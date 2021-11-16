@@ -100,10 +100,10 @@ def crop_residue_all(params, r_vals, nv):
     # Total stubble production  #
     #############################
     ##calc yield - frost and seeding rate not accounted for because they don't effect stubble.
-    rot_yields_rkl_mz = phs.f_rot_yield(for_stub=True)
+    rot_yields_rkl_p7z = phs.f_rot_yield(for_stub=True)
     ##calc stubble
     residue_per_grain_k = f_cropresidue_production()
-    rot_stubble_rkl_mz = rot_yields_rkl_mz.mul(residue_per_grain_k, axis=0, level=1)
+    rot_stubble_rkl_p7z = rot_yields_rkl_p7z.mul(residue_per_grain_k, axis=0, level=1)
 
     #########################
     #dmd deterioration      #
@@ -157,7 +157,7 @@ def crop_residue_all(params, r_vals, nv):
 
     ##ri availability - first calc stubble foo (stub available) this is the average from all rotations and lmus because we just need one value for foo (crop residue volume is assumed to be the same across lmu - the extra detail could be added)
     ###try calc the base yield for each crop but if the crop is not one of the rotation phases then assign the average foo (this is only to stop error. it doesnt matter because the crop doesnt exist so the stubble is never used)
-    base_yields = rot_yields_rkl_mz.droplevel(0, axis=0).sum(axis=1, level=1) #drop rotation index and sum m axis (just want total yield to calc pi)
+    base_yields = rot_yields_rkl_p7z.droplevel(0, axis=0).sum(axis=1, level=1) #drop rotation index and sum p7 axis (just want total yield to calc pi)
     base_yields = base_yields.replace(0,np.NaN) #replace 0 with nan so if yield inputs are missing (eg set to 0) the foo is still correct (nan gets skipped in pd.mean)
     stub_foo_harv_zk = np.zeros((n_seasons, n_crops))
     for crop, crop_idx in zip(pinp.stubble['i_stub_landuse_idx'], range(n_crops)):
@@ -283,7 +283,7 @@ def crop_residue_all(params, r_vals, nv):
     ################
 
     ##stubble produced per tonne of grain yield - this is df so don't need to build index.
-    params['rot_stubble'] = rot_stubble_rkl_mz.stack([0,1]).to_dict()
+    params['rot_stubble'] = rot_stubble_rkl_p7z.stack([0,1]).to_dict()
 
     ##'require' params ie consuming 1t of stubble B requires 1.002t from the constraint (0.002 accounts for trampling)
     tup_ks1 = tuple(map(tuple, index_ks1))

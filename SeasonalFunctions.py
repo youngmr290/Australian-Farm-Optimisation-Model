@@ -238,6 +238,8 @@ def f1_z_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=-1
     '''
     Allocation of item into season periods (p7).
 
+    Note: cashflow goes through a slightly different function that also calculates interest.
+
     - Arrays must be numpy and broadcastable.
     - p7 axis must be in pos 0
     - item start must contain all axes (including z and p7)

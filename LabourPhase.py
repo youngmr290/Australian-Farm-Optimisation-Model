@@ -115,13 +115,13 @@ def f_fert_rotperiod_allocation():
     fert_info = pinp.crop['fert_info']
     fert_date_n = fert_info['app_date'].values
     fert_length_n = fert_info['app_len'].values.astype('timedelta64[D]')
-    alloc_mzn = rps.f1_rot_period_alloc(fert_date_n[na,na,:], fert_length_n[na,na,:], z_pos=-2)
+    alloc_p7zn = zfun.f1_z_period_alloc(fert_date_n[na,na,:], fert_length_n[na,na,:], z_pos=-2)
     ###convert to df
     keys_z = zfun.f_keys_z()
-    keys_m = per.f_phase_periods(keys=True)
-    new_index_mzn = pd.MultiIndex.from_product([keys_m, keys_z, fert_info.index])
-    alloc_mzn = pd.Series(alloc_mzn.ravel(), index=new_index_mzn)
-    return alloc_mzn
+    keys_p7 = per.f_season_periods(keys=True)
+    new_index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, fert_info.index])
+    alloc_p7zn = pd.Series(alloc_p7zn.ravel(), index=new_index_p7zn)
+    return alloc_p7zn
 
 
 #time/per ha - needs to be multiplied by the number of phases and then added to phases df because the previous phases can effect number of passes and hence time
@@ -149,21 +149,21 @@ def f_fert_app_time_ha():
     ##adjust fert labour across each labour period
     p5_allocation_p5_zn = f_fert_lab_allocation()
     time_p5n_z = p5_allocation_p5_zn.mul(time_ha_n, axis=1, level=1).stack() #time for 1 pass for each chem.
-    ##adjust for m axis
-    m_allocation_mz_n = f_fert_rotperiod_allocation().unstack(2)
-    time_p5n_mz = time_p5n_z.reindex(m_allocation_mz_n.index,axis=1,level=1)
-    time_p5n_mz = (time_p5n_mz.unstack(1).mul(m_allocation_mz_n.stack(),axis=1)).stack(2)
+    ##adjust for p7 axis
+    p7_allocation_p7z_n = f_fert_rotperiod_allocation().unstack(2)
+    time_p5n_p7z = time_p5n_z.reindex(p7_allocation_p7z_n.index,axis=1,level=1)
+    time_p5n_p7z = (time_p5n_p7z.unstack(1).mul(p7_allocation_p7z_n.stack(),axis=1)).stack(2)
     ##adjust for passes
-    time_rln_mzp5 = time_p5n_mz.unstack(0).reindex(total_passes_rzln.unstack(1).index, axis=0, level=2)
-    time_rzln_mp5 = time_rln_mzp5.stack(1).reorder_levels([0,3,1,2])
-    fert_app_time_ha_rzln_mp5 = time_rzln_mp5.mul(total_passes_rzln, axis=0)
-    fert_app_time_ha_rzl_mp5 = fert_app_time_ha_rzln_mp5.sum(axis=0, level=(0,1,2)) #sum fert type
-    fert_app_time_ha_rzlp5_m = fert_app_time_ha_rzl_mp5.stack()
+    time_rln_p7zp5 = time_p5n_p7z.unstack(0).reindex(total_passes_rzln.unstack(1).index, axis=0, level=2)
+    time_rzln_p7p5 = time_rln_p7zp5.stack(1).reorder_levels([0,3,1,2])
+    fert_app_time_ha_rzln_p7p5 = time_rzln_p7p5.mul(total_passes_rzln, axis=0)
+    fert_app_time_ha_rzl_p7p5 = fert_app_time_ha_rzln_p7p5.sum(axis=0, level=(0,1,2)) #sum fert type
+    fert_app_time_ha_rzlp5_p7 = fert_app_time_ha_rzl_p7p5.stack()
 
     ##create params for v_phase_increment
-    increment_fert_app_time_ha_rzlp5_m = rps.f_v_phase_increment_adj(fert_app_time_ha_rzlp5_m,m_pos=1)
+    increment_fert_app_time_ha_rzlp5_p7 = rps.f_v_phase_increment_adj(fert_app_time_ha_rzlp5_p7,p7_pos=1)
 
-    return fert_app_time_ha_rzlp5_m.stack(), increment_fert_app_time_ha_rzlp5_m.stack()
+    return fert_app_time_ha_rzlp5_p7.stack(), increment_fert_app_time_ha_rzlp5_p7.stack()
 
 #f=fert_app_time_ha()
 #print(timeit.timeit(fert_app_time_ha,number=20)/20)
@@ -189,21 +189,21 @@ def f_fert_app_time_t():
     time_n = ((mac.time_cubic() / conversion).mul(spreader_proportion.squeeze(),axis=1)).squeeze()
     p5_allocation_p5_zn = f_fert_lab_allocation()
     time_p5n_z = p5_allocation_p5_zn.mul(time_n, axis=1, level=1).stack(1)
-    m_allocation_mz_n = f_fert_rotperiod_allocation().unstack(2)
-    time_p5n_mz = time_p5n_z.reindex(m_allocation_mz_n.index, axis=1, level=1)
-    time_p5n_mz = (time_p5n_mz.unstack(1).mul(m_allocation_mz_n.stack(), axis=1)).stack(2)
+    p7_allocation_p7z_n = f_fert_rotperiod_allocation().unstack(2)
+    time_p5n_p7z = time_p5n_z.reindex(p7_allocation_p7z_n.index, axis=1, level=1)
+    time_p5n_p7z = (time_p5n_p7z.unstack(1).mul(p7_allocation_p7z_n.stack(), axis=1)).stack(2)
 
     ##combine with rotation fert
-    time_rln_mzp5 = time_p5n_mz.unstack(0).reindex(fert_total_rzln.unstack(1).index, axis=0, level=2)
-    time_rzln_mp5 = time_rln_mzp5.stack(1).reorder_levels([0,3,1,2])
-    fert_app_time_tonne_rzln_mp5 = time_rzln_mp5.mul(fert_total_rzln, axis=0)
-    fert_app_time_tonne_rzl_mp5 = fert_app_time_tonne_rzln_mp5.sum(axis=0,level=(0,1,2))  # sum fert type
-    fert_app_time_tonne_rzlp5_m = fert_app_time_tonne_rzl_mp5.stack()
+    time_rln_p7zp5 = time_p5n_p7z.unstack(0).reindex(fert_total_rzln.unstack(1).index, axis=0, level=2)
+    time_rzln_p7p5 = time_rln_p7zp5.stack(1).reorder_levels([0,3,1,2])
+    fert_app_time_tonne_rzln_p7p5 = time_rzln_p7p5.mul(fert_total_rzln, axis=0)
+    fert_app_time_tonne_rzl_p7p5 = fert_app_time_tonne_rzln_p7p5.sum(axis=0,level=(0,1,2))  # sum fert type
+    fert_app_time_tonne_rzlp5_p7 = fert_app_time_tonne_rzl_p7p5.stack()
 
     ##create params for v_phase_increment
-    increment_fert_app_time_tonne_rzlp5_m = rps.f_v_phase_increment_adj(fert_app_time_tonne_rzlp5_m,m_pos=1)
+    increment_fert_app_time_tonne_rzlp5_p7 = rps.f_v_phase_increment_adj(fert_app_time_tonne_rzlp5_p7,p7_pos=1)
 
-    return fert_app_time_tonne_rzlp5_m.stack(), increment_fert_app_time_tonne_rzlp5_m.stack()
+    return fert_app_time_tonne_rzlp5_p7.stack(), increment_fert_app_time_tonne_rzlp5_p7.stack()
 
 
 #print(fert_app_time_t())
@@ -237,13 +237,13 @@ def f_chem_rotperiod_allocation():
     chem_info = pinp.crop['chem_info']
     chem_date_n = chem_info['app_date'].values
     chem_length_n = chem_info['app_len'].values.astype('timedelta64[D]')
-    alloc_mzn = rps.f1_rot_period_alloc(chem_date_n[na,na,:], chem_length_n[na,na,:], z_pos=-2)
+    alloc_p7zn = zfun.f1_z_period_alloc(chem_date_n[na,na,:], chem_length_n[na,na,:], z_pos=-2)
     ###convert to df
     keys_z = zfun.f_keys_z()
-    keys_m = per.f_phase_periods(keys=True)
-    new_index_mzn = pd.MultiIndex.from_product([keys_m, keys_z, chem_info.index])
-    alloc_mzn = pd.Series(alloc_mzn.ravel(), index=new_index_mzn)
-    return alloc_mzn
+    keys_p7 = per.f_season_periods(keys=True)
+    new_index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, chem_info.index])
+    alloc_p7zn = pd.Series(alloc_p7zn.ravel(), index=new_index_p7zn)
+    return alloc_p7zn
 
 
 def f_chem_app_time_ha():
@@ -264,21 +264,21 @@ def f_chem_app_time_ha():
     time = mac.spray_time_ha()
     ##adjust chem labour across each labour period
     time_p5n_z = f_chem_lab_allocation().stack() * time
-    ##adjust for m axis
-    m_allocation_mz_n = f_chem_rotperiod_allocation().unstack(2)
-    time_p5n_mz = time_p5n_z.reindex(m_allocation_mz_n.index,axis=1,level=1)
-    time_p5n_mz = (time_p5n_mz.unstack(1).mul(m_allocation_mz_n.stack(),axis=1)).stack(2)
+    ##adjust for p7 axis
+    p7_allocation_p7z_n = f_chem_rotperiod_allocation().unstack(2)
+    time_p5n_p7z = time_p5n_z.reindex(p7_allocation_p7z_n.index,axis=1,level=1)
+    time_p5n_p7z = (time_p5n_p7z.unstack(1).mul(p7_allocation_p7z_n.stack(),axis=1)).stack(2)
     ##adjust for passes
-    time_rln_mzp5 = time_p5n_mz.unstack(0).reindex(passes_rzln.unstack(1).index, axis=0, level=2)
-    time_rzln_mp5 = time_rln_mzp5.stack(1).reorder_levels([0,3,1,2])
-    chem_app_time_rzln_mp5 = time_rzln_mp5.mul(passes_rzln, axis=0)
-    chem_app_time_rzl_mp5 = chem_app_time_rzln_mp5.sum(axis=0, level=(0,1,2)) #sum chem type
-    chem_app_time_rzlp5_m = chem_app_time_rzl_mp5.stack()
+    time_rln_p7zp5 = time_p5n_p7z.unstack(0).reindex(passes_rzln.unstack(1).index, axis=0, level=2)
+    time_rzln_p7p5 = time_rln_p7zp5.stack(1).reorder_levels([0,3,1,2])
+    chem_app_time_rzln_p7p5 = time_rzln_p7p5.mul(passes_rzln, axis=0)
+    chem_app_time_rzl_p7p5 = chem_app_time_rzln_p7p5.sum(axis=0, level=(0,1,2)) #sum chem type
+    chem_app_time_rzlp5_p7 = chem_app_time_rzl_p7p5.stack()
 
     ##create params for v_phase_increment
-    increment_chem_app_time_rzlp5_m = rps.f_v_phase_increment_adj(chem_app_time_rzlp5_m,m_pos=1)
+    increment_chem_app_time_rzlp5_p7 = rps.f_v_phase_increment_adj(chem_app_time_rzlp5_p7,p7_pos=1)
 
-    return chem_app_time_rzlp5_m.stack(), increment_chem_app_time_rzlp5_m.stack()
+    return chem_app_time_rzlp5_p7.stack(), increment_chem_app_time_rzlp5_p7.stack()
 
 
 
@@ -315,30 +315,30 @@ def f_crop_monitoring():
     ## drop last row, because it has na because it only contains the end date, therefore not a period
     monitoring_allocation_pzd = monitoring_allocation_pzd[:-1]
 
-    ##adjust for m (rotation period) axis
-    alloc_mzd = rps.f1_rot_period_alloc(date_start_d[na,na,:],length_d[na,na,:],z_pos=-2)
+    ##adjust for p7 (rotation period) axis
+    alloc_p7zd = zfun.f1_z_period_alloc(date_start_d[na,na,:],length_d[na,na,:],z_pos=-2)
 
     ##variable monitoring
     ###adjust to monitoring time per ha
     variable_crop_monitor_kd = variable_crop_monitor.values #convert to numpy
     variable_crop_monitor_kd = variable_crop_monitor_kd/pinp.general['pad_size'] * length_d.astype(float)/7
     ###convert date range to labour periods
-    variable_crop_monitor_kpmz = np.sum(variable_crop_monitor_kd[:,na,na,na,:] * monitoring_allocation_pzd[:,na,:,:] * alloc_mzd, axis=-1) #sum the d axis (monitoring date axis)
+    variable_crop_monitor_kpp7z = np.sum(variable_crop_monitor_kd[:,na,na,na,:] * monitoring_allocation_pzd[:,na,:,:] * alloc_p7zd, axis=-1) #sum the d axis (monitoring date axis)
     ###convert to df and expand landuse to rotation
-    variable_crop_monitor_k_pmz = variable_crop_monitor_kpmz.reshape(variable_crop_monitor_kpmz.shape[0], -1)
+    variable_crop_monitor_k_pp7z = variable_crop_monitor_kpp7z.reshape(variable_crop_monitor_kpp7z.shape[0], -1)
     keys_z = zfun.f_keys_z()
     keys_p5 = per.f_p_dates_df().index[:-1]
-    keys_m = per.f_phase_periods(keys=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_k = variable_crop_monitor.index
-    cols_p5mz = pd.MultiIndex.from_product([keys_p5, keys_m, keys_z])
-    variable_crop_monitor = pd.DataFrame(variable_crop_monitor_k_pmz, index=keys_k, columns=cols_p5mz)
+    cols_p5p7z = pd.MultiIndex.from_product([keys_p5, keys_p7, keys_z])
+    variable_crop_monitor = pd.DataFrame(variable_crop_monitor_k_pp7z, index=keys_k, columns=cols_p5p7z)
     phases_df = sinp.f_phases()
     phases_df.columns = pd.MultiIndex.from_product([phases_df.columns,[''],['']])
     variable_crop_monitor = pd.merge(phases_df, variable_crop_monitor, how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases
-    variable_crop_monitor_r_p5mz = variable_crop_monitor.drop(list(range(sinp.general['phase_len'])), axis=1)
-    variable_crop_monitor_p5mzr = variable_crop_monitor_r_p5mz.unstack().dropna()
+    variable_crop_monitor_r_p5p7z = variable_crop_monitor.drop(list(range(sinp.general['phase_len'])), axis=1)
+    variable_crop_monitor_p5p7zr = variable_crop_monitor_r_p5p7z.unstack().dropna()
     ###create params for v_phase_increment
-    increment_variable_crop_monitor_p5mzr = rps.f_v_phase_increment_adj(variable_crop_monitor_p5mzr.unstack(1),m_pos=1).stack()
+    increment_variable_crop_monitor_p5p7zr = rps.f_v_phase_increment_adj(variable_crop_monitor_p5p7zr.unstack(1),p7_pos=1).stack()
 
     ##fixed monitoring
     ###adjust from hrs/week to hrs/period
@@ -347,7 +347,7 @@ def f_crop_monitoring():
     ###convert date range to labour periods
     fixed_crop_monitor_pz = np.sum(fixed_crop_monitor_d * monitoring_allocation_pzd, axis=-1) #sum the d axis (monitoring date axis)
     fixed_crop_monitor = pd.DataFrame(fixed_crop_monitor_pz, index=keys_p5, columns=keys_z)
-    return variable_crop_monitor_p5mzr, increment_variable_crop_monitor_p5mzr, fixed_crop_monitor.stack()
+    return variable_crop_monitor_p5p7zr, increment_variable_crop_monitor_p5p7zr, fixed_crop_monitor.stack()
 
 ##collates all the params
 def f1_labcrop_params(params,r_vals):

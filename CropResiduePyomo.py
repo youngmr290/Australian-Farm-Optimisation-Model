@@ -38,10 +38,10 @@ def f1_stubpyomo_local(params, model):
     model.v_stub_harv = pe.Var(model.s_sequence_year, model.s_sequence, model.s_feed_periods, model.s_season_types, model.s_crops, bounds=(0.0,None),
                                    doc='total stubble at harvest. Used to transfer to stubble constraint')
 
-    model.v_stub_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_crops, model.s_season_types, bounds=(0,None),
+    model.v_stub_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, bounds=(0,None),
                                 doc='tonnes of total stub in debt (will need to be provided from harvest)')
 
-    # model.v_stub_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_crops, model.s_stub_cat, model.s_season_types, bounds=(0,None),
+    # model.v_stub_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_stub_cat, model.s_season_types, bounds=(0,None),
     #                             doc='tonnes of total stub in credit (can be used for feeding)')
 
 
@@ -49,7 +49,7 @@ def f1_stubpyomo_local(params, model):
     ####################
     #define parameters #
     ####################
-    model.p_rot_stubble = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_phase_periods, model.s_season_types,
+    model.p_rot_stubble = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_season_periods, model.s_season_types,
                                    initialize=params['rot_stubble'], default=0.0, doc='stubble produced per ha of each rotation')
 
     model.p_harv_prop = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['cons_prop'],
@@ -140,16 +140,16 @@ def f_con_stubble_between(model):
 #constraint global#
 ###################
 ##stubble transter from category to category and period to period
-# def f_stubble_req_a(model,q,s,m,z,k,sc):
+# def f_stubble_req_a(model,q,s,p7,z,k,sc):
 #     '''
 #     Calculate the total stubble required to consume the selected volume category A stubble in each period.
 #
 #     Used in global constraint (con_stubble_a). See CorePyomo
 #     '''
 #
-#     return sum(model.v_stub_transfer[q,s,p6,z,k,sc] * model.p_a_req[p6,z,k,sc] * model.p_a_p6_m[m,p6,z]
+#     return sum(model.v_stub_transfer[q,s,p6,z,k,sc] * model.p_a_req[p6,z,k,sc] * model.p_a_p6_p7[p7,p6,z]
 #                for p6 in model.s_feed_periods if pe.value(model.p_a_req[p6,z,k,sc]) !=0)
-#     # return sum(model.v_stub_con[q,s,f,p6,z,k,sc] * model.p_a_req[p6,z,k,sc] * model.p_a_p6_m[m,p6,z]
+#     # return sum(model.v_stub_con[q,s,f,p6,z,k,sc] * model.p_a_req[p6,z,k,sc] * model.p_a_p6_p7[p7,p6,z]
 #     #            for f in model.s_feed_pools for p6 in model.s_feed_periods if pe.value(model.p_a_req[p6,z,k,sc]) !=0)
 
 

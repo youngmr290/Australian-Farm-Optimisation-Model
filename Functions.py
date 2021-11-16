@@ -968,7 +968,7 @@ def range_allocation_np(period_dates, item_start, length=np.array([1]).astype('t
     add_yrs = np.ceil(np.maximum(0,(start_of_periods - item_start).astype('timedelta64[D]').astype(int) / 365))
     sub_yrs = np.ceil(np.maximum(0,(item_start - end_of_periods).astype('timedelta64[D]').astype(int) / 365))
     item_start = item_start + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
-    ###handle cases where cost date + length is after the end of cashflow. in this situation length gets reduced
+    ###handle cases where date + length is after the end of periods. in this situation length gets reduced
     length = np.minimum(length, (period_dates[-1,...] - item_start).astype('timedelta64[D]'))
 
     ##end of period

@@ -32,45 +32,46 @@ def f1_croppyomo_local(params, model):
     ############
     # variable #
     ############
-    model.v_sell_grain = pe.Var(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
+    model.v_sell_grain = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
                                 doc='tonnes of grain in each pool sold')
 
-    model.v_grain_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
+    model.v_grain_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
                                 doc='tonnes of grain in debt (will need to be purchased or provided from harvest)')
 
-    model.v_grain_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
+    model.v_grain_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
                                 doc='tonnes of grain in credit (can be used for sup feeding or sold)')
 
     #########
     #param  #
     #########
 
-    model.p_rotation_cost = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_phase_periods, model.s_lmus, model.s_phases, initialize=params['rot_cost'], default=0, mutable=False, doc='total cost for 1 unit of rotation')
+    model.p_rotation_cost = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_lmus, model.s_phases,
+                                     initialize=params['rot_cost'], default=0, mutable=False, doc='total cost for 1 unit of rotation')
        
-    model.p_increment_rotation_cost = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_lmus,
-                                               model.s_phases, model.s_phase_periods, initialize=params['increment_rot_cost'],
+    model.p_increment_rotation_cost = pe.Param(model.s_enterprises, model.s_season_types, model.s_lmus,
+                                               model.s_phases, model.s_season_periods, initialize=params['increment_rot_cost'],
                                                default=0, mutable=False, doc='total cost for 1 unit of rotation')
 
-    model.p_rotation_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_phase_periods,
+    model.p_rotation_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types,
                                    model.s_lmus, model.s_phases, initialize=params['rot_wc'], default=0, mutable=False,
                                    doc='total wc for 1 unit of rotation')
        
-    model.p_increment_rotation_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_lmus,
-                                             model.s_phases, model.s_phase_periods, initialize=params['increment_rot_wc'],
+    model.p_increment_rotation_wc = pe.Param(model.s_enterprises, model.s_season_types, model.s_lmus,
+                                             model.s_phases, model.s_season_periods, initialize=params['increment_rot_wc'],
                                              default=0, mutable=False, doc='total wc for 1 unit of rotation')
 
-    model.p_rotation_yield = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_season_types, model.s_phase_periods,
+    model.p_rotation_yield = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_season_types, model.s_season_periods,
                                       initialize=params['rot_yield'], default = 0.0, mutable=False, doc='grain production for all crops for 1 unit of rotation')
 
     model.p_grainpool_proportion = pe.Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
     
-    model.p_grain_price = pe.Param(model.s_phase_periods, model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
+    model.p_grain_price = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
     
-    model.p_grain_wc = pe.Param(model.s_phase_periods, model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['grain_wc'],default = 0.0, doc='farm gate wc per tonne of each grain')
+    model.p_grain_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['grain_wc'],default = 0.0, doc='farm gate wc per tonne of each grain')
     
     model.p_phasesow_req = pe.Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['phase_sow_req'], default = 0.0, doc='ha of sow activity required by each rot phase')
     
-    model.p_sow_prov = pe.Param(model.s_phase_periods, model.s_labperiods, model.s_season_types, model.s_landuses, initialize=params['sow_prov'], default = 0.0, doc='states which landuses can be sown in each p5 period')
+    model.p_sow_prov = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_landuses, initialize=params['sow_prov'], default = 0.0, doc='states which landuses can be sown in each p5 period')
 
 
 #######################################################################################################################################################
@@ -87,15 +88,15 @@ def f1_croppyomo_local(params, model):
 ### yield needs to be disaggregated so that it returns the grain transfer for each crop - this is so it is compatible with yield penalty and sup feed activities.
 ### alternative would have been to add another key/index/set to the yield parameter that was k, although i suspect this would make it a bit slower due to being bigger but it might be tidier
 
-def f_rotation_yield(model,q,s,m,g,k,z):
+def f_rotation_yield(model,q,s,p7,g,k,z):
     '''
     Calculate the total (kg) of each grain harvested from selected rotation phases.
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
-    return sum(model.p_rotation_yield[r,k,l,z,m]*model.v_phase_area[q,s,m,z,r,l]
+    return sum(model.p_rotation_yield[r,k,l,z,p7]*model.v_phase_area[q,s,p7,z,r,l]
                for r in model.s_phases for l in model.s_lmus
-               if pe.value(model.p_rotation_yield[r,k,l,z,m]) != 0) * model.p_grainpool_proportion[k,g]
+               if pe.value(model.p_rotation_yield[r,k,l,z,p7]) != 0) * model.p_grainpool_proportion[k,g]
 
 
 
@@ -104,14 +105,14 @@ def f_rotation_yield(model,q,s,m,g,k,z):
 ##############
 ##similar to yield - this is more complex because we want to mul with phase area variable then sum based on the current landuse (k)
 ##returns a tuple, the boolean part indicates if the constraint needs to exist
-def f_phasesow_req(model,q,s,m,k,l,z):
+def f_phasesow_req(model,q,s,p7,k,l,z):
     '''
     Calculate the seeding requirement for each rotation phase.
 
     Used in global constraint (con_sow). See CorePyomo
     '''
     if any(model.p_phasesow_req[r,k,l] for r in model.s_phases):
-        return sum(model.p_phasesow_req[r,k,l]*model.v_phase_increment[q,s,m,z,r,l] for r in model.s_phases
+        return sum(model.p_phasesow_req[r,k,l]*model.v_phase_increment[q,s,p7,z,r,l] for r in model.s_phases
                    if pe.value(model.p_phasesow_req[r,k,l]) != 0)
     else:
         return 0
@@ -128,10 +129,10 @@ def f_rotation_cost(model,q,s,c0,p7,z):
     Used in objective. See CorePyomo
     '''
 
-    return sum(model.p_rotation_cost[c0,p7,z,m,l,r]*model.v_phase_area[q,s,m,z,r,l]
-               + model.p_increment_rotation_cost[c0,p7,z,l,r,m]*model.v_phase_increment[q,s,m,z,r,l]
-               for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
-                   if pe.value(model.p_rotation_cost[c0,p7,z,m,l,r]) != 0 or pe.value(model.p_increment_rotation_cost[c0,p7,z,l,r,m]) != 0)
+    return sum(model.p_rotation_cost[c0,p7,z,l,r]*model.v_phase_area[q,s,p7,z,r,l]
+               + model.p_increment_rotation_cost[c0,z,l,r,p7]*model.v_phase_increment[q,s,p7,z,r,l]
+               for r in model.s_phases for l in model.s_lmus
+                   if pe.value(model.p_rotation_cost[c0,p7,z,l,r]) != 0 or pe.value(model.p_increment_rotation_cost[c0,z,l,r,p7]) != 0)
 
 def f_rotation_wc(model,q,s,c0,p7,z):
     '''
@@ -140,10 +141,10 @@ def f_rotation_wc(model,q,s,c0,p7,z):
     Used in global constraint (con_workingcap). See CorePyomo
     '''
 
-    return sum(model.p_rotation_wc[c0,p7,z,m,l,r]*model.v_phase_area[q,s,m,z,r,l]
-               + model.p_increment_rotation_wc[c0,p7,z,l,r,m]*model.v_phase_increment[q,s,m,z,r,l]
-               for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
-                   if pe.value(model.p_rotation_wc[c0,p7,z,m,l,r]) != 0 or pe.value(model.p_increment_rotation_wc[c0,p7,z,l,r,m]) != 0)
+    return sum(model.p_rotation_wc[c0,p7,z,l,r]*model.v_phase_area[q,s,p7,z,r,l]
+               + model.p_increment_rotation_wc[c0,z,l,r,p7]*model.v_phase_increment[q,s,p7,z,r,l]
+               for r in model.s_phases for l in model.s_lmus
+                   if pe.value(model.p_rotation_wc[c0,p7,z,l,r]) != 0 or pe.value(model.p_increment_rotation_wc[c0,z,l,r,p7]) != 0)
 
 
 

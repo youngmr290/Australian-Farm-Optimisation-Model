@@ -22,7 +22,6 @@ import FeedsupplyFunctions as fsfun
 import Periods as per
 import Sensitivity as sen
 import PastureFunctions as pfun
-import RotationPhases as rps
 
 #1. todo add labour required for feed budgeting. Inputs are currently in the sheep sheet of Property.xls (would be best if this can be built in phase_labour module)
 #2. todo Will need to add the foo reduction in the current year for manipulated pasture and a germination reduction in the following year.
@@ -187,7 +186,7 @@ def f_pasture(params, r_vals, nv):
     keys_p6  = np.asarray(pinp.period['i_fp_idx'])
     keys_g  = np.asarray(sinp.general['grazing_int'])
     keys_l  = pinp.general['i_lmu_idx'][lmu_mask_l]   # lmu index description
-    keys_m = per.f_phase_periods(keys=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_o  = np.asarray(sinp.general['foo_levels'])
     keys_p5  = np.array(per.f_p_date2_df().index).astype('str')
     keys_r  = np.array(phases_rotn_df.index).astype('str')
@@ -211,9 +210,9 @@ def f_pasture(params, r_vals, nv):
     # index_p6lrt=tuple(map(tuple, index_p6lrt)) #create a tuple rather than a list because tuples are faster
 
     ### mp6lrzt
-    arrays=[keys_m, keys_p6, keys_l, keys_r, keys_z, keys_t]
-    index_mp6lrzt=fun.cartesian_product_simple_transpose(arrays)
-    index_mp6lrzt=tuple(map(tuple, index_mp6lrzt)) #create a tuple rather than a list because tuples are faster
+    arrays=[keys_p7, keys_p6, keys_l, keys_r, keys_z, keys_t]
+    index_p7p6lrzt=fun.cartesian_product_simple_transpose(arrays)
+    index_p7p6lrzt=tuple(map(tuple, index_p7p6lrzt)) #create a tuple rather than a list because tuples are faster
 
     ### op6lzt
     arrays=[keys_o, keys_p6, keys_l, keys_z, keys_t]
@@ -236,9 +235,9 @@ def f_pasture(params, r_vals, nv):
     index_dgop6lzt=tuple(map(tuple, index_dgop6lzt)) #create a tuple rather than a list because tuples are faster
 
     ### mdp6lrzt
-    arrays=[keys_m, keys_d, keys_p6, keys_l, keys_r, keys_z, keys_t]
-    index_mdp6lrzt=fun.cartesian_product_simple_transpose(arrays)
-    index_mdp6lrzt=tuple(map(tuple, index_mdp6lrzt)) #create a tuple rather than a list because tuples are faster
+    arrays=[keys_p7, keys_d, keys_p6, keys_l, keys_r, keys_z, keys_t]
+    index_p7dp6lrzt=fun.cartesian_product_simple_transpose(arrays)
+    index_p7dp6lrzt=tuple(map(tuple, index_p7dp6lrzt)) #create a tuple rather than a list because tuples are faster
 
     ### fdp6zt
     arrays=[keys_f, keys_d, keys_p6, keys_z, keys_t]
@@ -531,18 +530,18 @@ def f_pasture(params, r_vals, nv):
     #############################################
     #adjust params with r axis for rot peirod   #
     #############################################
-    ##m allocation
-    alloc_mp6z = rps.f1_rot_period_alloc(date_start_p6z[na,:,:], length_p6z[na,:,:].astype('timedelta64[D]'), z_pos=-1)
-    alloc_mp6lrzt = alloc_mp6z[:,:,na,na,:,na]
-    alloc_mdp6lrzt = alloc_mp6z[:,na,:,na,na,:,na]
+    ##p7 allocation
+    alloc_p7p6z = zfun.f1_z_period_alloc(date_start_p6z[na,:,:], length_p6z[na,:,:].astype('timedelta64[D]'), z_pos=-1)
+    alloc_p7p6lrzt = alloc_p7p6z[:,:,na,na,:,na]
+    alloc_p7dp6lrzt = alloc_p7p6z[:,na,:,na,na,:,na]
 
     ##apply allocation
-    erosion_mp6lrzt = erosion_p6lrzt * alloc_mp6lrzt
-    foo_dry_reseeding_mdp6lrzt = foo_dry_reseeding_dp6lrzt * alloc_mdp6lrzt
-    foo_grn_reseeding_mp6lrzt = foo_grn_reseeding_p6lrzt * alloc_mp6lrzt
-    phase_area_mp6lrzt = phase_area_p6lrzt * alloc_mp6lrzt
-    germination_mp6lrzt = germination_p6lrzt * alloc_mp6lrzt
-    nap_mdp6lrzt = nap_dp6lrzt * alloc_mdp6lrzt
+    erosion_p7p6lrzt = erosion_p6lrzt * alloc_p7p6lrzt
+    foo_dry_reseeding_p7dp6lrzt = foo_dry_reseeding_dp6lrzt * alloc_p7dp6lrzt
+    foo_grn_reseeding_p7p6lrzt = foo_grn_reseeding_p6lrzt * alloc_p7p6lrzt
+    phase_area_p7p6lrzt = phase_area_p6lrzt * alloc_p7p6lrzt
+    germination_p7p6lrzt = germination_p6lrzt * alloc_p7p6lrzt
+    nap_p7dp6lrzt = nap_dp6lrzt * alloc_p7dp6lrzt
 
     ###########
     #params   #
@@ -551,8 +550,8 @@ def f_pasture(params, r_vals, nv):
     pasture_area = pasture_rt.ravel() * 1  # times 1 to convert from bool to int eg if the phase is pasture then 1ha of pasture is recorded.
     params['pasture_area_rt'] = dict(zip(index_rt,pasture_area))
 
-    erosion_rav_mp6lrzt = erosion_mp6lrzt.ravel()
-    params['p_erosion_mp6lrzt'] = dict(zip(index_mp6lrzt,erosion_rav_mp6lrzt))
+    erosion_rav_p7p6lrzt = erosion_p7p6lrzt.ravel()
+    params['p_erosion_p7p6lrzt'] = dict(zip(index_p7p6lrzt,erosion_rav_p7p6lrzt))
 
     poc_con_rav_p6lz = poc_con_p6lz.ravel()
     params['p_poc_con_p6lz'] = dict(zip(index_p6lz, poc_con_rav_p6lz))
@@ -571,18 +570,18 @@ def f_pasture(params, r_vals, nv):
 
     params['p_dry_removal_t_p6zt'] = dict(zip(index_p6zt,dry_removal_t_p6zt.ravel()))
 
-    params['p_foo_dry_reseeding_mdp6lrzt'] = dict(zip(index_mdp6lrzt, foo_dry_reseeding_mdp6lrzt.ravel()))
-    params['p_foo_grn_reseeding_mp6lrzt'] = dict(zip(index_mp6lrzt, foo_grn_reseeding_mp6lrzt.ravel()))
+    params['p_foo_dry_reseeding_p7dp6lrzt'] = dict(zip(index_p7dp6lrzt, foo_dry_reseeding_p7dp6lrzt.ravel()))
+    params['p_foo_grn_reseeding_p7p6lrzt'] = dict(zip(index_p7p6lrzt, foo_grn_reseeding_p7p6lrzt.ravel()))
 
-    params['p_phase_area_mp6lrzt'] = dict(zip(index_mp6lrzt, phase_area_mp6lrzt.ravel()))
+    params['p_phase_area_p7p6lrzt'] = dict(zip(index_p7p6lrzt, phase_area_p7p6lrzt.ravel()))
 
     params['p_dry_transfer_prov_t_p6zt'] = dict(zip(index_p6zt, dry_transfer_prov_t_p6zt.ravel()))
 
     params['p_dry_transfer_req_t_p6zt'] = dict(zip(index_p6zt, dry_transfer_req_t_p6zt.ravel()))
 
-    params['p_germination_mp6lrzt'] = dict(zip(index_mp6lrzt, germination_mp6lrzt.ravel()))
+    params['p_germination_p7p6lrzt'] = dict(zip(index_p7p6lrzt, germination_p7p6lrzt.ravel()))
 
-    params['p_nap_mdp6lrzt'] = dict(zip(index_mdp6lrzt,nap_mdp6lrzt.ravel()))
+    params['p_nap_p7dp6lrzt'] = dict(zip(index_p7dp6lrzt,nap_p7dp6lrzt.ravel()))
 
     params['p_foo_start_grnha_op6lzt'] = dict(zip(index_op6lzt, foo_start_grnha_op6lzt.ravel()))
 

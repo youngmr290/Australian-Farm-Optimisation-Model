@@ -34,7 +34,6 @@ import UniversalInputs as uinp
 import StructuralInputs as sinp
 import Phase as phs
 import Mach as mac
-import RotationPhases as rps
 import Sensitivity as sen
 import Finance as fin
 
@@ -65,31 +64,30 @@ def f_buy_grain_price(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    keys_m = per.f_phase_periods(keys=True)
     grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='stk', z_pos=-1)
 
-    ##add m axis - needed so yield can be required from the same m that it is sold.
-    alloc_mz = rps.f1_rot_period_alloc(start[na], z_pos=-1)
-    grain_cost_allocation_mc0p7z = grain_cost_allocation_c0p7z * alloc_mz[:,na,na,:]
-    grain_wc_allocation_mc0p7z = grain_wc_allocation_c0p7z * alloc_mz[:,na,na,:]
+    # ##add p7 axis - needed so yield can be required from the same m that it is sold.
+    # grain_cost_allocation_p7c0p7z = grain_cost_allocation_c0p7z * alloc_p7z[:,na,na,:]
+    # grain_wc_allocation_p7c0p7z = grain_wc_allocation_c0p7z * alloc_p7z[:,na,na,:]
 
     ##convert to df
-    new_index_mc0p7z = pd.MultiIndex.from_product([keys_m, keys_c0, keys_p7, keys_z])
-    grain_income_allocation_mc0p7z = pd.Series(grain_cost_allocation_mc0p7z.ravel(), index=new_index_mc0p7z)
-    grain_wc_allocation_mc0p7z = pd.Series(grain_wc_allocation_mc0p7z.ravel(), index=new_index_mc0p7z)
+    new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
+    grain_income_allocation_c0p7z = pd.Series(grain_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
+    grain_wc_allocation_c0p7z = pd.Series(grain_wc_allocation_c0p7z.ravel(), index=new_index_c0p7z)
 
-    cols_mc0p7zg = pd.MultiIndex.from_product([keys_m, keys_c0, keys_p7, keys_z, price_k_g.columns])
-    grain_income_allocation_mc0p7zg = grain_income_allocation_mc0p7z.reindex(cols_mc0p7zg, axis=1)#adds level to header so i can mul in the next step
-    grain_wc_allocation_mc0p7zg = grain_wc_allocation_mc0p7z.reindex(cols_mc0p7zg, axis=1)#adds level to header so i can mul in the next step
-    buy_grain_price =  price_k_g.mul(grain_income_allocation_mc0p7zg,axis=1, level=-1)
-    buy_grain_price_wc =  price_k_g.mul(grain_wc_allocation_mc0p7zg,axis=1, level=-1)
+    cols_c0p7zg = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, price_k_g.columns])
+    grain_income_allocation_c0p7zg = grain_income_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
+    grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
+    buy_grain_price =  price_k_g.mul(grain_income_allocation_c0p7zg,axis=1, level=-1)
+    buy_grain_price_wc =  price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
     r_vals['buy_grain_price'] = buy_grain_price
 
     ##buy grain period - purchased grain can only provide into the grain transfer constraint in the phase period when it is purchased (otherwise it will get free grain)
-    index_mz = pd.MultiIndex.from_product([keys_m, keys_z])
-    buy_grain_prov_mz = pd.Series(alloc_mz.ravel(), index=index_mz)
+    alloc_p7z = zfun.f1_z_period_alloc(start[na], z_pos=-1)
+    index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
+    buy_grain_prov_p7z = pd.Series(alloc_p7z.ravel(), index=index_p7z)
 
-    return buy_grain_price.unstack(), buy_grain_price_wc.unstack(), buy_grain_prov_mz
+    return buy_grain_price.unstack(), buy_grain_price_wc.unstack(), buy_grain_prov_p7z
 
 def f_sup_cost(r_vals):
     '''
@@ -315,20 +313,20 @@ def f_sup_labour():
     return total_time_p5p6k_z
 
 
-def f1_a_p6_m():
+def f1_a_p6_p7():
     '''
     Association between p6 and m. Used to link supplement consumed in each p6 with grain transfer which has m peirods.
     '''
     start_p6z = per.f_feed_periods()[:-1,:]
-    alloc_mp6z = rps.f1_rot_period_alloc(start_p6z[na,:,:], z_pos=-1)
+    alloc_p7p6z = zfun.f1_z_period_alloc(start_p6z[na,:,:], z_pos=-1)
 
     ##make df
     keys_z = zfun.f_keys_z()
-    keys_m = per.f_phase_periods(keys=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_p6 = pinp.period['i_fp_idx']
-    new_index_mp6z = pd.MultiIndex.from_product([keys_m, keys_p6, keys_z])
-    alloc_mp6z = pd.Series(alloc_mp6z.ravel(), index=new_index_mp6z)
-    return alloc_mp6z
+    new_index_p7p6z = pd.MultiIndex.from_product([keys_p7, keys_p6, keys_z])
+    alloc_p7p6z = pd.Series(alloc_p7p6z.ravel(), index=new_index_p7p6z)
+    return alloc_p7p6z
 
 
 ##collates all the params
@@ -336,8 +334,8 @@ def f_sup_params(params,r_vals):
     total_sup_cost, total_sup_wc, storage_dep, storage_asset = f_sup_cost(r_vals)
     vol_tonne, md_tonne = f_sup_md_vol()
     sup_labour = f_sup_labour()
-    buy_grain_price, buy_grain_wc, buy_grain_prov_mz = f_buy_grain_price(r_vals)
-    a_p6_m = f1_a_p6_m()
+    buy_grain_price, buy_grain_wc, buy_grain_prov_p7z = f_buy_grain_price(r_vals)
+    a_p6_p7 = f1_a_p6_p7()
 
 
     ##create non seasonal params
@@ -347,11 +345,11 @@ def f_sup_params(params,r_vals):
     params['md_tonne'] = md_tonne.to_dict()
     params['buy_grain_price'] = buy_grain_price.to_dict()
     params['buy_grain_wc'] = buy_grain_wc.to_dict()
-    params['buy_grain_prov_mz'] = buy_grain_prov_mz.to_dict()
+    params['buy_grain_prov_p7z'] = buy_grain_prov_p7z.to_dict()
 
     ##create season params
     params['total_sup_cost'] = total_sup_cost.to_dict()
     params['total_sup_wc'] = total_sup_wc.to_dict()
     params['sup_labour'] = sup_labour.stack().to_dict()
-    params['a_p6_m'] = a_p6_m.to_dict()
+    params['a_p6_p7'] = a_p6_p7.to_dict()
 

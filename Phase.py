@@ -167,24 +167,23 @@ def f_grain_price(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    keys_m = per.f_phase_periods(keys=True)
     grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
 
-    ##add m axis - needed so yield can be required from the same m that it is sold.
-    alloc_mz = rps.f1_rot_period_alloc(start[na], z_pos=-1)
-    grain_cost_allocation_mc0p7z = grain_cost_allocation_c0p7z * alloc_mz[:,na,na,:]
-    grain_wc_allocation_mc0p7z = grain_wc_allocation_c0p7z * alloc_mz[:,na,na,:]
+    # ##add p7 axis - needed so yield can be required from the same m that it is sold.
+    # alloc_p7z = zfun.f1_z_period_alloc(start[na], z_pos=-1)
+    # grain_cost_allocation_p7c0p7z = grain_cost_allocation_c0p7z * alloc_p7z[:,na,na,:]
+    # grain_wc_allocation_p7c0p7z = grain_wc_allocation_c0p7z * alloc_p7z[:,na,na,:]
 
     ##convert to df
-    new_index_mc0p7z = pd.MultiIndex.from_product([keys_m, keys_c0, keys_p7, keys_z])
-    grain_income_allocation_mc0p7z = pd.Series(grain_cost_allocation_mc0p7z.ravel(), index=new_index_mc0p7z)
-    grain_wc_allocation_mc0p7z = pd.Series(grain_wc_allocation_mc0p7z.ravel(), index=new_index_mc0p7z)
+    new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
+    grain_income_allocation_c0p7z = pd.Series(grain_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
+    grain_wc_allocation_c0p7z = pd.Series(grain_wc_allocation_c0p7z.ravel(), index=new_index_c0p7z)
 
-    cols_mc0p7zg = pd.MultiIndex.from_product([keys_m, keys_c0, keys_p7, keys_z, farm_gate_price_k_g.columns])
-    grain_income_allocation_mc0p7zg = grain_income_allocation_mc0p7z.reindex(cols_mc0p7zg, axis=1)#adds level to header so i can mul in the next step
-    grain_wc_allocation_mc0p7zg = grain_wc_allocation_mc0p7z.reindex(cols_mc0p7zg, axis=1)#adds level to header so i can mul in the next step
-    grain_price =  farm_gate_price_k_g.mul(grain_income_allocation_mc0p7zg,axis=1, level=-1)
-    grain_price_wc =  farm_gate_price_k_g.mul(grain_wc_allocation_mc0p7zg,axis=1, level=-1)
+    cols_c0p7zg = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, farm_gate_price_k_g.columns])
+    grain_income_allocation_c0p7zg = grain_income_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
+    grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
+    grain_price =  farm_gate_price_k_g.mul(grain_income_allocation_c0p7zg,axis=1, level=-1)
+    grain_price_wc =  farm_gate_price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
 
     r_vals['grain_price'] =  grain_price
     return grain_price.unstack(), grain_price_wc.unstack()
@@ -262,33 +261,33 @@ def f_rot_yield(for_stub=False, for_insurance=False):
 
     ##add rotation period axis - if a rotation exists at the begining of harvest it provides grain and requires harvesting.
     harv_start_date_z = zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0).astype('datetime64') #this could be changed to include landuse axis.
-    alloc_mz = rps.f1_rot_period_alloc(harv_start_date_z[na,...], z_pos=-1)
+    alloc_p7z = zfun.f1_z_period_alloc(harv_start_date_z[na,...], z_pos=-1)
     ###convert to df
     keys_z = zfun.f_keys_z()
-    keys_m = per.f_phase_periods(keys=True)
-    new_index_mz = pd.MultiIndex.from_product([keys_m, keys_z])
-    alloc_mz = pd.Series(alloc_mz.ravel(), index=new_index_mz)
+    keys_p7 = per.f_season_periods(keys=True)
+    new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
+    alloc_p7z = pd.Series(alloc_p7z.ravel(), index=new_index_p7z)
     ###mul m allocation with cost
-    yields_rkl_mz = yields_rkl_z.mul(alloc_mz, axis=1,level=1)
+    yields_rkl_p7z = yields_rkl_z.mul(alloc_p7z, axis=1,level=1)
 
     if for_stub:
         ###return yield for stubble before accounting for frost, seed rate and harv propn
-        return yields_rkl_mz
+        return yields_rkl_p7z
 
     ##account for frost, seed rate and harv propn
     ###doing this in a particular order to keep r and k always on the same axis (so that size is kept small since r vs k is big)
-    yields_rk_mzl = yields_rkl_mz.unstack(2)
+    yields_rk_p7zl = yields_rkl_p7z.unstack(2)
     frost_harv_factor_k_l = (1-frost).mul(proportion_grain_harv, axis=0) #mul these two fisrt because they have same index so its easy.
-    frost_harv_factor_rkl = frost_harv_factor_k_l.reindex(yields_rk_mzl.index, axis=0, level=1).stack()
-    seeding_rate_rkl = seeding_rate_k_l.reindex(yields_rk_mzl.index, axis=0, level=1).stack()
-    yields_rkl_mz = yields_rk_mzl.stack(2).mul(frost_harv_factor_rkl, axis=0)
-    yields_rkl_mz = yields_rkl_mz.sub(seeding_rate_rkl,axis=0) #minus seeding rate
-    yields_rkl_mz = yields_rkl_mz.clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0). Note crops that don't produce harvest yield require seed as an input.
+    frost_harv_factor_rkl = frost_harv_factor_k_l.reindex(yields_rk_p7zl.index, axis=0, level=1).stack()
+    seeding_rate_rkl = seeding_rate_k_l.reindex(yields_rk_p7zl.index, axis=0, level=1).stack()
+    yields_rkl_p7z = yields_rk_p7zl.stack(2).mul(frost_harv_factor_rkl, axis=0)
+    yields_rkl_p7z = yields_rkl_p7z.sub(seeding_rate_rkl,axis=0) #minus seeding rate
+    yields_rkl_p7z = yields_rkl_p7z.clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0). Note crops that don't produce harvest yield require seed as an input.
     if for_insurance:
-        return yields_rkl_mz.sum(axis=1, level=1).stack() #sum the m axis. Just want the total yield. M axis is added later for costs.
+        return yields_rkl_p7z.sum(axis=1, level=1).stack() #sum the p7 axis. Just want the total yield. p7 axis is added later for costs.
     else:
         ###yield for pyomo yield param
-        return yields_rkl_mz.stack([1,0])
+        return yields_rkl_p7z.stack([1,0])
 
 def f_grain_pool_proportions():
     '''Calculate the proportion of grain in each pool.
@@ -669,7 +668,7 @@ def f_phase_stubble_cost(r_vals):
     stub_cost=mac.f_stubble_cost_ha()
 
     ##calculate the probability of a rotation phase needing stubble handling
-    base_yields_rkl_z = f_rot_yield(for_stub=True).sum(axis=1,level=1) #sum the m axis. Just want the total yield. M axis is added later for costs.
+    base_yields_rkl_z = f_rot_yield(for_stub=True).sum(axis=1,level=1) #sum the p7 axis. Just want the total yield. p7 axis is added later for costs.
     stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=pinp.crop['start_harvest_crops'].index, dtype=float)*1000  #have to convert to kg to match base yield
     probability_handling_rkl_z = base_yields_rkl_z.div(stub_handling_threshold, axis=0, level=1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
     probability_handling_rl_z = probability_handling_rkl_z.droplevel(1)
@@ -976,33 +975,21 @@ def f1_rot_cost(r_vals):
     phase_stubble_cost, phase_stubble_wc = f_phase_stubble_cost(r_vals)
 
     #note if any array has dtype object then pandas throws error (No axis named 1 for object type Series)
-    cost = pd.concat([fert_cost, nap_fert_cost, chem_cost, seedcost, insurance_cost, phase_stubble_cost],axis=1).sum(axis=1,level=(0,1,2))
-    wc = pd.concat([fert_wc, nap_fert_wc, chem_wc, seedwc, insurance_wc, phase_stubble_wc],axis=1).sum(axis=1,level=(0,1,2))
+    cost_rl_c0p7z = pd.concat([fert_cost, nap_fert_cost, chem_cost, seedcost, insurance_cost, phase_stubble_cost],axis=1).sum(axis=1,level=(0,1,2))
+    wc_rl_c0p7z = pd.concat([fert_wc, nap_fert_wc, chem_wc, seedwc, insurance_wc, phase_stubble_wc],axis=1).sum(axis=1,level=(0,1,2))
 
-    ##add rotation period axis
-    p7_dates_p7z = per.f_season_periods()
-    p7_start_dates_p7z = p7_dates_p7z[0:-1,:]
-    p7_len_p7z = p7_dates_p7z[1:,:] - p7_dates_p7z[0:-1,:]
-
-    alloc_mp7z = rps.f1_rot_period_alloc(p7_start_dates_p7z[na,...], p7_len_p7z[na,...], z_pos=-1)
-    alloc_p7zm = np.moveaxis(alloc_mp7z,source=0, destination=-1) #move axis so m axis is at the end (required for reindeing below)
-    ###convert to df
-    keys_z = zfun.f_keys_z()
-    keys_m = per.f_phase_periods(keys=True)
-    keys_p7 = per.f_season_periods(keys=True)
-    keys_c0 = sinp.general['i_enterprises_c0'][1:2] #take crp slice (keeping the dim so that line below works since it mult index needs iterables)
-    new_index_c0p7zm = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_m])
-    alloc_c0p7zm = pd.Series(alloc_p7zm.ravel(), index=new_index_c0p7zm) #c0 is added as singleton
-
-    ##mul m allocation with cost
-    cost_c0p7zmlr = cost.reindex(new_index_c0p7zm, axis=1).mul(alloc_c0p7zm, axis=1).unstack([1,0])
-    wc_c0p7zmlr = wc.reindex(new_index_c0p7zm, axis=1).mul(alloc_c0p7zm, axis=1).unstack([1,0])
+    ##stack
+    cost_c0p7zlr = cost_rl_c0p7z.unstack([1,0])
+    wc_c0p7zlr = wc_rl_c0p7z.unstack([1,0])
 
     ##create params for v_phase_increment
-    increment_cost_c0p7zlrm = rps.f_v_phase_increment_adj(cost_c0p7zmlr.unstack(3),m_pos=1).stack()
-    increment_wc_c0p7zlrm = rps.f_v_phase_increment_adj(wc_c0p7zmlr.unstack(3),m_pos=1).stack()
+    ## costs for v_phase_increment activities are incurred in the season peirod when the activity is selected
+    ## however the interest is calculated as if the cost was incurred at the normal time (this is because interest
+    ## is calculated for each seperate cost in the functions above).
+    increment_cost_c0zlrp7 = rps.f_v_phase_increment_adj(cost_c0p7zlr.unstack(1),p7_pos=1).stack()
+    increment_wc_c0zlrp7 = rps.f_v_phase_increment_adj(wc_c0p7zlr.unstack(1),p7_pos=1).stack()
 
-    return cost_c0p7zmlr, increment_cost_c0p7zlrm, wc_c0p7zmlr, increment_wc_c0p7zlrm
+    return cost_c0p7zlr, increment_cost_c0zlrp7, wc_c0p7zlr, increment_wc_c0zlrp7
 
 
 #################
@@ -1050,7 +1037,7 @@ def f_sow_prov():
     keys_k = np.asarray(list(sinp.landuse['All']))
     keys_z = zfun.f_keys_z()
     keys_p5 = labour_period_p5z.index[:-1]
-    keys_m = per.f_phase_periods(keys=True)
+    keys_p7 = per.f_season_periods(keys=True)
     dry_sown_landuses = sinp.landuse['dry_sown']
     wet_sown_landuses = sinp.landuse['C'] - dry_sown_landuses #can subtract sets to return differences
 
@@ -1093,14 +1080,14 @@ def f_sow_prov():
     ##combine wet, dry and pas
     period_is_seeding_p5zk = np.minimum(1,period_is_wetseeding_p5z + period_is_dryseeding_p5zk + period_is_passeeding_p5zk)
 
-    ##add m axis - needed so machinery can be linked with phases (machinery just has a p5 axis)
-    alloc_mp5z = rps.f1_rot_period_alloc(labour_period_start_p5z[na,:,:], z_pos=-1)
-    sow_prov_mp5zk = period_is_seeding_p5zk * alloc_mp5z[...,na]
+    ##add p7 axis - needed so machinery can be linked with phases (machinery just has a p5 axis)
+    alloc_p7p5z = zfun.f1_z_period_alloc(labour_period_start_p5z[na,:,:], z_pos=-1)
+    sow_prov_p7p5zk = period_is_seeding_p5zk * alloc_p7p5z[...,na]
 
     ##make df
-    index_mp5zk = pd.MultiIndex.from_product([keys_m,keys_p5,keys_z,keys_k])
-    sow_prov_mp5zk = pd.Series(sow_prov_mp5zk.ravel(), index=index_mp5zk)
-    return sow_prov_mp5zk
+    index_p7p5zk = pd.MultiIndex.from_product([keys_p7,keys_p5,keys_z,keys_k])
+    sow_prov_p7p5zk = pd.Series(sow_prov_p7p5zk.ravel(), index=index_p7p5zk)
+    return sow_prov_p7p5zk
 
 
 #########
@@ -1113,14 +1100,14 @@ def f1_crop_params(params,r_vals):
     propn = f_grain_pool_proportions()
     grain_price, grain_wc = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
-    sow_prov_mp5zk = f_sow_prov()
+    sow_prov_p7p5zk = f_sow_prov()
 
     ##create params
     params['grain_pool_proportions'] = propn.to_dict()
     params['grain_price'] = grain_price.to_dict()
     params['grain_wc'] = grain_wc.to_dict()
     params['phase_sow_req'] = phasesow_req.to_dict()
-    params['sow_prov'] = sow_prov_mp5zk.to_dict()
+    params['sow_prov'] = sow_prov_p7p5zk.to_dict()
     params['rot_cost'] = cost.to_dict()
     params['increment_rot_cost'] = increment_cost.to_dict()
     params['rot_wc'] = wc.to_dict()

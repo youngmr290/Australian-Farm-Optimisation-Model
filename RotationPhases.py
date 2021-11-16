@@ -20,36 +20,7 @@ import Periods as per
 import SeasonalFunctions as zfun
 
 
-def f1_rot_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=0):
-    '''
-    Allocation of item into rotation periods (m).
-
-    - Arrays must be numpy and broadcastable.
-    - M axis must be in pos 0
-    - item start must contain all axes (including z and m)
-
-    :param item_start: datetime64 item dates which are allocated into rotation periods. MUST contain all axis of the final array (singleton is fine)
-    :param item_length: datetime64
-    :param z_pos:
-    :return:
-    '''
-
-    date_phase_periods_mz = per.f_phase_periods()
-    len_m = date_phase_periods_mz.shape[0] - 1  # minus one because end date is not a period
-
-    ##align axes
-    m_pos = -item_start.ndim
-    date_node_metc = fun.f_expand(date_phase_periods_mz, left_pos=z_pos, right_pos2=z_pos, left_pos2=m_pos)
-    shape = (len_m,) + tuple(np.maximum.reduce([date_node_metc.shape[1:], item_start.shape[1:]]))  # create shape which has the max size, this is used for o array
-    alloc_metc = fun.range_allocation_np(date_node_metc, item_start, item_length, opposite=True, shape=shape)
-
-    ##mask z8
-    mask_season_z8 = zfun.f_season_transfer_mask(date_node_metc[:-1,...],z_pos,mask=True) #slice off end date p7
-
-    return alloc_metc * mask_season_z8
-
-
-def f_v_phase_increment_adj(param, m_pos, numpy=False):
+def f_v_phase_increment_adj(param, p7_pos, numpy=False):
     '''
     Adjust v_phase param for v_phase_increment.
 
@@ -62,15 +33,15 @@ def f_v_phase_increment_adj(param, m_pos, numpy=False):
 
     Note dry sown rotations are excluded because they are selected in the final m period and passed to the starting m.
 
-    :param param: parameter with m axis and r axis that is being adjusted.
-    :param m_pos: axis position of m
+    :param param: parameter with p7 axis and r axis that is being adjusted.
+    :param p7_pos: axis position of m
     :param r_pos: for pandas this is r axis level, for numpy this is r axis pos
     :param numpy: Boolean, stating if param is numpy.
     '''
     ##calc cost to date - occurs 0 in the current period because v_phase incurs current period cost.
-    param_increment = np.roll(np.cumsum(param.values, axis=m_pos),1, axis=m_pos) #include .values incase df is passed.
+    param_increment = np.roll(np.cumsum(param.values, axis=p7_pos),1, axis=p7_pos) #include .values incase df is passed.
     slc = [slice(None)] * len(param_increment.shape)
-    slc[m_pos] = slice(0,1)
+    slc[p7_pos] = slice(0,1)
     param_increment[tuple(slc)] = 0
 
     ##add index if pandas
@@ -87,7 +58,7 @@ def f_season_params(params):
     Create params for phase period transfer.
     '''
     ##inputs
-    keys_m = per.f_phase_periods(keys=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_z = zfun.f_keys_z()
     phases_df = sinp.f_phases()
     keys_r = phases_df.index
@@ -98,23 +69,23 @@ def f_season_params(params):
     phase_is_drysown_r = np.any(landuse_r[:,na]==list(dry_sown_landuses), axis=-1)
 
     ##z8z9 transfer
-    start_phase_periods_mz = per.f_phase_periods()[:-1,:] #remove end date of last period
+    start_phase_periods_p7z = per.f_season_periods()[:-1,:] #remove end date of last period
     season_start_z = per.f_season_periods()[0,:] #slice season node to get season start
-    period_is_seasonstart_mz = start_phase_periods_mz==season_start_z
-    mask_provwithinz8z9_mz8z9, mask_provbetweenz8z9_mz8z9, mask_reqwithinz8_mz8, mask_reqbetweenz8_mz8 = zfun.f_season_transfer_mask(
-        start_phase_periods_mz, period_is_seasonstart_pz=period_is_seasonstart_mz, z_pos=-1) #the req masks dont do the correct job for rotation and hence are not used.
+    period_is_seasonstart_p7z = start_phase_periods_p7z==season_start_z
+    mask_provwithinz8z9_p7z8z9, mask_provbetweenz8z9_p7z8z9, mask_reqwithinz8_p7z8, mask_reqbetweenz8_p7z8 = zfun.f_season_transfer_mask(
+        start_phase_periods_p7z, period_is_seasonstart_pz=period_is_seasonstart_p7z, z_pos=-1) #the req masks dont do the correct job for rotation and hence are not used.
     ###for rotation the between and within constraints are acting on different things (history vs the acutal phase) therefore
     ### the req params above dont work because they have been adjusted for season start. so in the following line i make a
     ### new req param which doesnt acount for within or between
-    mask_childz8_mz8 = zfun.f_season_transfer_mask(start_phase_periods_mz,z_pos=-1,mask=True)
+    mask_childz8_p7z8 = zfun.f_season_transfer_mask(start_phase_periods_p7z,z_pos=-1,mask=True)
 
     ##mask phases which transfer in each m
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
         ###if steady state then there is no m transfering
-        mask_phases_rm = np.zeros((len(phases_df),len(keys_m)))
+        mask_phases_rm = np.zeros((len(phases_df),len(keys_p7)))
     else:
         ###if dsp no transfer at the end of yr to the start (different for dry sown landuses since m-1 is essentially the start for them)
-        mask_phases_rm = np.ones((len(phases_df),len(keys_m)))
+        mask_phases_rm = np.ones((len(phases_df),len(keys_p7)))
         mask_phases_rm[:,-1] = phase_is_drysown_r #only dry sown landuse pass from m[-1] to m[0] because m[-1] is the period when dry sown phases are selected.
         mask_phases_rm[:,-2] = np.logical_not(phase_is_drysown_r) #v_phase dry does not provide into m[-1]. if the model wants dry sown phases it can select via v_phase_increment.
 
@@ -130,15 +101,15 @@ def f_season_params(params):
     mask_drystart_z8z9 = mask_drystart_z8z9 * phase_is_drysown_r[:,na,na]
 
     ##build params
-    arrays = [keys_m, keys_z, keys_z]
-    index_mz8z9 = fun.cartesian_product_simple_transpose(arrays)
-    tup_mz8z9 = tuple(map(tuple,index_mz8z9))
+    arrays = [keys_p7, keys_z, keys_z]
+    index_p7z8z9 = fun.cartesian_product_simple_transpose(arrays)
+    tup_p7z8z9 = tuple(map(tuple,index_p7z8z9))
 
-    arrays = [keys_m, keys_z]
-    index_mz = fun.cartesian_product_simple_transpose(arrays)
-    tup_mz = tuple(map(tuple,index_mz))
+    arrays = [keys_p7, keys_z]
+    index_p7z = fun.cartesian_product_simple_transpose(arrays)
+    tup_p7z = tuple(map(tuple,index_p7z))
 
-    arrays = [keys_r, keys_m]
+    arrays = [keys_r, keys_p7]
     index_rm = fun.cartesian_product_simple_transpose(arrays)
     tup_rm = tuple(map(tuple,index_rm))
 
@@ -146,9 +117,9 @@ def f_season_params(params):
     index_rz8z9 = fun.cartesian_product_simple_transpose(arrays)
     tup_rz8z9 = tuple(map(tuple,index_rz8z9))
 
-    params['p_mask_childz_phase'] =dict(zip(tup_mz, mask_childz8_mz8.ravel()*1))
-    params['p_parentz_provwithin_phase'] =dict(zip(tup_mz8z9, mask_provwithinz8z9_mz8z9.ravel()*1))
-    params['p_parentz_provbetween_phase'] =dict(zip(tup_mz8z9, mask_provbetweenz8z9_mz8z9.ravel()*1))
+    params['p_mask_childz_phase'] =dict(zip(tup_p7z, mask_childz8_p7z8.ravel()*1))
+    params['p_parentz_provwithin_phase'] =dict(zip(tup_p7z8z9, mask_provwithinz8z9_p7z8z9.ravel()*1))
+    params['p_parentz_provbetween_phase'] =dict(zip(tup_p7z8z9, mask_provbetweenz8z9_p7z8z9.ravel()*1))
     params['p_mask_phases'] =dict(zip(tup_rm, mask_phases_rm.ravel()*1))
     params['p_dryz_link'] =dict(zip(tup_rz8z9, mask_drynext_z8z9.ravel()*1))
     params['p_dryz_link2'] =dict(zip(tup_rz8z9, mask_drystart_z8z9.ravel()*1))

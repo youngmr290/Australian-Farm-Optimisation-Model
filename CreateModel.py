@@ -105,9 +105,6 @@ def sets(model, nv):
     #rotation #
     ###########
 
-    ##phase periods
-    model.s_phase_periods = Set(initialize=per.f_phase_periods(keys=True),doc='phase nodes')
-
     ##lmus
     lmu_mask = pinp.general['i_lmu_area'] > 0
     model.s_lmus = Set(initialize=pinp.general['i_lmu_idx'][lmu_mask],doc='defined the soil type a given rotation is on')

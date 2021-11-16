@@ -34,33 +34,33 @@ def f1_labcrppyomo_local(params, model):
     model.p_prep_pack = pe.Param(model.s_labperiods, model.s_season_types, initialize=params['prep_labour'], default = 0.0, mutable=False, doc='labour for preparation and packing up for seeding and harv')
 
     model.p_fert_app_hour_tonne = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_labperiods,
-                                           model.s_phase_periods, initialize= params['fert_app_time_t'], default = 0.0,
+                                           model.s_season_periods, initialize= params['fert_app_time_t'], default = 0.0,
                                            mutable=False, doc='time required for fert application per tonne of each fert (filling up and driving to paddock cost)')
  
     model.p_increment_fert_app_hour_tonne = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_labperiods,
-                                           model.s_phase_periods, initialize= params['increment_fert_app_time_t'], default = 0.0,
+                                           model.s_season_periods, initialize= params['increment_fert_app_time_t'], default = 0.0,
                                            mutable=False, doc='time required for fert application per tonne of each fert (filling up and driving to paddock cost)')
 
     model.p_fert_app_hour_ha = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_labperiods,
-                                        model.s_phase_periods, initialize= params['fert_app_time_ha'], default = 0.0,
+                                        model.s_season_periods, initialize= params['fert_app_time_ha'], default = 0.0,
                                         mutable=False, doc='time required for fert application per ha of each fert (driving around paddock cost)')
     
     model.p_increment_fert_app_hour_ha = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_labperiods,
-                                        model.s_phase_periods, initialize= params['increment_fert_app_time_ha'], default = 0.0,
+                                        model.s_season_periods, initialize= params['increment_fert_app_time_ha'], default = 0.0,
                                         mutable=False, doc='time required for fert application per ha of each fert (driving around paddock cost)')
 
     model.p_chem_app_lab = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_labperiods,
-                                    model.s_phase_periods, initialize= params['chem_app_time_ha'], default = 0.0,
+                                    model.s_season_periods, initialize= params['chem_app_time_ha'], default = 0.0,
                                     mutable=False, doc='time required for chem application per ha (hr/ha)')
 
     model.p_increment_chem_app_lab = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_labperiods,
-                                    model.s_phase_periods, initialize= params['increment_chem_app_time_ha'], default = 0.0,
+                                    model.s_season_periods, initialize= params['increment_chem_app_time_ha'], default = 0.0,
                                     mutable=False, doc='time required for chem application per ha (hr/ha)')
 
-    model.p_variable_crop_monitor = pe.Param(model.s_labperiods, model.s_phase_periods, model.s_season_types, model.s_phases,
+    model.p_variable_crop_monitor = pe.Param(model.s_labperiods, model.s_season_periods, model.s_season_types, model.s_phases,
                                              initialize= params['variable_crop_monitor'], default = 0.0, mutable=False, doc='time required for crop monitoring (hr/ha)')
 
-    model.p_increment_variable_crop_monitor = pe.Param(model.s_labperiods, model.s_season_types, model.s_phases, model.s_phase_periods,
+    model.p_increment_variable_crop_monitor = pe.Param(model.s_labperiods, model.s_season_types, model.s_phases, model.s_season_periods,
                                              initialize= params['increment_variable_crop_monitor'], default = 0.0, mutable=False, doc='time required for crop monitoring (hr/ha)')
 
     model.p_fixed_crop_monitor = pe.Param(model.s_labperiods, model.s_season_types, initialize= params['fixed_crop_monitor'], default = 0.0, mutable=False, doc='fixed time required for crop monitoring (hr/period)')
@@ -81,18 +81,18 @@ def f_mach_labour_anyone(model,q,s,p,z):
     * model.p_daily_seed_hours *(1 + model.p_seeding_helper)
     harv_labour = sum(model.v_harv_hours[q,s,z,p,k] * (1 + model.p_harv_helper[k]) for k in model.s_harvcrops)
     prep_labour = model.p_prep_pack[p,z]
-    fert_t_time = sum(model.v_phase_area[q,s,m,z,r,l]*model.p_fert_app_hour_tonne[r,z,l,p,m]
-                      + model.v_phase_increment[q,s,m,z,r,l]*model.p_increment_fert_app_hour_tonne[r,z,l,p,m]
-                      for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
-                      if pe.value(model.p_fert_app_hour_tonne[r,z,l,p,m]) != 0 or pe.value(model.p_increment_fert_app_hour_tonne[r,z,l,p,m]) != 0)
-    fert_ha_time = sum(model.v_phase_area[q,s,m,z,r,l]*model.p_fert_app_hour_ha[r,z,l,p,m]
-                       + model.v_phase_increment[q,s,m,z,r,l]*model.p_increment_fert_app_hour_ha[r,z,l,p,m]
-                       for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
-                       if pe.value(model.p_fert_app_hour_ha[r,z,l,p,m]) != 0 or pe.value(model.p_increment_fert_app_hour_ha[r,z,l,p,m]) != 0)
-    chem_time = sum(model.v_phase_area[q,s,m,z,r,l]*model.p_chem_app_lab[r,z,l,p,m]
-                    + model.v_phase_increment[q,s,m,z,r,l]*model.p_increment_chem_app_lab[r,z,l,p,m]
-                    for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
-                    if pe.value(model.p_chem_app_lab[r,z,l,p,m]) != 0 or pe.value(model.p_increment_chem_app_lab[r,z,l,p,m]) != 0)
+    fert_t_time = sum(model.v_phase_area[q,s,p7,z,r,l]*model.p_fert_app_hour_tonne[r,z,l,p,p7]
+                      + model.v_phase_increment[q,s,p7,z,r,l]*model.p_increment_fert_app_hour_tonne[r,z,l,p,p7]
+                      for r in model.s_phases for l in model.s_lmus for p7 in model.s_season_periods
+                      if pe.value(model.p_fert_app_hour_tonne[r,z,l,p,p7]) != 0 or pe.value(model.p_increment_fert_app_hour_tonne[r,z,l,p,p7]) != 0)
+    fert_ha_time = sum(model.v_phase_area[q,s,p7,z,r,l]*model.p_fert_app_hour_ha[r,z,l,p,p7]
+                       + model.v_phase_increment[q,s,p7,z,r,l]*model.p_increment_fert_app_hour_ha[r,z,l,p,p7]
+                       for r in model.s_phases for l in model.s_lmus for p7 in model.s_season_periods
+                       if pe.value(model.p_fert_app_hour_ha[r,z,l,p,p7]) != 0 or pe.value(model.p_increment_fert_app_hour_ha[r,z,l,p,p7]) != 0)
+    chem_time = sum(model.v_phase_area[q,s,p7,z,r,l]*model.p_chem_app_lab[r,z,l,p,p7]
+                    + model.v_phase_increment[q,s,p7,z,r,l]*model.p_increment_chem_app_lab[r,z,l,p,p7]
+                    for r in model.s_phases for l in model.s_lmus for p7 in model.s_season_periods
+                    if pe.value(model.p_chem_app_lab[r,z,l,p,p7]) != 0 or pe.value(model.p_increment_chem_app_lab[r,z,l,p,p7]) != 0)
     return seed_labour + harv_labour + prep_labour + fert_t_time + fert_ha_time + chem_time
 
 
@@ -105,10 +105,10 @@ def f_mach_labour_perm(model,q,s,p,z):
 
     '''
     fixed_monitor_time = model.p_fixed_crop_monitor[p,z]
-    variable_monitor_time = sum(model.p_variable_crop_monitor[p,m,z,r] * model.v_phase_area[q,s,m,z,r,l]
-                                + model.p_increment_variable_crop_monitor[p,z,r,m] * model.v_phase_increment[q,s,m,z,r,l]
-                                for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
-                                if pe.value(model.p_variable_crop_monitor[p,m,z,r]) != 0 or pe.value(model.p_increment_variable_crop_monitor[p,z,r,m]) != 0)
+    variable_monitor_time = sum(model.p_variable_crop_monitor[p,p7,z,r] * model.v_phase_area[q,s,p7,z,r,l]
+                                + model.p_increment_variable_crop_monitor[p,z,r,p7] * model.v_phase_increment[q,s,p7,z,r,l]
+                                for r in model.s_phases for l in model.s_lmus for p7 in model.s_season_periods
+                                if pe.value(model.p_variable_crop_monitor[p,p7,z,r]) != 0 or pe.value(model.p_increment_variable_crop_monitor[p,z,r,p7]) != 0)
     return variable_monitor_time + fixed_monitor_time
 
 
