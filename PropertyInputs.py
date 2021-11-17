@@ -347,9 +347,9 @@ def f_property_inp_sa():
     duplicate_mask_m = np.logical_not(duplicate_mask_m)
     ###test if any season is identified at the node
     import SeasonalFunctions as zfun #have to import here since zfun imports pinp.
-    date_initiate_z = zfun.f_seasonal_inp(general['i_date_initiate_z'],numpy=True,axis=0)
-    i_date_node_zm = zfun.f_seasonal_inp(general['i_date_node_zm'],numpy=True,axis=0)
-    mask_m = np.any(np.logical_or(date_initiate_z[:,na]==i_date_node_zm, general['i_node_is_fvp']), axis=0)
+    mask_zm = np.logical_or(general['i_date_initiate_z'][:,na]==general['i_date_node_zm'], general['i_node_is_fvp'])
+    mask_zm = zfun.f_seasonal_inp(mask_zm,numpy=True,axis=0)
+    mask_m = np.any(mask_zm, axis=0)
     mask_m = np.logical_and(duplicate_mask_m, mask_m)
     general['i_date_node_zm'] = general['i_date_node_zm'][:,mask_m]
     general['i_node_is_fvp'] = general['i_node_is_fvp'][mask_m]
