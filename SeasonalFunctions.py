@@ -238,7 +238,19 @@ def f1_z_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=-1
     '''
     Allocation of item into season periods (p7).
 
-    Note: cashflow goes through a slightly different function that also calculates interest.
+    Cant be allocated across the season start (length is automatically adjusted in f_range_allocation to stop allocation
+    going from the end of the periods to the start of the periods. This is because gets complicated if it crosses junction)
+    e.g. post harvest jobs must be completed before the next season start.
+    An item can be allocated in to multiple season periods as long as the dv exists in the same multiple season periods
+    e.g. v_phase exists in all children therefore labour requirement can cross nodes.
+
+    Note: Inputs required before season start (e.g. lime) are never applied on the basis of an expected landuse it will
+    only be applied based on actual landuse. Because (i) although in the mind of a farmer these inputs are preseeding
+    the model sees them as inputs at the end of the year (ii) the inputs are directly hooked to the phase selected.
+    If this is a problem the solution is to make the preseeding inputs a desicion variable that allows landuses (you
+    could select another landuse but the cost would be wasted). And season start would need to be prior to decision.
+
+    Note: cashflow goes through a slightly different function that also calculates interest (it then calls this function).
 
     - Arrays must be numpy and broadcastable.
     - p7 axis must be in pos 0

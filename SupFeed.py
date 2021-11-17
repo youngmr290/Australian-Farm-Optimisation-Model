@@ -315,7 +315,7 @@ def f_sup_labour():
 
 def f1_a_p6_p7():
     '''
-    Association between p6 and m. Used to link supplement consumed in each p6 with grain transfer which has m peirods.
+    Association between p6 and p7. Used to link supplement consumed in each p6 with grain transfer which has p7 peirods.
     '''
     start_p6z = per.f_feed_periods()[:-1,:]
     alloc_p7p6z = zfun.f1_z_period_alloc(start_p6z[na,:,:], z_pos=-1)

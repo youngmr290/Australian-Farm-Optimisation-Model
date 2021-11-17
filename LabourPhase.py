@@ -144,7 +144,7 @@ def f_fert_app_time_ha():
     ##add fert for arable area and fert for nonarable area, na_fert doesnt have season axis so need to reindex first
     passes_na = passes_na.unstack().reindex(passes_arable.unstack().index, axis=0, level=0).stack()
     total_passes_rzln = pd.concat([passes_arable, passes_na], axis=1).sum(axis=1, level=0).stack()
-    ##time taken to cover 1ha whilw spreading
+    ##time taken to cover 1ha while spreading
     time_ha_n = mac.time_ha().squeeze()
     ##adjust fert labour across each labour period
     p5_allocation_p5_zn = f_fert_lab_allocation()
