@@ -57,7 +57,7 @@ def f1_labcrppyomo_local(params, model):
                                     model.s_season_periods, initialize= params['increment_chem_app_time_ha'], default = 0.0,
                                     mutable=False, doc='time required for chem application per ha (hr/ha)')
 
-    model.p_variable_crop_monitor = pe.Param(model.s_labperiods, model.s_season_periods, model.s_season_types, model.s_phases,
+    model.p_variable_crop_monitor = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_phases,
                                              initialize= params['variable_crop_monitor'], default = 0.0, mutable=False, doc='time required for crop monitoring (hr/ha)')
 
     model.p_increment_variable_crop_monitor = pe.Param(model.s_labperiods, model.s_season_types, model.s_phases, model.s_season_periods,
@@ -96,7 +96,7 @@ def f_mach_labour_anyone(model,q,s,p,z):
     return seed_labour + harv_labour + prep_labour + fert_t_time + fert_ha_time + chem_time
 
 
-def f_mach_labour_perm(model,q,s,p,z):
+def f_mach_labour_perm(model,q,s,p5,z):
     '''
     Calculate the total labour required by permanent staff for fertilising, spraying, seeding, harvest, preparation,
     packing and monitoring.
@@ -104,11 +104,11 @@ def f_mach_labour_perm(model,q,s,p,z):
     Used in global constraint (con_labour_perm). See CorePyomo
 
     '''
-    fixed_monitor_time = model.p_fixed_crop_monitor[p,z]
-    variable_monitor_time = sum(model.p_variable_crop_monitor[p,p7,z,r] * model.v_phase_area[q,s,p7,z,r,l]
-                                + model.p_increment_variable_crop_monitor[p,z,r,p7] * model.v_phase_increment[q,s,p7,z,r,l]
+    fixed_monitor_time = model.p_fixed_crop_monitor[p5,z]
+    variable_monitor_time = sum(model.p_variable_crop_monitor[p7,p5,z,r] * model.v_phase_area[q,s,p7,z,r,l]
+                                + model.p_increment_variable_crop_monitor[p5,z,r,p7] * model.v_phase_increment[q,s,p7,z,r,l]
                                 for r in model.s_phases for l in model.s_lmus for p7 in model.s_season_periods
-                                if pe.value(model.p_variable_crop_monitor[p,p7,z,r]) != 0 or pe.value(model.p_increment_variable_crop_monitor[p,z,r,p7]) != 0)
+                                if pe.value(model.p_variable_crop_monitor[p7,p5,z,r]) != 0 or pe.value(model.p_increment_variable_crop_monitor[p5,z,r,p7]) != 0)
     return variable_monitor_time + fixed_monitor_time
 
 
