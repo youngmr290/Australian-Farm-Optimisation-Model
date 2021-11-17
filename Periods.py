@@ -107,7 +107,7 @@ def f_p_dates_df():
         #create empty list of dates to be filled by this function
         period_start_dates = []
         #determine the start of the first period, this references feed periods so it has the same yr.
-        start_date_period_0 = pd.to_datetime(f_feed_periods()[0,0]) + relativedelta(day=1,month=1,hour=0, minute=0, second=0, microsecond=0)
+        start_date_period_0 = pinp.general['i_date_node_zm'][0,0]
         #end date of all labour periods, simply one yr after start date.
         date_last_period = start_date_period_0 + relativedelta(years=1)
         #start point for the loop counter.
