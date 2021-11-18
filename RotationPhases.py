@@ -20,7 +20,7 @@ import Periods as per
 import SeasonalFunctions as zfun
 
 
-def f_v_phase_increment_adj(param, p7_pos, z_pos, numpy=False):
+def f_v_phase_increment_adj(param, p7_pos, z_pos, p5_pos=None, numpy=False):
     '''
     Adjust v_phase param for v_phase_increment.
 
@@ -31,13 +31,23 @@ def f_v_phase_increment_adj(param, p7_pos, z_pos, numpy=False):
     incurring any costs. Note: Yield and stubble do not require increment params because it is not possible to harvest a
     rotation before the rotation is selected.
 
-    Note dry sown rotations are excluded because they are selected in the final m period and passed to the starting m.
+    Note labour gets handled slightly different. Labour that occurs in previous labour periods before the season
+        period when v_phase_increment is selected must be completed in the first labour period when the phase is selected.
 
     :param param: numpy array or pandas series - parameter with p7 axis.
-    :param p7_pos: negitive int: axis/level of p7
-    :param z_pos: negitive int: axis/level of z
+    :param p7_pos: negative int: axis/level of p7
+    :param z_pos: negative int: axis/level of z
+    :param p5_pos: optional negative int: axis/level of p5 axis.
     :param numpy: Boolean, stating if param is numpy.
     '''
+    ##get p7 periods into corect shape
+    p7_date_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    if p7_pos > z_pos:
+        p7_date_p7z = np.swapaxes(p7_date_p7z,0,1) #handle if z axis is before p7 axis
+        p7_date_p7zetc = fun.f_expand(p7_date_p7z, left_pos=p7_pos, right_pos2=p7_pos, left_pos2=z_pos)
+    else:
+        p7_date_p7zetc = fun.f_expand(p7_date_p7z, left_pos=z_pos, right_pos2=z_pos, left_pos2=p7_pos)
+
     ##convert pd.Series to numpy
     if not numpy:
         ##store index
@@ -47,15 +57,10 @@ def f_v_phase_increment_adj(param, p7_pos, z_pos, numpy=False):
         param = np.reshape(param.values,reshape_size)
 
     ##uncluster z so that cumsum works correctly (if a z is clustered labour/cost is still needed in that z for the cumsum)
-    maskz8_p7z = zfun.f_season_transfer_mask(per.f_season_periods()[:-1,...],z_pos=-1,mask=True) #slice off end date p7
-    index_z = np.arange(maskz8_p7z.shape[-1])
-    a_zcluster_p7z = np.maximum.accumulate(index_z * maskz8_p7z, axis=-1)
-    if p7_pos > z_pos:
-        a_zcluster_p7z = np.swapaxes(a_zcluster_p7z,0,1) #handle if z axis is before p7 axis
-        a_zcluster = fun.f_expand(a_zcluster_p7z, left_pos=p7_pos, right_pos2=p7_pos, left_pos2=z_pos)
-    else:
-        a_zcluster = fun.f_expand(a_zcluster_p7z, left_pos=z_pos, right_pos2=z_pos, left_pos2=p7_pos)
-    a_zcluster = np.broadcast_to(a_zcluster, param.shape)
+    maskz8_p7z = zfun.f_season_transfer_mask(p7_date_p7zetc,z_pos=z_pos,mask=True)
+    index_zetc = fun.f_expand(np.arange(maskz8_p7z.shape[-1]), z_pos)
+    a_zcluster_p7zetc = np.maximum.accumulate(index_zetc * maskz8_p7z, axis=z_pos)
+    a_zcluster = np.broadcast_to(a_zcluster_p7zetc, param.shape)
     param = np.take_along_axis(param, a_zcluster, axis=z_pos)
 
     ##calc cost to date - occurs 0 in the current period because v_phase incurs current period cost.
@@ -63,6 +68,25 @@ def f_v_phase_increment_adj(param, p7_pos, z_pos, numpy=False):
     slc = [slice(None)] * len(param_increment.shape)
     slc[p7_pos] = slice(0,1)
     param_increment[tuple(slc)] = 0
+
+    ##handle labour period axis if it exists
+    if p5_pos:
+        ##get p5 periods into corect shape
+        p5_date_p5z = per.f_p_dates_df().values[:-1,...]  # slice off end date p5
+        if p5_pos > z_pos:
+            p5_date_p5z = np.swapaxes(p5_date_p5z,0,1)  # handle if z axis is before p7 axis
+            p5_date_p5zetc = fun.f_expand(p5_date_p5z,left_pos=p5_pos,right_pos2=p5_pos,left_pos2=z_pos)
+        else:
+            p5_date_p5zetc = fun.f_expand(p5_date_p5z,left_pos=z_pos,right_pos2=z_pos,left_pos2=p5_pos)
+
+        ###labour period that is start of p7 node
+        p5_is_start_p7_p5p7zetc = p7_date_p7zetc == p5_date_p5zetc
+
+        ###create temp variable which has the total labour for a given p7 for each p5
+        temp_param_increment = np.cumsum(param_increment,axis=p5_pos)
+        ###update only for p5 which are start of p7. This means that any labour prior to the start of the node
+        ### must be completed in the first node when the phase is selected.
+        param_increment = fun.f_update(param_increment, temp_param_increment, p5_is_start_p7_p5p7zetc)
 
     ##add index if pandas
     if not numpy:
