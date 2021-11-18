@@ -509,19 +509,17 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         ##create dict to store grain variables
         grain = {}
         ##prices
-        grains_sale_price_zkg_mc0p7 = r_vals['crop']['grain_price'].stack([3,4]).swaplevel(0,1)
-        grains_buy_price_zkg_mc0p7 = r_vals['sup']['buy_grain_price'].stack([3,4]).swaplevel(0,1)
-        grains_sale_price_zkg_c0p7 = grains_sale_price_zkg_mc0p7.sum(axis=1, level=(1,2))  # sum m
-        grains_buy_price_zkg_c0p7 = grains_buy_price_zkg_mc0p7.sum(axis=1, level=(1,2))  # sum m
+        grains_sale_price_zkg_c0p7 = r_vals['crop']['grain_price'].stack([2,3]).swaplevel(0,1)
+        grains_buy_price_zkg_c0p7 = r_vals['sup']['buy_grain_price'].stack([2,3]).swaplevel(0,1)
 
         ##grain purchased
-        grain_purchased_qsmzkg = f_vars2df(lp_vars,'v_buy_grain')
-        grain_purchased_qszkg = grain_purchased_qsmzkg.sum(level=(0,1,3,4,5))  # sum m
+        grain_purchased_qsp7zkg = f_vars2df(lp_vars,'v_buy_grain')
+        grain_purchased_qszkg = grain_purchased_qsp7zkg.sum(level=(0,1,3,4,5))  # sum p7
         grain_purchased_zkgqs = grain_purchased_qszkg.reorder_levels([2,3,4,0,1]) #change the order so that reindexing works (new levels being added must be at the end)
 
         ##grain sold
-        grain_sold_qsmzkg = f_vars2df(lp_vars,'v_sell_grain')
-        grain_sold_qszkg = grain_sold_qsmzkg.sum(level=(0,1,3,4,5))  # sum m
+        grain_sold_qsp7zkg = f_vars2df(lp_vars,'v_sell_grain')
+        grain_sold_qszkg = grain_sold_qsp7zkg.sum(level=(0,1,3,4,5))  # sum p7
         grain_sold_zkgqs = grain_sold_qszkg.reorder_levels([2,3,4,0,1]) #change the order so that reindexing works (new levels being added must be at the end)
 
         ##grain fed
