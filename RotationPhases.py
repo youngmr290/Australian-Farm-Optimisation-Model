@@ -58,7 +58,7 @@ def f_v_phase_increment_adj(param, p7_pos, z_pos, p5_pos=None, numpy=False):
 
     ##uncluster z so that cumsum works correctly (if a z is clustered labour/cost is still needed in that z for the cumsum)
     maskz8_p7z = zfun.f_season_transfer_mask(p7_date_p7zetc,z_pos=z_pos,mask=True)
-    index_zetc = fun.f_expand(np.arange(maskz8_p7z.shape[-1]), z_pos)
+    index_zetc = fun.f_expand(np.arange(maskz8_p7z.shape[z_pos]), z_pos)
     a_zcluster_p7zetc = np.maximum.accumulate(index_zetc * maskz8_p7z, axis=z_pos)
     a_zcluster = np.broadcast_to(a_zcluster_p7zetc, param.shape)
     param = np.take_along_axis(param, a_zcluster, axis=z_pos)
