@@ -20,7 +20,7 @@ import Periods as per
 import SeasonalFunctions as zfun
 
 
-def f_v_phase_increment_adj(param, p7_pos, numpy=False):
+def f_v_phase_increment_adj(param, p7_pos, z_pos, numpy=False):
     '''
     Adjust v_phase param for v_phase_increment.
 
@@ -33,22 +33,40 @@ def f_v_phase_increment_adj(param, p7_pos, numpy=False):
 
     Note dry sown rotations are excluded because they are selected in the final m period and passed to the starting m.
 
-    :param param: parameter with p7 axis and r axis that is being adjusted.
-    :param p7_pos: axis position of m
-    :param r_pos: for pandas this is r axis level, for numpy this is r axis pos
+    :param param: numpy array or pandas series - parameter with p7 axis.
+    :param p7_pos: negitive int: axis/level of p7
+    :param z_pos: negitive int: axis/level of z
     :param numpy: Boolean, stating if param is numpy.
     '''
+    ##convert pd.Series to numpy
+    if not numpy:
+        ##store index
+        index = param.index
+        ##reshape array to be numpy
+        reshape_size = tuple([len(x) for x in param.index.levels]) # create a tuple with the rights dimensions
+        param = np.reshape(param.values,reshape_size)
+
+    ##uncluster z so that cumsum works correctly (if a z is clustered labour/cost is still needed in that z for the cumsum)
+    maskz8_p7z = zfun.f_season_transfer_mask(per.f_season_periods()[:-1,...],z_pos=-1,mask=True) #slice off end date p7
+    index_z = np.arange(maskz8_p7z.shape[-1])
+    a_zcluster_p7z = np.maximum.accumulate(index_z * maskz8_p7z, axis=-1)
+    if p7_pos > z_pos:
+        a_zcluster_p7z = np.swapaxes(a_zcluster_p7z,0,1) #handle if z axis is before p7 axis
+        a_zcluster = fun.f_expand(a_zcluster_p7z, left_pos=p7_pos, right_pos2=p7_pos, left_pos2=z_pos)
+    else:
+        a_zcluster = fun.f_expand(a_zcluster_p7z, left_pos=z_pos, right_pos2=z_pos, left_pos2=p7_pos)
+    a_zcluster = np.broadcast_to(a_zcluster, param.shape)
+    param = np.take_along_axis(param, a_zcluster, axis=z_pos)
+
     ##calc cost to date - occurs 0 in the current period because v_phase incurs current period cost.
-    param_increment = np.roll(np.cumsum(param.values, axis=p7_pos),1, axis=p7_pos) #include .values incase df is passed.
+    param_increment = np.roll(np.cumsum(param, axis=p7_pos),1, axis=p7_pos)
     slc = [slice(None)] * len(param_increment.shape)
     slc[p7_pos] = slice(0,1)
     param_increment[tuple(slc)] = 0
 
     ##add index if pandas
     if not numpy:
-        index = param.index
-        cols = param.columns
-        param_increment = pd.DataFrame(param_increment, index=index, columns=cols)
+        param_increment = pd.Series(param_increment.ravel(), index=index)
 
     return param_increment
 

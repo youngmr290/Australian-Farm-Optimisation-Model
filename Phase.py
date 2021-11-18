@@ -986,10 +986,10 @@ def f1_rot_cost(r_vals):
     ## costs for v_phase_increment activities are incurred in the season peirod when the activity is selected
     ## however the interest is calculated as if the cost was incurred at the normal time (this is because interest
     ## is calculated for each seperate cost in the functions above).
-    increment_cost_c0zlrp7 = rps.f_v_phase_increment_adj(cost_c0p7zlr.unstack(1),p7_pos=1).stack()
-    increment_wc_c0zlrp7 = rps.f_v_phase_increment_adj(wc_c0p7zlr.unstack(1),p7_pos=1).stack()
+    increment_cost_c0p7zlr = rps.f_v_phase_increment_adj(cost_c0p7zlr,p7_pos=-4,z_pos=-3)
+    increment_wc_c0p7zlr = rps.f_v_phase_increment_adj(wc_c0p7zlr,p7_pos=-4,z_pos=-3)
 
-    return cost_c0p7zlr, increment_cost_c0zlrp7, wc_c0p7zlr, increment_wc_c0zlrp7
+    return cost_c0p7zlr, increment_cost_c0p7zlr, wc_c0p7zlr, increment_wc_c0p7zlr
 
 
 #################

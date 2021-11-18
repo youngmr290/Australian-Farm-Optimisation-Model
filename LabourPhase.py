@@ -152,12 +152,12 @@ def f_fert_app_time_ha():
     time_p7p5_rzln = time_p7p5z_rln.unstack().reorder_levels([0,3,1,2], axis=1)
     fert_app_time_ha_p7p5_rzln = time_p7p5_rzln.mul(total_passes_rzln, axis=1)
     fert_app_time_ha_p7p5_rzl = fert_app_time_ha_p7p5_rzln.sum(axis=1, level=(0,1,2)) #sum fert type
-    fert_app_time_ha_p7_rzlp5 = fert_app_time_ha_p7p5_rzl.unstack()
+    fert_app_time_ha_rzlp5p7 = fert_app_time_ha_p7p5_rzl.unstack([1,0])
 
     ##create params for v_phase_increment
-    increment_fert_app_time_ha_p7_rzlp5 = rps.f_v_phase_increment_adj(fert_app_time_ha_p7_rzlp5,p7_pos=0)
+    increment_fert_app_time_ha_rzlp5p7 = rps.f_v_phase_increment_adj(fert_app_time_ha_rzlp5p7,p7_pos=-1,z_pos=-4)
 
-    return fert_app_time_ha_p7_rzlp5.unstack(), increment_fert_app_time_ha_p7_rzlp5.unstack()
+    return fert_app_time_ha_rzlp5p7, increment_fert_app_time_ha_rzlp5p7
 
 #f=fert_app_time_ha()
 #print(timeit.timeit(fert_app_time_ha,number=20)/20)
@@ -191,12 +191,12 @@ def f_fert_app_time_t():
     time_p7p5_rzln = time_p7p5z_rln.unstack().reorder_levels([0,3,1,2], axis=1)
     fert_app_time_tonne_p7p5_rzln = time_p7p5_rzln.mul(fert_total_rzln, axis=1)
     fert_app_time_tonne_p7p5_rzl = fert_app_time_tonne_p7p5_rzln.sum(axis=1, level=(0,1,2)) #sum fert type
-    fert_app_time_tonne_p7_rzlp5 = fert_app_time_tonne_p7p5_rzl.unstack()
+    fert_app_time_tonne_rzlp5p7 = fert_app_time_tonne_p7p5_rzl.unstack([1,0])
 
     ##create params for v_phase_increment
-    increment_fert_app_time_tonne_p7_rzlp5 = rps.f_v_phase_increment_adj(fert_app_time_tonne_p7_rzlp5,p7_pos=0)
+    increment_fert_app_time_tonne_rzlp5p7 = rps.f_v_phase_increment_adj(fert_app_time_tonne_rzlp5p7,p7_pos=-1,z_pos=-4)
 
-    return fert_app_time_tonne_p7_rzlp5.unstack(), increment_fert_app_time_tonne_p7_rzlp5.unstack()
+    return fert_app_time_tonne_rzlp5p7, increment_fert_app_time_tonne_rzlp5p7
 
 
 #print(fert_app_time_t())
@@ -254,12 +254,12 @@ def f_chem_app_time_ha():
     time_p7p5_rzln = time_p7p5z_rln.unstack().reorder_levels([0,3,1,2], axis=1)
     chem_app_time_p7p5_rzln = time_p7p5_rzln.mul(total_passes_rzln, axis=1)
     chem_app_time_p7p5_rzl = chem_app_time_p7p5_rzln.sum(axis=1, level=(0,1,2)) #sum chem type
-    chem_app_time_p7_rzlp5 = chem_app_time_p7p5_rzl.unstack()
+    chem_app_time_rzlp5p7 = chem_app_time_p7p5_rzl.unstack([1,0])
 
     ##create params for v_phase_increment
-    increment_chem_app_time_p7_rzlp5 = rps.f_v_phase_increment_adj(chem_app_time_p7_rzlp5,p7_pos=0)
+    increment_chem_app_time_rzlp5p7 = rps.f_v_phase_increment_adj(chem_app_time_rzlp5p7,p7_pos=-1,z_pos=-4)
 
-    return chem_app_time_p7_rzlp5.unstack(), increment_chem_app_time_p7_rzlp5.unstack()
+    return chem_app_time_rzlp5p7, increment_chem_app_time_rzlp5p7
 
 
 
@@ -317,10 +317,11 @@ def f_crop_monitoring():
     phases_df.columns = pd.MultiIndex.from_product([phases_df.columns,[''],['']])
     variable_crop_monitor = pd.merge(phases_df, variable_crop_monitor, how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases
     variable_crop_monitor_r_p7p5z = variable_crop_monitor.drop(list(range(sinp.general['phase_len'])), axis=1)
+    variable_crop_monitor_r_p7p5z.columns = cols_p7p5z #need to update cols because merging added levels
     variable_crop_monitor_r_p7p5z.index.name = None #remove index name (it got added because of the merge and causes issues later)
-    variable_crop_monitor_p7p5zr = variable_crop_monitor_r_p7p5z.unstack().dropna()
+    variable_crop_monitor_p7p5zr = variable_crop_monitor_r_p7p5z.unstack().fillna(0) #nan exist because pasture was not included in the merge above
     ###create params for v_phase_increment
-    increment_variable_crop_monitor_p5zrp7 = rps.f_v_phase_increment_adj(variable_crop_monitor_p7p5zr.unstack(0),p7_pos=1).stack()
+    increment_variable_crop_monitor_p7p5zr = rps.f_v_phase_increment_adj(variable_crop_monitor_p7p5zr,p7_pos=-4,z_pos=-2)
 
     ##fixed monitoring
     ###adjust from hrs/week to hrs/period
@@ -329,7 +330,7 @@ def f_crop_monitoring():
     ###convert date range to labour periods
     fixed_crop_monitor_p5z = np.sum(fixed_crop_monitor_d * monitoring_allocation_p5zd, axis=-1) #sum the d axis (monitoring date axis)
     fixed_crop_monitor = pd.DataFrame(fixed_crop_monitor_p5z, index=keys_p5, columns=keys_z)
-    return variable_crop_monitor_p7p5zr, increment_variable_crop_monitor_p5zrp7, fixed_crop_monitor.stack()
+    return variable_crop_monitor_p7p5zr, increment_variable_crop_monitor_p7p5zr, fixed_crop_monitor.stack()
 
 ##collates all the params
 def f1_labcrop_params(params,r_vals):
