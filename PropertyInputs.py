@@ -340,6 +340,7 @@ def f_property_inp_sa():
     rep['i_store_mort'] = fun.f_sa(rep['i_store_mort'], sen.sav['mort_inc'], 5)
 
     ##mask out unrequired nodes dates - nodes are removed if there are double ups or if a season is not identified at the node (and node is not used as fvp)
+    ## has to be here because if affects two inputs so cant put it in f_season_periods.
     ###test for duplicate
     duplicate_mask_m = []
     for m in range(general['i_date_node_zm'].shape[1]):  # maybe there is a way to do this without a loop.
