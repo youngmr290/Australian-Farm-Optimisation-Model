@@ -316,7 +316,10 @@ def f_con_phasesow(model):
         #. wet sown crops are sown after the break of season.
 
     v_seeding_machdays is bound in con_seed_period_days to ensure that the correct days of seeding are provided in
-    each m and p5 period.
+    each p7 and p5 period.
+
+    Note: this is an equals to constraint to stop the model sowing without a landuse so it can get poc and crop
+          grazing (both of those activities are provided by seeding).
     '''
     def sow_link(model,q,s,p7,k,l,z):
         if type(phspy.f_phasesow_req(model,q,s,p7,k,l,z)) == int:  # if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
@@ -324,7 +327,7 @@ def f_con_phasesow(model):
         else:
             return - sum(model.v_contractseeding_ha[q,s,z,p5,k,l] * model.p_contractseeding_occur[p5,z] * model.p_sow_prov[p7,p5,z,k] for p5 in model.s_labperiods) \
                    - sum(model.v_seeding_machdays[q,s,z,p5,k,l] * model.p_seeding_rate[k,l] * model.p_sow_prov[p7,p5,z,k] for p5 in model.s_labperiods) \
-                   + phspy.f_phasesow_req(model,q,s,p7,k,l,z) <= 0
+                   + phspy.f_phasesow_req(model,q,s,p7,k,l,z) == 0
 
     model.con_phasesow = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops,model.s_lmus,model.s_season_types,rule=sow_link,
                                       doc='link between mach sow provide and rotation crop sow require')
