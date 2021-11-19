@@ -43,9 +43,9 @@ def f1_rotationpyomo(params, model):
     model.p_landuse_area = pe.Param(model.s_phases, model.s_landuses, initialize=params['phases_rk'], doc='landuse in each phase')
     model.p_hist_prov = pe.Param(params['hist_prov'].keys(), initialize=params['hist_prov'], default=0, doc='history provided by  each rotation') #use keys instead of sets to reduce size of param
     model.p_hist_req = pe.Param(params['hist_req'].keys(), initialize=params['hist_req'], default=0, doc='history required by  each rotation') #use keys instead of sets to reduce size of param
-    model.p_mask_phases = pe.Param(model.s_phases, model.s_season_periods, initialize=params['p_mask_phases'], doc='mask phases that transfer in each phase period')
-    model.p_dryz_link = pe.Param(model.s_phases, model.s_season_types, model.s_season_types, initialize=params['p_dryz_link'], doc='dry link between seasons (only occurs between m[-1])')
-    model.p_dryz_link2 = pe.Param(model.s_phases, model.s_season_types, model.s_season_types, initialize=params['p_dryz_link2'], doc='dry link between seasons (only occurs between m[-1])')
+    # model.p_mask_phases = pe.Param(model.s_phases, model.s_season_periods, initialize=params['p_mask_phases'], doc='mask phases that transfer in each phase period')
+    # model.p_dryz_link = pe.Param(model.s_phases, model.s_season_types, model.s_season_types, initialize=params['p_dryz_link'], doc='dry link between seasons (only occurs between m[-1])')
+    # model.p_dryz_link2 = pe.Param(model.s_phases, model.s_season_types, model.s_season_types, initialize=params['p_dryz_link2'], doc='dry link between seasons (only occurs between m[-1])')
     model.p_parentz_provwithin_phase = pe.Param(model.s_season_periods, model.s_season_types, model.s_season_types,
                                              initialize=params['p_parentz_provwithin_phase'], default=0.0, mutable=False,
                                              doc='Transfer of z8 dv in the previous phase period to z9 constraint in the current phase period within years')
@@ -61,7 +61,7 @@ def f1_rotationpyomo(params, model):
     f_con_rotation_between(params, model)
     f_con_rotation_within(model)
     f_con_area(model)
-    f_con_dry_link(model)
+    # f_con_dry_link(model)
 
 
 
@@ -75,8 +75,6 @@ def f1_rotationpyomo(params, model):
 ######################
 ##rotation constraints are usually the same each loop. but if the lmu mask changes they need to be built again
 ##thus they are just built each loop. Maybe this could be changed if running lots of rotations.
-
-    #todo i might not need the root hist variable and whatnot with new season structure
 
 def f_con_rotation_between(params, model):
     '''
@@ -119,15 +117,12 @@ def f_con_rotation_within(model):
     earlier selection).
 
     The transfer of the phases selected in the parent weather-year to the child weather-years is achieved in
-    the same manner as the transfers of stock, pasture and cashflow with 4 differences:
+    the same manner as the transfers of stock, pasture and cashflow with 2 differences:
 
         a.	the inclusion of v_phase_increment which allows extra area of a phase to be selected in each node.
         b.	the constraint is equal-to rather than less-than. This is necessary to cover a situation in which the
-            cashflow parameter of v_phase_included is earning money. In this situation the model would be unbounded
+            cashflow parameter of v_phase_increment is earning money. In this situation the model would be unbounded
             with a less-than constraint.
-        c.	the transfer of dry sown phases from parent to child in m[0] is done with a different parameter
-        d.	the parameter p_parentchildz_transfer for m[0] is set to 0 except for passing to the same weather-year.
-            This is so that dry seeding is not transferred from parent to child in the next period.
 
     '''
     def rot_phase_link_within(model,q,s,p7,l,r,z9):
@@ -137,49 +132,49 @@ def f_con_rotation_within(model):
             return model.v_phase_area[q,s,p7,z9,r,l]  \
                    - model.v_phase_increment[q,s,p7,z9,r,l] \
                    - sum(model.v_phase_area[q,s,p7_prev,z8,r,l] * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
-                         for z8 in model.s_season_types) * model.p_mask_phases[r,p7_prev] ==0 #end of the previous yr is controlled by between constraint
+                         for z8 in model.s_season_types) == 0 #end of the previous yr is controlled by between constraint
         else:
             return pe.Constraint.Skip
     model.con_phase_link_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=rot_phase_link_within, doc='rotation phases constraint')
 
 
-def f_con_dry_link(model):
-    '''
-    Link between dry seeding in different breaks.
+# def f_con_dry_link(model):
+#     '''
+#     Link between dry seeding in different breaks.
+#
+#     If dry seeding occurs in a given season it must also occur in all other seasons that have not yet broken.
+#     For example, if dry sowing occurs before the earliest break then at least the same amount must occur in all
+#     other seasons. However, if dry seeding occurs in a season with a medium break it doesn't need to happen in a season
+#     with an early break but it must happen in a season with a later break.
+#
+#     This constraint only occurs for m[-1] because that is the period when dry sowing phases are selected.
+#     This constraint is required because in m[-1] all seasons are identified so nothing forces dry seeding to be
+#     the same across seasons.
+#
+#     '''
+#     #this one forces the current season to have at least as much dry seeding as the previous season
+#     def dry_phase_link1(model,q,s,p7,l,r,z9):
+#         l_p7 = list(model.s_season_periods)
+#         ##only build the constraint for m[-1]
+#         if p7 == l_p7[-1] and any(model.p_dryz_link[r,z8,z9] for z8 in model.s_season_types) and pe.value(model.p_mask_childz_phase[p7,z9]):
+#             return - model.v_phase_increment[q,s,p7,z9,r,l] \
+#                    + sum(model.v_phase_increment[q,s,p7,z8,r,l] * model.p_dryz_link[r,z8,z9]
+#                          for z8 in model.s_season_types) <= 0
+#         else:
+#             return pe.Constraint.Skip
+    # model.con_dry_link1 = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=dry_phase_link1, doc='link dry seeding between season types')
 
-    If dry seeding occurs in a given season it must also occur in all other seasons that have not yet broken.
-    For example, if dry sowing occurs before the earliest break then at least the same amount must occur in all
-    other seasons. However, if dry seeding occurs in a season with a medium break it doesn't need to happen in a season
-    with an early break but it must happen in a season with a later break.
-
-    This constraint only occurs for m[-1] because that is the period when dry sowing phases are selected.
-    This constraint is required because in m[-1] all seasons are identified so nothing forces dry seeding to be
-    the same across seasons.
-
-    '''
-    #this one forces the current season to have at least as much dry seeding as the previous season
-    def dry_phase_link1(model,q,s,p7,l,r,z9):
-        l_p7 = list(model.s_season_periods)
-        ##only build the constraint for m[-1]
-        if p7 == l_p7[-1] and any(model.p_dryz_link[r,z8,z9] for z8 in model.s_season_types) and pe.value(model.p_mask_childz_phase[p7,z9]):
-            return - model.v_phase_increment[q,s,p7,z9,r,l] \
-                   + sum(model.v_phase_increment[q,s,p7,z8,r,l] * model.p_dryz_link[r,z8,z9]
-                         for z8 in model.s_season_types) <= 0
-        else:
-            return pe.Constraint.Skip
-    model.con_dry_link1 = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=dry_phase_link1, doc='link dry seeding between season types')
-
-    #this one forces each season with the same break to have the same amount of dry seeding (by forcing the end to equal the start)
-    def dry_phase_link2(model,q,s,p7,l,r,z9):
-        l_p7 = list(model.s_season_periods)
-        ##only build the constraint for m[-1]
-        if p7 == l_p7[-1] and any(model.p_dryz_link2[r,z8,z9] for z8 in model.s_season_types) and pe.value(model.p_mask_childz_phase[p7,z9]):
-            return - model.v_phase_increment[q,s,p7,z9,r,l] \
-                   + sum(model.v_phase_increment[q,s,p7,z8,r,l] * model.p_dryz_link2[r,z8,z9]
-                         for z8 in model.s_season_types) <= 0
-        else:
-            return pe.Constraint.Skip
-    model.con_dry_link2 = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=dry_phase_link2, doc='link dry seeding between season types')
+    # #this one forces each season with the same break to have the same amount of dry seeding (by forcing the end to equal the start)
+    # def dry_phase_link2(model,q,s,p7,l,r,z9):
+    #     l_p7 = list(model.s_season_periods)
+    #     ##only build the constraint for m[-1]
+    #     if p7 == l_p7[-1] and any(model.p_dryz_link2[r,z8,z9] for z8 in model.s_season_types) and pe.value(model.p_mask_childz_phase[p7,z9]):
+    #         return - model.v_phase_increment[q,s,p7,z9,r,l] \
+    #                + sum(model.v_phase_increment[q,s,p7,z8,r,l] * model.p_dryz_link2[r,z8,z9]
+    #                      for z8 in model.s_season_types) <= 0
+    #     else:
+    #         return pe.Constraint.Skip
+    # model.con_dry_link2 = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=dry_phase_link2, doc='link dry seeding between season types')
 
 
 

@@ -121,26 +121,26 @@ def f_season_params(params):
     ### new req param which doesnt acount for within or between
     mask_childz8_p7z8 = zfun.f_season_transfer_mask(start_phase_periods_p7z,z_pos=-1,mask=True)
 
-    ##mask phases which transfer in each m
-    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
-        ###if steady state then there is no m transfering
-        mask_phases_rm = np.zeros((len(phases_df),len(keys_p7)))
-    else:
-        ###if dsp no transfer at the end of yr to the start (different for dry sown landuses since m-1 is essentially the start for them)
-        mask_phases_rm = np.ones((len(phases_df),len(keys_p7)))
-        mask_phases_rm[:,-1] = phase_is_drysown_r #only dry sown landuse pass from m[-1] to m[0] because m[-1] is the period when dry sown phases are selected.
-        mask_phases_rm[:,-2] = np.logical_not(phase_is_drysown_r) #v_phase dry does not provide into m[-1]. if the model wants dry sown phases it can select via v_phase_increment.
-
-    ##dry seeding link between season - dry seeding must happen in all seasons that brk after the season with dry seeding.
-    ##the same amount of dry seeding must occur for all seasons with the same break therefore the end season passes back to the start for a given brk.
-    ##the param below is used on the require side of phase_increment. It says if you want to dry sow in z0 you must
-    ## dry sow in z1 and if you want to sow in z1 you must dry sow in z2 etc.
-    ## The second part of the mask creation makes it so that the same dry sowing occurs for each season that has the same brk.
-    mask_drynext_z8z9 = index_z[:,na] == index_z-1 #every season must have at least the same amount of dry sowing as the previous season.
-    mask_drystart_z8z9 = (initiating_parent_z != np.roll(initiating_parent_z,-1))[:,na]*(index_z==initiating_parent_z[:,na])#each season with the same brk must have the same amount of dry sowiing.
-    ###only for dry sown phases
-    mask_drynext_z8z9 = mask_drynext_z8z9 * phase_is_drysown_r[:,na,na]
-    mask_drystart_z8z9 = mask_drystart_z8z9 * phase_is_drysown_r[:,na,na]
+    # ##mask phases which transfer in each m
+    # if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
+    #     ###if steady state then there is no m transfering
+    #     mask_phases_rm = np.zeros((len(phases_df),len(keys_p7)))
+    # else:
+    #     ###if dsp no transfer at the end of yr to the start (different for dry sown landuses since m-1 is essentially the start for them)
+    #     mask_phases_rm = np.ones((len(phases_df),len(keys_p7)))
+    #     mask_phases_rm[:,-1] = phase_is_drysown_r #only dry sown landuse pass from m[-1] to m[0] because m[-1] is the period when dry sown phases are selected.
+    #     mask_phases_rm[:,-2] = np.logical_not(phase_is_drysown_r) #v_phase dry does not provide into m[-1]. if the model wants dry sown phases it can select via v_phase_increment.
+    #
+    # ##dry seeding link between season - dry seeding must happen in all seasons that brk after the season with dry seeding.
+    # ##the same amount of dry seeding must occur for all seasons with the same break therefore the end season passes back to the start for a given brk.
+    # ##the param below is used on the require side of phase_increment. It says if you want to dry sow in z0 you must
+    # ## dry sow in z1 and if you want to sow in z1 you must dry sow in z2 etc.
+    # ## The second part of the mask creation makes it so that the same dry sowing occurs for each season that has the same brk.
+    # mask_drynext_z8z9 = index_z[:,na] == index_z-1 #every season must have at least the same amount of dry sowing as the previous season.
+    # mask_drystart_z8z9 = (initiating_parent_z != np.roll(initiating_parent_z,-1))[:,na]*(index_z==initiating_parent_z[:,na])#each season with the same brk must have the same amount of dry sowiing.
+    # ###only for dry sown phases
+    # mask_drynext_z8z9 = mask_drynext_z8z9 * phase_is_drysown_r[:,na,na]
+    # mask_drystart_z8z9 = mask_drystart_z8z9 * phase_is_drysown_r[:,na,na]
 
     ##build params
     arrays = [keys_p7, keys_z, keys_z]
@@ -162,9 +162,9 @@ def f_season_params(params):
     params['p_mask_childz_phase'] =dict(zip(tup_p7z, mask_childz8_p7z8.ravel()*1))
     params['p_parentz_provwithin_phase'] =dict(zip(tup_p7z8z9, mask_provwithinz8z9_p7z8z9.ravel()*1))
     params['p_parentz_provbetween_phase'] =dict(zip(tup_p7z8z9, mask_provbetweenz8z9_p7z8z9.ravel()*1))
-    params['p_mask_phases'] =dict(zip(tup_rm, mask_phases_rm.ravel()*1))
-    params['p_dryz_link'] =dict(zip(tup_rz8z9, mask_drynext_z8z9.ravel()*1))
-    params['p_dryz_link2'] =dict(zip(tup_rz8z9, mask_drystart_z8z9.ravel()*1))
+    # params['p_mask_phases'] =dict(zip(tup_rm, mask_phases_rm.ravel()*1))
+    # params['p_dryz_link'] =dict(zip(tup_rz8z9, mask_drynext_z8z9.ravel()*1))
+    # params['p_dryz_link2'] =dict(zip(tup_rz8z9, mask_drystart_z8z9.ravel()*1))
 
 
 def f_landuses_phases(params,report):
