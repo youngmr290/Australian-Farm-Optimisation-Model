@@ -57,8 +57,9 @@ def f1_cropgrazepyomo_local(params,model):
         #                                  initialize=params['DM_reduction_kp6p5zl'], default=0, mutable=False,
         #                                  doc='Reduction in DM due to sowing timing (late sowing means less growth)')
 
-        model.p_crop_DM_required = pe.Param(model.s_crops, initialize=params['crop_DM_required_k'], default=0, mutable=False,
-                                         doc='FOO required for livestock to consume 1t of crop feed (this accounts for wastage)')
+        model.p_crop_DM_required = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types,
+                                            initialize=params['crop_DM_required_kp6z'], default=0, mutable=False,
+                                            doc='FOO required for livestock to consume 1t of crop feed (this accounts for wastage)')
 
         model.p_transfer_exists = pe.Param(model.s_feed_periods, model.s_season_types,
                                          initialize=params['transfer_exists_p6z'], default=0, mutable=False,
@@ -89,22 +90,29 @@ def f1_cropgrazepyomo_local(params,model):
 
 def f_con_crop_DM_transfer(model):
     '''
-    Transfer FOO from grazing 1ha of crop to the livestock crop consumption activity. DM that is not consumed is
-    transferred into the following feed period (without changing the growth rate of the crop).
+    Links seeding with the ability to graze crops.
+
+    Each period following seeding provide feed (if it is within the crop grazing window) which can be consumed
+    in the given period. DM that is not consumed is transferred into the following feed period (without
+    changing the growth rate of the crop).
 
     Note: there is no corresponding 'between' constraint because there is no carry over across the break.
     '''
     def crop_DM_transfer(model,q,s,k,p6,z9):
         p6s = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6) - 1]  #previous feedperiod - have to convert to a list first because indexing of an ordered set starts at 1
-        return - sum(model.v_contractseeding_ha[q,s,z9,p5,k,l] * model.p_crop_DM_provided[p5,k,p6,z9,l]
-                   for p5 in model.s_labperiods for l in model.s_lmus) \
-               - sum(model.v_seeding_machdays[q,s,z9,p5,k,l] * model.p_seeding_rate[k,l] * model.p_crop_DM_provided[p5,k,p6,z9,l]
-                   for p5 in model.s_labperiods for l in model.s_lmus) \
-               + sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,z9] * model.p_crop_DM_required[k] for f in model.s_feed_pools) \
-                   - sum(model.v_tonnes_crop_transfer[q,s,k,p6s,z8]*1000*model.p_transfer_exists[p6,z8] #meant to be p6 in transfer_exists because that states if crop can be grazing in current p6 (if not then don't transfer last periods dm)
-                         * model.p_parentz_provwithin_fp[p6s,z8,z9] for z8 in model.s_season_types)        \
-                   + model.v_tonnes_crop_transfer[q,s,k,p6,z9]*1000 \
-               <=0
+        if model.p_crop_DM_required[k,p6,z9]!=0:
+            return - sum(model.v_contractseeding_ha[q,s,z9,p5,k,l] * model.p_crop_DM_provided[p5,k,p6,z9,l]
+                       for p5 in model.s_labperiods for l in model.s_lmus) \
+                   - sum(model.v_seeding_machdays[q,s,z9,p5,k,l] * model.p_seeding_rate[k,l] * model.p_crop_DM_provided[p5,k,p6,z9,l]
+                       for p5 in model.s_labperiods for l in model.s_lmus) \
+                   + sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,z9] * model.p_crop_DM_required[k,p6,z9] for f in model.s_feed_pools) \
+                       - sum(model.v_tonnes_crop_transfer[q,s,k,p6s,z8] * 1000 * model.p_transfer_exists[p6s,z8]
+                             * model.p_parentz_provwithin_fp[p6s,z8,z9] for z8 in model.s_season_types)        \
+                       + model.v_tonnes_crop_transfer[q,s,k,p6,z9]*1000 \
+                   <=0
+        else:
+            return pe.Constraint.Skip
+
         # return sum(- model.v_grazecrop_ha[p7,k,z9,l] * model.p_crop_DM_provided[p7,k,p6,z9,l]
         #            for l in model.s_lmus for p7 in model.s_season_periods)    \
         #      + sum(model.v_tonnes_crop_consumed[f,k,p6,z9] * model.p_crop_DM_required[k] for f in model.s_feed_pools) \
