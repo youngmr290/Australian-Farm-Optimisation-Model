@@ -403,23 +403,23 @@ def f_con_grain_transfer(model):
     seeding penalties and grain feed to sheep. Grain fed to the sheep is purchased unless it is produced on farm.
     The net grain is either purchased or sold depending on the final balance.
     '''
-    ##Must pass between m because harvest could be in different m's for different crops and sale/buy timing could
-    ## be in different m to harvest
+    ##Must pass between p7 because harvest could be in different p7's for different crops and sale/buy timing could
+    ## be in different p7 to harvest
 
     ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint.
     def grain_transfer(model,q,s,p7,g,k,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
-        m0 = l_p7[0]
+        p7_start = l_p7[0]
         p7_end = l_p7[-1]
 
         return -phspy.f_rotation_yield(model,q,s,p7,g,k,z9) + macpy.f_late_seed_penalty(model,q,s,p7,g,k,z9) \
                + cgzpy.f_grazecrop_yield_penalty(model,q,s,p7,g,k,z9) \
                + sum(model.v_sup_con[q,s,z9,k,g,f,p6] * model.p_a_p6_p7[p7,p6,z9] * 1000
                      for f in model.s_feed_pools for p6 in model.s_feed_periods) \
-               - model.v_grain_debit[q,s,p7,z9,k,g] * (p7 != p7_end) \
-               + model.v_grain_credit[q,s,p7,z9,k,g] \
-               + sum((model.v_grain_debit[q,s,p7_prev,z8,k,g] * 1000 - model.v_grain_credit[q,s,p7_prev,z8,k,g] * 1000 * (p7 != m0)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
+               - model.v_grain_debit[q,s,p7,z9,k,g] * 1000 * (p7 != p7_end) \
+               + model.v_grain_credit[q,s,p7,z9,k,g] * 1000 \
+               + sum((model.v_grain_debit[q,s,p7_prev,z8,k,g] * 1000 - model.v_grain_credit[q,s,p7_prev,z8,k,g] * 1000 * (p7 != p7_start)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
                      ]   # p7!=p7[0] to stop grain tranfer from last yr to current yr else unbounded solution.
                      for z8 in model.s_season_types) \
                - model.v_buy_grain[q,s,p7,z9,k,g] * model.p_buy_grain_prov[p7,z9] * 1000 + model.v_sell_grain[q,s,p7,z9,k,g] * 1000 <= 0
