@@ -84,9 +84,9 @@ def f_v_phase_increment_adj(param, p7_pos, z_pos, p5_pos=None, numpy=False):
 
         ###create temp variable which has the total labour for a given p7 for each p5
         temp_param_increment = np.cumsum(param_increment,axis=p5_pos)
-        ###update only for p5 which are start of p7. This means that any labour prior to the start of the node
+        ###mask only for p5 which are start of p7. This means that any labour prior to the start of the node
         ### must be completed in the first node when the phase is selected.
-        param_increment = fun.f_update(param_increment, temp_param_increment, p5_is_start_p7_p5p7zetc)
+        param_increment = temp_param_increment * p5_is_start_p7_p5p7zetc
 
     ##add index if pandas
     if not numpy:
