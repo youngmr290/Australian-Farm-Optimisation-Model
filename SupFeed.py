@@ -203,23 +203,42 @@ def f_sup_md_vol():
               so the animals achieve their target weight profile and aren't gaining then losing weight.
     '''
     #todo review the volume of supplementary feed, especially the max RI==1 and non-inclusion of protein supplementation.
+    ##inputs
+    sup_md_vol = uinp.supfeed['sup_md_vol']
+    energy_k = sup_md_vol.loc['energy'].values
+    dry_matter_content_k = sup_md_vol.loc['dry matter content'].values
+    prop_consumed_k = sup_md_vol.loc['prop consumed'].values
+
     ##calc vol
-    sup_md_vol = uinp.supfeed['sup_md_vol']    
     ###convert md to dmd
-    dmd=(sup_md_vol.loc['energy'] / 1000).apply(fsfun.md_to_dmd)
-    ##calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
+    dmd_k = fsfun.md_to_dmd(energy_k/1000)
+    ###calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
-        rq = fsfun.f_rq_cs(dmd, 0)
+        rq_k = fsfun.f_rq_cs(dmd_k, 0)
     ###use max(1,...) to make it the same as MIDAS - this increases lupin vol slightly from what the equation returns
     ###do not calculate ra (relative availability) because assume that supplement has high availability
-    vol_kg = np.maximum(1, 1 / rq)
+    vol_kg_k = np.maximum(1, 1 / rq_k)
     ###convert vol per kg to per tonne fed - have to adjust for the actual dry matter content and wastage
-    vol_tonne = vol_kg * 1000 * sup_md_vol.loc['prop consumed'] * sup_md_vol.loc['dry matter content']
-    vol_tonne = vol_tonne / (1 + sen.sap['pi'])
+    vol_tonne_k = vol_kg_k * 1000 * prop_consumed_k * dry_matter_content_k
+    vol_tonne_k = vol_tonne_k / (1 + sen.sap['pi'])
+
     ##calc ME (note: value in dict is MJ/t of DM, so doesn't need to be multiplied by 1000)
-    md_tonne = sup_md_vol.loc['energy'] * sup_md_vol.loc['prop consumed'] * sup_md_vol.loc['dry matter content']
-    ##load into params dict for pyomo
-    return vol_tonne, md_tonne
+    md_tonne_k = energy_k * prop_consumed_k * dry_matter_content_k
+
+    ##apply season mask
+    date_start_p6z = per.f_feed_periods()[:-1]
+    mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z,z_pos=-1,mask=True)
+    vol_tonne_kp6z = vol_tonne_k[:,na,na] * mask_fp_z8var_p6z
+    md_tonne_kp6z = md_tonne_k[:,na,na] * mask_fp_z8var_p6z
+
+    ##build df
+    keys_z = zfun.f_keys_z()
+    keys_p6 = pinp.period['i_fp_idx']
+    index = pd.MultiIndex.from_product([sup_md_vol.columns, keys_p6, keys_z])
+    vol_tonne_kp6z = pd.Series(vol_tonne_kp6z.ravel(), index=index)
+    md_tonne_kp6z = pd.Series(md_tonne_kp6z.ravel(), index=index)
+
+    return vol_tonne_kp6z, md_tonne_kp6z
     
     
 def f_sup_labour():
@@ -303,6 +322,11 @@ def f_sup_labour():
 
     ##allocate time to labour period for each feed period - get the time taken in each labour period to feed 1t of feed in each feed period
     total_time_p5p6zk = total_time_p5zk[:,na,...] * alloc_p5p6z[...,na]
+
+    ##apply season mask
+    date_start_p6z = per.f_feed_periods()[:-1]
+    mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
+    total_time_p5p6zk = total_time_p5p6zk * mask_fp_z8var_p6z[...,na]
 
     ##build df
     total_time_p5_p6zk = total_time_p5p6zk.reshape(total_time_p5p6zk.shape[0],-1)

@@ -54,10 +54,10 @@ def f1_suppyomo_local(params, model):
     model.p_sup_labour = pe.Param(model.s_labperiods, model.s_feed_periods, model.s_crops, model.s_season_types, initialize=params['sup_labour'], default = 0.0, mutable=True, doc='labour required to feed each sup in each feed period')
     
     ##sup vol
-    model.p_sup_vol = pe.Param(model.s_crops, initialize=params['vol_tonne'] , default = 0.0, doc='vol per tonne of grain fed')
+    model.p_sup_vol = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types, initialize=params['vol_tonne'] , default = 0.0, doc='vol per tonne of grain fed')
     
     ##sup md
-    model.p_sup_md = pe.Param(model.s_crops, initialize=params['md_tonne'] , default = 0.0, doc='md per tonne of grain fed')
+    model.p_sup_md = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types, initialize=params['md_tonne'] , default = 0.0, doc='md per tonne of grain fed')
     
     ##price buy grain
     model.p_buy_grain_price = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['buy_grain_price'], default = 0.0, doc='price to buy grain from neighbour')
@@ -106,7 +106,8 @@ def f_sup_me(model,q,s,p6,f,z):
     Used in global constraint (con_me). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_md[k] for g in model.s_grain_pools for k in model.s_crops)
+    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_md[k,p6,z] for g in model.s_grain_pools for k in model.s_crops
+               if pe.value(model.p_sup_md[k,p6,z])!=0)
 
 def f_sup_vol(model,q,s,p6,f,z):
     '''
@@ -115,7 +116,8 @@ def f_sup_vol(model,q,s,p6,f,z):
     Used in global constraint (con_vol). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_vol[k] for g in model.s_grain_pools for k in model.s_crops)
+    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_vol[k,p6,z] for g in model.s_grain_pools for k in model.s_crops
+               if pe.value(model.p_sup_vol[k,p6,z])!=0)
 
 def f_sup_dep(model,q,s,p7,z):
     '''
