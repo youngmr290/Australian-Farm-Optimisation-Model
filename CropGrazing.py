@@ -63,12 +63,10 @@ def f_cropgraze_DM(total_DM=False):
     The total DM is calculated from the initial DM plus growth minus the consumption. The initial DM is an inputted amount
     which represents germination and first growth over an establishing period. No grazing can occur during the establishing
     period. After the establishing period the crop grows at an inputted rate per day and a proportion of this growth
-    becomes available for consumption. The total DM and the DM available for consumption are calculated assuming that
-    the crop is sown on the first day of seeding however, this may not be the case. To account for this a FOO reduction is
-    included that is linked to the crop sowing activity (see f_DM_reduction_seeding_time). It is not possible to adjust
-    the DM used in the relative availability (volume) calculation. Thus it assumes that seeding occurs on the
-    first day of seeding period (potentially overestimating DM) and the maximum DM is consumed in each
-    period (potentially underestimating DM). These two limitations somewhat balance each other out.
+    becomes available for consumption. Total DM (used to calc relative availability) is calculated assuming that all
+    the crop available for grazing is consumed. Depending on grazing management this may under estimate DM
+    however, crop grazing has high availability at low DM levels (due to upright growth) so this limitation is likely
+    to be minor.
 
     If DM is not consumed in the period it grows it is transferred to the following feed period. Currently, it
     doesn't incur a growth rate (e.g. 1t that isn't consumed in fp0 transfers to 1t in fp1). A possible improvement would
@@ -81,6 +79,11 @@ def f_cropgraze_DM(total_DM=False):
         #. Growth rate is independent of selected grazing management (e.g. if the crop isn't grazed in the
            first period then the subsequent growth rate does not change).
 
+    Both DM parameters are built with a z8z9 axis. This is because provision of crop grazing is hooked up to the
+    seeding activity which is not transferred to future periods and thus doesnt uncluster but seeding provides
+    crop DM in future periods which may be in nodes. Thus a z8z9 axis is required so that seeding in z[0] provides
+    crop grazing in z[1] and other children.
+
     :param total_DM: boolean when set to True calculates the total crop DM used to calculate relative availability.
     '''
     ##read inputs
@@ -92,20 +95,42 @@ def f_cropgraze_DM(total_DM=False):
     date_feed_periods = per.f_feed_periods()
     date_start_p6z = date_feed_periods[:-1]
     date_end_p6z = date_feed_periods[1:]
-    length_p6z = date_end_p6z - date_start_p6z
+    mach_periods = per.f_p_dates_df()
+    date_start_p5z = mach_periods.values[:-1]
+    date_end_p5z = mach_periods.values[1:]
     seeding_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     initial_DM = pinp.cropgraze['i_cropgraze_initial_dm'] #used to calc total DM for relative availability (vol). The initial DM cant be consumed.
-    establishment_days = pinp.cropgraze['i_cropgraze_defer_days'] #days between sowing and grazing
+    establishment_days = np.timedelta64(pinp.cropgraze['i_cropgraze_defer_days'], 'D') #days between sowing and grazing
+    end_establishment_z = seeding_start_z + establishment_days
 
     ##adjust crop growth for lmu (kg/d)
     growth_kp6zl = growth_kp6z[...,na] * growth_lmu_factor_kl[:,na,na,:]
 
     ##calc total dry matter accumulation in each feed period - the duration of growth in each feed period is adjusted to
     # account for the establishment period because the DM available at the end of the establishment period is an input.
-    end_establishment_z = seeding_start_z + establishment_days
-    date_start_adj_p6z = np.maximum(date_start_p6z, end_establishment_z)
-    feed_period_lengths_p6z = np.maximum(0,(date_end_p6z - date_start_adj_p6z).astype('timedelta64[D]').astype('float'))
-    total_dm_growth_kp6zl = growth_kp6zl * feed_period_lengths_p6z[...,na]
+    crop_grazing_start_z = seeding_start_z + establishment_days
+    seed_days_p5z = (date_end_p5z - date_start_p5z).astype('timedelta64[D]').astype(int)
+
+    ##grazing days rectangle component (for p5) and allocation to feed periods (p6)
+    base_p6p5z = (date_end_p6z[:,na,:] - np.maximum(np.maximum(date_end_p5z + establishment_days, crop_grazing_start_z)
+                                                    , date_start_p6z[:,na,:]))/ np.timedelta64(1, 'D')
+    height_p5z = 1
+    grazing_days_rect_p6p5z = np.maximum(0, base_p6p5z * height_p5z)
+
+    ##grazing days triangular component (for p5) and allocation to feed periods (p6)
+    start_p6p5z = np.maximum(date_start_p6z[:,na,:], np.maximum(crop_grazing_start_z, date_start_p5z + establishment_days))
+    end_p6p5z = np.minimum(date_end_p6z[:,na,:], date_end_p5z + establishment_days)
+    base_p6p5z = (end_p6p5z - start_p6p5z)/ np.timedelta64(1, 'D')
+    ###calculated based on seeding 1ha/day then divided by seed_days to scale the height back to 1 day (which is that seeding activity)
+    height_start_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z + establishment_days) - start_p6p5z)/ np.timedelta64(1, 'D')
+                                                    , seed_days_p5z))
+    height_end_p6p5z = np.maximum(0,fun.f_divide(((date_end_p5z + establishment_days) - end_p6p5z)/ np.timedelta64(1, 'D')
+                                                    , seed_days_p5z))
+    grazing_days_tri_p6p5z = np.maximum(0,base_p6p5z * (height_start_p6p5z + height_end_p6p5z) / 2)
+
+    ##reduction in total grazing days due to seeding after the first day
+    total_grazing_days_p6p5z = grazing_days_tri_p6p5z + grazing_days_rect_p6p5z
+    total_dm_growth_kp6p5zl = growth_kp6zl[:,:,na,:,:] * total_grazing_days_p6p5z[...,na]
 
     ##landuse mask - some crops can't be grazed
     ###lmu mask
@@ -113,18 +138,34 @@ def f_cropgraze_DM(total_DM=False):
     ###propn of crop grazing possible for each landuse.
     landuse_grazing_kl = pinp.cropgraze['i_cropgrazing_inc_landuse'][:, lmu_mask]
 
-
     ##season mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
 
     if not total_DM:
         ##calc dry matter available for consumption provided by 1ha of crop
-        crop_DM_provided_kp6zl = total_dm_growth_kp6zl * consumption_factor_p6z[:,:,na]
-        ###add p5 axis so DM can be linked to seeding activity - the later seeding occures the less crop grazing can occur
-        lp_dates_p5z = per.f_p_dates_df()
-        shape_p5p6z = (lp_dates_p5z.shape[0],) + length_p6z.shape
-        alloc_p5p6z = fun.range_allocation_np(lp_dates_p5z.values[:,na,:], date_start_p6z, length_p6z,True,shape=shape_p5p6z)[:-1]
-        crop_DM_provided_p5kp6zl = crop_DM_provided_kp6zl * alloc_p5p6z[:,na,:,:,na]
+        crop_DM_provided_kp6p5zl = total_dm_growth_kp6p5zl * consumption_factor_p6z[:,na,:,na]
+
+        ##season transfer (z8z9) param
+        ##little more complicated because seeding in parent p5 provides into all children p6 so p5 axis is required.
+        ##and cumultive max on p6 (needs to be done after adding p5)
+        #todo this needs to also handle situations where z0 is providing to z2 where z2 is a grandchild.
+
+        # season_start_z = per.f_season_periods()[0,:]  # slice season node to get season start
+        # period_is_seasonstart_p6z = date_start_p6z == season_start_z
+        # mask_p6z8z9= zfun.f_season_transfer_mask(
+        #     date_start_p6z,period_is_seasonstart_pz=period_is_seasonstart_p6z,z_pos=-1)[0] #only want z8z9 mask
+        # ###add p5 - If the seeding period (p5) is before the initiation node then z9 is included with the parent. If equal our after then it is not included
+        # date_initiate_z = zfun.f_seasonal_inp(pinp.general['i_date_initiate_z'],numpy=True,axis=0).astype('datetime64[D]')
+        # p5_prov_p5z9 = date_start_p5z < date_initiate_z
+        # mask_p6z8z9 * p5_prov_p5z9[:,na,na,:]
+
+        #todo cant get the stuff below to work needs p6p5z8z9 axis. and parent needs to provide grandchildren for certain p5 slices.
+        maskz8_p5z = zfun.f_season_transfer_mask(date_start_p5z, z_pos=-1, mask=True)
+        index_z = np.arange(maskz8_p5z.shape[-1])
+        a_zcluster_p5z9 = np.maximum.accumulate(index_z * maskz8_p5z)
+        crop_DM_provided_kp6p5zlz9 = np.take_along_axis(crop_DM_provided_kp6p5zl[...,na], a_zcluster_p5z9[na,na,:,na,na,:], axis=3)
+
+        # a_zcluster_p5z[...,na] == index_z
 
         ##calc mask if crop can be grazed
         grazing_exists_p6z = (consumption_factor_p6z > 0)*1
@@ -140,15 +181,15 @@ def f_cropgraze_DM(total_DM=False):
         transfer_exists_p6z = transfer_exists_p6z * mask_fp_z8var_p6z
         crop_DM_required_kp6z = crop_DM_required_kp6z * mask_fp_z8var_p6z
 
-        return crop_DM_provided_p5kp6zl * landuse_grazing_kl[:,na,na,:], crop_DM_required_kp6z, transfer_exists_p6z
+        return crop_DM_provided_p5kp6zl * landuse_grazing_kl[:,na,na,na,:], crop_DM_required_kp6z, transfer_exists_p6z
 
     else:
         ##crop foo mid way through feed period after consumption - used to calc vol in the next function.
         ##DM = initial DM plus cumulative sum of DM in previous periods minus DM consumed. Minus half the DM in the current period to get the DM in the middle of the period.
         initial_DM_p6z = initial_DM * (end_establishment_z <= date_end_p6z)
-        crop_foo_kp6zl =  initial_DM_p6z[...,na] + np.cumsum(total_dm_growth_kp6zl * (1-consumption_factor_p6z[:,:,na])
-                                                            , axis=1) - total_dm_growth_kp6zl/2 * (1-consumption_factor_p6z[:,:,na])
-        return crop_foo_kp6zl * landuse_grazing_kl[:,na,na,:]
+        crop_foo_kp6p5zl =  initial_DM_p6z[:,na,:,na] + np.cumsum(total_dm_growth_kp6p5zl * (1-consumption_factor_p6z[:,na,:,na])
+                                                            , axis=1) - total_dm_growth_kp6p5zl/2 * (1-consumption_factor_p6z[:,na,:,na])
+        return crop_foo_kp6p5zl * landuse_grazing_kl[:,na,na,na,:]
 
 # def f_DM_reduction_seeding_time():
 #     '''
