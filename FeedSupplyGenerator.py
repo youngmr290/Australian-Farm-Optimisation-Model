@@ -270,6 +270,7 @@ def feed_generator():
     # ###apply association - give feedsupply singleton n axis and 81 slices in w axis
     # feedsupplyw_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg1,a_n_pa1e1b1nwzida0e0b0xyg1,axis=n_pos)
 
+    period_within_junction_n_pa1e1b1nwzida0e0b0xyg = np.array([False])
 
     ####################################
     ### initialise arrays for sim loop  # axis names not always track from now on because they change between p=0 and p=1
@@ -331,7 +332,7 @@ def feed_generator():
         ##feedsupply - calculated after pi because pi required for intake_s
         foo_dams, hf_dams, dmd_dams, intake_s_dams, md_herb_dams  \
             = sfun.f1_feedsupply(feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p] , paststd_foo_pa1e1b1j0wzida0e0b0xyg[p]
-                                , paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p], paststd_hf_pa1e1b1j0wzida0e0b0xyg[p], pi_dams)
+                                , paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p], paststd_hf_pa1e1b1j0wzida0e0b0xyg[p], pi_dams, period_within_junction_n_pa1e1b1nwzida0e0b0xyg)
 
         ##relative availability
         eqn_group = 5
