@@ -2130,7 +2130,9 @@ def generator(params,r_vals,nv,plots = False):
     feedsupplyw_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg3, a_n_pa1e1b1nwzida0e0b0xyg3, axis=n_pos)
 
 
-
+    #######################
+    #start generator loops#
+    #######################
     ##Start the LTW loop here so that the arrays are reinitialised from the inputs
     ### set the LTW adjustments to zero for the first loop. Sires do not have a LTW adjust because they are born off farm
     sfw_ltwadj_g0 = 1

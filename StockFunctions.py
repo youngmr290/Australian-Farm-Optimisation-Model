@@ -1452,13 +1452,13 @@ def f1_season_wa(numbers, var, season, mask_min_lw_z, period_is_startseason):
     Don't need to worry about mortality in the different slices because this is not to do with condensing (in condensing we take the weights of animals with less than 10% mort).
     '''
     temporary = fun.f_weighted_average(var,numbers,season,keepdims=True, non_zero=True)  # gets the weighted average of production in the different seasons
-    ###adjust production for min lw: the w slices with the minimum lw get assigned the production associated with the animal from the season with the lightest animal (this is so the light animals in the poor seasons are not disregarded when distributing in PP).
-    ###use masked array to average the production from the z slices with the lightest animal (this is required in case multiple z slices have the same weight animals)
+    ##adjust production for min lw: the w slices with the minimum lw get assigned the production associated with the animal from the season with the lightest animal (this is so the light animals in the poor seasons are not disregarded when distributing in PP).
+    ##use masked array to average the production from the z slices with the lightest animal (this is required in case multiple z slices have the same weight animals)
     masked_var = np.ma.masked_array(var,np.logical_not(mask_min_lw_z))
     mean_var = np.mean(masked_var ,axis=season,keepdims=True) #take the mean in case multiple season slices have the same weight light animal.
     temporary[np.any(mask_min_lw_z,axis=season, keepdims=True)] = mean_var[np.any(mask_min_lw_z,axis=season, keepdims=True)]
 
-    ###Set values where it is beginning of FVP
+    ##Update values if it is start of season
     var = fun.f_update(var,temporary,period_is_startseason)
     return var
 
@@ -1581,7 +1581,7 @@ def f1_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason
     ##a) reallocate for season type
     if np.any(period_is_startseason):
         temporary = np.sum(numbers * season_propn_z, axis = season_tup, keepdims=True) #Calculate temporary values as if period_is_break
-        numbers = fun.f_update(numbers, temporary, period_is_startseason)  #Set values where it is beginning of FVP
+        numbers = fun.f_update(numbers, temporary, period_is_startseason)  #Set values where it is beginning of season
     ##b)things for dams - prejoining and moving between classes
     if group==1 and np.any(period_is_prejoin):
         ##d) new repro cycle (prejoining)
