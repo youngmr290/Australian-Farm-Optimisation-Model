@@ -318,6 +318,12 @@ def f_con_phasesow(model):
     v_seeding_machdays is bound in con_seed_period_days to ensure that the correct days of seeding are provided in
     each p7 and p5 period.
 
+    Notes:
+
+        #. The requirement for seeding is based on v_phase_increment rather than v_phase_area
+        #. a phase can only be sown in the phase_period for which the phase_increment is selected. If there is
+           insufficient seeding capacity then the selection of v_phase_increment must be made in a later phase_period.
+
     Note: this is an equals to constraint to stop the model sowing without a landuse so it can get poc and crop
           grazing (both of those activities are provided by seeding).
     '''

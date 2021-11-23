@@ -1,6 +1,8 @@
 """
 author: young
 
+.. _RotGeneration module:
+
 Background
 ----------
 
