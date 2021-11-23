@@ -588,7 +588,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     ### adjust foo and calc hf
     pasture_stage_p6zt = i_pasture_stage_p6z[...,na]
     dry_foo_dp6zt, hf = fsfun.f_foo_convert(cu3, cu4, dry_foo_dp6zt, pasture_stage_p6zt, i_legume_zt, z_pos=-2)
-    ### calc relative availability - note that the equation system used is the one selected for dams in p1
+    ### calc relative availability - note that the equation system used is the one selected for dams in p=0
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
         dry_ri_availability_dp6zt = fsfun.f_ra_cs(dry_foo_dp6zt, hf)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used
