@@ -6783,677 +6783,280 @@ def generator(params,r_vals,nv,plots = False):
     params['k5_idx_offs'] = keys_k5
     params['y_idx_offs'] = keys_y3
     params['x_idx_offs'] = keys_x
-    ##make param indexs
-    ###k2tvanwziyg1g0p8 - nsire
-    arrays = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g0, keys_p8]
-    index_k2tvanwziyg1g0p8 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###zg0p8 - nsire
-    arrays = [keys_z, keys_g0, keys_p8]
-    index_zg0p8 = fun.cartesian_product_simple_transpose(arrays)
+    ##infrastructure
+    arrays_h1c0p7z = [keys_h1, keys_c0, keys_p7, keys_z]
 
-    # ###k5tvanwidxyg1w9i9 - npw
-    # arrays = [keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
-    # index_k5tva1nw8idxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
+    ##sire related
+    ###nsire prov
+    arrays_zg0p8 = [keys_z, keys_g0, keys_p8]
+    ###nsire req
+    arrays_k2tvanwziyg1g0p8 = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g0, keys_p8]
 
-    ###k3txg - npw req
-    arrays = [keys_k3, keys_t2, keys_x, keys_g2]
-    index_k3txg = fun.cartesian_product_simple_transpose(arrays)
+    ##prog related
+    ###npw req
+    arrays_k3txg = [keys_k3, keys_t2, keys_x, keys_g2]
+    ###npw
+    arrays_k3k5tva1nw8zixyg1w9i9 = [keys_k3,keys_k5,keys_t1,keys_v1,keys_a,keys_n1,keys_lw1,keys_z,keys_i,keys_x,
+                                    keys_y1,keys_g1,keys_lw_prog,keys_i]
+    ###prog to dams req
+    arrays_k2k3k5tw8ziyg1g9w9 = [keys_k2, keys_k3, keys_k5, keys_t1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]
+    ###prog to dams prov
+    arrays_k3k5tw8zia0xyg2g9w9 = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_y1, keys_g2, keys_g1, keys_lw1]
+    ###prog to offs prov
+    arrays_k3k5tw8ziaxyg2w9 = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_y1, keys_g3, keys_lw3]
+    ###prog to offs req
+    arrays_k3vw8zixg3w9 = [keys_k3, keys_v3, keys_lw3, keys_z, keys_i, keys_x, keys_g3, keys_lw3]
 
-    ###k3tvw8ziaxyg2g9w9 - prog to dams prov
-    arrays = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_y1, keys_g2, keys_g1, keys_lw1]
-    index_k3k5tw8zia0xyg2g9w9 = fun.cartesian_product_simple_transpose(arrays)
+    ##dams numbers related
+    ###numbers req dams
+    arrays_k2k2tva1nw8ziyg1g9w9 = [keys_k2,keys_k2,keys_t1,keys_v1,keys_a,keys_n1,keys_lw1,keys_z,keys_i,keys_y1,
+                                   keys_g1,keys_g1,keys_lw1]
+    ###numbers dams prov
+    arrays_k2k2tvanwziyg1g9w9 = [keys_k2,keys_k2,keys_t1,keys_v1,keys_a,keys_n1,keys_lw1,keys_z,keys_i,keys_y1,keys_g1,
+                                keys_g1,keys_lw1]
 
-    ###k3tvw8zidyg2w9 - prog to offs prov
-    arrays = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_y1, keys_g3, keys_lw3]
-    index_k3k5tw8ziaxyg2w9 = fun.cartesian_product_simple_transpose(arrays)
-
-    # ###k3k5tva1w8idyg1g9w9 - prog to dams req
-    # arrays = [keys_k2, keys_k3, keys_k5, keys_t1, keys_lw1, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]
-    # index_k2k3k5tw8iyg1g9w9 = fun.cartesian_product_simple_transpose(arrays)
-
-
-    ###vw8ixw9 - prog to offs req
-    arrays = [keys_k3, keys_v3, keys_lw3, keys_z, keys_i, keys_x, keys_g3, keys_lw3]
-    index_k3vw8zixg3w9 = fun.cartesian_product_simple_transpose(arrays)
-    # arrays = [keys_v3, keys_lw3, keys_i, keys_x, keys_lw3]
-    # index_vw8ixw9 = fun.cartesian_product_simple_transpose(arrays)
-
-    ##k2k2tvanwiyg1g9w9 - numbers dams
-    # arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]
-    # index_k2k2tvanwiyg1g9w = fun.cartesian_product_simple_transpose(arrays)
-
-    ###k3k5tvnwziayg3w9 - numbers offs
-    arrays = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3, keys_lw3]
-    index_k3k5tvnw8ziaxyg3w9 = fun.cartesian_product_simple_transpose(arrays)
+    ##offs related
+    ###numbers prov offs
+    arrays_k3k5tvnw8ziaxyg3w9 = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3, keys_lw3]
     ###k3k5wixg3w9 - numbers req offs (doesnt have many active axis)
-    arrays = [keys_k3, keys_k5, keys_v3, keys_lw3, keys_z, keys_i, keys_x, keys_g3, keys_lw3]
-    index_k3k5vw8zixg3w9 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k3k5vw8zixg3w9 = [keys_k3, keys_k5, keys_v3, keys_lw3, keys_z, keys_i, keys_x, keys_g3, keys_lw3]
 
-    ###p6fzg0 - mei sire
-    arrays = [keys_p6, keys_f, keys_z, keys_g0]
-    index_p6fzg0 = fun.cartesian_product_simple_transpose(arrays)
-    ###k2p6ftva1nw8iyg1 - mei dams
-    arrays = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    index_k2p6ftva1nwziyg1 = fun.cartesian_product_simple_transpose(arrays)
-    ###k3k5p6ftvnw8iaxyg3 - mei offs
-    arrays = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
-    index_k3k5p6ftvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+    ##mei and pi
+    ###mei & pi sire
+    arrays_p6fzg0 = [keys_p6, keys_f, keys_z, keys_g0]
+    ###mei & pi dams
+    arrays_k2p6ftva1nwziyg1 = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    ###mei & pi offs
+    arrays_k3k5p6ftvnwziaxyg3 = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     ###p6z - winter grazed propn
-    arrays = [keys_p6, keys_z]
-    index_p6z = fun.cartesian_product_simple_transpose(arrays)
+    arrays_p6z = [keys_p6, keys_z]
     ###p6zg0 - dse sire
-    arrays = [keys_p6, keys_z, keys_g0]
-    index_p6zg0 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_p6zg0 = [keys_p6, keys_z, keys_g0]
     ###k2p6tva1nwziyg1 - dse dams
-    arrays = [keys_k2, keys_p6, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    index_k2p6tva1nwziyg1 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k2p6tva1nwziyg1 = [keys_k2, keys_p6, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     ###k3k5p6tvnwziaxyg3 - dse offs
-    arrays = [keys_k3, keys_k5, keys_p6, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
-    index_k3k5p6tvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k3k5p6tvnwziaxyg3 = [keys_k3, keys_k5, keys_p6, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     ###c0p7zg0 - cashflow sire
-    arrays = [keys_c0, keys_p7, keys_z, keys_g0]
-    index_c0p7zg0 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_c0p7zg0 = [keys_c0, keys_p7, keys_z, keys_g0]
     ###k2c0p7tvanwziyg1 - cashflow dams
-    arrays = [keys_k2, keys_c0, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    index_k2c0p7tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k2c0p7tvanwziyg1 = [keys_k2, keys_c0, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     ###k3k5c0p7twziaxg2 - cashflow prog
-    arrays = [keys_k3, keys_k5, keys_c0, keys_p7, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_g2]
-    index_k3k5c0p7twzia0xg2 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k3k5c0p7twzia0xg2 = [keys_k3, keys_k5, keys_c0, keys_p7, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_g2]
     ###k3k5c0p7tvnwziaxyg3 - cashflow offs
-    arrays = [keys_k3, keys_k5, keys_c0, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
-    index_k3k5c0p7tvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k3k5c0p7tvnwziaxyg3 = [keys_k3, keys_k5, keys_c0, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     ###p7zg0 - asset sire
-    arrays = [keys_p7, keys_z, keys_g0]
-    index_p7zg0 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_p7zg0 = [keys_p7, keys_z, keys_g0]
     ###k2tp7vanwziyg1 - asset dams
-    arrays = [keys_k2, keys_t1, keys_p7, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    index_k2tp7vanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k2tp7vanwziyg1 = [keys_k2, keys_t1, keys_p7, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     ###k3k5tp7vnwziaxyg3 - asset offs
-    arrays = [keys_k3, keys_k5, keys_t3, keys_p7, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
-    index_k3k5tp7vnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k3k5tp7vnwziaxyg3 = [keys_k3, keys_k5, keys_t3, keys_p7, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     ###p5zg0 - labour sire
-    arrays = [keys_p5, keys_z, keys_g0]
-    index_p5zg0 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_p5zg0 = [keys_p5, keys_z, keys_g0]
     ###k2p5tvanwziyg1 - labour dams
-    arrays = [keys_k2, keys_p5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    index_k2p5tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k2p5tvanwziyg1 = [keys_k2, keys_p5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     ###k3k5p5tvnwziaxyg3 - labour offs
-    arrays = [keys_k3, keys_k5, keys_p5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
-    index_k3k5p5tvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k3k5p5tvnwziaxyg3 = [keys_k3, keys_k5, keys_p5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     ###h1g0 - infrastructure dams
-    arrays = [keys_h1, keys_z, keys_g0]
-    index_h1zg0 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_h1zg0 = [keys_h1, keys_z, keys_g0]
     ###k2h1tvanwziyg1 - infrastructure dams
-    arrays = [keys_k2, keys_h1, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    index_k2h1tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k2h1tvanwziyg1 = [keys_k2, keys_h1, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     ###k3k5h1tvnwziaxyg3 - infrastructure offs
-    arrays = [keys_k3, keys_k5, keys_h1, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
-    index_k3k5h1tvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
-
-    ###h1c - infrastructure
-    arrays = [keys_h1, keys_c0, keys_p7, keys_z]
-    index_h1c0p7z = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k3k5h1tvnwziaxyg3 = [keys_k3, keys_k5, keys_h1, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     ###z8z9 - season req numbers transfer
-    arrays = [keys_z, keys_z]
-    index_z8z9 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_z8z9 = [keys_z, keys_z]
     ###k2vz8g1z9 - season transfer dams
-    arrays = [keys_k2, keys_v1, keys_z, keys_g1, keys_z]
-    index_k2vz8g1z9 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k2vz8g1z9 = [keys_k2, keys_v1, keys_z, keys_g1, keys_z]
     ###k2vz8g1 - season transfer dams (req)
-    arrays = [keys_k2, keys_v1, keys_z, keys_g1]
-    index_k2vz8g1 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k2vz8g1 = [keys_k2, keys_v1, keys_z, keys_g1]
     ###k3vz8xg3z9 - season transfer offs
-    arrays = [keys_k3, keys_v3, keys_z, keys_x, keys_g3, keys_z]
-    index_k3vz8xg3z9 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k3vz8xg3z9 = [keys_k3, keys_v3, keys_z, keys_x, keys_g3, keys_z]
     ###k3vz8xg3 - season transfer offs (req)
-    arrays = [keys_k3, keys_v3, keys_z, keys_x, keys_g3]
-    index_k3vz8xg3 = fun.cartesian_product_simple_transpose(arrays)
+    arrays_k3vz8xg3 = [keys_k3, keys_v3, keys_z, keys_x, keys_g3]
 
 
     ################
     #create params #
     ################
-    '''
-    ravel and zip params with keys. This step removes 0's first using a mask because this saves considerable time.
-    note: need to do the tups each time even if same keys because the mask may be different
-    
-    For sire collapse the z axis by taking wa (because we are assuming that sire management is the same across seasons)
-    '''
 
-    ##non seasonal
+    ##infra r&m cost
+    params['p_rm_stockinfra_var'] = fun.f1_make_pyomo_dict(rm_stockinfra_var_h1c0p7z, arrays_h1c0p7z)
+    params['p_rm_stockinfra_fix'] = fun.f1_make_pyomo_dict(rm_stockinfra_fix_h1c0p7z, arrays_h1c0p7z)
 
-    ###npw required by prog activity
-    mask=numbers_prog_req_k3k5tva1e1b1nwzida0e0b0xyg2w9!=0
-    npw_k3txg = numbers_prog_req_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    mask=mask.ravel()
-    index_cut_k3txg=index_k3txg[mask,:]
-    tup_k3txg = tuple(map(tuple, index_cut_k3txg))
-    params['p_npw_req_prog'] =dict(zip(tup_k3txg, npw_k3txg))
-
-    ###infra r&m cost
-    tup_h1c0p7z = tuple(map(tuple,index_h1c0p7z))
-    params['p_rm_stockinfra_var'] = dict(zip(tup_h1c0p7z, rm_stockinfra_var_h1c0p7z.ravel()))
-    params['p_rm_stockinfra_fix'] = dict(zip(tup_h1c0p7z,rm_stockinfra_fix_h1c0p7z.ravel()))
-
-    ###asset value infra - all in the last season period (doesnt really matter where since it is transferred between each season period)
+    ##asset value infra - all in the last season period (doesnt really matter where since it is transferred between each season period)
     keys_p7_end = keys_p7[-1:]
-    index_p7h1 = fun.cartesian_product_simple_transpose([keys_p7_end,keys_h1])
-    tup_p7h1 = tuple(map(tuple,index_p7h1))
-    params['p_infra'] = dict(zip(tup_p7h1, assetvalue_infra_h1))
+    arrays_p7h1 = [keys_p7_end,keys_h1]
+    params['p_infra'] = fun.f1_make_pyomo_dict(assetvalue_infra_h1, arrays_p7h1)
 
 
-    ##seasonal
-    ###nsire_sire
-    mask = numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 != 0
-    nsire_zg0p8 = numbers_startp8_va1e1b1nwzida0e0b0xyg0p8[mask]  # applying the mask does the raveling and squeezing of singleton axis
-    mask = mask.ravel()
-    index_cut_zg0p8 = index_zg0p8[mask,:]
-    tup_zg0p8 = tuple(map(tuple,index_cut_zg0p8))
-    params['p_nsire_prov_sire'] = dict(zip(tup_zg0p8,nsire_zg0p8))
-
+    ##sire related
+    ###sires provided
+    params['p_nsire_prov_sire'] = fun.f1_make_pyomo_dict(numbers_startp8_va1e1b1nwzida0e0b0xyg0p8, arrays_zg0p8)
     ###nsire_dams
-    mask=nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8!=0
-    nsire_k2tva1nwziyg1g0p8 = nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8[mask] #applying the mask does the raveling and squeezing of singleton axis
-    mask=mask.ravel()
-    index_cut_k2tvanwziyg1g0p8=index_k2tvanwziyg1g0p8[mask,:]
-    tup_k2tvanwziyg1g0p8 = tuple(map(tuple, index_cut_k2tvanwziyg1g0p8))
-    params['p_nsire_req_dams'] =dict(zip(tup_k2tvanwziyg1g0p8, nsire_k2tva1nwziyg1g0p8))
+    params['p_nsire_req_dams'] = fun.f1_make_pyomo_dict(nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8, arrays_k2tvanwziyg1g0p8)
 
+    ##prog related
+    ###npw required by prog activity
+    params['p_npw_req_prog'] = fun.f1_make_pyomo_dict(numbers_prog_req_k3k5tva1e1b1nwzida0e0b0xyg2w9, arrays_k3txg)
     ###number prog weaned
-    # mask=npw_k5tva1e1b1nwzida0e0b0xyg1w9i9!=0
-    # npw_k5tva1nw8zidxyg1w9i9 = npw_k5tva1e1b1nwzida0e0b0xyg1w9i9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    # mask=mask.ravel()
-    # index_cut_k5tva1nw8zidxyg1w9i9=index_k5tva1nw8zidxyg1w9i9[mask,:]
-    # tup_k5tva1nw8zidxyg1w9i9 = tuple(map(tuple, index_cut_k5tva1nw8zidxyg1w9i9))
-    # params['p_npw_dams'] =dict(zip(tup_k5tva1nw8zidxyg1w9i9, npw_k5tva1nw8zidxyg1w9i9))
-    npw_k3k5tva1nw8zixyg1w9i9 = np.array([],dtype=dtype)
-    index_cut_k3k5tva1nw8zixyg1w9i9 = np.array([])
-    for w in range(len(keys_lw1)):
-        mask=npw_k3k5tva1e1b1nwzida0e0b0xyg1w9i9[:,:,:,:,:,:,:,:,w,...]!=0
-        temp_npw_k3k5tva1e1b1nzida0e0b0xyg1w9i9 = npw_k3k5tva1e1b1nwzida0e0b0xyg1w9i9[:,:,:,:,:,:,:,:,w,...]
-        npw_k3k5tva1nw8zixyg1w9i9 = np.concatenate([npw_k3k5tva1nw8zixyg1w9i9,temp_npw_k3k5tva1e1b1nzida0e0b0xyg1w9i9[mask]],0).astype(dtype) #applying the mask does the raveling and squeezing of singleton axis
-        mask=mask.ravel()
-        arrays = [keys_k3, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1[w:w+1], keys_z, keys_i, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
-        index_k3k5tva1nw8zixyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
-        index_cut_k3k5tva1nw8zixyg1w9i9 = np.vstack([index_cut_k3k5tva1nw8zixyg1w9i9,index_k3k5tva1nw8zixyg1w9i9[mask,:]]) if index_cut_k3k5tva1nw8zixyg1w9i9.size else index_k3k5tva1nw8zixyg1w9i9[mask,:]
-    tup_k3k5tva1nw8zixyg1w9i9 = tuple(map(tuple, index_cut_k3k5tva1nw8zixyg1w9i9))
-    params['p_npw_dams'] =dict(zip(tup_k3k5tva1nw8zixyg1w9i9, npw_k3k5tva1nw8zixyg1w9i9))
-
+    params['p_npw_dams'] = fun.f1_make_pyomo_dict(npw_k3k5tva1e1b1nwzida0e0b0xyg1w9i9, arrays_k3k5tva1nw8zixyg1w9i9, loop_axis_pos=w_pos-2, index_loop_axis_pos=-8)
     ###number prog require by dams
-    # mask=numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9!=0
-    # progreq_k2k3k5tw8iyg1g9w9 = numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    # mask=mask.ravel()
-    # index_cut_k2k3k5tw8iyg1g9w9=index_k2k3k5tw8iyg1g9w9[mask,:]
-    # tup_k2k3k5tw8iyg1g9w9 = tuple(map(tuple, index_cut_k2k3k5tw8iyg1g9w9))
-    # params['p_progreq_dams'] =dict(zip(tup_k2k3k5tw8iyg1g9w9, progreq_k2k3k5tw8iyg1g9w9))
-    progreq_k2k3k5tw8ziyg1g9w9 = np.array([], dtype=dtype)
-    index_cut_k2k3k5tw8ziyg1g9w9 = np.array([])
-    for w in range(len(keys_lw1)): #loop on w to reduce memory
-        mask=numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9[...,w]!=0
-        progreq_k2k3k5tw8ziyg1g9w9 = np.concatenate([progreq_k2k3k5tw8ziyg1g9w9,numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9[mask,w]],0).astype(dtype) #applying the mask does the raveling and squeezing of singleton axis
-        mask=mask.ravel()
-        arrays = [keys_k2, keys_k3, keys_k5, keys_t1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1[w:w+1]]
-        index_k2k3k5tw8ziyg1g9w9 = fun.cartesian_product_simple_transpose(arrays)
-        index_cut_k2k3k5tw8ziyg1g9w9 = np.vstack([index_cut_k2k3k5tw8ziyg1g9w9, index_k2k3k5tw8ziyg1g9w9[mask,:]]) if index_cut_k2k3k5tw8ziyg1g9w9.size else index_k2k3k5tw8ziyg1g9w9[mask,:]
-    tup_k2k3k5tw8ziyg1g9w9 = tuple(map(tuple, index_cut_k2k3k5tw8ziyg1g9w9))
-    params['p_progreq_dams'] =dict(zip(tup_k2k3k5tw8ziyg1g9w9, progreq_k2k3k5tw8ziyg1g9w9))
-
+    params['p_progreq_dams'] = fun.f1_make_pyomo_dict(numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k3k5tw8ziyg1g9w9, loop_axis_pos=-1, index_loop_axis_pos=-1)
     ###number prog require by offs
-    # mask=numbers_progreq_va1e1b1nw8zida0e0b0xyg3w9!=0
-    # progreq_vw8ixw9 = numbers_progreq_va1e1b1nw8zida0e0b0xyg3w9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    # mask=mask.ravel()
-    # index_cut_vw8ixw9=index_vw8ixw9[mask,:]
-    # tup_vw8ixw9 = tuple(map(tuple, index_cut_vw8ixw9))
-    # params['p_progreq_offs'] =dict(zip(tup_vw8ixw9, progreq_vw8ixw9))
-    mask=numbers_progreq_k3k5tva1e1b1nw8zida0e0b0xyg3w9!=0
-    progreq_k3vw8zixg3w9 = numbers_progreq_k3k5tva1e1b1nw8zida0e0b0xyg3w9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    mask=mask.ravel()
-    index_cut_k3vw8zixg3w9=index_k3vw8zixg3w9[mask,:]
-    tup_k3vw8zixg3w9 = tuple(map(tuple, index_cut_k3vw8zixg3w9))
-    params['p_progreq_offs'] =dict(zip(tup_k3vw8zixg3w9, progreq_k3vw8zixg3w9))
-
-    ###numbers_req_dams
-    # mask=numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9!=0
-    # params['numbers_req_numpyversion_k2k2tva1nw8iyg1g9w9'] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,:,:,0,0,:,:,0,:,0,0,0,0,0,:,:,:,:]  #can't use squeeze here because i need to keep all relevant axis even if singleton. this is used to speed pyomo constraint.
-    # numbers_req_dams_k2k2tva1nw8iyg1g9w9 = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    # mask=mask.ravel()
-    # index_cut_k2k2tvanwiyg1g9w=index_k2k2tvanwiyg1g9w[mask,:]
-    # tup_k2k2tvanwiyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwiyg1g9w))
-    # params['p_numbers_req_dams'] =dict(zip(tup_k2k2tvanwiyg1g9w, numbers_req_dams_k2k2tva1nw8iyg1g9w9)) #same keys as prov so don't need to recalc again
-    numbers_req_dams_k2k2tva1nw8ziyg1g9w9 = np.array([], dtype=dtype)
-    index_cut_k2k2tvanwziyg1g9w = np.array([])
-    params['numbers_req_numpyversion_k2k2tva1nw8ziyg1g9w9'] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:,:,:]  #can't use squeeze here because i need to keep all relevant axis even if singleton. this is used to speed pyomo constraint.
-    for w in range(len(keys_lw1)): #loop on w to reduce memory
-        mask=numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[...,w]!=0
-        numbers_req_dams_k2k2tva1nw8ziyg1g9w9 = np.concatenate([numbers_req_dams_k2k2tva1nw8ziyg1g9w9,numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask,w]],0).astype(dtype) #applying the mask does the raveling and squeezing of singleton axis
-        mask=mask.ravel()
-        arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1[w:w+1]]
-        index_k2k2tvanwziyg1g9 = fun.cartesian_product_simple_transpose(arrays)
-        index_cut_k2k2tvanwziyg1g9w = np.vstack([index_cut_k2k2tvanwziyg1g9w,index_k2k2tvanwziyg1g9[mask,:]]) if index_cut_k2k2tvanwziyg1g9w.size else index_k2k2tvanwziyg1g9[mask,:]
-    tup_k2k2tvanwziyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwziyg1g9w))
-    params['p_numbers_req_dams'] =dict(zip(tup_k2k2tvanwziyg1g9w, numbers_req_dams_k2k2tva1nw8ziyg1g9w9)) #same keys as prov so don't need to recalc again
-
-    ###numbers_req_offs
-    mask=numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9!=0
-    params['numbers_req_numpyversion_k3k5vw8zixg3w9'] = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,0,:,0,0,0,0,:,:,:,0,0,0,0,:,0,:,:]  #can't use squeeze here because i need to keep all relevant axis even if singleton. this is used to speed pyomo constraint.
-    numbers_req_offs_k3k5vw8zixg3w9 = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    mask=mask.ravel()
-    index_cut_k3k5vw8zixg3w9=index_k3k5vw8zixg3w9[mask,:]
-    tup_k3k5vw8zixg3w9 = tuple(map(tuple, index_cut_k3k5vw8zixg3w9))
-    params['p_numbers_req_offs'] =dict(zip(tup_k3k5vw8zixg3w9, numbers_req_offs_k3k5vw8zixg3w9))
-
+    params['p_progreq_offs'] = fun.f1_make_pyomo_dict(numbers_progreq_k3k5tva1e1b1nw8zida0e0b0xyg3w9, arrays_k3vw8zixg3w9)
     ###number prog provided to dams
-    mask=numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9!=0
-    progprov_dams_k3k5tw8zia0xyg2g9w9 = numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    mask=mask.ravel()
-    index_cut_k3k5tw8zia0xyg2g9w9=index_k3k5tw8zia0xyg2g9w9[mask,:]
-    tup_k3k5tw8zia0xyg2g9w9 = tuple(map(tuple, index_cut_k3k5tw8zia0xyg2g9w9))
-    params['p_progprov_dams'] =dict(zip(tup_k3k5tw8zia0xyg2g9w9, progprov_dams_k3k5tw8zia0xyg2g9w9))
-
+    params['p_progprov_dams'] = fun.f1_make_pyomo_dict(numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9, arrays_k3k5tw8zia0xyg2g9w9)
     ###number prog provided to offs
-    mask=numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9!=0
-    progprov_offs_k3k5tw8ziaxyg2w9 = numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    mask=mask.ravel()
-    index_cut_k3k5tw8ziaxyg2w9=index_k3k5tw8ziaxyg2w9[mask,:]
-    tup_k3k5tw8ziaxyg2w9 = tuple(map(tuple, index_cut_k3k5tw8ziaxyg2w9))
-    params['p_progprov_offs'] =dict(zip(tup_k3k5tw8ziaxyg2w9, progprov_offs_k3k5tw8ziaxyg2w9))
+    params['p_progprov_offs'] = fun.f1_make_pyomo_dict(numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9, arrays_k3k5tw8ziaxyg2w9)
 
+    ##dams
+    ###numbers_req_dams
+    params['numbers_req_numpyversion_k2k2tva1nw8ziyg1g9w9'] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:,:,:]  #can't use squeeze here because i need to keep all relevant axis even if singleton. this is used to speed pyomo constraint.
+    params['p_numbers_req_dams'] = fun.f1_make_pyomo_dict(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k2tva1nw8ziyg1g9w9, loop_axis_pos=-1, index_loop_axis_pos=-1)
     ###numbers_prov_dams
     ####numbers provided into next period (the norm)
-    numbers_prov_dams_k2k2tva1nw8ziyg1g9w9 = np.array([], dtype=dtype)
-    index_cut_k2k2tvanwziyg1g9w = np.array([])
-    for w in range(len(keys_lw1)):
-        mask=numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[...,w]!=0
-        numbers_prov_dams_k2k2tva1nw8ziyg1g9w9 = np.concatenate([numbers_prov_dams_k2k2tva1nw8ziyg1g9w9,numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask,w]],0).astype(dtype) #applying the mask does the raveling and squeezing of singleton axis
-        mask=mask.ravel()
-        arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1[w:w+1]]
-        index_k2k2tvanwziyg1g9 = fun.cartesian_product_simple_transpose(arrays)
-        index_cut_k2k2tvanwziyg1g9w = np.vstack([index_cut_k2k2tvanwziyg1g9w,index_k2k2tvanwziyg1g9[mask,:]]) if index_cut_k2k2tvanwziyg1g9w.size else index_k2k2tvanwziyg1g9[mask,:]
-    tup_k2k2tvanwziyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwziyg1g9w))
-    params['p_numbers_prov_dams'] =dict(zip(tup_k2k2tvanwziyg1g9w, numbers_prov_dams_k2k2tva1nw8ziyg1g9w9))
-
+    params['p_numbers_prov_dams'] = fun.f1_make_pyomo_dict(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k2tvanwziyg1g9w9, loop_axis_pos=-1, index_loop_axis_pos=-1)
     #### provided into this period (when transferring from an earlier lambing ram group to a later lambing)
-    # mask=numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9!=0
-    # numbers_provthis_dams_k2k2tva1nw8ziyg1g9w9 = numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    # mask=mask.ravel()
-    # index_cut_k2k2tvanwziyg1g9w=index_k2k2tvanwziyg1g9w[mask,:]
-    # tup_k2k2tvanwziyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwziyg1g9w))
-    # params['p_numbers_provthis_dams'] =dict(zip(tup_k2k2tvanwziyg1g9w, numbers_provthis_dams_k2k2tva1nw8ziyg1g9w9))
-    numbers_provthis_dams_k2k2tva1nw8ziyg1g9w9 = np.array([])
-    index_cut_k2k2tvanwziyg1g9w = np.array([])
-    for w in range(len(keys_lw1)): #loop on w to reduce memory
-        mask=numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[...,w]!=0
-        numbers_provthis_dams_k2k2tva1nw8ziyg1g9w9 = np.concatenate([numbers_provthis_dams_k2k2tva1nw8ziyg1g9w9,numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask,w]],0) #applying the mask does the raveling and squeezing of singleton axis
-        mask=mask.ravel()
-        arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1[w:w+1]]
-        index_k2k2tvanwziyg1g9 = fun.cartesian_product_simple_transpose(arrays)
-        index_cut_k2k2tvanwziyg1g9w = np.vstack([index_cut_k2k2tvanwziyg1g9w,index_k2k2tvanwziyg1g9[mask,:]]) if index_cut_k2k2tvanwziyg1g9w.size else index_k2k2tvanwziyg1g9[mask,:]
-    tup_k2k2tvanwziyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwziyg1g9w))
-    params['p_numbers_provthis_dams'] =dict(zip(tup_k2k2tvanwziyg1g9w, numbers_provthis_dams_k2k2tva1nw8ziyg1g9w9))
+    params['p_numbers_provthis_dams'] = fun.f1_make_pyomo_dict(numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k2tvanwziyg1g9w9, loop_axis_pos=-1, index_loop_axis_pos=-1)
 
-
+    ##offs related
+    ###numbers_req_offs
+    params['numbers_req_numpyversion_k3k5vw8zixg3w9'] = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,0,:,0,0,0,0,:,:,:,0,0,0,0,:,0,:,:]  #can't use squeeze here because i need to keep all relevant axis even if singleton. this is used to speed pyomo constraint.
+    params['p_numbers_req_offs'] = fun.f1_make_pyomo_dict(numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9, arrays_k3k5vw8zixg3w9)
     ###numbers_prov_offs
-    mask=numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9!=0
-    numbers_prov_offs_k3k5tvnw8zia0xyg3w9 = numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    mask=mask.ravel()
-    index_cut_k3k5tvnw8ziaxyg3w9=index_k3k5tvnw8ziaxyg3w9[mask,:]
-    tup_k3k5tvnw8ziaxyg3w9 = tuple(map(tuple, index_cut_k3k5tvnw8ziaxyg3w9))
-    params['p_numbers_prov_offs'] =dict(zip(tup_k3k5tvnw8ziaxyg3w9, numbers_prov_offs_k3k5tvnw8zia0xyg3w9))
+    params['p_numbers_prov_offs'] = fun.f1_make_pyomo_dict(numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9, arrays_k3k5tvnw8ziaxyg3w9)
 
+    ##mei
     ###mei - sire
-    mask=mei_p6fva1e1b1nwzida0e0b0xyg0!=0
-    mei_sire_p6fzg0 = mei_p6fva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_p6fzg0=index_p6fzg0[mask,:]
-    tup_p6fzg0 = tuple(map(tuple, index_cut_p6fzg0))
-    params['p_mei_sire'] =dict(zip(tup_p6fzg0, mei_sire_p6fzg0))
+    params['p_mei_sire'] = fun.f1_make_pyomo_dict(mei_p6fva1e1b1nwzida0e0b0xyg0, arrays_p6fzg0)
     ###mei - dams
-    mask=mei_k2p6ftva1e1b1nwzida0e0b0xyg1!=0
-    mei_dams_k2p6ftva1nwziyg1 = mei_k2p6ftva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2p6ftva1nwziyg1=index_k2p6ftva1nwziyg1[mask,:]
-    tup_k2p6ftva1nwziyg1 = tuple(map(tuple, index_cut_k2p6ftva1nwziyg1))
-    params['p_mei_dams'] =dict(zip(tup_k2p6ftva1nwziyg1, mei_dams_k2p6ftva1nwziyg1))
+    params['p_mei_dams'] = fun.f1_make_pyomo_dict(mei_k2p6ftva1e1b1nwzida0e0b0xyg1, arrays_k2p6ftva1nwziyg1)
     ###mei - offs
-    mask=mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3!=0
-    mei_offs_k3k5p6ftvnwziaxyg3 = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5p6ftvnwziaxyg3=index_k3k5p6ftvnwziaxyg3[mask,:]
-    tup_k3k5p6ftvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5p6ftvnwziaxyg3))
-    params['p_mei_offs'] =dict(zip(tup_k3k5p6ftvnwziaxyg3, mei_offs_k3k5p6ftvnwziaxyg3))
+    params['p_mei_offs'] = fun.f1_make_pyomo_dict(mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3, arrays_k3k5p6ftvnwziaxyg3)
 
+    ##pi
     ###pi - sire
-    mask=pi_p6fva1e1b1nwzida0e0b0xyg0!=0
-    pi_sire_p6fzg0 = pi_p6fva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_p6fzg0=index_p6fzg0[mask,:]
-    tup_p6fzg0 = tuple(map(tuple, index_cut_p6fzg0))
-    params['p_pi_sire'] =dict(zip(tup_p6fzg0, pi_sire_p6fzg0))
+    params['p_pi_sire'] = fun.f1_make_pyomo_dict(pi_p6fva1e1b1nwzida0e0b0xyg0, arrays_p6fzg0)
     ###pi - dams
-    mask=pi_k2p6ftva1e1b1nwzida0e0b0xyg1!=0
-    pi_dams_k2p6ftva1nwziyg1 = pi_k2p6ftva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2p6ftva1nwziyg1=index_k2p6ftva1nwziyg1[mask,:]
-    tup_k2p6ftva1nwziyg1 = tuple(map(tuple, index_cut_k2p6ftva1nwziyg1))
-    params['p_pi_dams'] =dict(zip(tup_k2p6ftva1nwziyg1, pi_dams_k2p6ftva1nwziyg1))
+    params['p_pi_dams'] = fun.f1_make_pyomo_dict(pi_k2p6ftva1e1b1nwzida0e0b0xyg1, arrays_k2p6ftva1nwziyg1)
     ###pi - offs
-    mask=pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3!=0
-    pi_offs_k3k5p6ftvnwziaxyg3 = pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5p6ftvnwziaxyg3=index_k3k5p6ftvnwziaxyg3[mask,:]
-    tup_k3k5p6ftvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5p6ftvnwziaxyg3))
-    params['p_pi_offs'] =dict(zip(tup_k3k5p6ftvnwziaxyg3, pi_offs_k3k5p6ftvnwziaxyg3))
+    params['p_pi_offs'] = fun.f1_make_pyomo_dict(pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3, arrays_k3k5p6ftvnwziaxyg3)
 
+    ##cashflow
     ###cashflow - sire
-    mask=cashflow_c0p7va1e1b1nwzida0e0b0xyg0!=0
-    cashflow_sire_c0p7zg0 = cashflow_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_c0p7zg0=index_c0p7zg0[mask,:]
-    tup_c0p7zg0 = tuple(map(tuple, index_cut_c0p7zg0))
-    params['p_cashflow_sire'] =dict(zip(tup_c0p7zg0, cashflow_sire_c0p7zg0))
+    params['p_cashflow_sire'] = fun.f1_make_pyomo_dict(cashflow_c0p7va1e1b1nwzida0e0b0xyg0, arrays_c0p7zg0)
     ###cashflow - dams
-    mask=cashflow_k2c0p7tva1e1b1nwzida0e0b0xyg1!=0
-    cashflow_dams_k2c0p7tva1nwziyg = cashflow_k2c0p7tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2c0p7tvanwziyg1=index_k2c0p7tvanwziyg1[mask,:]
-    tup_k2c0p7tvanwziyg1 = tuple(map(tuple, index_cut_k2c0p7tvanwziyg1))
-    params['p_cashflow_dams'] =dict(zip(tup_k2c0p7tvanwziyg1, cashflow_dams_k2c0p7tva1nwziyg))
+    params['p_cashflow_dams'] = fun.f1_make_pyomo_dict(cashflow_k2c0p7tva1e1b1nwzida0e0b0xyg1, arrays_k2c0p7tvanwziyg1)
     ###cashflow - prog - only consists of sale value
-    mask=salevalue_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2!=0
-    cashflow_prog_k3k5c0p7twzia0xg2 = salevalue_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5c0p7twzia0xg2=index_k3k5c0p7twzia0xg2[mask,:]
-    tup_k3k5c0p7twzia0xg2 = tuple(map(tuple, index_cut_k3k5c0p7twzia0xg2))
-    params['p_cashflow_prog'] =dict(zip(tup_k3k5c0p7twzia0xg2, cashflow_prog_k3k5c0p7twzia0xg2))
+    params['p_cashflow_prog'] = fun.f1_make_pyomo_dict(salevalue_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2, arrays_k3k5c0p7twzia0xg2)
     ###cashflow - offs
-    mask=cashflow_k3k5c0p7tva1e1b1nwzida0e0b0xyg3!=0
-    cashflow_offs_k3k5c0p7tvnwziaxyg3 = cashflow_k3k5c0p7tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5c0p7tvnwziaxyg3=index_k3k5c0p7tvnwziaxyg3[mask,:]
-    tup_k3k5c0p7tvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5c0p7tvnwziaxyg3))
-    params['p_cashflow_offs'] =dict(zip(tup_k3k5c0p7tvnwziaxyg3, cashflow_offs_k3k5c0p7tvnwziaxyg3))
+    params['p_cashflow_offs'] = fun.f1_make_pyomo_dict(cashflow_k3k5c0p7tva1e1b1nwzida0e0b0xyg3, arrays_k3k5c0p7tvnwziaxyg3)
 
+    ##wc
     ###wc - sire
-    mask=wc_c0p7va1e1b1nwzida0e0b0xyg0!=0
-    wc_sire_c0p7zg0 = wc_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_c0p7zg0=index_c0p7zg0[mask,:]
-    tup_c0p7zg0 = tuple(map(tuple, index_cut_c0p7zg0))
-    params['p_wc_sire'] =dict(zip(tup_c0p7zg0, wc_sire_c0p7zg0))
+    params['p_wc_sire'] = fun.f1_make_pyomo_dict(wc_c0p7va1e1b1nwzida0e0b0xyg0, arrays_c0p7zg0)
     ###wc - dams
-    mask=wc_k2c0p7tva1e1b1nwzida0e0b0xyg1!=0
-    wc_dams_k2c0p7tva1nwziyg = wc_k2c0p7tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2c0p7tvanwziyg1=index_k2c0p7tvanwziyg1[mask,:]
-    tup_k2c0p7tvanwziyg1 = tuple(map(tuple, index_cut_k2c0p7tvanwziyg1))
-    params['p_wc_dams'] =dict(zip(tup_k2c0p7tvanwziyg1, wc_dams_k2c0p7tva1nwziyg))
+    params['p_wc_dams'] = fun.f1_make_pyomo_dict(wc_k2c0p7tva1e1b1nwzida0e0b0xyg1, arrays_k2c0p7tvanwziyg1)
     ###wc - prog - only consists of sale value
-    mask=salevalue_wc_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2!=0
-    wc_prog_k3k5c0p7twzia0xg2 = salevalue_wc_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5c0p7twzia0xg2=index_k3k5c0p7twzia0xg2[mask,:]
-    tup_k3k5c0p7twzia0xg2 = tuple(map(tuple, index_cut_k3k5c0p7twzia0xg2))
-    params['p_wc_prog'] =dict(zip(tup_k3k5c0p7twzia0xg2, wc_prog_k3k5c0p7twzia0xg2))
+    params['p_wc_prog'] = fun.f1_make_pyomo_dict(salevalue_wc_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2, arrays_k3k5c0p7twzia0xg2)
     ###wc - offs
-    mask=wc_k3k5c0p7tva1e1b1nwzida0e0b0xyg3!=0
-    wc_offs_k3k5c0p7tvnwziaxyg3 = wc_k3k5c0p7tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5c0p7tvnwziaxyg3=index_k3k5c0p7tvnwziaxyg3[mask,:]
-    tup_k3k5c0p7tvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5c0p7tvnwziaxyg3))
-    params['p_wc_offs'] =dict(zip(tup_k3k5c0p7tvnwziaxyg3, wc_offs_k3k5c0p7tvnwziaxyg3))
+    params['p_wc_offs'] = fun.f1_make_pyomo_dict(wc_k3k5c0p7tva1e1b1nwzida0e0b0xyg3, arrays_k3k5c0p7tvnwziaxyg3)
 
+    ##cost (for minROE)
     ###cost - sire
-    mask=cost_c0p7va1e1b1nwzida0e0b0xyg0!=0
-    cost_sire_c0p7zg0 = cost_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_c0p7zg0=index_c0p7zg0[mask,:]
-    tup_c0p7zg0 = tuple(map(tuple, index_cut_c0p7zg0))
-    params['p_cost_sire'] =dict(zip(tup_c0p7zg0, cost_sire_c0p7zg0))
+    params['p_cost_sire'] = fun.f1_make_pyomo_dict(cost_c0p7va1e1b1nwzida0e0b0xyg0, arrays_c0p7zg0)
     ###cost - dams
-    mask=cost_k2c0p7tva1e1b1nwzida0e0b0xyg1!=0
-    cost_dams_k2c0p7tva1nwziyg = cost_k2c0p7tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2c0p7tvanwziyg1=index_k2c0p7tvanwziyg1[mask,:]
-    tup_k2c0p7tvanwziyg1 = tuple(map(tuple, index_cut_k2c0p7tvanwziyg1))
-    params['p_cost_dams'] =dict(zip(tup_k2c0p7tvanwziyg1, cost_dams_k2c0p7tva1nwziyg))
+    params['p_cost_dams'] = fun.f1_make_pyomo_dict(cost_k2c0p7tva1e1b1nwzida0e0b0xyg1, arrays_k2c0p7tvanwziyg1)
     ###cost - offs
-    mask=cost_k3k5c0p7tva1e1b1nwzida0e0b0xyg3!=0
-    cost_offs_k3k5c0p7tvnwziaxyg3 = cost_k3k5c0p7tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5c0p7tvnwziaxyg3=index_k3k5c0p7tvnwziaxyg3[mask,:]
-    tup_k3k5c0p7tvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5c0p7tvnwziaxyg3))
-    params['p_cost_offs'] =dict(zip(tup_k3k5c0p7tvnwziaxyg3, cost_offs_k3k5c0p7tvnwziaxyg3))
+    params['p_cost_offs'] = fun.f1_make_pyomo_dict(cost_k3k5c0p7tva1e1b1nwzida0e0b0xyg3, arrays_k3k5c0p7tvnwziaxyg3)
 
+    ##purchase cost
     ###purchcost - sire
-    mask=purchcost_c0p7va1e1b1nwzida0e0b0xyg0!=0
-    purchcost_sire_c0p7zg0 = purchcost_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_c0p7zg0=index_c0p7zg0[mask,:]
-    tup_c0p7zg0 = tuple(map(tuple, index_cut_c0p7zg0))
-    params['p_purchcost_sire'] =dict(zip(tup_c0p7zg0, purchcost_sire_c0p7zg0))
+    params['p_purchcost_sire'] = fun.f1_make_pyomo_dict(purchcost_c0p7va1e1b1nwzida0e0b0xyg0, arrays_c0p7zg0)
 
+    ##purchase wc
     ###purchcost wc - sire
-    mask=purchcost_wc_c0p7va1e1b1nwzida0e0b0xyg0!=0
-    purchcost_wc_sire_c0p7zg0 = purchcost_wc_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_c0p7zg0=index_c0p7zg0[mask,:]
-    tup_c0p7zg0 = tuple(map(tuple, index_cut_c0p7zg0))
-    params['p_purchcost_wc_sire'] =dict(zip(tup_c0p7zg0, purchcost_wc_sire_c0p7zg0))
+    params['p_purchcost_wc_sire'] = fun.f1_make_pyomo_dict(purchcost_wc_c0p7va1e1b1nwzida0e0b0xyg0, arrays_c0p7zg0)
 
+    ##asset value
     ###assetvalue - sire
-    mask=assetvalue_p7va1e1b1nwzida0e0b0xyg0!=0
-    assetvalue_sire_p7zg0 = assetvalue_p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_p7zg0=index_p7zg0[mask,:]
-    tup_p7zg0 = tuple(map(tuple, index_cut_p7zg0))
-    params['p_assetvalue_sire'] =dict(zip(tup_p7zg0, assetvalue_sire_p7zg0))
+    params['p_assetvalue_sire'] = fun.f1_make_pyomo_dict(assetvalue_p7va1e1b1nwzida0e0b0xyg0, arrays_p7zg0)
     ###assetvalue - dams
-    mask=assetvalue_k2tp7va1e1b1nwzida0e0b0xyg1!=0
-    assetvalue_dams_k2tp7va1nwziyg = assetvalue_k2tp7va1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2tp7vanwziyg1=index_k2tp7vanwziyg1[mask,:]
-    tup_k2tp7vanwziyg1 = tuple(map(tuple, index_cut_k2tp7vanwziyg1))
-    params['p_assetvalue_dams'] =dict(zip(tup_k2tp7vanwziyg1, assetvalue_dams_k2tp7va1nwziyg))
+    params['p_assetvalue_dams'] = fun.f1_make_pyomo_dict(assetvalue_k2tp7va1e1b1nwzida0e0b0xyg1, arrays_k2tp7vanwziyg1)
     ###assetvalue - offs
-    mask=assetvalue_k3k5tp7va1e1b1nwzida0e0b0xyg3!=0
-    assetvalue_offs_k3k5tp7vnwziaxyg3 = assetvalue_k3k5tp7va1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5tp7vnwziaxyg3=index_k3k5tp7vnwziaxyg3[mask,:]
-    tup_k3k5tp7vnwziaxyg3 = tuple(map(tuple, index_cut_k3k5tp7vnwziaxyg3))
-    params['p_assetvalue_offs'] =dict(zip(tup_k3k5tp7vnwziaxyg3, assetvalue_offs_k3k5tp7vnwziaxyg3))
+    params['p_assetvalue_offs'] = fun.f1_make_pyomo_dict(assetvalue_k3k5tp7va1e1b1nwzida0e0b0xyg3, arrays_k3k5tp7vnwziaxyg3)
 
+    ##labour
     ###anyone labour - sire
-    mask=lab_anyone_p5tva1e1b1nwzida0e0b0xyg0!=0
-    lab_any_sire_p5zg0 = lab_anyone_p5tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_p5zg0=index_p5zg0[mask,:]
-    tup_p5zg0 = tuple(map(tuple, index_cut_p5zg0))
-    params['p_labour_anyone_sire'] =dict(zip(tup_p5zg0, lab_any_sire_p5zg0))
+    params['p_labour_anyone_sire'] = fun.f1_make_pyomo_dict(lab_anyone_p5tva1e1b1nwzida0e0b0xyg0, arrays_p5zg0)
     ###perm labour - sire
-    mask=lab_perm_p5tva1e1b1nwzida0e0b0xyg0!=0
-    lab_perm_sire_p5zg0 = lab_perm_p5tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_p5zg0=index_p5zg0[mask,:]
-    tup_p5zg0 = tuple(map(tuple, index_cut_p5zg0))
-    params['p_labour_perm_sire'] =dict(zip(tup_p5zg0, lab_perm_sire_p5zg0))
+    params['p_labour_perm_sire'] = fun.f1_make_pyomo_dict(lab_perm_p5tva1e1b1nwzida0e0b0xyg0, arrays_p5zg0)
     ###manager labour - sire
-    mask=lab_manager_p5tva1e1b1nwzida0e0b0xyg0!=0
-    lab_manager_sire_p5zg0 = lab_manager_p5tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_p5zg0=index_p5zg0[mask,:]
-    tup_p5zg0 = tuple(map(tuple, index_cut_p5zg0))
-    params['p_labour_manager_sire'] =dict(zip(tup_p5zg0, lab_manager_sire_p5zg0))
-
+    params['p_labour_manager_sire'] = fun.f1_make_pyomo_dict(lab_manager_p5tva1e1b1nwzida0e0b0xyg0, arrays_p5zg0)
     ###anyone labour - dams
-    mask=lab_anyone_k2p5tva1e1b1nwzida0e0b0xyg1!=0
-    lab_any_dams_k2p5tva1nwziyg = lab_anyone_k2p5tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2p5tvanwziyg1=index_k2p5tvanwziyg1[mask,:]
-    tup_k2p5tvanwziyg1 = tuple(map(tuple, index_cut_k2p5tvanwziyg1))
-    params['p_labour_anyone_dams'] =dict(zip(tup_k2p5tvanwziyg1, lab_any_dams_k2p5tva1nwziyg))
+    params['p_labour_anyone_dams'] = fun.f1_make_pyomo_dict(lab_anyone_k2p5tva1e1b1nwzida0e0b0xyg1, arrays_k2p5tvanwziyg1)
     ###perm labour - dams
-    mask=lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1!=0
-    lab_perm_dams_k2p5tva1nwziyg = lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2p5tvanwziyg1=index_k2p5tvanwziyg1[mask,:]
-    tup_k2p5tvanwziyg1 = tuple(map(tuple, index_cut_k2p5tvanwziyg1))
-    params['p_labour_perm_dams'] =dict(zip(tup_k2p5tvanwziyg1, lab_perm_dams_k2p5tva1nwziyg))
+    params['p_labour_perm_dams'] = fun.f1_make_pyomo_dict(lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1, arrays_k2p5tvanwziyg1)
     ###manager labour - dams
-    mask=lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1!=0
-    lab_manager_dams_k2p5tva1nwziyg = lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2p5tvanwziyg1=index_k2p5tvanwziyg1[mask,:]
-    tup_k2p5tvanwziyg1 = tuple(map(tuple, index_cut_k2p5tvanwziyg1))
-    params['p_labour_manager_dams'] =dict(zip(tup_k2p5tvanwziyg1, lab_manager_dams_k2p5tva1nwziyg))
-
+    params['p_labour_manager_dams'] = fun.f1_make_pyomo_dict(lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1, arrays_k2p5tvanwziyg1)
     ###anyone labour - offs
-    mask=lab_anyone_k3k5p5tva1e1b1nwzida0e0b0xyg3!=0
-    lab_any_offs_k3k5p5tvnwziaxyg3 = lab_anyone_k3k5p5tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5p5tvnwziaxyg3=index_k3k5p5tvnwziaxyg3[mask,:]
-    tup_k3k5p5tvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5p5tvnwziaxyg3))
-    params['p_labour_anyone_offs'] =dict(zip(tup_k3k5p5tvnwziaxyg3, lab_any_offs_k3k5p5tvnwziaxyg3))
+    params['p_labour_anyone_offs'] = fun.f1_make_pyomo_dict(lab_anyone_k3k5p5tva1e1b1nwzida0e0b0xyg3, arrays_k3k5p5tvnwziaxyg3)
     ###perm labour - offs
-    mask=lab_perm_k3k5p5tva1e1b1nwzida0e0b0xyg3!=0
-    lab_perm_offs_k3k5p5tvnwziaxyg3 = lab_perm_k3k5p5tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5p5tvnwziaxyg3=index_k3k5p5tvnwziaxyg3[mask,:]
-    tup_k3k5p5tvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5p5tvnwziaxyg3))
-    params['p_labour_perm_offs'] =dict(zip(tup_k3k5p5tvnwziaxyg3, lab_perm_offs_k3k5p5tvnwziaxyg3))
+    params['p_labour_perm_offs'] = fun.f1_make_pyomo_dict(lab_perm_k3k5p5tva1e1b1nwzida0e0b0xyg3, arrays_k3k5p5tvnwziaxyg3)
     ###manager labour - offs
-    mask=lab_manager_k3k5p5tva1e1b1nwzida0e0b0xyg3!=0
-    lab_manager_offs_k3k5p5tvnwziaxyg3 = lab_manager_k3k5p5tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5p5tvnwziaxyg3=index_k3k5p5tvnwziaxyg3[mask,:]
-    tup_k3k5p5tvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5p5tvnwziaxyg3))
-    params['p_labour_manager_offs'] =dict(zip(tup_k3k5p5tvnwziaxyg3, lab_manager_offs_k3k5p5tvnwziaxyg3))
+    params['p_labour_manager_offs'] = fun.f1_make_pyomo_dict(lab_manager_k3k5p5tva1e1b1nwzida0e0b0xyg3, arrays_k3k5p5tvnwziaxyg3)
 
     ###infrastructure - sire
-    mask=infrastructure_h1va1e1b1nwzida0e0b0xyg0!=0
-    infrastructure_sire_h1zg0 = infrastructure_h1va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_h1zg0=index_h1zg0[mask,:]
-    tup_h1zg0 = tuple(map(tuple, index_cut_h1zg0))
-    params['p_infrastructure_sire'] =dict(zip(tup_h1zg0, infrastructure_sire_h1zg0))
+    params['p_infrastructure_sire'] = fun.f1_make_pyomo_dict(infrastructure_h1va1e1b1nwzida0e0b0xyg0, arrays_h1zg0)
     ###infrastructure - dams
-    mask=infrastructure_k2h1tva1e1b1nwzida0e0b0xyg1!=0
-    infrastructure_dams_k2h1tva1nwziyg = infrastructure_k2h1tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2h1tvanwziyg1=index_k2h1tvanwziyg1[mask,:]
-    tup_k2h1tvanwziyg1 = tuple(map(tuple, index_cut_k2h1tvanwziyg1))
-    params['p_infrastructure_dams'] =dict(zip(tup_k2h1tvanwziyg1, infrastructure_dams_k2h1tva1nwziyg))
+    params['p_infrastructure_dams'] = fun.f1_make_pyomo_dict(infrastructure_k2h1tva1e1b1nwzida0e0b0xyg1, arrays_k2h1tvanwziyg1)
     ###infrastructure - offs
-    mask=infrastructure_k3k5p5tva1e1b1nwzida0e0b0xyg3!=0
-    infrastructure_offs_k3k5h1tvnwziaxyg3 = infrastructure_k3k5p5tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5h1tvnwziaxyg3=index_k3k5h1tvnwziaxyg3[mask,:]
-    tup_k3k5h1tvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5h1tvnwziaxyg3))
-    params['p_infrastructure_offs'] =dict(zip(tup_k3k5h1tvnwziaxyg3, infrastructure_offs_k3k5h1tvnwziaxyg3))
+    params['p_infrastructure_offs'] = fun.f1_make_pyomo_dict(infrastructure_k3k5p5tva1e1b1nwzida0e0b0xyg3, arrays_k3k5h1tvnwziaxyg3)
 
     ##DSE - sire
-    mask=dsemj_p6tva1e1b1nwzida0e0b0xyg0!=0
-    dsemj_sire_p6zg0 = dsemj_p6tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    dsenw_sire_p6zg0 = dsenw_p6tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_p6zg0=index_p6zg0[mask,:]
-    tup_p6zg0 = tuple(map(tuple, index_cut_p6zg0))
     if pinp.sheep['i_dse_type'] == 0:
-        params['p_dse_sire'] =dict(zip(tup_p6zg0, dsenw_sire_p6zg0))
+        params['p_dse_sire'] = fun.f1_make_pyomo_dict(dsenw_p6tva1e1b1nwzida0e0b0xyg0, arrays_p6zg0)
     else:
-        params['p_dse_sire'] =dict(zip(tup_p6zg0, dsemj_sire_p6zg0))
+        params['p_dse_sire'] = fun.f1_make_pyomo_dict(dsemj_p6tva1e1b1nwzida0e0b0xyg0, arrays_p6zg0)
     ##DSE - dams
-    mask=dsemj_k2p6tva1e1b1nwzida0e0b0xyg1!=0
-    dsemj_dams_k2p6tva1nwziyg1 = dsemj_k2p6tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    dsenw_dams_k2p6tva1nwziyg1 = dsenw_k2p6tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2p6tva1nwziyg1=index_k2p6tva1nwziyg1[mask,:]
-    tup_k2p6tva1nwziyg1 = tuple(map(tuple, index_cut_k2p6tva1nwziyg1))
     if pinp.sheep['i_dse_type'] == 0:
-        params['p_dse_dams'] =dict(zip(tup_k2p6tva1nwziyg1, dsenw_dams_k2p6tva1nwziyg1))
+        params['p_dse_dams'] = fun.f1_make_pyomo_dict(dsenw_k2p6tva1e1b1nwzida0e0b0xyg1, arrays_k2p6tva1nwziyg1)
     else:
-        params['p_dse_dams'] =dict(zip(tup_k2p6tva1nwziyg1, dsemj_dams_k2p6tva1nwziyg1))
+        params['p_dse_dams'] = fun.f1_make_pyomo_dict(dsemj_k2p6tva1e1b1nwzida0e0b0xyg1, arrays_k2p6tva1nwziyg1)
     ##DSE - offs
-    mask=dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3!=0
-    dsemj_dams_k3k5p6tvnwziaxyg3 = dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    dsenw_dams_k3k5p6tvnwziaxyg3 = dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5p6tvnwziaxyg3=index_k3k5p6tvnwziaxyg3[mask,:]
-    tup_k3k5p6tvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5p6tvnwziaxyg3))
     if pinp.sheep['i_dse_type'] == 0:
-        params['p_dse_offs'] =dict(zip(tup_k3k5p6tvnwziaxyg3, dsenw_dams_k3k5p6tvnwziaxyg3))
+        params['p_dse_offs'] = fun.f1_make_pyomo_dict(dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3, arrays_k3k5p6tvnwziaxyg3)
     else:
-        params['p_dse_offs'] =dict(zip(tup_k3k5p6tvnwziaxyg3, dsemj_dams_k3k5p6tvnwziaxyg3))
+        params['p_dse_offs'] = fun.f1_make_pyomo_dict(dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3, arrays_k3k5p6tvnwziaxyg3)
 
     ##winter grazed propn - indicates the propn of the DSE in each FP that is used to calculate total DSE for SR
-    tup_p6z = tuple(map(tuple, index_p6z))
     wg_propn_p6z = zfun.f_seasonal_inp(pinp.sheep['i_wg_propn_p6z'], numpy=True, axis=-1)
-    params['p_wg_propn_p6z'] = dict(zip(tup_p6z,wg_propn_p6z))
+    params['p_wg_propn_p6z'] =  fun.f1_make_pyomo_dict(wg_propn_p6z, arrays_p6z)
 
     ##season transfer masks
     ###dams req within
-    mask=mask_childz_reqwithin_k2tva1e1b1nwzida0e0b0xyg1!=0
-    mask_reqwithinz8_k2vz8g1 = mask_childz_reqwithin_k2tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2vz8g1=index_k2vz8g1[mask,:]
-    tup_k2vz8g1 = tuple(map(tuple, index_cut_k2vz8g1))
-    params['p_mask_childz_within_dams'] =dict(zip(tup_k2vz8g1, mask_reqwithinz8_k2vz8g1))
+    params['p_mask_childz_within_dams'] = fun.f1_make_pyomo_dict(mask_childz_reqwithin_k2tva1e1b1nwzida0e0b0xyg1, arrays_k2vz8g1)
     ###dams req between
-    mask=mask_childz_reqbetween_k2tva1e1b1nwzida0e0b0xyg1!=0
-    mask_reqbetweenz8_k2vz8g1 = mask_childz_reqbetween_k2tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2vz8g1=index_k2vz8g1[mask,:]
-    tup_k2vz8g1 = tuple(map(tuple, index_cut_k2vz8g1))
-    params['p_mask_childz_between_dams'] =dict(zip(tup_k2vz8g1, mask_reqbetweenz8_k2vz8g1))
+    params['p_mask_childz_between_dams'] = fun.f1_make_pyomo_dict(mask_childz_reqbetween_k2tva1e1b1nwzida0e0b0xyg1, arrays_k2vz8g1)
     ###offs req within
-    mask=mask_childz_reqwithin_k3k5tva1e1b1nwzida0e0b0xyg3!=0
-    mask_reqwithinz8_k3vz8xg3 = mask_childz_reqwithin_k3k5tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3vz8xg3=index_k3vz8xg3[mask,:]
-    tup_k3vz8xg3 = tuple(map(tuple, index_cut_k3vz8xg3))
-    params['p_mask_childz_within_offs'] =dict(zip(tup_k3vz8xg3, mask_reqwithinz8_k3vz8xg3))
+    params['p_mask_childz_within_offs'] = fun.f1_make_pyomo_dict(mask_childz_reqwithin_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3vz8xg3)
     ###offs req between
-    mask=mask_childz_reqbetween_k3k5tva1e1b1nwzida0e0b0xyg3!=0
-    mask_reqbetweenz8_k3vz8xg3 = mask_childz_reqbetween_k3k5tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3vz8xg3=index_k3vz8xg3[mask,:]
-    tup_k3vz8xg3 = tuple(map(tuple, index_cut_k3vz8xg3))
-    params['p_mask_childz_between_offs'] =dict(zip(tup_k3vz8xg3, mask_reqbetweenz8_k3vz8xg3))
+    params['p_mask_childz_between_offs'] = fun.f1_make_pyomo_dict(mask_childz_reqbetween_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3vz8xg3)
 
     ###dams prov within
-    mask=mask_provwithinz8z9_k2tva1e1b1nwzida0e0b0xyg1z9!=0
-    mask_provwithinz8z9_k2vz8g1z9 = mask_provwithinz8z9_k2tva1e1b1nwzida0e0b0xyg1z9[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2vz8g1z9=index_k2vz8g1z9[mask,:]
-    tup_k2vz8g1z9 = tuple(map(tuple, index_cut_k2vz8g1z9))
-    params['p_parentz_provwithin_dams'] =dict(zip(tup_k2vz8g1z9, mask_provwithinz8z9_k2vz8g1z9))
+    params['p_parentz_provwithin_dams'] = fun.f1_make_pyomo_dict(mask_provwithinz8z9_k2tva1e1b1nwzida0e0b0xyg1z9, arrays_k2vz8g1z9)
     ###dams prov between
-    mask=mask_provbetweenz8z9_k2tva1e1b1nwzida0e0b0xyg1z9!=0
-    mask_provbetweenz8z9_k2vz8g1z9 = mask_provbetweenz8z9_k2tva1e1b1nwzida0e0b0xyg1z9[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2vz8g1z9=index_k2vz8g1z9[mask,:]
-    tup_k2vz8g1z9 = tuple(map(tuple, index_cut_k2vz8g1z9))
-    params['p_parentz_provbetween_dams'] =dict(zip(tup_k2vz8g1z9, mask_provbetweenz8z9_k2vz8g1z9))
+    params['p_parentz_provbetween_dams'] = fun.f1_make_pyomo_dict(mask_provbetweenz8z9_k2tva1e1b1nwzida0e0b0xyg1z9, arrays_k2vz8g1z9)
     ###offs prov within
-    mask=mask_provwithinz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9!=0
-    mask_provwithinz8z9_k3vz8xg3z9 = mask_provwithinz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3vz8xg3z9=index_k3vz8xg3z9[mask,:]
-    tup_k3vz8xg3z9 = tuple(map(tuple, index_cut_k3vz8xg3z9))
-    params['p_parentz_provwithin_offs'] =dict(zip(tup_k3vz8xg3z9, mask_provwithinz8z9_k3vz8xg3z9))
+    params['p_parentz_provwithin_offs'] = fun.f1_make_pyomo_dict(mask_provwithinz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9, arrays_k3vz8xg3z9)
     ###offs prov between
-    mask=mask_provbetweenz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9!=0
-    mask_provbetweenz8z9_k3vz8xg3z9 = mask_provbetweenz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3vz8xg3z9=index_k3vz8xg3z9[mask,:]
-    tup_k3vz8xg3z9 = tuple(map(tuple, index_cut_k3vz8xg3z9))
-    params['p_parentz_provbetween_offs'] =dict(zip(tup_k3vz8xg3z9, mask_provbetweenz8z9_k3vz8xg3z9))
+    params['p_parentz_provbetween_offs'] = fun.f1_make_pyomo_dict(mask_provbetweenz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9, arrays_k3vz8xg3z9)
 
 
 

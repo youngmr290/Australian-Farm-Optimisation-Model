@@ -265,18 +265,14 @@ def crop_residue_all(params, r_vals, nv):
 
 
     ##array indexes
-    ###ks1 - stub transfer (cat b & c)
-    arrays = [keys_k, keys_s1]
-    index_ks1 = fun.cartesian_product_simple_transpose(arrays)
-    ###p6zks1 - category A req
-    arrays = [keys_p6, keys_z, keys_k, keys_s1]
-    index_p6zks1 = fun.cartesian_product_simple_transpose(arrays)
-    ###p6zks1 - md & vol
-    arrays = [keys_f, keys_p6, keys_z, keys_k, keys_s1]
-    index_fp6zks1 = fun.cartesian_product_simple_transpose(arrays)
-    ###p6zk - p7con & feed period transfer
-    arrays = [keys_p6, keys_z, keys_k]
-    index_p6zk = fun.cartesian_product_simple_transpose(arrays)
+    ###stub transfer (cat b & c)
+    arrays_ks1 = [keys_k, keys_s1]
+    ###category A req
+    arrays_p6zks1 = [keys_p6, keys_z, keys_k, keys_s1]
+    ###md & vol
+    arrays_fp6zks1 = [keys_f, keys_p6, keys_z, keys_k, keys_s1]
+    ###harv con & feed period transfer
+    arrays_p6zk = [keys_p6, keys_z, keys_k]
 
     ################
     ##pyomo params #
@@ -286,31 +282,25 @@ def crop_residue_all(params, r_vals, nv):
     params['rot_stubble'] = rot_stubble_rkl_p7z.stack([0,1]).to_dict()
 
     ##'require' params ie consuming 1t of stubble B requires 1.002t from the constraint (0.002 accounts for trampling)
-    tup_ks1 = tuple(map(tuple, index_ks1))
-    params['transfer_req'] =dict(zip(tup_ks1, stub_req_ks1.ravel()))
+    params['transfer_req'] = fun.f1_make_pyomo_dict(stub_req_ks1, arrays_ks1)
 
     ###'provide' from cat to cat ie consuming 1t of cat A provides 2t of cat b
-    tup_ks1 = tuple(map(tuple, index_ks1))
-    params['transfer_prov'] =dict(zip(tup_ks1, stub_prov_ks1.ravel()))
+    params['transfer_prov'] = fun.f1_make_pyomo_dict(stub_prov_ks1, arrays_ks1)
 
-    ###p7con
-    tup_p6zk = tuple(map(tuple, index_p6zk))
-    params['cons_prop'] =dict(zip(tup_p6zk, cons_propn_p6zk.ravel()))
+    ###harv con
+    params['cons_prop'] = fun.f1_make_pyomo_dict(cons_propn_p6zk, arrays_p6zk)
 
     ###feed period transfer
-    tup_p6zk = tuple(map(tuple, index_p6zk))
-    params['stub_transfer_prov'] =dict(zip(tup_p6zk, stub_transfer_prov_p6zk.ravel()))
-    params['stub_transfer_req'] =dict(zip(tup_p6zk, stub_transfer_req_p6zk.ravel()))
+    params['stub_transfer_prov'] = fun.f1_make_pyomo_dict(stub_transfer_prov_p6zk, arrays_p6zk)
+    params['stub_transfer_req'] = fun.f1_make_pyomo_dict(stub_transfer_req_p6zk, arrays_p6zk)
 
     ###category A transfer 'require' param
-    tup_p6zks1 = tuple(map(tuple, index_p6zks1))
-    params['cat_a_prov'] =dict(zip(tup_p6zks1, cat_a_prov_p6zks1.ravel()))
+    params['cat_a_prov'] = fun.f1_make_pyomo_dict(cat_a_prov_p6zks1, arrays_p6zks1)
 
     ##md
-    tup_fp6zks1 = tuple(map(tuple, index_fp6zks1))
-    params['md'] =dict(zip(tup_fp6zks1, md_fp6zks1.ravel()))
+    params['md'] = fun.f1_make_pyomo_dict(md_fp6zks1, arrays_fp6zks1)
 
     ##vol
-    params['vol'] =dict(zip(tup_fp6zks1, vol_fp6zks1.ravel()))
+    params['vol'] = fun.f1_make_pyomo_dict(vol_fp6zks1, arrays_fp6zks1)
 
 

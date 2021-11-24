@@ -42,3 +42,7 @@ class LabourPeriodError(Error):
 class FVPError(Error):
     """Raised when multiple fvps are on the same date"""
     pass
+
+class ParamError(Error):
+    """Raised when building param if index is not the same size as the param"""
+    pass

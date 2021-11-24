@@ -277,17 +277,15 @@ def f_perm_cost(params, r_vals):
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
 
-    arrays = [keys_c0, keys_p7, keys_z]
-    index_c0p7z = fun.cartesian_product_simple_transpose(arrays)
-    tup_c0p7z = tuple(map(tuple, index_c0p7z))
+    arrays_c0p7z = [keys_c0, keys_p7, keys_z]
 
     ##params and report vals
-    params['perm_cost'] = dict(zip(tup_c0p7z, perm_cost_c0p7z.ravel()))
-    params['perm_wc'] = dict(zip(tup_c0p7z, perm_wc_c0p7z.ravel()))
+    params['perm_cost'] = fun.f1_make_pyomo_dict(perm_cost_c0p7z, arrays_c0p7z)
+    params['perm_wc'] = fun.f1_make_pyomo_dict(perm_wc_c0p7z, arrays_c0p7z)
     r_vals['perm_cost_c0p7z'] = perm_cost_c0p7z
 
-    params['manager_cost'] = dict(zip(tup_c0p7z, manager_cost_c0p7z.ravel()))
-    params['manager_wc'] = dict(zip(tup_c0p7z, manager_wc_c0p7z.ravel()))
+    params['manager_cost'] = fun.f1_make_pyomo_dict(manager_cost_c0p7z, arrays_c0p7z)
+    params['manager_wc'] = fun.f1_make_pyomo_dict(manager_wc_c0p7z, arrays_c0p7z)
     r_vals['manager_cost_c0p7z'] = manager_cost_c0p7z
 
 

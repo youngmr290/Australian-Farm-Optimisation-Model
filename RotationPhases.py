@@ -143,25 +143,13 @@ def f_season_params(params):
     # mask_drystart_z8z9 = mask_drystart_z8z9 * phase_is_drysown_r[:,na,na]
 
     ##build params
-    arrays = [keys_p7, keys_z, keys_z]
-    index_p7z8z9 = fun.cartesian_product_simple_transpose(arrays)
-    tup_p7z8z9 = tuple(map(tuple,index_p7z8z9))
+    arrays_p7z8z9 = [keys_p7, keys_z, keys_z]
 
-    arrays = [keys_p7, keys_z]
-    index_p7z = fun.cartesian_product_simple_transpose(arrays)
-    tup_p7z = tuple(map(tuple,index_p7z))
+    arrays_p7z8 = [keys_p7, keys_z]
 
-    arrays = [keys_r, keys_p7]
-    index_rm = fun.cartesian_product_simple_transpose(arrays)
-    tup_rm = tuple(map(tuple,index_rm))
-
-    arrays = [keys_r, keys_z, keys_z]
-    index_rz8z9 = fun.cartesian_product_simple_transpose(arrays)
-    tup_rz8z9 = tuple(map(tuple,index_rz8z9))
-
-    params['p_mask_childz_phase'] =dict(zip(tup_p7z, mask_childz8_p7z8.ravel()*1))
-    params['p_parentz_provwithin_phase'] =dict(zip(tup_p7z8z9, mask_provwithinz8z9_p7z8z9.ravel()*1))
-    params['p_parentz_provbetween_phase'] =dict(zip(tup_p7z8z9, mask_provbetweenz8z9_p7z8z9.ravel()*1))
+    params['p_mask_childz_phase'] = fun.f1_make_pyomo_dict(mask_childz8_p7z8*1, arrays_p7z8)
+    params['p_parentz_provwithin_phase'] = fun.f1_make_pyomo_dict(mask_provwithinz8z9_p7z8z9*1, arrays_p7z8z9)
+    params['p_parentz_provbetween_phase'] = fun.f1_make_pyomo_dict(mask_provbetweenz8z9_p7z8z9*1, arrays_p7z8z9)
     # params['p_mask_phases'] =dict(zip(tup_rm, mask_phases_rm.ravel()*1))
     # params['p_dryz_link'] =dict(zip(tup_rz8z9, mask_drynext_z8z9.ravel()*1))
     # params['p_dryz_link2'] =dict(zip(tup_rz8z9, mask_drystart_z8z9.ravel()*1))

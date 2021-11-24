@@ -365,34 +365,24 @@ def f1_cropgraze_params(params, r_vals, nv):
     keys_z = zfun.f_keys_z()
 
     ##array indexes
-    ###kp6z
-    arrays = [keys_k, keys_p6, keys_z]
-    index_kp6z = fun.cartesian_product_simple_transpose(arrays)
-    tup_kp6z = tuple(map(tuple, index_kp6z))
-    ###kp6p5z
-    arrays = [keys_k, keys_p6, keys_p5, keys_z]
-    index_kp6p5z = fun.cartesian_product_simple_transpose(arrays)
-    tup_kp6p5z = tuple(map(tuple, index_kp6p5z))
-    ###p6p5z
-    arrays = [keys_p6, keys_p5, keys_z]
-    index_p6z = fun.cartesian_product_simple_transpose(arrays)
-    tup_p6p5z = tuple(map(tuple, index_p6z))
-    ###p5kp6zl
-    arrays = [keys_k, keys_p6, keys_p5, keys_z, keys_l, keys_z]
-    index_kp6p5z8lz9 = fun.cartesian_product_simple_transpose(arrays)
-    tup_kp6p5z8lz9 = tuple(map(tuple, index_kp6p5z8lz9))
-    ###fkp6zl
-    arrays = [keys_f, keys_k, keys_p6, keys_p5, keys_z, keys_l]
-    index_fkp6zl = fun.cartesian_product_simple_transpose(arrays)
-    tup_fkp6p5zl = tuple(map(tuple, index_fkp6zl))
+    ###DM prov
+    arrays_kp6p5z8lz9 = [keys_k, keys_p6, keys_p5, keys_z, keys_l, keys_z]
+    ###DM req
+    arrays_kp6p5z = [keys_k, keys_p6, keys_p5, keys_z]
+    ###yield & stub penalty
+    arrays_kp6z = [keys_k, keys_p6, keys_z]
+    ###transfer
+    arrays_p6p5z = [keys_p6, keys_p5, keys_z]
+    ###mei & pi
+    arrays_fkp6p5zl = [keys_f, keys_k, keys_p6, keys_p5, keys_z, keys_l]
 
 
     ##create params
-    params['crop_DM_provided_kp6p5z8lz9'] = dict(zip(tup_kp6p5z8lz9, crop_DM_provided_kp6p5z8lz9.ravel()))
-    params['crop_DM_required_kp6p5z'] = dict(zip(tup_kp6p5z, crop_DM_required_kp6p5z.ravel()))
-    params['transfer_exists_p6p5z'] = dict(zip(tup_p6p5z, transfer_exists_p6p5z.ravel()))
-    params['yield_reduction_propn_kp6z'] = dict(zip(tup_kp6z, yield_reduction_propn_kp6z.ravel()))
-    params['stubble_reduction_propn_kp6z'] = dict(zip(tup_kp6z, stubble_reduction_propn_kp6z.ravel()))
-    params['crop_md_fkp6p5zl'] = dict(zip(tup_fkp6p5zl, crop_md_fkp6p5zl.ravel()))
-    params['crop_vol_kp6p5zl'] = dict(zip(tup_fkp6p5zl, crop_vol_fkp6p5zl.ravel()))
+    params['crop_DM_provided_kp6p5z8lz9'] = fun.f1_make_pyomo_dict(crop_DM_provided_kp6p5z8lz9, arrays_kp6p5z8lz9)
+    params['crop_DM_required_kp6p5z'] = fun.f1_make_pyomo_dict(crop_DM_required_kp6p5z, arrays_kp6p5z)
+    params['transfer_exists_p6p5z'] = fun.f1_make_pyomo_dict(transfer_exists_p6p5z, arrays_p6p5z)
+    params['yield_reduction_propn_kp6z'] = fun.f1_make_pyomo_dict(yield_reduction_propn_kp6z, arrays_kp6z)
+    params['stubble_reduction_propn_kp6z'] = fun.f1_make_pyomo_dict(stubble_reduction_propn_kp6z, arrays_kp6z)
+    params['crop_md_fkp6p5zl'] = fun.f1_make_pyomo_dict(crop_md_fkp6p5zl, arrays_fkp6p5zl)
+    params['crop_vol_kp6p5zl'] = fun.f1_make_pyomo_dict(crop_vol_fkp6p5zl, arrays_fkp6p5zl)
 
