@@ -787,40 +787,40 @@ def f_stock_cash_summary(lp_vars, r_vals):
     offs_numbers_qsk3k5tvnwziaxyg3 = stock_vars['offs_numbers_qsk3k5tvnwziaxyg3']
 
     ##husb cost
-    sire_cost_qsc0p7g0 = r_vals['stock']['sire_cost_c0p7g0'] * sire_numbers_qsg0[:, :, na, na, :]
+    sire_cost_qsc0p7zg0 = r_vals['stock']['sire_cost_c0p7zg0'] * sire_numbers_qsg0[:, :, na, na, na, :]
     dams_cost_qsk2c0p7tva1nwziyg1 = r_vals['stock']['dams_cost_k2c0p7tva1nwziyg1'] * dams_numbers_qsk2tvanwziy1g1[:, :, :, na, na, ...]
     offs_cost_qsk3k5c0p7tvnwziaxyg3 = r_vals['stock']['offs_cost_k3k5c0p7tvnwziaxyg3'] * offs_numbers_qsk3k5tvnwziaxyg3[:, :, :, :, na, na, ...]
 
     ##purchase cost
-    sire_purchcost_qsc0p7g0 = r_vals['stock']['purchcost_sire_c0p7g0'] * sire_numbers_qsg0[:, :, na, na, :]
+    sire_purchcost_qsc0p7zg0 = r_vals['stock']['purchcost_sire_c0p7zg0'] * sire_numbers_qsg0[:, :, na, na, na, :]
 
     ##sale income
-    salevalue_qsc0p7g0 = r_vals['stock']['salevalue_c0p7g0'] * sire_numbers_qsg0[:, :, na, na, :]
+    salevalue_qsc0p7zg0 = r_vals['stock']['salevalue_c0p7zg0'] * sire_numbers_qsg0[:, :, na, na, na, :]
     salevalue_qsk2c0p7tva1nwziyg1 = r_vals['stock']['salevalue_k2c0p7tva1nwziyg1'] * dams_numbers_qsk2tvanwziy1g1[:, :, :, na, na, ...]
     salevalue_qsk3k5c0p7twzia0xg2 = r_vals['stock']['salevalue_k3k5c0p7twzia0xg2'] * prog_numbers_qsk3k5twzia0xg2[:, :, :, :, na, na, ...]
     salevalue_qsk3k5c0p7tvnwziaxyg3 = r_vals['stock']['salevalue_k3k5c0p7tvnwziaxyg3'] * offs_numbers_qsk3k5tvnwziaxyg3[:, :, :, :, na, na, ...]
 
     ##wool income
-    woolvalue_qsc0p7g0 = r_vals['stock']['woolvalue_c0p7g0'] * sire_numbers_qsg0[:, :, na, na, :]
+    woolvalue_qsc0p7zg0 = r_vals['stock']['woolvalue_c0p7zg0'] * sire_numbers_qsg0[:, :, na, na, na, :]
     woolvalue_qsk2c0p7tva1nwziyg1 = r_vals['stock']['woolvalue_k2c0p7tva1nwziyg1'] * dams_numbers_qsk2tvanwziy1g1[:, :, :, na, na, ...]
     woolvalue_qsk3k5c0p7tvnwziaxyg3 = r_vals['stock']['woolvalue_k3k5c0p7tvnwziaxyg3'] * offs_numbers_qsk3k5tvnwziaxyg3[:, :, :, :, na, na, ...]
 
     ###sum axis to return total income in each cash period
-    siresale_qsc0p7 = fun.f_reduce_skipfew(np.sum, salevalue_qsc0p7g0, preserveAxis=(0,1,2,3))  # sum all axis except q,s,c0,p7
+    siresale_qsc0p7z = fun.f_reduce_skipfew(np.sum, salevalue_qsc0p7zg0, preserveAxis=(0,1,2,3,4))  # sum all axis except q,s,c0,p7
     damssale_qsc0p7z = fun.f_reduce_skipfew(np.sum, salevalue_qsk2c0p7tva1nwziyg1, preserveAxis=(0,1,3,4,10))  # sum all axis except q,s,c0,p7,z
     progsale_qsc0p7z = fun.f_reduce_skipfew(np.sum, salevalue_qsk3k5c0p7twzia0xg2, preserveAxis=(0,1,3,5,8))  # sum all axis except q,s,c0,p7,z
     offssale_qsc0p7z = fun.f_reduce_skipfew(np.sum, salevalue_qsk3k5c0p7tvnwziaxyg3, preserveAxis=(0,1,4,5,10))  # sum all axis except q,s,c0,p7,z
-    sirewool_qsc0p7 = fun.f_reduce_skipfew(np.sum, woolvalue_qsc0p7g0, preserveAxis=(0,1,2,3))  # sum all axis except q,s,c0,p7,z
+    sirewool_qsc0p7z = fun.f_reduce_skipfew(np.sum, woolvalue_qsc0p7zg0, preserveAxis=(0,1,2,3,4))  # sum all axis except q,s,c0,p7,z
     damswool_qsc0p7z = fun.f_reduce_skipfew(np.sum, woolvalue_qsk2c0p7tva1nwziyg1, preserveAxis=(0,1,3,4,10))  # sum all axis except q,s,c0,p7,z
     offswool_qsc0p7z = fun.f_reduce_skipfew(np.sum, woolvalue_qsk3k5c0p7tvnwziaxyg3, preserveAxis=(0,1,4,5,10))  # sum all axis except q,s,c0,p7,z
-    stocksale_qsc0p7z = siresale_qsc0p7[...,na] + damssale_qsc0p7z + progsale_qsc0p7z + offssale_qsc0p7z
-    wool_qsc0p7z = sirewool_qsc0p7[...,na] + damswool_qsc0p7z + offswool_qsc0p7z
+    stocksale_qsc0p7z = siresale_qsc0p7z + damssale_qsc0p7z + progsale_qsc0p7z + offssale_qsc0p7z
+    wool_qsc0p7z = sirewool_qsc0p7z + damswool_qsc0p7z + offswool_qsc0p7z
 
-    sirecost_qsc0p7 = fun.f_reduce_skipfew(np.sum, sire_cost_qsc0p7g0, preserveAxis=(0,1,2,3))  # sum all axis except q,s,c0,p7
+    sirecost_qsc0p7z = fun.f_reduce_skipfew(np.sum, sire_cost_qsc0p7zg0, preserveAxis=(0,1,2,3,4))  # sum all axis except q,s,c0,p7,z
     damscost_qsc0p7z = fun.f_reduce_skipfew(np.sum, dams_cost_qsk2c0p7tva1nwziyg1, preserveAxis=(0,1,3,4,10))  # sum all axis except q,s,c0,p7,z
     offscost_qsc0p7z = fun.f_reduce_skipfew(np.sum, offs_cost_qsk3k5c0p7tvnwziaxyg3, preserveAxis=(0,1,4,5,10))  # sum all axis except q,s,c0,p7,z
 
-    sire_purchcost_qsc0p7 = fun.f_reduce_skipfew(np.sum, sire_purchcost_qsc0p7g0, preserveAxis=(0,1,2,3))  # sum all axis except q,s,c0,p7
+    sire_purchcost_qsc0p7z = fun.f_reduce_skipfew(np.sum, sire_purchcost_qsc0p7zg0, preserveAxis=(0,1,2,3,4))  # sum all axis except q,s,c0,p7
 
     ##expenses sup feeding
     ###read in dict from grain summary
@@ -839,16 +839,17 @@ def f_stock_cash_summary(lp_vars, r_vals):
     total_infra_cost_qsc0p7z = fixed_infra_cost_c0p7z + var_infra_cost_qsc0p7z
 
     ##total costs
-    husbcost_qsc0p7z = sirecost_qsc0p7[...,na] + damscost_qsc0p7z + offscost_qsc0p7z + total_infra_cost_qsc0p7z
+    husbcost_qsc0p7z = sirecost_qsc0p7z + damscost_qsc0p7z + offscost_qsc0p7z + total_infra_cost_qsc0p7z
     supcost_c0p7zqs = sup_grain_cost_c0p7zqs + supp_feedstorage_cost_c0p7zqs
-    purchasecost_qsc0p7 = sire_purchcost_qsc0p7
+    purchasecost_qsc0p7z = sire_purchcost_qsc0p7z
 
     ##get axis in correct order for pnl table
     stocksale_qszc0p7 = np.moveaxis(stocksale_qsc0p7z, source=-1, destination=2)
     wool_qszc0p7 = np.moveaxis(wool_qsc0p7z, source=-1, destination=2)
     husbcost_qszc0p7 = np.moveaxis(husbcost_qsc0p7z, source=-1, destination=2)
+    purchasecost_qszc0p7 = np.moveaxis(purchasecost_qsc0p7z, source=-1, destination=2)
     supcost_qsz_c0p7 = supcost_c0p7zqs.unstack([3,4,2]).T
-    return stocksale_qszc0p7, wool_qszc0p7, husbcost_qszc0p7, supcost_qsz_c0p7, purchasecost_qsc0p7
+    return stocksale_qszc0p7, wool_qszc0p7, husbcost_qszc0p7, supcost_qsz_c0p7, purchasecost_qszc0p7
 
 
 def f_labour_summary(lp_vars, r_vals, option=0):
@@ -1002,8 +1003,8 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
 
     if method == 0:
         ##sire
-        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_qsg0'][:, :, na, :]
-                                        * r_vals['stock']['dsenw_p6g0'][na,na,...], preserveAxis=sire_preserve_ax)  # sum all axis except preserveAxis
+        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_qsg0'][:, :, na, na, :]
+                                        * r_vals['stock']['dsenw_p6zg0'][na,na,...], preserveAxis=sire_preserve_ax)  # sum all axis except preserveAxis
         ##dams
         dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_qsk2tvanwziy1g1'][:, :, :, na, ...]
                                         * r_vals['stock']['dsenw_k2p6tva1nwziyg1'][na,na,...], preserveAxis=dams_preserve_ax)  # sum all axis except preserveAxis
@@ -1012,8 +1013,8 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
                                         * r_vals['stock']['dsenw_k3k5p6tvnwziaxyg3'][na,na,...], preserveAxis=offs_preserve_ax)  # sum all axis except preserveAxis
     else:
         ##sire
-        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_qsg0'][:, :, na, :]
-                                        * r_vals['stock']['dsemj_p6g0'][na,na,...], preserveAxis=sire_preserve_ax)  # sum all axis except preserveAxis
+        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_qsg0'][:, :, na, na, :]
+                                        * r_vals['stock']['dsemj_p6zg0'][na,na,...], preserveAxis=sire_preserve_ax)  # sum all axis except preserveAxis
         ##dams
         dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_qsk2tvanwziy1g1'][:, :, :, na, ...]
                                         * r_vals['stock']['dsemj_k2p6tva1nwziyg1'][na,na,...], preserveAxis=dams_preserve_ax)  # sum all axis except preserveAxis
@@ -1053,7 +1054,7 @@ def f_profitloss_table(lp_vars, r_vals):
     ##read stuff from other functions that is used in rev and cost section
     exp_fert_k_c0p7zqs, exp_chem_k_c0p7zqs, misc_exp_k_c0p7zqs, rev_grain_k_c0p7zqs = f_crop_summary(lp_vars, r_vals, option=0)
     exp_mach_k_c0p7zqs, mach_insurance_c0p7z = f_mach_summary(lp_vars, r_vals)
-    stocksale_qszc0p7, wool_qszc0p7, husbcost_qszc0p7, supcost_qsz_c0p7, purchasecost_qsc0p7 = f_stock_cash_summary(lp_vars, r_vals)
+    stocksale_qszc0p7, wool_qszc0p7, husbcost_qszc0p7, supcost_qsz_c0p7, purchasecost_qszc0p7 = f_stock_cash_summary(lp_vars, r_vals)
 
     ##other info required below
     all_pas = r_vals['rot']['all_pastures']  # landuse sets
@@ -1108,7 +1109,7 @@ def f_profitloss_table(lp_vars, r_vals):
     pnl.loc[idx[:, :, :, 'Expense', 'pasture'], :] = pas_c0p7_qsz.T.reindex(pnl_cols, axis=1).values #reindex because c0 has been sorted alphabetically
     pnl.loc[idx[:, :, :, 'Expense', 'stock husb'], :] = husbcost_qszc0p7.reshape(-1, len_c0p7)
     pnl.loc[idx[:, :, :, 'Expense', 'stock sup'], :] = supcost_qsz_c0p7.reindex(pnl_cols, axis=1).values #reindex because c0 has been sorted alphabetically
-    pnl.loc[idx[:, :, :, 'Expense', 'stock purchase'], :] = purchasecost_qsc0p7.reshape(-1, len_c0p7)
+    pnl.loc[idx[:, :, :, 'Expense', 'stock purchase'], :] = purchasecost_qszc0p7.reshape(-1, len_c0p7)
     pnl.loc[idx[:, :, :, 'Expense', 'machinery'], :] = mach_c0p7_qsz.T.reindex(pnl_cols, axis=1).values #reindex because c0 has been sorted alphabetically
     pnl.loc[idx[:, :, :, 'Expense', 'labour'], :] = labour_c0p7qsz.reshape(len_c0p7, -1).T
     pnl.loc[idx[:, :, :, 'Expense', 'fixed'], :] = exp_fix_c0p7_z.T.reindex(pnl_cols, axis=1).values #reindex because c0 has been sorted alphabetically
