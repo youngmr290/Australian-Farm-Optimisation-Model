@@ -24,7 +24,8 @@ can easily be optimised for different axis that are not included in the inputs (
 depending on the number of w it may take a few creation runs to converge on the optimal feedsupply.
 Optimising if the stock are in confinement or not is more complicated because the level of optimisation
 can only be made to the dvp level. The user can increase the precision by specifying the generator periods
-when confinement feeding can occur (i_confinement_r1p).
+when confinement feeding can occur (i_confinement_r1p). This (i_confinement_r1p) is also required so that confinement
+can be included in the n1 model without forcing it to occur all year.
 
 Confinement feeding is good to represent separately for a few reason:
 
