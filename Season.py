@@ -83,35 +83,25 @@ def f_season_precalcs(params, r_vals):
     keys_p7 = per.f_season_periods(keys=True)
 
     ###p7z8
-    arrays = [keys_p7, keys_z]
-    index_p7z8 = fun.cartesian_product_simple_transpose(arrays)
-    tup_p7z8 = tuple(map(tuple,index_p7z8))
+    arrays_p7z8 = [keys_p7, keys_z]
     ###p7z8z9
-    arrays = [keys_p7, keys_z, keys_z]
-    index_p7z8z9 = fun.cartesian_product_simple_transpose(arrays)
-    tup_p7z8z9 = tuple(map(tuple,index_p7z8z9))
+    arrays_p7z8z9 = [keys_p7, keys_z, keys_z]
     ###qs - season sequence
-    arrays = [keys_q, keys_s]
-    index_qs = fun.cartesian_product_simple_transpose(arrays)
-    tup_qs = tuple(map(tuple, index_qs))
+    arrays_qs = [keys_q, keys_s]
     ###qsz - season sequence
-    arrays = [keys_q, keys_s, keys_z]
-    index_qsz = fun.cartesian_product_simple_transpose(arrays)
-    tup_qsz = tuple(map(tuple,index_qsz))
+    arrays_qsz = [keys_q, keys_s, keys_z]
     ###qs8zs9 - season sequence
-    arrays = [keys_q, keys_s, keys_z, keys_s]
-    index_qs8zs9 = fun.cartesian_product_simple_transpose(arrays)
-    tup_qs8zs9 = tuple(map(tuple,index_qs8zs9))
+    arrays_qs8zs9 = [keys_q, keys_s, keys_z, keys_s]
 
 
-    params['p_mask_childz_within_season'] =dict(zip(tup_p7z8, mask_reqwithinz8_p7z8.ravel()*1))
-    params['p_mask_childz_between_season'] =dict(zip(tup_p7z8, mask_reqbetweenz8_p7z8.ravel()*1))
-    params['p_parentz_provwithin_season'] =dict(zip(tup_p7z8z9, mask_provwithinz8z9_p7z8z9.ravel()*1))
-    params['p_parentz_provbetween_season'] =dict(zip(tup_p7z8z9, mask_provbetweenz8z9_p7z8z9.ravel()*1))
-    params['p_wyear_inc_qs'] =dict(zip(tup_qs,p_wyear_inc_qs.ravel()*1))
-    params['p_season_prob_qsz'] = dict(zip(tup_qsz,p_season_prob_qsz.ravel()))
-    params['p_endstart_prov_qsz'] = dict(zip(tup_qsz,p_endstart_prov_qsz.ravel()))
-    params['p_sequence_prov_qs8zs9'] = dict(zip(tup_qs8zs9,p_sequence_prov_qs8zs9.ravel()*1))
+    params['p_mask_childz_within_season'] = fun.f1_make_pyomo_dict(mask_reqwithinz8_p7z8*1, arrays_p7z8)
+    params['p_mask_childz_between_season'] = fun.f1_make_pyomo_dict(mask_reqbetweenz8_p7z8*1, arrays_p7z8)
+    params['p_parentz_provwithin_season'] = fun.f1_make_pyomo_dict(mask_provwithinz8z9_p7z8z9*1, arrays_p7z8z9)
+    params['p_parentz_provbetween_season'] = fun.f1_make_pyomo_dict(mask_provbetweenz8z9_p7z8z9*1, arrays_p7z8z9)
+    params['p_wyear_inc_qs'] = fun.f1_make_pyomo_dict(p_wyear_inc_qs*1, arrays_qs)
+    params['p_season_prob_qsz'] = fun.f1_make_pyomo_dict(p_season_prob_qsz, arrays_qsz)
+    params['p_endstart_prov_qsz'] = fun.f1_make_pyomo_dict(p_endstart_prov_qsz, arrays_qsz)
+    params['p_sequence_prov_qs8zs9'] = fun.f1_make_pyomo_dict(p_sequence_prov_qs8zs9*1, arrays_qs8zs9)
 
 
     ##report
