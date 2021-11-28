@@ -448,7 +448,7 @@ def f1_nv_components(paststd_foo_p6a1e1b1j0wzida0e0b0xyg, paststd_dmd_p6a1e1b1j0
     n_pos = sinp.stock['i_n_pos']
 
     ##Generate the levels of FOO, DMD & Supplement for the conversion arrays.
-    len_j1 = 1500
+    len_j1 = 150
     index_j1 = np.arange(len_j1) / len_j1
     propn = 2/3   #proportion of the length of j1 that is in the range of the 2 levels of j0.
     ###add upper level to sup
