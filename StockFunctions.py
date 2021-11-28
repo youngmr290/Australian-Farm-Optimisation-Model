@@ -492,7 +492,7 @@ def f1_feedsupply(feedsupplyw_a1e1b1nwzida0e0b0xyg, confinementw_a1e1b1nwzida0e0
                   foo_a1e1b1j1wzida0e0b0xyg, dmd_a1e1b1j1wzida0e0b0xyg, supp_a1e1b1j1wzida0e0b0xyg, pi_a1e1b1nwzida0e0b0xyg,
                   mp2=0):
     ##calc mei (mei = nv * pi)
-    mei = feedsupplyw_a1e1b1nwzida0e0b0xyg * pi_a1e1b1nwzida0e0b0xyg + mp2 #todo need to check that +mp2 is correct
+    mei = feedsupplyw_a1e1b1nwzida0e0b0xyg * pi_a1e1b1nwzida0e0b0xyg + mp2 #add mp2 because pi doesnt include milk.
 
     ##interp to calc foo, dmd and supp that correspond with given feedsupply
     axis = sinp.stock['i_n_pos']
