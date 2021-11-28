@@ -648,9 +648,9 @@ def f_potential_intake_mu(srw):
     return np.maximum(0,pi)
 
 
-def f_intake(pi, ri, md_herb, feedsupply, intake_s, i_md_supp, mp2=0):
+def f_intake(pi, ri, md_herb, confinement, intake_s, i_md_supp, mp2=0):
     ##Pasture intake
-    intake_f = np.maximum(0, pi - intake_s) * ri * (feedsupply < 3)
+    intake_f = np.maximum(0, pi - intake_s) * ri * np.logical_not(confinement)
     ##ME intake from forage	
     mei_forage = 0
     ##ME intake from supplement	
