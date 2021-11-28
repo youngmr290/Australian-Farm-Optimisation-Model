@@ -224,7 +224,7 @@ def generator(params,r_vals,nv,plots = False):
     fvp2_offset_ida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_fvp2_offset_ig3'], 'offs', i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
 
     ##season nodes - dvp must be added for each node (fvp is optional)
-    date_node_zm = per.f_season_periods()[:-1,:].T #slice off end date of last period
+    date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64') #have to use this rather than season periods because season periods get cut down in SE model but we still might want all the season nodes as dvp/fvp.
     date_node_zidaebxygm = fun.f_expand(date_node_zm, z_pos-1, right_pos=-1)
     len_m = date_node_zidaebxygm.shape[-1]
 

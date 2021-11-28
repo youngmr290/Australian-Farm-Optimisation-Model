@@ -227,7 +227,8 @@ def f_season_periods(keys=False):
     '''
     date_node_zp7 = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64')
     ##if steady state then p7 axis is singleton (start and finish at the break of season).
-    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
+    ## all node are included even in steady state model if user overwrites.
+    if np.logical_not(pinp.general['i_inc_node_periods']) and (pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1):
         date_node_zp7 = date_node_zp7[:,0:1]
         ###add end date of last node period - required for the allocation function
         end_zp7 = date_node_zp7[:,0:1] + np.timedelta64(365,'D')  # increment the first date by 1yr so it becomes the end date for the last period
