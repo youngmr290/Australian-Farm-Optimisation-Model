@@ -103,9 +103,6 @@ def f_season_params(params):
     keys_p7 = per.f_season_periods(keys=True)
     keys_z = zfun.f_keys_z()
     phases_df = sinp.f_phases()
-    keys_r = phases_df.index
-    index_z = np.arange(len(keys_z))
-    initiating_parent_z = zfun.f_initiating_parent_z()
     landuse_r = phases_df.iloc[:,-1].values
     dry_sown_landuses = sinp.landuse['dry_sown']
     phase_is_drysown_r = np.any(landuse_r[:,na]==list(dry_sown_landuses), axis=-1)
