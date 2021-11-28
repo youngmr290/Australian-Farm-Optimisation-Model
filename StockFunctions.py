@@ -738,7 +738,7 @@ def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_sta
     ##Distance walked (horizontal equivalent)	
     distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
     ##Set Distance walked to 0 if in confinement	
-    distance = distance * confinement
+    distance = distance * np.logical_not(confinement)
     ##Energy required for movement	
     emove = cm[16, ...] * distance * lw_start
     ##Energy required for grazing (chewing and walking around)
