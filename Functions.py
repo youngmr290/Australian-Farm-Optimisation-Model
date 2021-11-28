@@ -186,7 +186,7 @@ def f_expand(array, left_pos=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2
     left_pos : int
         position of axis to the left of where the new axis will be added.
     swap : boolean, optional
-        do you want to swap the first tow axis?. The default is False.
+        do you want to swap the first two axis?. The default is False.
     right_pos : int, optional
         the position of the axis to the right of the singleton axis being added. The default is -1, for when the axis to the right is g?.
     left_pos2 : int
@@ -601,6 +601,45 @@ def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None)
                 sl[axis2] = slice( start2, stop2)
                 arr = arr[tuple(sl)]
         return arr
+
+def f_nD_interp(x, xp, yp, axis):
+    '''
+    Interp with multi-D this is essentially the same as looping through axis and applying np.interp
+
+    All inputs must be broadcastable.
+
+    :param x: The x-coordinates at which to evaluate the interpolated values.
+    :param xp: The x-coordinates of the data points, must be increasing
+    :param yp: The y-coordinates of the data points, same length as xp
+    :param axis: Axis to interp along
+    :return: y - the interpolated values, same shape as x.
+    '''
+    ##move axis to interp along into pos=0
+    x = np.moveaxis(x, source=axis, destination=0)
+    xp = np.moveaxis(xp, source=axis, destination=0)
+    yp = np.moveaxis(yp, source=axis, destination=0)
+    ##broadcast all arrays to be the same along all axis except the interp axis
+    shape = tuple(np.maximum.reduce([xp.shape[1:], yp.shape[1:], x.shape[1:]]))
+    x = np.broadcast_to(x, x.shape[0:1]+shape)
+    xp = np.broadcast_to(xp, xp.shape[0:1]+shape)
+    yp = np.broadcast_to(yp, yp.shape[0:1]+shape)
+    ##store shape of final array so it can be reshaped back
+    final_shape = x.shape
+    ##reshape
+    x = x.reshape(x.shape[0],-1)
+    xp = xp.reshape(xp.shape[0],-1)
+    yp = yp.reshape(yp.shape[0],-1)
+    ##loop and do interp
+    y = np.zeros(x.shape)
+    for i in range(x.shape[-1]):
+        y[:,i] = np.interp(x[:,i], xp[:,i], yp[:,i])
+    ##reshape to normal
+    y = y.reshape(final_shape)
+    y = np.moveaxis(y, source=0, destination=axis)
+    return y
+
+
+
 
 #######################
 #Specific AFO function#

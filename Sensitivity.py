@@ -91,7 +91,7 @@ saa['r1_izg1'] = np.zeros(pinp.sheep['ia_r1_zig1'].shape, dtype=int)   #SA to ch
 saa['r1_izg3'] = np.zeros(pinp.sheep['ia_r1_zig3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
 saa['r2_isk2g1'] = np.zeros(pinp.sheep['ia_r2_sk2ig1'].shape, dtype=int)   #SA to change the base feed option selected for dams
 saa['r2_ik5g3'] = np.zeros(pinp.sheep['ia_r2_ik5g3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
-saa['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1pj0'].shape, dtype=np.float64)  #SA value for feedsupply.
+saa['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype=np.float64)  #SA value for feedsupply.
 saa['feedsupply_adj_r2p'] = np.zeros(pinp.feedsupply['i_feedsupply_adj_options_r2p'].shape, dtype=np.float64)  #SA value for feedsupply adjustment.
 
 ##stock parameters

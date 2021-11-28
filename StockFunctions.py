@@ -425,6 +425,111 @@ def f1_fvpdvp_adj(fvp_start_fa1e1b1nwzida0e0b0xyg, fvp_type_fa1e1b1nwzida0e0b0xy
 #Sim functions #
 ################
 
+def f1_nv_components(paststd_foo_p6a1e1b1j0wzida0e0b0xyg, paststd_dmd_p6a1e1b1j0wzida0e0b0xyg, paststd_hf_p6a1e1b1j0wzida0e0b0xyg,
+                     suppstd_p6a1e1b1nwzida0e0b0xyg, legume_p6a1e1b1nwzida0e0b0xyg, cr, cu0, zf=1):
+    '''
+    Generates the relationship between diet NV and, FOO & diet quality (in each feed period and weather-year).
+
+    The function generates multiple discrete data points from which FOO & diet M/D can be predicted from diet NV by interpolation.
+    This relationship is required because the same nutritive value can be achieved with a varying combination of FOO and DMD.
+    The combination selected affects the animal requirements because:
+
+        #. FOO affects the energy requirement associated with walking to find feed.
+        #. M/D affects the efficiency of utilising energy for maintenance and production.
+
+    The range from lowest NV to highest NV is associated with increasing FOO & DMD inputs across the j0 axis and then
+    increasing supplementary feeding from the input level up to adlib.
+
+    The mei returned from this function is nv for a potential intake of 1 (nv = mei * PI). The nv is is scaled
+    for the actual PI outside of this function.
+    '''
+    from scipy.interpolate import interp1d
+    ##inputs
+    n_pos = sinp.stock['i_n_pos']
+
+    ##Generate the levels of FOO, DMD & Supplement for the conversion arrays.
+    len_j1 = 1500
+    index_j1 = np.arange(len_j1) / len_j1
+    propn = 2/3   #proportion of the length of j1 that is in the range of the 2 levels of j0.
+    ###add upper level to sup
+    max_supp_p6a1e1b1nwzida0e0b0xyg = np.ones_like(suppstd_p6a1e1b1nwzida0e0b0xyg)
+    suppstd_p6a1e1b1j0wzida0e0b0xyg = np.concatenate([suppstd_p6a1e1b1nwzida0e0b0xyg, max_supp_p6a1e1b1nwzida0e0b0xyg], axis=n_pos)
+    ###create the foo, dmd & supp for each level of j1
+    foo_p6a1e1b1j1wzida0e0b0xyg = interp1d([0, propn], paststd_foo_p6a1e1b1j0wzida0e0b0xyg, axis=n_pos)(np.minimum(index_j1,propn))
+    hf_p6a1e1b1j1wzida0e0b0xyg = interp1d([0, propn], paststd_hf_p6a1e1b1j0wzida0e0b0xyg, axis=n_pos)(np.minimum(index_j1,propn))
+    dmd_p6a1e1b1j1wzida0e0b0xyg = interp1d([0, propn], paststd_dmd_p6a1e1b1j0wzida0e0b0xyg, axis=n_pos)(np.minimum(index_j1,propn))
+    supp_p6a1e1b1j1wzida0e0b0xyg = interp1d([propn,1], suppstd_p6a1e1b1j0wzida0e0b0xyg, axis=n_pos)(np.maximum(index_j1,propn))
+
+    ## calculate the M/D of diet from DMD, FOO & proportion of supplement
+    past_md_p6a1e1b1j1wzida0e0b0xyg = fsfun.dmd_to_md(dmd_p6a1e1b1j1wzida0e0b0xyg)
+
+    ##relative availability - uses dams equation system in p=0
+    eqn_group = 5
+    eqn_system = 0 # CSIRO = 0
+    if uinp.sheep['i_eqn_used_g1_q1p7'][eqn_group, 0] == eqn_system:
+        ra_p6a1e1b1j1wzida0e0b0xyg = fsfun.f_ra_cs(foo_p6a1e1b1j1wzida0e0b0xyg, hf_p6a1e1b1j1wzida0e0b0xyg, cr, zf)
+    eqn_system = 1 # Murdoch = 1
+    if uinp.sheep['i_eqn_used_g1_q1p7'][eqn_group, 0] == eqn_system:
+        ra_p6a1e1b1j1wzida0e0b0xyg = fsfun.f_ra_mu(foo_p6a1e1b1j1wzida0e0b0xyg, hf_p6a1e1b1j1wzida0e0b0xyg, zf, cu0)
+
+    ##relative ingestibility (quality)
+    eqn_group = 6
+    eqn_system = 0 # CSIRO = 0
+    if uinp.sheep['i_eqn_used_g1_q1p7'][eqn_group, 0] == eqn_system:
+        rq_p6a1e1b1j1wzida0e0b0xyg = fsfun.f_rq_cs(dmd_p6a1e1b1j1wzida0e0b0xyg, legume_p6a1e1b1nwzida0e0b0xyg, cr, pinp.sheep['i_sf'])
+
+    ##relative intake
+    ri_p6a1e1b1j1wzida0e0b0xyg = fsfun.f_rel_intake(ra_p6a1e1b1j1wzida0e0b0xyg, rq_p6a1e1b1j1wzida0e0b0xyg, legume_p6a1e1b1nwzida0e0b0xyg, cr)
+
+    ##mei which is nv for a PI of 1.
+    mei_p6zj1 = f_intake(1, ri_p6a1e1b1j1wzida0e0b0xyg, past_md_p6a1e1b1j1wzida0e0b0xyg, False
+                         , supp_p6a1e1b1j1wzida0e0b0xyg, pinp.sheep['i_md_supp'])
+
+    return mei_p6zj1, foo_p6a1e1b1j1wzida0e0b0xyg, dmd_p6a1e1b1j1wzida0e0b0xyg, supp_p6a1e1b1j1wzida0e0b0xyg
+
+
+def f1_feedsupply(feedsupplyw_a1e1b1nwzida0e0b0xyg, confinementw_a1e1b1nwzida0e0b0xyg, nv_a1e1b1j1wzida0e0b0xyg,
+                  foo_a1e1b1j1wzida0e0b0xyg, dmd_a1e1b1j1wzida0e0b0xyg, supp_a1e1b1j1wzida0e0b0xyg, pi_a1e1b1nwzida0e0b0xyg,
+                  mp2=0):
+    ##calc mei (mei = nv * pi)
+    mei = feedsupplyw_a1e1b1nwzida0e0b0xyg * pi_a1e1b1nwzida0e0b0xyg + mp2 #todo need to check that +mp2 is correct
+
+    ##interp to calc foo, dmd and supp that correspond with given feedsupply
+    axis = sinp.stock['i_n_pos']
+    foo = fun.f_nD_interp(feedsupplyw_a1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,foo_a1e1b1j1wzida0e0b0xyg,axis)
+    dmd = fun.f_nD_interp(feedsupplyw_a1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,dmd_a1e1b1j1wzida0e0b0xyg,axis)
+    supp = fun.f_nD_interp(feedsupplyw_a1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,supp_a1e1b1j1wzida0e0b0xyg,axis)
+
+    ##if confinement then no pasture
+    foo = fun.f_update(foo,0,confinementw_a1e1b1nwzida0e0b0xyg)
+    dmd = fun.f_update(dmd,0,confinementw_a1e1b1nwzida0e0b0xyg)
+    ##if confinement then all diet is made up from supp therefore scale supp accordingly
+    supp = fun.f_update(supp, feedsupplyw_a1e1b1nwzida0e0b0xyg / pinp.sheep['i_md_supp'], confinementw_a1e1b1nwzida0e0b0xyg)
+
+    ##supplement intake
+    intake_s = pi_a1e1b1nwzida0e0b0xyg * supp
+    ##ME intake from supplement
+    mei_supp = intake_s * pinp.sheep['i_md_supp']
+    ##ME intake of solid food
+    mei_solid = mei - mp2
+    ##ME intake from herbage
+    mei_herb = mei_solid - mei_supp
+    ##M/D of herbs
+    md_herb = fsfun.dmd_to_md(dmd)  # will be 0 if in confinement
+    ##herb intake
+    intake_f = fun.f_divide(mei_herb, md_herb) #func to stop div/0 error if confinement
+    ##M/D of the diet (solids)
+    md_solid = fun.f_divide(mei_solid, intake_f + intake_s) #yatf have 0 solid intake at start of life.
+    ##Proportion of ME as milk
+    mei_propn_milk = fun.f_divide(mp2, mei) #func to stop div/0 error when some animals dont exist eg tol1 animals exist before tol2 animals
+    ##Proportion of ME as supp
+    mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error when some animals dont exist eg tol1 animals exist before tol2 animals
+    ##Proportion of ME as herbage
+    mei_propn_herb = fun.f_divide(mei_herb, mei) #func to stop div/0 error when some animals dont exist eg tol1 animals exist before tol2 animals
+
+    return mei, foo, dmd, mei_solid, md_solid, md_herb, intake_f, intake_s, mei_propn_milk, mei_propn_supp, mei_propn_herb
+
+
 def f1_feedsupply_adjust(attempts,feedsupply,itn):
     ##create empty array to put new feedsupply into, this is done so it doesnt have the itn axis (probably could just create from attempts array shape without last axis)
     feedsupply = np.zeros_like(feedsupply)
@@ -554,17 +659,17 @@ def f_intake(pi, ri, md_herb, feedsupply, intake_s, i_md_supp, mp2=0):
     mei_herb = intake_f * md_herb
     ##ME intake of solid food	
     mei_solid = mei_forage + mei_herb + mei_supp
-    ##M/D of the diet (solids)	
-    md_solid = fun.f_divide(mei_solid, intake_f + intake_s) #func to stop div/0 error if fs  = 3 (eg zero feed)
+    # ##M/D of the diet (solids)
+    # md_solid = fun.f_divide(mei_solid, intake_f + intake_s) #func to stop div/0 error if fs  = 3 (eg zero feed)
     ##ME intake total	
     mei = mei_solid + mp2
-    ##Proportion of ME as milk	
-    mei_propn_milk = fun.f_divide(mp2, mei) #func to stop div/0 error - if mei is 0 then so is numerator
-    ##Proportion of ME as herbage	
-    mei_propn_herb = fun.f_divide((mei_herb + mei_forage), mei) #func to stop div/0 error - if mei is 0 then so is numerator
-    ##Proportion of ME as supp	
-    mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error - if mei is 0 then so is numerator
-    return mei, mei_solid, intake_f, md_solid, mei_propn_milk, mei_propn_herb, mei_propn_supp
+    # ##Proportion of ME as milk
+    # mei_propn_milk = fun.f_divide(mp2, mei) #func to stop div/0 error - if mei is 0 then so is numerator
+    # ##Proportion of ME as herbage
+    # mei_propn_herb = fun.f_divide((mei_herb + mei_forage), mei) #func to stop div/0 error - if mei is 0 then so is numerator
+    # ##Proportion of ME as supp
+    # mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error - if mei is 0 then so is numerator
+    return mei#, mei_solid, intake_f, md_solid, mei_propn_milk, mei_propn_herb, mei_propn_supp
 
 
 def f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
@@ -619,7 +724,7 @@ def f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
 
 
 def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_start, days_period, md_solid, i_md_supp,
-                md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, feedsupply, intake_f, dmd, mei_propn_milk=0, sam_kg=1, sam_mr=1):
+                md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_kg=1, sam_mr=1):
     ##Efficiency for maintenance	
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
     ##Efficiency for lactation - dam only	
@@ -633,7 +738,7 @@ def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_sta
     ##Distance walked (horizontal equivalent)	
     distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
     ##Set Distance walked to 0 if in confinement	
-    distance = distance * (feedsupply < 3)
+    distance = distance * confinement
     ##Energy required for movement	
     emove = cm[16, ...] * distance * lw_start
     ##Energy required for grazing (chewing and walking around)
@@ -958,58 +1063,30 @@ def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
     return ch4_total, ch4_animal
 
 
-def f1_convert_fs2nv(fs_input, nv_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg):
-    ##convert a feed supply array (feed) and return an NV array using a conversion array (nv_p6f) for a corresponding feedsupply (feedsupply_f)
-    ## expect feed to have a p axis as axis 0.
-    ###the position of the feedsupply input in the conversion array
-    fs_col_pa1e1b1nwzida0e0b0xyg = np.searchsorted(feedsupply_f, fs_input, 'right') - 1
-    fs_col_pa1e1b1nwzida0e0b0xyg = np.maximum(0, fs_col_pa1e1b1nwzida0e0b0xyg)
-    ###the value from the conversion array in column fs_col in the row associated with the feed period for that generator period.
-    nv_pa1e1b1nwzida0e0b0xygf = nv_p6f[a_p6_pa1e1b1nwzida0e0b0xyg, :]
-    nv_pa1e1b1nwzida0e0b0xygf = np.take_along_axis(nv_pa1e1b1nwzida0e0b0xygf, fs_col_pa1e1b1nwzida0e0b0xyg[...,na], axis=-1)
-    return nv_pa1e1b1nwzida0e0b0xygf[...,0] #remove singleton f axis - no longer needed.
-
-
-def f1_convert_nv2fs(nv_input, nv_p6f, feedsupply_f, a_p6_pz):
-    ##convert a feed supply array (feed) and return an NV array using a conversion array (nv_p6f) for a corresponding feedsupply (feedsupply_f)
-    ## expect feed to have a p axis as axis 0.
-    ### multi dim search sorted requires the axes to be the same, so convert p6 to p in the lookup array
-    nv_pzf = nv_p6f[a_p6_pz, :]
-    ###the position of the feedsupply input in the conversion array
-    z_pos = sinp.stock['i_z_pos']
-    fs_col_pa1e1b1nwzida0e0b0xyg = fun.searchsort_multiple_dim(nv_pzf, nv_input, axis_a0=0, axis_v0=0, axis_a1=1, axis_v1=z_pos, side='right') - 1
-    fs_col_pa1e1b1nwzida0e0b0xyg = np.maximum(0, fs_col_pa1e1b1nwzida0e0b0xyg)
-    ###the value from the feedsupply array in column fs_col.
-    fs = feedsupply_f[fs_col_pa1e1b1nwzida0e0b0xyg]
-    return fs
-
-
-def f1_feedsupply(feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0e0b0xyg, paststd_dmd_a1e1b1j0wzida0e0b0xyg
-                 , paststd_hf_a1e1b1j0wzida0e0b0xyg, pi):
-    ##level of pasture
-    level_a1e1b1nwzida0e0b0xyg = np.trunc(np.minimum(2, feedsupply_std_a1e1b1nwzida0e0b0xyg)).astype('int') #note np.trunc rounds down to the nearest int (need to specify int type for the take along axis function below)
-    ##next level up of pasture
-    next_level_a1e1b1nwzida0e0b0xyg = np.minimum(2, level_a1e1b1nwzida0e0b0xyg + 1)
-    ##decimal component of feedsupply
-    proportion_a1e1b1nwzida0e0b0xyg = feedsupply_std_a1e1b1nwzida0e0b0xyg % 1
-    ##foo (corrected for measurement system of the region and the pasture stage)
-    paststd_foo_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_foo_a1e1b1j0wzida0e0b0xyg, level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
-    paststd_foo_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_foo_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
-    foo_a1e1b1nwzida0e0b0xyg = paststd_foo_a1e1b1nwzida0e0b0xyg + proportion_a1e1b1nwzida0e0b0xyg * (paststd_foo_next_a1e1b1nwzida0e0b0xyg - paststd_foo_a1e1b1nwzida0e0b0xyg)
-    ##dmd
-    paststd_dmd_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_dmd_a1e1b1j0wzida0e0b0xyg, level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
-    paststd_dmd_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_dmd_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
-    dmd_a1e1b1nwzida0e0b0xyg = paststd_dmd_a1e1b1nwzida0e0b0xyg + proportion_a1e1b1nwzida0e0b0xyg * (paststd_dmd_next_a1e1b1nwzida0e0b0xyg - paststd_dmd_a1e1b1nwzida0e0b0xyg)
-    ##hf
-    paststd_hf_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_hf_a1e1b1j0wzida0e0b0xyg, level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
-    paststd_hf_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_hf_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
-    hf_a1e1b1nwzida0e0b0xyg = paststd_hf_a1e1b1nwzida0e0b0xyg + proportion_a1e1b1nwzida0e0b0xyg * (paststd_hf_next_a1e1b1nwzida0e0b0xyg - paststd_hf_a1e1b1nwzida0e0b0xyg)
-    ##proportion of PI that is offered as supp
-    supp_propn_a1e1b1nwzida0e0b0xyg = proportion_a1e1b1nwzida0e0b0xyg * (feedsupply_std_a1e1b1nwzida0e0b0xyg > 2) + (feedsupply_std_a1e1b1nwzida0e0b0xyg == 4)   # the proportion of diet if the value is above 2 and equal to 1.0 if fs==4 (at fs 3 sheep have 0 sup and 0 fodder at fs4 sheep have 100% of pi is sup)
-    intake_s = pi * supp_propn_a1e1b1nwzida0e0b0xyg
-    ##calc herb md
-    herb_md = fsfun.dmd_to_md(dmd_a1e1b1nwzida0e0b0xyg)
-    return foo_a1e1b1nwzida0e0b0xyg, hf_a1e1b1nwzida0e0b0xyg, dmd_a1e1b1nwzida0e0b0xyg, intake_s, herb_md
+# def f1_convert_fs2nv(fs_input, nv_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg):
+#     ##convert a feed supply array (feed) and return an NV array using a conversion array (nv_p6f) for a corresponding feedsupply (feedsupply_f)
+#     ## expect feed to have a p axis as axis 0.
+#     ###the position of the feedsupply input in the conversion array
+#     fs_col_pa1e1b1nwzida0e0b0xyg = np.searchsorted(feedsupply_f, fs_input, 'right') - 1
+#     fs_col_pa1e1b1nwzida0e0b0xyg = np.maximum(0, fs_col_pa1e1b1nwzida0e0b0xyg)
+#     ###the value from the conversion array in column fs_col in the row associated with the feed period for that generator period.
+#     nv_pa1e1b1nwzida0e0b0xygf = nv_p6f[a_p6_pa1e1b1nwzida0e0b0xyg, :]
+#     nv_pa1e1b1nwzida0e0b0xygf = np.take_along_axis(nv_pa1e1b1nwzida0e0b0xygf, fs_col_pa1e1b1nwzida0e0b0xyg[...,na], axis=-1)
+#     return nv_pa1e1b1nwzida0e0b0xygf[...,0] #remove singleton f axis - no longer needed.
+#
+#
+# def f1_convert_nv2fs(nv_input, nv_p6f, feedsupply_f, a_p6_pz):
+#     ##convert a feed supply array (feed) and return an NV array using a conversion array (nv_p6f) for a corresponding feedsupply (feedsupply_f)
+#     ## expect feed to have a p axis as axis 0.
+#     ### multi dim search sorted requires the axes to be the same, so convert p6 to p in the lookup array
+#     nv_pzf = nv_p6f[a_p6_pz, :]
+#     ###the position of the feedsupply input in the conversion array
+#     z_pos = sinp.stock['i_z_pos']
+#     fs_col_pa1e1b1nwzida0e0b0xyg = fun.searchsort_multiple_dim(nv_pzf, nv_input, axis_a0=0, axis_v0=0, axis_a1=1, axis_v1=z_pos, side='right') - 1
+#     fs_col_pa1e1b1nwzida0e0b0xyg = np.maximum(0, fs_col_pa1e1b1nwzida0e0b0xyg)
+#     ###the value from the feedsupply array in column fs_col.
+#     fs = feedsupply_f[fs_col_pa1e1b1nwzida0e0b0xyg]
+#     return fs
 
 
 def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1
@@ -1482,6 +1559,7 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
     """
     if np.any(period_is_condense):
         var = np.broadcast_to(var,lw_idx.shape).copy() #need to copy so array can be assigned to down below
+        condense_w_mask = np.broadcast_to(condense_w_mask,lw_idx.shape)
         temporary = np.zeros_like(var)  #this is done to ensure that temp has the same size as var.
         ##test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocating at the end of a DVP
         if i_n_len >= i_w_len:

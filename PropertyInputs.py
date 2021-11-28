@@ -131,7 +131,7 @@ len_h2 = sheep_inp['i_h2_len']
 len_h5 = sheep_inp['i_h5_len']
 len_h7 = sheep_inp['i_husb_operations_triggerlevels_h5h7h2'].shape[-1]
 len_i = sheep_inp['i_i_len']
-len_j0 = feedsupply_inp['i_j0_len']
+len_j2 = feedsupply_inp['i_j2_len']
 len_k = len(cropgraze_inp['i_cropgraze_landuse_idx'])
 len_k0 = sheep_inp['i_k0_len']
 len_k1 = sheep_inp['i_k1_len']
@@ -154,7 +154,7 @@ len_z = len(general_inp['i_mask_z'])
 zp6 = (len_z, len_p6)
 zkp6 = (len_z, len_k, len_p6)
 zp6l = (len_z, len_p6, len_l)
-zp6j0 = (len_z, len_p6, len_j0)
+zp6j0 = (len_z, len_p6, -1)
 h2h5h7 = (len_h2, len_h5, len_h7)
 iog = (len_i, len_o, -1)
 idg = (len_i, len_d, -1)
@@ -167,7 +167,8 @@ ik3g = (len_i, len_k3, -1)
 ik4g = (len_i, len_k4, -1)
 ik5g = (len_i, len_k5, -1)
 t3Sg = (len_t3, len_s+1, -1) #capital S to indicate this is special eg not normal because +1
-r1j0P = (len_r1, len_j0, -1) #capital p to indicate this is just the remaining length of input, it is p axis but input is longer
+r1j2P = (len_r1, len_j2, -1) #capital p to indicate this is just the remaining length of input, it is p axis but input is longer
+r1p6z = (len_r1, len_p6, len_z)
 
 
 ###pasture
@@ -189,8 +190,9 @@ cropgraze_inp['i_crop_growth_zkp6'] = np.reshape(cropgraze_inp['i_crop_growth_zk
 ###stock
 sheep_inp['i_pasture_stage_p6z'] = np.reshape(sheep_inp['i_pasture_stage_p6z'], zp6)
 sheep_inp['i_legume_p6z'] = np.reshape(sheep_inp['i_legume_p6z'], zp6)
-sheep_inp['i_paststd_foo_p6zj0'] = np.reshape(sheep_inp['i_paststd_foo_p6zj0'], zp6j0)
-sheep_inp['i_paststd_dmd_p6zj0'] = np.reshape(sheep_inp['i_paststd_dmd_p6zj0'], zp6j0)
+sheep_inp['i_supplement_zp6'] = np.reshape(sheep_inp['i_supplement_zp6'], zp6)
+sheep_inp['i_paststd_foo_zp6j0'] = np.reshape(sheep_inp['i_paststd_foo_zp6j0'], zp6j0)
+sheep_inp['i_paststd_dmd_zp6j0'] = np.reshape(sheep_inp['i_paststd_dmd_zp6j0'], zp6j0)
 sheep_inp['i_density_p6z'] = np.reshape(sheep_inp['i_density_p6z'], zp6)
 sheep_inp['i_husb_operations_triggerlevels_h5h7h2'] = np.reshape(sheep_inp['i_husb_operations_triggerlevels_h5h7h2'], h2h5h7)
 sheep_inp['i_date_born1st_oig2'] = np.reshape(sheep_inp['i_date_born1st_oig2'], iog)
@@ -213,7 +215,8 @@ sheep_inp['i_sales_offset_tsg3'] = np.reshape(sheep_inp['i_sales_offset_tsg3'], 
 sheep_inp['i_target_weight_tsg3'] = np.reshape(sheep_inp['i_target_weight_tsg3'], t3Sg)
 sheep_inp['i_shear_prior_tsg3'] = np.reshape(sheep_inp['i_shear_prior_tsg3'], t3Sg)
 sheep_inp['ia_i_idg2'] = np.reshape(sheep_inp['ia_i_idg2'], idg)
-feedsupply_inp['i_feedsupply_options_r1pj0'] = np.reshape(feedsupply_inp['i_feedsupply_options_r1pj0'], r1j0P)
+feedsupply_inp['i_feedsupply_options_r1j2p'] = np.reshape(feedsupply_inp['i_feedsupply_options_r1j2p'], r1j2P)
+feedsupply_inp['i_confinement_options_r1p6z'] = np.reshape(feedsupply_inp['i_confinement_options_r1p6z'], r1p6z)
 
 ##create a copy of each input dict - so that the base inputs remain unchanged
 ##the copy created is the one used in the actual modules
@@ -326,7 +329,7 @@ def f_property_inp_sa():
     sheep['ia_r2_sk2ig1'] = fun.f_sa(sheep['ia_r2_sk2ig1'], sen.saa['r2_isk2g1'], 2).astype('int')
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.saa['r1_izg3'], 2).astype('int')
     sheep['ia_r2_ik5g3'] = fun.f_sa(sheep['ia_r2_ik5g3'], sen.saa['r2_ik5g3'], 2).astype('int')
-    feedsupply['i_feedsupply_options_r1pj0'] = fun.f_sa(feedsupply['i_feedsupply_options_r1pj0'], sen.saa['feedsupply_r1jp'], 2)
+    feedsupply['i_feedsupply_options_r1j2p'] = fun.f_sa(feedsupply['i_feedsupply_options_r1j2p'], sen.saa['feedsupply_r1jp'], 2)
     feedsupply['i_feedsupply_adj_options_r2p'] = fun.f_sa(feedsupply['i_feedsupply_adj_options_r2p'], sen.saa['feedsupply_adj_r2p'], 2)
     ###sat
     ###sar
@@ -368,14 +371,18 @@ def f1_expand_p6():
 
     ###get association between the input fp and the node adjusted fp
     a_p6std_p6z = per.f_feed_periods(option=2)
-    a_p6_std_zp6 = a_p6std_p6z.T
+    a_p6std_zp6 = a_p6std_p6z.T
     ###apply association
+    ####feedsupply
+    feedsupply['i_confinement_options_r1p6z'] = np.take_along_axis(feedsupply['i_confinement_options_r1p6z'], a_p6std_p6z[na,:,:], axis=1)
+
     ####stock
-    sheep['i_legume_p6z'] = np.take_along_axis(sheep['i_legume_p6z'], a_p6_std_zp6, axis=1)
-    sheep['i_paststd_foo_p6zj0'] = np.take_along_axis(sheep['i_paststd_foo_p6zj0'], a_p6_std_zp6[...,na], axis=1)
-    sheep['i_paststd_dmd_p6zj0'] = np.take_along_axis(sheep['i_paststd_dmd_p6zj0'], a_p6_std_zp6[...,na], axis=1)
-    sheep['i_pasture_stage_p6z'] = np.take_along_axis(sheep['i_pasture_stage_p6z'], a_p6_std_zp6, axis=1)
-    sheep['i_density_p6z'] = np.take_along_axis(sheep['i_density_p6z'], a_p6_std_zp6, axis=1)
+    sheep['i_legume_p6z'] = np.take_along_axis(sheep['i_legume_p6z'], a_p6std_zp6, axis=1)
+    sheep['i_supplement_zp6'] = np.take_along_axis(sheep['i_supplement_zp6'], a_p6std_zp6, axis=1)
+    sheep['i_paststd_foo_zp6j0'] = np.take_along_axis(sheep['i_paststd_foo_zp6j0'], a_p6std_zp6[...,na], axis=1)
+    sheep['i_paststd_dmd_zp6j0'] = np.take_along_axis(sheep['i_paststd_dmd_zp6j0'], a_p6std_zp6[...,na], axis=1)
+    sheep['i_pasture_stage_p6z'] = np.take_along_axis(sheep['i_pasture_stage_p6z'], a_p6std_zp6, axis=1)
+    sheep['i_density_p6z'] = np.take_along_axis(sheep['i_density_p6z'], a_p6std_zp6, axis=1)
     sheep['i_mobsize_sire_p6zi'] = np.take_along_axis(sheep['i_mobsize_sire_p6i'][:,na,:], a_p6std_p6z[:,:,na], axis=0)
     sheep['i_mobsize_dams_p6zi'] = np.take_along_axis(sheep['i_mobsize_dams_p6i'][:,na,:], a_p6std_p6z[:,:,na], axis=0)
     sheep['i_mobsize_offs_p6zi'] = np.take_along_axis(sheep['i_mobsize_offs_p6i'][:,na,:], a_p6std_p6z[:,:,na], axis=0)
@@ -385,18 +392,18 @@ def f1_expand_p6():
     ####crop grazing
     cropgraze['i_cropgraze_yield_reduction_kp6z'] = np.take_along_axis(cropgraze['i_cropgraze_yield_reduction_kp6'][...,na], a_p6std_p6z[na,...], axis=1)
     cropgraze['i_crop_dmd_kp6z'] = np.take_along_axis(cropgraze['i_crop_dmd_kp6'][...,na], a_p6std_p6z[na,...], axis=1)
-    cropgraze['i_crop_growth_zkp6'] = np.take_along_axis(cropgraze['i_crop_growth_zkp6'], a_p6_std_zp6[:,na,:], axis=2)
-    cropgraze['i_cropgraze_consumption_factor_zp6'] = np.take_along_axis(cropgraze['i_cropgraze_consumption_factor_zp6'], a_p6_std_zp6, axis=1)
+    cropgraze['i_crop_growth_zkp6'] = np.take_along_axis(cropgraze['i_crop_growth_zkp6'], a_p6std_zp6[:,na,:], axis=2)
+    cropgraze['i_cropgraze_consumption_factor_zp6'] = np.take_along_axis(cropgraze['i_cropgraze_consumption_factor_zp6'], a_p6std_zp6, axis=1)
 
 
     ####pasture
     for pasture in sinp.general['pastures'][general['pas_inc']]:
         pasture_inputs[pasture]['POCCons'] = np.take_along_axis(pasture_inputs[pasture]['POCCons'][:,:,na], a_p6std_p6z[:,na,:], axis=0)
-        pasture_inputs[pasture]['DigRednSenesce'] = np.take_along_axis(pasture_inputs[pasture]['DigRednSenesce'], a_p6_std_zp6, axis=1)
-        pasture_inputs[pasture]['DigDryAve'] = np.take_along_axis(pasture_inputs[pasture]['DigDryAve'], a_p6_std_zp6, axis=1)
-        pasture_inputs[pasture]['DigDryRange'] = np.take_along_axis(pasture_inputs[pasture]['DigDryRange'], a_p6_std_zp6, axis=1)
-        pasture_inputs[pasture]['FOODryH'] = np.take_along_axis(pasture_inputs[pasture]['FOODryH'], a_p6_std_zp6, axis=1)
-        pasture_inputs[pasture]['GermScalarFP'] = np.take_along_axis(pasture_inputs[pasture]['GermScalarFP'], a_p6_std_zp6, axis=1)
+        pasture_inputs[pasture]['DigRednSenesce'] = np.take_along_axis(pasture_inputs[pasture]['DigRednSenesce'], a_p6std_zp6, axis=1)
+        pasture_inputs[pasture]['DigDryAve'] = np.take_along_axis(pasture_inputs[pasture]['DigDryAve'], a_p6std_zp6, axis=1)
+        pasture_inputs[pasture]['DigDryRange'] = np.take_along_axis(pasture_inputs[pasture]['DigDryRange'], a_p6std_zp6, axis=1)
+        pasture_inputs[pasture]['FOODryH'] = np.take_along_axis(pasture_inputs[pasture]['FOODryH'], a_p6std_zp6, axis=1)
+        pasture_inputs[pasture]['GermScalarFP'] = np.take_along_axis(pasture_inputs[pasture]['GermScalarFP'], a_p6std_zp6, axis=1)
         pasture_inputs[pasture]['CPGrn'] = np.take_along_axis(pasture_inputs[pasture]['CPGrn'][:,na], a_p6std_p6z, axis=0)
         pasture_inputs[pasture]['CPDry'] = np.take_along_axis(pasture_inputs[pasture]['CPDry'][:,na], a_p6std_p6z, axis=0)
         pasture_inputs[pasture]['DigPOC'] = np.take_along_axis(pasture_inputs[pasture]['DigPOC'][:,na], a_p6std_p6z, axis=0)
@@ -407,11 +414,11 @@ def f1_expand_p6():
         pasture_inputs[pasture]['ErosionLimit'] = np.take_along_axis(pasture_inputs[pasture]['ErosionLimit'][:,:,na], a_p6std_p6z[:,na,:], axis=0)
         pasture_inputs[pasture]['SenescePropn'] = np.take_along_axis(pasture_inputs[pasture]['SenescePropn'][:,na], a_p6std_p6z, axis=0)
         pasture_inputs[pasture]['SenesceEOS'] = np.take_along_axis(pasture_inputs[pasture]['SenesceEOS'], a_p6std_p6z, axis=0)
-        pasture_inputs[pasture]['LowFOO'] = np.take_along_axis(pasture_inputs[pasture]['LowFOO'], a_p6_std_zp6[:,:,na], axis=1)
-        pasture_inputs[pasture]['MedFOO'] = np.take_along_axis(pasture_inputs[pasture]['MedFOO'], a_p6_std_zp6[:,:,na], axis=1)
-        pasture_inputs[pasture]['LowPGR'] = np.take_along_axis(pasture_inputs[pasture]['LowPGR'], a_p6_std_zp6[:,:,na], axis=1)
-        pasture_inputs[pasture]['MedPGR'] = np.take_along_axis(pasture_inputs[pasture]['MedPGR'], a_p6_std_zp6[:,:,na], axis=1)
-        pasture_inputs[pasture]['DigGrn'] = np.take_along_axis(pasture_inputs[pasture]['DigGrn'], a_p6_std_zp6[:,:,na], axis=1)
+        pasture_inputs[pasture]['LowFOO'] = np.take_along_axis(pasture_inputs[pasture]['LowFOO'], a_p6std_zp6[:,:,na], axis=1)
+        pasture_inputs[pasture]['MedFOO'] = np.take_along_axis(pasture_inputs[pasture]['MedFOO'], a_p6std_zp6[:,:,na], axis=1)
+        pasture_inputs[pasture]['LowPGR'] = np.take_along_axis(pasture_inputs[pasture]['LowPGR'], a_p6std_zp6[:,:,na], axis=1)
+        pasture_inputs[pasture]['MedPGR'] = np.take_along_axis(pasture_inputs[pasture]['MedPGR'], a_p6std_zp6[:,:,na], axis=1)
+        pasture_inputs[pasture]['DigGrn'] = np.take_along_axis(pasture_inputs[pasture]['DigGrn'], a_p6std_zp6[:,:,na], axis=1)
         pasture_inputs[pasture]['MaintenanceEff'] = np.take_along_axis(pasture_inputs[pasture]['MaintenanceEff'][:,na,:], a_p6std_p6z[:,:,na], axis=0)
 
         ###end of growing season and period when dry feed exists need special handling because they are fp pointer
