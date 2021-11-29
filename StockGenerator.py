@@ -37,6 +37,7 @@ import sys,traceback
 import Functions as fun
 import SeasonalFunctions as zfun
 import Finance as fin
+import FeedSupplyStock as fsstk
 import FeedsupplyFunctions as fsfun
 import Sensitivity as sen
 import PropertyInputs as pinp
@@ -162,7 +163,6 @@ def generator(params,r_vals,nv,plots = False):
     len_g3 = np.count_nonzero(mask_offs_inc_g3)
     len_i = np.count_nonzero(pinp.sheep['i_mask_i'])
     lensire_i = np.count_nonzero(pinp.sheep['i_masksire_i'])
-    len_j2 = pinp.feedsupply['i_j2_len']
     len_k3 = len(pinp.sheep['i_k3_idx_offs'])
     len_n0 = sinp.structuralsa['i_n0_matrix_len']
     len_n1 = sinp.structuralsa['i_n1_matrix_len']
@@ -200,7 +200,7 @@ def generator(params,r_vals,nv,plots = False):
     #dvp/fvp related inputs #
     ########################
     ##sire
-    n_fs_g0 = sinp.structuralsa['i_n0_len']
+    n_fs_sire = sinp.structuralsa['i_n0_len']
     n_fvp_periods_sire = sinp.structuralsa['i_n_fvp_period0']
 
     ##dams & yatf
@@ -510,50 +510,6 @@ def generator(params,r_vals,nv,plots = False):
     mask_shear_g3 = np.max(date_shear_sida0e0b0xyg3<=offs_date_end_p[-1], axis=tuple(range(i_pos, 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3[mask_shear_g3]
 
-    ############################
-    ### feed supply inputs     #
-    ############################
-    ##r1 & r2 are the axes for the inputs that are the options of different feed supply.
-    # r1 is the choices for the full year feed supply for the undifferentiated animal.
-    # r2 is the adjustment for different classes or different management.
-
-    ##feedsupply
-    ###feedsupply option selected - keep the z axis here and then handle the z axis after the feedsupply is calculated
-    a_r_zida0e0b0xyg0 = sfun.f1_g2g(pinp.sheep['ia_r1_zig0'], 'sire',i_pos, swap=True, condition=pinp.sheep['i_masksire_i']
-                                    , axis=i_pos).astype(int)
-    a_r_zida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r1_zig1'], 'dams',i_pos, swap=True, condition=pinp.sheep['i_mask_i']
-                                    , axis=i_pos).astype(int)
-    a_r_zida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['ia_r1_zig3'], 'offs',i_pos, swap=True, condition=pinp.sheep['i_mask_i']
-                                    , axis=i_pos).astype(int)
-    ###feed adjustment for dams
-    a_r2_k0e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r2_k0ig1'], 'dams',i_pos, swap=True, left_pos2=a1_pos
-                                             , right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r2_k1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r2_k1ig1'], 'dams', i_pos, swap=True, left_pos2=e1_pos
-                                           , right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r2_spk0k1k2nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r2_sk2ig1'], 'dams',i_pos, left_pos2=b1_pos, right_pos2=i_pos
-                                               , left_pos3=p_pos-1, right_pos3=b1_pos, condition=pinp.sheep['i_mask_i']
-                                               , axis=i_pos, move=True, source=0, dest=2)  #add axis between g and i and i and b1
-    ###feed adjustment for offs
-    a_r2_idk0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik0g3'], 'offs',a0_pos, left_pos2=i_pos, right_pos2=a0_pos
-                                    , condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r2_ik3a0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik3g3'], 'offs',d_pos,  condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r2_ida0e0k4xyg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik4g3'], 'offs',b0_pos, left_pos2=i_pos, right_pos2=b0_pos
-                                    , condition=pinp.sheep['i_mask_i'], axis=i_pos)  #add axis between g and b0 and b0 and i
-    a_r2_ida0e0b0k5yg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik5g3'], 'offs',x_pos, left_pos2=i_pos, right_pos2=x_pos
-                                     , condition=pinp.sheep['i_mask_i'], axis=i_pos)  #add axis between g and b0 and b0 and i
-
-    ##std feed options
-    feedsupply_options_r1j2p = pinp.feedsupply['i_feedsupply_options_r1j2p'][...,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
-    ##confinement - True/False on confinement feeding. This controls which generator periods confinement feeding occurs.
-    ## this input is required so that confinement can be included in n1 model, without forcing the animal into confinement for the whole year.
-    ## This means you can have a given level of NV and it can be either in the paddock or in confinement.
-    ## This input works inconjunction with i_confinement_n (see in the feed supply section)
-    confinement_options_r1p6z = pinp.feedsupply['i_confinement_options_r1p6z'].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
-    ##feed supply adjustment
-    feedsupply_adj_options_r2p = pinp.feedsupply['i_feedsupply_adj_options_r2p'][:,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
-    ##an association between the k2 cluster (feed adjustment) and reproductive management (scanning, gbal & weaning).
-    a_k2_mlsb1 = sinp.stock['ia_k2_mlsb1']
-
 
     ############################
     ### sim param arrays       # '''csiro params '''
@@ -611,9 +567,6 @@ def generator(params,r_vals,nv,plots = False):
     cu2_sire, cu2_dams, cu2_yatf, cu2_offs = sfun.f1_c2g(uinp.parameters['i_cu2_c2'], uinp.parameters['i_cu2_y'], uinp.parameters['i_cu2_pos'])
     cw_sire, cw_dams, cw_yatf, cw_offs = sfun.f1_c2g(uinp.parameters['i_cw_c2'], uinp.parameters['i_cw_y'], uinp.parameters['i_cw_pos'])
     cx_sire, cx_dams, cx_yatf, cx_offs = sfun.f1_c2g(uinp.parameters['i_cx_c2'], uinp.parameters['i_cx_y'], uinp.parameters['i_cx_pos'])
-    ##pasture params
-    cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].astype(float)#have to convert from object to float so it doesnt chuck error in np.exp (np.exp can't handle object arrays)
-    cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].astype(float)#have to convert from object to float so it doesnt chuck error in np.exp (np.exp can't handle object arrays)
     ##Convert the cl0 & cl1 to cb1 (dams and yatf only need cb1, sires and offs don't have b1 axis)
     cb1_dams = cl0_dams[:,sinp.stock['a_nfoet_b1']] + cl1_dams[:,sinp.stock['a_nyatf_b1']]
     cb1_yatf = cl0_yatf[:,sinp.stock['a_nfoet_b1']] + cl1_yatf[:,sinp.stock['a_nyatf_b1']]
@@ -637,50 +590,10 @@ def generator(params,r_vals,nv,plots = False):
     ##legume proportion in each period
     legume_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_legume_p6z'], z_pos, move=True, source=0, dest=-1,
                                                  left_pos2=p_pos, right_pos2=z_pos)
-    ##estimated foo and dmd for the feed periods (p6) periods
-    paststd_foo_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_paststd_foo_zp6j0'],z_pos,move=True,source=0,
-                                                       dest=2, left_pos2=n_pos,right_pos2=z_pos,left_pos3=p_pos,
-                                                       right_pos3=n_pos)
-    pasture_stage_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_pasture_stage_p6z'], z_pos, move=True, source=0,
-                                                         dest=-1, left_pos2=p_pos, right_pos2=z_pos)  # z is treated in next step
-    ##foo corrected to hand shears and estimated height - the z axis is also treated in this step
-    paststd_foo_p6a1e1b1j0wzida0e0b0xyg0, paststd_hf_p6a1e1b1j0wzida0e0b0xyg0 = fsfun.f_foo_convert(cu3, cu4,
-                                                                                     paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
-                                                                                     pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
-                                                                                     legume_p6a1e1b1nwzida0e0b0xyg, cr_sire,
-                                                                                     z_pos=sinp.stock['i_z_pos'], treat_z=True)
-    paststd_foo_p6a1e1b1j0wzida0e0b0xyg1, paststd_hf_p6a1e1b1j0wzida0e0b0xyg1 = fsfun.f_foo_convert(cu3, cu4,
-                                                                                     paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
-                                                                                     pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
-                                                                                     legume_p6a1e1b1nwzida0e0b0xyg, cr_dams,
-                                                                                     z_pos=sinp.stock['i_z_pos'], treat_z=True)
-    # paststd_foo_p6a1e1b1j0wzida0e0b0xyg2, paststd_hf_p6a1e1b1j0wzida0e0b0xyg2 = fsfun.f_foo_convert(cu3, cu4,
-    #                                                                                  paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
-    #                                                                                  pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
-    #                                                                                  legume_p6a1e1b1nwzida0e0b0xyg,
-    #                                                                                  cr_yatf,
-    #                                                                                  z_pos=sinp.stock['i_z_pos'], treat_z=True)
-    paststd_foo_p6a1e1b1j0wzida0e0b0xyg3, paststd_hf_p6a1e1b1j0wzida0e0b0xyg3 = fsfun.f_foo_convert(cu3, cu4,
-                                                                                     paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
-                                                                                     pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
-                                                                                     legume_p6a1e1b1nwzida0e0b0xyg, cr_offs,
-                                                                                     z_pos=sinp.stock['i_z_pos'], treat_z=True)
-    ##treat z axis (have to do it after adjusting foo)
     legume_p6a1e1b1nwzida0e0b0xyg = zfun.f_seasonal_inp(legume_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos)
-    ##dmd
-    paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_paststd_dmd_zp6j0'],z_pos,move=True,source=0,
-                                                       dest=2, left_pos2=n_pos,right_pos2=z_pos,left_pos3=p_pos,
-                                                       right_pos3=n_pos)
-    paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = zfun.f_seasonal_inp(paststd_dmd_p6a1e1b1j0wzida0e0b0xyg,numpy=True,axis=z_pos)
-    ##expected supplementary feeding level in each period (propn of intake)
-    std_supp_p6a1e1b1nwzida0e0b0xyg = zfun.f_seasonal_inp(fun.f_expand(pinp.sheep['i_supplement_zp6'],swap=True,left_pos=z_pos, left_pos2=p_pos,
-                                                                       right_pos2=z_pos)
-                                                           ,numpy=True,axis=z_pos)
-
     ##season type probability
     i_season_propn_z = zfun.f_z_prob()
     season_propn_zida0e0b0xyg = fun.f_expand(i_season_propn_z, z_pos)
-
     ##wind speed
     #todo add a distribution to the windspeed (after checking the importance for chill_index)
     #might need to do this with a longer axis length so that it is not the distribution in the week but in the month
@@ -1230,7 +1143,7 @@ def generator(params,r_vals,nv,plots = False):
     date_shear_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(date_shear_sa1e1b1nwzida0e0b0xyg1, a_prev_s_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     date_shear_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(date_shear_sa1e1b1nwzida0e0b0xyg3, a_prev_s_pa1e1b1nwzida0e0b0xyg3,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 
-    ##management for weaning, gbal and scan options
+    ##management for weaning, gbal and scan options - adjusted further down to represent time of the repro cycle and management
     wean_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(wean_oa1e1b1nwzida0e0b0xyg1, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     gbal_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(gbal_oa1e1b1nwzida0e0b0xyg1, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     scan_option_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
@@ -1298,7 +1211,7 @@ def generator(params,r_vals,nv,plots = False):
 
     ##create association between n and w for each generator period i.e. what nutrition level is being offered to this LW profile in this period
     ###sire ^not required because sires only have 1 fvp and 1 n slice
-    # a_n_pa1e1b1nwzida0e0b0xyg0 = (np.trunc(index_wzida0e0b0xyg0 / (n_fs_g0 ** ((n_fvp_periods_g0-1) - fvp_type_pa1e1b1nwzida0e0b0xyg0))) % n_fs_g0).astype(int) #needs to be int so it can be an indice
+    # a_n_pa1e1b1nwzida0e0b0xyg0 = (np.trunc(index_wzida0e0b0xyg0 / (n_fs_sire ** ((n_fvp_periods_g0-1) - fvp_type_pa1e1b1nwzida0e0b0xyg0))) % n_fs_sire).astype(int) #needs to be int so it can be an indice
     ###dams
     ####for dams period is condense is the same as period is prejoin atm but it is designed so it can be different (the lw_distribution will just need to be updated)
     period_is_condense_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_condensing_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
@@ -1922,295 +1835,42 @@ def generator(params,r_vals,nv,plots = False):
                                                 , axis=e1_pos,keepdims=True)
 
 
-    ###############################
-    #relate NV to FOO, DMD & Supp #
-    ###############################
-    '''
-    AFO feedsupply inputs used to generate livestock are nutritive values however the generator needs information
-    about the feed consumed eg FOO and DMD because these factors impact things like energy required (eg less feed means 
-    more walking). The function creates a relationship between NV and feed components.
-    
-    yatf don't require this function call since they just get the same fs as dams.
-    '''
-    #todo zf needs to be added to this function when cattle are added.
-    ##sires
-    nv_p6a1e1b1j1wzida0e0b0xyg0, foo_p6a1e1b1j1wzida0e0b0xyg0, dmd_p6a1e1b1j1wzida0e0b0xyg0, supp_p6a1e1b1j1wzida0e0b0xyg0 =\
-        sfun.f1_nv_components(paststd_foo_p6a1e1b1j0wzida0e0b0xyg0, paststd_dmd_p6a1e1b1j0wzida0e0b0xyg,
-                         paststd_hf_p6a1e1b1j0wzida0e0b0xyg0, std_supp_p6a1e1b1nwzida0e0b0xyg,
-                         legume_p6a1e1b1nwzida0e0b0xyg,cr_sire, cu0_sire)
-
-    ##dams
-    nv_p6a1e1b1j1wzida0e0b0xyg1, foo_p6a1e1b1j1wzida0e0b0xyg1, dmd_p6a1e1b1j1wzida0e0b0xyg1, supp_p6a1e1b1j1wzida0e0b0xyg1 =\
-        sfun.f1_nv_components(paststd_foo_p6a1e1b1j0wzida0e0b0xyg1, paststd_dmd_p6a1e1b1j0wzida0e0b0xyg,
-                         paststd_hf_p6a1e1b1j0wzida0e0b0xyg1, std_supp_p6a1e1b1nwzida0e0b0xyg,
-                         legume_p6a1e1b1nwzida0e0b0xyg,cr_dams, cu0_dams)
-
-    ##offs
-    nv_p6a1e1b1j1wzida0e0b0xyg3, foo_p6a1e1b1j1wzida0e0b0xyg3, dmd_p6a1e1b1j1wzida0e0b0xyg3, supp_p6a1e1b1j1wzida0e0b0xyg3 =\
-        sfun.f1_nv_components(paststd_foo_p6a1e1b1j0wzida0e0b0xyg3, paststd_dmd_p6a1e1b1j0wzida0e0b0xyg,
-                         paststd_hf_p6a1e1b1j0wzida0e0b0xyg3, std_supp_p6a1e1b1nwzida0e0b0xyg,
-                         legume_p6a1e1b1nwzida0e0b0xyg,cr_offs, cu0_offs)
-
-
-    ############################
-    ### feed supply calcs      # todo need to add something about break of season..? and need to add e variation
-    ############################
-    ##r1 & r2 are the axes for the inputs that are the options of different feed supply.
-    # r1 is the choices for the full year feed supply for the undifferentiated animal.
-    # r2 is the adjustment for different classes or different management.
-
-    ##1a) compile the standard pattern from the inputs and handle the z axis (need to apply z treatment here because a_r_zida0e0b0xyg0 didn't get the season treatment)
-    ###sire
-    t_feedsupply_pj2zida0e0b0xyg0 = np.moveaxis(np.moveaxis(feedsupply_options_r1j2p[a_r_zida0e0b0xyg0],-1,0),-1,1) #had to rollaxis twice once for p and once for j2 (couldn't find a way to do both at the same time)
-    t_feedsupply_pj2zida0e0b0xyg0 = zfun.f_seasonal_inp(t_feedsupply_pj2zida0e0b0xyg0,numpy=True,axis=z_pos)
-    t_feedsupply_pa1e1b1j2wzida0e0b0xyg0 = fun.f_expand(t_feedsupply_pj2zida0e0b0xyg0, left_pos=n_pos, right_pos=z_pos, left_pos2=p_pos,right_pos2=n_pos) #add  a1,e1,b1,w axis. Note n and j are the same thing (as far a position goes)
-
-    ###dams
-    t_feedsupply_pj2zida0e0b0xyg1 = np.moveaxis(np.moveaxis(feedsupply_options_r1j2p[a_r_zida0e0b0xyg1],-1,0),-1,1) #had to rollaxis twice once for p and once for j2 (couldn't find a way to do both at the same time)
-    t_feedsupply_pj2zida0e0b0xyg1 = zfun.f_seasonal_inp(t_feedsupply_pj2zida0e0b0xyg1,numpy=True,axis=z_pos)
-    t_feedsupply_pa1e1b1j2wzida0e0b0xyg1 = fun.f_expand(t_feedsupply_pj2zida0e0b0xyg1, left_pos=n_pos, right_pos=z_pos, left_pos2=p_pos,right_pos2=n_pos) #add  a1,e1,b1,w axis. Note n and j are the same thing (as far a position goes)
-
-    ###offs
-    t_feedsupply_pj2zida0e0b0xyg3 = np.moveaxis(np.moveaxis(feedsupply_options_r1j2p[a_r_zida0e0b0xyg3],-1,0),-1,1) #had to rollaxis twice once for p and once for j2 (couldn't find a way to do both at the same time)
-    t_feedsupply_pj2zida0e0b0xyg3 = zfun.f_seasonal_inp(t_feedsupply_pj2zida0e0b0xyg3,numpy=True,axis=z_pos)
-    t_feedsupply_pa1e1b1j2wzida0e0b0xyg3 = fun.f_expand(t_feedsupply_pj2zida0e0b0xyg3, left_pos=n_pos, right_pos=z_pos, left_pos2=p_pos,right_pos2=n_pos, condition=mask_p_offs_p, axis=0) #add  a1,e1,b1,w axis. Note n and j are the same thing (as far a position goes), mask p axis for offs
-
-    ##1b) select confinement options for each animal group and handle the z axis (need to apply z treatment here because a_r_zida0e0b0xyg0 didn't get the season treatment)
-    ## using advanced indexing (could have also used np.take_along_axis but that requires getting all the arrays the same shape)
-    t_index_zida0e0b0xyg = fun.f_expand(np.arange(confinement_options_r1p6z.shape[-1]),z_pos) #length of z before being masked. needs to broadcast with a_r_zida0e0b0xyg so advanced indexing works
-    ###sire
-    t_confinement_p6zida0e0b0xyg0 = np.moveaxis(confinement_options_r1p6z[a_r_zida0e0b0xyg0,:,t_index_zida0e0b0xyg],-1,0) #move p to front
-    t_confinement_p6zida0e0b0xyg0 = zfun.f_seasonal_inp(t_confinement_p6zida0e0b0xyg0,numpy=True,axis=z_pos)
-    t_confinement_p6a1e1b1nwzida0e0b0xyg0 = fun.f_expand(t_confinement_p6zida0e0b0xyg0, left_pos=p_pos, right_pos=z_pos) #add  a1,e1,b1,w,n axis.
-    t_confinement_pa1e1b1nwzida0e0b0xyg0 = np.take_along_axis(t_confinement_p6a1e1b1nwzida0e0b0xyg0,a_p6_pa1e1b1nwzida0e0b0xyg,0)
-    
-
-    ###dams
-    t_confinement_p6zida0e0b0xyg1 = np.moveaxis(confinement_options_r1p6z[a_r_zida0e0b0xyg1,:,t_index_zida0e0b0xyg],-1,0) #move p to front
-    t_confinement_p6zida0e0b0xyg1 = zfun.f_seasonal_inp(t_confinement_p6zida0e0b0xyg1,numpy=True,axis=z_pos)
-    t_confinement_p6a1e1b1nwzida0e0b0xyg1 = fun.f_expand(t_confinement_p6zida0e0b0xyg1, left_pos=p_pos, right_pos=z_pos) #add  a1,e1,b1,w,n axis.
-    t_confinement_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(t_confinement_p6a1e1b1nwzida0e0b0xyg1,a_p6_pa1e1b1nwzida0e0b0xyg,0)
-
-    ###offs
-    t_confinement_p6zida0e0b0xyg3 = np.moveaxis(confinement_options_r1p6z[a_r_zida0e0b0xyg3,:,t_index_zida0e0b0xyg],-1,0)#move p to front
-    t_confinement_p6zida0e0b0xyg3 = zfun.f_seasonal_inp(t_confinement_p6zida0e0b0xyg3,numpy=True,axis=z_pos)
-    t_confinement_p6a1e1b1nwzida0e0b0xyg3 = fun.f_expand(t_confinement_p6zida0e0b0xyg3, left_pos=p_pos, right_pos=z_pos, axis=0) #add  a1,e1,b1,w,n axis.
-    t_confinement_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(t_confinement_p6a1e1b1nwzida0e0b0xyg3,a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],0)
-
-    ##2) calc lsln management association based on sheep identification options (scanning vs no scanning), management practise (differential management once identifying different groups) & time of the year (eg even if you scan you still need to manage sheep the same before scanning)
-    ####have to create a_t array that is maximum size of the arrays that are used to mask it.
-    ####t = 0 is prescan, 1 is postscan, 2 is lactation, 3 not used in V1 but would be is post wean
+    ##################################################
+    #adjust lsln management for timing of repro cycle#
+    ##################################################
+    ##calc lsln management association based on sheep identification options (scanning vs no scanning), management practise (differential management once identifying different groups) & time of the year (eg even if you scan you still need to manage sheep the same before scanning)
+    ###have to create a_t array that is maximum size of the arrays that are used to mask it.
+    ###t = 0 is prescan, 1 is postscan, 2 is lactation, 3 not used in V1 but would be is post wean
     shape = np.maximum.reduce([period_between_prejoinscan_pa1e1b1nwzida0e0b0xyg1.shape, period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1.shape
                                   , period_between_birthwean_pa1e1b1nwzida0e0b0xyg1.shape]) #create shape which has the max size
     a_t_pa1e1b1nwzida0e0b0xyg1 = np.zeros(shape)
     period_between_prejoinscan_mask = np.broadcast_arrays(a_t_pa1e1b1nwzida0e0b0xyg1, period_between_prejoinscan_pa1e1b1nwzida0e0b0xyg1)[1] #mask must be manually broadcasted then applied - for some reason numpy doesnt automatically broadcast them.
     period_between_scanbirth_mask = np.broadcast_arrays(a_t_pa1e1b1nwzida0e0b0xyg1, period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1)[1]
     period_between_birthwean_mask = np.broadcast_arrays(a_t_pa1e1b1nwzida0e0b0xyg1, period_between_birthwean_pa1e1b1nwzida0e0b0xyg1)[1]
-    ####order matters because post wean does not have a cap ie it is over written by others
+    ###order matters because post wean does not have a cap ie it is over written by others
     a_t_pa1e1b1nwzida0e0b0xyg1[...] = 3 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 not used in V1 but would be is post wean
     a_t_pa1e1b1nwzida0e0b0xyg1[period_between_prejoinscan_mask] = 0 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is not used in V1 but would be post wean
     a_t_pa1e1b1nwzida0e0b0xyg1[period_between_scanbirth_mask] = 1 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is not used in V1 but would be post wean
     a_t_pa1e1b1nwzida0e0b0xyg1[period_between_birthwean_mask] = 2 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is not used in V1 but would be post wean
 
-    ####dams management in each period based on scanning detail, time of the year (even if you are scanning you cant manage sheep differently before scanning) and management (you can scan and then not differentially manage)
+    ###dams management in each period based on scanning detail, time of the year (even if you are scanning you cant manage sheep differently before scanning) and management (you can scan and then not differentially manage)
     scan_management_pa1e1b1nwzida0e0b0xyg1 = (scan_option_pa1e1b1nwzida0e0b0xyg1) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 1) * pinp.sheep['i_dam_lsln_diffman_t'][1]
-    gbal_pa1e1b1nwzida0e0b0xyg1 = (gbal_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 2) * pinp.sheep['i_dam_lsln_diffman_t'][2] + 1  #minus 1 then plus 1 ensures that the wean option before lactation is 1
-    wean_pa1e1b1nwzida0e0b0xyg1 = (wean_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 3) * pinp.sheep['i_dam_lsln_diffman_t'][3] + 1  #minus 1 then plus 1 ensures that the wean option before weaning is 1
+    gbal_management_pa1e1b1nwzida0e0b0xyg1 = (gbal_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 2) * pinp.sheep['i_dam_lsln_diffman_t'][2] + 1  #minus 1 then plus 1 ensures that the wean option before lactation is 1
+    wean_management_pa1e1b1nwzida0e0b0xyg1 = (wean_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 3) * pinp.sheep['i_dam_lsln_diffman_t'][3] + 1  #minus 1 then plus 1 ensures that the wean option before weaning is 1
 
-    ##3) calculate the feedsupply adjustment OPTION for each sheep class
-    ###a)wean
-    a_k0_pa1e1b1nwzida0e0b0xyg1 = period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1 * pinp.sheep['i_dam_wean_diffman'] * fun.f_expand(np.arange(len_a1)+1, a1_pos) #len_a+1 because that is the association between k0 and a1
-    a_r2_wean_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(a_r2_k0e1b1nwzida0e0b0xyg1[na,...], a_k0_pa1e1b1nwzida0e0b0xyg1, a1_pos)
-
-    ###b)b.	Dams Cluster k1 – oestrus cycle (e1): The association required is
-    #^Have decided to drop this out of version 1. Will require multiple nutrition patterns in order to test value of scanning for foetal age
-    # a_r2_oestrus_pa1e1b1nwzida0e0b0xyg1 =
-
-    ###c)lsln
-    ####a_k2_mlsb1 is the k2 input cluster for each b1 slice (LSLN) with different management options.
-    #### In this step we slice a_k2_mlsb1 for the selected management in each period.
-    #####remove the singleton b1 axis from the association arrays because a populated b1 axis comes from a_k2_mlsb1
-    a_k2_pa1e1b1nwzida0e0b0xyg1 = np.rollaxis(a_k2_mlsb1[wean_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...]
-                                                         , gbal_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...]
-                                                         , scan_management_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], ...],-1,3)
-    ####a_r2_spk0k1k2nwzida0e0b0xyg1 (k2 active) is the feedsupply adjustment option for each k2 input cluster for each scanning options.
-    ####The scan axis is required because the feedsupply for a cluster can vary based on how the other classes are clustered
-    #### eg the optimum feedsupply prior to scanning may change depending on whether singles and twins are identified
-    #todo the above comment is correct however, it is not represented in the inputs of the model. Undiff/mated is always 0 regardless of the scanning level
-    #####take along the scan axis then remove the singleton scan axis with [0]
-    a_r2_pk0k1k2nwzida0e0b0xyg1 = np.take_along_axis(a_r2_spk0k1k2nwzida0e0b0xyg1, scan_management_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0]
-    ####select feedsupply adjustment option for each b slice based on the 'k2 input cluster' association.
-    a_r2_lsln_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(a_r2_pk0k1k2nwzida0e0b0xyg1, a_k2_pa1e1b1nwzida0e0b0xyg1, b1_pos)
-
-    ###d) todo come back to offs (remember gender needs to be masked)
-    # t_fs_agedam_pj2zida0e0b0xg3 = t_fs_agedam_pj2zik3k0k4k5g3
-    # t_fs_ageweaned_pj2zida0e0b0xg3 = t_fs_ageweaned_pj2zik3k0k4k5g3
-    # t_fs_btrt_pj2zida0e0b0xg3 = t_fs_btrt_pj2zik3k0k4k5g3
-    # t_fs_gender_pj2zida0e0b0xg3 = t_fs_gender_pj2zik3k0k4k5g3
-
-
-    ##3) calculate the feedsupply adjustment for each sheep class
-    feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1 = fun.f_expand(feedsupply_adj_options_r2p,p_pos) #add other axis as singleton
-    ###a)wean (take along the r2 axis and then remove the singleton axis with [0])
-    t_fs_ageweaned_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1
-                                                                , a_r2_wean_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0]
-    ###b)oestrus (take along the r2 axis and then remove the singleton axis with [0])
-    # t_fs_cycle_pa1e1b1j2wzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1
-    #                                                         , a_r2_oestrus_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0]
-    ###c)lsln (take along the r2 axis and then remove the singleton axis with [0])
-    t_fs_lsln_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1
-                                                           , a_r2_lsln_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0]
-
-    # t_fs_agedam_pa1e1b1j2wzik3a0e0b0xyg3 =
-    # t_fs_ageweaned_pa1e1b1j2wzidk0e0b0xyg3 =
-    # t_fs_btrt_a1e1b1j2wzida0e0k4xyg3 =
-    # t_fs_gender_pa1e1b1j2wzida0e0b0k5yg3 =
-
-
-
-    ##4) add adjustment to std pattern (the adjustment is broadcast across j2 (the standard, minimum and maximum))
-    ##feedsupply is clipped below to ensure it is within a feasible range.
-    ##Note: the adjustment is in FS units (not in MJ/kg)
-    t_feedsupply_pa1e1b1j2wzida0e0b0xyg1 = (t_feedsupply_pa1e1b1j2wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1nwzida0e0b0xyg1
-                                                   + t_fs_lsln_pa1e1b1nwzida0e0b0xyg1) #can't use += for some reason
-    # t_feedsupply_pa1e1b1j2wzida0e0b0xyg3 = (t_feedsupply_pa1e1b1j2wzida0e0b0xyg3 + t_fs_agedam_pj2zida0e0b0xg3
-    #                                             + t_fs_ageweaned_pj2zida0e0b0xg3 + t_fs_gender_pj2zida0e0b0xg3)
-
-
-    ##6)Convert the ‘j2’ axis to an ‘n’ axis using the nut_spread inputs.
-    ## activate n axis for confinement control (controls if a nutrition pattern is in confinement - note
-    ## if i_confinement_n? is set to True the generator periods confinement occurs is controlled by i_confinement_options_r1p6z.
-    #todo there may be a way to save duplication of code (same with stuff above.) put it into a func to convert feedsuply from j2 to n.
-    
-    ### the nut_spread inputs are the proportion of std and min or max feed supply.
-    ### Unless nut_spread is greater than 3 in which case the value becomes the actual feed supply
-    ###convert nut_spread inputs to numpy array and cut to the correct length based on number of nutrition options (i_len_n structural input)
-    if isinstance(sinp.structuralsa['i_nut_spread_n0'], np.ndarray):
-        nut_spread_g0_n = sinp.structuralsa['i_nut_spread_n0'][0:n_fs_g0]
-        bool_confinement_g0_n = sinp.structuralsa['i_confinement_n0'][0:n_fs_g0]
-    else:
-        nut_spread_g0_n = np.array([sinp.structuralsa['i_nut_spread_n0']])[0:n_fs_g0]
-        bool_confinement_g0_n = np.array([sinp.structuralsa['i_confinement_n0']])[0:n_fs_g0]
-
-    if isinstance(sinp.structuralsa['i_nut_spread_n1'], np.ndarray): #so it can handle 1 nut pattern
-        nut_spread_g1_n = sinp.structuralsa['i_nut_spread_n1'][0:n_fs_dams]
-        bool_confinement_g1_n = sinp.structuralsa['i_confinement_n1'][0:n_fs_dams]
-    else:
-        nut_spread_g1_n = np.array([sinp.structuralsa['i_nut_spread_n1']])[0:n_fs_dams]
-        bool_confinement_g1_n = np.array([sinp.structuralsa['i_confinement_n1']])[0:n_fs_dams]
-
-    if isinstance(sinp.structuralsa['i_nut_spread_n3'], np.ndarray): #so it can handle 1 nut pattern
-        nut_spread_g3_n = sinp.structuralsa['i_nut_spread_n3'][0:n_fs_offs]
-        bool_confinement_g3_n = sinp.structuralsa['i_confinement_n3'][0:n_fs_offs]
-    else:
-        nut_spread_g3_n = np.array([sinp.structuralsa['i_nut_spread_n3']])[0:n_fs_offs]
-        bool_confinement_g3_n = np.array([sinp.structuralsa['i_confinement_n3']])[0:n_fs_offs]
-
-    ###a- create a ‘j2’ by ‘n’ array that is the multipliers that weight each ‘j2’ for that level of ‘n’
-    ###the slices of j2 are Std, minimum & maximum respectively
-    ###the nut_mult does an array equivalent of feed supply = std + (max - std) * spread (if spread > 0, (min - std) if spread < 0)
-    ###the nut_mult step is carried out on NV (MJ of MEI / intake volume required)
-    nut_mult_g0_j2n = np.empty((len_j2,n_fs_g0))
-    nut_mult_g0_j2n[0, ...] = 1 - np.abs(nut_spread_g0_n)
-    nut_mult_g0_j2n[1, ...] = np.abs(np.minimum(0, nut_spread_g0_n))
-    nut_mult_g0_j2n[2, ...] = np.abs(np.maximum(0, nut_spread_g0_n))
-    nut_mult_g1_j2n = np.empty((len_j2,n_fs_dams))
-    nut_mult_g1_j2n[0, ...] = 1 - np.abs(nut_spread_g1_n)
-    nut_mult_g1_j2n[1, ...] = np.abs(np.minimum(0, nut_spread_g1_n))
-    nut_mult_g1_j2n[2, ...] = np.abs(np.maximum(0, nut_spread_g1_n))
-    nut_mult_g3_j2n = np.empty((len_j2,n_fs_offs))
-    nut_mult_g3_j2n[0, ...] = 1 - np.abs(nut_spread_g3_n)
-    nut_mult_g3_j2n[1, ...] = np.abs(np.minimum(0, nut_spread_g3_n))
-    nut_mult_g3_j2n[2, ...] = np.abs(np.maximum(0, nut_spread_g3_n))
-
-    # ###b- create add array if there is a confinement or feedlot pattern (i_nut_spread_n >=3)
-    # nut_add_g0_n = np.zeros_like(nut_spread_g0_n)
-    # nut_add_g0_n[nut_spread_g0_n >=3] = nut_spread_g0_n[nut_spread_g0_n >=3]
-    # nut_mult_g0_j2n[:,nut_spread_g0_n >=3] = 0 #if nut_add exists then nut_mult=0
-    #
-    # nut_add_g1_n = np.zeros_like(nut_spread_g1_n)
-    # nut_add_g1_n[nut_spread_g1_n >=3] = nut_spread_g1_n[nut_spread_g1_n >=3]
-    # nut_mult_g1_j2n[:,nut_spread_g1_n >=3] = 0 #if nut_add exists then nut_mult=0
-    #
-    # nut_add_g3_n = np.zeros_like(nut_spread_g3_n)
-    # nut_add_g3_n[nut_spread_g3_n >=3] = nut_spread_g3_n[nut_spread_g3_n >=3]
-    # nut_mult_g3_j2n[:,nut_spread_g3_n >=3] = 0 #if nut_add exists then nut_mult=0
-
-    ###b - feedsupply_std with n axis (instead of j axis).
-
-    # #### an array to convert feedsupply to NV and then to revert. Used to create the feedsupply with nut_spread.
-    # #### the FeedSupplyGenerator is based on code from StockGenerator but with different period definitions
-    # nv_p6f, feedsupply_f = fgen.feed_generator()
-
-    nut_mult_g0_pk0k1k2j2nwzida0e0b0xyg = np.expand_dims(nut_mult_g0_j2n[na,na,na,na,...], axis = tuple(range(n_pos+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j2 to p
-    # nut_add_g0_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g0_n, axis = (tuple(range(p_pos,n_pos)) + tuple(range(n_pos+1,0)))) #add axis from p to n and n to g
-    # t_nv_pa1e1b1j2wzida0e0b0xyg0 = sfun.f1_convert_fs2nv(t_feedsupply_pa1e1b1j2wzida0e0b0xyg0, nv_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg) #convert fs to NV
-    t_feedsupply_pa1e1b1j2nwzida0e0b0xyg0 = np.expand_dims(t_feedsupply_pa1e1b1j2wzida0e0b0xyg0, axis = n_pos) #add n axis
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.sum(t_feedsupply_pa1e1b1j2nwzida0e0b0xyg0 * nut_mult_g0_pk0k1k2j2nwzida0e0b0xyg, axis = n_pos-1 ) #sum j axis, minus 1 because n axis was added therefore shifting j2 position (it was originally in the same place). Sum across j2 axis and leave just the n axis
-    # feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_convert_nv2fs(nv_std_pa1e1b1nwzida0e0b0xyg0, nv_p6f, feedsupply_f, a_p6_pz) #convert NV back to fs
-
-    nut_mult_g1_pk0k1k2j2nwzida0e0b0xyg = np.expand_dims(nut_mult_g1_j2n[na,na,na,na,...], axis = tuple(range(n_pos+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j2 to p
-    # nut_add_g1_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g1_n, axis = (tuple(range(p_pos,n_pos)) + tuple(range(n_pos+1,0)))) #add axis from p to n and n to g
-    # t_nv_pa1e1b1j2wzida0e0b0xyg1 = sfun.f1_convert_fs2nv(t_feedsupply_pa1e1b1j2wzida0e0b0xyg1, nv_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg) #convert fs to NV
-    t_feedsupply_pa1e1b1j2nwzida0e0b0xyg1 = np.expand_dims(t_feedsupply_pa1e1b1j2wzida0e0b0xyg1, axis = n_pos) #add n axis
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = np.sum(t_feedsupply_pa1e1b1j2nwzida0e0b0xyg1 * nut_mult_g1_pk0k1k2j2nwzida0e0b0xyg, axis = n_pos-1 ) #minus 1 because n axis was added therefore shifting j2 position (it was originally in the place of n). Sum across j2 axis leaving the n axis
-    # feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_convert_nv2fs(nv_std_pa1e1b1nwzida0e0b0xyg1, nv_p6f, feedsupply_f, a_p6_pz) #convert NV back to fs
-
-    nut_mult_g3_pk0k1k2j2nwzida0e0b0xyg = np.expand_dims(nut_mult_g3_j2n[na,na,na,na,...], axis = tuple(range(n_pos+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j2 to p
-    # nut_add_g3_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g3_n, axis = (tuple(range(p_pos,n_pos)) + tuple(range(n_pos+1,0)))) #add axis from p to n and n to g
-    # t_nv_pa1e1b1j2wzida0e0b0xyg3 = sfun.f1_convert_fs2nv(t_feedsupply_pa1e1b1j2wzida0e0b0xyg3, nv_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p]) #convert fs to NV
-    t_feedsupply_pa1e1b1j2nwzida0e0b0xyg3 = np.expand_dims(t_feedsupply_pa1e1b1j2wzida0e0b0xyg3, axis = n_pos) #add n axis
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = np.sum(t_feedsupply_pa1e1b1j2nwzida0e0b0xyg3 * nut_mult_g3_pk0k1k2j2nwzida0e0b0xyg, axis = n_pos-1 ) #minus 1 because n axis was added therefore shifting j2 position (it was originally in the same place). Sum across j2 axis and leave just the n axis
-    # feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_convert_nv2fs(nv_std_pa1e1b1nwzida0e0b0xyg3, nv_p6f, feedsupply_f, a_p6_pz[mask_p_offs_p]) #convert NV back to fs
-
-    # ###Ensure that feed supplies generated by nut_spread inputs < 3 are less than 3
-    # feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.minimum(pinp.sheep['i_md_supp'], feedsupply_std_pa1e1b1nwzida0e0b0xyg0)
-    # feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = np.minimum(pinp.sheep['i_md_supp'], feedsupply_std_pa1e1b1nwzida0e0b0xyg1)
-    # feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = np.minimum(pinp.sheep['i_md_supp'], feedsupply_std_pa1e1b1nwzida0e0b0xyg3)
-
-    # ### for nut_spread inputs >= 3 set the feed supply to the value of the input (nut_add)
-    # feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = feedsupply_std_pa1e1b1nwzida0e0b0xyg0 + nut_add_g0_pk0k1k2nwzida0e0b0xyg
-    # feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = feedsupply_std_pa1e1b1nwzida0e0b0xyg1 + nut_add_g1_pk0k1k2nwzida0e0b0xyg
-    # feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = feedsupply_std_pa1e1b1nwzida0e0b0xyg3 + nut_add_g3_pk0k1k2nwzida0e0b0xyg
-
-    ###c activate n axis on confinement control
-    confinement_std_pa1e1b1nwzida0e0b0xyg0 = t_confinement_pa1e1b1nwzida0e0b0xyg0 * fun.f_expand(bool_confinement_g0_n, n_pos)
-    confinement_std_pa1e1b1nwzida0e0b0xyg1 = t_confinement_pa1e1b1nwzida0e0b0xyg1 * fun.f_expand(bool_confinement_g1_n, n_pos)
-    confinement_std_pa1e1b1nwzida0e0b0xyg3 = t_confinement_pa1e1b1nwzida0e0b0xyg3 * fun.f_expand(bool_confinement_g3_n, n_pos)
-    
-    ##7)Ensure that no feed supplies are outside the possible range - j1[0] is the lowest NV as determined by the poorest feed specified in the j0 inputs. j1[-1] is ad lib supplement so will equate to i_md_supp
-    nv_min_p6a1e1b1j1wzida0e0b0xyg0 = fun.f_dynamic_slice(nv_p6a1e1b1j1wzida0e0b0xyg0, axis=n_pos, start=0, stop=1)
-    nv_min_pa1e1b1j1wzida0e0b0xyg0 = np.take_along_axis(nv_min_p6a1e1b1j1wzida0e0b0xyg0,a_p6_pa1e1b1nwzida0e0b0xyg,0)
-    nv_max_p6a1e1b1j1wzida0e0b0xyg0 = fun.f_dynamic_slice(nv_p6a1e1b1j1wzida0e0b0xyg0, axis=n_pos, start=-1, stop=None)
-    nv_max_pa1e1b1j1wzida0e0b0xyg0 = np.take_along_axis(nv_max_p6a1e1b1j1wzida0e0b0xyg0,a_p6_pa1e1b1nwzida0e0b0xyg,0)
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.clip(feedsupply_std_pa1e1b1nwzida0e0b0xyg0, nv_min_pa1e1b1j1wzida0e0b0xyg0, nv_max_pa1e1b1j1wzida0e0b0xyg0)
-    
-    nv_min_p6a1e1b1j1wzida0e0b0xyg1 = fun.f_dynamic_slice(nv_p6a1e1b1j1wzida0e0b0xyg1, axis=n_pos, start=0, stop=1)
-    nv_min_pa1e1b1j1wzida0e0b0xyg1 = np.take_along_axis(nv_min_p6a1e1b1j1wzida0e0b0xyg1,a_p6_pa1e1b1nwzida0e0b0xyg,0)
-    nv_max_p6a1e1b1j1wzida0e0b0xyg1 = fun.f_dynamic_slice(nv_p6a1e1b1j1wzida0e0b0xyg1, axis=n_pos, start=-1, stop=None)
-    nv_max_pa1e1b1j1wzida0e0b0xyg1 = np.take_along_axis(nv_max_p6a1e1b1j1wzida0e0b0xyg1,a_p6_pa1e1b1nwzida0e0b0xyg,0)
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = np.clip(feedsupply_std_pa1e1b1nwzida0e0b0xyg1, nv_min_pa1e1b1j1wzida0e0b0xyg1, nv_max_pa1e1b1j1wzida0e0b0xyg1)
-    
-    nv_min_p6a1e1b1j1wzida0e0b0xyg3 = fun.f_dynamic_slice(nv_p6a1e1b1j1wzida0e0b0xyg3, axis=n_pos, start=0, stop=1)
-    nv_min_pa1e1b1j1wzida0e0b0xyg3 = np.take_along_axis(nv_min_p6a1e1b1j1wzida0e0b0xyg3,a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],0)
-    nv_max_p6a1e1b1j1wzida0e0b0xyg3 = fun.f_dynamic_slice(nv_p6a1e1b1j1wzida0e0b0xyg3, axis=n_pos, start=-1, stop=None)
-    nv_max_pa1e1b1j1wzida0e0b0xyg3 = np.take_along_axis(nv_max_p6a1e1b1j1wzida0e0b0xyg3,a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],0)
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = np.clip(feedsupply_std_pa1e1b1nwzida0e0b0xyg3, nv_min_pa1e1b1j1wzida0e0b0xyg3, nv_max_pa1e1b1j1wzida0e0b0xyg3)
-
-
-    #####################################
-    ##expand feedsupply for all w slices#  see google doc for more info
-    #####################################
-    ###convert feedsupply from having an active n axis to active w axis by applying association
-    #### each slice of w has a combination of nutrition levels during the nutrition cycle and that is specified in the association a_n_pw
-    feedsupplyw_pa1e1b1nwzida0e0b0xyg0 = feedsupply_std_pa1e1b1nwzida0e0b0xyg0 #^only one n slice so doesnt need following code yet: np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg0,a_n_pa1e1b1nwzida0e0b0xyg0,axis=n_pos)
-    feedsupplyw_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg1, axis=n_pos)
-    feedsupplyw_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg3, a_n_pa1e1b1nwzida0e0b0xyg3, axis=n_pos)
-
-    ##convert n to w for confinement control
-    confinementw_pa1e1b1nwzida0e0b0xyg0 = confinement_std_pa1e1b1nwzida0e0b0xyg0 #^only one n slice so doesnt need following code yet: np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg0,a_n_pa1e1b1nwzida0e0b0xyg0,axis=n_pos)
-    confinementw_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(confinement_std_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg1, axis=n_pos)
-    confinementw_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(confinement_std_pa1e1b1nwzida0e0b0xyg3, a_n_pa1e1b1nwzida0e0b0xyg3, axis=n_pos)
+    ############################
+    ### feed supply calcs      #
+    ############################
+    legume_p6a1e1b1nwzida0e0b0xyg,bool_confinement_g0_n,bool_confinement_g1_n,bool_confinement_g3_n, \
+    nv_p6a1e1b1j1wzida0e0b0xyg0,foo_p6a1e1b1j1wzida0e0b0xyg0,dmd_p6a1e1b1j1wzida0e0b0xyg0,supp_p6a1e1b1j1wzida0e0b0xyg0, \
+    nv_p6a1e1b1j1wzida0e0b0xyg1,foo_p6a1e1b1j1wzida0e0b0xyg1,dmd_p6a1e1b1j1wzida0e0b0xyg1,supp_p6a1e1b1j1wzida0e0b0xyg1, \
+    nv_p6a1e1b1j1wzida0e0b0xyg3,foo_p6a1e1b1j1wzida0e0b0xyg3,dmd_p6a1e1b1j1wzida0e0b0xyg3,supp_p6a1e1b1j1wzida0e0b0xyg3, \
+    feedsupplyw_pa1e1b1nwzida0e0b0xyg0,feedsupplyw_pa1e1b1nwzida0e0b0xyg1,feedsupplyw_pa1e1b1nwzida0e0b0xyg3, \
+    confinementw_pa1e1b1nwzida0e0b0xyg0,confinementw_pa1e1b1nwzida0e0b0xyg1,confinementw_pa1e1b1nwzida0e0b0xyg3 = \
+    fsstk.f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1nwzida0e0b0xyg,
+                     period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1,
+                     scan_management_pa1e1b1nwzida0e0b0xyg1, gbal_management_pa1e1b1nwzida0e0b0xyg1, wean_management_pa1e1b1nwzida0e0b0xyg1,
+                     a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, mask_p_offs_p, len_p)
 
 
     #######################
@@ -2652,108 +2312,6 @@ def generator(params,r_vals,nv,plots = False):
                                             , nv_a1e1b1j1wzida0e0b0xyg3, foo_a1e1b1j1wzida0e0b0xyg3
                                             , dmd_a1e1b1j1wzida0e0b0xyg3, supp_a1e1b1j1wzida0e0b0xyg3, pi_offs)
 
-                # ##relative availability
-                # eqn_group = 5
-                # eqn_system = 0 # CSIRO = 0
-                # if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                #     ###sire
-                #     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
-                #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                #         temp0 = fsfun.f_ra_cs(foo_sire, hf_sire, cr_sire, zf_sire)
-                #         if eqn_used:
-                #             ra_sire = temp0
-                #         if eqn_compare:
-                #             r_compare_q0q1q2psire[eqn_system, eqn_group, 0, p, ...] = temp0
-                #     ###dams
-                #     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
-                #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                #         temp0 = fsfun.f_ra_cs(foo_dams, hf_dams, cr_dams, zf_dams)
-                #         if eqn_used:
-                #             ra_dams = temp0
-                #         if eqn_compare:
-                #             r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
-                #     ###offs
-                #     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
-                #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                #         temp0 = fsfun.f_ra_cs(foo_offs, hf_offs, cr_offs, zf_offs)
-                #         if eqn_used:
-                #             ra_offs = temp0
-                #         if eqn_compare:
-                #             r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
-                #
-                # eqn_system = 1 # Murdoch = 1
-                # if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                #     ###sire
-                #     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
-                #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                #         temp0 = fsfun.f_ra_mu(foo_sire, hf_sire, zf_sire, cu0_sire)
-                #         if eqn_used:
-                #             ra_sire = temp0
-                #         if eqn_compare:
-                #             r_compare_q0q1q2psire[eqn_system, eqn_group, 0, p, ...] = temp0
-                #     ###dams
-                #     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
-                #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                #         temp0 = fsfun.f_ra_mu(foo_dams, hf_dams, zf_dams, cu0_dams)
-                #         if eqn_used:
-                #             ra_dams = temp0
-                #         if eqn_compare:
-                #             r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
-                #     ###offs
-                #     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
-                #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                #         temp0 = fsfun.f_ra_mu(foo_offs, hf_offs, zf_offs, cu0_offs)
-                #         if eqn_used:
-                #             ra_offs = temp0
-                #         if eqn_compare:
-                #             r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
-                #
-                #
-                # ##relative ingestibility (quality)
-                # eqn_group = 6
-                # eqn_system = 0 # CSIRO = 0
-                # if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                #     ###sire
-                #     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
-                #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                #         temp0 = fsfun.f_rq_cs(dmd_sire, legume_pa1e1b1nwzida0e0b0xyg[p], cr_sire, pinp.sheep['i_sf'])
-                #         if eqn_used:
-                #             rq_sire = temp0
-                #         if eqn_compare:
-                #             r_compare_q0q1q2psire[eqn_system, eqn_group, 0, p, ...] = temp0
-                #     ###dams
-                #     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
-                #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                #         temp0 = fsfun.f_rq_cs(dmd_dams, legume_pa1e1b1nwzida0e0b0xyg[p], cr_dams, pinp.sheep['i_sf'])
-                #         if eqn_used:
-                #             rq_dams = temp0
-                #         if eqn_compare:
-                #             r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
-                #     ###offs
-                #     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
-                #     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                #         temp0 = fsfun.f_rq_cs(dmd_offs, legume_pa1e1b1nwzida0e0b0xyg[p], cr_offs, pinp.sheep['i_sf'])
-                #         if eqn_used:
-                #             rq_offs = temp0
-                #         if eqn_compare:
-                #             r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
-                #
-                # ##intake
-                # if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                #     ri_sire = fsfun.f_rel_intake(ra_sire, rq_sire, legume_pa1e1b1nwzida0e0b0xyg[p], cr_sire)
-                #     mei_sire, mei_solid_sire, intake_f_sire, md_solid_sire, mei_propn_milk_sire, mei_propn_herb_sire, mei_propn_supp_sire \
-                #             = sfun.f_intake(pi_sire, ri_sire, md_herb_sire, feedsupplyw_pa1e1b1nwzida0e0b0xyg0[p]
-                #                             , intake_s_sire, pinp.sheep['i_md_supp'])
-                # if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                #     ri_dams = fsfun.f_rel_intake(ra_dams, rq_dams, legume_pa1e1b1nwzida0e0b0xyg[p], cr_dams)
-                #     mei_dams, mei_solid_dams, intake_f_dams, md_solid_dams, mei_propn_milk_dams, mei_propn_herb_dams, mei_propn_supp_dams  \
-                #             = sfun.f_intake(pi_dams, ri_dams, md_herb_dams, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
-                #                             , intake_s_dams, pinp.sheep['i_md_supp'])
-                # if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                #     ri_offs = fsfun.f_rel_intake(ra_offs, rq_offs, legume_pa1e1b1nwzida0e0b0xyg[p], cr_offs)
-                #     mei_offs, mei_solid_offs, intake_f_offs, md_solid_offs, mei_propn_milk_offs, mei_propn_herb_offs, mei_propn_supp_offs  \
-                #             = sfun.f_intake(pi_offs, ri_offs, md_herb_offs, feedsupplyw_pa1e1b1nwzida0e0b0xyg3[p]
-                #                             , intake_s_offs, pinp.sheep['i_md_supp'])
 
                 ##energy
                 eqn_group = 7
@@ -2817,10 +2375,6 @@ def generator(params,r_vals,nv,plots = False):
                             kg_supp_offs = temp4 # temp5 is not used for offspring
                         if eqn_compare:
                             r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0  # more of the return variable could be retained
-
-
-
-
 
 
                 ##foetal growth - dams
@@ -3699,7 +3253,7 @@ def generator(params,r_vals,nv,plots = False):
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 numbers_end_dams, pp_numbers_end_dams = sfun.f1_period_end_nums(numbers_start_dams, mortality_dams, numbers_min_b1nwzida0e0b0xyg, mortality_yatf=mortality_birth_yatf,
                              nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1, conception=conception_dams, scan= scan_management_pa1e1b1nwzida0e0b0xyg1[p],
-                             gbal = gbal_pa1e1b1nwzida0e0b0xyg1[p], gender_propn_x=gender_propn_xyg, period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p],
+                             gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p], gender_propn_x=gender_propn_xyg, period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p],
                              period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p], period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p],
                              period_is_scan=period_is_scan_pa1e1b1nwzida0e0b0xyg1[p], propn_dams_mated=prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p])
 
@@ -4207,40 +3761,40 @@ def generator(params,r_vals,nv,plots = False):
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                 ###FFCFW (condense - fleece free conceptus free)
                 ffcfw_condensed_sire = sfun.f1_condensed(ffcfw_sire, idx_sorted_w_sire, condense_w_mask_sire
-                                        , n_fs_g0, len_w0, n_fvp_periods_sire, False)
+                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)
                 ###nw (condense - normal weight)	- yes this is meant to be updated from nw_start
                 nw_start_condensed_sire = sfun.f1_condensed(nw_start_sire, idx_sorted_w_sire, condense_w_mask_sire
-                                        , n_fs_g0, len_w0, n_fvp_periods_sire, False)
+                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)
                 ###FFCFW maximum to date
                 ffcfw_max_condensed_sire = sfun.f1_condensed(ffcfw_max_sire, idx_sorted_w_sire, condense_w_mask_sire
-                                        , n_fs_g0, len_w0, n_fvp_periods_sire, False)
+                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)
                 ###Weight of adipose (condense)
                 aw_condensed_sire = sfun.f1_condensed(aw_sire, idx_sorted_w_sire, condense_w_mask_sire
-                                        , n_fs_g0, len_w0, n_fvp_periods_sire, False)
+                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)
                 ###Weight of muscle (condense)
                 mw_condensed_sire = sfun.f1_condensed(mw_sire, idx_sorted_w_sire, condense_w_mask_sire
-                                        , n_fs_g0, len_w0, n_fvp_periods_sire, False)
+                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)
                 ###Weight of bone (condense)
                 bw_condensed_sire = sfun.f1_condensed(bw_sire, idx_sorted_w_sire, condense_w_mask_sire
-                                        , n_fs_g0, len_w0, n_fvp_periods_sire, False)
+                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)
                 ###Organ energy requirement (condense)
                 omer_history_condensed_p3g0 = sfun.f1_condensed(omer_history_sire, idx_sorted_w_sire[na,...], condense_w_mask_sire[na,...]
-                                        , n_fs_g0, len_w0, n_fvp_periods_sire, False)  #increment the p slice, note this doesnt impact the p loop - this is required for the next section because we are calculating the production and numbers for the start of the next period.
+                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)  #increment the p slice, note this doesnt impact the p loop - this is required for the next section because we are calculating the production and numbers for the start of the next period.
                 ###Clean fleece weight (condense)
                 cfw_condensed_sire = sfun.f1_condensed(cfw_sire, idx_sorted_w_sire, condense_w_mask_sire
-                                        , n_fs_g0, len_w0, n_fvp_periods_sire, False)
+                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)
                 ###Clean fleece weight (condense)
                 d_cfw_history_condensed_p2g0 = sfun.f1_condensed(d_cfw_history_sire_p2, idx_sorted_w_sire[na,...], condense_w_mask_sire[na,...]
-                                        , n_fs_g0, len_w0, n_fvp_periods_sire, False)
+                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)
                 ###Fibre length since shearing (condense)
                 fl_condensed_sire = sfun.f1_condensed(fl_sire, idx_sorted_w_sire, condense_w_mask_sire
-                                        , n_fs_g0, len_w0, n_fvp_periods_sire, False)
+                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)
                 ###Average FD since shearing (condense)
                 fd_condensed_sire = sfun.f1_condensed(fd_sire, idx_sorted_w_sire, condense_w_mask_sire
-                                        , n_fs_g0, len_w0, n_fvp_periods_sire, False)
+                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)
                 ###Minimum FD since shearing (condense)
                 fd_min_condensed_sire = sfun.f1_condensed(fd_min_sire, idx_sorted_w_sire, condense_w_mask_sire
-                                        , n_fs_g0, len_w0, n_fvp_periods_sire, False)
+                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)
 
             ###dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -4412,7 +3966,7 @@ def generator(params,r_vals,nv,plots = False):
             ##condense end numbers - have to condense the numbers before calc start production, but need to condense production using non condensed end numbers
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                 numbers_end_condensed_sire = sfun.f1_condensed(numbers_end_sire, idx_sorted_w_sire, condense_w_mask_sire
-                                        , n_fs_g0, len_w0, n_fvp_periods_sire, False)
+                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 numbers_end_condensed_dams = sfun.f1_condensed(numbers_end_dams, idx_sorted_w_dams, condense_w_mask_dams
@@ -5695,7 +5249,7 @@ def generator(params,r_vals,nv,plots = False):
     cluster_start = time.time()
     ##dams
     ###create k2 association based on scanning and gbal
-    gbal_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(gbal_pa1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,0)
+    gbal_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(gbal_management_pa1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,0)
     scan_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(scan_management_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1,0)
     a_k2cluster_va1e1b1nwzida0e0b0xyg1 = np.sum(a_ppk2g1_va1e1b1nwzida0e0b0xygsl * (gbal_va1e1b1nwzida0e0b0xyg1[...,na,na] == index_l)
                                                 * (scan_va1e1b1nwzida0e0b0xyg1[...,na,na]==index_s[:,na]), axis = (-1,-2))

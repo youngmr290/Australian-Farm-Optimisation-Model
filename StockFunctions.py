@@ -659,17 +659,9 @@ def f_intake(pi, ri, md_herb, confinement, intake_s, i_md_supp, mp2=0):
     mei_herb = intake_f * md_herb
     ##ME intake of solid food	
     mei_solid = mei_forage + mei_herb + mei_supp
-    # ##M/D of the diet (solids)
-    # md_solid = fun.f_divide(mei_solid, intake_f + intake_s) #func to stop div/0 error if fs  = 3 (eg zero feed)
-    ##ME intake total	
+    ##ME intake total
     mei = mei_solid + mp2
-    # ##Proportion of ME as milk
-    # mei_propn_milk = fun.f_divide(mp2, mei) #func to stop div/0 error - if mei is 0 then so is numerator
-    # ##Proportion of ME as herbage
-    # mei_propn_herb = fun.f_divide((mei_herb + mei_forage), mei) #func to stop div/0 error - if mei is 0 then so is numerator
-    # ##Proportion of ME as supp
-    # mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error - if mei is 0 then so is numerator
-    return mei#, mei_solid, intake_f, md_solid, mei_propn_milk, mei_propn_herb, mei_propn_supp
+    return mei
 
 
 def f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
@@ -1715,7 +1707,7 @@ def f1_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfo
         else:
             ##numbers for post processing - don't include selling drys - assignment required here in case it is not birth
             pp_numbers = numbers
-        ###c) scanning
+        ###c) scanning - scale numbers based on if drys are expected (the model can optimise sale so at this point it is only expected) to be retained or not.
         if np.any(period_is_scan):
             temp = np.maximum(pinp.sheep['i_drysretained_scan'],np.minimum(1, nfoet_b1)) * numbers # scale the level of drys by drys_retained, scale every other slice by 1 except drys if not retained
             numbers = fun.f_update(numbers, temp, period_is_scan * (scan>=1))
