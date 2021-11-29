@@ -3951,21 +3951,16 @@ def generator(params,r_vals,nv,plots = False):
             ######################################
             ###sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] > 0):
-                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort or have been in the feedlot.
-                ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
-                ### and animals that have been in the feed lot will have been sold therefore it is not useful to include these animal in the condensing because
-                ### this will increase the condensing weight but all the heavy animals were sold so the high condense weight becomes too high for many animals to distribute into and hence is a waste.
-                no_confinement_sire = np.all(np.logical_not(confinementw_pa1e1b1nwzida0e0b0xyg0[0:p]), axis=p_pos)  # if the animal has ever been in feedlot it is masked out
-
-                ###mask for animals (slices of w) with mortality greater than a threshold - false means mort is greater and the slice is masked
+                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort (no feedlot mask for sires (only for offs) because feedlotting sires doesn indicat they are being sold).
+                ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
                 numbers_start_condense_sire = np.broadcast_to(numbers_start_condense_sire, numbers_end_sire.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
                 surv_sire = (np.sum(numbers_end_sire,axis=prejoin_tup + (season_tup,), keepdims=True)
                              / np.sum(numbers_start_condense_sire, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
                 threshold = np.minimum(0.9, np.mean(surv_sire, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
                 mort_mask_sire = surv_sire > threshold
 
-                ###combine mort and feedlot mask
-                condense_w_mask_sire = np.logical_and(no_confinement_sire, mort_mask_sire)
+                ###combine mort and feedlot mask - True means the w slice is included in condensing.
+                condense_w_mask_sire = mort_mask_sire
 
                 ###sorted index of w. used for condensing and used below.
                 idx_sorted_w_sire = np.argsort(ffcfw_sire, axis=w_pos)
@@ -3994,13 +3989,8 @@ def generator(params,r_vals,nv,plots = False):
 
             ###dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort or have been in the feedlot.
-                ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
-                ### and animals that have been in the feed lot will have been sold therefore it is not useful to include these animal in the condensing because
-                ### this will increase the condensing weight but all the heavy animals were sold so the high condense weight becomes too high for many animals to distribute into and hence is a waste.
-                no_confinement_dams = np.all(np.logical_not(confinementw_pa1e1b1nwzida0e0b0xyg1[0:p]), axis=p_pos)  # if the animal has ever been in feedlot it is masked out
-                # todo this ^ may not be true since feedlot during aut. For offs an error could trow if confinement feeding in n1 model
-                ###mask for animals (slices of w) with mortality greater than a threshold - false means mort is greater and the slice is masked
+                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort  (no feedlot mask for dams (only for offs) because feedlotting sires doesn indicat they are being sold).
+                ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
                 numbers_start_condense_dams = np.broadcast_to(numbers_start_condense_dams, numbers_end_dams.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
                 surv_dams = (np.sum(numbers_end_dams,axis=prejoin_tup + (season_tup,), keepdims=True)
                              / np.sum(numbers_start_condense_dams, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
@@ -4013,9 +4003,8 @@ def generator(params,r_vals,nv,plots = False):
                     if np.any(min_mort > 0.1):
                         print('WARNING: HIGH MORTALITY DAMS: period ', p)
 
-
-                ###combine mort and feedlot mask
-                condense_w_mask_dams = np.logical_and(no_confinement_dams, mort_mask_dams)
+                ###combine mort and feedlot mask  - True means the w slice is included in condensing.
+                condense_w_mask_dams = mort_mask_dams
 
                 ###sorted index of w. used for condensing.
                 idx_sorted_w_dams = np.argsort(ffcfw_dams * condense_w_mask_dams, axis=w_pos)
@@ -4088,16 +4077,19 @@ def generator(params,r_vals,nv,plots = False):
                 ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
                 ### and animals that have been in the feed lot will have been sold therefore it is not useful to include these animal in the condensing because
                 ### this will increase the condensing weight but all the heavy animals were sold so the high condense weight becomes too high for many animals to distribute into and hence is a waste.
-                no_confinement_yatf = np.all(np.logical_not(confinementw_pa1e1b1nwzida0e0b0xyg1[0:p]), axis=p_pos)  # if the animal has ever been in feedlot it is masked out
+                no_confinement_yatf = np.all(np.logical_not(confinementw_pa1e1b1nwzida0e0b0xyg1[0:p]), axis=p_pos)  # True if animal has never been in feedlot
+                ###if all nut spread options include confinement then confinement w must be included in condensing.
+                ### ie if all n is confinement then overwrite no_confinement to True
+                no_confinement_yatf = np.logical_or(np.all(bool_confinement_g1_n), no_confinement_yatf)
 
-                ###mask for animals (slices of w) with mortality greater than a threshold - false means mort is greater and the slice is masked
+                ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
                 numbers_start_condense_yatf = np.broadcast_to(numbers_start_condense_yatf, numbers_end_yatf.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
                 surv_yatf = fun.f_divide(np.sum(numbers_end_yatf,axis=season_tup, keepdims=True)
                                         , np.sum(numbers_start_condense_yatf, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along z axis so need to sum to determine if w has mortality > 10% (don't sum e&b because yatf stay in the same slice)
                 threshold = np.minimum(0.9, np.mean(surv_yatf, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
                 mort_mask_yatf = surv_yatf > threshold
 
-                ###combine mort and feedlot mask
+                ###combine mort and feedlot mask - True means the w slice is included in condensing.
                 condense_w_mask_yatf = np.logical_and(no_confinement_yatf, mort_mask_yatf)
 
                 ###sorted index of w. used for condensing.
@@ -4143,9 +4135,12 @@ def generator(params,r_vals,nv,plots = False):
                 ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
                 ### and animals that have been in the feed lot will have been sold therefore it is not useful to include these animal in the condensing because
                 ### this will increase the condensing weight but all the heavy animals were sold so the high condense weight becomes too high for many animals to distribute into and hence is a waste.
-                no_confinement_offs = np.all(np.logical_not(confinementw_pa1e1b1nwzida0e0b0xyg3[0:p]), axis=p_pos)  # if the animal has ever been in feedlot it is masked out
+                no_confinement_offs = np.all(np.logical_not(confinementw_pa1e1b1nwzida0e0b0xyg3[0:p]), axis=p_pos)  # True if animal has never been in feedlot
+                ###if all nut spread options include confinement then confinement w must be included in condensing.
+                ### ie if all n is confinement then overwrite no_confinement to True
+                no_confinement_offs = np.logical_or(np.all(bool_confinement_g3_n), no_confinement_offs)
 
-                ###mask for animals (slices of w) with mortality greater than a threshold - false means mort is greater and the slice is masked
+                ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
                 numbers_start_condense_offs = np.broadcast_to(numbers_start_condense_offs, numbers_end_offs.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
                 surv_offs = (np.sum(numbers_end_offs,axis=season_tup, keepdims=True)
                              / np.sum(numbers_start_condense_offs, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10% (don't sum e&b because offs don't change slice)
@@ -4158,7 +4153,7 @@ def generator(params,r_vals,nv,plots = False):
                     if np.any(min_mort > 0.1):
                         print('WARNING: HIGH MORTALITY OFFS: period ', p)
 
-                ###combine mort and feedlot mask
+                ###combine mort and feedlot mask - True means the w slice is included in condensing.
                 condense_w_mask_offs = np.logical_and(no_confinement_offs, mort_mask_offs)
 
                 ###sorted index of w. used for condensing.
