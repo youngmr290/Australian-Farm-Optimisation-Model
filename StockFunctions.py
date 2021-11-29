@@ -514,7 +514,7 @@ def f1_feedsupply(feedsupplyw_a1e1b1nwzida0e0b0xyg, confinementw_a1e1b1nwzida0e0
     mei_solid = mei - mp2
     ##ME intake from herbage
     mei_herb = mei_solid - mei_supp
-    ##M/D of herbs
+    ##M/D of herbage
     md_herb = fsfun.dmd_to_md(dmd)  # will be 0 if in confinement
     ##herb intake
     intake_f = fun.f_divide(mei_herb, md_herb) #func to stop div/0 error if confinement
