@@ -41,11 +41,15 @@ def crop_residue_all(params, r_vals, nv):
     Crop residue represents crop stubble and fodder crops (unharvested crops).
     Stubble and fodder are a key feed source for sheep during the summer months. In general sheep graze crop residues
     selectively, preferring the higher quality components.  Thus, they tend to eat grain first followed
-    by leaf and finally stem.  In AFO, total crop residues is split into four categories (A, B, C & D) to
-    reflect the selectivity of grazing.  For cereals, category A is mainly grain and leaf blade,
+    by leaf and finally stem. To allow optimisation of the quantity of the stubble grazed and to reflect selective
+    grazing the total crop residues are divided into four categories (A, B, C & D). The higher categories are better
+    quality but generally lower quantity. Consumption of a higher quality category allows the consumption of a lower
+    category (e.g. sheep can not consume any of category B until some of category A has been consumed).
+
+    For cereals, category A is mainly grain and leaf blade,
     category B is mainly leaf blade, leaf sheath and cocky chaff, category C is mainly cocky chaff and
     stem and category D is the remaining fraction that is not grazed. The total mass of crop residues at first
-    grazing (harvest for stubble and an inputted date for fodder) is calculated as a product of the grain yield.
+    grazing (harvest for stubble and an inputted date for fodder) is calculated as a product of the grain yield and harvest index.
     Overtime if the feed is not consumed it deteriorates in quality and quantity due to adverse effects of
     weather and the impact of sheep trampling.
 
@@ -53,8 +57,8 @@ def crop_residue_all(params, r_vals, nv):
     proportion of each component in each category. The DMD of each component (grain , leaf, sheath, stalk) has been
     determined by other work :cite:p:`RN108` and can be used to determine the proportion of each component in each category based
     on the DMD of each category. The quantity and DMD of each crop residue category were determined using the AFO
-    sheep generator (documented in a future section). The DMD of the feed was altered until the liveweight of
-    the sheep in the simulation matched the that of an equivalent sheep in a stubble trial (Riggall 2017 pers comm).
+    sheep generator (documented in a future section). The DMD of the feed was altered until the liveweight change of
+    the sheep in the simulation matched that of an equivalent sheep in a stubble trial (Riggall 2017 pers comm).
     This provided the feed DMD and the intake required to achieve the given liveweight. Based on the number of
     sheep and the total crop residue available in the trial the simulation results can be extrapolated to provide
     the crop residue DMD for different levels of intake. These results can be summaries into the 4 crop residue categories
@@ -67,6 +71,14 @@ def crop_residue_all(params, r_vals, nv):
 
     Farmer often rake and burn crop residue in preparation for the following seeding. This is represented as a
     cost see Phase.py for further information.
+
+    Stubble grazing optimisation in AFO includes:
+
+        - The time to start grazing of each stubble
+        - The class of stock that grazes the stubble
+        - The duration of grazing
+        - The amount of supplementary required in addition to stubble (to meet alternative LW profiles)
+
 
     '''
     '''

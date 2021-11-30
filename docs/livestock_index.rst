@@ -103,6 +103,14 @@ represent time points when either:
     #. An alternative nutrition level may be optimal for different classes of stock.
     #. Quantifying the value of altering nutrition is desired for an analysis report.
 
+Further information regarding the feedsuppy patterns used in the livestock generator can be found at the
+following link:
+
+.. toctree::
+   :maxdepth: 1
+
+   StockFeedSupply
+
 
 Precalcs
 ---------

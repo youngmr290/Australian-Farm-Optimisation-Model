@@ -1,12 +1,28 @@
 '''
-Stock feedsupply construction
 
 author: young
 
 Feedsupply is represented as a nutritive value (NV). There is also an input which controls if the animal
 is in confinement or not.
 
-Feedsupply can be generated in two ways
+Animal production is generated for animals following different livewight profiles throughout the year. There
+are a number of starting liveweights and for each starting liveweight there are a number of feedsupply patterns.
+The LW profiles are not continuous for the entirety of the animals life, rather the animals are distributed to the
+starting livewights at the beginning of each year (prejoining). This is done to reduce model size.
+
+The feedsupply patterns followed throughout the year are generated from a standard feedsupply which is
+adjusted for the specified nutrition levels at each feed variation peirod (FVP).
+The standard feedsupply is inputted at three levels; high, low and medium. The standard feedsupply is adjusted for each
+nutrition level resulting in a new feedsupply for each nutrition level. At each FVP the nutrition level resets expanind
+the feedsupply pattern. For example, the high nutrition feedsupply in the first FVP is followed by all
+feedsupply levels in the second FVP. See below for a visual description of the feedsupply patterns.
+
+.. image:: FS_diagram.png
+
+Figure 1: Representation of the nutrition profile options (feedsupply patterns) included in the livestock data
+generator if there were 1 starting liveweight 2 nutrition levels and 3 feed variation periods.
+
+The standard feedsupply can be generated in two ways:
 
     #. from inputs in Property.xl and Structural.xl
     #. from pkl file that is generated from running the model with multiple w options.
@@ -22,7 +38,7 @@ generate the optimal feedsupply which is used for subsequent runs.
 Generating the feedsupply from the optimal nutrition pattern selected by the model means that the feedsupply
 can easily be optimised for different axis that are not included in the inputs (eg t axis and z axis).
 This is carried out in the feedsupply creation experiment (in exp.xl). Depending on the number of w that
-can be included in the model it may take several trials to converge on the optimal feedsupply.
+have been included in the model it may take several trials to converge on the optimal feedsupply.
 Optimising the duration of confinement feeding is imprecise because the optimisation occurs at the DVP level
 and this timestep is likely too long. Therefore, the user needs to test including confinement in a range of feed
 periods for different stock classes. This is controlled using the input i_confinement_r1p6z.
@@ -51,9 +67,6 @@ using the big model. The feedsupply will need to be generated for each group of 
 active sheep axis (ie if the analysis is comparing scanning options then there would need to be a feedsupply
 for scan=0 and scan=1 because the clustering is different). A further challenge is to optimise when to confinement
 feed. Optimising the NV in confinement is similar to optimising in the paddock and requires multiple confinement n.
-
-
-
 
 
 '''
