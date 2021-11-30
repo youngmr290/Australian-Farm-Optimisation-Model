@@ -58,18 +58,20 @@ def f_season_precalcs(params, r_vals):
                                 * (np.trunc(index_s[:,na,na] / step_sparam_q[:,na,na,na])
                                    == np.trunc(index_s / step_sparam_q[:,na,na,na]))
                                 * (index_z[:,na] == np.trunc(index_s / step_zparam_q[:,na,na,na]) % len_z))
-    mask_provqs8z8s9_qs8z8s9[-1, ...] = True
+    mask_provqs8z8s9_qs8z8s9[-1, ...] = False  #in the final year of the sequence all the weather years only 'provide' to the initial sequence (s9[0])
+    mask_provqs8z8s9_qs8z8s9[-1, ..., 0] = True
+    parent_qs9_qs8zs9 = np.roll(mask_provqs8z8s9_qs8z8s9, 1, axis = 0)  #the parent of q,s9 is q_prev,s8,z
 
-    # mask_provqs8z8s9_qs8z8s9 = (mask_s8vars_qs8[:,:,na,na]
-    #                             *(np.trunc(index_s[:,na,na] / step_sparam_q[:,na,na,na]) == np.trunc(index_s / step_sparam_q[:,na,na,na]))
-    #                             *(index_z[:,na] == np.trunc(index_s / step_zparam_q[:,na,na,na]) % len_z))
+    ##probability of a weather-year in each year of the sequence (which is the cum prob for year 0)
+    ###This is the place to alter probability if weather-years are not independent (by not broadcasting across q)
+    prob_qsz = mask_s8vars_qs8[..., na] * i_season_propn_z
+    season_seq_prob_qsz = prob_qsz.copy()
+    for q in range(1, len_q):   #calculate cum prob in a loop because requires summing across z in q_prev
+        season_seq_prob_qsz[q, ...] = prob_qsz[q, ...] * np.sum(season_seq_prob_qsz[q-1, :, :, na]
+                                                                * parent_qs9_qs8zs9[q, ...], axis = (0,1))[...,na]
 
-    season_seq_prob_qzs9 = np.cumprod(np.sum(i_season_propn_z[:,na] * mask_provqs8z8s9_qs8z8s9,axis=1,keepdims=False),axis=0)
-    season_seq_prob_qsz = np.moveaxis(season_seq_prob_qzs9,source=-1,destination=1)  # s9 to s8 so that s9 no longer exists
-    # season_seq_prob_qsz = np.cumprod(np.sum(i_season_propn_z * mask_s8vars_qs8[:,:,na],axis=-1, keepdims=True),
-    #                                  axis=0)  # todo as above, work needed to represent sequence of interest. Currently z axis is not active.
     p_wyear_inc_qs = mask_s8vars_qs8  # todo work needed to allow masking ‘sequence of interest’ (which requires a z8 axis).
-    p_season_prob_qsz = season_seq_prob_qsz
+    p_season_prob_qsz = season_seq_prob_qsz / len_q # Divide by len_q so that the objective value is $/yr rather than $/sequence
 
     p_sequence_prov_qs8zs9 = mask_s8vars_qs8[:,:,na,na] * (index_q[:,na,na,na] != (len_q - 1)) * mask_provqs8z8s9_qs8z8s9
     p_endstart_prov_qsz = mask_s8vars_qs8[:,:,na] * (index_q[:,na,na] == (len_q - 1)) * season_seq_prob_qsz
