@@ -2576,10 +2576,10 @@ def generator(params,r_vals,nv,plots = False):
                 ###calc error
                 error = (ebg_dams * cg_dams) - target_lwc
                 ###store in attempts array - build new array assign old array and then add current itn results - done like this to handle the shape changing and because we don't know what shape feedsupply and error are before this loop starts
-                shape = tuple(np.maximum.reduce([feedsupplyw_pa1e1b1nwzida0e0b0xyg1.shape, error.shape]))+(n_max_itn,)+(2,)
+                shape = tuple(np.maximum.reduce([feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p].shape, error.shape]))+(n_max_itn,)+(2,)
                 attempts2= np.zeros(shape)
                 attempts2[...] = attempts
-                attempts2[...,itn,0] = feedsupplyw_pa1e1b1nwzida0e0b0xyg1
+                attempts2[...,itn,0] = feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
                 attempts2[...,itn,1] = error
                 attempts = attempts2
                 ###is error within tolerance
@@ -2588,9 +2588,9 @@ def generator(params,r_vals,nv,plots = False):
                 ###max attempts reached
                 elif itn == n_max_itn-1: #minus 1 because range() and hence itn starts from 0
                     ####select best feed supply option
-                    feedsupply = attempts[...,attempts[...,1]==np.nanmin(np.abs(attempts[...,1]),axis=-1),0] #create boolean index using error array then index feedsupply array
+                    feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p] = attempts[...,attempts[...,1]==np.nanmin(np.abs(attempts[...,1]),axis=-1),0] #create boolean index using error array then index feedsupply array
                     break
-                feedsupply = sfun.f1_feedsupply_adjust(attempts,feedsupply,itn)
+                feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p] = sfun.f1_feedsupply_adjust(attempts,feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p],itn)
                 itn+=1
 
             ##dam weight at a given time during period - used for special events like birth.
