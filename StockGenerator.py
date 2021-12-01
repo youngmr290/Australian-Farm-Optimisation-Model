@@ -63,7 +63,7 @@ import Exceptions as exc
 
 # from memory_profiler import profile
 # @profile
-def generator(params,r_vals,nv,plots = False):
+def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     """
     A function to wrap the generator and post processing that can be called by SheepPyomo.
 
@@ -1870,7 +1870,7 @@ def generator(params,r_vals,nv,plots = False):
     fsstk.f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1nwzida0e0b0xyg,
                      period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1,
                      scan_management_pa1e1b1nwzida0e0b0xyg1, gbal_management_pa1e1b1nwzida0e0b0xyg1, wean_management_pa1e1b1nwzida0e0b0xyg1,
-                     a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, mask_p_offs_p, len_p)
+                     a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, mask_p_offs_p, len_p, pkl_fs_info)
 
 
     #######################
@@ -4979,6 +4979,10 @@ def generator(params,r_vals,nv,plots = False):
     nv_psire = fun.f_divide(o_mei_solid_psire, o_pi_psire, dtype=dtype)
     nv_pdams = fun.f_divide(o_mei_solid_pdams, o_pi_pdams, dtype=dtype)
     nv_poffs = fun.f_divide(o_mei_solid_poffs, o_pi_poffs, dtype=dtype)
+    ###store nv (feedsupply) so it can be used at the end of the trial to calc optimal fs
+    pkl_fs_info['feedsupply_pa1e1b1nwzida0e0b0xyg0'] = nv_psire
+    pkl_fs_info['feedsupply_pa1e1b1nwzida0e0b0xyg1'] = nv_pdams
+    pkl_fs_info['feedsupply_pa1e1b1nwzida0e0b0xyg3'] = nv_poffs
 
     ##create the upper and lower cutoffs. If there is a confinement slice then it will be populated with values but they never get used.
     nv_upper_p6fpzg = fun.f_expand(sinp.structuralsa['i_nv_upper_p6z'], left_pos=z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
@@ -5277,6 +5281,13 @@ def generator(params,r_vals,nv,plots = False):
     a_k5cluster_da0e0b0xyg3 = a_k5cluster_da0e0b0xyg3 + (len_b0 * index_e0b0xyg * (scan_da0e0b0xyg3 == 4)) #If scanning for foetal age add 6 to the animals in the second & subsequent cycles. 6 is the number of slices in the b0 axes
     len_k5 = np.max(a_k5cluster_da0e0b0xyg3)+1  #Added +1 because python starts at 0.
     index_k5tva1e1b1nwzida0e0b0xyg3 = fun.f_expand(np.arange(len_k5), k5_pos)
+
+    ##store cluster associations for use in creating the optimal feedsupply at the end of the trial
+    pkl_fs_info['a_v_pa1e1b1nwzida0e0b0xyg1'] = a_v_pa1e1b1nwzida0e0b0xyg1
+    pkl_fs_info['a_k2cluster_va1e1b1nwzida0e0b0xyg1'] = a_k2cluster_va1e1b1nwzida0e0b0xyg1
+    pkl_fs_info['a_v_pa1e1b1nwzida0e0b0xyg3'] = a_v_pa1e1b1nwzida0e0b0xyg3
+    pkl_fs_info['a_k3cluster_da0e0b0xyg3'] = a_k3cluster_da0e0b0xyg3
+    pkl_fs_info['a_k5cluster_da0e0b0xyg3'] = a_k5cluster_da0e0b0xyg3
 
 
     ######################################

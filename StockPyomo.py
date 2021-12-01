@@ -15,8 +15,8 @@ import StockGenerator as sgen
 import PropertyInputs as pinp
 
 
-def stock_precalcs(params, r_vals, nv):
-    sgen.generator(params, r_vals, nv)
+def stock_precalcs(params, r_vals, nv, pkl_fs_info):
+    sgen.generator(params, r_vals, nv, pkl_fs_info)
 
 
 

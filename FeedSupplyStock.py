@@ -70,9 +70,16 @@ feed. Optimising the NV in confinement is similar to optimising in the paddock a
 
 
 '''
-
+'''
+Additional notes:
+- if running n1 with pkl create and use = True and nut spread != 0 then the feedsupply will change each itteration 
+  because the pkl fs is read in before nut adjustment but stored for post calculating after. Therefore each itteration 
+  the fs will change by an amount specified by nut spread.
+- cant optimise feeds using multiprocessing because the same pkl file is accessed and written too.
+'''
 
 import numpy as np
+import pickle as pkl
 
 import PropertyInputs as pinp
 import UniversalInputs as uinp
@@ -83,6 +90,7 @@ import FeedsupplyFunctions as fsfun
 import SeasonalFunctions as zfun
 
 
+na=np.newaxis
 
 
 #todo supp feeding in confinement incurs the same costs as paddock feeding. this should be changed. it should also incur some capital cost.
@@ -90,12 +98,11 @@ import SeasonalFunctions as zfun
 def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1nwzida0e0b0xyg,
                  period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1,
                  scan_management_pa1e1b1nwzida0e0b0xyg1, gbal_management_pa1e1b1nwzida0e0b0xyg1, wean_management_pa1e1b1nwzida0e0b0xyg1,
-                 a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, mask_p_offs_p, len_p):
+                 a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, mask_p_offs_p, len_p, pkl_fs_info):
 
     #########
     #inputs #
     #########
-    na=np.newaxis
 
     ##pos
     a0_pos = sinp.stock['i_a0_pos']
@@ -332,6 +339,22 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     # t_feedsupply_pa1e1b1j2wzida0e0b0xyg3 = (t_feedsupply_pa1e1b1j2wzida0e0b0xyg3 + t_fs_agedam_pj2zida0e0b0xg3
     #                                             + t_fs_ageweaned_pj2zida0e0b0xg3 + t_fs_gender_pj2zida0e0b0xg3)
 
+    ##4b) update fs and confinement info with pkl if desired
+    fs_number = sinp.structuralsa['fs_number']
+    if sinp.structuralsa['fs_use_pkl']:
+        print('pkl fs being used.')
+        with open('pkl/pkl_fs{0}.pkl'.format(fs_number),"rb") as f:
+            pkl_fs = pkl.load(f)
+
+        ###update the feedsupply with the pkl fs
+        t_feedsupply_pa1e1b1j2wzida0e0b0xyg0 = pkl_fs['fs']['sire']
+        t_feedsupply_pa1e1b1j2wzida0e0b0xyg1 = pkl_fs['fs']['dams']
+        t_feedsupply_pa1e1b1j2wzida0e0b0xyg3 = pkl_fs['fs']['offs']
+
+        ###confinement info - only use if n=1 and fs_use_pkl (above) is true
+        t_confinement_pa1e1b1nwzida0e0b0xyg0 = fun.f_update(t_confinement_pa1e1b1nwzida0e0b0xyg0, pkl_fs['confinement']['sire'], n_fs_sire==1)
+        t_confinement_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(t_confinement_pa1e1b1nwzida0e0b0xyg1, pkl_fs['confinement']['dams'], n_fs_dams==1)
+        t_confinement_pa1e1b1nwzida0e0b0xyg3 = fun.f_update(t_confinement_pa1e1b1nwzida0e0b0xyg3, pkl_fs['confinement']['offs'], n_fs_offs==1)
 
     ##5)Convert the ‘j2’ axis to an ‘n’ axis using the nut_spread inputs.
     ## activate n axis for confinement control (controls if a nutrition pattern is in confinement - note
@@ -362,6 +385,19 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     confinementw_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(confinement_std_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg1, axis=n_pos)
     confinementw_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(confinement_std_pa1e1b1nwzida0e0b0xyg3, a_n_pa1e1b1nwzida0e0b0xyg3, axis=n_pos)
 
+    ##store some info required to determine the optimal feedsupply at the end
+    ## note: feedsupply is stored after the generator because it could be changed in the target lw loop.
+    pkl_fs_info['confinementw_pa1e1b1nwzida0e0b0xyg0'] = confinementw_pa1e1b1nwzida0e0b0xyg0
+    pkl_fs_info['confinementw_pa1e1b1nwzida0e0b0xyg1'] = confinementw_pa1e1b1nwzida0e0b0xyg1
+    pkl_fs_info['confinementw_pa1e1b1nwzida0e0b0xyg3'] = confinementw_pa1e1b1nwzida0e0b0xyg3
+    ###store the inputted fs and confinement so that we can calculate the difference of the min and max j2 slices in comparison to the std slice.
+    ### also used to set the feedsupply and confinement for slice that had no animals selected in the optimal solution.
+    pkl_fs_info['t_feedsupply_pa1e1b1j2wzida0e0b0xyg0'] = t_feedsupply_pa1e1b1j2wzida0e0b0xyg0
+    pkl_fs_info['t_feedsupply_pa1e1b1j2wzida0e0b0xyg1'] = t_feedsupply_pa1e1b1j2wzida0e0b0xyg1
+    pkl_fs_info['t_feedsupply_pa1e1b1j2wzida0e0b0xyg3'] = t_feedsupply_pa1e1b1j2wzida0e0b0xyg3
+    pkl_fs_info['t_confinement_pa1e1b1nwzida0e0b0xyg0'] = t_confinement_pa1e1b1nwzida0e0b0xyg0
+    pkl_fs_info['t_confinement_pa1e1b1nwzida0e0b0xyg1'] = t_confinement_pa1e1b1nwzida0e0b0xyg1
+    pkl_fs_info['t_confinement_pa1e1b1nwzida0e0b0xyg3'] = t_confinement_pa1e1b1nwzida0e0b0xyg3
 
     return legume_p6a1e1b1nwzida0e0b0xyg, bool_confinement_g0_n, bool_confinement_g1_n, bool_confinement_g3_n, \
            nv_p6a1e1b1j1wzida0e0b0xyg0,foo_p6a1e1b1j1wzida0e0b0xyg0,dmd_p6a1e1b1j1wzida0e0b0xyg0,supp_p6a1e1b1j1wzida0e0b0xyg0,\
@@ -374,7 +410,6 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
 
 def f1_j2_to_n(t_feedsupply_pa1e1b1j2wzida0e0b0xyg, t_confinement_pa1e1b1nwzida0e0b0xyg, nv_p6a1e1b1j1wzida0e0b0xyg,
                a_p6_pa1e1b1nwzida0e0b0xyg, i_nut_spread_n, i_confinement_n, n_fs):
-    na = np.newaxis
     n_pos = sinp.stock['i_n_pos']
     ### the nut_spread inputs are the proportion of std and min or max feed supply.
     ### Unless nut_spread is greater than 3 in which case the value becomes the actual feed supply
@@ -404,8 +439,6 @@ def f1_j2_to_n(t_feedsupply_pa1e1b1j2wzida0e0b0xyg, t_confinement_pa1e1b1nwzida0
 
     ###c activate n axis on confinement control
     confinement_std_pa1e1b1nwzida0e0b0xyg = t_confinement_pa1e1b1nwzida0e0b0xyg * fun.f_expand(bool_confinement_n, n_pos)
-    # confinement_std_pa1e1b1nwzida0e0b0xyg1 = t_confinement_pa1e1b1nwzida0e0b0xyg1 * fun.f_expand(bool_confinement_g1_n, n_pos)
-    # confinement_std_pa1e1b1nwzida0e0b0xyg3 = t_confinement_pa1e1b1nwzida0e0b0xyg3 * fun.f_expand(bool_confinement_g3_n, n_pos)
 
     ##7)Ensure that no feed supplies are outside the possible range - j1[0] is the lowest NV as determined by the poorest feed specified in the j0 inputs. j1[-1] is ad lib supplement so will equate to i_md_supp
     nv_min_p6a1e1b1j1wzida0e0b0xyg = fun.f_dynamic_slice(nv_p6a1e1b1j1wzida0e0b0xyg, axis=n_pos, start=0, stop=1)
@@ -417,3 +450,121 @@ def f1_j2_to_n(t_feedsupply_pa1e1b1j2wzida0e0b0xyg, t_confinement_pa1e1b1nwzida0
     return feedsupply_std_pa1e1b1nwzida0e0b0xyg, confinement_std_pa1e1b1nwzida0e0b0xyg, bool_confinement_n
 
 
+def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
+    '''
+    Calculates the optimum feedsupply based on the stock activities selected and stores it in a pkl file.
+
+    Note: Sires currently only have one w slice. There is no ability to optimise their lw. Thus optimal fs equals input fs.
+
+    Use float32 to speed process when using lots of w.
+    '''
+    import ReportFunctions as rfun
+
+    if sinp.structuralsa['fs_create']:
+        ##inputs
+        d_pos = sinp.stock['i_d_pos']
+        n_pos = sinp.stock['i_n_pos']
+        w_pos = sinp.stock['i_w_pos']
+        p_pos = sinp.stock['i_p_pos']
+        z_pos = sinp.stock['i_z_pos']
+
+        ##access stock variables from lp output
+        stock_vars = rfun.f_stock_reshape(lp_vars,r_vals)
+        sire_numbers_qsg0 = stock_vars['sire_numbers_qsg0'].astype('float32')
+        dams_numbers_qsk2tvanwziy1g1 = stock_vars['dams_numbers_qsk2tvanwziy1g1'].astype('float32')
+        offs_numbers_qsk3k5tvnwziaxyg3 = stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'].astype('float32')
+        ###add singleton axis to line up with generator
+        dams_numbers_qsk2tva1e1b1nwzida0e0b0xyg1 = dams_numbers_qsk2tvanwziy1g1[...,na,na,:,:,:,:,na,na,na,na,na,:,:]
+        offs_numbers_qsk3k5tva1e1b1nwzida0e0b0xyg3 = offs_numbers_qsk3k5tvnwziaxyg3[...,na,na,na,:,:,:,:,na,:,na,na,:,:,:]
+        ###weight by q,s&z. then remove the q&s axis (they can be removed here since the feedsupply doesnt have those axis)
+        z_prob_qsk2tva1e1b1nwzida0e0b0xyg = fun.f_expand(r_vals['zgen']['z_prob_qsz'], z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
+        z_prob_qsk3k5tva1e1b1nwzida0e0b0xyg = fun.f_expand(r_vals['zgen']['z_prob_qsz'], z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
+        dams_numbers_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(dams_numbers_qsk2tva1e1b1nwzida0e0b0xyg1, z_prob_qsk2tva1e1b1nwzida0e0b0xyg, axis=(0,1))
+        offs_numbers_k3k5tva1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(offs_numbers_qsk3k5tva1e1b1nwzida0e0b0xyg3, z_prob_qsk3k5tva1e1b1nwzida0e0b0xyg, axis=(0,1))
+
+        ##uncluster k axes on lp vars and convert v to p
+        a_v_pa1e1b1nwzida0e0b0xyg1 = pkl_fs_info['a_v_pa1e1b1nwzida0e0b0xyg1']
+        a_k2cluster_va1e1b1nwzida0e0b0xyg1 = pkl_fs_info['a_k2cluster_va1e1b1nwzida0e0b0xyg1']
+        a_v_pa1e1b1nwzida0e0b0xyg3 = pkl_fs_info['a_v_pa1e1b1nwzida0e0b0xyg3']
+        a_k3cluster_k3k5tva1e1b1nwzida0e0b0xyg3 = fun.f_expand(pkl_fs_info['a_k3cluster_da0e0b0xyg3'],p_pos-4,right_pos=d_pos)
+        a_k5cluster_k5tva1e1b1nwzida0e0b0xyg3 = fun.f_expand(pkl_fs_info['a_k5cluster_da0e0b0xyg3'],p_pos-3,right_pos=d_pos)
+
+        ##uncluster via association
+        ###dams
+        dams_numbers_tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dams_numbers_k2tva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1[na,na], axis=0)[0] #slice of singleton k axis (now replaced by e&b)
+        dams_numbers_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dams_numbers_tva1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1[na], axis=1)
+        ###pffs
+        offs_numbers_k5tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(offs_numbers_k3k5tva1e1b1nwzida0e0b0xyg3, a_k3cluster_k3k5tva1e1b1nwzida0e0b0xyg3, axis=0)[0] #slice of singleton k3 axis (now replaced by d)
+        offs_numbers_tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(offs_numbers_k5tva1e1b1nwzida0e0b0xyg3, a_k5cluster_k5tva1e1b1nwzida0e0b0xyg3, axis=0)[0] #slice of singleton k5 axis (now replaced by e&b)
+        offs_numbers_tpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(offs_numbers_tva1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3[na], axis=1)
+
+        ##access generator arrays
+        feedsupply_pa1e1b1nwzida0e0b0xyg0 = pkl_fs_info['feedsupply_pa1e1b1nwzida0e0b0xyg0'].astype('float32')
+        feedsupply_pa1e1b1nwzida0e0b0xyg1 = pkl_fs_info['feedsupply_pa1e1b1nwzida0e0b0xyg1'].astype('float32')
+        feedsupply_pa1e1b1nwzida0e0b0xyg3 = pkl_fs_info['feedsupply_pa1e1b1nwzida0e0b0xyg3'].astype('float32')
+
+        confinementw_pa1e1b1nwzida0e0b0xyg0 = pkl_fs_info['confinementw_pa1e1b1nwzida0e0b0xyg0'].astype('float32')
+        confinementw_pa1e1b1nwzida0e0b0xyg1 = pkl_fs_info['confinementw_pa1e1b1nwzida0e0b0xyg1'].astype('float32')
+        confinementw_pa1e1b1nwzida0e0b0xyg3 = pkl_fs_info['confinementw_pa1e1b1nwzida0e0b0xyg3'].astype('float32')
+
+        t_feedsupply_pa1e1b1j2wzida0e0b0xyg0 = pkl_fs_info['t_feedsupply_pa1e1b1j2wzida0e0b0xyg0'].astype('float32')
+        t_feedsupply_pa1e1b1j2wzida0e0b0xyg1 = pkl_fs_info['t_feedsupply_pa1e1b1j2wzida0e0b0xyg1'].astype('float32')
+        t_feedsupply_pa1e1b1j2wzida0e0b0xyg3 = pkl_fs_info['t_feedsupply_pa1e1b1j2wzida0e0b0xyg3'].astype('float32')
+
+        t_confinement_pa1e1b1nwzida0e0b0xyg0 = pkl_fs_info['t_confinement_pa1e1b1nwzida0e0b0xyg0'].astype('float32')
+        t_confinement_pa1e1b1nwzida0e0b0xyg1 = pkl_fs_info['t_confinement_pa1e1b1nwzida0e0b0xyg1'].astype('float32')
+        t_confinement_pa1e1b1nwzida0e0b0xyg3 = pkl_fs_info['t_confinement_pa1e1b1nwzida0e0b0xyg3'].astype('float32')
+
+        ##calculate the optimum feedsupply. Take weighted average across axis that are unwanted.
+        ##note sires only ever have one w slice. There is no ability to optimise their lw. Thus optimal fs equals input fs.
+        optimal_fs_pa1e1b1j2wzida0e0b0xyg0 = t_feedsupply_pa1e1b1j2wzida0e0b0xyg0
+        optimal_fs_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(feedsupply_pa1e1b1nwzida0e0b0xyg1,dams_numbers_tpa1e1b1nwzida0e0b0xyg1,w_pos,keepdims=True)
+        optimal_fs_tpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(feedsupply_pa1e1b1nwzida0e0b0xyg3,offs_numbers_tpa1e1b1nwzida0e0b0xyg3,w_pos,keepdims=True)
+
+        ##populate the min and max slice of j2 axis - min and max slices of j2 are populated based on the same scale as the feedsupply inputs from excel
+        ###dams
+        j2_scale_pa1e1b1j2wzida0e0b0xyg1 = fun.f_divide(t_feedsupply_pa1e1b1j2wzida0e0b0xyg1,
+                                                        fun.f_dynamic_slice(t_feedsupply_pa1e1b1j2wzida0e0b0xyg1, n_pos, 0, 1))
+        optimal_fs_tpa1e1b1j2wzida0e0b0xyg1 = optimal_fs_tpa1e1b1nwzida0e0b0xyg1 * j2_scale_pa1e1b1j2wzida0e0b0xyg1
+        ###offs
+        j2_scale_pa1e1b1j2wzida0e0b0xyg3 = fun.f_divide(t_feedsupply_pa1e1b1j2wzida0e0b0xyg3,
+                                                        fun.f_dynamic_slice(t_feedsupply_pa1e1b1j2wzida0e0b0xyg3, n_pos, 0, 1))
+        optimal_fs_tpa1e1b1j2wzida0e0b0xyg3 = optimal_fs_tpa1e1b1nwzida0e0b0xyg3 * j2_scale_pa1e1b1j2wzida0e0b0xyg3
+        
+        ##calculate optimum confinement period - the proportion of animals in confinement must be greater than a cut off propn.
+        cutoff = 0.75
+        ###sires - no w optimisation therefore optimal = input
+        optimal_confinement_pa1e1b1nwzida0e0b0xyg0 = confinementw_pa1e1b1nwzida0e0b0xyg0
+        ###dams
+        optimal_confinement_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(confinementw_pa1e1b1nwzida0e0b0xyg1,dams_numbers_tpa1e1b1nwzida0e0b0xyg1,w_pos,keepdims=True)
+        optimal_confinement_tpa1e1b1nwzida0e0b0xyg1 = optimal_confinement_tpa1e1b1nwzida0e0b0xyg1 > cutoff
+        ###offs
+        optimal_confinement_tpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(confinementw_pa1e1b1nwzida0e0b0xyg3,offs_numbers_tpa1e1b1nwzida0e0b0xyg3,w_pos,keepdims=True)
+        optimal_confinement_tpa1e1b1nwzida0e0b0xyg3 = optimal_confinement_tpa1e1b1nwzida0e0b0xyg3 > cutoff
+
+        ##use std values to update fs and confinement for slices where no animals were selected in pyomo. They still need to be generated with a fs.
+        ## sum w axis for numbers because w has been averaged above.
+        optimal_fs_tpa1e1b1j2wzida0e0b0xyg1 = fun.f_update(optimal_fs_tpa1e1b1j2wzida0e0b0xyg1, t_feedsupply_pa1e1b1j2wzida0e0b0xyg1,
+                                                          np.sum(dams_numbers_tpa1e1b1nwzida0e0b0xyg1,w_pos,keepdims=True)==0)
+        optimal_fs_tpa1e1b1j2wzida0e0b0xyg3 = fun.f_update(optimal_fs_tpa1e1b1j2wzida0e0b0xyg3, t_feedsupply_pa1e1b1j2wzida0e0b0xyg3,
+                                                          np.sum(offs_numbers_tpa1e1b1nwzida0e0b0xyg3,w_pos,keepdims=True)==0)
+        optimal_confinement_tpa1e1b1nwzida0e0b0xyg1 = fun.f_update(optimal_confinement_tpa1e1b1nwzida0e0b0xyg1, t_confinement_pa1e1b1nwzida0e0b0xyg1,
+                                                          np.sum(dams_numbers_tpa1e1b1nwzida0e0b0xyg1,w_pos,keepdims=True)==0)
+        optimal_confinement_tpa1e1b1nwzida0e0b0xyg3 = fun.f_update(optimal_confinement_tpa1e1b1nwzida0e0b0xyg3, t_confinement_pa1e1b1nwzida0e0b0xyg3,
+                                                          np.sum(offs_numbers_tpa1e1b1nwzida0e0b0xyg3,w_pos,keepdims=True)==0)
+        ##pkl
+        ##stick fs info into dict
+        pkl_fs = dict()
+        pkl_fs['fs'] = {}
+        pkl_fs['confinement'] = {}
+        pkl_fs['fs']['sire'] = optimal_fs_pa1e1b1j2wzida0e0b0xyg0
+        pkl_fs['fs']['dams'] = optimal_fs_tpa1e1b1j2wzida0e0b0xyg1[2]
+        pkl_fs['fs']['offs'] = optimal_fs_tpa1e1b1j2wzida0e0b0xyg3[0]
+        pkl_fs['confinement']['sire'] = optimal_confinement_pa1e1b1nwzida0e0b0xyg0
+        pkl_fs['confinement']['dams'] = optimal_confinement_tpa1e1b1nwzida0e0b0xyg1[2]
+        pkl_fs['confinement']['offs'] = optimal_confinement_tpa1e1b1nwzida0e0b0xyg3[0]
+
+        ##store rev if trial is rev_create
+        fs_number = sinp.structuralsa['fs_number']
+        with open('pkl/pkl_fs{0}.pkl'.format(fs_number),"wb") as f:
+            pkl.dump(pkl_fs, f)

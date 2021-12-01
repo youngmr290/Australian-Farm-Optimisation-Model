@@ -45,6 +45,7 @@ import CorePyomo as core
 import MVF as mvf
 import CropGrazingPyomo as cgzpy
 import SeasonPyomo as zgenpy
+import FeedSupplyStock as fsstk
 
 ##report the clock time that the experiment was started
 print(f'Experiment commenced at: {time.ctime()}')
@@ -172,6 +173,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     r_vals['stub']={}
     r_vals['pas']={}
     nv = {} #dict to store nv params from StockGenerator to be used in pasture
+    pkl_fs_info = {}  # dict to store info required to pkl feedsupply
 
     ##call precalcs
     precalc_start = time.time()
@@ -184,7 +186,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     labpy.lab_precalcs(params['lab'],r_vals['lab'])
     lphspy.crplab_precalcs(params['crplab'],r_vals['crplab'])
     suppy.sup_precalcs(params['sup'],r_vals['sup'])
-    spy.stock_precalcs(params['stock'],r_vals['stock'],nv)
+    spy.stock_precalcs(params['stock'],r_vals['stock'],nv,pkl_fs_info)
     cgzpy.cropgraze_precalcs(params['crpgrz'],r_vals['crpgrz'], nv) #cropgraze must be after stock because it uses nv dict which is populated in stock.py
     stubpy.stub_precalcs(params['stub'],r_vals['stub'], nv) #stub must be after stock because it uses nv dict which is populated in stock.py
     paspy.paspyomo_precalcs(params['pas'],r_vals['pas'], nv) #pas must be after stock because it uses nv dict which is populated in stock.py
@@ -273,6 +275,9 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     ##pickle report values - every time a trial is run (even if pyomo not run)
     with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
+
+    ##call function to store optimal feedsupply
+    fsstk.f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info)
 
     #last step is to print the time for the current trial to run
     ##determine expected time to completion - trials left multiplied by average time per trial
