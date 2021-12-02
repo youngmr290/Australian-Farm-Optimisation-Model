@@ -1493,7 +1493,21 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
 #end of loop functions#
 #######################
 
-def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startseason, mask_min_lw_z, period_is_prejoin=0, group=None):
+def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startseason, mask_min_lw_z, period_is_prejoin=0,
+                         group=None, scan_management=0, gbal=0):
+    '''
+    Production is weighted at prejoining across e&b axes and at season start across the z axis.
+
+    Prejoining is slight more complex because there is the potential that drys would have been sold during the
+    yr if the farmers management allowed them to be identified. If the drys were sold the animal at the start
+    of the next repro cylce (prejoining) should be the weighted average of all the animals excluding drys.
+    Because we dont know the animals are actually sold (since pyomo optimises this) we need to leave the
+    main numbers variable untouched so we temporarily make the adjustment in this function. In the inputs the user
+    inputs the expected number of drys that will be retained. In this function we scale the numbers of drys
+    by that amount so that the new animal at the start of next prejoining reflects if drys were sold or retained.
+    E.g. if drys were sold the prejoining animal would be a little bit lighter (because drys tend to weigh more).
+
+    '''
     ##Set variable level = value at end of previous	
     var_start = var
     ##make sure numbers and var are same shape - this is required for the np.average func below
@@ -1505,7 +1519,18 @@ def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_starts
 
     ##b) Calculate temporary values as if period_is_prejoin
     if group==1 and np.any(period_is_prejoin):
-        temporary = fun.f_weighted_average(var_start, numbers, prejoin_tup, keepdims=True, non_zero=True) #gets the weighted average of production in the different seasons
+        ###inputs
+        b1_pos = sinp.stock['i_b1_pos']
+        nfoet_b1 = fun.f_expand(sinp.stock['a_nfoet_b1'],b1_pos)
+        nyatf_b1 = fun.f_expand(sinp.stock['a_nyatf_b1'],b1_pos)
+        ###scale numbers if drys are expected to have been sold at scanning (in the generator we dont know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
+        temp = np.maximum(pinp.sheep['i_drysretained_scan'],np.minimum(1,nfoet_b1)) * numbers
+        scaled_numbers = fun.f_update(numbers, temp, scan_management >= 1) # only scale numbers if scanning occurs
+        ###scale numbers if drys are expected to have been sold at birth (in the generator we dont know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
+        temp = np.maximum(pinp.sheep['i_drysretained_birth'],np.minimum(1,nyatf_b1)) * scaled_numbers
+        scaled_numbers = fun.f_update(scaled_numbers,temp, gbal >= 2)  # only scale numbers if differential management
+        ###weighted average of e&b axis
+        temporary = fun.f_weighted_average(var_start, scaled_numbers, prejoin_tup, keepdims=True, non_zero=True) #gets the weighted average of production in the different seasons
         ##Set values where it is beginning of FVP
         var_start = fun.f_update(var_start, temporary, period_is_prejoin)
     return var_start
@@ -1536,6 +1561,14 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
     """
     Condense variable to x common points along the w axis when period_is_condense.
     Currently this function only handle 2 or 3 initial liveweights. The order of the returned W axis is M, H, L for 3 initial lws or H, L for 2 initial lws.
+
+    Note: Animals in a given axis are condensed to starting weights determined by that activity. Meaning twins are
+    distributed to starting weights that were calculated from all the w slices related to the twin activity.
+    An alternative would be to distribute twins to starting weights that were calculated from all w slices across
+    the e and b axis. This would mean that prejoining and condensing would have to be the same period and it would
+    also complicate the 1n model since a twin on the std feed pattern may not pass to the std pattern in the next dvp.
+    In the current structure at prejoining the e and b axis are weighted. This means that the w[0] activity is
+    potentially created from a bigger spread of weights.
 
     :param numbers: current end numbers
     :param var: production variable being condensed
@@ -1664,9 +1697,9 @@ def f1_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason
     return numbers
 
 
-def f1_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None
-                      , conception = 0, scan=0, gbal=0, gender_propn_x=1, period_is_mating = False
-                      , period_is_matingend = False, period_is_birth=False, period_is_scan=False, propn_dams_mated=1):
+def f1_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None
+                      , conception = 0, gender_propn_x=1, period_is_mating = False
+                      , period_is_matingend = False, period_is_birth=False, propn_dams_mated=1):
     '''
     This adjusts numbers for things like conception and mortality that happen during a given period
     '''
@@ -1689,7 +1722,7 @@ def f1_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfo
             ##handle the proportion mated. Note: if the inputs are set to optimise the proportion (np.inf) then it is treated as 100% mated
             mated_propn = np.minimum(1, propn_dams_mated) #maximum value of 1 because default is inf, otherwise propn to be mated.
             ### the number in the NM slice e1[0] is a proportion of the total numbers
-            ### need a minimum number otherwise get nan later. Want a small number relative to mortality (after allowing for multiple slices getting the small number)
+            ### need a minimum number to keep nm in pyomo. Want a small number relative to mortality (after allowing for multiple slices getting the small number)
             temporary[:, 0:1, 0:1, ...] = np.maximum(0.00001, np.sum(temporary, axis=(sinp.stock['i_e1_pos'], sinp.stock['i_b1_pos']),
                                                                      keepdims=True) * (1 - mated_propn))
             ### the numbers in the other mated slices other than NM get scaled by the proportion mated
@@ -1701,19 +1734,8 @@ def f1_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfo
             dam_propn_birth_b1 = fun.f_comb(nfoet_b1, nyatf_b1) * (1 - mortality_yatf) ** nyatf_b1 * mortality_yatf ** (nfoet_b1 - nyatf_b1) # the proportion of dams of each LSLN based on (progeny) mortality
             ##have to average x axis so that it is not active for dams - times by gender propn to give approx weighting (ie because offs are not usually entire males so they will get low weighting)
             temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[:,:,sinp.stock['ia_prepost_b1'],...]
-            pp_numbers = fun.f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
-            temp = np.maximum(pinp.sheep['i_drysretained_birth'],np.minimum(1, nyatf_b1)) * pp_numbers
-            numbers = fun.f_update(pp_numbers, temp, period_is_birth * (gbal>=2)) # has to happen after the dams are moved due to progeny mortality so that gbal drys are also scaled by drys_retained
-        else:
-            ##numbers for post processing - don't include selling drys - assignment required here in case it is not birth
-            pp_numbers = numbers
-        ###c) scanning - scale numbers based on if drys are expected (the model can optimise sale so at this point it is only expected) to be retained or not.
-        if np.any(period_is_scan):
-            temp = np.maximum(pinp.sheep['i_drysretained_scan'],np.minimum(1, nfoet_b1)) * numbers # scale the level of drys by drys_retained, scale every other slice by 1 except drys if not retained
-            numbers = fun.f_update(numbers, temp, period_is_scan * (scan>=1))
-        ###e)make the max of number 0.0001
-        numbers=np.maximum(numbers_min_b1, numbers)
-    return numbers,pp_numbers
+            numbers = fun.f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
+    return numbers
 
 
 

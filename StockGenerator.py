@@ -621,8 +621,6 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     ##latitude
     lat_deg = pinp.sheep['i_latitude']
     lat_rad = np.radians(pinp.sheep['i_latitude'])
-    ##min numbers
-    numbers_min_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['i_numbers_min_b1'],b1_pos)
 
     ########################################
     #adjust input to align with gen periods#
@@ -3249,18 +3247,18 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
 
             ##end numbers - accounts for mortality and other activity during the period - this is the number in the different classes as at the end of the period
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                numbers_end_sire, pp_numbers_end_sire = sfun.f1_period_end_nums(numbers_start_sire, mortality_sire, numbers_min_b1nwzida0e0b0xyg, group=0)
+                numbers_end_sire = sfun.f1_period_end_nums(numbers_start_sire, mortality_sire, group=0)
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                numbers_end_dams, pp_numbers_end_dams = sfun.f1_period_end_nums(numbers_start_dams, mortality_dams, numbers_min_b1nwzida0e0b0xyg, mortality_yatf=mortality_birth_yatf,
-                             nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1, conception=conception_dams, scan= scan_management_pa1e1b1nwzida0e0b0xyg1[p],
-                             gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p], gender_propn_x=gender_propn_xyg, period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p],
+                numbers_end_dams = sfun.f1_period_end_nums(numbers_start_dams, mortality_dams, mortality_yatf=mortality_birth_yatf,
+                             nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1, conception=conception_dams,
+                             gender_propn_x=gender_propn_xyg, period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p],
                              period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p], period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p],
-                             period_is_scan=period_is_scan_pa1e1b1nwzida0e0b0xyg1[p], propn_dams_mated=prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p])
+                             propn_dams_mated=prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p])
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                numbers_end_yatf, pp_numbers_end_yatf = sfun.f1_period_end_nums(numbers_start_yatf, mortality_yatf, numbers_min_b1nwzida0e0b0xyg, group=2)
+                numbers_end_yatf = sfun.f1_period_end_nums(numbers_start_yatf, mortality_yatf, group=2)
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                numbers_end_offs, pp_numbers_end_offs = sfun.f1_period_end_nums(numbers_start_offs, mortality_offs, numbers_min_b1nwzida0e0b0xyg, group=3)
+                numbers_end_offs = sfun.f1_period_end_nums(numbers_start_offs, mortality_offs, group=3)
 
             ##################################################
             #post calculation sensitivity for intake & energy#
@@ -3524,7 +3522,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
 
                 ###store output variables for the post processing
                 o_numbers_start_psire[p] = numbers_start_sire
-                o_numbers_end_psire[p] = pp_numbers_end_sire
+                o_numbers_end_psire[p] = numbers_end_sire
                 o_ffcfw_psire[p] = ffcfw_sire
                 o_lw_psire[p] = lw_sire
                 o_pi_psire[p] = pi_sire
@@ -3568,19 +3566,19 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
 
                 ###store output variables for the post processing
                 o_numbers_start_pdams[p] = numbers_start_dams
-                o_numbers_end_pdams[p] = pp_numbers_end_dams
+                o_numbers_end_pdams[p] = numbers_end_dams
 
                 ###back date numbers from end of mating to prejoining
                 if np.any(period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]): #need to back date the numbers from conception to prejoining because otherwise in the matrix there is not a dvp between prejoining and mating therefore this is require so that other slices have energy etc requirement
                     ###period is between prejoining and the end of current period (testing this for each p slice)
                     between_prejoinnow = sfun.f1_period_is_('period_is_between', date_prejoin_pa1e1b1nwzida0e0b0xyg1[p], date_start_pa1e1b1nwzida0e0b0xyg, date_end_pa1e1b1nwzida0e0b0xyg[p], date_end_pa1e1b1nwzida0e0b0xyg)
                     ###scale numbers at the end of mating (to account for mortality) to each period (note only the periods between prejoining and end of mating get used)
-                    t_scaled_end_numbers = np.maximum(pp_numbers_end_dams,
-                                                  pp_numbers_end_dams * (np.sum(o_numbers_end_pdams, axis=(e1_pos,b1_pos), keepdims=True)
-                                                                            / np.sum(pp_numbers_end_dams, axis=(e1_pos,b1_pos), keepdims=True)))
-                    t_scaled_start_numbers = np.maximum(pp_numbers_end_dams,
-                                                  pp_numbers_end_dams * (np.sum(o_numbers_start_pdams, axis=(e1_pos,b1_pos), keepdims=True)
-                                                                            / np.sum(pp_numbers_end_dams, axis=(e1_pos,b1_pos), keepdims=True)))
+                    t_scaled_end_numbers = np.maximum(numbers_end_dams,
+                                                  numbers_end_dams * (np.sum(o_numbers_end_pdams, axis=(e1_pos,b1_pos), keepdims=True)
+                                                                            / np.sum(numbers_end_dams, axis=(e1_pos,b1_pos), keepdims=True)))
+                    t_scaled_start_numbers = np.maximum(numbers_end_dams,
+                                                  numbers_end_dams * (np.sum(o_numbers_start_pdams, axis=(e1_pos,b1_pos), keepdims=True)
+                                                                            / np.sum(numbers_end_dams, axis=(e1_pos,b1_pos), keepdims=True)))
                     ###if period is mating back date the end number after mating to all the periods since prejoining
                     o_numbers_end_pdams = fun.f_update(o_numbers_end_pdams, t_scaled_end_numbers.astype(dtype), (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
                     o_numbers_start_pdams = fun.f_update(o_numbers_start_pdams, t_scaled_start_numbers.astype(dtype)
@@ -4025,111 +4023,163 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                 ###FFCFW (start - fleece free conceptus free)
                 ffcfw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, ffcfw_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, nw_start_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###FFCFW maximum to date
                 ffcfw_max_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, ffcfw_max_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Weight of adipose (start)
                 aw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, aw_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Weight of muscle (start)
                 mw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, mw_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Weight of bone (start)
                 bw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, bw_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Organ energy requirement (start)
                 omer_history_start_p3g1 = sfun.f1_period_start_prod(numbers_end_condensed_dams
                                         , omer_history_condensed_p3g1, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams[na,...]
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Clean fleece weight (start)
                 cfw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, cfw_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Clean fleece weight (start)
                 d_cfw_history_start_p2g1 = sfun.f1_period_start_prod(numbers_end_condensed_dams
                                         , d_cfw_history_condensed_p2g1, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams[na,...]
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Fibre length since shearing (start)
                 fl_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, fl_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Average FD since shearing (start)
                 fd_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, fd_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Minimum FD since shearing (start)
                 fd_min_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, fd_min_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Lagged DR (lactation deficit)
                 ldr_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, ldr_condensed_dams, prejoin_tup
-                                        , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p], mask_min_lw_z_dams
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Loss of potential milk due to consistent under production
                 lb_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, lb_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Loss of potential milk due to consistent under production
                 rc_birth_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, rc_birth_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p+1]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Weight of foetus (start)
                 w_f_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, w_f1_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p+1]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Weight of gravid uterus (start)
                 guw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, guw_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Normal weight of foetus (start)
                 nw_f_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, nw_f1_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Birth weight carryover (running tally of foetal weight diff)
                 cf_w_b_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, cf_w_b_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###LTW CFW carryover (running tally of CFW diff)
                 cf_cfwltw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, cf_cfwltw_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###LTW FD carryover (running tally of FD diff)
                 cf_fdltw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, cf_fdltw_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ##dams LTW CFW (total adjustment, calculated at birth)
                 cfw_ltwadj_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams
                                         , cfw_ltwadj_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ##dams LTW FD (total adjustment, calculated at birth)
                 fd_ltwadj_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, fd_ltwadj_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Carry forward conception
                 cf_conception_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams
                                         , cf_conception_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Weaning weight carryover (running tally of foetal weight diff)
                 cf_w_w_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, cf_w_w_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Average FOO during lactation (for weaning weight calculation)
                 foo_lact_ave_start = sfun.f1_period_start_prod(numbers_end_condensed_dams, foo_lact_ave_condensed, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
 
             ###yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
