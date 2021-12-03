@@ -262,7 +262,9 @@ def f_overall_seed_rate(r_vals):
     seedrate_df = pd.concat([uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj']]*len(seed_rate_lmus),axis=1) #expands df for each lmu
     seedrate_df.columns = seed_rate_lmus.index #rename columns to lmu so i can mul
     seedrate_df=seedrate_df.mul(seed_rate_lmus)
-    r_vals['seeding_rate'] = seedrate_df
+
+    ##store r_vals
+    fun.f1_make_r_val(r_vals,seedrate_df,'seeding_rate')
     return seedrate_df.stack()
 
     
@@ -388,7 +390,13 @@ def f_seeding_cost(r_vals):
     ##mul costs and allocation
     seeding_cost_c0p7zp5l = seeding_cost_allocation_c0p7zp5l.mul(seeding_cost_l, level=4)
     seeding_wc_c0p7zp5l = seeding_wc_allocation_c0p7zp5l.mul(seeding_cost_l, level=4)
-    r_vals['seeding_cost'] = seeding_cost_c0p7zp5l
+
+    ##store r_vals
+    ###make z8 mask - used to uncluster
+    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
+    ###store
+    fun.f1_make_r_val(r_vals, seeding_cost_c0p7zp5l, 'seeding_cost', mask_season_p7z[:,:,na,na], z_pos=-3)
     return seeding_cost_c0p7zp5l, seeding_wc_c0p7zp5l
 
 def f_contract_seed_cost(r_vals):
@@ -402,7 +410,13 @@ def f_contract_seed_cost(r_vals):
     seed_cost = uinp.price['contract_seed_cost']
     contract_seeding_cost_c0p7zp5 = seeding_cost_allocation_c0p7zp5 * seed_cost
     contract_seeding_wc_c0p7zp5 = seeding_wc_allocation_c0p7zp5 * seed_cost
-    r_vals['contractseed_cost'] = contract_seeding_cost_c0p7zp5
+
+    ##store r_vals
+    ###make z8 mask - used to uncluster
+    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
+    ###store
+    fun.f1_make_r_val(r_vals, contract_seeding_cost_c0p7zp5, 'contractseed_cost', mask_season_p7z[:,:,na], z_pos=-2)
     return contract_seeding_cost_c0p7zp5, contract_seeding_wc_c0p7zp5
 
 ########################################
@@ -652,7 +666,12 @@ def f_harvest_cost(r_vals):
     harv_cost_c0p7zp5k = harv_cost_allocation_c0p7zp5k.mul(harv_cost_k, level=-1)
     harv_wc_c0p7zp5k = harv_wc_allocation_c0p7zp5k.mul(harv_cost_k, level=-1)
 
-    r_vals['harvest_cost'] = harv_cost_c0p7zp5k
+    ##store r_vals
+    ###make z8 mask - used to uncluster
+    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
+    ###store
+    fun.f1_make_r_val(r_vals, harv_cost_c0p7zp5k, 'harvest_cost', mask_season_p7z[:,:,na,na], z_pos=-3)
     return harv_cost_c0p7zp5k, harv_wc_c0p7zp5k
 
 
@@ -729,7 +748,12 @@ def f_contract_harvest_cost(r_vals):
     contract_harv_cost_c0p7zp5k = contract_harv_cost_allocation_c0p7zp5k.mul(contract_harv_cost_k, level=-1)
     contract_harv_wc_c0p7zp5k = contract_harv_wc_allocation_c0p7zp5k.mul(contract_harv_cost_k, level=-1)
 
-    r_vals['contract_harvest_cost'] = contract_harv_cost_c0p7zp5k
+    ##store r_vals
+    ###make z8 mask - used to uncluster
+    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
+    ###store
+    fun.f1_make_r_val(r_vals, contract_harv_cost_c0p7zp5k, 'contract_harvest_cost', mask_season_p7z[:,:,na,na], z_pos=-3)
     return contract_harv_cost_c0p7zp5k, contract_harv_wc_c0p7zp5k
 
 
@@ -1112,7 +1136,12 @@ def f_insurance(r_vals):
     insurance_cost_c0p7z = insurance_cost_allocation_c0p7z * insurance_cost
     insurance_wc_c0p7z = insurance_wc_allocation_c0p7z * insurance_cost
 
-    r_vals['mach_insurance'] = insurance_cost_c0p7z
+    ##store r_vals
+    ###make z8 mask - used to uncluster
+    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
+    ###store
+    fun.f1_make_r_val(r_vals, insurance_cost_c0p7z, 'mach_insurance', mask_season_p7z, z_pos=-1)
     return insurance_cost_c0p7z.to_dict(), insurance_wc_c0p7z.to_dict()
 
 

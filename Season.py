@@ -19,6 +19,7 @@ def f_season_precalcs(params, r_vals):
     period_is_seasonstart_p7z = date_season_node_p7z==season_start_z
     mask_provwithinz8z9_p7z8z9, mask_provbetweenz8z9_p7z8z9, mask_reqwithinz8_p7z8, mask_reqbetweenz8_p7z8 = zfun.f_season_transfer_mask(
         date_season_node_p7z, period_is_seasonstart_pz=period_is_seasonstart_p7z, z_pos=-1)  # slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
 
     ###########
     #sequence #
@@ -105,9 +106,9 @@ def f_season_precalcs(params, r_vals):
     params['p_endstart_prov_qsz'] = fun.f1_make_pyomo_dict(p_endstart_prov_qsz, arrays_qsz)
     params['p_sequence_prov_qs8zs9'] = fun.f1_make_pyomo_dict(p_sequence_prov_qs8zs9*1, arrays_qs8zs9)
 
-
-    ##report
-    r_vals['keys_q'] = keys_q
-    r_vals['keys_s'] = keys_s
-    r_vals['keys_z'] = keys_z
-    r_vals['z_prob_qsz'] = p_season_prob_qsz
+    ##store r_vals
+    fun.f1_make_r_val(r_vals,keys_q,'keys_q')
+    fun.f1_make_r_val(r_vals,keys_s,'keys_s')
+    fun.f1_make_r_val(r_vals,keys_z,'keys_z')
+    fun.f1_make_r_val(r_vals,p_season_prob_qsz,'z_prob_qsz')
+    fun.f1_make_r_val(r_vals,mask_season_p7z,'mask_season_p7z')

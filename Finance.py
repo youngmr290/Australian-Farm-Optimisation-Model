@@ -232,7 +232,13 @@ def overheads(params, r_vals):
 
     params['overheads_cost'] = overhead_cost_c0p7z.to_dict()
     params['overheads_wc'] = overhead_wc_c0p7z.to_dict()
-    r_vals['overheads'] = overhead_cost_c0p7z
+
+    ##store r_vals
+    ###make z8 mask - used to uncluster
+    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
+    ###store
+    fun.f1_make_r_val(r_vals, overhead_cost_c0p7z, 'overheads', mask_season_p7z, z_pos=-1)
 
 #################
 #Min ROE        #
@@ -254,10 +260,10 @@ def f_min_roe():
 def finance_rep(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    r_vals['keys_p7'] = keys_p7
-    r_vals['keys_c0'] = keys_c0
-    r_vals['opportunity_cost_capital'] = uinp.finance['opportunity_cost_capital']
-    r_vals['interest_rate'] = uinp.finance['i_interest']
+    fun.f1_make_r_val(r_vals,keys_p7,'keys_p7')
+    fun.f1_make_r_val(r_vals,keys_c0,'keys_c0')
+    fun.f1_make_r_val(r_vals,uinp.finance['opportunity_cost_capital'],'opportunity_cost_capital')
+    fun.f1_make_r_val(r_vals,uinp.finance['i_interest'],'interest_rate')
 
 
 

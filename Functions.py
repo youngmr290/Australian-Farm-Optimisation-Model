@@ -864,6 +864,65 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav):
             elif dic == 'sav':
                 sav[key1]=value
 
+def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
+    '''
+    This function save a variable in the r_vals dict so it can be accessed in the reporting stage.
+
+    The majority of this function concerns unclustering the z axis. This is required for two reasons:
+
+        1. By the time the r_val is save it would have likely been masked by mask_z8.
+        2. The user may have incorrectly clustered the inputs in excel (eg seasons had different inputs before they
+           were identified). This doesnt effect the actual model because z8 is masked until it is identified
+           however if the r_val didnt get z8 treatment the reports could contain errors.
+
+    :param r_vals: r_vals dict
+    :param param: param to be stored
+    :param maskz8: season identification mask
+    :param name: name of r_val
+
+    Note 1: Arrays must broadcast.
+    Note 2: if no z axis then param is simply stored in r_vals no need to pass in the mask arg.
+    '''
+    if maskz8 is not None:
+        df=False
+        series=False
+        ##convert df to series
+        if isinstance(param,pd.DataFrame):
+            df = True
+            n_cols = param.columns.nlevels
+            param = param.stack(list(range(n_cols)))
+        ##convert pd.Series to numpy
+        if isinstance(param,pd.Series):
+            series = True
+            ##store index
+            index = param.index
+            ##reshape array to be numpy
+            reshape_size = param.index.remove_unused_levels().levshape # create a tuple with the rights dimensions
+            param = np.reshape(param.values,reshape_size)
+
+        ##uncluster z so that each season gets complete information
+        index_z = f_expand(np.arange(maskz8.shape[z_pos]), z_pos)
+        a_zcluster = np.maximum.accumulate(index_z * maskz8, axis=z_pos)
+        a_zcluster = np.broadcast_to(a_zcluster, param.shape)
+        param = np.take_along_axis(param, a_zcluster, axis=z_pos)
+
+        ##add index if pandas
+        if series:
+            param = pd.Series(param.ravel(), index=index)
+
+        ##unstack back to a df if required
+        if df:
+            param = param.unstack(list(range(-n_cols,0)))
+
+    ##reshape if required
+    if shape is not None:
+        param = param.reshape(shape)
+
+    ##store param
+    r_vals[name] = param
+
+
+
 def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=None, dtype='float32'):
     '''
     Convert numpy array into dict for pyomo. A loop can be used to reduce memory if required.

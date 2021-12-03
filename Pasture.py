@@ -562,31 +562,33 @@ def f_pasture(params, r_vals, nv):
     ###########
     #report   #
     ###########
+    ##maskz8 used to uncluster lp_vars
+    fun.f1_make_r_val(r_vals,mask_fp_z8var_p6z,'mask_fp_z8var_p6z')
+
     ##keys
-    r_vals['keys_d'] = keys_d
-    r_vals['keys_f'] = keys_f
-    r_vals['keys_p6'] = keys_p6
-    r_vals['keys_g'] = keys_g
-    r_vals['keys_l'] = keys_l
-    r_vals['keys_o'] = keys_o
-    r_vals['keys_p5'] = keys_p5
-    r_vals['keys_r'] = keys_r
-    r_vals['keys_t'] = keys_t
-    r_vals['keys_k'] = keys_k
+    fun.f1_make_r_val(r_vals,keys_d,'keys_d')
+    fun.f1_make_r_val(r_vals,keys_f,'keys_f')
+    fun.f1_make_r_val(r_vals,keys_p6,'keys_p6')
+    fun.f1_make_r_val(r_vals,keys_g,'keys_g')
+    fun.f1_make_r_val(r_vals,keys_l,'keys_l')
+    fun.f1_make_r_val(r_vals,keys_o,'keys_o')
+    fun.f1_make_r_val(r_vals,keys_p5,'keys_p5')
+    fun.f1_make_r_val(r_vals,keys_r,'keys_r')
+    fun.f1_make_r_val(r_vals,keys_t,'keys_t')
+    fun.f1_make_r_val(r_vals,keys_k,'keys_k')
 
     ##store report vals
-    r_vals['pasture_area_rt'] = pasture_rt
-    r_vals['keys_pastures'] = pastures
-    r_vals['days_p6z'] = length_p6z
-
-    r_vals['pgr_grnha_gop6lzt'] = pgr_grnha_gop6lzt
-    r_vals['foo_end_grnha_gop6lzt'] = foo_endprior_grnha_gop6lzt #Green FOO prior to eos senescence
-    r_vals['cons_grnha_t_gop6lzt'] = cons_grnha_t_gop6lzt
-    r_vals['nv_grnha_fgop6lzt'] = fun.f_divide(me_cons_grnha_fgop6lzt, volume_grnha_fgop6lzt)
-    r_vals['nv_dry_fdp6zt'] = fun.f_divide(dry_mecons_t_fdp6zt, dry_volume_t_fdp6zt)
-    r_vals['foo_ave_grnha_gop6lzt'] = foo_ave_grnha_gop6lzt
-    r_vals['dmd_diet_grnha_gop6lzt'] = dmd_diet_grnha_gop6lzt
-    r_vals['dry_foo_dp6zt'] = dry_foo_dp6zt
-    r_vals['dry_dmd_dp6zt'] = dry_dmd_dp6zt
+    fun.f1_make_r_val(r_vals,pasture_rt,'pasture_area_rt')
+    fun.f1_make_r_val(r_vals,pastures,'keys_pastures')
+    fun.f1_make_r_val(r_vals,length_p6z,'days_p6z',mask_fp_z8var_p6z,z_pos=-1)
+    fun.f1_make_r_val(r_vals,pgr_grnha_gop6lzt,'pgr_grnha_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,foo_endprior_grnha_gop6lzt,'foo_end_grnha_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)#Green FOO prior to eos senescence
+    fun.f1_make_r_val(r_vals,cons_grnha_t_gop6lzt,'cons_grnha_t_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,fun.f_divide(me_cons_grnha_fgop6lzt, volume_grnha_fgop6lzt),'nv_grnha_fgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,fun.f_divide(dry_mecons_t_fdp6zt, dry_volume_t_fdp6zt),'nv_dry_fdp6zt',mask_fp_z8var_p6zt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,foo_ave_grnha_gop6lzt,'foo_ave_grnha_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,dmd_diet_grnha_gop6lzt,'dmd_diet_grnha_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,dry_foo_dp6zt,'dry_foo_dp6zt',mask_fp_z8var_p6zt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,dry_dmd_dp6zt,'dry_dmd_dp6zt',mask_fp_z8var_p6zt,z_pos=-2)
 
 

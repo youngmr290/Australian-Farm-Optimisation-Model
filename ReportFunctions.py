@@ -164,70 +164,65 @@ def load_pkl(trial_name):
     return lp_vars, r_vals
 
 #todo once this method is finalised remove the old code and unrequired args. Do the same for vars2df
-def f_vars2np(lp_vars, var_key, shape):
+def f_vars2np(lp_vars, var_key, shape, maskz8=None, z_pos=-1):
     '''
-    converts lp_vars to numpy.
+    Converts lp_vars to numpy.
+
     :param lp_vars: dict of lp variables
     :param var_key: string - name of variable to convert to numpy
     :param shape: shape of desired numpy array
-    :param z_pos: position to add z axis
-    :return: numpy array with season axis.
+    :param maskz8: z8 mask. Must be broadcastable to lp_vars
+    :param z_pos: position of z axis
+    :return: numpy array with unclustered season axis.
     '''
-    #todo the decision variables with season axis will be clustered and thus some will be set to 0. Here i will need to use an association to do the opposite to clustering.
-    # eg if z0 and z1 are the same then i will need to set z1 to z0 value.
-    # to do this i will need to report the periods eg dvps and fps and cash period. or maybe just report the z8 masks for each periods.
-
-    # final_vars = np.zeros(shape)
-    # if isinstance(shape,int):
-    #     shape_wo_z = 1
-    #     len_z = shape
-    #     len_shape = 1
-    # elif z_pos == -1:
-    #     shape_wo_z = shape[0:z_pos] + (1,) #make z singleton
-    #     len_z = shape[z_pos]
-    #     len_shape = len(shape)
-    # else:
-    #     shape_wo_z = shape[0:z_pos] + (1,)+ shape[z_pos+1:] #make z singleton
-    #     len_z = shape[z_pos]
-    #     len_shape = len(shape)
-    #
-    # for z in range(len_z):
-    #     z_key = keys_z[z]
-    #     try:
-    #         vars = np.array(list(lp_vars[z_key][var_key].values()))
-    #     except KeyError:
-    #         vars = np.array(list(lp_vars.values()))
-    #     vars = vars.reshape(shape_wo_z)
-    #     vars[vars == None] = 0  # replace None with 0
-    #     slc = [slice(None)] * len_shape
-    #     slc[z_pos] = slice(z,z+1)
-    #     final_vars[tuple(slc)] = vars
-    # return final_vars
 
     vars = np.array(list(lp_vars[var_key].values()))
     vars = vars.reshape(shape)
     vars[vars == None] = 0  # replace None with 0
+
+    ##uncluster z so that each season gets complete information
+    if maskz8 is not None:
+        index_z = fun.f_expand(np.arange(maskz8.shape[z_pos]),z_pos)
+        a_zcluster = np.maximum.accumulate(index_z * maskz8,axis=z_pos)
+        a_zcluster = np.broadcast_to(a_zcluster,vars.shape)
+        vars = np.take_along_axis(vars,a_zcluster,axis=z_pos)
+
     return vars
 
 
-def f_vars2df(lp_vars, var_key):
+def f_vars2df(lp_vars, var_key, maskz8=None, z_pos=-1):
     '''
     converts lp_vars to pandas series.
     :param lp_vars: dict of variables.
     :param var_key: string - name of variable to convert to series.
+    :param maskz8: z8 mask. Must be broadcastable to lp_vars once lp_vars if numpy
+    :param z_pos: position (level) of z axis
+
     :return: series with season as index level 0
     '''
-    # for z_key, z in zip(z_keys,range(len(z_keys))):
-    #     var_series = pd.Series(lp_vars[z_key][var_key])
-    #     var_series = pd.concat([var_series], keys=[z_key])
-    #     if z == 0:
-    #         final_series = var_series
-    #     else:
-    #         final_series = pd.concat([final_series, var_series])
-    # return final_series.sort_index()
 
-    var_series = pd.Series(lp_vars[var_key])
-    return var_series.sort_index()
+    vars = pd.Series(lp_vars[var_key])
+    vars = vars.sort_index()
+
+    ##uncluster z so that each season gets complete information
+    if maskz8 is not None:
+        ###store index before convert to np
+        index = vars.index
+        ###reshape array to be numpy
+        reshape_size = vars.index.remove_unused_levels().levshape  # create a tuple with the rights dimensions
+        vars = np.reshape(vars.values,reshape_size)
+        ###uncluster numpy
+        index_z = fun.f_expand(np.arange(maskz8.shape[z_pos]),z_pos)
+        a_zcluster = np.maximum.accumulate(index_z * maskz8,axis=z_pos)
+        a_zcluster = np.broadcast_to(a_zcluster,vars.shape)
+        vars = np.take_along_axis(vars,a_zcluster,axis=z_pos)
+        ###convert back to pd
+        vars = pd.Series(vars.ravel(),index=index)
+
+    return vars
+
+
+
 
 def f_append_dfs(stacked_df, additional_df):
     new_stacked_df = stacked_df.append(additional_df)
@@ -339,9 +334,10 @@ def f_rotation(lp_vars, r_vals):
     '''
     ##rotation
     phases_df = r_vals['rot']['phases']
+    mask_season_p7z = r_vals['zgen']['mask_season_p7z']
     phases_rk = phases_df.set_index(5, append=True)  # add landuse as index level
-    rot_area_qsmzrl = f_vars2df(lp_vars, 'v_phase_increment') # use phase increment then sum p7 axis so summer crops are included.
-    rot_area_qszrl = rot_area_qsmzrl.sum(level=(0,1,3,4,5)) #sum m
+    rot_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_increment', mask_season_p7z[:,:,na,na], z_pos=-3) # use phase increment then sum p7 axis so summer crops are included.
+    rot_area_qszrl = rot_area_qsp7zrl.sum(level=(0,1,3,4,5)) #sum p7
     rot_area_qszlrk = rot_area_qszrl.unstack(3).reindex(phases_rk.index, axis=1, level=0).stack([0,1])  # add landuse to the axis
     return phases_rk, rot_area_qszrl, rot_area_qszlrk
 
@@ -417,10 +413,13 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     phases_rk, rot_area_qszrl = f_rotation(lp_vars, r_vals)[0:2]
     rot_area_zrlqs = rot_area_qszrl.reorder_levels([2,3,4,0,1])  # change the order so that reindexing works (new levels being added must be at the end)
 
+    ##masks to uncluster z axis
+    maskz8_zp5 = r_vals['lab']['maskz8_p5z'].T
+
     ##harv
-    contractharv_hours_qszp5k = f_vars2df(lp_vars, 'v_contractharv_hours')
+    contractharv_hours_qszp5k = f_vars2df(lp_vars, 'v_contractharv_hours', maskz8_zp5[:,:,na], z_pos=-3)
     contractharv_hours_zp5kqs = contractharv_hours_qszp5k.reorder_levels([2,3,4,0,1])  # change the order so that reindexing works (new levels being added must be at the end)
-    harv_hours_qszp5k = f_vars2df(lp_vars, 'v_harv_hours')
+    harv_hours_qszp5k = f_vars2df(lp_vars, 'v_harv_hours', maskz8_zp5[:,:,na], z_pos=-3)
     harv_hours_zp5kqs = harv_hours_qszp5k.reorder_levels([2,3,4,0,1])  # change the order so that reindexing works (new levels being added must be at the end)
     contract_harvest_cost_zp5k_c0p7 = r_vals['mach']['contract_harvest_cost'].unstack([0,1])
     contract_harvest_cost_zp5kqs_c0p7 = contract_harvest_cost_zp5k_c0p7.reindex(contractharv_hours_zp5kqs.index, axis=0)
@@ -430,7 +429,7 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     harvest_cost_zkqs_c0p7 = harvest_cost_zp5kqs_c0p7.sum(axis=0, level=(0,2,3,4)) #sum p5
 
     ##seeding
-    seeding_days_qszp5_kl = f_vars2df(lp_vars, 'v_seeding_machdays').unstack([4,5])
+    seeding_days_qszp5_kl = f_vars2df(lp_vars, 'v_seeding_machdays', maskz8_zp5[:,:,na,na], z_pos=-4).unstack([4,5])
     seeding_rate_kl = r_vals['mach']['seeding_rate'].stack()
     seeding_ha_qszp5_kl = seeding_days_qszp5_kl.mul(seeding_rate_kl.reindex(seeding_days_qszp5_kl.columns), axis=1) # note seeding ha won't equal the rotation area because arable area is included in seed_ha.
     seeding_ha_zp5lkqs = seeding_ha_qszp5_kl.stack([0,1]).reorder_levels([2,3,5,4,0,1])
@@ -438,7 +437,7 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     seeding_cost_zp5lkqs_c0p7 = seeding_cost_zp5l_c0p7.reindex(seeding_ha_zp5lkqs.index, axis=0)
     seeding_cost_own_zkqs_c0p7 = seeding_cost_zp5lkqs_c0p7.mul(seeding_ha_zp5lkqs, axis=0).sum(axis=0, level=(0,3,4,5))  # sum lmu axis and p5
 
-    contractseeding_ha_qszp5k = f_vars2df(lp_vars, 'v_contractseeding_ha').sum(level=(0,1,2,3,4))  # sum lmu axis (cost doesnt vary by lmu for contract)
+    contractseeding_ha_qszp5k = f_vars2df(lp_vars, 'v_contractseeding_ha', maskz8_zp5[:,:,na,na], z_pos=-4).sum(level=(0,1,2,3,4))  # sum lmu axis (cost doesnt vary by lmu for contract)
     contractseeding_ha_zp5kqs = contractseeding_ha_qszp5k.reorder_levels([2,3,4,0,1])
     contractseed_cost_ha_zp5_c0p7 = r_vals['mach']['contractseed_cost'].unstack([0,1])
     contractseed_cost_ha_zp5kqs_c0p7 = contractseed_cost_ha_zp5_c0p7.reindex(contractseeding_ha_zp5kqs.index, axis=0)
@@ -482,9 +481,12 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
             #. return total sup fed (weighted by season prob)
 
     '''
+    ##z masks to uncluster lp_vars
+    mask_season_p7z = r_vals['zgen']['mask_season_p7z']
+    maskz8_zp6 = r_vals['pas']['mask_fp_z8var_p6z'].T
 
     ##grain fed
-    grain_fed_qszkgvp6 = f_vars2df(lp_vars, 'v_sup_con')
+    grain_fed_qszkgvp6 = f_vars2df(lp_vars, 'v_sup_con', maskz8_zp6[:,na,na,na,:], z_pos=-5)
 
     if option == 1:
         grain_fed_qszp6 = grain_fed_qszkgvp6.sum(level=(0, 1, 2, 6))  # sum feed pool, landuse and grain pool
@@ -513,12 +515,12 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         grains_buy_price_zkg_c0p7 = r_vals['sup']['buy_grain_price'].stack([2,3]).swaplevel(0,1)
 
         ##grain purchased
-        grain_purchased_qsp7zkg = f_vars2df(lp_vars,'v_buy_grain')
+        grain_purchased_qsp7zkg = f_vars2df(lp_vars,'v_buy_grain', mask_season_p7z[:,:,na,na], z_pos=-3)
         grain_purchased_qszkg = grain_purchased_qsp7zkg.sum(level=(0,1,3,4,5))  # sum p7
         grain_purchased_zkgqs = grain_purchased_qszkg.reorder_levels([2,3,4,0,1]) #change the order so that reindexing works (new levels being added must be at the end)
 
         ##grain sold
-        grain_sold_qsp7zkg = f_vars2df(lp_vars,'v_sell_grain')
+        grain_sold_qsp7zkg = f_vars2df(lp_vars,'v_sell_grain', mask_season_p7z[:,:,na,na], z_pos=-3)
         grain_sold_qszkg = grain_sold_qsp7zkg.sum(level=(0,1,3,4,5))  # sum p7
         grain_sold_zkgqs = grain_sold_qszkg.reorder_levels([2,3,4,0,1]) #change the order so that reindexing works (new levels being added must be at the end)
 
@@ -541,7 +543,9 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
 
 
 def f_stubble_summary(lp_vars, r_vals):
-    stub_fp6zks = f_vars2df(lp_vars, 'v_stub_con')
+    ##mask to uncluster z axis
+    maskz8_p6z = r_vals['pas']['mask_fp_z8var_p6z']
+    stub_fp6zks = f_vars2df(lp_vars, 'v_stub_con', maskz8_p6z[:,:,na,na], z_pos=-3)
     return stub_fp6zks.sum(level=(1, 2, 4)).unstack()
 
 
@@ -684,11 +688,13 @@ def f_stock_reshape(lp_vars, r_vals):
     ###sire
     stock_vars['sire_numbers_qsg0'] = f_vars2np(lp_vars, 'v_sire', sire_shape).astype(float)
     ###dams
-    stock_vars['dams_numbers_qsk2tvanwziy1g1'] = f_vars2np(lp_vars, 'v_dams', dams_shape).astype(float)
+    maskz8_k2tvanwziy1g1 = r_vals['stock']['maskz8_k2tvanwziy1g1']
+    stock_vars['dams_numbers_qsk2tvanwziy1g1'] = f_vars2np(lp_vars, 'v_dams', dams_shape, maskz8_k2tvanwziy1g1, z_pos=-4).astype(float)
     ###prog
     stock_vars['prog_numbers_qsk3k5twzia0xg2'] = f_vars2np(lp_vars, 'v_prog', prog_shape).astype(float)
     ###offs
-    stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'] = f_vars2np(lp_vars, 'v_offs', offs_shape).astype(float)
+    maskz8_k3k5tvnwziaxyg3 = r_vals['stock']['maskz8_k3k5tvnwziaxyg3']
+    stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'] = f_vars2np(lp_vars, 'v_offs', offs_shape, maskz8_k3k5tvnwziaxyg3, z_pos=-6).astype(float)
     ###infrastructure
     stock_vars['infrastructure_qsh1z'] = f_vars2np(lp_vars, 'v_infrastructure', infra_shape).astype(float)
 
@@ -749,23 +755,29 @@ def f_pasture_reshape(lp_vars, r_vals):
     qsdp6zt = len_q, len_s, len_d, len_p6, len_z, len_t
     qsfp6lz = len_q, len_s, len_f, len_p6, len_l, len_z
 
+    ##reshape z8 mask to uncluster
+    maskz8_p6z = r_vals['pas']['mask_fp_z8var_p6z']
+    maskz8_p6zna = maskz8_p6z[:,:,na]
+    maskz8_p6naz = maskz8_p6z[:,na,:]
+    maskz8_p6nazna = maskz8_p6z[:,na,:,na]
+
     ##reshape green pasture hectare variable
-    pas_vars['greenpas_ha_qsfgop6lzt'] = f_vars2np(lp_vars, 'v_greenpas_ha', qsfgop6lzt)
+    pas_vars['greenpas_ha_qsfgop6lzt'] = f_vars2np(lp_vars, 'v_greenpas_ha', qsfgop6lzt, maskz8_p6nazna, z_pos=-2)
 
     ##dry end period
-    pas_vars['drypas_transfer_qsdp6zt'] = f_vars2np(lp_vars, 'v_drypas_transfer', qsdp6zt)
+    pas_vars['drypas_transfer_qsdp6zt'] = f_vars2np(lp_vars, 'v_drypas_transfer', qsdp6zt, maskz8_p6zna, z_pos=-2)
 
     ##nap end period
-    pas_vars['nap_transfer_qsdp6zt'] = f_vars2np(lp_vars, 'v_nap_transfer', qsdp6zt)
+    pas_vars['nap_transfer_qsdp6zt'] = f_vars2np(lp_vars, 'v_nap_transfer', qsdp6zt, maskz8_p6zna, z_pos=-2)
 
     ##dry consumed
-    pas_vars['drypas_consumed_qsfdp6zt'] = f_vars2np(lp_vars, 'v_drypas_consumed', qsfdp6zt)
+    pas_vars['drypas_consumed_qsfdp6zt'] = f_vars2np(lp_vars, 'v_drypas_consumed', qsfdp6zt, maskz8_p6zna, z_pos=-2)
 
     ##nap consumed
-    pas_vars['nap_consumed_qsfdp6zt'] = f_vars2np(lp_vars, 'v_nap_consumed', qsfdp6zt)
+    pas_vars['nap_consumed_qsfdp6zt'] = f_vars2np(lp_vars, 'v_nap_consumed', qsfdp6zt, maskz8_p6zna, z_pos=-2)
 
     ##poc consumed
-    pas_vars['poc_consumed_qsfp6lz'] = f_vars2np(lp_vars, 'v_poc', qsfp6lz)
+    pas_vars['poc_consumed_qsfp6lz'] = f_vars2np(lp_vars, 'v_poc', qsfp6lz, maskz8_p6naz, z_pos=-1)
 
     return pas_vars
 
@@ -860,6 +872,8 @@ def f_labour_summary(lp_vars, r_vals, option=0):
         #. return amount for each enterprise
 
     '''
+    ##mask to uncluster lp_vars
+    maskz8_p5z = r_vals['lab']['maskz8_p5z']
 
     ##shapes
     keys_p5 = r_vals['lab']['keys_p5']
@@ -877,9 +891,9 @@ def f_labour_summary(lp_vars, r_vals, option=0):
     ##total labour cost
     if option == 0:
         ###casual
-        quantity_casual_qsp5z = f_vars2np(lp_vars, 'v_quantity_casual', qsp5z)
-        quantity_casual_qszp5 = np.swapaxes(quantity_casual_qsp5z, -1, -2)
         casual_cost_c0p7zp5 = r_vals['lab']['casual_cost_c0p7zp5']
+        quantity_casual_qsp5z = f_vars2np(lp_vars, 'v_quantity_casual', qsp5z, maskz8_p5z, z_pos=-1)
+        quantity_casual_qszp5 = np.swapaxes(quantity_casual_qsp5z, -1, -2)
         cas_cost_c0p7qsz = np.sum(casual_cost_c0p7zp5[:,:,na,na,:,:] * quantity_casual_qszp5, axis=-1)
         ###perm
         quantity_perm = f_vars2np(lp_vars, 'v_quantity_perm', 1)  #1 because not sets
@@ -896,26 +910,27 @@ def f_labour_summary(lp_vars, r_vals, option=0):
     ##labour breakdown for each worker level (table: labour period by worker level)
     if option == 1:
         ###sheep
-        manager_sheep_p5w = pd.Series(lp_vars['v_sheep_labour_manager']).unstack()
-        prem_sheep_p5w = pd.Series(lp_vars['v_sheep_labour_permanent']).unstack()
-        casual_sheep_p5w = pd.Series(lp_vars['v_sheep_labour_casual']).unstack()
-        sheep_labour = pd.concat([manager_sheep_p5w, prem_sheep_p5w, casual_sheep_p5w], axis=1).sum(axis=1, level=0)
+        manager_sheep_qsp5z_w = f_vars2df(lp_vars, 'v_sheep_labour_manager', maskz8_p5z[:,na,:], z_pos=-1).unstack(-2)
+        prem_sheep_qsp5z_w = f_vars2df(lp_vars, 'v_sheep_labour_permanent', maskz8_p5z[:,na,:], z_pos=-1).unstack(-2)
+        casual_sheep_qsp5z_w = f_vars2df(lp_vars, 'v_sheep_labour_casual', maskz8_p5z[:,na,:], z_pos=-1).unstack(-2)
+        sheep_labour = pd.concat([manager_sheep_qsp5z_w, prem_sheep_qsp5z_w, casual_sheep_qsp5z_w], axis=1).sum(axis=1, level=0)
         ###crop
-        manager_crop_p5w = pd.Series(lp_vars['v_phase_labour_manager']).unstack()
-        prem_crop_p5w = pd.Series(lp_vars['v_phase_labour_permanent']).unstack()
-        casual_crop_p5w = pd.Series(lp_vars['v_phase_labour_casual']).unstack()
-        crop_labour = pd.concat([manager_crop_p5w, prem_crop_p5w, casual_crop_p5w], axis=1).sum(axis=1, level=0)
+        manager_crop_qsp5z_w = f_vars2df(lp_vars, 'v_phase_labour_manager', maskz8_p5z[:,na,:], z_pos=-1).unstack(-2)
+        prem_crop_qsp5z_w = f_vars2df(lp_vars, 'v_phase_labour_permanent', maskz8_p5z[:,na,:], z_pos=-1).unstack(-2)
+        casual_crop_qsp5z_w = f_vars2df(lp_vars, 'v_phase_labour_casual', maskz8_p5z[:,na,:], z_pos=-1).unstack(-2)
+        crop_labour = pd.concat([manager_crop_qsp5z_w, prem_crop_qsp5z_w, casual_crop_qsp5z_w], axis=1).sum(axis=1, level=0)
         ###fixed
-        manager_fixed_p5w = pd.Series(lp_vars['v_fixed_labour_manager']).unstack()
-        prem_fixed_p5w = pd.Series(lp_vars['v_fixed_labour_permanent']).unstack()
-        casual_fixed_p5w = pd.Series(lp_vars['v_fixed_labour_casual']).unstack()
-        fixed_labour = pd.concat([manager_fixed_p5w, prem_fixed_p5w, casual_fixed_p5w], axis=1).sum(axis=1, level=0)
+        manager_fixed_qsp5z_w = f_vars2df(lp_vars, 'v_fixed_labour_manager', maskz8_p5z[:,na,:], z_pos=-1).unstack(-2)
+        prem_fixed_qsp5z_w = f_vars2df(lp_vars, 'v_fixed_labour_permanent', maskz8_p5z[:,na,:], z_pos=-1).unstack(-2)
+        casual_fixed_qsp5z_w = f_vars2df(lp_vars, 'v_fixed_labour_casual', maskz8_p5z[:,na,:], z_pos=-1).unstack(-2)
+        fixed_labour = pd.concat([manager_fixed_qsp5z_w, prem_fixed_qsp5z_w, casual_fixed_qsp5z_w], axis=1).sum(axis=1, level=0)
         return sheep_labour, crop_labour, fixed_labour
 
 
 def f_dep_summary(lp_vars, r_vals):
     ##depreciation total
     keys_p7 = r_vals['fin']['keys_p7']
+    mask_season_p7z = r_vals['zgen']['mask_season_p7z']
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
@@ -924,12 +939,13 @@ def f_dep_summary(lp_vars, r_vals):
     len_s = len(keys_s)
     len_z = len(keys_z)
     qsp7z = len_q, len_s, len_p7, len_z
-    dep_qsp7z = f_vars2np(lp_vars, 'v_dep', qsp7z)
+    dep_qsp7z = f_vars2np(lp_vars, 'v_dep', qsp7z, mask_season_p7z, z_pos=-1)
     return dep_qsp7z
 
 def f_minroe_summary(lp_vars, r_vals):
     ##min return on expense cost
     keys_p7 = r_vals['fin']['keys_p7']
+    mask_season_p7z = r_vals['zgen']['mask_season_p7z']
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
@@ -939,12 +955,13 @@ def f_minroe_summary(lp_vars, r_vals):
     len_z = len(keys_z)
     qsp7z = len_q, len_s, len_p7, len_z
 
-    minroe_qsp7z = f_vars2np(lp_vars, 'v_minroe', qsp7z)#.droplevel(1) #drop level 1 because no sets therefore nan
+    minroe_qsp7z = f_vars2np(lp_vars, 'v_minroe', qsp7z, mask_season_p7z, z_pos=-1)
     return minroe_qsp7z
 
 def f_asset_value_summary(lp_vars, r_vals):
     ##asset opportunity cost
     keys_p7 = r_vals['fin']['keys_p7']
+    mask_season_p7z = r_vals['zgen']['mask_season_p7z']
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
@@ -953,7 +970,7 @@ def f_asset_value_summary(lp_vars, r_vals):
     len_s = len(keys_s)
     len_z = len(keys_z)
     qsp7z = len_q, len_s, len_p7, len_z
-    asset_value_qsp7z = f_vars2np(lp_vars, 'v_asset', qsp7z)#.droplevel(1) #drop level 1 because no sets therefore nan
+    asset_value_qsp7z = f_vars2np(lp_vars, 'v_asset', qsp7z, mask_season_p7z, z_pos=-1)
     return asset_value_qsp7z
 
 def f_overhead_summary(r_vals):

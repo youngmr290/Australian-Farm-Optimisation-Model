@@ -5617,9 +5617,13 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                                                                     axis=d_pos-1, keepdims=True) > 0)
 
     ##p6z mask - this is only for masking sire because they don't have a v axis
-    mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg = fun.f_expand(zfun.f_season_transfer_mask(per.f_feed_periods()[:-1], z_pos=-1, mask=True),
-                                                          left_pos=z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
+    mask_fp_z8var_p6z = zfun.f_season_transfer_mask(per.f_feed_periods()[:-1], z_pos=-1, mask=True)
+    mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg = fun.f_expand(mask_fp_z8var_p6z, left_pos=z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
 
+    ##make p7z8 mask
+    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
+    mask_z8var_p7va1e1b1nwzida0e0b0xyg = fun.f_expand(mask_season_p7z, left_pos=z_pos, left_pos2=p_pos-1, right_pos2=z_pos)
 
     ###########################
     #create production params #
@@ -6330,7 +6334,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
         r_ffcfw_offs_k3k5tvpoffs = (o_ffcfw_poffs * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
-        r_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg3 = ffcfw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 \
+        r_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg2 = ffcfw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 \
                                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3) \
                                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3) #todo cluster d
 
@@ -6851,36 +6855,48 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     ###############
     '''add report values to report dict and do any additional calculations'''
 
+    ##create z8 mask to uncluster report vars
+    ###dams - cluster e and b (e axis is active from the dvp dates)
+    mask_z8var_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, z_pos=z_pos, mask=True)
+    mask_z8var_k2tva1e1b1nwzida0e0b0xyg1 = 1 * (np.sum(mask_z8var_va1e1b1nwzida0e0b0xyg1
+                                                * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1),
+                                                axis=(e1_pos,b1_pos), keepdims=True) > 0)
+
+    ###offs - cluster d (d axis is active from the dvp dates)
+    mask_z8var_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg3, z_pos=z_pos, mask=True)
+    mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3 = 1 * (np.sum(mask_z8var_va1e1b1nwzida0e0b0xyg3
+                                                         * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
+                                                         axis=d_pos, keepdims=True) > 0)
     ##store in report dict
     ###keys
-    r_vals['keys_a'] = keys_a
-    r_vals['keys_d'] = keys_d
-    r_vals['keys_g0'] = keys_g0
-    r_vals['keys_g1'] = keys_g1
-    r_vals['keys_g2'] = keys_g2
-    r_vals['keys_g3'] = keys_g3
-    r_vals['keys_f'] = keys_f
-    r_vals['keys_h1'] = keys_h1
-    r_vals['keys_i'] = keys_i
-    r_vals['keys_k2'] = keys_k2
-    r_vals['keys_k3'] = keys_k3
-    r_vals['keys_k5'] = keys_k5
-    r_vals['keys_lw1'] = keys_lw1
-    r_vals['keys_lw3'] = keys_lw3
-    r_vals['keys_lw_prog'] = keys_lw_prog
-    r_vals['keys_n1'] = keys_n1
-    r_vals['keys_n3'] = keys_n3
-    r_vals['keys_p8'] = keys_p8
-    r_vals['keys_t1'] = keys_t1
-    r_vals['keys_t2'] = keys_t2
-    r_vals['keys_t3'] = keys_t3
-    r_vals['keys_v1'] = keys_v1
-    r_vals['keys_v3'] = keys_v3
-    r_vals['keys_y0'] = keys_y0
-    r_vals['keys_y1'] = keys_y1
-    r_vals['keys_y3'] = keys_y3
-    r_vals['keys_x'] = keys_x
-    r_vals['keys_p6'] = keys_p6
+    fun.f1_make_r_val(r_vals,keys_a,'keys_a')
+    fun.f1_make_r_val(r_vals,keys_d,'keys_d')
+    fun.f1_make_r_val(r_vals,keys_g0,'keys_g0')
+    fun.f1_make_r_val(r_vals,keys_g1,'keys_g1')
+    fun.f1_make_r_val(r_vals,keys_g2,'keys_g2')
+    fun.f1_make_r_val(r_vals,keys_g3,'keys_g3')
+    fun.f1_make_r_val(r_vals,keys_f,'keys_f')
+    fun.f1_make_r_val(r_vals,keys_h1,'keys_h1')
+    fun.f1_make_r_val(r_vals,keys_i,'keys_i')
+    fun.f1_make_r_val(r_vals,keys_k2,'keys_k2')
+    fun.f1_make_r_val(r_vals,keys_k3,'keys_k3')
+    fun.f1_make_r_val(r_vals,keys_k5,'keys_k5')
+    fun.f1_make_r_val(r_vals,keys_lw1,'keys_lw1')
+    fun.f1_make_r_val(r_vals,keys_lw3,'keys_lw3')
+    fun.f1_make_r_val(r_vals,keys_lw_prog,'keys_lw_prog')
+    fun.f1_make_r_val(r_vals,keys_n1,'keys_n1')
+    fun.f1_make_r_val(r_vals,keys_n3,'keys_n3')
+    fun.f1_make_r_val(r_vals,keys_p6,'keys_p6')
+    fun.f1_make_r_val(r_vals,keys_p8,'keys_p8')
+    fun.f1_make_r_val(r_vals,keys_t1,'keys_t1')
+    fun.f1_make_r_val(r_vals,keys_t2,'keys_t2')
+    fun.f1_make_r_val(r_vals,keys_t3,'keys_t3')
+    fun.f1_make_r_val(r_vals,keys_v1,'keys_v1')
+    fun.f1_make_r_val(r_vals,keys_v3,'keys_v3')
+    fun.f1_make_r_val(r_vals,keys_y0,'keys_y0')
+    fun.f1_make_r_val(r_vals,keys_y1,'keys_y1')
+    fun.f1_make_r_val(r_vals,keys_y3,'keys_y3')
+    fun.f1_make_r_val(r_vals,keys_x,'keys_x')
 
     ##key lists used to form table headers and indexs
     keys_e = ['e%s'%i for i in range(len_e1)]
@@ -6891,51 +6907,48 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     keys_p = np.array(['p%s'%i for i in range(len_p)])
     keys_p3 = keys_p[mask_p_offs_p]
 
-    r_vals['sire_keys_qszg0'] = [keys_q, keys_s, keys_z, keys_g0]
-    r_vals['sire_keys_qsp6fzg0'] = [keys_q, keys_s, keys_p6, keys_f, keys_z, keys_g0]
-    r_vals['dams_keys_qsk2tvanwziy1g1'] = [keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
-                                             , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_qsk2c0p7tvanwziy1g1'] = [keys_q, keys_s, keys_k2, keys_c0, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
-                                             , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_qsk2tvaeb9nwziy1g1'] = [keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b9, keys_n1, keys_lw1
-                                             , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_qsk2tvaebnwziy1g1'] = [keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
-                                             , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_tva1e1b1nwziyg1'] = [keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
-                                             , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_qsk2tvpanwziy1g1'] = [keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_n1, keys_lw1
-                                            , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_qsk2tvpaebnwziy1g1'] = [keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
-                                            , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_qsk2p6ftvanwziy1g1'] = [keys_q, keys_s, keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
-                                            , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_paebnwziy1g1'] = [keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
-                                            , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['yatf_keys_qsk2tvpaebnwzixy1g1'] = [keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
-                                            , keys_z, keys_i, keys_x, keys_y1, keys_g2]
-    r_vals['yatf_keys_vaebnwzixy1g2'] = [keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
-                                            , keys_z, keys_i, keys_x, keys_y1, keys_g2]
-
-    r_vals['prog_keys_qsk3k5twzia0xg2'] = [keys_q, keys_s, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i
-                                            , keys_a, keys_x, keys_g2]
-    r_vals['prog_keys_qsk3k5twzida0e0b0xyg2'] = [keys_q, keys_s, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d
-                                            , keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g2]
-
-    r_vals['offs_keys_qsk3k5tvnwziaxyg3'] = [keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
-                                            , keys_a, keys_x, keys_y3, keys_g3]
-    r_vals['offs_keys_qsk3k5c0p7tvnwziaxyg3'] = [keys_q, keys_s, keys_k3, keys_k5, keys_c0, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
-                                            , keys_a, keys_x, keys_y3, keys_g3]
-    r_vals['offs_keys_qsk3k5tvpnwziaxyg3'] = [keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
-                                            , keys_i, keys_a, keys_x, keys_y3, keys_g3]
-    r_vals['offs_keys_tvnwzida0e0b0xyg3'] = [keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0
-                                            , keys_b0, keys_x, keys_y3, keys_g3]
-    r_vals['offs_keys_qsk3k5tvpnwzidaebxyg3'] = [keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
-                                            , keys_i, keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g3]
-    r_vals['offs_keys_qsk3k5p6ftvnwziaxyg3'] = [keys_q, keys_s, keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3
-                                            , keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
-
-    r_vals['offs_keys_pnwzidaebxyg3'] = [keys_p3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0
-                                            , keys_x, keys_y3, keys_g3]
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_z, keys_g0],'sire_keys_qszg0')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_p6, keys_f, keys_z, keys_g0],'sire_keys_qsp6fzg0')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
+                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvanwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_c0, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
+                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2c0p7tvanwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b9, keys_n1, keys_lw1
+                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvaeb9nwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvaebnwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_tva1e1b1nwziyg1')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvpanwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvpaebnwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2p6ftvanwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_paebnwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_x, keys_y1, keys_g2],'yatf_keys_qsk2tvpaebnwzixy1g1')
+    fun.f1_make_r_val(r_vals,[keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_x, keys_y1, keys_g2],'yatf_keys_vaebnwzixy1g2')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i
+                                            , keys_a, keys_x, keys_g2],'prog_keys_qsk3k5twzia0xg2')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d
+                                            , keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g2],'prog_keys_qsk3k5twzida0e0b0xyg2')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
+                                            , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tvnwziaxyg3')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_c0, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
+                                            , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5c0p7tvnwziaxyg3')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
+                                            , keys_i, keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tvpnwziaxyg3')
+    fun.f1_make_r_val(r_vals,[keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0
+                                            , keys_b0, keys_x, keys_y3, keys_g3],'offs_keys_tvnwzida0e0b0xyg3')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
+                                            , keys_i, keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tvpnwzidaebxyg3')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3
+                                            , keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5p6ftvnwziaxyg3')
+    fun.f1_make_r_val(r_vals,[keys_p3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0
+                                            , keys_x, keys_y3, keys_g3],'offs_keys_pnwzidaebxyg3')
 
     ####std
     zg0_shape = len_z, len_g0
@@ -6962,6 +6975,11 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     k3k5wzida0e0b0xyg2_shape = len_k3, len_k5, len_w_prog, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y2,  len_g2
     k3k5vpnwzidae0b0xyg3_shape = len_k3, len_k5, len_v3, lenoffs_p, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3
 
+    ####ktvpeb
+    k2tvpa1e1b1nwziyg1_shape = len_k2, len_t1, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    k2tvpa1e1b1nwzixyg1_shape = len_k2, len_t1, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_x, len_y1, len_g1
+    k3k5tvpnwzidae0b0xyg3_shape = len_k3, len_k5, len_t3, len_v3, lenoffs_p, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3
+
     ####ktvp
     pzg0_shape = len_p, len_z, len_g0
     k2tvpa1nwziyg1_shape = len_k2, len_t1, len_v1, len_p, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
@@ -6983,157 +7001,167 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     k3k5c0p7twziaxyg2_shape = len_k3, len_k5, len_c0, len_p7, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
     k3k5c0p7tvnwziaxyg3_shape = len_k3, len_k5, len_c0, len_p7, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
-
+    ###z8 masks for unclustering lp_vars
+    fun.f1_make_r_val(r_vals,mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:],'maskz8_k2tvanwziy1g1') #slice off unused axis
+    fun.f1_make_r_val(r_vals,mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,0,0,0,:,:,:,:,0,:,0,0,:,:,:],'maskz8_k3k5tvnwziaxyg3') #slice off unused axis
 
     ###dse
-    r_vals['dsenw_p6zg0'] = dsenw_p6tva1e1b1nwzida0e0b0xyg0.reshape(p6zg0_shape)
-    r_vals['dsemj_p6zg0'] = dsemj_p6tva1e1b1nwzida0e0b0xyg0.reshape(p6zg0_shape)
-    r_vals['dsenw_k2p6tva1nwziyg1'] = dsenw_k2p6tva1e1b1nwzida0e0b0xyg1.reshape(k2p6tva1nwziyg1_shape)
-    r_vals['dsemj_k2p6tva1nwziyg1'] = dsemj_k2p6tva1e1b1nwzida0e0b0xyg1.reshape(k2p6tva1nwziyg1_shape)
-    r_vals['dsenw_k3k5p6tvnwziaxyg3'] = dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6tvnwziaxyg3_shape)
-    r_vals['dsemj_k3k5p6tvnwziaxyg3'] = dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6tvnwziaxyg3_shape)
-    r_vals['wg_propn_p6z'] = wg_propn_p6z
+    fun.f1_make_r_val(r_vals,dsenw_p6tva1e1b1nwzida0e0b0xyg0,'dsenw_p6zg0',mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg,z_pos, p6zg0_shape)
+    fun.f1_make_r_val(r_vals,dsemj_p6tva1e1b1nwzida0e0b0xyg0,'dsemj_p6zg0',mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg,z_pos, p6zg0_shape)
+    fun.f1_make_r_val(r_vals,dsenw_k2p6tva1e1b1nwzida0e0b0xyg1,'dsenw_k2p6tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p6tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,dsemj_k2p6tva1e1b1nwzida0e0b0xyg1,'dsemj_k2p6tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p6tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3,'dsenw_k3k5p6tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p6tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3,'dsemj_k3k5p6tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p6tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,wg_propn_p6z,'wg_propn_p6z',mask_fp_z8var_p6z,z_pos=-1)
 
     ###stock days
-    r_vals['stock_days_p6fzg0'] = stock_days_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
-    r_vals['stock_days_k2p6ftva1nwziyg1'] = stock_days_k2p6ftva1e1b1nwzida0e0b0xyg1.reshape(k2p6ftva1nwziyg1_shape)
-    r_vals['stock_days_k3k5p6ftvnwziaxyg3'] = stock_days_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,stock_days_p6fa1e1b1nwzida0e0b0xyg0[:,:,na,...],'stock_days_p6fzg0',mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg,z_pos, p6fzg0_shape)
+    fun.f1_make_r_val(r_vals,stock_days_k2p6ftva1e1b1nwzida0e0b0xyg1,'stock_days_k2p6ftva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],z_pos, k2p6ftva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,stock_days_k3k5p6ftva1e1b1nwzida0e0b0xyg3,'stock_days_k3k5p6ftvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],z_pos, k3k5p6ftvnwziaxyg3_shape)
 
     ###cashflow
-    r_vals['sire_cost_c0p7zg0'] = cost_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7zg0_shape)
-    r_vals['dams_cost_k2c0p7tva1nwziyg1'] = cost_k2c0p7tva1e1b1nwzida0e0b0xyg1.reshape(k2c0p7tva1nwziyg1_shape)
-    r_vals['offs_cost_k3k5c0p7tvnwziaxyg3'] =cost_k3k5c0p7tva1e1b1nwzida0e0b0xyg3.reshape(k3k5c0p7tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,cost_c0p7va1e1b1nwzida0e0b0xyg0,'sire_cost_c0p7zg0',mask_z8var_p7va1e1b1nwzida0e0b0xyg,z_pos, c0p7zg0_shape)
+    fun.f1_make_r_val(r_vals,cost_k2c0p7tva1e1b1nwzida0e0b0xyg1,'dams_cost_k2c0p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],z_pos, k2c0p7tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,cost_k3k5c0p7tva1e1b1nwzida0e0b0xyg3,'offs_cost_k3k5c0p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],z_pos, k3k5c0p7tvnwziaxyg3_shape)
 
-    r_vals['salevalue_c0p7zg0'] = r_salevalue_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7zg0_shape)
-    r_vals['salevalue_k2c0p7tva1nwziyg1'] = r_salevalue_k2c0p7tva1e1b1nwzida0e0b0xyg1.reshape(k2c0p7tva1nwziyg1_shape)
-    r_vals['salevalue_k3k5c0p7twzia0xg2'] = salevalue_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2.reshape(k3k5c0p7twziaxyg2_shape)
-    r_vals['salevalue_k3k5c0p7tvnwziaxyg3'] = r_salevalue_k3k5c0p7tva1e1b1nwzida0e0b0xyg3.reshape(k3k5c0p7tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,r_salevalue_c0p7va1e1b1nwzida0e0b0xyg0,'salevalue_c0p7zg0',mask_z8var_p7va1e1b1nwzida0e0b0xyg,z_pos, c0p7zg0_shape)
+    fun.f1_make_r_val(r_vals,r_salevalue_k2c0p7tva1e1b1nwzida0e0b0xyg1,'salevalue_k2c0p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],z_pos, k2c0p7tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,salevalue_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2,'salevalue_k3k5c0p7twzia0xg2',mask_z8var_p7va1e1b1nwzida0e0b0xyg[:,na,...],z_pos, k3k5c0p7twziaxyg2_shape)
+    fun.f1_make_r_val(r_vals,r_salevalue_k3k5c0p7tva1e1b1nwzida0e0b0xyg3,'salevalue_k3k5c0p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],z_pos, k3k5c0p7tvnwziaxyg3_shape)
 
-    r_vals['salegrid_zg0'] = r_salegrid_va1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
-    r_vals['salegrid_tva1e1b1nwziyg1'] = r_salegrid_tva1e1b1nwzida0e0b0xyg1.reshape(tva1e1b1nwziyg1_shape)
-    r_vals['salegrid_va1e1b1nwzixyg2'] = r_salegrid_va1e1b1nwzida0e0b0xyg2.reshape(va1e1b1nwzixyg2_shape)
-    r_vals['salegrid_tvnwzida0e0b0xyg3'] = r_salegrid_tva1e1b1nwzida0e0b0xyg3.reshape(tvnwzidaebxyg3_shape)
+    fun.f1_make_r_val(r_vals,r_salegrid_va1e1b1nwzida0e0b0xyg0,'salegrid_zg0', shape=zg0_shape)
+    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg1,'salegrid_tva1e1b1nwziyg1', shape=tva1e1b1nwziyg1_shape) #didnt worry about unclustering since not important report and wasnt masked by z8
+    fun.f1_make_r_val(r_vals,r_salegrid_va1e1b1nwzida0e0b0xyg2,'salegrid_va1e1b1nwzixyg2', shape=va1e1b1nwzixyg2_shape) #didnt worry about unclustering since not important report and wasnt masked by z8
+    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg3,'salegrid_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #didnt worry about unclustering since not important report and wasnt masked by z8
 
-    r_vals['woolvalue_c0p7zg0'] = r_woolvalue_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7zg0_shape)
-    r_vals['woolvalue_k2c0p7tva1nwziyg1'] = r_woolvalue_k2c0p7tva1e1b1nwzida0e0b0xyg1.reshape(k2c0p7tva1nwziyg1_shape)
-    r_vals['woolvalue_k3k5c0p7tvnwziaxyg3'] =r_woolvalue_k3k5c0p7tva1e1b1nwzida0e0b0xyg3.reshape(k3k5c0p7tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,r_woolvalue_c0p7va1e1b1nwzida0e0b0xyg0,'woolvalue_c0p7zg0',mask_z8var_p7va1e1b1nwzida0e0b0xyg,z_pos, c0p7zg0_shape)
+    fun.f1_make_r_val(r_vals,r_woolvalue_k2c0p7tva1e1b1nwzida0e0b0xyg1,'woolvalue_k2c0p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],z_pos, k2c0p7tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_woolvalue_k3k5c0p7tva1e1b1nwzida0e0b0xyg3,'woolvalue_k3k5c0p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],z_pos, k3k5c0p7tvnwziaxyg3_shape)
 
-    r_vals['rm_stockinfra_var_h1c0p7z'] = rm_stockinfra_var_h1c0p7z
-    r_vals['rm_stockinfra_fix_h1c0p7z'] = rm_stockinfra_fix_h1c0p7z
+    fun.f1_make_r_val(r_vals,rm_stockinfra_var_h1c0p7z,'rm_stockinfra_var_h1c0p7z',mask_season_p7z,z_pos=-1)
+    fun.f1_make_r_val(r_vals,rm_stockinfra_fix_h1c0p7z,'rm_stockinfra_fix_h1c0p7z',mask_season_p7z,z_pos=-1)
 
     ###purchase costs
-    r_vals['purchcost_sire_c0p7zg0'] = purchcost_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7zg0_shape)
+    fun.f1_make_r_val(r_vals,purchcost_c0p7va1e1b1nwzida0e0b0xyg0,'purchcost_sire_c0p7zg0',mask_z8var_p7va1e1b1nwzida0e0b0xyg,z_pos, c0p7zg0_shape)
 
     ###sale date
-    r_vals['saledate_k3k5tvnwziaxyg3'] = r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3,'saledate_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
 
     ###wbe
-    r_vals['wbe_k2va1nwziyg1'] = r_wbe_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2va1nwziyg1_shape)
-    r_vals['wbe_k3k5vnwziaxyg3'] = r_wbe_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5vnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,r_wbe_k2tva1e1b1nwzida0e0b0xyg1,'wbe_k2va1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2va1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_wbe_k3k5tva1e1b1nwzida0e0b0xyg3,'wbe_k3k5vnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5vnwziaxyg3_shape)
 
     ###cfw
-    r_vals['cfw_hdmob_zg0'] = r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
-    r_vals['cfw_hdmob_k2tva1nwziyg1'] = r_cfw_hdmob_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
-    r_vals['cfw_hdmob_k3k5tvnwziaxyg3'] = r_cfw_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0,'cfw_hdmob_zg0', shape=zg0_shape) #no mask needed since no active period axis
+    fun.f1_make_r_val(r_vals,r_cfw_hdmob_k2tva1e1b1nwzida0e0b0xyg1,'cfw_hdmob_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_cfw_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3,'cfw_hdmob_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
 
-    r_vals['cfw_hd_zg0'] = r_cfw_hd_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
-    r_vals['cfw_hd_k2tva1nwziyg1'] = r_cfw_hd_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
-    r_vals['cfw_hd_k3k5tvnwziaxyg3'] = r_cfw_hd_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,r_cfw_hd_tva1e1b1nwzida0e0b0xyg0,'cfw_hd_zg0', shape=zg0_shape) #no mask needed since no active period axis
+    fun.f1_make_r_val(r_vals,r_cfw_hd_k2tva1e1b1nwzida0e0b0xyg1,'cfw_hd_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_cfw_hd_k3k5tva1e1b1nwzida0e0b0xyg3,'cfw_hd_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
 
     ###fd
-    r_vals['fd_hdmob_zg0'] = r_fd_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
-    r_vals['fd_hdmob_k2tva1nwziyg1'] = r_fd_hdmob_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
-    r_vals['fd_hdmob_k3k5tvnwziaxyg3'] = r_fd_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,r_fd_hdmob_tva1e1b1nwzida0e0b0xyg0,'fd_hdmob_zg0', shape=zg0_shape) #no mask needed since no active period axis
+    fun.f1_make_r_val(r_vals,r_fd_hdmob_k2tva1e1b1nwzida0e0b0xyg1,'fd_hdmob_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_fd_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3,'fd_hdmob_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
 
-    r_vals['fd_hd_zg0'] = r_fd_hd_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
-    r_vals['fd_hd_k2tva1nwziyg1'] = r_fd_hd_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
-    r_vals['fd_hd_k3k5tvnwziaxyg3'] = r_fd_hd_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,r_fd_hd_tva1e1b1nwzida0e0b0xyg0,'fd_hd_zg0', shape=zg0_shape) #no mask needed since no active period axis
+    fun.f1_make_r_val(r_vals,r_fd_hd_k2tva1e1b1nwzida0e0b0xyg1,'fd_hd_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_fd_hd_k3k5tva1e1b1nwzida0e0b0xyg3,'fd_hd_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
 
     ###mei and pi and NV (nutritive value)
-    r_vals['mei_sire_p6fzg0'] = mei_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
-    r_vals['mei_dams_k2p6ftva1nw8ziyg1'] = mei_k2p6ftva1e1b1nwzida0e0b0xyg1.reshape(k2p6ftva1nwziyg1_shape)
-    r_vals['mei_offs_k3k5p6ftvnw8ziaxyg3'] = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,mei_p6fa1e1b1nwzida0e0b0xyg0[:,:,na,...],'mei_sire_p6fzg0',mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg,z_pos, p6fzg0_shape)
+    fun.f1_make_r_val(r_vals,mei_k2p6ftva1e1b1nwzida0e0b0xyg1,'mei_dams_k2p6ftva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],z_pos, k2p6ftva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3,'mei_offs_k3k5p6ftvnw8ziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],z_pos, k3k5p6ftvnwziaxyg3_shape)
 
-    r_vals['pi_sire_p6fzg0'] = pi_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
-    r_vals['pi_dams_k2p6ftva1nw8ziyg1'] = pi_k2p6ftva1e1b1nwzida0e0b0xyg1.reshape(k2p6ftva1nwziyg1_shape)
-    r_vals['pi_offs_k3k5p6ftvnw8ziaxyg3'] = pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,pi_p6fa1e1b1nwzida0e0b0xyg0[:,:,na,...],'pi_sire_p6fzg0',mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg,z_pos, p6fzg0_shape)
+    fun.f1_make_r_val(r_vals,pi_k2p6ftva1e1b1nwzida0e0b0xyg1,'pi_dams_k2p6ftva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],z_pos, k2p6ftva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3,'pi_offs_k3k5p6ftvnw8ziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],z_pos, k3k5p6ftvnwziaxyg3_shape)
 
 
     ###proportion mated per dam at beginning of the period (eg accounts for mortality)
-    r_vals['n_mated_k2tva1nw8ziyg1'] = r_n_mated_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_n_mated_k2tva1e1b1nwzida0e0b0xyg1,'n_mated_k2tva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
 
     ###proportion of drys per dam at beginning of the period (eg accounts for mortality)
-    r_vals['n_drys_k2tva1nw8ziyg1'] = r_n_drys_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_n_drys_k2tva1e1b1nwzida0e0b0xyg1,'n_drys_k2tva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
 
     ###number of foetuses scanned per dam at beginning of the period (eg accounts for mortality)
-    r_vals['nfoet_scan_k2tva1nw8ziyg1'] = r_nfoet_scan_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_nfoet_scan_k2tva1e1b1nwzida0e0b0xyg1,'nfoet_scan_k2tva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
 
     ###wean percent
-    r_vals['nyatf_wean_k2tva1nw8ziyg1'] = r_nyatf_wean_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_nyatf_wean_k2tva1e1b1nwzida0e0b0xyg1,'nyatf_wean_k2tva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
 
     ###nfoet and nyatf used to calc lamb survival and mortality
-    r_vals['nfoet_birth_k2tva1e1b1nw8ziyg1'] = r_nfoet_birth_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
-    r_vals['nyatf_birth_k2tva1e1b1nw8ziyg1'] = r_nyatf_birth_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_nfoet_birth_k2tva1e1b1nwzida0e0b0xyg1,'nfoet_birth_k2tva1e1b1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1e1b1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_nyatf_birth_k2tva1e1b1nwzida0e0b0xyg1,'nyatf_birth_k2tva1e1b1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1e1b1nwziyg1_shape)
     index_b9 = [0,1,2,3]
     nfoet_b1nwzida0e0b0xygb9 = nfoet_b1nwzida0e0b0xyg[...,na] == index_b9
     nyatf_b1nwzida0e0b0xygb9 = nyatf_b1nwzida0e0b0xyg[...,na] == index_b9
-    r_vals['mask_b1b9_preg_b1nwziygb9'] = nfoet_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1))
+    fun.f1_make_r_val(r_vals,nfoet_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1)),'mask_b1b9_preg_b1nwziygb9')
 
     ###mort - uses b axis instead of k for extra detail when scan=0
     if pinp.rep['i_store_mort']:
-        r_vals['mort_pa1e1b1nwziyg1'] = r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1.squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
-        r_vals['mort_pnwzida0e0b0xyg3'] = r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3.squeeze(axis=(a1_pos, e1_pos, b1_pos))
+        fun.f1_make_r_val(r_vals,r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1.squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos)),'mort_pa1e1b1nwziyg1') #no unclustering because this wasnt masked by z8
+        fun.f1_make_r_val(r_vals,r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3.squeeze(axis=(a1_pos, e1_pos, b1_pos)),'mort_pnwzida0e0b0xyg3') #no unclustering because this wasnt masked by z8
 
     ###on hand mort - proportion of each sheep remaining in each period after accounting for mort
     if pinp.rep['i_store_on_hand_mort']:
-        r_vals['on_hand_mort_k2tvpa1nwziyg1'] = r_on_hand_mort_k2tvpa1e1b1nwzida0e0b0xyg1.reshape(k2tvpa1nwziyg1_shape)
-        r_vals['on_hand_mort_k3k5tvpnwziaxyg3'] = r_on_hand_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3.reshape(k3k5tvpnwziaxyg3_shape)
+        fun.f1_make_r_val(r_vals,r_on_hand_mort_k2tvpa1e1b1nwzida0e0b0xyg1,'on_hand_mort_k2tvpa1nwziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2tvpa1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_on_hand_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3,'on_hand_mort_k3k5tvpnwziaxyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5tvpnwziaxyg3_shape)
 
     ###numbers weights for reports with arrays that keep axis that are not present in lp array.
     if pinp.rep['i_store_lw_rep'] or pinp.rep['i_store_ffcfw_rep'] or pinp.rep['i_store_nv_rep']:
 
         ###weights the denominator and numerator - required for reports when p, e and b are added and weighted average is taken (otherwise broadcasting the variable activity to the new axis causes error in result)
         ###If these arrays get too big might have to add a second denom weight in reporting.
-        r_vals['pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                                                             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])
-                                                             * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...]
-                                                             * o_numbers_start_pdams).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
+        pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1 = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                                                      * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])
+                                                      * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...]
+                                                      * o_numbers_start_pdams)
+        fun.f1_make_r_val(r_vals,pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1,'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1',
+                          mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2tvpa1e1b1nwziyg1_shape)
+
         ###for yatf a b1 weighting must be given
-        r_vals['pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+        pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1 = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                                                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])
                                                              * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...]
-                                                             * o_numbers_start_pyatf).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos))
+                                                             * o_numbers_start_pyatf)
+        fun.f1_make_r_val(r_vals,pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1,'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1',
+                          mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2tvpa1e1b1nwzixyg1_shape)
 
-        r_vals['pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3'] = ((a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-                                                                    * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
-                                                                    * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...])
-                                                                    * on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...]
-                                                                    * o_numbers_start_poffs).squeeze(axis=(a1_pos, e1_pos, b1_pos))
+        pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3 = ((a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                                                            * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                                                            * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...])
+                                                            * on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...]
+                                                            * o_numbers_start_poffs)
+        fun.f1_make_r_val(r_vals,pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3,'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3',
+                          mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5tvpnwzidae0b0xyg3_shape)
 
-        r_vals['de0b0_denom_weights_prog_k3k5tw8zida0e0b0xyg2'] = ((a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
-                                                                 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
-                                                                 * numbers_start_d_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2
-                                                                ).squeeze(axis=(p_pos, a1_pos, e1_pos, b1_pos, n_pos))
+        de0b0_denom_weights_prog_k3k5tw8zida0e0b0xyg2 = ((a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
+                                                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
+                                                             * numbers_start_d_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2
+                                                            ).squeeze(axis=(p_pos, a1_pos, e1_pos, b1_pos, n_pos))
+        fun.f1_make_r_val(r_vals,de0b0_denom_weights_prog_k3k5tw8zida0e0b0xyg2,'de0b0_denom_weights_prog_k3k5tw8zida0e0b0xyg2') #no mask because p axis to mask
 
     ###lw - with p, e, b
     if pinp.rep['i_store_lw_rep']:
-        r_vals['lw_sire_pzg0'] = r_lw_sire_psire.reshape(pzg0_shape)
-        r_vals['lw_dams_k2vpa1e1b1nw8ziyg1'] = r_lw_dams_k2tvpdams.reshape(k2vpa1e1b1nwziyg1_shape)
-        r_vals['lw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_lw_offs_k3k5tvpoffs.reshape(k3k5vpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_lw_sire_psire,'lw_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_lw_dams_k2tvpdams,'lw_dams_k2vpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2vpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_lw_offs_k3k5tvpoffs,'lw_offs_k3k5vpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5vpnwzidae0b0xyg3_shape)
 
     ###ffcfw - with p, e, b
     if pinp.rep['i_store_ffcfw_rep']:
-        r_vals['ffcfw_sire_pzg0'] = r_ffcfw_sire_psire.reshape(pzg0_shape)
-        r_vals['ffcfw_dams_k2vpa1e1b1nw8ziyg1'] = r_ffcfw_dams_k2tvpdams.reshape(k2vpa1e1b1nwziyg1_shape)
-        r_vals['ffcfw_yatf_k2vpa1e1b1nw8zixyg1'] = r_ffcfw_yatf_k2tvpyatf.reshape(k2vpa1e1b1nwzixyg1_shape)
-        r_vals['ffcfw_prog_k3k5wzida0e0b0xyg2'] = r_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5wzida0e0b0xyg2_shape) #no p axis
-        r_vals['ffcfw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_ffcfw_offs_k3k5tvpoffs.reshape(k3k5vpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_ffcfw_sire_psire,'ffcfw_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_ffcfw_dams_k2tvpdams,'ffcfw_dams_k2vpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2vpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_ffcfw_yatf_k2tvpyatf,'ffcfw_yatf_k2vpa1e1b1nw8zixyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2vpa1e1b1nwzixyg1_shape)
+        fun.f1_make_r_val(r_vals,r_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg2,'ffcfw_prog_k3k5wzida0e0b0xyg2', shape=k3k5wzida0e0b0xyg2_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_ffcfw_offs_k3k5tvpoffs,'ffcfw_offs_k3k5vpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5vpnwzidae0b0xyg3_shape)
 
     ###NV - with p, e, b
     if pinp.rep['i_store_nv_rep']:
-        r_vals['nv_sire_pzg0'] = r_nv_sire_pg.reshape(pzg0_shape)
-        r_vals['nv_dams_k2vpa1e1b1nw8ziyg1'] = r_nv_dams_k2tvpg.reshape(k2vpa1e1b1nwziyg1_shape)
-        r_vals['nv_offs_k3k5vpnw8zida0e0b0xyg3'] = r_nv_offs_k3k5tvpg.reshape(k3k5vpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_nv_sire_pg,'nv_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_nv_dams_k2tvpg,'nv_dams_k2vpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2vpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_nv_offs_k3k5tvpg,'nv_offs_k3k5vpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5vpnwzidae0b0xyg3_shape)
 
 
 

@@ -207,6 +207,8 @@ def f_labour_general(params,r_vals):
     casual_cost_c0p7zp5 = casual_cost_c0zp5[:,na,...] * labour_cost_allocation_c0p7zp5
     casual_wc_c0p7zp5 = casual_cost_c0zp5[:,na,...] * labour_wc_allocation_c0p7zp5
 
+    ##make p5z8 mask (used to mask params with p5 axis and no p7 axis - params with p7 axis have been masked already in cash allocation)
+    maskz8_p5z = zfun.f_season_transfer_mask(lp_start_p5z,z_pos=-1,mask=True)
 
     #########
     ##keys  #
@@ -239,9 +241,14 @@ def f_labour_general(params,r_vals):
     params['casual_cost'] =dict(zip(tup_c0p7zp5, casual_cost_c0p7zp5.ravel()))
     params['casual_wc'] =dict(zip(tup_c0p7zp5, casual_wc_c0p7zp5.ravel()))
 
-    ##report values that are not season affected
-    r_vals['keys_p5'] = keys_p5
-    r_vals['casual_cost_c0p7zp5'] = casual_cost_c0p7zp5
+    ##store r_vals
+    ###make z8 mask - used to uncluster
+    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
+    ###store
+    fun.f1_make_r_val(r_vals, maskz8_p5z, 'maskz8_p5z')
+    fun.f1_make_r_val(r_vals, keys_p5, 'keys_p5')
+    fun.f1_make_r_val(r_vals, casual_cost_c0p7zp5, 'casual_cost_c0p7zp5', mask_season_p7z[:,:,na], z_pos=-2)
 
 
 def f_perm_cost(params, r_vals):
@@ -282,11 +289,16 @@ def f_perm_cost(params, r_vals):
     ##params and report vals
     params['perm_cost'] = fun.f1_make_pyomo_dict(perm_cost_c0p7z, arrays_c0p7z)
     params['perm_wc'] = fun.f1_make_pyomo_dict(perm_wc_c0p7z, arrays_c0p7z)
-    r_vals['perm_cost_c0p7z'] = perm_cost_c0p7z
-
     params['manager_cost'] = fun.f1_make_pyomo_dict(manager_cost_c0p7z, arrays_c0p7z)
     params['manager_wc'] = fun.f1_make_pyomo_dict(manager_wc_c0p7z, arrays_c0p7z)
-    r_vals['manager_cost_c0p7z'] = manager_cost_c0p7z
+
+    ##store r_vals
+    ###make z8 mask - used to uncluster
+    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
+    ###store
+    fun.f1_make_r_val(r_vals, perm_cost_c0p7z, 'perm_cost_c0p7z', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, manager_cost_c0p7z, 'manager_cost_c0p7z', mask_season_p7z, z_pos=-1)
 
 
 

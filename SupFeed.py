@@ -80,13 +80,18 @@ def f_buy_grain_price(r_vals):
     grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
     buy_grain_price =  price_k_g.mul(grain_income_allocation_c0p7zg,axis=1, level=-1)
     buy_grain_price_wc =  price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
-    r_vals['buy_grain_price'] = buy_grain_price
 
     ##buy grain period - purchased grain can only provide into the grain transfer constraint in the phase period when it is purchased (otherwise it will get free grain)
     alloc_p7z = zfun.f1_z_period_alloc(start[na], z_pos=-1)
     index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
     buy_grain_prov_p7z = pd.Series(alloc_p7z.ravel(), index=index_p7z)
 
+    ##store r_vals
+    ###make z8 mask - used to uncluster
+    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
+    ###store
+    fun.f1_make_r_val(r_vals, buy_grain_price, 'buy_grain_price', mask_season_p7z[:,:,na], z_pos=-2)
     return buy_grain_price.unstack(), buy_grain_price_wc.unstack(), buy_grain_prov_p7z
 
 def f_sup_cost(r_vals):
@@ -162,7 +167,6 @@ def f_sup_cost(r_vals):
     ##total cost = feeding cost plus storage cost
     total_sup_cost_c0p7zp6k = feeding_cost_c0p7zp6k + storage_cost_c0p7zp6k
     total_sup_wc_c0p7zp6k = feeding_wc_c0p7zp6k + storage_wc_c0p7zp6k
-    r_vals['total_sup_cost_c0p7zp6k'] = total_sup_cost_c0p7zp6k
 
     ##dep
     storage_dep_k = grain_info.loc['dep']
@@ -180,10 +184,17 @@ def f_sup_cost(r_vals):
     storage_dep_p7p6zk = alloc_p7p6zk.mul(storage_dep_k, level=-1)
     storage_asset_p7p6zk = alloc_p7p6zk.mul(storage_asset_k, level=-1)
 
+    ##store r_vals
+    ###make z8 mask - used to uncluster
+    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
+    ###store
+    fun.f1_make_r_val(r_vals, total_sup_cost_c0p7zp6k, 'total_sup_cost_c0p7zp6k', mask_season_p7z[:,:,na,na], z_pos=-3)
+
     ##return cost, dep and asset value
     return total_sup_cost_c0p7zp6k, total_sup_wc_c0p7zp6k, storage_dep_p7p6zk, storage_asset_p7p6zk
 
-    
+
 def f_sup_md_vol():
     '''
     M/D and DM content of each supplement are known inputs.
