@@ -5675,23 +5675,28 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     ##cashflow & cost & working capital
-    purchcost_c0p7va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', purchcost_c0p7va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
-    cashflow_c0p7va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', cashflow_c0p7va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    purchcost_c0p7va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', purchcost_c0p7va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0,
+                                                                           mask_vg=mask_z8var_p7va1e1b1nwzida0e0b0xyg)
+    cashflow_c0p7va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', cashflow_c0p7va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0,
+                                                                          mask_vg=mask_z8var_p7va1e1b1nwzida0e0b0xyg)
     cashflow_k2c0p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', cashflow_c0p7tva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
                                                                  mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,...]))
     cashflow_k3k5c0p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', cashflow_c0p7tva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],
                                                     a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...], numbers_start_va1e1b1nwzida0e0b0xyg3,
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
-    purchcost_wc_c0p7va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', purchcost_wc_c0p7va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
-    wc_c0p7va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', wc_c0p7va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    purchcost_wc_c0p7va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', purchcost_wc_c0p7va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0,
+                                                                              mask_vg=mask_z8var_p7va1e1b1nwzida0e0b0xyg)
+    wc_c0p7va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', wc_c0p7va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0,
+                                                                      mask_vg=mask_z8var_p7va1e1b1nwzida0e0b0xyg)
     wc_k2c0p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', wc_c0p7tva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
                                                                  mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,...]))
     wc_k3k5c0p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', wc_c0p7tva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],
                                                     a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...], numbers_start_va1e1b1nwzida0e0b0xyg3,
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
-    cost_c0p7va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', cost_c0p7va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    cost_c0p7va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', cost_c0p7va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0,
+                                                                      mask_vg=mask_z8var_p7va1e1b1nwzida0e0b0xyg)
     cost_k2c0p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', cost_c0p7tva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
                                                                  mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,...]))
@@ -5700,7 +5705,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     ##asset value
-    assetvalue_p7va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', assetvalue_p7va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    assetvalue_p7va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', assetvalue_p7va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0,
+                                                                          mask_vg=mask_z8var_p7va1e1b1nwzida0e0b0xyg)
     assetvalue_k2tp7va1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', assetvalue_tp7va1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,:,na,...],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
                                                                  mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,:,na,...]))
