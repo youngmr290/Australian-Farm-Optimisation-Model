@@ -92,6 +92,12 @@ def f_prep_labour():
 
     ##sum all and make df
     prep_p5z = seed_prep_p5z + spray_prep_p5z + fert_prep_p5z + harvest_prep_p5z
+
+    ##mask z axis (not required for other params because they have p7 axis thus are already masked)
+    maskz8_p5z = zfun.f_season_transfer_mask(lp_p5z[:-1,:],z_pos=-1,mask=True) #slice off the end date of the last period
+    prep_p5z = prep_p5z * maskz8_p5z
+
+    ##make df
     prep_p5z = pd.DataFrame(prep_p5z,index=keys_p5,columns=keys_z)
     return prep_p5z
 
@@ -329,6 +335,10 @@ def f_crop_monitoring():
     fixed_crop_monitor_d = fixed_crop_monitor_d * length_d.astype(float)/7
     ###convert date range to labour periods
     fixed_crop_monitor_p5z = np.sum(fixed_crop_monitor_d * monitoring_allocation_p5zd, axis=-1) #sum the d axis (monitoring date axis)
+    ###mask z axis
+    maskz8_p5z = zfun.f_season_transfer_mask(labour_periods_pz[:-1,:],z_pos=-1,mask=True) #slice off the end date of the last period
+    fixed_crop_monitor_p5z = fixed_crop_monitor_p5z * maskz8_p5z
+    ###convert to df
     fixed_crop_monitor = pd.DataFrame(fixed_crop_monitor_p5z, index=keys_p5, columns=keys_z)
     return variable_crop_monitor_p7p5zr, increment_variable_crop_monitor_p7p5zr, fixed_crop_monitor.stack()
 
@@ -339,7 +349,6 @@ def f1_labcrop_params(params,r_vals):
     fert_app_time_ha, increment_fert_app_time_ha = f_fert_app_time_ha()
     chem_app_time_ha, increment_chem_app_time_ha = f_chem_app_time_ha()
     variable_crop_monitor, increment_variable_crop_monitor, fixed_crop_monitor = f_crop_monitoring()
-
 
     ##add params which are inputs
     params['harvest_helper'] = pinp.labour['harvest_helper'].squeeze().to_dict()

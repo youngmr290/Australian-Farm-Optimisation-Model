@@ -5163,7 +5163,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
 
     ##every period - with labour (p5) axis
     labour_l2p5tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(husbandry_labour_l2pg0[:,na,na,...], numbers_p=o_numbers_end_psire,
-                                             on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_p5_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_p5tpa1e1b1nwzida0e0b0xyg)
+                                             on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_p5_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_p5tpa1e1b1nwzida0e0b0xyg)[:,:,:,na,...] #add v axis
     labour_l2p5tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(husbandry_labour_l2pg1[:,na,na,...], a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
                                              on_hand_tpa1e1b1nwzida0e0b0xyg1, a_any1_p=a_p5_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_p5tpa1e1b1nwzida0e0b0xyg)
     labour_l2p5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(husbandry_labour_l2tpg3[:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs,
@@ -5628,10 +5628,15 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(per.f_feed_periods()[:-1], z_pos=-1, mask=True)
     mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg = fun.f_expand(mask_fp_z8var_p6z, left_pos=z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
 
-    ##make p7z8 mask
+    ##make p7z8 mask - used to mask sire $ stuff
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     mask_z8var_p7va1e1b1nwzida0e0b0xyg = fun.f_expand(mask_season_p7z, left_pos=z_pos, left_pos2=p_pos-1, right_pos2=z_pos)
+
+    ##p5z mask - used to mask sire labour
+    lp_start_p5z = per.f_p_dates_df().iloc[:-1].values #slice off end date of last period
+    maskz8_p5z = zfun.f_season_transfer_mask(lp_start_p5z,z_pos=-1,mask=True)
+    mask_z8var_p5va1e1b1nwzida0e0b0xyg = fun.f_expand(maskz8_p5z, left_pos=z_pos, left_pos2=p_pos-1, right_pos2=z_pos)
 
     ###########################
     #create production params #
@@ -5704,7 +5709,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     ##labour - manager
-    lab_manager_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', labour_l2p5tva1e1b1nwzida0e0b0xyg0[0], numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    lab_manager_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', labour_l2p5tva1e1b1nwzida0e0b0xyg0[0], numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0,
+                                                                            mask_vg=mask_z8var_p5va1e1b1nwzida0e0b0xyg[:,na,...])
     lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', labour_l2p5tva1e1b1nwzida0e0b0xyg1[0], a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
                                                                  mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,...]))
@@ -5713,7 +5719,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     ##labour - permanent
-    lab_perm_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', labour_l2p5tva1e1b1nwzida0e0b0xyg0[1], numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    lab_perm_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', labour_l2p5tva1e1b1nwzida0e0b0xyg0[1], numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0,
+                                                                         mask_vg=mask_z8var_p5va1e1b1nwzida0e0b0xyg[:,na,...])
     lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', labour_l2p5tva1e1b1nwzida0e0b0xyg1[1], a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
                                                                  mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,...]))
@@ -5722,7 +5729,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     ##labour - anyone
-    lab_anyone_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', labour_l2p5tva1e1b1nwzida0e0b0xyg0[2], numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    lab_anyone_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', labour_l2p5tva1e1b1nwzida0e0b0xyg0[2], numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0,
+                                                                           mask_vg=mask_z8var_p5va1e1b1nwzida0e0b0xyg[:,na,...])
     lab_anyone_k2p5tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', labour_l2p5tva1e1b1nwzida0e0b0xyg1[2], a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
                                                                  mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,...]))

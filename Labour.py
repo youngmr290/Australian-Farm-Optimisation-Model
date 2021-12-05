@@ -188,13 +188,13 @@ def f_labour_general(params,r_vals):
     ###determine upper bounds for casual labour. note: casual labour requirements may be different during seeding and harvest compared to the rest
     max_casual_norm = pinp.labour['max_casual'] if pinp.labour['max_casual']!='inf' else np.inf #if inf need to convert to python inf
     max_casual_seedharv = pinp.labour['max_casual_seedharv'] if pinp.labour['max_casual']!='inf' else np.inf #if inf need to convert to python inf
-    ub_cas_pz = np.zeros(seeding_occur_p5z.shape, dtype=float)
-    ub_cas_pz[seedharv_mask_pz] = max_casual_seedharv
-    ub_cas_pz[np.logical_not(seedharv_mask_pz)] = max_casual_norm
+    ub_cas_p5z = np.zeros(seeding_occur_p5z.shape, dtype=float)
+    ub_cas_p5z[seedharv_mask_pz] = max_casual_seedharv
+    ub_cas_p5z[np.logical_not(seedharv_mask_pz)] = max_casual_norm
     ###determine lower bounds for casual labour. note: casual labour requirements may be different during seeding and harvest compared to the rest
-    lb_cas_pz = np.zeros(seeding_occur_p5z.shape, dtype=float)
-    lb_cas_pz[seedharv_mask_pz] = pinp.labour['min_casual_seedharv']
-    lb_cas_pz[np.logical_not(seedharv_mask_pz)] = pinp.labour['min_casual']
+    lb_cas_p5z = np.zeros(seeding_occur_p5z.shape, dtype=float)
+    lb_cas_p5z[seedharv_mask_pz] = pinp.labour['min_casual_seedharv']
+    lb_cas_p5z[np.logical_not(seedharv_mask_pz)] = pinp.labour['min_casual']
 
     ##cost of casual for each labour period - wage plus super plus workers comp (multiplied by wage because super and others are %)
     ##differect to perm and manager because they are at a fixed level throughout the year ie same number of perm staff all yr.
@@ -207,8 +207,18 @@ def f_labour_general(params,r_vals):
     casual_cost_c0p7zp5 = casual_cost_c0zp5[:,na,...] * labour_cost_allocation_c0p7zp5
     casual_wc_c0p7zp5 = casual_cost_c0zp5[:,na,...] * labour_wc_allocation_c0p7zp5
 
+    ########
+    #z mask#
+    ########
     ##make p5z8 mask (used to mask params with p5 axis and no p7 axis - params with p7 axis have been masked already in cash allocation)
     maskz8_p5z = zfun.f_season_transfer_mask(lp_start_p5z,z_pos=-1,mask=True)
+
+    ##apply to params with only p5 period axis (p7z8 masking is handled elsewhere)
+    perm_hrs_total_p5z = perm_hrs_total_p5z * maskz8_p5z
+    perm_supervision_p5z = perm_supervision_p5z * maskz8_p5z
+    cas_hrs_total_p5z = cas_hrs_total_p5z * maskz8_p5z
+    cas_supervision_p5z = cas_supervision_p5z * maskz8_p5z
+    manager_hrs_total_p5z = manager_hrs_total_p5z * maskz8_p5z
 
     #########
     ##keys  #
@@ -228,15 +238,14 @@ def f_labour_general(params,r_vals):
     index_c0p7zp5 = fun.cartesian_product_simple_transpose(arrays)
     tup_c0p7zp5 = tuple(map(tuple, index_c0p7zp5))
 
-    ################
-    ##pyomo params #
+    ##pyomo params
     params['permanent hours'] = dict(zip(tup_p5z, perm_hrs_total_p5z.ravel()))
     params['permanent supervision'] = dict(zip(tup_p5z, perm_supervision_p5z.ravel()))
     params['casual hours'] = dict(zip(tup_p5z, cas_hrs_total_p5z.ravel()))
     params['casual supervision'] = dict(zip(tup_p5z, cas_supervision_p5z.ravel()))
     params['manager hours'] = dict(zip(tup_p5z, manager_hrs_total_p5z.ravel()))
-    params['casual ub'] = dict(zip(tup_p5z, ub_cas_pz.ravel()))
-    params['casual lb'] = dict(zip(tup_p5z, lb_cas_pz.ravel()))
+    params['casual ub'] = dict(zip(tup_p5z, ub_cas_p5z.ravel()))
+    params['casual lb'] = dict(zip(tup_p5z, lb_cas_p5z.ravel()))
 
     params['casual_cost'] =dict(zip(tup_c0p7zp5, casual_cost_c0p7zp5.ravel()))
     params['casual_wc'] =dict(zip(tup_c0p7zp5, casual_wc_c0p7zp5.ravel()))

@@ -38,12 +38,16 @@ def fixed(params):
     keys_p5 = labour_period.index[:-1]
     keys_z = zfun.f_keys_z()
 
+    ##z8 mask
+    maskz8_p5z = zfun.f_season_transfer_mask(lp_p5z[:-1,:],z_pos=-1,mask=True) #slice off end date
+
     ##super
     super_dates_p8 = pinp.labour['super'].index.values
     super_length_p8 = pinp.labour['super']['days'].values.astype('timedelta64[D]')
     super_labour_p8 = pinp.labour['super']['hours'].values
     alloc_p5zp8 = fun.range_allocation_np(lp_p5z[...,na], super_dates_p8, super_length_p8, True)[:-1,:,:]
     super_p5z = np.sum(alloc_p5zp8 * super_labour_p8, axis=-1) #get rid of p8 axis
+    super_p5z = super_p5z * maskz8_p5z
     super = pd.DataFrame(super_p5z, index=keys_p5, columns=keys_z)
 
     ##bas
@@ -52,6 +56,7 @@ def fixed(params):
     bas_labour_p8 = pinp.labour['bas']['hours'].values
     alloc_p5zp8 = fun.range_allocation_np(lp_p5z[...,na], bas_dates_p8, bas_length_p8, True)[:-1,:,:]
     bas_p5z = np.sum(alloc_p5zp8 * bas_labour_p8, axis=-1) #get rid of p8 axis
+    bas_p5z = bas_p5z * maskz8_p5z
     bas = pd.DataFrame(bas_p5z, index=keys_p5, columns=keys_z)
 
     ##planning
@@ -60,6 +65,7 @@ def fixed(params):
     planning_labour_p8 = pinp.labour['planning']['hours'].values
     alloc_p5zp8 = fun.range_allocation_np(lp_p5z[...,na], planning_dates_p8, planning_length_p8, True)[:-1,:,:]
     planning_p5z = np.sum(alloc_p5zp8 * planning_labour_p8, axis=-1) #get rid of p8 axis
+    planning_p5z = planning_p5z * maskz8_p5z
     planning = pd.DataFrame(planning_p5z, index=keys_p5, columns=keys_z)
 
     ##tax
@@ -68,8 +74,8 @@ def fixed(params):
     tax_labour_p8 = pinp.labour['tax']['hours'].values
     alloc_p5zp8 = fun.range_allocation_np(lp_p5z[...,na], tax_dates_p8, tax_length_p8, True)[:-1,:,:]
     tax_p5z = np.sum(alloc_p5zp8 * tax_labour_p8, axis=-1) #get rid of p8 axis
+    tax_p5z = tax_p5z * maskz8_p5z
     tax = pd.DataFrame(tax_p5z, index=keys_p5, columns=keys_z)
-
 
     ##create params
     params['super'] = super.stack().to_dict()
