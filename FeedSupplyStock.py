@@ -340,8 +340,8 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     #                                             + t_fs_ageweaned_pj2zida0e0b0xg3 + t_fs_gender_pj2zida0e0b0xg3)
 
     ##4b) update fs and confinement info with pkl if desired
-    fs_number = sinp.structuralsa['fs_number']
-    if sinp.structuralsa['fs_use_pkl']:
+    fs_number = sinp.structuralsa['i_fs_number']
+    if sinp.structuralsa['i_fs_use_pkl']:
         print('pkl fs being used.')
         with open('pkl/pkl_fs{0}.pkl'.format(fs_number),"rb") as f:
             pkl_fs = pkl.load(f)
@@ -460,7 +460,7 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
     '''
     import ReportFunctions as rfun
 
-    if sinp.structuralsa['fs_create']:
+    if sinp.structuralsa['i_fs_create']:
         ##inputs
         d_pos = sinp.stock['i_d_pos']
         n_pos = sinp.stock['i_n_pos']
@@ -565,6 +565,6 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         pkl_fs['confinement']['offs'] = optimal_confinement_tpa1e1b1nwzida0e0b0xyg3[0]
 
         ##store rev if trial is rev_create
-        fs_number = sinp.structuralsa['fs_number']
+        fs_number = sinp.structuralsa['i_fs_number']
         with open('pkl/pkl_fs{0}.pkl'.format(fs_number),"wb") as f:
             pkl.dump(pkl_fs, f)
