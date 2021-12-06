@@ -126,12 +126,12 @@ def f_structural_inp_sa():
     structuralsa['i_dvp_mask_f1'] = fun.f_sa(structuralsa['i_dvp_mask_f1'], sen.sav['fvp_is_dvp_dams'],5)
     structuralsa['i_fvp_mask_offs'] = fun.f_sa(structuralsa['i_fvp_mask_offs'], sen.sav['mask_fvp_offs'],5)
     structuralsa['i_dvp_mask_f3'] = fun.f_sa(structuralsa['i_dvp_mask_f3'], sen.sav['fvp_is_dvp_offs'],5)
-    structuralsa['rev_create'] = fun.f_sa(structuralsa['i_rev_create'], sen.sav['rev_create'],5)
-    structuralsa['rev_number'] = fun.f_sa(structuralsa['i_rev_number'], sen.sav['rev_number'],5)
-    structuralsa['rev_trait_inc'] = fun.f_sa(structuralsa['i_rev_trait_inc'], sen.sav['rev_trait_inc'],5)
-    structuralsa['fs_create'] = fun.f_sa(structuralsa['i_fs_create'], sen.sav['fs_create'],5)
-    structuralsa['fs_use_pkl'] = fun.f_sa(structuralsa['i_fs_use_pkl'], sen.sav['fs_use_pkl'],5)
-    structuralsa['fs_number'] = fun.f_sa(structuralsa['i_fs_number'], sen.sav['fs_number'],5)
+    structuralsa['i_rev_create'] = fun.f_sa(structuralsa['i_rev_create'], sen.sav['rev_create'],5)
+    structuralsa['i_rev_number'] = fun.f_sa(structuralsa['i_rev_number'], sen.sav['rev_number'],5)
+    structuralsa['i_rev_trait_inc'] = fun.f_sa(structuralsa['i_rev_trait_inc'], sen.sav['rev_trait_inc'],5)
+    structuralsa['i_fs_create'] = fun.f_sa(structuralsa['i_fs_create'], sen.sav['fs_create'],5)
+    structuralsa['i_fs_use_pkl'] = fun.f_sa(structuralsa['i_fs_use_pkl'], sen.sav['fs_use_pkl'],5)
+    structuralsa['i_fs_number'] = fun.f_sa(structuralsa['i_fs_number'], sen.sav['fs_number'],5)
 
 ##############################
 # handle inputs with p6 axis #
