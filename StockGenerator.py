@@ -2018,15 +2018,15 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
         ### sim engine       #
         ######################
         ##load in or create REV dict if doing a relative economic value analysis
-        rev_number = sinp.structuralsa['rev_number']
-        if sinp.structuralsa['rev_create'] or not np.any(sinp.structuralsa['rev_trait_inc']): #if rev is not being used an empty dict is still required.
+        rev_number = sinp.structuralsa['i_rev_number']
+        if sinp.structuralsa['i_rev_create'] or not np.any(sinp.structuralsa['i_rev_trait_inc']): #if rev is not being used an empty dict is still required.
             rev_trait_values = collections.defaultdict(dict)
             for p in range(n_sim_periods - 1):
                 rev_trait_values['sire'][p] = {}
                 rev_trait_values['dams'][p] = {}
                 rev_trait_values['yatf'][p] = {}
                 rev_trait_values['offs'][p] = {}
-        elif np.any(sinp.structuralsa['rev_trait_inc']):
+        elif np.any(sinp.structuralsa['i_rev_trait_inc']):
             print('REV values being used.')
             with open('pkl/pkl_rev_trait{0}.pkl'.format(rev_number),"rb") as f:
                 rev_trait_values = pkl.load(f)
@@ -6803,7 +6803,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     # REV         #
     ###############
     ##store rev if trial is rev_create
-    if sinp.structuralsa['rev_create']:
+    if sinp.structuralsa['i_rev_create']:
         with open('pkl/pkl_rev_trait{0}.pkl'.format(rev_number),"wb") as f:
             pkl.dump(rev_trait_values, f)
 
