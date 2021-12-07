@@ -488,23 +488,23 @@ def f1_nv_components(paststd_foo_p6a1e1b1j0wzida0e0b0xyg, paststd_dmd_p6a1e1b1j0
     return mei_p6zj1, foo_p6a1e1b1j1wzida0e0b0xyg, dmd_p6a1e1b1j1wzida0e0b0xyg, supp_p6a1e1b1j1wzida0e0b0xyg
 
 
-def f1_feedsupply(feedsupplyw_a1e1b1nwzida0e0b0xyg, confinementw_a1e1b1nwzida0e0b0xyg, nv_a1e1b1j1wzida0e0b0xyg,
+def f1_feedsupply(feedsupplyw_ta1e1b1nwzida0e0b0xyg, confinementw_ta1e1b1nwzida0e0b0xyg, nv_a1e1b1j1wzida0e0b0xyg,
                   foo_a1e1b1j1wzida0e0b0xyg, dmd_a1e1b1j1wzida0e0b0xyg, supp_a1e1b1j1wzida0e0b0xyg, pi_a1e1b1nwzida0e0b0xyg,
                   mp2=0):
     ##calc mei (mei = nv * pi)
-    mei = feedsupplyw_a1e1b1nwzida0e0b0xyg * pi_a1e1b1nwzida0e0b0xyg + mp2 #add mp2 because pi doesnt include milk.
+    mei = feedsupplyw_ta1e1b1nwzida0e0b0xyg * pi_a1e1b1nwzida0e0b0xyg + mp2 #add mp2 because pi doesnt include milk.
 
     ##interp to calc foo, dmd and supp that correspond with given feedsupply
     axis = sinp.stock['i_n_pos']
-    foo = fun.f_nD_interp(feedsupplyw_a1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,foo_a1e1b1j1wzida0e0b0xyg,axis)
-    dmd = fun.f_nD_interp(feedsupplyw_a1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,dmd_a1e1b1j1wzida0e0b0xyg,axis)
-    supp = fun.f_nD_interp(feedsupplyw_a1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,supp_a1e1b1j1wzida0e0b0xyg,axis)
+    foo = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,foo_a1e1b1j1wzida0e0b0xyg,axis)
+    dmd = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,dmd_a1e1b1j1wzida0e0b0xyg,axis)
+    supp = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,supp_a1e1b1j1wzida0e0b0xyg,axis)
 
     ##if confinement then no pasture
-    foo = fun.f_update(foo,0,confinementw_a1e1b1nwzida0e0b0xyg)
-    dmd = fun.f_update(dmd,0,confinementw_a1e1b1nwzida0e0b0xyg)
+    foo = fun.f_update(foo,0,confinementw_ta1e1b1nwzida0e0b0xyg)
+    dmd = fun.f_update(dmd,0,confinementw_ta1e1b1nwzida0e0b0xyg)
     ##if confinement then all diet is made up from supp therefore scale supp accordingly
-    supp = fun.f_update(supp, feedsupplyw_a1e1b1nwzida0e0b0xyg / pinp.sheep['i_md_supp'], confinementw_a1e1b1nwzida0e0b0xyg)
+    supp = fun.f_update(supp, feedsupplyw_ta1e1b1nwzida0e0b0xyg / pinp.sheep['i_md_supp'], confinementw_ta1e1b1nwzida0e0b0xyg)
 
     ##supplement intake
     intake_s = pi_a1e1b1nwzida0e0b0xyg * supp
@@ -1158,7 +1158,8 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         ###Conception is the proportion of dams that are dry and a change in conception is assumed to be converting
         ### a dry ewe into a single bearing ewe. It is calculated by altering the proportion of single bearing ewes b1[2].
         ### The proportion of Drys is then calculated (later) as the animals that didn't get pregnant.
-        t_cr[:, :, 2, ...] = f1_rev_update('conception', t_cr[:, :, 2, ...], rev_trait_value)
+        slc[b1_pos] = slice(2,3)
+        t_cr[tuple(slc)] = f1_rev_update('conception', t_cr[tuple(slc)], rev_trait_value)
 
         ##Process the Litter size REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
         ##The litter size REV is stored as the proportion of the pregnant dams that are single-, twin- & triplet-bearing
@@ -1170,7 +1171,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         litter_propn = t_cr_masked / np.sum(t_cr_masked, b1_pos, keepdims=True)
         litter_propn = f1_rev_update('litter_size', litter_propn, rev_trait_value)
         ###calculate t_cr from the REV adjusted litter size. t_cr will only change from the original value if litter_size REV is active
-        t_cr[:,:,mask,...] = litter_propn * np.sum(t_cr_masked, b1_pos, keepdims=True)
+        t_cr[:,:,:,mask,...] = litter_propn * np.sum(t_cr_masked, b1_pos, keepdims=True)
 
         ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester
         ## are added to 00 slice (b1[1:2]) and removed from the NM slice
@@ -1705,35 +1706,33 @@ def f1_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf
     '''
     ##a) mortality (include np.maximum on mortality so that numbers can't become negative)
     numbers = numbers * np.maximum(0, 1-mortality)
-    ##numbers for post processing - don't include selling drys - assignment required here for when it is not group 1 or 2
-    pp_numbers = numbers
     ##things for dams - prejoining and moving between classes
     if group==1:
         ###b) conception - conception is the change in numbers +ve for animals getting pregnancy and -ve in the NM e-0 slice (note the conception for e slice 1 and higher puts the negative numbers in the e-0 nm slice)
         if np.any(period_is_mating):
-            temporary = numbers + conception * numbers[:, 0:1, 0:1, ...]  # numbers_dams[:,0,0,...] is the NM slice of cycle 0 ie the number of animals yet to be mated (conception will have negative value in nm slice)
+            temporary = numbers + conception * numbers[:, :, 0:1, 0:1, ...]  # numbers_dams[:,0,0,...] is the NM slice of cycle 0 ie the number of animals yet to be mated (conception will have negative value in nm slice)
             numbers = fun.f_update(numbers, temporary, np.any(period_is_mating, axis=sinp.stock['i_e1_pos'])) #needs to be previous period else conception is not calculated because numbers happens at beginning of p loop
         ###at the end of mating move any remaining numbers from nm to 00 slice (note only the nm slice for e-0 has numbers - this is handled in the conception function)
         ###Set temporary to copy of current numbers
         if np.any(period_is_matingend):
             temporary  = np.copy(numbers)
-            temporary[:, 0:1, 1:2, ...] += numbers[:, 0:1, 0:1, ...]   # add the number remaining unmated to the dry slice in e1[0]
-            temporary[:, :, 0:1, ...] = 0 #set the NM slice to 0 (because they have just been added to drys)
+            temporary[:, :, 0:1, 1:2, ...] += numbers[:, :, 0:1, 0:1, ...]   # add the number remaining unmated to the dry slice in e1[0]
+            temporary[:, :, :, 0:1, ...] = 0 #set the NM slice to 0 (because they have just been added to drys)
             ##handle the proportion mated. Note: if the inputs are set to optimise the proportion (np.inf) then it is treated as 100% mated
             mated_propn = np.minimum(1, propn_dams_mated) #maximum value of 1 because default is inf, otherwise propn to be mated.
             ### the number in the NM slice e1[0] is a proportion of the total numbers
             ### need a minimum number to keep nm in pyomo. Want a small number relative to mortality (after allowing for multiple slices getting the small number)
-            temporary[:, 0:1, 0:1, ...] = np.maximum(0.00001, np.sum(temporary, axis=(sinp.stock['i_e1_pos'], sinp.stock['i_b1_pos']),
+            temporary[:, :, 0:1, 0:1, ...] = np.maximum(0.00001, np.sum(temporary, axis=(sinp.stock['i_e1_pos'], sinp.stock['i_b1_pos']),
                                                                      keepdims=True) * (1 - mated_propn))
             ### the numbers in the other mated slices other than NM get scaled by the proportion mated
-            temporary[:, :, 1:, ...] = np.maximum(0, temporary[:, :, 1:, ...] * mated_propn)
+            temporary[:, :, :, 1:, ...] = np.maximum(0, temporary[:, :, :, 1:, ...] * mated_propn)
             ###update numbers with the temporary calculations if it is the end of mating
             numbers = fun.f_update(numbers, temporary, period_is_matingend)
         ###d) birth (account for birth status and if drys are retained)
         if np.any(period_is_birth):
             dam_propn_birth_b1 = fun.f_comb(nfoet_b1, nyatf_b1) * (1 - mortality_yatf) ** nyatf_b1 * mortality_yatf ** (nfoet_b1 - nyatf_b1) # the proportion of dams of each LSLN based on (progeny) mortality
             ##have to average x axis so that it is not active for dams - times by gender propn to give approx weighting (ie because offs are not usually entire males so they will get low weighting)
-            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[:,:,sinp.stock['ia_prepost_b1'],...]
+            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[:,:,:,sinp.stock['ia_prepost_b1'],...]
             numbers = fun.f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
     return numbers
 
@@ -1830,7 +1829,7 @@ def f_wool_value(mpg_w4, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg,dtype=None):
     wool_value_pg = woolp_stbnib_pg * cfw_pg
     return wool_value_pg, woolp_stbnib_pg
 
-def f1_condition_score(rc, cu0):
+def f1_condition_score(rc_tpg, cu0):
     ''' Estimate CS from LW. Works with scalars or arrays - provided they are broadcastable into ffcfw.
 
        ffcfw: (kg) Fleece free, conceptus free liveweight. normal_weight: (kg). cs_propn: (0.19) change in LW
@@ -1839,7 +1838,7 @@ def f1_condition_score(rc, cu0):
        long version of the formula (use rc instead of using to following): 3 + (ffcfw - normal_weight) / (cs_propn * normal_weight)
        Returns: condition score - float
        '''
-    return np.maximum(1, 3 + (rc - 1) / cu0[1, ...]) #a minimum value of CS=1 is used to remove errors caused by low CS. A CS below 1 is unlikely because the animal would be dead
+    return np.maximum(1, 3 + (rc_tpg - 1) / cu0[1, ...]) #a minimum value of CS=1 is used to remove errors caused by low CS. A CS below 1 is unlikely because the animal would be dead
 
 
 #todo needs updating - currently just a copy of the cs function
@@ -1866,96 +1865,96 @@ def f1_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None
     return grid_s7s5s6
 
 
-def f1_salep_mob(weight_s7pg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
-                grid_weightrange_s7s5pg, grid_scorerange_s7s6p5g, grid_priceslw_s7s5s6pg):
+def f1_salep_mob(weight_s7tpg, scores_s7s6tpg, cvlw_s7s5tpg, cvscore_s7s6tpg,
+                grid_weightrange_s7s5tpg, grid_scorerange_s7s6p5tpg, grid_priceslw_s7s5s6tpg):
     '''A function to calculate the average price of the mob based on the average specifications in the mob.
     This is to represent that the distribution of weight & specification reduces the mob average price
     This representation allows valuing individual animal management and reducing the mob distribution.
     Note: if the distribution extends below the lower range of weight or score in the grid these animals have zero value (ncv)'''
 
     ##loop on s7 to reduce memory
-    saleprice_mobaverage_s7pg = np.zeros_like(weight_s7pg)
-    for s7 in range(weight_s7pg.shape[0]):
+    saleprice_mobaverage_s7tpg = np.zeros_like(weight_s7tpg)
+    for s7 in range(weight_s7tpg.shape[0]):
         ## Probability for each lw step in grid based on the mob average weight and the coefficient of variation (CV) of weight
         ### probability of being less than the upper value of the step (roll) - probability of less than the lower value of the step
-        prob_lw_s5pg = np.maximum(0, fun.f_norm_cdf(np.roll(grid_weightrange_s7s5pg[s7,...], -1, axis = 0), weight_s7pg[s7,...], cvlw_s7s5pg[s7,...])
-                              - fun.f_norm_cdf(grid_weightrange_s7s5pg[s7,...], weight_s7pg[s7,...], cvlw_s7s5pg[s7,...]))
+        prob_lw_s5tpg = np.maximum(0, fun.f_norm_cdf(np.roll(grid_weightrange_s7s5tpg[s7,...], -1, axis = 0), weight_s7tpg[s7,...], cvlw_s7s5tpg[s7,...])
+                              - fun.f_norm_cdf(grid_weightrange_s7s5tpg[s7,...], weight_s7tpg[s7,...], cvlw_s7s5tpg[s7,...]))
         ## Probability for each score step in grid (fat score/CS) based on the mob average score and the CV of quality score
-        prob_score_s6pg = np.maximum(0, fun.f_norm_cdf(np.roll(grid_scorerange_s7s6p5g[s7,...], -1, axis = 0), scores_s7s6pg[s7,...], cvscore_s7s6pg[s7,...])
-                                 - fun.f_norm_cdf(grid_scorerange_s7s6p5g[s7,...], scores_s7s6pg[s7,...], cvscore_s7s6pg[s7,...]))
+        prob_score_s6tpg = np.maximum(0, fun.f_norm_cdf(np.roll(grid_scorerange_s7s6p5tpg[s7,...], -1, axis = 0), scores_s7s6tpg[s7,...], cvscore_s7s6tpg[s7,...])
+                                 - fun.f_norm_cdf(grid_scorerange_s7s6p5tpg[s7,...], scores_s7s6tpg[s7,...], cvscore_s7s6tpg[s7,...]))
         ##Probability for each cell of grid (assuming that weight & score are independent allows multiplying weight and score probabilities)
-        prob_grid_s5s6pg = prob_lw_s5pg[:,na, ...] * prob_score_s6pg
+        prob_grid_s5s6tpg = prob_lw_s5tpg[:,na, ...] * prob_score_s6tpg
 
         ##Average price for the mob is the sum of the probabilities in each cell of the grid and the price in that cell
-        saleprice_mobaverage_s7pg[s7,...] = np.sum(prob_grid_s5s6pg * grid_priceslw_s7s5s6pg[s7,...], axis = (0, 1))
-    return saleprice_mobaverage_s7pg
+        saleprice_mobaverage_s7tpg[s7,...] = np.sum(prob_grid_s5s6tpg * grid_priceslw_s7s5s6tpg[s7,...], axis = (0, 1))
+    return saleprice_mobaverage_s7tpg
 
 
-def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg,
-                 dresspercent_adj_s7pg, grid_price_s7s5s6pg, month_scalar_s7pg,
-                 month_discount_s7pg, price_type_s7pg, cvlw_s7s5pg, cvscore_s7s6pg,
-                 grid_weightrange_s7s5pg, grid_scorerange_s7s6pg, age_end_p5g1, discount_age_s7pg,sale_cost_pc_s7pg,
-                 sale_cost_hd_s7pg, mask_s7x_s7pg, sale_agemax_s7pg1, sale_agemin_s7pg1, dtype=None):
+def f_sale_value(cu0, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj_s6tpg,
+                 dresspercent_adj_s7tpg, grid_price_s7s5s6tpg, month_scalar_s7tpg,
+                 month_discount_s7tpg, price_type_s7tpg, cvlw_s7s5tpg, cvscore_s7s6tpg,
+                 grid_weightrange_s7s5tpg, grid_scorerange_s7s6tpg, age_end_pg1, discount_age_s7tpg,sale_cost_pc_s7tpg,
+                 sale_cost_hd_s7tpg, mask_s7x_s7tpg, sale_agemax_s7tpg1, sale_agemin_s7tpg1, dtype=None):
     ##Calculate condition score from relative condition
-    cs_pg = f1_condition_score(o_rc, cu0)
+    cs_tpg = f1_condition_score(o_rc_tpg, cu0)
     ##Calculate fat score from relative condition
-    fs_pg = f1_fat_score(o_rc, cu0)
+    fs_tpg = f1_fat_score(o_rc_tpg, cu0)
     ##Combine the scores into single array
-    scores_s8p = np.stack([fs_pg, cs_pg], axis=0)
+    scores_s8tpg = np.stack([fs_tpg, cs_tpg], axis=0)
     ##Select the quality scores (s8) for each price grid (s7)
-    scores_s7s6pg = scores_s8p[uinp.sheep['ia_s8_s7']][:,na,...]
+    scores_s7s6tpg = scores_s8tpg[uinp.sheep['ia_s8_s7']][:,na,...]
     ##Dressing percentage to adjust price grid from $/kg DW to $/kg LW
     ### It is easier to convert the price to $/kg LW than it is to convert a distribution of LW and fat score to a distribution of dressed weight and fat score
     ### because dressing percentage changes with fat score.
-    dresspercent_for_price_s7s6pg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dresspercent_adj_s6pg + dresspercent_adj_s7pg[:,na,...]
+    dresspercent_for_price_s7s6tpg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dresspercent_adj_s6tpg + dresspercent_adj_s7tpg[:,na,...]
     ##Dressing percentage is set to 100% if price type is $/kg LW or $/hd
-    dresspercent_for_price_s7s6pg = fun.f_update(dresspercent_for_price_s7s6pg, 1, price_type_s7pg[:,na,...] >= 1)
+    dresspercent_for_price_s7s6tpg = fun.f_update(dresspercent_for_price_s7s6tpg, 1, price_type_s7tpg[:,na,...] >= 1)
     ##Create the grid prices in $/kg LW
-    grid_priceslw_s7s5s6pg = grid_price_s7s5s6pg * dresspercent_for_price_s7s6pg[:,na,...]
+    grid_priceslw_s7s5s6tpg = grid_price_s7s5s6tpg * dresspercent_for_price_s7s6tpg[:,na,...]
 
     ## Calculate the 'lookup' weight of the average animal in the units of each grid (some grids the weight is dressed weight other grids are LW)
     ## start with dressing percentage and set to 1 later if the grid is kg LW
     ###Interploate DP adjustment based on the average FS of the animals
-    dressp_adj_fs_pg= np.interp(fs_pg, uinp.sheep['i_salep_score_range_s8s6'][0, ...], uinp.sheep['i_salep_dressp_adj_s6']).astype(dtype)
+    dressp_adj_fs_tpg= np.interp(fs_tpg, uinp.sheep['i_salep_score_range_s8s6'][0, ...], uinp.sheep['i_salep_dressp_adj_s6']).astype(dtype)
     ###Average Dressing percentage including effects of genotype, fat score and age (which varies with the grid).
-    dresspercent_for_wt_s7pg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dressp_adj_fs_pg + dresspercent_adj_s7pg
+    dresspercent_for_wt_s7tpg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dressp_adj_fs_tpg + dresspercent_adj_s7tpg
     ###Dressing percentage is 100% if price type is $/kg LW or $/hd
-    dresspercent_wt_s7pg = fun.f_update(dresspercent_for_wt_s7pg, 1, price_type_s7pg >= 1)
+    dresspercent_wt_s7tpg = fun.f_update(dresspercent_for_wt_s7tpg, 1, price_type_s7tpg >= 1)
     ###Scale ffcfw to the units in the grid
-    weight_for_lookup_s7pg = o_ffcfw_pg * dresspercent_wt_s7pg
+    weight_for_lookup_s7tpg = o_ffcfw_tpg * dresspercent_wt_s7tpg
 
     ##Calculate mob average price in each grid from the mob average and the distribution of weight & score within the mob (this is just the price, not the total animal value)
-    price_mobaverage_s7pg = f1_salep_mob(weight_for_lookup_s7pg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
-                                                      grid_weightrange_s7s5pg, grid_scorerange_s7s6pg, grid_priceslw_s7s5s6pg)
+    price_mobaverage_s7tpg = f1_salep_mob(weight_for_lookup_s7tpg, scores_s7s6tpg, cvlw_s7s5tpg, cvscore_s7s6tpg,
+                                                      grid_weightrange_s7s5tpg, grid_scorerange_s7s6tpg, grid_priceslw_s7s5s6tpg)
 
     ##Scale price received based on month of sale
-    price_mobaverage_s7pg = price_mobaverage_s7pg * (1+month_scalar_s7pg)
+    price_mobaverage_s7tpg = price_mobaverage_s7tpg * (1+month_scalar_s7tpg)
 
     ## Apply the age based discount if the animal is greater than the threshold age
     ### Temporary value of the age based discount from the relevant month
-    temporary_s7pg = price_mobaverage_s7pg * (1 + month_discount_s7pg)
+    temporary_s7tpg = price_mobaverage_s7tpg * (1 + month_discount_s7tpg)
     ###Apply discount if age is greater than threshold age
-    price_mobaverage_s7pg = fun.f_update(price_mobaverage_s7pg, temporary_s7pg, age_end_p5g1/30 > discount_age_s7pg)  #divide 30 to convert to months
+    price_mobaverage_s7tpg = fun.f_update(price_mobaverage_s7tpg, temporary_s7tpg, age_end_pg1/30 > discount_age_s7tpg)  #divide 30 to convert to months
 
     ## Some grids are in $/hd. For these grids don't want to multiply grid value by weight (so set weight to 1)
     ### Convert weight to 1 if price is $/hd (price_type == 2)
-    weight_for_value_s7pg = fun.f_update(o_ffcfw_pg, 1, price_type_s7pg == 2)
+    weight_for_value_s7tpg = fun.f_update(o_ffcfw_tpg, 1, price_type_s7tpg == 2)
 
     ## Calculate the net value per head from the gross value minus the selling costs
     ### Calculate gross value per head
-    sale_value_s7pg = price_mobaverage_s7pg * weight_for_value_s7pg
+    sale_value_s7tpg = price_mobaverage_s7tpg * weight_for_value_s7tpg
     ###Subtract the selling costs (some are percentage costs some are $/hd)
-    sale_value_s7pg = sale_value_s7pg * (1 - sale_cost_pc_s7pg) - sale_cost_hd_s7pg
+    sale_value_s7tpg = sale_value_s7tpg * (1 - sale_cost_pc_s7tpg) - sale_cost_hd_s7tpg
 
     ## Select the best net sale price from the relevant grids
     ###Mask the grids based on the maximum age, minimun age and the gender for each grid
-    sale_value_s7pg = sale_value_s7pg * mask_s7x_s7pg * (age_end_p5g1/30 <= sale_agemax_s7pg1) * (age_end_p5g1/30 >= sale_agemin_s7pg1) #divide 30 to convert to months
+    sale_value_s7tpg = sale_value_s7tpg * mask_s7x_s7tpg * (age_end_pg1/30 <= sale_agemax_s7tpg1) * (age_end_pg1/30 >= sale_agemin_s7tpg1) #divide 30 to convert to months
     ###Select the maximum value across the grids
-    sale_value = np.max(sale_value_s7pg, axis=0)
-    sale_grid = np.argmax(sale_value_s7pg, axis=0)
+    sale_value = np.max(sale_value_s7tpg, axis=0)
+    sale_grid = np.argmax(sale_value_s7tpg, axis=0)
     return sale_value, sale_grid
 
-def f1_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
+def f1_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_is_wean_pg, gender, o_ebg_tpg, wool_genes,
                             period_is_joining_pg, animal_mated, scan_option, period_is_endmating_pg):
     '''
 
@@ -1985,14 +1984,14 @@ def f1_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_
     ##Trigger value 10 - gender of the animal
     trigger10_pg = gender
     ##Trigger value 11 - rate of empty body gain
-    trigger11_pg = o_ebg_p
+    trigger11_pg = o_ebg_tpg
     ##Trigger value 12 - the 'wooliness' of the genotype
     trigger12_pg = wool_genes
     ##Stack the triggers
-    animal_triggervalues_h7pg = np.stack(np.broadcast_arrays(trigger1_pg, trigger2_pg, trigger3_pg, trigger4_pg,
+    animal_triggervalues_h7tpg = np.stack(np.broadcast_arrays(trigger1_pg, trigger2_pg, trigger3_pg, trigger4_pg,
                                                              trigger5_pg, trigger6_pg, trigger7_pg, trigger8_pg, trigger9_pg,
                                                              trigger10_pg, trigger11_pg, trigger12_pg), axis = 0)
-    return animal_triggervalues_h7pg
+    return animal_triggervalues_h7tpg
 
 
 def f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_nyatf_b1g=0):
@@ -2012,7 +2011,7 @@ def f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_ny
     treatment_units_h8pg = np.stack(np.broadcast_arrays(unit0_pg, unit1_pg, unit2_pg, unit3_pg, unit4_pg, unit5_pg), axis=0)
     return treatment_units_h8pg
 
-def f1_adjust_triggervalues_for_t(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7pg):
+def f1_adjust_triggervalues_for_t(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7tpg):
     '''
     The t slice on period_is_shearing means that a randomness can be introduced in the husbandry.
     For example if animal classing is done 1 week before shearing but shearing for the t[2] (sale slice)
@@ -2023,9 +2022,9 @@ def f1_adjust_triggervalues_for_t(animal_triggervalues_h7tpg, operations_trigger
     If the input value for time since 'x' or time to 'x' is 0 then you use t[:] if the value is anything other
     than 0 (i.e. it might be in a different DVP) then t[0] is used.
 
-    Currently only offs have a t axis so this function only effect them. If shearing ever gets a t axis for dams this
+    Currently only offs have a t axis on period_is_shear so this function only effect them. If shearing ever gets a t axis for dams this
     function will need to become a bit more complex using the association between t and g (a_g1_tpa1e1b1nwzida0e0b0xyg1).
-    Although i think it will have to be a_t_g (which doesnt exist). So a_t_g will become an arg and it will eed to be passed
+    Although i think it will have to be a_t_g (which doesnt exist). So a_t_g will become an arg and it will need to be passed
     in for dams and offs. For offs a_t_g will just be [0,0,0,0].
 
     This function must be called each time the trigger_values are used. It needs to be called inside a h2
@@ -2037,32 +2036,32 @@ def f1_adjust_triggervalues_for_t(animal_triggervalues_h7tpg, operations_trigger
 
         #which of the trigger level inputs are operating on the current generator period which means we can use t[:] rather than the retained animal.
         #the slices h7[2:7] relate to time from previous or time to next, the values for these slices need to be 0 or default
-        trigger_is_not_current_pg = np.logical_not(np.all(np.logical_or(np.abs(operations_triggerlevels_h5h7pg[:,2:7,...]) == np.inf,
-                                                     operations_triggerlevels_h5h7pg[:,2:7,...] == 0), axis=(0,1)))
+        trigger_is_not_current_tpg = np.logical_not(np.all(np.logical_or(np.abs(operations_triggerlevels_h5h7tpg[:,2:7,...]) == np.inf,
+                                                     operations_triggerlevels_h5h7tpg[:,2:7,...] == 0), axis=(0,1)))
 
         # select t[0] (retained) if the trigger_is_not_current
-        animal_triggervalues_h7tpg = fun.f_update(animal_triggervalues_h7tpg, animal_triggervalues_h7tpg[:,0:1,...], trigger_is_not_current_pg)
+        animal_triggervalues_h7tpg = fun.f_update(animal_triggervalues_h7tpg, animal_triggervalues_h7tpg[:,0:1,...], trigger_is_not_current_tpg)
 
     return animal_triggervalues_h7tpg
 
-def f1_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
-    shape = (operations_triggerlevels_h5h7h2pg.shape[2],) + animal_triggervalues_h7pg.shape[1:]
-    triggered_h2pg = np.zeros(shape, dtype=bool)
-    for h2 in range(operations_triggerlevels_h5h7h2pg.shape[2]):
+def f1_operations_triggered(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7h2tpg):
+    shape = (operations_triggerlevels_h5h7h2tpg.shape[2],) + animal_triggervalues_h7tpg.shape[1:]
+    triggered_h2tpg = np.zeros(shape, dtype=bool)
+    for h2 in range(operations_triggerlevels_h5h7h2tpg.shape[2]):
         ##adjust triggervalues for t axis
-        adj_animal_triggervalues_h7pg = f1_adjust_triggervalues_for_t(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg[:,:,h2,...])
+        adj_animal_triggervalues_h7tpg = f1_adjust_triggervalues_for_t(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7h2tpg[:,:,h2,...])
         ##Test slice 0 of h5 axis
-        slice0_h7pg = adj_animal_triggervalues_h7pg[:, ...] <= operations_triggerlevels_h5h7h2pg[0, :, h2, ...]
+        slice0_h7tpg = adj_animal_triggervalues_h7tpg[:, ...] <= operations_triggerlevels_h5h7h2tpg[0, :, h2, ...]
         ##Test slice 1 of h5 axis
-        slice1_h7pg = np.logical_or(adj_animal_triggervalues_h7pg[:, ...] == operations_triggerlevels_h5h7h2pg[1, :, h2, ...],
-                                    operations_triggerlevels_h5h7h2pg[1, :, h2, ...] == np.inf)
+        slice1_h7tpg = np.logical_or(adj_animal_triggervalues_h7tpg[:, ...] == operations_triggerlevels_h5h7h2tpg[1, :, h2, ...],
+                                    operations_triggerlevels_h5h7h2tpg[1, :, h2, ...] == np.inf)
         ##Test slice 2 of h5 axis
-        slice2_h7pg = adj_animal_triggervalues_h7pg[:, ...] >= operations_triggerlevels_h5h7h2pg[2, :, h2, ...]
+        slice2_h7tpg = adj_animal_triggervalues_h7tpg[:, ...] >= operations_triggerlevels_h5h7h2tpg[2, :, h2, ...]
         ##Test across the conditions
-        slices_all_h7pg = np.logical_and(slice0_h7pg, np.logical_and(slice1_h7pg, slice2_h7pg))
+        slices_all_h7tpg = np.logical_and(slice0_h7tpg, np.logical_and(slice1_h7tpg, slice2_h7tpg))
         ##Test across the rules (& collapse s7 axis)
-        triggered_h2pg[h2,...] = np.all(slices_all_h7pg, axis=0)
-    return triggered_h2pg
+        triggered_h2tpg[h2,...] = np.all(slices_all_h7tpg, axis=0)
+    return triggered_h2tpg
 
 
 def f1_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
@@ -2136,12 +2135,12 @@ def f1_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, op
     return level_h2pg
 
 
-def f1_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg):
+def f1_mustering_required(application_level_h2tpg, husb_operations_muster_propn_h2tpg):
     ##Total mustering required for all operations
-    musters_pg = np.sum(application_level_h2pg * husb_operations_muster_propn_h2pg, axis=0)
+    musters_tpg = np.sum(application_level_h2tpg * husb_operations_muster_propn_h2tpg, axis=0)
     ##Round up to the next integer
-    musters_pg = np.ceil(musters_pg)
-    return musters_pg
+    musters_tpg = np.ceil(musters_tpg)
+    return musters_tpg
 
 
 # def f_husbandry_component(level, treatment_units, requirements, association, axes_tup):
@@ -2152,91 +2151,91 @@ def f1_mustering_required(application_level_h2pg, husb_operations_muster_propn_h
 #     return component
 
 
-def f1_husbandry_requisites(level_hpg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_requisites_prob_h6hpg,a_h8_h):
+def f1_husbandry_requisites(level_htpg, treatment_units_h8tpg, husb_requisite_cost_h6tpg, husb_requisites_prob_h6htpg,a_h8_h):
     ##Number of treatment units for requisites
     if type(a_h8_h)==int:
-        units_hpg = treatment_units_h8pg[a_h8_h:a_h8_h+1] #so the h axis is kept
+        units_htpg = treatment_units_h8tpg[a_h8_h:a_h8_h+1] #so the h axis is kept
     else:
-        units_hpg = treatment_units_h8pg[a_h8_h]
+        units_htpg = treatment_units_h8tpg[a_h8_h]
     ##Labour requirement for each animal class during the period
     ##calculated using loop to reduce memory
-    cost_pg = 0
-    for h in range(level_hpg.shape[0]):
-        cost_pg += np.sum(level_hpg[h] * units_hpg[h] * husb_requisite_cost_h6pg *
-                     husb_requisites_prob_h6hpg[:,h], axis = 0)
-    return cost_pg
+    cost_tpg = 0
+    for h in range(level_htpg.shape[0]):
+        cost_tpg += np.sum(level_htpg[h] * units_htpg[h] * husb_requisite_cost_h6tpg *
+                     husb_requisites_prob_h6htpg[:,h], axis = 0)
+    return cost_tpg
 
 
-def f1_husbandry_labour(level_hpg, treatment_units_h8pg, units_per_labourhour_l2hpg, a_h8_h):
+def f1_husbandry_labour(level_htpg, treatment_units_h8tpg, units_per_labourhour_l2htpg, a_h8_h):
     ##Number of treatment units for contract
     if type(a_h8_h)==int:
-        units_hpg = treatment_units_h8pg[a_h8_h:a_h8_h+1] #so the h axis is kept
+        units_htpg = treatment_units_h8tpg[a_h8_h:a_h8_h+1] #so the h axis is kept
     else:
-        units_hpg = treatment_units_h8pg[a_h8_h]
+        units_htpg = treatment_units_h8tpg[a_h8_h]
     ##Labour requirement for each animal class during the period
     ##calculated using loop to reduce memory
-    hours_l2pg = 0
-    for h2 in range(level_hpg.shape[0]):
-        hours_l2pg += fun.f_divide(level_hpg[h2] * units_hpg[h2] , units_per_labourhour_l2hpg[:,h2], dtype=level_hpg.dtype) #divide by units_per_labourhour_l2hpg because that is how many units can be done per hour eg how many sheep can be drenched per hr
-    return hours_l2pg
+    hours_l2tpg = 0
+    for h2 in range(level_htpg.shape[0]):
+        hours_l2tpg += fun.f_divide(level_htpg[h2] * units_htpg[h2] , units_per_labourhour_l2htpg[:,h2], dtype=level_htpg.dtype) #divide by units_per_labourhour_l2hpg because that is how many units can be done per hour eg how many sheep can be drenched per hr
+    return hours_l2tpg
 
 
-def f1_husbandry_infrastructure(level_hpg, husb_infrastructurereq_h1h2pg):
+def f1_husbandry_infrastructure(level_htpg, husb_infrastructurereq_h1h2tpg):
     ##Infrastructure requirement for each animal class during the period
     ##calculated using loop to reduce memory
-    infrastructure_h1pg = 0
-    for h2 in range(level_hpg.shape[0]):
-        infrastructure_h1pg += level_hpg[h2] * husb_infrastructurereq_h1h2pg[:,h2]
-    return infrastructure_h1pg
+    infrastructure_h1tpg = 0
+    for h2 in range(level_htpg.shape[0]):
+        infrastructure_h1tpg += level_htpg[h2] * husb_infrastructurereq_h1h2tpg[:,h2]
+    return infrastructure_h1tpg
 
 
-def f1_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operations_contract_cost_h2pg):
+def f1_contract_cost(application_level_h2tpg, treatment_units_h8tpg, husb_operations_contract_cost_h2tpg):
     ##Number of animal units for contract
-    units_h2pg = treatment_units_h8pg[uinp.sheep['ia_h8_h2']]
+    units_h2tpg = treatment_units_h8tpg[uinp.sheep['ia_h8_h2']]
     ##Contract cost for each animal class during the period
-    cost_pg = np.sum(application_level_h2pg * units_h2pg * husb_operations_contract_cost_h2pg, axis=0)
-    return cost_pg
+    cost_tpg = np.sum(application_level_h2tpg * units_h2tpg * husb_operations_contract_cost_h2tpg, axis=0)
+    return cost_tpg
 
 
-def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_triggerlevels_h5h7h2pg, index_pg,
-                age_start, period_is_shear_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
-                husb_operations_muster_propn_h2pg, husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg,
-                operations_per_hour_l2h2pg, husb_operations_infrastructurereq_h1h2pg,
-                husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
-                musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
+def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_tpg, o_cfw_tpg, operations_triggerlevels_h5h7h2tpg, index_pg,
+                age_start, period_is_shear_pg, period_is_wean_pg, gender, o_ebg_tpg, wool_genes,
+                husb_operations_muster_propn_h2tpg, husb_requisite_cost_h6tpg, husb_operations_requisites_prob_h6h2tpg,
+                operations_per_hour_l2h2tpg, husb_operations_infrastructurereq_h1h2tpg,
+                husb_operations_contract_cost_h2tpg, husb_muster_requisites_prob_h6h4tpg,
+                musters_per_hour_l2h4tpg, husb_muster_infrastructurereq_h1h4tpg,
                 a_nyatf_b1g=0,period_is_joining_pg=False, animal_mated=False, scan_option=0, period_is_endmating_pg=False, dtype=None):
     ##An array of the trigger values for the animal classes in each period - these values are compared against a threshold to determine if the husb is required
-    animal_triggervalues_h7pg = f1_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, period_is_wean_pg, gender,
-                            o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, scan_option, period_is_endmating_pg).astype(dtype)
+    animal_triggervalues_h7tpg = f1_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, period_is_wean_pg, gender,
+                            o_ebg_tpg, wool_genes, period_is_joining_pg, animal_mated, scan_option, period_is_endmating_pg).astype(dtype)
     ##The number of treatment units per animal in each period - each slice has a different unit eg mobsize, nyatf etc the treatment unit can be selected and applied for a given husb operation
-    treatment_units_h8pg = f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_nyatf_b1g).astype(dtype)
+    treatment_units_h8tpg = f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_tpg, o_cfw_tpg, a_nyatf_b1g).astype(dtype)
     ##Is the husb operation triggered in the period for each class
-    operation_triggered_h2pg = f1_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
+    operation_triggered_h2tpg = f1_operations_triggered(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7h2tpg)
     ##The level of the operation in each period for the class of livestock (proportion of animals that receive treatment) - this accounts for the fact that just because the operation is triggered the operation may not be done to all animals
-    application_level_h2pg = f1_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
+    application_level_h2tpg = f1_application_level(operation_triggered_h2tpg, animal_triggervalues_h7tpg, operations_triggerlevels_h5h7h2tpg)
     ##The number of times the mob must be mustered
-    mustering_level_h4pg = f1_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg)[na,...] #needs a h4 axis for the functions below
+    mustering_level_h4tpg = f1_mustering_required(application_level_h2tpg, husb_operations_muster_propn_h2tpg)[na,...] #needs a h4 axis for the functions below
     ##The cost of requisites for the operations
-    operations_requisites_cost_pg = f1_husbandry_requisites(application_level_h2pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, uinp.sheep['ia_h8_h2'])
+    operations_requisites_cost_tpg = f1_husbandry_requisites(application_level_h2tpg, treatment_units_h8tpg, husb_requisite_cost_h6tpg, husb_operations_requisites_prob_h6h2tpg, uinp.sheep['ia_h8_h2'])
     ##The labour requirement for the operations
-    operations_labourreq_l2pg = f1_husbandry_labour(application_level_h2pg, treatment_units_h8pg, operations_per_hour_l2h2pg, uinp.sheep['ia_h8_h2'])
+    operations_labourreq_l2tpg = f1_husbandry_labour(application_level_h2tpg, treatment_units_h8tpg, operations_per_hour_l2h2tpg, uinp.sheep['ia_h8_h2'])
     ##The infrastructure requirements for the operations
-    operations_infrastructurereq_h1pg = f1_husbandry_infrastructure(application_level_h2pg, husb_operations_infrastructurereq_h1h2pg)
+    operations_infrastructurereq_h1tpg = f1_husbandry_infrastructure(application_level_h2tpg, husb_operations_infrastructurereq_h1h2tpg)
     ##Contract cost for husbandry
-    contract_cost_pg = f1_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operations_contract_cost_h2pg)
+    contract_cost_tpg = f1_contract_cost(application_level_h2tpg, treatment_units_h8tpg, husb_operations_contract_cost_h2tpg)
     ##The cost of requisites for mustering
-    mustering_requisites_cost_pg = f1_husbandry_requisites(mustering_level_h4pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_muster_requisites_prob_h6h4pg, uinp.sheep['ia_h8_h4'])
+    mustering_requisites_cost_tpg = f1_husbandry_requisites(mustering_level_h4tpg, treatment_units_h8tpg, husb_requisite_cost_h6tpg, husb_muster_requisites_prob_h6h4tpg, uinp.sheep['ia_h8_h4'])
     ##The labour requirement for mustering
-    mustering_labourreq_l2pg = f1_husbandry_labour(mustering_level_h4pg, treatment_units_h8pg, musters_per_hour_l2h4pg, uinp.sheep['ia_h8_h4'])
+    mustering_labourreq_l2tpg = f1_husbandry_labour(mustering_level_h4tpg, treatment_units_h8tpg, musters_per_hour_l2h4tpg, uinp.sheep['ia_h8_h4'])
     ##The infrastructure requirements for mustering
-    mustering_infrastructurereq_h1pg = f1_husbandry_infrastructure(mustering_level_h4pg, husb_muster_infrastructurereq_h1h4pg)
+    mustering_infrastructurereq_h1tpg = f1_husbandry_infrastructure(mustering_level_h4tpg, husb_muster_infrastructurereq_h1h4tpg)
     ##Total cost of husbandry
-    husbandry_cost_pg = operations_requisites_cost_pg + mustering_requisites_cost_pg + contract_cost_pg
+    husbandry_cost_tpg = operations_requisites_cost_tpg + mustering_requisites_cost_tpg + contract_cost_tpg
     ##Labour requirement for husbandry
-    husbandry_labour_l2pg = operations_labourreq_l2pg + mustering_labourreq_l2pg
+    husbandry_labour_l2tpg = operations_labourreq_l2tpg + mustering_labourreq_l2tpg
     ##infrastructure requirement for husbandry
-    husbandry_infrastructure_h1pg = operations_infrastructurereq_h1pg + mustering_infrastructurereq_h1pg
-    return husbandry_cost_pg, husbandry_labour_l2pg, husbandry_infrastructure_h1pg
+    husbandry_infrastructure_h1tpg = operations_infrastructurereq_h1tpg + mustering_infrastructurereq_h1tpg
+    return husbandry_cost_tpg, husbandry_labour_l2tpg, husbandry_infrastructure_h1tpg
 
 
 ##################

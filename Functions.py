@@ -614,6 +614,15 @@ def f_nD_interp(x, xp, yp, axis):
     :param axis: Axis to interp along
     :return: y - the interpolated values, same shape as x.
     '''
+    ##add new axis where arrays have diff number of dims
+    n_dims = max(x.ndim,xp.ndim,yp.ndim)
+    extra_axes = tuple(range(n_dims-x.ndim))
+    x = np.expand_dims(x,axis=extra_axes)
+    extra_axes = tuple(range(n_dims-xp.ndim))
+    xp = np.expand_dims(xp,axis=extra_axes)
+    extra_axes = tuple(range(n_dims-yp.ndim))
+    yp = np.expand_dims(yp,axis=extra_axes)
+
     ##move axis to interp along into pos=0
     x = np.moveaxis(x, source=axis, destination=0)
     xp = np.moveaxis(xp, source=axis, destination=0)
@@ -638,7 +647,23 @@ def f_nD_interp(x, xp, yp, axis):
     y = np.moveaxis(y, source=0, destination=axis)
     return y
 
-
+def f_merge_axis(a, source_axis=0, target_axis=1):
+    '''
+    This function merges two axis into one. This is basically reshaping but works if the two axis are not side by side.
+    :param a: numpy array
+    :param source_axis: position of axis being merged with target_axis (this axis wont exist in the new array)
+    :param target_axis: position axis to be kept (this is merged with source axis)
+    :return:
+    '''
+    ##determine new shape
+    shp = np.array(a.shape)
+    shp[target_axis] *= shp[source_axis]
+    out_shp = np.delete(shp,source_axis)
+    ##If source and target axes are adjacent ones, we can skip moveaxis and simply reshape
+    if target_axis==source_axis+1:
+        return a.reshape(out_shp)
+    else:
+        return np.moveaxis(a,source_axis,target_axis-1).reshape(out_shp)
 
 
 #######################
