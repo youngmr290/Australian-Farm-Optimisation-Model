@@ -125,6 +125,7 @@ sav['rev_create']      = '-'                  #SA to alter if the trial is being
 sav['rev_number']      = '-'                  #SA to alter rev number - rev number is appended to the std rev value pkl file and can be used to select which rev is used as std for a given trial.
 sav['rev_trait_inc'] = np.full_like(sinp.structuralsa['i_rev_trait_inc'], '-', dtype=object) #SA value for which traits are to be held constant in REV analysis.
 sav['fs_create']      = '-'                  #SA to control if the trial is being used to create pkl fs
+sav['gen_with_t']      = '-'                  #SA to control if sheep generator is run with active t axis.
 sav['fs_use_pkl']      = '-'                  #SA to control if the pkl fs is used or the excel input fs is used.
 sav['fs_number']      = '-'                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is used for a given trial.
 
