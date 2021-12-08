@@ -3589,12 +3589,12 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     ###period is between prejoining and the end of current period (testing this for each p slice)
                     between_prejoinnow = sfun.f1_period_is_('period_is_between', date_prejoin_pa1e1b1nwzida0e0b0xyg1[p], date_start_pa1e1b1nwzida0e0b0xyg, date_end_pa1e1b1nwzida0e0b0xyg[p], date_end_pa1e1b1nwzida0e0b0xyg)
                     ###scale numbers at the end of mating (to account for mortality) to each period (note only the periods between prejoining and end of mating get used)
-                    t_scaled_end_numbers = np.maximum(numbers_end_dams,
-                                                  numbers_end_dams * (np.sum(o_numbers_end_tpdams, axis=(e1_pos,b1_pos), keepdims=True)
-                                                                            / np.sum(numbers_end_dams, axis=(e1_pos,b1_pos), keepdims=True)))
-                    t_scaled_start_numbers = np.maximum(numbers_end_dams,
-                                                  numbers_end_dams * (np.sum(o_numbers_start_tpdams, axis=(e1_pos,b1_pos), keepdims=True)
-                                                                            / np.sum(numbers_end_dams, axis=(e1_pos,b1_pos), keepdims=True)))
+                    t_scaled_end_numbers = np.maximum(numbers_end_dams[:,na],
+                                                  numbers_end_dams[:,na] * (np.sum(o_numbers_end_tpdams, axis=(e1_pos,b1_pos), keepdims=True)
+                                                                            / np.sum(numbers_end_dams[:,na], axis=(e1_pos,b1_pos), keepdims=True)))
+                    t_scaled_start_numbers = np.maximum(numbers_end_dams[:,na],
+                                                  numbers_end_dams[:,na] * (np.sum(o_numbers_start_tpdams, axis=(e1_pos,b1_pos), keepdims=True)
+                                                                            / np.sum(numbers_end_dams[:,na], axis=(e1_pos,b1_pos), keepdims=True)))
                     ###if period is mating back date the end number after mating to all the periods since prejoining
                     o_numbers_end_tpdams = fun.f_update(o_numbers_end_tpdams, t_scaled_end_numbers.astype(dtype), (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
                     o_numbers_start_tpdams = fun.f_update(o_numbers_start_tpdams, t_scaled_start_numbers.astype(dtype)
@@ -5128,7 +5128,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
 
     ##every period - with sire periods
     nsire_tva1e1b1nwzida0e0b0xyg1g0p8 = sfun.f1_p2v_std(o_n_sire_tpa1e1b1nwzida0e0b0xyg1g0p8[:,na,...], a_v_pa1e1b1nwzida0e0b0xyg1[...,na,na], index_vpa1e1b1nwzida0e0b0xyg1[...,na,na]
-                                               , o_numbers_end_tpdams[...,na,na], on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...,na,na], sumadj=2)
+                                               , o_numbers_end_tpdams[:,na,...,na,na], on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...,na,na], sumadj=2)
 
 
     ##every period - with cost (c) axis (when combining the cost the period is arrays were already applied therefore converted from 'intermittent' to 'every period'
@@ -6509,6 +6509,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     keys_q = np.array(['q%s' % i for i in range(len_q)])
     keys_s = np.array(['s%s' % i for i in range(len_s)])
     keys_t1 = np.array(['t%s'%i for i in range(len_t1)])
+    keys_T1 = np.array(['t%s'%i for i in range(len_gen_t1)])
     keys_t2 = np.array(['t%s'%i for i in range(len_t2)])
     keys_t3 = np.array(['t%s'%i for i in range(len_t3)])
     keys_v1 = np.array(['dv%02d'%i for i in range(dvp_type_va1e1b1nwzida0e0b0xyg1.shape[0])])
@@ -6968,8 +6969,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_paebnwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_x, keys_y1, keys_g2],'yatf_keys_qsk2tvpaebnwzixy1g1')
-    fun.f1_make_r_val(r_vals,[keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
-                                            , keys_z, keys_i, keys_x, keys_y1, keys_g2],'yatf_keys_vaebnwzixy1g2')
+    fun.f1_make_r_val(r_vals,[keys_T1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_x, keys_y1, keys_g2],'yatf_keys_Tvaebnwzixy1g2')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i
                                             , keys_a, keys_x, keys_g2],'prog_keys_qsk3k5twzia0xg2')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d
@@ -6997,12 +6998,12 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
 
     ####std
     tva1e1b1nwziyg1_shape = len_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    tva1e1b1nwzixyg2_shape = len_gen_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_x, len_y1, len_g2 #only has t axis from generator
+    Tva1e1b1nwzixyg2_shape = len_gen_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_x, len_y1, len_g2 #only has t axis from generator
     tvnwzidaebxyg3_shape = len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3
 
-    ####kv with no t axis
-    k2va1nwziyg1_shape = len_k2, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    k3k5vnwziaxyg3_shape = len_k3, len_k5, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
+    ####kv with generator t axis
+    k2Tva1nwziyg1_shape = len_k2, len_gen_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    k3k5Tvnwziaxyg3_shape = len_k3, len_k5, len_gen_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####kveb
     k2tva1e1b1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
@@ -7070,7 +7071,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
 
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg0,'salegrid_zg0', shape=zg0_shape)
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg1,'salegrid_tva1e1b1nwziyg1', shape=tva1e1b1nwziyg1_shape) #didnt worry about unclustering since not important report and wasnt masked by z8
-    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg2,'salegrid_va1e1b1nwzixyg2', shape=tva1e1b1nwzixyg2_shape) #didnt worry about unclustering since not important report and wasnt masked by z8
+    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg2,'salegrid_Tva1e1b1nwzixyg2', shape=Tva1e1b1nwzixyg2_shape) #didnt worry about unclustering since not important report and wasnt masked by z8
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg3,'salegrid_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #didnt worry about unclustering since not important report and wasnt masked by z8
 
     fun.f1_make_r_val(r_vals,r_woolvalue_c0p7tva1e1b1nwzida0e0b0xyg0,'woolvalue_c0p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, c0p7zg0_shape)
@@ -7086,9 +7087,9 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     ###sale date
     fun.f1_make_r_val(r_vals,r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3,'saledate_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
 
-    ###wbe
-    fun.f1_make_r_val(r_vals,r_wbe_k2tva1e1b1nwzida0e0b0xyg1,'wbe_k2va1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2va1nwziyg1_shape)
-    fun.f1_make_r_val(r_vals,r_wbe_k3k5tva1e1b1nwzida0e0b0xyg3,'wbe_k3k5vnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5vnwziaxyg3_shape)
+    ###wbe - this uses generator t axis (thus it can be singleton but it is always broadcastable with normal t)
+    fun.f1_make_r_val(r_vals,r_wbe_k2tva1e1b1nwzida0e0b0xyg1,'wbe_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_wbe_k3k5tva1e1b1nwzida0e0b0xyg3,'wbe_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5Tvnwziaxyg3_shape)
 
     ###cfw
     fun.f1_make_r_val(r_vals,r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0,'cfw_hdmob_zg0', shape=zg0_shape) #no mask needed since no active period axis
