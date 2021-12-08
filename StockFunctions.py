@@ -2011,7 +2011,7 @@ def f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_ny
     treatment_units_h8pg = np.stack(np.broadcast_arrays(unit0_pg, unit1_pg, unit2_pg, unit3_pg, unit4_pg, unit5_pg), axis=0)
     return treatment_units_h8pg
 
-def f1_adjust_triggervalues_for_t(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7tpg):
+def f1_adjust_triggervalues_for_t(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7tpg, a_t_g):
     '''
     The t slice on period_is_shearing means that a randomness can be introduced in the husbandry.
     For example if animal classing is done 1 week before shearing but shearing for the t[2] (sale slice)
@@ -2022,34 +2022,40 @@ def f1_adjust_triggervalues_for_t(animal_triggervalues_h7tpg, operations_trigger
     If the input value for time since 'x' or time to 'x' is 0 then you use t[:] if the value is anything other
     than 0 (i.e. it might be in a different DVP) then t[0] is used.
 
-    Currently only offs have a t axis on period_is_shear so this function only effect them. If shearing ever gets a t axis for dams this
-    function will need to become a bit more complex using the association between t and g (a_g1_tpa1e1b1nwzida0e0b0xyg1).
-    Although i think it will have to be a_t_g (which doesnt exist). So a_t_g will become an arg and it will need to be passed
-    in for dams and offs. For offs a_t_g will just be [0,0,0,0].
+    Currently only offs have a t axis on period_is_shear so this function only effect them.
+    However, the function is built to handle a t axis on period_is_shear for dams. Although there will still be some
+    potential errors with dams changing g slice (for example crutching). Therefore it is best if dams do not
+    have a t axis on period is shear.
+
+    Note: the generator t axis has been made to a singleton to reduce computational time in the husb calcs. Thus this
+    function doesnt do anything for dams unless peirod_is_shear has a t axis.
 
     This function must be called each time the trigger_values are used. It needs to be called inside a h2
     loop so that triggervalues never has a full h2 axis (that would be too big).
 
     '''
+    p_pos = sinp.stock['i_p_pos']
     ##only need to handle the t axis for groups that have a t axis (currently just offs)
-    if len(animal_triggervalues_h7tpg.shape) == (-1*sinp.stock['i_p_pos'])+2:
+    if animal_triggervalues_h7tpg.shape[p_pos-1]>1:
 
         #which of the trigger level inputs are operating on the current generator period which means we can use t[:] rather than the retained animal.
         #the slices h7[2:7] relate to time from previous or time to next, the values for these slices need to be 0 or default
         trigger_is_not_current_tpg = np.logical_not(np.all(np.logical_or(np.abs(operations_triggerlevels_h5h7tpg[:,2:7,...]) == np.inf,
                                                      operations_triggerlevels_h5h7tpg[:,2:7,...] == 0), axis=(0,1)))
 
-        # select t[0] (retained) if the trigger_is_not_current
-        animal_triggervalues_h7tpg = fun.f_update(animal_triggervalues_h7tpg, animal_triggervalues_h7tpg[:,0:1,...], trigger_is_not_current_tpg)
+        # select retained t slice if the trigger_is_not_current
+        a_t_tpg = fun.f_expand(a_t_g, p_pos-2, right_pos=-1)
+        t_animal_triggervalues_h7tpg = np.take_along_axis(animal_triggervalues_h7tpg, a_t_tpg[na], axis=p_pos-1)
+        animal_triggervalues_h7tpg = fun.f_update(animal_triggervalues_h7tpg, t_animal_triggervalues_h7tpg, trigger_is_not_current_tpg)
 
     return animal_triggervalues_h7tpg
 
-def f1_operations_triggered(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7h2tpg):
+def f1_operations_triggered(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7h2tpg, a_t_g):
     shape = (operations_triggerlevels_h5h7h2tpg.shape[2],) + animal_triggervalues_h7tpg.shape[1:]
     triggered_h2tpg = np.zeros(shape, dtype=bool)
     for h2 in range(operations_triggerlevels_h5h7h2tpg.shape[2]):
         ##adjust triggervalues for t axis
-        adj_animal_triggervalues_h7tpg = f1_adjust_triggervalues_for_t(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7h2tpg[:,:,h2,...])
+        adj_animal_triggervalues_h7tpg = f1_adjust_triggervalues_for_t(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7h2tpg[:,:,h2,...], a_t_g)
         ##Test slice 0 of h5 axis
         slice0_h7tpg = adj_animal_triggervalues_h7tpg[:, ...] <= operations_triggerlevels_h5h7h2tpg[0, :, h2, ...]
         ##Test slice 1 of h5 axis
@@ -2064,12 +2070,12 @@ def f1_operations_triggered(animal_triggervalues_h7tpg, operations_triggerlevels
     return triggered_h2tpg
 
 
-def f1_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
+def f1_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg, a_t_g):
     ##loop on h2 axis to save memory
     level_h2pg = np.ones_like(operation_triggered_h2pg, dtype='float32')
     for h2 in range(operation_triggered_h2pg.shape[0]):
         ##adjust triggervalues for t axis
-        adj_animal_triggervalues_h7pg = f1_adjust_triggervalues_for_t(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg[:,:,h2,...])
+        adj_animal_triggervalues_h7pg = f1_adjust_triggervalues_for_t(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg[:,:,h2,...], a_t_g)
 
         ## mask & remove the slices of the h7 axis that don't require calculation of the application level (not required because inputs do not include a range input)
         ## must be same mask for 'le' and 'ge'
@@ -2202,7 +2208,7 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_tpg, o_cfw_tpg, operations_trig
                 husb_operations_muster_propn_h2tpg, husb_requisite_cost_h6tpg, husb_operations_requisites_prob_h6h2tpg,
                 operations_per_hour_l2h2tpg, husb_operations_infrastructurereq_h1h2tpg,
                 husb_operations_contract_cost_h2tpg, husb_muster_requisites_prob_h6h4tpg,
-                musters_per_hour_l2h4tpg, husb_muster_infrastructurereq_h1h4tpg,
+                musters_per_hour_l2h4tpg, husb_muster_infrastructurereq_h1h4tpg, a_t_g=np.array([0]),
                 a_nyatf_b1g=0,period_is_joining_pg=False, animal_mated=False, scan_option=0, period_is_endmating_pg=False, dtype=None):
     ##An array of the trigger values for the animal classes in each period - these values are compared against a threshold to determine if the husb is required
     animal_triggervalues_h7tpg = f1_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, period_is_wean_pg, gender,
@@ -2210,9 +2216,9 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_tpg, o_cfw_tpg, operations_trig
     ##The number of treatment units per animal in each period - each slice has a different unit eg mobsize, nyatf etc the treatment unit can be selected and applied for a given husb operation
     treatment_units_h8tpg = f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_tpg, o_cfw_tpg, a_nyatf_b1g).astype(dtype)
     ##Is the husb operation triggered in the period for each class
-    operation_triggered_h2tpg = f1_operations_triggered(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7h2tpg)
+    operation_triggered_h2tpg = f1_operations_triggered(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7h2tpg, a_t_g)
     ##The level of the operation in each period for the class of livestock (proportion of animals that receive treatment) - this accounts for the fact that just because the operation is triggered the operation may not be done to all animals
-    application_level_h2tpg = f1_application_level(operation_triggered_h2tpg, animal_triggervalues_h7tpg, operations_triggerlevels_h5h7h2tpg)
+    application_level_h2tpg = f1_application_level(operation_triggered_h2tpg, animal_triggervalues_h7tpg, operations_triggerlevels_h5h7h2tpg, a_t_g)
     ##The number of times the mob must be mustered
     mustering_level_h4tpg = f1_mustering_required(application_level_h2tpg, husb_operations_muster_propn_h2tpg)[na,...] #needs a h4 axis for the functions below
     ##The cost of requisites for the operations

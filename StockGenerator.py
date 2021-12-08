@@ -4570,6 +4570,9 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     slices_to_add = ~slices_to_add * np.arange(len_g1)
     a_g1_tpa1e1b1nwzida0e0b0xyg1 = np.concatenate([slices_to_add, a_g1_tpa1e1b1nwzida0e0b0xyg1],0)
 
+    ###retained t
+    a_t_g1 = np.arange(pinp.sheep['i_n_dam_sales'], pinp.sheep['i_n_dam_sales']+len_g1)
+
     ###dvp pointer and index
     a_v_pa1e1b1nwzida0e0b0xyg1 =  np.apply_along_axis(fun.f_next_prev_association, 0, dvp_start_va1e1b1nwzida0e0b0xyg1
                                                       , date_end_p, 1,'right')
@@ -4613,6 +4616,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     ####expand cluster input from rtype to v
     a_ppk2g1_va1e1b1nwzida0e0b0xygsl = np.take_along_axis(a_ppk2g1_ra1e1b1nwzida0e0b0xygsl,a_r_va1e1b1nwzida0e0b0xyg1[...,na,na], axis=0)
 
+    ##offs
     ###build array of shearing dates including the initial weaning - weaning is used for sale stuff because inputs are based on weaning date.
     date_weaned_a1e1b1nwzida0e0b0xyg3 = np.broadcast_to(date_weaned_ida0e0b0xyg3,fvp_0_start_sa1e1b1nwzida0e0b0xyg3.shape[1:]) #need wean date rather than first day of yr because selling inputs are days from weaning.
     date_wean_shearing_sa1e1b1nwzida0e0b0xyg3 = np.concatenate([date_weaned_a1e1b1nwzida0e0b0xyg3[na,...]
@@ -4928,13 +4932,22 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     husbandry_cost_c0p7tpg0 = husbandry_cost_tpg0 * cash_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
     husbandry_cost_wc_c0p7tpg0 = husbandry_cost_tpg0 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
     ###Dams: cost, labour and infrastructure requirements - accounts for yatf costs as well
+    ### for dams remove the generator t axis by selecting the retained t slice. This reduces the array sizes and doesnt lose much detail.
+    if len_gen_t1==1:
+        a_gen_t_g1 = np.array([0])
+    else:
+        a_gen_t_g1 = a_t_g1
+    a_t_tpg1 = fun.f_expand(a_gen_t_g1, p_pos-2, right_pos=-1)
+    t_o_ffcfw_tpdams = np.take_along_axis(o_ffcfw_tpdams, a_t_tpg1, p_pos-1)
+    t_o_cfw_tpdams = np.take_along_axis(o_cfw_tpdams, a_t_tpg1, p_pos-1)
+    t_o_ebg_tpdams = np.take_along_axis(o_ebg_tpdams, a_t_tpg1, p_pos-1)
     husbandry_cost_tpg1, husbandry_labour_l2tpg1, husbandry_infrastructure_h1tpg1 = sfun.f_husbandry(
-        uinp.sheep['i_head_adjust_dams'], mobsize_pa1e1b1nwzida0e0b0xyg1, o_ffcfw_tpdams, o_cfw_tpdams, operations_triggerlevels_h5h7h2tpg,
+        uinp.sheep['i_head_adjust_dams'], mobsize_pa1e1b1nwzida0e0b0xyg1, t_o_ffcfw_tpdams, t_o_cfw_tpdams, operations_triggerlevels_h5h7h2tpg,
         p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg1, period_is_shearing_pa1e1b1nwzida0e0b0xyg1,
-        period_is_wean_pa1e1b1nwzida0e0b0xyg1, gender_xyg[1], o_ebg_tpdams, wool_genes_yg1, husb_operations_muster_propn_h2tpg,
+        period_is_wean_pa1e1b1nwzida0e0b0xyg1, gender_xyg[1], t_o_ebg_tpdams, wool_genes_yg1, husb_operations_muster_propn_h2tpg,
         husb_requisite_cost_h6tpg, husb_operations_requisites_prob_h6h2tpg, operations_per_hour_l2h2tpg,
         husb_operations_infrastructurereq_h1h2tpg, husb_operations_contract_cost_h2tpg, husb_muster_requisites_prob_h6h4tpg,
-        musters_per_hour_l2h4tpg, husb_muster_infrastructurereq_h1h4tpg, nyatf_b1nwzida0e0b0xyg, period_is_join_pa1e1b1nwzida0e0b0xyg1,
+        musters_per_hour_l2h4tpg, husb_muster_infrastructurereq_h1h4tpg, a_t_g1, nyatf_b1nwzida0e0b0xyg, period_is_join_pa1e1b1nwzida0e0b0xyg1,
         animal_mated_b1g1, scan_option_pa1e1b1nwzida0e0b0xyg1, period_is_matingend_pa1e1b1nwzida0e0b0xyg1, dtype=dtype)
     husbandry_cost_c0p7tpg1 = husbandry_cost_tpg1 * cash_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
     husbandry_cost_wc_c0p7tpg1 = husbandry_cost_tpg1 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
