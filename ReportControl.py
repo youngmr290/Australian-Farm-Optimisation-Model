@@ -206,11 +206,11 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_salegrid_yatf', 'Run']:
             type = 'stock'
-            prod = 'salegrid_va1e1b1nwzixyg2'
-            keys = 'yatf_keys_vaebnwzixy1g2'
+            prod = 'salegrid_Tva1e1b1nwzixyg2'
+            keys = 'yatf_keys_Tvaebnwzixy1g2'
             arith = 0
-            index =[0]
-            cols = [3,5,8,10] #b,w,x,g
+            index =[1]
+            cols = [4,6,9,11] #b,w,x,g
             salegrid_yatf = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, 
                                    keys=keys, arith=arith, index=index, cols=cols)
             salegrid_yatf = pd.concat([salegrid_yatf],keys=[trial_name],names=['Trial'])  # add trial name as index level
@@ -376,8 +376,8 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_wbe_dams', 'Run']:
             type = 'stock'
-            prod = 'wbe_k2va1nwziyg1'
-            na_prod = [0,1,3] #q,s,t
+            prod = 'wbe_k2tva1nwziyg1'
+            na_prod = [0,1] #q,s
             weights = 'dams_numbers_qsk2tvanwziy1g1'
             keys = 'dams_keys_qsk2tvanwziy1g1'
             arith = 1
@@ -392,8 +392,8 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_wbe_offs', 'Run']:
             type = 'stock'
-            prod = 'wbe_k3k5vnwziaxyg3'
-            na_prod = [0,1,4] #q,s,t
+            prod = 'wbe_k3k5tvnwziaxyg3'
+            na_prod = [0,1] #q,s
             weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
             keys = 'offs_keys_qsk3k5tvnwziaxyg3'
             arith = 1
