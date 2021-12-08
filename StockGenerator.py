@@ -4377,7 +4377,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
         ###         b1 axis in the position of b0 and simplified using a_b0_b1
         ###         w axis to only have slice 0
         ###         z axis is the weighted average across season types
-        temporary = np.sum(o_cfw_ltwadj_tpdams[:, :, :, :, :, :, 0:1, ...] / sfw_a0e0b0xyg1
+        temporary = np.sum(fun.f_dynamic_slice(o_cfw_ltwadj_tpdams,w_pos,0,1) / sfw_a0e0b0xyg1
                            * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg)
                            * period_is_join_pa1e1b1nwzida0e0b0xyg1, axis=p_pos)
         ##dams have a e1 axis, whereas offspring have an e0 axis, swap the e1 into position of e0
@@ -4390,7 +4390,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
         sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3 = 1 + temporary * sen.sam['LTW_offs']
 
         ## repeat for FD
-        temporary = np.sum(o_fd_ltwadj_tpdams[:, :, :, :, :, :, 0:1, ...]
+        temporary = np.sum(fun.f_dynamic_slice(o_fd_ltwadj_tpdams,w_pos,0,1)
                            * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg)
                            * period_is_join_pa1e1b1nwzida0e0b0xyg1, axis=p_pos)
         temporary = np.swapaxes(temporary, e1_pos, e0_pos)
@@ -4785,13 +4785,13 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     index_p9a1e1b1nwzida0e0b0xyg1 = fun.f_expand(np.arange(np.count_nonzero(shear_mask_p1)),p_pos)
     index_p9a1e1b1nwzida0e0b0xyg3 = fun.f_expand(np.arange(np.count_nonzero(shear_mask_p3)),p_pos)
     ###convert period is shearing array to the condensed version
-    period_is_shearing_p9a1e1b1nwzida0e0b0xyg0 = period_is_shearing_pa1e1b1nwzida0e0b0xyg0[shear_mask_p0,...]
-    period_is_shearing_p9a1e1b1nwzida0e0b0xyg1 = period_is_shearing_pa1e1b1nwzida0e0b0xyg1[shear_mask_p1,...]
-    period_is_shearing_tp9a1e1b1nwzida0e0b0xyg3 = period_is_shearing_tpa1e1b1nwzida0e0b0xyg3[:,shear_mask_p3,...]
+    period_is_shearing_p9a1e1b1nwzida0e0b0xyg0 = np.compress(shear_mask_p0, period_is_shearing_pa1e1b1nwzida0e0b0xyg0, p_pos)
+    period_is_shearing_p9a1e1b1nwzida0e0b0xyg1 = np.compress(shear_mask_p1, period_is_shearing_pa1e1b1nwzida0e0b0xyg1, p_pos)
+    period_is_shearing_tp9a1e1b1nwzida0e0b0xyg3 = np.compress(shear_mask_p3, period_is_shearing_tpa1e1b1nwzida0e0b0xyg3, p_pos)
     ###Vegatative Matter if shorn(end)
-    vm_p9a1e1b1nwzida0e0b0xyg0 = vm_p4a1e1b1nwzida0e0b0xyg[a_p4_p,...][shear_mask_p0]
-    vm_p9a1e1b1nwzida0e0b0xyg1 = vm_p4a1e1b1nwzida0e0b0xyg[a_p4_p,...][shear_mask_p1]
-    vm_p9a1e1b1nwzida0e0b0xyg3 = vm_p4a1e1b1nwzida0e0b0xyg[a_p4_p[mask_p_offs_p],...][shear_mask_p3]
+    vm_p9a1e1b1nwzida0e0b0xyg0 = np.compress(shear_mask_p0, np.take(vm_p4a1e1b1nwzida0e0b0xyg,a_p4_p,p_pos), p_pos) #expand p4 axis to p then mask to p9
+    vm_p9a1e1b1nwzida0e0b0xyg1 = np.compress(shear_mask_p1, np.take(vm_p4a1e1b1nwzida0e0b0xyg,a_p4_p,p_pos), p_pos) #expand p4 axis to p then mask to p9
+    vm_p9a1e1b1nwzida0e0b0xyg3 = np.compress(shear_mask_p3, np.take(vm_p4a1e1b1nwzida0e0b0xyg,a_p4_p[mask_p_offs_p],p_pos), p_pos)#expand p4 axis to p then mask to p9
     ###pmb - a little complex because it is dependent on time since previous shearing
     pmb_p9s4a1e1b1nwzida0e0b0xyg0 = pmb_p4s4a1e1b1nwzida0e0b0xyg[a_p4_p,...][shear_mask_p0]
     pmb_p9s4a1e1b1nwzida0e0b0xyg1 = pmb_p4s4a1e1b1nwzida0e0b0xyg[a_p4_p,...][shear_mask_p1]
@@ -4815,18 +4815,18 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     pmb_p9a1e1b1nwzida0e0b0xyg1 = np.squeeze(np.take_along_axis(pmb_p9s4a1e1b1nwzida0e0b0xyg1,a_months_since_shearing_p9a1e1b1nwzida0e0b0xyg1[:,na,...],1),axis=p_pos) #select the relevant s4 (pmb interval) then squeeze that axis
     pmb_tp9a1e1b1nwzida0e0b0xyg3 = np.squeeze(np.take_along_axis(pmb_p9s4a1e1b1nwzida0e0b0xyg3[na,...],a_months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3[:,:,na,...],2),axis=p_pos) #select the relevant s4 (pmb interval) then squeeze that axis
     ###apply period mask to condense p axis
-    cfw_sire_p9 = o_cfw_tpsire[:,shear_mask_p0]
-    fd_sire_p9 = o_fd_tpsire[:,shear_mask_p0]
-    sl_sire_p9 = o_sl_tpsire[:,shear_mask_p0]
-    ss_sire_p9 = o_ss_tpsire[:,shear_mask_p0]
-    cfw_dams_p9 = o_cfw_tpdams[:,shear_mask_p1]
-    fd_dams_p9 = o_fd_tpdams[:,shear_mask_p1]
-    sl_dams_p9 = o_sl_tpdams[:,shear_mask_p1]
-    ss_dams_p9 = o_ss_tpdams[:,shear_mask_p1]
-    cfw_offs_p9 = o_cfw_tpoffs[:,shear_mask_p3]
-    fd_offs_p9 = o_fd_tpoffs[:,shear_mask_p3]
-    sl_offs_p9 = o_sl_tpoffs[:,shear_mask_p3]
-    ss_offs_p9 = o_ss_tpoffs[:,shear_mask_p3]
+    cfw_sire_p9 = np.compress(shear_mask_p0, o_cfw_tpsire, p_pos)
+    fd_sire_p9 = np.compress(shear_mask_p0, o_fd_tpsire, p_pos)
+    sl_sire_p9 = np.compress(shear_mask_p0, o_sl_tpsire, p_pos)
+    ss_sire_p9 = np.compress(shear_mask_p0, o_ss_tpsire, p_pos)
+    cfw_dams_p9 = np.compress(shear_mask_p1, o_cfw_tpdams, p_pos)
+    fd_dams_p9 = np.compress(shear_mask_p1, o_fd_tpdams, p_pos)
+    sl_dams_p9 = np.compress(shear_mask_p1, o_sl_tpdams, p_pos)
+    ss_dams_p9 = np.compress(shear_mask_p1, o_ss_tpdams, p_pos)
+    cfw_offs_p9 = np.compress(shear_mask_p3, o_cfw_tpoffs, p_pos)
+    fd_offs_p9 = np.compress(shear_mask_p3, o_fd_tpoffs, p_pos)
+    sl_offs_p9 = np.compress(shear_mask_p3, o_sl_tpoffs, p_pos)
+    ss_offs_p9 = np.compress(shear_mask_p3, o_ss_tpoffs, p_pos)
     ###micron price guide
     woolp_mpg_w4 = sfun.f1_woolprice().astype(dtype)/100
     r_vals['woolp_mpg_w4'] = woolp_mpg_w4
