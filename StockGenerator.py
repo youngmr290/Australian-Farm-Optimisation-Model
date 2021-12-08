@@ -2243,7 +2243,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         if eqn_used:
                             pi_sire = temp0
                         if eqn_compare:
-                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, p, ...] = temp0
+                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -2255,7 +2255,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         if eqn_used:
                             pi_dams = temp0
                         if eqn_compare:
-                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -2266,7 +2266,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         if eqn_used:
                             pi_offs = temp0
                         if eqn_compare:
-                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, p, ...] = temp0
+                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
                 ###murdoch #todo function doesnt exist yet, add args when it is built
                 eqn_system = 1 # mu = 1
@@ -2278,7 +2278,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         if eqn_used:
                             pi_sire = temp0
                         if eqn_compare:
-                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, p, ...] = temp0
+                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -2286,7 +2286,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         if eqn_used:
                             pi_dams = temp0
                         if eqn_compare:
-                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -2294,7 +2294,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         if eqn_used:
                             pi_offs = temp0
                         if eqn_compare:
-                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, p, ...] = temp0
+                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
                 ##feedsupply - calculated after pi because pi required for intake_s
                 a_p6_cut_pa1e1b1nwzida0e0b0xyg = a_p6_pa1e1b1nwzida0e0b0xyg[p:p+1]  # the slice of p6 for the current generator period. Has active z axis so need to use expanded version.
@@ -2349,7 +2349,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                             kg_fodd_sire = temp3
                             kg_supp_sire = temp4  # temp5 is not used for sires
                         if eqn_compare:
-                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, p, ...] = temp0  # more of the return variable could be retained
+                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -2369,7 +2369,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                             kg_supp_dams = temp4
                             kl_dams = temp5
                         if eqn_compare:
-                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0  # more of the return variable could be retained
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -2388,7 +2388,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                             kg_fodd_offs = temp3
                             kg_supp_offs = temp4 # temp5 is not used for offspring
                         if eqn_compare:
-                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, p, ...] = temp0  # more of the return variable could be retained
+                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
 
 
                 ##foetal growth - dams
@@ -2410,8 +2410,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                             w_b_exp_y_dams = temp3
                             guw_dams = temp5
                         if eqn_compare:
-                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
-                            # r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, p, ...] = temp1
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                            # r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
 
 
@@ -2499,8 +2499,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                             level_sire = temp4
                             surplus_energy_sire = temp5
                         if eqn_compare:
-                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, p, ...] = temp0
-                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, p, ...] = temp1
+                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp1
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -2515,8 +2515,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                             level_dams = temp4
                             surplus_energy_dams = temp5
                         if eqn_compare:
-                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
-                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, p, ...] = temp1
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -2530,8 +2530,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                             level_offs = temp4
                             surplus_energy_offs = temp5
                         if eqn_compare:
-                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, p, ...] = temp0
-                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, p, ...] = temp1
+                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
                 eqn_system = 1 # Murdoch = 1
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -2548,8 +2548,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                             level_sire = temp4
                             surplus_energy_sire = temp5
                         if eqn_compare:
-                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, p, ...] = temp0
-                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, p, ...] = temp1
+                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp1
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -2564,8 +2564,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                             level_dams = temp4
                             surplus_energy_dams = temp5
                         if eqn_compare:
-                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
-                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, p, ...] = temp1
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -2579,8 +2579,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                             level_offs = temp4
                             surplus_energy_offs = temp5
                         if eqn_compare:
-                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, p, ...] = temp0
-                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, p, ...] = temp1
+                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
 
 
@@ -2646,7 +2646,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         w_b_yatf = temp0 * (nfoet_b1nwzida0e0b0xyg>0) #so that only b slices with nfoet have a weight (need to leave a weight in 30, 20, 10 because used in prog mort)
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
             eqn_system = 1 # MU = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
@@ -2662,7 +2662,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         w_b_yatf = temp0 * (nfoet_b1nwzida0e0b0xyg>0) #so that only b slices with nfoet have a weight (need to leave a weight in 30, 20, 10 because used in prog mort)
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
             ##progeny fleece prodn adjustment due to dam profile (LTW adjustment)
             eqn_group = 13
@@ -2675,8 +2675,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                 #         cfw_ltwadj_dams = temp0
                 #         fdltw = temp1
                 #     if eqn_compare:
-                #         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
-                #         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, p, ...] = temp1
+                #         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                #         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp1
             eqn_system = 1 # MU = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
@@ -2700,8 +2700,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     fd_ltwadj_dams = temp2
                     cf_fdltw_dams = temp3
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, p, ...] = temp2
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp2
 
             ##yatf resets
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
@@ -2775,7 +2775,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         pi_yatf = temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
             ##feedsupply
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
@@ -2798,7 +2798,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
             #         if eqn_used:
             #             ra_yatf = temp0
             #         if eqn_compare:
-            #             r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+            #             r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
             # eqn_system = 1 # Mu = 1
             # if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
             #     eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
@@ -2807,7 +2807,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
             #         if eqn_used:
             #             ra_yatf = temp0
             #         if eqn_compare:
-            #             r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+            #             r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
             #
             #
             # ##relative ingestibility (quality) - yatf
@@ -2821,7 +2821,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
             #         if eqn_used:
             #             rq_yatf = temp0
             #         if eqn_compare:
-            #             r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+            #             r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
             #
 
             # ##intake - yatf
@@ -2853,7 +2853,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         kg_fodd_yatf = temp3
                         kg_supp_yatf = temp4  # temp5 is not used for yatf
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0  # more of the return variable could be retained
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
 
 
             ##wool production - yatf
@@ -2893,8 +2893,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         level_yatf = temp4
                         surplus_energy_yatf = temp5
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, p, ...] = temp1
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
             eqn_system = 1 # Mu = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -2910,8 +2910,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         level_yatf = temp4
                         surplus_energy_yatf = temp5
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, p, ...] = temp1
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
             ##weaning weight yatf - called when dams days per period greater than 0 - calculates the weight at the start of the period
             eqn_group = 11
@@ -2925,7 +2925,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         w_w_yatf = temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
             eqn_system = 1 # Mu = 1   #it is okay to use ebg of current period because it is mul by lact propn
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
@@ -2945,7 +2945,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         w_w_yatf = temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
 
 
@@ -2961,7 +2961,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         ch4_total_sire = temp0
                         ch4_animal_sire = temp1
                     if eqn_compare:
-                        r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
                 ###dams
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -2970,7 +2970,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         ch4_total_dams = temp0
                         ch4_animal_dams = temp1
                     if eqn_compare:
-                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
                 ###yatf
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
@@ -2979,7 +2979,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         ch4_total_yatf = temp0
                         ch4_animal_yatf = temp1
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
                 ###offs
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -2988,7 +2988,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         ch4_total_offs = temp0
                         ch4_animal_offs = temp1
                     if eqn_compare:
-                        r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
             ##conception Dams
             eqn_group = 0
@@ -3004,7 +3004,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         conception_dams =  temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
             eqn_system = 1 # MU LTW = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
@@ -3020,7 +3020,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         conception_dams = temp0
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     if eqn_compare:
-                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
             ##Scanning percentage per ewe scanned (if scanning) -  report variable only
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -3042,7 +3042,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_sire = temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
                 ####dams
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -3052,7 +3052,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_dams = temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
                 ####yatf
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
@@ -3062,7 +3062,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_yatf = temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
                 ####offs
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -3072,7 +3072,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_offs = temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
             eqn_system = 1 # MU/LTW = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 ####sire
@@ -3084,7 +3084,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_sire = temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
                 ####dams
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -3094,7 +3094,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_dams = temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
                 ####yatf
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
@@ -3104,7 +3104,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_yatf = temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
                 ####offs
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -3114,7 +3114,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_offs = temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
             ##weaner mortality - comments about mortality functions can be found in sfun.
             eqn_group = 2
@@ -3128,7 +3128,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_sire += temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
             ####dams
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
@@ -3138,7 +3138,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_dams += temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
             ####offs
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
@@ -3148,7 +3148,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_offs += temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
             eqn_system = 1 # MU = 1
             ####sire
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -3158,7 +3158,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_sire += temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
             ####dams
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
@@ -3167,7 +3167,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_dams += temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
             ####offs
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
@@ -3176,7 +3176,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_offs += temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
             ##Peri-natal (around birth) Dam mortality - comments about mortality functions can be found in sfun.
             eqn_group = 3
@@ -3188,7 +3188,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_dams += temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
             eqn_system = 1 # mu = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
@@ -3198,7 +3198,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_dams += temp0 #dam mort at birth due to low CS
                     if eqn_compare:
-                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
             ##preg tox Dam mortality - comments about mortality functions can be found in sfun.
             eqn_group = 15
@@ -3212,7 +3212,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_dams += temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
             eqn_system = 1 # mu = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
@@ -3221,7 +3221,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_dams += temp0
                     if eqn_compare:
-                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
             ### Peri-natal progeny mortality (progeny survival) - comments about mortality functions can be found in sfun.
             eqn_group = 1
@@ -3238,8 +3238,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                         mortality_birth_yatf += temp0 #mortalityx
                         mortality_dams += temp2 #mortality due to dystocia
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, p, ...] = temp1
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp1
             eqn_system = 1 # MU = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)   # equation used is based on the yatf system
@@ -3258,7 +3258,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                     if eqn_used:
                         mortality_birth_yatf = temp0 #mortality
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
 
             ##end numbers - accounts for mortality and other activity during the period - this is the number in the different classes as at the end of the period
