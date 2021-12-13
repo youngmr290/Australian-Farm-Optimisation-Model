@@ -2560,7 +2560,7 @@ def f1_cum_sum_dvp(arr,dvp_pointer,axis=0,shift=0):
     return final
 
 
-def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, index_w8=None, dvp_type_next_tvgw=0, vtype=0): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
+def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_w9vars_wg=1, index_w8=None, dvp_type_next_tvgw=0, vtype=0): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
     '''distributing animals on LW at the start of dvp
         the 8 or 9 is dropped from the w if singleton'''
     ##set dtype
@@ -2584,7 +2584,8 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, index_w8=None, dvp_type
     ### if the source weight is matched to the destination then set index to own slice (so slice distributes to itself)
     #### required if destination weights are replicated and nearestw9_idx is pointing to first occurrence
     if index_w8 is not None:
-        nearestw9_idx_w8g = fun.f_update(nearestw9_idx_w8g, index_w8, np.isclose(ffcfw_dest_w8g, ffcfw_source_w8g))
+        nearestw9_idx_w8g = fun.f_update(nearestw9_idx_w8g, index_w8
+                                         , np.isclose(ffcfw_source_w8g, ffcfw_dest_w8g * mask_w9vars_wg))
 
     ## The nearest destination weight for each source weight & the difference from each w8
     nearestw9_w8gw = np.take_along_axis(ffcfw_dest_wgw9, nearestw9_idx_w8g[...,na], axis=-1)
@@ -2597,7 +2598,8 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, index_w8=None, dvp_type
 
     ## If an index_w8 has been provided then test for equality (as per nearest)
     if index_w8 is not None:
-        next_nearestw9_idx_w8g = fun.f_update(next_nearestw9_idx_w8g, index_w8, np.isclose(ffcfw_dest_w8g, ffcfw_source_w8g))
+        next_nearestw9_idx_w8g = fun.f_update(next_nearestw9_idx_w8g, index_w8
+                                              , np.isclose(ffcfw_source_w8g, ffcfw_dest_w8g * mask_w9vars_wg))
 
     ## the next_nearest destination weight
     next_nearestw9_w8gw = np.take_along_axis(ffcfw_dest_wgw9, next_nearestw9_idx_w8g[...,na], axis=-1)

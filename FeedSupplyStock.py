@@ -5,17 +5,20 @@ author: young
 Feedsupply is represented as a nutritive value (NV). There is also an input which controls if the animal
 is in confinement or not.
 
-Animal production is generated for animals following different livewight profiles throughout the year. There
+Animal production is generated for animals following different liveweight profiles throughout the year. There
 are a number of starting liveweights and for each starting liveweight there are a number of feedsupply patterns.
 The LW profiles are not continuous for the entirety of the animals life, rather the animals are distributed to the
-starting livewights at the beginning of each year (prejoining). This is done to reduce model size.
+starting liveweights at the beginning of each year (prejoining). This is done to reduce model size.
 
-The feedsupply patterns followed throughout the year are generated from a standard feedsupply which is
-adjusted for the specified nutrition levels at each feed variation peirod (FVP).
-The standard feedsupply is inputted at three levels; high, low and medium. The standard feedsupply is adjusted for each
-nutrition level resulting in a new feedsupply for each nutrition level. At each FVP the nutrition level resets expanind
-the feedsupply pattern. For example, the high nutrition feedsupply in the first FVP is followed by all
-feedsupply levels in the second FVP. See below for a visual description of the feedsupply patterns.
+The standard feedsupply options throughout the year are generated from an input of the expected optimum feedsupply
+and a range either side based on specified nutrition levels. The feedsupply is
+input for three levels; expected optimum, higher and lower and the standard feedsupply is created by scaling
+the expected optimum using the range between the higher and lower levels and the input values for nutrition level.
+For each feed variation period (FVP) the number of nutrition options is determined by the specified nutrition levels.
+The number of nutrition options each year depends on this number and the number of FVPs. At the start of each
+FVP each nutrition option up to that point can then split based on the number of specified nutrition levels.
+For example, the high nutrition feedsupply in the first FVP is followed by all feedsupply levels in the
+second FVP. See below for a visual description of the feedsupply patterns.
 
 .. image:: FS_diagram.png
 
@@ -25,22 +28,23 @@ generator if there were 1 starting liveweight 2 nutrition levels and 3 feed vari
 The standard feedsupply can be generated in two ways:
 
     #. from inputs in Property.xl and Structural.xl
-    #. from pkl file that is generated from running the model with multiple w options.
+    #. from a pkl file that is generated from the optimum nutrition in a previous trial with multiple w options.
 
-Feedsupply inputs contain a base feedsupply (i_feedoptions_r1pj0) for different animals. The base feed supply
-used for each animal in the generator is selected using ia_r1_zig?.
+The spreadsheet inputs for Feedsupply contain a base feedsupply (i_feedoptions_r1pj0) for different animals.
+The base feed supply used for each animal class in the generator is selected using ia_r1_zig?.
 
 For dams (has not been hooked up for offs) there is possible further adjustment (i_feedsupply_adj_options_r2p)
-for LSLN (litter size lactation number - b1 axis) and weaning
-age (a1 axis). Typically this is not used. Instead the user runs AFO with multiple w and allows the model to
-generate the optimal feedsupply which is used for subsequent runs.
+for LSLN (litter size lactation number - b1 axis) and weaning age (a1 axis). Typically this is not used.
+Instead the user runs AFO with multiple nutrition levels and allows the model to
+generate the optimal feedsupply which is stored in a pkl file and used for subsequent runs.
 
 Generating the feedsupply from the optimal nutrition pattern selected by the model means that the feedsupply
-can easily be optimised for different axis that are not included in the inputs (eg t axis and z axis).
+can easily be optimised for different axis that are not included in the spreadsheet inputs (eg t axis and z axis).
 This is carried out in the feedsupply creation experiment (in exp.xl). Depending on the number of w that
-have been included in the model it may take several trials to converge on the optimal feedsupply.
-Optimising the duration of confinement feeding is imprecise because the optimisation occurs at the DVP level
-and this timestep is likely too long. Therefore, the user needs to test including confinement in a range of feed
+have been included in the trials it may take several iterations to converge on the optimal feedsupply.
+The inclusion of confinement feeding may also be optimised and stored in the pkl file. However, optimising
+the duration of confinement feeding is imprecise because the optimisation occurs at the DVP level
+and this time-step is likely too long. Therefore, the user needs to test including confinement in a range of feed
 periods for different stock classes. This is controlled using the input i_confinement_r1p6z.
 
 When using the pkl file as the source of the feedsupply inputs it is possible to control whether the inclusion
@@ -49,17 +53,20 @@ input i_confinement_r1p6z. This allows the inclusion of confinement feeding in s
 selected in the previous optimum solution.
 This also allows confinement to be included in the N1 model without forcing it to occur all year.
 
-Confinement feeding is good to represent separately for a few reason:
+Differentiating feeding supplement in confinement from supplementary feeding in the paddock by separating
+both the DV's for the livestock and a separate feed pool constraint is good for a few reason:
 
     #. Feeding a given quantity of energy per day in confinement results in better production because less energy
        is expended grazing.
-    #. Confinement feeding is represented in a separate feed pool because a restricted intake of supplement that meets
-       the energy requirements of an animal results in slack volume. If in the same feed pool this slack volume could
-       be used to consume greater quantities of poor quality feed such as dry pasture or stubble.
-    #. The confinement pool is not adjusted for effective MEI, which is to allow for the lower efficiency of feeding
-       if feed quality is greater than the quality required to meet the target for the given pool.
     #. Confinement feeding should incur a capital cost of the feed lot and the labour requirement should reflect
        feedlot conditions rather than paddock feeding conditions.
+    #. Restricted intake of supplement in confinement that meets the energy requirements of an animal results
+       in slack volume. If the supplement fed in confinement was in the same feed pool as dry residues this slack
+       volume could be used to consume greater quantities of poor quality feed such as dry pasture or stubble.
+    #. The confinement pool is not adjusted for effective MEI, which is to allow for the lower efficiency of feeding
+       if feed quality is greater than the quality required to meet the target for the given pool.
+    #. Reason 4 should be removed because no supplement is scaled by effective mei (regardless of feed pool)
+       Michael, after you have read this comment you can delete these 2 points
 
 Likely process to calibrate feedsupply: feedsupply can be calibrated prior to an analysis using multiple n
 slices and once the optimum is identified the model can be set back to N1. This might take multiple iterations
