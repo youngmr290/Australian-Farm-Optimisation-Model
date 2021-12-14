@@ -665,6 +665,22 @@ def f_merge_axis(a, source_axis=0, target_axis=1):
     else:
         return np.moveaxis(a,source_axis,target_axis-1).reshape(out_shp)
 
+def f_split_axis(a, len_a, axis):
+    '''
+    This function splits an axis into two axis.
+
+    This is basically reshaping.
+
+    :param a: numpy array
+    :param len_a: length of the first of the two new axis
+    :return:
+    '''
+    ##determine new shape
+    shp = np.array(a.shape)
+    shp[axis] /= len_a
+    out_shp = np.insert(shp,axis,len_a)
+    return a.reshape(out_shp)
+
 
 #######################
 #Specific AFO function#
