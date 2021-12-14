@@ -2594,6 +2594,9 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_w9vars_wg=1, index
     ## Determine the index of the next nearest destination slice that is on the opposite side of the source (using masked array)
     ### mask the values for which the difference is the same sign as the difference of the nearest.
     mask = np.sign(diff_w8gw9) == np.sign(diff_nearest_w8gw)
+    shape = np.broadcast(diff_abs_w8gw9, mask).shape
+    diff_abs_w8gw9 = np.broadcast_to(diff_abs_w8gw9, shape)
+    mask = np.broadcast_to(mask, shape)
     next_nearestw9_idx_w8g = np.argmin(np.ma.masked_array(diff_abs_w8gw9, mask), axis = -1)
 
     ## If an index_w8 has been provided then test for equality (as per nearest)

@@ -5252,83 +5252,6 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     npw2_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(t_npw, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_start_tpdams,
                                         on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_wean_pa1e1b1nwzida0e0b0xyg2) #use numbers start because weaning is beginning of period
 
-    # ##################
-    # #lw distribution #
-    # ##################
-    # '''
-    # Distributing happens at the start of each season/season sequence when all the different seasons are combined back
-    # to a common season. It also happens when lw is condensed back to the starting number for the livestock year.
-    # For dams lw distributing is also required at prejoining when dams can be transferred to different sires and
-    # dams with different LSLN in the previous reproduction cycle are combined for the next cycle.
-    #
-    # Note: 1. For dams condensing for the livestock year is carried out at prejoining which coincides with when
-    #       distribution is required. The generator can handle dam condensing and prejoining to be in different dvps
-    #       however the distribution below requires condensing to occur at prejoining (although it may be possible
-    #       to change the distribution code to handle condensing and prejoining in different dvps).
-    #
-    #       2. Distribution of animals is controlled by LW and distributing maintains the current average LW. The
-    #       errors associated with difference in wool production that are not 100% correlated with LW will be
-    #       minimised if condensing and distributing are occurring soon after shearing.
-    #
-    #
-    # What this section does:
-    # Calc the ffcfw being distributed from and to.
-    # Calc the proportion of the source weight allocated to each destination weight.
-    #
-    # '''
-    # lwdist_start = time.time()
-    #
-    # ## calc the ‘source’ weight of the animal at the end of each period in which they can be transferred
-    # ###dams - the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
-    # ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_transfer_tpa1e1b1nwzida0e0b0xyg1) #numbers not required for ffcfw
-    # ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1)
-    # ffcfw_source_season_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg) #numbers not required for ffcfw
-    # ffcfw_source_season_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_source_season_va1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1)
-    # ###offs
-    # ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3) #numbers not required for ffcfw
-    # ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3,a_p_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3)
-    # ffcfw_source_season_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3) #numbers not required for ffcfw
-    # ffcfw_source_season_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_source_season_va1e1b1nwzida0e0b0xyg3,a_p_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3)
-    #
-    # ## calc the ‘destination’ weight of each group of animal at the end of the period prior to the transfer (transfer is next period is prejoining for the destination animal)
-    # ### for dams select the ‘destination’ condensed weight for the ‘source’ slices using a_g1_tg1
-    # ffcfw_condensed_tdams = np.take_along_axis(o_ffcfw_condensed_tpdams, a_g1_tpa1e1b1nwzida0e0b0xyg1, -1)
-    # ### Convert from p to v.
-    # #### for dams the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
-    # ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(ffcfw_condensed_tdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_transfer_tpa1e1b1nwzida0e0b0xyg1)  #numbers not required for ffcfw
-    # ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1)
-    # ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_season_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg)  #numbers not required for ffcfw
-    # ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1)
-    # ###offs
-    # ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_condensed_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3) #numbers not required for ffcfw
-    # ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3,a_p_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3)
-    # ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_season_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
-    # ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3,a_p_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3)
-    #
-    # ##distributing at condensing - all lws back to starting number of LWs and dams to different sires at prejoining
-    # ###t0 and t1 are distributed however this is not used because t0 and t1 don't transfer to next dvp
-    # distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
-    #                     ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1, ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1,
-    #                     mask_w8vars_va1e1b1nw8zida0e0b0xyg1, index_wzida0e0b0xyg1,
-    #                     dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na], condense_vtype1)
-    # distribution_condense_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
-    #                     ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3, ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3,
-    #                     mask_w8vars_va1e1b1nw8zida0e0b0xyg3, index_wzida0e0b0xyg3,
-    #                     dvp_type_next_va1e1b1nwzida0e0b0xyg3[...,na], condense_vtype3)
-    #
-    # ##redistribute at season start - all seasons back into a common season
-    # distribution_season_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
-    #                     ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1, ffcfw_source_season_va1e1b1nwzida0e0b0xyg1,
-    #                     mask_w8vars_va1e1b1nw8zida0e0b0xyg1, index_wzida0e0b0xyg1,
-    #                     dvp_type_next_va1e1b1nwzida0e0b0xyg1[...,na], season_vtype1)
-    # distribution_season_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
-    #                     ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3, ffcfw_source_season_va1e1b1nwzida0e0b0xyg3,
-    #                     mask_w8vars_va1e1b1nw8zida0e0b0xyg3, index_wzida0e0b0xyg3,
-    #                     dvp_type_next_va1e1b1nwzida0e0b0xyg3[...,na], season_vtype3)
-    #
-    # ##combine distributions
-    # distribution_tva1e1b1nw8zida0e0b0xyg1w9 = distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 * distribution_season_va1e1b1nw8zida0e0b0xyg1w9
-    # distribution_va1e1b1nw8zida0e0b0xyg3w9 = distribution_condense_va1e1b1nw8zida0e0b0xyg3w9 * distribution_season_va1e1b1nw8zida0e0b0xyg3w9
 
     # ##################################
     # #animal shifting between classes #
@@ -5767,7 +5690,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
         mask_w9vars_va1e1b1nw9zida0e0b0xyg3,
         index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[..., na], condense_vtype3)
 
-    ##redistribute at season start - all seasons back into a common season
+    ##redistribute at season start - all seasons back into a common season.
     distribution_season_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
         ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1, ffcfw_source_season_va1e1b1nwzida0e0b0xyg1,
         mask_w9vars_va1e1b1nw9zida0e0b0xyg1,
