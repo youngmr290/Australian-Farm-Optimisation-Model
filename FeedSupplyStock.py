@@ -571,6 +571,49 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         optimal_fs_stpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(feedsupply_stpa1e1b1nwzida0e0b0xyg1,dams_numbers_stpa1e1b1nwzida0e0b0xyg1,w_pos,keepdims=True)
         optimal_fs_tpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(feedsupply_tpa1e1b1nwzida0e0b0xyg3,offs_numbers_tpa1e1b1nwzida0e0b0xyg3,w_pos,keepdims=True)
 
+
+        # #temporary stuff below to test idea - update the previous fs but only the std w slices so that the condense stuff is not affected much
+        # #this helped but wasnt 100% effective because w[0] condensed stuff was not being held constant because the condensed info for w0 is not an average.
+        # t_feedsupply_tpa1e1b1nwzida0e0b0xyg1 = feedsupply_tpa1e1b1nwzida0e0b0xyg1.copy()
+        # feedsupply_tpa1e1b1nwzida0e0b0xyg1[:,:,:,:,:,:,0:1,...] = optimal_fs_stpa1e1b1nwzida0e0b0xyg1[0,2]
+        # feedsupply_tpa1e1b1nwzida0e0b0xyg1[:,:,:,:,:,:,27:28,...] = optimal_fs_stpa1e1b1nwzida0e0b0xyg1[1,2]
+        # feedsupply_tpa1e1b1nwzida0e0b0xyg1[:,:,:,:,:,:,54:55,...] = optimal_fs_stpa1e1b1nwzida0e0b0xyg1[2,2]
+        #
+        # feedsupply_tpa1e1b1nwzida0e0b0xyg1 = fun.f_update(feedsupply_tpa1e1b1nwzida0e0b0xyg1, t_feedsupply_tpa1e1b1nwzida0e0b0xyg1, feedsupply_tpa1e1b1nwzida0e0b0xyg1==0)
+
+        ##Test idea to track the animals and update the fs based on where the animal goes. This didnt help because need to uncluster the b axis
+        ## when tracking the animals. And w[27 & 54] are not 1:1 transfers at condensing due to being an average therefore cant track animals.
+        # distribution_tva1e1b1nw8zida0e0b0xyg1w9 = pkl_fs_info['distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9']
+        # a_prev_condense_va1e1b1nwzida0e0b0xyg1 = pkl_fs_info['a_prev_condense_va1e1b1nwzida0e0b0xyg1']
+        # dams_numbers_stva1e1b1nwzida0e0b0xyg1 = np.moveaxis(fun.f_split_axis(dams_numbers_tva1e1b1nwzida0e0b0xyg1, len_start_w1, w_pos), w_pos-1,0)
+        # distribution_s9tva1e1b1nw8zida0e0b0xyg1w9 = np.moveaxis(fun.f_split_axis(distribution_tva1e1b1nw8zida0e0b0xyg1w9, len_start_w1, -1), -2,0)
+        # distribution_s8s9tva1e1b1nw8zida0e0b0xyg1w9 = np.moveaxis(fun.f_split_axis(distribution_s9tva1e1b1nw8zida0e0b0xyg1w9, len_start_w1, w_pos-1), w_pos-2,0)
+        # ### Step 2 calculate the s9 numbers for the optimum FS for each s8
+        # ### this is how the animals offered the optimum FS were distributed from s8 to s9
+        # t_numbers_s8s9tvwg = np.sum(np.sum(dams_numbers_stva1e1b1nwzida0e0b0xyg1[:,na,...,na] * distribution_s8s9tva1e1b1nw8zida0e0b0xyg1w9, axis=w_pos-1,
+        #                                    keepdims=True), axis=-1, keepdims = False)
+        # ### Step 3 convert the numbers to the proportion of s8 animals distributed to each s9.
+        # t_propn_s8s9tvwg = fun.f_divide(t_numbers_s8s9tvwg, np.sum(t_numbers_s8s9tvwg, axis = 1, keepdims = True))
+        # ### Step 4 the distribution at the end of a period affects the optimum FS in the next period
+        # index_s = np.arange(len_start_w1)
+        # index_s8s9tvwg = fun.f_expand(index_s, p_pos-3)
+        # index_s9tvwg = fun.f_expand(index_s, p_pos-2)
+        # propn_s8s9tvwg = np.roll(t_propn_s8s9tvwg, 1, axis=p_pos)
+        # propn_s8s9tvwg[:,:,:,0:1,...] = (index_s8s9tvwg == index_s9tvwg)  #in the first DVP each s8 is based on the corresponding s9.
+        # propn_s8s9tvwg = fun.f_update(propn_s8s9tvwg, index_s8s9tvwg == index_s9tvwg, np.all(propn_s8s9tvwg==0,axis=(0,1))) #todo i added this to help where no animals existed last dvp
+        # ### Step 5 Spread the result for the condense period to subsequent no condensing periods
+        # propn_s8s9tvwg = np.take_along_axis(propn_s8s9tvwg, a_prev_condense_va1e1b1nwzida0e0b0xyg1[na,na,na,...], axis=p_pos)
+        # ### Step 6 Convert from v to p because FS has a p axis
+        # propn_s8s9tpwg = np.take_along_axis(propn_s8s9tvwg,a_v_pa1e1b1nwzida0e0b0xyg1[na,na,na],axis=p_pos)
+        # ### Step 7 Adjust the optimum FS for the next iteration based on the distribution proportion
+        # optimal_fs_stpa1e1b1nwzida0e0b0xyg1 = np.sum(t_optimal_fs_stpa1e1b1nwzida0e0b0xyg1 * propn_s8s9tpwg, axis=1, keepdims=False)
+        #
+        # ### overwrite s1 & s2 with temp optimum. eg only s[0] looks at the distribution in the next dvp because it transfers 1:1
+        # optimal_fs_stpa1e1b1nwzida0e0b0xyg1[1] = t_optimal_fs_stpa1e1b1nwzida0e0b0xyg1[1]
+        # optimal_fs_stpa1e1b1nwzida0e0b0xyg1[2] = t_optimal_fs_stpa1e1b1nwzida0e0b0xyg1[2]
+
+
+
         ##populate the min and max slice of j2 axis - min and max slices of j2 are populated based on the same scale as the feedsupply inputs from excel
         ###dams
         j2_scale_pa1e1b1j2wzida0e0b0xyg1 = fun.f_divide(xl_feedsupply_pa1e1b1j2wzida0e0b0xyg1,

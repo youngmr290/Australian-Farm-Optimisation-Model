@@ -5781,6 +5781,12 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     distribution_tva1e1b1nw8zida0e0b0xyg1w9 = distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 * distribution_season_va1e1b1nw8zida0e0b0xyg1w9
     distribution_va1e1b1nw8zida0e0b0xyg3w9 = distribution_condense_va1e1b1nw8zida0e0b0xyg3w9 * distribution_season_va1e1b1nw8zida0e0b0xyg3w9
 
+    # ##store cluster associations for use in creating the optimal feedsupply at the end of the trial
+    # pkl_fs_info['distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9'] = distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9
+    # a_prev_condense_va1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate((dvp_type_va1e1b1nwzida0e0b0xyg1==condense_vtype1) * index_va1e1b1nwzida0e0b0xyg1,
+    #     axis=p_pos)  # return the index for each  condense dvp or index for previous condense dvp if the dvp is not condense
+    # pkl_fs_info['a_prev_condense_va1e1b1nwzida0e0b0xyg1'] = a_prev_condense_va1e1b1nwzida0e0b0xyg1
+
     ###########################
     #create production params #
     ###########################
