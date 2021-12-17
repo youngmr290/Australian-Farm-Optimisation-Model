@@ -117,7 +117,7 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     otherwise some seasons do not incur the cashflow.
 
     :param date_incurred: datetime64 date when cashflow is incurred (must include z axis)
-    :param enterprise: enterprise
+    :param enterprise: enterprise. If no enterprise is passed in the cashflow is averaged across the c0 axis.
     :param z_pos: axis position of z (must be negative eg reference from the end).
     :param c0_inc: boolean stating if c0 axis is included in date_incurred
     '''
@@ -157,12 +157,18 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     final_cashflow_c0p7 = np.swapaxes(final_cashflow_p7c0, 0, 1)
     final_wc_c0p7 = np.swapaxes(final_wc_p7c0, 0, 1)
 
-    ##adjust for enterprise
+    ##adjust cashflow for enterprise - this essentially selects which interest to use.
+    ## if no enterprise is provided the interest from all enterprise dates are averaged.
     if enterprise is not None:
-        keys_c0 = np.expand_dims(sinp.general['i_enterprises_c0'], tuple(range(1, final_cashflow_c0p7.ndim)))
-        final_cashflow_c0p7 = final_cashflow_c0p7 * (keys_c0==enterprise)
+        keys_c0 = sinp.general['i_enterprises_c0']
+        final_cashflow_p7 = final_cashflow_c0p7[keys_c0==enterprise,...]
+    else:
+        final_cashflow_p7 = np.average(final_cashflow_c0p7, axis=0)
 
-    return final_cashflow_c0p7, final_wc_c0p7
+    ##mask c0 on wc
+    mask_wc_c0 = np.array([True, True]) #todo this need to be an input in pinp near the wc dates
+    final_wc_c0p7 = final_wc_c0p7[mask_wc_c0,:]
+    return final_cashflow_p7, final_wc_c0p7
 
 #################
 #overheads      #
@@ -182,22 +188,24 @@ def overheads(params, r_vals):
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     ###call allocation/interset function - needs to be numpy
-    overhead_cost_allocation_c0p7z, overhead_wc_allocation_c0p7z = f_cashflow_allocation(overhead_start_c0[:,na], z_pos=-1, c0_inc=True)
+    ### no enterprise is passed because fixed cost are for both enterprise and thus the interest is the average of both enterprises
+    overhead_cost_allocation_p7z, overhead_wc_allocation_c0p7z = f_cashflow_allocation(overhead_start_c0[:,na], z_pos=-1, c0_inc=True)
 
     ##cost - overheads are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr).
     overheads = pinp.general['i_overheads']
     overheads = overheads.sum()
-    overheads_c0_alloc_c0 = pinp.finance['i_fixed_cost_enterprise_allocation_c0']
-    overheads_c0p7z = overheads * overheads_c0_alloc_c0[:,na,na]
-    overhead_cost_c0p7z = overhead_cost_allocation_c0p7z * overheads_c0p7z
-    overhead_wc_c0p7z = overhead_wc_allocation_c0p7z * overheads_c0p7z
+    # overheads_c0_alloc_c0 = pinp.finance['i_fixed_cost_enterprise_allocation_c0'] #todo remove this input
+    # overheads_c0p7z = overheads * overheads_c0_alloc_c0[:,na,na]
+    overhead_cost_p7z = overhead_cost_allocation_p7z * overheads
+    overhead_wc_c0p7z = overhead_wc_allocation_c0p7z * overheads
 
     ##convert to df
+    new_index_p7z = pd.MultiIndex.from_product([keys_p7,keys_z])
+    overhead_cost_p7z = pd.Series(overhead_cost_p7z.ravel(),index=new_index_p7z)
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0,keys_p7,keys_z])
-    overhead_cost_c0p7z = pd.Series(overhead_cost_c0p7z.ravel(),index=new_index_c0p7z)
     overhead_wc_c0p7z = pd.Series(overhead_wc_c0p7z.ravel(),index=new_index_c0p7z)
 
-    params['overheads_cost'] = overhead_cost_c0p7z.to_dict()
+    params['overheads_cost'] = overhead_cost_p7z.to_dict()
     params['overheads_wc'] = overhead_wc_c0p7z.to_dict()
 
     ##store r_vals
@@ -205,7 +213,7 @@ def overheads(params, r_vals):
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, overhead_cost_c0p7z, 'overheads', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, overhead_cost_p7z, 'overheads', mask_season_p7z, z_pos=-1)
 
 #################
 #Min ROE        #

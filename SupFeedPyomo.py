@@ -37,7 +37,7 @@ def f1_suppyomo_local(params, model):
     ######### 
 
     ##sup cost
-    model.p_sup_cost = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_feed_periods, model.s_crops, initialize=params['total_sup_cost'], default = 0.0, mutable=True, doc='cost of storing and feeding 1t of sup each period')
+    model.p_sup_cost = pe.Param(model.s_season_periods, model.s_season_types, model.s_feed_periods, model.s_crops, initialize=params['total_sup_cost'], default = 0.0, mutable=True, doc='cost of storing and feeding 1t of sup each period')
     
     ##sup wc
     model.p_sup_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_feed_periods, model.s_crops, initialize=params['total_sup_wc'], default = 0.0, mutable=True, doc='wc of storing and feeding 1t of sup each period')
@@ -60,7 +60,7 @@ def f1_suppyomo_local(params, model):
     model.p_sup_md = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types, initialize=params['md_tonne'] , default = 0.0, doc='md per tonne of grain fed')
     
     ##price buy grain
-    model.p_buy_grain_price = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['buy_grain_price'], default = 0.0, doc='price to buy grain from neighbour')
+    model.p_buy_grain_price = pe.Param(model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['buy_grain_price'], default = 0.0, doc='price to buy grain from neighbour')
 
     ##wc buy grain
     model.p_buy_grain_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['buy_grain_wc'], default = 0.0, doc='wc to buy grain from neighbour')
@@ -77,16 +77,16 @@ def f1_suppyomo_local(params, model):
 #functions for core model
 #######################################################################################################################################################
 #######################################################################################################################################################
-def f_sup_cost(model,q,s,c0,p7,z):
+def f_sup_cost(model,q,s,p7,z):
     '''
     Calculate the total cost of feeding the selected level of supplement.
 
     Used in global constraint (con_cashflow). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_cost[c0,p7,z,p6,k]
+    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_cost[p7,z,p6,k]
                for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods
-               if pe.value(model.p_sup_cost[c0,p7,z,p6,k])!=0)
+               if pe.value(model.p_sup_cost[p7,z,p6,k])!=0)
 
 def f_sup_wc(model,q,s,c0,p7,z):
     '''

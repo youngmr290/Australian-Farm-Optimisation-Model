@@ -117,11 +117,11 @@ def f1_labpyomo_local(params, model):
     
     model.p_perm_supervision = Param(model.s_labperiods, model.s_season_types, initialize= params['permanent supervision'], default = 0.0, mutable=True, doc='hours of supervision required by a permanent staff in each period')
     
-    model.p_perm_cost = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize = params['perm_cost'], default = 0.0, doc = 'cost of a permanent staff for 1 yr')
+    model.p_perm_cost = Param(model.s_season_periods, model.s_season_types, initialize = params['perm_cost'], default = 0.0, doc = 'cost of a permanent staff for 1 yr')
     
     model.p_perm_wc = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize = params['perm_wc'], default = 0.0, doc = 'wc of a permanent staff for 1 yr')
     
-    model.p_casual_cost = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_labperiods, initialize = params['casual_cost'], default = 0.0, doc = 'cost of a casual staff for each labour period')
+    model.p_casual_cost = Param(model.s_season_periods, model.s_season_types, model.s_labperiods, initialize = params['casual_cost'], default = 0.0, doc = 'cost of a casual staff for each labour period')
     
     model.p_casual_wc = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_labperiods, initialize = params['casual_wc'], default = 0.0, doc = 'wc of a casual staff for each labour period')
     
@@ -131,7 +131,7 @@ def f1_labpyomo_local(params, model):
     
     model.p_manager_hours = Param(model.s_labperiods, model.s_season_types, initialize= params['manager hours'], default = 0.0, doc='hours worked by a manager in each period')
     
-    model.p_manager_cost = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize = params['manager_cost'], default = 0.0, doc = 'cost of a manager for 1 yr')
+    model.p_manager_cost = Param(model.s_season_periods, model.s_season_types, initialize = params['manager_cost'], default = 0.0, doc = 'cost of a manager for 1 yr')
     
     model.p_manager_wc = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize = params['manager_wc'], default = 0.0, doc = 'wc of a manager for 1 yr')
     
@@ -204,16 +204,16 @@ def f_con_labour_transfer_casual(model):
 
 #sum the cost of perm, casual and manager labour.
 
-def f_labour_cost(model,q,s,c0,p7,z):
+def f_labour_cost(model,q,s,p7,z):
     '''
     Calculate the total cost of the selected labour activities. Perm and manager labour cost is allocated to each
     enterprise based on the fixed cost allocation proportion.
 
     Used in global constraint (con_cashflow). See CorePyomo
     '''
-    cas = sum(model.v_quantity_casual[q,s,p5,z] * model.p_casual_cost[c0,p7,z,p5] for p5 in model.s_labperiods)
-    perm = model.v_quantity_perm * model.p_perm_cost[c0,p7,z]
-    manager = model.v_quantity_manager * model.p_manager_cost[c0,p7,z]
+    cas = sum(model.v_quantity_casual[q,s,p5,z] * model.p_casual_cost[p7,z,p5] for p5 in model.s_labperiods)
+    perm = model.v_quantity_perm * model.p_perm_cost[p7,z]
+    manager = model.v_quantity_manager * model.p_manager_cost[p7,z]
     return cas + perm + manager
 
 def f_labour_wc(model,q,s,c0,p7,z):

@@ -64,21 +64,19 @@ def f_buy_grain_price(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='stk', z_pos=-1)
-
-    # ##add p7 axis - needed so yield can be required from the same m that it is sold.
-    # grain_cost_allocation_p7c0p7z = grain_cost_allocation_c0p7z * alloc_p7z[:,na,na,:]
-    # grain_wc_allocation_p7c0p7z = grain_wc_allocation_c0p7z * alloc_p7z[:,na,na,:]
+    grain_cost_allocation_p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='stk', z_pos=-1)
 
     ##convert to df
+    new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
+    grain_income_allocation_p7z = pd.Series(grain_cost_allocation_p7z.ravel(), index=new_index_p7z)
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
-    grain_income_allocation_c0p7z = pd.Series(grain_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
     grain_wc_allocation_c0p7z = pd.Series(grain_wc_allocation_c0p7z.ravel(), index=new_index_c0p7z)
 
+    cols_p7zg = pd.MultiIndex.from_product([keys_p7, keys_z, price_k_g.columns])
+    grain_income_allocation_p7zg = grain_income_allocation_p7z.reindex(cols_p7zg, axis=1)#adds level to header so i can mul in the next step
     cols_c0p7zg = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, price_k_g.columns])
-    grain_income_allocation_c0p7zg = grain_income_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
     grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
-    buy_grain_price =  price_k_g.mul(grain_income_allocation_c0p7zg,axis=1, level=-1)
+    buy_grain_price =  price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
     buy_grain_price_wc =  price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
 
     ##buy grain period - purchased grain can only provide into the grain transfer constraint in the phase period when it is purchased (otherwise it will get free grain)
@@ -148,24 +146,26 @@ def f_sup_cost(r_vals):
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     keys_p6 = pinp.period['i_fp_idx']
-    sup_cost_allocation_c0p7zp6, sup_wc_allocation_c0p7zp6 = fin.f_cashflow_allocation(start_p6z.T, enterprise='stk', z_pos=-2)
+    sup_cost_allocation_p7zp6, sup_wc_allocation_c0p7zp6 = fin.f_cashflow_allocation(start_p6z.T, enterprise='stk', z_pos=-2)
     ###convert to df
+    new_index_p7zp6 = pd.MultiIndex.from_product([keys_p7, keys_z, keys_p6])
+    sup_cost_allocation_p7zp6 = pd.Series(sup_cost_allocation_p7zp6.ravel(), index=new_index_p7zp6)
     new_index_c0p7zp6 = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6])
-    sup_cost_allocation_c0p7zp6 = pd.Series(sup_cost_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)
     sup_wc_allocation_c0p7zp6 = pd.Series(sup_wc_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)
     ###reindex
+    cols_p7zp6k = pd.MultiIndex.from_product([keys_p7, keys_z, keys_p6, feeding_cost_k.index])
+    sup_cost_allocation_p7zp6k = sup_cost_allocation_p7zp6.reindex(cols_p7zp6k)
     cols_c0p7zp6k = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6, feeding_cost_k.index])
-    sup_cost_allocation_c0p7zp6k = sup_cost_allocation_c0p7zp6.reindex(cols_c0p7zp6k)
     sup_wc_allocation_c0p7zp6k = sup_wc_allocation_c0p7zp6.reindex(cols_c0p7zp6k)
 
     ##adjust cost for allocation and interest
-    feeding_cost_c0p7zp6k = sup_cost_allocation_c0p7zp6k.mul(feeding_cost_k, level=4)
+    feeding_cost_p7zp6k = sup_cost_allocation_p7zp6k.mul(feeding_cost_k, level=3)
     feeding_wc_c0p7zp6k = sup_wc_allocation_c0p7zp6k.mul(feeding_cost_k, level=4)
-    storage_cost_c0p7zp6k = sup_cost_allocation_c0p7zp6k.mul(storage_cost_k, level=4)
+    storage_cost_p7zp6k = sup_cost_allocation_p7zp6k.mul(storage_cost_k, level=3)
     storage_wc_c0p7zp6k = sup_wc_allocation_c0p7zp6k.mul(storage_cost_k, level=4)
 
     ##total cost = feeding cost plus storage cost
-    total_sup_cost_c0p7zp6k = feeding_cost_c0p7zp6k + storage_cost_c0p7zp6k
+    total_sup_cost_p7zp6k = feeding_cost_p7zp6k + storage_cost_p7zp6k
     total_sup_wc_c0p7zp6k = feeding_wc_c0p7zp6k + storage_wc_c0p7zp6k
 
     ##dep
@@ -189,10 +189,10 @@ def f_sup_cost(r_vals):
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, total_sup_cost_c0p7zp6k, 'total_sup_cost_c0p7zp6k', mask_season_p7z[:,:,na,na], z_pos=-3)
+    fun.f1_make_r_val(r_vals, total_sup_cost_p7zp6k, 'total_sup_cost_p7zp6k', mask_season_p7z[:,:,na,na], z_pos=-3)
 
     ##return cost, dep and asset value
-    return total_sup_cost_c0p7zp6k, total_sup_wc_c0p7zp6k, storage_dep_p7p6zk, storage_asset_p7p6zk
+    return total_sup_cost_p7zp6k, total_sup_wc_c0p7zp6k, storage_dep_p7p6zk, storage_asset_p7p6zk
 
 
 def f_sup_md_vol():

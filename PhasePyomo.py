@@ -45,10 +45,10 @@ def f1_croppyomo_local(params, model):
     #param  #
     #########
 
-    model.p_rotation_cost = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_lmus, model.s_phases,
+    model.p_rotation_cost = pe.Param(model.s_season_periods, model.s_season_types, model.s_lmus, model.s_phases,
                                      initialize=params['rot_cost'], default=0, mutable=False, doc='total cost for 1 unit of rotation')
        
-    model.p_increment_rotation_cost = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_lmus,
+    model.p_increment_rotation_cost = pe.Param(model.s_season_periods, model.s_season_types, model.s_lmus,
                                                model.s_phases, initialize=params['increment_rot_cost'],
                                                default=0, mutable=False, doc='total cost for 1 unit of rotation')
 
@@ -65,7 +65,7 @@ def f1_croppyomo_local(params, model):
 
     model.p_grainpool_proportion = pe.Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
     
-    model.p_grain_price = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
+    model.p_grain_price = pe.Param(model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
     
     model.p_grain_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['grain_wc'],default = 0.0, doc='farm gate wc per tonne of each grain')
     
@@ -122,16 +122,16 @@ def f_phasesow_req(model,q,s,p7,k,l,z):
 # functions used to define cashflow #
 #####################################
 
-def f_rotation_cost(model,q,s,c0,p7,z):
+def f_rotation_cost(model,q,s,p7,z):
     '''
     Calculate the total cost of the selected rotation phases.
 
     Used in objective. See CorePyomo
     '''
-    return sum(model.p_rotation_cost[c0,p7,z,l,r]*model.v_phase_area[q,s,p7,z,r,l]
-               + model.p_increment_rotation_cost[c0,p7,z,l,r]*model.v_phase_increment[q,s,p7,z,r,l]
+    return sum(model.p_rotation_cost[p7,z,l,r]*model.v_phase_area[q,s,p7,z,r,l]
+               + model.p_increment_rotation_cost[p7,z,l,r]*model.v_phase_increment[q,s,p7,z,r,l]
                for r in model.s_phases for l in model.s_lmus
-                   if pe.value(model.p_rotation_cost[c0,p7,z,l,r]) != 0 or pe.value(model.p_increment_rotation_cost[c0,p7,z,l,r]) != 0)
+                   if pe.value(model.p_rotation_cost[p7,z,l,r]) != 0 or pe.value(model.p_increment_rotation_cost[p7,z,l,r]) != 0)
 
 def f_rotation_wc(model,q,s,c0,p7,z):
     '''

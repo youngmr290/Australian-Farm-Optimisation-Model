@@ -199,13 +199,13 @@ def f_labour_general(params,r_vals):
     ##cost of casual for each labour period - wage plus super plus workers comp (multiplied by wage because super and others are %)
     ##differect to perm and manager because they are at a fixed level throughout the year ie same number of perm staff all yr.
     casual_cost_p5z = cas_hrs_total_p5z * (uinp.price['casual_cost'] + uinp.price['casual_cost'] * uinp.price['casual_super'] + uinp.price['casual_cost'] * uinp.price['casual_workers_comp'])
-    casual_cost_c0_alloc_c0 = pinp.finance['i_fixed_cost_enterprise_allocation_c0']
-    casual_cost_c0zp5 = casual_cost_p5z.T * casual_cost_c0_alloc_c0[:,na,na]
+    casual_cost_zp5 = casual_cost_p5z.T
 
     ##labour cost cashflow period allocation and interest
-    labour_cost_allocation_c0p7zp5, labour_wc_allocation_c0p7zp5 = fin.f_cashflow_allocation(lp_start_p5z.T, z_pos=-2)
-    casual_cost_c0p7zp5 = casual_cost_c0zp5[:,na,...] * labour_cost_allocation_c0p7zp5
-    casual_wc_c0p7zp5 = casual_cost_c0zp5[:,na,...] * labour_wc_allocation_c0p7zp5
+    ### no enterprise is passed because fixed cost are for both enterprise and thus the interest is the average of both enterprises
+    labour_cost_allocation_p7zp5, labour_wc_allocation_c0p7zp5 = fin.f_cashflow_allocation(lp_start_p5z.T, z_pos=-2)
+    casual_cost_p7zp5 = casual_cost_zp5 * labour_cost_allocation_p7zp5
+    casual_wc_c0p7zp5 = casual_cost_zp5 * labour_wc_allocation_c0p7zp5
 
     ########
     #z mask#
@@ -234,6 +234,10 @@ def f_labour_general(params,r_vals):
     index_p5z = fun.cartesian_product_simple_transpose(arrays)
     tup_p5z = tuple(map(tuple, index_p5z))
 
+    arrays = [keys_p7, keys_z, keys_p5]
+    index_p7zp5 = fun.cartesian_product_simple_transpose(arrays)
+    tup_p7zp5 = tuple(map(tuple, index_p7zp5))
+
     arrays = [keys_c0, keys_p7, keys_z, keys_p5]
     index_c0p7zp5 = fun.cartesian_product_simple_transpose(arrays)
     tup_c0p7zp5 = tuple(map(tuple, index_c0p7zp5))
@@ -247,7 +251,7 @@ def f_labour_general(params,r_vals):
     params['casual ub'] = dict(zip(tup_p5z, ub_cas_p5z.ravel()))
     params['casual lb'] = dict(zip(tup_p5z, lb_cas_p5z.ravel()))
 
-    params['casual_cost'] =dict(zip(tup_c0p7zp5, casual_cost_c0p7zp5.ravel()))
+    params['casual_cost'] =dict(zip(tup_p7zp5, casual_cost_p7zp5.ravel()))
     params['casual_wc'] =dict(zip(tup_c0p7zp5, casual_wc_c0p7zp5.ravel()))
 
     ##store r_vals
@@ -257,7 +261,7 @@ def f_labour_general(params,r_vals):
     ###store
     fun.f1_make_r_val(r_vals, maskz8_p5z, 'maskz8_p5z')
     fun.f1_make_r_val(r_vals, keys_p5, 'keys_p5')
-    fun.f1_make_r_val(r_vals, casual_cost_c0p7zp5, 'casual_cost_c0p7zp5', mask_season_p7z[:,:,na], z_pos=-2)
+    fun.f1_make_r_val(r_vals, casual_cost_p7zp5, 'casual_cost_p7zp5', mask_season_p7z[:,:,na], z_pos=-2)
 
 
 def f_perm_cost(params, r_vals):
@@ -271,34 +275,34 @@ def f_perm_cost(params, r_vals):
     ##cost allocation
     labour_start_c0 = per.f_cashflow_date() + np.timedelta64(182,'D') #fixed costs are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr)
     ###call allocation/interset function - needs to be numpy
-    labour_cost_allocation_c0p7z, labour_wc_allocation_c0p7z = fin.f_cashflow_allocation(labour_start_c0[:,na], z_pos=-1, c0_inc=True)
+    ### no enterprise is passed because fixed cost are for both enterprise and thus the interest is the average of both enterprises
+    labour_cost_allocation_p7z, labour_wc_allocation_c0p7z = fin.f_cashflow_allocation(labour_start_c0[:,na], z_pos=-1, c0_inc=True)
 
     ##cost - fix costs are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr)
     cost_c0_alloc_c0 = pinp.finance['i_fixed_cost_enterprise_allocation_c0']
     ###perm
     perm_cost = (uinp.price['permanent_cost'] + uinp.price['permanent_cost'] * uinp.price['permanent_super'] \
     + uinp.price['permanent_cost'] * uinp.price['permanent_workers_comp'] + uinp.price['permanent_cost'] * uinp.price['permanent_ls_leave'])
-    perm_cost_c0p7z = perm_cost * cost_c0_alloc_c0[:,na,na]
-    perm_cost_c0p7z = perm_cost_c0p7z * labour_cost_allocation_c0p7z
-    perm_wc_c0p7z = perm_cost_c0p7z * labour_wc_allocation_c0p7z
+    perm_cost_p7z = perm_cost * labour_cost_allocation_p7z
+    perm_wc_c0p7z = perm_cost * labour_wc_allocation_c0p7z
 
     ###manager
     manager_cost = uinp.price['manager_cost']
-    manager_cost_c0p7z = manager_cost * cost_c0_alloc_c0[:,na,na]
-    manager_cost_c0p7z = manager_cost_c0p7z * labour_cost_allocation_c0p7z
-    manager_wc_c0p7z = manager_cost_c0p7z * labour_wc_allocation_c0p7z
+    manager_cost_p7z = manager_cost * labour_cost_allocation_p7z
+    manager_wc_c0p7z = manager_cost * labour_wc_allocation_c0p7z
 
     ##keys
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
 
+    arrays_p7z = [keys_p7, keys_z]
     arrays_c0p7z = [keys_c0, keys_p7, keys_z]
 
     ##params and report vals
-    params['perm_cost'] = fun.f1_make_pyomo_dict(perm_cost_c0p7z, arrays_c0p7z)
+    params['perm_cost'] = fun.f1_make_pyomo_dict(perm_cost_p7z, arrays_p7z)
     params['perm_wc'] = fun.f1_make_pyomo_dict(perm_wc_c0p7z, arrays_c0p7z)
-    params['manager_cost'] = fun.f1_make_pyomo_dict(manager_cost_c0p7z, arrays_c0p7z)
+    params['manager_cost'] = fun.f1_make_pyomo_dict(manager_cost_p7z, arrays_p7z)
     params['manager_wc'] = fun.f1_make_pyomo_dict(manager_wc_c0p7z, arrays_c0p7z)
 
     ##store r_vals
@@ -306,8 +310,8 @@ def f_perm_cost(params, r_vals):
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, perm_cost_c0p7z, 'perm_cost_c0p7z', mask_season_p7z, z_pos=-1)
-    fun.f1_make_r_val(r_vals, manager_cost_c0p7z, 'manager_cost_c0p7z', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, perm_cost_p7z, 'perm_cost_p7z', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, manager_cost_p7z, 'manager_cost_p7z', mask_season_p7z, z_pos=-1)
 
 
 

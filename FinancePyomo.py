@@ -31,9 +31,9 @@ def f1_finpyomo_local(params, model):
     ############
 
     ##credit for a given time period (time period defined by cashflow set)
-    model.v_credit = Var(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net positive cashflow in a given period')
+    model.v_credit = Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net positive cashflow in a given period')
     ##debit for a given time period (time period defined by cashflow set)
-    model.v_debit = Var(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net negative cashflow in a given period')
+    model.v_debit = Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net negative cashflow in a given period')
     ##working capital credit for a given time period (time period defined by cashflow set)
     model.v_wc_credit = Var(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net positive working capital in a given period')
     ##working capital for a given time period (time period defined by cashflow set)
@@ -48,7 +48,7 @@ def f1_finpyomo_local(params, model):
     ####################
     #params            #
     ####################
-    model.p_overhead_cost = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize = params['overheads_cost'], doc = 'cost of overheads each period')
+    model.p_overhead_cost = Param(model.s_season_periods, model.s_season_types, initialize = params['overheads_cost'], doc = 'cost of overheads each period')
 
     model.p_overhead_wc = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize = params['overheads_wc'], doc = 'wc of overheads each period')
 

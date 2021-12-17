@@ -128,11 +128,14 @@ def f_farmgate_grain_price(r_vals={}):
     grain_price_info_df = uinp.price['grain_price_info'] #grain info
     percentile_price_df = uinp.price['grain_price'] #grain price for 3 different percentiles
     grain_price_percentile = uinp.price['grain_price_percentile'] #price percentile to use
+    grain_price_scalar_c1z = zfun.f_seasonal_inp(pd.read_excel('PriceScenarios.xlsx',sheet_name='grain',index_col=0,header=0,engine='openpyxl')
+                                                 ,numpy=False, axis=1, level=0)
 
     ##extrapolate price for the selected percentile (can go beyond the data input range)
     grain_price_firsts = pd.Series()
     for k in percentile_price_df.index:
         grain_price_firsts[k] = fun.np_extrap(np.array([grain_price_percentile]), percentile_price_df.columns, percentile_price_df.loc[k].values)[0] #returns as one value in an array thus take [0]
+
     ##seconds price
     grain_price_seconds = grain_price_firsts * (1-grain_price_info_df['seconds_discount'])
 
@@ -146,9 +149,14 @@ def f_farmgate_grain_price(r_vals={}):
             + pinp.general['rail_cartage'] + uinp.price['flagfall'])
     tols= grain_price_info_df['grain_tolls']
     total_fees= cartage+tols
-    farmgate_price = price_df.sub(total_fees, axis=0).clip(0)
-    fun.f1_make_r_val(r_vals,farmgate_price,'farmgate_price')
-    return farmgate_price
+    farmgate_price_kg = price_df.sub(total_fees, axis=0).clip(0)
+
+    ##scale by c1 & z
+
+
+    ##store and return
+    fun.f1_make_r_val(r_vals,farmgate_price_kg,'farmgate_price')
+    return farmgate_price_kg
 
 
 def f_grain_price(r_vals):
@@ -167,7 +175,7 @@ def f_grain_price(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
+    grain_cost_allocation_p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
 
     # ##add p7 axis - needed so yield can be required from the same m that it is sold.
     # alloc_p7z = zfun.f1_z_period_alloc(start[na], z_pos=-1)
@@ -175,14 +183,16 @@ def f_grain_price(r_vals):
     # grain_wc_allocation_p7c0p7z = grain_wc_allocation_c0p7z * alloc_p7z[:,na,na,:]
 
     ##convert to df
+    new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
+    grain_income_allocation_p7z = pd.Series(grain_cost_allocation_p7z.ravel(), index=new_index_p7z)
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
-    grain_income_allocation_c0p7z = pd.Series(grain_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
     grain_wc_allocation_c0p7z = pd.Series(grain_wc_allocation_c0p7z.ravel(), index=new_index_c0p7z)
 
+    cols_p7zg = pd.MultiIndex.from_product([keys_p7, keys_z, farm_gate_price_k_g.columns])
+    grain_income_allocation_p7zg = grain_income_allocation_p7z.reindex(cols_p7zg, axis=1)#adds level to header so i can mul in the next step
     cols_c0p7zg = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, farm_gate_price_k_g.columns])
-    grain_income_allocation_c0p7zg = grain_income_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
     grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
-    grain_price =  farm_gate_price_k_g.mul(grain_income_allocation_c0p7zg,axis=1, level=-1)
+    grain_price =  farm_gate_price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
     grain_price_wc =  farm_gate_price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
 
     ##store r_vals
@@ -336,12 +346,13 @@ def f1_fert_cost_allocation():
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     ##calc interest and allocate to cash period - needs to be numpy
-    fert_cost_allocation_c0p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2)
+    fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2)
     ###convert to df
+    new_index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, start_df.index])
+    fert_cost_allocation_p7zn = pd.Series(fert_cost_allocation_p7zn.ravel(), index=new_index_p7zn)
     new_index_c0p7zn = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, start_df.index])
-    fert_cost_allocation_c0p7zn = pd.Series(fert_cost_allocation_c0p7zn.ravel(), index=new_index_c0p7zn)
     fert_wc_allocation_c0p7zn = pd.Series(fert_wc_allocation_c0p7zn.ravel(), index=new_index_c0p7zn)
-    return fert_cost_allocation_c0p7zn, fert_wc_allocation_c0p7zn
+    return fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn
 # t_allocation=f1_fert_cost_allocation()
 
 
@@ -466,25 +477,29 @@ def f_fert_cost(r_vals):
     fertreq = f_fert_req()
     cost=uinp.price['fert_cost'].squeeze()
     transport=uinp.price['fert_cartage_cost']  #transport cost
-    fert_cost_allocation_c0p7zn, fert_wc_allocation_c0p7zn = f1_fert_cost_allocation()
-    fert_cost_allocation_z_c0p7n = fert_cost_allocation_c0p7zn.unstack(2).T
+    fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn = f1_fert_cost_allocation()
+    fert_cost_allocation_z_p7n = fert_cost_allocation_p7zn.unstack(1).T
     fert_wc_allocation_z_c0p7n = fert_wc_allocation_c0p7zn.unstack(2).T
 
     ##calc cost of actual fertiliser
     total_cost = cost + transport #total cost = fert cost and transport.
     phase_fert_cost_rzl_n = fertreq.mul(total_cost/1000,axis=1) #div by 1000 to convert to $/kg,
-    phase_fert_cost_rzl_c0p7n = phase_fert_cost_rzl_n.reindex(fert_cost_allocation_z_c0p7n.columns, axis=1, level=2)
-    phase_fert_cost_rl_c0p7nz = phase_fert_cost_rzl_c0p7n.unstack(1)
-    phase_fert_cost_rl_c0p7z = phase_fert_cost_rl_c0p7nz.mul(fert_cost_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
-    phase_fert_wc_rl_c0p7z = phase_fert_cost_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    phase_fert_cost_rzl_p7n = phase_fert_cost_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
+    phase_fert_cost_rl_p7nz = phase_fert_cost_rzl_p7n.unstack(1)
+    phase_fert_cost_rl_p7z = phase_fert_cost_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).sum(axis=1, level=(0,2))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    phase_fert_wc_rzl_c0p7n = phase_fert_cost_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
+    phase_fert_wc_rl_c0p7nz = phase_fert_wc_rzl_c0p7n.unstack(1)
+    phase_fert_wc_rl_c0p7z = phase_fert_wc_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
 
     ##aplication cost per tonne
     application_cost_tonne = mac.fert_app_cost_t()
     fert_app_cost_tonne_rzl_n = fertreq.mul(application_cost_tonne/1000,axis=1) #div by 1000 to convert to $/kg
-    fert_app_cost_tonne_rzl_c0p7n = fert_app_cost_tonne_rzl_n.reindex(fert_cost_allocation_z_c0p7n.columns, axis=1, level=2)
-    fert_app_cost_tonne_rl_c0p7nz = fert_app_cost_tonne_rzl_c0p7n.unstack(1)
-    fert_app_cost_tonne_rl_c0p7z = fert_app_cost_tonne_rl_c0p7nz.mul(fert_cost_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
-    fert_app_wc_tonne_rl_c0p7z = fert_app_cost_tonne_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    fert_app_cost_tonne_rzl_p7n = fert_app_cost_tonne_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
+    fert_app_cost_tonne_rl_p7nz = fert_app_cost_tonne_rzl_p7n.unstack(1)
+    fert_app_cost_tonne_rl_p7z = fert_app_cost_tonne_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).sum(axis=1, level=(0,2))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    fert_app_wc_tonne_rzl_c0p7n = fert_app_cost_tonne_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
+    fert_app_wc_tonne_rl_c0p7nz = fert_app_wc_tonne_rzl_c0p7n.unstack(1)
+    fert_app_wc_tonne_rl_c0p7z = fert_app_wc_tonne_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
 
     ##app cost per ha
     ###call passes function (it has to be a separate function because it is used in crplabour.py as well
@@ -492,26 +507,26 @@ def f_fert_cost(r_vals):
     ###add the cost for each pass
     fert_cost_ha = mac.fert_app_cost_ha() #cost for 1 pass for each fert.
     fert_app_cost_ha_rzl_n = fert_passes.mul(fert_cost_ha,axis=1)
-    fert_app_cost_ha_rzl_c0p7n = fert_app_cost_ha_rzl_n.reindex(fert_cost_allocation_z_c0p7n.columns, axis=1, level=2)
-    fert_app_cost_ha_rl_c0p7nz = fert_app_cost_ha_rzl_c0p7n.unstack(1)
-    fert_app_cost_ha_rl_c0p7z = fert_app_cost_ha_rl_c0p7nz.mul(fert_cost_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
-    fert_app_wc_ha_rl_c0p7z = fert_app_cost_ha_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    fert_app_cost_ha_rzl_p7n = fert_app_cost_ha_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
+    fert_app_cost_ha_rl_p7nz = fert_app_cost_ha_rzl_p7n.unstack(1)
+    fert_app_cost_ha_rl_p7z = fert_app_cost_ha_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).sum(axis=1, level=(0,2))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    fert_app_wc_ha_rzl_c0p7n = fert_app_cost_ha_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
+    fert_app_wc_ha_rl_c0p7nz = fert_app_wc_ha_rzl_c0p7n.unstack(1)
+    fert_app_wc_ha_rl_c0p7z = fert_app_wc_ha_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
 
     ##combine all costs - fert, app per ha and app per tonne
-    fert_cost_total = phase_fert_cost_rl_c0p7z + fert_app_cost_ha_rl_c0p7z + fert_app_cost_tonne_rl_c0p7z
-    fert_cost_total = fert_cost_total.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
+    fert_cost_total = phase_fert_cost_rl_p7z + fert_app_cost_ha_rl_p7z + fert_app_cost_tonne_rl_p7z
 
     ##combine all wc - fert, app per ha and app per tonne
     fert_wc_total = phase_fert_wc_rl_c0p7z + fert_app_wc_ha_rl_c0p7z + fert_app_wc_tonne_rl_c0p7z
-    fert_wc_total = fert_wc_total.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
 
     ##store r_vals
     ###make z8 mask - used to uncluster
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, phase_fert_cost_rl_c0p7z, 'phase_fert_cost', mask_season_p7z, z_pos=-1)
-    fun.f1_make_r_val(r_vals, fert_app_cost_ha_rl_c0p7z + fert_app_cost_tonne_rl_c0p7z, 'fert_app_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, phase_fert_cost_rl_p7z, 'phase_fert_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, fert_app_cost_ha_rl_p7z + fert_app_cost_tonne_rl_p7z, 'fert_app_cost', mask_season_p7z, z_pos=-1)
     return fert_cost_total, fert_wc_total
 
 def f_nap_fert_req():
@@ -568,7 +583,7 @@ def f_nap_fert_cost(r_vals):
         hence it needs to be a separate function.
 
     '''
-    fert_cost_allocation_c0p7zn, fert_wc_allocation_c0p7zn = f1_fert_cost_allocation()
+    fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn = f1_fert_cost_allocation()
     cost=uinp.price['fert_cost'].squeeze()
     transport=uinp.price['fert_cartage_cost']  #transport cost
     fertreq = f_nap_fert_req()
@@ -576,9 +591,10 @@ def f_nap_fert_cost(r_vals):
     ##fert cost
     total_cost = cost + transport #total cost = fert cost and transport.
     phase_fert_cost_rl_n = fertreq.mul(total_cost, axis=1)/1000  #div by 1000 to convert to $/kg
-    phase_fert_cost_rl_c0p7zn = phase_fert_cost_rl_n.reindex(fert_cost_allocation_c0p7zn.index, axis=1, level=3)
-    phase_fert_cost_rl_c0p7z = phase_fert_cost_rl_c0p7zn.mul(fert_cost_allocation_c0p7zn, axis=1).sum(axis=1, level=(0,1,2))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
-    phase_fert_wc_rl_c0p7z = phase_fert_cost_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).sum(axis=1, level=(0,1,2))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    phase_fert_cost_rl_p7zn = phase_fert_cost_rl_n.reindex(fert_cost_allocation_p7zn.index, axis=1, level=2)
+    phase_fert_cost_rl_p7z = phase_fert_cost_rl_p7zn.mul(fert_cost_allocation_p7zn, axis=1).sum(axis=1, level=(0,1))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    phase_fert_wc_rl_c0p7zn = phase_fert_cost_rl_n.reindex(fert_wc_allocation_c0p7zn.index, axis=1, level=3)
+    phase_fert_wc_rl_c0p7z = phase_fert_wc_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).sum(axis=1, level=(0,1,2))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
 
     ##application cost per tonne
     app_cost_tonne_rl_n = fertreq.mul(mac.fert_app_cost_t(), axis=1)/1000  #div by 1000 to convert to $/kg
@@ -587,25 +603,24 @@ def f_nap_fert_cost(r_vals):
     app_cost_ha_rl_n = passes.mul(mac.fert_app_cost_ha(), axis=1) #cost for 1 pass for each fert.
     ##total application cost in each cash period
     total_app_cost_rl_n = (app_cost_tonne_rl_n+app_cost_ha_rl_n)
-    total_app_cost_rl_c0p7zn = total_app_cost_rl_n.reindex(fert_cost_allocation_c0p7zn.index, axis=1, level=3)
-    total_app_cost_rl_c0p7z = total_app_cost_rl_c0p7zn.mul(fert_cost_allocation_c0p7zn, axis=1).sum(axis=1, level=(0,1,2))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
-    total_app_wc_rl_c0p7z = total_app_cost_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).sum(axis=1, level=(0,1,2))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    total_app_cost_rl_p7zn = total_app_cost_rl_n.reindex(fert_cost_allocation_p7zn.index, axis=1, level=2)
+    total_app_cost_rl_p7z = total_app_cost_rl_p7zn.mul(fert_cost_allocation_p7zn, axis=1).sum(axis=1, level=(0,1))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    total_app_wc_rl_c0p7zn = total_app_cost_rl_n.reindex(fert_wc_allocation_c0p7zn.index, axis=1, level=3)
+    total_app_wc_rl_c0p7z = total_app_wc_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).sum(axis=1, level=(0,1,2))  # sum the wc of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
 
     ##total fert and app cost
-    nap_fert_cost = phase_fert_cost_rl_c0p7z + total_app_cost_rl_c0p7z
-    nap_fert_cost = nap_fert_cost.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
+    nap_fert_cost = phase_fert_cost_rl_p7z + total_app_cost_rl_p7z
 
     ##total fert and app wc
     nap_fert_wc = phase_fert_wc_rl_c0p7z + total_app_wc_rl_c0p7z
-    nap_fert_wc = nap_fert_wc.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
 
     ##store r_vals
     ###make z8 mask - used to uncluster
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, phase_fert_cost_rl_c0p7z, 'nap_phase_fert_cost', mask_season_p7z, z_pos=-1)
-    fun.f1_make_r_val(r_vals, total_app_cost_rl_c0p7z, 'nap_fert_app_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, phase_fert_cost_rl_p7z, 'nap_phase_fert_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, total_app_cost_rl_p7z, 'nap_fert_app_cost', mask_season_p7z, z_pos=-1)
     return nap_fert_cost, nap_fert_wc
 
 def f1_total_fert_req():
@@ -699,13 +714,14 @@ def f_phase_stubble_cost(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    stub_cost_allocation_c0p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
+    stub_cost_allocation_p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
     ###convert to df
+    new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
+    stub_cost_allocation_p7z = pd.Series(stub_cost_allocation_p7z.ravel(), index=new_index_p7z)
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
-    stub_cost_allocation_c0p7z = pd.Series(stub_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
     stub_wc_allocation_c0p7z = pd.Series(stub_wc_allocation_c0p7z.ravel(), index=new_index_c0p7z)
     ###mul cost and allocation
-    rot_stub_cost_rl_c0p7z = stub_cost_rl_z.mul(stub_cost_allocation_c0p7z, axis=1, level=2)
+    rot_stub_cost_rl_p7z = stub_cost_rl_z.mul(stub_cost_allocation_p7z, axis=1, level=1)
     rot_stub_wc_rl_c0p7z = stub_cost_rl_z.mul(stub_wc_allocation_c0p7z, axis=1, level=2)
 
     ##store r_vals
@@ -713,14 +729,9 @@ def f_phase_stubble_cost(r_vals):
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, rot_stub_cost_rl_c0p7z, 'stub_cost', mask_season_p7z, z_pos=-1)
-    r_vals['stub_cost'] = rot_stub_cost_rl_c0p7z
+    fun.f1_make_r_val(r_vals, rot_stub_cost_rl_p7z, 'stub_cost', mask_season_p7z, z_pos=-1)
 
-    ##take crp slice of c0 to reduce param size
-    rot_stub_cost_rl_c0p7z = rot_stub_cost_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    rot_stub_wc_rl_c0p7z = rot_stub_wc_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-
-    return rot_stub_cost_rl_c0p7z, rot_stub_wc_rl_c0p7z
+    return rot_stub_cost_rl_p7z, rot_stub_wc_rl_c0p7z
 # t_stubcost=f_phase_stubble_cost()
 
 #print(timeit.timeit(fert_cost,number=10)/10)
@@ -739,12 +750,13 @@ def f1_chem_cost_allocation():
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     ##calc interest and allocate to cash period - needs to be numpy
-    chem_cost_allocation_c0p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2)
+    chem_cost_allocation_p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2)
     ###convert to df
+    new_index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, start_df.index])
+    chem_cost_allocation_p7zn = pd.Series(chem_cost_allocation_p7zn.ravel(), index=new_index_p7zn)
     new_index_c0p7zn = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, start_df.index])
-    chem_cost_allocation_c0p7zn = pd.Series(chem_cost_allocation_c0p7zn.ravel(), index=new_index_c0p7zn)
     chem_wc_allocation_c0p7zn = pd.Series(chem_wc_allocation_c0p7zn.ravel(), index=new_index_c0p7zn)
-    return chem_cost_allocation_c0p7zn, chem_wc_allocation_c0p7zn
+    return chem_cost_allocation_p7zn, chem_wc_allocation_c0p7zn
 # t_allocation=f1_chem_cost_allocation()
     
 def f_chem_application():
@@ -825,8 +837,8 @@ def f_chem_cost(r_vals):
     ##read in necessary bits and adjust indexed
     i_chem_cost = pinp.crop['chem_cost'].sort_index()
     chem_by_soil = f1_mask_lmu(pinp.crop['chem_by_lmu'], axis=1) #read in chem by soil
-    chem_cost_allocation_c0p7zn, chem_wc_allocation_c0p7zn = f1_chem_cost_allocation()
-    chem_cost_allocation_z_c0p7n = chem_cost_allocation_c0p7zn.unstack(2).T
+    chem_cost_allocation_p7zn, chem_wc_allocation_c0p7zn = f1_chem_cost_allocation()
+    chem_cost_allocation_z_p7n = chem_cost_allocation_p7zn.unstack(1).T
     chem_wc_allocation_z_c0p7n = chem_wc_allocation_c0p7zn.unstack(2).T
 
     ##add cont pasture to chem cost array
@@ -843,33 +855,37 @@ def f_chem_cost(r_vals):
     ### adjust the chem cost for each rotation by lmu
     chem_by_soil1 = chem_by_soil.stack()
     chem_cost_rzl_n=chem_cost.unstack().mul(chem_by_soil1,axis=1).stack()
-    phase_chem_cost_rzl_c0p7n = chem_cost_rzl_n.reindex(chem_cost_allocation_z_c0p7n.columns,axis=1,level=2)
-    phase_chem_cost_rl_c0p7nz = phase_chem_cost_rzl_c0p7n.unstack(1)
-    phase_chem_cost_rl_c0p7z = phase_chem_cost_rl_c0p7nz.mul(chem_cost_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the chem
-    phase_chem_wc_rl_c0p7z = phase_chem_cost_rl_c0p7nz.mul(chem_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the chem
+    ###adjust of interest and p7 period
+    phase_chem_cost_rzl_p7n = chem_cost_rzl_n.reindex(chem_cost_allocation_z_p7n.columns,axis=1,level=1)
+    phase_chem_cost_rl_p7nz = phase_chem_cost_rzl_p7n.unstack(1)
+    phase_chem_cost_rl_p7z = phase_chem_cost_rl_p7nz.mul(chem_cost_allocation_z_p7n.unstack(), axis=1).sum(axis=1, level=(0,2))  # sum the cost of all the chem
+    phase_chem_wc_rzl_c0p7n = chem_cost_rzl_n.reindex(chem_wc_allocation_z_c0p7n.columns,axis=1,level=2)
+    phase_chem_wc_rl_c0p7nz = phase_chem_wc_rzl_c0p7n.unstack(1)
+    phase_chem_wc_rl_c0p7z = phase_chem_wc_rl_c0p7nz.mul(chem_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the chem
 
     ##application cost - only a per ha component
     chem_app_cost_rzl_n = chem_applications * mac.chem_app_cost_ha()
-    chem_app_cost_rzl_c0p7n = chem_app_cost_rzl_n.reindex(chem_cost_allocation_z_c0p7n.columns, axis=1, level=2)
-    chem_app_cost_rl_c0p7nz = chem_app_cost_rzl_c0p7n.unstack(1)
-    chem_app_cost_rl_c0p7z = chem_app_cost_rl_c0p7nz.mul(chem_cost_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the chems
-    chem_app_wc_rl_c0p7z = chem_app_cost_rl_c0p7nz.mul(chem_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the chems
+    ###adjust of interest and p7 period
+    chem_app_cost_rzl_p7n = chem_app_cost_rzl_n.reindex(chem_cost_allocation_z_p7n.columns, axis=1, level=1)
+    chem_app_cost_rl_p7nz = chem_app_cost_rzl_p7n.unstack(1)
+    chem_app_cost_rl_p7z = chem_app_cost_rl_p7nz.mul(chem_cost_allocation_z_p7n.unstack(), axis=1).sum(axis=1, level=(0,2))  # sum the cost of all the chems
+    chem_app_wc_rzl_c0p7n = chem_app_cost_rzl_n.reindex(chem_wc_allocation_z_c0p7n.columns, axis=1, level=2)
+    chem_app_wc_rl_c0p7nz = chem_app_wc_rzl_c0p7n.unstack(1)
+    chem_app_wc_rl_c0p7z = chem_app_wc_rl_c0p7nz.mul(chem_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the chems
 
     ##add application cost and chem cost
-    total_cost = phase_chem_cost_rl_c0p7z + chem_app_cost_rl_c0p7z
-    total_cost = total_cost.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
+    total_cost = phase_chem_cost_rl_p7z + chem_app_cost_rl_p7z
 
     ##add application wc and chem wc
     total_wc = phase_chem_wc_rl_c0p7z + chem_app_wc_rl_c0p7z
-    total_wc = total_wc.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
 
     ##store r_vals
     ###make z8 mask - used to uncluster
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, phase_chem_cost_rl_c0p7z, 'chem_cost', mask_season_p7z, z_pos=-1)
-    fun.f1_make_r_val(r_vals, chem_app_cost_rl_c0p7z, 'chem_app_cost_ha', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, phase_chem_cost_rl_p7z, 'chem_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, chem_app_cost_rl_p7z, 'chem_app_cost_ha', mask_season_p7z, z_pos=-1)
     return total_cost, total_wc
 
 
@@ -887,6 +903,8 @@ def f_seedcost(r_vals):
         - arable area
     '''
     ##read phases and add two empty col levels
+    phases_df2 = sinp.f_phases()
+    phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns,[''],['']])  # make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
     phases_df3 = sinp.f_phases()
     phases_df3.columns = pd.MultiIndex.from_product([phases_df3.columns,[''],[''],['']])  # make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
 
@@ -922,22 +940,25 @@ def f_seedcost(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    seed_cost_allocation_c0p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(start_z, enterprise='crp', z_pos=-1)
+    seed_cost_allocation_p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(start_z, enterprise='crp', z_pos=-1)
     ###convert to df
+    new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
+    seed_cost_allocation_p7z = pd.Series(seed_cost_allocation_p7z.ravel(), index=new_index_p7z)
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
-    seed_cost_allocation_c0p7z = pd.Series(seed_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
     seed_wc_allocation_c0p7z = pd.Series(seed_wc_allocation_c0p7z.ravel(), index=new_index_c0p7z)
 
     ##mul cost by allocation - need to align column headers first
+    columns_p7zl = pd.MultiIndex.from_product([keys_p7, keys_z, seed_cost.columns])
+    seed_cost_kl_p7z = seed_cost.reindex(columns_p7zl, axis=1, level=2).stack()
+    seed_cost_kl_p7z = seed_cost_kl_p7z.mul(seed_cost_allocation_p7z, axis=1)
     columns_c0p7zl = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, seed_cost.columns])
-    seed_cost_kl_c0p7z = seed_cost.reindex(columns_c0p7zl, axis=1, level=3).stack()
-    seed_cost_kl_c0p7z = seed_cost_kl_c0p7z.mul(seed_cost_allocation_c0p7z, axis=1)
-    seed_wc_kl_c0p7z = seed_cost_kl_c0p7z.mul(seed_wc_allocation_c0p7z, axis=1)
+    seed_wc_kl_c0p7z = seed_cost.reindex(columns_c0p7zl, axis=1, level=3).stack()
+    seed_wc_kl_c0p7z = seed_wc_kl_c0p7z.mul(seed_wc_allocation_c0p7z, axis=1)
 
     ##merge to rotation df
-    phase_seed_cost_r_c0p7zl = pd.merge(phases_df3, seed_cost_kl_c0p7z.unstack(), how='left', left_on=sinp.end_col(), right_index = True)
+    phase_seed_cost_r_p7zl = pd.merge(phases_df2, seed_cost_kl_p7z.unstack(), how='left', left_on=sinp.end_col(), right_index = True)
     phase_seed_wc_r_c0p7zl = pd.merge(phases_df3, seed_wc_kl_c0p7z.unstack(), how='left', left_on=sinp.end_col(), right_index = True)
-    seedcost_rl_c0p7z = phase_seed_cost_r_c0p7zl.drop(list(range(sinp.general['phase_len'])), axis=1).stack()
+    seedcost_rl_p7z = phase_seed_cost_r_p7zl.drop(list(range(sinp.general['phase_len'])), axis=1).stack()
     seed_wc_rl_c0p7z = phase_seed_wc_r_c0p7zl.drop(list(range(sinp.general['phase_len'])), axis=1).stack()
 
     ##store r_vals
@@ -945,12 +966,9 @@ def f_seedcost(r_vals):
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, seedcost_rl_c0p7z, 'seedcost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, seedcost_rl_p7z, 'seedcost', mask_season_p7z, z_pos=-1)
 
-    ##take crp slice of c0 to reduce param size
-    seedcost_rl_c0p7z = seedcost_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    seed_wc_rl_c0p7z = seed_wc_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    return seedcost_rl_c0p7z, seed_wc_rl_c0p7z
+    return seedcost_rl_p7z, seed_wc_rl_c0p7z
 
 def f_insurance(r_vals):
     '''
@@ -975,14 +993,15 @@ def f_insurance(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    insurance_cost_allocation_c0p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
+    insurance_cost_allocation_p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
     ###convert to df
+    new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
+    insurance_cost_allocation_p7z = pd.Series(insurance_cost_allocation_p7z.ravel(), index=new_index_p7z)
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
-    insurance_cost_allocation_c0p7z = pd.Series(insurance_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
     insurance_wc_allocation_c0p7z = pd.Series(insurance_wc_allocation_c0p7z.ravel(), index=new_index_c0p7z)
 
     ##add cashflow period to col index
-    rot_insurance_cost_rl_c0p7z = rot_insurance_rl_z.mul(insurance_cost_allocation_c0p7z, axis=1, level=2)
+    rot_insurance_cost_rl_p7z = rot_insurance_rl_z.mul(insurance_cost_allocation_p7z, axis=1, level=1)
     rot_insurance_wc_rl_c0p7z = rot_insurance_rl_z.mul(insurance_wc_allocation_c0p7z, axis=1, level=2)
 
     ##store r_vals
@@ -990,12 +1009,10 @@ def f_insurance(r_vals):
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, rot_insurance_cost_rl_c0p7z, 'insurance_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rot_insurance_cost_rl_p7z, 'insurance_cost', mask_season_p7z, z_pos=-1)
 
     ##take crp slice of c0 to reduce param size.
-    rot_insurance_cost_rl_c0p7z = rot_insurance_cost_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    rot_insurance_wc_rl_c0p7z = rot_insurance_wc_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    return rot_insurance_cost_rl_c0p7z, rot_insurance_wc_rl_c0p7z
+    return rot_insurance_cost_rl_p7z, rot_insurance_wc_rl_c0p7z
 
 
 
@@ -1023,21 +1040,21 @@ def f1_rot_cost(r_vals):
     phase_stubble_cost, phase_stubble_wc = f_phase_stubble_cost(r_vals)
 
     #note if any array has dtype object then pandas throws error (No axis named 1 for object type Series)
-    cost_rl_c0p7z = pd.concat([fert_cost, nap_fert_cost, chem_cost, seedcost, insurance_cost, phase_stubble_cost],axis=1).sum(axis=1,level=(0,1,2))
+    cost_rl_p7z = pd.concat([fert_cost, nap_fert_cost, chem_cost, seedcost, insurance_cost, phase_stubble_cost],axis=1).sum(axis=1,level=(0,1))
     wc_rl_c0p7z = pd.concat([fert_wc, nap_fert_wc, chem_wc, seedwc, insurance_wc, phase_stubble_wc],axis=1).sum(axis=1,level=(0,1,2))
 
     ##stack
-    cost_c0p7zlr = cost_rl_c0p7z.unstack([1,0])
+    cost_p7zlr = cost_rl_p7z.unstack([1,0])
     wc_c0p7zlr = wc_rl_c0p7z.unstack([1,0])
 
     ##create params for v_phase_increment
     ## costs for v_phase_increment activities are incurred in the season peirod when the activity is selected
     ## however the interest is calculated as if the cost was incurred at the normal time (this is because interest
     ## is calculated for each seperate cost in the functions above).
-    increment_cost_c0p7zlr = rps.f_v_phase_increment_adj(cost_c0p7zlr,p7_pos=-4,z_pos=-3)
+    increment_cost_p7zlr = rps.f_v_phase_increment_adj(cost_p7zlr,p7_pos=-4,z_pos=-3)
     increment_wc_c0p7zlr = rps.f_v_phase_increment_adj(wc_c0p7zlr,p7_pos=-4,z_pos=-3)
 
-    return cost_c0p7zlr, increment_cost_c0p7zlr, wc_c0p7zlr, increment_wc_c0p7zlr
+    return cost_p7zlr, increment_cost_p7zlr, wc_c0p7zlr, increment_wc_c0p7zlr
 
 
 #################
