@@ -2,14 +2,36 @@
 """
 author: young
 
-To support the sporadic nature of farming income
-finance is often drawn from the bank throughout the year to fund costly operations such as seeding. This
-is also represented by working capital in AFO. A working capital constraint tracks the bank balance throughout the year
-and ensures that the maximum overdraw is below a user specified limit. This ensure the model doesnt overdraw an unrealistic
-level of capital from the bank.
+The financial components of the model include:
 
-The interest cost of working capital is calculated from when the expense is incurred through to when the income associated
-with that cost is received (cashflow date). This has an impact on total objective function value but also ensures that
+    - interest
+    - cashflow
+    - working capital overdraw
+    - minimum return on expenditure
+    - asset opportunity cost
+
+Each module tracks its relevant financial components. The finance module provides a common location to describe the
+finance section of the model and is also home to key finance functions that calculate the interest and working
+capital overdraw of each cashflow item.
+
+To support the sporadic nature of farming income, finance is often drawn from the bank throughout the year to fund
+costly operations such as seeding. This is represented by working capital in AFO. There is a working capital
+constraint for each expected date when peak debt could occur. The default is to have one peak debt date per enterprise
+just before the date the main income for that enterprise is received. The working capital constraints
+tracks the cumulative cashflow for each enterprise and ensures that the maximum overdraw is below a user specified limit.
+This ensure the model doesnt overdraw an unrealistic/undesired level of capital from the bank.
+
+The cumulative cashflow used in the working capital constraint is calculated from cashflow date (a date following the main
+income for an enterprise) to peak debt date (a date when peak debt is expected for an enterprise - typically just
+before the cashflow date). This means the main income for the enterprise is not included in the working
+capital constraint. This is because the aim of the working capital constraint is to allow the user to constrain management
+practises which have high costs. If the main income was included in this constraint there would be no way to
+constrain high cost high reward management practices.
+
+In an equilibrium model there is no start and end point. This complicates the calculation of interest because
+interest must be calculated for a given period. In AFO the interest period starts and finishes after the main income
+for the enterprise is received. This is quite logical from an expense point of view because the expense accumulates
+interest from the date it was incurred through to when the income associated with that cost is received. This ensures that
 expenditure is only incurred if the return exceeds the cost of interest.
 
 There is no representation of a starting cash balance. If it is included the model just selects the
@@ -18,15 +40,15 @@ cash, so this does not affect model solution.
 
 Tax is also not represented for several reasons:
 
-#. There are several mechanisms by which farmers seek to lessen their tax liabilities. Not all
-   are 'economically rational' and not all are easily represented in an LP model.
+    #. There are several mechanisms by which farmers seek to lessen their tax liabilities. Not all
+       are 'economically rational' and not all are easily represented in an LP model.
 
-#. Many farmers nowadays invest in farm management deposits and income-averaging as a means
-   of taxable income averaging and smoothing working capital borrowings. if the FMDs could be used
-   'perfectly' then each year would have the same taxable profit. Thus, the optimal farm management
-   is unaffected by the inclusion of tax.
+    #. Many farmers nowadays invest in farm management deposits and income-averaging as a means
+       of taxable income averaging and smoothing working capital borrowings. if the FMDs could be used
+       'perfectly' then each year would have the same taxable profit. Thus, the optimal farm management
+       is unaffected by the inclusion of tax.
 
-#. AFO is a bioeconomic model with the aim of optimising farm management. It is not a finance model.
+    #. AFO is a bioeconomic model with the aim of optimising farm management. It is not a finance model.
 
 Asset value
     Asset value is the value of all assets on the cashflow date. It captures the opportunity
@@ -47,7 +69,7 @@ that the animal was valued should be an ‘equal’ outcome solution, but this o
 interest ‘earned’ in the cashflow.
 
 The interest rate for credit & debit are different for farmers ‘real money’ in the bank.
-However, in the AFO the same interest rate is used to represent debit and credit.
+However, in AFO the same interest rate is used to represent debit and credit.
 The reasons are:
 
 #. Many farmers often have a core debt, so the farm cash position is usually negative even though
@@ -85,61 +107,6 @@ na = np.newaxis
 #######################
 # cashflow & interest #
 #######################
-# def f_cashflow_allocation(date_incurred,p_dates_c0p7,peakdebt_date,z8mask_c0p7,enterprise=None):
-#     '''
-#     Allocates cashflow and wc to a cashflow period with an additional interest component.
-#
-#     Cashflow allocation always has a length of 1. Meaning that cost is allocated based on the start date when it is
-#     incurred. Interest is calculated from this date until the end of the cashflow periods. The reason for not
-#     including a length is that cashflow for a give decision variable can not cross a season junction
-#     otherwise some seasons do not incur the cashflow.
-#
-#     All inputs must be broadcastable.
-#
-#     :param date_incurred: datetime64 date when cashflow is incurred
-#     :param enterprise: enterprise
-#     :param peak_debt_date_c0: datetime64 date peak debt occurs
-#     :param p_dates_c0p7: datetime64 cashflow dates with c0 and p7 in position 0 and 1 respectively. Other axis can be included after p7.
-#     '''
-#
-#     ##inputs
-#     rate = uinp.finance['i_interest']
-#     keys_c0 = np.expand_dims(sinp.general['i_enterprises_c0'], tuple(range(1, p_dates_c0p7.ndim)))
-#     peakdebt_date = peakdebt_date + np.timedelta64(365,'D') * (p_dates_c0p7[:,0:1,...]>peakdebt_date[:,0:1,...]) # peak debt is after the start of the cashflow
-#
-#     ##adjust yr of cashflow occurence so it occurs within the cashflow periods
-#     start_of_cash = p_dates_c0p7[:,0:1,...]
-#     end_of_cash = start_of_cash + np.timedelta64(364,'D') #use 364 because end date is the day before before the end otherwise can get item that starts on the last day of periods.
-#     add_yrs = np.ceil(np.maximum(0,(start_of_cash - date_incurred).astype('timedelta64[D]').astype(int) / 365))
-#     sub_yrs = np.ceil(np.maximum(0,(date_incurred - end_of_cash).astype('timedelta64[D]').astype(int) / 365))
-#     date_incurred = date_incurred + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
-#
-#     ##calc interest
-#     cashflow_incur_days = (end_of_cash - date_incurred).astype('timedelta64[D]').astype(int)
-#     wc_incur_days = (peakdebt_date - date_incurred).astype('timedelta64[D]').astype(int)
-#     cashflow_interest = (1 + rate / 365) ** cashflow_incur_days
-#     wc_interest = (1 + rate / 365) ** wc_incur_days
-#
-#     ##allocate to cashflow period
-#     p_dates_p7c0 = np.swapaxes(p_dates_c0p7, 0, 1) #period axis need to be first for allocation function
-#     date_incurred_p7c0 = np.swapaxes(date_incurred, 0, 1) #period axis need to be first for allocation function
-#     date_incurred_shape = date_incurred_p7c0.shape
-#     p_dates_p7c0_shape = list(p_dates_p7c0.shape) #has to be a list because cant change tuple.
-#     p_dates_p7c0_shape[0] = p_dates_p7c0_shape[0] -1 #remove the last cashflow peirod because it is not a real period. It is just the end date.
-#     shape = np.maximum.reduce([date_incurred_shape, p_dates_p7c0_shape]) #create shape which has the max size, this is used for alloc array
-#     p7_alloc_p7c0 = fun.range_allocation_np(p_dates_p7c0, date_incurred_p7c0, opposite=True, shape=tuple(shape))
-#     p7_alloc_c0p7 = np.swapaxes(p7_alloc_p7c0, 0, 1) #get axis back into correct order
-#
-#     ##add interest adjustment
-#     final_cashflow = cashflow_interest * p7_alloc_c0p7
-#     final_wc = wc_interest * p7_alloc_c0p7
-#
-#     ##adjust for enterprise
-#     if enterprise is not None:
-#         final_cashflow = final_cashflow * (keys_c0==enterprise)
-#
-#     return final_cashflow * z8mask_c0p7, final_wc * z8mask_c0p7
-
 def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     '''
     Allocates cashflow and wc to a season period and accounts for an interest component.
