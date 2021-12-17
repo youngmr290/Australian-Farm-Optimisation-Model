@@ -256,12 +256,12 @@ def f1_z_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=-1
 
     ##align axes
     p7_pos = -item_start.ndim
-    date_node_metc = fun.f_expand(date_season_node_p7z, left_pos=z_pos, right_pos2=z_pos, left_pos2=p7_pos)
-    shape = (len_p7,) + tuple(np.maximum.reduce([date_node_metc.shape[1:], item_start.shape[1:]]))  # create shape which has the max size, this is used for o array
-    alloc_metc = fun.range_allocation_np(date_node_metc, item_start, item_length, opposite=True, shape=shape)
+    date_node_p7etc = fun.f_expand(date_season_node_p7z, left_pos=z_pos, right_pos2=z_pos, left_pos2=p7_pos)
+    shape = (len_p7,) + tuple(np.maximum.reduce([date_node_p7etc.shape[1:], item_start.shape[1:]]))  # create shape which has the max size, this is used for o array
+    alloc_metc = fun.range_allocation_np(date_node_p7etc, item_start, item_length, opposite=True, shape=shape)
 
     ##mask z8
-    mask_season_z8 = f_season_transfer_mask(date_node_metc[:-1,...],z_pos,mask=True) #slice off end date p7
+    mask_season_z8 = f_season_transfer_mask(date_node_p7etc[:-1,...],z_pos,mask=True) #slice off end date p7
 
     return alloc_metc * mask_season_z8
 
