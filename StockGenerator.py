@@ -7081,8 +7081,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_p6, keys_f, keys_z, keys_g0],'sire_keys_qsp6fzg0')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvanwziy1g1')
-    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_c0, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
-                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2c0p7tvanwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
+                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2p7tvanwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b9, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvaeb9nwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
@@ -7107,8 +7107,8 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                                             , keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g2],'prog_keys_qsk3k5twzida0e0b0xyg2')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
                                             , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tvnwziaxyg3')
-    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_c0, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
-                                            , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5c0p7tvnwziaxyg3')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
+                                            , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5p7tvnwziaxyg3')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
                                             , keys_i, keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tvpnwziaxyg3')
     fun.f1_make_r_val(r_vals,[keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0
