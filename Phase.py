@@ -128,7 +128,7 @@ def f_farmgate_grain_price(r_vals={}):
     grain_price_info_df = uinp.price['grain_price_info'] #grain info
     percentile_price_df = uinp.price['grain_price'] #grain price for 3 different percentiles
     grain_price_percentile = uinp.price['grain_price_percentile'] #price percentile to use
-    grain_price_scalar_c1z = zfun.f_seasonal_inp(pd.read_excel('PriceScenarios.xlsx',sheet_name='grain',index_col=0,header=0,engine='openpyxl')
+    grain_price_scalar_c1z = zfun.f_seasonal_inp(uinp.price_variation['grain_price_scalar_c1z']
                                                  ,numpy=False, axis=1, level=0)
 
     ##extrapolate price for the selected percentile (can go beyond the data input range)
@@ -149,14 +149,18 @@ def f_farmgate_grain_price(r_vals={}):
             + pinp.general['rail_cartage'] + uinp.price['flagfall'])
     tols= grain_price_info_df['grain_tolls']
     total_fees= cartage+tols
-    farmgate_price_kg = price_df.sub(total_fees, axis=0).clip(0)
+    farmgate_price_k_g = price_df.sub(total_fees, axis=0).clip(0)
 
     ##scale by c1 & z
-
-
+    keys_z = zfun.f_keys_z()
+    keys_c1 = grain_price_scalar_c1z.index
+    new_index_c1zg = pd.MultiIndex.from_product([keys_c1,keys_z,farmgate_price_k_g.columns])
+    farmgate_price_kg_c1z = farmgate_price_k_g.reindex(new_index_c1zg, axis=1, level=2).stack()
+    farmgate_price_kg_c1z = farmgate_price_kg_c1z.mul(grain_price_scalar_c1z.stack(), axis=1)
+    farmgate_price_kgc1_z = farmgate_price_kg_c1z.stack(0)
     ##store and return
-    fun.f1_make_r_val(r_vals,farmgate_price_kg,'farmgate_price')
-    return farmgate_price_kg
+    fun.f1_make_r_val(r_vals,farmgate_price_kgc1_z,'farmgate_price')
+    return farmgate_price_kgc1_z
 
 
 def f_grain_price(r_vals):
@@ -168,7 +172,7 @@ def f_grain_price(r_vals):
 
     '''
     ##get grain price - accounts for tols and other fees
-    farm_gate_price_k_g=f_farmgate_grain_price(r_vals)
+    farmgate_price_kgc1_z=f_farmgate_grain_price(r_vals)
 
     ##allocate farm gate grain price for each cashflow period and calc interest
     start = np.array([pinp.crop['i_grain_income_date']]).astype('datetime64')
@@ -177,31 +181,33 @@ def f_grain_price(r_vals):
     keys_z = zfun.f_keys_z()
     grain_cost_allocation_p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
 
-    # ##add p7 axis - needed so yield can be required from the same m that it is sold.
-    # alloc_p7z = zfun.f1_z_period_alloc(start[na], z_pos=-1)
-    # grain_cost_allocation_p7c0p7z = grain_cost_allocation_c0p7z * alloc_p7z[:,na,na,:]
-    # grain_wc_allocation_p7c0p7z = grain_wc_allocation_c0p7z * alloc_p7z[:,na,na,:]
-
     ##convert to df
     new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
     grain_income_allocation_p7z = pd.Series(grain_cost_allocation_p7z.ravel(), index=new_index_p7z)
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     grain_wc_allocation_c0p7z = pd.Series(grain_wc_allocation_c0p7z.ravel(), index=new_index_c0p7z)
 
-    cols_p7zg = pd.MultiIndex.from_product([keys_p7, keys_z, farm_gate_price_k_g.columns])
-    grain_income_allocation_p7zg = grain_income_allocation_p7z.reindex(cols_p7zg, axis=1)#adds level to header so i can mul in the next step
-    cols_c0p7zg = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, farm_gate_price_k_g.columns])
-    grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
-    grain_price =  farm_gate_price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
-    grain_price_wc =  farm_gate_price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
+    # cols_p7zg = pd.MultiIndex.from_product([keys_p7, keys_z, farm_gate_price_k_g.columns])
+    # grain_income_allocation_p7zg = grain_income_allocation_p7z.reindex(cols_p7zg, axis=1)#adds level to header so i can mul in the next step
+    # grain_price =  farm_gate_price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
+    grain_price_kgc1_p7z =  farmgate_price_kgc1_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
+    # cols_c0p7zg = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, farm_gate_price_k_g.columns])
+    # grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
+    # grain_price_wc =  farm_gate_price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
+    grain_price_wc_kgc1_c0p7z =  farmgate_price_kgc1_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
+
+    ##average c1 axis for wc and report
+    c1_prob = uinp.price_variation['prob_c1']
+    grain_price_kg_p7z = grain_price_kgc1_p7z.mul(c1_prob, axis=0, level=-1).sum(axis=0, level=[0,1])
+    grain_price_wc_kg_c0p7z = grain_price_wc_kgc1_c0p7z.mul(c1_prob, axis=0, level=-1).sum(axis=0, level=[0,1])
 
     ##store r_vals
     ###make z8 mask - used to uncluster
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, grain_price, 'grain_price', mask_season_p7z[:,:,na], z_pos=-2)
-    return grain_price.unstack(), grain_price_wc.unstack()
+    fun.f1_make_r_val(r_vals, grain_price_kg_p7z, 'grain_price', mask_season_p7z, z_pos=-1)
+    return grain_price_kgc1_p7z.unstack([1,0,2]), grain_price_wc_kg_c0p7z.unstack([1,0])
 # a=grain_price()
 
 #########################
@@ -981,13 +987,21 @@ def f_insurance(r_vals):
 
     .. note:: arable area is already counted for by the yield calculation.
     '''
-    ##first need to combine each grain pool to get average price
-    grain_pool_proportions = f_grain_pool_proportions()
-    ave_price = f_farmgate_grain_price().mul(grain_pool_proportions.unstack()).sum(axis=1)
-    insurance=ave_price*uinp.price['grain_price_info']['insurance']/100  #div by 100 because insurance is a percent
+    #todo insurance probably shouldnt change by z. need to average the z axis.
+    ##weight c1 to get average price
+    c1_prob = uinp.price_variation['prob_c1']
+    farmgate_price_kgc1_z = f_farmgate_grain_price()
+    farmgate_price_kg_z = farmgate_price_kgc1_z.mul(c1_prob,axis=0,level=-1).sum(axis=0,level=[0,1])
+    ##combine each grain pool to get average price
+    grain_pool_proportions_kg = f_grain_pool_proportions()
+    ave_price_k_z = farmgate_price_kg_z.mul(grain_pool_proportions_kg, axis=0).sum(axis=0, level=0)
+    ##calc insurance cost per tonne
+    insurance_k_z = ave_price_k_z.mul(uinp.price['grain_price_info']['insurance']/100, axis=0)  #div by 100 because insurance is a percent
+    insurance_kz = insurance_k_z.stack()
     yields_rklz = f_rot_yield(for_insurance=True)
-    yields_rklz = yields_rklz.mul(insurance, axis=0, level=1)/1000 #divide by 1000 to convert yield to tonnes
-    rot_insurance_rl_z = yields_rklz.droplevel(1).unstack(2)
+    yields_rl_kz = yields_rklz.unstack([1,3])
+    yields_rl_kz = yields_rl_kz.reindex(insurance_kz.index, axis=1).mul(insurance_kz, axis=1)/1000 #divide by 1000 to convert yield to tonnes
+    rot_insurance_rl_z = yields_rl_kz.stack(0).droplevel(axis=0, level=-1)
     ##cost allocation
     start = np.array([uinp.price['crp_insurance_date']]).astype('datetime64')
     keys_p7 = per.f_season_periods(keys=True)

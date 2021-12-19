@@ -58,6 +58,11 @@ def sets(model, nv):
     model.s_sequence = Set(initialize=np.array(['s%s' % i for i in range(len_s)]), doc='season sequences')
 
     #######################
+    #price                #
+    #######################
+    model.s_c1 = Set(initialize=np.array(['c1_%s' % i for i in range(uinp.price_variation['len_c1'])]), doc='price scenarios')
+
+    #######################
     #labour               #
     #######################
     ##labour periods
@@ -70,7 +75,7 @@ def sets(model, nv):
     #######################
     #enterprises          #
     #######################
-    ##cashflow periods
+
     model.s_enterprises = Set(initialize=sinp.general['i_enterprises_c0'], doc='enterprises')
 
     #######################

@@ -18,9 +18,8 @@ def fin_precalcs(params, r_vals):
     :param report: dictionary which stores all report values.
 
     '''
-    fin.overheads(params, r_vals)
-    fin.finance_rep(r_vals)
-    params['overdraw'] = pinp.finance['overdraw_limit']
+    fin.f1_fin_params(params, r_vals)
+
 
 
 def f1_finpyomo_local(params, model):
@@ -31,9 +30,9 @@ def f1_finpyomo_local(params, model):
     ############
 
     ##credit for a given time period (time period defined by cashflow set)
-    model.v_credit = Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net positive cashflow in a given period')
+    model.v_credit = Var(model.s_sequence_year, model.s_sequence, model.s_c1, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net positive cashflow in a given period')
     ##debit for a given time period (time period defined by cashflow set)
-    model.v_debit = Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net negative cashflow in a given period')
+    model.v_debit = Var(model.s_sequence_year, model.s_sequence, model.s_c1, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net negative cashflow in a given period')
     ##working capital credit for a given time period (time period defined by cashflow set)
     model.v_wc_credit = Var(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net positive working capital in a given period')
     ##working capital for a given time period (time period defined by cashflow set)
@@ -51,6 +50,8 @@ def f1_finpyomo_local(params, model):
     model.p_overhead_cost = Param(model.s_season_periods, model.s_season_types, initialize = params['overheads_cost'], doc = 'cost of overheads each period')
 
     model.p_overhead_wc = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize = params['overheads_wc'], doc = 'wc of overheads each period')
+
+    model.p_prob_c1 = Param(model.s_c1, initialize = params['prob_c1'], doc = 'probability of each price scenario')
 
     #########################
     #call Local constrain   #

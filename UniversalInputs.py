@@ -14,6 +14,7 @@ author: young
 ##python modules
 import pickle as pkl
 import numpy as np
+import pandas as pd
 import copy
 
 import Functions as fun
@@ -99,6 +100,24 @@ else:
         pastparameters_inp = pkl.load(f)
         
         machine_options_dict_inp  = pkl.load(f)
+
+##read in price variation inputs from xl - this might change
+price_variation_inp = {}
+if os.path.exists('PriceScenarios.xlsx'):
+    price_variation_inp['grain_price_scalar_c1z'] = pd.read_excel('PriceScenarios.xlsx',sheet_name='grain',index_col=0,header=0,engine='openpyxl')
+    price_variation_inp['meat_price_scalar_c1z'] = pd.read_excel('PriceScenarios.xlsx',sheet_name='meat',index_col=0,header=0,engine='openpyxl').values
+    price_variation_inp['wool_price_scalar_c1z'] = pd.read_excel('PriceScenarios.xlsx',sheet_name='wool',index_col=0,header=0,engine='openpyxl').values
+    price_variation_inp['prob_c1'] = pd.read_excel('PriceScenarios.xlsx',sheet_name='prob',index_col=0,header=0,engine='openpyxl').squeeze()
+    price_variation_inp['len_c1'] = 1
+
+else:
+    price_variation_inp['grain_price_scalar_c1z'] = 1
+    price_variation_inp['meat_price_scalar_c1z'] = np.array([1])
+    price_variation_inp['wool_price_scalar_c1z'] = np.array([1])
+    price_variation_inp['prob_c1'] = 1
+    price_variation_inp['len_c1'] = 1
+#todo if this structure doesnt change then need to add a SA that determines if price variation is included. if it is not included then need to take average anong c1 axis.
+# the best option would be to have inputs sheet in uinp with historical prices and len_c1 then generate everything from there each loop
 print('- finished')
 
 ##reshape require inputs
@@ -171,6 +190,7 @@ sheep = copy.deepcopy(sheep_inp)
 parameters = copy.deepcopy(parameters_inp)
 pastparameters = copy.deepcopy(pastparameters_inp)
 mach = copy.deepcopy(machine_options_dict_inp)
+price_variation = copy.deepcopy(price_variation_inp)
 
 #######################
 #apply SA             #
@@ -199,6 +219,7 @@ def f_universal_inp_sa():
     fun.f_dict_reset(parameters, parameters_inp)
     fun.f_dict_reset(pastparameters, pastparameters_inp)
     fun.f_dict_reset(mach, machine_options_dict_inp)
+    fun.f_dict_reset(price_variation, price_variation_inp)
 
     ##finance
     ###SAV

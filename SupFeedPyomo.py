@@ -60,7 +60,7 @@ def f1_suppyomo_local(params, model):
     model.p_sup_md = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types, initialize=params['md_tonne'] , default = 0.0, doc='md per tonne of grain fed')
     
     ##price buy grain
-    model.p_buy_grain_price = pe.Param(model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['buy_grain_price'], default = 0.0, doc='price to buy grain from neighbour')
+    model.p_buy_grain_price = pe.Param(model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, model.s_c1, initialize=params['buy_grain_price'], default = 0.0, doc='price to buy grain from neighbour')
 
     ##wc buy grain
     model.p_buy_grain_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['buy_grain_wc'], default = 0.0, doc='wc to buy grain from neighbour')

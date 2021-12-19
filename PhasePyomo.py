@@ -65,7 +65,7 @@ def f1_croppyomo_local(params, model):
 
     model.p_grainpool_proportion = pe.Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
     
-    model.p_grain_price = pe.Param(model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
+    model.p_grain_price = pe.Param(model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, model.s_c1, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
     
     model.p_grain_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['grain_wc'],default = 0.0, doc='farm gate wc per tonne of each grain')
     

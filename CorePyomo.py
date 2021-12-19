@@ -6,7 +6,7 @@ author: young
 import time
 import pyomo.environ as pe
 import numpy as np
-import networkx
+# import networkx
 # import pyomo.pysp.util.rapper as rapper
 # import pyomo.pysp.plugins.csvsolutionwriter as csvw
 # import pyomo.pysp.plugins.jsonsolutionwriter as jsonw
@@ -434,11 +434,11 @@ def f_con_grain_transfer(model):
                                              doc='constrain grain transfer between rotation and sup feeding')
 
 
-def f1_grain_income(model,q,s,p7,z):
+def f1_grain_income(model,q,s,p7,z,c1):
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
     return sum(
-            model.v_sell_grain[q,s,p7,z,k,g] * model.p_grain_price[p7,z,g,k] - model.v_buy_grain[q,s,p7,z,k,g] * model.p_buy_grain_price[
-            p7,z,g,k] for k in model.s_crops for g in model.s_grain_pools)
+            model.v_sell_grain[q,s,p7,z,k,g] * model.p_grain_price[p7,z,g,k,c1] - model.v_buy_grain[q,s,p7,z,k,g] * model.p_buy_grain_price[
+            p7,z,g,k,c1] for k in model.s_crops for g in model.s_grain_pools)
 
 def f1_grain_wc(model,q,s,c0,p7,z):
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
@@ -533,17 +533,17 @@ def f_con_cashflow(model):
     Tallies all cashflow in each period and transfers to the next period. Cashflow periods exist so that a transfer can
     exist between parent and child seasons.
     '''
-    def cash_flow(model,q,s,p7,z9):
+    def cash_flow(model,q,s,c1,p7,z9):
         p7_start = list(model.s_season_periods)[0]
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
-        return ((-f1_grain_income(model,q,s,p7,z9) + phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9)
+        return ((-f1_grain_income(model,q,s,p7,z9,c1) + phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9)
                 + macpy.f_mach_cost(model,q,s,p7,z9) + suppy.f_sup_cost(model,q,s,p7,z9) + model.p_overhead_cost[p7,z9]
-                - stkpy.f_stock_cashflow(model,q,s,p7,z9)
-                - model.v_debit[q,s,p7,z9] + model.v_credit[q,s,p7,z9])
-                + sum((model.v_debit[q,s,p7_prev,z8] - model.v_credit[q,s,p7_prev,z8]) * model.p_parentz_provwithin_season[p7_prev,z8,z9] * (p7!=p7_start)  #end cashflow doesnot provide start cashflow else unbounded.
+                - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1)
+                - model.v_debit[q,s,c1,p7,z9] + model.v_credit[q,s,c1,p7,z9])
+                + sum((model.v_debit[q,s,c1,p7_prev,z8] - model.v_credit[q,s,c1,p7_prev,z8]) * model.p_parentz_provwithin_season[p7_prev,z8,z9] * (p7!=p7_start)  #end cashflow doesnot provide start cashflow else unbounded.
                       for z8 in model.s_season_types)) <= 0
 
-    model.con_cashflow_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,rule=cash_flow,
+    model.con_cashflow_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_c1, model.s_season_periods, model.s_season_types,rule=cash_flow,
                                                 doc='transfer of cash between periods')
 
 
@@ -588,15 +588,15 @@ def f_con_workingcap_between(model):
                     - stkpy.f_stock_wc(model,q,s9,c0,p7,z9)
                     - model.v_wc_debit[q,s9,c0,p7,z9]
                     + model.v_wc_credit[q,s9,c0,p7,z9]
-                    + sum((model.v_debit[q,s8,p7_prev,z8] - model.v_credit[q,s8,p7_prev,z8]) #end cashflow become start wc.
+                    + sum((model.v_debit[q,s8,c1,p7_prev,z8] - model.v_credit[q,s8,c1,p7_prev,z8]) #end cashflow become start wc. #todo the c1 axis will need to be weighted
                           * model.p_parentz_provbetween_season[p7_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
-                        + (model.v_debit[q,s8,p7_prev,z8] - model.v_credit[q,s8,p7_prev,z8]) #end cashflow become start wc.
+                        + (model.v_debit[q,s8,c1,p7_prev,z8] - model.v_credit[q,s8,c1,p7_prev,z8]) #end cashflow become start wc.
                           * model.p_parentz_provbetween_season[p7_prev,z8,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
                           for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q,s8])!=0)) <= 0
         else:
             return pe.Constraint.Skip
-    model.con_workingcap_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap_between,
-                                       doc='working capital transfer between years')
+    # model.con_workingcap_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap_between,
+    #                                    doc='working capital transfer between years')
 
 
 def f_con_dep(model):
@@ -658,9 +658,10 @@ def f_objective(model):
     variables = model.component_objects(pe.Var,active=True)
 
     p7_end = list(model.s_season_periods)[-1]
-    return (sum((model.v_credit[q,s,p7_end,z] - model.v_debit[q,s,p7_end,z]
-               - model.v_dep[q,s,p7_end,z] - model.v_minroe[q,s,p7_end,z] - model.v_asset[q,s,p7_end,z]) * model.p_season_prob_qsz[q,s,z]
-               for q in model.s_sequence_year for s in model.s_sequence for z in model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
+    return (sum((model.v_credit[q,s,c1,p7_end,z] - model.v_debit[q,s,c1,p7_end,z]
+               - model.v_dep[q,s,p7_end,z] - model.v_minroe[q,s,p7_end,z] - model.v_asset[q,s,p7_end,z])
+                * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
+               for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
                -0.0001 * sum(sum(v[s] for s in v) for v in variables))
 
 

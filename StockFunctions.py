@@ -1798,7 +1798,7 @@ def f1_woolprice():
     return mpg_w4
 
 
-def f_wool_value(mpg_w4, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg,dtype=None):
+def f_wool_value(mpg_w4, wool_price_scalar_c1w4tpg, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg,dtype=None):
     '''Calculate the net value of the wool on the sheep's back (cost of shearing is not included in these calculations)
     Includes adjusting price for FD, level of fault (VM & predicted hauteur) and all components of the clip (STB)
     FNF is 'free or nearly free' i.e. wool with no fault (low VM & high SS)
@@ -1826,7 +1826,7 @@ def f_wool_value(mpg_w4, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg,dtype=None):
     ##stb net in the bank price
     woolp_stbnib_pg = woolp_stb_pg * (1 - uinp.sheep['i_wool_cost_pc']) - uinp.sheep['i_wool_cost_kg']
     ##wool value if shorn this period
-    wool_value_pg = woolp_stbnib_pg * cfw_pg
+    wool_value_pg = woolp_stbnib_pg * wool_price_scalar_c1w4tpg * cfw_pg
     return wool_value_pg, woolp_stbnib_pg
 
 def f1_condition_score(rc_tpg, cu0):
@@ -1891,7 +1891,7 @@ def f1_salep_mob(weight_s7tpg, scores_s7s6tpg, cvlw_s7s5tpg, cvscore_s7s6tpg,
 
 
 def f_sale_value(cu0, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj_s6tpg,
-                 dresspercent_adj_s7tpg, grid_price_s7s5s6tpg, month_scalar_s7tpg,
+                 dresspercent_adj_s7tpg, grid_price_s7s5s6tpg, price_scalar_c1s7tpg, month_scalar_s7tpg,
                  month_discount_s7tpg, price_type_s7tpg, cvlw_s7s5tpg, cvscore_s7s6tpg,
                  grid_weightrange_s7s5tpg, grid_scorerange_s7s6tpg, age_end_pg1, discount_age_s7tpg,sale_cost_pc_s7tpg,
                  sale_cost_hd_s7tpg, mask_s7x_s7tpg, sale_agemax_s7tpg1, sale_agemin_s7tpg1, dtype=None):
@@ -1943,15 +1943,17 @@ def f_sale_value(cu0, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj
     ## Calculate the net value per head from the gross value minus the selling costs
     ### Calculate gross value per head
     sale_value_s7tpg = price_mobaverage_s7tpg * weight_for_value_s7tpg
+    ###add price variation
+    sale_value_c1s7tpg = sale_value_s7tpg * price_scalar_c1s7tpg
     ###Subtract the selling costs (some are percentage costs some are $/hd)
-    sale_value_s7tpg = sale_value_s7tpg * (1 - sale_cost_pc_s7tpg) - sale_cost_hd_s7tpg
+    sale_value_c1s7tpg = sale_value_c1s7tpg * (1 - sale_cost_pc_s7tpg) - sale_cost_hd_s7tpg
 
     ## Select the best net sale price from the relevant grids
     ###Mask the grids based on the maximum age, minimun age and the gender for each grid
-    sale_value_s7tpg = sale_value_s7tpg * mask_s7x_s7tpg * (age_end_pg1/30 <= sale_agemax_s7tpg1) * (age_end_pg1/30 >= sale_agemin_s7tpg1) #divide 30 to convert to months
+    sale_value_c1s7tpg = sale_value_c1s7tpg * mask_s7x_s7tpg * (age_end_pg1/30 <= sale_agemax_s7tpg1) * (age_end_pg1/30 >= sale_agemin_s7tpg1) #divide 30 to convert to months
     ###Select the maximum value across the grids
-    sale_value = np.max(sale_value_s7tpg, axis=0)
-    sale_grid = np.argmax(sale_value_s7tpg, axis=0)
+    sale_value = np.max(sale_value_c1s7tpg, axis=1)
+    sale_grid = np.argmax(sale_value_c1s7tpg, axis=1)
     return sale_value, sale_grid
 
 def f1_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_is_wean_pg, gender, o_ebg_tpg, wool_genes,

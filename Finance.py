@@ -160,8 +160,8 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     ##adjust cashflow for enterprise - this essentially selects which interest to use.
     ## if no enterprise is provided the interest from all enterprise dates are averaged.
     if enterprise is not None:
-        keys_c0 = sinp.general['i_enterprises_c0']
-        final_cashflow_p7 = final_cashflow_c0p7[keys_c0==enterprise,...]
+        idx = list(sinp.general['i_enterprises_c0']).index(enterprise)
+        final_cashflow_p7 = final_cashflow_c0p7[idx,...]
     else:
         final_cashflow_p7 = np.average(final_cashflow_c0p7, axis=0)
 
@@ -228,15 +228,24 @@ def f_min_roe():
     return min_roe
 
 
-#################
-# report vals   #
-#################
+#########################
+# params & report vals  #
+#########################
+def f1_fin_params(params, r_vals):
+    ##overheads
+    overheads(params, r_vals)
 
-def finance_rep(r_vals):
+    ##store params which are inputs
+    params['prob_c1'] = uinp.price_variation['prob_c1']
+    params['overdraw'] = pinp.finance['overdraw_limit']
+
+    ##store report
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
+    keys_c1 = np.array(['c1_%d' % i for i in range(uinp.price_variation['len_c1'])])
     fun.f1_make_r_val(r_vals,keys_p7,'keys_p7')
     fun.f1_make_r_val(r_vals,keys_c0,'keys_c0')
+    fun.f1_make_r_val(r_vals,keys_c1,'keys_c1')
     fun.f1_make_r_val(r_vals,uinp.finance['opportunity_cost_capital'],'opportunity_cost_capital')
     fun.f1_make_r_val(r_vals,uinp.finance['i_interest'],'interest_rate')
 
