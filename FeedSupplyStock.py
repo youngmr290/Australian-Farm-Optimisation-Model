@@ -79,8 +79,8 @@ feed. Optimising the NV in confinement is similar to optimising in the paddock a
 '''
 '''
 Additional notes:
-- if running n1 with pkl create and use = True and nut spread != 0 then the feedsupply will change each itteration 
-  because the pkl fs is read in before nut adjustment but stored for post calculating after. Therefore each itteration 
+- if running n1 with pkl create and use = True and nut spread != 0 then the feedsupply will change each iteration 
+  because the pkl fs is read in before nut adjustment but stored for post calculating after. Therefore each iteration 
   the fs will change by an amount specified by nut spread.
 - cant optimise feeds using multiprocessing because the same pkl file is accessed and written too.
 '''

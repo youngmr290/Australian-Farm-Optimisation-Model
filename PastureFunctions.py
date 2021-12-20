@@ -12,17 +12,19 @@ The biology and logistics of pasture growth rate that are represented in AFO is:
 
     * PGR is dependent on pasture leaf area, which is quantified by the level of feed on offer (FOO, kg of DM/ha),
     * PGR for each pasture type varies with the phase during its life cycle, soil moisture and sunlight. All are quantified by land management unit, time of year and season.
-    * Germination of annual pastures at the break of season is dependent on the seed bank. Seed bank is controlled by the rotation in which the pasture is grown.
-    * The digestibility of the diet selected by animals grazing pasture is dependent on their capacity for selective grazing.
+    * The mobilisation of below ground reserves (germination) of annual pastures at the break of season is dependent on the seed bank. Seed bank is controlled by the rotation in which the pasture is grown.
+    * The mobilisation of below ground reserves of perennial pastures at the break of season can also be adjusted by rotation, however, perennials ususally aren't grown in rotation with crops.
+    * The digestibility of the diet selected by animals grazing pasture is dependent on their capacity for selective grazing which depends on FOO and grazing intensity.
     * The intake of animals grazing pasture is dependent on FOO and diet DMD.
-    * The risk of resource degradation increases when ground cover is lower.
+    * The risk of resource degradation increases when ground cover is lower so there is a minimum limit to ground cover
 
 The decision variables that can be optimised in AFO that represent the above biology are:
 
     * The rotation phases in which pasture can be grown on each LMU
     * A discrete range of FOO level (low, medium and high) at the start of each feed period
     * A discrete range of the severity of defoliation (0, 25%, 50% & 100%) in each feed period
-    * The quantity of dry feed consumed from each of 2 dry feed quality group in each feed period
+    * The level of growth modifiers (nitrogen or gibberelic acid) applied to the pasture
+    * The quantity of dry feed consumed from each of 2 dry feed quality groups in each feed period
 
 Nutritive value of pasture is determined by the metabolisable energy per unit of dry matter, the relative
 ingestibility and the relative availability. This varies with:
@@ -75,15 +77,18 @@ na = np.newaxis
 def f_germination(i_germination_std_zt, i_germ_scalar_lzt, i_germ_scalar_p6zt
                   , pasture_rt, arable_l,  pastures, phase_germresow_df, i_phase_germ_dict, rt):
     '''
-    Calculate pasture germination for each rotation phase.
+    Calculate mobilisation of the below ground reserves of the pasture for each rotation phase.
 
-    Pasture germination is calculated for each pasture rotation phase based on the LMU and rotation history.
+    For annual pastures the below ground reserves is the seed bank which is mobilised through germination. For
+    perennial pastures it is the root reserves that are mobilised at the beginning of the growing season.
+
+    The mobilisation is calculated for each pasture rotation phase based on the LMU and rotation history.
     The phase history is assumed only to impact pasture seed bank and hence pasture establishment. Phase
     history impacts the seed bank for three main reasons. Firstly, spraying out the weeds during the crop
     phase reduces seed set. Secondly, pasture manipulation in the prior years can reduce seed set. Thirdly,
     reseeding in the previous year can have carry forward benefits. For LMUs that have a component of
-    non-arable area, the germination on the arable area is affected by the phase history whereas the
-    germination on the non-arable area is assumed to be the same as the germination in a continuous
+    non-arable area, the mobilisation on the arable area is affected by the phase history whereas the
+    non-arable area are assumed to be the same as the continuous annual
     pasture rotation. Additionally, resown pastures or perennial pastures (e.g. Lucerne & Tedera)
     are only established on the arable areas, the non-arable areas are assumed to be growing annual pasture.
 

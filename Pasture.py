@@ -136,7 +136,7 @@ def f_pasture(params, r_vals, nv):
     i_poc_intake_daily_p6lzt      = np.zeros(p6lzt, dtype = 'float64')  # intake per day of pasture on crop paddocks prior to seeding
     i_lmu_conservation_p6lzt      = np.zeros(p6lzt, dtype = 'float64')  # minimum foo at end of each period to reduce risk of wind & water erosion
 
-    i_germ_scalar_lzt           = np.zeros(lzt,  dtype = 'float64') # scale the germination levels for each lmu
+    i_germ_scalar_lzt           = np.zeros(lzt,  dtype = 'float64') # scale the mobilisation of below ground reserves for each lmu
     i_restock_fooscalar_lt      = np.zeros(lt,  dtype = 'float64')  # scalar for FOO between LMUs when pastures are restocked after reseeding
 
     i_me_eff_gainlose_p6zt        = np.zeros(p6zt,  dtype = 'float64')  # Reduction in efficiency if M/D is above requirement for target LW pattern
@@ -151,7 +151,7 @@ def f_pasture(params, r_vals, nv):
     dry_decay_period_p6zt        = np.zeros(p6zt,  dtype = 'float64') # decline in dry foo for each period
     mask_dryfeed_exists_p6zt     = np.zeros(p6zt,  dtype = bool)      # mask for period when dry feed exists
     mask_greenfeed_exists_p6zt   = np.zeros(p6zt,  dtype = bool)      # mask for period when green feed exists
-    i_germ_scalar_p6zt           = np.zeros(p6zt,  dtype = 'float64') # allocate the total germination between feed periods
+    i_germ_scalar_p6zt           = np.zeros(p6zt,  dtype = 'float64') # allocate the total mobilisation of below ground reserves between feed periods
     i_grn_cp_p6zt                 = np.zeros(p6zt,  dtype = 'float64')  # crude protein content of green feed
     i_dry_cp_p6zt                 = np.zeros(p6zt,  dtype = 'float64')  # crude protein content of dry feed
     i_poc_dmd_p6zt                = np.zeros(p6zt,  dtype = 'float64')  # digestibility of pasture consumed on crop paddocks
@@ -164,7 +164,7 @@ def f_pasture(params, r_vals, nv):
     i_restock_date_zt           = np.zeros(zt, dtype = 'datetime64[D]')         # date of first grazing of reseeded pasture
     i_restock_foo_arable_t      = np.zeros(n_pasture_types, dtype = 'float64')  # FOO at restocking on the arable area of the resown pastures
     # reseeding_machperiod_t      = np.zeros(n_pasture_types, dtype = 'float64')  # labour/machinery period in which reseeding occurs ^ instantiation may not be required
-    i_germination_std_zt        = np.zeros(zt, dtype = 'float64')               # standard germination level for the standard soil type in a continuous pasture rotation
+    i_germination_std_zt        = np.zeros(zt, dtype = 'float64')               # standard level of mobilisation of below ground reserves for the standard soil type in a continuous pasture rotation
     # i_ri_foo_t                  = np.zeros(n_pasture_types, dtype = 'float64')  # to reduce foo to allow for differences in measurement methods for FOO. The target is to convert the measurement to the system developing the intake equations
     # poc_days_of_grazing_t       = np.zeros(n_pasture_types, dtype = 'float64')  # number of days after the pasture break that (moist) seeding can begin
     i_legume_zt                 = np.zeros(zt, dtype = 'float64')               # proportion of legume in the sward
@@ -356,9 +356,9 @@ def f_pasture(params, r_vals, nv):
 
 
 
-    #################################################
-    #Calculate germination and reseeding parameters #
-    #################################################
+    ###############################################################################
+    #Calculate the mobilisation of below ground reserves and reseeding parameters #
+    ###############################################################################
 
 
     ## define instantiate arrays that are assigned in slices

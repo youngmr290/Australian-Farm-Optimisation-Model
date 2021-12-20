@@ -1133,7 +1133,7 @@ def f_sow_prov():
     dry_seed_start = np.datetime64(pinp.crop['dry_seed_start'])
     date_feed_periods = per.f_feed_periods()
     date_start_p6z = date_feed_periods[:-1]
-    season_break_z = date_start_p6z[0]
+    season_break_z = date_start_p6z[0]   #todo critical error. p6[0] is no longer the break. Input pinp.i_break now exists
     period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)
     ###add k axis
     period_is_dryseeding_p5zk = period_is_dryseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(dry_sown_landuses), axis=-1)

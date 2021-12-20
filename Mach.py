@@ -196,7 +196,7 @@ def f_poc_grazing_days():
     date_end_p5z = mach_periods.values[1:]
     seed_days_p5z = f_seed_days().values
     defer_period = np.array([pinp.crop['poc_destock']]).astype('timedelta64[D]') #days between seeding and destocking
-    season_break_z = date_start_p6z[0]
+    season_break_z = date_start_p6z[0]   #todo critical error. p6[0] is no longer the break. Input pinp.i_break now exists
 
     ##grazing days rectangle component (for p5) and allocation to feed periods (p6)
     base_p6p5z = (np.minimum(date_end_p6z[:,na,:], date_start_p5z - defer_period) \
