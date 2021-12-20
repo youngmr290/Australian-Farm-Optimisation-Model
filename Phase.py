@@ -979,7 +979,7 @@ def f_insurance(r_vals):
     '''
     Crop insurance cost.
 
-    Crop insurance is typically based off the farmers estimation of yield in mid spring.
+    Crop insurance is typically based off the farmers estimation of yield in mid spring (hence active z axis).
     This is not going to exactly be equal to final yield but it is closer than using the average yield.
     The small amount of error in this assumption will have little impact due to the small magnitude of
     financial impact of insurance.
@@ -989,19 +989,17 @@ def f_insurance(r_vals):
     ##weight c1 to get average price
     c1_prob = uinp.price_variation['prob_c1']
     farmgate_price_kgc1_z = f_farmgate_grain_price()
-    farmgate_price_kgc1 = farmgate_price_kgc1_z.mean(axis=1)
-    farmgate_price_kg = farmgate_price_kgc1.mul(c1_prob,level=-1).groupby(level=[0,1]).sum()
+    farmgate_price_kg_z = farmgate_price_kgc1_z.mul(c1_prob,axis=0,level=-1).groupby(axis=0,level=[0,1]).sum()
     ##combine each grain pool to get average price
     grain_pool_proportions_kg = f_grain_pool_proportions()
-    ave_price_k = farmgate_price_kg.mul(grain_pool_proportions_kg).groupby(level=0).sum()
+    ave_price_k_z = farmgate_price_kg_z.mul(grain_pool_proportions_kg, axis=0).groupby(axis=0, level=0).sum()
     ##calc insurance cost per tonne
-    insurance_k = ave_price_k.mul(uinp.price['grain_price_info']['insurance']/100)  #div by 100 because insurance is a percent
+    insurance_k_z = ave_price_k_z.mul(uinp.price['grain_price_info']['insurance']/100, axis=0)  #div by 100 because insurance is a percent
+    insurance_kz = insurance_k_z.stack()
     yields_rklz = f_rot_yield(for_insurance=True)
-    yields_rkl = yields_rklz.groupby(level=[0,1,2]).mean()
-    yields_rl_k = yields_rkl.unstack(1)
-    yields_rl_k = yields_rl_k.mul(insurance_k, axis=1)/1000 #divide by 1000 to convert yield to tonnes
-    rot_insurance_rl = yields_rl_k.stack().droplevel(axis=0, level=-1)
-
+    yields_rl_kz = yields_rklz.unstack([1,3])
+    yields_rl_kz = yields_rl_kz.reindex(insurance_kz.index, axis=1).mul(insurance_kz, axis=1)/1000 #divide by 1000 to convert yield to tonnes
+    rot_insurance_rl_z = yields_rl_kz.stack(0).droplevel(axis=0, level=-1)
     ##cost allocation
     start = np.array([uinp.price['crp_insurance_date']]).astype('datetime64')
     keys_p7 = per.f_season_periods(keys=True)
@@ -1015,7 +1013,6 @@ def f_insurance(r_vals):
     insurance_wc_allocation_c0p7z = pd.Series(insurance_wc_allocation_c0p7z.ravel(), index=new_index_c0p7z)
 
     ##add cashflow period to col index
-    rot_insurance_rl_z = pd.DataFrame(np.tile(rot_insurance_rl,(len(keys_z),1)).T, index=rot_insurance_rl.index, columns=keys_z) #add z axis
     rot_insurance_cost_rl_p7z = rot_insurance_rl_z.mul(insurance_cost_allocation_p7z, axis=1, level=1)
     rot_insurance_wc_rl_c0p7z = rot_insurance_rl_z.mul(insurance_wc_allocation_c0p7z, axis=1, level=2)
 
@@ -1132,7 +1129,7 @@ def f_sow_prov():
 
     ##dry sowing periods
     dry_seed_start = np.datetime64(pinp.crop['dry_seed_start'])
-    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'],numpy=True)
+    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'],numpy=True).astype('datetime64')
     period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)
     ###add k axis
     period_is_dryseeding_p5zk = period_is_dryseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(dry_sown_landuses), axis=-1)
