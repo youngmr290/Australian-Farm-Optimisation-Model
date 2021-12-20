@@ -147,7 +147,7 @@ def f_fert_app_time_ha():
     passes_na = phs.f_nap_fert_passes() #on pasture phases only
     ##add fert for arable area and fert for nonarable area, na_fert doesnt have season axis so need to reindex first
     passes_na = passes_na.unstack().reindex(passes_arable.unstack().index, axis=0, level=0).stack()
-    total_passes_rzln = pd.concat([passes_arable, passes_na], axis=1).sum(axis=1, level=0).stack()
+    total_passes_rzln = pd.concat([passes_arable, passes_na], axis=1).groupby(axis=1, level=0).sum().stack()
     ##time taken to cover 1ha while spreading
     time_ha_n = mac.time_ha().squeeze()
     ##adjust fert labour across each labour period
@@ -157,7 +157,7 @@ def f_fert_app_time_ha():
     time_p7p5z_rln = time_p7p5z_n.reindex(total_passes_rzln.unstack(1).index, axis=1, level=2)
     time_p7p5_rzln = time_p7p5z_rln.unstack().reorder_levels([0,3,1,2], axis=1)
     fert_app_time_ha_p7p5_rzln = time_p7p5_rzln.mul(total_passes_rzln, axis=1)
-    fert_app_time_ha_p7p5_rzl = fert_app_time_ha_p7p5_rzln.sum(axis=1, level=(0,1,2)) #sum fert type
+    fert_app_time_ha_p7p5_rzl = fert_app_time_ha_p7p5_rzln.groupby(axis=1, level=(0,1,2)).sum() #sum fert type
     fert_app_time_ha_rzlp5p7 = fert_app_time_ha_p7p5_rzl.unstack([1,0])
 
     ##create params for v_phase_increment
@@ -196,7 +196,7 @@ def f_fert_app_time_t():
     time_p7p5z_rln = time_p7p5z_n.reindex(fert_total_rzln.unstack(1).index, axis=1, level=2)
     time_p7p5_rzln = time_p7p5z_rln.unstack().reorder_levels([0,3,1,2], axis=1)
     fert_app_time_tonne_p7p5_rzln = time_p7p5_rzln.mul(fert_total_rzln, axis=1)
-    fert_app_time_tonne_p7p5_rzl = fert_app_time_tonne_p7p5_rzln.sum(axis=1, level=(0,1,2)) #sum fert type
+    fert_app_time_tonne_p7p5_rzl = fert_app_time_tonne_p7p5_rzln.groupby(axis=1, level=(0,1,2)).sum() #sum fert type
     fert_app_time_tonne_rzlp5p7 = fert_app_time_tonne_p7p5_rzl.unstack([1,0])
 
     ##create params for v_phase_increment
@@ -259,7 +259,7 @@ def f_chem_app_time_ha():
     time_p7p5z_rln = time_p7p5z_n.reindex(total_passes_rzln.unstack(1).index, axis=1, level=2)
     time_p7p5_rzln = time_p7p5z_rln.unstack().reorder_levels([0,3,1,2], axis=1)
     chem_app_time_p7p5_rzln = time_p7p5_rzln.mul(total_passes_rzln, axis=1)
-    chem_app_time_p7p5_rzl = chem_app_time_p7p5_rzln.sum(axis=1, level=(0,1,2)) #sum chem type
+    chem_app_time_p7p5_rzl = chem_app_time_p7p5_rzln.groupby(axis=1, level=(0,1,2)).sum() #sum chem type
     chem_app_time_rzlp5p7 = chem_app_time_p7p5_rzl.unstack([1,0])
 
     ##create params for v_phase_increment

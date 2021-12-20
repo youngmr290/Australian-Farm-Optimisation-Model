@@ -84,8 +84,8 @@ def f_buy_grain_price(r_vals):
 
     ##average c1 axis for wc and report
     c1_prob = uinp.price_variation['prob_c1']
-    buy_grain_price_wc_kg_c0p7z = buy_grain_price_wc_kgc1_c0p7z.mul(c1_prob, axis=0, level=-1).sum(axis=0, level=[0,1])
-    buy_grain_price_kg_p7z = buy_grain_price_kgc1_p7z.mul(c1_prob, axis=0, level=-1).sum(axis=0, level=[0,1])
+    buy_grain_price_wc_kg_c0p7z = buy_grain_price_wc_kgc1_c0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1]).sum()
+    buy_grain_price_kg_p7z = buy_grain_price_kgc1_p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1]).sum()
 
     ##buy grain period - purchased grain can only provide into the grain transfer constraint in the phase period when it is purchased (otherwise it will get free grain)
     alloc_p7z = zfun.f1_z_period_alloc(start[na], z_pos=-1)

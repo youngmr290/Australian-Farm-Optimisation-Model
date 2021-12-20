@@ -198,8 +198,8 @@ def f_grain_price(r_vals):
 
     ##average c1 axis for wc and report
     c1_prob = uinp.price_variation['prob_c1']
-    grain_price_kg_p7z = grain_price_kgc1_p7z.mul(c1_prob, axis=0, level=-1).sum(axis=0, level=[0,1])
-    grain_price_wc_kg_c0p7z = grain_price_wc_kgc1_c0p7z.mul(c1_prob, axis=0, level=-1).sum(axis=0, level=[0,1])
+    grain_price_kg_p7z = grain_price_kgc1_p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1]).sum()
+    grain_price_wc_kg_c0p7z = grain_price_wc_kgc1_c0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1]).sum()
 
     ##store r_vals
     ###make z8 mask - used to uncluster
@@ -305,7 +305,7 @@ def f_rot_yield(for_stub=False, for_insurance=False):
     yields_rkl_p7z = yields_rkl_p7z.sub(seeding_rate_rkl,axis=0) #minus seeding rate
     yields_rkl_p7z = yields_rkl_p7z.clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0). Note crops that don't produce harvest yield require seed as an input.
     if for_insurance:
-        return yields_rkl_p7z.sum(axis=1, level=1).stack() #sum the p7 axis. Just want the total yield. p7 axis is added later for costs.
+        return yields_rkl_p7z.groupby(axis=1, level=1).sum().stack() #sum the p7 axis. Just want the total yield. p7 axis is added later for costs.
     else:
         ###yield for pyomo yield param
         return yields_rkl_p7z.stack([1,0])
@@ -492,20 +492,20 @@ def f_fert_cost(r_vals):
     phase_fert_cost_rzl_n = fertreq.mul(total_cost/1000,axis=1) #div by 1000 to convert to $/kg,
     phase_fert_cost_rzl_p7n = phase_fert_cost_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
     phase_fert_cost_rl_p7nz = phase_fert_cost_rzl_p7n.unstack(1)
-    phase_fert_cost_rl_p7z = phase_fert_cost_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).sum(axis=1, level=(0,2))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    phase_fert_cost_rl_p7z = phase_fert_cost_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
     phase_fert_wc_rzl_c0p7n = phase_fert_cost_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
     phase_fert_wc_rl_c0p7nz = phase_fert_wc_rzl_c0p7n.unstack(1)
-    phase_fert_wc_rl_c0p7z = phase_fert_wc_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    phase_fert_wc_rl_c0p7z = phase_fert_wc_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
 
     ##aplication cost per tonne
     application_cost_tonne = mac.fert_app_cost_t()
     fert_app_cost_tonne_rzl_n = fertreq.mul(application_cost_tonne/1000,axis=1) #div by 1000 to convert to $/kg
     fert_app_cost_tonne_rzl_p7n = fert_app_cost_tonne_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
     fert_app_cost_tonne_rl_p7nz = fert_app_cost_tonne_rzl_p7n.unstack(1)
-    fert_app_cost_tonne_rl_p7z = fert_app_cost_tonne_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).sum(axis=1, level=(0,2))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    fert_app_cost_tonne_rl_p7z = fert_app_cost_tonne_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
     fert_app_wc_tonne_rzl_c0p7n = fert_app_cost_tonne_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
     fert_app_wc_tonne_rl_c0p7nz = fert_app_wc_tonne_rzl_c0p7n.unstack(1)
-    fert_app_wc_tonne_rl_c0p7z = fert_app_wc_tonne_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    fert_app_wc_tonne_rl_c0p7z = fert_app_wc_tonne_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
 
     ##app cost per ha
     ###call passes function (it has to be a separate function because it is used in crplabour.py as well
@@ -515,10 +515,10 @@ def f_fert_cost(r_vals):
     fert_app_cost_ha_rzl_n = fert_passes.mul(fert_cost_ha,axis=1)
     fert_app_cost_ha_rzl_p7n = fert_app_cost_ha_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
     fert_app_cost_ha_rl_p7nz = fert_app_cost_ha_rzl_p7n.unstack(1)
-    fert_app_cost_ha_rl_p7z = fert_app_cost_ha_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).sum(axis=1, level=(0,2))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    fert_app_cost_ha_rl_p7z = fert_app_cost_ha_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
     fert_app_wc_ha_rzl_c0p7n = fert_app_cost_ha_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
     fert_app_wc_ha_rl_c0p7nz = fert_app_wc_ha_rzl_c0p7n.unstack(1)
-    fert_app_wc_ha_rl_c0p7z = fert_app_wc_ha_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    fert_app_wc_ha_rl_c0p7z = fert_app_wc_ha_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
 
     ##combine all costs - fert, app per ha and app per tonne
     fert_cost_total = phase_fert_cost_rl_p7z + fert_app_cost_ha_rl_p7z + fert_app_cost_tonne_rl_p7z
@@ -598,9 +598,9 @@ def f_nap_fert_cost(r_vals):
     total_cost = cost + transport #total cost = fert cost and transport.
     phase_fert_cost_rl_n = fertreq.mul(total_cost, axis=1)/1000  #div by 1000 to convert to $/kg
     phase_fert_cost_rl_p7zn = phase_fert_cost_rl_n.reindex(fert_cost_allocation_p7zn.index, axis=1, level=2)
-    phase_fert_cost_rl_p7z = phase_fert_cost_rl_p7zn.mul(fert_cost_allocation_p7zn, axis=1).sum(axis=1, level=(0,1))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    phase_fert_cost_rl_p7z = phase_fert_cost_rl_p7zn.mul(fert_cost_allocation_p7zn, axis=1).groupby(axis=1, level=(0,1)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
     phase_fert_wc_rl_c0p7zn = phase_fert_cost_rl_n.reindex(fert_wc_allocation_c0p7zn.index, axis=1, level=3)
-    phase_fert_wc_rl_c0p7z = phase_fert_wc_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).sum(axis=1, level=(0,1,2))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    phase_fert_wc_rl_c0p7z = phase_fert_wc_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).groupby(axis=1, level=(0,1,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
 
     ##application cost per tonne
     app_cost_tonne_rl_n = fertreq.mul(mac.fert_app_cost_t(), axis=1)/1000  #div by 1000 to convert to $/kg
@@ -610,9 +610,9 @@ def f_nap_fert_cost(r_vals):
     ##total application cost in each cash period
     total_app_cost_rl_n = (app_cost_tonne_rl_n+app_cost_ha_rl_n)
     total_app_cost_rl_p7zn = total_app_cost_rl_n.reindex(fert_cost_allocation_p7zn.index, axis=1, level=2)
-    total_app_cost_rl_p7z = total_app_cost_rl_p7zn.mul(fert_cost_allocation_p7zn, axis=1).sum(axis=1, level=(0,1))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    total_app_cost_rl_p7z = total_app_cost_rl_p7zn.mul(fert_cost_allocation_p7zn, axis=1).groupby(axis=1, level=(0,1)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
     total_app_wc_rl_c0p7zn = total_app_cost_rl_n.reindex(fert_wc_allocation_c0p7zn.index, axis=1, level=3)
-    total_app_wc_rl_c0p7z = total_app_wc_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).sum(axis=1, level=(0,1,2))  # sum the wc of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    total_app_wc_rl_c0p7z = total_app_wc_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).groupby(axis=1, level=(0,1,2)).sum()  # sum the wc of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
 
     ##total fert and app cost
     nap_fert_cost = phase_fert_cost_rl_p7z + total_app_cost_rl_p7z
@@ -637,7 +637,7 @@ def f1_total_fert_req():
     fert_na = f_nap_fert_req()
     fert_na = fert_na.unstack().reindex(fertreq_arable.unstack().index, axis=0).stack()
     ##add fert for arable area and fert for nonarable area
-    fert_total = pd.concat([fertreq_arable, fert_na], axis=1).sum(axis=1, level=0)
+    fert_total = pd.concat([fertreq_arable, fert_na], axis=1).groupby(axis=1, level=0).sum()
     fert_req = fert_total.stack()
     return fert_req
 
@@ -706,7 +706,7 @@ def f_phase_stubble_cost(r_vals):
     stub_cost=mac.f_stubble_cost_ha()
 
     ##calculate the probability of a rotation phase needing stubble handling
-    base_yields_rkl_z = f_rot_yield(for_stub=True).sum(axis=1,level=1) #sum the p7 axis. Just want the total yield. p7 axis is added later for costs.
+    base_yields_rkl_z = f_rot_yield(for_stub=True).groupby(axis=1,level=1).sum() #sum the p7 axis. Just want the total yield. p7 axis is added later for costs.
     stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=pinp.crop['start_harvest_crops'].index, dtype=float)*1000  #have to convert to kg to match base yield
     probability_handling_rkl_z = base_yields_rkl_z.div(stub_handling_threshold, axis=0, level=1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
     probability_handling_rl_z = probability_handling_rkl_z.droplevel(1)
@@ -864,20 +864,20 @@ def f_chem_cost(r_vals):
     ###adjust of interest and p7 period
     phase_chem_cost_rzl_p7n = chem_cost_rzl_n.reindex(chem_cost_allocation_z_p7n.columns,axis=1,level=1)
     phase_chem_cost_rl_p7nz = phase_chem_cost_rzl_p7n.unstack(1)
-    phase_chem_cost_rl_p7z = phase_chem_cost_rl_p7nz.mul(chem_cost_allocation_z_p7n.unstack(), axis=1).sum(axis=1, level=(0,2))  # sum the cost of all the chem
+    phase_chem_cost_rl_p7z = phase_chem_cost_rl_p7nz.mul(chem_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the chem
     phase_chem_wc_rzl_c0p7n = chem_cost_rzl_n.reindex(chem_wc_allocation_z_c0p7n.columns,axis=1,level=2)
     phase_chem_wc_rl_c0p7nz = phase_chem_wc_rzl_c0p7n.unstack(1)
-    phase_chem_wc_rl_c0p7z = phase_chem_wc_rl_c0p7nz.mul(chem_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the chem
+    phase_chem_wc_rl_c0p7z = phase_chem_wc_rl_c0p7nz.mul(chem_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the chem
 
     ##application cost - only a per ha component
     chem_app_cost_rzl_n = chem_applications * mac.chem_app_cost_ha()
     ###adjust of interest and p7 period
     chem_app_cost_rzl_p7n = chem_app_cost_rzl_n.reindex(chem_cost_allocation_z_p7n.columns, axis=1, level=1)
     chem_app_cost_rl_p7nz = chem_app_cost_rzl_p7n.unstack(1)
-    chem_app_cost_rl_p7z = chem_app_cost_rl_p7nz.mul(chem_cost_allocation_z_p7n.unstack(), axis=1).sum(axis=1, level=(0,2))  # sum the cost of all the chems
+    chem_app_cost_rl_p7z = chem_app_cost_rl_p7nz.mul(chem_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the chems
     chem_app_wc_rzl_c0p7n = chem_app_cost_rzl_n.reindex(chem_wc_allocation_z_c0p7n.columns, axis=1, level=2)
     chem_app_wc_rl_c0p7nz = chem_app_wc_rzl_c0p7n.unstack(1)
-    chem_app_wc_rl_c0p7z = chem_app_wc_rl_c0p7nz.mul(chem_wc_allocation_z_c0p7n.unstack(), axis=1).sum(axis=1, level=(0,1,3))  # sum the cost of all the chems
+    chem_app_wc_rl_c0p7z = chem_app_wc_rl_c0p7nz.mul(chem_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the chems
 
     ##add application cost and chem cost
     total_cost = phase_chem_cost_rl_p7z + chem_app_cost_rl_p7z
@@ -991,10 +991,10 @@ def f_insurance(r_vals):
     ##weight c1 to get average price
     c1_prob = uinp.price_variation['prob_c1']
     farmgate_price_kgc1_z = f_farmgate_grain_price()
-    farmgate_price_kg_z = farmgate_price_kgc1_z.mul(c1_prob,axis=0,level=-1).sum(axis=0,level=[0,1])
+    farmgate_price_kg_z = farmgate_price_kgc1_z.mul(c1_prob,axis=0,level=-1).groupby(axis=0,level=[0,1]).sum()
     ##combine each grain pool to get average price
     grain_pool_proportions_kg = f_grain_pool_proportions()
-    ave_price_k_z = farmgate_price_kg_z.mul(grain_pool_proportions_kg, axis=0).sum(axis=0, level=0)
+    ave_price_k_z = farmgate_price_kg_z.mul(grain_pool_proportions_kg, axis=0).groupby(axis=0, level=0).sum()
     ##calc insurance cost per tonne
     insurance_k_z = ave_price_k_z.mul(uinp.price['grain_price_info']['insurance']/100, axis=0)  #div by 100 because insurance is a percent
     insurance_kz = insurance_k_z.stack()
@@ -1054,8 +1054,8 @@ def f1_rot_cost(r_vals):
     phase_stubble_cost, phase_stubble_wc = f_phase_stubble_cost(r_vals)
 
     #note if any array has dtype object then pandas throws error (No axis named 1 for object type Series)
-    cost_rl_p7z = pd.concat([fert_cost, nap_fert_cost, chem_cost, seedcost, insurance_cost, phase_stubble_cost],axis=1).sum(axis=1,level=(0,1))
-    wc_rl_c0p7z = pd.concat([fert_wc, nap_fert_wc, chem_wc, seedwc, insurance_wc, phase_stubble_wc],axis=1).sum(axis=1,level=(0,1,2))
+    cost_rl_p7z = pd.concat([fert_cost, nap_fert_cost, chem_cost, seedcost, insurance_cost, phase_stubble_cost],axis=1).groupby(axis=1,level=(0,1)).sum()
+    wc_rl_c0p7z = pd.concat([fert_wc, nap_fert_wc, chem_wc, seedwc, insurance_wc, phase_stubble_wc],axis=1).groupby(axis=1,level=(0,1,2)).sum()
 
     ##stack
     cost_p7zlr = cost_rl_p7z.unstack([1,0])
