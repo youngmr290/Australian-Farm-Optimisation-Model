@@ -166,7 +166,9 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
         final_cashflow_p7 = np.average(final_cashflow_c0p7, axis=0)
 
     ##mask c0 on wc
-    mask_wc_c0 = np.array([True, True]) #todo this need to be an input in pinp near the wc dates
+    crop_c0_inc = np.array([pinp.crop['i_crp_c0_inc']])
+    stk_c0_inc = np.array([pinp.sheep['i_stk_c0_inc']])
+    mask_wc_c0 = np.concatenate([stk_c0_inc,crop_c0_inc]) #order of concat is important - needs to be the same as the c0 order in periods.py
     final_wc_c0p7 = final_wc_c0p7[mask_wc_c0,:]
     return final_cashflow_p7, final_wc_c0p7
 
@@ -194,8 +196,6 @@ def overheads(params, r_vals):
     ##cost - overheads are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr).
     overheads = pinp.general['i_overheads']
     overheads = overheads.sum()
-    # overheads_c0_alloc_c0 = pinp.finance['i_fixed_cost_enterprise_allocation_c0'] #todo remove this input
-    # overheads_c0p7z = overheads * overheads_c0_alloc_c0[:,na,na]
     overhead_cost_p7z = overhead_cost_allocation_p7z * overheads
     overhead_wc_c0p7z = overhead_wc_allocation_c0p7z * overheads
 

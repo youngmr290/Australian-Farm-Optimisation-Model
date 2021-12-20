@@ -278,8 +278,6 @@ def f_perm_cost(params, r_vals):
     ### no enterprise is passed because fixed cost are for both enterprise and thus the interest is the average of both enterprises
     labour_cost_allocation_p7z, labour_wc_allocation_c0p7z = fin.f_cashflow_allocation(labour_start_c0[:,na], z_pos=-1, c0_inc=True)
 
-    ##cost - fix costs are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr)
-    cost_c0_alloc_c0 = pinp.finance['i_fixed_cost_enterprise_allocation_c0']
     ###perm
     perm_cost = (uinp.price['permanent_cost'] + uinp.price['permanent_cost'] * uinp.price['permanent_super'] \
     + uinp.price['permanent_cost'] * uinp.price['permanent_workers_comp'] + uinp.price['permanent_cost'] * uinp.price['permanent_ls_leave'])

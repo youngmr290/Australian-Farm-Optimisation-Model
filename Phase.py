@@ -716,7 +716,6 @@ def f_phase_stubble_cost(r_vals):
 
     ##allocate the cash period and calc interest and working capital
     start = np.array([pinp.mach['stub_handling_date']]).astype('datetime64') #needed for allocation func
-    length = pinp.mach['stub_handling_length'] #needed for allocation func
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
