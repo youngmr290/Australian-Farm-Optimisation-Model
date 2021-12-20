@@ -69,7 +69,7 @@ def f1_croppyomo_local(params, model):
     
     model.p_grain_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['grain_wc'],default = 0.0, doc='farm gate wc per tonne of each grain')
     
-    model.p_phasesow_req = pe.Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['phase_sow_req'], default = 0.0, doc='ha of sow activity required by each rot phase')
+    model.p_phasesow_req = pe.Param(model.s_phases, model.s_landuses, model.s_lmus, initialize=params['phase_sow_req'], default = 0.0, doc='ha of sow activity required by each rot phase')
     
     model.p_sow_prov = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_landuses, initialize=params['sow_prov'], default = 0.0, doc='states which landuses can be sown in each p5 period')
 

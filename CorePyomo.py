@@ -335,7 +335,7 @@ def f_con_phasesow(model):
                    - sum(model.v_seeding_machdays[q,s,z,p5,k,l] * model.p_seeding_rate[k,l] * model.p_sow_prov[p7,p5,z,k] for p5 in model.s_labperiods) \
                    + phspy.f_phasesow_req(model,q,s,p7,k,l,z) == 0
 
-    model.con_phasesow = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops,model.s_lmus,model.s_season_types,rule=sow_link,
+    model.con_phasesow = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_landuses, model.s_lmus,model.s_season_types,rule=sow_link,
                                       doc='link between mach sow provide and rotation crop sow require')
 
 
