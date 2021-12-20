@@ -91,7 +91,7 @@ saa['r1_izg1'] = np.zeros(pinp.sheep['ia_r1_zig1'].shape, dtype=int)   #SA to ch
 saa['r1_izg3'] = np.zeros(pinp.sheep['ia_r1_zig3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
 saa['r2_isk2g1'] = np.zeros(pinp.sheep['ia_r2_sk2ig1'].shape, dtype=int)   #SA to change the base feed option selected for dams
 saa['r2_ik5g3'] = np.zeros(pinp.sheep['ia_r2_ik5g3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
-saa['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1pj0'].shape, dtype=np.float64)  #SA value for feedsupply.
+saa['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype=np.float64)  #SA value for feedsupply.
 saa['feedsupply_adj_r2p'] = np.zeros(pinp.feedsupply['i_feedsupply_adj_options_r2p'].shape, dtype=np.float64)  #SA value for feedsupply adjustment.
 
 ##stock parameters
@@ -123,7 +123,11 @@ sav['steady_state']      = '-'                  #SA to alter if the model is ste
 sav['inc_node_periods']      = '-'              #SA to alter if season nodes are included in the steady state model (note they are always included in the dsp version this only effects if they are included in steady state)
 sav['rev_create']      = '-'                  #SA to alter if the trial is being used to create rev std values
 sav['rev_number']      = '-'                  #SA to alter rev number - rev number is appended to the std rev value pkl file and can be used to select which rev is used as std for a given trial.
-sav['rev_trait_inc'] = np.full_like(sinp.structuralsa['rev_trait_inc'], '-', dtype=object) #SA value for which traits are to be held constant in REV analysis.
+sav['rev_trait_inc'] = np.full_like(sinp.structuralsa['i_rev_trait_inc'], '-', dtype=object) #SA value for which traits are to be held constant in REV analysis.
+sav['fs_create']      = '-'                  #SA to control if the trial is being used to create pkl fs
+sav['gen_with_t']      = '-'                  #SA to control if sheep generator is run with active t axis.
+sav['fs_use_pkl']      = '-'                  #SA to control if the pkl fs is used or the excel input fs is used.
+sav['fs_number']      = '-'                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is used for a given trial.
 
 ##finance
 sav['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)

@@ -71,11 +71,11 @@ year. However, as discussed by
 
 MIDAS fails to represent inter-year variation, which has
 been noted as a significant limitation by many of the MIDAS model developers and users
-:cite:p:`RN54, RN76`. A model called MUDAS (Model of an Uncertain Dryland
+:cite:p:`Kingwelletal1992, RN76`. A model called MUDAS (Model of an Uncertain Dryland
 Agricultural System) was developed to analyse the impact of risk associated with weather-year
 variation and price variation :cite:p:`RN83`. MUDAS is a discrete stochastic programming (DSP)
 model that considers nine season types and five price states. The model represents the farmer’s risk
-aversion and possible tactics to implement as the various seasons unfold :cite:p:`RN54`.
+aversion and possible tactics to implement as the various seasons unfold :cite:p:`Kingwelletal1992`.
 Representing risk and tactics associated with farm management enabled MUDAS to overcome the key
 steady-state limitation of MIDAS and provide more accurate findings concerning farm management.
 However, the added detail increased the size and complexity of the model. Such a large model resulted
@@ -96,7 +96,7 @@ the task of error-trapping and potentially complicates the interpretation of mod
 The whole farm model described in this documentation uses MP, more specifically linear programming (LP). LP was
 chosen because it is well established, reliable and efficient for optimising large problems with thousands
 of activities and constraints. Furthermore, LP has been used successfully to model farming systems in
-Australia :cite:p:`RN2, RN83` and overseas :cite:p:`Annetts2002, RN114`. To maximise
+Australia :cite:p:`RN2, RN83` and overseas :cite:p:`Annetts2002, Schäfer2017`. To maximise
 the accuracy of representing biological relationships in LP, non-linear relationships such as pasture
 growth are represented by piece-wise linearization :cite:p:`RN134`.
 

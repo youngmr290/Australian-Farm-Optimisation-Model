@@ -1,37 +1,12 @@
-# -*- coding: utf-8 -*-
 """
-Created on Mon Nov 18 11:29:17 2019
-
-module: functions module - contains all the core functions that we have made
-
-Version Control:
-Version     Date        Person  Change
-1.1         10Dec19     John    xl_all_named_ranges: Commented the updates made
-                                                     removed cells temporary variable and parameters dict is updated directly from the cells read
-1.2         11Dec19     John    xl_all_named_ranges: Added handling of rangename errors. Pass over index errors that are associated with 'bad' range names
-                                                     IndexError handles when a sheet with names has been deleted (ie a sheet_name error)
-                                                     TypeError handles a name in the target sheet is #REF (ie a cell_range error)
-1.3         12Dec19     MRY     phases: Altered the phase filter to compare the landuse in the following pairs (0,1),(1,2)...(len_phase-2,len_phase-1) so the first and last year are not compared
-1.4         13Dec19     MRY     added cartesian_product_simple_transpose - a fast func for making every possibility of multiple lists
-1.5         22Dec19     John    period_allocation: simplify the function so that it doesn't redefine variable from the parameters passed
-                                range_allocation: added this function fashioned from period_allocation
-1.6         26Dec19     JMY     xl_all_named_ranges: altered 2 comments that were in the wrong position
-1.7         19Jan20     MRY     altered cost period function to handle df with undefined title - because now inputs are read in from excel the column name can vary, which it couldn't before because the df was built from dict hence column name was always 0
-
-
-Known problems:
-Fixed   Date    ID by   Problem
-
+Functions used across the model (multi module functions). These functions don't import other AFO modules
+(hence don't initialise inputs inside the function). All function parameters are passed in when calling the function.
 
 @author: young
 """
 import pandas as pd
-# import timeit
 import numpy as np
 import pickle as pkl
-# from dateutil.parser import parse
-# import itertools
-import datetime as dt
 from dateutil import relativedelta as rdelta
 import os.path
 import glob
@@ -211,7 +186,7 @@ def f_expand(array, left_pos=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2
     left_pos : int
         position of axis to the left of where the new axis will be added.
     swap : boolean, optional
-        do you want to swap the first tow axis?. The default is False.
+        do you want to swap the first two axis?. The default is False.
     right_pos : int, optional
         the position of the axis to the right of the singleton axis being added. The default is -1, for when the axis to the right is g?.
     left_pos2 : int
@@ -311,6 +286,12 @@ def f_update(existing_value, new_value, mask_for_new):
         dtype = new_value.dtype
     elif isinstance(existing_value,np.ndarray):
         dtype = existing_value.dtype
+    elif isinstance(mask_for_new,np.ndarray):
+        pass #if both values are int/float and mask is numpy then just ignore dtype
+    elif type(existing_value)==type(new_value):
+        dtype = type(existing_value)
+    elif isinstance(new_value, str): #if it is '-' (used in exp) then retain the original dtype
+        dtype = type(existing_value)
 
 
     ##convert '-' to 0 (because '-' * False == '' which causes and error when you add to existing value)
@@ -334,6 +315,14 @@ def f_update(existing_value, new_value, mask_for_new):
         pass
     except UnboundLocalError:
         pass
+    ###used for core python dtype eg floats/int/str
+    try:
+        updated = dtype(updated)
+    except TypeError:
+        pass
+    except UnboundLocalError:
+        pass
+    ###error check
     try:
         if updated.dtype == object:
             print('dtype error in f_update (type object is being returned)') #will give warning if ever returning a numpy object
@@ -385,7 +374,7 @@ def f_divide(numerator, denominator, dtype='float64', option=0):
     numerator, denominator = np.broadcast_arrays(numerator, denominator)
     result = np.zeros(numerator.shape, dtype=dtype) #make it a float in case the numerator is int
     ##use ~np.isclose to capture when the denominator is 0 within rounding tolerances
-    mask = ~np.isclose(denominator, 0)
+    mask = ~np.isclose(denominator.astype(float), 0) #astype float to handle timedeltas. timdelata / timedelta is a float so the final product needs to be a float anyway
     result[mask] = numerator[mask]/denominator[mask]
 
     ##If option is 1 then return 1 if the numerator and the denominator are the same (both 0 or both inf)
@@ -427,6 +416,7 @@ def f_bilinear_interpolate(im, x_im, y_im, x, y):
 def np_extrap(x, xp, yp):
     ## np.interp function with linear extrapolation if x is beyond the input date (xp)
     ### from https://stackoverflow.com/questions/2745329/how-to-make-scipy-interpolate-give-an-extrapolated-result-beyond-the-input-range"""
+    x = np.array(x) #convert x to array so that it can be masked
     y = np.array(np.interp(x, xp, yp))  #convert y to array so that it can be masked (required if x is a scalar)
     ##use a mask to adjust values if extrapolating x below the lowest input value in xp
     y[x < xp[0]] = yp[0] + (x[x<xp[0]]-xp[0]) * (yp[0]-yp[1]) / (xp[0]-xp[1])
@@ -612,6 +602,86 @@ def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None)
                 arr = arr[tuple(sl)]
         return arr
 
+def f_nD_interp(x, xp, yp, axis):
+    '''
+    Interp with multi-D this is essentially the same as looping through axis and applying np.interp
+
+    All inputs must be broadcastable.
+
+    :param x: The x-coordinates at which to evaluate the interpolated values.
+    :param xp: The x-coordinates of the data points, must be increasing
+    :param yp: The y-coordinates of the data points, same length as xp
+    :param axis: Axis to interp along
+    :return: y - the interpolated values, same shape as x.
+    '''
+    ##add new axis where arrays have diff number of dims
+    n_dims = max(x.ndim,xp.ndim,yp.ndim)
+    extra_axes = tuple(range(n_dims-x.ndim))
+    x = np.expand_dims(x,axis=extra_axes)
+    extra_axes = tuple(range(n_dims-xp.ndim))
+    xp = np.expand_dims(xp,axis=extra_axes)
+    extra_axes = tuple(range(n_dims-yp.ndim))
+    yp = np.expand_dims(yp,axis=extra_axes)
+
+    ##move axis to interp along into pos=0
+    x = np.moveaxis(x, source=axis, destination=0)
+    xp = np.moveaxis(xp, source=axis, destination=0)
+    yp = np.moveaxis(yp, source=axis, destination=0)
+    ##broadcast all arrays to be the same along all axis except the interp axis
+    shape = tuple(np.maximum.reduce([xp.shape[1:], yp.shape[1:], x.shape[1:]]))
+    x = np.broadcast_to(x, x.shape[0:1]+shape)
+    xp = np.broadcast_to(xp, xp.shape[0:1]+shape)
+    yp = np.broadcast_to(yp, yp.shape[0:1]+shape)
+    ##store shape of final array so it can be reshaped back
+    final_shape = x.shape
+    ##reshape
+    x = x.reshape(x.shape[0],-1)
+    xp = xp.reshape(xp.shape[0],-1)
+    yp = yp.reshape(yp.shape[0],-1)
+    ##loop and do interp
+    y = np.zeros(x.shape)
+    for i in range(x.shape[-1]):
+        y[:,i] = np.interp(x[:,i], xp[:,i], yp[:,i])
+    ##reshape to normal
+    y = y.reshape(final_shape)
+    y = np.moveaxis(y, source=0, destination=axis)
+    return y
+
+def f_merge_axis(a, source_axis=0, target_axis=1):
+    '''
+    This function merges two axis into one. This is basically reshaping but works if the two axis are not side by side.
+    :param a: numpy array
+    :param source_axis: position of axis being merged with target_axis (this axis wont exist in the new array)
+    :param target_axis: position axis to be kept (this is merged with source axis)
+    :return:
+    '''
+    ##determine new shape
+    shp = np.array(a.shape)
+    shp[target_axis] *= shp[source_axis]
+    out_shp = np.delete(shp,source_axis)
+    ##If source and target axes are adjacent ones, we can skip moveaxis and simply reshape
+    if target_axis==source_axis+1:
+        return a.reshape(out_shp)
+    else:
+        return np.moveaxis(a,source_axis,target_axis-1).reshape(out_shp)
+
+def f_split_axis(a, len_a, axis):
+    '''
+    This function splits an axis into two axis.
+
+    This is basically reshaping.
+
+    :param a: numpy array
+    :param len_a: length of the first of the two new axis
+    :return:
+    '''
+    ##determine new shape
+    shp = np.array(a.shape)
+    shp[axis] /= len_a
+    out_shp = np.insert(shp,axis,len_a)
+    return a.reshape(out_shp)
+
+
 #######################
 #Specific AFO function#
 #######################
@@ -651,6 +721,7 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
         value = f_update(value, sa, sa != '-')
 
     return value
+
 
 def f_run_required(exp_data1):
     '''
@@ -834,6 +905,112 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav):
             elif dic == 'sav':
                 sav[key1]=value
 
+def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
+    '''
+    This function save a variable in the r_vals dict so it can be accessed in the reporting stage.
+
+    The majority of this function concerns unclustering the z axis. This is required for two reasons:
+
+        1. By the time the r_val is save it would have likely been masked by mask_z8.
+        2. The user may have incorrectly clustered the inputs in excel (eg seasons had different inputs before they
+           were identified). This doesnt effect the actual model because z8 is masked until it is identified
+           however if the r_val didnt get z8 treatment the reports could contain errors.
+
+    :param r_vals: r_vals dict
+    :param param: param to be stored
+    :param maskz8: season identification mask
+    :param name: name of r_val
+
+    Note 1: Arrays must broadcast.
+    Note 2: if no z axis then param is simply stored in r_vals no need to pass in the mask arg.
+    '''
+    if maskz8 is not None:
+        df=False
+        series=False
+        ##convert df to series
+        if isinstance(param,pd.DataFrame):
+            df = True
+            n_cols = param.columns.nlevels
+            param = param.stack(list(range(n_cols)))
+        ##convert pd.Series to numpy
+        if isinstance(param,pd.Series):
+            series = True
+            ##store index
+            index = param.index
+            ##reshape array to be numpy
+            reshape_size = param.index.remove_unused_levels().levshape # create a tuple with the rights dimensions
+            param = np.reshape(param.values,reshape_size)
+
+        ##uncluster z so that each season gets complete information
+        index_z = f_expand(np.arange(maskz8.shape[z_pos]), z_pos)
+        a_zcluster = np.maximum.accumulate(index_z * maskz8, axis=z_pos)
+        a_zcluster = np.broadcast_to(a_zcluster, param.shape)
+        param = np.take_along_axis(param, a_zcluster, axis=z_pos)
+
+        ##add index if pandas
+        if series:
+            param = pd.Series(param.ravel(), index=index)
+
+        ##unstack back to a df if required
+        if df:
+            param = param.unstack(list(range(-n_cols,0)))
+
+    ##reshape if required
+    if shape is not None:
+        param = param.reshape(shape)
+
+    ##store param
+    r_vals[name] = param
+
+
+
+def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=None, dtype='float32'):
+    '''
+    Convert numpy array into dict for pyomo. A loop can be used to reduce memory if required.
+
+    0 values are removed to reduce time (when creating the param in pyomo) and space.
+
+    :param param: numpy array
+    :param index: list of index arrays
+    :param loop_axis_pos: optional: position of axis that is being looped on (arg not required if no loop)
+    :param index_loop_axis_pos: optional: position of axis that is being looped on in the index array (arg not required if no loop)
+    :return: dict for pyomo
+    '''
+    ##build in loop to reduce memory for some big params
+    if loop_axis_pos:
+        param_masked = np.array([],dtype=dtype)
+        index_masked = np.array([])
+        for i in range(param.shape[loop_axis_pos]):
+            ###mask out values=0
+            param_cut = f_dynamic_slice(param, loop_axis_pos, start=i, stop=i+1)
+            mask = param_cut != 0
+            param_masked = np.concatenate([param_masked,param_cut[mask]],0).astype(dtype)  # applying the mask does the raveling and squeezing of singleton axis
+            mask = mask.ravel() #needs to be 1d to mask the index
+            ###build index
+            ####adjust if the position given is negative (eg cant use pos=-1)
+            if index_loop_axis_pos<0:
+                index_loop_axis_pos = len(index) + index_loop_axis_pos
+            index_cut = [index[x] if x != index_loop_axis_pos else index[x][i:i+1] for x in range(len(index))]
+            index_cut = cartesian_product_simple_transpose(index_cut)
+            index_masked = np.vstack([index_masked,index_cut[mask,:]]) if index_masked.size else index_cut[mask,:]
+    else:
+        ###mask out values=0
+        mask = param!=0
+        ###build index
+        index = cartesian_product_simple_transpose(index)
+        ###mask param and index
+        param_masked = param[mask]  # applying the mask does the raveling and squeezing of array
+        mask = mask.ravel() #needs to be 1d to mask the index
+        index_masked = index[mask,:]
+
+    ##error check - index and param should be same length but zip() doesnt throw error if they are different length
+    if len(index_masked) != len(param_masked):
+        raise exc.ParamError('''Index and param must be the same length''')
+
+    ##make index a tupple and zip with param and make dict
+    tup = tuple(map(tuple,index_masked))
+    return dict(zip(tup, param_masked))
+
 def write_variablesummary(model, row, exp_data, obj, option=0):
     '''
 
@@ -863,6 +1040,7 @@ def write_variablesummary(model, row, exp_data, obj, option=0):
             except:
                 pass
     file.close()
+
 
 
 ##########################
@@ -941,43 +1119,13 @@ def period_allocation(period_dates,periods,start_d,length=None):
                 break
         return allocation_p
 
-def period_allocation2(start_df, length_df, p_dates, p_name):
-    '''
-    Parameters
-    ----------
-    start_df : Datetime series
-        Contains the activity start dates ie start date of fert spreading for each fert.
-    length_df : Datetime series
-        Length of the df activity ie length of fert spreading for each fert.
-    p_dates : List
-        Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
-    p_name : List
-        Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
 
-    Returns
-    -------
-    Dataframe 2D
-        index = period names you are matching within ie cashflow
-        column names = activities ie fertilisers
-        This function is used when multiple activities have different period allocation.
-        - this func basically just calls the main allocation multiple times and adds the results to one df.
-        eg the cost of fert spreading could be in different periods depending what time of yr that fertiliser is applied
-    '''
-    start_df=start_df.squeeze() #should be a series but in case it is a 1d df
-    length_df=length_df.squeeze() #should be a series but in case it is a 1d df
-    df = pd.DataFrame()
-    for col, start, length in zip(start_df.index, start_df, length_df):
-        allocation = period_allocation(p_dates,p_name,start,length)
-        df[col]=allocation['allocation']
-    df.index=allocation['period']
-    return df
-
-def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
+def range_allocation_np(period_dates, item_start, length=np.array([1]).astype('timedelta64[D]'), opposite=None, shape=None):
     ''' Numpy version - The proportion of each period that falls in the tested date range or proportion of date range in each period.
 
-    :param period_dates: the start of the periods - in a Numpy array np.datetime64. This array must be broadcastable with start
-                  (therefore may need to add new axis if start has a dimension).
-    :param start: the date of the beginning of the date range to test - a numpy array of dates (np.datetime64)
+    :param period_dates: the start of the periods (including end date of last period) - in a Numpy array np.datetime64. This array must be broadcastable with start
+                  (therefore may need to add new axis if start has a dimension). Period axis must be in pos=0.
+    :param item_start: the date of the beginning of the date range to test - a numpy array of dates (np.datetime64)
     :param length: the length of the date range to test - an array of timedelta. Must be broadcastable to start.
     :param opposite: Controls the proportion calculated. True returns the proportion of date range in each period.
                      None returns the proportion of the period in the date range (2nd arg).
@@ -990,42 +1138,46 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     min = np.array([1]).astype('timedelta64[D]')
     length = np.maximum(min,length)
 
-    ##end of period
-    end = np.minimum(start + length, period_dates[-1]) #minimum ensures that the assigned date range is within the period date range.
-
     #start empty array to assign to
     if shape==None:
-        allocation_period=np.zeros((period_dates.shape[:-1] + start.shape),dtype=np.float64)
+        allocation_period=np.zeros((period_dates.shape[:-1] + item_start.shape),dtype=np.float64)
     else:
         allocation_period=np.zeros(shape,dtype=np.float64)
+
+    ##get dtype consistent
+    period_dates = period_dates.astype('datetime64[D]')
+    item_start = item_start.astype('datetime64[D]')
+
+    ##adjust yr of item occurence
+    start_of_periods = period_dates[0,...]
+    end_of_periods = start_of_periods + np.timedelta64(364, 'D') #use 364 because end date is the day before the end otherwise can get item that starts on the last day of periods.
+    add_yrs = np.ceil(np.maximum(0,(start_of_periods - item_start).astype('timedelta64[D]').astype(int) / 365))
+    sub_yrs = np.ceil(np.maximum(0,(item_start - end_of_periods).astype('timedelta64[D]').astype(int) / 365))
+    item_start = item_start + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
+    ###handle cases where date + length is after the end of periods. in this situation length gets reduced
+    length = np.minimum(length, (period_dates[-1,...] - item_start).astype('timedelta64[D]'))
+
+    ##end of period
+    item_end = np.minimum(item_start + length, period_dates[-1]) #minimum ensures that the assigned date range is within the period date range.
 
     ##checks if user wants the proportion of each period that falls in the tested date range or proportion of date range in each period
     if opposite:
         #check how much of each date range falls within the period
         for i in range(len(period_dates)-1):
             per_start = period_dates[i, ...] #[i:i+1] #to keep dim
-            per_end = period_dates[i+1, ...].copy() #[i+1:i+2].copy() #so original date array isn't altered when updating year in next step
-            ###to handle situations where base yr version of feed period is used. In these case the year does not increment
-            ###at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
-            ###in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
-            mask = per_end < per_start
-            per_end[mask] = per_end[mask] + np.timedelta64(365, 'D')
-            calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
-            calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
-            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (end - start)) #days between calc_end and calc_start (0 if end before start) divided by length of the range
+            per_end = period_dates[i+1, ...]
+            calc_start = np.maximum(per_start,item_start).astype('datetime64[D]')       #select the later of the period start or the start of the range
+            calc_end = np.minimum(per_end,item_end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
+            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (item_end - item_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the range
     else:
         #check how much of each period falls within the date range
         for i in range(len(period_dates)-1):
             per_start = period_dates[i, ...] #[i:i+1]
-            per_end = period_dates[i+1, ...].copy() #[i+1:i+2].copy() #so original date array isn't altered when updating year in next step
-            ###to handle situations where base yr version of feed period is used. In these case the year does not increment
-            ###at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
-            ###in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
-            mask = per_end < per_start
-            per_end[mask] = per_end[mask] + np.timedelta64(365, 'D')
-            calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
-            calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
-            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period, use f_divide in case any period lengths are 0 (this is likely to occur in season version)
+            per_end = period_dates[i+1, ...]
+            calc_start = np.maximum(per_start,item_start).astype('datetime64[D]')       #select the later of the period start or the start of the range
+            calc_end = np.minimum(per_end,item_end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
+            allocation_period[i,...] = np.maximum(0, f_divide(calc_end - calc_start
+                                                              , per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period, use f_divide in case any period lengths are 0 (this is likely to occur in season version)
     return allocation_period
 
 
@@ -1052,15 +1204,22 @@ def period_proportion_np(period_dates, date_array):
     shape = (period_dates.shape[0],) + date_array.shape
     period_dates = np.broadcast_to(period_dates, shape)
 
+    ##get dtype consistent
+    period_dates = period_dates.astype('datetime64[D]')
+    date_array = date_array.astype('datetime64[D]')
+
     ##dates
     dates_start = period_dates[:-1]
     dates_end = period_dates[1:].copy() #so original date array isn't altered when updating year in next step
 
-    ##to handle situations where base yr version of feed period is used. In these case the year does not increment
-    ##at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
-    ##in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
-    mask = dates_end < dates_start
-    dates_end[mask] = dates_end[mask] + np.timedelta64(365,'D')
+    ##adjust yr of item occurence
+    start_of_periods = period_dates[0,...]
+    end_of_periods = period_dates[-1,...]
+    add_yrs = np.ceil(np.maximum(0,(start_of_periods - date_array).astype('timedelta64[D]').astype(int) / 365))
+    sub_yrs = np.ceil(np.maximum(0,(date_array - end_of_periods).astype('timedelta64[D]').astype(int) / 365))
+    date_array = date_array + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
+    ###little check to ensure that all cashflow is all starting at least 1 day before the end cashflow date
+    date_array = date_array - np.maximum(0, (date_array - (period_dates[-1,...] - np.timedelta64(1, 'D'))).astype('timedelta64[D]').astype(int))
 
     ##calc the period each value in the date array falls within (can't use np.searchsorted because date array has z axis)
     ###occur is bool array which is true for the period that the date array fall into
@@ -1149,24 +1308,4 @@ def f_next_prev_association(datearray_slice,*args):
     idx_next = np.searchsorted(datearray_slice, date, side)
     idx = np.clip(idx_next - offset, 0, len(datearray_slice)-1) #makes the max value equal to the length of joining array, because if the period date is after the last lambing opportunity there is no 'next'
     return idx
-
-
-def f_baseyr(periods, base_year=None):
-    """convert all dates to the same year
-    :param periods: array of period dates
-    :param base_year: datetime[Y] - year to convert periods to. If None it takes the year from the first period in array.
-    """
-    ##convert to np datetime
-    periods  = periods.astype('datetime64')
-
-    ##If None it takes the year from the first period in array
-    if base_year==None:
-        base_year = periods[0,0].astype('datetime64[Y]')
-
-    ##bring year back to base yr
-    period_year = periods.astype('datetime64[Y]').astype(int)
-    year_offset = period_year - base_year.astype(int)
-    periods = periods - (np.timedelta64(365, 'D') * year_offset)
-    return periods
-
 

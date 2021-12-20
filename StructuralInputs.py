@@ -98,7 +98,7 @@ structuralsa = copy.deepcopy(structuralsa_inp)
 #######################
 #apply SA             #
 #######################
-def structural_inp_sa():
+def f_structural_inp_sa():
     '''
     Applies sensitivity adjustment to relevant inputs. Note only inputs in StructuralSA sheet can have sensitivities applied.
     After the sensitivities are applied, when using the DSP model, inputs with a feed period index are expanded to
@@ -118,20 +118,28 @@ def structural_inp_sa():
     ##SAV
     structuralsa['i_nut_spread_n1'] = fun.f_sa(structuralsa['i_nut_spread_n1'], sen.sav['nut_spread_n1'],5)
     structuralsa['i_nut_spread_n3'] = fun.f_sa(structuralsa['i_nut_spread_n3'], sen.sav['nut_spread_n3'],5)
-    structuralsa['i_n1_len'] = fun.f_sa(structuralsa['i_n1_len'], sen.sav['n_fs_dams'],5).astype(int)
-    structuralsa['i_n3_len'] = fun.f_sa(structuralsa['i_n3_len'], sen.sav['n_fs_offs'],5).astype(int)
+    structuralsa['i_n1_len'] = fun.f_sa(structuralsa['i_n1_len'], sen.sav['n_fs_dams'],5)
+    structuralsa['i_n3_len'] = fun.f_sa(structuralsa['i_n3_len'], sen.sav['n_fs_offs'],5)
     structuralsa['i_w_start_len1'] = fun.f_sa(structuralsa['i_w_start_len1'], sen.sav['n_initial_lw_dams'],5)
     structuralsa['i_adjp_lw_initial_w1'] = fun.f_sa(structuralsa['i_adjp_lw_initial_w1'], sen.sav['adjp_lw_initial_w1'],5)
     structuralsa['i_fvp_mask_dams'] = fun.f_sa(structuralsa['i_fvp_mask_dams'], sen.sav['mask_fvp_dams'],5)
     structuralsa['i_dvp_mask_f1'] = fun.f_sa(structuralsa['i_dvp_mask_f1'], sen.sav['fvp_is_dvp_dams'],5)
     structuralsa['i_fvp_mask_offs'] = fun.f_sa(structuralsa['i_fvp_mask_offs'], sen.sav['mask_fvp_offs'],5)
     structuralsa['i_dvp_mask_f3'] = fun.f_sa(structuralsa['i_dvp_mask_f3'], sen.sav['fvp_is_dvp_offs'],5)
-    structuralsa['rev_create'] = fun.f_sa(structuralsa['rev_create'], sen.sav['rev_create'],5)
-    structuralsa['rev_number'] = fun.f_sa(structuralsa['rev_number'], sen.sav['rev_number'],5)
-    structuralsa['rev_trait_inc'] = fun.f_sa(structuralsa['rev_trait_inc'], sen.sav['rev_trait_inc'],5)
+    structuralsa['i_rev_create'] = fun.f_sa(structuralsa['i_rev_create'], sen.sav['rev_create'],5)
+    structuralsa['i_rev_number'] = fun.f_sa(structuralsa['i_rev_number'], sen.sav['rev_number'],5)
+    structuralsa['i_rev_trait_inc'] = fun.f_sa(structuralsa['i_rev_trait_inc'], sen.sav['rev_trait_inc'],5)
+    structuralsa['i_generate_with_t'] = fun.f_sa(structuralsa['i_generate_with_t'], sen.sav['gen_with_t'],5)
+    structuralsa['i_fs_create'] = fun.f_sa(structuralsa['i_fs_create'], sen.sav['fs_create'],5)
+    structuralsa['i_fs_use_pkl'] = fun.f_sa(structuralsa['i_fs_use_pkl'], sen.sav['fs_use_pkl'],5)
+    structuralsa['i_fs_number'] = fun.f_sa(structuralsa['i_fs_number'], sen.sav['fs_number'],5)
 
-
+##############################
+# handle inputs with p6 axis #
+##############################
+def f1_expand_p6():
     ##When using DSP, expand inputs with a p6 axis for each season node.
+    ##has to be a seperate function to the sa because values altered in SA impact a_p6std_p6z
     ##have to import it here since sen.py imports this module
     import Periods as per
 
@@ -173,7 +181,7 @@ landuse['All_pas']={'a', 'ar'
                 , 'x', 'xr','xc'
                 , 'j', 't', 'jr', 'tr','tc','jc'
                 }
-##next set is used in pasture.py for germination and phase area
+##next set is used in pasture.py for mobilisation of below ground reserves and phase area
 landuse['pasture_sets']={'annual': {'a', 'ar'
                                 , 's', 'sr'
                                 , 'm'}

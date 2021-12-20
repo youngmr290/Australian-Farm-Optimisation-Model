@@ -43,6 +43,8 @@ import StockPyomo as spy
 import CorePyomo as core
 import MVF as mvf
 import CropGrazingPyomo as cgzpy
+import SeasonPyomo as zgenpy
+import FeedSupplyStock as fsstk
 
 #report the clock time that the experiment was started
 print(f'Experiment commenced at: {time.ctime()}')
@@ -124,12 +126,17 @@ for row in range(len(exp_data)):
     fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
 
     ##call sa functions - assigns sa variables to relevant inputs
-    sinp.structural_inp_sa()
-    uinp.universal_inp_sa()
-    pinp.property_inp_sa()
+    sinp.f_structural_inp_sa()
+    uinp.f_universal_inp_sa()
+    pinp.f_property_inp_sa()
+    ##expand p6 axis to include nodes
+    sinp.f1_expand_p6()
+    pinp.f1_expand_p6()
+
     ##create empty dicts - have to do it here because need the trial as the first key, so whole trial can be compared when determining if pyomo needs to be run
     ###params
     params={}
+    params['zgen']={}
     params['rot']={}
     params['crop']={}
     params['crpgrz']={}
@@ -144,6 +151,7 @@ for row in range(len(exp_data)):
     params['pas']={}
     ###report values
     r_vals={}
+    r_vals['zgen']={}
     r_vals['rot']={}
     r_vals['crop']={}
     r_vals['crpgrz']={}
@@ -157,8 +165,11 @@ for row in range(len(exp_data)):
     r_vals['stub']={}
     r_vals['pas']={}
     nv = {} #dict to store nv params from stockgen to be used in pasture
+    pkl_fs_info = {} #dict to store info required to pkl feedsupply
+
     ##call precalcs
     precalc_start = time.time()
+    zgenpy.season_precalcs(params['zgen'],r_vals['zgen'])
     rotpy.rotation_precalcs(params['rot'],r_vals['rot'])
     phspy.crop_precalcs(params['crop'],r_vals['crop'])
     macpy.mach_precalcs(params['mach'],r_vals['mach'])
@@ -167,7 +178,7 @@ for row in range(len(exp_data)):
     labpy.lab_precalcs(params['lab'],r_vals['lab'])
     lphspy.crplab_precalcs(params['crplab'],r_vals['crplab'])
     suppy.sup_precalcs(params['sup'],r_vals['sup'])
-    spy.stock_precalcs(params['stock'],r_vals['stock'],nv)
+    spy.stock_precalcs(params['stock'],r_vals['stock'],nv,pkl_fs_info)
     cgzpy.cropgraze_precalcs(params['crpgrz'],r_vals['crpgrz'], nv) #cropgraze must be after stock because it uses nv dict which is populated in stock.py
     stubpy.stub_precalcs(params['stub'],r_vals['stub'], nv) #stub must be after stock because it uses nv dict which is populated in stock.py
     paspy.paspyomo_precalcs(params['pas'],r_vals['pas'], nv) #pas must be after stock because it uses nv dict which is populated in stock.py
@@ -180,7 +191,8 @@ for row in range(len(exp_data)):
         ##call pyomo model function, must call them in the correct order (core must be last)
         pyomocalc_start = time.time()
         model = pe.ConcreteModel() #create pyomo model - done each loop because memory was being leaked when just deleting and re adding the components.
-        crtmod.sets(model, nv) #certain sets have to be updated each iteration of exp
+        crtmod.sets(model, nv) #certain sets have to be updated each iteration of exp - has to be first since other modules use the sets
+        zgenpy.f1_seasonpyomo_local(params['zgen'], model)  # has to be first since builds params used in other modules
         rotpy.f1_rotationpyomo(params['rot'], model)
         phspy.f1_croppyomo_local(params['crop'], model)
         macpy.f1_machpyomo_local(params['mach'], model)
@@ -199,99 +211,65 @@ for row in range(len(exp_data)):
 
         pyomocalc_end = time.time()
         print(f'{trial_description}, time for localpyomo: {pyomocalc_end - pyomocalc_start:.2f} finished at {time.ctime()}')
-        obj = core.coremodel_all(params, trial_name, model)
+        obj = core.coremodel_all(trial_name, model)
         print(f'{trial_description}, time for corepyomo: {time.time() - pyomocalc_end:.2f} finished at {time.ctime()}')
 
-        if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
-            ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
-            fun.write_variablesummary(model, row, exp_data, obj, 1)
+        ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
+        fun.write_variablesummary(model, row, exp_data, obj, 1)
 
-            ##check if user wants full solution
-            if exp_data.index[row][1] == True:
-                ##make lp file
-                model.write('Output/%s.lp' %trial_name, io_options={'symbolic_solver_labels':True})  #file name has to have capital
+        ##check if user wants full solution
+        if exp_data.index[row][1] == True:
+            ##make lp file
+            model.write('Output/%s.lp' %trial_name, io_options={'symbolic_solver_labels':True})  #file name has to have capital
 
-                ##This writes variable summary for full solution (same file as the temporary version created above)
-                fun.write_variablesummary(model, row, exp_data, obj)
+            ##This writes variable summary for full solution (same file as the temporary version created above)
+            fun.write_variablesummary(model, row, exp_data, obj)
 
-                ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
-                with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
-                    f.write("My description of the instance!\n")
-                    model.display(ostream=f)
+            ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
+            with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
+                f.write("My description of the instance!\n")
+                model.display(ostream=f)
 
-                ##write rc, duals and slacks to txt file. Duals are slow to write so that option must be turn on
-                write_duals = True
-                with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
-                    f.write('RC\n')
-                    for v in model.component_objects(pe.Var, active=True):
-                        f.write("Variable %s\n" %v)
-                        for index in v:
-                            try: #in case variable has no index
-                                print("      ", index, model.rc[v[index]], file=f)
-                            except: pass
-                    f.write('Slacks (no entry means no slack)\n')  # this can be used in search to find the start of this in the txt file
-                    for c in model.component_objects(pe.Constraint,active=True):
-                        f.write("Constraint %s\n" % c)
+            ##write rc, duals and slacks to txt file. Duals are slow to write so that option must be turn on
+            write_duals = True
+            with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
+                f.write('RC\n')
+                for v in model.component_objects(pe.Var, active=True):
+                    f.write("Variable %s\n" %v)
+                    for index in v:
+                        try: #in case variable has no index
+                            print("      ", index, model.rc[v[index]], file=f)
+                        except: pass
+                f.write('Slacks (no entry means no slack)\n')  # this can be used in search to find the start of this in the txt file
+                for c in model.component_objects(pe.Constraint,active=True):
+                    f.write("Constraint %s\n" % c)
+                    for index in c:
+                        if c[index].lslack() != 0 and c[index].lslack() != np.inf:
+                            print("  L   ",index,c[index].lslack(),file=f)
+                        if c[index].uslack() != 0 and c[index].lslack() != np.inf:
+                            print("  U   ",index,c[index].uslack(),file=f)
+                if write_duals:
+                    f.write('Dual\n')   #this can be used in search to find the start of this in the txt file
+                    for c in model.component_objects(pe.Constraint, active=True):
+                        f.write("Constraint %s\n" %c)
                         for index in c:
-                            if c[index].lslack() != 0 and c[index].lslack() != np.inf:
-                                print("  L   ",index,c[index].lslack(),file=f)
-                            if c[index].uslack() != 0 and c[index].lslack() != np.inf:
-                                print("  U   ",index,c[index].uslack(),file=f)
-                    if write_duals:
-                        f.write('Dual\n')   #this can be used in search to find the start of this in the txt file
-                        for c in model.component_objects(pe.Constraint, active=True):
-                            f.write("Constraint %s\n" %c)
-                            for index in c:
-                                print("      ", index, model.dual[c[index]], file=f)
+                            print("      ", index, model.dual[c[index]], file=f)
 
-            ##store pyomo variable output as a dict
-            season = pinp.f_keys_z()[0]
-            lp_vars = {}
-            variables=model.component_objects(pe.Var, active=True)
-            lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
-            lp_vars['scenario_profit'] = obj #todo this will need to change with new season structure eg just remove this.
-            ##store profit
-            lp_vars['profit'] = obj
-
-        ## if DSP version
-        else:
-            ##Note: to get full lp file for DSP model it needs to be run via the terminal (or in runef.py) see google doc for more info.
-
-            ## load json (dsp solution) back in
-            with open('ef_solution.json') as f:
-                data = json.load(f)
-
-            ##store pyomo variable output as a dict
-            lp_vars = {}
-            for season in pinp.f_keys_z():
-                variables = data['scenario solutions'][season]['variables']
-                lp_vars[season] = {}
-                ###get dict into correct format for lp_vars
-                for key in variables.keys():
-                    var_name = key.split('[', 1)[0]
-                    try:
-                        sets = key.split('[', 1)[1].split(']',1)[0]
-                        sets = tuple(sets.split(','))
-                    except IndexError: #handle variables with no sets
-                        sets = None #set to None because this happens in steady state version.
-                    value = variables[key]['value']
-                    try:
-                        lp_vars[season][var_name][sets] = value
-                    except KeyError:
-                        lp_vars[season][var_name] = {} #create empty dict once for each variable name
-                        lp_vars[season][var_name][sets] = value
-
-                ##store scenario profit
-                lp_vars[season]['scenario_profit'] = data['scenario solutions'][season]['objective']
-            ##store overall expected profit
-            lp_vars['profit'] = obj
+        ##store pyomo variable output as a dict
+        variables=model.component_objects(pe.Var, active=True)
+        lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
+        ##store profit
+        lp_vars['profit'] = obj
 
         ##pickle lp info - only if pyomo is run
         with open('pkl/pkl_lp_vars_{0}.pkl'.format(trial_name),"wb") as f:
             pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
-    ##pickle report values - every time a trial is run
+    ##pickle report values - every time a trial is run (even if pyomo not run)
     with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
+
+    ##call function to store optimal feedsupply
+    fsstk.f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info)
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run

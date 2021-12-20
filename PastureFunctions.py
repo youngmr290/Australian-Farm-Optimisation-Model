@@ -12,17 +12,19 @@ The biology and logistics of pasture growth rate that are represented in AFO is:
 
     * PGR is dependent on pasture leaf area, which is quantified by the level of feed on offer (FOO, kg of DM/ha),
     * PGR for each pasture type varies with the phase during its life cycle, soil moisture and sunlight. All are quantified by land management unit, time of year and season.
-    * Germination of annual pastures at the break of season is dependent on the seed bank. Seed bank is controlled by the rotation in which the pasture is grown.
-    * The digestibility of the diet selected by animals grazing pasture is dependent on their capacity for selective grazing.
+    * The mobilisation of below ground reserves (germination) of annual pastures at the break of season is dependent on the seed bank. Seed bank is controlled by the rotation in which the pasture is grown.
+    * The mobilisation of below ground reserves of perennial pastures at the break of season can also be adjusted by rotation, however, perennials ususally aren't grown in rotation with crops.
+    * The digestibility of the diet selected by animals grazing pasture is dependent on their capacity for selective grazing which depends on FOO and grazing intensity.
     * The intake of animals grazing pasture is dependent on FOO and diet DMD.
-    * The risk of resource degradation increases when ground cover is lower.
+    * The risk of resource degradation increases when ground cover is lower so there is a minimum limit to ground cover
 
 The decision variables that can be optimised in AFO that represent the above biology are:
 
     * The rotation phases in which pasture can be grown on each LMU
     * A discrete range of FOO level (low, medium and high) at the start of each feed period
     * A discrete range of the severity of defoliation (0, 25%, 50% & 100%) in each feed period
-    * The quantity of dry feed consumed from each of 2 dry feed quality group in each feed period
+    * The level of growth modifiers (nitrogen or gibberelic acid) applied to the pasture
+    * The quantity of dry feed consumed from each of 2 dry feed quality groups in each feed period
 
 Nutritive value of pasture is determined by the metabolisable energy per unit of dry matter, the relative
 ingestibility and the relative availability. This varies with:
@@ -75,15 +77,18 @@ na = np.newaxis
 def f_germination(i_germination_std_zt, i_germ_scalar_lzt, i_germ_scalar_p6zt
                   , pasture_rt, arable_l,  pastures, phase_germresow_df, i_phase_germ_dict, rt):
     '''
-    Calculate pasture germination for each rotation phase.
+    Calculate mobilisation of the below ground reserves of the pasture for each rotation phase.
 
-    Pasture germination is calculated for each pasture rotation phase based on the LMU and rotation history.
+    For annual pastures the below ground reserves is the seed bank which is mobilised through germination. For
+    perennial pastures it is the root reserves that are mobilised at the beginning of the growing season.
+
+    The mobilisation is calculated for each pasture rotation phase based on the LMU and rotation history.
     The phase history is assumed only to impact pasture seed bank and hence pasture establishment. Phase
     history impacts the seed bank for three main reasons. Firstly, spraying out the weeds during the crop
     phase reduces seed set. Secondly, pasture manipulation in the prior years can reduce seed set. Thirdly,
     reseeding in the previous year can have carry forward benefits. For LMUs that have a component of
-    non-arable area, the germination on the arable area is affected by the phase history whereas the
-    germination on the non-arable area is assumed to be the same as the germination in a continuous
+    non-arable area, the mobilisation on the arable area is affected by the phase history whereas the
+    non-arable area are assumed to be the same as the continuous annual
     pasture rotation. Additionally, resown pastures or perennial pastures (e.g. Lucerne & Tedera)
     are only established on the arable areas, the non-arable areas are assumed to be growing annual pasture.
 
@@ -245,36 +250,36 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     return foo_grn_reseeding_p6lrzt, foo_dry_reseeding_dp6lrzt, periods_destocked_p6zt
 
 
-def f_pas_sow(i_reseeding_date_start_zt, i_reseeding_date_end_zt, resown_rt, arable_l, phases_rotn_df, pastures):
-    '''
-    Calculate the sowing provided by the pas_sow activity in each machinery period for each pasture landuse.
-
-    The sow activity only provides seeding during the machinery periods that align with reseeding date and only provides
-    sowing for the resown pasture landuses.
-
-    :param i_reseeding_date_start_zt: Date reseeding begins.
-    :param i_reseeding_date_end_zt: Date reseeding ends.
-    :param resown_rt: Boolean array denoting which rotations phases are resown.
-    :param arable_l: Proportion of arable land on each LMU.
-    :return: Pasture sowing requirement for all rotation phases.
-    '''
-    ### sow param determination
-    ### determine the labour periods pas seeding occurs
-    labour_period_p5z = per.f_p_dates_df()
-    labour_period_start_p5z = labour_period_p5z.values[:-1]
-    labour_period_end_p5z = labour_period_p5z.values[1:]
-    period_is_passeeding_p5zt = (labour_period_start_p5z[:,:,na] < i_reseeding_date_end_zt) * (labour_period_end_p5z[:,:,na] > i_reseeding_date_start_zt)
-
-    ## add k (landuse axis) - this is required for sow param
-    keys_k = np.asarray(list(sinp.landuse['All']))
-    kt = (len(keys_k), len(pastures))
-    seeding_landuses = uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj'].index
-    resown_kt = np.zeros(kt)
-    for t,pasture in enumerate(pastures):
-        pasture_landuses = list(sinp.landuse['pasture_sets'][pasture])
-        resown_kt[:,t] = np.logical_and(np.in1d(keys_k, seeding_landuses), np.in1d(keys_k, pasture_landuses)) #resown if landuse is a pasture and is a sown landuse
-    pas_sow_prov_pkz = np.sum(resown_kt[:,na,:] * period_is_passeeding_p5zt[:,na,...], -1) #sum t axis - t is counted for in the k axis
-    return pas_sow_prov_pkz
+# def f_pas_sow(i_reseeding_date_start_zt, i_reseeding_date_end_zt, resown_rt, arable_l, phases_rotn_df, pastures):
+#     '''
+#     Calculate the sowing provided by the pas_sow activity in each machinery period for each pasture landuse.
+#
+#     The sow activity only provides seeding during the machinery periods that align with reseeding date and only provides
+#     sowing for the resown pasture landuses.
+#
+#     :param i_reseeding_date_start_zt: Date reseeding begins.
+#     :param i_reseeding_date_end_zt: Date reseeding ends.
+#     :param resown_rt: Boolean array denoting which rotations phases are resown.
+#     :param arable_l: Proportion of arable land on each LMU.
+#     :return: Pasture sowing requirement for all rotation phases.
+#     '''
+#     ### sow param determination
+#     ### determine the labour periods pas seeding occurs
+#     labour_period_p5z = per.f_p_dates_df()
+#     labour_period_start_p5z = labour_period_p5z.values[:-1]
+#     labour_period_end_p5z = labour_period_p5z.values[1:]
+#     period_is_passeeding_p5zt = (labour_period_start_p5z[:,:,na] < i_reseeding_date_end_zt) * (labour_period_end_p5z[:,:,na] > i_reseeding_date_start_zt)
+#
+#     ## add k (landuse axis) - this is required for sow param
+#     keys_k = np.asarray(list(sinp.landuse['All']))
+#     kt = (len(keys_k), len(pastures))
+#     seeding_landuses = uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj'].index
+#     resown_kt = np.zeros(kt)
+#     for t,pasture in enumerate(pastures):
+#         pasture_landuses = list(sinp.landuse['pasture_sets'][pasture])
+#         resown_kt[:,t] = np.logical_and(np.in1d(keys_k, seeding_landuses), np.in1d(keys_k, pasture_landuses)) #resown if landuse is a pasture and is a sown landuse
+#     pas_sow_prov_pkz = np.sum(resown_kt[:,na,:] * period_is_passeeding_p5zt[:,na,...], -1) #sum t axis - t is counted for in the k axis
+#     return pas_sow_prov_pkz
 
 
 def f1_green_area(resown_rt, pasture_rt, periods_destocked_p6zt, arable_l):
@@ -433,10 +438,10 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
 
     ## green, removal & dmi
     ### divide by (1 - grn_senesce_pgrcons) to allows for consuming feed reducing senescence
-    removal_grnha_gop6lzt = np.maximum(0, (foo_start_grnha_op6lzt * (1 - grn_senesce_startfoo_p6zt[:, na, ...])
-                                          + pgr_grnha_gop6lzt * (1 - grn_senesce_pgrcons_p6zt[:, na, :])
-                                          - foo_endprior_grnha_gop6lzt)
-                                      / (1 - grn_senesce_pgrcons_p6zt[:, na, :]))
+    removal_grnha_gop6lzt = np.maximum(0, fun.f_divide((foo_start_grnha_op6lzt * (1 - grn_senesce_startfoo_p6zt[:, na, ...])
+                                                        + pgr_grnha_gop6lzt * (1 - grn_senesce_pgrcons_p6zt[:, na, :])
+                                                        - foo_endprior_grnha_gop6lzt)
+                                                       , (1 - grn_senesce_pgrcons_p6zt[:, na, :])))
     cons_grnha_t_gop6lzt = removal_grnha_gop6lzt / (1 + i_grn_trampling_ft[:, na, na, :])
 
     ## green, dmd & md from input values and impact of foo & grazing intensity
@@ -549,7 +554,8 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     all year without being grazed.
 
     Dry pasture that is not consumed is passed to the same pool in the next period and the average quality
-    and quantity reduces each period as it decays. Consumption of the high quality/high FOO component further
+    and quantity reduces each period as it decays. Dry pasture does not transfer into the new season because once green
+    feed is available stock will not graze old dry feed. Consumption of the high quality/high FOO component further
     reduces the average as the feed available skews towards the low-quality pool.
 
     .. note:: There is not a constraint that ensures that the high-quality pasture pool is grazed prior to the
@@ -587,7 +593,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     ### adjust foo and calc hf
     pasture_stage_p6zt = i_pasture_stage_p6z[...,na]
     dry_foo_dp6zt, hf = fsfun.f_foo_convert(cu3, cu4, dry_foo_dp6zt, pasture_stage_p6zt, i_legume_zt, z_pos=-2)
-    ### calc relative availability - note that the equation system used is the one selected for dams in p1
+    ### calc relative availability - note that the equation system used is the one selected for dams in p=0
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
         dry_ri_availability_dp6zt = fsfun.f_ra_cs(dry_foo_dp6zt, hf)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used

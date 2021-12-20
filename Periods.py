@@ -30,55 +30,44 @@ import UniversalInputs as uinp
 import StructuralInputs as sinp
 import PropertyInputs as pinp
 import Functions as fun
+import SeasonalFunctions as zfun
+import Exceptions as exc
+
+na = np.newaxis
+
+#############################
+#define dates of cashflow   #
+#############################
+def f_cashflow_date():
+    '''cashflow date.'''
+    ##create c0 axis
+    cash_date = pinp.sheep['i_date_cashflow_stock_i'][pinp.sheep['i_mask_i']].astype('datetime64')
+    date_cashflow_stock = cash_date.view('i8').mean(keepdims=True).astype(cash_date.dtype) #take mean in case multiple tol included
+    date_cashflow_crop = np.array([pinp.crop['i_date_cashflow_crop']]).astype('datetime64')
+    cashflow_date_c0 = np.concatenate([date_cashflow_stock, date_cashflow_crop]) #have to stack this in the same order as the enterprise input in sinp.
+    return cashflow_date_c0
+
+def f_peak_debt_date():
+    date_peakdebt_stock = pinp.sheep['i_date_peakdebt_stock_i'][pinp.sheep['i_mask_i']].astype('datetime64')
+    date_peakdebt_stock = date_peakdebt_stock.view('i8').mean(keepdims=True).astype(date_peakdebt_stock.dtype) #take mean in case multiple tol included
+    date_peakdebt_crop = np.array([pinp.crop['i_date_peakdebt_crop']]).astype('datetime64')
+    peakdebt_date_c0 = np.concatenate([date_peakdebt_stock,date_peakdebt_crop])
+    return peakdebt_date_c0
 
 
-
-#####################################
-#define dates of cashflow periods   #
-#####################################
-
-def f_cashflow_periods():
-    #index for cash periods
-    i = 0
-    #empty list
-    cashflow_period_dates = []
-    #start date of the current cashflow period (ie start of year)
-    start = sinp.general['i_date_assetvalue']
-    cashflow_period_dates.append(start)
-    date = start
-    #upper date of the current cashflow period (ie end of year)
-    #upper = lower + relativedelta(days=(365 / len(inp.structure['cashflow_periods'])))
-    while i < len(sinp.general['cashflow_periods']):
-        cash_period_length = relativedelta(days=(365 / len(sinp.general['cashflow_periods'])))
-        date += cash_period_length
-        cashflow_period_dates.append(date)
-        i += 1
-    #made df this way so the columns could be diff len
-    cashflow_dates = pd.DataFrame({'start date' : pd.Series(cashflow_period_dates),'cash period' : pd.Series(sinp.general['cashflow_periods'])})
-    return cashflow_dates
-
-
-'''
-labour periods and length
-'''
 ################################
-# make a df containing  period #
+#labour periods and length     #
 ################################
-
-
-
-
 #function to determine seeding start - starts a specified number of days after season break
 #also used in mach sheet
 def f_wet_seeding_start_date():
-    seeding_after_season_start_z = pinp.f_seasonal_inp(pinp.period['seeding_after_season_start'], numpy=True, axis=0)
-    seeding_after_season_start_z = (seeding_after_season_start_z * 24).astype('timedelta64[h]')
-    seeding_after_season_start_z = seeding_after_season_start_z.astype(datetime.datetime)
+    seeding_after_season_start_z = zfun.f_seasonal_inp(pinp.period['seeding_after_season_start'], numpy=True, axis=0)
+    seeding_after_season_start_z = seeding_after_season_start_z.astype('timedelta64[D]')
+    # seeding_after_season_start_z = seeding_after_season_start_z.astype(datetime.datetime)
     # seeding_after_season_start_z = pd.to_timedelta(seeding_after_season_start_z,unit='D')
     ##wet seeding starts a specified number of days after season break
     return f_feed_periods()[0] +  seeding_after_season_start_z
     # return f_feed_periods().iloc[0].squeeze() +  datetime.timedelta(days = pinp.period['seeding_after_season_start'])
-
 
 #this function requires start date and length of each period (as a list) and spits out the start dates of each period
 #used to determine harv and seed dates for period func below
@@ -106,18 +95,19 @@ def f_period_end_date(start, length):
 def f_p_dates_df():
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
         ##put season inputs through season input function
-        harv_date = pinp.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0)[0]
-        seed_period_lengths = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)[...,0]
-        harv_period_lengths = pinp.f_seasonal_inp(pinp.period['harv_period_lengths'],numpy=True,axis=1)[...,0]
-        wet_seeding_start = f_wet_seeding_start_date()[0]
+        harv_date = pd.to_datetime(zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0)[0])
+        seed_period_lengths = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)[...,0]
+        harv_period_lengths = zfun.f_seasonal_inp(pinp.period['harv_period_lengths'],numpy=True,axis=1)[...,0]
+        dry_seeding_start = np.datetime64(pinp.crop['dry_seed_start'])
+        wet_seeding_start = pd.to_datetime(f_wet_seeding_start_date()[0])
 
         ##calc period
-        keys_z = pinp.f_keys_z()
+        keys_z = zfun.f_keys_z()
         periods = pd.DataFrame(columns=keys_z)
         #create empty list of dates to be filled by this function
         period_start_dates = []
         #determine the start of the first period, this references feed periods so it has the same yr.
-        start_date_period_0 = f_feed_periods()[0,0] + relativedelta(day=1,month=1,hour=0, minute=0, second=0, microsecond=0)
+        start_date_period_0 = pinp.general['i_date_node_zm'][0,0]
         #end date of all labour periods, simply one yr after start date.
         date_last_period = start_date_period_0 + relativedelta(years=1)
         #start point for the loop counter.
@@ -125,7 +115,7 @@ def f_p_dates_df():
         #loop that runs until the loop counter reached the end date.
         while date <= date_last_period:
             #if not a seed period then
-            if date < wet_seeding_start or date > f_period_end_date(wet_seeding_start,seed_period_lengths):
+            if date < dry_seeding_start or date > f_period_end_date(wet_seeding_start,seed_period_lengths):
                 #if not a harvest period then just simply add 1 month and append that date to the list
                 if date < harv_date or date > f_period_end_date(harv_date,harv_period_lengths):
                     period_start_dates.append(date)
@@ -141,6 +131,7 @@ def f_p_dates_df():
                     date = f_period_end_date(start, length) + relativedelta(months=sinp.general['labour_period_len']) + relativedelta(day=1)
             #if seed period then append the seed dates to the list and adjust the loop counter (date) to the start of the following time period (time period is determined by standard period length in the input sheet).
             else:
+                period_start_dates.append(dry_seeding_start) #add dry seeding period before wet seeding periods.
                 start = wet_seeding_start
                 length = seed_period_lengths
                 for i in range(len(f_period_dates(start, length))):
@@ -161,6 +152,13 @@ def f_p_dates_df():
         ##apply season mask
         mask_z = pinp.general['i_mask_z'][1:] #need to slice off 'typical' because no labour period inputs for typical because it is automatically generated
         periods = periods.loc[:, mask_z]
+        ##error check: node dates must be included in the lab periods
+        date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'], numpy=True, axis=0).astype('datetime64')
+        if np.all(np.any(periods.values[:,:,na]==date_node_zm, axis=0)):
+            pass
+        else:
+            raise exc.LabourPeriodError('''Season nodes are not all included in labour periods''')
+
     return periods
 
 # drop last row, because it only contains the end date, this version of the df is used for creating the period set and when determining labour allocation
@@ -183,14 +181,16 @@ def f_feed_periods(option=0):
     ##calc feed period dates from inputs plus adjust for node dates.
     fp_std_p6z = pinp.period['i_dsp_fp_date'].astype('datetime64')
 
-    ##adjust end date of the last period (needs to be the date of the latest break so that pasture season junction has the correct length of the final fp)
-    #todo add this when doing season stuff.
-
-    ###add node dates as feed peirods if dsp
+    ###add node dates as feed periods if dsp
     if pinp.general['i_inc_node_periods'] or np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
         date_node_mz = pinp.general['i_date_node_zm'].astype('datetime64').T
         date_node_mz = date_node_mz + (np.timedelta64(365, 'D') * (date_node_mz < fp_std_p6z[0,:]))
-        fp_p6z = np.concatenate([fp_std_p6z, date_node_mz[1:]]) #[1:] becasue first node is break of season which already exists in fp array.
+        fp_p6z = np.concatenate([fp_std_p6z, date_node_mz])
+        ###remove duplicate periods
+        duplicate_mask_p6 = []
+        for p6 in range(fp_p6z.shape[0]):  # maybe there is a way to do this without a loop.
+            duplicate_mask_p6.append(np.all(np.any(fp_p6z[p6,...] == fp_p6z[0:p6,...], axis=0, keepdims=True)))
+        fp_p6z = fp_p6z[np.logical_not(duplicate_mask_p6)]
         fp_p6z = np.sort(fp_p6z, axis=0)
     else: #if nodes are not added then the adjusted fps are the same as the std fp.
         fp_p6z = pinp.period['i_dsp_fp_date'].astype('datetime64')
@@ -202,7 +202,7 @@ def f_feed_periods(option=0):
         return a_p6std_p6z[:-1,:] #drop the last period since that is just the end of the final fp (not a real period)
 
     ###handle z axis
-    fp_p6z = pinp.f_seasonal_inp(fp_p6z, numpy=True, axis=1)
+    fp_p6z = zfun.f_seasonal_inp(fp_p6z, numpy=True, axis=1)
 
     ### return array of fp dates
     if option==0:
@@ -210,31 +210,40 @@ def f_feed_periods(option=0):
 
     ### return length
     if option==1:
-        fp_len = (fp_p6z[1:,:] - fp_p6z[:-1,:]).astype('timedelta64[D]')
+        fp_len = (fp_p6z[1:,:] - fp_p6z[:-1,:]).astype('timedelta64[D]').astype(float)
         return fp_len
 
 
-    # else:
-    #     # fp = fp.loc[:fp.index[-2], idx[:, 'length']] #last row not included because that only contains the end date of last period
-    #     fp = pinp.period['i_dsp_fp_len']
-    #     fp = pinp.f_seasonal_inp(fp, numpy=True, axis=1)
-    #     return fp
+#################
+#season periods #
+#################
+def f_season_periods(keys=False):
+    '''
+    :param keys: Boolean if True this returns the m keys
+    :param periods: Boolean if True this returns the m period dates
+    '''
+    date_node_zp7 = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64')
+    ##if steady state then p7 axis is singleton (start and finish at the break of season).
+    ## all node are included even in steady state model if user overwrites.
+    if np.logical_not(pinp.general['i_inc_node_periods']) and (pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1):
+        date_node_zp7 = date_node_zp7[:,0:1]
+        ###add end date of last node period - required for the allocation function
+        end_zp7 = date_node_zp7[:,0:1] + np.timedelta64(365,'D')  # increment the first date by 1yr so it becomes the end date for the last period
+        date_season_node_p7z = np.concatenate([date_node_zp7,end_zp7],axis=1).T  # put p7 in pos 0 because that how the allocation function requires
+    ##if DSP then all season node included plus a node for dry seeding
+    else:
+        ###add end date of last node period - required for the allocation function
+        end_zp7 = date_node_zp7[:,0:1] + np.timedelta64(365,'D')  # increment the first date by 1yr so it becomes the end date for the last period
+        date_season_node_p7z = np.concatenate([date_node_zp7,end_zp7],
+                                            axis=1).T  # put p7 in pos 0 because that how the allocation function requires
 
-    #     if pinp.general['steady_state']:
-    #         # fp = pinp.period['feed_periods']
-    #
-    #         n_fp = fp.values.astype(np.int64)
-    #         np.average(n_fp, axis=1, weights=z_prob)
-    #         n_fp = pd.to_datetime(n_fp.mean(axis=1))
-    #         fp = pd.DataFrame(n_fp, index=fp.index, columns=fp.columns[0])
-    #
+    len_p7 = date_season_node_p7z.shape[0] - 1  # minus one because end date is not a period
 
-    #
-    #     else:
-    #         fp = pinp.period['i_dsp_fp']
-    #         fp = fp.T.set_index(['period'], append=True).T
-    #         ##apply season mask - more complicated because masking level 0 of multilevel df
-    #         fp = fp.loc[:, idx[:, pinp.general['i_mask_z']]]
-
+    ##return keys if wanted
+    if keys:
+        keys_p7 = np.array(['zm%s' % i for i in range(len_p7)]) #this is zm because if it were p7 then it gets confusing once the period number is added eg p70 (p7[0])
+        return keys_p7
+    else:
+        return date_season_node_p7z
 
 

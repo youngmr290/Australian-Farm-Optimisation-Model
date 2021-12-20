@@ -10,7 +10,7 @@ The output is used in the [Feed supply calculator.xlsx] to generate the optimum 
 import pandas as pd
 import numpy as np
 
-import FeedSupplyGenerator as fgen
+import FeedSupplyStock as fgen
 #import Functions as fun
 
 print("")

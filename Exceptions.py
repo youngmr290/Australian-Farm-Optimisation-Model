@@ -33,3 +33,16 @@ class AxisError(Error):
 class Exp(Error):
     """Raised when user has specified duplicate trials in exp.xls"""
     pass
+
+
+class LabourPeriodError(Error):
+    """Raised when user has NOT included all season nodes in labour periods"""
+    pass
+
+class FVPError(Error):
+    """Raised when multiple fvps are on the same date"""
+    pass
+
+class ParamError(Error):
+    """Raised when building param if index is not the same size as the param"""
+    pass

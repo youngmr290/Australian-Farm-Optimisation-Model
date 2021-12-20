@@ -26,6 +26,7 @@ import UniversalInputs as uinp
 import StructuralInputs as sinp
 import PropertyInputs as pinp
 import Periods as per
+import SeasonalFunctions as zfun
 
 
 '''
@@ -33,11 +34,33 @@ pyomo sets
 '''
 ##define sets - sets are redefined for each exp in case they change due to SA
 def sets(model, nv):
+
+    #######################
+    #season               #
+    #######################
     ##season types - set only has one season if steady state model is being used
     if pinp.general['steady_state']:
-        model.s_season_types = Set(initialize=[pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]], doc='season types')
+        z_keys = [pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]]
     else:
-        model.s_season_types = Set(initialize=pinp.general['i_z_idx'][pinp.general['i_mask_z']], doc='season types') #mask season types by the ones included
+        z_keys = pinp.general['i_z_idx'][pinp.general['i_mask_z']] #mask season types by the ones included
+    model.s_season_types = Set(initialize=z_keys, doc='season types')
+
+    ##season periods
+    model.s_season_periods = Set(initialize=per.f_season_periods(keys=True),doc='season nodes')
+
+    ##season sequence set
+    len_q = pinp.general['i_len_q']
+    model.s_sequence_year = Set(initialize=np.array(['q%s' % i for i in range(len_q)]), doc='season sequences')
+
+    ##season sequence set
+    len_z = len(z_keys)
+    len_s = np.power(len_z, len_q - 1)
+    model.s_sequence = Set(initialize=np.array(['s%s' % i for i in range(len_s)]), doc='season sequences')
+
+    #######################
+    #price                #
+    #######################
+    model.s_c1 = Set(initialize=np.array(['c1_%s' % i for i in range(uinp.price_variation['len_c1'])]), doc='price scenarios')
 
     #######################
     #labour               #
@@ -50,10 +73,10 @@ def sets(model, nv):
 
 
     #######################
-    #cash                 #
+    #enterprises          #
     #######################
-    ##cashflow periods
-    model.s_cashflow_periods = Set(initialize=sinp.general['cashflow_periods'], doc='cashflow periods')
+
+    model.s_enterprises = Set(initialize=sinp.general['i_enterprises_c0'], doc='enterprises')
 
     #######################
     #stubble              #

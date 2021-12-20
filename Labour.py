@@ -15,6 +15,8 @@ import UniversalInputs as uinp
 import StructuralInputs as sinp
 import Periods as per
 import Functions as fun
+import SeasonalFunctions as zfun
+import Finance as fin
 
 
 ###################################################################
@@ -23,7 +25,7 @@ import Functions as fun
 na = np.newaxis
 
 
-def labour_general(params,r_vals):
+def f_labour_general(params,r_vals):
     '''
     Calculates labour supply, labour cost and supervision requirements.
 
@@ -69,7 +71,7 @@ def labour_general(params,r_vals):
     ###########################
     
     ##season inputs through input func
-    harv_date_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
+    harv_date_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
 
     ##initialise period data
     lp_p5z = per.f_p_dates_df().values
@@ -116,11 +118,11 @@ def labour_general(params,r_vals):
     cas_weekend_p5z = (lp_len_p5z) * 2/7
 
     ##set up stuff to calc hours work per period be each source
-    seed_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
+    seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     seeding_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     seeding_end_z = seeding_start_z + np.sum(seed_period_lengths_pz, axis=0).astype('timedelta64[D]')
     seeding_occur_p5z =  np.logical_and(seeding_start_z <= lp_start_p5z, lp_start_p5z < seeding_end_z)
-    harv_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1)
+    harv_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1)
     harv_start_z = harv_date_z.astype(np.datetime64)
     harv_end_z = harv_start_z + np.sum(harv_period_lengths_pz, axis=0).astype('timedelta64[D]')
     harv_occur_p5z =  np.logical_and(harv_start_z <= lp_start_p5z, lp_start_p5z < harv_end_z)
@@ -186,88 +188,130 @@ def labour_general(params,r_vals):
     ###determine upper bounds for casual labour. note: casual labour requirements may be different during seeding and harvest compared to the rest
     max_casual_norm = pinp.labour['max_casual'] if pinp.labour['max_casual']!='inf' else np.inf #if inf need to convert to python inf
     max_casual_seedharv = pinp.labour['max_casual_seedharv'] if pinp.labour['max_casual']!='inf' else np.inf #if inf need to convert to python inf
-    ub_cas_pz = np.zeros(seeding_occur_p5z.shape, dtype=float)
-    ub_cas_pz[seedharv_mask_pz] = max_casual_seedharv
-    ub_cas_pz[np.logical_not(seedharv_mask_pz)] = max_casual_norm
+    ub_cas_p5z = np.zeros(seeding_occur_p5z.shape, dtype=float)
+    ub_cas_p5z[seedharv_mask_pz] = max_casual_seedharv
+    ub_cas_p5z[np.logical_not(seedharv_mask_pz)] = max_casual_norm
     ###determine lower bounds for casual labour. note: casual labour requirements may be different during seeding and harvest compared to the rest
-    lb_cas_pz = np.zeros(seeding_occur_p5z.shape, dtype=float)
-    lb_cas_pz[seedharv_mask_pz] = pinp.labour['min_casual_seedharv']
-    lb_cas_pz[np.logical_not(seedharv_mask_pz)] = pinp.labour['min_casual']
-
-    ##determine cashflow period each labour period aligns with
-    ###get cashflow period dates and names - used in the following loop
-    p_dates = per.f_cashflow_periods()['start date']#get cashflow period dates
-    p_dates_start_c = p_dates.values[:-1]
-    p_dates_end_c = p_dates.values[1:]
-    p_name = per.f_cashflow_periods()['cash period'].values[:-1].astype(str)#gets the period name
-    ###determine cashflow allocation
-    # index_c = np.arange(len(p_dates_start_c))
-    length_c = p_dates_end_c - p_dates_start_c
-    alloc_pzc = fun.range_allocation_np(lp_p5z[...,None],p_dates_start_c,length_c)[:-1]
-    # cash_period_idx_pz = np.sum(alloc_pzc * index_c, axis=-1)
-    # cashflow_alloc_p5z = p_name[cash_period_idx_pz]
-
-    # p_name = np.broadcast_to(p_name[:,na], (p_name.shape + (lp_start_p5z.shape[-1],)))
-    # cashflow_alloc_p5z = np.empty(lp_start_p5z.shape, dtype='S2')
-    # for lp_date_z, lp_idx in zip(lp_start_p5z, np.arange(len(lp_start_p5z))):
-    #     alloc_cz = np.logical_and(p_dates_start_c[:,na] <= lp_date_z, lp_date_z < p_dates_end_c[:,na])
-    #     cashflow_alloc_p5z[lp_idx] = p_name[alloc_cz]
+    lb_cas_p5z = np.zeros(seeding_occur_p5z.shape, dtype=float)
+    lb_cas_p5z[seedharv_mask_pz] = pinp.labour['min_casual_seedharv']
+    lb_cas_p5z[np.logical_not(seedharv_mask_pz)] = pinp.labour['min_casual']
 
     ##cost of casual for each labour period - wage plus super plus workers comp (multiplied by wage because super and others are %)
     ##differect to perm and manager because they are at a fixed level throughout the year ie same number of perm staff all yr.
     casual_cost_p5z = cas_hrs_total_p5z * (uinp.price['casual_cost'] + uinp.price['casual_cost'] * uinp.price['casual_super'] + uinp.price['casual_cost'] * uinp.price['casual_workers_comp'])
-    casual_cost_p5zc = casual_cost_p5z[...,na] * alloc_pzc
+    casual_cost_zp5 = casual_cost_p5z.T
 
+    ##labour cost cashflow period allocation and interest
+    ### no enterprise is passed because fixed cost are for both enterprise and thus the interest is the average of both enterprises
+    labour_cost_allocation_p7zp5, labour_wc_allocation_c0p7zp5 = fin.f_cashflow_allocation(lp_start_p5z.T, z_pos=-2)
+    casual_cost_p7zp5 = casual_cost_zp5 * labour_cost_allocation_p7zp5
+    casual_wc_c0p7zp5 = casual_cost_zp5 * labour_wc_allocation_c0p7zp5
+
+    ########
+    #z mask#
+    ########
+    ##make p5z8 mask (used to mask params with p5 axis and no p7 axis - params with p7 axis have been masked already in cash allocation)
+    maskz8_p5z = zfun.f_season_transfer_mask(lp_start_p5z,z_pos=-1,mask=True)
+
+    ##apply to params with only p5 period axis (p7z8 masking is handled elsewhere)
+    perm_hrs_total_p5z = perm_hrs_total_p5z * maskz8_p5z
+    perm_supervision_p5z = perm_supervision_p5z * maskz8_p5z
+    cas_hrs_total_p5z = cas_hrs_total_p5z * maskz8_p5z
+    cas_supervision_p5z = cas_supervision_p5z * maskz8_p5z
+    manager_hrs_total_p5z = manager_hrs_total_p5z * maskz8_p5z
 
     #########
     ##keys  #
     #########
     ##keys
-    keys_c = np.array(sinp.general['cashflow_periods'])
+    keys_p7 = per.f_season_periods(keys=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
+    keys_z = zfun.f_keys_z()
     keys_p5 = np.asarray(per.f_p_dates_df().index[:-1]).astype('str')
-    keys_z = pinp.f_keys_z()
 
     ##index
     arrays = [keys_p5, keys_z]
     index_p5z = fun.cartesian_product_simple_transpose(arrays)
     tup_p5z = tuple(map(tuple, index_p5z))
 
-    arrays = [keys_p5, keys_z, keys_c]
-    index_p5zc = fun.cartesian_product_simple_transpose(arrays)
-    tup_p5zc = tuple(map(tuple, index_p5zc))
+    arrays = [keys_p7, keys_z, keys_p5]
+    index_p7zp5 = fun.cartesian_product_simple_transpose(arrays)
+    tup_p7zp5 = tuple(map(tuple, index_p7zp5))
 
-    ################
-    ##pyomo params #
+    arrays = [keys_c0, keys_p7, keys_z, keys_p5]
+    index_c0p7zp5 = fun.cartesian_product_simple_transpose(arrays)
+    tup_c0p7zp5 = tuple(map(tuple, index_c0p7zp5))
+
+    ##pyomo params
     params['permanent hours'] = dict(zip(tup_p5z, perm_hrs_total_p5z.ravel()))
     params['permanent supervision'] = dict(zip(tup_p5z, perm_supervision_p5z.ravel()))
     params['casual hours'] = dict(zip(tup_p5z, cas_hrs_total_p5z.ravel()))
     params['casual supervision'] = dict(zip(tup_p5z, cas_supervision_p5z.ravel()))
     params['manager hours'] = dict(zip(tup_p5z, manager_hrs_total_p5z.ravel()))
-    params['casual ub'] = dict(zip(tup_p5z, ub_cas_pz.ravel()))
-    params['casual lb'] = dict(zip(tup_p5z, lb_cas_pz.ravel()))
+    params['casual ub'] = dict(zip(tup_p5z, ub_cas_p5z.ravel()))
+    params['casual lb'] = dict(zip(tup_p5z, lb_cas_p5z.ravel()))
 
-    params['casual_cost'] =dict(zip(tup_p5zc, casual_cost_p5zc.ravel()))
+    params['casual_cost'] =dict(zip(tup_p7zp5, casual_cost_p7zp5.ravel()))
+    params['casual_wc'] =dict(zip(tup_c0p7zp5, casual_wc_c0p7zp5.ravel()))
 
-    ##report values that are not season affected
-    r_vals['keys_p5'] = keys_p5
-    r_vals['casual_cost_p5zc'] = casual_cost_p5zc
+    ##store r_vals
+    ###make z8 mask - used to uncluster
+    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
+    ###store
+    fun.f1_make_r_val(r_vals, maskz8_p5z, 'maskz8_p5z')
+    fun.f1_make_r_val(r_vals, keys_p5, 'keys_p5')
+    fun.f1_make_r_val(r_vals, casual_cost_p7zp5, 'casual_cost_p7zp5', mask_season_p7z[:,:,na], z_pos=-2)
 
 
-#permanent cost per cashflow period - wage plus super plus workers comp and leave ls (multiplied by wage because super and others are %)
-def perm_cost(params, r_vals):
+def f_perm_cost(params, r_vals):
+    '''
+    Permanent and manager staff cost.
+
+    Costs include bank interest.
+    Permanent cost includes wage plus super plus workers comp and leave ls (multiplied by wage because super and others are %)
+    '''
+
+    ##cost allocation
+    labour_start_c0 = per.f_cashflow_date() + np.timedelta64(182,'D') #fixed costs are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr)
+    ###call allocation/interset function - needs to be numpy
+    ### no enterprise is passed because fixed cost are for both enterprise and thus the interest is the average of both enterprises
+    labour_cost_allocation_p7z, labour_wc_allocation_c0p7z = fin.f_cashflow_allocation(labour_start_c0[:,na], z_pos=-1, c0_inc=True)
+
+    ###perm
     perm_cost = (uinp.price['permanent_cost'] + uinp.price['permanent_cost'] * uinp.price['permanent_super'] \
-    + uinp.price['permanent_cost'] * uinp.price['permanent_workers_comp'] + uinp.price['permanent_cost'] * uinp.price['permanent_ls_leave']) / len(sinp.general['cashflow_periods'])
-    perm_cost=dict.fromkeys(sinp.general['cashflow_periods'], perm_cost)
-    params['perm_cost']=perm_cost
-    r_vals['perm_cost_c']=np.array(list(perm_cost.values()))
+    + uinp.price['permanent_cost'] * uinp.price['permanent_workers_comp'] + uinp.price['permanent_cost'] * uinp.price['permanent_ls_leave'])
+    perm_cost_p7z = perm_cost * labour_cost_allocation_p7z
+    perm_wc_c0p7z = perm_cost * labour_wc_allocation_c0p7z
+
+    ###manager
+    manager_cost = uinp.price['manager_cost']
+    manager_cost_p7z = manager_cost * labour_cost_allocation_p7z
+    manager_wc_c0p7z = manager_cost * labour_wc_allocation_c0p7z
+
+    ##keys
+    keys_p7 = per.f_season_periods(keys=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
+    keys_z = zfun.f_keys_z()
+
+    arrays_p7z = [keys_p7, keys_z]
+    arrays_c0p7z = [keys_c0, keys_p7, keys_z]
+
+    ##params and report vals
+    params['perm_cost'] = fun.f1_make_pyomo_dict(perm_cost_p7z, arrays_p7z)
+    params['perm_wc'] = fun.f1_make_pyomo_dict(perm_wc_c0p7z, arrays_c0p7z)
+    params['manager_cost'] = fun.f1_make_pyomo_dict(manager_cost_p7z, arrays_p7z)
+    params['manager_wc'] = fun.f1_make_pyomo_dict(manager_wc_c0p7z, arrays_c0p7z)
+
+    ##store r_vals
+    ###make z8 mask - used to uncluster
+    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
+    ###store
+    fun.f1_make_r_val(r_vals, perm_cost_p7z, 'perm_cost_p7z', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, manager_cost_p7z, 'manager_cost_p7z', mask_season_p7z, z_pos=-1)
 
 
-#manager cost per cashflow period
-def manager_cost(params, r_vals):
-    manager_cost = uinp.price['manager_cost'] / len(sinp.general['cashflow_periods'])
-    manager_cost=dict.fromkeys(sinp.general['cashflow_periods'], manager_cost)
-    params['manager_cost']=manager_cost
-    r_vals['manager_cost_c'] = np.array(list(manager_cost.values()))
 
 
 

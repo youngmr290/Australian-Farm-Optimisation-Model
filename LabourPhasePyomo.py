@@ -32,24 +32,44 @@ def f1_labcrppyomo_local(params, model):
     model.p_seeding_helper = pe.Param( initialize=params['seeding_helper'], default = 0.0, doc='proportion of time helper is needed for seeding')
 
     model.p_prep_pack = pe.Param(model.s_labperiods, model.s_season_types, initialize=params['prep_labour'], default = 0.0, mutable=False, doc='labour for preparation and packing up for seeding and harv')
-    
-    model.p_fert_app_hour_tonne = pe.Param(model.s_labperiods, model.s_fert_type, model.s_season_types, initialize= params['fert_app_time_t'], default = 0.0, mutable=False, doc='time required for fert application per tonne of each fert (filling up and driving to paddock cost)')
- 
-    model.p_fert_app_hour_ha = pe.Param(model.s_phases, model.s_lmus, model.s_labperiods, model.s_season_types, initialize= params['fert_app_time_ha'], default = 0.0, mutable=False, doc='time required for fert application per ha of each fert (driving around paddock cost)')
-    
-    model.p_chem_app_lab = pe.Param(model.s_phases, model.s_lmus, model.s_labperiods, model.s_season_types, initialize= params['chem_app_time_ha'], default = 0.0, mutable=False, doc='time required for chem application per ha (hr/ha)')
 
-    model.p_variable_crop_monitor = pe.Param(model.s_phases, model.s_labperiods, model.s_season_types, initialize= params['variable_crop_monitor'], default = 0.0, mutable=False, doc='time required for crop monitoring (hr/ha)')
+    model.p_fert_app_hour_tonne = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_labperiods,
+                                           model.s_season_periods, initialize= params['fert_app_time_t'], default = 0.0,
+                                           mutable=False, doc='time required for fert application per tonne of each fert (filling up and driving to paddock cost)')
+ 
+    model.p_increment_fert_app_hour_tonne = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_labperiods,
+                                           model.s_season_periods, initialize= params['increment_fert_app_time_t'], default = 0.0,
+                                           mutable=False, doc='time required for fert application per tonne of each fert (filling up and driving to paddock cost)')
+
+    model.p_fert_app_hour_ha = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_labperiods,
+                                        model.s_season_periods, initialize= params['fert_app_time_ha'], default = 0.0,
+                                        mutable=False, doc='time required for fert application per ha of each fert (driving around paddock cost)')
+    
+    model.p_increment_fert_app_hour_ha = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_labperiods,
+                                        model.s_season_periods, initialize= params['increment_fert_app_time_ha'], default = 0.0,
+                                        mutable=False, doc='time required for fert application per ha of each fert (driving around paddock cost)')
+
+    model.p_chem_app_lab = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_labperiods,
+                                    model.s_season_periods, initialize= params['chem_app_time_ha'], default = 0.0,
+                                    mutable=False, doc='time required for chem application per ha (hr/ha)')
+
+    model.p_increment_chem_app_lab = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_labperiods,
+                                    model.s_season_periods, initialize= params['increment_chem_app_time_ha'], default = 0.0,
+                                    mutable=False, doc='time required for chem application per ha (hr/ha)')
+
+    model.p_variable_crop_monitor = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_phases,
+                                             initialize= params['variable_crop_monitor'], default = 0.0, mutable=False, doc='time required for crop monitoring (hr/ha)')
+
+    model.p_increment_variable_crop_monitor = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_phases,
+                                             initialize= params['increment_variable_crop_monitor'], default = 0.0, mutable=False, doc='time required for crop monitoring (hr/ha)')
 
     model.p_fixed_crop_monitor = pe.Param(model.s_labperiods, model.s_season_types, initialize= params['fixed_crop_monitor'], default = 0.0, mutable=False, doc='fixed time required for crop monitoring (hr/period)')
-
-    model.p_phasefert = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_fert_type, initialize=params['fert_req'], default = 0.0, mutable=False, doc='fert required by 1 unit of phase')
 
 
 ###################################
 #functions for core model         #
 ###################################
-def f_mach_labour_anyone(model,p,z):
+def f_mach_labour_anyone(model,q,s,p,z):
     '''
     Calculate the total labour required by anyone for fertilising, spraying, seeding, harvest, preparation,
     packing and monitoring.
@@ -57,20 +77,26 @@ def f_mach_labour_anyone(model,p,z):
     Used in global constraint (con_labour_anyone). See CorePyomo
 
     '''
-    seed_labour = sum(sum(model.v_seeding_machdays[z, p, k, l] for k in model.s_landuses) for l in model.s_lmus)        \
+    seed_labour = sum(model.v_seeding_machdays[q,s,z,p,k,l] for k in model.s_landuses for l in model.s_lmus)        \
     * model.p_daily_seed_hours *(1 + model.p_seeding_helper)
-    harv_labour = sum(model.v_harv_hours[z,p,k] * (1 + model.p_harv_helper[k])  for k in model.s_harvcrops)
+    harv_labour = sum(model.v_harv_hours[q,s,z,p,k] * (1 + model.p_harv_helper[k]) for k in model.s_harvcrops)
     prep_labour = model.p_prep_pack[p,z]
-    fert_t_time = sum(sum(sum(model.p_phasefert[r,z,l,n]*model.v_phase_area[z,r,l]*(model.p_fert_app_hour_tonne[p,n,z]/1000)  for r in model.s_phases
-                              if pe.value(model.p_phasefert[r,z,l,n]) != 0)for l in model.s_lmus)for n in model.s_fert_type )
-    fert_ha_time = sum(sum(model.v_phase_area[z,r,l]*(model.p_fert_app_hour_ha[r,l,p,z]) for r in model.s_phases
-                           if pe.value(model.p_fert_app_hour_ha[r,l,p,z]) != 0) for l in model.s_lmus)
-    chem_time = sum(sum(model.v_phase_area[z,r,l]*(model.p_chem_app_lab[r,l,p,z]) for r in model.s_phases
-                        if pe.value(model.p_chem_app_lab[r,l,p,z]) != 0) for l in model.s_lmus)
+    fert_t_time = sum(model.v_phase_area[q,s,p7,z,r,l]*model.p_fert_app_hour_tonne[r,z,l,p,p7]
+                      + model.v_phase_increment[q,s,p7,z,r,l]*model.p_increment_fert_app_hour_tonne[r,z,l,p,p7]
+                      for r in model.s_phases for l in model.s_lmus for p7 in model.s_season_periods
+                      if pe.value(model.p_fert_app_hour_tonne[r,z,l,p,p7]) != 0 or pe.value(model.p_increment_fert_app_hour_tonne[r,z,l,p,p7]) != 0)
+    fert_ha_time = sum(model.v_phase_area[q,s,p7,z,r,l]*model.p_fert_app_hour_ha[r,z,l,p,p7]
+                       + model.v_phase_increment[q,s,p7,z,r,l]*model.p_increment_fert_app_hour_ha[r,z,l,p,p7]
+                       for r in model.s_phases for l in model.s_lmus for p7 in model.s_season_periods
+                       if pe.value(model.p_fert_app_hour_ha[r,z,l,p,p7]) != 0 or pe.value(model.p_increment_fert_app_hour_ha[r,z,l,p,p7]) != 0)
+    chem_time = sum(model.v_phase_area[q,s,p7,z,r,l]*model.p_chem_app_lab[r,z,l,p,p7]
+                    + model.v_phase_increment[q,s,p7,z,r,l]*model.p_increment_chem_app_lab[r,z,l,p,p7]
+                    for r in model.s_phases for l in model.s_lmus for p7 in model.s_season_periods
+                    if pe.value(model.p_chem_app_lab[r,z,l,p,p7]) != 0 or pe.value(model.p_increment_chem_app_lab[r,z,l,p,p7]) != 0)
     return seed_labour + harv_labour + prep_labour + fert_t_time + fert_ha_time + chem_time
 
 
-def f_mach_labour_perm(model,p,z):
+def f_mach_labour_perm(model,q,s,p5,z):
     '''
     Calculate the total labour required by permanent staff for fertilising, spraying, seeding, harvest, preparation,
     packing and monitoring.
@@ -78,9 +104,11 @@ def f_mach_labour_perm(model,p,z):
     Used in global constraint (con_labour_perm). See CorePyomo
 
     '''
-    fixed_monitor_time = model.p_fixed_crop_monitor[p,z]
-    variable_monitor_time = sum(model.p_variable_crop_monitor[r,p,z] * model.v_phase_area[z,r,l]  for r in model.s_phases for l in model.s_lmus
-                                if pe.value(model.p_variable_crop_monitor[r,p,z]) != 0)
+    fixed_monitor_time = model.p_fixed_crop_monitor[p5,z]
+    variable_monitor_time = sum(model.p_variable_crop_monitor[p7,p5,z,r] * model.v_phase_area[q,s,p7,z,r,l]
+                                + model.p_increment_variable_crop_monitor[p7,p5,z,r] * model.v_phase_increment[q,s,p7,z,r,l]
+                                for r in model.s_phases for l in model.s_lmus for p7 in model.s_season_periods
+                                if pe.value(model.p_variable_crop_monitor[p7,p5,z,r]) != 0 or pe.value(model.p_increment_variable_crop_monitor[p7,p5,z,r]) != 0)
     return variable_monitor_time + fixed_monitor_time
 
 

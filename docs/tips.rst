@@ -1,5 +1,5 @@
-Tips
-=======
+Usage Tips
+==========
 .. include:: <isonum.txt>
 
 Model structure overview
@@ -66,9 +66,25 @@ number of trials.
 
 Rotation
 ----------
+This is a link to information about rotation generation: :ref:`RotGeneration module`
 
 Seasonal Variation
 ------------------
+The inclusion of seasons and their respective probability is controlled in the general sheet in Property.xlsx.
+If only one season is included or the steady state boolean inputs is set to true then the model will represent
+a steady state framework. If multiple seasons are included and the steady state boolean input is set to true
+then the inputs become the weighted average of the active seasons.
+
+The inputs for each season are included in the relevant inputs sheet. E.g. cropping inputs are in the crop sheet.
+The inputs must be the same across seasons until the period when the season is identified. The clustering ensure
+the model works correctly even if the inputs are wrong but it will make more sense to have correct inputs.
+
+Debugging tips:
+
+    #. Go back to the steady state version and see if that works. If not fix that first.
+    #. If an aspect of the model looks weird you could set the inputs to be the same across seasons and see if
+       that highlights the problem more clearly.
+    #. Bound stuff or remove constraints to help identify the location of the error.
 
 Pyomo
 -----

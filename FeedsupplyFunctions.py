@@ -7,8 +7,10 @@ import numpy as np
 import math
 
 import Functions as fun
+import SeasonalFunctions as zfun
 import PropertyInputs as pinp
 import UniversalInputs as uinp
+import Periods as per
 
 
 #######################################
@@ -152,8 +154,8 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1, tre
     hf = f_hf(hr, cr)
     ##apply z treatment
     if treat_z:
-        foo_shears = pinp.f_seasonal_inp(foo_shears,numpy=True,axis=z_pos)
-        hf = pinp.f_seasonal_inp(hf,numpy=True,axis=z_pos)
+        foo_shears = zfun.f_seasonal_inp(foo_shears,numpy=True,axis=z_pos)
+        hf = zfun.f_seasonal_inp(hf,numpy=True,axis=z_pos)
     return foo_shears, hf
 
 def f_ra_cs(foo, hf, cr=None, zf=1):

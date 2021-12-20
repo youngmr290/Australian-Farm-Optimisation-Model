@@ -6,7 +6,7 @@ author: young
 import time
 import pyomo.environ as pe
 import numpy as np
-import networkx
+# import networkx
 # import pyomo.pysp.util.rapper as rapper
 # import pyomo.pysp.plugins.csvsolutionwriter as csvw
 # import pyomo.pysp.plugins.jsonsolutionwriter as jsonw
@@ -31,7 +31,7 @@ import Finance as fin
 import CropGrazingPyomo as cgzpy
 
 
-def coremodel_all(params,trial_name,model):
+def coremodel_all(trial_name,model):
     '''
     Wraps all of the core model into a function so it can be run multiple times in a loop
 
@@ -67,11 +67,13 @@ def coremodel_all(params,trial_name,model):
     f_con_vol(model)
     f_con_me(model)
     #crop grazing
-    f_con_cropgraze_area(model)
+    # f_con_cropgraze_area(model)
     #grain
     f_con_grain_transfer(model)
     #cashflow
     f_con_cashflow(model)
+    f_con_workingcap_within(model)
+    f_con_workingcap_between(model)
     f_con_dep(model)
     f_con_asset(model)
     f_con_minroe(model)
@@ -145,12 +147,12 @@ def f_con_labour_fixed_anyone(model):
     Tallies labour used for fixed activities that can be completed by anyone (casual/permanent/manager) and ensures
     that there is sufficient labour available to carry out the jobs.
     '''
-    def labour_fixed_casual(model,p,w,z):
-        return -model.v_fixed_labour_casual[p,w,z] - model.v_fixed_labour_permanent[p,w,z] - \
-               model.v_fixed_labour_manager[p,w,z] \
+    def labour_fixed_casual(model,q,s,p,w,z):
+        return -model.v_fixed_labour_casual[q,s,p,w,z] - model.v_fixed_labour_permanent[q,s,p,w,z] - \
+               model.v_fixed_labour_manager[q,s,p,w,z] \
                + model.p_super_labour[p,z] + model.p_tax_labour[p,z] + model.p_bas_labour[p,z] <= 0
 
-    model.con_labour_fixed_anyone = pe.Constraint(model.s_labperiods,['any'],model.s_season_types,
+    model.con_labour_fixed_anyone = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods,['any'],model.s_season_types,
                                                   rule=labour_fixed_casual,
                                                   doc='link between labour supply and requirement by fixed jobs for casual and above')
 
@@ -160,11 +162,11 @@ def f_con_labour_fixed_manager(model):
     Tallies labour used for fixed activities that can only be completed by the manager and ensures that there is
     sufficient labour available to carry out the jobs.
     '''
-    def labour_fixed_manager(model,p,w,z):
-        return -model.v_fixed_labour_manager[p,w,z] + model.p_planning_labour[p,z] + (
-                    model.p_learn_labour * model.v_learn_allocation[p,z]) <= 0
+    def labour_fixed_manager(model,q,s,p,w,z):
+        return -model.v_fixed_labour_manager[q,s,p,w,z] + model.p_planning_labour[p,z] + (
+                    model.p_learn_labour * model.v_learn_allocation[q,s,p,z]) <= 0
 
-    model.con_labour_fixed_manager = pe.Constraint(model.s_labperiods,['mngr'],model.s_season_types,
+    model.con_labour_fixed_manager = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods,['mngr'],model.s_season_types,
                                                    rule=labour_fixed_manager,
                                                    doc='link between labour supply and requirement by fixed jobs for manager')
 
@@ -174,11 +176,11 @@ def f_con_labour_phase_anyone(model):
     Tallies labour used in the crop enterprise that can be completed by anyone (casual/permanent/manager) and ensures
     that there is sufficient labour available to carry out the jobs.
     '''
-    def labour_crop_anyone(model,p,w,z):
-        return -model.v_phase_labour_casual[p,w,z] - model.v_phase_labour_permanent[p,w,z] - model.v_phase_labour_manager[
-            p,w,z] + lphspy.f_mach_labour_anyone(model,p,z) <= 0
+    def labour_crop_anyone(model,q,s,p,w,z):
+        return -model.v_phase_labour_casual[q,s,p,w,z] - model.v_phase_labour_permanent[q,s,p,w,z] - model.v_phase_labour_manager[
+            q,s,p,w,z] + lphspy.f_mach_labour_anyone(model,q,s,p,z) <= 0
 
-    model.con_labour_crop_anyone = pe.Constraint(model.s_labperiods,['any'],model.s_season_types,
+    model.con_labour_crop_anyone = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods,['any'],model.s_season_types,
                                                  rule=labour_crop_anyone,
                                                  doc='link between labour supply and requirement by crop jobs for all labour sources')
 
@@ -188,11 +190,11 @@ def f_con_labour_phase_perm(model):
     Tallies labour used in the crop enterprise that can be completed by permanent or manager staff and ensures that
     there is sufficient labour available to carry out the jobs.
     '''
-    def labour_crop_perm(model,p,w,z):
-        return - model.v_phase_labour_permanent[p,w,z] - model.v_phase_labour_manager[p,w,z] + lphspy.f_mach_labour_perm(
-            model,p,z) <= 0
+    def labour_crop_perm(model,q,s,p,w,z):
+        return - model.v_phase_labour_permanent[q,s,p,w,z] - model.v_phase_labour_manager[q,s,p,w,z] + lphspy.f_mach_labour_perm(
+            model,q,s,p,z) <= 0
 
-    model.con_labour_crop_perm = pe.Constraint(model.s_labperiods,['perm'],model.s_season_types,rule=labour_crop_perm,
+    model.con_labour_crop_perm = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods,['perm'],model.s_season_types,rule=labour_crop_perm,
                                                doc='link between labour supply and requirement by crop jobs for perm and manager labour sources')
 
 
@@ -201,11 +203,11 @@ def f_con_labour_sheep_anyone(model):
     Tallies labour used in the sheep enterprise that can be completed by anyone (casual/permanent/manager) and
     ensures that there is sufficient labour available to carry out the jobs.
     '''
-    def labour_sheep_cas(model,p,w,z):
-        return -model.v_sheep_labour_casual[p,w,z] - model.v_sheep_labour_permanent[p,w,z] - \
-               model.v_sheep_labour_manager[p,w,z] + suppy.f_sup_labour(model,p,z) + stkpy.f_stock_labour_anyone(model,p,z) <= 0
+    def labour_sheep_cas(model,q,s,p,w,z):
+        return -model.v_sheep_labour_casual[q,s,p,w,z] - model.v_sheep_labour_permanent[q,s,p,w,z] - \
+               model.v_sheep_labour_manager[q,s,p,w,z] + suppy.f_sup_labour(model,q,s,p,z) + stkpy.f_stock_labour_anyone(model,q,s,p,z) <= 0
 
-    model.con_labour_sheep_anyone = pe.Constraint(model.s_labperiods,['any'],model.s_season_types,rule=labour_sheep_cas,
+    model.con_labour_sheep_anyone = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods,['any'],model.s_season_types,rule=labour_sheep_cas,
                                                   doc='link between labour supply and requirement by sheep jobs for all labour sources')
 
 
@@ -214,11 +216,11 @@ def f_con_labour_sheep_perm(model):
     Tallies labour used in the sheep enterprise that can be completed by permanent or manager staff and ensures that
     there is sufficient labour available to carry out the jobs.
     '''
-    def labour_sheep_perm(model,p,w,z):
-        return - model.v_sheep_labour_permanent[p,w,z] - model.v_sheep_labour_manager[p,w,z] + stkpy.f_stock_labour_perm(
-            model,p,z) <= 0
+    def labour_sheep_perm(model,q,s,p,w,z):
+        return - model.v_sheep_labour_permanent[q,s,p,w,z] - model.v_sheep_labour_manager[q,s,p,w,z] + stkpy.f_stock_labour_perm(
+            model,q,s,p,z) <= 0
 
-    model.con_labour_sheep_perm = pe.Constraint(model.s_labperiods,['perm'],model.s_season_types,rule=labour_sheep_perm,
+    model.con_labour_sheep_perm = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods,['perm'],model.s_season_types,rule=labour_sheep_perm,
                                                 doc='link between labour supply and requirement by sheep jobs for perm labour sources')
 
 
@@ -227,25 +229,25 @@ def f_con_labour_sheep_manager(model):
     Tallies labour used in the sheep enterprise that can be completed by manager staff and ensures that
     there is sufficient labour available to carry out the jobs.
     '''
-    def labour_sheep_manager(model,p,w,z):
-        return - model.v_sheep_labour_manager[p,w,z] + stkpy.f_stock_labour_manager(model,p,z) <= 0
+    def labour_sheep_manager(model,q,s,p,w,z):
+        return - model.v_sheep_labour_manager[q,s,p,w,z] + stkpy.f_stock_labour_manager(model,q,s,p,z) <= 0
 
-    model.con_labour_sheep_manager = pe.Constraint(model.s_labperiods,['mngr'],model.s_season_types,
+    model.con_labour_sheep_manager = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods,['mngr'],model.s_season_types,
                                                    rule=labour_sheep_manager,
                                                    doc='link between labour supply and requirement by sheep jobs for manager labour sources')
 
 
-def f_con_cropgraze_area(model):
-    '''
-    Constrains the area of crop grazed to the amount provided by the selected rotations.
-    '''
-    if pinp.cropgraze['i_cropgrazing_inc']:
-        def cropgraze_area(model,k,l,z):
-            return -sum(model.v_phase_area[z,r,l] * model.p_cropgrazing_area[r,k,l] for r in model.s_phases if pe.value(model.p_cropgrazing_area[r,k,l])!=0)\
-                   + model.v_grazecrop_ha[k,z,l] <= 0
-
-        model.con_cropgraze_area = pe.Constraint(model.s_crops, model.s_lmus, model.s_season_types, rule=cropgraze_area,
-                                                       doc='link rotation area to the area of crop that can be grazed')
+# def f_con_cropgraze_area(model):
+#     '''
+#     Constrains the area of crop grazed to the amount provided by the selected rotations.
+#     '''
+#     if pinp.cropgraze['i_cropgrazing_inc']:
+#         def cropgraze_area(model,p7,k,l,z):
+#             return -sum(model.v_phase_area[p7,z,r,l] * model.p_cropgrazing_area[r,k,l] for r in model.s_phases if pe.value(model.p_cropgrazing_area[r,k,l])!=0)\
+#                    + model.v_grazecrop_ha[p7,k,z,l] <= 0
+#
+#         model.con_cropgraze_area = pe.Constraint(model.s_season_periods, model.s_crops, model.s_lmus, model.s_season_types, rule=cropgraze_area,
+#                                                        doc='link rotation area to the area of crop that can be grazed')
 
 
 def f_con_harv_stub_nap_cons(model):
@@ -256,17 +258,17 @@ def f_con_harv_stub_nap_cons(model):
     for a given period from stubble and non arable pasture when they don’t become available until after harvest
     (the logic behind this is explained in the stubble section of this document).
     '''
-    def harv_stub_nap_cons(model,p6,z):
+    def harv_stub_nap_cons(model,q,s,p6,z):
         if any(model.p_nap_prop[p6,z] or model.p_harv_prop[p6,z,k] for k in model.s_crops):
-            return sum(-paspy.f_pas_me(model,p6,f,z) + sum(model.p_harv_prop[p6,z,k] / (1 - model.p_harv_prop[p6,z,k])
-                                                         * model.v_stub_con[f,p6,z,k,s] * model.p_stub_md[f,p6,z,k,s]
-                                                         for k in model.s_crops for s in model.s_stub_cat)
-                       + model.p_nap_prop[p6,z] / (1 - model.p_nap_prop[p6,z]) * paspy.f_nappas_me(model,p6,f,z) for f in
+            return sum(-paspy.f_pas_me(model,q,s,p6,f,z) + sum(model.p_harv_prop[p6,z,k] / (1 - model.p_harv_prop[p6,z,k])
+                                                         * model.v_stub_con[q,s,f,p6,z,k,sc] * model.p_stub_md[f,p6,z,k,sc]
+                                                         for k in model.s_crops for sc in model.s_stub_cat)
+                       + model.p_nap_prop[p6,z] / (1 - model.p_nap_prop[p6,z]) * paspy.f_nappas_me(model,q,s,p6,f,z) for f in
                        model.s_feed_pools) <= 0
         else:
             return pe.Constraint.Skip
 
-    model.con_harv_stub_nap_cons = pe.Constraint(model.s_feed_periods,model.s_season_types,rule=harv_stub_nap_cons,
+    model.con_harv_stub_nap_cons = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods,model.s_season_types,rule=harv_stub_nap_cons,
                                                  doc='limit stubble and nap consumption in the period harvest occurs')
 
 
@@ -275,14 +277,26 @@ def f_con_stubble_a(model):
     Constrains the amount of stubble required to consume 1t of category A to no more than the total amount of
     stubble produced from each rotation.
     '''
-    def stubble_a(model,k,s,z):
-        return -sum(model.v_phase_area[z,r,l] * model.p_rot_stubble[r,k,z,l] for r in model.s_phases for l in model.s_lmus
-                    if pe.value(model.p_rot_stubble[r,k,z,l]) != 0)   \
-               + macpy.f_stubble_penalty(model,k,z) + cgzpy.f_grazecrop_stubble_penalty(model,k,z) \
-               + stubpy.f_stubble_req_a(model,z,k,s) <= 0
+    ##has to have p7 axis and transfer because penalties occur at seeding time and have to transfer as seasons are unclustered (same as yield)
+    def stubble_a(model,q,s,p7,k,z9):
+        l_p7 = list(model.s_season_periods)
+        p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
+        p7_end = l_p7[-1]
+        if pe.value(model.p_wyear_inc_qs[q,s]):
+            return (-sum(model.v_phase_area[q,s,p7,z9,r,l] * model.p_rot_stubble[r,k,l,p7,z9]
+                         for r in model.s_phases for l in model.s_lmus
+                         if pe.value(model.p_rot_stubble[r,k,l,p7,z9]) != 0)
+                    + macpy.f_stubble_penalty(model,q,s,p7,k,z9) + cgzpy.f_grazecrop_stubble_penalty(model,q,s,p7,k,z9)
+                    + sum(model.v_stub_harv[q,s,p6,z9,k] * 1000 * model.p_a_p6_p7[p7,p6,z9] for p6 in model.s_feed_periods)
+                    - model.v_stub_debit[q,s,p7,k,z9] *1000 * (p7 != p7_end) #cant debit in the final peirod otherwise unlimited stubble.
 
-    model.con_stubble_a = pe.Constraint(model.s_crops,model.s_stub_cat,model.s_season_types,rule=stubble_a,
-                                        doc='links rotation stubble production with consumption of cat A')
+                    + sum(model.v_stub_debit[q,s,p7_prev,k,z8] * 1000 * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
+                          for z8 in model.s_season_types) <= 0)
+        else:
+            return pe.Param.Skip
+
+    model.con_stubble_a = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, rule=stubble_a,
+                                        doc='Total stubble at harvest. Provides Cat A at harvest.')
 
 
 def f_con_phasesow(model):
@@ -294,17 +308,34 @@ def f_con_phasesow(model):
     needed to sow pasture).
     No p5 set in the constraint because model can optimise sowing time (can only optimise within the periods provided eg
     dry sowing activity only provides sowing capacity before the break).
+
+    p_sow_prov links k and p5 so that:
+
+        #. dry sown landuses are sown before the break.
+        #. pasture is sown in the correct p5 periods based on the inputted reseeding date.
+        #. wet sown crops are sown after the break of season.
+
+    v_seeding_machdays is bound in con_seed_period_days to ensure that the correct days of seeding are provided in
+    each p7 and p5 period.
+
+    Notes:
+
+        #. The requirement for seeding is based on v_phase_increment rather than v_phase_area
+        #. a phase can only be sown in the phase_period for which the phase_increment is selected. If there is
+           insufficient seeding capacity then the selection of v_phase_increment must be made in a later phase_period.
+
+    Note: this is an equals to constraint to stop the model sowing without a landuse so it can get poc and crop
+          grazing (both of those activities are provided by seeding).
     '''
-    def sow_link(model,k,l,z):
-        if type(phspy.f_phasesow_req(model,k,l,z)) == int:  # if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
+    def sow_link(model,q,s,p7,k,l,z):
+        if type(phspy.f_phasesow_req(model,q,s,p7,k,l,z)) == int:  # if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
             return pe.Constraint.Skip  # skip constraint if no crop is being sown on given rotation
         else:
-            return - sum(model.v_wet_seeding_crop[p5,k,l,z] * model.p_wet_sow_prov[p5,k,z] for p5 in model.s_labperiods)  \
-                   - sum(model.v_dry_seeding_crop[p5,k,l,z] * model.p_dry_sow_prov[p5,k,z] for p5 in model.s_labperiods) \
-                   - sum(model.v_seeding_pas[p5,k,l,z] * model.p_pas_sow_prov[p5,k,z] for p5 in model.s_labperiods) \
-                   + phspy.f_phasesow_req(model,k,l,z) <= 0
+            return - sum(model.v_contractseeding_ha[q,s,z,p5,k,l] * model.p_contractseeding_occur[p5,z] * model.p_sow_prov[p7,p5,z,k] for p5 in model.s_labperiods) \
+                   - sum(model.v_seeding_machdays[q,s,z,p5,k,l] * model.p_seeding_rate[k,l] * model.p_sow_prov[p7,p5,z,k] for p5 in model.s_labperiods) \
+                   + phspy.f_phasesow_req(model,q,s,p7,k,l,z) == 0
 
-    model.con_phasesow = pe.Constraint(model.s_crops,model.s_lmus,model.s_season_types,rule=sow_link,
+    model.con_phasesow = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_landuses, model.s_lmus,model.s_season_types,rule=sow_link,
                                       doc='link between mach sow provide and rotation crop sow require')
 
 
@@ -325,7 +356,7 @@ def f_con_phasesow(model):
 #         else:
 #             return -model.v_seeding_pas[p5,k,l,z] + paspy.f_passow(model,p5,k,l,z) <= 0
 #
-#     model.con_passow = pe.Constraint(model.s_labperiods,model.s_landuses,model.s_lmus,model.s_season_types,
+#     model.con_passow = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods,model.s_landuses,model.s_lmus,model.s_season_types,
 #                                      rule=passow_link,doc='link between mach sow provide and rotation pas sow require')
 
 
@@ -334,11 +365,20 @@ def f_con_harv(model):
     Links the harvest requirement for each rotation with harvesting capacity. Harvest capacity can be provided from
     farmer labour and machinery or contract services.
     '''
-    def harv(model,k,z):
-        return -macpy.f_harv_supply(model,k,z) + sum(
-            phspy.f_rotation_yield_transfer(model,g,k,z) / 1000 for g in model.s_grain_pools) <= 0
+    ##Transfer unharvested grain incase a season node occurs between two harvest periods. The harvest requirement needs to uncluster to the new seasons.
+    ##Yield required for harvest does not include seeding timliness and crop grazing penalty (if this is deemed important could be included using f_late_seed_penalty & f_grazecrop_yield_penalty)
+    def harv(model,q,s,p7,k,z9):
+        l_p7 = list(model.s_season_periods)
+        p7_prev = l_p7[l_p7.index(p7) - 1]  # need the activity level from last feed period
+        p7_end = l_p7[-1]
+        return (-macpy.f_harv_supply(model,q,s,p7,k,z9)
+                + sum(phspy.f_rotation_yield(model,q,s,p7,g,k,z9) / 1000 for g in model.s_grain_pools)
+                - model.v_unharvested_yield[q,s,p7,k,z9] * (p7 != p7_end) #must be harvested before the begining of the next yr - therefore no transfer
+                + sum(model.v_unharvested_yield[q,s,p7_prev,k,z8] * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
+                      for z8 in model.s_season_types)
+                <= 0)
 
-    model.con_harv = pe.Constraint(model.s_harvcrops,model.s_season_types,rule=harv,doc='harvest constraint')
+    model.con_harv = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_harvcrops, model.s_season_types, rule=harv,doc='harvest constraint')
 
 
 def f_con_makehay(model):
@@ -346,11 +386,21 @@ def f_con_makehay(model):
     Constrains the hay making requirement for each rotation by hay making capacity. Hay making capacity is provided
     by contract services.
     '''
-    def harv(model,k,z):
-        return sum(
-            -model.v_hay_made[z] + phspy.f_rotation_yield_transfer(model,g,k,z) / 1000 for g in model.s_grain_pools) <= 0
+    ##Transfer unharvested grain incase a season node occurs between two harvest periods. The harvest requirement needs to uncluster to the new seasons.
+    ##Yield required for harvest does not include seeding timliness and crop grazing penalty (if this is deemed important could be included using f_late_seed_penalty & f_grazecrop_yield_penalty)
+    def harv(model,q,s,p7,k,z9):
+        l_p7 = list(model.s_season_periods)
+        p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
+        p7_end = l_p7[-1]
+        return (sum(-model.v_hay_made[q,s,z9] * model.p_hay_made_prov[p7,z9]
+                   + phspy.f_rotation_yield(model,q,s,p7,g,k,z9) / 1000
+                   for g in model.s_grain_pools)
+               - model.v_hay_tobe_made[q,s,p7,z9] * (p7 != p7_end) #must be harvested before the begining of the next yr - therefore no transfer
+               + sum(model.v_hay_tobe_made[q,s,p7_prev,z8] * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
+                     for z8 in model.s_season_types)
+               <= 0)
 
-    model.con_makehay = pe.Constraint(model.s_haycrops,model.s_season_types,rule=harv,doc='make hay constraint')
+    model.con_makehay = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_haycrops,model.s_season_types,rule=harv,doc='make hay constraint')
 
 
 def f_con_grain_transfer(model):
@@ -359,21 +409,42 @@ def f_con_grain_transfer(model):
     seeding penalties and grain feed to sheep. Grain fed to the sheep is purchased unless it is produced on farm.
     The net grain is either purchased or sold depending on the final balance.
     '''
-    ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint.
-    def grain_transfer(model,g,k,z):
-        return -phspy.f_rotation_yield_transfer(model,g,k,z) + macpy.f_late_seed_penalty(model,g,k,z) \
-               + cgzpy.f_grazecrop_yield_penalty(model,g,k,z) + sum(model.v_sup_con[z,k,g,f,p6] * 1000 for f in model.s_feed_pools for p6 in model.s_feed_periods) \
-               - model.v_buy_grain[z,k,g] * 1000 + model.v_sell_grain[z,k,g] * 1000 <= 0
+    ##Must pass between p7 because harvest could be in different p7's for different crops and sale/buy timing could
+    ## be in different p7 to harvest
 
-    model.con_grain_transfer = pe.Constraint(model.s_grain_pools,model.s_crops,model.s_season_types,rule=grain_transfer,
+    ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint.
+    def grain_transfer(model,q,s,p7,g,k,z9):
+        l_p7 = list(model.s_season_periods)
+        p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
+        p7_start = l_p7[0]
+        p7_end = l_p7[-1]
+
+        return -phspy.f_rotation_yield(model,q,s,p7,g,k,z9) + macpy.f_late_seed_penalty(model,q,s,p7,g,k,z9) \
+               + cgzpy.f_grazecrop_yield_penalty(model,q,s,p7,g,k,z9) \
+               + sum(model.v_sup_con[q,s,z9,k,g,f,p6] * model.p_a_p6_p7[p7,p6,z9] * 1000
+                     for f in model.s_feed_pools for p6 in model.s_feed_periods) \
+               - model.v_grain_debit[q,s,p7,z9,k,g] * 1000 * (p7 != p7_end) \
+               + model.v_grain_credit[q,s,p7,z9,k,g] * 1000 \
+               + sum((model.v_grain_debit[q,s,p7_prev,z8,k,g] * 1000 - model.v_grain_credit[q,s,p7_prev,z8,k,g] * 1000 * (p7 != p7_start)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
+                     ]   # p7!=p7[0] to stop grain tranfer from last yr to current yr else unbounded solution.
+                     for z8 in model.s_season_types) \
+               - model.v_buy_grain[q,s,p7,z9,k,g] * model.p_buy_grain_prov[p7,z9] * 1000 + model.v_sell_grain[q,s,p7,z9,k,g] * 1000 <= 0
+
+    model.con_grain_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_grain_pools,model.s_crops,model.s_season_types,rule=grain_transfer,
                                              doc='constrain grain transfer between rotation and sup feeding')
 
 
-def f1_grain_income(model,c,z):
+def f1_grain_income(model,q,s,p7,z,c1):
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
     return sum(
-        model.v_sell_grain[z,k,g] * model.p_grain_price[k,c,g] - model.v_buy_grain[z,k,g] * model.p_buy_grain_price[
-            k,c,g] for k in model.s_crops for g in model.s_grain_pools)
+            model.v_sell_grain[q,s,p7,z,k,g] * model.p_grain_price[p7,z,g,k,c1] - model.v_buy_grain[q,s,p7,z,k,g] * model.p_buy_grain_price[
+            p7,z,g,k,c1] for k in model.s_crops for g in model.s_grain_pools)
+
+def f1_grain_wc(model,q,s,c0,p7,z):
+    ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
+    return sum(
+        model.v_sell_grain[q,s,p7,z,k,g] * model.p_grain_wc[c0,p7,z,g,k] - model.v_buy_grain[q,s,p7,z,k,g] * model.p_buy_grain_wc[
+            c0,p7,z,g,k] for k in model.s_crops for g in model.s_grain_pools)
 
 
 def f_con_poc_available(model):
@@ -382,11 +453,11 @@ def f_con_poc_available(model):
     hectares sown and the number of days each hectare can be grazed (calculated in Mach.py) multiplied
     by the foo available to be consumed on each hectare each day (calculated in Pasture.py).
     '''
-    def poc(model,f,l,z):
-        return -macpy.f_ha_days_pasture_crop_paddocks(model,f,l,z) * model.p_poc_con[f,l,z] + sum(
-            model.v_poc[v,f,l,z] for v in model.s_feed_pools) <= 0
+    def poc(model,q,s,f,l,z):
+        return -macpy.f_ha_days_pasture_crop_paddocks(model,q,s,f,l,z) * model.p_poc_con[f,l,z] + sum(
+            model.v_poc[q,s,v,f,l,z] for v in model.s_feed_pools) <= 0
 
-    model.con_poc_available = pe.Constraint(model.s_feed_periods,model.s_lmus,model.s_season_types,rule=poc,
+    model.con_poc_available = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods,model.s_lmus,model.s_season_types,rule=poc,
                                             doc='constraint between poc available and consumed')
 
 
@@ -406,12 +477,12 @@ def f_con_me(model):
     is beyond the capacity of the animal to consume.
 
     '''
-    def me(model,p6,f,z):
-        return -paspy.f_pas_me(model,p6,f,z) - paspy.f_nappas_me(model,p6,f,z) - suppy.f_sup_me(model,p6,f,z) \
-               - stubpy.f_stubble_me(model,p6,f,z) - cgzpy.f_grazecrop_me(model,p6,f,z) \
-               + stkpy.f_stock_me(model,p6,f,z) - mvf.f_mvf_me(model,p6,f) <= 0
+    def me(model,q,s,p6,f,z):
+        return -paspy.f_pas_me(model,q,s,p6,f,z) - paspy.f_nappas_me(model,q,s,p6,f,z) - suppy.f_sup_me(model,q,s,p6,f,z) \
+               - stubpy.f_stubble_me(model,q,s,p6,f,z) - cgzpy.f_grazecrop_me(model,q,s,p6,f,z) \
+               + stkpy.f_stock_me(model,q,s,p6,f,z) - mvf.f_mvf_me(model,q,s,p6,f) <= 0
 
-    model.con_me = pe.Constraint(model.s_feed_periods,model.s_feed_pools,model.s_season_types,rule=me,
+    model.con_me = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods,model.s_feed_pools,model.s_season_types,rule=me,
                                  doc='constraint between me available and consumed')
 
 
@@ -426,45 +497,103 @@ def f_con_vol(model):
     is beyond the capacity of the animal to consume.
 
     '''
-    def vol(model,p6,f,z):
-        return paspy.f_pas_vol(model,p6,f,z) + suppy.f_sup_vol(model,p6,f,z) + stubpy.f_stubble_vol(model,p6,f,z) \
-               + cgzpy.f_grazecrop_vol(model,p6,f,z) \
-               - stkpy.f_stock_pi(model,p6,f,z) \
-               + mvf.f_mvf_vol(model,p6,f) <= 0
+    def vol(model,q,s,p6,f,z):
+        return paspy.f_pas_vol(model,q,s,p6,f,z) + suppy.f_sup_vol(model,q,s,p6,f,z) + stubpy.f_stubble_vol(model,q,s,p6,f,z) \
+               + cgzpy.f_grazecrop_vol(model,q,s,p6,f,z) \
+               - stkpy.f_stock_pi(model,q,s,p6,f,z) \
+               + mvf.f_mvf_vol(model,q,s,p6,f) <= 0
 
-    model.con_vol = pe.Constraint(model.s_feed_periods,model.s_feed_pools,model.s_season_types,rule=vol,
+    model.con_vol = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods,model.s_feed_pools,model.s_season_types,rule=vol,
                                   doc='constraint between me available and consumed')
 
 
 def f_con_cashflow(model):
     '''
-    Tallies all cashflow in each bi-monthly period from each module. If the balance is positive interest is earned.
-    If the balance is negitive interest is paid.
+    Tallies all cashflow in each period and transfers to the next period. Cashflow periods exist so that a transfer can
+    exist between parent and child seasons.
     '''
-    def cash_flow(model,i,z):
-        c = sinp.general['cashflow_periods']
-        ##j becomes a list which has 0 as first value and 1 after that. this is then indexed by i and multiplied by previous periods debit and credit.
-        ##this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period)
-        j = [1] * len(c)
-        j[0] = 0
-        # todo Revisit the interest calculation at some stage because it didn't tally with the back of envelope estimate by $1000
-        return (-f1_grain_income(model,c[i],z) + phspy.f_rotation_cost(model,c[i],z) + labpy.f_labour_cost(model,c[i],z)
-                + macpy.f_mach_cost(model,c[i],z) + suppy.f_sup_cost(model,c[i],z) + model.p_overhead_cost[c[i]]
-                - stkpy.f_stock_cashflow(model,c[i],z)
-                - model.v_debit[c[i]] + model.v_credit[c[i]]
-                + (model.v_debit[c[i - 1]] * fin.debit_interest() - model.v_credit[c[i - 1]] * fin.credit_interest()) * j[i] # mul by j so that credit in ND doesnt provide into JF otherwise it will be unbounded because it will get interest
-                ) <= 0
+    def cash_flow(model,q,s,c1,p7,z9):
+        p7_start = list(model.s_season_periods)[0]
+        p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
+        return ((-f1_grain_income(model,q,s,p7,z9,c1) + phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9)
+                + macpy.f_mach_cost(model,q,s,p7,z9) + suppy.f_sup_cost(model,q,s,p7,z9) + model.p_overhead_cost[p7,z9]
+                - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1)
+                - model.v_debit[q,s,c1,p7,z9] + model.v_credit[q,s,c1,p7,z9])
+                + sum((model.v_debit[q,s,c1,p7_prev,z8] - model.v_credit[q,s,c1,p7_prev,z8]) * model.p_parentz_provwithin_season[p7_prev,z8,z9] * (p7!=p7_start)  #end cashflow doesnot provide start cashflow else unbounded.
+                      for z8 in model.s_season_types)) <= 0
 
-    model.con_cashflow = pe.Constraint(range(len(model.s_cashflow_periods)),model.s_season_types,rule=cash_flow,
-                                       doc='cashflow')
+    model.con_cashflow_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_c1, model.s_season_periods, model.s_season_types,rule=cash_flow,
+                                                doc='transfer of cash between periods')
+
+
+def f_con_workingcap_within(model):
+    '''
+    Tallies working capital and transfers to the next period. Cashflow periods exist so that a transfer can
+    exist between parent and child seasons.
+
+    '''
+    def working_cap_within(model,q,s,c0,p7,z9):
+        p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
+        if pe.value(model.p_mask_childz_within_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s]):
+            return (-f1_grain_wc(model,q,s,c0,p7,z9) + phspy.f_rotation_wc(model,q,s,c0,p7,z9) + labpy.f_labour_wc(model,q,s,c0,p7,z9)
+                    + macpy.f_mach_wc(model,q,s,c0,p7,z9) + suppy.f_sup_wc(model,q,s,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
+                    - stkpy.f_stock_wc(model,q,s,c0,p7,z9)
+                    - model.v_wc_debit[q,s,c0,p7,z9]
+                    + model.v_wc_credit[q,s,c0,p7,z9]
+                    + sum((model.v_wc_debit[q,s,c0,p7_prev,z8] - model.v_wc_credit[q,s,c0,p7_prev,z8]) #end working capital doesnot provide start else unbounded constraint.
+                          * model.p_parentz_provwithin_season[p7_prev,z8,z9]
+                         for z8 in model.s_season_types)) <= 0
+        else:
+            return pe.Constraint.Skip
+    model.con_workingcap_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap_within,
+                                       doc='working capital transfer within year')
+
+
+def f_con_workingcap_between(model):
+    '''
+    Tallies working capital and transfers to the next period. Cashflow periods exist so that a transfer can
+    exist between parent and child seasons.
+
+    Cashflow at the end of the previous yr becomes the starting balance for working capital (cashflow broadcasts
+    to both c0 slices). This only happens between years in the sequence. End to start doesnt carry over. This is
+    because it was decided that the working capital constraint is more useful if there is no starting balance at
+    the start of the sequence. This means an expensive strategy with a high reward can be bounded using wc (if the end
+    cashflow became the start then a high expense high income strategy would not trigger the constraint).
+
+    '''
+    def working_cap_between(model,q,s9,c0,p7,z9):
+        p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
+        q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
+        if pe.value(model.p_mask_childz_between_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]):
+            return (-f1_grain_wc(model,q,s9,c0,p7,z9) + phspy.f_rotation_wc(model,q,s9,c0,p7,z9) + labpy.f_labour_wc(model,q,s9,c0,p7,z9)
+                    + macpy.f_mach_wc(model,q,s9,c0,p7,z9) + suppy.f_sup_wc(model,q,s9,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
+                    - stkpy.f_stock_wc(model,q,s9,c0,p7,z9)
+                    - model.v_wc_debit[q,s9,c0,p7,z9]
+                    + model.v_wc_credit[q,s9,c0,p7,z9]
+                    + sum(sum((model.v_debit[q,s8,c1,p7_prev,z8] - model.v_credit[q,s8,c1,p7_prev,z8]) * model.p_prob_c1[c1]
+                              for c1 in model.s_c1)#end cashflow become start wc (only within a sequence).
+                          * model.p_parentz_provbetween_season[p7_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
+                        # + (model.v_debit[q,s8,c1,p7_prev,z8] - model.v_credit[q,s8,c1,p7_prev,z8]) #end cashflow become start wc.
+                        #   * model.p_parentz_provbetween_season[p7_prev,z8,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
+                          for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q,s8])!=0)) <= 0
+        else:
+            return pe.Constraint.Skip
+    model.con_workingcap_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap_between,
+                                       doc='working capital transfer between years')
 
 
 def f_con_dep(model):
     '''Tallies the depreciation of capital, which is then passed to the objective.'''
-    def dep(model,z):
-        return macpy.f_total_dep(model,z) + suppy.f_sup_dep(model,z) - model.v_dep[z] <= 0
+    def dep(model,q,s,p7,z9):
+        l_p7 = list(model.s_season_periods)
+        p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last period
+        p7_start = l_p7[0]
+        return (macpy.f_total_dep(model,q,s,p7,z9) + suppy.f_sup_dep(model,q,s,p7,z9) - model.v_dep[q,s,p7,z9]
+                + sum(model.v_dep[q,s,p7_prev,z9] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
+                      for z8 in model.s_season_types) * (p7!=p7_start) #end doesnt carry over
+                <= 0)
 
-    model.con_dep = pe.Constraint(model.s_season_types,rule=dep,
+    model.con_dep = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,rule=dep,
                                   doc='tallies depreciation from all activities so it can be transferred to objective')
 
 
@@ -472,23 +601,33 @@ def f_con_asset(model):
     '''Tallies the total asset value to ensure that there is a minimum ROI on farm assets. The asset value multiplied
     by opportunity cost on capital is then passed to the objective.
     '''
-    def asset(model,z):
-        return (suppy.f_sup_asset(model,z) + macpy.f_mach_asset(model) + stkpy.f_stock_asset(model,z)) * uinp.finance[
-            'opportunity_cost_capital'] \
-               - model.v_asset[z] <= 0
+    def asset(model,q,s,p7,z9):
+        l_p7 = list(model.s_season_periods)
+        p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last period
+        p7_start = l_p7[0]
+        return (suppy.f_sup_asset(model,q,s,p7,z9) + macpy.f_mach_asset(model,p7) + stkpy.f_stock_asset(model,q,s,p7,z9)) * uinp.finance['opportunity_cost_capital'] \
+               - model.v_asset[q,s,p7,z9] \
+               + sum(model.v_asset[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
+                     for z8 in model.s_season_types) * (p7!=p7_start) <= 0 #end doesnt carry over
 
-    model.con_asset = pe.Constraint(model.s_season_types,rule=asset,
+    model.con_asset = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,rule=asset,
                                     doc='tallies asset from all activities so it can be transferred to objective to represent ROE')
 
 
 def f_con_minroe(model):
     '''Tallies the total expenditure to ensure that there is a minimum ROI on cash expenditure.'''
-    def minroe(model,z):
-        return (sum(phspy.f_rotation_cost(model,c,z) + labpy.f_labour_cost(model,c,z) + macpy.f_mach_cost(model,c,z)
-                    + suppy.f_sup_cost(model,c,z) for c in model.s_cashflow_periods) + stkpy.f_stock_cost(model,z)) * fin.f_min_roe() \
-               - model.v_minroe[z] <= 0
+    def minroe(model,q,s,p7,z9):
+        l_p7 = list(model.s_season_periods)
+        p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last period
+        p7_start = l_p7[0]
+        return ((phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9) + macpy.f_mach_cost(model,q,s,p7,z9)
+                + suppy.f_sup_cost(model,q,s,p7,z9) + stkpy.f_stock_cost(model,q,s,p7,z9))
+                * fin.f_min_roe()
+                - model.v_minroe[q,s,p7,z9]
+                + sum(model.v_minroe[q,s,p7_prev,z8] *model.p_parentz_provwithin_season[p7_prev,z8,z9]
+                      for z8 in model.s_season_types) * (p7 != p7_start)) <= 0  # end doesnt carry over
 
-    model.con_minroe = pe.Constraint(model.s_season_types,rule=minroe,
+    model.con_minroe = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,rule=minroe,
                                      doc='tallies total expenditure to ensure minimum roe is met')
 
 
@@ -499,8 +638,13 @@ def f_objective(model):
     the cost of depreciation and the opportunity cost on the farm assets (total value of all assets times the discount
     rate  (to ensure that the assets generate a minimum ROI)).
     '''
-    c = sinp.general['cashflow_periods']
-    i = len(c) - 1  # minus one because index starts from 0
-    return model.v_credit[c[i]] - model.v_debit[c[i]] - sum(
-        model.v_dep[z] + model.v_minroe[z] + model.v_asset[z] for z in
-        model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
+    variables = model.component_objects(pe.Var,active=True)
+
+    p7_end = list(model.s_season_periods)[-1]
+    return (sum((model.v_credit[q,s,c1,p7_end,z] - model.v_debit[q,s,c1,p7_end,z]
+               - model.v_dep[q,s,p7_end,z] - model.v_minroe[q,s,p7_end,z] - model.v_asset[q,s,p7_end,z])
+                * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
+               for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
+               -0.0001 * sum(sum(v[s] for s in v) for v in variables))
+
+
