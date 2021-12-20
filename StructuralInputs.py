@@ -181,7 +181,7 @@ landuse['All_pas']={'a', 'ar'
                 , 'x', 'xr','xc'
                 , 'j', 't', 'jr', 'tr','tc','jc'
                 }
-##next set is used in pasture.py for germination and phase area
+##next set is used in pasture.py for mobilisation of below ground reserves and phase area
 landuse['pasture_sets']={'annual': {'a', 'ar'
                                 , 's', 'sr'
                                 , 'm'}
