@@ -42,7 +42,6 @@ How to add a report:
 author: Young
 """
 
-#todo add a second mortality report that the weighted average mortality for the animals selected (to complement the current report that is mortality for each w axis)
 
 import numpy as np
 import pandas as pd
@@ -76,7 +75,7 @@ report_run = report_run.to_frame()
 report_run = report_run.droplevel(1, axis=1)
 
 #todo Reports to add:
-# 1. report which identifies which sale grid sheep go into. Maybe this can be done using arg sorted on the saleprice array (last step of the sale value function).
+# 1. todo add a second mortality report that the weighted average mortality for the animals selected (to complement the current report that is mortality for each w axis)
 
 def f_report(processor, trials, non_exist_trials):
     '''Function to wrap ReportControl.py so that multiprocessing can be used.'''
@@ -1012,7 +1011,6 @@ def f_report(processor, trials, non_exist_trials):
             stacked_drydmd = rep.f_append_dfs(stacked_drydmd, drydmd)
 
         if report_run.loc['run_dryfoo', 'Run']:
-            #todo this report throws error when combining multiple excel... why??
             #returns average FOO during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'dry_foo_dp6zt'

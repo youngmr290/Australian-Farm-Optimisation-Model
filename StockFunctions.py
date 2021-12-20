@@ -2284,7 +2284,6 @@ def f1_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_t
 #     shape = production_ftpany.shape[0:sinp.stock['i_p_pos']] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[sinp.stock['i_p_pos']+1:]  # bit messy because need v t and all the other axis (but not p)
 #     result=np.zeros(shape).astype('float32')
 #     shape = dvp_pointer_p.shape
-#     #todo referring to axes positions using a constant rather than using the variable
 #     for a1 in range(shape[-14]):
 #         a1_slc = slice(a1,a1+1) if shape[-14]>1 else slice(0,None) #used for param because we want to keep axis
 #         for e1 in range(shape[-13]):

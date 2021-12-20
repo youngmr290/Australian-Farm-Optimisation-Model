@@ -163,7 +163,6 @@ def load_pkl(trial_name):
         r_vals = pkl.load(f)
     return lp_vars, r_vals
 
-#todo once this method is finalised remove the old code and unrequired args. Do the same for vars2df
 def f_vars2np(lp_vars, var_key, shape, maskz8=None, z_pos=-1):
     '''
     Converts lp_vars to numpy.

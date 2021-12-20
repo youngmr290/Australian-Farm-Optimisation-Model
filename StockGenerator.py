@@ -710,13 +710,9 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     date_joined_oa1e1b1nwzida0e0b0xyg1 = date_born1st_oa1e1b1nwzida0e0b0xyg2 - cp_dams[1,...,0:1,:].astype('timedelta64[D]') #take slice 0 from y axis because cp1 is not affected by genetic merit
     ##expand feed periods over all the years of the sim so that an association between sim period can be made.
     ##set fp to start at the next generator period following the node (needs to be next so that clustering works). Lp are adjusted so that they get clustered the same as dvps
-    #todo changing the index dropped profit 10k the only thing that i could find that changed
-    # was the fp9 got one more gen period and fp3 got one less. We think maybe the profit difference wouldn't exist if we recalibrated the fs. So once the fs pkl is working i can check the profit with old fp and new fp both with their optimal fs.
-    # the only thing that is effected by the a_p6_p change is the p2v (ie changing a_p6_p in the p2v function makes the 10k diff other things that use a_p6_p dont effect profit)
     feedperiods_p6z = per.f_feed_periods().astype('datetime64[D]')[:-1] #remove last date because that is the end date of the last period (not required)
     feedperiods_p6z = feedperiods_p6z + np.timedelta64(365,'D') * ((date_start_p[0].astype('datetime64[Y]').astype(int) + 1970 -1) - (feedperiods_p6z[0].astype('datetime64[Y]').astype(int) + 1970)) #this is to make sure the first sim period date is greater than the first feed period date.
     feedperiods_p6z = (feedperiods_p6z  + (np.arange(np.ceil(sim_years +1)) * np.timedelta64(365,'D') )[...,na,na]).reshape((-1, len_z)) #expand then ravel to return 1d array of the feed period dates expanded the length of the sim. +1 because feed periods start and finish mid yr so add one to ensure they go to the end of the sim.
-    # feedperiods_idx_p6z = fun.f_next_prev_association(date_start_p, feedperiods_p6z - np.timedelta64(step/2,'D'), 0, 'left') #get the nearest generator period (hence minus half a period
     feedperiods_idx_p6z = np.minimum(len(date_start_p) - 1,np.searchsorted(date_start_p,feedperiods_p6z,'left'))  # maximum idx is the number of generator periods
     feedperiods_p6z = date_start_p[feedperiods_idx_p6z]
 

@@ -13,10 +13,6 @@ author: young
 
 
 """
-    #todo add a manager and permanent labour DV that has a (small) positive OBJ value to use the slack.
-  #  The value could be very small most of the time (sufficient to pick up the slack).
-  #  But it could also be used as a control variable to allow SA on what jobs don't get done if you have minimum return on labour.
-  #  i.e. if I'm not making at least $20/hr then "I'm not getting out of bed"
 
 #python modules
 from pyomo.environ import *
