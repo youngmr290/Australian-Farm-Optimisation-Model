@@ -96,6 +96,8 @@ The following rules are implemented to remove unprofitable rotation phases:
 
     #. Only a single pasture variety in a rotation phase.
 
+    #. No dry seeding after pasture because of excessive weed burden.
+
 
 
 """
@@ -113,6 +115,7 @@ import PropertyInputs as pinp
 customised_rotations = False
 def f_rot_gen():
     yr0 = np.array(['b', 'h', 'o','of', 'w', 'f', 'l', 'z','r'
+                   , 'bd','wd','rd','zd'
                    , 'a', 'ar'
                    , 's', 'sr'
                    , 'm'#])
@@ -171,7 +174,7 @@ def f_rot_gen():
     for i in range(np.size(phases,1)-1):
     ##drop rules 1; unprofitable
         ###no cont canola
-        phases = phases[~(np.isin(phases[:,i], ['N'])&np.isin(phases[:,i+1], ['N','r','z']))]
+        phases = phases[~(np.isin(phases[:,i], ['N'])&np.isin(phases[:,i+1], ['N','r','z','rd','zd']))]
         ###no cont pulse
         phases = phases[~(np.isin(phases[:,i], ['P'])&np.isin(phases[:,i+1], ['P','l','f']))]
         ###no pulse after pasture
@@ -184,6 +187,8 @@ def f_rot_gen():
         phases = phases[~(np.isin(phases[:,i], ['T','J'])&np.isin(phases[:,i+1], ['tr','jr']))]
         ###not going to resow lucerne after a lucerne (in a cont rotation you resow every 5yrs but that is accounted for with 'uc' & 'xc')
         phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['xr','ur']))]
+        ###no dry seeding after pasture
+        phases = phases[~(np.isin(phases[:,i], ['AR', 'SR','A','M','S','U','X','T','J'])&np.isin(phases[:,i+1], ['bd','wd','rd','zd']))]
         ###can't have 1yr of perennial unless it is the earliest yr in the history
         if i == 0:
             pass #first yr of rotation can be a perennial because
