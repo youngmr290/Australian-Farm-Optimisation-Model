@@ -144,7 +144,7 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     cashflow_incur_days_c0 = (end_of_cash_c0 - date_incurred_c0).astype('timedelta64[D]').astype(int)
     wc_incur_days_c0 = (peakdebt_date_c0 - date_incurred_c0).astype('timedelta64[D]').astype(int)
     cashflow_interest_c0 = (1 + rate / 365) ** cashflow_incur_days_c0
-    wc_interest_c0 = (1 + rate / 365) ** wc_incur_days_c0
+    wc_interest_c0 = (1 + rate / 365) ** wc_incur_days_c0 * (wc_incur_days_c0>=0) #bool to make wc 0 if the cashflow item occurs between peak debt and cashflow date (this stops an enterprises main income being included in wc constraint).
 
     ##allocate to cashflow period
     p7_alloc_p7c0 = zfun.f1_z_period_alloc(date_incurred_c0[na,...], z_pos=z_pos)

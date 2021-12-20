@@ -576,7 +576,10 @@ def f_con_workingcap_between(model):
     exist between parent and child seasons.
 
     Cashflow at the end of the previous yr becomes the starting balance for working capital (cashflow broadcasts
-    to both c0 slices).
+    to both c0 slices). This only happens between years in the sequence. End to start doesnt carry over. This is
+    because it was decided that the working capital constraint is more useful if there is no starting balance at
+    the start of the sequence. This means an expensive strategy with a high reward can be bounded using wc (if the end
+    cashflow became the start then a high expense high income strategy would not trigger the constraint).
 
     '''
     def working_cap_between(model,q,s9,c0,p7,z9):
@@ -588,15 +591,16 @@ def f_con_workingcap_between(model):
                     - stkpy.f_stock_wc(model,q,s9,c0,p7,z9)
                     - model.v_wc_debit[q,s9,c0,p7,z9]
                     + model.v_wc_credit[q,s9,c0,p7,z9]
-                    + sum((model.v_debit[q,s8,c1,p7_prev,z8] - model.v_credit[q,s8,c1,p7_prev,z8]) #end cashflow become start wc. #todo the c1 axis will need to be weighted
+                    + sum(sum((model.v_debit[q,s8,c1,p7_prev,z8] - model.v_credit[q,s8,c1,p7_prev,z8]) * model.p_prob_c1[c1]
+                              for c1 in model.s_c1)#end cashflow become start wc (only within a sequence).
                           * model.p_parentz_provbetween_season[p7_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
-                        + (model.v_debit[q,s8,c1,p7_prev,z8] - model.v_credit[q,s8,c1,p7_prev,z8]) #end cashflow become start wc.
-                          * model.p_parentz_provbetween_season[p7_prev,z8,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
+                        # + (model.v_debit[q,s8,c1,p7_prev,z8] - model.v_credit[q,s8,c1,p7_prev,z8]) #end cashflow become start wc.
+                        #   * model.p_parentz_provbetween_season[p7_prev,z8,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
                           for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q,s8])!=0)) <= 0
         else:
             return pe.Constraint.Skip
-    # model.con_workingcap_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap_between,
-    #                                    doc='working capital transfer between years')
+    model.con_workingcap_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap_between,
+                                       doc='working capital transfer between years')
 
 
 def f_con_dep(model):
