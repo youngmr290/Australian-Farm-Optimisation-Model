@@ -1096,8 +1096,10 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
 
     :param cf:
     :param cb1: GrazPlan parameter stating the probability of conception with different number of foetuses.
-    :param relsize_mating:
-    :param rc_mating:
+    :param relsize_mating: Relative size at mating. This is a seperate variable to relsize_start because mating
+                           may occur mid period. Note: the e and b axis have been handled before passing in.
+    :param rc_mating: Relative condition at mating. This is a seperate variable to rc_start because mating
+                      may occur mid period. Note: the e and b axis have been handled before passing in.
     :param crg_doy:
     :param nfoet_b1any:
     :param nyatf_b1any:
@@ -1112,13 +1114,8 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
     else:
         b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
 
-        ## relative size and relative condition of the dams at mating are the determinants of conception
-        ### the dams being mated are those in slices e1[0] and b1[0] (first cycle, not mated)
-        relsize_mating_e1b1sliced = fun.f_dynamic_slice(relsize_mating, sinp.stock['i_e1_pos'], 0, 1, b1_pos, 0, 1) #take slice from e1 & b1 axis
-        rc_mating_e1b1sliced = fun.f_dynamic_slice(rc_mating, sinp.stock['i_e1_pos'], 0, 1, b1_pos, 0, 1) #take slice from e1 & b1 axis
-
         ## probability of at least a given number of foetuses
-        crg = crg_doy * fun.f_sig(relsize_mating_e1b1sliced * rc_mating_e1b1sliced, cb1[2, ...], cb1[3, ...])
+        crg = crg_doy * fun.f_sig(relsize_mating * rc_mating, cb1[2, ...], cb1[3, ...])
         ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp calculate correctly
         crg *= (nfoet_b1any == nyatf_b1any)
 
@@ -1134,8 +1131,8 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         ### Carried out here so that the sa affects the REV and is included in proportion of NM
         ### Achieved by calculating the impact of the sa on the scanning percentage and the change in the 'standardised'
         ### proportions of DST. Then adjusting the actual proportions of dry, singles and twins by that amount.
-        # Calculate the repro rate from the probabilities above (t_cr) and convert to an expected proportion of dry,
-        # # singles, twins & triplets after 1 cycle
+        ### Calculate the repro rate from the probabilities above (t_cr) and convert to an expected proportion of dry,
+        ### singles, twins & triplets after 1 cycle
         #### convert the proportion of DST in t_cr to an equivalent scanning % after the calibration number of cycles.
         repro_rate = f1_convert_scancycles(t_cr, nfoet_b1any, cycles = 1)
         ####remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f1_DSTw
@@ -1206,21 +1203,22 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, crg_do
     The slope varies with day of year
     The proportion of dry, single, twin & triplet is estimated as a function of the scanning percentage using f1_DSTw
     Note: sa is not applied in this function because it is applied to the input scan_std (which is also used to determine the BTRT effect on fleece)
-    '''
+
+    :param relsize_mating: Relative size at mating. This is a seperate variable to relsize_start because mating
+                           may occur mid period. Note: the e and b axis have been handled before passing in.
+    :param cs_mating: Condition score at mating. Note: the e and b axis have been handled before passing in.
+'''
     if ~np.any(period_is_mating):
         conception = np.zeros_like(relsize_mating)
     else:
         b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
-        ## relative size and condition score of the dams at mating are the determinants of conception
-        ### the dams being mated are those in slices e1[0] and b1[0] (first cycle, not mated)
-        relsize_mating_e1b1sliced = fun.f_dynamic_slice(relsize_mating, sinp.stock['i_e1_pos'], 0, 1, b1_pos, 0, 1) #take slice e1[0] & b1[0]
-        cs_mating_e1b1sliced = fun.f_dynamic_slice(cs_mating, sinp.stock['i_e1_pos'], 0, 1, b1_pos, 0, 1) #take slice e1[0] & b1[0]
+
         ##Adjust standard scanning percentage based on relative size (to reduce scanning percentage of younger animals)
-        scan_std = scan_std * relsize_mating_e1b1sliced * crg_doy
+        scan_std = scan_std * relsize_mating * crg_doy
         ##Slope of the RR vs CS relationship based on time of the year
         slope = np.maximum(cu0[4, ...], cu0[2, ...] + np.sin(2 * np.pi * doy_p / 365) * cu0[3, ...])
         ##Reproduction rate for dams as if mated for the number of cycles in the calibration data.
-        repro_rate = scan_std + (cs_mating_e1b1sliced - 3) * slope
+        repro_rate = scan_std + (cs_mating - 3) * slope
 
         ##Calculate the propn dry/single/twin for given repro rate.
         ###remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f1_DSTw)
@@ -1700,11 +1698,17 @@ def f1_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason
 
 def f1_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None
                       , conception = 0, gender_propn_x=1, period_is_mating = False
-                      , period_is_matingend = False, period_is_birth=False, propn_dams_mated=1):
+                      , period_is_matingend = False, period_is_birth=False, period_isbetween_prejoinmatingend=False
+                      , propn_dams_mated=1):
     '''
     This adjusts numbers for things like conception and mortality that happen during a given period
     '''
     ##a) mortality (include np.maximum on mortality so that numbers can't become negative)
+    ###For dams temporarily update the nm mort with mated mort between prejoining and end of mating. So that conception is calculated
+    ### reflect the mated numbers. This is required because nm and mated might have a diferent feedsupply and conception needs to be based on the mated fs and hence mort.
+    ### The back dating of the numbers scales the mortality correctly.
+    if group==1:
+        mortality = fun.f_update(mortality, mortality[:, :, :, 2:3, ...], period_isbetween_prejoinmatingend)
     numbers = numbers * np.maximum(0, 1-mortality)
     ##things for dams - prejoining and moving between classes
     if group==1:

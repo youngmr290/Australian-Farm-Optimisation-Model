@@ -1848,7 +1848,10 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     period_is_matingend_pa1e1b1nwzida0e0b0xyg1 = np.any(np.logical_and(period_is_mating_pa1e1b1nwzida0e0b0xyg1
                                                 , index_e1b1nwzida0e0b0xyg == np.max(pinp.sheep['i_join_cycles_ig1']) - 1)
                                                 , axis=e1_pos,keepdims=True)
-
+    period_isbetween_prejoinmatingend_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is_between', date_prejoin_pa1e1b1nwzida0e0b0xyg1,
+                                                                                   date_start_pa1e1b1nwzida0e0b0xyg,
+                                                                                   np.max(date_mated_pa1e1b1nwzida0e0b0xyg1, axis=e1_pos,keepdims=True),
+                                                                                   date_end_pa1e1b1nwzida0e0b0xyg)
 
     ##################################################
     #adjust lsln management for timing of repro cycle#
@@ -2611,8 +2614,13 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
             ##dam weight at a given time during period - used for special events like birth.
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 ##Dam weight at mating - to estimate the weight at mating we are wanting to use the growth rate of the dams that are not yet pregnant
-                ffcfw_e1b1sliced = fun.f_dynamic_slice(ffcfw_start_dams, e1_pos, 0, 1, b1_pos, 0, 1) #slice e1 & b1 axis
-                ebg_e1b1sliced = fun.f_dynamic_slice(ebg_dams, e1_pos, 0, 1, b1_pos, 0, 1) #slice e1 & b1 axis
+                ## because mating doesnt happen at the start of the period.
+                ##relative size and relative condition of the dams at mating are the determinants of conception
+                ## use the condition of dams in the 11 slice because mated animals can have a different feed supply
+                ## use dams in e[-1] because want the condition of the animal before it concieves. Note all e slices will have the same condition until concieved because they have the same feedsupply until scanning.
+                ffcfw_e1b1sliced = fun.f_dynamic_slice(ffcfw_start_dams, e1_pos, -1, None, b1_pos, 2, 3) #slice e1 & b1 axis
+                ebg_e1b1sliced = fun.f_dynamic_slice(ebg_dams, e1_pos, -1, None, b1_pos, 2, 3) #slice e1 & b1 axis
+                nw_start_dams_e1b1sliced = fun.f_dynamic_slice(nw_start_dams, e1_pos, -1, None, b1_pos, 2, 3) #slice e1 & b1 axis
                 gest_propn_b1sliced = fun.f_dynamic_slice(gest_propn_pa1e1b1nwzida0e0b0xyg1[p], b1_pos, 2, 3) #slice b1 axis
                 days_period_b1sliced = fun.f_dynamic_slice(days_period_pa1e1b1nwzida0e0b0xyg1[p], b1_pos, 2, 3) #slice b1 axis
 
@@ -2620,7 +2628,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                              * period_is_mating_pa1e1b1nwzida0e0b0xyg1[p], axis=e1_pos, keepdims=True)#Temporary variable for mating weight
                 ffcfw_mating_dams = fun.f_update(ffcfw_mating_dams, t_w_mating, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
                 ##Relative condition of the dam at mating - required to determine milk production
-                rc_mating_dams = ffcfw_mating_dams / nw_start_dams
+                rc_mating_dams = ffcfw_mating_dams / nw_start_dams_e1b1sliced
                 ##Condition score of the dams at mating
                 cs_mating_dams = sfun.f1_condition_score(rc_mating_dams, cu0_dams)
                 ##Relative size of the dams at mating
@@ -3273,6 +3281,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                              nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1, conception=conception_dams,
                              gender_propn_x=gender_propn_xyg, period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p],
                              period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p], period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p],
+                             period_isbetween_prejoinmatingend=period_isbetween_prejoinmatingend_pa1e1b1nwzida0e0b0xyg1[p],
                              propn_dams_mated=prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p])
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
@@ -3561,7 +3570,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
 
             ###dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort  (no feedlot mask for dams (only for offs) because feedlotting sires doesn indicat they are being sold).
+                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort  (no feedlot mask for dams (only for offs) because feedlotting dams doesn indicat they are being sold).
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
                 numbers_start_condense_dams = np.broadcast_to(numbers_start_condense_dams, numbers_end_dams.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
                 surv_dams = (np.sum(numbers_end_dams,axis=prejoin_tup + (season_tup,), keepdims=True)
@@ -3585,6 +3594,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                 mask_min_lw_z_dams = np.isclose(ffcfw_dams, np.min(ffcfw_dams, axis=(w_pos, z_pos), keepdims=True)) #use isclose in case small rounding error in lw
 
                 ###store output variables for the post processing
+                o_mortality_dams[:,p] = mortality_dams #has to be stored before back dating numbers
                 o_numbers_start_tpdams[:,p] = numbers_start_dams
                 o_numbers_end_tpdams[:,p] = numbers_end_dams
 
@@ -3592,15 +3602,15 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                 if np.any(period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]): #need to back date the numbers from conception to prejoining because otherwise in the matrix there is not a dvp between prejoining and mating therefore this is require so that other slices have energy etc requirement
                     ###period is between prejoining and the end of current period (testing this for each p slice)
                     between_prejoinnow = sfun.f1_period_is_('period_is_between', date_prejoin_pa1e1b1nwzida0e0b0xyg1[p], date_start_pa1e1b1nwzida0e0b0xyg, date_end_pa1e1b1nwzida0e0b0xyg[p], date_end_pa1e1b1nwzida0e0b0xyg)
+
                     ###scale numbers at the end of mating (to account for mortality) to each period (note only the periods between prejoining and end of mating get used)
-                    t_scaled_end_numbers = np.maximum(numbers_end_dams[:,na],
-                                                  numbers_end_dams[:,na] * (np.sum(o_numbers_end_tpdams, axis=(e1_pos,b1_pos), keepdims=True)
-                                                                            / np.sum(numbers_end_dams[:,na], axis=(e1_pos,b1_pos), keepdims=True)))
-                    t_scaled_start_numbers = np.maximum(numbers_end_dams[:,na],
-                                                  numbers_end_dams[:,na] * (np.sum(o_numbers_start_tpdams, axis=(e1_pos,b1_pos), keepdims=True)
-                                                                            / np.sum(numbers_end_dams[:,na], axis=(e1_pos,b1_pos), keepdims=True)))
+                    cum_mortality_dams = np.flip(np.cumprod(np.flip(1-o_mortality_dams, axis=p_pos), axis=p_pos), axis=p_pos)
+                    t_scaled_start_numbers = numbers_end_dams[:, na] / cum_mortality_dams
+                    t_scaled_end_numbers = numbers_end_dams[:, na] / np.roll(cum_mortality_dams, shift=-1, axis=p_pos)
+
                     ###if period is mating back date the end number after mating to all the periods since prejoining
-                    o_numbers_end_tpdams = fun.f_update(o_numbers_end_tpdams, t_scaled_end_numbers.astype(dtype), (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
+                    o_numbers_end_tpdams = fun.f_update(o_numbers_end_tpdams, t_scaled_end_numbers.astype(dtype)
+                                                        , (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
                     o_numbers_start_tpdams = fun.f_update(o_numbers_start_tpdams, t_scaled_start_numbers.astype(dtype)
                                                          , (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
                 o_ffcfw_tpdams[:,p] = ffcfw_dams
@@ -3612,7 +3622,6 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                 o_nw_start_tpdams[:,p] = nw_start_dams
                 numbers_join_dams = fun.f_update(numbers_join_dams, numbers_start_dams, period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
                 o_numbers_join_tpdams[:,p] = numbers_join_dams #store the numbers at joining until next
-                o_mortality_dams[:,p] = mortality_dams
                 o_lw_tpdams[:,p] = lw_dams
                 o_pi_tpdams[:,p] = pi_dams
                 o_mei_solid_tpdams[:,p] = mei_solid_dams
@@ -3864,13 +3873,13 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                 rc_birth_condensed_dams = sfun.f1_condensed(rc_birth_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of foetus (condense)
-                w_f1_condensed_dams = sfun.f1_condensed(w_f_dams, idx_sorted_w_dams, condense_w_mask_dams
+                w_f_condensed_dams = sfun.f1_condensed(w_f_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of gravid uterus (condense)
                 guw_condensed_dams = sfun.f1_condensed(guw_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Normal weight of foetus (condense)
-                nw_f1_condensed_dams = sfun.f1_condensed(nw_f_dams, idx_sorted_w_dams, condense_w_mask_dams
+                nw_f_condensed_dams = sfun.f1_condensed(nw_f_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Birth weight carryover (running tally of foetal weight diff)
                 cf_w_b_condensed_dams = sfun.f1_condensed(cf_w_b_dams, idx_sorted_w_dams, condense_w_mask_dams
@@ -4133,7 +4142,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                                         , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Weight of foetus (start)
-                w_f_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, w_f1_condensed_dams, prejoin_tup
+                w_f_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, w_f_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
                                         , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p+1]
@@ -4145,7 +4154,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                                         , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p]) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                 ###Normal weight of foetus (start)
-                nw_f_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, nw_f1_condensed_dams, prejoin_tup
+                nw_f_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, nw_f_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
                                         , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
@@ -4290,6 +4299,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
 
 
             ##start numbers - has to be after production because the numbers are being calced for the current period and are used in the start production function
+            ## Doesnt have to use condensed numbers because we are only interested in the start vs end numbers of a dvp (using condensed numbers would still work).
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                 numbers_start_sire = sfun.f1_period_start_nums(numbers_end_sire, prejoin_tup, season_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg, group=0)
@@ -4305,7 +4315,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
                 numbers_start_condense_dams = fun.f_update(numbers_start_condense_dams, numbers_start_dams
                                                            , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
 
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p+1,...] >0):
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p+1,...] >0): #use p+1 so that initial numbers at birth can be set
                 numbers_start_yatf = sfun.f1_period_start_nums(numbers_end_yatf, prejoin_tup, season_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg
                                         , nyatf_b1=nyatf_b1nwzida0e0b0xyg, gender_propn_x=gender_propn_xyg
