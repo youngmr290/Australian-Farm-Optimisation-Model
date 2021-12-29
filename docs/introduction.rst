@@ -244,7 +244,7 @@ Additional aspects that can be tested but not optimised include:
 
 Cropping
 ^^^^^^^^
-The following feed management decisions that are optimised can include:
+The following crop management decisions that are optimised can include:
 
 #. Rotation/crop selection
 #. Contractual services
