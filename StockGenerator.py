@@ -1980,6 +1980,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
         numbers_start_condense_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1 #just need a default because this is processed using update function.
         scanning = 0 #variable is used only for reporting
         # ebg_start_dams=0
+        o_mortality_dams[...] = 0 #have to reset when doing the ltw loop because it is used to back date numbers
 
         ##yatf
         omer_history_start_p3g2[...] = np.nan
