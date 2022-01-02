@@ -93,7 +93,7 @@ def f1_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_e
 #input and manipulation functions #
 ###################################
 
-def f1_c2g(params_c2, y=0, var_pos=0, condition=None, axis=0, dtype=False):
+def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=0, condition=None, axis=0, dtype=False):
     '''
     Parameters
     ----------
