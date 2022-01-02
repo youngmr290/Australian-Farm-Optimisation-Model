@@ -118,7 +118,7 @@ def crop_residue_all(params, r_vals, nv):
     rot_stubble_rkl_p7z = rot_yields_rkl_p7z.mul(residue_per_grain_k, axis=0, level=1)
 
     #########################
-    #dmd deterioration      #
+    # deterioration         #
     #########################
     ##days since harvest (calculated from the end date of each fp)
     days_since_harv_p6zk = fp_end_p6z[...,na] - harv_date_zk.astype('datetime64[D]')
@@ -129,10 +129,10 @@ def crop_residue_all(params, r_vals, nv):
     ##calc the quantity decline % for each period - used in transfer constraints, need to average the number of days in the period of interest
     quant_declined_p6zk = (1 - pinp.stubble['quantity_deterioration']) ** average_days_since_harv_p6zk.astype(float)
 
-    ##calc dmd for each component in each period for each crop
-    deterioration_factor_ks0 = pinp.stubble['quality_deterioration']
-    dmd_component_harv_ks0 = pinp.stubble['component_dmd']
-    dmd_component_p6zks0 = ((1 - deterioration_factor_ks0) ** average_days_since_harv_p6zk[...,na]) * dmd_component_harv_ks0
+    ##calc the quality decline % for each period
+    ###quality is inputted for the paddock trial date. Therefore use days_since_trial to scale quality.
+    average_days_since_trial_p6zk = average_days_since_harv_p6zk - pinp.stubble['i_calibration_offest'] #days will be negative between harvest and trial start
+    qual_declined_p6zk = (1 - pinp.stubble['quality_deterioration']) ** average_days_since_trial_p6zk.astype(float)
 
     ###############
     # M/D & vol   #
@@ -147,21 +147,26 @@ def crop_residue_all(params, r_vals, nv):
     4) calcs the md of each stubble category (dmd to MD)
     
     '''
-    ##load in data from stubble sim spreadsheet.
+    # ##load in data from stubble sim spreadsheet.
     n_crops = len(pinp.stubble['i_stub_landuse_idx'])
-    n_comp = dmd_component_harv_ks0.shape[1]
-    n_cat = 4
+    # n_comp = dmd_component_harv_ks0.shape[1]
+    # n_cat = 4
     n_seasons = zfun.f_keys_z().shape[0]
-    ks0s1 = (n_crops, n_comp, n_cat)
-    stub_cat_component_proportion_ks0s1 = np.zeros(ks0s1)
-    for crop, crop_idx in zip(pinp.stubble['i_stub_landuse_idx'], range(n_crops)):
-        try: #required if the crop does not have stubble sim inputs
-            stub_cat_component_proportion_ks0s1[crop_idx,...] = pd.read_excel('stubble sim.xlsx',sheet_name=crop,header=None, engine='openpyxl')
-        except (KeyError, ValueError) as e: #todo once everyone has updated to new packages keyerror can be removed since new version of read_excel throws valueerror.
-            pass
+    # ks0s1 = (n_crops, n_comp, n_cat)
+    # stub_cat_component_proportion_ks0s1 = np.zeros(ks0s1)
+    # for crop, crop_idx in zip(pinp.stubble['i_stub_landuse_idx'], range(n_crops)):
+    #     try: #required if the crop does not have stubble sim inputs
+    #         stub_cat_component_proportion_ks0s1[crop_idx,...] = pd.read_excel('stubble sim.xlsx',sheet_name=crop,header=None, engine='openpyxl')
+    #     except (KeyError, ValueError) as e: #todo once everyone has updated to new packages keyerror can be removed since new version of read_excel throws valueerror.
+    #         pass
+    #
+    # ##quality of each category in each period - multiply quality by proportion of components in each category (a, b, c, d) then sum the components axis
+    # dmd_cat_p6zks1 = np.sum(dmd_component_p6zks0[...,na] * stub_cat_component_proportion_ks0s1, axis=-2)
 
-    ##quality of each category in each period - multiply quality by proportion of components in each category (a, b, c, d) then sum the components axis
-    dmd_cat_p6zks1 = np.sum(dmd_component_p6zks0[...,na] * stub_cat_component_proportion_ks0s1, axis=-2)
+    ##quality of each category in each period
+    ###scale dmd at the trial date to each period.
+    stub_cat_qual_ks1 = pinp.stubble['stub_cat_qual']
+    dmd_cat_p6zks1 = stub_cat_qual_ks1 * qual_declined_p6zk[...,na]
 
     ##calc relative quality before converting dmd to md - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
