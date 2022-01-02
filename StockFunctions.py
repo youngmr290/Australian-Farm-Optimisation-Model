@@ -111,8 +111,6 @@ def f1_c2g(params_c2, y=0, var_pos=0, condition=None, axis=0, dtype=False):
     '''
 
     ##these inputs are used for each param so they don't need to be passed into the function.
-    a_c2_c0 = pinp.sheep['a_c2_c0']
-    i_g3_inc = pinp.sheep['i_g3_inc']
     i_mul_g0_c0 = sinp.stock['i_mul_g0c0']
     i_mul_g1_c0 = sinp.stock['i_mul_g1c0']
     i_mul_g2_c0 = sinp.stock['i_mul_g2c0']
