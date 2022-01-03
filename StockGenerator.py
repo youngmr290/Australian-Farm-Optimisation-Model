@@ -489,7 +489,7 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     date_born1st_oa1e1b1nwzida0e0b0xyg2 = date_born1st_oa1e1b1nwzida0e0b0xyg2[mask_o_dams,...] #input read in in the mask section
     date_born1st_ida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_date_born1st_idg3'],'offs',d_pos, condition=pinp.sheep['i_mask_i']
                                            , axis=i_pos, condition2=mask_d_offs, axis2=d_pos).astype('datetime64[D]')
-    date_born1st_ida0e0b0xyg3[:,len_k3-1:,...] = date_born1st_ida0e0b0xyg3[:,len_k3-1,...] #for animals in the same d cluster date born must be the same (so that the dvp and fvp dates are the same for all animals that get clustered)
+    date_born1st_ida0e0b0xyg3[:,len_k3-1:,...] = date_born1st_ida0e0b0xyg3[:,len_k3-1:len_k3,...] #for animals in the same d cluster date born must be the same (so that the dvp and fvp dates are the same for all animals that get clustered)
 
     ##mating
     sire_propn_oa1e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_sire_propn_oig1'],'dams', i_pos, swap=True,
