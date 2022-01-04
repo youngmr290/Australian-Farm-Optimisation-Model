@@ -220,7 +220,6 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     n_fs_dams = sinp.structuralsa['i_n1_len']
     n_fvp_periods_dams = np.count_nonzero(fvp_mask_dams)
     len_w1 = w_start_len1 * n_fs_dams ** n_fvp_periods_dams
-    n_lw1_total = w_start_len1 * n_fs_dams ** (len(fvp_mask_dams))  # total lw if all dvps included
     len_w2 = len_w1 #yatf and dams are same
     len_nut_dams = (n_fs_dams ** n_fvp_periods_dams)
 
@@ -229,7 +228,6 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     n_fs_offs = sinp.structuralsa['i_n3_len']
     n_fvp_periods_offs= np.count_nonzero(fvp_mask_offs)
     len_w3 = w_start_len3 * n_fs_offs ** n_fvp_periods_offs
-    n_lw3_total = w_start_len3 * n_fs_offs ** (len(fvp_mask_offs))  # total lw if all dvps included
     len_nut_offs = (n_fs_offs ** n_fvp_periods_offs)
     fvp0_offset_ida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_fvp0_offset_ig3'], 'offs', i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
     fvp1_offset_ida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_fvp1_offset_ig3'], 'offs', i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
@@ -1361,10 +1359,6 @@ def generator(params,r_vals,nv,pkl_fs_info, plots = False):
     ####################
     #initial conditions#
     ####################
-    #mask adjustments along w axis so it can handle changing the number of dvps
-    # n_lw1_total = n_fs_dams ** (len(fvp_mask_dams) + 1) #total lw if all dvps included
-    # lw_adjp_mask_dams = np.full(n_lw1_total,False)
-    # lw_adjp_mask_dams[0:len_w1] = True
     ##step - used to expand start lw adjustment to all lw patterns
     step_w1 = len_w1/w_start_len1
     step_w3 = len_w3/w_start_len3
