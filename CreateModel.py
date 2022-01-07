@@ -82,7 +82,7 @@ def sets(model, nv):
     #stubble              #
     #######################
     #stubble categories -  ordered so to allow transferring between categories
-    model.s_stub_cat = Set(ordered=True, initialize=pinp.stubble['stub_cat_idx'], doc='stubble categories')
+    model.s_stub_cat = Set(ordered=True, initialize=pinp.stubble['i_stub_cat_idx'], doc='stubble categories')
 
     #######################
     #cropping related     #
