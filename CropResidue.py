@@ -163,33 +163,33 @@ def crop_residue_all(params, r_vals, nv):
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
         ri_quality_p6zks1 = fsfun.f_rq_cs(dmd_cat_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
 
-    ##ri availability - first calc stubble foo (stub available) this is the average from all rotations and lmus because we just need one value for foo (crop residue volume is assumed to be the same across lmu - the extra detail could be added)
-    ###try calc the base yield for each crop but if the crop is not one of the rotation phases then assign the average foo (this is only to stop error. it doesnt matter because the crop doesnt exist so the stubble is never used)
-    base_yields = rot_yields_rkl_p7z.droplevel(0, axis=0).groupby(axis=1, level=1).sum() #drop rotation index and sum p7 axis (just want total yield to calc pi)
-    base_yields = base_yields.replace(0,np.NaN) #replace 0 with nan so if yield inputs are missing (eg set to 0) the foo is still correct (nan gets skipped in pd.mean)
-    stub_foo_harv_zk = np.zeros((n_seasons, n_crops))
-    for crop, crop_idx in zip(pinp.stubble['i_stub_landuse_idx'], range(n_crops)):
-        try:
-            stub_foo_harv_zk[:, crop_idx] = base_yields.loc[crop].mean(axis=0) * residue_per_grain_k.loc[crop]
-        except KeyError: #if the crop is not in any of the rotations assign average foo to stop error - this is not used so could assign any value.
-            stub_foo_harv_zk[:,crop_idx] = base_yields.mean(axis=0) * residue_per_grain_k.mean()
-    stub_foo_harv_zk = np.nan_to_num(stub_foo_harv_zk) #replace nan with 0 (only wanted nan for the mean)
+    # ##ri availability (not calced anymore - stubble uses ra=1 now) - first calc stubble foo (stub available) this is the average from all rotations and lmus because we just need one value for foo (crop residue volume is assumed to be the same across lmu - the extra detail could be added)
+    # ###try calc the base yield for each crop but if the crop is not one of the rotation phases then assign the average foo (this is only to stop error. it doesnt matter because the crop doesnt exist so the stubble is never used)
+    # base_yields = rot_yields_rkl_p7z.droplevel(0, axis=0).groupby(axis=1, level=1).sum() #drop rotation index and sum p7 axis (just want total yield to calc pi)
+    # base_yields = base_yields.replace(0,np.NaN) #replace 0 with nan so if yield inputs are missing (eg set to 0) the foo is still correct (nan gets skipped in pd.mean)
+    # stub_foo_harv_zk = np.zeros((n_seasons, n_crops))
+    # for crop, crop_idx in zip(pinp.stubble['i_stub_landuse_idx'], range(n_crops)):
+    #     try:
+    #         stub_foo_harv_zk[:, crop_idx] = base_yields.loc[crop].mean(axis=0) * residue_per_grain_k.loc[crop]
+    #     except KeyError: #if the crop is not in any of the rotations assign average foo to stop error - this is not used so could assign any value.
+    #         stub_foo_harv_zk[:,crop_idx] = base_yields.mean(axis=0) * residue_per_grain_k.mean()
+    # stub_foo_harv_zk = np.nan_to_num(stub_foo_harv_zk) #replace nan with 0 (only wanted nan for the mean)
     ###adjust the foo for each category because the good stuff is eaten first therefore there is less foo when the sheep start eating the poorer stubble
-    cat_propn_rolled_ks1 = np.roll(cat_propn_ks1, shift=1, axis=1) #roll along the cat axis. So that the previous cat lines up with the current cat
-    cat_propn_rolled_ks1[:, 0] = 0 #set the first slice to 0 because no stubble is consumed before cat A is consumed eg there is 100% of foo available when sheep are consuming cat A
-    cat_cum_propn_ks1 = np.cumsum(cat_propn_rolled_ks1, axis=1) #cumulative sum of the component sizes.
-    stubble_foo_zks1 = stub_foo_harv_zk[..., na] *  (1 - cat_cum_propn_ks1)
+    # cat_propn_rolled_ks1 = np.roll(cat_propn_ks1, shift=1, axis=1) #roll along the cat axis. So that the previous cat lines up with the current cat
+    # cat_propn_rolled_ks1[:, 0] = 0 #set the first slice to 0 because no stubble is consumed before cat A is consumed eg there is 100% of foo available when sheep are consuming cat A
+    # cat_cum_propn_ks1 = np.cumsum(cat_propn_rolled_ks1, axis=1) #cumulative sum of the component sizes.
+    # stubble_foo_zks1 = stub_foo_harv_zk[..., na] *  (1 - cat_cum_propn_ks1)
     ###adjust for quantity delcine due to deterioration
-    stubble_foo_p6zks1 = stubble_foo_zks1 * quant_declined_p6zk[..., na]
+    # stubble_foo_p6zks1 = stubble_foo_zks1 * quant_declined_p6zk[..., na]
     ###ri availability
-    hf = fsfun.f_hf(pinp.stubble['i_hr'])  # height factor
-    if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used - note that the equation system used is the one selected for dams in p1
-        ri_availability_p6zks1 = fsfun.f_ra_cs(stubble_foo_p6zks1, hf)
-    elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used - note that the equation system used is the one selected for dams in p1
-        ri_availability_p6zks1 = fsfun.f_ra_mu(stubble_foo_p6zks1, hf)
+    # hf = fsfun.f_hf(pinp.stubble['i_hr'])  # height factor
+    # if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used - note that the equation system used is the one selected for dams in p1
+    #     ri_availability_p6zks1 = fsfun.f_ra_cs(stubble_foo_p6zks1, hf)
+    # elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used - note that the equation system used is the one selected for dams in p1
+    #     ri_availability_p6zks1 = fsfun.f_ra_mu(stubble_foo_p6zks1, hf)
 
-    ##combine ri quality and ri availability to calc overall vol (potential intake)
-    ri_p6zks1 = fsfun.f_rel_intake(ri_availability_p6zks1, ri_quality_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
+    ##combine ri quality and ri availability to calc overall vol (potential intake) - use ra=1 for stubble (same as stubble sim)
+    ri_p6zks1 = fsfun.f_rel_intake(1, ri_quality_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
     vol_p6zks1 = (1000 / ri_p6zks1) / (1 + SA.sap['pi'])
     vol_p6zks1 = vol_p6zks1 * mask_stubble_exists_p6zk[..., na] #stop md being provided if stubble doesnt exist
     vol_fp6zks1 = vol_p6zks1 * nv_is_not_confinement_f[:,na,na,na,na] #me from stubble is 0 in the confinement pool
