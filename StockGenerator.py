@@ -2033,7 +2033,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         cf_w_w_dams = np.array([0.0]) #this is required as default when mu wean function is not being called (it is required in the start production function)
         cf_conception_start_dams = np.array([0.0])
         cf_conception_dams = np.array([0.0]) #this is required as default when mu concep function is not being called (it is required in the start production function)
-        conception_dams = 0.0 #initialise so it can be added to (conception += conception)
         guw_start_dams = np.array([0.0])
         rc_birth_start_dams = np.array([1.0])
         ffcfw_start_dams = fun.f_expand(lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...], p_pos, right_pos=w_pos) #add axis w to a1 because e and b axis are sliced before they are added via calculation
@@ -2078,9 +2077,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         w_b_start_yatf = 0.0
         w_b_ltw_std_yatf = 0.0
         w_w_start_yatf = 0.0
-        w_w_yatf = 0.0
         foo_lact_ave_start = 0.0
-        foo_lact_ave = 0.0
+        foo_lact_ave = 0.0 #required because only calculated if using mu function
         aw_start_yatf = 0.0
         bw_start_yatf = 0.0
         mw_start_yatf = 0.0
@@ -2101,7 +2099,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         temp_lc_offs = np.array([0.0]) #this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_offs = numbers_initial_ida0e0b0xyg3
         numbers_start_condense_offs = numbers_initial_ida0e0b0xyg3 #just need a default because this is processed using update function.
-        # ebg_start_offs=0
 
         '''if generating for stubble then overwrite some initial params to align with paddock trial'''
         if stubble:
