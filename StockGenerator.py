@@ -2121,57 +2121,27 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         numbers_start_offs = numbers_initial_ida0e0b0xyg3
         numbers_start_condense_offs = numbers_initial_ida0e0b0xyg3 #just need a default because this is processed using update function.
 
-        '''if generating for stubble then overwrite some initial params to align with paddock trial'''
+        '''if generating for stubble then overwrite some initial params to align with paddock trial.
+           Ffcfw and other initial values are overwritten above'''
         if stubble:
-            #todo get dad to go through these and determine which ones dont need to be updated for stubble (ie can be deleted if they remain the same as the initial values above)
             ##dams
-            ldr_start_dams = np.array([1.0])
-            lb_start_dams = np.array([1.0])
             w_f_start_dams = pinp.stubble['w_foetus_start']
-            nw_f_start_dams = np.array([0.0])
-            nec_cum_start_dams = np.array([0.0])
-            cf_w_b_start_dams = np.array([0.0])
-            cf_w_b_dams = np.array([0.0])  # this is required as default when mu birth weight function is not being called (it is required in the start production function)
-            cf_w_w_start_dams = np.array([0.0])
-            cf_w_w_dams = np.array([0.0])  # this is required as default when mu wean function is not being called (it is required in the start production function)
-            cf_conception_start_dams = np.array([0.0])
-            cf_conception_dams = np.array([0.0])  # this is required as default when mu concep function is not being called (it is required in the start production function)
-            conception_dams = 0.0  # initialise so it can be added to (conception += conception)
-            guw_start_dams = np.array([0.0])
-            rc_birth_start_dams = np.array([1.0])
-            ffcfw_mating_dams = 0.0
-            omer_history_start_p3g1[...] = np.nan
-            d_cfw_history_start_p2g1[...] = np.nan
-            nw_start_dams = np.array([0.0])
-            temp_lc_dams = np.array([0.0])  # this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
+            nw_f_start_dams = w_f_start_dams
 
             ##yatf
-            omer_history_start_p3g2[...] = np.nan
-            d_cfw_history_start_p2g2[...] = np.nan
-            nw_start_yatf = 0.0
-            rc_start_yatf = 0.0
-            ffcfw_start_yatf = w_b_std_y_b1nwzida0e0b0xyg1  # this is just an estimate, it is updated with the real weight at birth - needed to calc milk production in birth period because milk prod is calculated before yatf weight is updated)
-            # todo will this cause an error for the second lambing because ffcfw_start_yatf will be last years weaning weight rather than this years expected birth weight - hard to see how the weight can be reset unless it is done the period after weaning
+            ffcfw_start_yatf = np.array([pinp.stubble['i_lw_yatf'] - pinp.stubble['i_gfw_yatf']]) #have to make it an array so it can handle new axis.
             ffcfw_max_start_yatf = ffcfw_start_yatf
-            cfw_start_yatf = 0.0
-            temp_lc_yatf = np.array([0.0])  # this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
-            ebg_yatf = 0.0  # need a default because used in call to WWt of yatf
-            fl_start_yatf = fl_birth_yg2  # can't use fl_initial because that is at weaning
-            fd_start_yatf = 0.0
-            fd_min_start_yatf = 1000.0
-            w_b_start_yatf = 0.0
-            w_b_ltw_std_yatf = 0.0
-            w_w_start_yatf = 0.0
-            w_w_yatf = 0.0
-            foo_lact_ave_start = 0.0
-            foo_lact_ave = 0.0
-            # aw_start_yatf = 0.0
-            # bw_start_yatf = 0.0
-            # mw_start_yatf = 0.0
+            nw_start_yatf = ffcfw_start_yatf
+            rc_start_yatf = 1
+            cfw_start_yatf = pinp.stubble['i_gfw_yatf'] * cw_yatf[3, ...]
+            fl_start_yatf = pinp.stubble['i_fl_yatf']
+            fd_start_yatf = pinp.stubble['i_fd_yatf'] #not used for anything so just use the same one as adult
+            foo_lact_ave_start = pinp.stubble['i_foo']
+            aw_start_yatf = ffcfw_start_yatf * pinp.stubble['i_aw_yatf']
+            bw_start_yatf = ffcfw_start_yatf * pinp.stubble['i_bw_yatf']
+            mw_start_yatf = ffcfw_start_yatf * pinp.stubble['i_mw_yatf']
 
             ##offs
-            omer_history_start_p3g3[...] = np.nan
-            d_cfw_history_start_p2g3[...] = np.nan
             nw_start_offs = 0.0
             temp_lc_offs = np.array([0.0])  # this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
 
