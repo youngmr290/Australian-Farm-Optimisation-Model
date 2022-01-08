@@ -565,12 +565,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     agedam_propn_da0e0b0xyg1 = agedam_propn_da0e0b0xyg1 / np.sum(agedam_propn_da0e0b0xyg1, axis=d_pos) #scale unmasked slices to a total of 1
     agedam_propn_da0e0b0xyg2 = agedam_propn_da0e0b0xyg2 / np.sum(agedam_propn_da0e0b0xyg2, axis=d_pos) #scale unmasked slices to a total of 1
     agedam_propn_da0e0b0xyg3 = agedam_propn_da0e0b0xyg3 / np.sum(agedam_propn_da0e0b0xyg3, axis=d_pos) #scale unmasked slices to a total of 1
-    aw_propn_yg0, aw_propn_yg1, aw_propn_yg2, aw_propn_yg3 = sfun.f1_c2g(uinp.parameters['i_aw_propn_wean_c2'], uinp.parameters['i_aw_wean_y'], a_c2_c0, i_g3_inc)
-    bw_propn_yg0, bw_propn_yg1, bw_propn_yg2, bw_propn_yg3 = sfun.f1_c2g(uinp.parameters['i_bw_propn_wean_c2'], uinp.parameters['i_bw_wean_y'], a_c2_c0, i_g3_inc)
+    aw_propn_wean_yg0, aw_propn_wean_yg1, aw_propn_wean_yg2, aw_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_aw_propn_wean_c2'], uinp.parameters['i_aw_wean_y'], a_c2_c0, i_g3_inc)
+    aw_propn_birth_yg0, aw_propn_birth_yg1, aw_propn_birth_yg2, aw_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_aw_propn_birth_c2'], uinp.parameters['i_aw_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
+    bw_propn_wean_yg0, bw_propn_wean_yg1, bw_propn_wean_yg2, bw_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_bw_propn_wean_c2'], uinp.parameters['i_bw_wean_y'], a_c2_c0, i_g3_inc)
+    bw_propn_birth_yg0, bw_propn_birth_yg1, bw_propn_birth_yg2, bw_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_bw_propn_birth_c2'], uinp.parameters['i_bw_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
     cfw_propn_yg0, cfw_propn_yg1, cfw_propn_yg2, cfw_propn_yg3 = sfun.f1_c2g(uinp.parameters['i_cfw_propn_c2'], uinp.parameters['i_cfw_propn_y'], a_c2_c0, i_g3_inc)
     fl_birth_yg0, fl_birth_yg1, fl_birth_yg2, fl_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_fl_birth_c2'], uinp.parameters['i_fl_birth_y'], a_c2_c0, i_g3_inc)
     fl_shear_yg0, fl_shear_yg1, fl_shear_yg2, fl_shear_yg3 = sfun.f1_c2g(uinp.parameters['i_fl_shear_c2'], uinp.parameters['i_fl_shear_y'], a_c2_c0, i_g3_inc)
-    mw_propn_yg0, mw_propn_yg1, mw_propn_yg2, mw_propn_yg3 = sfun.f1_c2g(uinp.parameters['i_mw_propn_wean_c2'], uinp.parameters['i_mw_wean_y'], a_c2_c0, i_g3_inc)
+    mw_propn_wean_yg0, mw_propn_wean_yg1, mw_propn_wean_yg2, mw_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_mw_propn_wean_c2'], uinp.parameters['i_mw_wean_y'], a_c2_c0, i_g3_inc)
+    mw_propn_birth_yg0, mw_propn_birth_yg1, mw_propn_birth_yg2, mw_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_mw_propn_birth_c2'], uinp.parameters['i_mw_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
     pss_std_yg0, pss_std_yg1, pss_std_yg2, pss_std_yg3 = sfun.f1_c2g(uinp.parameters['i_lss_std_c2'], uinp.parameters['i_lss_std_y'], a_c2_c0, i_g3_inc)
     pstr_std_yg0, pstr_std_yg1, pstr_std_yg2, pstr_std_yg3 = sfun.f1_c2g(uinp.parameters['i_lstr_std_c2'], uinp.parameters['i_lstr_std_y'], a_c2_c0, i_g3_inc)
     pstw_std_yg0, pstw_std_yg1, pstw_std_yg2, pstw_std_yg3 = sfun.f1_c2g(uinp.parameters['i_lstw_std_c2'], uinp.parameters['i_lstw_std_y'], a_c2_c0, i_g3_inc)
@@ -1527,16 +1530,34 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         fl_initial_wzida0e0b0xyg1[...] = pinp.stubble['i_fl']
         fl_initial_wzida0e0b0xyg3[...] = pinp.stubble['i_fl']
 
+    ##calc initial ffcfw
+    ffcfw_initial_wzida0e0b0xyg0 = lw_initial_wzida0e0b0xyg0 - cfw_initial_wzida0e0b0xyg0 / cw_sire[3, ...]
+    ffcfw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...]
+    ffcfw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3 / cw_offs[3, ...]
+
     ##calc aw, bw and mw (adipose, bone and muscle weight)
-    aw_initial_wzida0e0b0xyg0 = lw_initial_wzida0e0b0xyg0 * aw_propn_yg0
-    aw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 * aw_propn_yg1
-    aw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 * aw_propn_yg3
-    bw_initial_wzida0e0b0xyg0 = lw_initial_wzida0e0b0xyg0 * bw_propn_yg0
-    bw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 * bw_propn_yg1
-    bw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 * bw_propn_yg3
-    mw_initial_wzida0e0b0xyg0 = lw_initial_wzida0e0b0xyg0 * mw_propn_yg0
-    mw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 * mw_propn_yg1
-    mw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 * mw_propn_yg3
+    aw_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * aw_propn_wean_yg0
+    aw_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * aw_propn_wean_yg1
+    aw_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * aw_propn_wean_yg3
+    bw_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * bw_propn_wean_yg0
+    bw_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * bw_propn_wean_yg1
+    bw_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * bw_propn_wean_yg3
+    mw_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * mw_propn_wean_yg0
+    mw_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * mw_propn_wean_yg1
+    mw_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * mw_propn_wean_yg3
+
+    ##if stubble update aw, bw & mw.
+    if stubble:
+        aw_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * pinp.stubble['i_aw']
+        aw_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * pinp.stubble['i_aw']
+        aw_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * pinp.stubble['i_aw']
+        bw_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * pinp.stubble['i_bw']
+        bw_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * pinp.stubble['i_bw']
+        bw_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * pinp.stubble['i_bw']
+        mw_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * pinp.stubble['i_mw']
+        mw_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * pinp.stubble['i_mw']
+        mw_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * pinp.stubble['i_mw']
+
     ##numbers
     ###Distribution of initial numbers across the a1 axis
     initial_a1 = pinp.sheep['i_initial_a1'][pinp.sheep['i_mask_a']] / np.sum(pinp.sheep['i_initial_a1'][pinp.sheep['i_mask_a']])
@@ -1997,7 +2018,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         ##all groups
         eqn_compare = uinp.sheep['i_eqn_compare']
         ##sire
-        ffcfw_start_sire = lw_initial_wzida0e0b0xyg0 - cfw_initial_wzida0e0b0xyg0 / cw_sire[3, ...]
+        ffcfw_start_sire = ffcfw_initial_wzida0e0b0xyg0
         ffcfw_max_start_sire = ffcfw_start_sire
         omer_history_start_p3g0[...] = np.nan
         d_cfw_history_start_p2g0[...] = np.nan
@@ -2035,7 +2056,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         cf_conception_dams = np.array([0.0]) #this is required as default when mu concep function is not being called (it is required in the start production function)
         guw_start_dams = np.array([0.0])
         rc_birth_start_dams = np.array([1.0])
-        ffcfw_start_dams = fun.f_expand(lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...], p_pos, right_pos=w_pos) #add axis w to a1 because e and b axis are sliced before they are added via calculation
+        ffcfw_start_dams = fun.f_expand(ffcfw_initial_wzida0e0b0xyg1, p_pos, right_pos=w_pos) #add axis w to a1 because e and b axis are sliced before they are added via calculation
         ffcfw_max_start_dams = ffcfw_start_dams
         ffcfw_mating_dams = 0.0
         omer_history_start_p3g1[...] = np.nan
@@ -2084,7 +2105,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         mw_start_yatf = 0.0
 
         ##offs
-        ffcfw_start_offs = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3 / cw_offs[3, ...]
+        ffcfw_start_offs = ffcfw_initial_wzida0e0b0xyg3
         ffcfw_max_start_offs = ffcfw_start_offs
         omer_history_start_p3g3[...] = np.nan
         d_cfw_history_start_p2g3[...] = np.nan
@@ -2903,11 +2924,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###normal weight of yatf
                 nw_start_yatf	= fun.f_update(nw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###adipose weight of yatf
-                aw_start_yatf	= fun.f_update(aw_start_yatf, w_b_yatf * aw_propn_yg2, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                aw_start_yatf	= fun.f_update(aw_start_yatf, w_b_yatf * aw_propn_birth_yg2, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###muscle weight of yatf
-                mw_start_yatf	= fun.f_update(mw_start_yatf, w_b_yatf * mw_propn_yg2, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                mw_start_yatf	= fun.f_update(mw_start_yatf, w_b_yatf * mw_propn_birth_yg2, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###bone weight of the yatf
-                bw_start_yatf	= fun.f_update(bw_start_yatf, w_b_yatf * bw_propn_yg2, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                bw_start_yatf	= fun.f_update(bw_start_yatf, w_b_yatf * bw_propn_birth_yg2, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###clean fleece weight of yatf
                 cfw_start_yatf	= fun.f_update(cfw_start_yatf, 0, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###fibre diameter of yatf
