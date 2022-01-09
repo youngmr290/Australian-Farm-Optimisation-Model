@@ -463,7 +463,7 @@ def f_sowing_timeliness_penalty(stub=False):
         pass
     else:
         ###if calculating yield penalty for grain transfer then only include harvested crops (eg don't include fodders)
-        proportion_grain_harv_k = pd.Series(pinp.stubble['proportion_grain_harv'], index=pinp.stubble['i_stub_landuse_idx'])
+        proportion_grain_harv_k = pd.Series(pinp.stubble['proportion_grain_harv'], index=sinp.landuse['C'])
         wet_seeding_penalty_k_z = wet_seeding_penalty_k_z.mul(proportion_grain_harv_k>0, axis=0)
 
     ##general info

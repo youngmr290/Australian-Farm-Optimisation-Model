@@ -20,7 +20,7 @@ import Periods as per
 
 na = np.newaxis
 
-
+#todo remove the 1-harv_propn when converting to the biomass version.
 def f_cropresidue_production():
     '''
     Stubble produced per kg of total grain (kgs of dry matter).
@@ -28,7 +28,7 @@ def f_cropresidue_production():
     This is a separate function because it is used in CropGrazing.py and Mach.py to calculate stubble penalties.
     '''
     stubble_prod_data = 1 / pinp.stubble['harvest_index'] - 1 * pinp.stubble['proportion_grain_harv']  # subtract 1*harv propn to account for the tonne of grain that was harvested and doesnt become stubble.
-    stubble = pd.Series(data=stubble_prod_data, index=pinp.stubble['i_stub_landuse_idx'])
+    stubble = pd.Series(data=stubble_prod_data, index=sinp.landuse['C'])
     return stubble
 
 
@@ -147,7 +147,7 @@ def crop_residue_all(params, r_vals, nv):
     4) calcs the md of each stubble category (dmd to MD)
     
     '''
-    n_crops = len(pinp.stubble['i_stub_landuse_idx'])
+    n_crops = len(sinp.landuse['C'])
     n_seasons = zfun.f_keys_z().shape[0]
 
     ##read in category info frpm xl
@@ -264,7 +264,7 @@ def crop_residue_all(params, r_vals, nv):
     ##keys  #
     #########
     ##keys
-    keys_k = np.array(pinp.stubble['i_stub_landuse_idx'])
+    keys_k = sinp.landuse['C']
     keys_p6 = pinp.period['i_fp_idx']
     keys_s1 = pinp.stubble['i_stub_cat_idx']
     keys_f  = np.array(['nv{0}' .format(i) for i in range(len_nv)])

@@ -314,20 +314,12 @@ def f_cropgraze_yield_penalty():
     '''
     import CropResidue as stub
     ##inputs
-    cropgraze_landuse_idx_k = pinp.cropgraze['i_cropgraze_landuse_idx']
-    stubble_per_grain_k3 = stub.f_cropresidue_production()
+    stubble_per_grain_k = stub.f_cropresidue_production().values
     yield_reduction_propn_kp6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_yield_reduction_kp6z'], numpy=True, axis=-1)
-    proportion_grain_harv_k = pd.Series(pinp.stubble['proportion_grain_harv'], index=pinp.stubble['i_stub_landuse_idx'])
+    proportion_grain_harv_k = pinp.stubble['proportion_grain_harv']
     consumption_factor_p6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
 
-    ##correct stubble k axis (k axis needs to be in the correct order and contain all crops so that numpy arrays align).
-    stub_idx_bool_k3k = stubble_per_grain_k3.index.values[:,na]==cropgraze_landuse_idx_k
-    stubble_per_grain_k = np.sum(stubble_per_grain_k3.values[:,na] * stub_idx_bool_k3k, axis=0)
-
     ##adjust seeding penalty - crops that are not harvested eg fodder don't have yield penalty. But do have a stubble penalty
-    ###correct stubble k axis (k axis needs to be in the correct order and contain all crops so that numpy arrays align).
-    stub_idx_bool_k3k = proportion_grain_harv_k.index.values[:,na]==cropgraze_landuse_idx_k
-    proportion_grain_harv_k = np.sum(proportion_grain_harv_k.values[:,na] * stub_idx_bool_k3k, axis=0)
     ###if calculating yield penalty for stubble then include all crop (eg include fodders)
     stub_yield_reduction_propn_kp6z = yield_reduction_propn_kp6z
     ###if calculating yield penalty for grain transfer then only include harvested crops (eg don't include fodders)
@@ -358,10 +350,10 @@ def f1_cropgraze_params(params, r_vals, nv):
     ##keys
     lmu_mask = pinp.general['i_lmu_area'] > 0
     keys_l = pinp.general['i_lmu_idx'][lmu_mask]
-    keys_k = pinp.cropgraze['i_cropgraze_landuse_idx']
+    keys_k = sinp.landuse['C']
     keys_p6 = pinp.period['i_fp_idx']
     keys_p5 = np.asarray(per.f_p_dates_df().index[:-1]).astype('str')
-    keys_f  = np.array(['nv{0}' .format(i) for i in range(nv['len_nv'])])
+    keys_f = np.array(['nv{0}' .format(i) for i in range(nv['len_nv'])])
     keys_z = zfun.f_keys_z()
 
     ##array indexes

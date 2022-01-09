@@ -273,11 +273,11 @@ def f_rot_yield(for_stub=False, for_insurance=False):
     yields_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
     seeding_rate_k_l = f1_mask_lmu(pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0), axis=1) #seeding rate adjusted by if the farmer is using their own seed from last yr
     frost = f1_mask_lmu(pinp.crop['frost'], axis=1)  #frost
-    proportion_grain_harv = pd.Series(pinp.stubble['proportion_grain_harv'], index=pinp.stubble['i_stub_landuse_idx'])
+    proportion_grain_harv_k = pd.Series(pinp.stubble['proportion_grain_harv'], index=sinp.landuse['C'])
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
     ##calculate yield - base yield * arable area * harv_propn * frost * lmu factor - seeding rate
-    yield_arable_by_soil = yields_lmus.mul(arable) #mul arable area to the the lmu factor (easy because dfs have the same axis's).
-    yields_rkz_l=yield_arable_by_soil.reindex(base_yields.index, axis=0, level=1).mul(base_yields,axis=0) #reindes and mul with base yields
+    yield_arable_by_soil_k_l = yields_lmus.mul(arable) #mul arable area to the the lmu factor (easy because dfs have the same axis's).
+    yields_rkz_l=yield_arable_by_soil_k_l.reindex(base_yields.index, axis=0, level=1).mul(base_yields,axis=0) #reindes and mul with base yields
     yields_rkl_z = yields_rkz_l.stack().unstack(2)
 
     ##add rotation period axis - if a rotation exists at the begining of harvest it provides grain and requires harvesting.
@@ -298,7 +298,7 @@ def f_rot_yield(for_stub=False, for_insurance=False):
     ##account for frost, seed rate and harv propn
     ###doing this in a particular order to keep r and k always on the same axis (so that size is kept small since r vs k is big)
     yields_rk_p7zl = yields_rkl_p7z.unstack(2)
-    frost_harv_factor_k_l = (1-frost).mul(proportion_grain_harv, axis=0) #mul these two fisrt because they have same index so its easy.
+    frost_harv_factor_k_l = (1-frost).mul(proportion_grain_harv_k, axis=0) #mul these two fisrt because they have same index so its easy.
     frost_harv_factor_rkl = frost_harv_factor_k_l.reindex(yields_rk_p7zl.index, axis=0, level=1).stack()
     seeding_rate_rkl = seeding_rate_k_l.reindex(yields_rk_p7zl.index, axis=0, level=1).stack()
     yields_rkl_p7z = yields_rk_p7zl.stack(2).mul(frost_harv_factor_rkl, axis=0)
@@ -707,7 +707,7 @@ def f_phase_stubble_cost(r_vals):
 
     ##calculate the probability of a rotation phase needing stubble handling
     base_yields_rkl_z = f_rot_yield(for_stub=True).groupby(axis=1,level=1).sum() #sum the p7 axis. Just want the total yield. p7 axis is added later for costs.
-    stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=pinp.crop['start_harvest_crops'].index, dtype=float)*1000  #have to convert to kg to match base yield
+    stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=sinp.landuse['C'], dtype=float)*1000  #have to convert to kg to match base yield
     probability_handling_rkl_z = base_yields_rkl_z.div(stub_handling_threshold, axis=0, level=1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
     probability_handling_rl_z = probability_handling_rkl_z.droplevel(1)
 
@@ -801,7 +801,7 @@ def f_chem_application():
         base_chem = pd.DataFrame(base_chem, index = [phases_df.index, phases_df.iloc[:,-1]])  #make the current landuse the index
     ##rename index
     base_chem.index.rename(['rot','landuse'],inplace=True)
-    ##add cont pasture fert req
+    ##add cont pasture chem req
     base_chem = f_cont_pas(base_chem.unstack(0)).stack() #unstack for function then stack
     ##drop landuse from index
     base_chem = base_chem.droplevel(0, axis=0)
@@ -1080,16 +1080,19 @@ def f_phase_sow_req():
     This accounts for arable area and includes any seeding (wet or dry or pasture).
 
     '''
-    #todo need to make cont tedera and lucern only require a bit of seeding (probably just enter an input somewhere which says the frequency of reseeding for each landuse)
     ##read phases
     phases_df = sinp.f_phases()
-
-    ##sow = arable area
+    ##adjust arable area
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
-    seeding_landuses = uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj'].index
-    phasesow = arable.reindex(pd.MultiIndex.from_product([seeding_landuses, arable.index]), axis=0, level=1)
+    ##sow = arable area * frequency
+    keys_k = sinp.landuse['All']
+    keys_l = arable.index
+    seeding_freq_k = pinp.crop['i_seeding_frequency']
+    arable_l = arable.values
+    sow_req_kl = seeding_freq_k[:,na] * arable_l
+    phasesow = pd.DataFrame(sow_req_kl, index=keys_k, columns=keys_l)
     ##merge to rot phases
-    phasesow = pd.merge(phases_df, phasesow.unstack(), how='left', left_on=sinp.end_col(), right_index = True)
+    phasesow = pd.merge(phases_df, phasesow, how='left', left_on=sinp.end_col(), right_index = True)
     ##add current crop to index
     phasesow.set_index(sinp.end_col(), append=True, inplace=True)
     phase_sow = phasesow.drop(list(range(sinp.general['phase_len']-1)), axis=1).stack()
@@ -1111,12 +1114,12 @@ def f_sow_prov():
     labour_period_end_p5z = labour_period_p5z.values[1:]
 
     ##general info
-    keys_k = np.asarray(list(sinp.landuse['All']))
+    keys_k = sinp.landuse['All']
     keys_z = zfun.f_keys_z()
     keys_p5 = labour_period_p5z.index[:-1]
     keys_p7 = per.f_season_periods(keys=True)
     dry_sown_landuses = sinp.landuse['dry_sown']
-    wet_sown_landuses = sinp.landuse['C'] - dry_sown_landuses #can subtract sets to return differences
+    wet_sown_landuses = set(sinp.landuse['C']) - dry_sown_landuses #can subtract sets to return differences
 
     ##wet sowing periods
     seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
@@ -1125,7 +1128,7 @@ def f_sow_prov():
     wet_seed_end_z = wet_seed_start_z + wet_seed_len_z
     period_is_wetseeding_p5z = (labour_period_start_p5z < wet_seed_end_z) * (labour_period_end_p5z > wet_seed_start_z)
     ###add k axis
-    period_is_wetseeding_p5z = period_is_wetseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(wet_sown_landuses), axis=-1)
+    period_is_wetseeding_p5zk = period_is_wetseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(wet_sown_landuses), axis=-1)
 
     ##dry sowing periods
     dry_seed_start = np.datetime64(pinp.crop['dry_seed_start'])
@@ -1145,15 +1148,16 @@ def f_sow_prov():
     period_is_passeeding_p5zt = (labour_period_start_p5z[:,:,na] < i_reseeding_date_end_zt) * (labour_period_end_p5z[:,:,na] > i_reseeding_date_start_zt)
     ###convert t axis to k
     kt = (len(keys_k), len(pastures))
-    seeding_landuses = uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj'].index
     resown_kt = np.zeros(kt)
+    seeding_freq_k = pinp.crop['i_seeding_frequency']
+    resown_k = seeding_freq_k>0
     for t,pasture in enumerate(pastures):
         pasture_landuses = list(sinp.landuse['pasture_sets'][pasture])
-        resown_kt[:,t] = np.logical_and(np.in1d(keys_k, seeding_landuses), np.in1d(keys_k, pasture_landuses)) #resown if landuse is a pasture and is a sown landuse
+        resown_kt[:,t] = resown_k * np.in1d(keys_k, pasture_landuses)  #resown if landuse is a pasture and is a sown landuse
     period_is_passeeding_p5zk = np.sum(resown_kt * period_is_passeeding_p5zt[:,:,na,:], -1) #sum t axis - t is counted for in the k axis
 
     ##combine wet, dry and pas
-    period_is_seeding_p5zk = np.minimum(1,period_is_wetseeding_p5z + period_is_dryseeding_p5zk + period_is_passeeding_p5zk)
+    period_is_seeding_p5zk = np.minimum(1,period_is_wetseeding_p5zk + period_is_dryseeding_p5zk + period_is_passeeding_p5zk)
 
     ##add p7 axis - needed so machinery can be linked with phases (machinery just has a p5 axis)
     alloc_p7p5z = zfun.f1_z_period_alloc(labour_period_start_p5z[na,:,:], z_pos=-1)

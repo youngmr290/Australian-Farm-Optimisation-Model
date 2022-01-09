@@ -184,7 +184,7 @@ def f_sup_cost(r_vals):
     alloc_p7p6z = zfun.f1_z_period_alloc(start_p6z[na,...], z_pos=-1)
     ###make df
     keys_p7 = per.f_season_periods(keys=True)
-    keys_k = storage_dep_k.index
+    keys_k = grain_info.columns
     index_p7p6z = pd.MultiIndex.from_product([keys_p7,keys_p6,keys_z])
     alloc_p7p6z = pd.Series(alloc_p7p6z.ravel(), index=index_p7p6z)
     index_p7p6zk = pd.MultiIndex.from_product([keys_p7,keys_p6,keys_z,keys_k])
