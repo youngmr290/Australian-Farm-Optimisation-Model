@@ -404,10 +404,8 @@ def f_fert_req():
     columns = pd.MultiIndex.from_product([keys_z, fixed_fert.columns])
     fixed_fert = fixed_fert.reindex(columns, axis=1, level=1)
     base_fert = pd.merge(base_fert, fixed_fert, how='left', left_on='landuse', right_index = True)
-    ##add cont pasture fert req
-    base_fert = f_cont_pas(base_fert.unstack(0)).stack() #unstack for function then stack
     ##drop landuse from index
-    base_fert = base_fert.droplevel(0,axis=0)
+    base_fert = base_fert.droplevel(1,axis=0)
     ## adjust the fert req for each rotation by lmu
     fert_by_soil = fert_by_soil.stack() #read in fert by soil
     fert=base_fert.stack(level=0).mul(fert_by_soil,axis=1,level=0).stack()
@@ -449,10 +447,8 @@ def f_fert_passes():
     columns = pd.MultiIndex.from_product([keys_z, fixed_fert_passes.columns])
     fixed_fert_passes = fixed_fert_passes.reindex(columns, axis=1, level=1)
     fert_passes = pd.merge(fert_passes, fixed_fert_passes, how='left', left_on='landuse', right_index = True)
-    ##add cont pasture fert passes
-    fert_passes = f_cont_pas(fert_passes.unstack(0)).stack() #unstack for function then stack
     ##drop landuse from index
-    fert_passes = fert_passes.droplevel(0, axis=0)
+    fert_passes = fert_passes.droplevel(1, axis=0)
     ##adjust fert passes by arable area
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
     index = pd.MultiIndex.from_product([fert_passes.index, arable.index])
@@ -553,10 +549,8 @@ def f_nap_fert_req():
     fertreq_na = pinp.crop['nap_fert'].reset_index().set_index(['fert','landuse'])
     fertreq_na = f1_mask_lmu(fertreq_na, axis=1)
     fertreq_na = fertreq_na.mul(1 - arable)
-    ##add cont pasture fert req
-    fertreq_na = f_cont_pas(fertreq_na.unstack(0))
     ##merge with full df
-    fertreq_na = pd.merge(phases_df2, fertreq_na, how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
+    fertreq_na = pd.merge(phases_df2, fertreq_na.unstack(0), how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
     fertreq_na = fertreq_na.drop(list(range(sinp.general['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
     return fertreq_na
 
@@ -574,10 +568,8 @@ def f_nap_fert_passes():
     passes_na = f1_mask_lmu(passes_na, axis=1)
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #need to adjust for only non arable area
     passes_na= passes_na.mul(1-arable) #adjust for the non arable area
-    ##add cont pasture fert req
-    passes_na = f_cont_pas(passes_na.unstack(0))
     ##merge with full df
-    passes_na = pd.merge(phases_df2, passes_na, how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
+    passes_na = pd.merge(phases_df2, passes_na.unstack(0), how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
     passes_na = passes_na.drop(list(range(sinp.general['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
     return passes_na
 
@@ -794,17 +786,10 @@ def f_chem_application():
         base_chem = pinp.crop['chem']
         base_chem = base_chem.T.set_index(['chem'], append=True).T.astype(float)
         base_chem = zfun.f_seasonal_inp(base_chem, axis=1)
-        base_chem = base_chem.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the current landuse the index
     else:
         ### AusFarm ^need to add code for ausfarm inputs
         base_chem
         base_chem = pd.DataFrame(base_chem, index = [phases_df.index, phases_df.iloc[:,-1]])  #make the current landuse the index
-    ##rename index
-    base_chem.index.rename(['rot','landuse'],inplace=True)
-    ##add cont pasture chem req
-    base_chem = f_cont_pas(base_chem.unstack(0)).stack() #unstack for function then stack
-    ##drop landuse from index
-    base_chem = base_chem.droplevel(0, axis=0)
     ##arable area.
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
     #adjust chem passes by arable area
@@ -846,8 +831,6 @@ def f_chem_cost(r_vals):
     chem_cost_allocation_z_p7n = chem_cost_allocation_p7zn.unstack(1).T
     chem_wc_allocation_z_c0p7n = chem_wc_allocation_c0p7zn.unstack(2).T
 
-    ##add cont pasture to chem cost array
-    i_chem_cost = f_cont_pas(i_chem_cost)
     ##number of applications for each rotation
     chem_applications = f_chem_application()
 
@@ -938,8 +921,6 @@ def f_seedcost(r_vals):
     cost = cost + (cost2*rate2/100 * percent_dressed)
     ##account for seeding rate to determine actual cost (divide by 1000 to convert cost to kg)
     seed_cost = seeding_rate.mul(cost/1000,axis=0)
-    ##add cost for cont pasture
-    seed_cost = f_cont_pas(seed_cost)
     ##cost allocation
     start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     keys_p7 = per.f_season_periods(keys=True)
@@ -1195,118 +1176,118 @@ def f1_crop_params(params,r_vals):
 
 
 
-
-#################
-#continuous pas #
-#################
-
-def f_cont_pas(cost_array):
-    '''
-    Calculates the cost for continuous pasture that is resown a proportion of the time. eg tc (cont tedera)
-    the cost of cont pasture is a combination of the cost of normal and resown eg tc = t + tr (weighted by the frequency of resowing)
-    This function requires the index to be the landuse with no other levels. You can use unstack to ensure landuse is the only index.
-    Generally this function is applied early in the cost process (before landuse has been dropped)
-    Cont pasture only needs to exist if the phase has been included in the rotation.
-
-    .. note:: if a new pasture is added which has a continuous option that is resown occasionally it will need to be added to this function.
-
-    :param cost_array: df with the cost of the corresponding resown landuse. This array will be returned with the addition of the continuous pasture landuse
-    '''
-    ##read phases
-    phases_df = sinp.f_phases()
-
-    pastures = sinp.general['pastures'][pinp.general['pas_inc']]
-    ##if cont tedera is in rotation list and tedera is included in the pasture modules then generate the inputs for it
-    if any(phases_df.iloc[:,-1].isin(['tc'])) and 'tedera' in pastures:
-        germ_df = pinp.pasture_inputs['tedera']['GermPhases']
-        ##determine the proportion of the time tc and jc are resown - this is used as a weighting to determine the input costs
-        tc_idx = germ_df.iloc[:,-3].isin(['tc']) #checks current phase for tc
-        tc_frequency = germ_df.loc[tc_idx,'resown'] #get frequency of resowing tc
-        ##create mask for normal tedera and resown tedera
-        bool_t = cost_array.index.isin(['t'])
-        bool_tr = cost_array.index.isin(['tr'])
-        ##create new param - average all phases.
-        if np.count_nonzero(bool_t)==0: #check if any of the phases in the input array had t, if not then the cost is 0
-            t_cost = 0
-        else:
-            t_cost=(cost_array[bool_t]*(1-tc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        if np.count_nonzero(bool_tr)==0: #check if any of the phases in the input array had t, if not then the cost is 0
-            tr_cost = 0
-        else:
-            tr_cost=(cost_array[bool_tr]*(tc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        ##add weighted average of the resown and normal phase
-        tc_cost = t_cost + tr_cost
-        ##assign to df as new col
-        cost_array.loc['tc', :] = tc_cost
-
-    ##if cont tedera is in rotation list and tedera is included in the pasture modules then generate the inputs for it
-    if any(phases_df.iloc[:,-1].isin(['jc'])) and 'tedera' in pastures:
-        germ_df = pinp.pasture_inputs['tedera']['GermPhases']
-        ##determine the proportion of the time jc and jc are resown - this is used as a weighting to determine the input costs
-        jc_idx = germ_df.iloc[:,-3].isin(['jc']) #checks current phase for jc
-        jc_frequency = germ_df.loc[jc_idx,'resown'] #get frequency of resowing jc
-        ##create mask for normal tedera and resown tedera
-        bool_j = cost_array.index.isin(['j'])
-        bool_jr = cost_array.index.isin(['jr'])
-        ##create new param - average all phases.
-        if np.count_nonzero(bool_j)==0: #check if any of the phases in the input array had t, if not then the cost is 0
-            j_cost = 0
-        else:
-            j_cost=(cost_array[bool_j]*(1-jc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        if np.count_nonzero(bool_jr)==0: #check if any of the phases in the input array had t, if not then the cost is 0
-            jr_cost = 0
-        else:
-            jr_cost=(cost_array[bool_jr]*(jc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        ##add weighted average of the resown and normal phase
-        jc_cost = j_cost + jr_cost
-        ##assign to df as new col
-        cost_array.loc['jc', :] = jc_cost
-
-    ##if cont lucerne is in rotation list and lucerne is included in the pasture modules then generate the inputs for it
-    if any(phases_df.iloc[:,-1].isin(['uc'])) and 'lucerne' in pastures:
-        germ_df = pinp.pasture_inputs['lucerne']['GermPhases']
-        ##determine the proportion of the time uc and xc are resown - this is used as a weighting to determine the input costs
-        uc_idx = germ_df.iloc[:,-3].isin(['uc']) #checks current phase for uc
-        uc_frequency = germ_df.loc[uc_idx,'resown'] #get frequency of resowing uc
-        ##create mask for normal tedera and resown tedera
-        bool_u = cost_array.index.isin(['u'])
-        bool_ur = cost_array.index.isin(['ur'])
-        ##create new param - average all phases.
-        if np.count_nonzero(bool_u)==0: #check if any of the phases in the input array had t, if not then the cost is 0
-            u_cost = 0
-        else:
-            u_cost=(cost_array[bool_u]*(1-uc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        if np.count_nonzero(bool_ur)==0: #check if any of the phases in the input array had t, if not then the cost is 0
-            ur_cost = 0
-        else:
-            ur_cost=(cost_array[bool_ur]*(uc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        ##add weighted average of the resown and normal phase
-        uc_cost = u_cost + ur_cost
-        ##assign to df as new col
-        cost_array.loc['uc', :] = uc_cost
-
-    ##if cont lucerne is in rotation list and lucerne is included in the pasture modules then generate the inputs for it
-    if any(phases_df.iloc[:,-1].isin(['xc'])) and 'lucerne' in pastures:
-        germ_df = pinp.pasture_inputs['lucerne']['GermPhases']
-        ##determine the proportion of the time xc and xc are resown - this is used as a weighting to determine the input costs
-        xc_idx = germ_df.iloc[:,-3].isin(['xc']) #checks current phase for xc
-        xc_frequency = germ_df.loc[xc_idx,'resown'] #get frequency of resowing xc
-        ##create mask for normal tedera and resown tedera
-        bool_x = cost_array.index.isin(['x'])
-        bool_xr = cost_array.index.isin(['xr'])
-        ##create new param - average all phases.
-        if np.count_nonzero(bool_x)==0: #check if any of the phases in the input array had x, if not then the cost is 0
-            x_cost = 0
-        else:
-            x_cost=(cost_array[bool_x]*(1-xc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        if np.count_nonzero(bool_xr)==0: #check if any of the phases in the input array had t, if not then the cost is 0
-            xr_cost = 0
-        else:
-            xr_cost=(cost_array[bool_xr]*(xc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        ##add weighted average of the resown and normal phase
-        xc_cost = x_cost + xr_cost
-        ##assign to df as new col
-        cost_array.loc['xc', :] = xc_cost
-
-    return cost_array
+##cont pas are now just included in the inputs.
+# #################
+# #continuous pas #
+# #################
+#
+# def f_cont_pas(cost_array):
+#     '''
+#     Calculates the cost for continuous pasture that is resown a proportion of the time. eg tc (cont tedera)
+#     the cost of cont pasture is a combination of the cost of normal and resown eg tc = t + tr (weighted by the frequency of resowing)
+#     This function requires the index to be the landuse with no other levels. You can use unstack to ensure landuse is the only index.
+#     Generally this function is applied early in the cost process (before landuse has been dropped)
+#     Cont pasture only needs to exist if the phase has been included in the rotation.
+#
+#     .. note:: if a new pasture is added which has a continuous option that is resown occasionally it will need to be added to this function.
+#
+#     :param cost_array: df with the cost of the corresponding resown landuse. This array will be returned with the addition of the continuous pasture landuse
+#     '''
+#     ##read phases
+#     phases_df = sinp.f_phases()
+#
+#     pastures = sinp.general['pastures'][pinp.general['pas_inc']]
+#     ##if cont tedera is in rotation list and tedera is included in the pasture modules then generate the inputs for it
+#     if any(phases_df.iloc[:,-1].isin(['tc'])) and 'tedera' in pastures:
+#         germ_df = pinp.pasture_inputs['tedera']['GermPhases']
+#         ##determine the proportion of the time tc and jc are resown - this is used as a weighting to determine the input costs
+#         tc_idx = germ_df.iloc[:,-3].isin(['tc']) #checks current phase for tc
+#         tc_frequency = germ_df.loc[tc_idx,'resown'] #get frequency of resowing tc
+#         ##create mask for normal tedera and resown tedera
+#         bool_t = cost_array.index.isin(['t'])
+#         bool_tr = cost_array.index.isin(['tr'])
+#         ##create new param - average all phases.
+#         if np.count_nonzero(bool_t)==0: #check if any of the phases in the input array had t, if not then the cost is 0
+#             t_cost = 0
+#         else:
+#             t_cost=(cost_array[bool_t]*(1-tc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         if np.count_nonzero(bool_tr)==0: #check if any of the phases in the input array had t, if not then the cost is 0
+#             tr_cost = 0
+#         else:
+#             tr_cost=(cost_array[bool_tr]*(tc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         ##add weighted average of the resown and normal phase
+#         tc_cost = t_cost + tr_cost
+#         ##assign to df as new col
+#         cost_array.loc['tc', :] = tc_cost
+#
+#     ##if cont tedera is in rotation list and tedera is included in the pasture modules then generate the inputs for it
+#     if any(phases_df.iloc[:,-1].isin(['jc'])) and 'tedera' in pastures:
+#         germ_df = pinp.pasture_inputs['tedera']['GermPhases']
+#         ##determine the proportion of the time jc and jc are resown - this is used as a weighting to determine the input costs
+#         jc_idx = germ_df.iloc[:,-3].isin(['jc']) #checks current phase for jc
+#         jc_frequency = germ_df.loc[jc_idx,'resown'] #get frequency of resowing jc
+#         ##create mask for normal tedera and resown tedera
+#         bool_j = cost_array.index.isin(['j'])
+#         bool_jr = cost_array.index.isin(['jr'])
+#         ##create new param - average all phases.
+#         if np.count_nonzero(bool_j)==0: #check if any of the phases in the input array had t, if not then the cost is 0
+#             j_cost = 0
+#         else:
+#             j_cost=(cost_array[bool_j]*(1-jc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         if np.count_nonzero(bool_jr)==0: #check if any of the phases in the input array had t, if not then the cost is 0
+#             jr_cost = 0
+#         else:
+#             jr_cost=(cost_array[bool_jr]*(jc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         ##add weighted average of the resown and normal phase
+#         jc_cost = j_cost + jr_cost
+#         ##assign to df as new col
+#         cost_array.loc['jc', :] = jc_cost
+#
+#     ##if cont lucerne is in rotation list and lucerne is included in the pasture modules then generate the inputs for it
+#     if any(phases_df.iloc[:,-1].isin(['uc'])) and 'lucerne' in pastures:
+#         germ_df = pinp.pasture_inputs['lucerne']['GermPhases']
+#         ##determine the proportion of the time uc and xc are resown - this is used as a weighting to determine the input costs
+#         uc_idx = germ_df.iloc[:,-3].isin(['uc']) #checks current phase for uc
+#         uc_frequency = germ_df.loc[uc_idx,'resown'] #get frequency of resowing uc
+#         ##create mask for normal tedera and resown tedera
+#         bool_u = cost_array.index.isin(['u'])
+#         bool_ur = cost_array.index.isin(['ur'])
+#         ##create new param - average all phases.
+#         if np.count_nonzero(bool_u)==0: #check if any of the phases in the input array had t, if not then the cost is 0
+#             u_cost = 0
+#         else:
+#             u_cost=(cost_array[bool_u]*(1-uc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         if np.count_nonzero(bool_ur)==0: #check if any of the phases in the input array had t, if not then the cost is 0
+#             ur_cost = 0
+#         else:
+#             ur_cost=(cost_array[bool_ur]*(uc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         ##add weighted average of the resown and normal phase
+#         uc_cost = u_cost + ur_cost
+#         ##assign to df as new col
+#         cost_array.loc['uc', :] = uc_cost
+#
+#     ##if cont lucerne is in rotation list and lucerne is included in the pasture modules then generate the inputs for it
+#     if any(phases_df.iloc[:,-1].isin(['xc'])) and 'lucerne' in pastures:
+#         germ_df = pinp.pasture_inputs['lucerne']['GermPhases']
+#         ##determine the proportion of the time xc and xc are resown - this is used as a weighting to determine the input costs
+#         xc_idx = germ_df.iloc[:,-3].isin(['xc']) #checks current phase for xc
+#         xc_frequency = germ_df.loc[xc_idx,'resown'] #get frequency of resowing xc
+#         ##create mask for normal tedera and resown tedera
+#         bool_x = cost_array.index.isin(['x'])
+#         bool_xr = cost_array.index.isin(['xr'])
+#         ##create new param - average all phases.
+#         if np.count_nonzero(bool_x)==0: #check if any of the phases in the input array had x, if not then the cost is 0
+#             x_cost = 0
+#         else:
+#             x_cost=(cost_array[bool_x]*(1-xc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         if np.count_nonzero(bool_xr)==0: #check if any of the phases in the input array had t, if not then the cost is 0
+#             xr_cost = 0
+#         else:
+#             xr_cost=(cost_array[bool_xr]*(xc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         ##add weighted average of the resown and normal phase
+#         xc_cost = x_cost + xr_cost
+#         ##assign to df as new col
+#         cost_array.loc['xc', :] = xc_cost
+#
+#     return cost_array
 
