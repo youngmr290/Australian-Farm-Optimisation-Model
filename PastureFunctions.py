@@ -103,22 +103,18 @@ def f_germination(i_germination_std_zt, i_germ_scalar_lzt, i_germ_scalar_p6zt
     '''
     #todo currently all germination occurs in period 0, however, other code handles germination in other periods if the inputs & this code are changed
     germ_scalar_rt = np.zeros(rt,dtype = 'float64')
-    resown_rt = np.zeros(rt, dtype = 'int')
     for t, pasture in enumerate(pastures):
         phase_germresow_df['germ_scalar']=0 #set default to 0
-        phase_germresow_df['resown']=False #set default to false
-        ###loop through each combo of landuses and pastures (i_phase_germ), then check which rotations fall into each germ/resowing category. Then populate the rot phase df with the necessary germination and resowing param.
+        ###loop through each combo of landuses and pastures (i_phase_germ), then check which rotations fall into each germ category. Then populate the rot phase df with the necessary germination param.
         for ix_row in i_phase_germ_dict[pasture].index:
             ix_bool = pd.Series(data=True,index=range(len(phase_germresow_df)))
-            for ix_col in range(i_phase_germ_dict[pasture].shape[1]-2):    #-2 because two of the cols are germ and resowing
+            for ix_col in range(i_phase_germ_dict[pasture].shape[1]-1):    #-1 because one of the cols is germ
                 c_set = sinp.landuse[i_phase_germ_dict[pasture].iloc[ix_row,ix_col]]
                 ix_bool &= phase_germresow_df.loc[:,ix_col].reset_index(drop=True).isin(c_set) #had to drop index so that it would work (just said false when the index was different between series)
             ### maps the relevant germ scalar and resown bool to the rotation phase
-            phase_germresow_df.loc[list(ix_bool),'germ_scalar'] = i_phase_germ_dict[pasture].iloc[ix_row, -2]  #have to make bool into a list for some reason it doesn't like a series
-            phase_germresow_df.loc[list(ix_bool),'resown'] = i_phase_germ_dict[pasture].iloc[ix_row, -1]
+            phase_germresow_df.loc[list(ix_bool),'germ_scalar'] = i_phase_germ_dict[pasture].iloc[ix_row, -1]  #have to make bool into a list for some reason it doesn't like a series
         ### Convert germ and resow into a numpy - each pasture goes in a different slice
         germ_scalar_rt[:,t] = phase_germresow_df['germ_scalar'].to_numpy()    # extract the germ_scalar from the dataframe
-        resown_rt[:,t] = phase_germresow_df['resown'].to_numpy()              # extract the resown boolean from the dataframe
 
     ## germination on the arable area of pasture paddocks based on std germ, rotation scalar, lmu scalar and distribution across periods
     arable_germination_p6lrzt = i_germination_std_zt                 \
@@ -137,7 +133,7 @@ def f_germination(i_germination_std_zt, i_germ_scalar_lzt, i_germ_scalar_p6zt
     germination_p6lrzt = arable_germination_p6lrzt * arable_l[:, na, na, na]
     ## add germination on the non-arable area to the first pasture type
     germination_p6lrzt[..., 0] += na_germination_flrz * (1 - arable_l[:,na,na])
-    return germination_p6lrzt, max_germination_flz, resown_rt
+    return germination_p6lrzt, max_germination_flz
 
 def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restock_grn_propn_t, resown_rt
                 , feed_period_dates_fz, i_restock_fooscalar_lt, i_restock_foo_arable_t, dry_decay_period_p6zt

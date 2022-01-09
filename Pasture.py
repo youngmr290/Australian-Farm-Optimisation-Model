@@ -371,10 +371,18 @@ def f_pasture(params, r_vals, nv):
 
     phase_germresow_df = phases_rotn_df.copy() #copy needed so subsequent changes don't alter initial df
 
-    germination_p6lrzt, max_germination_flz, resown_rt = pfun.f_germination(i_germination_std_zt, i_germ_scalar_lzt
+    germination_p6lrzt, max_germination_flz = pfun.f_germination(i_germination_std_zt, i_germ_scalar_lzt
                                                                 , i_germ_scalar_p6zt, pasture_rt, arable_l
                                                                 , pastures, phase_germresow_df, i_phase_germ_dict, rt)
 
+    resown_rt = np.zeros(rt)
+    seeding_freq_k = pinp.crop['i_seeding_frequency']
+    landuse_r = phases_rotn_df.iloc[:,-1].values
+    a_k_rk = landuse_r[:,na] == keys_k
+    for t,pasture in enumerate(pastures):
+        pasture_landuses = list(sinp.landuse['pasture_sets'][pasture])
+        resown_k = seeding_freq_k * np.in1d(keys_k, pasture_landuses)  #resown if landuse is a pasture and is a sown landuse
+        resown_rt[:,t] = np.sum(resown_k * a_k_rk, axis=-1)
     foo_grn_reseeding_p6lrzt, foo_dry_reseeding_dp6lrzt, periods_destocked_p6zt = pfun.f_reseeding(
         i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restock_grn_propn_t, resown_rt, feed_period_dates_p6z
         , i_restock_fooscalar_lt, i_restock_foo_arable_t, dry_decay_period_p6zt, i_fxg_foo_op6lzt, c_fxg_a_op6lzt
