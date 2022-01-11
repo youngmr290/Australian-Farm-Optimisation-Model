@@ -14,13 +14,12 @@ import FeedsupplyFunctions as fsfun
 import PropertyInputs as pinp
 import UniversalInputs as uinp
 import StructuralInputs as sinp
-import Phase as phs
 import Sensitivity as SA
 import Periods as per
 
 na = np.newaxis
 
-#todo remove the 1-harv_propn when converting to the biomass version.
+#todo remove the 1-harv_propn when converting to the biomass version. actually i think just need to add s2 axis
 def f_cropresidue_production():
     '''
     Stubble produced per kg of total grain (kgs of dry matter).
@@ -108,14 +107,26 @@ def crop_residue_all(params, r_vals, nv):
     mask_stubble_exists_p6zk = fp_end_p6z[...,na] > harv_date_zk  #^this may need to become an input to handle chaff piles which may be grazed after the brk
     peirod_is_harvest_p6zk = np.logical_and(fp_end_p6z[...,na] >= harv_date_zk, fp_start_p6z[...,na] <= harv_date_zk)
 
+    # #############################
+    # # Total stubble production  #
+    # #############################
+    # ##calc yield - frost and seeding rate not accounted for because they don't effect stubble.
+    # rot_yields_rkl_p7z = phs.f_rot_yield(for_stub=True)
+    # ##calc stubble
+    # residue_per_grain_k = f_cropresidue_production()
+    # rot_stubble_rkl_p7z = rot_yields_rkl_p7z.mul(residue_per_grain_k, axis=0, level=1)
+
     #############################
-    # Total stubble production  #
+    # Biomass to residue        #
     #############################
-    ##calc yield - frost and seeding rate not accounted for because they don't effect stubble.
-    rot_yields_rkl_p7z = phs.f_rot_yield(for_stub=True)
-    ##calc stubble
-    residue_per_grain_k = f_cropresidue_production()
-    rot_stubble_rkl_p7z = rot_yields_rkl_p7z.mul(residue_per_grain_k, axis=0, level=1)
+    ##inputs
+    harvest_index_ks2 = pinp.stubble['i_harvest_index_ks2']
+    biomass_scalar_ks2 = pinp.stubble['i_biomass_scalar_ks2']
+    propn_grain_harv_ks2 = pinp.stubble['i_propn_grain_harv_ks2']
+
+    ##calc biomass to product scalar
+    biomass2residue_ks2 = (1 - harvest_index_ks2 * propn_grain_harv_ks2) * biomass_scalar_ks2
+
 
     #########################
     # deterioration         #
@@ -267,6 +278,7 @@ def crop_residue_all(params, r_vals, nv):
     keys_k = sinp.landuse['C']
     keys_p6 = pinp.period['i_fp_idx']
     keys_s1 = pinp.stubble['i_stub_cat_idx']
+    keys_s2 = pinp.stubble['i_idx_s2']
     keys_f  = np.array(['nv{0}' .format(i) for i in range(len_nv)])
     keys_z = zfun.f_keys_z()
 
@@ -280,13 +292,15 @@ def crop_residue_all(params, r_vals, nv):
     arrays_fp6zks1 = [keys_f, keys_p6, keys_z, keys_k, keys_s1]
     ###harv con & feed period transfer
     arrays_p6zk = [keys_p6, keys_z, keys_k]
+    ###biomass to residue
+    arrays_ks2 = [keys_k, keys_s2]
 
     ################
     ##pyomo params #
     ################
 
-    ##stubble produced per tonne of grain yield - this is df so don't need to build index.
-    params['rot_stubble'] = rot_stubble_rkl_p7z.stack([0,1]).to_dict()
+    # ##stubble produced per tonne of grain yield - this is df so don't need to build index.
+    # params['rot_stubble'] = rot_stubble_rkl_p7z.stack([0,1]).to_dict()
 
     ##'require' params ie consuming 1t of stubble B requires 1.002t from the constraint (0.002 accounts for trampling)
     params['transfer_req'] = fun.f1_make_pyomo_dict(stub_req_ks1, arrays_ks1)
@@ -303,6 +317,9 @@ def crop_residue_all(params, r_vals, nv):
 
     ###category A transfer 'require' param
     params['cat_a_prov'] = fun.f1_make_pyomo_dict(cat_a_prov_p6zks1, arrays_p6zks1)
+
+    ###category A transfer 'require' param
+    params['biomass2residue_ks2'] = fun.f1_make_pyomo_dict(biomass2residue_ks2, arrays_ks2)
 
     ##md
     params['md'] = fun.f1_make_pyomo_dict(md_fp6zks1, arrays_fp6zks1)

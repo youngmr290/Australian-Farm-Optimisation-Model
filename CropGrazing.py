@@ -305,28 +305,32 @@ def crop_md_vol(nv):
 
     return crop_md_fkp6p5zl, crop_vol_fkp6p5zl
 
-def f_cropgraze_yield_penalty():
+def f_cropgraze_biomass_penalty():
     '''
-    Yield and stubble penalty associated with the amount of crop consumed.
+    biomass penalty associated with the amount of crop consumed.
 
-    The yield penalty is an inputted proportion of the dry matter consumed. The stubble penalty is calculated
-    from the yield using f_cropresidue_production.
+    The yield penalty is an inputted proportion of the dry matter consumed. Below it is converted to a biomass
+    penalty.
     '''
     import CropResidue as stub
     ##inputs
-    stubble_per_grain_k = stub.f_cropresidue_production().values
-    yield_reduction_propn_kp6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_yield_reduction_kp6z'], numpy=True, axis=-1)
-    proportion_grain_harv_k = pinp.stubble['proportion_grain_harv']
+    # stubble_per_grain_k = stub.f_cropresidue_production().values
+    biomass_reduction_propn_kp6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_yield_reduction_kp6z'], numpy=True, axis=-1)
+    # proportion_grain_harv_k = pinp.stubble['proportion_grain_harv']
     consumption_factor_p6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
 
-    ##adjust seeding penalty - crops that are not harvested eg fodder don't have yield penalty. But do have a stubble penalty
-    ###if calculating yield penalty for stubble then include all crop (eg include fodders)
-    stub_yield_reduction_propn_kp6z = yield_reduction_propn_kp6z
-    ###if calculating yield penalty for grain transfer then only include harvested crops (eg don't include fodders)
-    yield_reduction_propn_kp6z = yield_reduction_propn_kp6z * (proportion_grain_harv_k>0)[:,na,na]
+    # ##adjust seeding penalty - crops that are not harvested eg fodder don't have yield penalty. But do have a stubble penalty
+    # ###if calculating yield penalty for stubble then include all crop (eg include fodders)
+    # stub_yield_reduction_propn_kp6z = yield_reduction_propn_kp6z
+    # ###if calculating yield penalty for grain transfer then only include harvested crops (eg don't include fodders)
+    # yield_reduction_propn_kp6z = yield_reduction_propn_kp6z * (proportion_grain_harv_k>0)[:,na,na]
 
-    ##calc stubble reduction (kg of stubble per kg of crop DM consumed)
-    stubble_reduction_propn_kp6z = stub_yield_reduction_propn_kp6z * stubble_per_grain_k[:,na,na]
+    # ##calc stubble reduction (kg of stubble per kg of crop DM consumed)
+    # stubble_reduction_propn_kp6z = stub_yield_reduction_propn_kp6z * stubble_per_grain_k[:,na,na]
+
+    ##convert from yield penalty to biomass penalty - required because input is grain yield reduction per tonne of crop consummed
+    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harves s2 slice because yield penalty is inputted as a harvestable grain
+    biomass_reduction_propn_kp6z = biomass_reduction_propn_kp6z / harvest_index_k[:,na,na]
 
     ##apply season mask and grazing exists mask
     ###calc mask if crop can be grazed - doesnt need to include p5 since no p5 set in the constraint.
@@ -334,16 +338,16 @@ def f_cropgraze_yield_penalty():
     ###calc season mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(per.f_feed_periods()[:-1], z_pos=-1, mask=True)
     ###apply masks
-    yield_reduction_propn_kp6z = yield_reduction_propn_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
-    stubble_reduction_propn_kp6z = stubble_reduction_propn_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
+    biomass_reduction_propn_kp6z = biomass_reduction_propn_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
+    # stubble_reduction_propn_kp6z = stubble_reduction_propn_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
 
-    return yield_reduction_propn_kp6z, stubble_reduction_propn_kp6z
+    return biomass_reduction_propn_kp6z #, stubble_reduction_propn_kp6z
 
 
 def f1_cropgraze_params(params, r_vals, nv):
     # grazecrop_area_rkl = f_graze_crop_area()
     crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z = f_cropgraze_DM()
-    yield_reduction_propn_kp6z, stubble_reduction_propn_kp6z = f_cropgraze_yield_penalty()
+    biomass_reduction_propn_kp6z = f_cropgraze_biomass_penalty()
     crop_md_fkp6p5zl, crop_vol_fkp6p5zl = crop_md_vol(nv)
     # DM_reduction_kp6p5zl = f_DM_reduction_seeding_time()
 
@@ -373,8 +377,8 @@ def f1_cropgraze_params(params, r_vals, nv):
     params['crop_DM_provided_kp6p5z8lz9'] = fun.f1_make_pyomo_dict(crop_DM_provided_kp6p5z8lz9, arrays_kp6p5z8lz9)
     params['crop_DM_required_kp6p5z'] = fun.f1_make_pyomo_dict(crop_DM_required_kp6p5z, arrays_kp6p5z)
     params['transfer_exists_p6p5z'] = fun.f1_make_pyomo_dict(transfer_exists_p6p5z, arrays_p6p5z)
-    params['yield_reduction_propn_kp6z'] = fun.f1_make_pyomo_dict(yield_reduction_propn_kp6z, arrays_kp6z)
-    params['stubble_reduction_propn_kp6z'] = fun.f1_make_pyomo_dict(stubble_reduction_propn_kp6z, arrays_kp6z)
+    params['biomass_reduction_propn_kp6z'] = fun.f1_make_pyomo_dict(biomass_reduction_propn_kp6z, arrays_kp6z)
+    # params['stubble_reduction_propn_kp6z'] = fun.f1_make_pyomo_dict(stubble_reduction_propn_kp6z, arrays_kp6z)
     params['crop_md_fkp6p5zl'] = fun.f1_make_pyomo_dict(crop_md_fkp6p5zl, arrays_fkp6p5zl)
     params['crop_vol_kp6p5zl'] = fun.f1_make_pyomo_dict(crop_vol_fkp6p5zl, arrays_fkp6p5zl)
 

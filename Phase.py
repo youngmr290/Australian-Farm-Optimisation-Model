@@ -127,40 +127,42 @@ def f_farmgate_grain_price(r_vals={}):
     ##inputs
     grain_price_info_df = uinp.price['grain_price_info'] #grain info
     percentile_price_df = uinp.price['grain_price'] #grain price for 3 different percentiles
+    percentile_price_k_s2p = percentile_price_df.T.set_index(['percentile'], append=True).T.astype(float) #convert to float because array was initilised with string as well therefore it is an object type.
     grain_price_percentile = uinp.price['grain_price_percentile'] #price percentile to use
-    grain_price_scalar_c1z = zfun.f_seasonal_inp(uinp.price_variation['grain_price_scalar_c1z']
+    grain_price_scalar_c1_z = zfun.f_seasonal_inp(uinp.price_variation['grain_price_scalar_c1z']
                                                  ,numpy=False, axis=1, level=0)
 
     ##extrapolate price for the selected percentile (can go beyond the data input range)
-    grain_price_firsts = pd.Series()
-    for k in percentile_price_df.index:
-        grain_price_firsts[k] = fun.np_extrap(np.array([grain_price_percentile]), percentile_price_df.columns, percentile_price_df.loc[k].values)[0] #returns as one value in an array thus take [0]
+    percentile_price_ks2_p = percentile_price_k_s2p.stack(0)
+    grain_price_firsts_ks2 = pd.Series(index=percentile_price_ks2_p.index)
+    for k in percentile_price_ks2_p.index:
+        grain_price_firsts_ks2[k] = fun.np_extrap(np.array([grain_price_percentile]), percentile_price_ks2_p.columns, percentile_price_ks2_p.loc[k].values)[0] #returns as one value in an array thus take [0]
 
     ##seconds price
-    grain_price_seconds = grain_price_firsts * (1-grain_price_info_df['seconds_discount'])
+    grain_price_seconds_ks2 = grain_price_firsts_ks2.mul(1-grain_price_info_df['seconds_discount'], level=0)
 
     ##gets the price of firsts and seconds for each grain
     price_df = pd.DataFrame(columns=['firsts','seconds'])
-    price_df['firsts'] = grain_price_firsts
-    price_df['seconds'] = grain_price_seconds
+    price_df['firsts'] = grain_price_firsts_ks2
+    price_df['seconds'] = grain_price_seconds_ks2
 
     ##determine cost of selling
     cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance']
             + pinp.general['rail_cartage'] + uinp.price['flagfall'])
     tols= grain_price_info_df['grain_tolls']
     total_fees= cartage+tols
-    farmgate_price_k_g = price_df.sub(total_fees, axis=0).clip(0)
+    farmgate_price_ks2_g = price_df.sub(total_fees, axis=0, level=0).clip(0)
 
     ##scale by c1 & z
     keys_z = zfun.f_keys_z()
-    keys_c1 = grain_price_scalar_c1z.index
-    new_index_c1zg = pd.MultiIndex.from_product([keys_c1,keys_z,farmgate_price_k_g.columns])
-    farmgate_price_kg_c1z = farmgate_price_k_g.reindex(new_index_c1zg, axis=1, level=2).stack()
-    farmgate_price_kg_c1z = farmgate_price_kg_c1z.mul(grain_price_scalar_c1z.stack(), axis=1)
-    farmgate_price_kgc1_z = farmgate_price_kg_c1z.stack(0)
+    keys_c1 = grain_price_scalar_c1_z.index
+    new_index_c1zg = pd.MultiIndex.from_product([keys_c1,keys_z,farmgate_price_ks2_g.columns])
+    farmgate_price_ks2g_c1z = farmgate_price_ks2_g.reindex(new_index_c1zg, axis=1, level=2).stack()
+    farmgate_price_ks2g_c1z = farmgate_price_ks2g_c1z.mul(grain_price_scalar_c1_z.stack(), axis=1)
+    farmgate_price_ks2gc1_z = farmgate_price_ks2g_c1z.stack(0)
     ##store and return
-    fun.f1_make_r_val(r_vals,farmgate_price_kgc1_z,'farmgate_price')
-    return farmgate_price_kgc1_z
+    fun.f1_make_r_val(r_vals,farmgate_price_ks2gc1_z,'farmgate_price')
+    return farmgate_price_ks2gc1_z
 
 
 def f_grain_price(r_vals):
@@ -172,7 +174,7 @@ def f_grain_price(r_vals):
 
     '''
     ##get grain price - accounts for tols and other fees
-    farmgate_price_kgc1_z=f_farmgate_grain_price(r_vals)
+    farmgate_price_ks2gc1_z=f_farmgate_grain_price(r_vals)
 
     ##allocate farm gate grain price for each cashflow period and calc interest
     start = np.array([pinp.crop['i_grain_income_date']]).astype('datetime64')
@@ -190,53 +192,60 @@ def f_grain_price(r_vals):
     # cols_p7zg = pd.MultiIndex.from_product([keys_p7, keys_z, farm_gate_price_k_g.columns])
     # grain_income_allocation_p7zg = grain_income_allocation_p7z.reindex(cols_p7zg, axis=1)#adds level to header so i can mul in the next step
     # grain_price =  farm_gate_price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
-    grain_price_kgc1_p7z =  farmgate_price_kgc1_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
+    grain_price_ks2gc1_p7z =  farmgate_price_ks2gc1_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
     # cols_c0p7zg = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, farm_gate_price_k_g.columns])
     # grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
     # grain_price_wc =  farm_gate_price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
-    grain_price_wc_kgc1_c0p7z =  farmgate_price_kgc1_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
+    grain_price_wc_ks2gc1_c0p7z =  farmgate_price_ks2gc1_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
 
     ##average c1 axis for wc and report
     c1_prob = uinp.price_variation['prob_c1']
-    grain_price_kg_p7z = grain_price_kgc1_p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1]).sum()
-    grain_price_wc_kg_c0p7z = grain_price_wc_kgc1_c0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1]).sum()
+    r_grain_price_ks2g_p7z = grain_price_ks2gc1_p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
+    grain_price_wc_ks2g_c0p7z = grain_price_wc_ks2gc1_c0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
 
     ##store r_vals
     ###make z8 mask - used to uncluster
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, grain_price_kg_p7z, 'grain_price', mask_season_p7z, z_pos=-1)
-    return grain_price_kgc1_p7z.unstack([1,0,2]), grain_price_wc_kg_c0p7z.unstack([1,0])
+    fun.f1_make_r_val(r_vals, r_grain_price_ks2g_p7z, 'grain_price', mask_season_p7z, z_pos=-1)
+    return grain_price_ks2gc1_p7z.unstack([2,0,1,3]), grain_price_wc_ks2g_c0p7z.unstack([2,0,1])
 # a=grain_price()
 
 #########################
-#yield                  #
+#biomass                #
 #########################
-def f_rot_yield(for_stub=False, for_insurance=False):
+def f_rot_biomass(for_stub=False, for_insurance=False):
     '''
-    Calculates the yield for each rotation. Accounting for LMU, arable area, frost and harvested proportion.
+    Calculates the biomass for each rotation. Accounting for LMU, arable area and frost.
 
     The crop yield for each rotation phase, on the base LMU [#]_, before frost and harvested proportion adjustment,
     is entered as an input. The yield is inputted assuming seeding was completed at the optimal time.
     The base yield inputs are read in from either the simulation output or
     from Property.xl depending on what the user has specified to do. The yield input is dependant on the
     rotation history and hence accounts for the level of soil fertility, weed burden, disease prominence,
-    and how the current land use is affected by the existing levels of each in the rotation.
+    and how the current land use is affected by the existing levels of each in the rotation. Biomass is calculated
+    as a function of yield and harvest index. Yield is the input rather than biomass because that is easier to
+    relate to and thus determine inputs. However, it is converted to biomass so that the optimisation has
+    the tactical option to deviate from the strategy. For example, the model may select a barley phase at the
+    beginning of the year with the expectation of harvesting it for salable grain. However, if a
+    big frost event is occurred the model may choose to either cut the crop for hay or use it as fodder. To
+    allow these tactics to be represented requires a common starting point which has been defined as phase biomass.
+    Biomass can either be harvested for grain, cut for hay or grazed as fodder.
 
     To extrapolate the inputs from the base LMU to the other LMUs an LMU adjustment factor is
     applied which determines the yield on each other LMU as a proportion of the base LMU. The LMU adjustment
     factor accounts for the variation in yield on different LMUs when management is the same.
 
-    The decision variable represented in the model is the yield per hectare on a given LMU. To account for
+    The decision variable represented in the model is the biomass per hectare on a given LMU at harvest. To account for
     the fact that LMUs are rarely 100% arable due to patches of rocks, gully’s, waterlogged area and uncleared
     trees the yield is adjusted by the arable proportion. (eg if wheat yields 4 t/ha on LMU5 and LMU5 is 80%
     arable then 1 unit of the decision variable will yield 3.2t of wheat).
 
     Crop yield can also be adversely impacted by frost during the plants flowing stage :cite:p:`RN144`. Thus,
-    the yield of each rotation phase is adjusted by a frost factor. The frost factor can be customised for each
-    crop which is required because different crops flower at different times, changing the impact probability of
-    frost yield reduction. Frost factor can be customised for each LMU because frost effects can be altered by
+    the biomass of each rotation phase is adjusted by a frost factor. The frost factor can be customised for each
+    crop which is required because different crops flower at different times, changing the impact and probability of
+    frost biomass reduction. Frost factor can be customised for each LMU because frost effects can be altered by
     the LMU topography and soil type. For example, sandy soils are more affected by frost because the lower
     moisture holding capacity reduces the heat buffering from the soil.
 
@@ -245,8 +254,7 @@ def f_rot_yield(for_stub=False, for_insurance=False):
 
     Furthermore, as detailed in the machinery chapter, sowing timeliness can also impact yield. Dry sowing tends [#]_
     to incur a yield reduction due to forgoing an initial knockdown spray. While later sowing incurs a yield
-    loss due to a reduced growing season. Additionally, during the harvesting process a small proportion of grain
-    is split/spilt. This is accounted for by adjusting the yield by a harvest proportion factor.
+    loss due to a reduced growing season.
 
     .. [#] Base LMU – standardise LMU to which other LMUs are compared against.
     .. [#] Dry sowing may not incur a yield penalty in seasons with a late break.
@@ -263,22 +271,27 @@ def f_rot_yield(for_stub=False, for_insurance=False):
         ### User defined
         base_yields = pinp.crop['yields']
         base_yields = zfun.f_seasonal_inp(base_yields, axis=1)
-        base_yields = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
+        base_yields_rk_z = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
     else:
         ### AusFarm ^need to add code for ausfarm inputs
-        base_yields
-    base_yields = base_yields.stack()
+        base_yields_rk_z
+    base_yields_rkz = base_yields_rk_z.stack()
 
     ##colate other info
-    yields_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
+    biomass_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
     seeding_rate_k_l = f1_mask_lmu(pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0), axis=1) #seeding rate adjusted by if the farmer is using their own seed from last yr
     frost = f1_mask_lmu(pinp.crop['frost'], axis=1)  #frost
-    proportion_grain_harv_k = pd.Series(pinp.stubble['proportion_grain_harv'], index=sinp.landuse['C'])
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
-    ##calculate yield - base yield * arable area * harv_propn * frost * lmu factor - seeding rate
-    yield_arable_by_soil_k_l = yields_lmus.mul(arable) #mul arable area to the the lmu factor (easy because dfs have the same axis's).
-    yields_rkz_l=yield_arable_by_soil_k_l.reindex(base_yields.index, axis=0, level=1).mul(base_yields,axis=0) #reindes and mul with base yields
-    yields_rkl_z = yields_rkz_l.stack().unstack(2)
+    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harves s2 slice because yield is inputted as a harvestable grain
+    harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
+
+    ##convert to biomass
+    base_biomass_rkz = base_yields_rkz.div(harvest_index_k, level=1)
+
+    ##calculate biomass - base biomass * arable area * harv_propn * frost * lmu factor - seeding rate
+    biomass_arable_by_soil_k_l = biomass_lmus.mul(arable) #mul arable area to the the lmu factor (easy because dfs have the same axis's).
+    biomass_rkz_l=biomass_arable_by_soil_k_l.reindex(base_biomass_rkz.index, axis=0, level=1).mul(base_biomass_rkz,axis=0) #reindes and mul with base biomass
+    biomass_rkl_z = biomass_rkz_l.stack().unstack(2)
 
     ##add rotation period axis - if a rotation exists at the begining of harvest it provides grain and requires harvesting.
     harv_start_date_z = zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0).astype('datetime64') #this could be changed to include landuse axis.
@@ -289,26 +302,53 @@ def f_rot_yield(for_stub=False, for_insurance=False):
     new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
     alloc_p7z = pd.Series(alloc_p7z.ravel(), index=new_index_p7z)
     ###mul m allocation with cost
-    yields_rkl_p7z = yields_rkl_z.mul(alloc_p7z, axis=1,level=1)
+    biomass_rkl_p7z = biomass_rkl_z.mul(alloc_p7z, axis=1,level=1)
 
+    #todo this can probably be removed once frost is handled in biomass2.. func.
     if for_stub:
-        ###return yield for stubble before accounting for frost, seed rate and harv propn
-        return yields_rkl_p7z
+        ###return biomass for stubble before accounting for frost, seed rate and harv propn
+        return biomass_rkl_p7z.groupby(axis=1, level=1).sum().stack()
 
-    ##account for frost, seed rate and harv propn
-    ###doing this in a particular order to keep r and k always on the same axis (so that size is kept small since r vs k is big)
-    yields_rk_p7zl = yields_rkl_p7z.unstack(2)
-    frost_harv_factor_k_l = (1-frost).mul(proportion_grain_harv_k, axis=0) #mul these two fisrt because they have same index so its easy.
-    frost_harv_factor_rkl = frost_harv_factor_k_l.reindex(yields_rk_p7zl.index, axis=0, level=1).stack()
-    seeding_rate_rkl = seeding_rate_k_l.reindex(yields_rk_p7zl.index, axis=0, level=1).stack()
-    yields_rkl_p7z = yields_rk_p7zl.stack(2).mul(frost_harv_factor_rkl, axis=0)
-    yields_rkl_p7z = yields_rkl_p7z.sub(seeding_rate_rkl,axis=0) #minus seeding rate
-    yields_rkl_p7z = yields_rkl_p7z.clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0). Note crops that don't produce harvest yield require seed as an input.
-    if for_insurance:
-        return yields_rkl_p7z.groupby(axis=1, level=1).sum().stack() #sum the p7 axis. Just want the total yield. p7 axis is added later for costs.
+    #todo seeding rate cant be here because reduces stubble.
+
+    # ##account for frost, seed rate and harv propn
+    # ###doing this in a particular order to keep r and k always on the same axis (so that size is kept small since r vs k is big)
+    biomass_rk_p7zl = biomass_rkl_p7z.unstack(2)
+    frost_harv_factor_k_l = (1-frost)
+    frost_harv_factor_rkl = frost_harv_factor_k_l.reindex(biomass_rk_p7zl.index, axis=0, level=1).stack()
+    seeding_rate_k_l = seeding_rate_k_l.div(harvest_index_k,axis=0)
+    seeding_rate_rkl = seeding_rate_k_l.reindex(biomass_rk_p7zl.index, axis=0, level=1).stack()
+    biomass_rkl_p7z = biomass_rk_p7zl.stack(2).mul(frost_harv_factor_rkl, axis=0)
+    biomass_rkl_p7z = biomass_rkl_p7z.sub(seeding_rate_rkl,axis=0) #minus seeding rate
+    biomass_rkl_p7z = biomass_rkl_p7z.clip(lower=0) #we don't want negative biomass so clip at 0 (if any values are neg they become 0). Note crops that don't produce harvest biomass require seed as an input.
+    if for_insurance or for_stub:
+        return biomass_rkl_p7z.groupby(axis=1, level=1).sum().stack() #sum the p7 axis. Just want the total biomass. p7 axis is added later for costs.
     else:
-        ###yield for pyomo yield param
-        return yields_rkl_p7z.stack([1,0])
+        ###biomass for pyomo biomass param
+        return biomass_rkl_p7z.stack([1,0])
+
+def f_biomass2product():
+    '''Relationship between biomass and salable product. Where salable product is either grain or hay.
+
+    Biomass is relate to product through harvest index, harvest proportion and biomass scalar.
+    Harvest index is the amount of the target product (grain or hay) per unit of biomass at harvest (which is the unit of the biomass DV).
+    Harvest proportion accounts for grain that is split/spilt during the harvesting process.
+    Biomass scalar is the total biomass production from the area baled net of respiration losses relative
+    to biomass at harvest if not baled. Which is to account for difference in biomass between harvest and baling time.
+    '''
+    ##inputs
+    harvest_index_ks2 = pinp.stubble['i_harvest_index_ks2']
+    biomass_scalar_ks2 = pinp.stubble['i_biomass_scalar_ks2']
+    propn_grain_harv_ks2 = pinp.stubble['i_propn_grain_harv_ks2']
+
+    ##calc biomass to product scalar
+    biomass2product_ks2 = harvest_index_ks2 * propn_grain_harv_ks2 * biomass_scalar_ks2
+
+    ##convert to pandas
+    keys_k = sinp.landuse['C']
+    keys_s2 = pinp.stubble['i_idx_s2']
+    biomass2product_k_s2 = pd.DataFrame(biomass2product_ks2, index=keys_k, columns=keys_s2)
+    return biomass2product_k_s2.stack()
 
 def f_grain_pool_proportions():
     '''Calculate the proportion of grain in each pool.
@@ -698,7 +738,11 @@ def f_phase_stubble_cost(r_vals):
     stub_cost=mac.f_stubble_cost_ha()
 
     ##calculate the probability of a rotation phase needing stubble handling
-    base_yields_rkl_z = f_rot_yield(for_stub=True).groupby(axis=1,level=1).sum() #sum the p7 axis. Just want the total yield. p7 axis is added later for costs.
+    base_biomass_rkl_z = f_rot_biomass(for_stub=True).unstack()
+    ###convert to grain
+    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harves s2 slice because stubble handling is based on harvestable grain yield
+    harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
+    base_yields_rkl_z = base_biomass_rkl_z.mul(harvest_index_k, axis=0, level=1)
     stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=sinp.landuse['C'], dtype=float)*1000  #have to convert to kg to match base yield
     probability_handling_rkl_z = base_yields_rkl_z.div(stub_handling_threshold, axis=0, level=1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
     probability_handling_rl_z = probability_handling_rkl_z.droplevel(1)
@@ -969,17 +1013,22 @@ def f_insurance(r_vals):
     '''
     ##weight c1 to get average price
     c1_prob = uinp.price_variation['prob_c1']
-    farmgate_price_kgc1_z = f_farmgate_grain_price()
-    farmgate_price_kg_z = farmgate_price_kgc1_z.mul(c1_prob,axis=0,level=-1).groupby(axis=0,level=[0,1]).sum()
+    farmgate_price_ks2gc1_z = f_farmgate_grain_price()
+    farmgate_price_ks2g_z = farmgate_price_ks2gc1_z.mul(c1_prob,axis=0,level=-1).groupby(axis=0,level=[0,1,2]).sum()
     ##combine each grain pool to get average price
     grain_pool_proportions_kg = f_grain_pool_proportions()
-    ave_price_k_z = farmgate_price_kg_z.mul(grain_pool_proportions_kg, axis=0).groupby(axis=0, level=0).sum()
+    farmgate_price_kg_zs2 = farmgate_price_ks2g_z.unstack(1)
+    ave_price_k_zs2 = farmgate_price_kg_zs2.mul(grain_pool_proportions_kg, axis=0).groupby(axis=0, level=0).sum()
     ##calc insurance cost per tonne
-    insurance_k_z = ave_price_k_z.mul(uinp.price['grain_price_info']['insurance']/100, axis=0)  #div by 100 because insurance is a percent
-    insurance_kz = insurance_k_z.stack()
-    yields_rklz = f_rot_yield(for_insurance=True)
-    yields_rl_kz = yields_rklz.unstack([1,3])
-    yields_rl_kz = yields_rl_kz.reindex(insurance_kz.index, axis=1).mul(insurance_kz, axis=1)/1000 #divide by 1000 to convert yield to tonnes
+    insurance_k_zs2 = ave_price_k_zs2.mul(uinp.price['grain_price_info']['insurance']/100, axis=0)  #div by 100 because insurance is a percent
+    insurance_ks2z = insurance_k_zs2.stack([1,0])
+    ##calc phase product for each s2 option then select the s2 slice with maximum insurance cost (maximum because that would most likely be the expected s2 option)
+    biomass_rklz = f_rot_biomass(for_insurance=True)
+    biomass2product_ks2 = f_biomass2product()
+    yields_rlz_ks2 = biomass_rklz.unstack(1).mul(biomass2product_ks2, axis=1, level=0)
+    yields_rl_ks2z = yields_rlz_ks2.unstack(2)
+    yields_rl_ks2z = yields_rl_ks2z.reindex(insurance_ks2z.index, axis=1).mul(insurance_ks2z, axis=1)/1000 #divide by 1000 to convert yield to tonnes
+    yields_rl_kz = yields_rl_ks2z.groupby(axis=1, level=[0,2]).max()
     rot_insurance_rl_z = yields_rl_kz.stack(0).droplevel(axis=0, level=-1)
     ##cost allocation
     start = np.array([uinp.price['crp_insurance_date']]).astype('datetime64')
@@ -1156,7 +1205,8 @@ def f_sow_prov():
 ##collates all the params
 def f1_crop_params(params,r_vals):
     cost, increment_cost, wc, increment_wc = f1_rot_cost(r_vals)
-    yields = f_rot_yield()
+    biomass = f_rot_biomass()
+    biomass2product_ks2 = f_biomass2product()
     propn = f_grain_pool_proportions()
     grain_price, grain_wc = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
@@ -1172,7 +1222,8 @@ def f1_crop_params(params,r_vals):
     params['increment_rot_cost'] = increment_cost.to_dict()
     params['rot_wc'] = wc.to_dict()
     params['increment_rot_wc'] = increment_wc.to_dict()
-    params['rot_yield'] = yields.to_dict()
+    params['rot_biomass'] = biomass.to_dict()
+    params['biomass2product_ks2'] = biomass2product_ks2.to_dict()
 
 
 

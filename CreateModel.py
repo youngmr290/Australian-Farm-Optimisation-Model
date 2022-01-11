@@ -90,11 +90,8 @@ def sets(model, nv):
     #grain pools ie firsts and seconds
     model.s_grain_pools = Set(initialize=sinp.general['grain_pools'], doc='grain pools')
 
-    #landuses that are harvested - used in harv constraints and variables
-    model.s_harvcrops = Set(initialize=uinp.mach_general['contract_harvest_speed'].index, doc='landuses that are harvest')
-
-    ##landuses that produce hay - used in hay constraints
-    model.s_haycrops = Set(ordered=False, initialize=sinp.landuse['Hay'], doc='landuses that make hay')
+    ##biomass uses
+    model.s_biomass_uses = Set(initialize=pinp.stubble['i_idx_s2'], doc='uses of phase biomass')
 
     ##types of crops
     model.s_crops = Set(ordered=False, initialize=sinp.landuse['C'], doc='crop types')

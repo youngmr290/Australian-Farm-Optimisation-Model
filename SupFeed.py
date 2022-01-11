@@ -54,10 +54,10 @@ def f_buy_grain_price(r_vals):
 
     '''
     ##purchase price from neighbour is farm gate price plus transaction and transport
-    farmgate_price_kgc1_z = phs.f_farmgate_grain_price()
+    farmgate_price_ks2gc1_z = phs.f_farmgate_grain_price()
     cartage=uinp.price['sup_cartage']
     transaction_fee=uinp.price['sup_transaction']
-    buy_price_kgc1_z = farmgate_price_kgc1_z + cartage + transaction_fee
+    buy_price_ks2gc1_z = farmgate_price_ks2gc1_z + cartage + transaction_fee
 
     ##allocate farm gate grain price for each cashflow period and calc interest
     start = np.array([pinp.crop['i_grain_income_date']]).astype('datetime64')
@@ -79,13 +79,13 @@ def f_buy_grain_price(r_vals):
     # buy_grain_price =  price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
     # buy_grain_price_wc =  price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
 
-    buy_grain_price_kgc1_p7z =  buy_price_kgc1_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
-    buy_grain_price_wc_kgc1_c0p7z =  buy_price_kgc1_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
+    buy_grain_price_ks2gc1_p7z =  buy_price_ks2gc1_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
+    buy_grain_price_wc_ks2gc1_c0p7z =  buy_price_ks2gc1_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
 
     ##average c1 axis for wc and report
     c1_prob = uinp.price_variation['prob_c1']
-    buy_grain_price_wc_kg_c0p7z = buy_grain_price_wc_kgc1_c0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1]).sum()
-    buy_grain_price_kg_p7z = buy_grain_price_kgc1_p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1]).sum()
+    buy_grain_price_wc_ks2g_c0p7z = buy_grain_price_wc_ks2gc1_c0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
+    r_buy_grain_price_ks2g_p7z = buy_grain_price_ks2gc1_p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
 
     ##buy grain period - purchased grain can only provide into the grain transfer constraint in the phase period when it is purchased (otherwise it will get free grain)
     alloc_p7z = zfun.f1_z_period_alloc(start[na], z_pos=-1)
@@ -97,8 +97,8 @@ def f_buy_grain_price(r_vals):
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, buy_grain_price_kg_p7z, 'buy_grain_price', mask_season_p7z, z_pos=-1)
-    return buy_grain_price_kgc1_p7z.unstack([1,0,2]), buy_grain_price_wc_kg_c0p7z.unstack([1,0]), buy_grain_prov_p7z
+    fun.f1_make_r_val(r_vals, r_buy_grain_price_ks2g_p7z, 'buy_grain_price', mask_season_p7z, z_pos=-1)
+    return buy_grain_price_ks2gc1_p7z.unstack([2,0,1,3]), buy_grain_price_wc_ks2g_c0p7z.unstack([2,0,1]), buy_grain_prov_p7z
 
 def f_sup_cost(r_vals):
     '''
@@ -372,6 +372,21 @@ def f1_a_p6_p7():
     return alloc_p7p6z
 
 
+def f1_sup_s2_ks2():
+    '''
+    Association between supplement feed and s2.
+
+    This param is required because v_sup does not have a s2 axis but product transfer does.
+    An s2 set could be added to supplement but at the time of building it was deemed not to be worth the effort.
+    The lack of s2 axis means that each crop only has one s2 slice that provides supp. E.g. barely only provides
+    grain supplement. Therefore barely that was tactically baled for hay can't be fed as supplement. It can
+    only be sold. This is not a big limitation because the model can just sell the barley hay and purchase some oat hay
+    to feed.
+    '''
+    sup_s2_k_s2 = uinp.supfeed['i_sup_s2_ks2']
+    return sup_s2_k_s2.stack()
+
+
 ##collates all the params
 def f_sup_params(params,r_vals):
     total_sup_cost, total_sup_wc, storage_dep, storage_asset = f_sup_cost(r_vals)
@@ -379,6 +394,7 @@ def f_sup_params(params,r_vals):
     sup_labour = f_sup_labour()
     buy_grain_price, buy_grain_wc, buy_grain_prov_p7z = f_buy_grain_price(r_vals)
     a_p6_p7 = f1_a_p6_p7()
+    sup_s2_ks2 = f1_sup_s2_ks2()
 
 
     ##create non seasonal params
@@ -395,4 +411,5 @@ def f_sup_params(params,r_vals):
     params['total_sup_wc'] = total_sup_wc.to_dict()
     params['sup_labour'] = sup_labour.stack().to_dict()
     params['a_p6_p7'] = a_p6_p7.to_dict()
+    params['sup_s2_ks2'] = sup_s2_ks2.to_dict()
 

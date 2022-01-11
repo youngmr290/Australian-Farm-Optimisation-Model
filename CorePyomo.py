@@ -55,8 +55,8 @@ def coremodel_all(trial_name,model):
     f_con_labour_sheep_manager(model)
     # stubble & nap consumption at harvest
     f_con_harv_stub_nap_cons(model)
-    # stubble
-    f_con_stubble_a(model)
+    # # stubble
+    # f_con_stubble_a(model)
     # sow landuse
     f_con_phasesow(model)
     # harvest and make hay
@@ -68,8 +68,10 @@ def coremodel_all(trial_name,model):
     f_con_me(model)
     #crop grazing
     # f_con_cropgraze_area(model)
+    #biomass
+    f_con_biomass_transfer(model)
     #grain
-    f_con_grain_transfer(model)
+    f_con_product_transfer(model)
     #cashflow
     f_con_cashflow(model)
     f_con_workingcap_within(model)
@@ -272,31 +274,31 @@ def f_con_harv_stub_nap_cons(model):
                                                  doc='limit stubble and nap consumption in the period harvest occurs')
 
 
-def f_con_stubble_a(model):
-    '''
-    Constrains the amount of stubble required to consume 1t of category A to no more than the total amount of
-    stubble produced from each rotation.
-    '''
-    ##has to have p7 axis and transfer because penalties occur at seeding time and have to transfer as seasons are unclustered (same as yield)
-    def stubble_a(model,q,s,p7,k,z9):
-        l_p7 = list(model.s_season_periods)
-        p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
-        p7_end = l_p7[-1]
-        if pe.value(model.p_wyear_inc_qs[q,s]):
-            return (-sum(model.v_phase_area[q,s,p7,z9,r,l] * model.p_rot_stubble[r,k,l,p7,z9]
-                         for r in model.s_phases for l in model.s_lmus
-                         if pe.value(model.p_rot_stubble[r,k,l,p7,z9]) != 0)
-                    + macpy.f_stubble_penalty(model,q,s,p7,k,z9) + cgzpy.f_grazecrop_stubble_penalty(model,q,s,p7,k,z9)
-                    + sum(model.v_stub_harv[q,s,p6,z9,k] * 1000 * model.p_a_p6_p7[p7,p6,z9] for p6 in model.s_feed_periods)
-                    - model.v_stub_debit[q,s,p7,k,z9] *1000 * (p7 != p7_end) #cant debit in the final peirod otherwise unlimited stubble.
-
-                    + sum(model.v_stub_debit[q,s,p7_prev,k,z8] * 1000 * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
-                          for z8 in model.s_season_types) <= 0)
-        else:
-            return pe.Param.Skip
-
-    model.con_stubble_a = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, rule=stubble_a,
-                                        doc='Total stubble at harvest. Provides Cat A at harvest.')
+# def f_con_stubble_a(model):
+#     '''
+#     Constrains the amount of stubble required to consume 1t of category A to no more than the total amount of
+#     stubble produced from each rotation.
+#     '''
+#     ##has to have p7 axis and transfer because penalties occur at seeding time and have to transfer as seasons are unclustered (same as yield)
+#     def stubble_a(model,q,s,p7,k,z9):
+#         l_p7 = list(model.s_season_periods)
+#         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
+#         p7_end = l_p7[-1]
+#         if pe.value(model.p_wyear_inc_qs[q,s]):
+#             return (-sum(model.v_phase_area[q,s,p7,z9,r,l] * model.p_rot_stubble[r,k,l,p7,z9]
+#                          for r in model.s_phases for l in model.s_lmus
+#                          if pe.value(model.p_rot_stubble[r,k,l,p7,z9]) != 0)
+#                     + macpy.f_stubble_penalty(model,q,s,p7,k,z9) + cgzpy.f_grazecrop_stubble_penalty(model,q,s,p7,k,z9)
+#                     + sum(model.v_stub_harv[q,s,p6,z9,k] * 1000 * model.p_a_p6_p7[p7,p6,z9] for p6 in model.s_feed_periods)
+#                     - model.v_stub_debit[q,s,p7,k,z9] *1000 * (p7 != p7_end) #cant debit in the final peirod otherwise unlimited stubble.
+#
+#                     + sum(model.v_stub_debit[q,s,p7_prev,k,z8] * 1000 * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
+#                           for z8 in model.s_season_types) <= 0)
+#         else:
+#             return pe.Param.Skip
+#
+#     model.con_stubble_a = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, rule=stubble_a,
+#                                         doc='Total stubble at harvest. Provides Cat A at harvest.')
 
 
 def f_con_phasesow(model):
@@ -366,19 +368,18 @@ def f_con_harv(model):
     farmer labour and machinery or contract services.
     '''
     ##Transfer unharvested grain incase a season node occurs between two harvest periods. The harvest requirement needs to uncluster to the new seasons.
-    ##Yield required for harvest does not include seeding timliness and crop grazing penalty (if this is deemed important could be included using f_late_seed_penalty & f_grazecrop_yield_penalty)
-    def harv(model,q,s,p7,k,z9):
+    def harv(model,q,s,p7,k,s2,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1]  # need the activity level from last feed period
         p7_end = l_p7[-1]
         return (-macpy.f_harv_supply(model,q,s,p7,k,z9)
-                + sum(phspy.f_rotation_yield(model,q,s,p7,g,k,z9) / 1000 for g in model.s_grain_pools)
+                + model.v_use_biomass[q,s,p7,z9,k,s2] * model.p_biomass2product[k,s2] #adjust with biomass2product because harv dv are based on grain yield not biomass
                 - model.v_unharvested_yield[q,s,p7,k,z9] * (p7 != p7_end) #must be harvested before the begining of the next yr - therefore no transfer
                 + sum(model.v_unharvested_yield[q,s,p7_prev,k,z8] * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
                       for z8 in model.s_season_types)
                 <= 0)
 
-    model.con_harv = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_harvcrops, model.s_season_types, rule=harv,doc='harvest constraint')
+    model.con_harv = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, ['Harv'], model.s_season_types, rule=harv,doc='harvest constraint')
 
 
 def f_con_makehay(model):
@@ -387,64 +388,90 @@ def f_con_makehay(model):
     by contract services.
     '''
     ##Transfer unharvested grain incase a season node occurs between two harvest periods. The harvest requirement needs to uncluster to the new seasons.
-    ##Yield required for harvest does not include seeding timliness and crop grazing penalty (if this is deemed important could be included using f_late_seed_penalty & f_grazecrop_yield_penalty)
-    def harv(model,q,s,p7,k,z9):
+    def harv(model,q,s,p7,s2,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
         p7_end = l_p7[-1]
-        return (sum(-model.v_hay_made[q,s,z9] * model.p_hay_made_prov[p7,z9]
-                   + phspy.f_rotation_yield(model,q,s,p7,g,k,z9) / 1000
-                   for g in model.s_grain_pools)
-               - model.v_hay_tobe_made[q,s,p7,z9] * (p7 != p7_end) #must be harvested before the begining of the next yr - therefore no transfer
+        return (-model.v_hay_made[q,s,z9] * model.p_hay_made_prov[p7,z9]
+                   + sum(model.v_use_biomass[q,s,p7,z9,k,s2] * model.p_biomass2product[k,s2] for k in model.s_crops)
+               - model.v_hay_tobe_made[q,s,p7,z9] * (p7 != p7_end) #must be baled before the begining of the next yr - therefore no transfer
                + sum(model.v_hay_tobe_made[q,s,p7_prev,z8] * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
                      for z8 in model.s_season_types)
                <= 0)
 
-    model.con_makehay = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_haycrops,model.s_season_types,rule=harv,doc='make hay constraint')
+    model.con_makehay = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, ['Bale'], model.s_season_types,rule=harv,doc='make hay constraint')
 
 
-def f_con_grain_transfer(model):
+def f_con_biomass_transfer(model):
     '''
-    Tracks the grain transferred between different activities including the yield production from all rotations, late
-    seeding penalties and grain feed to sheep. Grain fed to the sheep is purchased unless it is produced on farm.
+    Tracks the biomass of each phase and allows the transfer of biomass to either grain, hay or fodder for grazing.
+    Biomass penalties associated with untimely sowing and/or crop grazing are accounted for here as well.
+    '''
+    ##Must pass between p7 because need to transfer penalties through the season
+
+    ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint.
+    def biomass_transfer(model,q,s,p7,k,z9):
+        l_p7 = list(model.s_season_periods)
+        p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
+        p7_start = l_p7[0]
+        p7_end = l_p7[-1]
+
+        return -phspy.f_rotation_biomass(model,q,s,p7,k,z9) + macpy.f_late_seed_penalty(model,q,s,p7,k,z9) \
+               + cgzpy.f_grazecrop_biomass_penalty(model,q,s,p7,k,z9) \
+               - model.v_biomass_debit[q,s,p7,z9,k] * 1000 * (p7 != p7_end) \
+               + model.v_biomass_credit[q,s,p7,z9,k] * 1000 \
+               + sum((model.v_biomass_debit[q,s,p7_prev,z8,k] * 1000 - model.v_biomass_credit[q,s,p7_prev,z8,k] * 1000 * (p7 != p7_start)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
+                     ]   # p7!=p7[0] to stop biomass tranfer from last yr to current yr else unbounded solution.
+                     for z8 in model.s_season_types) \
+               + sum(model.v_use_biomass[q,s,p7,z9,k,s2] for s2 in model.s_biomass_uses) * 1000 <= 0
+
+    model.con_biomass_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops,model.s_season_types,rule=biomass_transfer,
+                                             doc='constrain biomass transfer')
+
+
+def f_con_product_transfer(model):
+    '''
+    Links rotation product (grain or baled biomass), feed requirement for supplementary feeding and the sale and
+    purchase of grain/hay.
+    Grain fed to the sheep is purchased unless it is produced on farm.
     The net grain is either purchased or sold depending on the final balance.
     '''
     ##Must pass between p7 because harvest could be in different p7's for different crops and sale/buy timing could
     ## be in different p7 to harvest
 
     ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint.
-    def grain_transfer(model,q,s,p7,g,k,z9):
+    def product_transfer(model,q,s,p7,g,k,s2,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
         p7_start = l_p7[0]
         p7_end = l_p7[-1]
 
-        return -phspy.f_rotation_yield(model,q,s,p7,g,k,z9) + macpy.f_late_seed_penalty(model,q,s,p7,g,k,z9) \
-               + cgzpy.f_grazecrop_yield_penalty(model,q,s,p7,g,k,z9) \
-               + sum(model.v_sup_con[q,s,z9,k,g,f,p6] * model.p_a_p6_p7[p7,p6,z9] * 1000
+        return -phspy.f_rotation_product(model,q,s,p7,g,k,s2,z9) \
+               + sum(model.v_sup_con[q,s,z9,k,g,f,p6] * model.p_sup_s2[k,s2] * model.p_a_p6_p7[p7,p6,z9] * 1000
                      for f in model.s_feed_pools for p6 in model.s_feed_periods) \
-               - model.v_grain_debit[q,s,p7,z9,k,g] * 1000 * (p7 != p7_end) \
-               + model.v_grain_credit[q,s,p7,z9,k,g] * 1000 \
-               + sum((model.v_grain_debit[q,s,p7_prev,z8,k,g] * 1000 - model.v_grain_credit[q,s,p7_prev,z8,k,g] * 1000 * (p7 != p7_start)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
+               - model.v_grain_debit[q,s,p7,z9,k,s2,g] * 1000 * (p7 != p7_end) \
+               + model.v_grain_credit[q,s,p7,z9,k,s2,g] * 1000 \
+               + sum((model.v_grain_debit[q,s,p7_prev,z8,k,s2,g] * 1000 - model.v_grain_credit[q,s,p7_prev,z8,k,s2,g] * 1000 * (p7 != p7_start)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
                      ]   # p7!=p7[0] to stop grain tranfer from last yr to current yr else unbounded solution.
                      for z8 in model.s_season_types) \
-               - model.v_buy_grain[q,s,p7,z9,k,g] * model.p_buy_grain_prov[p7,z9] * 1000 + model.v_sell_grain[q,s,p7,z9,k,g] * 1000 <= 0
+               - model.v_buy_grain[q,s,p7,z9,k,s2,g] * model.p_buy_grain_prov[p7,z9] * 1000 + model.v_sell_grain[q,s,p7,z9,k,s2,g] * 1000 <= 0
 
-    model.con_grain_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_grain_pools,model.s_crops,model.s_season_types,rule=grain_transfer,
+    model.con_product_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_grain_pools,
+                                               model.s_crops,model.s_biomass_uses,model.s_season_types,rule=product_transfer,
                                              doc='constrain grain transfer between rotation and sup feeding')
 
 
 def f1_grain_income(model,q,s,p7,z,c1):
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
     return sum(
-            model.v_sell_grain[q,s,p7,z,k,g] * model.p_grain_price[p7,z,g,k,c1] - model.v_buy_grain[q,s,p7,z,k,g] * model.p_buy_grain_price[
-            p7,z,g,k,c1] for k in model.s_crops for g in model.s_grain_pools)
+            model.v_sell_grain[q,s,p7,z,k,s2,g] * model.p_grain_price[p7,z,g,k,s2,c1] - model.v_buy_grain[q,s,p7,z,k,s2,g] * model.p_buy_grain_price[
+            p7,z,g,k,s2,c1] for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
 
 def f1_grain_wc(model,q,s,c0,p7,z):
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
     return sum(
-        model.v_sell_grain[q,s,p7,z,k,g] * model.p_grain_wc[c0,p7,z,g,k] - model.v_buy_grain[q,s,p7,z,k,g] * model.p_buy_grain_wc[
-            c0,p7,z,g,k] for k in model.s_crops for g in model.s_grain_pools)
+        model.v_sell_grain[q,s,p7,z,k,s2,g] * model.p_grain_wc[c0,p7,z,g,k,s2] - model.v_buy_grain[q,s,p7,z,k,s2,g] * model.p_buy_grain_wc[
+            c0,p7,z,g,k,s2] for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
 
 
 def f_con_poc_available(model):

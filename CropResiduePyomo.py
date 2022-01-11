@@ -35,8 +35,8 @@ def f1_stubpyomo_local(params, model):
                                    model.s_crops, model.s_stub_cat,bounds=(0.0,None),
                                    doc='transfer of 1t of stubble to following period - 1t of stubble at the start of the period that is not consumed but is decayed')
 
-    model.v_stub_harv = pe.Var(model.s_sequence_year, model.s_sequence, model.s_feed_periods, model.s_season_types, model.s_crops, bounds=(0.0,None),
-                                   doc='total stubble at harvest. Used to transfer to stubble constraint')
+    # model.v_stub_harv = pe.Var(model.s_sequence_year, model.s_sequence, model.s_feed_periods, model.s_season_types, model.s_crops, bounds=(0.0,None),
+    #                                doc='total stubble at harvest. Used to transfer to stubble constraint')
 
     model.v_stub_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, bounds=(0,None),
                                 doc='tonnes of total stub in debt (will need to be provided from harvest)')
@@ -49,8 +49,8 @@ def f1_stubpyomo_local(params, model):
     ####################
     #define parameters #
     ####################
-    model.p_rot_stubble = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_season_periods, model.s_season_types,
-                                   initialize=params['rot_stubble'], default=0.0, doc='stubble produced per ha of each rotation')
+    # model.p_rot_stubble = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_season_periods, model.s_season_types,
+    #                                initialize=params['rot_stubble'], default=0.0, doc='stubble produced per ha of each rotation')
 
     model.p_harv_prop = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['cons_prop'],
                                  default = 0.0, mutable=False, doc='proportion of the way through each fp harvest occurs (0 if harv doesnt occur in given period)')
@@ -64,6 +64,9 @@ def f1_stubpyomo_local(params, model):
     model.p_a_prov = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['cat_a_prov'],
                              default = 0.0, mutable=False, doc='cat A stubble provided at harvest from 1t of stubble')
     
+    model.p_biomass2residue = pe.Param(model.s_crops, model.s_biomass_uses, initialize=params['biomass2residue_ks2'],
+                             default = 0.0, mutable=False, doc='conversion of biomass to crop residue for each biomass use (harvesting as normal, baling for hay and grazing as fodder)')
+
     model.p_bc_prov = pe.Param(model.s_crops, model.s_stub_cat, initialize=params['transfer_prov'], default = 0.0,
                                doc='stubble B provided from 1t of cat A and stubble C provided from 1t of cat B')
     
@@ -100,7 +103,8 @@ def f_con_stubble_within(model):
             p6_prev = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6)-1] #have to convert to a list first because indexing of an ordered set starts at 1
             return  - sum(model.v_stub_transfer[q,s,p6_prev,z8,k,sc] * model.p_stub_transfer_prov[p6_prev,z8,k]
                           * model.p_parentz_provwithin_fp[p6_prev,z8,z9] for z8 in model.s_season_types)  \
-                    - model.v_stub_harv[q,s,p6,z9,k] * model.p_a_prov[p6,z9,k,sc] \
+                    - sum(model.v_use_biomass[q,s,p7,z9,k,s2] * model.p_a_p6_p7[p7,p6,z9] * model.p_biomass2residue[k,s2]
+                          for s2 in model.s_biomass_uses for p7 in model.s_season_periods) * model.p_a_prov[p6,z9,k,sc] \
                     + model.v_stub_transfer[q,s,p6,z9,k,sc] * model.p_stub_transfer_req[p6,z9,k] \
                     + sum(-model.v_stub_con[q,s,f,p6,z9,k,sc_prev] * model.p_bc_prov[k,sc_prev]
                           + model.v_stub_con[q,s,f,p6,z9,k,sc] * model.p_bc_req[k,sc]
@@ -126,7 +130,8 @@ def f_con_stubble_between(model):
                           + model.v_stub_transfer[q,s8,p6_prev,z8,k,sc] * model.p_stub_transfer_prov[p6_prev,z8,k]
                           * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
                           for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q,s8])!=0)  \
-                    - model.v_stub_harv[q,s9,p6,z9,k] * model.p_a_prov[p6,z9,k,sc] \
+                    - sum(model.v_use_biomass[q,s9,p7,z9,k,s2] * 1000 * model.p_a_p6_p7[p7,p6,z9] * model.p_biomass2residue[k,s2]
+                          for s2 in model.s_biomass_uses for p7 in model.s_season_periods) * model.p_a_prov[p6,z9,k,sc] \
                     + model.v_stub_transfer[q,s9,p6,z9,k,sc] * model.p_stub_transfer_req[p6,z9,k] \
                     + sum(-model.v_stub_con[q,s9,f,p6,z9,k,sc_prev] * model.p_bc_prov[k,sc_prev]
                           + model.v_stub_con[q,s9,f,p6,z9,k,sc] * model.p_bc_req[k,sc]
