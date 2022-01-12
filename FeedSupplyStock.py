@@ -347,17 +347,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     # t_fs_btrt_a1e1b1j2wzida0e0k4xyg3 =
     # t_fs_gender_pa1e1b1j2wzida0e0b0k5yg3 =
 
-
-
-    ##4) add adjustment to std pattern (the adjustment is broadcast across j2 (the standard, minimum and maximum))
-    ##feedsupply is clipped below to ensure it is within a feasible range.
-    ##Note: the adjustment is in FS units (not in MJ/kg)
-    t_feedsupply_pa1e1b1j2wzida0e0b0xyg1 = (t_feedsupply_pa1e1b1j2wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1nwzida0e0b0xyg1
-                                                   + t_fs_lsln_pa1e1b1nwzida0e0b0xyg1) #can't use += for some reason
-    # t_feedsupply_pa1e1b1j2wzida0e0b0xyg3 = (t_feedsupply_pa1e1b1j2wzida0e0b0xyg3 + t_fs_agedam_pj2zida0e0b0xg3
-    #                                             + t_fs_ageweaned_pj2zida0e0b0xg3 + t_fs_gender_pj2zida0e0b0xg3)
-
-    ##4b) update fs and confinement info with pkl if desired
+    ##4a) update fs and confinement info with pkl if desired
     fs_number = sinp.structuralsa['i_fs_number']
     if sinp.structuralsa['i_fs_use_pkl']:
         print('pkl fs being used.')
@@ -374,14 +364,13 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
         t_confinement_tpa1e1b1nwzida0e0b0xyg1 = fun.f_update(t_confinement_pa1e1b1nwzida0e0b0xyg1[na], pkl_fs['confinement']['dams'], n_fs_dams==1)
         t_confinement_tpa1e1b1nwzida0e0b0xyg3 = fun.f_update(t_confinement_pa1e1b1nwzida0e0b0xyg3[na], pkl_fs['confinement']['offs'], n_fs_offs==1)
 
-        ###slice t axis if t is not being included in the loop part of sgen
-        ### take the retain t slice (slice so that sinleton axis remains)
+        ###slice t axis if t is not being included in the looping part of sgen
+        ### take the 'retain' t slice (slice so that singleton axis remains)
         if not sinp.structuralsa['i_generate_with_t']:
             t_confinement_stpa1e1b1nwzida0e0b0xyg1 = t_confinement_tpa1e1b1nwzida0e0b0xyg1[:,2:3]
             t_confinement_stpa1e1b1nwzida0e0b0xyg3 = t_confinement_tpa1e1b1nwzida0e0b0xyg3[:,0:1]
             t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1[:,2:3]
             t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 = t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3[:,0:1]
-
 
     ###still need to add singleton s&t axis
     else:
@@ -392,6 +381,15 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
         t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = t_feedsupply_pa1e1b1j2wzida0e0b0xyg1[na,na]
         t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 = t_feedsupply_pa1e1b1j2wzida0e0b0xyg3[na,na]
 
+    ##4b) add adjustment to std pattern if it is specified (mostly won't be included if using pkl_fs)
+    ## adjustment is only calculated for dams
+    if sinp.structuralsa['i_r2adjust_inc']:
+        ##the adjustment is broadcast across j2 (the standard, minimum and maximum)
+        ##feedsupply is clipped in step 7 to ensure it is within a feasible range.
+        t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = (t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1nwzida0e0b0xyg1
+                                                  + t_fs_lsln_pa1e1b1nwzida0e0b0xyg1) #can't use += for some reason
+        # t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 = (t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 + t_fs_agedam_pj2zida0e0b0xg3
+        #                                             + t_fs_ageweaned_pj2zida0e0b0xg3 + t_fs_gender_pj2zida0e0b0xg3)
 
     ##5)Convert the ‘j2’ axis to an ‘n’ axis using the nut_spread inputs.
     ## activate n axis for confinement control (controls if a nutrition pattern is in confinement - note

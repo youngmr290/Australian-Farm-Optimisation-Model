@@ -133,6 +133,7 @@ def f_structural_inp_sa():
     structuralsa['i_fs_create'] = fun.f_sa(structuralsa['i_fs_create'], sen.sav['fs_create'],5)
     structuralsa['i_fs_use_pkl'] = fun.f_sa(structuralsa['i_fs_use_pkl'], sen.sav['fs_use_pkl'],5)
     structuralsa['i_fs_number'] = fun.f_sa(structuralsa['i_fs_number'], sen.sav['fs_number'],5)
+    structuralsa['i_r2adjust_inc'] = fun.f_sa(structuralsa['i_r2adjust_inc'], sen.sav['r2adjust_inc'],5)
 
 ##############################
 # handle inputs with p6 axis #

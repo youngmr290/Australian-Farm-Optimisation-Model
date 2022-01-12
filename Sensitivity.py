@@ -128,6 +128,7 @@ sav['fs_create']      = '-'                  #SA to control if the trial is bein
 sav['gen_with_t']      = '-'                  #SA to control if sheep generator is run with active t axis.
 sav['fs_use_pkl']      = '-'                  #SA to control if the pkl fs is used or the excel input fs is used.
 sav['fs_number']      = '-'                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is used for a given trial.
+sav['r2adjust_inc']      = '-'              #SA to control if the r2 feedsupply adjustment from Excel is included.
 
 ##finance
 sav['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
