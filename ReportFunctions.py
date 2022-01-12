@@ -514,12 +514,12 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         grains_buy_price_zks2g_p7 = r_vals['sup']['buy_grain_price'].stack().reorder_levels([3,0,1,2])
 
         ##grain purchased
-        grain_purchased_qsp7zks2g = f_vars2df(lp_vars,'v_buy_grain', mask_season_p7z[:,:,na,na], z_pos=-3)
+        grain_purchased_qsp7zks2g = f_vars2df(lp_vars,'v_buy_grain', mask_season_p7z[:,:,na,na,na], z_pos=-4)
         grain_purchased_qszks2g = grain_purchased_qsp7zks2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
         grain_purchased_zks2gqs = grain_purchased_qszks2g.reorder_levels([2,3,4,5,0,1]) #change the order so that reindexing works (new levels being added must be at the end)
 
         ##grain sold
-        grain_sold_qsp7zks2g = f_vars2df(lp_vars,'v_sell_grain', mask_season_p7z[:,:,na,na], z_pos=-3)
+        grain_sold_qsp7zks2g = f_vars2df(lp_vars,'v_sell_grain', mask_season_p7z[:,:,na,na,na], z_pos=-4)
         grain_sold_qszks2g = grain_sold_qsp7zks2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
         grain_sold_zks2gqs = grain_sold_qszks2g.reorder_levels([2,3,4,5,0,1]) #change the order so that reindexing works (new levels being added must be at the end)
 
@@ -546,7 +546,7 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
 def f_stubble_summary(lp_vars, r_vals):
     ##mask to uncluster z axis
     maskz8_p6z = r_vals['pas']['mask_fp_z8var_p6z']
-    stub_fp6zks = f_vars2df(lp_vars, 'v_stub_con', maskz8_p6z[:,:,na,na], z_pos=-3)
+    stub_fp6zks = f_vars2df(lp_vars, 'v_stub_con', maskz8_p6z[:,:,na,na,na], z_pos=-4)
     return stub_fp6zks.groupby(level=(1, 2, 4)).sum().unstack()
 
 
