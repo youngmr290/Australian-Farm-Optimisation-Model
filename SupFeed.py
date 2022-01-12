@@ -116,14 +116,17 @@ def f_sup_cost(r_vals):
     to only feed as much supplement as the storage capacity. However, AFO is built to evaluate
     the medium term where storage capacity can be varied. To account for this the cost
     of the storage is divided by the storage capacity returning the storage cost per tonne of supplement.
-    This cost then applies to each tonne of supplement fed.
+    This cost then applies to each tonne of supplement fed. The storage cost is calculated assuming
+    that all supplement fed for the year is stored on farm. If the capacity of the silos is less than
+    the supplement fed (meaning additional supplement is purchased part way through the year) then the
+    storage cost will be overestimated. However, discussions with farm consultants suggest that farmers
+    store enough supplement for the whole year an extra to handle a poor year.
 
     The machinery cost to feed a tonne of supplement is added in this function however it
     is calculated in Mach.py (see Mach.py for details on machinery cost to feed supplement).
 
     '''
 
-    #todo there could be a limitation here. We are assuming the silo is only filled once each year - the cost of the silo per tonne of sup is calculated based on the silos capacity, if the silo is fill multiple times this will overestimate the cost.
     ##calculate the insurance/dep/asset value per yr for the silos
     silo_info = pinp.supfeed['storage_type']
     silo_info.loc['dep'] = (silo_info.loc['price'] - silo_info.loc['salvage value'])/silo_info.loc['life']
