@@ -19,17 +19,30 @@ import Periods as per
 
 na = np.newaxis
 
-#todo remove the 1-harv_propn when converting to the biomass version. actually i think just need to add s2 axis
-def f_cropresidue_production():
-    '''
-    Stubble produced per kg of total grain (kgs of dry matter).
+# def f_cropresidue_production():
+#     '''
+#     Stubble produced per kg of total grain (kgs of dry matter).
+#
+#     This is a separate function because it is used in CropGrazing.py and Mach.py to calculate stubble penalties.
+#     '''
+#     stubble_prod_data = 1 / pinp.stubble['i_harvest_index_ks2'][:,0] - 1 * pinp.stubble['i_propn_grain_harv_ks2'][:,0]  # subtract 1*harv propn to account for the tonne of grain that was harvested and doesnt become stubble.
+#     stubble = pd.Series(data=stubble_prod_data, index=sinp.landuse['C'])
+#     return stubble
 
-    This is a separate function because it is used in CropGrazing.py and Mach.py to calculate stubble penalties.
+def f_biomass2residue():
     '''
-    stubble_prod_data = 1 / pinp.stubble['harvest_index'] - 1 * pinp.stubble['proportion_grain_harv']  # subtract 1*harv propn to account for the tonne of grain that was harvested and doesnt become stubble.
-    stubble = pd.Series(data=stubble_prod_data, index=sinp.landuse['C'])
-    return stubble
+    Stubble (kgs of dry matter) produced per kg of biomass .
 
+    This is a separate function because it is used in residue simulator.
+    '''
+    ##inputs
+    harvest_index_ks2 = pinp.stubble['i_harvest_index_ks2']
+    biomass_scalar_ks2 = pinp.stubble['i_biomass_scalar_ks2']
+    propn_grain_harv_ks2 = pinp.stubble['i_propn_grain_harv_ks2']
+
+    ##calc biomass to product scalar
+    biomass2residue_ks2 = (1 - harvest_index_ks2 * propn_grain_harv_ks2) * biomass_scalar_ks2
+    return biomass2residue_ks2
 
 
 def crop_residue_all(params, r_vals, nv):
@@ -47,7 +60,7 @@ def crop_residue_all(params, r_vals, nv):
 
     The total mass of crop residues at first
     grazing (harvest for stubble and an inputted date for fodder) is calculated as a product of the biomass,
-    harvest index and proportion havrvested. Overtime if the feed is not consumed it deteriorates in quality
+    harvest index and proportion havrvested (see f_biomass2residue). Overtime if the feed is not consumed it deteriorates in quality
     and quantity due to adverse effects of weather and the impact of sheep trampling.
 
     Residue production can be positively impacted by frost because frost during the plants flowing stage
@@ -123,18 +136,6 @@ def crop_residue_all(params, r_vals, nv):
     # residue_per_grain_k = f_cropresidue_production()
     # rot_stubble_rkl_p7z = rot_yields_rkl_p7z.mul(residue_per_grain_k, axis=0, level=1)
 
-    #############################
-    # Biomass to residue        #
-    #############################
-    ##inputs
-    harvest_index_ks2 = pinp.stubble['i_harvest_index_ks2']
-    biomass_scalar_ks2 = pinp.stubble['i_biomass_scalar_ks2']
-    propn_grain_harv_ks2 = pinp.stubble['i_propn_grain_harv_ks2']
-
-    ##calc biomass to product scalar
-    biomass2residue_ks2 = (1 - harvest_index_ks2 * propn_grain_harv_ks2) * biomass_scalar_ks2
-
-
     #########################
     # deterioration         #
     #########################
@@ -165,12 +166,14 @@ def crop_residue_all(params, r_vals, nv):
     4) calcs the md of each stubble category (dmd to MD)
     
     '''
-    n_crops = len(sinp.landuse['C'])
     n_seasons = zfun.f_keys_z().shape[0]
+    len_k = len(sinp.landuse['C'])
+    len_s2 = len(pinp.stubble['i_idx_s2'])
+    len_s1 = len(pinp.stubble['i_stub_cat_dmd_s1'])
 
     ##read in category info frpm xl
-    cat_propn_s1k = pd.read_excel('stubble sim.xlsx',header=None, engine='openpyxl')
-    cat_propn_ks1 = cat_propn_s1k.values.T
+    cat_propn_s1_ks2 = pd.read_excel('stubble sim.xlsx',header=None, engine='openpyxl')
+    cat_propn_ks1s2 = cat_propn_s1_ks2.values.reshape(len_s1,len_k,len_s2).swapaxes(0,1)
 
     ##quality of each category in each period
     ###scale dmd at the trial date to each period.
@@ -226,23 +229,23 @@ def crop_residue_all(params, r_vals, nv):
     ###########
     #trampling#
     ###########
-    #for now this is just a single number however the input could be changed to per period, if this is changed some of the dict below would need to be dfs the stacked - so they account for period
-    tramp_effect_ks1 = pinp.stubble['trampling'][:,na] * cat_propn_ks1
+    #for now this is just a single number however the input could be changed to per period
+    tramp_effect_ks1s2 = pinp.stubble['trampling'][:,na,na] * cat_propn_ks1s2 #mul by cat propn because only want to include the trampling of the categry being consumed.
 
     ################################
     # allow access to next category#
     ################################
 
     ##quantity of cat A stubble provided from 1t of total stubble at harvest
-    cat_a_prov_p6zks1 = 1000 * cat_propn_ks1 * np.logical_and(np.arange(len(pinp.stubble['i_stub_cat_idx']))==0
-                                                      ,peirod_is_harvest_p6zk[...,na]) #Only cat A is provides at harvest
+    cat_a_prov_p6zks1s2 = 1000 * cat_propn_ks1s2 * np.logical_and(np.arange(len(pinp.stubble['i_stub_cat_idx']))[:,na]==0
+                                                      ,peirod_is_harvest_p6zk[...,na,na]) #Only cat A is provides at harvest
 
     ##amount of available stubble required to consume 1t of each cat in each fp
-    stub_req_ks1 = 1000*(1+tramp_effect_ks1)
+    stub_req_ks1s2 = 1000*(1+tramp_effect_ks1s2)
 
     ##amount of next category provide by consumption of current category.
-    stub_prov_ks1 = np.roll(cat_propn_ks1, shift=-1,axis=-1)/cat_propn_ks1*1000
-    stub_prov_ks1[:,-1] = 0 #final cat doesnt provide anything
+    stub_prov_ks1s2 = np.roll(cat_propn_ks1s2, shift=-1,axis=1)/cat_propn_ks1s2*1000
+    stub_prov_ks1s2[:,-1,:] = 0 #final cat doesnt provide anything
 
 
     ##############################
@@ -274,7 +277,7 @@ def crop_residue_all(params, r_vals, nv):
     cons_propn_p6zk = cons_propn_p6zk * mask_fp_z8var_p6z[...,na]
     stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * mask_fp_z8var_p6z[...,na]
     stub_transfer_req_p6zk = stub_transfer_req_p6zk * mask_fp_z8var_p6z[...,na]
-    cat_a_prov_p6zks1 = cat_a_prov_p6zks1 * mask_fp_z8var_p6z[...,na,na]
+    cat_a_prov_p6zks1s2 = cat_a_prov_p6zks1s2 * mask_fp_z8var_p6z[...,na,na,na]
     md_fp6zks1 = md_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
     vol_fp6zks1 = vol_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
 
@@ -292,9 +295,9 @@ def crop_residue_all(params, r_vals, nv):
 
     ##array indexes
     ###stub transfer (cat b & c)
-    arrays_ks1 = [keys_k, keys_s1]
+    arrays_ks1s2 = [keys_k, keys_s1, keys_s2]
     ###category A req
-    arrays_p6zks1 = [keys_p6, keys_z, keys_k, keys_s1]
+    arrays_p6zks1s2 = [keys_p6, keys_z, keys_k, keys_s1, keys_s2]
     ###md & vol
     arrays_fp6zks1 = [keys_f, keys_p6, keys_z, keys_k, keys_s1]
     ###harv con & feed period transfer
@@ -310,10 +313,10 @@ def crop_residue_all(params, r_vals, nv):
     # params['rot_stubble'] = rot_stubble_rkl_p7z.stack([0,1]).to_dict()
 
     ##'require' params ie consuming 1t of stubble B requires 1.002t from the constraint (0.002 accounts for trampling)
-    params['transfer_req'] = fun.f1_make_pyomo_dict(stub_req_ks1, arrays_ks1)
+    params['transfer_req'] = fun.f1_make_pyomo_dict(stub_req_ks1s2, arrays_ks1s2)
 
     ###'provide' from cat to cat ie consuming 1t of cat A provides 2t of cat b
-    params['transfer_prov'] = fun.f1_make_pyomo_dict(stub_prov_ks1, arrays_ks1)
+    params['transfer_prov'] = fun.f1_make_pyomo_dict(stub_prov_ks1s2, arrays_ks1s2)
 
     ###harv con
     params['cons_prop'] = fun.f1_make_pyomo_dict(cons_propn_p6zk, arrays_p6zk)
@@ -323,9 +326,10 @@ def crop_residue_all(params, r_vals, nv):
     params['stub_transfer_req'] = fun.f1_make_pyomo_dict(stub_transfer_req_p6zk, arrays_p6zk)
 
     ###category A transfer 'require' param
-    params['cat_a_prov'] = fun.f1_make_pyomo_dict(cat_a_prov_p6zks1, arrays_p6zks1)
+    params['cat_a_prov'] = fun.f1_make_pyomo_dict(cat_a_prov_p6zks1s2, arrays_p6zks1s2)
 
     ###category A transfer 'require' param
+    biomass2residue_ks2 = f_biomass2residue()
     params['biomass2residue_ks2'] = fun.f1_make_pyomo_dict(biomass2residue_ks2, arrays_ks2)
 
     ##md
