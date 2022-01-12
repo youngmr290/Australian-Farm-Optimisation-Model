@@ -5,8 +5,11 @@ author: young
 The phase module is driven by the inputs [#i]_ for yield production, fertiliser and chemical
 requirements for each rotation phase on each LMU. For pasture phases this module only generates data for
 fertiliser, chemical and seed (if resown) requirement. Growth, consumption etc is generated in the
-pasture module. AFO can then optimise the area of each rotation
-on each LMU. AFO does not currently simulate the biology of crop plant growth under different technical
+pasture module. Each phase provide a given amount of biomass depending on the rotation history, LMU, frost,
+and arable proportion. AFO can then optimise the area of each rotation
+on each LMU and the best way to utilise the biomass of each rotation phase.
+Biomass can be either harvested for grain, baled for hay or grazed as standing fodder.
+AFO does not currently simulate the biology of crop plant growth under different technical
 management. Thus, the model is unable to optimise technical aspects of cropping such as timing and
 level of controls [#j]_. However, the user has the capacity to do this more manually by altering the
 inputs (more like the technique of simulation modelling) or by including additional land uses
@@ -222,12 +225,12 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     The crop yield for each rotation phase, on the base LMU [#]_, before frost and harvested proportion adjustment,
     is entered as an input. The yield is inputted assuming seeding was completed at the optimal time.
     The base yield inputs are read in from either the simulation output or
-    from Property.xl depending on what the user has specified to do. The yield input is dependant on the
+    from Property.xl depending on what the user has specified to do. The yield input is dependent on the
     rotation history and hence accounts for the level of soil fertility, weed burden, disease prominence,
     and how the current land use is affected by the existing levels of each in the rotation. Biomass is calculated
     as a function of yield and harvest index. Yield is the input rather than biomass because that is easier to
     relate to and thus determine inputs. However, it is converted to biomass so that the optimisation has
-    the tactical option to deviate from the strategy. For example, the model may select a barley phase at the
+    the option to tactically deviate from the overall strategy. For example, the model may select a barley phase at the
     beginning of the year with the expectation of harvesting it for salable grain. However, if a
     big frost event is occurred the model may choose to either cut the crop for hay or use it as fodder. To
     allow these tactics to be represented requires a common starting point which has been defined as phase biomass.
@@ -242,15 +245,8 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     trees the yield is adjusted by the arable proportion. (eg if wheat yields 4 t/ha on LMU5 and LMU5 is 80%
     arable then 1 unit of the decision variable will yield 3.2t of wheat).
 
-    Crop yield can also be adversely impacted by frost during the plants flowing stage :cite:p:`RN144`. Thus,
-    the biomass of each rotation phase is adjusted by a frost factor. The frost factor can be customised for each
-    crop which is required because different crops flower at different times, changing the impact and probability of
-    frost biomass reduction. Frost factor can be customised for each LMU because frost effects can be altered by
-    the LMU topography and soil type. For example, sandy soils are more affected by frost because the lower
-    moisture holding capacity reduces the heat buffering from the soil.
-
-    .. note:: Potentially frost can be accounted for in the inputs (particularly if the simulation model accounts
-        for frost). The LMU yield factor must then capture the difference of frost across LMUS.
+    Frost does not impact total biomass however it does impact yield and stubble. Thus, frost is counted for
+    in biomass2product and biomass2residue functions. See those functions for more documentation on frost.
 
     Furthermore, as detailed in the machinery chapter, sowing timeliness can also impact yield. Dry sowing tends [#]_
     to incur a yield reduction due to forgoing an initial knockdown spray. While later sowing incurs a yield
@@ -335,6 +331,16 @@ def f_biomass2product():
     Harvest proportion accounts for grain that is split/spilt during the harvesting process.
     Biomass scalar is the total biomass production from the area baled net of respiration losses relative
     to biomass at harvest if not baled. Which is to account for difference in biomass between harvest and baling time.
+
+    Crop yield can also be adversely impacted by frost during the plants flowing stage :cite:p:`RN144`. Thus,
+    the harvest index of each rotation phase is adjusted by a frost factor. The frost factor can be customised for each
+    crop which is required because different crops flower at different times, changing the impact and probability of
+    frost biomass reduction. Frost factor can be customised for each LMU because frost effects can be altered by
+    the LMU topography and soil type. For example, sandy soils are more affected by frost because the lower
+    moisture holding capacity reduces the heat buffering from the soil.
+
+    .. note:: Potentially frost can be accounted for in the inputs (particularly if the simulation model accounts
+        for frost). The LMU yield factor must then capture the difference of frost across LMUS.
     '''
     ##inputs
     harvest_index_ks2 = pinp.stubble['i_harvest_index_ks2']

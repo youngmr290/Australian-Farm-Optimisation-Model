@@ -41,27 +41,34 @@ def crop_residue_all(params, r_vals, nv):
     Stubble and fodder are a key feed source for sheep during the summer months. In general sheep graze crop residues
     selectively, preferring the higher quality components.  Thus, they tend to eat grain first followed
     by leaf and finally stem. To allow optimisation of the quantity of the stubble grazed and to reflect selective
-    grazing the total crop residues are divided into four categories (A, B, C & D). The higher categories are better
+    grazing the total crop residues are divided into ten categories. The higher categories are better
     quality but generally lower quantity. Consumption of a higher quality category allows the consumption of a lower
     category (e.g. sheep can not consume any of category B until some of category A has been consumed).
 
-    For cereals, category A is mainly grain and leaf blade,
-    category B is mainly leaf blade, leaf sheath and cocky chaff, category C is mainly cocky chaff and
-    stem and category D is the remaining fraction that is not grazed. The total mass of crop residues at first
-    grazing (harvest for stubble and an inputted date for fodder) is calculated as a product of the grain yield and harvest index.
-    Overtime if the feed is not consumed it deteriorates in quality and quantity due to adverse effects of
-    weather and the impact of sheep trampling.
+    The total mass of crop residues at first
+    grazing (harvest for stubble and an inputted date for fodder) is calculated as a product of the biomass,
+    harvest index and proportion havrvested. Overtime if the feed is not consumed it deteriorates in quality
+    and quantity due to adverse effects of weather and the impact of sheep trampling.
 
-    To represent crop residues in AFO requires the proportion of each category, the DMD of each category and the
-    proportion of each component in each category. The DMD of each component (grain , leaf, sheath, stalk) has been
-    determined by other work :cite:p:`RN108` and can be used to determine the proportion of each component in each category based
-    on the DMD of each category. The quantity and DMD of each crop residue category were determined using the AFO
-    sheep generator (documented in a future section). The DMD of the feed was altered until the liveweight change of
-    the sheep in the simulation matched that of an equivalent sheep in a stubble trial (Riggall 2017 pers comm).
-    This provided the feed DMD and the intake required to achieve the given liveweight. Based on the number of
-    sheep and the total crop residue available in the trial the simulation results can be extrapolated to provide
-    the crop residue DMD for different levels of intake. These results can be summaries into the 4 crop residue categories
-    providing the DMD and proportion of the total crop residue in each.
+    Residue production can be positively impacted by frost because frost during the plants flowing stage
+    can damage cell tissue and reduce grain fill :cite:p:`RN144`. This results in less grain and more residue
+    due to not using energy resources to fill grain. Thus, the harvest index used to calculate biomass to residue
+    is adjusted by a frost factor. The frost factor can be customised for each
+    crop which is required because different crops flower at different times, changing the impact and probability of
+    frost biomass reduction. Frost factor can be customised for each LMU because frost effects can be altered by
+    the LMU topography and soil type. For example, sandy soils are more affected by frost because the lower
+    moisture holding capacity reduces the heat buffering from the soil.
+
+    To represent crop residues in AFO requires the proportion of total residue in each category and the DMD (quality)
+    of each category. The DMD of each category is an input which a proportion of the total residue is allocated to.
+    The proportion in each category was determined using AFO's residue simulator which leverages AFO
+    stock generator (documented in a future section) in combination with trial liveweight data (Riggall 2017 pers comm).
+    Using AFOs stock generator, animals that reflect those in the paddock trial were simulated on large range of diet
+    qualities and daily intake and liveweight change was determined. The livewight change of the simulated animals
+    was compared with the actual liveweight change in the paddock trial to determine the daily feed quality.
+    Based on the number of
+    sheep, the sheep intake and the total crop residue available in the trial the proportion of residue in each category
+    was calculated.
 
     The energy provided from consuming each crop residue category is calculated from DMD. Like pasture, crop residue
     FOO is expressed in units of dry matter (excluding moisture) therefore feed energy is expressed as M/D
