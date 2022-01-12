@@ -372,7 +372,7 @@ def f1_a_p6_p7():
     return alloc_p7p6z
 
 
-def f1_sup_s2_ks2():
+def f1_sup_s2_ks2(r_vals):
     '''
     Association between supplement feed and s2.
 
@@ -384,6 +384,7 @@ def f1_sup_s2_ks2():
     to feed.
     '''
     sup_s2_k_s2 = uinp.supfeed['i_sup_s2_ks2']
+    fun.f1_make_r_val(r_vals, sup_s2_k_s2, 'sup_s2_k_s2')
     return sup_s2_k_s2.stack()
 
 
@@ -394,7 +395,7 @@ def f_sup_params(params,r_vals):
     sup_labour = f_sup_labour()
     buy_grain_price, buy_grain_wc, buy_grain_prov_p7z = f_buy_grain_price(r_vals)
     a_p6_p7 = f1_a_p6_p7()
-    sup_s2_ks2 = f1_sup_s2_ks2()
+    sup_s2_ks2 = f1_sup_s2_ks2(r_vals)
 
 
     ##create non seasonal params
