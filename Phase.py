@@ -276,7 +276,6 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     ##colate other info
     biomass_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
     seeding_rate_k_l = f1_mask_lmu(pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0), axis=1) #seeding rate adjusted by if the farmer is using their own seed from last yr
-    frost = f1_mask_lmu(pinp.crop['frost'], axis=1)  #frost
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
     harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harves s2 slice because yield is inputted as a harvestable grain
     harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
@@ -301,27 +300,25 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     biomass_rkl_p7z = biomass_rkl_z.mul(alloc_p7z, axis=1,level=1)
 
     #todo this can probably be removed once frost is handled in biomass2.. func.
-    if for_stub:
+    if for_insurance or for_stub:
         ###return biomass for stubble before accounting for frost, seed rate and harv propn
         return biomass_rkl_p7z.groupby(axis=1, level=1).sum().stack()
 
     #todo seeding rate cant be here because reduces stubble.
 
-    # ##account for frost, seed rate and harv propn
+    # ##account for seed rate
     # ###doing this in a particular order to keep r and k always on the same axis (so that size is kept small since r vs k is big)
     biomass_rk_p7zl = biomass_rkl_p7z.unstack(2)
-    frost_harv_factor_k_l = (1-frost)
-    frost_harv_factor_rkl = frost_harv_factor_k_l.reindex(biomass_rk_p7zl.index, axis=0, level=1).stack()
+    # frost = f1_mask_lmu(pinp.crop['frost'], axis=1)*0  #frost
+    # frost_harv_factor_k_l = (1-frost)
+    # frost_harv_factor_rkl = frost_harv_factor_k_l.reindex(biomass_rk_p7zl.index, axis=0, level=1).stack()
     seeding_rate_k_l = seeding_rate_k_l.div(harvest_index_k,axis=0)
     seeding_rate_rkl = seeding_rate_k_l.reindex(biomass_rk_p7zl.index, axis=0, level=1).stack()
-    biomass_rkl_p7z = biomass_rk_p7zl.stack(2).mul(frost_harv_factor_rkl, axis=0)
+    # biomass_rkl_p7z = biomass_rk_p7zl.stack(2).mul(frost_harv_factor_rkl, axis=0)
     biomass_rkl_p7z = biomass_rkl_p7z.sub(seeding_rate_rkl,axis=0) #minus seeding rate
     biomass_rkl_p7z = biomass_rkl_p7z.clip(lower=0) #we don't want negative biomass so clip at 0 (if any values are neg they become 0). Note crops that don't produce harvest biomass require seed as an input.
-    if for_insurance or for_stub:
-        return biomass_rkl_p7z.groupby(axis=1, level=1).sum().stack() #sum the p7 axis. Just want the total biomass. p7 axis is added later for costs.
-    else:
-        ###biomass for pyomo biomass param
-        return biomass_rkl_p7z.stack([1,0])
+    ###biomass for pyomo biomass param
+    return biomass_rkl_p7z.stack([1,0])
 
 def f_biomass2product():
     '''Relationship between biomass and salable product. Where salable product is either grain or hay.
@@ -346,15 +343,22 @@ def f_biomass2product():
     harvest_index_ks2 = pinp.stubble['i_harvest_index_ks2']
     biomass_scalar_ks2 = pinp.stubble['i_biomass_scalar_ks2']
     propn_grain_harv_ks2 = pinp.stubble['i_propn_grain_harv_ks2']
+    frost_kl = f1_mask_lmu(pinp.crop['frost'], axis=1).values
 
-    ##calc biomass to product scalar
-    biomass2product_ks2 = harvest_index_ks2 * propn_grain_harv_ks2 * biomass_scalar_ks2
+    ##calc biomass to product scalar - adjusted for frost
+    frost_harv_factor_kl = (1-frost_kl)
+    harvest_index_kls2 = harvest_index_ks2[:,na,:] * frost_harv_factor_kl[:,:,na]
+    biomass2product_kls2 = harvest_index_kls2 * propn_grain_harv_ks2[:,na,:] * biomass_scalar_ks2[:,na,:]
 
     ##convert to pandas
     keys_k = sinp.landuse['C']
     keys_s2 = pinp.stubble['i_idx_s2']
-    biomass2product_k_s2 = pd.DataFrame(biomass2product_ks2, index=keys_k, columns=keys_s2)
-    return biomass2product_k_s2.stack()
+    lmu_mask = pinp.general['i_lmu_area'] > 0
+    keys_l = pinp.general['i_lmu_idx'][lmu_mask]
+    index_kls2 = pd.MultiIndex.from_product([keys_k, keys_l, keys_s2])
+    biomass2product_kls2 = pd.Series(biomass2product_kls2.ravel(), index=index_kls2)
+    return biomass2product_kls2
+
 
 def f_grain_pool_proportions():
     '''Calculate the proportion of grain in each pool.
@@ -1030,9 +1034,9 @@ def f_insurance(r_vals):
     insurance_ks2z = insurance_k_zs2.stack([1,0])
     ##calc phase product for each s2 option then select the s2 slice with maximum insurance cost (maximum because that would most likely be the expected s2 option)
     biomass_rklz = f_rot_biomass(for_insurance=True)
-    biomass2product_ks2 = f_biomass2product()
-    yields_rlz_ks2 = biomass_rklz.unstack(1).mul(biomass2product_ks2, axis=1, level=0)
-    yields_rl_ks2z = yields_rlz_ks2.unstack(2)
+    biomass2product_kls2 = f_biomass2product()
+    yields_rz_kls2 = biomass_rklz.unstack([1,2]).reindex(biomass2product_kls2.index, axis=1).mul(biomass2product_kls2, axis=1)
+    yields_rl_ks2z = yields_rz_kls2.unstack(1).stack(1)
     yields_rl_ks2z = yields_rl_ks2z.reindex(insurance_ks2z.index, axis=1).mul(insurance_ks2z, axis=1)/1000 #divide by 1000 to convert yield to tonnes
     yields_rl_kz = yields_rl_ks2z.groupby(axis=1, level=[0,2]).max()
     rot_insurance_rl_z = yields_rl_kz.stack(0).droplevel(axis=0, level=-1)
@@ -1212,7 +1216,7 @@ def f_sow_prov():
 def f1_crop_params(params,r_vals):
     cost, increment_cost, wc, increment_wc = f1_rot_cost(r_vals)
     biomass = f_rot_biomass()
-    biomass2product_ks2 = f_biomass2product()
+    biomass2product_kls2 = f_biomass2product()
     propn = f_grain_pool_proportions()
     grain_price, grain_wc = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
@@ -1229,7 +1233,7 @@ def f1_crop_params(params,r_vals):
     params['rot_wc'] = wc.to_dict()
     params['increment_rot_wc'] = increment_wc.to_dict()
     params['rot_biomass'] = biomass.to_dict()
-    params['biomass2product_ks2'] = biomass2product_ks2.to_dict()
+    params['biomass2product_kls2'] = biomass2product_kls2.to_dict()
 
 
 

@@ -374,7 +374,8 @@ def f_con_harv(model):
         p7_prev = l_p7[l_p7.index(p7) - 1]  # need the activity level from last feed period
         p7_end = l_p7[-1]
         return (-macpy.f_harv_supply(model,q,s,p7,k,z9)
-                + model.v_use_biomass[q,s,p7,z9,k,s2] * model.p_biomass2product[k,s2] #adjust with biomass2product because harv dv are based on grain yield not biomass
+                + sum(model.v_use_biomass[q,s,p7,z9,k,l,s2] * model.p_biomass2product[k,l,s2] #adjust with biomass2product because harv dv are based on grain yield not biomass
+                      for l in model.s_lmus)
                 - model.v_unharvested_yield[q,s,p7,k,z9] * (p7 != p7_end) #must be harvested before the begining of the next yr - therefore no transfer
                 + sum(model.v_unharvested_yield[q,s,p7_prev,k,z8] * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
                       for z8 in model.s_season_types)
@@ -389,18 +390,19 @@ def f_con_makehay(model):
     by contract services.
     '''
     ##Transfer unharvested grain incase a season node occurs between two harvest periods. The harvest requirement needs to uncluster to the new seasons.
-    def harv(model,q,s,p7,s2,z9):
+    def hay(model,q,s,p7,s2,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
         p7_end = l_p7[-1]
         return (-model.v_hay_made[q,s,z9] * model.p_hay_made_prov[p7,z9]
-                   + sum(model.v_use_biomass[q,s,p7,z9,k,s2] * model.p_biomass2product[k,s2] for k in model.s_crops)
+                   + sum(model.v_use_biomass[q,s,p7,z9,k,l,s2] * model.p_biomass2product[k,l,s2]
+                         for k in model.s_crops for l in model.s_lmus)
                - model.v_hay_tobe_made[q,s,p7,z9] * (p7 != p7_end) #must be baled before the begining of the next yr - therefore no transfer
                + sum(model.v_hay_tobe_made[q,s,p7_prev,z8] * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
                      for z8 in model.s_season_types)
                <= 0)
 
-    model.con_makehay = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, ['Bale'], model.s_season_types,rule=harv,doc='make hay constraint')
+    model.con_makehay = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, ['Bale'], model.s_season_types,rule=hay,doc='make hay constraint')
 
 
 def f_con_biomass_transfer(model):
@@ -411,23 +413,23 @@ def f_con_biomass_transfer(model):
     ##Must pass between p7 because need to transfer penalties through the season
 
     ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint.
-    def biomass_transfer(model,q,s,p7,k,z9):
+    def biomass_transfer(model,q,s,p7,k,l,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
         p7_start = l_p7[0]
         p7_end = l_p7[-1]
 
-        return -phspy.f_rotation_biomass(model,q,s,p7,k,z9) + macpy.f_late_seed_penalty(model,q,s,p7,k,z9) \
-               + cgzpy.f_grazecrop_biomass_penalty(model,q,s,p7,k,z9) \
-               - model.v_biomass_debit[q,s,p7,z9,k] * 1000 * (p7 != p7_end) \
-               + model.v_biomass_credit[q,s,p7,z9,k] * 1000 \
-               + sum((model.v_biomass_debit[q,s,p7_prev,z8,k] * 1000 - model.v_biomass_credit[q,s,p7_prev,z8,k] * 1000 * (p7 != p7_start)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
+        return -phspy.f_rotation_biomass(model,q,s,p7,k,l,z9) + macpy.f_late_seed_penalty(model,q,s,p7,k,l,z9) \
+               + cgzpy.f_grazecrop_biomass_penalty(model,q,s,p7,k,l,z9) \
+               - model.v_biomass_debit[q,s,p7,z9,k,l] * 1000 * (p7 != p7_end) \
+               + model.v_biomass_credit[q,s,p7,z9,k,l] * 1000 \
+               + sum((model.v_biomass_debit[q,s,p7_prev,z8,k,l] * 1000 - model.v_biomass_credit[q,s,p7_prev,z8,k,l] * 1000 * (p7 != p7_start)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
                      ]   # p7!=p7[0] to stop biomass tranfer from last yr to current yr else unbounded solution.
                      for z8 in model.s_season_types) \
-               + sum(model.v_use_biomass[q,s,p7,z9,k,s2] for s2 in model.s_biomass_uses) * 1000 <= 0
+               + sum(model.v_use_biomass[q,s,p7,z9,k,l,s2] for s2 in model.s_biomass_uses) * 1000 <= 0
 
-    model.con_biomass_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops,model.s_season_types,rule=biomass_transfer,
-                                             doc='constrain biomass transfer')
+    model.con_biomass_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops,
+                                               model.s_lmus, model.s_season_types,rule=biomass_transfer, doc='constrain biomass transfer')
 
 
 def f_con_product_transfer(model):

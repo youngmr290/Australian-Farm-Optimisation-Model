@@ -29,9 +29,9 @@ na = np.newaxis
 #     stubble = pd.Series(data=stubble_prod_data, index=sinp.landuse['C'])
 #     return stubble
 
-def f_biomass2residue():
+def f_biomass2residue(residuesim=False):
     '''
-    Stubble (kgs of dry matter) produced per kg of biomass .
+    Residue produced per kg of biomass .
 
     This is a separate function because it is used in residue simulator.
     '''
@@ -39,10 +39,22 @@ def f_biomass2residue():
     harvest_index_ks2 = pinp.stubble['i_harvest_index_ks2']
     biomass_scalar_ks2 = pinp.stubble['i_biomass_scalar_ks2']
     propn_grain_harv_ks2 = pinp.stubble['i_propn_grain_harv_ks2']
+    lmu_mask = pinp.general['i_lmu_area'] > 0
+    frost_kl = pinp.crop['frost'].values[:,lmu_mask]
 
     ##calc biomass to product scalar
-    biomass2residue_ks2 = (1 - harvest_index_ks2 * propn_grain_harv_ks2) * biomass_scalar_ks2
-    return biomass2residue_ks2
+    ##if this is being calculated for sim then dont want to include frost (because dont want lmu axis and the frost input in AFO doesnt reflect the trial).
+    ##the assumption is that a frosted crop will not be used in the stubble trial.
+    if residuesim:
+        biomass2residue_ks2 = (1 - harvest_index_ks2 * propn_grain_harv_ks2) * biomass_scalar_ks2
+        return biomass2residue_ks2
+
+    ##calc biomass to product scalar - adjusted for frost
+    frost_harv_factor_kl = (1-frost_kl)
+    harvest_index_kls2 = harvest_index_ks2[:,na,:] * frost_harv_factor_kl[:,:,na]
+    biomass2residue_kls2 = (1 - harvest_index_kls2 * propn_grain_harv_ks2[:,na,:]) * biomass_scalar_ks2[:,na,:]
+
+    return biomass2residue_kls2
 
 
 def crop_residue_all(params, r_vals, nv):
@@ -291,7 +303,8 @@ def crop_residue_all(params, r_vals, nv):
     keys_s2 = pinp.stubble['i_idx_s2']
     keys_f  = np.array(['nv{0}' .format(i) for i in range(len_nv)])
     keys_z = zfun.f_keys_z()
-
+    lmu_mask = pinp.general['i_lmu_area'] > 0
+    keys_l = pinp.general['i_lmu_idx'][lmu_mask]
 
     ##array indexes
     ###stub transfer (cat b & c)
@@ -303,7 +316,7 @@ def crop_residue_all(params, r_vals, nv):
     ###harv con & feed period transfer
     arrays_p6zk = [keys_p6, keys_z, keys_k]
     ###biomass to residue
-    arrays_ks2 = [keys_k, keys_s2]
+    arrays_kls2 = [keys_k, keys_l, keys_s2]
 
     ################
     ##pyomo params #
@@ -329,8 +342,8 @@ def crop_residue_all(params, r_vals, nv):
     params['cat_a_prov'] = fun.f1_make_pyomo_dict(cat_a_prov_p6zks1s2, arrays_p6zks1s2)
 
     ###category A transfer 'require' param
-    biomass2residue_ks2 = f_biomass2residue()
-    params['biomass2residue_ks2'] = fun.f1_make_pyomo_dict(biomass2residue_ks2, arrays_ks2)
+    biomass2residue_kls2 = f_biomass2residue()
+    params['biomass2residue_kls2'] = fun.f1_make_pyomo_dict(biomass2residue_kls2, arrays_kls2)
 
     ##md
     params['md'] = fun.f1_make_pyomo_dict(md_fp6zks1, arrays_fp6zks1)

@@ -133,7 +133,7 @@ def f_con_crop_DM_transfer(model):
 #functions for core pyomo         #
 ###################################
 
-def f_grazecrop_biomass_penalty(model,q,s,p7,k,z):
+def f_grazecrop_biomass_penalty(model,q,s,p7,k,l,z):
     '''
     Calculate the yield penalty from grazing crops (kg).
 
@@ -141,7 +141,7 @@ def f_grazecrop_biomass_penalty(model,q,s,p7,k,z):
     '''
     if pinp.cropgraze['i_cropgrazing_inc']:
         return sum(model.v_tonnes_crop_consumed[q,s,f,k,l,p6,p5,z] * model.p_cropgraze_biomass_penalty[k,p6,z] * model.p_a_p6_p7[p7,p6,z] * 1000
-                   for l in model.s_lmus for f in model.s_feed_pools for p6 in model.s_feed_periods for p5 in model.s_labperiods)
+                   for f in model.s_feed_pools for p6 in model.s_feed_periods for p5 in model.s_labperiods)
     else:
         return 0
 

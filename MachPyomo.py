@@ -173,7 +173,7 @@ def f_ha_days_pasture_crop_paddocks(model,q,s,f,l,z):
     return ha_days_contract + ha_days_personal
 
 #function to determine late seeding penalty, this will be passed to core model
-def f_late_seed_penalty(model,q,s,p7,k,z):
+def f_late_seed_penalty(model,q,s,p7,k,l,z):
     '''
     Calculate the yield penalty (kg) based on the timeliness of the selected contract and farmer seeding activities.
 
@@ -181,10 +181,10 @@ def f_late_seed_penalty(model,q,s,p7,k,z):
     '''
 
     farmer_penalty = sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[q,s,z,p,k,l] * model.p_biomass_penalty[p7,p,z,k]
-                         for l in model.s_lmus for p in model.s_labperiods)
+                         for p in model.s_labperiods)
 
     contract_penalty = sum(model.v_contractseeding_ha[q,s,z,p,k,l] * model.p_biomass_penalty[p7,p,z,k]
-                           for l in model.s_lmus for p in model.s_labperiods)
+                           for p in model.s_labperiods)
 
     return farmer_penalty + contract_penalty
 

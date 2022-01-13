@@ -32,7 +32,7 @@ def f1_croppyomo_local(params, model):
     ############
     # variable #
     ############
-    model.v_use_biomass = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, bounds=(0,None),
+    model.v_use_biomass = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_lmus, model.s_biomass_uses, bounds=(0,None),
                                 doc='tonnes of biomass in each use category')
 
     model.v_sell_grain = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
@@ -44,10 +44,10 @@ def f1_croppyomo_local(params, model):
     model.v_grain_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
                                 doc='tonnes of grain in credit (can be used for sup feeding or sold)')
 
-    model.v_biomass_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, bounds=(0,None),
+    model.v_biomass_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_lmus, bounds=(0,None),
                                 doc='tonnes of grain in debt (will need to be purchased or provided from harvest)')
 
-    model.v_biomass_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, bounds=(0,None),
+    model.v_biomass_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_lmus, bounds=(0,None),
                                 doc='tonnes of grain in credit (can be used for sup feeding or sold)')
 
     #########
@@ -72,7 +72,7 @@ def f1_croppyomo_local(params, model):
     model.p_rotation_biomass = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_season_types, model.s_season_periods,
                                       initialize=params['rot_biomass'], default = 0.0, mutable=False, doc='biomass production for all crops for 1 unit of rotation')
 
-    model.p_biomass2product = pe.Param(model.s_crops, model.s_biomass_uses, initialize=params['biomass2product_ks2'],
+    model.p_biomass2product = pe.Param(model.s_crops, model.s_lmus, model.s_biomass_uses, initialize=params['biomass2product_kls2'],
                              default = 0.0, mutable=False, doc='conversion of biomass to yield (grain or hay) for each biomass use (harvesting as normal, baling for hay and grazing as fodder)')
 
     model.p_grainpool_proportion = pe.Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
@@ -99,15 +99,14 @@ def f1_croppyomo_local(params, model):
 ##############
 ##total biomass transfer for each crop. This is initially separated from cashflow so it can be combined with untimely sowing and crop grazing penalty.
 
-def f_rotation_biomass(model,q,s,p7,k,z):
+def f_rotation_biomass(model,q,s,p7,k,l,z):
     '''
     Calculate the total (kg) of biomass from the selected rotation phases.
 
     Used in global constraint (con_biomass_transfer). See CorePyomo
     '''
     return sum(model.p_rotation_biomass[r,k,l,z,p7]*model.v_phase_area[q,s,p7,z,r,l]
-               for r in model.s_phases for l in model.s_lmus
-               if pe.value(model.p_rotation_biomass[r,k,l,z,p7]) != 0)
+               for r in model.s_phases if pe.value(model.p_rotation_biomass[r,k,l,z,p7]) != 0)
 
 
 ##############
@@ -121,8 +120,8 @@ def f_rotation_product(model,q,s,p7,g,k,s2,z):
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
-    return model.v_use_biomass[q,s,p7,z,k,s2] * 1000 * model.p_biomass2product[k,s2]\
-           * model.p_grainpool_proportion[k,g]
+    return sum(model.v_use_biomass[q,s,p7,z,k,l,s2] * 1000 * model.p_biomass2product[k,l,s2]
+               for l in model.s_lmus) * model.p_grainpool_proportion[k,g]
 
 
 ##############
