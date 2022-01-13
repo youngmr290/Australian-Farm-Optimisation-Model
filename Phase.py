@@ -275,7 +275,6 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
 
     ##colate other info
     biomass_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
-    seeding_rate_k_l = f1_mask_lmu(pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0), axis=1) #seeding rate adjusted by if the farmer is using their own seed from last yr
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
     harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harves s2 slice because yield is inputted as a harvestable grain
     harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
@@ -299,26 +298,12 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     ###mul m allocation with cost
     biomass_rkl_p7z = biomass_rkl_z.mul(alloc_p7z, axis=1,level=1)
 
-    #todo this can probably be removed once frost is handled in biomass2.. func.
     if for_insurance or for_stub:
         ###return biomass for stubble before accounting for frost, seed rate and harv propn
         return biomass_rkl_p7z.groupby(axis=1, level=1).sum().stack()
-
-    #todo seeding rate cant be here because reduces stubble.
-
-    # ##account for seed rate
-    # ###doing this in a particular order to keep r and k always on the same axis (so that size is kept small since r vs k is big)
-    biomass_rk_p7zl = biomass_rkl_p7z.unstack(2)
-    # frost = f1_mask_lmu(pinp.crop['frost'], axis=1)*0  #frost
-    # frost_harv_factor_k_l = (1-frost)
-    # frost_harv_factor_rkl = frost_harv_factor_k_l.reindex(biomass_rk_p7zl.index, axis=0, level=1).stack()
-    seeding_rate_k_l = seeding_rate_k_l.div(harvest_index_k,axis=0)
-    seeding_rate_rkl = seeding_rate_k_l.reindex(biomass_rk_p7zl.index, axis=0, level=1).stack()
-    # biomass_rkl_p7z = biomass_rk_p7zl.stack(2).mul(frost_harv_factor_rkl, axis=0)
-    biomass_rkl_p7z = biomass_rkl_p7z.sub(seeding_rate_rkl,axis=0) #minus seeding rate
-    biomass_rkl_p7z = biomass_rkl_p7z.clip(lower=0) #we don't want negative biomass so clip at 0 (if any values are neg they become 0). Note crops that don't produce harvest biomass require seed as an input.
-    ###biomass for pyomo biomass param
-    return biomass_rkl_p7z.stack([1,0])
+    else:
+        ###biomass for pyomo biomass param
+        return biomass_rkl_p7z.stack([1,0])
 
 def f_biomass2product():
     '''Relationship between biomass and salable product. Where salable product is either grain or hay.
@@ -940,7 +925,7 @@ def f_seedcost(r_vals):
     Seed costs includes:
 
         - seed treatment
-        - raw seed cost (incurred if seed is purchased as apposed to using last yrs seed)
+        - raw seed cost (this assumes that farmers purchase seed rather than using seed from last years harvest)
         - crop insurance
         - arable area
     '''
@@ -954,7 +939,7 @@ def f_seedcost(r_vals):
     seed_period_lengths = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     ##inputs
     seeding_rate = pinp.crop['seeding_rate']
-    seeding_cost = pinp.crop['seed_info']['Seed cost'] #this is 0 if the seed is sourced from last yrs crop ie cost is accounted for by minusing from the yield
+    seeding_cost = pinp.crop['seed_info']['Seed cost']
     grading_cost = pinp.crop['seed_info']['Grading'] 
     percent_graded = pinp.crop['seed_info']['Percent Graded'] 
     cost1 = pinp.crop['seed_info']['Cost1'] #cost ($/l) for dressing 1 
