@@ -425,46 +425,49 @@ def f_contract_seed_cost(r_vals):
 #late seeding & dry seeding penalty    #
 ########################################
 
-def f_sowing_timeliness_penalty(stub=False):
+def f_sowing_timeliness_penalty():
     '''
-    Calculates the yield penalty in each mach period due to wet sowing timeliness- kg/ha/period/crop.
+    Calculates the biomass penalty in each mach period due to wet sowing timeliness- kg/ha/period/crop.
 
-    The timeliness of sowing can have a large impact on crop yields. AFO accounts for this using a
-    yield penalty.
+    The timeliness of sowing can have a large impact on crop biomasss. AFO accounts for this using a
+    biomass penalty.
 
-    Late sowing receives a yield reduction because the crop has less time to mature (e.g. shorter
+    Late sowing receives a biomass reduction because the crop has less time to mature (e.g. shorter
     growing season) and grain filling often occurs during hotter drier conditions :cite:p:`RN121, RN122`.
     The user can specify the length of time after the beginning of wet seeding that no penalty applies
-    after that a penalty is applied. The yield reduction is cumulative per day, so the longer sowing is
-    delayed the larger the yield reduction.
+    after that a penalty is applied. The biomass reduction is cumulative per day, so the longer sowing is
+    delayed the larger the biomass reduction.
 
-    Yield penalty reduces grain available to sell and reduces stubble production.
+    biomass penalty reduces grain available to sell and reduces stubble production.
 
     The assumption is that seeding is done evenly throughout a given period. In reality this is wrong eg if a
     period is 5 days long but the farmer only has to sow 20ha they will do it on the first day of the period not
-    4ha each day of the period. Therefore, the calculation overestimates the yield penalty.
+    4ha each day of the period. Therefore, the calculation overestimates the biomass penalty.
 
     .. note:: There are also risks associated with dry sowing such as less effective weed control (i.e. crops germinate at
         the same time as the weeds so you miss out on a knock down spray opportunity), poor crop emergence (if
         opening rains are spasmodic patchy crop germination is possible and early crop vigour may be absent without
         adequate follow up rain) and increased chance of frost :cite:p:`RN119`. These risks are represented
-        in the model via the yield inputs because dry sown crop are separate landuses.
-
-    :param stub: boolean: set to True when calculating yield penalty for stubble penalty.
+        in the model via the biomass inputs because dry sown crop are separate landuses.
 
     '''
     ##inputs
     seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     wet_seeding_penalty_k_z = zfun.f_seasonal_inp(pinp.crop['yield_penalty_wet'], axis=1)
 
-    ##adjust seeding penalty - crops that are not harvested eg fodder don't have yield penalty. But do have a stubble penalty
-    if stub:
-        ###if calculating yield penalty for stubble then include all crop (eg include fodders)
-        pass
-    else:
-        ###if calculating yield penalty for grain transfer then only include harvested crops (eg don't include fodders)
-        proportion_grain_harv_k = pd.Series(pinp.stubble['proportion_grain_harv'], index=pinp.stubble['i_stub_landuse_idx'])
-        wet_seeding_penalty_k_z = wet_seeding_penalty_k_z.mul(proportion_grain_harv_k>0, axis=0)
+    # ##adjust seeding penalty - crops that are not harvested eg fodder don't have yield penalty. But do have a stubble penalty
+    # if stub:
+    #     ###if calculating yield penalty for stubble then include all crop (eg include fodders)
+    #     pass
+    # else:
+    #     ###if calculating yield penalty for grain transfer then only include harvested crops (eg don't include fodders)
+    #     proportion_grain_harv_k = pd.Series(pinp.stubble['proportion_grain_harv'], index=sinp.landuse['C'])
+    #     wet_seeding_penalty_k_z = wet_seeding_penalty_k_z.mul(proportion_grain_harv_k>0, axis=0)
+
+    ##convert from yield penalty to biomass penalty
+    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harves s2 slice because yield penalty is inputted as a harvestable grain
+    harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
+    wet_seeding_penalty_k_z = wet_seeding_penalty_k_z.div(harvest_index_k, axis=0)
 
     ##general info
     mach_periods = per.f_p_dates_df()
@@ -493,15 +496,15 @@ def f_sowing_timeliness_penalty(stub=False):
     return penalty
 
 
-def f_stubble_penalty():
-    '''
-    Calculates the stubble penalty in each mach period (wet and dry seeding) due to sowing timeliness- kg/ha/period/crop.
-    '''
-    import CropResidue as stub
-    yield_penalty_p7p5zk = f_sowing_timeliness_penalty(stub=True) #late sowing yield reduction kg/ha/period
-    stub_production_k = stub.f_cropresidue_production() #stubble production per kg of grain yield
-    stub_penalty = yield_penalty_p7p5zk.mul(stub_production_k, level=-1)
-    return stub_penalty
+# def f_stubble_penalty():
+#     '''
+#     Calculates the stubble penalty in each mach period (wet and dry seeding) due to sowing timeliness- kg/ha/period/crop.
+#     '''
+#     import CropResidue as stub
+#     yield_penalty_p7p5zk = f_sowing_timeliness_penalty(stub=True) #late sowing yield reduction kg/ha/period
+#     stub_production_k = stub.f_cropresidue_production() #stubble production per kg of grain yield
+#     stub_penalty = yield_penalty_p7p5zk.mul(stub_production_k, level=-1)
+#     return stub_penalty
 
 #######################################################################################################################################################
 #######################################################################################################################################################
@@ -1171,8 +1174,8 @@ def f_mach_params(params,r_vals):
     harvest_cost, harvest_wc = f_harvest_cost(r_vals)
     contract_harvest_cost, contract_harvest_wc = f_contract_harvest_cost(r_vals)
     hay_making_cost, hay_making_wc, hay_made_prov_p7z  = f_hay_making_cost()
-    yield_penalty = f_sowing_timeliness_penalty()
-    stubble_penalty = f_stubble_penalty()
+    biomass_penalty = f_sowing_timeliness_penalty()
+    # stubble_penalty = f_stubble_penalty()
     poc_grazing_days = f_poc_grazing_days().stack()
     fixed_dep = f_fix_dep()
     harv_dep = f_harvest_dep()
@@ -1211,8 +1214,8 @@ def f_mach_params(params,r_vals):
     params['max_harv_hours'] = max_harv_hours.to_dict()
     params['contract_harvest_cost'] = contract_harvest_cost.to_dict()
     params['contract_harvest_wc'] = contract_harvest_wc.to_dict()
-    params['yield_penalty'] = yield_penalty.to_dict()
-    params['stubble_penalty'] = stubble_penalty.to_dict()
+    params['biomass_penalty'] = biomass_penalty.to_dict()
+    # params['stubble_penalty'] = stubble_penalty.to_dict()
     params['poc_grazing_days'] = poc_grazing_days.to_dict()
     params['insurance'] = insurance_cost
     params['insurance_wc'] = insurance_wc

@@ -188,16 +188,51 @@ Spring application of N to pasture
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 For seasons with a slow spring applying nitrogen to pasture can provide some valuable additional FOO.
 
+Rotation
+^^^^^^^^
+Rotation area can be adjusted depending on the date of season break or other early indicators such as
+residual soil moisture from summer rainfall.
+
 Fodder crops
 ^^^^^^^^^^^^
 In adverse seasons where either livestock feed is short or crops are frosted or are not worthy of harvest,
 salable crops can be turned to fodder. I.e. instead of harvesting a crop it is grazed by livestock as a good
 source of summer feed.
 
-Graze crops
+Bale crops
+^^^^^^^^^^^^
+Crops that were planted with the expectation of being harvested for grain can be baled as hay.
+This may occur in adverse seasons where either livestock feed is short or crops are frosted or are not worthy of harvest.
+
+Winter crop grazing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Salable crops can be grazed early in the growing season with little yield penalties. This can provide
 additional feed in seasons with a slow start.
+
+Labour supply
+^^^^^^^^^^^^^
+Perm and manager labour is fixed (must be the same for each season type) however, casual labour can be
+optimised for each season as it unfolds.
+
+Machinery contracting
+^^^^^^^^^^^^^^^^^^^^^
+If the timeliness of an activity is an issue, contract services can be selected to improve the work rate.
+This could be valuable in a late break to ensure the crops get the maximum possible growing season.
+
+Dry seeding
+^^^^^^^^^^^
+A useful tactic to improve timeliness of seeding to ensure crops get the maximum possible growing season.
+
+Crop inputs
+^^^^^^^^^^^
+Cropping inputs can be tactically adjusted depending on how the season unfolds. This can not currently be
+optimised by AFO however the user can manually adjust the inputs to capture expected seasonal inputs adjustments.
+
+Summer cropping
+^^^^^^^^^^^^^^^
+Currently this is not hooked up. Rotations do have a node axis which would allow this type of transfer. Just
+need to work out a way to do the history transfer.
+Summer cropping would need to be a new landuse (so it can have a different harvest date and grain income date).
 
 Agistment
 ^^^^^^^^^
@@ -258,32 +293,3 @@ that sale can occur in each DVP (only one sale can exist per dvp per t slice). F
 currently have 2 sale options in each DVP (because there are 2 slices in the t axis). Therefore other
 tactical selling options could be added without expanding the size of the t axis in the post processing.
 
-Labour supply
-^^^^^^^^^^^^^
-Perm and manager labour is fixed (must be the same for each season type) however, casual labour can be
-optimised for each season as it unfolds.
-
-Machinery contracting
-^^^^^^^^^^^^^^^^^^^^^
-If the timeliness of an activity is an issue, contract services can be selected to improve the work rate.
-This could be valuable in a late break to ensure the crops get the maximum possible growing season.
-
-Dry seeding
-^^^^^^^^^^^
-A useful tactic to improve timeliness of seeding to ensure crops get the maximum possible growing season.
-
-Rotation
-^^^^^^^^
-Rotation area can be adjusted depending on the date of season break or other early indicators such as
-residual soil moisture from summer rainfall.
-
-Crop inputs
-^^^^^^^^^^^
-Cropping inputs can be tactically adjusted depending on how the season unfolds. This can not currently be
-optimised by AFO however the user can manually adjust the inputs to capture expected seasonal inputs adjustments.
-
-Summer cropping
-^^^^^^^^^^^^^^^
-Currently this is not hooked up. Rotations do have a node axis which would allow this type of transfer. Just
-need to work out a way to do the history transfer.
-Summer cropping would need to be a new landuse (so it can have a different harvest date and grain income date).

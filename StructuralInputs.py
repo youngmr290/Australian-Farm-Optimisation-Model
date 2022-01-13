@@ -174,14 +174,13 @@ Note
 - sets now include capitals - this shouldn't effect con1 but it makes building the germ df easier
 '''
 landuse = {}
-##all pas2 includes cont pasture - used in reporting
-landuse['All_pas']={'a', 'ar'
-                , 's', 'sr'
-                , 'm'
-                , 'u', 'ur','uc'
-                , 'x', 'xr','xc'
-                , 'j', 't', 'jr', 'tr','tc','jc'
-                }
+
+##landuse indexes
+landuse['All']=general['i_idx_k'] #used in reporting and bounds and as index in precalc modules
+landuse['C']=general['i_idx_k1'] #all crops, used in stubble and mach (not used for rotations)
+landuse['All_pas']=general['i_idx_k2'] #used in reporting
+
+
 ##next set is used in pasture.py for mobilisation of below ground reserves and phase area
 landuse['pasture_sets']={'annual': {'a', 'ar'
                                 , 's', 'sr'
@@ -209,8 +208,6 @@ landuse['G']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v'
 landuse['C1']={'E', 'N', 'P', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
 
 
-landuse['All']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd', 'a', 'ar', 's', 'sr', 'm', 'u', 'uc', 'ur', 'x', 'xc', 'xr', 'j','jc', 't','tc', 'jr', 'tr'} #used in reporting and bounds
-landuse['C']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'} #all crops, used in stubble and mach (not used for rotations)
 landuse['dry_sown'] = {'bd', 'od', 'wd', 'zd','rd'} #dry sown crops, used in phase.py for seeding param (not used for building rotations)
 landuse['Hay']={'h'} #all crops that produce hay - used in machpyomo/coremodel for hay con
 

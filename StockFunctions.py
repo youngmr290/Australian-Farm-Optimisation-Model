@@ -93,7 +93,7 @@ def f1_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_e
 #input and manipulation functions #
 ###################################
 
-def f1_c2g(params_c2, y=0, var_pos=0, condition=None, axis=0, dtype=False):
+def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=0, condition=None, axis=0, dtype=False):
     '''
     Parameters
     ----------
@@ -111,8 +111,6 @@ def f1_c2g(params_c2, y=0, var_pos=0, condition=None, axis=0, dtype=False):
     '''
 
     ##these inputs are used for each param so they don't need to be passed into the function.
-    a_c2_c0 = pinp.sheep['a_c2_c0']
-    i_g3_inc = pinp.sheep['i_g3_inc']
     i_mul_g0_c0 = sinp.stock['i_mul_g0c0']
     i_mul_g1_c0 = sinp.stock['i_mul_g1c0']
     i_mul_g2_c0 = sinp.stock['i_mul_g2c0']
@@ -483,7 +481,7 @@ def f1_nv_components(paststd_foo_p6a1e1b1j0wzida0e0b0xyg, paststd_dmd_p6a1e1b1j0
 
     ##mei which is nv for a PI of 1.
     mei_p6zj1 = f_intake(1, ri_p6a1e1b1j1wzida0e0b0xyg, past_md_p6a1e1b1j1wzida0e0b0xyg, False
-                         , supp_p6a1e1b1j1wzida0e0b0xyg, pinp.sheep['i_md_supp'])
+                         , supp_p6a1e1b1j1wzida0e0b0xyg, pinp.sheep['i_md_supp'])[0] #slice the first return arg
 
     return mei_p6zj1, foo_p6a1e1b1j1wzida0e0b0xyg, dmd_p6a1e1b1j1wzida0e0b0xyg, supp_p6a1e1b1j1wzida0e0b0xyg
 
@@ -661,7 +659,22 @@ def f_intake(pi, ri, md_herb, confinement, intake_s, i_md_supp, mp2=0):
     mei_solid = mei_forage + mei_herb + mei_supp
     ##ME intake total
     mei = mei_solid + mp2
-    return mei
+    ##md solid (includes sup) - this is just used for the stubble generator
+    md_solid = mei_solid / (intake_f + intake_s)
+
+    ##for stub sim
+    ###ME intake from supplement
+    mei_supp = intake_s * pinp.sheep['i_md_supp']
+    ###ME intake from herbage
+    mei_herb = mei_solid - mei_supp
+    ###Proportion of ME as milk
+    mei_propn_milk = fun.f_divide(mp2, mei) #func to stop div/0 error when some animals dont exist eg tol1 animals exist before tol2 animals
+    ###Proportion of ME as supp
+    mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error when some animals dont exist eg tol1 animals exist before tol2 animals
+    ###Proportion of ME as herbage
+    mei_propn_herb = fun.f_divide(mei_herb, mei) #func to stop div/0 error when some animals dont exist eg tol1 animals exist before tol2 animals
+
+    return mei, mei_solid, intake_f, md_solid, mei_propn_milk, mei_propn_herb, mei_propn_supp
 
 
 def f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
@@ -1493,7 +1506,7 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
 #######################
 
 def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startseason, mask_min_lw_z, period_is_prejoin=0,
-                         group=None, scan_management=0, gbal=0):
+                         group=None, scan_management=0, gbal=0, stub_lw_idx=np.array(np.nan)):
     '''
     Production is weighted at prejoining across e&b axes and at season start across the z axis.
 
@@ -1506,6 +1519,9 @@ def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_starts
     by that amount so that the new animal at the start of next prejoining reflects if drys were sold or retained.
     E.g. if drys were sold the prejoining animal would be a little bit lighter (because drys tend to weigh more).
 
+    An extra step occurs if generating for stubble. For stubble the function selects the starting animal for the
+    next period based on animal liveweight compare to the stubble trial. The animals that have te closest lw
+    to the paddock trial become the starting animals next period.
     '''
     ##Set variable level = value at end of previous	
     var_start = var
@@ -1532,6 +1548,10 @@ def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_starts
         temporary = fun.f_weighted_average(var_start, scaled_numbers, prejoin_tup, keepdims=True, non_zero=True) #gets the weighted average of production in the different seasons
         ##Set values where it is beginning of FVP
         var_start = fun.f_update(var_start, temporary, period_is_prejoin)
+
+    ##for stubble index the w axis to make the starting animal for the next period
+    if np.all(np.logical_not(np.isnan(stub_lw_idx))):
+        var_start[...] = np.take_along_axis(var_start, stub_lw_idx, sinp.stock['i_w_pos'])
     return var_start
 
 

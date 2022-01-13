@@ -28,11 +28,11 @@ def f1_machpyomo_local(params, model):
                                         model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha contract seeding for each crop')
     #number of hours harvesting for each crop - there is a constraint to limit this to the hours available in the harvest period
     model.v_harv_hours = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_labperiods,
-                                model.s_harvcrops, bounds=(0,None), doc='number of hours of harvesting')
+                                model.s_crops, bounds=(0,None), doc='number of hours of harvesting')
     #number of contract hours harvesting for each crop
-    model.v_contractharv_hours = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_labperiods, model.s_harvcrops, bounds=(0,None), doc='number of contract hours of harvesting')
+    model.v_contractharv_hours = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_labperiods, model.s_crops, bounds=(0,None), doc='number of contract hours of harvesting')
     #tonnes of crop yield that is unharvested (used to transfer between phase periods)
-    model.v_unharvested_yield = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_harvcrops, model.s_season_types, bounds=(0,None), doc='tonnes of crop yield that is unharvested (used to transfer between phase periods)')
+    model.v_unharvested_yield = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, bounds=(0,None), doc='tonnes of crop yield that is unharvested (used to transfer between phase periods)')
     #tonnes of hay made
     model.v_hay_made = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, bounds=(0,None), doc='tonnes of hay made')
     #tonnes of hay ready to be bailed
@@ -76,9 +76,9 @@ def f1_machpyomo_local(params, model):
     
     model.p_hay_made_prov = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['hay_made_prov_p7z'], default = 0.0, doc='phase period when hay is made (required so that hay is made in the same season stage that the cost is incurred)')
 
-    model.p_yield_penalty = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_crops, initialize=params['yield_penalty'], default = 0.0, mutable=False, doc='kg/ha/day penalty for late sowing in each period')
+    model.p_biomass_penalty = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_crops, initialize=params['biomass_penalty'], default = 0.0, mutable=False, doc='kg/ha/day penalty for late sowing in each period')
     
-    model.p_stubble_penalty = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_crops, initialize=params['stubble_penalty'], default = 0.0, mutable=False, doc='kg/ha/day penalty for late sowing in each period')
+    # model.p_stubble_penalty = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_crops, initialize=params['stubble_penalty'], default = 0.0, mutable=False, doc='kg/ha/day penalty for late sowing in each period')
 
     model.p_poc_grazingdays = pe.Param(model.s_feed_periods, model.s_labperiods, model.s_season_types, initialize=params['poc_grazing_days'], default = 0.0, mutable=False, doc='pasture grazing days per feed period provided by 1ha of seeding in each seed period')
 
@@ -133,7 +133,7 @@ def f_con_harv_hours_limit(model):
     of harvest gear (ie two harvesters allows you to harvest twice as much).
     '''
     def harv_hours_limit(model,q,s,p,z):
-        return sum(model.v_harv_hours[q,s,z,p,k] for k in model.s_harvcrops) <= model.p_harv_hrs_max[p,z] * model.p_number_harv_gear
+        return sum(model.v_harv_hours[q,s,z,p,k] for k in model.s_crops) <= model.p_harv_hrs_max[p,z] * model.p_number_harv_gear
     model.con_harv_hours_limit = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, rule=harv_hours_limit, doc='constrain the number of hours of harvest x crop gear can provide')
 
 # def f_con_sow_supply(model):
@@ -173,37 +173,37 @@ def f_ha_days_pasture_crop_paddocks(model,q,s,f,l,z):
     return ha_days_contract + ha_days_personal
 
 #function to determine late seeding penalty, this will be passed to core model
-def f_late_seed_penalty(model,q,s,p7,g,k,z):
+def f_late_seed_penalty(model,q,s,p7,k,l,z):
     '''
     Calculate the yield penalty (kg) based on the timeliness of the selected contract and farmer seeding activities.
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
 
-    farmer_penalty = sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[q,s,z,p,k,l] * model.p_yield_penalty[p7,p,z,k]
-                         for l in model.s_lmus for p in model.s_labperiods) * model.p_grainpool_proportion[k,g]
+    farmer_penalty = sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[q,s,z,p,k,l] * model.p_biomass_penalty[p7,p,z,k]
+                         for p in model.s_labperiods)
 
-    contract_penalty = sum(model.v_contractseeding_ha[q,s,z,p,k,l] * model.p_yield_penalty[p7,p,z,k]
-                           for l in model.s_lmus for p in model.s_labperiods) * model.p_grainpool_proportion[k,g]
-
-    return farmer_penalty + contract_penalty
-
-#function to determine late seeding stubble penalty, this will be passed to core model
-def f_stubble_penalty(model,q,s,p7,k,z):
-    '''
-    Calculate the stubble production penalty (kg) based on the timeliness of the selected contract and farmer seeding activities.
-
-    Used in global constraint (con_stubble_a). See CorePyomo
-    '''
-    farmer_penalty = sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[q,s,z,p5,k,l] * model.p_stubble_penalty[p7,p5,z,k]
-                         for l in model.s_lmus for p5 in model.s_labperiods
-                         if pe.value(model.p_stubble_penalty[p7,p5,z,k]) != 0)
-
-    contract_penalty = sum(model.v_contractseeding_ha[q,s,z,p5,k,l] * model.p_stubble_penalty[p7,p5,z,k]
-                           for l in model.s_lmus for p5 in model.s_labperiods
-                           if pe.value(model.p_stubble_penalty[p7,p5,z,k]) != 0)
+    contract_penalty = sum(model.v_contractseeding_ha[q,s,z,p,k,l] * model.p_biomass_penalty[p7,p,z,k]
+                           for p in model.s_labperiods)
 
     return farmer_penalty + contract_penalty
+
+# #function to determine late seeding stubble penalty, this will be passed to core model
+# def f_stubble_penalty(model,q,s,p7,k,z):
+#     '''
+#     Calculate the stubble production penalty (kg) based on the timeliness of the selected contract and farmer seeding activities.
+#
+#     Used in global constraint (con_stubble_a). See CorePyomo
+#     '''
+#     farmer_penalty = sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[q,s,z,p5,k,l] * model.p_stubble_penalty[p7,p5,z,k]
+#                          for l in model.s_lmus for p5 in model.s_labperiods
+#                          if pe.value(model.p_stubble_penalty[p7,p5,z,k]) != 0)
+#
+#     contract_penalty = sum(model.v_contractseeding_ha[q,s,z,p5,k,l] * model.p_stubble_penalty[p7,p5,z,k]
+#                            for l in model.s_lmus for p5 in model.s_labperiods
+#                            if pe.value(model.p_stubble_penalty[p7,p5,z,k]) != 0)
+#
+#     return farmer_penalty + contract_penalty
     
 
 def f_harv_supply(model,q,s,p7,k,z):
@@ -243,14 +243,14 @@ def f1_harvesting_cost(model,q,s,p7,z):
     ##contract cost and owner cost (cost per hr x number of hours)
     return sum(model.v_contractharv_hours[q,s,z,p5,k] * model.p_contractharv_cost[p7,z,p5,k]
                + model.v_harv_hours[q,s,z,p5,k] * model.p_harv_cost[p7,z,p5,k]
-               for p5 in model.s_labperiods for k in model.s_harvcrops)
+               for p5 in model.s_labperiods for k in model.s_crops)
 
 #function to determine harv wc
 def f1_harvesting_wc(model,q,s,c0,p7,z):
     ##contract wc and owner wc (wc per hr x number of hours)
     return sum(model.v_contractharv_hours[q,s,z,p5,k] * model.p_contractharv_wc[c0,p7,z,p5,k]
                + model.v_harv_hours[q,s,z, p5, k] * model.p_harv_wc[c0,p7,z,p5,k]
-               for p5 in model.s_labperiods for k in model.s_harvcrops)
+               for p5 in model.s_labperiods for k in model.s_crops)
 
 #includes hay cost
 def f_mach_cost(model,q,s,p7,z):
@@ -292,7 +292,7 @@ def f_total_dep(model,q,s,p7,z):
                                for l in model.s_lmus for p5 in  model.s_labperiods for k in model.s_crops)
     #cost of harv dep = hourly dep x early and late harv hours 
     harv_dep = sum(model.p_harv_dep[p7,p5,z] * model.v_harv_hours[q,s,z,p5,k]
-                   for k in model.s_harvcrops for p5 in model.s_labperiods)
+                   for k in model.s_crops for p5 in model.s_labperiods)
     return seeding_depreciation + fixed_dep + harv_dep
 
 def f_mach_asset(model,p7):

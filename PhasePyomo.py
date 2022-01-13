@@ -32,13 +32,22 @@ def f1_croppyomo_local(params, model):
     ############
     # variable #
     ############
-    model.v_sell_grain = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
+    model.v_use_biomass = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_lmus, model.s_biomass_uses, bounds=(0,None),
+                                doc='tonnes of biomass in each use category')
+
+    model.v_sell_grain = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
                                 doc='tonnes of grain in each pool sold')
 
-    model.v_grain_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
+    model.v_grain_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
                                 doc='tonnes of grain in debt (will need to be purchased or provided from harvest)')
 
-    model.v_grain_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
+    model.v_grain_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
+                                doc='tonnes of grain in credit (can be used for sup feeding or sold)')
+
+    model.v_biomass_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_lmus, bounds=(0,None),
+                                doc='tonnes of grain in debt (will need to be purchased or provided from harvest)')
+
+    model.v_biomass_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_lmus, bounds=(0,None),
                                 doc='tonnes of grain in credit (can be used for sup feeding or sold)')
 
     #########
@@ -60,14 +69,19 @@ def f1_croppyomo_local(params, model):
                                              model.s_phases, initialize=params['increment_rot_wc'],
                                              default=0, mutable=False, doc='total wc for 1 unit of rotation')
 
-    model.p_rotation_yield = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_season_types, model.s_season_periods,
-                                      initialize=params['rot_yield'], default = 0.0, mutable=False, doc='grain production for all crops for 1 unit of rotation')
+    model.p_rotation_biomass = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_season_types, model.s_season_periods,
+                                      initialize=params['rot_biomass'], default = 0.0, mutable=False, doc='biomass production for all crops for 1 unit of rotation')
+
+    model.p_biomass2product = pe.Param(model.s_crops, model.s_lmus, model.s_biomass_uses, initialize=params['biomass2product_kls2'],
+                             default = 0.0, mutable=False, doc='conversion of biomass to yield (grain or hay) for each biomass use (harvesting as normal, baling for hay and grazing as fodder)')
 
     model.p_grainpool_proportion = pe.Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
     
-    model.p_grain_price = pe.Param(model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, model.s_c1, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
+    model.p_grain_price = pe.Param(model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops,
+                                   model.s_biomass_uses, model.s_c1, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
     
-    model.p_grain_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['grain_wc'],default = 0.0, doc='farm gate wc per tonne of each grain')
+    model.p_grain_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools,
+                                model.s_crops, model.s_biomass_uses, initialize=params['grain_wc'],default = 0.0, doc='farm gate wc per tonne of each grain')
     
     model.p_phasesow_req = pe.Param(model.s_phases, model.s_landuses, model.s_lmus, initialize=params['phase_sow_req'], default = 0.0, doc='ha of sow activity required by each rot phase')
     
@@ -81,23 +95,33 @@ def f1_croppyomo_local(params, model):
 #######################################################################################################################################################
 
 ##############
-#yield       #
+#Biomass     #
 ##############
-##total grain transfer for each crop. This is initially separated from cashflow so it can be combined with untimely sowing and crop grazing penalty.
-### slightly more complicated because i have to have rotation yield in disaggregated format and the rotation variable is aggregated.
-### yield needs to be disaggregated so that it returns the grain transfer for each crop - this is so it is compatible with yield penalty and sup feed activities.
-### alternative would have been to add another key/index/set to the yield parameter that was k, although i suspect this would make it a bit slower due to being bigger but it might be tidier
+##total biomass transfer for each crop. This is initially separated from cashflow so it can be combined with untimely sowing and crop grazing penalty.
 
-def f_rotation_yield(model,q,s,p7,g,k,z):
+def f_rotation_biomass(model,q,s,p7,k,l,z):
+    '''
+    Calculate the total (kg) of biomass from the selected rotation phases.
+
+    Used in global constraint (con_biomass_transfer). See CorePyomo
+    '''
+    return sum(model.p_rotation_biomass[r,k,l,z,p7]*model.v_phase_area[q,s,p7,z,r,l]
+               for r in model.s_phases if pe.value(model.p_rotation_biomass[r,k,l,z,p7]) != 0)
+
+
+##############
+#product     #
+##############
+##total grain/hay transfer for each crop. This is initially separated from cashflow so it can be combined with untimely sowing and crop grazing penalty.
+
+def f_rotation_product(model,q,s,p7,g,k,s2,z):
     '''
     Calculate the total (kg) of each grain harvested from selected rotation phases.
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
-    return sum(model.p_rotation_yield[r,k,l,z,p7]*model.v_phase_area[q,s,p7,z,r,l]
-               for r in model.s_phases for l in model.s_lmus
-               if pe.value(model.p_rotation_yield[r,k,l,z,p7]) != 0) * model.p_grainpool_proportion[k,g]
-
+    return sum(model.v_use_biomass[q,s,p7,z,k,l,s2] * 1000 * model.p_biomass2product[k,l,s2]
+               for l in model.s_lmus) * model.p_grainpool_proportion[k,g]
 
 
 ##############

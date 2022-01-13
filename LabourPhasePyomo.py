@@ -79,7 +79,7 @@ def f_mach_labour_anyone(model,q,s,p,z):
     '''
     seed_labour = sum(model.v_seeding_machdays[q,s,z,p,k,l] for k in model.s_landuses for l in model.s_lmus)        \
     * model.p_daily_seed_hours *(1 + model.p_seeding_helper)
-    harv_labour = sum(model.v_harv_hours[q,s,z,p,k] * (1 + model.p_harv_helper[k]) for k in model.s_harvcrops)
+    harv_labour = sum(model.v_harv_hours[q,s,z,p,k] * (1 + model.p_harv_helper[k]) for k in model.s_crops)
     prep_labour = model.p_prep_pack[p,z]
     fert_t_time = sum(model.v_phase_area[q,s,p7,z,r,l]*model.p_fert_app_hour_tonne[r,z,l,p,p7]
                       + model.v_phase_increment[q,s,p7,z,r,l]*model.p_increment_fert_app_hour_tonne[r,z,l,p,p7]

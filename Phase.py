@@ -5,8 +5,11 @@ author: young
 The phase module is driven by the inputs [#i]_ for yield production, fertiliser and chemical
 requirements for each rotation phase on each LMU. For pasture phases this module only generates data for
 fertiliser, chemical and seed (if resown) requirement. Growth, consumption etc is generated in the
-pasture module. AFO can then optimise the area of each rotation
-on each LMU. AFO does not currently simulate the biology of crop plant growth under different technical
+pasture module. Each phase provide a given amount of biomass depending on the rotation history, LMU, frost,
+and arable proportion. AFO can then optimise the area of each rotation
+on each LMU and the best way to utilise the biomass of each rotation phase.
+Biomass can be either harvested for grain, baled for hay or grazed as standing fodder.
+AFO does not currently simulate the biology of crop plant growth under different technical
 management. Thus, the model is unable to optimise technical aspects of cropping such as timing and
 level of controls [#j]_. However, the user has the capacity to do this more manually by altering the
 inputs (more like the technique of simulation modelling) or by including additional land uses
@@ -127,40 +130,42 @@ def f_farmgate_grain_price(r_vals={}):
     ##inputs
     grain_price_info_df = uinp.price['grain_price_info'] #grain info
     percentile_price_df = uinp.price['grain_price'] #grain price for 3 different percentiles
+    percentile_price_k_s2p = percentile_price_df.T.set_index(['percentile'], append=True).T.astype(float) #convert to float because array was initilised with string as well therefore it is an object type.
     grain_price_percentile = uinp.price['grain_price_percentile'] #price percentile to use
-    grain_price_scalar_c1z = zfun.f_seasonal_inp(uinp.price_variation['grain_price_scalar_c1z']
+    grain_price_scalar_c1_z = zfun.f_seasonal_inp(uinp.price_variation['grain_price_scalar_c1z']
                                                  ,numpy=False, axis=1, level=0)
 
     ##extrapolate price for the selected percentile (can go beyond the data input range)
-    grain_price_firsts = pd.Series()
-    for k in percentile_price_df.index:
-        grain_price_firsts[k] = fun.np_extrap(np.array([grain_price_percentile]), percentile_price_df.columns, percentile_price_df.loc[k].values)[0] #returns as one value in an array thus take [0]
+    percentile_price_ks2_p = percentile_price_k_s2p.stack(0)
+    grain_price_firsts_ks2 = pd.Series(index=percentile_price_ks2_p.index)
+    for k in percentile_price_ks2_p.index:
+        grain_price_firsts_ks2[k] = fun.np_extrap(np.array([grain_price_percentile]), percentile_price_ks2_p.columns, percentile_price_ks2_p.loc[k].values)[0] #returns as one value in an array thus take [0]
 
     ##seconds price
-    grain_price_seconds = grain_price_firsts * (1-grain_price_info_df['seconds_discount'])
+    grain_price_seconds_ks2 = grain_price_firsts_ks2.mul(1-grain_price_info_df['seconds_discount'], level=0)
 
     ##gets the price of firsts and seconds for each grain
     price_df = pd.DataFrame(columns=['firsts','seconds'])
-    price_df['firsts'] = grain_price_firsts
-    price_df['seconds'] = grain_price_seconds
+    price_df['firsts'] = grain_price_firsts_ks2
+    price_df['seconds'] = grain_price_seconds_ks2
 
     ##determine cost of selling
     cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance']
             + pinp.general['rail_cartage'] + uinp.price['flagfall'])
     tols= grain_price_info_df['grain_tolls']
     total_fees= cartage+tols
-    farmgate_price_k_g = price_df.sub(total_fees, axis=0).clip(0)
+    farmgate_price_ks2_g = price_df.sub(total_fees, axis=0, level=0).clip(0)
 
     ##scale by c1 & z
     keys_z = zfun.f_keys_z()
-    keys_c1 = grain_price_scalar_c1z.index
-    new_index_c1zg = pd.MultiIndex.from_product([keys_c1,keys_z,farmgate_price_k_g.columns])
-    farmgate_price_kg_c1z = farmgate_price_k_g.reindex(new_index_c1zg, axis=1, level=2).stack()
-    farmgate_price_kg_c1z = farmgate_price_kg_c1z.mul(grain_price_scalar_c1z.stack(), axis=1)
-    farmgate_price_kgc1_z = farmgate_price_kg_c1z.stack(0)
+    keys_c1 = grain_price_scalar_c1_z.index
+    new_index_c1zg = pd.MultiIndex.from_product([keys_c1,keys_z,farmgate_price_ks2_g.columns])
+    farmgate_price_ks2g_c1z = farmgate_price_ks2_g.reindex(new_index_c1zg, axis=1, level=2).stack()
+    farmgate_price_ks2g_c1z = farmgate_price_ks2g_c1z.mul(grain_price_scalar_c1_z.stack(), axis=1)
+    farmgate_price_ks2gc1_z = farmgate_price_ks2g_c1z.stack(0)
     ##store and return
-    fun.f1_make_r_val(r_vals,farmgate_price_kgc1_z,'farmgate_price')
-    return farmgate_price_kgc1_z
+    fun.f1_make_r_val(r_vals,farmgate_price_ks2gc1_z,'farmgate_price')
+    return farmgate_price_ks2gc1_z
 
 
 def f_grain_price(r_vals):
@@ -172,7 +177,7 @@ def f_grain_price(r_vals):
 
     '''
     ##get grain price - accounts for tols and other fees
-    farmgate_price_kgc1_z=f_farmgate_grain_price(r_vals)
+    farmgate_price_ks2gc1_z=f_farmgate_grain_price(r_vals)
 
     ##allocate farm gate grain price for each cashflow period and calc interest
     start = np.array([pinp.crop['i_grain_income_date']]).astype('datetime64')
@@ -190,63 +195,62 @@ def f_grain_price(r_vals):
     # cols_p7zg = pd.MultiIndex.from_product([keys_p7, keys_z, farm_gate_price_k_g.columns])
     # grain_income_allocation_p7zg = grain_income_allocation_p7z.reindex(cols_p7zg, axis=1)#adds level to header so i can mul in the next step
     # grain_price =  farm_gate_price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
-    grain_price_kgc1_p7z =  farmgate_price_kgc1_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
+    grain_price_ks2gc1_p7z =  farmgate_price_ks2gc1_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
     # cols_c0p7zg = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, farm_gate_price_k_g.columns])
     # grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
     # grain_price_wc =  farm_gate_price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
-    grain_price_wc_kgc1_c0p7z =  farmgate_price_kgc1_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
+    grain_price_wc_ks2gc1_c0p7z =  farmgate_price_ks2gc1_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
 
     ##average c1 axis for wc and report
     c1_prob = uinp.price_variation['prob_c1']
-    grain_price_kg_p7z = grain_price_kgc1_p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1]).sum()
-    grain_price_wc_kg_c0p7z = grain_price_wc_kgc1_c0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1]).sum()
+    r_grain_price_ks2g_p7z = grain_price_ks2gc1_p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
+    grain_price_wc_ks2g_c0p7z = grain_price_wc_ks2gc1_c0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
 
     ##store r_vals
     ###make z8 mask - used to uncluster
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, grain_price_kg_p7z, 'grain_price', mask_season_p7z, z_pos=-1)
-    return grain_price_kgc1_p7z.unstack([1,0,2]), grain_price_wc_kg_c0p7z.unstack([1,0])
+    fun.f1_make_r_val(r_vals, r_grain_price_ks2g_p7z, 'grain_price', mask_season_p7z, z_pos=-1)
+    return grain_price_ks2gc1_p7z.unstack([2,0,1,3]), grain_price_wc_ks2g_c0p7z.unstack([2,0,1])
 # a=grain_price()
 
 #########################
-#yield                  #
+#biomass                #
 #########################
-def f_rot_yield(for_stub=False, for_insurance=False):
+def f_rot_biomass(for_stub=False, for_insurance=False):
     '''
-    Calculates the yield for each rotation. Accounting for LMU, arable area, frost and harvested proportion.
+    Calculates the biomass for each rotation. Accounting for LMU, arable area and frost.
 
     The crop yield for each rotation phase, on the base LMU [#]_, before frost and harvested proportion adjustment,
     is entered as an input. The yield is inputted assuming seeding was completed at the optimal time.
     The base yield inputs are read in from either the simulation output or
-    from Property.xl depending on what the user has specified to do. The yield input is dependant on the
+    from Property.xl depending on what the user has specified to do. The yield input is dependent on the
     rotation history and hence accounts for the level of soil fertility, weed burden, disease prominence,
-    and how the current land use is affected by the existing levels of each in the rotation.
+    and how the current land use is affected by the existing levels of each in the rotation. Biomass is calculated
+    as a function of yield and harvest index. Yield is the input rather than biomass because that is easier to
+    relate to and thus determine inputs. However, it is converted to biomass so that the optimisation has
+    the option to tactically deviate from the overall strategy. For example, the model may select a barley phase at the
+    beginning of the year with the expectation of harvesting it for salable grain. However, if a
+    big frost event is occurred the model may choose to either cut the crop for hay or use it as fodder. To
+    allow these tactics to be represented requires a common starting point which has been defined as phase biomass.
+    Biomass can either be harvested for grain, cut for hay or grazed as fodder.
 
     To extrapolate the inputs from the base LMU to the other LMUs an LMU adjustment factor is
     applied which determines the yield on each other LMU as a proportion of the base LMU. The LMU adjustment
     factor accounts for the variation in yield on different LMUs when management is the same.
 
-    The decision variable represented in the model is the yield per hectare on a given LMU. To account for
+    The decision variable represented in the model is the biomass per hectare on a given LMU at harvest. To account for
     the fact that LMUs are rarely 100% arable due to patches of rocks, gully’s, waterlogged area and uncleared
     trees the yield is adjusted by the arable proportion. (eg if wheat yields 4 t/ha on LMU5 and LMU5 is 80%
     arable then 1 unit of the decision variable will yield 3.2t of wheat).
 
-    Crop yield can also be adversely impacted by frost during the plants flowing stage :cite:p:`RN144`. Thus,
-    the yield of each rotation phase is adjusted by a frost factor. The frost factor can be customised for each
-    crop which is required because different crops flower at different times, changing the impact probability of
-    frost yield reduction. Frost factor can be customised for each LMU because frost effects can be altered by
-    the LMU topography and soil type. For example, sandy soils are more affected by frost because the lower
-    moisture holding capacity reduces the heat buffering from the soil.
-
-    .. note:: Potentially frost can be accounted for in the inputs (particularly if the simulation model accounts
-        for frost). The LMU yield factor must then capture the difference of frost across LMUS.
+    Frost does not impact total biomass however it does impact yield and stubble. Thus, frost is counted for
+    in biomass2product and biomass2residue functions. See those functions for more documentation on frost.
 
     Furthermore, as detailed in the machinery chapter, sowing timeliness can also impact yield. Dry sowing tends [#]_
     to incur a yield reduction due to forgoing an initial knockdown spray. While later sowing incurs a yield
-    loss due to a reduced growing season. Additionally, during the harvesting process a small proportion of grain
-    is split/spilt. This is accounted for by adjusting the yield by a harvest proportion factor.
+    loss due to a reduced growing season.
 
     .. [#] Base LMU – standardise LMU to which other LMUs are compared against.
     .. [#] Dry sowing may not incur a yield penalty in seasons with a late break.
@@ -263,22 +267,25 @@ def f_rot_yield(for_stub=False, for_insurance=False):
         ### User defined
         base_yields = pinp.crop['yields']
         base_yields = zfun.f_seasonal_inp(base_yields, axis=1)
-        base_yields = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
+        base_yields_rk_z = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
     else:
         ### AusFarm ^need to add code for ausfarm inputs
-        base_yields
-    base_yields = base_yields.stack()
+        base_yields_rk_z
+    base_yields_rkz = base_yields_rk_z.stack()
 
     ##colate other info
-    yields_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
-    seeding_rate_k_l = f1_mask_lmu(pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0), axis=1) #seeding rate adjusted by if the farmer is using their own seed from last yr
-    frost = f1_mask_lmu(pinp.crop['frost'], axis=1)  #frost
-    proportion_grain_harv = pd.Series(pinp.stubble['proportion_grain_harv'], index=pinp.stubble['i_stub_landuse_idx'])
+    biomass_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
-    ##calculate yield - base yield * arable area * harv_propn * frost * lmu factor - seeding rate
-    yield_arable_by_soil = yields_lmus.mul(arable) #mul arable area to the the lmu factor (easy because dfs have the same axis's).
-    yields_rkz_l=yield_arable_by_soil.reindex(base_yields.index, axis=0, level=1).mul(base_yields,axis=0) #reindes and mul with base yields
-    yields_rkl_z = yields_rkz_l.stack().unstack(2)
+    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harves s2 slice because yield is inputted as a harvestable grain
+    harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
+
+    ##convert to biomass
+    base_biomass_rkz = base_yields_rkz.div(harvest_index_k, level=1)
+
+    ##calculate biomass - base biomass * arable area * harv_propn * frost * lmu factor - seeding rate
+    biomass_arable_by_soil_k_l = biomass_lmus.mul(arable) #mul arable area to the the lmu factor (easy because dfs have the same axis's).
+    biomass_rkz_l=biomass_arable_by_soil_k_l.reindex(base_biomass_rkz.index, axis=0, level=1).mul(base_biomass_rkz,axis=0) #reindes and mul with base biomass
+    biomass_rkl_z = biomass_rkz_l.stack().unstack(2)
 
     ##add rotation period axis - if a rotation exists at the begining of harvest it provides grain and requires harvesting.
     harv_start_date_z = zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0).astype('datetime64') #this could be changed to include landuse axis.
@@ -289,26 +296,54 @@ def f_rot_yield(for_stub=False, for_insurance=False):
     new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
     alloc_p7z = pd.Series(alloc_p7z.ravel(), index=new_index_p7z)
     ###mul m allocation with cost
-    yields_rkl_p7z = yields_rkl_z.mul(alloc_p7z, axis=1,level=1)
+    biomass_rkl_p7z = biomass_rkl_z.mul(alloc_p7z, axis=1,level=1)
 
-    if for_stub:
-        ###return yield for stubble before accounting for frost, seed rate and harv propn
-        return yields_rkl_p7z
-
-    ##account for frost, seed rate and harv propn
-    ###doing this in a particular order to keep r and k always on the same axis (so that size is kept small since r vs k is big)
-    yields_rk_p7zl = yields_rkl_p7z.unstack(2)
-    frost_harv_factor_k_l = (1-frost).mul(proportion_grain_harv, axis=0) #mul these two fisrt because they have same index so its easy.
-    frost_harv_factor_rkl = frost_harv_factor_k_l.reindex(yields_rk_p7zl.index, axis=0, level=1).stack()
-    seeding_rate_rkl = seeding_rate_k_l.reindex(yields_rk_p7zl.index, axis=0, level=1).stack()
-    yields_rkl_p7z = yields_rk_p7zl.stack(2).mul(frost_harv_factor_rkl, axis=0)
-    yields_rkl_p7z = yields_rkl_p7z.sub(seeding_rate_rkl,axis=0) #minus seeding rate
-    yields_rkl_p7z = yields_rkl_p7z.clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0). Note crops that don't produce harvest yield require seed as an input.
-    if for_insurance:
-        return yields_rkl_p7z.groupby(axis=1, level=1).sum().stack() #sum the p7 axis. Just want the total yield. p7 axis is added later for costs.
+    if for_insurance or for_stub:
+        ###return biomass for stubble before accounting for frost, seed rate and harv propn
+        return biomass_rkl_p7z.groupby(axis=1, level=1).sum().stack()
     else:
-        ###yield for pyomo yield param
-        return yields_rkl_p7z.stack([1,0])
+        ###biomass for pyomo biomass param
+        return biomass_rkl_p7z.stack([1,0])
+
+def f_biomass2product():
+    '''Relationship between biomass and salable product. Where salable product is either grain or hay.
+
+    Biomass is relate to product through harvest index, harvest proportion and biomass scalar.
+    Harvest index is the amount of the target product (grain or hay) per unit of biomass at harvest (which is the unit of the biomass DV).
+    Harvest proportion accounts for grain that is split/spilt during the harvesting process.
+    Biomass scalar is the total biomass production from the area baled net of respiration losses relative
+    to biomass at harvest if not baled. Which is to account for difference in biomass between harvest and baling time.
+
+    Crop yield can also be adversely impacted by frost during the plants flowing stage :cite:p:`RN144`. Thus,
+    the harvest index of each rotation phase is adjusted by a frost factor. The frost factor can be customised for each
+    crop which is required because different crops flower at different times, changing the impact and probability of
+    frost biomass reduction. Frost factor can be customised for each LMU because frost effects can be altered by
+    the LMU topography and soil type. For example, sandy soils are more affected by frost because the lower
+    moisture holding capacity reduces the heat buffering from the soil.
+
+    .. note:: Potentially frost can be accounted for in the inputs (particularly if the simulation model accounts
+        for frost). The LMU yield factor must then capture the difference of frost across LMUS.
+    '''
+    ##inputs
+    harvest_index_ks2 = pinp.stubble['i_harvest_index_ks2']
+    biomass_scalar_ks2 = pinp.stubble['i_biomass_scalar_ks2']
+    propn_grain_harv_ks2 = pinp.stubble['i_propn_grain_harv_ks2']
+    frost_kl = f1_mask_lmu(pinp.crop['frost'], axis=1).values
+
+    ##calc biomass to product scalar - adjusted for frost
+    frost_harv_factor_kl = (1-frost_kl)
+    harvest_index_kls2 = harvest_index_ks2[:,na,:] * frost_harv_factor_kl[:,:,na]
+    biomass2product_kls2 = harvest_index_kls2 * propn_grain_harv_ks2[:,na,:] * biomass_scalar_ks2[:,na,:]
+
+    ##convert to pandas
+    keys_k = sinp.landuse['C']
+    keys_s2 = pinp.stubble['i_idx_s2']
+    lmu_mask = pinp.general['i_lmu_area'] > 0
+    keys_l = pinp.general['i_lmu_idx'][lmu_mask]
+    index_kls2 = pd.MultiIndex.from_product([keys_k, keys_l, keys_s2])
+    biomass2product_kls2 = pd.Series(biomass2product_kls2.ravel(), index=index_kls2)
+    return biomass2product_kls2
+
 
 def f_grain_pool_proportions():
     '''Calculate the proportion of grain in each pool.
@@ -404,10 +439,8 @@ def f_fert_req():
     columns = pd.MultiIndex.from_product([keys_z, fixed_fert.columns])
     fixed_fert = fixed_fert.reindex(columns, axis=1, level=1)
     base_fert = pd.merge(base_fert, fixed_fert, how='left', left_on='landuse', right_index = True)
-    ##add cont pasture fert req
-    base_fert = f_cont_pas(base_fert.unstack(0)).stack() #unstack for function then stack
     ##drop landuse from index
-    base_fert = base_fert.droplevel(0,axis=0)
+    base_fert = base_fert.droplevel(1,axis=0)
     ## adjust the fert req for each rotation by lmu
     fert_by_soil = fert_by_soil.stack() #read in fert by soil
     fert=base_fert.stack(level=0).mul(fert_by_soil,axis=1,level=0).stack()
@@ -449,10 +482,8 @@ def f_fert_passes():
     columns = pd.MultiIndex.from_product([keys_z, fixed_fert_passes.columns])
     fixed_fert_passes = fixed_fert_passes.reindex(columns, axis=1, level=1)
     fert_passes = pd.merge(fert_passes, fixed_fert_passes, how='left', left_on='landuse', right_index = True)
-    ##add cont pasture fert passes
-    fert_passes = f_cont_pas(fert_passes.unstack(0)).stack() #unstack for function then stack
     ##drop landuse from index
-    fert_passes = fert_passes.droplevel(0, axis=0)
+    fert_passes = fert_passes.droplevel(1, axis=0)
     ##adjust fert passes by arable area
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
     index = pd.MultiIndex.from_product([fert_passes.index, arable.index])
@@ -553,10 +584,8 @@ def f_nap_fert_req():
     fertreq_na = pinp.crop['nap_fert'].reset_index().set_index(['fert','landuse'])
     fertreq_na = f1_mask_lmu(fertreq_na, axis=1)
     fertreq_na = fertreq_na.mul(1 - arable)
-    ##add cont pasture fert req
-    fertreq_na = f_cont_pas(fertreq_na.unstack(0))
     ##merge with full df
-    fertreq_na = pd.merge(phases_df2, fertreq_na, how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
+    fertreq_na = pd.merge(phases_df2, fertreq_na.unstack(0), how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
     fertreq_na = fertreq_na.drop(list(range(sinp.general['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
     return fertreq_na
 
@@ -574,10 +603,8 @@ def f_nap_fert_passes():
     passes_na = f1_mask_lmu(passes_na, axis=1)
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #need to adjust for only non arable area
     passes_na= passes_na.mul(1-arable) #adjust for the non arable area
-    ##add cont pasture fert req
-    passes_na = f_cont_pas(passes_na.unstack(0))
     ##merge with full df
-    passes_na = pd.merge(phases_df2, passes_na, how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
+    passes_na = pd.merge(phases_df2, passes_na.unstack(0), how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
     passes_na = passes_na.drop(list(range(sinp.general['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
     return passes_na
 
@@ -706,8 +733,12 @@ def f_phase_stubble_cost(r_vals):
     stub_cost=mac.f_stubble_cost_ha()
 
     ##calculate the probability of a rotation phase needing stubble handling
-    base_yields_rkl_z = f_rot_yield(for_stub=True).groupby(axis=1,level=1).sum() #sum the p7 axis. Just want the total yield. p7 axis is added later for costs.
-    stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=pinp.crop['start_harvest_crops'].index, dtype=float)*1000  #have to convert to kg to match base yield
+    base_biomass_rkl_z = f_rot_biomass(for_stub=True).unstack()
+    ###convert to grain
+    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harves s2 slice because stubble handling is based on harvestable grain yield
+    harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
+    base_yields_rkl_z = base_biomass_rkl_z.mul(harvest_index_k, axis=0, level=1)
+    stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=sinp.landuse['C'], dtype=float)*1000  #have to convert to kg to match base yield
     probability_handling_rkl_z = base_yields_rkl_z.div(stub_handling_threshold, axis=0, level=1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
     probability_handling_rl_z = probability_handling_rkl_z.droplevel(1)
 
@@ -794,17 +825,10 @@ def f_chem_application():
         base_chem = pinp.crop['chem']
         base_chem = base_chem.T.set_index(['chem'], append=True).T.astype(float)
         base_chem = zfun.f_seasonal_inp(base_chem, axis=1)
-        base_chem = base_chem.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the current landuse the index
     else:
         ### AusFarm ^need to add code for ausfarm inputs
         base_chem
         base_chem = pd.DataFrame(base_chem, index = [phases_df.index, phases_df.iloc[:,-1]])  #make the current landuse the index
-    ##rename index
-    base_chem.index.rename(['rot','landuse'],inplace=True)
-    ##add cont pasture fert req
-    base_chem = f_cont_pas(base_chem.unstack(0)).stack() #unstack for function then stack
-    ##drop landuse from index
-    base_chem = base_chem.droplevel(0, axis=0)
     ##arable area.
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
     #adjust chem passes by arable area
@@ -846,8 +870,6 @@ def f_chem_cost(r_vals):
     chem_cost_allocation_z_p7n = chem_cost_allocation_p7zn.unstack(1).T
     chem_wc_allocation_z_c0p7n = chem_wc_allocation_c0p7zn.unstack(2).T
 
-    ##add cont pasture to chem cost array
-    i_chem_cost = f_cont_pas(i_chem_cost)
     ##number of applications for each rotation
     chem_applications = f_chem_application()
 
@@ -903,7 +925,7 @@ def f_seedcost(r_vals):
     Seed costs includes:
 
         - seed treatment
-        - raw seed cost (incurred if seed is purchased as apposed to using last yrs seed)
+        - raw seed cost (this assumes that farmers purchase seed rather than using seed from last years harvest)
         - crop insurance
         - arable area
     '''
@@ -917,7 +939,7 @@ def f_seedcost(r_vals):
     seed_period_lengths = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     ##inputs
     seeding_rate = pinp.crop['seeding_rate']
-    seeding_cost = pinp.crop['seed_info']['Seed cost'] #this is 0 if the seed is sourced from last yrs crop ie cost is accounted for by minusing from the yield
+    seeding_cost = pinp.crop['seed_info']['Seed cost']
     grading_cost = pinp.crop['seed_info']['Grading'] 
     percent_graded = pinp.crop['seed_info']['Percent Graded'] 
     cost1 = pinp.crop['seed_info']['Cost1'] #cost ($/l) for dressing 1 
@@ -938,8 +960,6 @@ def f_seedcost(r_vals):
     cost = cost + (cost2*rate2/100 * percent_dressed)
     ##account for seeding rate to determine actual cost (divide by 1000 to convert cost to kg)
     seed_cost = seeding_rate.mul(cost/1000,axis=0)
-    ##add cost for cont pasture
-    seed_cost = f_cont_pas(seed_cost)
     ##cost allocation
     start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     keys_p7 = per.f_season_periods(keys=True)
@@ -988,17 +1008,22 @@ def f_insurance(r_vals):
     '''
     ##weight c1 to get average price
     c1_prob = uinp.price_variation['prob_c1']
-    farmgate_price_kgc1_z = f_farmgate_grain_price()
-    farmgate_price_kg_z = farmgate_price_kgc1_z.mul(c1_prob,axis=0,level=-1).groupby(axis=0,level=[0,1]).sum()
+    farmgate_price_ks2gc1_z = f_farmgate_grain_price()
+    farmgate_price_ks2g_z = farmgate_price_ks2gc1_z.mul(c1_prob,axis=0,level=-1).groupby(axis=0,level=[0,1,2]).sum()
     ##combine each grain pool to get average price
     grain_pool_proportions_kg = f_grain_pool_proportions()
-    ave_price_k_z = farmgate_price_kg_z.mul(grain_pool_proportions_kg, axis=0).groupby(axis=0, level=0).sum()
+    farmgate_price_kg_zs2 = farmgate_price_ks2g_z.unstack(1)
+    ave_price_k_zs2 = farmgate_price_kg_zs2.mul(grain_pool_proportions_kg, axis=0).groupby(axis=0, level=0).sum()
     ##calc insurance cost per tonne
-    insurance_k_z = ave_price_k_z.mul(uinp.price['grain_price_info']['insurance']/100, axis=0)  #div by 100 because insurance is a percent
-    insurance_kz = insurance_k_z.stack()
-    yields_rklz = f_rot_yield(for_insurance=True)
-    yields_rl_kz = yields_rklz.unstack([1,3])
-    yields_rl_kz = yields_rl_kz.reindex(insurance_kz.index, axis=1).mul(insurance_kz, axis=1)/1000 #divide by 1000 to convert yield to tonnes
+    insurance_k_zs2 = ave_price_k_zs2.mul(uinp.price['grain_price_info']['insurance']/100, axis=0)  #div by 100 because insurance is a percent
+    insurance_ks2z = insurance_k_zs2.stack([1,0])
+    ##calc phase product for each s2 option then select the s2 slice with maximum insurance cost (maximum because that would most likely be the expected s2 option)
+    biomass_rklz = f_rot_biomass(for_insurance=True)
+    biomass2product_kls2 = f_biomass2product()
+    yields_rz_kls2 = biomass_rklz.unstack([1,2]).reindex(biomass2product_kls2.index, axis=1).mul(biomass2product_kls2, axis=1)
+    yields_rl_ks2z = yields_rz_kls2.unstack(1).stack(1)
+    yields_rl_ks2z = yields_rl_ks2z.reindex(insurance_ks2z.index, axis=1).mul(insurance_ks2z, axis=1)/1000 #divide by 1000 to convert yield to tonnes
+    yields_rl_kz = yields_rl_ks2z.groupby(axis=1, level=[0,2]).max()
     rot_insurance_rl_z = yields_rl_kz.stack(0).droplevel(axis=0, level=-1)
     ##cost allocation
     start = np.array([uinp.price['crp_insurance_date']]).astype('datetime64')
@@ -1080,16 +1105,19 @@ def f_phase_sow_req():
     This accounts for arable area and includes any seeding (wet or dry or pasture).
 
     '''
-    #todo need to make cont tedera and lucern only require a bit of seeding (probably just enter an input somewhere which says the frequency of reseeding for each landuse)
     ##read phases
     phases_df = sinp.f_phases()
-
-    ##sow = arable area
+    ##adjust arable area
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
-    seeding_landuses = uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj'].index
-    phasesow = arable.reindex(pd.MultiIndex.from_product([seeding_landuses, arable.index]), axis=0, level=1)
+    ##sow = arable area * frequency
+    keys_k = sinp.landuse['All']
+    keys_l = arable.index
+    seeding_freq_k = pinp.crop['i_seeding_frequency']
+    arable_l = arable.values
+    sow_req_kl = seeding_freq_k[:,na] * arable_l
+    phasesow = pd.DataFrame(sow_req_kl, index=keys_k, columns=keys_l)
     ##merge to rot phases
-    phasesow = pd.merge(phases_df, phasesow.unstack(), how='left', left_on=sinp.end_col(), right_index = True)
+    phasesow = pd.merge(phases_df, phasesow, how='left', left_on=sinp.end_col(), right_index = True)
     ##add current crop to index
     phasesow.set_index(sinp.end_col(), append=True, inplace=True)
     phase_sow = phasesow.drop(list(range(sinp.general['phase_len']-1)), axis=1).stack()
@@ -1111,12 +1139,12 @@ def f_sow_prov():
     labour_period_end_p5z = labour_period_p5z.values[1:]
 
     ##general info
-    keys_k = np.asarray(list(sinp.landuse['All']))
+    keys_k = sinp.landuse['All']
     keys_z = zfun.f_keys_z()
     keys_p5 = labour_period_p5z.index[:-1]
     keys_p7 = per.f_season_periods(keys=True)
     dry_sown_landuses = sinp.landuse['dry_sown']
-    wet_sown_landuses = sinp.landuse['C'] - dry_sown_landuses #can subtract sets to return differences
+    wet_sown_landuses = set(sinp.landuse['C']) - dry_sown_landuses #can subtract sets to return differences
 
     ##wet sowing periods
     seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
@@ -1125,7 +1153,7 @@ def f_sow_prov():
     wet_seed_end_z = wet_seed_start_z + wet_seed_len_z
     period_is_wetseeding_p5z = (labour_period_start_p5z < wet_seed_end_z) * (labour_period_end_p5z > wet_seed_start_z)
     ###add k axis
-    period_is_wetseeding_p5z = period_is_wetseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(wet_sown_landuses), axis=-1)
+    period_is_wetseeding_p5zk = period_is_wetseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(wet_sown_landuses), axis=-1)
 
     ##dry sowing periods
     dry_seed_start = np.datetime64(pinp.crop['dry_seed_start'])
@@ -1145,15 +1173,16 @@ def f_sow_prov():
     period_is_passeeding_p5zt = (labour_period_start_p5z[:,:,na] < i_reseeding_date_end_zt) * (labour_period_end_p5z[:,:,na] > i_reseeding_date_start_zt)
     ###convert t axis to k
     kt = (len(keys_k), len(pastures))
-    seeding_landuses = uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj'].index
     resown_kt = np.zeros(kt)
+    seeding_freq_k = pinp.crop['i_seeding_frequency']
+    resown_k = seeding_freq_k>0
     for t,pasture in enumerate(pastures):
         pasture_landuses = list(sinp.landuse['pasture_sets'][pasture])
-        resown_kt[:,t] = np.logical_and(np.in1d(keys_k, seeding_landuses), np.in1d(keys_k, pasture_landuses)) #resown if landuse is a pasture and is a sown landuse
+        resown_kt[:,t] = resown_k * np.in1d(keys_k, pasture_landuses)  #resown if landuse is a pasture and is a sown landuse
     period_is_passeeding_p5zk = np.sum(resown_kt * period_is_passeeding_p5zt[:,:,na,:], -1) #sum t axis - t is counted for in the k axis
 
     ##combine wet, dry and pas
-    period_is_seeding_p5zk = np.minimum(1,period_is_wetseeding_p5z + period_is_dryseeding_p5zk + period_is_passeeding_p5zk)
+    period_is_seeding_p5zk = np.minimum(1,period_is_wetseeding_p5zk + period_is_dryseeding_p5zk + period_is_passeeding_p5zk)
 
     ##add p7 axis - needed so machinery can be linked with phases (machinery just has a p5 axis)
     alloc_p7p5z = zfun.f1_z_period_alloc(labour_period_start_p5z[na,:,:], z_pos=-1)
@@ -1171,7 +1200,8 @@ def f_sow_prov():
 ##collates all the params
 def f1_crop_params(params,r_vals):
     cost, increment_cost, wc, increment_wc = f1_rot_cost(r_vals)
-    yields = f_rot_yield()
+    biomass = f_rot_biomass()
+    biomass2product_kls2 = f_biomass2product()
     propn = f_grain_pool_proportions()
     grain_price, grain_wc = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
@@ -1187,122 +1217,123 @@ def f1_crop_params(params,r_vals):
     params['increment_rot_cost'] = increment_cost.to_dict()
     params['rot_wc'] = wc.to_dict()
     params['increment_rot_wc'] = increment_wc.to_dict()
-    params['rot_yield'] = yields.to_dict()
+    params['rot_biomass'] = biomass.to_dict()
+    params['biomass2product_kls2'] = biomass2product_kls2.to_dict()
 
 
 
-
-#################
-#continuous pas #
-#################
-
-def f_cont_pas(cost_array):
-    '''
-    Calculates the cost for continuous pasture that is resown a proportion of the time. eg tc (cont tedera)
-    the cost of cont pasture is a combination of the cost of normal and resown eg tc = t + tr (weighted by the frequency of resowing)
-    This function requires the index to be the landuse with no other levels. You can use unstack to ensure landuse is the only index.
-    Generally this function is applied early in the cost process (before landuse has been dropped)
-    Cont pasture only needs to exist if the phase has been included in the rotation.
-
-    .. note:: if a new pasture is added which has a continuous option that is resown occasionally it will need to be added to this function.
-
-    :param cost_array: df with the cost of the corresponding resown landuse. This array will be returned with the addition of the continuous pasture landuse
-    '''
-    ##read phases
-    phases_df = sinp.f_phases()
-
-    pastures = sinp.general['pastures'][pinp.general['pas_inc']]
-    ##if cont tedera is in rotation list and tedera is included in the pasture modules then generate the inputs for it
-    if any(phases_df.iloc[:,-1].isin(['tc'])) and 'tedera' in pastures:
-        germ_df = pinp.pasture_inputs['tedera']['GermPhases']
-        ##determine the proportion of the time tc and jc are resown - this is used as a weighting to determine the input costs
-        tc_idx = germ_df.iloc[:,-3].isin(['tc']) #checks current phase for tc
-        tc_frequency = germ_df.loc[tc_idx,'resown'] #get frequency of resowing tc
-        ##create mask for normal tedera and resown tedera
-        bool_t = cost_array.index.isin(['t'])
-        bool_tr = cost_array.index.isin(['tr'])
-        ##create new param - average all phases.
-        if np.count_nonzero(bool_t)==0: #check if any of the phases in the input array had t, if not then the cost is 0
-            t_cost = 0
-        else:
-            t_cost=(cost_array[bool_t]*(1-tc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        if np.count_nonzero(bool_tr)==0: #check if any of the phases in the input array had t, if not then the cost is 0
-            tr_cost = 0
-        else:
-            tr_cost=(cost_array[bool_tr]*(tc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        ##add weighted average of the resown and normal phase
-        tc_cost = t_cost + tr_cost
-        ##assign to df as new col
-        cost_array.loc['tc', :] = tc_cost
-
-    ##if cont tedera is in rotation list and tedera is included in the pasture modules then generate the inputs for it
-    if any(phases_df.iloc[:,-1].isin(['jc'])) and 'tedera' in pastures:
-        germ_df = pinp.pasture_inputs['tedera']['GermPhases']
-        ##determine the proportion of the time jc and jc are resown - this is used as a weighting to determine the input costs
-        jc_idx = germ_df.iloc[:,-3].isin(['jc']) #checks current phase for jc
-        jc_frequency = germ_df.loc[jc_idx,'resown'] #get frequency of resowing jc
-        ##create mask for normal tedera and resown tedera
-        bool_j = cost_array.index.isin(['j'])
-        bool_jr = cost_array.index.isin(['jr'])
-        ##create new param - average all phases.
-        if np.count_nonzero(bool_j)==0: #check if any of the phases in the input array had t, if not then the cost is 0
-            j_cost = 0
-        else:
-            j_cost=(cost_array[bool_j]*(1-jc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        if np.count_nonzero(bool_jr)==0: #check if any of the phases in the input array had t, if not then the cost is 0
-            jr_cost = 0
-        else:
-            jr_cost=(cost_array[bool_jr]*(jc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        ##add weighted average of the resown and normal phase
-        jc_cost = j_cost + jr_cost
-        ##assign to df as new col
-        cost_array.loc['jc', :] = jc_cost
-
-    ##if cont lucerne is in rotation list and lucerne is included in the pasture modules then generate the inputs for it
-    if any(phases_df.iloc[:,-1].isin(['uc'])) and 'lucerne' in pastures:
-        germ_df = pinp.pasture_inputs['lucerne']['GermPhases']
-        ##determine the proportion of the time uc and xc are resown - this is used as a weighting to determine the input costs
-        uc_idx = germ_df.iloc[:,-3].isin(['uc']) #checks current phase for uc
-        uc_frequency = germ_df.loc[uc_idx,'resown'] #get frequency of resowing uc
-        ##create mask for normal tedera and resown tedera
-        bool_u = cost_array.index.isin(['u'])
-        bool_ur = cost_array.index.isin(['ur'])
-        ##create new param - average all phases.
-        if np.count_nonzero(bool_u)==0: #check if any of the phases in the input array had t, if not then the cost is 0
-            u_cost = 0
-        else:
-            u_cost=(cost_array[bool_u]*(1-uc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        if np.count_nonzero(bool_ur)==0: #check if any of the phases in the input array had t, if not then the cost is 0
-            ur_cost = 0
-        else:
-            ur_cost=(cost_array[bool_ur]*(uc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        ##add weighted average of the resown and normal phase
-        uc_cost = u_cost + ur_cost
-        ##assign to df as new col
-        cost_array.loc['uc', :] = uc_cost
-
-    ##if cont lucerne is in rotation list and lucerne is included in the pasture modules then generate the inputs for it
-    if any(phases_df.iloc[:,-1].isin(['xc'])) and 'lucerne' in pastures:
-        germ_df = pinp.pasture_inputs['lucerne']['GermPhases']
-        ##determine the proportion of the time xc and xc are resown - this is used as a weighting to determine the input costs
-        xc_idx = germ_df.iloc[:,-3].isin(['xc']) #checks current phase for xc
-        xc_frequency = germ_df.loc[xc_idx,'resown'] #get frequency of resowing xc
-        ##create mask for normal tedera and resown tedera
-        bool_x = cost_array.index.isin(['x'])
-        bool_xr = cost_array.index.isin(['xr'])
-        ##create new param - average all phases.
-        if np.count_nonzero(bool_x)==0: #check if any of the phases in the input array had x, if not then the cost is 0
-            x_cost = 0
-        else:
-            x_cost=(cost_array[bool_x]*(1-xc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        if np.count_nonzero(bool_xr)==0: #check if any of the phases in the input array had t, if not then the cost is 0
-            xr_cost = 0
-        else:
-            xr_cost=(cost_array[bool_xr]*(xc_frequency[0])).mean(axis=0) #get average cost of each t phase
-        ##add weighted average of the resown and normal phase
-        xc_cost = x_cost + xr_cost
-        ##assign to df as new col
-        cost_array.loc['xc', :] = xc_cost
-
-    return cost_array
+##cont pas are now just included in the inputs.
+# #################
+# #continuous pas #
+# #################
+#
+# def f_cont_pas(cost_array):
+#     '''
+#     Calculates the cost for continuous pasture that is resown a proportion of the time. eg tc (cont tedera)
+#     the cost of cont pasture is a combination of the cost of normal and resown eg tc = t + tr (weighted by the frequency of resowing)
+#     This function requires the index to be the landuse with no other levels. You can use unstack to ensure landuse is the only index.
+#     Generally this function is applied early in the cost process (before landuse has been dropped)
+#     Cont pasture only needs to exist if the phase has been included in the rotation.
+#
+#     .. note:: if a new pasture is added which has a continuous option that is resown occasionally it will need to be added to this function.
+#
+#     :param cost_array: df with the cost of the corresponding resown landuse. This array will be returned with the addition of the continuous pasture landuse
+#     '''
+#     ##read phases
+#     phases_df = sinp.f_phases()
+#
+#     pastures = sinp.general['pastures'][pinp.general['pas_inc']]
+#     ##if cont tedera is in rotation list and tedera is included in the pasture modules then generate the inputs for it
+#     if any(phases_df.iloc[:,-1].isin(['tc'])) and 'tedera' in pastures:
+#         germ_df = pinp.pasture_inputs['tedera']['GermPhases']
+#         ##determine the proportion of the time tc and jc are resown - this is used as a weighting to determine the input costs
+#         tc_idx = germ_df.iloc[:,-3].isin(['tc']) #checks current phase for tc
+#         tc_frequency = germ_df.loc[tc_idx,'resown'] #get frequency of resowing tc
+#         ##create mask for normal tedera and resown tedera
+#         bool_t = cost_array.index.isin(['t'])
+#         bool_tr = cost_array.index.isin(['tr'])
+#         ##create new param - average all phases.
+#         if np.count_nonzero(bool_t)==0: #check if any of the phases in the input array had t, if not then the cost is 0
+#             t_cost = 0
+#         else:
+#             t_cost=(cost_array[bool_t]*(1-tc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         if np.count_nonzero(bool_tr)==0: #check if any of the phases in the input array had t, if not then the cost is 0
+#             tr_cost = 0
+#         else:
+#             tr_cost=(cost_array[bool_tr]*(tc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         ##add weighted average of the resown and normal phase
+#         tc_cost = t_cost + tr_cost
+#         ##assign to df as new col
+#         cost_array.loc['tc', :] = tc_cost
+#
+#     ##if cont tedera is in rotation list and tedera is included in the pasture modules then generate the inputs for it
+#     if any(phases_df.iloc[:,-1].isin(['jc'])) and 'tedera' in pastures:
+#         germ_df = pinp.pasture_inputs['tedera']['GermPhases']
+#         ##determine the proportion of the time jc and jc are resown - this is used as a weighting to determine the input costs
+#         jc_idx = germ_df.iloc[:,-3].isin(['jc']) #checks current phase for jc
+#         jc_frequency = germ_df.loc[jc_idx,'resown'] #get frequency of resowing jc
+#         ##create mask for normal tedera and resown tedera
+#         bool_j = cost_array.index.isin(['j'])
+#         bool_jr = cost_array.index.isin(['jr'])
+#         ##create new param - average all phases.
+#         if np.count_nonzero(bool_j)==0: #check if any of the phases in the input array had t, if not then the cost is 0
+#             j_cost = 0
+#         else:
+#             j_cost=(cost_array[bool_j]*(1-jc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         if np.count_nonzero(bool_jr)==0: #check if any of the phases in the input array had t, if not then the cost is 0
+#             jr_cost = 0
+#         else:
+#             jr_cost=(cost_array[bool_jr]*(jc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         ##add weighted average of the resown and normal phase
+#         jc_cost = j_cost + jr_cost
+#         ##assign to df as new col
+#         cost_array.loc['jc', :] = jc_cost
+#
+#     ##if cont lucerne is in rotation list and lucerne is included in the pasture modules then generate the inputs for it
+#     if any(phases_df.iloc[:,-1].isin(['uc'])) and 'lucerne' in pastures:
+#         germ_df = pinp.pasture_inputs['lucerne']['GermPhases']
+#         ##determine the proportion of the time uc and xc are resown - this is used as a weighting to determine the input costs
+#         uc_idx = germ_df.iloc[:,-3].isin(['uc']) #checks current phase for uc
+#         uc_frequency = germ_df.loc[uc_idx,'resown'] #get frequency of resowing uc
+#         ##create mask for normal tedera and resown tedera
+#         bool_u = cost_array.index.isin(['u'])
+#         bool_ur = cost_array.index.isin(['ur'])
+#         ##create new param - average all phases.
+#         if np.count_nonzero(bool_u)==0: #check if any of the phases in the input array had t, if not then the cost is 0
+#             u_cost = 0
+#         else:
+#             u_cost=(cost_array[bool_u]*(1-uc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         if np.count_nonzero(bool_ur)==0: #check if any of the phases in the input array had t, if not then the cost is 0
+#             ur_cost = 0
+#         else:
+#             ur_cost=(cost_array[bool_ur]*(uc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         ##add weighted average of the resown and normal phase
+#         uc_cost = u_cost + ur_cost
+#         ##assign to df as new col
+#         cost_array.loc['uc', :] = uc_cost
+#
+#     ##if cont lucerne is in rotation list and lucerne is included in the pasture modules then generate the inputs for it
+#     if any(phases_df.iloc[:,-1].isin(['xc'])) and 'lucerne' in pastures:
+#         germ_df = pinp.pasture_inputs['lucerne']['GermPhases']
+#         ##determine the proportion of the time xc and xc are resown - this is used as a weighting to determine the input costs
+#         xc_idx = germ_df.iloc[:,-3].isin(['xc']) #checks current phase for xc
+#         xc_frequency = germ_df.loc[xc_idx,'resown'] #get frequency of resowing xc
+#         ##create mask for normal tedera and resown tedera
+#         bool_x = cost_array.index.isin(['x'])
+#         bool_xr = cost_array.index.isin(['xr'])
+#         ##create new param - average all phases.
+#         if np.count_nonzero(bool_x)==0: #check if any of the phases in the input array had x, if not then the cost is 0
+#             x_cost = 0
+#         else:
+#             x_cost=(cost_array[bool_x]*(1-xc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         if np.count_nonzero(bool_xr)==0: #check if any of the phases in the input array had t, if not then the cost is 0
+#             xr_cost = 0
+#         else:
+#             xr_cost=(cost_array[bool_xr]*(xc_frequency[0])).mean(axis=0) #get average cost of each t phase
+#         ##add weighted average of the resown and normal phase
+#         xc_cost = x_cost + xr_cost
+#         ##assign to df as new col
+#         cost_array.loc['xc', :] = xc_cost
+#
+#     return cost_array
 
