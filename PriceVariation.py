@@ -6,13 +6,32 @@ Price scalars have two main purposes
     #. To account for variation in prices across weather years.
     #. To account for price variation within a year that is important for examining farm risk.
 
-Version 1 only includes variation for farm outputs (wool, meat and grain). The assumption is that
-and all input commodities have no variation. A further assumption is that all animal classes are 100% correlated,
-all wool microns are 100% correlated, all grains are 100% correlated and all input comodities have no variation.
-If these assumptions become limiting it is not very difficult to improve the price generation.
+Notwithstanding weather variation agricultural commodity price is a major source of farm risk. Price variation is
+approximated in AFO using user defined number of price states scalars for meat, wool and grain.
+The price states were determined from a multivariate price distribution so that correlation between commodities
+was captured. To reduce model complexity and simplify future input calibration all meat classes (lamb, shipper,
+mutton, etc) received the same meat price scalar, and the same for wool and grain. Furthermore, price variation
+was not included for input costs because input costs tend to vary less and therefore the additional model size
+was not justified. The resulting assumptions are that all animal classes are 100% correlated,
+all wool microns are 100% correlated, all grains are 100% correlated and all input comodities have no variation
+If these assumptions become limiting it is possible to add the extra detail in the price generation.
 
 The c1 axis is averaged for both the asset constraint and the working capital. This saves space without loosing
 much/any information.
+
+Generation of discrete price states:
+
+The need to form discrete approximations of a continuous distributions is a necessary requirement for developing a
+discrete stochastic programming model of farm management responses to price and weather-year states, where the price
+states are affected by marketing schemes.  By their nature discrete stochastic programming models cannot consider
+all possible price states as described by continuous distributions.  Rather continuous variables such as price and
+yield need to be approximated by discrete states.
+
+In AFO the user inputs the expected price this is then scalled by a factor for each price scenario. Price scenario
+scalars exist for meat, wool and grain and are generated from historical prices. A historical price series is
+inputted for meat, wool and grain from there a multivariate log normal distribution is fitted to the data and
+multiple price states are selected. The price at each point is compared to the average to determine the magnitude
+of the scalar.
 
 '''
 import numpy as np

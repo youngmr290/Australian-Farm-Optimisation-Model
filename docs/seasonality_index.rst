@@ -293,3 +293,10 @@ that sale can occur in each DVP (only one sale can exist per dvp per t slice). F
 currently have 2 sale options in each DVP (because there are 2 slices in the t axis). Therefore other
 tactical selling options could be added without expanding the size of the t axis in the post processing.
 
+Price Variation
+---------------
+
+.. toctree::
+   :maxdepth: 1
+
+   PriceVariation
