@@ -3011,7 +3011,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     ri_yatf = fsfun.f_rel_intake(1, rq_yatf, legume_pa1e1b1nwzida0e0b0xyg[p], cr_yatf) #use ra=1 for stubble
                     mei_yatf, mei_solid_yatf, intake_f_yatf, md_solid_yatf, mei_propn_milk_yatf, mei_propn_herb_yatf, mei_propn_supp_yatf \
-                                = sfun.f_intake(pi_yatf, ri_yatf, md_herb_yatf, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
+                                = sfun.f_intake(pi_yatf, ri_yatf, md_herb_yatf, feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[p]
                                                 , intake_s_yatf, pinp.sheep['i_md_supp'], mp2_yatf)   #same feedsupply as dams
 
             ##energy - yatf
