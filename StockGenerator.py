@@ -144,6 +144,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                         or np.logical_not(bool_steady_state)) #node fvp/dvp are not included if it is steadystate.
     fvp_mask_dams = np.concatenate([mask_node_is_fvp[0:1], sinp.stock['i_fixed_fvp_mask_dams'], sinp.structuralsa['i_fvp_mask_dams'], mask_node_is_fvp[1:]]) #season start is at the front. because ss has to be first in the fvp/dvp
     fvp_mask_offs = np.concatenate([mask_node_is_fvp[0:1], sinp.structuralsa['i_fvp_mask_offs'], mask_node_is_fvp[1:]]) #season start is at the front. because ss has to be first in the fvp/dvp
+    ##t1 mask
+    mask_t1 = np.concatenate([np.full(pinp.sheep['i_n_dam_sales'], True), mask_sire_inc_g0])  # sale t slices plus transfer t slices
 
     ###################################
     ### axis len                      #
@@ -7174,11 +7176,29 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     len_v3 = len(keys_v3)
 
     ##mask for dam activities
-    arrays = [keys_k2, keys_t1, keys_v1, keys_lw1, keys_g1]
-    index_ktvwg1 = fun.cartesian_product_simple_transpose(arrays)
-    tup_ktvwg1 = tuple(map(tuple,index_ktvwg1))
-    mask_dams_ktvwg1 = mask_dams_k2tva1e1b1nw8zida0e0b0xyg1.ravel()
-    params['p_mask_dams'] = dict(zip(tup_ktvwg1, mask_dams_ktvwg1))
+    arrays_k2tvwg1 = [keys_k2, keys_t1, keys_v1, keys_lw1, keys_g1]
+    params['p_mask_dams'] = fun.f1_make_pyomo_dict(mask_dams_k2tva1e1b1nw8zida0e0b0xyg1, arrays_k2tvwg1)
+
+    ##lower bound dams
+    bnd_lower_dams_tog1 = fun.f_sa(np.array([0],dtype=float), sen.sav['bnd_lo_dams_tog1'], 5)
+    bnd_lower_dams_toa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_lower_dams_tog1, left_pos=p_pos, right_pos=-1,
+                                                    condition=mask_t1, axis=p_pos-1, condition2=mask_o_dams, axis2=p_pos, condition3=mask_dams_inc_g1, axis3=-1)
+    bnd_lower_dams_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(bnd_lower_dams_toa1e1b1nwzida0e0b0xyg1,
+                                                                a_o_va1e1b1nwzida0e0b0xyg1[na,:,:,0:1,...], #take e[0] because o is not effected by e
+                                                                axis=p_pos)  # increments at prejoining
+    arrays_tvg1 = [keys_t1, keys_v1, keys_g1]
+    params['p_dams_lobound'] = fun.f1_make_pyomo_dict(bnd_lower_dams_tpa1e1b1nwzida0e0b0xyg1, arrays_tvg1)
+
+    ##upper bound dams
+    bnd_upper_dams_tog1 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_dams_tog1'], 5) #999999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
+    bnd_upper_dams_tog1[bnd_upper_dams_tog1==999999] = np.inf
+    bnd_upper_dams_toa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_upper_dams_tog1, left_pos=p_pos, right_pos=-1,
+                                                    condition=mask_t1, axis=p_pos-1, condition2=mask_o_dams, axis2=p_pos, condition3=mask_dams_inc_g1, axis3=-1)
+    bnd_upper_dams_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(bnd_upper_dams_toa1e1b1nwzida0e0b0xyg1,
+                                                                a_o_va1e1b1nwzida0e0b0xyg1[na,:,:,0:1,...], #take e[0] because o is not effected by e
+                                                                axis=p_pos)  # increments at prejoining
+    arrays_tvg1 = [keys_t1, keys_v1, keys_g1]
+    params['p_dams_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_dams_tpa1e1b1nwzida0e0b0xyg1, arrays_tvg1)
 
     ##proportion of dams mated. inf means the model can optimise the proportion because inf is used to skip the constraint.
     arrays = [keys_v1, keys_g1]

@@ -15,6 +15,30 @@ import UniversalInputs as uinp
 import StructuralInputs as sinp
 import Periods as per
 
+##len - mostly SA arrays can be initilised using the shape of the array they will be applied to.
+## the length below need to be the full axis length before masking.
+len_d = len(pinp.sheep['i_d_idx'])
+len_g0 = sinp.stock['i_mask_g0g3'].shape[0]
+len_g1 = sinp.stock['i_mask_g1g3'].shape[0]
+len_g3 = sinp.stock['i_mask_g3g3'].shape[0]
+len_h2 = pinp.sheep['i_h2_len']
+len_h5 = pinp.sheep['i_h5_len']
+len_h7 = pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'].shape[-1]
+len_i = pinp.sheep['i_i_len']
+len_k = len(sinp.landuse['C'])
+len_k0 = pinp.sheep['i_k0_len']
+len_k1 = pinp.sheep['i_k1_len']
+len_k2 = pinp.sheep['i_k2_len']
+len_k3 = pinp.sheep['i_k3_len']
+len_k4 = pinp.sheep['i_k4_len']
+len_k5 = pinp.sheep['i_k5_len']
+len_o = pinp.sheep['i_o_len']
+len_t1 = pinp.sheep['i_n_dam_sales'] + len_g0
+len_t3 = pinp.sheep['i_t3_len']
+len_x = pinp.sheep['i_x_len']
+len_z = len(pinp.general['i_mask_z'])
+
+
 ##create dict - store sa variables in dict so they can easily be changed in the exp loop
 sam = dict()
 sap = dict()
@@ -145,8 +169,10 @@ sav['bnd_drys_sold_o'] = np.full(pinp.sheep['i_dry_sales_forced_o'].shape, '-', 
 sav['bnd_drys_retained'] = '-'   #SA to force drys to be retained
 sav['bnd_sale_twice_dry_inc'] = '-'   #SA to include the the bound which forces twice dry dams to be sold
 sav['bnd_twice_dry_propn'] = '-'   #SA to change twice dry dam proportion
-sav['bnd_lower_dam_inc'] = '-'   #control if dam lower bound is on.
-sav['bnd_upper_dam_inc'] = '-'   #control if dam upper bound is on.
+sav['bnd_lo_dam_inc'] = '-'   #control if dam lower bound is on.
+sav['bnd_lo_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1, ), '-', dtype=object)   #min number of dams
+sav['bnd_up_dam_inc'] = '-'   #control if dam upper bound is on.
+sav['bnd_up_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1, ), '-', dtype=object)   #max number of dams
 sav['bnd_total_dams_scanned'] = '-'   #total dams scanned (summed over all dvps) - this also controls if bound is on.
 sav['bnd_propn_dam5_retained'] = '-'   #propn of 5yo dams retained - this also controls if bound is on.
 sav['bnd_sr_t'] = np.full(pinp.sheep['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
