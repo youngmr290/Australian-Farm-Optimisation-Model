@@ -209,8 +209,8 @@ def f1_boundarypyomo_local(params, model):
                 c) update param creation in sgen (param index will need the set added/removed)
             '''
             ##set bound using SAV
-            model.p_offs_lobound = pe.Param(model.s_sale_offs, model.s_dvp_offs, model.s_gender, model.s_groups_offs,
-                                            default=0, initialize=params['stock']['p_offs_lobound'])
+            model.p_offs_lobound = pe.Param(model.s_k3_damage_offs, model.s_sale_offs, model.s_dvp_offs, model.s_gender,
+                                            model.s_groups_offs, default=0, initialize=params['stock']['p_offs_lobound'])
 
             ##manual set the bound - usually done using SAV but this is just a quick and dirty method for debugging
             ###keys to build arrays for the specified slices
@@ -228,12 +228,12 @@ def f1_boundarypyomo_local(params, model):
             # offs_lowbound = dict(zip(tup_tvwxg, offs_lowbound))
 
             ###constraint
-            def f_off_lobound(model, q, s, t, v, z, x, g3):
-                return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3] for k3 in model.s_k3_damage_offs
+            def f_off_lobound(model, q, s, k3, t, v, z, x, g3):
+                return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3]
                            for k5 in model.s_k5_birth_offs for a in model.s_wean_times for n3 in model.s_nut_offs
                            for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
-                           ) >= model.p_offs_lobound[t,v,x,g3]
-            model.con_offs_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_offs
+                           ) >= model.p_offs_lobound[k3,t,v,x,g3]
+            model.con_offs_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_sale_offs
                                                    , model.s_dvp_offs, model.s_season_types, model.s_gender, model.s_groups_offs
                                                    , rule=f_off_lobound, doc='min number of offs')
 
@@ -253,8 +253,8 @@ def f1_boundarypyomo_local(params, model):
                 c) update param creation in sgen (param index will need the set added/removed)
             '''
             ##set bound using SAV
-            model.p_offs_upbound = pe.Param(model.s_sale_offs, model.s_dvp_offs, model.s_gender, model.s_groups_offs,
-                                            default=0, initialize=params['stock']['p_offs_upbound'])
+            model.p_offs_upbound = pe.Param(model.s_k3_damage_offs, model.s_sale_offs, model.s_dvp_offs, model.s_gender,
+                                            model.s_groups_offs, default=0, initialize=params['stock']['p_offs_upbound'])
 
             ##manual set the bound - usually done using SAV but this is just a quick and dirty method for debugging
             ###keys to build arrays for the specified slices
@@ -272,12 +272,12 @@ def f1_boundarypyomo_local(params, model):
             # offs_upbound = dict(zip(tup_tvwxg, offs_upbound))
 
             ###constraint
-            def f_off_upbound(model, q, s, t, v, z, x, g3):
-                return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3] for k3 in model.s_k3_damage_offs
+            def f_off_upbound(model, q, s, k3, t, v, z, x, g3):
+                return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3]
                            for k5 in model.s_k5_birth_offs for a in model.s_wean_times for n3 in model.s_nut_offs
                            for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
-                           ) <= model.p_offs_upbound[t,v,x,g3]
-            model.con_offs_upbound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_offs
+                           ) <= model.p_offs_upbound[k3,t,v,x,g3]
+            model.con_offs_upbound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_sale_offs
                                                    , model.s_dvp_offs, model.s_season_types, model.s_gender, model.s_groups_offs
                                                    , rule=f_off_upbound, doc='max number of offs')
 

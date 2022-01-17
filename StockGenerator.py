@@ -7256,19 +7256,33 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     params['p_scan_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==scan_vtype1] #get the dvp keys which are scan (same for all animals hence take slice 0)
 
     ##lower bound offs
-    bnd_lower_offs_tvxg3 = fun.f_sa(np.array([0],dtype=float), sen.sav['bnd_lo_offs_tvxg3'], 5)
-    bnd_lower_offs_tva1e1b1nwzida0e0b0xyg3 = fun.f_expand(bnd_lower_offs_tvxg3, left_pos=x_pos, right_pos=-1
-                                                          , left_pos2=p_pos, right_pos2=x_pos , condition=mask_offs_inc_g3, axis=-1)
-    arrays_tvxg3 = [keys_t3, keys_v3, keys_x, keys_g3]
-    params['p_offs_lobound'] = fun.f1_make_pyomo_dict(bnd_lower_offs_tva1e1b1nwzida0e0b0xyg3, arrays_tvxg3)
+    bnd_lower_offs_tsdxg3 = fun.f_sa(np.array([0],dtype=float), sen.sav['bnd_lo_offs_tsdxg3'], 5)
+    bnd_lower_offs_tsa1e1b1nwzida0e0b0xyg3 = fun.f_expand(bnd_lower_offs_tsdxg3, left_pos=x_pos, right_pos=-1,
+                                                          left_pos2=d_pos, right_pos2=x_pos, left_pos3=p_pos, right_pos3=d_pos,
+                                                          condition=mask_d_offs, axis=d_pos, condition2=mask_x, axis2=x_pos, condition3=mask_offs_inc_g3, axis3=-1)
+    bnd_lower_offs_tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(bnd_lower_offs_tsa1e1b1nwzida0e0b0xyg3,
+                                                                a_s_va1e1b1nwzida0e0b0xyg3[na,...],
+                                                                axis=p_pos)
+    bnd_lower_offs_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(bnd_lower_offs_tva1e1b1nwzida0e0b0xyg3
+                                                         * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
+                                                         axis=d_pos, keepdims=True) #cluster d
+    arrays_k3tvxg3 = [keys_k3, keys_t3, keys_v3, keys_x, keys_g3]
+    params['p_offs_lobound'] = fun.f1_make_pyomo_dict(bnd_lower_offs_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3tvxg3)
 
     ##upper bound offs
-    bnd_upper_offs_tvxg3 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_offs_tog1'], 5) #999999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
-    bnd_upper_offs_tvxg3[bnd_upper_offs_tvxg3==999999] = np.inf
-    bnd_upper_offs_tva1e1b1nwzida0e0b0xyg3 = fun.f_expand(bnd_upper_offs_tvxg3, left_pos=x_pos, right_pos=-1
-                                                          , left_pos2=p_pos, right_pos2=x_pos , condition=mask_offs_inc_g3, axis=-1)
-    arrays_tvxg3 = [keys_t3, keys_v3, keys_x, keys_g3]
-    params['p_offs_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_offs_tva1e1b1nwzida0e0b0xyg3, arrays_tvxg3)
+    bnd_upper_offs_tsdxg3 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_offs_tsdxg3'], 5) #999999 just an arbitrary high value (cant use np.inf because it becomes nan in the folowing calcs)
+    # bnd_upper_offs_tsdxg3[bnd_upper_offs_tsdxg3==999999] = np.inf
+    bnd_upper_offs_tsa1e1b1nwzida0e0b0xyg3 = fun.f_expand(bnd_upper_offs_tsdxg3, left_pos=x_pos, right_pos=-1,
+                                                          left_pos2=d_pos, right_pos2=x_pos, left_pos3=p_pos, right_pos3=d_pos,
+                                                          condition=mask_d_offs, axis=d_pos, condition2=mask_x, axis2=x_pos, condition3=mask_offs_inc_g3, axis3=-1)
+    bnd_upper_offs_tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(bnd_upper_offs_tsa1e1b1nwzida0e0b0xyg3,
+                                                                a_s_va1e1b1nwzida0e0b0xyg3[na,...],
+                                                                axis=p_pos)
+    bnd_upper_offs_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(bnd_upper_offs_tva1e1b1nwzida0e0b0xyg3
+                                                         * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
+                                                         axis=d_pos, keepdims=True) #cluster d
+    arrays_k3tvxg3 = [keys_k3, keys_t3, keys_v3, keys_x, keys_g3]
+    params['p_offs_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_offs_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3tvxg3)
 
 
 
