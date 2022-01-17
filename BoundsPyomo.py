@@ -35,7 +35,8 @@ def f1_boundarypyomo_local(params, model):
     sup_lobound_inc = False #controls sup feed bound
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_dam_inc'], 5) #lower bound dams
     dams_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_dam_inc'], 5) #upper bound on dams
-    offs_lobound_inc = False #lower bound offs
+    offs_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_off_inc'], 5) #lower bound offs
+    offs_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_off_inc'], 5) #upper bound on offs
     total_dams_scanned_bound_inc = np.any(sen.sav['bnd_total_dams_scanned'] != '-') #equal to bound on the total number of mated dams at scanning
     force_5yo_retention_inc = np.any(sen.sav['bnd_propn_dam5_retained'] != '-') #force a propn of 5yo dams to be retained.
     bnd_propn_dams_mated = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
@@ -134,7 +135,7 @@ def f1_boundarypyomo_local(params, model):
             # dams_lobound = dict(zip(tup_tvwg, dams_lobound))
 
             ###constraint
-            def dam_lo_bound(model, q, s, t, v, z, g1):
+            def f_dam_lobound(model, q, s, t, v, z, g1):
                 if model.p_dams_lobound[t,v,g1]==0 or all(model.p_mask_dams[k2,t,v,w8,g1] == 0
                                                           for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams):
                     return pe.Constraint.Skip
@@ -142,10 +143,11 @@ def f1_boundarypyomo_local(params, model):
                     return sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1] for k2 in model.s_k2_birth_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
-                               if pe.value(model.p_mask_dams[k2,t,v,w8,g1]) == 1) \
-                           >= model.p_dams_lobound[t,v,g1]
-            model.con_dam_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_dams, model.s_dvp_dams, model.s_season_types,
-                                                  model.s_groups_dams, rule=dam_lo_bound, doc='min number of dams')
+                               if pe.value(model.p_mask_dams[k2,t,v,w8,g1]) == 1
+                               ) >= model.p_dams_lobound[t,v,g1]
+            model.con_dams_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_dams
+                                                   , model.s_dvp_dams, model.s_season_types, model.s_groups_dams
+                                                   , rule=f_dam_lobound, doc='min number of dams')
 
         ##dams upper bound
         if dams_upbound_inc:
@@ -175,6 +177,7 @@ def f1_boundarypyomo_local(params, model):
             # dams_upbound = dams_upbound_tv.ravel()
             # tup_tv = tuple(map(tuple, index_tv))
             # dams_upbound = dict(zip(tup_tv, dams_upbound))
+
             ###constraint
             def f_dam_upbound(model, q, s, t, v, z, g1):
                 if model.p_dams_upbound[t, v, g1]==np.inf or all(model.p_mask_dams[k2,t,v,w8,g1] == 0
@@ -186,34 +189,97 @@ def f1_boundarypyomo_local(params, model):
                                for i in model.s_tol for y in model.s_gen_merit_dams
                                if pe.value(model.p_mask_dams[k28,t,v,w8,g1]) == 1 #if removes the masked out dams so they don't show up in .lp output.
                                ) <= model.p_dams_upbound[t,v,g1]
-            model.con_dam_upbound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_dams, model.s_dvp_dams, model.s_season_types, model.s_groups_dams, rule=f_dam_upbound,
-                                                    doc='max number of dams_tv')
+            model.con_dams_upbound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_dams
+                                                   , model.s_dvp_dams, model.s_season_types, model.s_groups_dams
+                                                   , rule=f_dam_upbound, doc='max number of dams_tv')
 
-        ##min offs
+        ##offs lo bound
         if offs_lobound_inc:
+            '''
+            Lower bound offs.
+
+            The constraint sets can be changed for different analysis (this is preferred rather than creating 
+            a new lobound because that keeps this module smaller and easier to navigate etc).
+            Typically set using SAV however for quick and dirty debugging the code below can be uncommented.
+
+            Process to add/remove constraints sets:
+
+                a) add/remove the set from the constraint below (will also need to add/remove from the sum)
+                b) update empty array initialisation in sensitivity.py
+                c) update param creation in sgen (param index will need the set added/removed)
+            '''
+            ##set bound using SAV
+            model.p_offs_lobound = pe.Param(model.s_sale_offs, model.s_dvp_offs, model.s_gender, model.s_groups_offs,
+                                            default=0, initialize=params['stock']['p_offs_lobound'])
+
+            ##manual set the bound - usually done using SAV but this is just a quick and dirty method for debugging
             ###keys to build arrays for the specified slices
-            arrays = [model.s_sale_offs, model.s_dvp_offs, model.s_lw_offs,model.s_gender, model.s_groups_offs]   #more sets can be added here to customise the bound
-            index_tvwxg = fun.cartesian_product_simple_transpose(arrays)
-            ###build array for the axes of the specified slices
-            offs_lowbound_tvwxg = np.zeros((len(model.s_sale_offs), len(model.s_dvp_offs), len(model.s_lw_offs), len(model.s_gender), len(model.s_groups_offs)))
-            ###set the bound
-            offs_lowbound_tvwxg[0, 0,0,0,0] = 50
-            offs_lowbound_tvwxg[0, 0,1,0,0] = 50
-            offs_lowbound_tvwxg[0, 0,2,0,0] = 0
-            ###ravel and zip bound and dict
-            offs_lowbound = offs_lowbound_tvwxg.ravel()
-            tup_tvwxg = tuple(map(tuple, index_tvwxg))
-            offs_lowbound = dict(zip(tup_tvwxg, offs_lowbound))
+            # arrays = [model.s_sale_offs, model.s_dvp_offs, model.s_lw_offs,model.s_gender, model.s_groups_offs]   #more sets can be added here to customise the bound
+            # index_tvwxg = fun.cartesian_product_simple_transpose(arrays)
+            # ###build array for the axes of the specified slices
+            # offs_lowbound_tvwxg = np.zeros((len(model.s_sale_offs), len(model.s_dvp_offs), len(model.s_lw_offs), len(model.s_gender), len(model.s_groups_offs)))
+            # ###set the bound
+            # offs_lowbound_tvwxg[0, 0,0,0,0] = 50
+            # offs_lowbound_tvwxg[0, 0,1,0,0] = 50
+            # offs_lowbound_tvwxg[0, 0,2,0,0] = 0
+            # ###ravel and zip bound and dict
+            # offs_lowbound = offs_lowbound_tvwxg.ravel()
+            # tup_tvwxg = tuple(map(tuple, index_tvwxg))
+            # offs_lowbound = dict(zip(tup_tvwxg, offs_lowbound))
 
             ###constraint
-            def off_lo_bound(model, q, s, t, v, w8, z, x, g3):
-                return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3] for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs
-                           for a in model.s_wean_times for n3 in model.s_nut_offs
-                           for i in model.s_tol for y3 in model.s_gen_merit_offs) \
-                       >= offs_lowbound[t, v,w8,x,g3]
-            model.con_offs_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_offs, model.s_dvp_offs, model.s_lw_offs, model.s_season_types,
-                                                   model.s_gender, model.s_groups_offs, rule=off_lo_bound,
-                                                   doc='min number of offs')
+            def f_off_lobound(model, q, s, t, v, z, x, g3):
+                return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3] for k3 in model.s_k3_damage_offs
+                           for k5 in model.s_k5_birth_offs for a in model.s_wean_times for n3 in model.s_nut_offs
+                           for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
+                           ) >= model.p_offs_lobound[t,v,x,g3]
+            model.con_offs_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_offs
+                                                   , model.s_dvp_offs, model.s_season_types, model.s_gender, model.s_groups_offs
+                                                   , rule=f_off_lobound, doc='min number of offs')
+
+        ##offs upper bound
+        if offs_upbound_inc:
+            '''
+            Upper bound offs.
+
+            The constraint sets can be changed for different analysis (this is preferred rather than creating 
+            a new upbound because that keeps this module smaller and easier to navigate etc).
+            Typically set using SAV however for quick and dirty debugging the code below can be uncommented.
+
+            Process to add/remove constraints sets:
+
+                a) add/remove the set from the constraint below (will also need to add/remove from the sum)
+                b) update empty array initialisation in sensitivity.py
+                c) update param creation in sgen (param index will need the set added/removed)
+            '''
+            ##set bound using SAV
+            model.p_offs_upbound = pe.Param(model.s_sale_offs, model.s_dvp_offs, model.s_gender, model.s_groups_offs,
+                                            default=0, initialize=params['stock']['p_offs_upbound'])
+
+            ##manual set the bound - usually done using SAV but this is just a quick and dirty method for debugging
+            ###keys to build arrays for the specified slices
+            # arrays = [model.s_sale_offs, model.s_dvp_offs, model.s_lw_offs,model.s_gender, model.s_groups_offs]   #more sets can be added here to customise the bound
+            # index_tvwxg = fun.cartesian_product_simple_transpose(arrays)
+            # ###build array for the axes of the specified slices
+            # offs_upbound_tvwxg = np.zeros((len(model.s_sale_offs), len(model.s_dvp_offs), len(model.s_lw_offs), len(model.s_gender), len(model.s_groups_offs)))
+            # ###set the bound
+            # offs_upbound_tvwxg[0, 0,0,0,0] = 50
+            # offs_upbound_tvwxg[0, 0,1,0,0] = 50
+            # offs_upbound_tvwxg[0, 0,2,0,0] = 0
+            # ###ravel and zip bound and dict
+            # offs_upbound = offs_lowbound_tvwxg.ravel()
+            # tup_tvwxg = tuple(map(tuple, index_tvwxg))
+            # offs_upbound = dict(zip(tup_tvwxg, offs_upbound))
+
+            ###constraint
+            def f_off_upbound(model, q, s, t, v, z, x, g3):
+                return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3] for k3 in model.s_k3_damage_offs
+                           for k5 in model.s_k5_birth_offs for a in model.s_wean_times for n3 in model.s_nut_offs
+                           for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
+                           ) <= model.p_offs_upbound[t,v,x,g3]
+            model.con_offs_upbound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_offs
+                                                   , model.s_dvp_offs, model.s_season_types, model.s_gender, model.s_groups_offs
+                                                   , rule=f_off_upbound, doc='max number of offs')
 
 
         ##total dams scanned. Sums mated dams in all scanning dvps

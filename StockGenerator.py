@@ -7255,8 +7255,20 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     params['p_prejoin_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==prejoin_vtype1] #get the dvp keys which are prejoining (same for all animals hence take slice 0)
     params['p_scan_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==scan_vtype1] #get the dvp keys which are scan (same for all animals hence take slice 0)
 
+    ##lower bound offs
+    bnd_lower_offs_tvxg3 = fun.f_sa(np.array([0],dtype=float), sen.sav['bnd_lo_offs_tvxg3'], 5)
+    bnd_lower_offs_tva1e1b1nwzida0e0b0xyg3 = fun.f_expand(bnd_lower_offs_tvxg3, left_pos=x_pos, right_pos=-1
+                                                          , left_pos2=p_pos, right_pos2=x_pos , condition=mask_offs_inc_g3, axis=-1)
+    arrays_tvxg3 = [keys_t3, keys_v3, keys_x, keys_g3]
+    params['p_offs_lobound'] = fun.f1_make_pyomo_dict(bnd_lower_offs_tva1e1b1nwzida0e0b0xyg3, arrays_tvxg3)
 
-
+    ##upper bound offs
+    bnd_upper_offs_tvxg3 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_offs_tog1'], 5) #999999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
+    bnd_upper_offs_tvxg3[bnd_upper_offs_tvxg3==999999] = np.inf
+    bnd_upper_offs_tva1e1b1nwzida0e0b0xyg3 = fun.f_expand(bnd_upper_offs_tvxg3, left_pos=x_pos, right_pos=-1
+                                                          , left_pos2=p_pos, right_pos2=x_pos , condition=mask_offs_inc_g3, axis=-1)
+    arrays_tvxg3 = [keys_t3, keys_v3, keys_x, keys_g3]
+    params['p_offs_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_offs_tva1e1b1nwzida0e0b0xyg3, arrays_tvxg3)
 
 
 
