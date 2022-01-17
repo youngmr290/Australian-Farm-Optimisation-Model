@@ -471,6 +471,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ################################################
     ##gender propn yatf
     gender_propn_xyg = fun.f_expand(pinp.sheep['i_gender_propn_x'], x_pos, condition=mask_x, axis=0).astype(dtype)
+
+    ##drys management
+    dry_retained_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_dry_retained_forced'], p_pos, condition=mask_o_dams, axis=p_pos)
+
     ##join
     join_cycles_ida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_join_cycles_ig1'],'dams',i_pos)[pinp.sheep['i_mask_i'],...]
 
@@ -1219,6 +1223,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     wean_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(wean_oa1e1b1nwzida0e0b0xyg1, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     gbal_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(gbal_oa1e1b1nwzida0e0b0xyg1, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     scan_option_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+
+    ##drys management
+    dry_retained_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_retained_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 
     ##date, age, timing
     date_born1st_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)
@@ -4953,7 +4960,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1 = sale_period_pa1e1b1nwzida0e0b0xyg1 == p_index_pa1e1b1nwzida0e0b0xyg
     period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1[0] = False #don't want period 0 to be sale (but it will default to sale because the sale period association is 0 at the beginning which ==index in p[0])
     ###determine t1 slice - dry dams sold at scanning
-    period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_scan_pa1e1b1nwzida0e0b0xyg1 * (scan_management_pa1e1b1nwzida0e0b0xyg1>=1) * (not pinp.sheep['i_dry_retained_forced']) #not is required because variable is drys off hand ie sold. if forced to retain the variable wants to be false
+    period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_scan_pa1e1b1nwzida0e0b0xyg1 * (scan_management_pa1e1b1nwzida0e0b0xyg1>=1) * np.logical_not(dry_retained_pa1e1b1nwzida0e0b0xyg1) #not is required because variable is drys off hand ie sold. if forced to retain the variable wants to be false
     period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 * (nfoet_b1nwzida0e0b0xyg==0) #make sure selling is not an option for animals with foet (have to do it this way so that b axis is added)
     period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...] = False #make sure selling is not an option for not mated  todo may turn on again in seasonality version
     ###combine sale t slices (t0 & t1) to produce period is sale
@@ -7220,6 +7227,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     tup_vanwiyg1 = tuple(map(tuple,index_vanwiyg1))
     propn_drys_vanwiyg1 = propn_drys_vg1.ravel()
     params['p_prop_dry_dams'] = dict(zip(tup_vanwiyg1, propn_drys_vanwiyg1))
+
+    ##drys retained (bool used to control if bound constraint is built)
+    dry_retained_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_retained_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesnt impact o axis (o is the input axis)
+    params['p_drys_retained'] = dict(zip(keys_v1,dry_retained_va1e1b1nwzida0e0b0xyg1.ravel()))
 
     ##proportion of drys that are twice dry
     ###expand for p axis
