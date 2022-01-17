@@ -2009,7 +2009,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##Set whether it is necessary to loop for the LTW calculations.
     ## If both dams & offs are not used then don't loop.
-    ## If generating for stubble then dont loop because only running a few periods so no life time information is known.
+    ## If generating for stubble then don't loop because only running a few periods so no life time information is known.
     if (sen.sam['LTW_dams'] == 0 and sen.sam['LTW_offs'] == 0) or stubble:
         loop_ltw_len = 1
     else:
@@ -2018,7 +2018,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     for loop_ltw in range(loop_ltw_len):
         #todo The double loop could be replaced by separating the offspring into their own loop
         # it doesn't remove the requirement to loop for the dams because they need to have the first loop to generate the inputs for the second loop
-        # but it would reduce the number of offspring calculations, allow offspring wean wt to be based on ffcfw_yat at weaning and allow loop length to be customised
+        # but it would reduce the number of offspring calculations, allow offspring wean wt to be based on ffcfw_yatf at weaning and allow loop length to be customised
 
         ####################################
         ### initialise arrays for sim loop  # axis names not always track from now on because they change between p=0 and p=1
@@ -2319,7 +2319,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                                    , pinp.sheep['i_startyear'], date_end_pa1e1b1nwzida0e0b0xyg[p], period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
 
 
-        ##offs
+            ##offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
                 ###GFW (start)
                 gfw_start_offs = cfw_start_offs / cw_offs[3, ...]

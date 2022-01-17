@@ -224,6 +224,7 @@ sav['r1_izg1'] = np.full(pinp.sheep['ia_r1_zig1'].shape, '-', dtype=object)   #S
 sav['r1_izg3'] = np.full(pinp.sheep['ia_r1_zig3'].shape, '-', dtype=object)   #SA to change the base feed option selected for offspring
 sav['r2_isk2g1'] = np.full(pinp.sheep['ia_r2_sk2ig1'].shape, '-', dtype=object)   #SA to Change the selected feed adjustments selected for the k2 axis (LSLN) for dams
 sav['r2_ik5g3'] = np.full(pinp.sheep['ia_r2_ik5g3'].shape, '-', dtype=object)   #SA to change the base feed option selected for offspring
+sav['r2_ik0g1'] = np.full(pinp.sheep['ia_r2_k0ig1'].shape, '-', dtype=object)   #SA to Change the selected feed adjustments selected for the k0 axis (wean age) for dams
 
 ##stock parameters
 sav['srw_c2'] = np.full(uinp.parameters['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.

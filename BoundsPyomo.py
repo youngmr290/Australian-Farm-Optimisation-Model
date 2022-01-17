@@ -261,13 +261,14 @@ def f1_boundarypyomo_local(params, model):
                               if pe.value(model.p_mask_dams[k28,t,v,w8,g1]) == 1 and v in scan6_v)
             model.con_retention_5yo_dams = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=retention_5yo_dams, doc='force retention of 5yo dams')
 
-        ##bound to fix the proportion of dams being mated - typically used to exclude yearlings
+        ##bound to fix the proportion of dams being mated - typically used to exclude mating yearlings
         #todo this causes sheep to become infeasible in the DSP model. Will need to revisit.
         ###build bound if turned on
         if bnd_propn_dams_mated:
             ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
             model.p_prop_dams_mated = pe.Param(model.s_dvp_dams, model.s_groups_dams, initialize=params['stock']['p_prop_dams_mated'])
             ###constraint
+            #todo add an i axis to the constraint
             def f_propn_dams_mated(model, q, s, v, z, g1):
                 if model.p_prop_dams_mated[v, g1]==np.inf or all(model.p_mask_dams[k2,t, v, w8,g1] == 0
                                       for k2 in model.s_k2_birth_dams for t in model.s_sale_dams for w8 in model.s_lw_dams):

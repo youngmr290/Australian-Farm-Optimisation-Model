@@ -318,6 +318,7 @@ def f_property_inp_sa():
     sheep['i_dry_sales_forced_o'] = fun.f_sa(sheep['i_dry_sales_forced_o'], sen.sav['bnd_drys_sold_o'],5)
     sheep['i_dry_retained_forced'] = fun.f_sa(sheep['i_dry_retained_forced'], sen.sav['bnd_drys_retained_o'],5)
     sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.sav['r1_izg1'],5)
+    sheep['ia_r2_k0ig1'] = fun.f_sa(sheep['ia_r2_k0ig1'], sen.sav['r2_ik0g1'],5)
     sheep['ia_r2_sk2ig1'] = fun.f_sa(sheep['ia_r2_sk2ig1'], sen.sav['r2_isk2g1'],5)
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.sav['r1_izg3'],5)
     sheep['i_sr_constraint_t'] = fun.f_sa(sheep['i_sr_constraint_t'], sen.sav['bnd_sr_t'],5)
