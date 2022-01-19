@@ -142,6 +142,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     z_pos = sinp.stock['i_z_pos']
 
     ##len
+    len_a0 = np.count_nonzero(pinp.sheep['i_mask_a'])
     len_a1 = np.count_nonzero(pinp.sheep['i_mask_a'])
 
 
@@ -334,12 +335,17 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ###d) todo come back to offs (remember gender needs to be masked)
     # t_fs_agedam_pj2zida0e0b0xg3 = t_fs_agedam_pj2zik3k0k4k5g3
     # t_fs_ageweaned_pj2zida0e0b0xg3 = t_fs_ageweaned_pj2zik3k0k4k5g3
+    a_k0_a0e0b0xyg3 = pinp.sheep['i_off_wean_diffman'] * fun.f_expand(np.arange(len_a0)+1, a0_pos) #len_a+1 because that is the association between k0 and a1
+    a_r2_wean_ida0e0b0xyg3 = np.take_along_axis(a_r2_idk0e0b0xyg3, a_k0_a0e0b0xyg3[na,na,...], a0_pos)
+    a_r2_wean_pa1e1b1nwzida0e0b0xyg3 = fun.f_expand(a_r2_wean_ida0e0b0xyg3, left_pos=p_pos-1, right_pos=i_pos)  #p_pos-1 because require a p axis and all are new axes.
     # t_fs_btrt_pj2zida0e0b0xg3 = t_fs_btrt_pj2zik3k0k4k5g3
     # t_fs_gender_pj2zida0e0b0xg3 = t_fs_gender_pj2zik3k0k4k5g3
 
 
     ##3) calculate the feedsupply adjustment for each sheep class
-    feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1 = fun.f_expand(feedsupply_adj_options_r2p,p_pos) #add other axis as singleton
+    feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1 = fun.f_expand(feedsupply_adj_options_r2p, p_pos) #add other axis as singleton
+    feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg3 = fun.f_expand(feedsupply_adj_options_r2p, p_pos
+                                                                   , condition=mask_p_offs_p, axis=p_pos)
     ###a)wean (take along the r2 axis and then remove the singleton axis with [0])
     t_fs_ageweaned_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1
                                                                 , a_r2_wean_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0]
@@ -350,10 +356,15 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     t_fs_lsln_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1
                                                            , a_r2_lsln_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0]
 
-    # t_fs_agedam_pa1e1b1j2wzik3a0e0b0xyg3 =
-    # t_fs_ageweaned_pa1e1b1j2wzidk0e0b0xyg3 =
-    # t_fs_btrt_a1e1b1j2wzida0e0k4xyg3 =
-    # t_fs_gender_pa1e1b1j2wzida0e0b0k5yg3 =
+    ###d)agedam for offspring
+    t_fs_agedam_pa1e1b1nwzik3a0e0b0xyg3 = 0
+    ###e)wean age for offspring
+    t_fs_ageweaned_pa1e1b1nwzidk0e0b0xyg3 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg3
+                                                                , a_r2_wean_pa1e1b1nwzida0e0b0xyg3[na,...], axis=0)[0]
+    ###f) btrt for offspring
+    t_fs_btrt_pa1e1b1nwzida0e0k4xyg3 = 0
+    ###g) gender for offspring
+    t_fs_gender_pa1e1b1nwzida0e0b0k5yg3 = 0
 
     ##4a) update fs and confinement info with pkl if desired
     fs_number = sinp.structuralsa['i_fs_number']
@@ -396,8 +407,9 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
         ##feedsupply is clipped in step 7 to ensure it is within a feasible range.
         t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = (t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1nwzida0e0b0xyg1
                                                   + t_fs_lsln_pa1e1b1nwzida0e0b0xyg1) #can't use += for some reason
-        # t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 = (t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 + t_fs_agedam_pj2zida0e0b0xg3
-        #                                             + t_fs_ageweaned_pj2zida0e0b0xg3 + t_fs_gender_pj2zida0e0b0xg3)
+        t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 = (t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 + t_fs_agedam_pa1e1b1nwzik3a0e0b0xyg3
+                                                  + t_fs_ageweaned_pa1e1b1nwzidk0e0b0xyg3 + t_fs_btrt_pa1e1b1nwzida0e0k4xyg3
+                                                  + t_fs_gender_pa1e1b1nwzida0e0b0k5yg3)
 
     ##5)Convert the ‘j2’ axis to an ‘n’ axis using the nut_spread inputs.
     ## activate n axis for confinement control (controls if a nutrition pattern is in confinement - note
