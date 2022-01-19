@@ -174,6 +174,7 @@ def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=0, condition=None, axis=0, d
 
 def f1_g2g(array_g,group,left_pos=0,swap=False,right_pos=-1,left_pos2=0,right_pos2=-1, left_pos3=0, right_pos3=0,
           condition = None, axis = 0, condition2 = None, axis2 = 0, move=False, source=0, dest=1):
+    #todo remove f1_g2g and replace with call to fun.f_expand_dims using mask_g as an arg.
     '''
     Parameters
     ----------
