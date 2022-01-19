@@ -54,7 +54,7 @@ def f1_stubpyomo_local(params, model):
     #                                initialize=params['rot_stubble'], default=0.0, doc='stubble produced per ha of each rotation')
 
     model.p_harv_prop = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['cons_prop'],
-                                 default = 0.0, mutable=False, doc='proportion of the way through each fp harvest occurs (0 if harv doesnt occur in given period)')
+                                 default = 0.0, mutable=False, doc='proportion of the way through each fp harvest occurs (0 if harv does not occur in given period)')
     
     model.p_stub_md = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['md'],
                                default = 0.0, mutable=False, doc='md from 1t of each stubble categories for each crop')
@@ -75,10 +75,10 @@ def f1_stubpyomo_local(params, model):
                               doc='stubble required from the row inorder to consume cat B or cat C')
     
     model.p_stub_transfer_prov = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['stub_transfer_prov'],
-                                   default = 0.0, mutable=False, doc='stubble availale for consumption. Transfered in from last period or harvest.')
+                                   default = 0.0, mutable=False, doc='stubble available for consumption. Transferred in from last period or harvest.')
     
     model.p_stub_transfer_req = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['stub_transfer_req'],
-                                   default = 0.0, mutable=False, doc='stubble reqired for transfer to the next period')
+                                   default = 0.0, mutable=False, doc='stubble required for transfer to the next period')
 
 
     ########################
@@ -97,10 +97,10 @@ def f_con_stubble_within(model):
     stubble to the following period. Eg category A consumption provides category B. Category B can either be
     consumed (hence providing cat C) or transferred to the following period.
     '''
-    ##stubble transter from category to category and period to period
+    ##stubble transfer from category to category and period to period
     ##s2 required because cat propn can vary across s2
     def stubble_transfer_within(model,q,s,p6,z9,k,sc,s2):
-        if pe.value(model.p_mask_childz_within_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s]) and pe.value(model.p_stub_transfer_req[p6,z9,k]): #p_stub_transfer_req included to remove constraints when stubble doesnt exist
+        if pe.value(model.p_mask_childz_within_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s]) and pe.value(model.p_stub_transfer_req[p6,z9,k]): #p_stub_transfer_req included to remove constraints when stubble doesn't exist
             sc_prev = list(model.s_stub_cat)[list(model.s_stub_cat).index(sc)-1] #previous stubble cat - used to transfer from current cat to the next, list is required because indexing of an ordered set starts at 1 which means index of 0 chucks error
             p6_prev = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6)-1] #have to convert to a list first because indexing of an ordered set starts at 1
             return  - sum(model.v_stub_transfer[q,s,p6_prev,z8,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
@@ -122,10 +122,10 @@ def f_con_stubble_between(model):
     stubble to the following period. Eg category A consumption provides category B. Category B can either be
     consumed (hence providing cat C) or transferred to the following period.
     '''
-    ##stubble transter from category to category and period to period
+    ##stubble transfer from category to category and period to period
     ##s2 required because cat propn can vary across s2
     def stubble_transfer_between(model,q,s9,p6,z9,k,sc,s2):
-        if pe.value(model.p_mask_childz_between_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_stub_transfer_req[p6,z9,k]): #p_stub_transfer_req included to remove constraints when stubble doesnt exist
+        if pe.value(model.p_mask_childz_between_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_stub_transfer_req[p6,z9,k]): #p_stub_transfer_req included to remove constraints when stubble doesn't exist
             sc_prev = list(model.s_stub_cat)[list(model.s_stub_cat).index(sc)-1] #previous stubble cat - used to transfer from current cat to the next, list is required because indexing of an ordered set starts at 1 which means index of 0 chucks error
             p6_prev = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6)-1] #have to convert to a list first because indexing of an ordered set starts at 1
             q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
@@ -149,7 +149,7 @@ def f_con_stubble_between(model):
 ###################
 #constraint global#
 ###################
-##stubble transter from category to category and period to period
+##stubble transfer from category to category and period to period
 # def f_stubble_req_a(model,q,s,p7,z,k,sc):
 #     '''
 #     Calculate the total stubble required to consume the selected volume category A stubble in each period.

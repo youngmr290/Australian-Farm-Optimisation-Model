@@ -15,7 +15,7 @@ import UniversalInputs as uinp
 import StructuralInputs as sinp
 import Periods as per
 
-##len - mostly SA arrays can be initilised using the shape of the array they will be applied to.
+##len - mostly SA arrays can be initialised using the shape of the array they will be applied to.
 ## the length below need to be the full axis length before masking.
 len_d = len(pinp.sheep['i_d_idx'])
 len_g0 = sinp.stock['i_mask_g0g3'].shape[0]

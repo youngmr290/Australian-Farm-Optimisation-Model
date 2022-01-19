@@ -792,17 +792,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     FVPs have gotten a little bit complex. To ensure that weights, masks, transfers and distributions occur correctly there are some rules that need to be met.
     The DVP rules are documented below in the dvp section.
     
-    FVPs before weaning (ie while numbers are all 0) are removed if they occur across all axis. If they dont occur
+    FVPs before weaning (ie while numbers are all 0) are removed if they occur across all axis. If they don't occur
     across all axis then they are set to the date of weaning. If multiple fvps occur at weaning they get off set by 1 
-    period. Type is set to extra so nothing is triggered eg if season start is before weaning and it gets moved to weaing
-    we dont want to trigger a distribution.
+    period. Type is set to extra so nothing is triggered eg if season start is before weaning and it gets moved to weaning
+    we don't want to trigger a distribution.
     
     FVPs that occur after the end of the generator are handled the same as above. I.e they are removed if the same across 
     all axis otherwise they are set to the last period of the generator. If multiple fvps occur on the last period they are offset 
-    by 1 peirod (this doesnt need to happen it just does so that the fvp no clash test is passed but fvps clashing on the
-    last gen peirod would actually be fine).
+    by 1 period (this doesn't need to happen it just does so that the fvp no clash test is passed but fvps clashing on the
+    last gen period would actually be fine).
     
-    No FVPs can clash. If an fvp clashes with another fvp then it doesnt trigger a fvp_start therefore a 0 day fvp 
+    No FVPs can clash. If an fvp clashes with another fvp then it doesn't trigger a fvp_start therefore a 0 day fvp 
     does not trigger liveweight pattern expansion. This would result in different active w for different axes which
     could get confusing and may not work. So to handle this no fvp can clash. If they clash an error will be thrown and 
     the user will need to adjust the inputs.
@@ -822,7 +822,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     season_vtype1 = max(core_dvp_types_f1) + 1
     other_vtype1 = max(core_dvp_types_f1) + 2
 
-    ##if stubble we dont want it to condense so change condense type to something that is not triggered
+    ##if stubble we don't want it to condense so change condense type to something that is not triggered
     if stubble:
         condense_vtype1 = other_vtype1+1
 
@@ -909,7 +909,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                 fvp_scan_type_va1e1b1nwzida0e0b0xyg1, fvp_birth_type_va1e1b1nwzida0e0b0xyg1,
                                 fvp_wean_type_va1e1b1nwzida0e0b0xyg1, fvp_other_type_va1e1b1nwzida0e0b0xyg1], dtype=object)
     fvp_type_all_f1 = np.concatenate([node_fvp_type_m[0:1], fvp_type_all_f1, node_fvp_type_m[1:]]) #seasons start needs to be first because it needs to be the first dvp in situations where there is a clash. so that distributing can occur from v_prev.
-    fvp1_inc = np.concatenate([fvp_mask_dams[0:1], np.array([True]), fvp_mask_dams[1:]]) #True in the middle is to count for the period from the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesnt occur each year)
+    fvp1_inc = np.concatenate([fvp_mask_dams[0:1], np.array([True]), fvp_mask_dams[1:]]) #True in the middle is to count for the period from the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesn't occur each year)
     fvp_date_inc_f1 = fvp_date_all_f1[fvp1_inc]
     fvp_type_inc_f1 = fvp_type_all_f1[fvp1_inc]
     fvp_start_fa1e1b1nwzida0e0b0xyg1 = np.concatenate(fvp_date_inc_f1,axis=0)
@@ -927,7 +927,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##error check
     #can't be any clashes
-    if not stubble:  # when generating for stubble fvp dont matter
+    if not stubble:  # when generating for stubble fvp don't matter
         for f in range(fvp_start_fa1e1b1nwzida0e0b0xyg1.shape[0]): #maybe there is a way to do this without a loop.
             if np.any(fvp_start_fa1e1b1nwzida0e0b0xyg1[f,...] == fvp_start_fa1e1b1nwzida0e0b0xyg1[0:f,...]):
                 raise exc.FVPError('''Multiple dams FVP on the same date. Use inputs to change.''')
@@ -958,7 +958,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     other_vtype3 = condense_vtype3 + 1
     season_vtype3 = other_vtype3 + 1
 
-    ##if stubble we dont want it to condense so change condense type
+    ##if stubble we don't want it to condense so change condense type
     if stubble:
         condense_vtype3 = other_vtype3 + 1
 
@@ -1036,10 +1036,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                 fvp_b2_type_va1e1b1nwzida0e0b0xyg3, fvp_0_type_va1e1b1nwzida0e0b0xyg3,
                                 fvp_1_type_va1e1b1nwzida0e0b0xyg3, fvp_2_type_va1e1b1nwzida0e0b0xyg3], dtype=object)
     fvp_type_all_f3 = np.concatenate([node_fvp_type_m[0:1], fvp_type_all_f3, node_fvp_type_m[1:]]) #seasons start needs to be first because it needs to be the first dvp in situations where there is a clash. so that distributing can occur from v_prev.
-    ###if shearing is less than 3 sim periods after weaning then set the break fvp dates to the first date of the sim (so they arent used)
+    ###if shearing is less than 3 sim periods after weaning then set the break fvp dates to the first date of the sim (so they aren't used)
     mask_initial_fvp = np.all((date_shear_sa1e1b1nwzida0e0b0xyg3[0:1] - date_weaned_ida0e0b0xyg3) > ((step.astype('timedelta64[D]')+1)*3)) #true if not enough gap between weaning and shearing for extra dvps.
     ###create the fvp mask. fvps are masked out depending on what the user has specified (the extra fvps at the start are removed if weaning is within 3weeks of shearing).
-    fvp3_inc = np.concatenate([fvp_mask_offs[0:1], np.array([True, True and mask_initial_fvp, True and mask_initial_fvp]), fvp_mask_offs[1:]]) #Trues in middle are to count for the extra fvp at the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesnt occur each year)
+    fvp3_inc = np.concatenate([fvp_mask_offs[0:1], np.array([True, True and mask_initial_fvp, True and mask_initial_fvp]), fvp_mask_offs[1:]]) #Trues in middle are to count for the extra fvp at the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesn't occur each year)
     fvp_date_inc_f3 = fvp_date_all_f3[fvp3_inc]
     fvp_type_inc_f3 = fvp_type_all_f3[fvp3_inc]
     fvp_start_fa1e1b1nwzida0e0b0xyg3 = np.concatenate(fvp_date_inc_f3,axis=0)
@@ -1056,7 +1056,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fvp_type_fa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg3, ind, axis=0)
 
     ##error check - can't be any clashes
-    if not stubble: # when generating for stubble fvp dont matter
+    if not stubble: # when generating for stubble fvp don't matter
         for f in range(fvp_start_fa1e1b1nwzida0e0b0xyg3.shape[0]):  # maybe there is a way to do this without a loop.
             if np.any(fvp_start_fa1e1b1nwzida0e0b0xyg3[f,...] == fvp_start_fa1e1b1nwzida0e0b0xyg3[0:f,...]):
                 raise exc.FVPError('''Multiple offs FVP on the same date. Use inputs to change.''')
@@ -1078,7 +1078,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     2. can remove dvp if it clashes for all axis and type ==other. Because repro dvps are used for clustering and season and condense are used for distributing.
     3. prejoin must be in the same v slice across g axis because g activities can transfer to other g activities
     4. season start must be in the same v slice across all z axis because of weighted average needs all season start to be in same v.
-    5.condense and season start cant clash (unless they have the same vtype) (this doesnt ocur for offs because no condense).
+    5.condense and season start cant clash (unless they have the same vtype) (this doesn't occur for offs because no condense).
     '''
 
     if not stubble:  # when generating for stubble dvps aren't required
@@ -1087,11 +1087,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         ###build dvps from fvps
         mask_node_is_dvp = np.full(len_m, True) * (pinp.general['i_inc_node_periods'] or np.logical_not(bool_steady_state)) #node fvp/dvp are not included if it is steadystate.
         dvp_mask_f1 = np.concatenate([mask_node_is_dvp[0:1], sinp.stock['i_fixed_dvp_mask_f1'], sinp.structuralsa['i_dvp_mask_f1'], mask_node_is_dvp[1:]]) #season start is first
-        dvp1_inc = np.concatenate([dvp_mask_f1[0:1], np.array([True]), dvp_mask_f1[1:]]) #True at start is to count for the period from the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesnt occur each year)
+        dvp1_inc = np.concatenate([dvp_mask_f1[0:1], np.array([True]), dvp_mask_f1[1:]]) #True at start is to count for the period from the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesn't occur each year)
         dvp_date_inc_v1 = fvp_date_all_f1[dvp1_inc]
         dvp_type_inc_v1 = fvp_type_all_f1[dvp1_inc]
         dvp_start_va1e1b1nwzida0e0b0xyg1 = np.concatenate(dvp_date_inc_v1,axis=0)
-        dvp_type_va1e1b1nwzida0e0b0xyg1 = np.concatenate(dvp_type_inc_v1,axis=0) #note dvp type doesnt have to start at 0 or be consecutive.
+        dvp_type_va1e1b1nwzida0e0b0xyg1 = np.concatenate(dvp_type_inc_v1,axis=0) #note dvp type doesn't have to start at 0 or be consecutive.
 
         ##handle pre weaning fvps or post gen
         dvp_start_va1e1b1nwzida0e0b0xyg1,dvp_type_va1e1b1nwzida0e0b0xyg1 = \
@@ -1113,7 +1113,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             can_remove_type  = np.all(dvp_type_va1e1b1nwzida0e0b0xyg1[v,...]==other_vtype1) #can only remove dvp if it is type=other.
             can_remove_date = np.all(np.any(dvp_start_va1e1b1nwzida0e0b0xyg1[v,...] == dvp_start_va1e1b1nwzida0e0b0xyg1[0:v,...], axis=0, keepdims=True))
             duplicate_mask_v.append(np.logical_not(np.logical_and(can_remove_type, can_remove_date)))
-            ###check that condense and season start dont clash - note this doesnt throw an error if condense_type==season_type (this is correct).
+            ###check that condense and season start don't clash - note this doesn't throw an error if condense_type==season_type (this is correct).
             clash_type = dvp_type_va1e1b1nwzida0e0b0xyg1[0:v][dvp_start_va1e1b1nwzida0e0b0xyg1[v,...] == dvp_start_va1e1b1nwzida0e0b0xyg1[0:v,...]]
             current_type = dvp_type_va1e1b1nwzida0e0b0xyg1[v]
             season_condense_clash = np.logical_and(np.any(np.logical_or(clash_type==season_vtype1, clash_type==condense_vtype1)),
@@ -1132,7 +1132,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         ##offs
         ###mask which dvps are included
         dvp_mask_f3 = np.concatenate([mask_node_is_dvp[0:1], sinp.structuralsa['i_dvp_mask_f3'], mask_node_is_dvp[1:]]) #season start is first
-        dvp3_inc = np.concatenate([dvp_mask_f3[0:1], np.array([True, False, False]), dvp_mask_f3[1:]]) #True at start is to count for the period from the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesnt occur each year)
+        dvp3_inc = np.concatenate([dvp_mask_f3[0:1], np.array([True, False, False]), dvp_mask_f3[1:]]) #True at start is to count for the period from the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesn't occur each year)
         ###build dvps from fvps
         dvp_date_inc_v3 = fvp_date_all_f3[dvp3_inc]
         dvp_type_inc_v3 = fvp_type_all_f3[dvp3_inc]
@@ -1159,7 +1159,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             can_remove_type  = np.all(dvp_type_va1e1b1nwzida0e0b0xyg3[v,...]==other_vtype3) #can only remove dvp if it is type=other.
             can_remove_date = np.all(np.any(dvp_start_va1e1b1nwzida0e0b0xyg3[v,...] == dvp_start_va1e1b1nwzida0e0b0xyg3[0:v,...], axis=0, keepdims=True))
             duplicate_mask_v.append(np.logical_not(np.logical_and(can_remove_type, can_remove_date)))
-            ###check that condense and season start dont clash - note this doesnt throw an error if condense_type==season_type (this is correct).
+            ###check that condense and season start don't clash - note this doesn't throw an error if condense_type==season_type (this is correct).
             clash_type = dvp_type_va1e1b1nwzida0e0b0xyg3[0:v][dvp_start_va1e1b1nwzida0e0b0xyg3[v,...] == dvp_start_va1e1b1nwzida0e0b0xyg3[0:v,...]]
             current_type = dvp_type_va1e1b1nwzida0e0b0xyg3[v]
             season_condense_clash = np.logical_and(np.any(np.logical_or(clash_type==season_vtype3, clash_type==condense_vtype3)),
@@ -1971,7 +1971,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     shape = np.maximum.reduce([period_between_prejoinscan_pa1e1b1nwzida0e0b0xyg1.shape, period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1.shape
                                   , period_between_birthwean_pa1e1b1nwzida0e0b0xyg1.shape]) #create shape which has the max size
     a_t_pa1e1b1nwzida0e0b0xyg1 = np.zeros(shape)
-    period_between_prejoinscan_mask = np.broadcast_arrays(a_t_pa1e1b1nwzida0e0b0xyg1, period_between_prejoinscan_pa1e1b1nwzida0e0b0xyg1)[1] #mask must be manually broadcasted then applied - for some reason numpy doesnt automatically broadcast them.
+    period_between_prejoinscan_mask = np.broadcast_arrays(a_t_pa1e1b1nwzida0e0b0xyg1, period_between_prejoinscan_pa1e1b1nwzida0e0b0xyg1)[1] #mask must be manually broadcasted then applied - for some reason numpy doesn't automatically broadcast them.
     period_between_scanbirth_mask = np.broadcast_arrays(a_t_pa1e1b1nwzida0e0b0xyg1, period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1)[1]
     period_between_birthwean_mask = np.broadcast_arrays(a_t_pa1e1b1nwzida0e0b0xyg1, period_between_birthwean_pa1e1b1nwzida0e0b0xyg1)[1]
     ###order matters because post wean does not have a cap ie it is over written by others
@@ -2423,7 +2423,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
-                ###murdoch #todo function doesnt exist yet, add args when it is built
+                ###murdoch #todo function doesn't exist yet, add args when it is built
                 eqn_system = 1 # mu = 1
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
@@ -2474,7 +2474,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                             = sfun.f1_feedsupply(feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p], confinementw_tpa1e1b1nwzida0e0b0xyg1[:,p]
                                                 , nv_a1e1b1j1wzida0e0b0xyg1, foo_a1e1b1j1wzida0e0b0xyg1
                                                 , dmd_a1e1b1j1wzida0e0b0xyg1, supp_a1e1b1j1wzida0e0b0xyg1, pi_dams)
-                ###if generating for stubble then nv doesnt exist so need to calc a bit differently.
+                ###if generating for stubble then nv doesn't exist so need to calc a bit differently.
                 else:
                     ###calc dmd and md_herb - done within if statement because dmd & md_herb are calculated differently for stubble sim.
                     dmd_dams = dmd_pwg[p]
@@ -2509,7 +2509,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                             = sfun.f1_feedsupply(feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p], confinementw_tpa1e1b1nwzida0e0b0xyg3[:,p]
                                                 , nv_a1e1b1j1wzida0e0b0xyg3, foo_a1e1b1j1wzida0e0b0xyg3
                                                 , dmd_a1e1b1j1wzida0e0b0xyg3, supp_a1e1b1j1wzida0e0b0xyg3, pi_offs)
-                ###if generating for stubble then nv doesnt exist so need to calc a bit differently.
+                ###if generating for stubble then nv doesn't exist so need to calc a bit differently.
                 else:
                     ###calc dmd and md_herb - done within if statement because dmd & md_herb are calculated differently for stubble sim.
                     dmd_offs = dmd_pwg[p]
@@ -2816,10 +2816,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             ##dam weight at a given time during period - used for special events like birth.
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 ##Dam weight at mating - to estimate the weight at mating we are wanting to use the growth rate of the dams that are not yet pregnant
-                ## because mating doesnt happen at the start of the period.
+                ## because mating doesn't happen at the start of the period.
                 ##relative size and relative condition of the dams at mating are the determinants of conception
                 ## use the condition of dams in the 11 slice because mated animals can have a different feed supply
-                ## use dams in e[-1] because want the condition of the animal before it concieves. Note all e slices will have the same condition until concieved because they have the same feedsupply until scanning.
+                ## use dams in e[-1] because want the condition of the animal before it conceives. Note all e slices will have the same condition until conceived because they have the same feedsupply until scanning.
                 ffcfw_e1b1sliced = fun.f_dynamic_slice(ffcfw_start_dams, e1_pos, -1, None, b1_pos, 2, 3) #slice e1 & b1 axis
                 ebg_e1b1sliced = fun.f_dynamic_slice(ebg_dams, e1_pos, -1, None, b1_pos, 2, 3) #slice e1 & b1 axis
                 nw_start_dams_e1b1sliced = fun.f_dynamic_slice(nw_start_dams, e1_pos, -1, None, b1_pos, 2, 3) #slice e1 & b1 axis
@@ -2995,7 +2995,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                         = sfun.f1_feedsupply(feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p],confinementw_tpa1e1b1nwzida0e0b0xyg1[:,p]
                                              ,nv_a1e1b1j1wzida0e0b0xyg1,foo_a1e1b1j1wzida0e0b0xyg1
                                              ,dmd_a1e1b1j1wzida0e0b0xyg1,supp_a1e1b1j1wzida0e0b0xyg1,pi_yatf, mp2_yatf)
-            ###if generating for stubble then nv doesnt exist so need to calc a bit differently.
+            ###if generating for stubble then nv doesn't exist so need to calc a bit differently.
             else:
                 ##use ra=1 for stubble
                 # ##relative availability - yatf
@@ -3734,9 +3734,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             ######################################
             ###sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] > 0):
-                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort (no feedlot mask for sires (only for offs) because feedlotting sires doesn indicat they are being sold).
+                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort (no feedlot mask for sires (only for offs) because feedlotting sires doesn't indicate they are being sold).
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
-                numbers_start_condense_sire = np.broadcast_to(numbers_start_condense_sire, numbers_end_sire.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
+                numbers_start_condense_sire = np.broadcast_to(numbers_start_condense_sire, numbers_end_sire.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
                 surv_sire = (np.sum(numbers_end_sire,axis=prejoin_tup + (season_tup,), keepdims=True)
                              / np.sum(numbers_start_condense_sire, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
                 threshold = np.minimum(0.9, np.mean(surv_sire, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
@@ -3772,9 +3772,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
             ###dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort  (no feedlot mask for dams (only for offs) because feedlotting dams doesn indicat they are being sold).
+                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort  (no feedlot mask for dams (only for offs) because feedlotting dams doesn't indicate they are being sold).
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
-                numbers_start_condense_dams = np.broadcast_to(numbers_start_condense_dams, numbers_end_dams.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
+                numbers_start_condense_dams = np.broadcast_to(numbers_start_condense_dams, numbers_end_dams.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
                 surv_dams = (np.sum(numbers_end_dams,axis=prejoin_tup + (season_tup,), keepdims=True)
                              / np.sum(numbers_start_condense_dams, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
                 threshold = np.minimum(0.9, np.mean(surv_dams, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
@@ -3854,7 +3854,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             ###yatf
             o_ffcfw_start_tpyatf[:,p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period, has to be outside of the 'if' because days per period = 0 when weaning occurs (because once they are weaned they are not yatf therefore 0 days per period) because weaning is first day of period. But we need to know the start ffcfw.
             o_numbers_start_tpyatf[:,p] = numbers_start_yatf #used for npw calculation - use numbers start because weaning is start of period - has to be out of the 'if' because there is 0 days in the period when weaning occurs but we still want to store the start numbers (because once they are weaned they are not yatf therefore 0 days per period)
-            o_rc_start_tpyatf[:,p] = rc_start_yatf #outside because used for sale value which is weaning which has 0 days per period because weaning is first day (this means the rc at weaning is actually the rc at the start of the previous period because it doesnt recalculate once days per period goes to 0) (because once they are weaned they are not yatf therefore 0 days per period)
+            o_rc_start_tpyatf[:,p] = rc_start_yatf #outside because used for sale value which is weaning which has 0 days per period because weaning is first day (this means the rc at weaning is actually the rc at the start of the previous period because it doesn't recalculate once days per period goes to 0) (because once they are weaned they are not yatf therefore 0 days per period)
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort or have been in the feedlot.
                 ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
@@ -3866,7 +3866,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 no_confinement_yatf = np.logical_or(np.all(bool_confinement_g1_n), no_confinement_yatf)
 
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
-                numbers_start_condense_yatf = np.broadcast_to(numbers_start_condense_yatf, numbers_end_yatf.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
+                numbers_start_condense_yatf = np.broadcast_to(numbers_start_condense_yatf, numbers_end_yatf.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
                 surv_yatf = fun.f_divide(np.sum(numbers_end_yatf,axis=season_tup, keepdims=True)
                                         , np.sum(numbers_start_condense_yatf, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along z axis so need to sum to determine if w has mortality > 10% (don't sum e&b because yatf stay in the same slice)
                 threshold = np.minimum(0.9, np.mean(surv_yatf, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
@@ -3924,7 +3924,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 no_confinement_offs = np.logical_or(np.all(bool_confinement_g3_n), no_confinement_offs)
 
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
-                numbers_start_condense_offs = np.broadcast_to(numbers_start_condense_offs, numbers_end_offs.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
+                numbers_start_condense_offs = np.broadcast_to(numbers_start_condense_offs, numbers_end_offs.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
                 surv_offs = (np.sum(numbers_end_offs,axis=season_tup, keepdims=True)
                              / np.sum(numbers_start_condense_offs, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10% (don't sum e&b because offs don't change slice)
                 threshold = np.minimum(0.9, np.mean(surv_offs, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
@@ -4025,7 +4025,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                         , n_fs_sire, len_w0, n_fvp_periods_sire, False)
                 ###Organ energy requirement (condense)
                 omer_history_condensed_p3g0 = sfun.f1_condensed(omer_history_sire, idx_sorted_w_sire[na,...], condense_w_mask_sire[na,...]
-                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)  #increment the p slice, note this doesnt impact the p loop - this is required for the next section because we are calculating the production and numbers for the start of the next period.
+                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)  #increment the p slice, note this doesn't impact the p loop - this is required for the next section because we are calculating the production and numbers for the start of the next period.
                 ###Clean fleece weight (condense)
                 cfw_condensed_sire = sfun.f1_condensed(cfw_sire, idx_sorted_w_sire, condense_w_mask_sire
                                         , n_fs_sire, len_w0, n_fvp_periods_sire, False)
@@ -4530,7 +4530,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
 
             ##start numbers - has to be after production because the numbers are being calced for the current period and are used in the start production function
-            ## Doesnt have to use condensed numbers because we are only interested in the start vs end numbers of a dvp (using condensed numbers would still work).
+            ## doesn't have to use condensed numbers because we are only interested in the start vs end numbers of a dvp (using condensed numbers would still work).
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                 numbers_start_sire = sfun.f1_period_start_nums(numbers_end_sire, prejoin_tup, season_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg, group=0)
@@ -4773,7 +4773,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##dams
     sale_delay_sa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_sales_delay_sg1'], p_pos, right_pos=g_pos,
                                                     condition=mask_dams_inc_g1, axis=g_pos) #periods after shearing that sale occurs
-    ###mask for nutrition profiles. this doesnt have a full w axis because it only has the nutrition options it is expanded to w further down.
+    ###mask for nutrition profiles. this doesn't have a full w axis because it only has the nutrition options it is expanded to w further down.
     sav_mask_nut_dams_owi = sen.sav['nut_mask_dams_owi'][:,0:len_nut_dams,:] #This controls if a nutrition pattern is included.
     mask_nut_dams_owi = fun.f_sa(np.array(True), sav_mask_nut_dams_owi,5) #all nut options included unless SAV is false
     mask_nut_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(mask_nut_dams_owi,i_pos, left_pos2=w_pos, left_pos3=p_pos,
@@ -4793,7 +4793,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                          condition=mask_offs_inc_g3, axis=g_pos, condition2=sale_mask_g3, axis2=p_pos) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
 
 
-    ###mask for nutrition profiles. this doesnt have a full w axis because it only has the nutrition options it is expanded to w further down.
+    ###mask for nutrition profiles. this doesn't have a full w axis because it only has the nutrition options it is expanded to w further down.
     sav_mask_nut_offs_swix = sen.sav['nut_mask_offs_swix'][:,0:len_nut_offs,...] #This controls if a nutrition pattern is included.
     mask_nut_offs_swix = fun.f_sa(np.array(True), sav_mask_nut_offs_swix,5) #all nut options included unless SAV is false
     mask_nut_sa1e1b1nwzida0e0b0xyg3 = fun.f_expand(mask_nut_offs_swix, x_pos, left_pos2=i_pos, left_pos3=w_pos,left_pos4=p_pos,
@@ -5083,9 +5083,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     periods_since_shearing_p9a1e1b1nwzida0e0b0xyg0 = a_p_p9a1e1b1nwzida0e0b0xyg0 - np.maximum(period_previous_shearing_p9a1e1b1nwzida0e0b0xyg0, date_born_idx_ida0e0b0xyg0)
     periods_since_shearing_p9a1e1b1nwzida0e0b0xyg1 = a_p_p9a1e1b1nwzida0e0b0xyg1 - np.maximum(period_previous_shearing_p9a1e1b1nwzida0e0b0xyg1, date_born_idx_ida0e0b0xyg1)
     periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 = a_p_p9a1e1b1nwzida0e0b0xyg3 - np.maximum(period_previous_shearing_tp9a1e1b1nwzida0e0b0xyg3, date_born_idx_ida0e0b0xyg3)
-    months_since_shearing_p9a1e1b1nwzida0e0b0xyg0 = periods_since_shearing_p9a1e1b1nwzida0e0b0xyg0 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesnt need to be perfect its only an approximation)
-    months_since_shearing_p9a1e1b1nwzida0e0b0xyg1 = periods_since_shearing_p9a1e1b1nwzida0e0b0xyg1 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesnt need to be perfect its only an approximation)
-    months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 = periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesnt need to be perfect its only an approximation)
+    months_since_shearing_p9a1e1b1nwzida0e0b0xyg0 = periods_since_shearing_p9a1e1b1nwzida0e0b0xyg0 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesn't need to be perfect its only an approximation)
+    months_since_shearing_p9a1e1b1nwzida0e0b0xyg1 = periods_since_shearing_p9a1e1b1nwzida0e0b0xyg1 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesn't need to be perfect its only an approximation)
+    months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 = periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesn't need to be perfect its only an approximation)
     a_months_since_shearing_p9a1e1b1nwzida0e0b0xyg0 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_p9a1e1b1nwzida0e0b0xyg0)#provides the index of the index which is closest to the actual months since shearing
     a_months_since_shearing_p9a1e1b1nwzida0e0b0xyg1 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_p9a1e1b1nwzida0e0b0xyg1)#provides the index of the index which is closest to the actual months since shearing
     a_months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3)#provides the index of the index which is closest to the actual months since shearing
@@ -5119,7 +5119,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                             sfun.f_wool_value(woolp_mpg_w4, wool_price_scalar_c1w4tpg, cfw_offs_p9, fd_offs_p9, sl_offs_p9, ss_offs_p9
                                               , vm_p9a1e1b1nwzida0e0b0xyg3, pmb_tp9a1e1b1nwzida0e0b0xyg3, dtype))
 
-    ###create woolvalue with average c1 - this is used for wc/minroe and reporting because we dont think c1 is needed for them
+    ###create woolvalue with average c1 - this is used for wc/minroe and reporting because we don't think c1 is needed for them
     woolvalue_tpa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(woolvalue_c1tpa1e1b1nwzida0e0b0xyg0, prob_c1tpg, axis=0)
     woolvalue_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(woolvalue_c1tpa1e1b1nwzida0e0b0xyg1, prob_c1tpg, axis=0)
     woolvalue_tpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(woolvalue_c1tpa1e1b1nwzida0e0b0xyg3, prob_c1tpg, axis=0)
@@ -5134,8 +5134,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     sale_mask_p3 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, period_is_assetvalue_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p]), preserveAxis=p_pos)  #preforms np.any on all axis except 1
     ###manipulate axis with associations
     grid_scorerange_s7s6tpa1e1b1nwzida0e0b0xyg = score_range_s8s6tpa1e1b1nwzida0e0b0xyg[uinp.sheep['ia_s8_s7']] #s8 to s7
-    month_scalar_s7tpa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9tp4a1e1b1nwzida0e0b0xyg[:, :, :, a_p4_p][:,0] #month to p, then slice s9 (has to be seperate because otherwise advanced indexing is triggered)
-    month_discount_s7tpa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9tp4a1e1b1nwzida0e0b0xyg[:, :, :, a_p4_p][:,1] #month to p, then slice s9 (has to be seperate because otherwise advanced indexing is triggered)
+    month_scalar_s7tpa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9tp4a1e1b1nwzida0e0b0xyg[:, :, :, a_p4_p][:,0] #month to p, then slice s9 (has to be separate because otherwise advanced indexing is triggered)
+    month_discount_s7tpa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9tp4a1e1b1nwzida0e0b0xyg[:, :, :, a_p4_p][:,1] #month to p, then slice s9 (has to be separate because otherwise advanced indexing is triggered)
     ###Sale price grids for selected price percentile and the scalars for LW & quality score
     grid_price_s7s5s6 = sfun.f1_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype)
     r_vals['grid_price_s7s5s6'] = grid_price_s7s5s6
@@ -5201,7 +5201,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemax_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg3, dtype)
 
-    ###create woolvalue with average c1 - this is used for wc/minroe and reporting because we dont think c1 is needed for them
+    ###create woolvalue with average c1 - this is used for wc/minroe and reporting because we don't think c1 is needed for them
     salevalue_tpa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(salevalue_c1tpa1e1b1nwzida0e0b0xyg0, prob_c1tpg, axis=0)
     salevalue_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(salevalue_c1tpa1e1b1nwzida0e0b0xyg1, prob_c1tpg, axis=0)
     salevalue_tp9a1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(salevalue_c1tp9a1e1b1nwzida0e0b0xyg2, prob_c1tpg, axis=0)
@@ -5225,7 +5225,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     husbandry_cost_p7tpg0 = husbandry_cost_tpg0 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
     husbandry_cost_wc_c0p7tpg0 = husbandry_cost_tpg0 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
     ###Dams: cost, labour and infrastructure requirements - accounts for yatf costs as well
-    ### for dams remove the generator t axis by selecting the retained t slice. This reduces the array sizes and doesnt lose much detail.
+    ### for dams remove the generator t axis by selecting the retained t slice. This reduces the array sizes and doesn't lose much detail.
     if len_gen_t1==1:
         a_gen_t_g1 = np.array([0])
     else:
@@ -5466,7 +5466,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
 
     ##every period - with cost (p7) axis (when combining the cost the period_is arrays were already applied therefore converted from 'intermittent' to 'every period'
-    ##cost requires a c axis for reporting - it is summed before converting to a param because MINROE doesnt need c axis
+    ##cost requires a c axis for reporting - it is summed before converting to a param because MINROE doesn't need c axis
     ###sires
     purchcost_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(purchcost_p7tpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
                                                        period_is_tvp=period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0)[:,:,na,...]#add singleton v
@@ -5524,12 +5524,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##intermittent
     ###numbers
-    ####sires - dont need any special treatment because they dont have dvps - sires only have one dvp which essentially starts when the activity is purchased
+    ####sires - don't need any special treatment because they don't have dvps - sires only have one dvp which essentially starts when the activity is purchased
     numbers_start_tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_numbers_start_tpsire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
                                                           period_is_tvp=period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
     numbers_startp8_tva1e1b1nwzida0e0b0xyg0p8 = sfun.f1_p2v_std(o_numbers_start_tpsire[...,na], on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0[...,na],
                                                           period_is_tvp=period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8, sumadj=1)[:,na,...]#add singleton v
-    ####dams - need special dvp treatment for 0 day dvp. Essentially just set the start and end number to the same so that 1:1 transfefr can occur.
+    ####dams - need special dvp treatment for 0 day dvp. Essentially just set the start and end number to the same so that 1:1 transfer can occur.
     numbers_start_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_numbers_start_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     numbers_start_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(numbers_start_tva1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1)
     numbers_end_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_numbers_end_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
@@ -5540,7 +5540,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                          , a_any1_p=a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2, index_any1tp=index_da0e0b0xyg) #with a d axis.
     numbers_start_d_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(numbers_start_d_tva1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1)
 
-    ####offs - need special dvp treatment for 0 day dvp. Essentially just set the start and end number to the same so that 1:1 transfefr can occur.
+    ####offs - need special dvp treatment for 0 day dvp. Essentially just set the start and end number to the same so that 1:1 transfer can occur.
     numbers_start_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_numbers_start_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
     numbers_start_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(numbers_start_tva1e1b1nwzida0e0b0xyg3,a_p_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3)
     numbers_end_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_numbers_end_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
@@ -5707,7 +5707,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     mask_w8nut_va1e1b1nwzida0e0b0xyg1 = np.moveaxis(mask_w8nut_va1e1b1nzida0e0b0xyg1w9,-1,w_pos) #move w9 axis to w position
     ## Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nwzida0e0b0xyg1
-    ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesnt mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
+    ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesn't mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
     dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1 = np.logical_or(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1
                                                                , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == season_vtype1) #when distribution occurs any w8 can provide w9
     mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
@@ -5782,7 +5782,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     mask_w8nut_va1e1b1nwzida0e0b0xyg3 = np.moveaxis(mask_w8nut_va1e1b1nzida0e0b0xyg3w9,-1,w_pos) #move w9 axis to w position
     ## Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg3 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_w8nut_va1e1b1nwzida0e0b0xyg3
-    ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesnt mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
+    ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesn't mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
     dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3 = np.logical_or(dvp_type_next_va1e1b1nwzida0e0b0xyg3 == condense_vtype3
                                                                , dvp_type_next_va1e1b1nwzida0e0b0xyg3 == season_vtype3) #when distribution occurs any w8 can provide w9
     mask_numbers_provw8w9_va1e1b1nw8zida0e0b0xyg3w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3[...,na] \
@@ -6734,7 +6734,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         r_on_hand_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3 = 1 - r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3
         r_on_hand_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3[r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3==0] = 0 #if mort is 0 the animal is not on hand
 
-    ###lw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesnt effect lw
+    ###lw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesn't effect lw
     if pinp.rep['i_store_lw_rep']:
         r_lw_sire_tpsire = o_lw_tpsire
         r_lw_dams_k2tvpdams = (o_lw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
@@ -6743,7 +6743,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
 
-    ##ffcfw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesnt effect ffcfw
+    ##ffcfw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesn't effect ffcfw
     if pinp.rep['i_store_ffcfw_rep']:
         r_ffcfw_sire_tpsire = o_ffcfw_tpsire
         r_ffcfw_dams_k2tvpdams = (o_ffcfw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
@@ -6757,7 +6757,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3) \
                                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3) #todo cluster d
 
-    ##NV - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesnt effect NV
+    ##NV - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't effect NV
     if pinp.rep['i_store_nv_rep']:
         r_nv_sire_pg = nv_tpsire
         r_nv_dams_k2tvpg = (nv_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
@@ -6958,7 +6958,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##offs related
     ###numbers prov offs
     arrays_k3k5tvnw8ziaxyg3w9 = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3, keys_lw3]
-    ###k3k5wixg3w9 - numbers req offs (doesnt have many active axis)
+    ###k3k5wixg3w9 - numbers req offs (doesn't have many active axis)
     arrays_k3k5vw8zixg3w9 = [keys_k3, keys_k5, keys_v3, keys_lw3, keys_z, keys_i, keys_x, keys_g3, keys_lw3]
 
     ##mei and pi
@@ -7034,7 +7034,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     params['p_rm_stockinfra_var_wc'] = fun.f1_make_pyomo_dict(rm_stockinfra_var_wc_h1c0p7z, arrays_h1c0p7z)
     params['p_rm_stockinfra_fix_wc'] = fun.f1_make_pyomo_dict(rm_stockinfra_fix_wc_h1c0p7z, arrays_h1c0p7z)
 
-    ##asset value infra - all in the last season period (doesnt really matter where since it is transferred between each season period)
+    ##asset value infra - all in the last season period (doesn't really matter where since it is transferred between each season period)
     keys_p7_end = keys_p7[-1:]
     arrays_p7h1 = [keys_p7_end,keys_h1]
     params['p_infra'] = fun.f1_make_pyomo_dict(assetvalue_infra_h1, arrays_p7h1)
@@ -7250,7 +7250,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     arrays = [keys_v1, keys_g1]
     index_vg1 = fun.cartesian_product_simple_transpose(arrays)
     tup_vg1 = tuple(map(tuple,index_vg1))
-    prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesnt impact mating propn
+    prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
     prop_dams_mated_vg1 = prop_dams_mated_va1e1b1nwzida0e0b0xyg1.ravel()
     params['p_prop_dams_mated'] = dict(zip(tup_vg1, prop_dams_mated_vg1))
 
@@ -7268,7 +7268,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     params['p_prop_dry_dams'] = dict(zip(tup_vanwiyg1, propn_drys_vanwiyg1))
 
     ##drys retained (bool used to control if bound constraint is built)
-    dry_retained_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_retained_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesnt impact o axis (o is the input axis)
+    dry_retained_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_retained_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact o axis (o is the input axis)
     params['p_drys_retained'] = dict(zip(keys_v1,dry_retained_va1e1b1nwzida0e0b0xyg1.ravel()))
 
     ##proportion of drys that are twice dry
@@ -7278,12 +7278,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     prop_twice_dry_dams_oa1e1b1nwzida0e0b0xyg1[0] = 0 #cant have any twice drys in the first mating opportunity. (this line is just here to stop error if user accidentally puts in a value for o[0]).
     prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_twice_dry_dams_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
     ###convert to v axis
-    prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesnt impact mating propn
+    prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
     ###adjust maidens twice drys for yearling mating (if no yearlings are mated then there can not be any twice dry maidens)
     ####calc propn of dams mated in previous opportunity.
     prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1 = np.roll(prop_dams_mated_oa1e1b1nwzida0e0b0xyg1, shift=1, axis=0)
     prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
-    prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesnt impact mating propn
+    prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
     prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 * (prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1>1)
     ###create param
     arrays = [keys_v1, keys_i, keys_y1, keys_g1]
@@ -7309,7 +7309,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     params['p_offs_lobound'] = fun.f1_make_pyomo_dict(bnd_lower_offs_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3tvxg3)
 
     ##upper bound offs
-    bnd_upper_offs_tsdxg3 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_offs_tsdxg3'], 5) #999999 just an arbitrary high value (cant use np.inf because it becomes nan in the folowing calcs)
+    bnd_upper_offs_tsdxg3 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_offs_tsdxg3'], 5) #999999 just an arbitrary high value (cant use np.inf because it becomes nan in the following calcs)
     # bnd_upper_offs_tsdxg3[bnd_upper_offs_tsdxg3==999999] = np.inf
     bnd_upper_offs_tsa1e1b1nwzida0e0b0xyg3 = fun.f_expand(bnd_upper_offs_tsdxg3, left_pos=x_pos, right_pos=-1,
                                                           left_pos2=d_pos, right_pos2=x_pos, left_pos3=p_pos, right_pos3=d_pos,
@@ -7502,14 +7502,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     fun.f1_make_r_val(r_vals,r_salevalue_p7tva1e1b1nwzida0e0b0xyg0,'salevalue_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
     fun.f1_make_r_val(r_vals,r_salevalue_k2p7tva1e1b1nwzida0e0b0xyg1,'salevalue_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
-    salevalue_prog_k3k5c1p7tva1e1b1nwzida0e0b0xyg2
+    salevalue_prog_k3k5c1p7tva1e1b1nwzida0e0b0xyg2  #todo what is this for?
     fun.f1_make_r_val(r_vals,r_salevalue_prog_k3k5p7tva1e1b1nwzida0e0b0xyg2,'salevalue_k3k5p7twzia0xg2',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, k3k5p7twziaxyg2_shape)
     fun.f1_make_r_val(r_vals,r_salevalue_k3k5p7tva1e1b1nwzida0e0b0xyg3,'salevalue_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
 
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg0,'salegrid_zg0', shape=zg0_shape)
-    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg1,'salegrid_tva1e1b1nwziyg1', shape=tva1e1b1nwziyg1_shape) #didnt worry about unclustering since not important report and wasnt masked by z8
-    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg2,'salegrid_Tva1e1b1nwzixyg2', shape=Tva1e1b1nwzixyg2_shape) #didnt worry about unclustering since not important report and wasnt masked by z8
-    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg3,'salegrid_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #didnt worry about unclustering since not important report and wasnt masked by z8
+    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg1,'salegrid_tva1e1b1nwziyg1', shape=tva1e1b1nwziyg1_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
+    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg2,'salegrid_Tva1e1b1nwzixyg2', shape=Tva1e1b1nwzixyg2_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
+    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg3,'salegrid_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
 
     fun.f1_make_r_val(r_vals,r_woolvalue_p7tva1e1b1nwzida0e0b0xyg0,'woolvalue_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
     fun.f1_make_r_val(r_vals,r_woolvalue_k2p7tva1e1b1nwzida0e0b0xyg1,'woolvalue_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
@@ -7578,8 +7578,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ###mort - uses b axis instead of k for extra detail when scan=0
     if pinp.rep['i_store_mort']:
-        fun.f1_make_r_val(r_vals,r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1.squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos)),'mort_pa1e1b1nwziyg1') #no unclustering because this wasnt masked by z8
-        fun.f1_make_r_val(r_vals,r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3.squeeze(axis=(a1_pos, e1_pos, b1_pos)),'mort_pnwzida0e0b0xyg3') #no unclustering because this wasnt masked by z8
+        fun.f1_make_r_val(r_vals,r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1.squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos)),'mort_pa1e1b1nwziyg1') #no unclustering because this wasn't masked by z8
+        fun.f1_make_r_val(r_vals,r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3.squeeze(axis=(a1_pos, e1_pos, b1_pos)),'mort_pnwzida0e0b0xyg3') #no unclustering because this wasn't masked by z8
 
     ###on hand mort - proportion of each sheep remaining in each period after accounting for mort
     if pinp.rep['i_store_on_hand_mort']:

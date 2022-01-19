@@ -25,7 +25,7 @@ na = np.newaxis
 #
 #     This is a separate function because it is used in CropGrazing.py and Mach.py to calculate stubble penalties.
 #     '''
-#     stubble_prod_data = 1 / pinp.stubble['i_harvest_index_ks2'][:,0] - 1 * pinp.stubble['i_propn_grain_harv_ks2'][:,0]  # subtract 1*harv propn to account for the tonne of grain that was harvested and doesnt become stubble.
+#     stubble_prod_data = 1 / pinp.stubble['i_harvest_index_ks2'][:,0] - 1 * pinp.stubble['i_propn_grain_harv_ks2'][:,0]  # subtract 1*harv propn to account for the tonne of grain that was harvested and doesn't become stubble.
 #     stubble = pd.Series(data=stubble_prod_data, index=sinp.landuse['C'])
 #     return stubble
 
@@ -43,7 +43,7 @@ def f_biomass2residue(residuesim=False):
     frost_kl = pinp.crop['frost'].values[:,lmu_mask]
 
     ##calc biomass to product scalar
-    ##if this is being calculated for sim then dont want to include frost (because dont want lmu axis and the frost input in AFO doesnt reflect the trial).
+    ##if this is being calculated for sim then don't want to include frost (because don't want lmu axis and the frost input in AFO doesn't reflect the trial).
     ##the assumption is that a frosted crop will not be used in the stubble trial.
     if residuesim:
         biomass2residue_ks2 = (1 - harvest_index_ks2 * propn_grain_harv_ks2) * biomass_scalar_ks2
@@ -137,7 +137,7 @@ def crop_residue_all(params, r_vals, nv):
     fp_start_p6z = per.f_feed_periods()[:-1].astype('datetime64[D]')
     harv_date_zk = zfun.f_seasonal_inp(pinp.crop['start_harvest_crops'].values, numpy=True, axis=1).swapaxes(0,1).astype(np.datetime64)
     mask_stubble_exists_p6zk = fp_end_p6z[...,na] > harv_date_zk  #^this may need to become an input to handle chaff piles which may be grazed after the brk
-    peirod_is_harvest_p6zk = np.logical_and(fp_end_p6z[...,na] >= harv_date_zk, fp_start_p6z[...,na] <= harv_date_zk)
+    period_is_harvest_p6zk = np.logical_and(fp_end_p6z[...,na] >= harv_date_zk, fp_start_p6z[...,na] <= harv_date_zk)
 
     # #############################
     # # Total stubble production  #
@@ -197,7 +197,7 @@ def crop_residue_all(params, r_vals, nv):
         ri_quality_p6zks1 = fsfun.f_rq_cs(dmd_cat_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
 
     # ##ri availability (not calced anymore - stubble uses ra=1 now) - first calc stubble foo (stub available) this is the average from all rotations and lmus because we just need one value for foo (crop residue volume is assumed to be the same across lmu - the extra detail could be added)
-    # ###try calc the base yield for each crop but if the crop is not one of the rotation phases then assign the average foo (this is only to stop error. it doesnt matter because the crop doesnt exist so the stubble is never used)
+    # ###try calc the base yield for each crop but if the crop is not one of the rotation phases then assign the average foo (this is only to stop error. it doesn't matter because the crop doesn't exist so the stubble is never used)
     # base_yields = rot_yields_rkl_p7z.droplevel(0, axis=0).groupby(axis=1, level=1).sum() #drop rotation index and sum p7 axis (just want total yield to calc pi)
     # base_yields = base_yields.replace(0,np.NaN) #replace 0 with nan so if yield inputs are missing (eg set to 0) the foo is still correct (nan gets skipped in pd.mean)
     # stub_foo_harv_zk = np.zeros((n_seasons, n_crops))
@@ -224,14 +224,14 @@ def crop_residue_all(params, r_vals, nv):
     ##combine ri quality and ri availability to calc overall vol (potential intake) - use ra=1 for stubble (same as stubble sim)
     ri_p6zks1 = fsfun.f_rel_intake(1, ri_quality_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
     vol_p6zks1 = (1000 / ri_p6zks1) / (1 + SA.sap['pi'])
-    vol_p6zks1 = vol_p6zks1 * mask_stubble_exists_p6zk[..., na] #stop md being provided if stubble doesnt exist
+    vol_p6zks1 = vol_p6zks1 * mask_stubble_exists_p6zk[..., na] #stop md being provided if stubble doesn't exist
     vol_fp6zks1 = vol_p6zks1 * nv_is_not_confinement_f[:,na,na,na,na] #me from stubble is 0 in the confinement pool
 
     ##convert dmd to M/D
     ## Stubble doesn't include calculation of effective mei because stubble is generally low quality feed with a wide variation in quality within the sward.
     ## Therefore, there is scope to alter average diet quality by altering the grazing time and the proportion of the stubble consumed.
     md_p6zks1 = np.clip(fsfun.dmd_to_md(dmd_cat_p6zks1), 0, np.inf)
-    md_p6zks1 = md_p6zks1 * mask_stubble_exists_p6zk[...,na] #stop md being provided if stubble doesnt exist
+    md_p6zks1 = md_p6zks1 * mask_stubble_exists_p6zk[...,na] #stop md being provided if stubble doesn't exist
     ##reduce me if nv is higher than livestock diet requirement.
     md_fp6zks1 = fsfun.f_effective_mei(1000, md_p6zks1, me_threshold_fp6z[...,na,na]
                                        , nv['confinement_inc'], ri_p6zks1, stub_me_eff_gainlose)
@@ -250,14 +250,14 @@ def crop_residue_all(params, r_vals, nv):
 
     ##quantity of cat A stubble provided from 1t of total stubble at harvest
     cat_a_prov_p6zks1s2 = 1000 * cat_propn_ks1s2 * np.logical_and(np.arange(len(pinp.stubble['i_stub_cat_idx']))[:,na]==0
-                                                      ,peirod_is_harvest_p6zk[...,na,na]) #Only cat A is provides at harvest
+                                                      ,period_is_harvest_p6zk[...,na,na]) #Only cat A is provides at harvest
 
     ##amount of available stubble required to consume 1t of each cat in each fp
     stub_req_ks1s2 = 1000*(1+tramp_effect_ks1s2)
 
     ##amount of next category provide by consumption of current category.
     stub_prov_ks1s2 = np.roll(cat_propn_ks1s2, shift=-1,axis=1)/cat_propn_ks1s2*1000
-    stub_prov_ks1s2[:,-1,:] = 0 #final cat doesnt provide anything
+    stub_prov_ks1s2[:,-1,:] = 0 #final cat doesn't provide anything
 
 
     ##############################
@@ -265,11 +265,11 @@ def crop_residue_all(params, r_vals, nv):
     ##############################
     ##transfer a given cat to the next period. Only cat A is available at harvest - it comes from the rotation phase.
     stub_transfer_prov_p6zk = 1000 * np.roll(quant_declined_p6zk, shift=-1, axis=0)/quant_declined_p6zk #divide to capture only the decay during the curent period (quant_decline is the decay since harv)
-    stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * mask_stubble_exists_p6zk  #no transfer can occur when stubble doesnt exist
-    stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * np.roll(np.logical_not(peirod_is_harvest_p6zk), -1, 0) #last yrs stubble doesnt transfer past the following harv.
+    stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * mask_stubble_exists_p6zk  #no transfer can occur when stubble doesn't exist
+    stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * np.roll(np.logical_not(period_is_harvest_p6zk), -1, 0) #last yrs stubble doesn't transfer past the following harv.
 
     ##transfer requirment - mask out harvest period because last years stubble can not be consumed after this years harvest.
-    stub_transfer_req_p6zk = 1000 * mask_stubble_exists_p6zk   # No transfer can occur when stubble doesnt exist or at harvest.
+    stub_transfer_req_p6zk = 1000 * mask_stubble_exists_p6zk   # No transfer can occur when stubble doesn't exist or at harvest.
 
     ###############
     #harvest p con# stop sheep consuming more than possible because harvest is not at the start of the period

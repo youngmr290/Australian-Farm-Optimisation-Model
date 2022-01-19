@@ -130,7 +130,7 @@ def f_farmgate_grain_price(r_vals={}):
     ##inputs
     grain_price_info_df = uinp.price['grain_price_info'] #grain info
     percentile_price_df = uinp.price['grain_price'] #grain price for 3 different percentiles
-    percentile_price_k_s2p = percentile_price_df.T.set_index(['percentile'], append=True).T.astype(float) #convert to float because array was initilised with string as well therefore it is an object type.
+    percentile_price_k_s2p = percentile_price_df.T.set_index(['percentile'], append=True).T.astype(float) #convert to float because array was initialised with string as well therefore it is an object type.
     grain_price_percentile = uinp.price['grain_price_percentile'] #price percentile to use
     grain_price_scalar_c1_z = zfun.f_seasonal_inp(uinp.price_variation['grain_price_scalar_c1z']
                                                  ,numpy=False, axis=1, level=0)
@@ -1085,9 +1085,9 @@ def f1_rot_cost(r_vals):
     wc_c0p7zlr = wc_rl_c0p7z.unstack([1,0])
 
     ##create params for v_phase_increment
-    ## costs for v_phase_increment activities are incurred in the season peirod when the activity is selected
+    ## costs for v_phase_increment activities are incurred in the season period when the activity is selected
     ## however the interest is calculated as if the cost was incurred at the normal time (this is because interest
-    ## is calculated for each seperate cost in the functions above).
+    ## is calculated for each separate cost in the functions above).
     increment_cost_p7zlr = rps.f_v_phase_increment_adj(cost_p7zlr,p7_pos=-4,z_pos=-3)
     increment_wc_c0p7zlr = rps.f_v_phase_increment_adj(wc_c0p7zlr,p7_pos=-4,z_pos=-3)
 

@@ -256,7 +256,7 @@ def f_property_inp_sa():
     ##have to import it here since sen.py imports this module
     import Sensitivity as sen
 
-    ##reset inputs to base at the start of each trial before applying SA - old method was to update the SA based on the _inp dict but that doesnt work well when multiple SA on the same variable.
+    ##reset inputs to base at the start of each trial before applying SA - old method was to update the SA based on the _inp dict but that doesn't work well when multiple SA on the same variable.
     fun.f_dict_reset(general, general_inp)
     fun.f_dict_reset(rep, rep_inp)
     fun.f_dict_reset(labour, labour_inp)

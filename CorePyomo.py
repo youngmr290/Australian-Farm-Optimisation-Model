@@ -291,7 +291,7 @@ def f_con_harv_stub_nap_cons(model):
 #                          if pe.value(model.p_rot_stubble[r,k,l,p7,z9]) != 0)
 #                     + macpy.f_stubble_penalty(model,q,s,p7,k,z9) + cgzpy.f_grazecrop_stubble_penalty(model,q,s,p7,k,z9)
 #                     + sum(model.v_stub_harv[q,s,p6,z9,k] * 1000 * model.p_a_p6_p7[p7,p6,z9] for p6 in model.s_feed_periods)
-#                     - model.v_stub_debit[q,s,p7,k,z9] *1000 * (p7 != p7_end) #cant debit in the final peirod otherwise unlimited stubble.
+#                     - model.v_stub_debit[q,s,p7,k,z9] *1000 * (p7 != p7_end) #cant debit in the final period otherwise unlimited stubble.
 #
 #                     + sum(model.v_stub_debit[q,s,p7_prev,k,z8] * 1000 * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
 #                           for z8 in model.s_season_types) <= 0)
@@ -349,7 +349,7 @@ def f_con_phasesow(model):
 #     sowing can occur in any period so the user specifies the periods when a given pasture must be sown)
 #
 #     Pasture sow has separate constraint from crop sow because pas sow has a p axis so that user can specify period
-#     when pasture is sown (pasture has no yield penalty so model doesnt optimise seeding time like it does for crop)
+#     when pasture is sown (pasture has no yield penalty so model doesn't optimise seeding time like it does for crop)
 #     '''
 #
 #     def passow_link(model,p5,k,l,z):
@@ -368,7 +368,7 @@ def f_con_harv(model):
     Links the harvest requirement for each rotation with harvesting capacity. Harvest capacity can be provided from
     farmer labour and machinery or contract services.
     '''
-    ##Transfer unharvested grain incase a season node occurs between two harvest periods. The harvest requirement needs to uncluster to the new seasons.
+    ##Transfer unharvested grain in case a season node occurs between two harvest periods. The harvest requirement needs to uncluster to the new seasons.
     def harv(model,q,s,p7,k,s2,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1]  # need the activity level from last feed period
@@ -389,7 +389,7 @@ def f_con_makehay(model):
     Constrains the hay making requirement for each rotation by hay making capacity. Hay making capacity is provided
     by contract services.
     '''
-    ##Transfer unharvested grain incase a season node occurs between two harvest periods. The harvest requirement needs to uncluster to the new seasons.
+    ##Transfer unharvested grain in case a season node occurs between two harvest periods. The harvest requirement needs to uncluster to the new seasons.
     def hay(model,q,s,p7,s2,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
@@ -585,7 +585,7 @@ def f_con_workingcap_between(model):
     exist between parent and child seasons.
 
     Cashflow at the end of the previous yr becomes the starting balance for working capital (cashflow broadcasts
-    to both c0 slices). This only happens between years in the sequence. End to start doesnt carry over. This is
+    to both c0 slices). This only happens between years in the sequence. End to start doesn't carry over. This is
     because it was decided that the working capital constraint is more useful if there is no starting balance at
     the start of the sequence. This means an expensive strategy with a high reward can be bounded using wc (if the end
     cashflow became the start then a high expense high income strategy would not trigger the constraint).
@@ -620,7 +620,7 @@ def f_con_dep(model):
         p7_start = l_p7[0]
         return (macpy.f_total_dep(model,q,s,p7,z9) + suppy.f_sup_dep(model,q,s,p7,z9) - model.v_dep[q,s,p7,z9]
                 + sum(model.v_dep[q,s,p7_prev,z9] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
-                      for z8 in model.s_season_types) * (p7!=p7_start) #end doesnt carry over
+                      for z8 in model.s_season_types) * (p7!=p7_start) #end doesn't carry over
                 <= 0)
 
     model.con_dep = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,rule=dep,
@@ -638,7 +638,7 @@ def f_con_asset(model):
         return (suppy.f_sup_asset(model,q,s,p7,z9) + macpy.f_mach_asset(model,p7) + stkpy.f_stock_asset(model,q,s,p7,z9)) * uinp.finance['opportunity_cost_capital'] \
                - model.v_asset[q,s,p7,z9] \
                + sum(model.v_asset[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
-                     for z8 in model.s_season_types) * (p7!=p7_start) <= 0 #end doesnt carry over
+                     for z8 in model.s_season_types) * (p7!=p7_start) <= 0 #end doesn't carry over
 
     model.con_asset = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,rule=asset,
                                     doc='tallies asset from all activities so it can be transferred to objective to represent ROE')
@@ -655,7 +655,7 @@ def f_con_minroe(model):
                 * fin.f_min_roe()
                 - model.v_minroe[q,s,p7,z9]
                 + sum(model.v_minroe[q,s,p7_prev,z8] *model.p_parentz_provwithin_season[p7_prev,z8,z9]
-                      for z8 in model.s_season_types) * (p7 != p7_start)) <= 0  # end doesnt carry over
+                      for z8 in model.s_season_types) * (p7 != p7_start)) <= 0  # end doesn't carry over
 
     model.con_minroe = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,rule=minroe,
                                      doc='tallies total expenditure to ensure minimum roe is met')

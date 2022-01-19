@@ -89,7 +89,7 @@ def sup_mach_cost():
         property using the stocking rate. Or maybe it could be calculated more like the labour required.
 
     '''
-    sup_cost=uinp.mach[pinp.mach['option']]['sup_feed'].copy() #need this so it doesnt alter inputs
+    sup_cost=uinp.mach[pinp.mach['option']]['sup_feed'].copy() #need this so it doesn't alter inputs
     ##add fuel cost
     sup_cost['litres']=sup_cost['litres'] * fuel_price()
     ##sum the cost of r&m and fuel - note that rm is in the sup_cost df
@@ -1010,7 +1010,7 @@ def f_total_clearing_value():
     seed_value = f_seeding_gear_clearing_value()
     other_value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'remaining allocation'])
     total_clearing_value = harv_value + seed_value + other_value
-    ##all is incurred in the last p7 period (although it could occur in any period it doesnt make a difference)
+    ##all is incurred in the last p7 period (although it could occur in any period it doesn't make a difference)
     keys_p7 = per.f_season_periods(keys=True)
     total_clearing_value = pd.Series(total_clearing_value,index=keys_p7[-1:])
     return total_clearing_value

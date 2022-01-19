@@ -145,7 +145,7 @@ def f_season_transfer_mask(period_dates_pz, z_pos, period_is_seasonstart_pz=Fals
     the parent season provides the transfer parameters to the child season. This transferring method ensures the
     model has the same management across seasons until they are identified. For example, if there are two seasons, a
     good and a bad, that are identified in spring. Both seasons must have the same management through the beginning of
-    the year until spring (because the farmer doesnt know if they are having the good or bad year until spring).
+    the year until spring (because the farmer doesn't know if they are having the good or bad year until spring).
 
     :param period_dates_pz: period dates (eg dvp or cashflow) without end date of last period
     :param z_pos: z axis position

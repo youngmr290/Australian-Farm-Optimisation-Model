@@ -348,9 +348,9 @@ def f_rot_gen():
             mps_bool_req.append(req)
             mps_bool_prov.append(prov)
         if test==0: #doesn't provide a history
-            print('rot doesnt provide a history: ',rot_phase)
+            print('rot does not provide a history: ',rot_phase)
         if test2==0: #doesn't require a history
-            print('rot doesnt req a history: ',rot_phase)
+            print('rot does not req a history: ',rot_phase)
     rot_phase_by_constrain = pd.DataFrame(list(itertools.product(l_phases,l_rot_hist) ) ) #had to use this cartesian method as i couldn't get the fast function to work
     mps_bool_req=pd.Series(mps_bool_req) #convert to series because easier to manipulate
     mps_bool_prov=pd.Series(mps_bool_prov) #convert to series because easier to manipulate
@@ -384,7 +384,7 @@ def f_rot_gen():
 
 
 
-if __name__ == '__main__': #use this so that sphinx doesnt run all the code when generating the docs
+if __name__ == '__main__': #use this so that sphinx doesn't run all the code when generating the docs
     f_rot_gen()
 
 

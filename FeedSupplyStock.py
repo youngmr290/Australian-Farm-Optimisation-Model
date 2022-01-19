@@ -152,8 +152,8 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     n_fs_offs = sinp.structuralsa['i_n3_len']
 
     ##pasture params
-    cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].astype(float)#have to convert from object to float so it doesnt chuck error in np.exp (np.exp can't handle object arrays)
-    cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].astype(float)#have to convert from object to float so it doesnt chuck error in np.exp (np.exp can't handle object arrays)
+    cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].astype(float)#have to convert from object to float so it doesn't chuck error in np.exp (np.exp can't handle object arrays)
+    cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].astype(float)#have to convert from object to float so it doesn't chuck error in np.exp (np.exp can't handle object arrays)
 
     ##legume proportion in each period
     legume_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_legume_p6z'], z_pos, move=True, source=0, dest=-1,
@@ -262,7 +262,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ##confinement - True/False on confinement feeding. This controls which generator periods confinement feeding occurs.
     ## this input is required so that confinement can be included in n1 model, without forcing the animal into confinement for the whole year.
     ## This means you can have a given level of NV and it can be either in the paddock or in confinement.
-    ## This input works inconjunction with i_confinement_n (see in the feed supply section)
+    ## This input works in conjunction with i_confinement_n (see in the feed supply section)
     confinement_options_r1p6z = pinp.feedsupply['i_confinement_options_r1p6z'].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
     ##feed supply adjustment
     feedsupply_adj_options_r2p = pinp.feedsupply['i_feedsupply_adj_options_r2p'][:,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
@@ -453,8 +453,8 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
         feedsupplyw_tpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(feedsupply_std_stpa1e1b1nwzida0e0b0xyg3[0], a_n_pa1e1b1nwzida0e0b0xyg3[na], axis=n_pos) #slice off the singleton s axis
         confinementw_tpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(confinement_std_stpa1e1b1nwzida0e0b0xyg3[0], a_n_pa1e1b1nwzida0e0b0xyg3[na], axis=n_pos) #slice off the singleton s axis
     ###sires
-    feedsupplyw_tpa1e1b1nwzida0e0b0xyg0 = feedsupply_std_tpa1e1b1nwzida0e0b0xyg0 #^only one n slice so doesnt need following code yet: np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg0,a_n_pa1e1b1nwzida0e0b0xyg0,axis=n_pos)
-    confinementw_tpa1e1b1nwzida0e0b0xyg0 = confinement_std_tpa1e1b1nwzida0e0b0xyg0 #^only one n slice so doesnt need following code yet: np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg0,a_n_pa1e1b1nwzida0e0b0xyg0,axis=n_pos)
+    feedsupplyw_tpa1e1b1nwzida0e0b0xyg0 = feedsupply_std_tpa1e1b1nwzida0e0b0xyg0 #^only one n slice so doesn't need following code yet: np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg0,a_n_pa1e1b1nwzida0e0b0xyg0,axis=n_pos)
+    confinementw_tpa1e1b1nwzida0e0b0xyg0 = confinement_std_tpa1e1b1nwzida0e0b0xyg0 #^only one n slice so doesn't need following code yet: np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg0,a_n_pa1e1b1nwzida0e0b0xyg0,axis=n_pos)
 
     ##store some info required to determine the optimal feedsupply at the end
     ## note: feedsupply is stored after the generator because it could be changed in the target lw loop.
@@ -547,7 +547,7 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         ###add singleton axis to line up with generator
         dams_numbers_qsk2tva1e1b1nwzida0e0b0xyg1 = dams_numbers_qsk2tvanwziy1g1[...,na,na,:,:,:,:,na,na,na,na,na,:,:]
         offs_numbers_qsk3k5tva1e1b1nwzida0e0b0xyg3 = offs_numbers_qsk3k5tvnwziaxyg3[...,na,na,na,:,:,:,:,na,:,na,na,:,:,:]
-        ###weight by q,s&z. then remove the q&s axis (they can be removed here since the feedsupply doesnt have those axis)
+        ###weight by q,s&z. then remove the q&s axis (they can be removed here since the feedsupply doesn't have those axis)
         z_prob_qsk2tva1e1b1nwzida0e0b0xyg = fun.f_expand(r_vals['zgen']['z_prob_qsz'], z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
         z_prob_qsk3k5tva1e1b1nwzida0e0b0xyg = fun.f_expand(r_vals['zgen']['z_prob_qsz'], z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
         dams_numbers_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(dams_numbers_qsk2tva1e1b1nwzida0e0b0xyg1, z_prob_qsk2tva1e1b1nwzida0e0b0xyg, axis=(0,1))
@@ -604,7 +604,7 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         optimal_fs_stpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(feedsupply_stpa1e1b1nwzida0e0b0xyg3,offs_numbers_stpa1e1b1nwzida0e0b0xyg3,w_pos,keepdims=True)
 
         ##update slices that have no numbers with the average fs in a given period.
-        ## The p axis remains active to keep the fs realistic. However incases where pyomo doesnt select animals in the
+        ## The p axis remains active to keep the fs realistic. However in cases where pyomo doesn't select animals in the
         ## end dvps the generator still needs a feedsupply so p slices with no feedsupply get update with the average fs 
         ###dams
         axes = tuple(np.delete(np.arange(optimal_fs_stpa1e1b1nwzida0e0b0xyg1.ndim),optimal_fs_stpa1e1b1nwzida0e0b0xyg1.ndim+p_pos))

@@ -112,10 +112,10 @@ def f_season_params(params):
     season_start_z = per.f_season_periods()[0,:] #slice season node to get season start
     period_is_seasonstart_p7z = start_phase_periods_p7z==season_start_z
     mask_provwithinz8z9_p7z8z9, mask_provbetweenz8z9_p7z8z9, mask_reqwithinz8_p7z8, mask_reqbetweenz8_p7z8 = zfun.f_season_transfer_mask(
-        start_phase_periods_p7z, period_is_seasonstart_pz=period_is_seasonstart_p7z, z_pos=-1) #the req masks dont do the correct job for rotation and hence are not used.
+        start_phase_periods_p7z, period_is_seasonstart_pz=period_is_seasonstart_p7z, z_pos=-1) #the req masks don't do the correct job for rotation and hence are not used.
     ###for rotation the between and within constraints are acting on different things (history vs the acutal phase) therefore
-    ### the req params above dont work because they have been adjusted for season start. so in the following line i make a
-    ### new req param which doesnt acount for within or between
+    ### the req params above don't work because they have been adjusted for season start. so in the following line i make a
+    ### new req param which doesn't account for within or between
     mask_childz8_p7z8 = zfun.f_season_transfer_mask(start_phase_periods_p7z,z_pos=-1,mask=True)
 
     # ##mask phases which transfer in each m

@@ -155,7 +155,7 @@ def f_report(processor, trials, non_exist_trials):
         ##handle infeasible trials
         if os.path.isfile('Output/infeasible/{0}.txt'.format(trial_name)):
             stacked_infeasible = rep.f_append_dfs(stacked_infeasible, pd.DataFrame([trial_name]).rename_axis('Trial'))
-            lp_vars = fun.f_clean_dict(lp_vars) #if a trial is infeasible or doesnt solve all the lp values are None. This function converts them to 0 so the report can still run.
+            lp_vars = fun.f_clean_dict(lp_vars) #if a trial is infeasible or doesn't solve all the lp values are None. This function converts them to 0 so the report can still run.
 
         ##run report functions
         if report_run.loc['run_summary', 'Run']:
@@ -1245,7 +1245,7 @@ if __name__ == '__main__':
         pd.Series(exp_data.index.get_level_values(2)).fillna(0).astype(
             bool)]  # this is slightly complicated because blank rows in exp.xl result in nan, so nan must be converted to 0.
 
-    ##check the trials you want to run exist and are up to date - if trial doesnt exist it is removed from trials to
+    ##check the trials you want to run exist and are up to date - if trial doesn't exist it is removed from trials to
     # report array so that the others can still be run. A list of trials that don't exist is the 'non_exist' sheet in report excel.
     trials, non_exist_trials = rep.f_errors(trial_outdated,trials)
 

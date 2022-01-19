@@ -38,7 +38,7 @@ def xl_all_named_ranges(filename, targetsheets, rangename=None,numpy=False,datat
     targetsheets is a list of (or a single) worksheet names from which to read the range names.
     rangename is an optional argument. If not included then all rangenames are read. If included only that name is read in.
     numpy is an optional boolean argument. If True it will assign the input array to a numpy
-    datatype: you can use this parameter to select the data type of the numpy arrays. if a value doesnt match the dtype it gets a nan
+    datatype: you can use this parameter to select the data type of the numpy arrays. if a value doesn't match the dtype it gets a nan
     
     Returns:
     A dictionary that includes key that correspond to the rangenames
@@ -334,7 +334,7 @@ def f_update(existing_value, new_value, mask_for_new):
 def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den_weights=1):
     '''
     Calculates weighted average (similar to np.average however this will handle:
-        if the sum of the weights is 0 (np.average doesnt handle this)
+        if the sum of the weights is 0 (np.average doesn't handle this)
         keeping the axis (using the keepdims argument)
     'non-zero' handles how the average is calculated
     Note: if non-zero is false then when sum weights = 0 the numbers being averaged also = 0 (so can divide by 1 instead of 0)
@@ -374,7 +374,7 @@ def f_divide(numerator, denominator, dtype='float64', option=0):
     numerator, denominator = np.broadcast_arrays(numerator, denominator)
     result = np.zeros(numerator.shape, dtype=dtype) #make it a float in case the numerator is int
     ##use ~np.isclose to capture when the denominator is 0 within rounding tolerances
-    mask = ~np.isclose(denominator.astype(float), 0) #astype float to handle timedeltas. timdelata / timedelta is a float so the final product needs to be a float anyway
+    mask = ~np.isclose(denominator.astype(float), 0) #astype float to handle timedeltas. timedelta / timedelta is a float so the final product needs to be a float anyway
     result[mask] = numerator[mask]/denominator[mask]
 
     ##If option is 1 then return 1 if the numerator and the denominator are the same (both 0 or both inf)
@@ -752,7 +752,7 @@ def f_run_required(exp_data1):
         keys_current = list(exp_data1.reset_index().columns[3:].values)
 
         ##update prev_exp run column
-        ###if the trial was run the last time the model was run (r_vals are newer than exp.pkl) this trial doesnt need to be re-run unless code or inputs have changed.
+        ###if the trial was run the last time the model was run (r_vals are newer than exp.pkl) this trial doesn't need to be re-run unless code or inputs have changed.
         ###if r_vals don't exist the trial needs to be re-run (this allows the user to delete r_vals to re-run a trial).
         run_last = []
         no_r_vals = []
@@ -913,8 +913,8 @@ def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
 
         1. By the time the r_val is save it would have likely been masked by mask_z8.
         2. The user may have incorrectly clustered the inputs in excel (eg seasons had different inputs before they
-           were identified). This doesnt effect the actual model because z8 is masked until it is identified
-           however if the r_val didnt get z8 treatment the reports could contain errors.
+           were identified). This doesn't effect the actual model because z8 is masked until it is identified
+           however if the r_val didn't get z8 treatment the reports could contain errors.
 
     :param r_vals: r_vals dict
     :param param: param to be stored
@@ -1003,11 +1003,11 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
         mask = mask.ravel() #needs to be 1d to mask the index
         index_masked = index[mask,:]
 
-    ##error check - index and param should be same length but zip() doesnt throw error if they are different length
+    ##error check - index and param should be same length but zip() doesn't throw error if they are different length
     if len(index_masked) != len(param_masked):
         raise exc.ParamError('''Index and param must be the same length''')
 
-    ##make index a tupple and zip with param and make dict
+    ##make index a tuple and zip with param and make dict
     tup = tuple(map(tuple,index_masked))
     return dict(zip(tup, param_masked))
 
@@ -1148,7 +1148,7 @@ def range_allocation_np(period_dates, item_start, length=np.array([1]).astype('t
     period_dates = period_dates.astype('datetime64[D]')
     item_start = item_start.astype('datetime64[D]')
 
-    ##adjust yr of item occurence
+    ##adjust yr of item occurrence
     start_of_periods = period_dates[0,...]
     end_of_periods = start_of_periods + np.timedelta64(364, 'D') #use 364 because end date is the day before the end otherwise can get item that starts on the last day of periods.
     add_yrs = np.ceil(np.maximum(0,(start_of_periods - item_start).astype('timedelta64[D]').astype(int) / 365))
@@ -1212,7 +1212,7 @@ def period_proportion_np(period_dates, date_array):
     dates_start = period_dates[:-1]
     dates_end = period_dates[1:].copy() #so original date array isn't altered when updating year in next step
 
-    ##adjust yr of item occurence
+    ##adjust yr of item occurrence
     start_of_periods = period_dates[0,...]
     end_of_periods = period_dates[-1,...]
     add_yrs = np.ceil(np.maximum(0,(start_of_periods - date_array).astype('timedelta64[D]').astype(int) / 365))
