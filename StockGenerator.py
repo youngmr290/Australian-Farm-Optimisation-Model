@@ -480,7 +480,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     gender_propn_xyg = fun.f_expand(pinp.sheep['i_gender_propn_x'], x_pos, condition=mask_x, axis=0).astype(dtype)
 
     ##drys management
-    dry_retained_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_dry_retained_forced'], p_pos, condition=mask_o_dams, axis=p_pos)
+    dry_retained_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_dry_retained_forced_o'], p_pos, condition=mask_o_dams, axis=p_pos)
 
     ##join
     join_cycles_ida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_join_cycles_ig1'], i_pos, right_pos=g_pos,
