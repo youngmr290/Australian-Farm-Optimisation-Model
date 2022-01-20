@@ -39,7 +39,8 @@ r_vals={}
 exp_data, exp_group_bool = fun.f_read_exp()
 exp_data = fun.f_group_exp(exp_data, exp_group_bool)
 ##update sensitivity values
-fun.f_update_sen(4,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav) #4 is quick test
+fun.f_update_sen(4,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav
+                 ,sen.sam_inp,sen.saa_inp,sen.sap_inp,sen.sar_inp,sen.sat_inp,sen.sav_inp) #4 is quick test
 ##call sa functions - assigns sa variables to relevant inputs
 sinp.f_structural_inp_sa()
 uinp.f_universal_inp_sa()

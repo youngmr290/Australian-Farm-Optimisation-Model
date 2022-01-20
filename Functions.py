@@ -703,7 +703,7 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
     ##Type 2 is saa (sensitivity addition)
     elif sa_type == 2:
          value  = np.maximum(value_min, value + sa)
-    ##Type 3 is sat (sensitivity target, sa = 1 returns the target)
+    ##Type 3 is sat (sensitivity target, sa=1 returns the target, sa=-1 returns value that is same distance but opposite direction to target)
     elif sa_type == 3:
         if pandas:
             value = np.maximum(value_min, value + (target - value).mul(sa, axis=axis))
@@ -712,7 +712,7 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
     ##Type 4 is sar (sensitivity range. sa=-1 returns 0, sa=1 returns 1)
     elif sa_type == 4:
          value = np.maximum(0, np.minimum(1, value * (1 - np.abs(sa)) + np.maximum(0, sa)))
-    ##Type 5 is sav (return the SA value)
+    ##Type 5 is sav (return the SA value, '-' is no change)
     elif sa_type == 5:
         try:
             sa=sa.copy()#have to copy the np arrays so that the original sa is not changed
@@ -833,7 +833,15 @@ def f_group_exp(exp_data, exp_group_bool):
     exp_data = exp_data.loc[exp_group_bool]
     return exp_data
 
-def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav):
+def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav, sam_inp, saa_inp, sap_inp, sar_inp, sat_inp, sav_inp):
+    ##reset SA dicts to base at the start of each trial before applying SA.
+    f_dict_reset(sam, sam_inp)
+    f_dict_reset(sap, sap_inp)
+    f_dict_reset(saa, saa_inp)
+    f_dict_reset(sat, sat_inp)
+    f_dict_reset(sar, sar_inp)
+    f_dict_reset(sav, sav_inp)
+
     for dic,key1,key2,indx in exp_data:
         ##extract current value
         value = exp_data.loc[exp_data.index[row], (dic,key1,key2,indx)]
@@ -849,61 +857,61 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav):
         if not ('Unnamed' in indx  or 'nan' in indx or 'Unnamed' in key2):
             indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(',')) #creats a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
             if dic == 'sam':
-                sam[(key1,key2)][indices]=value
-            elif dic == 'saa':
-                saa[(key1,key2)][indices]=value
+                sam[(key1,key2)][indices] = sam[(key1,key2)][indices] * value  # if there are multiple instances of the same SA in exp.xlsx they accumulate
             elif dic == 'sap':
-                sap[(key1,key2)][indices]=value
-            elif dic == 'sar':
-                sar[(key1,key2)][indices]=value
+                sap[(key1,key2)][indices] = (1 + sap[(key1,key2)][indices]) * (1 + value) - 1  # if there are multiple instances of the same SA in exp.xlsx they accumulate
+            elif dic == 'saa':
+                saa[(key1,key2)][indices] = saa[(key1,key2)][indices] + value  # if there are multiple instances of the same SA in exp.xlsx they accumulate
             elif dic == 'sat':
-                sat[(key1,key2)][indices]=value
+                sat[(key1,key2)][indices] = value   # last entry in exp.xlsx is used
+            elif dic == 'sar':
+                sar[(key1,key2)][indices] = value   # last entry in exp.xlsx is used, could be changed to accumulate
             elif dic == 'sav':
-                sav[(key1,key2)][indices]=value
+                sav[(key1,key2)][indices] = value   # last entry in exp.xlsx is used
 
         ##checks if just slice exists
         elif not ('Unnamed' in indx  or 'nan' in indx):
             indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(',')) #creats a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
             if dic == 'sam':
-                sam[key1][indices]=value
-            elif dic == 'saa':
-                saa[key1][indices]=value
+                sam[key1][indices] = sam[key1][indices] * value  # if there are multiple instances of the same SA in exp.xlsx they accumulate
             elif dic == 'sap':
-                sap[key1][indices]=value
-            elif dic == 'sar':
-                sar[key1][indices]=value
+                sap[key1][indices] = (1 + sap[key1][indices]) * (1 + value) - 1  # if there are multiple instances of the same SA in exp.xlsx they accumulate
+            elif dic == 'saa':
+                saa[key1][indices] = saa[key1][indices] + value  # if there are multiple instances of the same SA in exp.xlsx they accumulate
             elif dic == 'sat':
-                sat[key1][indices]=value
+                sat[key1][indices] = value
+            elif dic == 'sar':
+                sar[key1][indices] = value
             elif dic == 'sav':
-                sav[key1][indices]=value
+                sav[key1][indices] = value
         ##checks if just key2 exists
         elif not 'Unnamed' in key2:
             if dic == 'sam':
-                sam[(key1,key2)]=value
-            elif dic == 'saa':
-                saa[(key1,key2)]=value
+                sam[(key1,key2)] = sam[(key1,key2)] * value
             elif dic == 'sap':
-                sap[(key1,key2)]=value
-            elif dic == 'sar':
-                sar[(key1,key2)]=value
+                sap[(key1,key2)] = (1 + sap[(key1,key2)]) * ( 1+ value) -1
+            elif dic == 'saa':
+                saa[(key1,key2)] = saa[(key1,key2)] + value
             elif dic == 'sat':
-                sat[(key1,key2)]=value
+                sat[(key1,key2)] = value
+            elif dic == 'sar':
+                sar[(key1, key2)] = value
             elif dic == 'sav':
-                sav[(key1,key2)]=value
+                sav[(key1,key2)] = value
         ##if just key1 exists
         else:
             if dic == 'sam':
-                sam[key1]=value
-            elif dic == 'saa':
-                saa[key1]=value
+                sam[key1] = sam[key1] * value
             elif dic == 'sap':
-                sap[key1]=value
-            elif dic == 'sar':
-                sar[key1]=value
+                sap[key1] = (1 + sap[key1]) * (1 + value) - 1
+            elif dic == 'saa':
+                saa[key1] = saa[key1] + value
             elif dic == 'sat':
-                sat[key1]=value
+                sat[key1] = value
+            elif dic == 'sar':
+                sar[key1] = value
             elif dic == 'sav':
-                sav[key1]=value
+                sav[key1] = value
 
 def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
     '''
