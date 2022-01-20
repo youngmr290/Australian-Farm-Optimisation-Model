@@ -465,7 +465,7 @@ def f_sowing_timeliness_penalty():
     #     wet_seeding_penalty_k_z = wet_seeding_penalty_k_z.mul(proportion_grain_harv_k>0, axis=0)
 
     ##convert from yield penalty to biomass penalty
-    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harves s2 slice because yield penalty is inputted as a harvestable grain
+    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield penalty is inputted as the harvestable grain
     harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
     wet_seeding_penalty_k_z = wet_seeding_penalty_k_z.div(harvest_index_k, axis=0)
 

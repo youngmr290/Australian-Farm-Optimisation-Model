@@ -66,7 +66,7 @@ sap_inp['pi']=0 #global potential intake (this increases animal intake without a
 ######
 ##general
 sam_inp['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to remove it)
-
+sam_inp['grainp'] = 1.0   # SA multiplier for all grain prices
 
 ## Annual module sensitivity variables - these need to have the same name for each pasture type
 sam_inp['germ','annual']                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods

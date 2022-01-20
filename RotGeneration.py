@@ -229,13 +229,13 @@ def f_rot_gen():
 
 
     ######################################################
-    #delete cont rotations that require special handeling#
+    #delete cont rotations that require special handling#
     ######################################################
     '''
-    remove cont rotations before generilisation
-    -remove rotations that can provide them selves
+    remove cont rotations before generalisation
+    -remove rotations that can provide themselves
     -when generalising don't generalise yr1 
-        - this will stop Y X X X3 x4 providing itself ie if you generalied yr1 to X then this rotation would provide itself'
+        - this will stop Y X X X3 x4 providing itself ie if you generalised yr1 to X then this rotation would provide itself'
     '''
     ##check if every phase in a rotation is either lucerne or Y
     xindex=np.all(np.isin(phases[:,:], ['X','x','U','u']), axis=1)

@@ -328,8 +328,8 @@ def f_cropgraze_biomass_penalty():
     # ##calc stubble reduction (kg of stubble per kg of crop DM consumed)
     # stubble_reduction_propn_kp6z = stub_yield_reduction_propn_kp6z * stubble_per_grain_k[:,na,na]
 
-    ##convert from yield penalty to biomass penalty - required because input is grain yield reduction per tonne of crop consummed
-    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harves s2 slice because yield penalty is inputted as a harvestable grain
+    ##convert from yield penalty to biomass penalty - required because input is grain yield reduction per tonne of crop consumed
+    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield penalty is inputted as the harvestable grain
     biomass_reduction_propn_kp6z = biomass_reduction_propn_kp6z / harvest_index_k[:,na,na]
 
     ##apply season mask and grazing exists mask
