@@ -239,13 +239,13 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     a_r_zida0e0b0xyg3 = fun.f_expand(pinp.sheep['ia_r1_zig3'], i_pos, right_pos=g_pos, swap=True, condition=mask_offs_inc_g3, axis=g_pos,
                                      condition2=pinp.sheep['i_mask_i'], axis2=i_pos).astype(int)
     ###feed adjustment for dams
-    a_r2_k0e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['ia_r2_k0ig1'], i_pos, right_pos=g_pos, swap=True, left_pos2=a1_pos
+    a_r2_k0e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['ia_r2_ik0g1'], i_pos, right_pos=g_pos, swap=True, left_pos2=a1_pos
                                              , right_pos2=i_pos, condition=mask_dams_inc_g1, axis=g_pos,
                                              condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
-    a_r2_k1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['ia_r2_k1ig1'], i_pos, right_pos=g_pos, swap=True, left_pos2=e1_pos
+    a_r2_k1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['ia_r2_ik1g1'], i_pos, right_pos=g_pos, swap=True, left_pos2=e1_pos
                                            , right_pos2=i_pos, condition=mask_dams_inc_g1, axis=g_pos,
                                            condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
-    a_r2_spk0k1k2nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['ia_r2_sk2ig1'], i_pos, right_pos=g_pos, left_pos2=b1_pos, right_pos2=i_pos
+    a_r2_spk0k1k2nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['ia_r2_isk2g1'], i_pos, right_pos=g_pos, left_pos2=b1_pos, right_pos2=i_pos
                                                , left_pos3=p_pos-1, right_pos3=b1_pos, condition=mask_dams_inc_g1, axis=g_pos,
                                                condition2=pinp.sheep['i_mask_i'], axis2=i_pos, move=True, source=0, dest=2)  #add axes between g and i and i and b1
     ###feed adjustment for offs

@@ -120,7 +120,7 @@ saa_inp['husb_cost_h2'] = np.zeros(uinp.sheep['i_husb_operations_contract_cost_h
 saa_inp['husb_labour_l2h2'] = np.zeros(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
 saa_inp['r1_izg1'] = np.zeros(pinp.sheep['ia_r1_zig1'].shape, dtype=int)   #SA to change the base feed option selected for dams
 saa_inp['r1_izg3'] = np.zeros(pinp.sheep['ia_r1_zig3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
-saa_inp['r2_isk2g1'] = np.zeros(pinp.sheep['ia_r2_sk2ig1'].shape, dtype=int)   #SA to change the base feed option selected for dams
+saa_inp['r2_isk2g1'] = np.zeros(pinp.sheep['ia_r2_isk2g1'].shape, dtype=int)   #SA to change the base feed option selected for dams
 saa_inp['r2_ik5g3'] = np.zeros(pinp.sheep['ia_r2_ik5g3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
 saa_inp['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype=np.float64)  #SA value for feedsupply.
 saa_inp['feedsupply_adj_r2p'] = np.zeros(pinp.feedsupply['i_feedsupply_adj_options_r2p'].shape, dtype=np.float64)  #SA value for feedsupply adjustment.
@@ -233,9 +233,10 @@ sav_inp['mask_fvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '
 sav_inp['fvp_is_dvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
 sav_inp['r1_izg1'] = np.full(pinp.sheep['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option selected for dams
 sav_inp['r1_izg3'] = np.full(pinp.sheep['ia_r1_zig3'].shape, '-', dtype=object)   #SA to change the base feed option selected for offspring
-sav_inp['r2_isk2g1'] = np.full(pinp.sheep['ia_r2_sk2ig1'].shape, '-', dtype=object)   #SA to Change the selected feed adjustments selected for the k2 axis (LSLN) for dams
-sav_inp['r2_ik5g3'] = np.full(pinp.sheep['ia_r2_ik5g3'].shape, '-', dtype=object)   #SA to change the base feed option selected for offspring
-sav_inp['r2_ik0g1'] = np.full(pinp.sheep['ia_r2_k0ig1'].shape, '-', dtype=object)   #SA to Change the selected feed adjustments selected for the k0 axis (wean age) for dams
+sav_inp['r2_ik0g1'] = np.full(pinp.sheep['ia_r2_ik0g1'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k0 axis (wean age) for dams
+sav_inp['r2_ik0g3'] = np.full(pinp.sheep['ia_r2_ik0g3'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k0 axis (wean age) for offs
+sav_inp['r2_isk2g1'] = np.full(pinp.sheep['ia_r2_isk2g1'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k2 axis (LSLN) for dams
+sav_inp['r2_ik5g3'] = np.full(pinp.sheep['ia_r2_ik5g3'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k5 axis (BTRT) for offs
 
 ##stock parameters
 sav_inp['srw_c2'] = np.full(uinp.parameters['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.

@@ -204,9 +204,9 @@ sheep_inp['i_date_shear_sixg3'] = np.reshape(sheep_inp['i_date_shear_sixg3'], is
 sheep_inp['ia_r1_zig0'] = np.reshape(sheep_inp['ia_r1_zig0'], izg)
 sheep_inp['ia_r1_zig1'] = np.reshape(sheep_inp['ia_r1_zig1'], izg)
 sheep_inp['ia_r1_zig3'] = np.reshape(sheep_inp['ia_r1_zig3'], izg)
-sheep_inp['ia_r2_k0ig1'] = np.reshape(sheep_inp['ia_r2_k0ig1'], ik0g)
-sheep_inp['ia_r2_k1ig1'] = np.reshape(sheep_inp['ia_r2_k1ig1'], ik1g)
-sheep_inp['ia_r2_sk2ig1'] = np.reshape(sheep_inp['ia_r2_sk2ig1'], isk2g)
+sheep_inp['ia_r2_ik0g1'] = np.reshape(sheep_inp['ia_r2_ik0g1'], ik0g)
+sheep_inp['ia_r2_ik1g1'] = np.reshape(sheep_inp['ia_r2_ik1g1'], ik1g)
+sheep_inp['ia_r2_isk2g1'] = np.reshape(sheep_inp['ia_r2_isk2g1'], isk2g)
 sheep_inp['ia_r2_ik0g3'] = np.reshape(sheep_inp['ia_r2_ik0g3'], ik0g)
 sheep_inp['ia_r2_ik3g3'] = np.reshape(sheep_inp['ia_r2_ik3g3'], ik3g)
 sheep_inp['ia_r2_ik4g3'] = np.reshape(sheep_inp['ia_r2_ik4g3'], ik4g)
@@ -318,16 +318,17 @@ def f_property_inp_sa():
     sheep['i_dry_sales_forced_o'] = fun.f_sa(sheep['i_dry_sales_forced_o'], sen.sav['bnd_drys_sold_o'],5)
     sheep['i_dry_retained_forced_o'] = fun.f_sa(sheep['i_dry_retained_forced_o'], sen.sav['bnd_drys_retained_o'],5)
     sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.sav['r1_izg1'],5)
-    sheep['ia_r2_k0ig1'] = fun.f_sa(sheep['ia_r2_k0ig1'], sen.sav['r2_ik0g1'],5)
-    sheep['ia_r2_sk2ig1'] = fun.f_sa(sheep['ia_r2_sk2ig1'], sen.sav['r2_isk2g1'],5)
+    sheep['ia_r2_ik0g1'] = fun.f_sa(sheep['ia_r2_ik0g1'], sen.sav['r2_ik0g1'],5)
+    sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.sav['r2_isk2g1'],5)
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.sav['r1_izg3'],5)
+    sheep['ia_r2_ik0g3'] = fun.f_sa(sheep['ia_r2_ik0g3'], sen.sav['r2_ik0g3'],5)
     sheep['i_sr_constraint_t'] = fun.f_sa(sheep['i_sr_constraint_t'], sen.sav['bnd_sr_t'],5)
 
     ###sam
     ###sap
     ###saa
     sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.saa['r1_izg1'], 2).astype('int')
-    sheep['ia_r2_sk2ig1'] = fun.f_sa(sheep['ia_r2_sk2ig1'], sen.saa['r2_isk2g1'], 2).astype('int')
+    sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.saa['r2_isk2g1'], 2).astype('int')
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.saa['r1_izg3'], 2).astype('int')
     sheep['ia_r2_ik5g3'] = fun.f_sa(sheep['ia_r2_ik5g3'], sen.saa['r2_ik5g3'], 2).astype('int')
     feedsupply['i_feedsupply_options_r1j2p'] = fun.f_sa(feedsupply['i_feedsupply_options_r1j2p'], sen.saa['feedsupply_r1jp'], 2)
