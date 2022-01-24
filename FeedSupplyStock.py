@@ -120,6 +120,11 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     #########
     #inputs #
     #########
+    ##masks required for initialising arrays
+    mask_sire_inc_g0 = np.any(sinp.stock['i_mask_g0g3'] * pinp.sheep['i_g3_inc'], axis =1)
+    mask_dams_inc_g1 = np.any(sinp.stock['i_mask_g1g3'] * pinp.sheep['i_g3_inc'], axis =1)
+    mask_yatf_inc_g2 = np.any(sinp.stock['i_mask_g2g3'] * pinp.sheep['i_g3_inc'], axis =1)
+    mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis =1)
 
     ##pos
     a0_pos = sinp.stock['i_a0_pos']
@@ -128,6 +133,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     b1_pos = sinp.stock['i_b1_pos']
     d_pos = sinp.stock['i_d_pos']
     e1_pos = sinp.stock['i_e1_pos']
+    g_pos = -1
     i_pos = sinp.stock['i_i_pos']
     n_pos = sinp.stock['i_n_pos']
     p_pos = sinp.stock['i_p_pos']
@@ -225,28 +231,30 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
 
     ##feedsupply selection inputs
     ###feedsupply option selected - keep the z axis here and then handle the z axis after the feedsupply is calculated
-    a_r_zida0e0b0xyg0 = sfun.f1_g2g(pinp.sheep['ia_r1_zig0'], 'sire',i_pos, swap=True, condition=pinp.sheep['i_masksire_i']
-                                    , axis=i_pos).astype(int)
-    a_r_zida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r1_zig1'], 'dams',i_pos, swap=True, condition=pinp.sheep['i_mask_i']
-                                    , axis=i_pos).astype(int)
-    a_r_zida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['ia_r1_zig3'], 'offs',i_pos, swap=True, condition=pinp.sheep['i_mask_i']
-                                    , axis=i_pos).astype(int)
+    a_r_zida0e0b0xyg0 = fun.f_expand(pinp.sheep['ia_r1_zig0'], i_pos, right_pos=g_pos, swap=True, condition=mask_sire_inc_g0, axis=g_pos,
+                                     condition2=pinp.sheep['i_masksire_i'], axis2=i_pos).astype(int)
+    a_r_zida0e0b0xyg1 = fun.f_expand(pinp.sheep['ia_r1_zig1'], i_pos, right_pos=g_pos, swap=True, condition=mask_dams_inc_g1, axis=g_pos,
+                                     condition2=pinp.sheep['i_mask_i'], axis2=i_pos).astype(int)
+    a_r_zida0e0b0xyg3 = fun.f_expand(pinp.sheep['ia_r1_zig3'], i_pos, right_pos=g_pos, swap=True, condition=mask_offs_inc_g3, axis=g_pos,
+                                     condition2=pinp.sheep['i_mask_i'], axis2=i_pos).astype(int)
     ###feed adjustment for dams
-    a_r2_k0e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r2_k0ig1'], 'dams',i_pos, swap=True, left_pos2=a1_pos
-                                             , right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r2_k1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r2_k1ig1'], 'dams', i_pos, swap=True, left_pos2=e1_pos
-                                           , right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r2_spk0k1k2nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r2_sk2ig1'], 'dams',i_pos, left_pos2=b1_pos, right_pos2=i_pos
-                                               , left_pos3=p_pos-1, right_pos3=b1_pos, condition=pinp.sheep['i_mask_i']
-                                               , axis=i_pos, move=True, source=0, dest=2)  #add axis between g and i and i and b1
+    a_r2_k0e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['ia_r2_k0ig1'], i_pos, right_pos=g_pos, swap=True, left_pos2=a1_pos
+                                             , right_pos2=i_pos, condition=mask_dams_inc_g1, axis=g_pos,
+                                             condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
+    a_r2_k1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['ia_r2_k1ig1'], i_pos, right_pos=g_pos, swap=True, left_pos2=e1_pos
+                                           , right_pos2=i_pos, condition=mask_dams_inc_g1, axis=g_pos,
+                                           condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
+    a_r2_spk0k1k2nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['ia_r2_sk2ig1'], i_pos, right_pos=g_pos, left_pos2=b1_pos, right_pos2=i_pos
+                                               , left_pos3=p_pos-1, right_pos3=b1_pos, condition=mask_dams_inc_g1, axis=g_pos,
+                                               condition2=pinp.sheep['i_mask_i'], axis2=i_pos, move=True, source=0, dest=2)  #add axes between g and i and i and b1
     ###feed adjustment for offs
-    a_r2_idk0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik0g3'], 'offs',a0_pos, left_pos2=i_pos, right_pos2=a0_pos
-                                    , condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r2_ik3a0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik3g3'], 'offs',d_pos,  condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r2_ida0e0k4xyg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik4g3'], 'offs',b0_pos, left_pos2=i_pos, right_pos2=b0_pos
-                                    , condition=pinp.sheep['i_mask_i'], axis=i_pos)  #add axis between g and b0 and b0 and i
-    a_r2_ida0e0b0k5yg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik5g3'], 'offs',x_pos, left_pos2=i_pos, right_pos2=x_pos
-                                     , condition=pinp.sheep['i_mask_i'], axis=i_pos)  #add axis between g and b0 and b0 and i
+    a_r2_idk0e0b0xyg3 = fun.f_expand(pinp.sheep['ia_r2_ik0g3'], a0_pos, right_pos=g_pos, left_pos2=i_pos, right_pos2=a0_pos,
+                                    condition=mask_offs_inc_g3, axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
+    a_r2_ik3a0e0b0xyg3 = fun.f_expand(pinp.sheep['ia_r2_ik3g3'], d_pos, right_pos=g_pos, condition=mask_offs_inc_g3, axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
+    a_r2_ida0e0k4xyg3 = fun.f_expand(pinp.sheep['ia_r2_ik4g3'], b0_pos, right_pos=g_pos, left_pos2=i_pos, right_pos2=b0_pos,
+                                    condition=mask_offs_inc_g3, axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos)  #add axis between g and b0 and b0 and i
+    a_r2_ida0e0b0k5yg3 = fun.f_expand(pinp.sheep['ia_r2_ik5g3'], x_pos, right_pos=g_pos, left_pos2=i_pos, right_pos2=x_pos,
+                                     condition=mask_offs_inc_g3, axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos)  #add axis between g and b0 and b0 and i
 
     ##std feed options
     feedsupply_options_r1j2p = pinp.feedsupply['i_feedsupply_options_r1j2p'][...,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods

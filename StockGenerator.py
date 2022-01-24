@@ -90,6 +90,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     d_pos = sinp.stock['i_d_pos']
     e0_pos = sinp.stock['i_e0_pos']
     e1_pos = sinp.stock['i_e1_pos']
+    g_pos = -1
     i_pos = sinp.stock['i_i_pos']
     k2_pos = sinp.stock['i_k2_pos']
     k3_pos = sinp.stock['i_k3_pos']
@@ -136,7 +137,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     mask_yatf_inc_g2 = np.any(sinp.stock['i_mask_g2g3'] * pinp.sheep['i_g3_inc'], axis =1)
     mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis =1)
     ##o/d mask - if dob is after the end of the sim then it is masked out -  the mask is created before the date of birth is adjusted to the start of a period however it is adjusted to the start of the next period so the mask won't cut out a birth event that actually would occur, additionally this is the birth of the first however the matrix sees the birth of average animal which is also later therefore if anything the mask will leave in unnecessary o slices
-    date_born1st_oa1e1b1nwzida0e0b0xyg2 = sfun.f1_g2g(pinp.sheep['i_date_born1st_oig2'],'yatf', i_pos, swap=True,left_pos2=p_pos,right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos).astype('datetime64[D]')
+    date_born1st_oa1e1b1nwzida0e0b0xyg2 = fun.f_expand(pinp.sheep['i_date_born1st_oig2'], i_pos, right_pos=g_pos, swap=True,
+                                                      left_pos2=p_pos,right_pos2=i_pos, condition=mask_yatf_inc_g2, axis=g_pos,
+                                                      condition2=pinp.sheep['i_mask_i'], axis2=i_pos).astype('datetime64[D]')
     mask_o_dams = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_d_offs = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_x = pinp.sheep['i_gender_propn_x']>0
@@ -239,9 +242,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     n_fvp_periods_offs= np.count_nonzero(fvp_mask_offs)
     len_w3 = w_start_len3 * n_fs_offs ** n_fvp_periods_offs
     len_nut_offs = (n_fs_offs ** n_fvp_periods_offs)
-    fvp0_offset_ida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_fvp0_offset_ig3'], 'offs', i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    fvp1_offset_ida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_fvp1_offset_ig3'], 'offs', i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    fvp2_offset_ida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_fvp2_offset_ig3'], 'offs', i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
+    fvp0_offset_ida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_fvp0_offset_ig3'], i_pos, right_pos=g_pos, condition=mask_offs_inc_g3, axis=g_pos,
+                                           condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
+    fvp1_offset_ida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_fvp1_offset_ig3'], i_pos, right_pos=g_pos, condition=mask_offs_inc_g3, axis=g_pos,
+                                           condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
+    fvp2_offset_ida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_fvp2_offset_ig3'], i_pos, right_pos=g_pos, condition=mask_offs_inc_g3, axis=g_pos,
+                                           condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
 
     ###if generating for stubble then w axis is controlled by dmd levels rather than fvps and nut
     if stubble:
@@ -477,43 +483,53 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     dry_retained_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_dry_retained_forced'], p_pos, condition=mask_o_dams, axis=p_pos)
 
     ##join
-    join_cycles_ida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_join_cycles_ig1'],'dams',i_pos)[pinp.sheep['i_mask_i'],...]
+    join_cycles_ida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_join_cycles_ig1'], i_pos, right_pos=g_pos,
+                                           condition=mask_dams_inc_g1, axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
 
     ##lamb and lost
-    gbal_oa1e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_gbal_og1'],'dams',p_pos, condition=mask_o_dams, axis=p_pos) #need axis up to p so that p association can be applied
-    gbal_da0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_gbal_og1'],'dams',d_pos, condition=mask_d_offs, axis=d_pos) #need axis up to p so that p association can be applied
+    gbal_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_gbal_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
+                                              axis=g_pos, condition2=mask_o_dams, axis2=p_pos) #need axis up to p so that p association can be applied
+    gbal_da0e0b0xyg3 = fun.f_expand(pinp.sheep['i_gbal_og1'], d_pos, right_pos=g_pos, condition=mask_dams_inc_g1, axis=g_pos,
+                                   condition2=mask_d_offs, axis2=d_pos) #need axis up to p so that p association can be applied
 
     ##scanning
-    scan_oa1e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_scan_og1'],'dams',p_pos, condition=mask_o_dams, axis=p_pos) #need axis up to p so that p association can be applied
-    scan_da0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_scan_og1'],'dams',d_pos, condition=mask_d_offs, axis=d_pos) #need axis up to p so that p association can be applied
+    scan_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_scan_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
+                                              axis=g_pos, condition2=mask_o_dams, axis2=p_pos) #need axis up to p so that p association can be applied
+    scan_da0e0b0xyg3 = fun.f_expand(pinp.sheep['i_scan_og1'], d_pos, right_pos=g_pos, condition=mask_dams_inc_g1, axis=g_pos,
+                                   condition2=mask_d_offs, axis2=d_pos) #need axis up to p so that p association can be applied
 
     ##post weaning management
-    wean_oa1e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_wean_og1'],'dams',p_pos, condition=mask_o_dams, axis=p_pos) #need axis up to p so that p association can be applied
+    wean_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_wean_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
+                                              axis=g_pos, condition2=mask_o_dams, axis2=p_pos) #need axis up to p so that p association can be applied
 
     ##association between offspring and sire/dam (used to determine the wean age of sire and dams based on the inputted wean age of offs)
-    a_g0_g1 = sfun.f1_g2g(pinp.sheep['ia_g0_g1'],'dams')
-    a_g3_g0 = sfun.f1_g2g(pinp.sheep['ia_g3_g0'],'sire')  # the sire association (pure bred B, M & T) are all based on purebred B because there are no pure bred M & T inputs
-    a_g3_g1 = sfun.f1_g2g(pinp.sheep['ia_g3_g1'],'dams')  # if BMT exist then BBM exist and they will be in slice 1, therefore the association value doesn't need to be adjusted for "prior exclusions"
+    a_g0_g1 = pinp.sheep['ia_g0_g1'][mask_dams_inc_g1]
+    a_g3_g0 = pinp.sheep['ia_g3_g0'][mask_sire_inc_g0]   # the sire association (pure bred B, M & T) are all based on purebred B because there are no pure bred M & T inputs
+    a_g3_g1 = pinp.sheep['ia_g3_g1'][mask_dams_inc_g1]   # if BMT exist then BBM exist and they will be in slice 1, therefore the association value doesn't need to be adjusted for "prior exclusions"
 
     ##age weaning- used to calc wean date and also to calc p1 stuff, sire and dams have no active a0 slice therefore just take the first slice
     ###note: if age_wean_g3 gets a d axis it need to be the same for all animals that get clustered (see date born below)
-    age_wean1st_a0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_age_wean_a0g3'],'offs',a0_pos).astype('timedelta64[D]')[pinp.sheep['i_mask_a']]
+    age_wean1st_a0e0b0xyg3 = fun.f_expand(pinp.sheep['i_age_wean_a0g3'], a0_pos, right_pos=g_pos, condition=mask_offs_inc_g3,
+                                         axis=g_pos, condition2=pinp.sheep['i_mask_a'], axis2=a0_pos).astype('timedelta64[D]')
     age_wean1st_e0b0xyg0 = np.rollaxis(age_wean1st_a0e0b0xyg3[0, ...,a_g3_g0],0,age_wean1st_a0e0b0xyg3.ndim-1) #when you slice one slice of the array and also take multiple slices from another axis the axis with multiple slices jumps to the front therefore need to roll the g axis back to the end
     age_wean1st_e0b0xyg1 = np.rollaxis(age_wean1st_a0e0b0xyg3[0, ...,a_g3_g1],0,age_wean1st_a0e0b0xyg3.ndim-1) #when you slice one slice of the array and also take multiple slices from another axis the axis with multiple slices jumps to the front therefore need to roll the g axis back to the end
 
     ##date first lamb is born - need to apply i mask to these inputs - make sure animals are born at beginning of gen period
-    date_born1st_ida0e0b0xyg0 = sfun.f1_g2g(pinp.sheep['i_date_born1st_ig0'],'sire',i_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos).astype('datetime64[D]')
-    date_born1st_ida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_date_born1st_ig1'],'dams',i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos).astype('datetime64[D]')
+    date_born1st_ida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_date_born1st_ig0'], i_pos, right_pos=g_pos, condition=mask_sire_inc_g0,
+                                            axis=g_pos, condition2=pinp.sheep['i_masksire_i'], axis2=i_pos).astype('datetime64[D]')
+    date_born1st_ida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_date_born1st_ig1'], i_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
+                                            axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos).astype('datetime64[D]')
     date_born1st_oa1e1b1nwzida0e0b0xyg2 = date_born1st_oa1e1b1nwzida0e0b0xyg2[mask_o_dams,...] #input read in in the mask section
-    date_born1st_ida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_date_born1st_idg3'],'offs',d_pos, condition=pinp.sheep['i_mask_i']
-                                           , axis=i_pos, condition2=mask_d_offs, axis2=d_pos).astype('datetime64[D]')
+    date_born1st_ida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_date_born1st_idg3'], d_pos, right_pos=g_pos,
+                                            condition=mask_offs_inc_g3, axis=g_pos, condition2=pinp.sheep['i_mask_i']
+                                           , axis2=i_pos, condition3=mask_d_offs, axis3=d_pos).astype('datetime64[D]')
     date_born1st_ida0e0b0xyg3[:,len_k3-1:,...] = date_born1st_ida0e0b0xyg3[:,len_k3-1:len_k3,...] #for animals in the same d cluster date born must be the same (so that the dvp and fvp dates are the same for all animals that get clustered)
 
     ##mating
-    sire_propn_oa1e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_sire_propn_oig1'],'dams', i_pos, swap=True,
-                                                   left_pos2=p_pos,right_pos2=i_pos, condition=pinp.sheep['i_mask_i'],
-                                                   axis=i_pos, condition2=mask_o_dams, axis2=p_pos)
-    sire_periods_p8g0 = sfun.f1_g2g(pinp.sheep['i_sire_periods_p8g0'], 'sire', condition=pinp.sheep['i_mask_p8'], axis=0)
+    sire_propn_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_sire_propn_oig1'], i_pos, right_pos=g_pos, swap=True,
+                                                   left_pos2=p_pos,right_pos2=i_pos, condition=mask_dams_inc_g1, axis=g_pos,
+                                                    condition2=pinp.sheep['i_mask_i'], axis2=i_pos, condition3=mask_o_dams, axis3=p_pos)
+    sire_periods_p8g0 = fun.f_expand(pinp.sheep['i_sire_periods_p8g0'], condition=mask_sire_inc_g0, axis=g_pos, condition2=pinp.sheep['i_mask_p8'], axis2=0)
     sire_periods_g0p8 = np.swapaxes(sire_periods_p8g0, 0, 1) #can't swap in function above because g needs to be in pos-1
 
     ##propn of dams mated - default is inf which gets skipped in the bound constraint hence the model can optimise the propn mated.
@@ -524,23 +540,24 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##Shearing date - set to be on the last day of a sim period
     ###sire
-    date_shear_sida0e0b0xyg0 = sfun.f1_g2g(pinp.sheep['i_date_shear_sixg0'], 'sire', x_pos, swap=True
-                                          ,left_pos2=i_pos,right_pos2=x_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos
+    date_shear_sida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_date_shear_sixg0'], x_pos, right_pos=g_pos, swap=True
+                                          ,left_pos2=i_pos,right_pos2=x_pos, condition=mask_sire_inc_g0, axis=g_pos,
+                                           condition2=pinp.sheep['i_masksire_i'], axis2=i_pos
                                           )[...,0:1,:,:].astype('datetime64[D]') #slice x axis for only male
     mask_shear_g0 = np.max(date_shear_sida0e0b0xyg0<=date_end_p[-1], axis=tuple(range(i_pos, 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg0 = date_shear_sida0e0b0xyg0[mask_shear_g0]
     ###dam
-    date_shear_sida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_date_shear_sixg1'],'dams',x_pos ,swap=True,left_pos2=i_pos,right_pos2=x_pos,
-                                          condition=pinp.sheep['i_mask_i'], axis=i_pos
+    date_shear_sida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_date_shear_sixg1'], x_pos, right_pos=g_pos, swap=True,left_pos2=i_pos,right_pos2=x_pos,
+                                           condition=mask_dams_inc_g1, axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos
                                           )[...,1:2,:,:].astype('datetime64[D]') #slice x axis for only female
     mask_shear_g1 = np.max(date_shear_sida0e0b0xyg1<=date_end_p[-1], axis=tuple(range(i_pos, 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg1 = date_shear_sida0e0b0xyg1[mask_shear_g1]
     ###off - the first shearing must occur as offspring because if yatf were shorn then all lambs would have to be shorn (ie no scope to not shear the lambs that are going to be fed up and sold)
     #### the offspring decision variables are not linked to the yatf (which are in the dam decision variables) and it would require doubling the dam DVs to have shorn and unshorn yatf
     ####note: if age_wean_g3 gets a d axis it need to be the same for all animals that get clustered (see date born below)
-    date_shear_sida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_date_shear_sixg3'],'offs',x_pos,swap=True,left_pos2=i_pos,right_pos2=x_pos,
-                                          condition=pinp.sheep['i_mask_i'], axis=i_pos
-                                          , condition2=mask_x, axis2=x_pos).astype('datetime64[D]')
+    date_shear_sida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_date_shear_sixg3'], x_pos, right_pos=g_pos, swap=True,left_pos2=i_pos,right_pos2=x_pos,
+                                           condition=mask_offs_inc_g3, axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos,
+                                           condition3=mask_x, axis3=x_pos).astype('datetime64[D]')
     mask_shear_g3 = np.max(date_shear_sida0e0b0xyg3<=offs_date_end_p[-1], axis=tuple(range(i_pos, 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3[mask_shear_g3]
 
@@ -1318,7 +1335,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ## sum saa[rr] and saa[rr_age] so there is only one saa to handle in f_conception_cs & f_conception_ltw
     ## Note: the proportions of the BTRT doesn't include rr_age_og1 because those calculations can't vary by age of the dam
     rr_age_og1 = sen.saa['rr_age_og1']
-    saa_rr_age_oa1e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(rr_age_og1, 'dams', p_pos, condition=mask_o_dams, axis=p_pos)
+    saa_rr_age_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(rr_age_og1, p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
+                                                    axis=g_pos, condition2=mask_o_dams, axis2=p_pos)
     saa_rr_age_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(saa_rr_age_oa1e1b1nwzida0e0b0xyg1,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     ## Alter the standard scanning rate for f_conception_ltw to include saa['rr_age'] (scan_std_yg0 has already been adjusted by saa['rr'] in UniversalInputs.py
@@ -4740,15 +4758,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     period_is_wean_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_period_is_('period_is', date_weaned_ida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3)
     gender_xyg = fun.f_expand(np.arange(len(mask_x)), x_pos)
     ##sire
-    purchcost_g0 = sfun.f1_g2g(pinp.sheep['i_purchcost_sire_ig0'], 'sire', condition=pinp.sheep['i_masksire_i'], axis=0) #Not divided by number of years onhand because the number of years of use is reflected in the number of dams that are serviced (because one sire can service multiple dam ages)
-    date_purch_oa1e1b1nwzida0e0b0xyg0 = sfun.f1_g2g(pinp.sheep['i_date_purch_ig0'], 'sire', i_pos, left_pos2=p_pos-1, right_pos2=i_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos).astype('datetime64[D]')
-    date_sale_oa1e1b1nwzida0e0b0xyg0 = sfun.f1_g2g(pinp.sheep['i_date_sale_ig0'], 'sire', i_pos, left_pos2=p_pos-1, right_pos2=i_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos).astype('datetime64[D]')
+    purchcost_ida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_purchcost_sire_ig0'], i_pos, right_pos=g_pos, condition=mask_sire_inc_g0, axis=g_pos,
+                               condition2=pinp.sheep['i_masksire_i'], axis2=i_pos) #Not divided by number of years onhand because the number of years of use is reflected in the number of dams that are serviced (because one sire can service multiple dam ages)
+    date_purch_oa1e1b1nwzida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_date_purch_ig0'], i_pos, right_pos=g_pos, left_pos2=p_pos-1,
+                                                    right_pos2=i_pos, condition=mask_sire_inc_g0, axis=g_pos,
+                                                    condition2=pinp.sheep['i_masksire_i'], axis2=i_pos).astype('datetime64[D]')
+    date_sale_oa1e1b1nwzida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_date_sale_ig0'], i_pos, right_pos=g_pos, left_pos2=p_pos-1,
+                                                   right_pos2=i_pos, condition=mask_sire_inc_g0, axis=g_pos,
+                                                   condition2=pinp.sheep['i_masksire_i'], axis2=i_pos).astype('datetime64[D]')
     sire_periods_g0p8y = sire_periods_g0p8[..., na].astype('datetime64[D]') + (
                          np.arange(np.ceil(sim_years)) * np.timedelta64(365, 'D'))
     period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8y = sfun.f1_period_is_('period_is', sire_periods_g0p8y, date_start_pa1e1b1nwzida0e0b0xyg[...,na,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg[...,na,na])
     period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8 = np.any(period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8y, axis=-1) #condense the y axis - it is now accounted for by p axis
     ##dams
-    sale_delay_sa1e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_sales_delay_sg1'], 'dams', p_pos) #periods after shearing that sale occurs
+    sale_delay_sa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_sales_delay_sg1'], p_pos, right_pos=g_pos,
+                                                    condition=mask_dams_inc_g1, axis=g_pos) #periods after shearing that sale occurs
     ###mask for nutrition profiles. this doesnt have a full w axis because it only has the nutrition options it is expanded to w further down.
     sav_mask_nut_dams_owi = sen.sav['nut_mask_dams_owi'][:,0:len_nut_dams,:] #This controls if a nutrition pattern is included.
     mask_nut_dams_owi = fun.f_sa(np.array(True), sav_mask_nut_dams_owi,5) #all nut options included unless SAV is false
@@ -4759,11 +4783,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###dvp mask - basically the shearing mask plus a true for the first dvp which is weaning
     sale_mask_g3 = np.concatenate([np.array([True]), mask_shear_g3]) #need to add true to the start of the shear mask because the first dvp is weaning
     ###days from the start of the dvp when sale occurs
-    sales_offset_tsa1e1b1nwzida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_sales_offset_tsg3'], 'offs', p_pos, condition=sale_mask_g3, axis=p_pos)
+    sales_offset_tsa1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_sales_offset_tsg3'], p_pos, right_pos=g_pos,
+                                                       condition=mask_offs_inc_g3, axis=g_pos, condition2=sale_mask_g3, axis2=p_pos)
     ###target weight in a dvp where sale occurs
-    target_weight_tsa1e1b1nwzida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_target_weight_tsg3'], 'offs', p_pos, condition=sale_mask_g3, axis=p_pos) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
+    target_weight_tsa1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_target_weight_tsg3'], p_pos, right_pos=g_pos,
+                                                        condition=mask_offs_inc_g3, axis=g_pos, condition2=sale_mask_g3, axis2=p_pos) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
     ###number of periods before sale that shearing occurs in each dvp
-    shearing_offset_tsa1e1b1nwzida0e0b0xyg3= sfun.f1_g2g(pinp.sheep['i_shear_prior_tsg3'], 'offs', p_pos, condition=sale_mask_g3, axis=p_pos) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
+    shearing_offset_tsa1e1b1nwzida0e0b0xyg3= fun.f_expand(pinp.sheep['i_shear_prior_tsg3'], p_pos, right_pos=g_pos,
+                                                         condition=mask_offs_inc_g3, axis=g_pos, condition2=sale_mask_g3, axis2=p_pos) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
 
 
     ###mask for nutrition profiles. this doesnt have a full w axis because it only has the nutrition options it is expanded to w further down.
@@ -4779,13 +4806,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #################################
     ##yatf
     ###association between the birth time of yatf and the birth time of dams
-    a_i_ida0e0b0xyg2 = sfun.f1_g2g(pinp.sheep['ia_i_idg2'],'yatf',d_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos, condition2=mask_d_offs, axis2=d_pos)
-    a_g1_g2 = sfun.f1_g2g(pinp.sheep['ia_g1_g2'],'yatf')
+    a_i_ida0e0b0xyg2 = fun.f_expand(pinp.sheep['ia_i_idg2'], d_pos, right_pos=g_pos, condition=mask_yatf_inc_g2, axis=g_pos,
+                                   condition2=pinp.sheep['i_mask_i'], axis2=i_pos, condition3=mask_d_offs, axis3=d_pos)
+    a_g1_g2 = fun.f_expand(pinp.sheep['ia_g1_g2'], condition=mask_yatf_inc_g2, axis=g_pos)
 
     ##dams
     ###transfer
-    a_g1_tpa1e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(sinp.stock['ia_g1_tg1'], 'dams', p_pos-1)
-    transfer_exists_tpa1e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(sinp.stock['i_transfer_exists_tg1'], 'dams', p_pos-1)
+    a_g1_tpa1e1b1nwzida0e0b0xyg1 = fun.f_expand(sinp.stock['ia_g1_tg1'], p_pos-1, right_pos=g_pos,
+                                               condition=mask_dams_inc_g1, axis=g_pos)
+    transfer_exists_tpa1e1b1nwzida0e0b0xyg1 = fun.f_expand(sinp.stock['i_transfer_exists_tg1'], p_pos-1, right_pos=g_pos,
+                                                          condition=mask_dams_inc_g1, axis=g_pos)
     #### adjust the pointers for excluded sires (t axis starts as just the sires eg dams transfer to different sire type)
     prior_sire_excluded_tpa1e1b1nwzida0e0b0xyg0 = fun.f_expand(np.cumsum(~mask_sire_inc_g0), p_pos-1) #put the g0 axis in the t position
     a_g1_tpa1e1b1nwzida0e0b0xyg1 = a_g1_tpa1e1b1nwzida0e0b0xyg1 - prior_sire_excluded_tpa1e1b1nwzida0e0b0xyg0
@@ -5017,8 +5047,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
 
     ##purchase cost
-    purchcost_p7tpa1e1b1nwzida0e0b0xyg0 = purchcost_g0 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
-    purchcost_wc_c0p7tpa1e1b1nwzida0e0b0xyg0 = purchcost_g0 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
+    purchcost_p7tpa1e1b1nwzida0e0b0xyg0 = purchcost_ida0e0b0xyg0 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
+    purchcost_wc_c0p7tpa1e1b1nwzida0e0b0xyg0 = purchcost_ida0e0b0xyg0 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
 
     ##calc wool value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
     ###create mask which is the periods where shearing occurs
@@ -6837,10 +6867,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_c1 = np.array(['c1_%d' % i for i in range(len_c1)])
     keys_d = pinp.sheep['i_d_idx'][mask_d_offs]
-    keys_g0 = sfun.f1_g2g(pinp.sheep['i_g_idx_sire'],'sire')
-    keys_g1 = sfun.f1_g2g(pinp.sheep['i_g_idx_dams'],'dams')
+    keys_g0 = pinp.sheep['i_g_idx_sire'][mask_sire_inc_g0]
+    keys_g1 = pinp.sheep['i_g_idx_dams'][mask_dams_inc_g1]
     keys_g2 = keys_g1
-    keys_g3 = sfun.f1_g2g(pinp.sheep['i_g_idx_offs'],'offs')
+    keys_g3 = pinp.sheep['i_g_idx_offs'][mask_offs_inc_g3]
     keys_f = np.array(['nv{0}' .format(i) for i in range(len_f)])
     keys_h1 = np.asarray(uinp.sheep['i_h1_idx'])
     keys_i = pinp.sheep['i_i_idx'][pinp.sheep['i_mask_i']]
