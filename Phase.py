@@ -231,7 +231,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     as a function of yield and harvest index. Yield is the input rather than biomass because that is easier to
     relate to and thus determine inputs. However, it is converted to biomass so that the optimisation has
     the option to tactically deviate from the overall strategy. For example, the model may select a barley phase at the
-    beginning of the year with the expectation of harvesting it for salable grain. However, if a
+    beginning of the year with the expectation of harvesting it for saleable grain. However, if a
     big frost event is occurred the model may choose to either cut the crop for hay or use it as fodder. To
     allow these tactics to be represented requires a common starting point which has been defined as phase biomass.
     Biomass can either be harvested for grain, cut for hay or grazed as fodder.
@@ -306,7 +306,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
         return biomass_rkl_p7z.stack([1,0])
 
 def f_biomass2product():
-    '''Relationship between biomass and salable product. Where salable product is either grain or hay.
+    '''Relationship between biomass and saleable product. Where saleable product is either grain or hay.
 
     Biomass is relate to product through harvest index, harvest proportion and biomass scalar.
     Harvest index is the amount of the target product (grain or hay) per unit of biomass at harvest (which is the unit of the biomass DV).

@@ -60,10 +60,8 @@ Parameters that define the rotation phases.
     * of years of continuous tedera before it needs resowing (tedera_resowing = 10)
     * of Lucerne before it needs to be resown (lucerne_resowing = 5)
 
-    Length of rotation phase = maximum(resow_a, resow_u, resow_t, use_n, canola disease, pulse disease, spraytopping, manip_sprayt) + 1
-    Year to start numbering the legume pasture landuses = phase_length - use_n + 1
-    Maximum landuse number for legume pasture = build_n
-
+    Length of rotation phase = maximum(resow_a, resow_u, resow_t, build_n, use_n, deplete_seed, canola disease,
+    pulse disease, spraytop, manip_sprayt) + 1
 
 The following rules are implemented to remove illogical rotation phases:
 
@@ -97,6 +95,8 @@ The following rules are implemented to remove unprofitable rotation phases:
     #. Only a single pasture variety in a rotation phase.
 
     #. No dry seeding after pasture because of excessive weed burden.
+
+    #. No saleable crop after fodder (due to excessive weed burden).
 
 
 
@@ -189,9 +189,11 @@ def f_rot_gen():
         phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['xr','ur']))]
         ###no dry seeding after pasture
         phases = phases[~(np.isin(phases[:,i], ['AR', 'SR','A','M','S','U','X','T','J'])&np.isin(phases[:,i+1], ['bd','wd','rd','zd']))]
+        ###no saleable crop after strategic fodder
+        phases = phases[~(np.isin(phases[:,i], ['OF'])&np.isin(phases[:,i+1], ['b', 'h', 'o', 'w', 'f', 'l', 'z','r','bd','wd','rd','zd']))]
         ###can't have 1yr of perennial unless it is the earliest yr in the history
         if i == 0:
-            pass #first yr of rotation can be a perennial because
+            pass #first yr of rotation can be a perennial because a  perennial could have been before it
         else:
             try: #used for conditions that are concerned with more than two yrs
                 phases = phases[~(np.isin(phases[:,i], ['T','J'])&~(np.isin(phases[:,i-1], ['T','J', 'Y']) + np.isin(phases[:,i+1], ['T','J','t','j'])))]
