@@ -316,7 +316,7 @@ def f_property_inp_sa():
     sheep['a_c2_c0'] = fun.f_sa(sheep['a_c2_c0'], sen.sav['genotype'],5)
     sheep['i_scan_og1'] = fun.f_sa(sheep['i_scan_og1'], sen.sav['scan_og1'],5)
     sheep['i_dry_sales_forced_o'] = fun.f_sa(sheep['i_dry_sales_forced_o'], sen.sav['bnd_drys_sold_o'],5)
-    sheep['i_dry_retained_forced'] = fun.f_sa(sheep['i_dry_retained_forced'], sen.sav['bnd_drys_retained_o'],5)
+    sheep['i_dry_retained_forced'] = fun.f_sa(np.array([sheep['i_dry_retained_forced']]), sen.sav['bnd_drys_retained_o'],5)
     sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.sav['r1_izg1'],5)
     sheep['ia_r2_k0ig1'] = fun.f_sa(sheep['ia_r2_k0ig1'], sen.sav['r2_ik0g1'],5)
     sheep['ia_r2_sk2ig1'] = fun.f_sa(sheep['ia_r2_sk2ig1'], sen.sav['r2_isk2g1'],5)
