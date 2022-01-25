@@ -396,10 +396,24 @@ def f1_feedsupply(feedsupplyw_ta1e1b1nwzida0e0b0xyg, confinementw_ta1e1b1nwzida0
     mei = feedsupplyw_ta1e1b1nwzida0e0b0xyg * pi_a1e1b1nwzida0e0b0xyg + mp2 #add mp2 because pi doesnt include milk.
 
     ##interp to calc foo, dmd and supp that correspond with given feedsupply
-    axis = sinp.stock['i_n_pos']
-    foo = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,foo_a1e1b1j1wzida0e0b0xyg,axis)
-    dmd = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,dmd_a1e1b1j1wzida0e0b0xyg,axis)
-    supp = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,supp_a1e1b1j1wzida0e0b0xyg,axis)
+    ## this only works if nv, foo, dmd and supp have no active axis except j1 and feedsupply has a singleton j1/n axis.
+    ###test that criteria above are met
+    j1_pos = sinp.stock['i_n_pos']
+    nv_test = len(nv_a1e1b1j1wzida0e0b0xyg.squeeze())==nv_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
+    foo_test = len(foo_a1e1b1j1wzida0e0b0xyg.squeeze())==foo_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
+    dmd_test = len(dmd_a1e1b1j1wzida0e0b0xyg.squeeze())==dmd_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
+    supp_test = len(supp_a1e1b1j1wzida0e0b0xyg.squeeze())==supp_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
+    if not(nv_test and foo_test and dmd_test and supp_test):
+        raise ValueError('Axis error in feed extrapolation: j1 can be the only active axis')
+    ###interp
+    foo = np.interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg.ravel(),nv_a1e1b1j1wzida0e0b0xyg.squeeze(),foo_a1e1b1j1wzida0e0b0xyg.squeeze()).reshape(feedsupplyw_ta1e1b1nwzida0e0b0xyg.shape)
+    dmd = np.interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg.ravel(),nv_a1e1b1j1wzida0e0b0xyg.squeeze(),dmd_a1e1b1j1wzida0e0b0xyg.squeeze()).reshape(feedsupplyw_ta1e1b1nwzida0e0b0xyg.shape)
+    supp = np.interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg.ravel(),nv_a1e1b1j1wzida0e0b0xyg.squeeze(),supp_a1e1b1j1wzida0e0b0xyg.squeeze()).reshape(feedsupplyw_ta1e1b1nwzida0e0b0xyg.shape)
+    #old method - 36% slower due to looping
+    # axis = sinp.stock['i_n_pos']
+    # foo = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,foo_a1e1b1j1wzida0e0b0xyg,axis)
+    # dmd = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,dmd_a1e1b1j1wzida0e0b0xyg,axis)
+    # supp = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,supp_a1e1b1j1wzida0e0b0xyg,axis)
 
     ##if confinement then no pasture
     foo = fun.f_update(foo,0,confinementw_ta1e1b1nwzida0e0b0xyg)
@@ -444,9 +458,9 @@ def f1_feedsupply_adjust(attempts,feedsupply,itn):
     ###feedsupply with positive error that is closest to 0 - this is a little complex because applying a max function to a masked array
     mask_attempts= np.ma.masked_array(attempts[...,1],attempts[...,1]<0) #np.ma has a true and false the other way around (eg false means keep data) therefore the <> sign is opposite to what you want
     pos_bool=np.ma.getdata(mask_attempts.min(axis=-1,keepdims=True)==attempts[...,1]) #returns a maks that states the error that is negative but closest to 0
-    pos_bool = pos_bool * binary_mask[...,na] #this just makes sure the pos mask only has a true in the same place as the neg mask. 
+    pos_bool = pos_bool * binary_mask[...,na] #this just makes sure the pos mask only has a true in the same place as the neg mask.
     ##calc feedsupply
-    feedsupply[binary_mask] = (attempts[...,0][neg_bool] + attempts[...,0][pos_bool])/2    
+    feedsupply[binary_mask] = (attempts[...,0][neg_bool] + attempts[...,0][pos_bool])/2
     ##calc feedsupply using interpolation
     ###first determine the slope, slope is always positive ie as feedsupply increases error increase because error = lwc - target and more feed means higher lwc.
     if itn==0:
@@ -1269,7 +1283,7 @@ def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_b
     mort = fun.f_sa(mort, sap_mortalitye, sa_type = 1, value_min = 0)
     return mort
 
-    
+
 def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_is_birth, chill_index_p1, nfoet_b1
                            , rev_trait_value, sap_mortalityp, saa_mortalityx):
     '''Progeny losses due to large progeny or slow birth process (dystocia)

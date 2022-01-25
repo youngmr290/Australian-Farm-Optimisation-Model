@@ -58,12 +58,12 @@ Variable v_grain_credit
 Variable v_biomass_debit
 Variable v_biomass_credit
 Variable v_seeding_machdays
-   ('q0', 's0', 'typ', 'P01', 'b', 'lmu3') 3.1710551106118703
-   ('q0', 's0', 'typ', 'P01', 'b', 'lmu4') 0.8538251107720788
    ('q0', 's0', 'typ', 'P01', 'w', 'lmu3') 0.8100125386843222
    ('q0', 's0', 'typ', 'P01', 'w', 'lmu4') 0.8538251107720787
    ('q0', 's0', 'typ', 'P01', 'z', 'lmu3') 0.8100125386843222
    ('q0', 's0', 'typ', 'P01', 'z', 'lmu4') 0.8538251107720788
+   ('q0', 's0', 'typ', 'P01', 'b', 'lmu3') 3.1710551106118703
+   ('q0', 's0', 'typ', 'P01', 'b', 'lmu4') 0.8538251107720788
 Variable v_contractseeding_ha
 Variable v_harv_hours
    ('q0', 's0', 'typ', 'P11', 'z') 38.33066462849382
