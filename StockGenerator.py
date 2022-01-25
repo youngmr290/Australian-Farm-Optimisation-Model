@@ -7427,6 +7427,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                             , keys_a, keys_x, keys_g2],'prog_keys_qsk3k5twzia0xg2')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d
                                             , keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g2],'prog_keys_qsk3k5twzida0e0b0xyg2')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p7, keys_t2, keys_lw_prog, keys_z, keys_i
+                                            , keys_a, keys_x, keys_g2],'prog_keys_qsk3k5p7twzia0xg2')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
                                             , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tvnwziaxyg3')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i

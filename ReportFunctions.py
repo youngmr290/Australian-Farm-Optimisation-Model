@@ -1386,7 +1386,7 @@ def f_numpy2df_error(prod, weights, arith_axis, index, cols):
     if arith_occur and arith_error:  # if arith is happening and there is an error in selected axis
         raise exc.ArithError('''Arith error: can't preform operation along an axis that is going to be reported as the index or col''')
 
-    ##error handle 2: can report an axis as index and col
+    ##error handle 2: can't report an axis as index and col
     axis_error = any(col in index for col in cols)
     if axis_error:  # if cols and index have any overlapping axis.
         raise exc.ArithError('''Arith error: can't have the same axis in index and cols''')
