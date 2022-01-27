@@ -31,7 +31,7 @@ def f1_boundarypyomo_local(params, model):
 
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
-    rot_lobound_inc = False #controls rot bound
+    rot_lobound_inc = sen.sav['bnd_rotn_inc'] != '-'  #fun.f_sa(False, sen.sav['bnd_rotn_inc'], 5)  #controls rot bound
     sup_lobound_inc = False #controls sup feed bound
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_dam_inc'], 5) #lower bound dams
     dams_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_dam_inc'], 5) #upper bound on dams
@@ -69,12 +69,13 @@ def f1_boundarypyomo_local(params, model):
             arrays = [model.s_phases, model.s_lmus]
             index_rl = fun.cartesian_product_simple_transpose(arrays)
             ###build array
-            rot_lobound_rl = np.zeros((len(model.s_phases), len(model.s_lmus)))
+            #rot_lobound_rl = np.zeros((len(model.s_phases), len(model.s_lmus)))
             ###set the bound
+            rot_lobound_rl = fun.f_sa(np.array([0],dtype=float), sen.sav['rot_lobound_rl'], 5)
             # rot_lobound_rl[4,0] = 70 #fodder lmu2
-            rot_lobound_rl[0,0] = 150 #AAAAAa
-            rot_lobound_rl[0,1] = 1230 #AAAAAa
-            rot_lobound_rl[0,2] = 750 #AAAAAa
+            # rot_lobound_rl[0,0] = 150 #AAAAAa
+            # rot_lobound_rl[0,1] = 1230 #AAAAAa
+            # rot_lobound_rl[0,2] = 750 #AAAAAa
             # rot_lobound_rl[2,1] = 570
             # rot_lobound_rl[2,2] = 20
             # rot_lobound_rl[9,1] = 11

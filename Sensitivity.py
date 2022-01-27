@@ -32,7 +32,10 @@ len_k2 = pinp.sheep['i_k2_len']
 len_k3 = pinp.sheep['i_k3_len']
 len_k4 = pinp.sheep['i_k4_len']
 len_k5 = pinp.sheep['i_k5_len']
+lmu_mask = pinp.general['i_lmu_area'] > 0
+len_l = len(pinp.general['i_lmu_idx'][lmu_mask])
 len_o = pinp.sheep['i_o_len']
+len_r = len(sinp.f_phases())
 len_s = pinp.sheep['i_s_len'] #s = shear
 len_t1 = pinp.sheep['i_n_dam_sales'] + len_g0
 len_t3 = pinp.sheep['i_t3_len']
@@ -178,22 +181,23 @@ sav_inp['bnd_drys_retained_o'] = np.full(pinp.sheep['i_dry_retained_forced_o'].s
 sav_inp['bnd_sale_twice_dry_inc'] = '-'   #SA to include the the bound which forces twice dry dams to be sold
 sav_inp['bnd_twice_dry_propn'] = '-'   #SA to change twice dry dam proportion
 sav_inp['bnd_lo_dam_inc'] = '-'   #control if dam lower bound is on.
-sav_inp['bnd_lo_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1, ), '-', dtype=object)   #min number of dams
-sav_inp['bnd_lo_dams_tVg1'] = np.full((len_t1,) + (len_V,) + (len_g1, ), '-', dtype=object)   #min number of dams
+sav_inp['bnd_lo_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1,), '-', dtype=object)   #min number of dams
+sav_inp['bnd_lo_dams_tVg1'] = np.full((len_t1,) + (len_V,) + (len_g1,), '-', dtype=object)   #min number of dams
 sav_inp['bnd_up_dam_inc'] = '-'   #control if dam upper bound is on.
-sav_inp['bnd_up_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1, ), '-', dtype=object)   #max number of dams
-sav_inp['bnd_up_dams_tVg1'] = np.full((len_t1,) + (len_V,) + (len_g1, ), '-', dtype=object)   #max number of dams
+sav_inp['bnd_up_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1,), '-', dtype=object)   #max number of dams
+sav_inp['bnd_up_dams_tVg1'] = np.full((len_t1,) + (len_V,) + (len_g1,), '-', dtype=object)   #max number of dams
 sav_inp['bnd_total_dams_scanned'] = '-'   #total dams scanned (summed over all dvps) - this also controls if bound is on.
 sav_inp['bnd_propn_dam5_retained'] = '-'   #propn of 5yo dams retained - this also controls if bound is on.
 sav_inp['bnd_lo_off_inc'] = '-'   #control if off lower bound is on.
-sav_inp['bnd_lo_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3, ), '-', dtype=object)   #min number of offs
+sav_inp['bnd_lo_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #min number of offs
 sav_inp['bnd_up_off_inc'] = '-'   #control if off upper bound is on.
-sav_inp['bnd_up_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3, ), '-', dtype=object)   #max number of offs
+sav_inp['bnd_up_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #max number of offs
 sav_inp['bnd_sr_t'] = np.full(pinp.sheep['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
 sav_inp['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
 sav_inp['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
 sav_inp['bnd_min_sale_age_female_g1'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a dam can be sold - BBT offspring can be sold but BBT dams can't (because they are BB)
 sav_inp['bnd_min_sale_age_female_dg3'] = np.full((len_d,) + (len_g3,), '-', dtype=object)   #SA to set min age a female can be sold - used to bound prog & offs
+sav_inp['rot_lobound_rl'] = np.full((len_r,) + (len_l,), '-', dtype=object)
 
 ##pasture
 sav_inp['pas_inc'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA value for pastures included mask
