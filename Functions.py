@@ -702,7 +702,12 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
             value  = np.maximum(value_min, value * (1 + sa))
     ##Type 2 is saa (sensitivity addition)
     elif sa_type == 2:
-         value  = np.maximum(value_min, value + sa)
+        try:  #in case array is datearray
+            value  = np.maximum(value_min, value + sa)
+        except TypeError:
+            #todo might be a way to handle the minimum value rather than to ignore
+            value = value + sa
+
     ##Type 3 is sat (sensitivity target, sa=1 returns the target, sa=-1 returns value that is same distance but opposite direction to target)
     elif sa_type == 3:
         if pandas:
@@ -877,7 +882,10 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav, sam_inp, saa_inp, 
             elif dic == 'sap':
                 sap[key1][indices] = (1 + sap[key1][indices]) * (1 + value) - 1  # if there are multiple instances of the same SA in exp.xlsx they accumulate
             elif dic == 'saa':
-                saa[key1][indices] = saa[key1][indices] + value  # if there are multiple instances of the same SA in exp.xlsx they accumulate
+                try:
+                    saa[key1][indices] = saa[key1][indices] + value  # if there are multiple instances of the same SA in exp.xlsx they accumulate
+                except:
+                    saa[key1][indices] = saa[key1][indices] + value.astype('timedelta64[D]')
             elif dic == 'sat':
                 sat[key1][indices] = value
             elif dic == 'sar':
