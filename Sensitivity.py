@@ -126,7 +126,7 @@ saa_inp['r1_izg1'] = np.zeros(pinp.sheep['ia_r1_zig1'].shape, dtype=int)   #SA t
 saa_inp['r1_izg3'] = np.zeros(pinp.sheep['ia_r1_zig3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
 saa_inp['r2_isk2g1'] = np.zeros(pinp.sheep['ia_r2_isk2g1'].shape, dtype=int)   #SA to change the base feed option selected for dams
 saa_inp['r2_ik5g3'] = np.zeros(pinp.sheep['ia_r2_ik5g3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
-saa_inp['date_born1st_iog2'] = np.zeros(pinp.sheep['i_date_born1st_iog2'].shape, dtype='timedelta64[D]')  #SA to adjust lambing date (used for ewe lambs).
+saa_inp['date_born1st_iog2'] = np.zeros(pinp.sheep['i_date_born1st_iog2'].shape, dtype=int)  #SA to adjust lambing date (used for ewe lambs).
 saa_inp['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype=np.float64)  #SA value for feedsupply.
 saa_inp['feedsupply_adj_r2p'] = np.zeros(pinp.feedsupply['i_feedsupply_adj_options_r2p'].shape, dtype=np.float64)  #SA value for feedsupply adjustment.
 

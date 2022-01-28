@@ -139,7 +139,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##o/d mask - if dob is after the end of the sim then it is masked out -  the mask is created before the date of birth is adjusted to the start of a period however it is adjusted to the start of the next period so the mask won't cut out a birth event that actually would occur, additionally this is the birth of the first however the matrix sees the birth of average animal which is also later therefore if anything the mask will leave in unnecessary o slices
     date_born1st_oa1e1b1nwzida0e0b0xyg2 = fun.f_expand(pinp.sheep['i_date_born1st_iog2'], i_pos, right_pos=g_pos, swap=True,
                                                       left_pos2=p_pos,right_pos2=i_pos, condition=mask_yatf_inc_g2, axis=g_pos,
-                                                      condition2=pinp.sheep['i_mask_i'], axis2=i_pos).astype('datetime64[D]')
+                                                      condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
     mask_o_dams = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_d_offs = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_x = pinp.sheep['i_gender_propn_x']>0
@@ -522,7 +522,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     date_born1st_oa1e1b1nwzida0e0b0xyg2 = date_born1st_oa1e1b1nwzida0e0b0xyg2[mask_o_dams,...] #input read in in the mask section
     date_born1st_ida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_date_born1st_idg3'], d_pos, right_pos=g_pos,
                                             condition=mask_offs_inc_g3, axis=g_pos, condition2=pinp.sheep['i_mask_i']
-                                           , axis2=i_pos, condition3=mask_d_offs, axis3=d_pos).astype('datetime64[D]')
+                                           , axis2=i_pos, condition3=mask_d_offs, axis3=d_pos)
     date_born1st_ida0e0b0xyg3[:,len_k3-1:,...] = date_born1st_ida0e0b0xyg3[:,len_k3-1:len_k3,...] #for animals in the same d cluster date born must be the same (so that the dvp and fvp dates are the same for all animals that get clustered)
 
     ##mating
