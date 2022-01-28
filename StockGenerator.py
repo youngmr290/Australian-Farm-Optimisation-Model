@@ -7315,7 +7315,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1 = np.roll(prop_dams_mated_oa1e1b1nwzida0e0b0xyg1, shift=1, axis=0)
     prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
     prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
-    prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 * (prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1>1)
+    prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 * np.minimum(1,prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1)
     ###create param
     arrays = [keys_v1, keys_i, keys_y1, keys_g1]
     index_viyg1 = fun.cartesian_product_simple_transpose(arrays)
