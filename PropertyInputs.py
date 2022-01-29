@@ -322,7 +322,6 @@ def f_property_inp_sa():
     ### If sale of drys is forced then proportion of drys retained is 0, so need to convert a True in the SAV to 0.
     bnd_drys_sold_o = sen.sav['bnd_drys_sold_o'].copy()
     bnd_drys_sold_o[bnd_drys_sold_o == True] = '0'
-#    bnd_drys_sold_o = fun.fupdate(sen.sav['bnd_drys_sold_o'], 0, sen.sav['bnd_drys_sold_o']==True)
     sheep['i_drys_retained_scan_est_o'] = fun.f_sa(sheep['i_drys_retained_scan_est_o'], bnd_drys_sold_o,5)
     ### If retain drys is forced (True) then proportion of drys retained is 1 so can use the SAV[] (True == 1)
     sheep['i_drys_retained_scan_est_o'] = fun.f_sa(sheep['i_drys_retained_scan_est_o'], sen.sav['bnd_drys_retained_o'],5)
