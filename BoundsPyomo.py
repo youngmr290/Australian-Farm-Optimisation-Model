@@ -31,7 +31,7 @@ def f1_boundarypyomo_local(params, model):
 
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
-    rot_lobound_inc = sen.sav['bnd_rotn_inc'] != '-'  #fun.f_sa(False, sen.sav['bnd_rotn_inc'], 5)  #controls rot bound
+    rot_lobound_inc = fun.f_sa(False, sen.sav['bnd_rotn_inc'], 5)  #controls rot bound
     sup_lobound_inc = False #controls sup feed bound
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_dam_inc'], 5) #lower bound dams
     dams_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_dam_inc'], 5) #upper bound on dams
@@ -44,7 +44,7 @@ def f1_boundarypyomo_local(params, model):
     bnd_dry_retained_inc = fun.f_sa(False, np.any(pinp.sheep['i_dry_retained_forced_o']), 5) #force the retention of drys in t[0] (t[1] is handled in the generator.
     sr_bound_inc = fun.f_sa(False, sen.sav['bnd_sr_inc'], 5) #controls sr bound
     total_pasture_bound_inc = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
-    landuse_bound_inc = False #bound on area of each landuse
+    landuse_bound_inc = False #bound on area of each landuse (which is the sum of all the phases for that landuse)
 
 
     if bounds_inc:

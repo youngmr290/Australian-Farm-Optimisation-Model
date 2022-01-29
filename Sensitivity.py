@@ -176,6 +176,8 @@ sav_inp['grain_percentile'] = '-'  #grain price percentile
 ##bounds
 sav_inp['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
 sav_inp['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
+sav_inp['bnd_rotn_inc'] = '-'   #SA to turn on the phase area bounds
+sav_inp['bnd_sr_inc'] = '-'   #SA to turn on the stocking rate bounds
 sav_inp['bnd_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated
 sav_inp['est_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #estimated proportion of dams mated - used when bnd_propn is default "-"
 sav_inp['bnd_drys_sold_o'] = np.full(pinp.sheep['i_dry_sales_forced_o'].shape, '-', dtype=object)   #SA to force drys to be sold

@@ -319,9 +319,9 @@ def f_property_inp_sa():
     sheep['i_dry_retained_forced_o'] = fun.f_sa(sheep['i_dry_retained_forced_o'], sen.sav['bnd_drys_retained_o'],5)
     ### The expected proportion retained at scanning or birth is a 3-step calc. Update with own SAV and then override if either of the dry management options is forced
     sheep['i_drys_retained_scan_est_o'] = fun.f_sa(sheep['i_drys_retained_scan_est_o'], sen.sav['est_drys_retained_scan_o'], 5)
-    ### If sale of drys is forced then proportion of drys retained is 0, so need to convert a True in the SAV to 0.
+    ### If sale of drys is forced then proportion of drys retained is 0, so need to convert a True in the SAV to False (which converts to 0).
     bnd_drys_sold_o = sen.sav['bnd_drys_sold_o'].copy()
-    bnd_drys_sold_o[bnd_drys_sold_o == True] = '0'
+    bnd_drys_sold_o[bnd_drys_sold_o == True] = False  # '0'
     sheep['i_drys_retained_scan_est_o'] = fun.f_sa(sheep['i_drys_retained_scan_est_o'], bnd_drys_sold_o,5)
     ### If retain drys is forced (True) then proportion of drys retained is 1 so can use the SAV[] (True == 1)
     sheep['i_drys_retained_scan_est_o'] = fun.f_sa(sheep['i_drys_retained_scan_est_o'], sen.sav['bnd_drys_retained_o'],5)

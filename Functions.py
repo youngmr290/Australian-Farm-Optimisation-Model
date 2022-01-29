@@ -871,7 +871,8 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav, sam_inp, saa_inp, 
             elif dic == 'sar':
                 sar[(key1,key2)][indices] = value   # last entry in exp.xlsx is used, could be changed to accumulate
             elif dic == 'sav':
-                sav[(key1,key2)][indices] = value   # last entry in exp.xlsx is used
+                if value != "-":
+                    sav[(key1,key2)][indices] = value   # last entry in exp.xlsx that is not "-" is used
 
         ##checks if just slice exists
         elif not ('Unnamed' in indx  or 'nan' in indx):
@@ -887,7 +888,8 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav, sam_inp, saa_inp, 
             elif dic == 'sar':
                 sar[key1][indices] = value
             elif dic == 'sav':
-                sav[key1][indices] = value
+                if value != "-":
+                    sav[key1][indices] = value
         ##checks if just key2 exists
         elif not 'Unnamed' in key2:
             if dic == 'sam':
@@ -901,7 +903,8 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav, sam_inp, saa_inp, 
             elif dic == 'sar':
                 sar[(key1, key2)] = value
             elif dic == 'sav':
-                sav[(key1,key2)] = value
+                if value != "-":
+                    sav[(key1,key2)] = value
         ##if just key1 exists
         else:
             if dic == 'sam':
@@ -915,7 +918,8 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav, sam_inp, saa_inp, 
             elif dic == 'sar':
                 sar[key1] = value
             elif dic == 'sav':
-                sav[key1] = value
+                if value != "-":
+                    sav[key1] = value
 
 def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
     '''
