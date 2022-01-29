@@ -1423,7 +1423,7 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
 #######################
 
 def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startseason, mask_min_lw_z, period_is_prejoin=0,
-                         group=None, scan_management=0, gbal=0, stub_lw_idx=np.array(np.nan)):
+                         group=None, scan_management=0, gbal=0, drysretained_scan=1, drysretained_birth=1, stub_lw_idx=np.array(np.nan)):
     '''
     Production is weighted at prejoining across e&b axes and at season start across the z axis.
 
@@ -1449,17 +1449,23 @@ def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_starts
     if np.any(period_is_startseason):
         var_start = f1_season_wa(numbers, var_start, season_tup, mask_min_lw_z, period_is_startseason)
 
-    ##b) Calculate temporary values as if period_is_prejoin
+    ##b) Calculated weighted average of var_start if period_is_prejoin (because the classes from the prior year are re-combined at pre-joining)
+    ### If the dams have been scanned or assessed for gbal then the number of drys is adjusted based on the estimated management
+    ### The adjustment for drys has to be done to the production levels at prejoining rather than to numbers at scan or birth
+    ###because adjusting numbers (although more intuitive) affects the apparent mortality of the drys.
+    ### Note: this is different to the approach taken for the proportion of dams mated that is done in f_end_numbers
+    ###at the beginning of the prejoin DVP which doesn't affect apparent mortality.
     if group==1 and np.any(period_is_prejoin):
         ###inputs
         b1_pos = sinp.stock['i_b1_pos']
         nfoet_b1 = fun.f_expand(sinp.stock['a_nfoet_b1'],b1_pos)
         nyatf_b1 = fun.f_expand(sinp.stock['a_nyatf_b1'],b1_pos)
         ###scale numbers if drys are expected to have been sold at scanning (in the generator we don't know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
-        temp = np.maximum(pinp.sheep['i_drysretained_scan'],np.minimum(1,nfoet_b1)) * numbers
+        ###can't occur at prejoining rather than at scanning & birth
+        temp = np.maximum(drysretained_scan, np.minimum(1, nfoet_b1)) * numbers
         scaled_numbers = fun.f_update(numbers, temp, scan_management >= 1) # only scale numbers if scanning occurs
         ###scale numbers if drys are expected to have been sold at birth (in the generator we don't know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
-        temp = np.maximum(pinp.sheep['i_drysretained_birth'],np.minimum(1,nyatf_b1)) * scaled_numbers
+        temp = np.maximum(drysretained_birth, np.minimum(1, nyatf_b1)) * scaled_numbers
         scaled_numbers = fun.f_update(scaled_numbers,temp, gbal >= 2)  # only scale numbers if differential management
         ###weighted average of e&b axis
         temporary = fun.f_weighted_average(var_start, scaled_numbers, prejoin_tup, keepdims=True, non_zero=True) #gets the weighted average of production in the different seasons
@@ -1659,6 +1665,8 @@ def f1_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf
             mated_propn = np.minimum(1, propn_dams_mated) #maximum value of 1 because default is inf, otherwise propn to be mated.
             ### the number in the NM slice e1[0] is a proportion of the total numbers
             ### need a minimum number to keep nm in pyomo. Want a small number relative to mortality (after allowing for multiple slices getting the small number)
+            ### Scale the numbers based on expected proportion mated so that the weighted average for production reflects expected management
+            ### Note: scaling of numbers for expected management of drys occurs in f1_period_start_prod()
             temporary[:, :, 0:1, 0:1, ...] = np.maximum(0.00001, np.sum(temporary, axis=(sinp.stock['i_e1_pos'], sinp.stock['i_b1_pos']),
                                                                      keepdims=True) * (1 - mated_propn))
             ### the numbers in the other mated slices other than NM get scaled by the proportion mated

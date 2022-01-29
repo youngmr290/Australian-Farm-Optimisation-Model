@@ -317,6 +317,18 @@ def f_property_inp_sa():
     sheep['i_scan_og1'] = fun.f_sa(sheep['i_scan_og1'], sen.sav['scan_og1'],5)
     sheep['i_dry_sales_forced_o'] = fun.f_sa(sheep['i_dry_sales_forced_o'], sen.sav['bnd_drys_sold_o'],5)
     sheep['i_dry_retained_forced_o'] = fun.f_sa(sheep['i_dry_retained_forced_o'], sen.sav['bnd_drys_retained_o'],5)
+    ### The expected proportion retained at scanning or birth is a 3-step calc. Update with own SAV and then override if either of the dry management options is forced
+    sheep['i_drys_retained_scan_est_o'] = fun.f_sa(sheep['i_drys_retained_scan_est_o'], sen.sav['est_drys_retained_scan_o'], 5)
+    ### If sale of drys is forced then proportion of drys retained is 0, so need to convert a True in the SAV to 0.
+    bnd_drys_sold_o = sen.sav['bnd_drys_sold_o'].copy()
+    bnd_drys_sold_o[bnd_drys_sold_o == True] = '0'
+#    bnd_drys_sold_o = fun.fupdate(sen.sav['bnd_drys_sold_o'], 0, sen.sav['bnd_drys_sold_o']==True)
+    sheep['i_drys_retained_scan_est_o'] = fun.f_sa(sheep['i_drys_retained_scan_est_o'], bnd_drys_sold_o,5)
+    ### If retain drys is forced (True) then proportion of drys retained is 1 so can use the SAV[] (True == 1)
+    sheep['i_drys_retained_scan_est_o'] = fun.f_sa(sheep['i_drys_retained_scan_est_o'], sen.sav['bnd_drys_retained_o'],5)
+    sheep['i_drys_retained_birth_est_o'] = fun.f_sa(sheep['i_drys_retained_birth_est_o'], sen.sav['est_drys_retained_birth_o'], 5)
+    sheep['i_drys_retained_birth_est_o'] = fun.f_sa(sheep['i_drys_retained_birth_est_o'], bnd_drys_sold_o,5)
+    sheep['i_drys_retained_birth_est_o'] = fun.f_sa(sheep['i_drys_retained_birth_est_o'], sen.sav['bnd_drys_retained_o'],5)
     sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.sav['r1_izg1'],5)
     sheep['ia_r2_ik0g1'] = fun.f_sa(sheep['ia_r2_ik0g1'], sen.sav['r2_ik0g1'],5)
     sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.sav['r2_isk2g1'],5)
@@ -331,8 +343,8 @@ def f_property_inp_sa():
     sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.saa['r2_isk2g1'], 2).astype('int')
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.saa['r1_izg3'], 2).astype('int')
     sheep['ia_r2_ik5g3'] = fun.f_sa(sheep['ia_r2_ik5g3'], sen.saa['r2_ik5g3'], 2).astype('int')
-    sheep['i_date_born1st_iog2'] = fun.f_sa(sheep['i_date_born1st_iog2'], sen.saa['date_born1st_iog2'].astype('timedelta64[D]'), 2)
-    sheep['i_date_born1st_idg3'] = fun.f_sa(sheep['i_date_born1st_idg3'], sen.saa['date_born1st_iog2'].astype('timedelta64[D]'), 2)
+    sheep['i_date_born1st_iog'] = fun.f_sa(sheep['i_date_born1st_iog2'], sen.saa['date_born1st_iog'].astype('timedelta64[D]'), 2)
+    #sheep['i_date_born1st_idg3'] = fun.f_sa(sheep['i_date_born1st_idg3'], sen.saa['date_born1st_iog'].astype('timedelta64[D]'), 2)
     feedsupply['i_feedsupply_options_r1j2p'] = fun.f_sa(feedsupply['i_feedsupply_options_r1j2p'], sen.saa['feedsupply_r1jp'], 2)
     feedsupply['i_feedsupply_adj_options_r2p'] = fun.f_sa(feedsupply['i_feedsupply_adj_options_r2p'], sen.saa['feedsupply_adj_r2p'], 2)
     ###sat

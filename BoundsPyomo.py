@@ -405,6 +405,7 @@ def f1_boundarypyomo_local(params, model):
             def f_retention_drys(model, q, s, v, z, i, g1):
                 '''Force the model so that the drys can only be sold when the other ewes are sold (essentially forcing the retention of drys).
                    The number of drys sold must be less than the sum of the other k2 slices'''
+                #todo add birth timing to p_prop_dry_dams when gbal is activated
                 if all(model.p_mask_dams['00-0','t0',v,w,g1] for w in model.s_lw_dams)==0 or params['stock']['p_drys_retained'][v]==0:
                     return pe.Constraint.Skip
                 else:
