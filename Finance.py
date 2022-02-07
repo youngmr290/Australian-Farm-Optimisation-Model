@@ -19,7 +19,7 @@ costly operations such as seeding. This is represented by working capital in AFO
 constraint for each expected date when peak debt could occur. The default is to have one peak debt date per enterprise
 just before the date the main income for that enterprise is received. The working capital constraints
 tracks the cumulative cashflow for each enterprise and ensures that the maximum overdraw is below a user specified limit.
-This ensure the model doesnt overdraw an unrealistic/undesired level of capital from the bank.
+This ensure the model doesn't overdraw an unrealistic/undesired level of capital from the bank.
 
 The cumulative cashflow used in the working capital constraint is calculated from cashflow date (a date following the main
 income for an enterprise) to peak debt date (a date when peak debt is expected for an enterprise - typically just
@@ -133,7 +133,7 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     cashflow_date_c0 = fun.f_expand(cashflow_date_c0, left_pos=ndims-1)
     peakdebt_date_c0 = fun.f_expand(peakdebt_date_c0, left_pos=ndims-1)
 
-    ##adjust yr of cashflow occurence so it occurs within the cashflow periods
+    ##adjust yr of cashflow occurrence so it occurs within the cashflow periods
     start_of_cash_c0 = cashflow_date_c0
     end_of_cash_c0 = start_of_cash_c0 + np.timedelta64(364,'D') #use 364 because end date is the day before before the end otherwise can get item that starts on the last day of periods.
     add_yrs_c0 = np.ceil(np.maximum(0,(start_of_cash_c0 - date_incurred).astype('timedelta64[D]').astype(int) / 365))

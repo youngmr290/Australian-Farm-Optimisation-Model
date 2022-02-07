@@ -99,7 +99,7 @@ def f1_paspyomo_local(params, model):
 
     model.p_dry_transfer_req_t = pe.Param(model.s_feed_periods, model.s_season_types, model.s_pastures,
                                           initialize=params['p_dry_transfer_req_t_p6zt'], default=0, mutable=False,
-                                          doc='quantity of dry feed required to transfer a tonne of dry feed to the following period (this parameter is always 1000 unless dry feed doesnt exist)')
+                                          doc='quantity of dry feed required to transfer a tonne of dry feed to the following period (this parameter is always 1000 unless dry feed does not exist)')
 
     model.p_dry_removal_t = pe.Param(model.s_feed_periods, model.s_season_types, model.s_pastures, initialize=params['p_dry_removal_t_p6zt'],
                                      default=0, doc='quantity of dry feed removed for sheep to consume 1t, accounts for trampling')

@@ -196,7 +196,7 @@ residual soil moisture from summer rainfall.
 Fodder crops
 ^^^^^^^^^^^^
 In adverse seasons where either livestock feed is short or crops are frosted or are not worthy of harvest,
-salable crops can be turned to fodder. I.e. instead of harvesting a crop it is grazed by livestock as a good
+saleable crops can be turned to fodder. I.e. instead of harvesting a crop it is grazed by livestock as a good
 source of summer feed.
 
 Bale crops
@@ -206,7 +206,7 @@ This may occur in adverse seasons where either livestock feed is short or crops 
 
 Winter crop grazing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Salable crops can be grazed early in the growing season with little yield penalties. This can provide
+Saleable crops can be grazed early in the growing season with little yield penalties. This can provide
 additional feed in seasons with a slow start.
 
 Labour supply

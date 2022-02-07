@@ -123,7 +123,8 @@ for row in range(len(exp_data)):
     run+=1
 
     ##update sensitivity values
-    fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
+    fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav
+                     ,sen.sam_inp,sen.saa_inp,sen.sap_inp,sen.sar_inp,sen.sat_inp,sen.sav_inp)
 
     ##call sa functions - assigns sa variables to relevant inputs
     sinp.f_structural_inp_sa()

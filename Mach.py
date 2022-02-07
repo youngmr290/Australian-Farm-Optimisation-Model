@@ -89,7 +89,7 @@ def sup_mach_cost():
         property using the stocking rate. Or maybe it could be calculated more like the labour required.
 
     '''
-    sup_cost=uinp.mach[pinp.mach['option']]['sup_feed'].copy() #need this so it doesnt alter inputs
+    sup_cost=uinp.mach[pinp.mach['option']]['sup_feed'].copy() #need this so it doesn't alter inputs
     ##add fuel cost
     sup_cost['litres']=sup_cost['litres'] * fuel_price()
     ##sum the cost of r&m and fuel - note that rm is in the sup_cost df
@@ -465,7 +465,7 @@ def f_sowing_timeliness_penalty():
     #     wet_seeding_penalty_k_z = wet_seeding_penalty_k_z.mul(proportion_grain_harv_k>0, axis=0)
 
     ##convert from yield penalty to biomass penalty
-    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harves s2 slice because yield penalty is inputted as a harvestable grain
+    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield penalty is inputted as the harvestable grain
     harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
     wet_seeding_penalty_k_z = wet_seeding_penalty_k_z.div(harvest_index_k, axis=0)
 
@@ -1010,7 +1010,7 @@ def f_total_clearing_value():
     seed_value = f_seeding_gear_clearing_value()
     other_value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'remaining allocation'])
     total_clearing_value = harv_value + seed_value + other_value
-    ##all is incurred in the last p7 period (although it could occur in any period it doesnt make a difference)
+    ##all is incurred in the last p7 period (although it could occur in any period it doesn't make a difference)
     keys_p7 = per.f_season_periods(keys=True)
     total_clearing_value = pd.Series(total_clearing_value,index=keys_p7[-1:])
     return total_clearing_value

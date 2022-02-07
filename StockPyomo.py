@@ -366,10 +366,10 @@ def f1_stockpyomo_local(params, model):
 '''pyomo summary:
         - if a set has a 9 on the end of it, it is a special constraint set. And it is used to link with a decision variable set (the corresponding letter without 9 eg g? and g9). The
           set without a 9 must be summed.
-        - if a given set doesnt have a corresponding 9 set, then you have two options
+        - if a given set doesn't have a corresponding 9 set, then you have two options
             1. transfer from one decision variable to another 1:1 (or at another ratio determined be the param - but it means that it transfers to the same set eg x1_dams transfers to x1_prog)
-            2. treat all decision variable in a set the same. Done by summing. eg the npw provided by each dam t slice can be treated the same because it doesnt make a difference
-               if the progeny came from a dam that gets sold vs retained. (for most of the livestock it has been built in a way that doesnt need summing except for the sets which have a corresponding 9 set).
+            2. treat all decision variable in a set the same. Done by summing. eg the npw provided by each dam t slice can be treated the same because it doesn't make a difference
+               if the progeny came from a dam that gets sold vs retained. (for most of the livestock it has been built in a way that doesn't need summing except for the sets which have a corresponding 9 set).
 
 speed info:
 - constraint.skip is fast, the trick is designing the code efficiently so that is knows when to skip.
@@ -400,14 +400,14 @@ def f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9
         if np.any(params['numbers_req_numpyversion_k3k5vw8zixg3w9'][t_k3,t_k5,t_v3,:,t_z,t_i,t_x,t_g3,t_w9]) \
            and pe.value(model.p_mask_childz_within_offs[k3,v3,z9,x,g3])\
            and pe.value(model.p_wyear_inc_qs[q,s]):
-            ###note: dont need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
+            ###note: don't need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
             ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
             return sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w8,z9,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]
                        - sum(model.v_offs[q,s,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
                           * model.p_parentz_provwithin_offs[k3,v3_prev,z8,x,g3,z9] for z8 in model.s_season_types)
                        for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
                        if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
-                       or pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z9,i,a,x,y3,g3,w9]) #doesnt need to use z8 because in the within constraint because z only provides to itsself and children with the same w patten.
+                       or pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z9,i,a,x,y3,g3,w9]) #doesn't need to use z8 because in the within constraint because z only provides to itsself and children with the same w patten.
                        ) <=0 #need to use both in the if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
         else:
             return pe.Constraint.Skip
@@ -438,7 +438,7 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
         if np.any(params['numbers_req_numpyversion_k3k5vw8zixg3w9'][t_k3,t_k5,t_v3,:,t_z,t_i,t_x,t_g3,t_w9]) \
            and pe.value(model.p_mask_childz_between_offs[k3,v3,z9,x,g3]) \
            and pe.value(model.p_wyear_inc_qs[q,s9]):
-            ###note: dont need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
+            ###note: don't need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
             ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
             return sum(model.v_offs[q,s9,k3,k5,t3,v3,n3,w8,z9,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]
                        - sum(model.v_offs[q_prev,s8,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
@@ -482,7 +482,7 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
            and any(pe.value(model.p_mask_childz_within_dams[k28,v1,z9,g1]) for k28 in model.s_k2_birth_dams for g1 in model.s_groups_dams)\
            and pe.value(model.p_wyear_inc_qs[q,s]):
 
-            ###note: dont need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
+            ###note: don't need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
             ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
             return sum(model.v_dams[q,s,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
                        - model.v_dams[q,s,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
@@ -491,7 +491,7 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
                        for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
                        for w8 in model.s_lw_dams for g1 in model.s_groups_dams
                        if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1,g9, w9]) != 0
-                       or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z9, i, y1, g1, g9, w9]) #doesnt need to use z8 because in the within constraint because z only provides to itsself and children with the same w patten.
+                       or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z9, i, y1, g1, g9, w9]) #doesn't need to use z8 because in the within constraint because z only provides to itsself and children with the same w patten.
                        or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
                        ) <=0 #need to use both in the if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
         else:
@@ -529,7 +529,7 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
         if np.any(params['numbers_req_numpyversion_k2k2tva1nw8ziyg1g9w9'][:,t_k29,:,t_v1,t_a,:,:,t_z,t_i,t_y1,:,t_g9,t_w9])\
            and any(pe.value(model.p_mask_childz_between_dams[k28,v1,z9,g1]) for k28 in model.s_k2_birth_dams for g1 in model.s_groups_dams)\
            and pe.value(model.p_wyear_inc_qs[q,s9]):
-            ###note: dont need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
+            ###note: don't need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
             ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
             return sum(model.v_dams[q,s9,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
                        - model.v_dams[q,s9,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]

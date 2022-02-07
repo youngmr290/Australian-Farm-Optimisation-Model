@@ -77,7 +77,7 @@ def f_period_dates(start, length):
     perioddate = start
     #appends start date to list
     dates.append(perioddate)
-    #loop used to append the rest of the seeding dates to list, doesnt include last seed period length because i only want start dates of seed periods
+    #loop used to append the rest of the seeding dates to list, doesn't include last seed period length because i only want start dates of seed periods
     for i in length[:-1]:
         perioddate += datetime.timedelta(days = i.astype(np.float64)) #for some reason the days must be a float64 otherwise you get an error (timedelta is seems only to be compatible with float64)
         dates.append(perioddate)

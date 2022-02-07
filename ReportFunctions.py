@@ -365,7 +365,7 @@ def f_area_summary(lp_vars, r_vals, option):
     ##all rotations by lmu
     rot_area_qszr_l = rot_area_qszrl.unstack()
     if option == 0:
-        return rot_area_qszr_l.round(0)
+        return rot_area_qszr_l.round(2)
 
     ###pasture area
     all_pas = r_vals['rot']['all_pastures']  # landuse sets
@@ -436,7 +436,7 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     seeding_cost_zp5lkqs_p7 = seeding_cost_zp5l_p7.reindex(seeding_ha_zp5lkqs.index, axis=0)
     seeding_cost_own_zkqs_p7 = seeding_cost_zp5lkqs_p7.mul(seeding_ha_zp5lkqs, axis=0).groupby(axis=0, level=(0,3,4,5)).sum()  # sum lmu axis and p5
 
-    contractseeding_ha_qszp5k = f_vars2df(lp_vars, 'v_contractseeding_ha', maskz8_zp5[:,:,na,na], z_pos=-4).groupby(level=(0,1,2,3,4)).sum()  # sum lmu axis (cost doesnt vary by lmu for contract)
+    contractseeding_ha_qszp5k = f_vars2df(lp_vars, 'v_contractseeding_ha', maskz8_zp5[:,:,na,na], z_pos=-4).groupby(level=(0,1,2,3,4)).sum()  # sum lmu axis (cost doesn't vary by lmu for contract)
     contractseeding_ha_zp5kqs = contractseeding_ha_qszp5k.reorder_levels([2,3,4,0,1])
     contractseed_cost_ha_zp5_p7 = r_vals['mach']['contractseed_cost'].unstack(0)
     contractseed_cost_ha_zp5kqs_p7 = contractseed_cost_ha_zp5_p7.reindex(contractseeding_ha_zp5kqs.index, axis=0)
@@ -523,7 +523,7 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         grain_sold_qszks2g = grain_sold_qsp7zks2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
         grain_sold_zks2gqs = grain_sold_qszks2g.reorder_levels([2,3,4,5,0,1]) #change the order so that reindexing works (new levels being added must be at the end)
 
-        ##grain fed - s2 axis added because sup feed is allocated to a given s2 slice and therefore the variable doesnt have an active s2 axis
+        ##grain fed - s2 axis added because sup feed is allocated to a given s2 slice and therefore the variable doesn't have an active s2 axis
         sup_s2_ks2 = r_vals['sup']['sup_s2_k_s2'].stack()
         grain_fed_qszkg = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 3, 4)).sum()  # sum feed pool and feed period
         grain_fed_qszg_ks2 = grain_fed_qszkg.unstack(3).mul(sup_s2_ks2, axis=1, level=0)
@@ -1138,7 +1138,7 @@ def f_profitloss_table(lp_vars, r_vals):
 
     ##EBIT
     ebtd = pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue']].values - pnl.loc[idx[:, :, :, 'Expense', 'Total expenses']].values
-    pnl.loc[idx[:, :, :, 'Total', 'EBTD'], :] = ebtd #interest is counted in the cashflow of each item - it is hard to seperate so it is not reported seperately
+    pnl.loc[idx[:, :, :, 'Total', 'EBTD'], :] = ebtd #interest is counted in the cashflow of each item - it is hard to separate so it is not reported seperately
 
     ##add a column which is total of all cashflow period
     pnl['Full year'] = pnl.sum(axis=1)
@@ -1386,7 +1386,7 @@ def f_numpy2df_error(prod, weights, arith_axis, index, cols):
     if arith_occur and arith_error:  # if arith is happening and there is an error in selected axis
         raise exc.ArithError('''Arith error: can't preform operation along an axis that is going to be reported as the index or col''')
 
-    ##error handle 2: can report an axis as index and col
+    ##error handle 2: can't report an axis as index and col
     axis_error = any(col in index for col in cols)
     if axis_error:  # if cols and index have any overlapping axis.
         raise exc.ArithError('''Arith error: can't have the same axis in index and cols''')

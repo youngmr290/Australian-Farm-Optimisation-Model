@@ -60,10 +60,8 @@ Parameters that define the rotation phases.
     * of years of continuous tedera before it needs resowing (tedera_resowing = 10)
     * of Lucerne before it needs to be resown (lucerne_resowing = 5)
 
-    Length of rotation phase = maximum(resow_a, resow_u, resow_t, use_n, canola disease, pulse disease, spraytopping, manip_sprayt) + 1
-    Year to start numbering the legume pasture landuses = phase_length - use_n + 1
-    Maximum landuse number for legume pasture = build_n
-
+    Length of rotation phase = maximum(resow_a, resow_u, resow_t, build_n, use_n, deplete_seed, canola disease,
+    pulse disease, spraytop, manip_sprayt) + 1
 
 The following rules are implemented to remove illogical rotation phases:
 
@@ -97,6 +95,8 @@ The following rules are implemented to remove unprofitable rotation phases:
     #. Only a single pasture variety in a rotation phase.
 
     #. No dry seeding after pasture because of excessive weed burden.
+
+    #. No saleable crop after fodder (due to excessive weed burden).
 
 
 
@@ -189,9 +189,11 @@ def f_rot_gen():
         phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['xr','ur']))]
         ###no dry seeding after pasture
         phases = phases[~(np.isin(phases[:,i], ['AR', 'SR','A','M','S','U','X','T','J'])&np.isin(phases[:,i+1], ['bd','wd','rd','zd']))]
+        ###no saleable crop after strategic fodder
+        phases = phases[~(np.isin(phases[:,i], ['OF'])&np.isin(phases[:,i+1], ['b', 'h', 'o', 'w', 'f', 'l', 'z','r','bd','wd','rd','zd']))]
         ###can't have 1yr of perennial unless it is the earliest yr in the history
         if i == 0:
-            pass #first yr of rotation can be a perennial because
+            pass #first yr of rotation can be a perennial because a  perennial could have been before it
         else:
             try: #used for conditions that are concerned with more than two yrs
                 phases = phases[~(np.isin(phases[:,i], ['T','J'])&~(np.isin(phases[:,i-1], ['T','J', 'Y']) + np.isin(phases[:,i+1], ['T','J','t','j'])))]
@@ -227,13 +229,13 @@ def f_rot_gen():
 
 
     ######################################################
-    #delete cont rotations that require special handeling#
+    #delete cont rotations that require special handling#
     ######################################################
     '''
-    remove cont rotations before generilisation
-    -remove rotations that can provide them selves
+    remove cont rotations before generalisation
+    -remove rotations that can provide themselves
     -when generalising don't generalise yr1 
-        - this will stop Y X X X3 x4 providing itself ie if you generalied yr1 to X then this rotation would provide itself'
+        - this will stop Y X X X3 x4 providing itself ie if you generalised yr1 to X then this rotation would provide itself'
     '''
     ##check if every phase in a rotation is either lucerne or Y
     xindex=np.all(np.isin(phases[:,:], ['X','x','U','u']), axis=1)
@@ -346,9 +348,9 @@ def f_rot_gen():
             mps_bool_req.append(req)
             mps_bool_prov.append(prov)
         if test==0: #doesn't provide a history
-            print('rot doesnt provide a history: ',rot_phase)
+            print('rot does not provide a history: ',rot_phase)
         if test2==0: #doesn't require a history
-            print('rot doesnt req a history: ',rot_phase)
+            print('rot does not req a history: ',rot_phase)
     rot_phase_by_constrain = pd.DataFrame(list(itertools.product(l_phases,l_rot_hist) ) ) #had to use this cartesian method as i couldn't get the fast function to work
     mps_bool_req=pd.Series(mps_bool_req) #convert to series because easier to manipulate
     mps_bool_prov=pd.Series(mps_bool_prov) #convert to series because easier to manipulate
@@ -382,7 +384,7 @@ def f_rot_gen():
 
 
 
-if __name__ == '__main__': #use this so that sphinx doesnt run all the code when generating the docs
+if __name__ == '__main__': #use this so that sphinx doesn't run all the code when generating the docs
     f_rot_gen()
 
 

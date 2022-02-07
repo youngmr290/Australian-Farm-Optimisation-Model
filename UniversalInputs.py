@@ -116,7 +116,7 @@ else:
     price_variation_inp['wool_price_scalar_c1z'] = np.array([1])
     price_variation_inp['prob_c1'] = 1
     price_variation_inp['len_c1'] = 1
-#todo if this structure doesnt change then need to add a SA that determines if price variation is included. if it is not included then need to take average anong c1 axis.
+#todo if this structure doesn't change then need to add a SA that determines if price variation is included. if it is not included then need to take average anong c1 axis.
 # the best option would be to have inputs sheet in uinp with historical prices and len_c1 then generate everything from there each loop
 print('- finished')
 
@@ -209,7 +209,7 @@ def f_universal_inp_sa():
     ##have to import it here since sen.py imports this module
     import Sensitivity as sen 
 
-    ##reset inputs to base at the start of each trial before applying SA  - old method was to update the SA based on the _inp dict but that doesnt work well when multiple SA on the same variable.
+    ##reset inputs to base at the start of each trial before applying SA  - old method was to update the SA based on the _inp dict but that doesn't work well when multiple SA on the same variable.
     fun.f_dict_reset(price, price_inp)
     fun.f_dict_reset(finance, finance_inp)
     fun.f_dict_reset(mach_general, mach_general_inp)

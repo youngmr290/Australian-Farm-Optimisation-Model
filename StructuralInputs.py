@@ -111,7 +111,7 @@ def f_structural_inp_sa():
     ##have to import it here since sen.py imports this module
     import Sensitivity as sen
 
-    ##reset inputs to base at the start of each trial before applying SA  - old method was to update the SA based on the _inp dict but that doesnt work well when multiple SA on the same variale.
+    ##reset inputs to base at the start of each trial before applying SA  - old method was to update the SA based on the _inp dict but that doesn't work well when multiple SA on the same variale.
     fun.f_dict_reset(structuralsa, structuralsa_inp)
 
 
@@ -140,7 +140,7 @@ def f_structural_inp_sa():
 ##############################
 def f1_expand_p6():
     ##When using DSP, expand inputs with a p6 axis for each season node.
-    ##has to be a seperate function to the sa because values altered in SA impact a_p6std_p6z
+    ##has to be a separate function to the sa because values altered in SA impact a_p6std_p6z
     ##have to import it here since sen.py imports this module
     import Periods as per
 

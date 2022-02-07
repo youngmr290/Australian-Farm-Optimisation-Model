@@ -80,7 +80,7 @@ def f_cropgraze_DM(total_DM=False):
            first period then the subsequent growth rate does not change).
 
     Both DM parameters are built with a z8z9 axis. This is because provision of crop grazing is hooked up to the
-    seeding activity which is not transferred to future periods and thus doesnt uncluster but seeding provides
+    seeding activity which is not transferred to future periods and thus doesn't uncluster but seeding provides
     crop DM in future periods which may be in nodes. Thus a z8z9 axis is required so that seeding in z[0] provides
     crop grazing in z[1] and other children.
 
@@ -156,14 +156,14 @@ def f_cropgraze_DM(total_DM=False):
 
 
         ##calc mask if crop can be grazed
-        ###p6 grazing only occurs in peirods defined by user
+        ###p6 grazing only occurs in periods defined by user
         grazing_exists_p6z = (consumption_factor_p6z > 0)
         ###can only graze crop sown in p5 if p5 < p6
         grazing_exists_p6p5z = date_start_p5z + establishment_days <= date_end_p6z[:,na,:]
         grazing_exists_p6p5z = np.logical_and(grazing_exists_p6z[:,na,:], grazing_exists_p6p5z) * 1
 
         ##calc mask if DM can be transferred to following period (can only be transferred to periods when consumption is greater than 0)
-        transfer_exists_p6p5z = grazing_exists_p6p5z * np.roll(grazing_exists_p6p5z, shift=-1, axis=0) #doesnt transfer into the first period or out of the last hence need to add the roll
+        transfer_exists_p6p5z = grazing_exists_p6p5z * np.roll(grazing_exists_p6p5z, shift=-1, axis=0) #doesn't transfer into the first period or out of the last hence need to add the roll
 
         ##calc DM removal when animals consume 1t - accounts for wastage and trampling
         crop_DM_required_kp6p5z = 1000 / (1 - wastage_k[:,na,na,na]) * grazing_exists_p6p5z
@@ -328,12 +328,12 @@ def f_cropgraze_biomass_penalty():
     # ##calc stubble reduction (kg of stubble per kg of crop DM consumed)
     # stubble_reduction_propn_kp6z = stub_yield_reduction_propn_kp6z * stubble_per_grain_k[:,na,na]
 
-    ##convert from yield penalty to biomass penalty - required because input is grain yield reduction per tonne of crop consummed
-    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harves s2 slice because yield penalty is inputted as a harvestable grain
+    ##convert from yield penalty to biomass penalty - required because input is grain yield reduction per tonne of crop consumed
+    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield penalty is inputted as the harvestable grain
     biomass_reduction_propn_kp6z = biomass_reduction_propn_kp6z / harvest_index_k[:,na,na]
 
     ##apply season mask and grazing exists mask
-    ###calc mask if crop can be grazed - doesnt need to include p5 since no p5 set in the constraint.
+    ###calc mask if crop can be grazed - doesn't need to include p5 since no p5 set in the constraint.
     grazing_exists_p6z = (consumption_factor_p6z > 0) * 1
     ###calc season mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(per.f_feed_periods()[:-1], z_pos=-1, mask=True)

@@ -31,7 +31,7 @@ def f1_boundarypyomo_local(params, model):
 
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
-    rot_lobound_inc = False #controls rot bound
+    rot_lobound_inc = fun.f_sa(False, sen.sav['bnd_rotn_inc'], 5)  #controls rot bound
     sup_lobound_inc = False #controls sup feed bound
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_dam_inc'], 5) #lower bound dams
     dams_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_dam_inc'], 5) #upper bound on dams
@@ -39,12 +39,12 @@ def f1_boundarypyomo_local(params, model):
     offs_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_off_inc'], 5) #upper bound on offs
     total_dams_scanned_bound_inc = np.any(sen.sav['bnd_total_dams_scanned'] != '-') #equal to bound on the total number of mated dams at scanning
     force_5yo_retention_inc = np.any(sen.sav['bnd_propn_dam5_retained'] != '-') #force a propn of 5yo dams to be retained.
-    bnd_propn_dams_mated = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
+    bnd_propn_dams_mated_inc = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
     bnd_sale_twice_drys_inc = fun.f_sa(False, sen.sav['bnd_sale_twice_dry_inc'], 5) #proportion of drys sold (can be sold at either sale opp)
-    bnd_dry_retained_inc = fun.f_sa(False, np.any(pinp.sheep['i_dry_retained_forced']), 5) #force the retention of drys in t[0] (t[1] is handled in the generator.
+    bnd_dry_retained_inc = fun.f_sa(False, np.any(pinp.sheep['i_dry_retained_forced_o']), 5) #force the retention of drys in t[0] (t[1] is handled in the generator.
     sr_bound_inc = fun.f_sa(False, sen.sav['bnd_sr_inc'], 5) #controls sr bound
     total_pasture_bound_inc = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
-    landuse_bound_inc = False #bound on area of each landuse
+    landuse_bound_inc = False #bound on area of each landuse (which is the sum of all the phases for that landuse)
 
 
     if bounds_inc:
@@ -69,12 +69,13 @@ def f1_boundarypyomo_local(params, model):
             arrays = [model.s_phases, model.s_lmus]
             index_rl = fun.cartesian_product_simple_transpose(arrays)
             ###build array
-            rot_lobound_rl = np.zeros((len(model.s_phases), len(model.s_lmus)))
+            #rot_lobound_rl = np.zeros((len(model.s_phases), len(model.s_lmus)))
             ###set the bound
+            rot_lobound_rl = fun.f_sa(np.array([0],dtype=float), sen.sav['rot_lobound_rl'], 5)
             # rot_lobound_rl[4,0] = 70 #fodder lmu2
-            rot_lobound_rl[0,0] = 150 #AAAAAa
-            rot_lobound_rl[0,1] = 1230 #AAAAAa
-            rot_lobound_rl[0,2] = 750 #AAAAAa
+            # rot_lobound_rl[0,0] = 150 #AAAAAa
+            # rot_lobound_rl[0,1] = 1230 #AAAAAa
+            # rot_lobound_rl[0,2] = 750 #AAAAAa
             # rot_lobound_rl[2,1] = 570
             # rot_lobound_rl[2,2] = 20
             # rot_lobound_rl[9,1] = 11
@@ -330,13 +331,13 @@ def f1_boundarypyomo_local(params, model):
         ##bound to fix the proportion of dams being mated - typically used to exclude mating yearlings
         #todo this causes sheep to become infeasible in the DSP model. Will need to revisit.
         ###build bound if turned on
-        if bnd_propn_dams_mated:
+        if bnd_propn_dams_mated_inc:
             ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
             model.p_prop_dams_mated = pe.Param(model.s_dvp_dams, model.s_groups_dams, initialize=params['stock']['p_prop_dams_mated'])
             ###constraint
             #todo add an i axis to the constraint
             def f_propn_dams_mated(model, q, s, v, z, g1):
-                if model.p_prop_dams_mated[v, g1]==np.inf or all(model.p_mask_dams[k2,t, v, w8,g1] == 0
+                if model.p_prop_dams_mated[v, g1]==np.inf or all(model.p_mask_dams[k2,t, v, w8,g1] == 0 or v=='dv00'   #skip if DVP0 which is a non-mating period in o[0]
                                       for k2 in model.s_k2_birth_dams for t in model.s_sale_dams for w8 in model.s_lw_dams):
                     return pe.Constraint.Skip
                 else:
@@ -404,6 +405,7 @@ def f1_boundarypyomo_local(params, model):
             def f_retention_drys(model, q, s, v, z, i, g1):
                 '''Force the model so that the drys can only be sold when the other ewes are sold (essentially forcing the retention of drys).
                    The number of drys sold must be less than the sum of the other k2 slices'''
+                #todo add birth timing to p_prop_dry_dams when gbal is activated
                 if all(model.p_mask_dams['00-0','t0',v,w,g1] for w in model.s_lw_dams)==0 or params['stock']['p_drys_retained'][v]==0:
                     return pe.Constraint.Skip
                 else:

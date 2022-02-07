@@ -145,7 +145,7 @@ def f_fert_app_time_ha():
     passes_arable = phs.f_fert_passes()
     ##non arable fert passes
     passes_na = phs.f_nap_fert_passes() #on pasture phases only
-    ##add fert for arable area and fert for nonarable area, na_fert doesnt have season axis so need to reindex first
+    ##add fert for arable area and fert for nonarable area, na_fert doesn't have season axis so need to reindex first
     passes_na = passes_na.unstack().reindex(passes_arable.unstack().index, axis=0, level=0).stack()
     total_passes_rzln = pd.concat([passes_arable, passes_na], axis=1).groupby(axis=1, level=0).sum().stack()
     ##time taken to cover 1ha while spreading
