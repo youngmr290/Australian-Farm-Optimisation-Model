@@ -222,8 +222,8 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     '''
     Calculates the biomass for each rotation. Accounting for LMU, arable area and frost.
 
-    The crop yield for each rotation phase, on the base LMU [#]_, before frost and harvested proportion adjustment,
-    is entered as an input. The yield is inputted assuming seeding was completed at the optimal time.
+    The crop yield for each rotation phase, on the base LMU [#]_, before frost and harvested proportion adjustment
+    (spilt/split grain), is entered as an input. The yield is inputted assuming seeding was completed at the optimal time.
     The base yield inputs are read in from either the simulation output or
     from Property.xl depending on what the user has specified to do. The yield input is dependent on the
     rotation history and hence accounts for the level of soil fertility, weed burden, disease prominence,
@@ -308,7 +308,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
 def f_biomass2product():
     '''Relationship between biomass and salable product. Where salable product is either grain or hay.
 
-    Biomass is relate to product through harvest index, harvest proportion and biomass scalar.
+    Biomass is related to product through harvest index, harvest proportion and biomass scalar.
     Harvest index is the amount of the target product (grain or hay) per unit of biomass at harvest (which is the unit of the biomass DV).
     Harvest proportion accounts for grain that is split/spilt during the harvesting process.
     Biomass scalar is the total biomass production from the area baled net of respiration losses relative
