@@ -994,7 +994,8 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
         if true it returns DSE/ha else it returns total dse
     :param summary: Bool
         if true it returns the total DSE/ha in fp0
-    :return DSE per pasture hectare for each sheep group.
+    :return: DSE per pasture hectare for each sheep group.
+
     '''
     ##keys for table that is reported
     keys_q = r_vals['zgen']['keys_q']

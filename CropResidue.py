@@ -3,7 +3,7 @@ author: young
 """
 #python modules
 import numpy as np
-
+import os.path
 import pandas as pd
 pd.set_option('mode.chained_assignment', 'raise')
 
@@ -184,7 +184,10 @@ def crop_residue_all(params, r_vals, nv):
     len_s1 = len(pinp.stubble['i_stub_cat_dmd_s1'])
 
     ##read in category info frpm xl
-    cat_propn_s1_ks2 = pd.read_excel('stubble sim.xlsx',header=None, engine='openpyxl')
+    ###build path this way so the file can be access even if AFO is run from another directory eg readthedocs or web app.
+    directory_path = os.path.dirname(os.path.abspath(__file__))
+    residue_xl_path = os.path.join(directory_path, "stubble sim.xlsx")
+    cat_propn_s1_ks2 = pd.read_excel(residue_xl_path,header=None, engine='openpyxl')
     cat_propn_ks1s2 = cat_propn_s1_ks2.values.reshape(len_s1,len_k,len_s2).swapaxes(0,1)
 
     ##quality of each category in each period

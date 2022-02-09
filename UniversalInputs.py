@@ -16,6 +16,7 @@ import pickle as pkl
 import numpy as np
 import pandas as pd
 import copy
+import os.path
 
 import Functions as fun
 
@@ -25,7 +26,6 @@ import Functions as fun
 #read in excel
 #########################################################################################################################################################################################################
 #########################################################################################################################################################################################################
-import os.path
 
 ##build path this way so that readthedocs can read correctly.
 directory_path = os.path.dirname(os.path.abspath(__file__))
@@ -103,19 +103,16 @@ else:
 
 ##read in price variation inputs from xl - this might change
 price_variation_inp = {}
-if os.path.exists('PriceScenarios.xlsx'):
-    price_variation_inp['grain_price_scalar_c1z'] = pd.read_excel('PriceScenarios.xlsx',sheet_name='grain',index_col=0,header=0,engine='openpyxl')
-    price_variation_inp['meat_price_scalar_c1z'] = pd.read_excel('PriceScenarios.xlsx',sheet_name='meat',index_col=0,header=0,engine='openpyxl').values
-    price_variation_inp['wool_price_scalar_c1z'] = pd.read_excel('PriceScenarios.xlsx',sheet_name='wool',index_col=0,header=0,engine='openpyxl').values
-    price_variation_inp['prob_c1'] = pd.read_excel('PriceScenarios.xlsx',sheet_name='prob',index_col=0,header=0,engine='openpyxl').squeeze()
-    price_variation_inp['len_c1'] = 1
+###build path this way so the file can be access even if AFO is run from another directory eg readthedocs or web app.
+directory_path = os.path.dirname(os.path.abspath(__file__))
+pricescenarios_xl_path = os.path.join(directory_path, "PriceScenarios.xlsx")
+###read price info
+price_variation_inp['grain_price_scalar_c1z'] = pd.read_excel(pricescenarios_xl_path,sheet_name='grain',index_col=0,header=0,engine='openpyxl')
+price_variation_inp['meat_price_scalar_c1z'] = pd.read_excel(pricescenarios_xl_path,sheet_name='meat',index_col=0,header=0,engine='openpyxl').values
+price_variation_inp['wool_price_scalar_c1z'] = pd.read_excel(pricescenarios_xl_path,sheet_name='wool',index_col=0,header=0,engine='openpyxl').values
+price_variation_inp['prob_c1'] = pd.read_excel(pricescenarios_xl_path,sheet_name='prob',index_col=0,header=0,engine='openpyxl').squeeze()
+price_variation_inp['len_c1'] = 1
 
-else:
-    price_variation_inp['grain_price_scalar_c1z'] = 1
-    price_variation_inp['meat_price_scalar_c1z'] = np.array([1])
-    price_variation_inp['wool_price_scalar_c1z'] = np.array([1])
-    price_variation_inp['prob_c1'] = 1
-    price_variation_inp['len_c1'] = 1
 #todo if this structure doesn't change then need to add a SA that determines if price variation is included. if it is not included then need to take average anong c1 axis.
 # the best option would be to have inputs sheet in uinp with historical prices and len_c1 then generate everything from there each loop
 print('- finished')
