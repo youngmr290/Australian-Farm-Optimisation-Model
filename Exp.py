@@ -53,7 +53,7 @@ start = time.time()
 ##settings
 force_run=True #force precalcs to be run
 run_pyomo = True #do you want pyomo to run (default is True but if testing reports it can be useful to only run the precalcs)
-
+directory_path = os.path.dirname(os.path.abspath(__file__)) #path of directory - required when exp is run from a different location (eg in the web app)
 
 #########################
 #Exp loop               #
@@ -221,19 +221,19 @@ for row in range(len(exp_data)):
         ##check if user wants full solution
         if exp_data.index[row][1] == True:
             ##make lp file
-            model.write('Output/%s.lp' %trial_name, io_options={'symbolic_solver_labels':True})  #file name has to have capital
+            model.write(os.path.join(directory_path, 'Output/%s.lp' %trial_name), io_options={'symbolic_solver_labels':True})  #file name has to have capital
 
             ##This writes variable summary for full solution (same file as the temporary version created above)
             fun.write_variablesummary(model, row, exp_data, obj)
 
             ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
-            with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
+            with open(os.path.join(directory_path, 'Output/Full model - %s.txt' %trial_name), 'w') as f:  #file name has to have capital
                 f.write("My description of the instance!\n")
                 model.display(ostream=f)
 
             ##write rc, duals and slacks to txt file. Duals are slow to write so that option must be turn on
             write_duals = True
-            with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
+            with open(os.path.join(directory_path, 'Output/Rc and Duals - %s.txt' %trial_name),'w') as f:  #file name has to have capital
                 f.write('RC\n')
                 for v in model.component_objects(pe.Var, active=True):
                     f.write("Variable %s\n" %v)
@@ -263,10 +263,10 @@ for row in range(len(exp_data)):
         lp_vars['profit'] = obj
 
         ##pickle lp info - only if pyomo is run
-        with open('pkl/pkl_lp_vars_{0}.pkl'.format(trial_name),"wb") as f:
+        with open(os.path.join(directory_path, 'pkl/pkl_lp_vars_{0}.pkl'.format(trial_name)),"wb") as f:
             pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
     ##pickle report values - every time a trial is run (even if pyomo not run)
-    with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
+    with open(os.path.join(directory_path, 'pkl/pkl_r_vals_{0}.pkl'.format(trial_name)),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
 
     ##call function to store optimal feedsupply
