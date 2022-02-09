@@ -97,6 +97,7 @@ Additional notes:
 
 import numpy as np
 import pickle as pkl
+import os.path
 
 import PropertyInputs as pinp
 import UniversalInputs as uinp
@@ -663,5 +664,6 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
 
         ##store rev if trial is rev_create
         fs_number = sinp.structuralsa['i_fs_number']
-        with open('pkl/pkl_fs{0}.pkl'.format(fs_number),"wb") as f:
+        directory_path = os.path.dirname(os.path.abspath(__file__))  # path of directory - required when exp is run from a different location (eg in the web app)
+        with open(os.path.join(directory_path, 'pkl/pkl_fs{0}.pkl'.format(fs_number)),"wb") as f:
             pkl.dump(pkl_fs, f)
