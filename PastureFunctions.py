@@ -429,7 +429,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
                                  * i_foo_graze_propn_gt[:, na, na, na, na, :])
     senesce_eos_grnha_gop6lzt = foo_endprior_grnha_gop6lzt * i_grn_senesce_eos_p6zt[:, na, ...]
     foo_end_grnha_gop6lzt = foo_endprior_grnha_gop6lzt - senesce_eos_grnha_gop6lzt
-    #apply mask to remove any green foo at the end of period in periods when green pas doesnt exist.
+    #apply mask to remove any green foo at the end of period in periods when green pas doesn't exist.
     foo_end_grnha_gop6lzt = foo_end_grnha_gop6lzt * mask_greenfeed_exists_p6zt[:, na, ...]
 
     ## green, removal & dmi
@@ -484,14 +484,14 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     me_cons_grnha_fgop6lzt = fsfun.f_effective_mei(cons_grnha_t_gop6lzt, grn_md_grnha_gop6lzt
                                                   , me_threshold_fp6zt[:, na, na, :, na, ...], confinement_inc
                                                   , grn_ri_gop6lzt, i_me_eff_gainlose_p6zt[:, na, :, :])
-    #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
+    #apply mask - this masks out any green foo at the end of period in periods when green pas doesn't exist.
     me_cons_grnha_fgop6lzt = me_cons_grnha_fgop6lzt * mask_greenfeed_exists_p6zt[:, na, ...]
     ## Pasture can't be grazed in confinement so ME is 0
     me_cons_grnha_fgop6lzt = me_cons_grnha_fgop6lzt * nv_is_not_confinement_f[:, na, na, na, na, na, na]
 
     # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
     volume_grnha_gop6lzt = cons_grnha_t_gop6lzt / grn_ri_gop6lzt
-    #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
+    #apply mask - this masks out any green foo at the end of period in periods when green pas doesn't exist.
     volume_grnha_gop6lzt = volume_grnha_gop6lzt * mask_greenfeed_exists_p6zt[:, na,...]
     #me from pasture is 0 in the confinement pool
     volume_grnha_fgop6lzt = volume_grnha_gop6lzt * nv_is_not_confinement_f[:, na, na, na, na, na, na]
@@ -601,7 +601,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     dry_ri_dp6zt = fsfun.f_rel_intake(dry_ri_availability_dp6zt, dry_ri_quality_dp6zt, i_legume_zt)  #set the minimum RI to 0.05
 
     dry_volume_t_dp6zt = 1000 / dry_ri_dp6zt                 # parameters for the dry feed grazing activities: Total volume of the tonne consumed
-    dry_volume_t_dp6zt = dry_volume_t_dp6zt * mask_dryfeed_exists_p6zt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
+    dry_volume_t_dp6zt = dry_volume_t_dp6zt * mask_dryfeed_exists_p6zt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesn't exist.
     dry_volume_t_fdp6zt = dry_volume_t_dp6zt * nv_is_not_confinement_f[:,na,na,na,na] #me from pasture is 0 in the confinement pool
 
     ## dry, ME consumed per kg consumed
@@ -611,7 +611,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     confinement_inc = np.any(np.logical_not(nv_is_not_confinement_f))
     dry_mecons_t_fdp6zt = fsfun.f_effective_mei( 1000, dry_md_dp6zt, me_threshold_fp6zt[:, na, ...]
                                                 , confinement_inc, dry_ri_dp6zt, i_me_eff_gainlose_p6zt)
-    dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * mask_dryfeed_exists_p6zt  #apply mask - this masks out consuming dry foo in periods when dry pas doesnt exist.
+    dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * mask_dryfeed_exists_p6zt  #apply mask - this masks out consuming dry foo in periods when dry pas doesn't exist.
     #Can't graze dry pasture while in confinement so ME is 0
     dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * nv_is_not_confinement_f[:,na,na,na,na]
     return dry_mecons_t_fdp6zt, dry_volume_t_fdp6zt, dry_dmd_dp6zt, dry_foo_dp6zt

@@ -195,8 +195,8 @@ sheep_inp['i_paststd_foo_zp6j0'] = np.reshape(sheep_inp['i_paststd_foo_zp6j0'], 
 sheep_inp['i_paststd_dmd_zp6j0'] = np.reshape(sheep_inp['i_paststd_dmd_zp6j0'], zp6j0)
 sheep_inp['i_density_p6z'] = np.reshape(sheep_inp['i_density_p6z'], zp6)
 sheep_inp['i_husb_operations_triggerlevels_h5h7h2'] = np.reshape(sheep_inp['i_husb_operations_triggerlevels_h5h7h2'], h2h5h7)
-sheep_inp['i_date_born1st_oig2'] = np.reshape(sheep_inp['i_date_born1st_oig2'], iog)
-sheep_inp['i_date_born1st_idg3'] = np.reshape(sheep_inp['i_date_born1st_idg3'], idg)
+sheep_inp['i_date_born1st_iog2'] = np.reshape(sheep_inp['i_date_born1st_iog2'], iog).astype('datetime64[D]')
+sheep_inp['i_date_born1st_idg3'] = np.reshape(sheep_inp['i_date_born1st_idg3'], idg).astype('datetime64[D]')
 sheep_inp['i_sire_propn_oig1'] = np.reshape(sheep_inp['i_sire_propn_oig1'], iog)
 sheep_inp['i_date_shear_sixg0'] = np.reshape(sheep_inp['i_date_shear_sixg0'], isxg)
 sheep_inp['i_date_shear_sixg1'] = np.reshape(sheep_inp['i_date_shear_sixg1'], isxg)
@@ -204,9 +204,9 @@ sheep_inp['i_date_shear_sixg3'] = np.reshape(sheep_inp['i_date_shear_sixg3'], is
 sheep_inp['ia_r1_zig0'] = np.reshape(sheep_inp['ia_r1_zig0'], izg)
 sheep_inp['ia_r1_zig1'] = np.reshape(sheep_inp['ia_r1_zig1'], izg)
 sheep_inp['ia_r1_zig3'] = np.reshape(sheep_inp['ia_r1_zig3'], izg)
-sheep_inp['ia_r2_k0ig1'] = np.reshape(sheep_inp['ia_r2_k0ig1'], ik0g)
-sheep_inp['ia_r2_k1ig1'] = np.reshape(sheep_inp['ia_r2_k1ig1'], ik1g)
-sheep_inp['ia_r2_sk2ig1'] = np.reshape(sheep_inp['ia_r2_sk2ig1'], isk2g)
+sheep_inp['ia_r2_ik0g1'] = np.reshape(sheep_inp['ia_r2_ik0g1'], ik0g)
+sheep_inp['ia_r2_ik1g1'] = np.reshape(sheep_inp['ia_r2_ik1g1'], ik1g)
+sheep_inp['ia_r2_isk2g1'] = np.reshape(sheep_inp['ia_r2_isk2g1'], isk2g)
 sheep_inp['ia_r2_ik0g3'] = np.reshape(sheep_inp['ia_r2_ik0g3'], ik0g)
 sheep_inp['ia_r2_ik3g3'] = np.reshape(sheep_inp['ia_r2_ik3g3'], ik3g)
 sheep_inp['ia_r2_ik4g3'] = np.reshape(sheep_inp['ia_r2_ik4g3'], ik4g)
@@ -256,7 +256,7 @@ def f_property_inp_sa():
     ##have to import it here since sen.py imports this module
     import Sensitivity as sen
 
-    ##reset inputs to base at the start of each trial before applying SA - old method was to update the SA based on the _inp dict but that doesnt work well when multiple SA on the same variable.
+    ##reset inputs to base at the start of each trial before applying SA - old method was to update the SA based on the _inp dict but that doesn't work well when multiple SA on the same variable.
     fun.f_dict_reset(general, general_inp)
     fun.f_dict_reset(rep, rep_inp)
     fun.f_dict_reset(labour, labour_inp)
@@ -316,19 +316,34 @@ def f_property_inp_sa():
     sheep['a_c2_c0'] = fun.f_sa(sheep['a_c2_c0'], sen.sav['genotype'],5)
     sheep['i_scan_og1'] = fun.f_sa(sheep['i_scan_og1'], sen.sav['scan_og1'],5)
     sheep['i_dry_sales_forced_o'] = fun.f_sa(sheep['i_dry_sales_forced_o'], sen.sav['bnd_drys_sold_o'],5)
-    sheep['i_dry_retained_forced'] = fun.f_sa(sheep['i_dry_retained_forced'], sen.sav['bnd_drys_retained'],5)
+    sheep['i_dry_retained_forced_o'] = fun.f_sa(sheep['i_dry_retained_forced_o'], sen.sav['bnd_drys_retained_o'],5)
+    ### The expected proportion retained at scanning or birth is a 3-step calc. Update with own SAV and then override if either of the dry management options is forced
+    sheep['i_drys_retained_scan_est_o'] = fun.f_sa(sheep['i_drys_retained_scan_est_o'], sen.sav['est_drys_retained_scan_o'], 5)
+    ### If sale of drys is forced then proportion of drys retained is 0, so need to convert a True in the SAV to False (which converts to 0).
+    bnd_drys_sold_o = sen.sav['bnd_drys_sold_o'].copy()
+    bnd_drys_sold_o[bnd_drys_sold_o == True] = False  # '0'
+    sheep['i_drys_retained_scan_est_o'] = fun.f_sa(sheep['i_drys_retained_scan_est_o'], bnd_drys_sold_o,5)
+    ### If retain drys is forced (True) then proportion of drys retained is 1 so can use the SAV[] (True == 1)
+    sheep['i_drys_retained_scan_est_o'] = fun.f_sa(sheep['i_drys_retained_scan_est_o'], sen.sav['bnd_drys_retained_o'],5)
+    sheep['i_drys_retained_birth_est_o'] = fun.f_sa(sheep['i_drys_retained_birth_est_o'], sen.sav['est_drys_retained_birth_o'], 5)
+    sheep['i_drys_retained_birth_est_o'] = fun.f_sa(sheep['i_drys_retained_birth_est_o'], bnd_drys_sold_o,5)
+    sheep['i_drys_retained_birth_est_o'] = fun.f_sa(sheep['i_drys_retained_birth_est_o'], sen.sav['bnd_drys_retained_o'],5)
     sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.sav['r1_izg1'],5)
-    sheep['ia_r2_sk2ig1'] = fun.f_sa(sheep['ia_r2_sk2ig1'], sen.sav['r2_isk2g1'],5)
+    sheep['ia_r2_ik0g1'] = fun.f_sa(sheep['ia_r2_ik0g1'], sen.sav['r2_ik0g1'],5)
+    sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.sav['r2_isk2g1'],5)
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.sav['r1_izg3'],5)
+    sheep['ia_r2_ik0g3'] = fun.f_sa(sheep['ia_r2_ik0g3'], sen.sav['r2_ik0g3'],5)
     sheep['i_sr_constraint_t'] = fun.f_sa(sheep['i_sr_constraint_t'], sen.sav['bnd_sr_t'],5)
 
     ###sam
     ###sap
     ###saa
     sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.saa['r1_izg1'], 2).astype('int')
-    sheep['ia_r2_sk2ig1'] = fun.f_sa(sheep['ia_r2_sk2ig1'], sen.saa['r2_isk2g1'], 2).astype('int')
+    sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.saa['r2_isk2g1'], 2).astype('int')
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.saa['r1_izg3'], 2).astype('int')
     sheep['ia_r2_ik5g3'] = fun.f_sa(sheep['ia_r2_ik5g3'], sen.saa['r2_ik5g3'], 2).astype('int')
+    sheep['i_date_born1st_iog'] = fun.f_sa(sheep['i_date_born1st_iog2'], sen.saa['date_born1st_iog'].astype('timedelta64[D]'), 2)
+    #sheep['i_date_born1st_idg3'] = fun.f_sa(sheep['i_date_born1st_idg3'], sen.saa['date_born1st_iog'].astype('timedelta64[D]'), 2)
     feedsupply['i_feedsupply_options_r1j2p'] = fun.f_sa(feedsupply['i_feedsupply_options_r1j2p'], sen.saa['feedsupply_r1jp'], 2)
     feedsupply['i_feedsupply_adj_options_r2p'] = fun.f_sa(feedsupply['i_feedsupply_adj_options_r2p'], sen.saa['feedsupply_adj_r2p'], 2)
     ###sat

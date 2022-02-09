@@ -321,7 +321,7 @@ def f_pasture(params, r_vals, nv):
     dry_decay_daily_p6zt[...] = i_dry_decay_t
     for t in range(n_pasture_types):
         for z in range(n_season_types):
-            dry_decay_daily_p6zt[0:i_dry_exists_zt[z,t], z, t] = 1  #couldn't do this without loops - advanced indexing doesnt appear to work when taking multiple slices
+            dry_decay_daily_p6zt[0:i_dry_exists_zt[z,t], z, t] = 1  #couldn't do this without loops - advanced indexing doesn't appear to work when taking multiple slices
     dry_decay_period_p6zt[...] = 1 - (1 - dry_decay_daily_p6zt) ** length_p6z[...,na]
     ### allowance for the decay of dry feed in the days prior to being consumed
     ### because only the feed at the end of period is decayed by dry_decay_period_p6zt
@@ -443,7 +443,7 @@ def f_pasture(params, r_vals, nv):
         , mask_dryfeed_exists_p6zt, i_pasture_stage_p6z, nv_is_not_confinement_f, i_legume_zt, n_feed_pools)
     dry_volume_t_fdp6zt = dry_volume_t_fdp6zt / (1 + sen.sap['pi'])
 
-    ## dry, animal removal, mask consumption in periods where dry doesnt exist to remove the decision variable in pyomo.
+    ## dry, animal removal, mask consumption in periods where dry doesn't exist to remove the decision variable in pyomo.
     dry_removal_t_p6zt  = (1000 * (1 + i_dry_trampling_p6t[:,na,:])
                            * removal_scalar_dry_decay_p6zt
                            * mask_dryfeed_exists_p6zt)
@@ -500,7 +500,7 @@ def f_pasture(params, r_vals, nv):
     poc_vol_fp6z = poc_vol_fp6z * mask_fp_z8var_p6z
 
     #############################################
-    #adjust params with r axis for rot peirod   #
+    #adjust params with r axis for rot period   #
     #############################################
     ##p7 allocation
     alloc_p7p6z = zfun.f1_z_period_alloc(date_start_p6z[na,:,:], length_p6z[na,:,:].astype('timedelta64[D]'), z_pos=-1)

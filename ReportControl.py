@@ -94,6 +94,7 @@ def f_report(processor, trials, non_exist_trials):
     stacked_salegrid_offs = pd.DataFrame()  # sale grid
     stacked_salevalue_dams = pd.DataFrame()  # average sale value dams
     stacked_salevalue_offs = pd.DataFrame()  # average sale value offs
+    stacked_salevalue_prog = pd.DataFrame()  # average sale value offs
     stacked_woolvalue_dams = pd.DataFrame()  # average wool value dams
     stacked_woolvalue_offs = pd.DataFrame()  # average wool value offs
     stacked_saledate_offs = pd.DataFrame()  # offs sale date
@@ -155,7 +156,7 @@ def f_report(processor, trials, non_exist_trials):
         ##handle infeasible trials
         if os.path.isfile('Output/infeasible/{0}.txt'.format(trial_name)):
             stacked_infeasible = rep.f_append_dfs(stacked_infeasible, pd.DataFrame([trial_name]).rename_axis('Trial'))
-            lp_vars = fun.f_clean_dict(lp_vars) #if a trial is infeasible or doesnt solve all the lp values are None. This function converts them to 0 so the report can still run.
+            lp_vars = fun.f_clean_dict(lp_vars) #if a trial is infeasible or doesn't solve all the lp values are None. This function converts them to 0 so the report can still run.
 
         ##run report functions
         if report_run.loc['run_summary', 'Run']:
@@ -260,6 +261,23 @@ def f_report(processor, trials, non_exist_trials):
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
             salevalue_offs = pd.concat([salevalue_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_salevalue_offs = rep.f_append_dfs(stacked_salevalue_offs, salevalue_offs)
+
+        if report_run.loc['run_salevalue_prog', 'Run']:
+            type = 'stock'
+            prod = 'salevalue_k3k5p7twzia0xg2'
+            na_prod = [0,1]  # q,s
+            weights = 'prog_numbers_qsk3k5twzia0xg2'
+            na_weights = [4] #p7
+            keys = 'prog_keys_qsk3k5p7twzia0xg2'
+            arith = 1
+            index = [6]     #w
+            cols = [4, 11, 5]   #cashflow period, g2, t
+            # axis_slice = {}
+            # axis_slice[4] = [0, 1, 1]   #c0: stk
+            salevalue_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                   na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+            salevalue_prog = pd.concat([salevalue_prog],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_salevalue_prog = rep.f_append_dfs(stacked_salevalue_prog, salevalue_prog)
 
         if report_run.loc['run_woolvalue_dams', 'Run']:
             type = 'stock'
@@ -414,7 +432,7 @@ def f_report(processor, trials, non_exist_trials):
             prod_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             na_prodweights = [0,1] #q,s
             weights = 'dams_numbers_qsk2tvanwziy1g1'
-            na_weights = [5,7,8]
+            na_weights = [5,7,8]  #p,e,b
             den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             na_denweights = [0,1] #q,s
             keys = 'dams_keys_qsk2tvpaebnwziy1g1'
@@ -708,7 +726,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'dams_keys_qsk2tvanwziy1g1'
             arith = 2
             index =[4] #v
-            cols =[2, 7] #k2, w
+            cols =[2, 3] #k2, t
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -1115,6 +1133,8 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_salevalue_offs, 'salevalue_offs', df_settings, option=1)
     if report_run.loc['run_salevalue_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_salevalue_dams, 'salevalue_dams', df_settings, option=1)
+    if report_run.loc['run_salevalue_prog', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_salevalue_prog, 'salevalue_prog', df_settings, option=1)
     if report_run.loc['run_woolvalue_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_woolvalue_offs, 'woolvalue_offs', df_settings, option=1)
     if report_run.loc['run_woolvalue_dams', 'Run']:
@@ -1245,7 +1265,7 @@ if __name__ == '__main__':
         pd.Series(exp_data.index.get_level_values(2)).fillna(0).astype(
             bool)]  # this is slightly complicated because blank rows in exp.xl result in nan, so nan must be converted to 0.
 
-    ##check the trials you want to run exist and are up to date - if trial doesnt exist it is removed from trials to
+    ##check the trials you want to run exist and are up to date - if trial doesn't exist it is removed from trials to
     # report array so that the others can still be run. A list of trials that don't exist is the 'non_exist' sheet in report excel.
     trials, non_exist_trials = rep.f_errors(trial_outdated,trials)
 

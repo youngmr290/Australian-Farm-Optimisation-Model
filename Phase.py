@@ -60,6 +60,7 @@ import Periods as per
 import Finance as fin
 import Mach as mac
 import RotationPhases as rps
+import Sensitivity as sen
 
 ####################
 #general functions #
@@ -130,7 +131,7 @@ def f_farmgate_grain_price(r_vals={}):
     ##inputs
     grain_price_info_df = uinp.price['grain_price_info'] #grain info
     percentile_price_df = uinp.price['grain_price'] #grain price for 3 different percentiles
-    percentile_price_k_s2p = percentile_price_df.T.set_index(['percentile'], append=True).T.astype(float) #convert to float because array was initilised with string as well therefore it is an object type.
+    percentile_price_k_s2p = percentile_price_df.T.set_index(['percentile'], append=True).T.astype(float) #convert to float because array was initialised with string as well therefore it is an object type.
     grain_price_percentile = uinp.price['grain_price_percentile'] #price percentile to use
     grain_price_scalar_c1_z = zfun.f_seasonal_inp(uinp.price_variation['grain_price_scalar_c1z']
                                                  ,numpy=False, axis=1, level=0)
@@ -146,14 +147,14 @@ def f_farmgate_grain_price(r_vals={}):
 
     ##gets the price of firsts and seconds for each grain
     price_df = pd.DataFrame(columns=['firsts','seconds'])
-    price_df['firsts'] = grain_price_firsts_ks2
-    price_df['seconds'] = grain_price_seconds_ks2
+    price_df['firsts'] = grain_price_firsts_ks2.mul(sen.sam['grainp'])
+    price_df['seconds'] = grain_price_seconds_ks2.mul(sen.sam['grainp'])
 
     ##determine cost of selling
     cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance']
             + pinp.general['rail_cartage'] + uinp.price['flagfall'])
-    tols= grain_price_info_df['grain_tolls']
-    total_fees= cartage+tols
+    tolls= grain_price_info_df['grain_tolls']
+    total_fees= cartage+tolls
     farmgate_price_ks2_g = price_df.sub(total_fees, axis=0, level=0).clip(0)
 
     ##scale by c1 & z
@@ -176,7 +177,7 @@ def f_grain_price(r_vals):
     :return: Dict of farm gate price received for each grain in each cashflow period.
 
     '''
-    ##get grain price - accounts for tols and other fees
+    ##get grain price - accounts for tolls and other fees
     farmgate_price_ks2gc1_z=f_farmgate_grain_price(r_vals)
 
     ##allocate farm gate grain price for each cashflow period and calc interest
@@ -222,8 +223,8 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     '''
     Calculates the biomass for each rotation. Accounting for LMU, arable area and frost.
 
-    The crop yield for each rotation phase, on the base LMU [#]_, before frost and harvested proportion adjustment,
-    is entered as an input. The yield is inputted assuming seeding was completed at the optimal time.
+    The crop yield for each rotation phase, on the base LMU [#]_, before frost and harvested proportion adjustment
+    (spilt/split grain), is entered as an input. The yield is inputted assuming seeding was completed at the optimal time.
     The base yield inputs are read in from either the simulation output or
     from Property.xl depending on what the user has specified to do. The yield input is dependent on the
     rotation history and hence accounts for the level of soil fertility, weed burden, disease prominence,
@@ -231,7 +232,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     as a function of yield and harvest index. Yield is the input rather than biomass because that is easier to
     relate to and thus determine inputs. However, it is converted to biomass so that the optimisation has
     the option to tactically deviate from the overall strategy. For example, the model may select a barley phase at the
-    beginning of the year with the expectation of harvesting it for salable grain. However, if a
+    beginning of the year with the expectation of harvesting it for saleable grain. However, if a
     big frost event is occurred the model may choose to either cut the crop for hay or use it as fodder. To
     allow these tactics to be represented requires a common starting point which has been defined as phase biomass.
     Biomass can either be harvested for grain, cut for hay or grazed as fodder.
@@ -276,7 +277,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     ##colate other info
     biomass_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
-    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harves s2 slice because yield is inputted as a harvestable grain
+    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield is inputted as the harvestable grain
     harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
 
     ##convert to biomass
@@ -287,7 +288,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     biomass_rkz_l=biomass_arable_by_soil_k_l.reindex(base_biomass_rkz.index, axis=0, level=1).mul(base_biomass_rkz,axis=0) #reindes and mul with base biomass
     biomass_rkl_z = biomass_rkz_l.stack().unstack(2)
 
-    ##add rotation period axis - if a rotation exists at the begining of harvest it provides grain and requires harvesting.
+    ##add rotation period axis - if a rotation exists at the beginning of harvest it provides grain and requires harvesting.
     harv_start_date_z = zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0).astype('datetime64') #this could be changed to include landuse axis.
     alloc_p7z = zfun.f1_z_period_alloc(harv_start_date_z[na,...], z_pos=-1)
     ###convert to df
@@ -306,9 +307,9 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
         return biomass_rkl_p7z.stack([1,0])
 
 def f_biomass2product():
-    '''Relationship between biomass and salable product. Where salable product is either grain or hay.
+    '''Relationship between biomass and saleable product. Where saleable product is either grain or hay.
 
-    Biomass is relate to product through harvest index, harvest proportion and biomass scalar.
+    Biomass is related to product through harvest index, harvest proportion and biomass scalar.
     Harvest index is the amount of the target product (grain or hay) per unit of biomass at harvest (which is the unit of the biomass DV).
     Harvest proportion accounts for grain that is split/spilt during the harvesting process.
     Biomass scalar is the total biomass production from the area baled net of respiration losses relative
@@ -502,7 +503,7 @@ def f_fert_cost(r_vals):
     purchased shortly before application because farmers wait to see how the year unfolds before locking
     in a fertiliser plan.
 
-    Fertiser application cost is broken into two components (detailed in the machinery section).
+    Fertiliser application cost is broken into two components (detailed in the machinery section).
 
         #. Application cost per tonne ($/rotation)
         #. Application cost per ha ($/rotation)
@@ -523,20 +524,20 @@ def f_fert_cost(r_vals):
     phase_fert_cost_rzl_n = fertreq.mul(total_cost/1000,axis=1) #div by 1000 to convert to $/kg,
     phase_fert_cost_rzl_p7n = phase_fert_cost_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
     phase_fert_cost_rl_p7nz = phase_fert_cost_rzl_p7n.unstack(1)
-    phase_fert_cost_rl_p7z = phase_fert_cost_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    phase_fert_cost_rl_p7z = phase_fert_cost_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
     phase_fert_wc_rzl_c0p7n = phase_fert_cost_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
     phase_fert_wc_rl_c0p7nz = phase_fert_wc_rzl_c0p7n.unstack(1)
-    phase_fert_wc_rl_c0p7z = phase_fert_wc_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    phase_fert_wc_rl_c0p7z = phase_fert_wc_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
 
     ##aplication cost per tonne
     application_cost_tonne = mac.fert_app_cost_t()
     fert_app_cost_tonne_rzl_n = fertreq.mul(application_cost_tonne/1000,axis=1) #div by 1000 to convert to $/kg
     fert_app_cost_tonne_rzl_p7n = fert_app_cost_tonne_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
     fert_app_cost_tonne_rl_p7nz = fert_app_cost_tonne_rzl_p7n.unstack(1)
-    fert_app_cost_tonne_rl_p7z = fert_app_cost_tonne_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    fert_app_cost_tonne_rl_p7z = fert_app_cost_tonne_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
     fert_app_wc_tonne_rzl_c0p7n = fert_app_cost_tonne_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
     fert_app_wc_tonne_rl_c0p7nz = fert_app_wc_tonne_rzl_c0p7n.unstack(1)
-    fert_app_wc_tonne_rl_c0p7z = fert_app_wc_tonne_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    fert_app_wc_tonne_rl_c0p7z = fert_app_wc_tonne_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
 
     ##app cost per ha
     ###call passes function (it has to be a separate function because it is used in crplabour.py as well
@@ -546,10 +547,10 @@ def f_fert_cost(r_vals):
     fert_app_cost_ha_rzl_n = fert_passes.mul(fert_cost_ha,axis=1)
     fert_app_cost_ha_rzl_p7n = fert_app_cost_ha_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
     fert_app_cost_ha_rl_p7nz = fert_app_cost_ha_rzl_p7n.unstack(1)
-    fert_app_cost_ha_rl_p7z = fert_app_cost_ha_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    fert_app_cost_ha_rl_p7z = fert_app_cost_ha_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
     fert_app_wc_ha_rzl_c0p7n = fert_app_cost_ha_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
     fert_app_wc_ha_rl_c0p7nz = fert_app_wc_ha_rzl_c0p7n.unstack(1)
-    fert_app_wc_ha_rl_c0p7z = fert_app_wc_ha_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    fert_app_wc_ha_rl_c0p7z = fert_app_wc_ha_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
 
     ##combine all costs - fert, app per ha and app per tonne
     fert_cost_total = phase_fert_cost_rl_p7z + fert_app_cost_ha_rl_p7z + fert_app_cost_tonne_rl_p7z
@@ -578,7 +579,7 @@ def f_nap_fert_req():
     '''
     ##read phases and add empty header level
     phases_df2 = sinp.f_phases()
-    phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns,['']])  # make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
+    phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns,['']])  # make the df multi index so that when it merges with other df below the indexs remaining separate (otherwise it turn into a one leveled tuple)
     ##adj arable
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)  # read in arable area df
     fertreq_na = pinp.crop['nap_fert'].reset_index().set_index(['fert','landuse'])
@@ -596,7 +597,7 @@ def f_nap_fert_passes():
     '''
     ##read phases and add empty header level
     phases_df2 = sinp.f_phases()
-    phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns,['']])  # make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
+    phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns,['']])  # make the df multi index so that when it merges with other df below the indexs remaining separate (otherwise it turn into a one leveled tuple)
 
     ##passes over non arable pasture area (only for pasture phases because for pasture the non arable areas also receive fert)
     passes_na = pinp.crop['nap_passes'].reset_index().set_index(['fert','landuse'])
@@ -625,9 +626,9 @@ def f_nap_fert_cost(r_vals):
     total_cost = cost + transport #total cost = fert cost and transport.
     phase_fert_cost_rl_n = fertreq.mul(total_cost, axis=1)/1000  #div by 1000 to convert to $/kg
     phase_fert_cost_rl_p7zn = phase_fert_cost_rl_n.reindex(fert_cost_allocation_p7zn.index, axis=1, level=2)
-    phase_fert_cost_rl_p7z = phase_fert_cost_rl_p7zn.mul(fert_cost_allocation_p7zn, axis=1).groupby(axis=1, level=(0,1)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    phase_fert_cost_rl_p7z = phase_fert_cost_rl_p7zn.mul(fert_cost_allocation_p7zn, axis=1).groupby(axis=1, level=(0,1)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
     phase_fert_wc_rl_c0p7zn = phase_fert_cost_rl_n.reindex(fert_wc_allocation_c0p7zn.index, axis=1, level=3)
-    phase_fert_wc_rl_c0p7z = phase_fert_wc_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).groupby(axis=1, level=(0,1,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    phase_fert_wc_rl_c0p7z = phase_fert_wc_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).groupby(axis=1, level=(0,1,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
 
     ##application cost per tonne
     app_cost_tonne_rl_n = fertreq.mul(mac.fert_app_cost_t(), axis=1)/1000  #div by 1000 to convert to $/kg
@@ -637,9 +638,9 @@ def f_nap_fert_cost(r_vals):
     ##total application cost in each cash period
     total_app_cost_rl_n = (app_cost_tonne_rl_n+app_cost_ha_rl_n)
     total_app_cost_rl_p7zn = total_app_cost_rl_n.reindex(fert_cost_allocation_p7zn.index, axis=1, level=2)
-    total_app_cost_rl_p7z = total_app_cost_rl_p7zn.mul(fert_cost_allocation_p7zn, axis=1).groupby(axis=1, level=(0,1)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    total_app_cost_rl_p7z = total_app_cost_rl_p7zn.mul(fert_cost_allocation_p7zn, axis=1).groupby(axis=1, level=(0,1)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
     total_app_wc_rl_c0p7zn = total_app_cost_rl_n.reindex(fert_wc_allocation_c0p7zn.index, axis=1, level=3)
-    total_app_wc_rl_c0p7z = total_app_wc_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).groupby(axis=1, level=(0,1,2)).sum()  # sum the wc of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
+    total_app_wc_rl_c0p7z = total_app_wc_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).groupby(axis=1, level=(0,1,2)).sum()  # sum the wc of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
 
     ##total fert and app cost
     nap_fert_cost = phase_fert_cost_rl_p7z + total_app_cost_rl_p7z
@@ -670,10 +671,10 @@ def f1_total_fert_req():
 
 
 #######################
-#stubble handeling    #
+#stubble handling    #
 #######################
 '''
-cost now associated with current yr because it requires knpwing the yield of the crop - hence under the new rotation phases that contain sets it isn;t possible to use the previous landuse to determine cost.
+cost now associated with current yr because it requires knowing the yield of the crop - hence under the new rotation phases that contain sets it isn;t possible to use the previous landuse to determine cost.
 As a general rule stubble handling is not required if:
 -the land use is a legume crop, pasture or lucerne
 Other general rules about stubble handling:
@@ -685,7 +686,7 @@ Limitations with the way stubble is handled in this Table:
     The biggest factor determining of whether stubble will require handling is the amount of stubble present, which largely depends on season type (other factors include width between crop rows, what type of seeding setup is used, how low crop was harvested, if the header was equipped with a straw chopper). All of this makes the requirement for stubble handling hard to represent in a steady state model. Hence the probability-based approach adopted in this Table.
     This probability is calculated by dividing the average yield for that LMU by the critical grain yield. This means the likelihood of stubble handling being req’d increases for higher yielding soil types etc, which is logical. However, the probability isn’t accurately linked to the likelihood that stubble will actually require handling. For instance, just because the average steady-state wht yield of a LMU is 1.75t/ha doesn’t necessarily mean that the wheat stubble on that LMU will need handling 1.75/3.5 = 50% of the time.
     So in summary, these probabilities are fairly crude...
-    additionally this new structure assumes that even if the preceeding landuse is pasture the current phase will still get handling cost (wasn't able to find an alternative way)
+    additionally this new structure assumes that even if the preceding landuse is pasture the current phase will still get handling cost (wasn't able to find an alternative way)
 frost is not included because that doesn't reduce biomass
 '''
 
@@ -735,7 +736,7 @@ def f_phase_stubble_cost(r_vals):
     ##calculate the probability of a rotation phase needing stubble handling
     base_biomass_rkl_z = f_rot_biomass(for_stub=True).unstack()
     ###convert to grain
-    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harves s2 slice because stubble handling is based on harvestable grain yield
+    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because stubble handling is based on harvestable grain yield
     harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
     base_yields_rkl_z = base_biomass_rkl_z.mul(harvest_index_k, axis=0, level=1)
     stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=sinp.landuse['C'], dtype=float)*1000  #have to convert to kg to match base yield
@@ -931,9 +932,9 @@ def f_seedcost(r_vals):
     '''
     ##read phases and add two empty col levels
     phases_df2 = sinp.f_phases()
-    phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns,[''],['']])  # make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
+    phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns,[''],['']])  # make the df multi index so that when it merges with other df below the indexs remaining separate (otherwise it turn into a one leveled tuple)
     phases_df3 = sinp.f_phases()
-    phases_df3.columns = pd.MultiIndex.from_product([phases_df3.columns,[''],[''],['']])  # make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
+    phases_df3.columns = pd.MultiIndex.from_product([phases_df3.columns,[''],[''],['']])  # make the df multi index so that when it merges with other df below the indexs remaining separate (otherwise it turn into a one leveled tuple)
 
     ##seasonal inputs
     seed_period_lengths = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
@@ -1085,9 +1086,9 @@ def f1_rot_cost(r_vals):
     wc_c0p7zlr = wc_rl_c0p7z.unstack([1,0])
 
     ##create params for v_phase_increment
-    ## costs for v_phase_increment activities are incurred in the season peirod when the activity is selected
+    ## costs for v_phase_increment activities are incurred in the season period when the activity is selected
     ## however the interest is calculated as if the cost was incurred at the normal time (this is because interest
-    ## is calculated for each seperate cost in the functions above).
+    ## is calculated for each separate cost in the functions above).
     increment_cost_p7zlr = rps.f_v_phase_increment_adj(cost_p7zlr,p7_pos=-4,z_pos=-3)
     increment_wc_c0p7zlr = rps.f_v_phase_increment_adj(wc_c0p7zlr,p7_pos=-4,z_pos=-3)
 

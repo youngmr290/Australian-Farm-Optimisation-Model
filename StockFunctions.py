@@ -172,103 +172,6 @@ def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=0, condition=None, axis=0, d
     return param_sire, param_dams, param_yatf, param_offs
 
 
-def f1_g2g(array_g,group,left_pos=0,swap=False,right_pos=-1,left_pos2=0,right_pos2=-1, left_pos3=0, right_pos3=0,
-          condition = None, axis = 0, condition2 = None, axis2 = 0, move=False, source=0, dest=1):
-    '''
-    Parameters
-    ----------
-    array_g : array
-        parameter array - input from excel.
-    group : TYPE
-        DESCRIPTION.
-    left_pos : int
-        position of axis to the left of where the new axis will be added.
-    swap : boolean, optional
-        do you want to swap the first tow axis?. The default is False.
-    right_pos : int, optional
-        the position of the axis to the right of the singleton axis being added. The default is -1, for when the axis to the right is g?.
-    left_pos2 : int
-        position of axis to the left of where the new axis will be added.
-    right_pos2 : int, optional
-        the position of the axis to the right of the singleton axis being added. The default is -1, for when the axis to the right is g?.
-    condition: boolean, optional
-        mask used to slice given axis.
-    axis: int, optional
-        axis to apply mask to.
-
-    *note: if adding two sets of new axis add from right to left (then the pos variables align)
-
-    Returns
-    -------
-    Reshapes, swaps axis if required, expands and converts g array to the correct g slices.
-    '''
-
-    i_g3_inc = pinp.sheep['i_g3_inc']
-    i_mask_g0g3 = sinp.stock['i_mask_g0g3']
-    i_mask_g1g3 = sinp.stock['i_mask_g1g3']
-    i_mask_g2g3 = sinp.stock['i_mask_g2g3']
-    i_mask_g3g3 = sinp.stock['i_mask_g3g3']
-
-    ##swap axis if necessary
-    if swap:
-        array_g = np.swapaxes(array_g, 0, 1)
-
-    ##move axis if necessary
-    if move:
-        array_g = np.moveaxis(array_g, source=source, destination=dest)
-
-
-    ##get axis into correct position 1
-    if left_pos != None or left_pos != 0:
-        extra_axes = tuple(range((left_pos + 1), right_pos))
-    else: extra_axes = ()
-    array_g = np.expand_dims(array_g, axis = extra_axes)
-
-    ##get axis into correct position 2 (some arrays need singleton axis added in multiple places ie separated by a used axis)
-    if left_pos2 != None or left_pos2 != 0:
-        extra_axes = tuple(range((left_pos2 + 1), right_pos2))
-    else: extra_axes = ()
-    array_g = np.expand_dims(array_g, axis = extra_axes)
-
-    ##get axis into correct position 3 (some arrays need singleton axis added in multiple places ie separated by a used axis)
-    if left_pos3 != 0:
-        extra_axes = tuple(range((left_pos3 + 1), right_pos3))
-    else: extra_axes = ()
-    array_g = np.expand_dims(array_g, axis = extra_axes)
-
-    ##select the required genotypes based on the offspring the user wants to model.
-    if group == 'sire':
-        ##create mask g?g
-        mask_sire_inc_g0 = np.any(i_mask_g0g3 * i_g3_inc, axis =1)
-        array = array_g[...,mask_sire_inc_g0]
-    elif group == 'dams':
-        ##create mask g?g
-        mask_dams_inc_g1 = np.any(i_mask_g1g3 * i_g3_inc, axis =1)
-        array = array_g[...,mask_dams_inc_g1]
-    elif group == 'offs':
-        ##create mask g?g
-        mask_offs_inc_g3 = np.any(i_mask_g3g3 * i_g3_inc, axis =1)
-        array = array_g[...,mask_offs_inc_g3]
-    elif group == 'yatf':
-        ##create mask g?g
-        mask_yatf_inc_g2 = np.any(i_mask_g2g3 * i_g3_inc, axis =1)
-        array = array_g[...,mask_yatf_inc_g2]
-    ##apply mask if required
-    if condition is not None: #see if condition exists
-        if type(condition) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
-            condition= np.asarray([condition]) #convert to numpy if it is singular input
-            array = np.compress(condition, array, axis)
-        else:
-            array = np.compress(condition, array, axis)
-    if condition2 is not None: #see if condition exists
-        if type(condition2) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
-            condition2= np.asarray([condition2]) #convert to numpy if it is singular input
-            array = np.compress(condition2, array, axis2)
-        else:
-            array = np.compress(condition2, array, axis2)
-    return array
-
-
 def f1_DSTw(scan_g, cycles=1):
     '''
     A numpy based calculation of the proportion of dry, single, twin & triplet bearing dams from a scanning percentage.
@@ -409,7 +312,7 @@ def f1_fvpdvp_adj(fvp_start_fa1e1b1nwzida0e0b0xyg, fvp_type_fa1e1b1nwzida0e0b0xy
     duplicate_fvp_mask_f = np.logical_not(fun.f_reduce_skipfew(np.all, post_fvp_mask,preserveAxis=0)) #post gen mask across all axis
     fvp_start_fa1e1b1nwzida0e0b0xyg = fvp_start_fa1e1b1nwzida0e0b0xyg[duplicate_fvp_mask_f] #remove fvps that are on the last period of the generator
     fvp_type_fa1e1b1nwzida0e0b0xyg = fvp_type_fa1e1b1nwzida0e0b0xyg[duplicate_fvp_mask_f] #remove fvps that are on the last period of the generator
-    ###if multiple fvps occur on the last period of the gen (only fo some axis and hance arent removed) date gets offset by 1 period.
+    ###if multiple fvps occur on the last period of the gen (only for some axis and hence aren't removed) date gets offset by 1 period.
     post_fvp_mask = fvp_start_fa1e1b1nwzida0e0b0xyg >= date_start_p[-1]
     new_fvp_post_fa1e1b1nwzida0e0b0xyg = date_start_p[-1] - (np.cumsum(post_fvp_mask, axis=0)-1) * np.timedelta64(step,'D') #if multiple fvps occur at weaning they need to be incremented by 7 days
     idx_fa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, new_fvp_post_fa1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the new period, side=right so that if the date is already the start of a period it remains in that period.
@@ -436,7 +339,7 @@ def f1_nv_components(paststd_foo_p6a1e1b1j0wzida0e0b0xyg, paststd_dmd_p6a1e1b1j0
         #. M/D affects the efficiency of utilising energy for maintenance and production.
 
     The range from lowest NV to highest NV is associated with increasing FOO & DMD inputs across the j0 axis and then
-    increasing supplementary feeding from the input level up to adlib.
+    increasing supplementary feeding from the input level up to ad-lib.
 
     The mei returned from this function is nv for a potential intake of 1 (nv = mei * PI). The nv is is scaled
     for the actual PI outside of this function.
@@ -490,13 +393,31 @@ def f1_feedsupply(feedsupplyw_ta1e1b1nwzida0e0b0xyg, confinementw_ta1e1b1nwzida0
                   foo_a1e1b1j1wzida0e0b0xyg, dmd_a1e1b1j1wzida0e0b0xyg, supp_a1e1b1j1wzida0e0b0xyg, pi_a1e1b1nwzida0e0b0xyg,
                   mp2=0):
     ##calc mei (mei = nv * pi)
-    mei = feedsupplyw_ta1e1b1nwzida0e0b0xyg * pi_a1e1b1nwzida0e0b0xyg + mp2 #add mp2 because pi doesnt include milk.
+    mei = feedsupplyw_ta1e1b1nwzida0e0b0xyg * pi_a1e1b1nwzida0e0b0xyg + mp2 #add mp2 because pi doesn't include milk.
 
     ##interp to calc foo, dmd and supp that correspond with given feedsupply
-    axis = sinp.stock['i_n_pos']
-    foo = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,foo_a1e1b1j1wzida0e0b0xyg,axis)
-    dmd = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,dmd_a1e1b1j1wzida0e0b0xyg,axis)
-    supp = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,supp_a1e1b1j1wzida0e0b0xyg,axis)
+    ## this only works if nv, foo, dmd and supp have no active axis except j1 & g and feedsupply has a singleton j1/n axis.
+    ###test that criteria above are met - slice off g so it is not included
+    j1_pos = sinp.stock['i_n_pos']
+    nv_test = len(nv_a1e1b1j1wzida0e0b0xyg[...,0].ravel())==nv_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
+    foo_test = len(foo_a1e1b1j1wzida0e0b0xyg[...,0].ravel())==foo_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
+    dmd_test = len(dmd_a1e1b1j1wzida0e0b0xyg[...,0].ravel())==dmd_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
+    supp_test = len(supp_a1e1b1j1wzida0e0b0xyg[...,0].ravel())==supp_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
+    if not(nv_test and foo_test and dmd_test and supp_test):
+        raise ValueError('Axis error in feed extrapolation: j1 can be the only active axis')
+    ###interp - has to be done in a loop because g axis is active in the nv array
+    foo = np.zeros_like(feedsupplyw_ta1e1b1nwzida0e0b0xyg)
+    dmd = np.zeros_like(feedsupplyw_ta1e1b1nwzida0e0b0xyg)
+    supp = np.zeros_like(feedsupplyw_ta1e1b1nwzida0e0b0xyg)
+    for g in range(feedsupplyw_ta1e1b1nwzida0e0b0xyg.shape[-1]):
+        foo[...,g] = np.interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg[...,g].ravel(), nv_a1e1b1j1wzida0e0b0xyg[...,g].squeeze(), foo_a1e1b1j1wzida0e0b0xyg.squeeze()).reshape(feedsupplyw_ta1e1b1nwzida0e0b0xyg[...,g].shape)
+        dmd[...,g] = np.interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg[...,g].ravel(), nv_a1e1b1j1wzida0e0b0xyg[...,g].squeeze(), dmd_a1e1b1j1wzida0e0b0xyg.squeeze()).reshape(feedsupplyw_ta1e1b1nwzida0e0b0xyg[...,g].shape)
+        supp[...,g] = np.interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg[...,g].ravel(),nv_a1e1b1j1wzida0e0b0xyg[...,g].squeeze(), supp_a1e1b1j1wzida0e0b0xyg.squeeze()).reshape(feedsupplyw_ta1e1b1nwzida0e0b0xyg[...,g].shape)
+    #old method - made generator 36% slower due to looping
+    # axis = sinp.stock['i_n_pos']
+    # foo = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,foo_a1e1b1j1wzida0e0b0xyg,axis)
+    # dmd = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,dmd_a1e1b1j1wzida0e0b0xyg,axis)
+    # supp = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,supp_a1e1b1j1wzida0e0b0xyg,axis)
 
     ##if confinement then no pasture
     foo = fun.f_update(foo,0,confinementw_ta1e1b1nwzida0e0b0xyg)
@@ -519,17 +440,17 @@ def f1_feedsupply(feedsupplyw_ta1e1b1nwzida0e0b0xyg, confinementw_ta1e1b1nwzida0
     ##M/D of the diet (solids)
     md_solid = fun.f_divide(mei_solid, intake_f + intake_s) #yatf have 0 solid intake at start of life.
     ##Proportion of ME as milk
-    mei_propn_milk = fun.f_divide(mp2, mei) #func to stop div/0 error when some animals dont exist eg tol1 animals exist before tol2 animals
+    mei_propn_milk = fun.f_divide(mp2, mei) #func to stop div/0 error when some animals don't exist eg tol1 animals exist before tol2 animals
     ##Proportion of ME as supp
-    mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error when some animals dont exist eg tol1 animals exist before tol2 animals
+    mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error when some animals don't exist eg tol1 animals exist before tol2 animals
     ##Proportion of ME as herbage
-    mei_propn_herb = fun.f_divide(mei_herb, mei) #func to stop div/0 error when some animals dont exist eg tol1 animals exist before tol2 animals
+    mei_propn_herb = fun.f_divide(mei_herb, mei) #func to stop div/0 error when some animals don't exist eg tol1 animals exist before tol2 animals
 
     return mei, foo, dmd, mei_solid, md_solid, md_herb, intake_f, intake_s, mei_propn_milk, mei_propn_supp, mei_propn_herb
 
 
 def f1_feedsupply_adjust(attempts,feedsupply,itn):
-    ##create empty array to put new feedsupply into, this is done so it doesnt have the itn axis (probably could just create from attempts array shape without last axis)
+    ##create empty array to put new feedsupply into, this is done so it doesn't have the itn axis (probably could just create from attempts array shape without last axis)
     feedsupply = np.zeros_like(feedsupply)
     ##which feedsupplies can be calculated using binary method - must have a negative and positive error
     binary_mask = np.nanmin(attempts[...,1], axis=-1)/np.nanmax(attempts[...,1], axis=-1) < 0 #axis -1 is the itn axis ie take the min and max error from the previous iterations
@@ -541,9 +462,9 @@ def f1_feedsupply_adjust(attempts,feedsupply,itn):
     ###feedsupply with positive error that is closest to 0 - this is a little complex because applying a max function to a masked array
     mask_attempts= np.ma.masked_array(attempts[...,1],attempts[...,1]<0) #np.ma has a true and false the other way around (eg false means keep data) therefore the <> sign is opposite to what you want
     pos_bool=np.ma.getdata(mask_attempts.min(axis=-1,keepdims=True)==attempts[...,1]) #returns a maks that states the error that is negative but closest to 0
-    pos_bool = pos_bool * binary_mask[...,na] #this just makes sure the pos mask only has a true in the same place as the neg mask. 
+    pos_bool = pos_bool * binary_mask[...,na] #this just makes sure the pos mask only has a true in the same place as the neg mask.
     ##calc feedsupply
-    feedsupply[binary_mask] = (attempts[...,0][neg_bool] + attempts[...,0][pos_bool])/2    
+    feedsupply[binary_mask] = (attempts[...,0][neg_bool] + attempts[...,0][pos_bool])/2
     ##calc feedsupply using interpolation
     ###first determine the slope, slope is always positive ie as feedsupply increases error increase because error = lwc - target and more feed means higher lwc.
     if itn==0:
@@ -668,11 +589,11 @@ def f_intake(pi, ri, md_herb, confinement, intake_s, i_md_supp, mp2=0):
     ###ME intake from herbage
     mei_herb = mei_solid - mei_supp
     ###Proportion of ME as milk
-    mei_propn_milk = fun.f_divide(mp2, mei) #func to stop div/0 error when some animals dont exist eg tol1 animals exist before tol2 animals
+    mei_propn_milk = fun.f_divide(mp2, mei) #func to stop div/0 error when some animals don't exist eg tol1 animals exist before tol2 animals
     ###Proportion of ME as supp
-    mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error when some animals dont exist eg tol1 animals exist before tol2 animals
+    mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error when some animals don't exist eg tol1 animals exist before tol2 animals
     ###Proportion of ME as herbage
-    mei_propn_herb = fun.f_divide(mei_herb, mei) #func to stop div/0 error when some animals dont exist eg tol1 animals exist before tol2 animals
+    mei_propn_herb = fun.f_divide(mei_herb, mei) #func to stop div/0 error when some animals don't exist eg tol1 animals exist before tol2 animals
 
     return mei, mei_solid, intake_f, md_solid, mei_propn_milk, mei_propn_herb, mei_propn_supp
 
@@ -1109,9 +1030,9 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
 
     :param cf:
     :param cb1: GrazPlan parameter stating the probability of conception with different number of foetuses.
-    :param relsize_mating: Relative size at mating. This is a seperate variable to relsize_start because mating
+    :param relsize_mating: Relative size at mating. This is a separate variable to relsize_start because mating
                            may occur mid period. Note: the e and b axis have been handled before passing in.
-    :param rc_mating: Relative condition at mating. This is a seperate variable to rc_start because mating
+    :param rc_mating: Relative condition at mating. This is a separate variable to rc_start because mating
                       may occur mid period. Note: the e and b axis have been handled before passing in.
     :param crg_doy:
     :param nfoet_b1any:
@@ -1217,7 +1138,7 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, crg_do
     The proportion of dry, single, twin & triplet is estimated as a function of the scanning percentage using f1_DSTw
     Note: sa is not applied in this function because it is applied to the input scan_std (which is also used to determine the BTRT effect on fleece)
 
-    :param relsize_mating: Relative size at mating. This is a seperate variable to relsize_start because mating
+    :param relsize_mating: Relative size at mating. This is a separate variable to relsize_start because mating
                            may occur mid period. Note: the e and b axis have been handled before passing in.
     :param cs_mating: Condition score at mating. Note: the e and b axis have been handled before passing in.
 '''
@@ -1366,7 +1287,7 @@ def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_b
     mort = fun.f_sa(mort, sap_mortalitye, sa_type = 1, value_min = 0)
     return mort
 
-    
+
 def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_is_birth, chill_index_p1, nfoet_b1
                            , rev_trait_value, sap_mortalityp, saa_mortalityx):
     '''Progeny losses due to large progeny or slow birth process (dystocia)
@@ -1506,14 +1427,14 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
 #######################
 
 def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startseason, mask_min_lw_z, period_is_prejoin=0,
-                         group=None, scan_management=0, gbal=0, stub_lw_idx=np.array(np.nan)):
+                         group=None, scan_management=0, gbal=0, drysretained_scan=1, drysretained_birth=1, stub_lw_idx=np.array(np.nan)):
     '''
     Production is weighted at prejoining across e&b axes and at season start across the z axis.
 
     Prejoining is slight more complex because there is the potential that drys would have been sold during the
     yr if the farmers management allowed them to be identified. If the drys were sold the animal at the start
-    of the next repro cylce (prejoining) should be the weighted average of all the animals excluding drys.
-    Because we dont know the animals are actually sold (since pyomo optimises this) we need to leave the
+    of the next repro cycle (prejoining) should be the weighted average of all the animals excluding drys.
+    Because we don't know the animals are actually sold (since pyomo optimises this) we need to leave the
     main numbers variable untouched so we temporarily make the adjustment in this function. In the inputs the user
     inputs the expected number of drys that will be retained. In this function we scale the numbers of drys
     by that amount so that the new animal at the start of next prejoining reflects if drys were sold or retained.
@@ -1532,17 +1453,23 @@ def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_starts
     if np.any(period_is_startseason):
         var_start = f1_season_wa(numbers, var_start, season_tup, mask_min_lw_z, period_is_startseason)
 
-    ##b) Calculate temporary values as if period_is_prejoin
+    ##b) Calculated weighted average of var_start if period_is_prejoin (because the classes from the prior year are re-combined at pre-joining)
+    ### If the dams have been scanned or assessed for gbal then the number of drys is adjusted based on the estimated management
+    ### The adjustment for drys has to be done to the production levels at prejoining rather than to numbers at scan or birth
+    ###because adjusting numbers (although more intuitive) affects the apparent mortality of the drys.
+    ### Note: this is different to the approach taken for the proportion of dams mated that is done in f_end_numbers
+    ###at the beginning of the prejoin DVP which doesn't affect apparent mortality.
     if group==1 and np.any(period_is_prejoin):
         ###inputs
         b1_pos = sinp.stock['i_b1_pos']
         nfoet_b1 = fun.f_expand(sinp.stock['a_nfoet_b1'],b1_pos)
         nyatf_b1 = fun.f_expand(sinp.stock['a_nyatf_b1'],b1_pos)
-        ###scale numbers if drys are expected to have been sold at scanning (in the generator we dont know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
-        temp = np.maximum(pinp.sheep['i_drysretained_scan'],np.minimum(1,nfoet_b1)) * numbers
+        ###scale numbers if drys are expected to have been sold at scanning (in the generator we don't know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
+        ###can't occur at prejoining rather than at scanning & birth
+        temp = np.maximum(drysretained_scan, np.minimum(1, nfoet_b1)) * numbers
         scaled_numbers = fun.f_update(numbers, temp, scan_management >= 1) # only scale numbers if scanning occurs
-        ###scale numbers if drys are expected to have been sold at birth (in the generator we dont know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
-        temp = np.maximum(pinp.sheep['i_drysretained_birth'],np.minimum(1,nyatf_b1)) * scaled_numbers
+        ###scale numbers if drys are expected to have been sold at birth (in the generator we don't know if drys are actually sold since pyomo optimises this, so this is just our best estimate)
+        temp = np.maximum(drysretained_birth, np.minimum(1, nyatf_b1)) * scaled_numbers
         scaled_numbers = fun.f_update(scaled_numbers,temp, gbal >= 2)  # only scale numbers if differential management
         ###weighted average of e&b axis
         temporary = fun.f_weighted_average(var_start, scaled_numbers, prejoin_tup, keepdims=True, non_zero=True) #gets the weighted average of production in the different seasons
@@ -1589,15 +1516,11 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
     In the current structure at prejoining the e and b axis are weighted. This means that the w[0] activity is
     potentially created from a bigger spread of weights.
 
-    :param numbers: current end numbers
     :param var: production variable being condensed
     :param lw_idx: index specifying the sorted order of the w axis
-    :param prejoin_tup: prejoin axis
-    :param season_tup: season axis
     :param i_n_len: number of nutrition options
     :param i_w_len: length of w axis
     :param i_n_fvp_period: number of fvps
-    :param numbers_start_condense: numbers at the previous condensing (used to calc mortality)
     :param period_is_condense: bool array
     :return:
     """
@@ -1725,7 +1648,7 @@ def f1_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf
     '''
     ##a) mortality (include np.maximum on mortality so that numbers can't become negative)
     ###For dams temporarily update the nm mort with mated mort between prejoining and end of mating. So that conception is calculated
-    ### reflect the mated numbers. This is required because nm and mated might have a diferent feedsupply and conception needs to be based on the mated fs and hence mort.
+    ### reflect the mated numbers. This is required because nm and mated might have a different feedsupply and conception needs to be based on the mated fs and hence mort.
     ### The back dating of the numbers scales the mortality correctly.
     if group==1:
         mortality = fun.f_update(mortality, mortality[:, :, :, 2:3, ...], period_isbetween_prejoinmatingend)
@@ -1746,6 +1669,8 @@ def f1_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf
             mated_propn = np.minimum(1, propn_dams_mated) #maximum value of 1 because default is inf, otherwise propn to be mated.
             ### the number in the NM slice e1[0] is a proportion of the total numbers
             ### need a minimum number to keep nm in pyomo. Want a small number relative to mortality (after allowing for multiple slices getting the small number)
+            ### Scale the numbers based on expected proportion mated so that the weighted average for production reflects expected management
+            ### Note: scaling of numbers for expected management of drys occurs in f1_period_start_prod()
             temporary[:, :, 0:1, 0:1, ...] = np.maximum(0.00001, np.sum(temporary, axis=(sinp.stock['i_e1_pos'], sinp.stock['i_b1_pos']),
                                                                      keepdims=True) * (1 - mated_propn))
             ### the numbers in the other mated slices other than NM get scaled by the proportion mated
@@ -2054,7 +1979,7 @@ def f1_adjust_triggervalues_for_t(animal_triggervalues_h7tpg, operations_trigger
     have a t axis on period is shear.
 
     Note: the generator t axis has been made to a singleton to reduce computational time in the husb calcs. Thus this
-    function doesnt do anything for dams unless peirod_is_shear has a t axis.
+    function doesn't do anything for dams unless period_is_shear has a t axis.
 
     This function must be called each time the trigger_values are used. It needs to be called inside a h2
     loop so that triggervalues never has a full h2 axis (that would be too big).
@@ -2304,7 +2229,7 @@ def f1_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_t
 #     ##convert p to v - info at this link https://stackoverflow.com/questions/50121980/numpy-conditional-sum
 #     ##basically we are summing the p axis for each dvp. the tricky part (which has caused the requirement for the loops) is that dvp pointer is not the same for each axis eg dvp is effected by e axis.
 #     ##so we need to loop though all the axis in the dvp and sum p and assign to a final array.
-#     ##if the axis is size 1 (ie singleton) then we want to take all of that axis ie ':' because just because the dvp pointer has singleton doesnt mean param array has singleton so need to take all slice of the param (unless that is an active dvp axis because that means dvp timing may differ for different slices along that axis so it must be summed in the loop)
+#     ##if the axis is size 1 (ie singleton) then we want to take all of that axis ie ':' because just because the dvp pointer has singleton doesn't mean param array has singleton so need to take all slice of the param (unless that is an active dvp axis because that means dvp timing may differ for different slices along that axis so it must be summed in the loop)
 #     shape = production_ftpany.shape[0:sinp.stock['i_p_pos']] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[sinp.stock['i_p_pos']+1:]  # bit messy because need v t and all the other axis (but not p)
 #     result=np.zeros(shape).astype('float32')
 #     shape = dvp_pointer_p.shape
@@ -2365,7 +2290,7 @@ def f1_p2v(production_p, dvp_pointer_p, numbers_p=np.array([1]), on_hand_tp=True
     production_p = np.broadcast_to(production_p, np.broadcast(production_p, dvp_pointer_p).shape)
     numbers_p = np.broadcast_to(numbers_p, np.broadcast(numbers_p, dvp_pointer_p).shape)
     days_period_p = np.broadcast_to(days_period_p, np.broadcast(days_period_p, dvp_pointer_p).shape)
-    on_hand_tp = np.broadcast_to(on_hand_tp, np.broadcast(on_hand_tp, dvp_pointer_p).shape) #bit more complex because need to account for axes that 'shape' doesnt have.
+    on_hand_tp = np.broadcast_to(on_hand_tp, np.broadcast(on_hand_tp, dvp_pointer_p).shape) #bit more complex because need to account for axes that 'shape' doesn't have.
     period_is_tp = np.broadcast_to(period_is_tp, np.broadcast(period_is_tp, dvp_pointer_p).shape)
 
     ##loop over each axis in dvp_pointer. Loop over all axis because active axis change for dams and offs. So this will handle if other axis get activated at a later date.
@@ -2529,7 +2454,7 @@ def f1_p2v_adj(production_v, a_p_v, a_v_p,update_production_v=None):
     Mostly when a dvp is 0 days long (clashes with another dvp) we want it to have 0 production (e.g. 0 mei).
     This is how it works in the p2v function. However, in some cases (numbers and ffcfw) we want values in the
     0 day dvps because we need the animals to transfer to the next dvp. ffcfw is used in the numbers distribution
-    so it needs numbers incase season start or condense dvp clash with another dvp.
+    so it needs numbers in case season start or condense dvp clash with another dvp.
     Numbers need to do a 1:1 transfer so the start and end numbers are the same.
     ffcfw needs to allow distribution to work correctly. So the condense dvp is always first in a clash (this is
     handled in the construction of the dvps) and the non 0 day dvp weights are used to populate the 0 day dvp.
@@ -2634,7 +2559,7 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_w9vars_wg=1, index
 
     ## Calculate the proportion distributed to the nearest and assign to that w9 slice
     ### Handle the special cases in f_divide (option=1) where source and destination weights are the same
-    ### weights have converged or the dest and source weight is 0 for all slices (eg if animals don't exist or distribution doesnt occur in the dvp)
+    ### weights have converged or the dest and source weight is 0 for all slices (eg if animals don't exist or distribution doesn't occur in the dvp)
     #### nearest
     proportion = fun.f_divide(ffcfw_source_w8g[...,na] - next_nearestw9_w8gw
                               , nearestw9_w8gw - next_nearestw9_w8gw, dtype=dtype, option=1)
