@@ -95,7 +95,8 @@ def coremodel_all(trial_name,model):
     #########
 
     ##sometimes if there is a bug when solved it is good to write lp here - because the code doesn't run to the other place where lp written
-    model.write('Output/test.lp',io_options={'symbolic_solver_labels': True})  # comment this out when not debugging
+    directory_path = os.path.dirname(os.path.abspath(__file__))
+    model.write(os.path.join(directory_path, 'Output/test.lp'),io_options={'symbolic_solver_labels': True})  # comment this out when not debugging
 
     ##tells the solver you want duals and rc
     model.dual = pe.Suffix(direction=pe.Suffix.IMPORT)

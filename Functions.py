@@ -1041,10 +1041,11 @@ def write_variablesummary(model, row, exp_data, obj, option=0):
     ##This writes variables with value greater than 0.0001 to txt file
     ### written with trial description in file name if full solution is requested (option 0)
     ### written every iteration with generic name (option 1) - can be used to check progress of analysis each iteration
+    directory_path = os.path.dirname(os.path.abspath(__file__))
     if option == 0:
-        file = open('Output/Variable summary %s.txt' % exp_data.index[row][3],'w')  # file name has to have capital
+        file = open(os.path.join(directory_path, 'Output/Variable summary %s.txt' % exp_data.index[row][3]),'w')  # file name has to have capital
     else:
-        file = open('Output/Variable summary.txt','w')  # file name has to have capital
+        file = open(os.path.join(directory_path, 'Output/Variable summary.txt'),'w')  # file name has to have capital
     file.write('Trial: %s\n' % exp_data.index[row][3])  # the first line is the name of the trial
     file.write('{0} profit: {1}\n'.format(exp_data.index[row][3],obj))  # the second line is profit
     for v in model.component_objects(pe.Var,active=True):
