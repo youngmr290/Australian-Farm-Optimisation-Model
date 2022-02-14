@@ -77,8 +77,8 @@ report_run = report_run.droplevel(1, axis=1)
 #todo Reports to add:
 # 1. todo add a second mortality report that the weighted average mortality for the animals selected (to complement the current report that is mortality for each w axis)
 
-def f_report(processor, trials, non_exist_trials):
-    '''Function to wrap ReportControl.py so that multiprocessing can be used.'''
+def f_report(processor, trials, non_exist_trials = [], app_lp_vars=None, app_r_vals=None):
+    """Function to wrap ReportControl.py so that multiprocessing can be used."""
     # print('Start processor: {0}'.format(processor))
     # print('Start trials: {0}'.format(trials))
     ##create empty df to stack each trial results into
@@ -151,7 +151,12 @@ def f_report(processor, trials, non_exist_trials):
 
     ##read in the pickled results
     for trial_name in trials:
-        lp_vars,r_vals = rep.load_pkl(trial_name)
+        ##if reports are being run from the app then the inputs are passed in else they are read from pkl files.
+        if app_lp_vars is not None:
+            lp_vars = app_lp_vars
+            r_vals = app_r_vals
+        else:
+            lp_vars,r_vals = rep.load_pkl(trial_name)
 
         ##handle infeasible trials
         if os.path.isfile('Output/infeasible/{0}.txt'.format(trial_name)):
@@ -1087,6 +1092,11 @@ def f_report(processor, trials, non_exist_trials):
             stubcon = rep.f_stubble_summary(lp_vars, r_vals)
             stubcon = pd.concat([stubcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_stubcon = rep.f_append_dfs(stacked_stubcon, stubcon)
+
+    ##if running from web app return the stacked results - dont want to write them to xl
+    if app_lp_vars is not None:
+        return stacked_summary, stacked_ffcfw_dams, stacked_ffcfw_offs
+
 
     ####################################
     #run between trial reports and save#
