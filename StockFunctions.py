@@ -396,23 +396,40 @@ def f1_feedsupply(feedsupplyw_ta1e1b1nwzida0e0b0xyg, confinementw_ta1e1b1nwzida0
     mei = feedsupplyw_ta1e1b1nwzida0e0b0xyg * pi_a1e1b1nwzida0e0b0xyg + mp2 #add mp2 because pi doesn't include milk.
 
     ##interp to calc foo, dmd and supp that correspond with given feedsupply
-    ## this only works if nv, foo, dmd and supp have no active axis except j1 & g and feedsupply has a singleton j1/n axis.
-    ###test that criteria above are met - slice off g so it is not included
+    ## this only works if nv, foo, dmd and supp have no active axis except j1, z & g and feedsupply has a singleton j1/n axis.
+    ###test that criteria above are met - slice off g & z so they are not included because they are looped
     j1_pos = sinp.stock['i_n_pos']
-    nv_test = len(nv_a1e1b1j1wzida0e0b0xyg[...,0].ravel())==nv_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
-    foo_test = len(foo_a1e1b1j1wzida0e0b0xyg[...,0].ravel())==foo_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
-    dmd_test = len(dmd_a1e1b1j1wzida0e0b0xyg[...,0].ravel())==dmd_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
-    supp_test = len(supp_a1e1b1j1wzida0e0b0xyg[...,0].ravel())==supp_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
+    z_pos = sinp.stock['i_z_pos']
+    g_pos = -1
+    slc = [slice(None)] * len(nv_a1e1b1j1wzida0e0b0xyg.shape)
+    slc[g_pos] = slice(0, 1)
+    slc[z_pos] = slice(0, 1)
+    nv_test = len(nv_a1e1b1j1wzida0e0b0xyg[tuple(slc)].ravel())==nv_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
+    foo_test = len(foo_a1e1b1j1wzida0e0b0xyg[tuple(slc)].ravel())==foo_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
+    dmd_test = len(dmd_a1e1b1j1wzida0e0b0xyg[tuple(slc)].ravel())==dmd_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
+    supp_test = len(supp_a1e1b1j1wzida0e0b0xyg[tuple(slc)].ravel())==supp_a1e1b1j1wzida0e0b0xyg.shape[j1_pos]
     if not(nv_test and foo_test and dmd_test and supp_test):
         raise ValueError('Axis error in feed extrapolation: j1 can be the only active axis')
-    ###interp - has to be done in a loop because g axis is active in the nv array
+    ###interp - has to be done in a loop because g & z axis can be active in the nv array
     foo = np.zeros_like(feedsupplyw_ta1e1b1nwzida0e0b0xyg)
     dmd = np.zeros_like(feedsupplyw_ta1e1b1nwzida0e0b0xyg)
     supp = np.zeros_like(feedsupplyw_ta1e1b1nwzida0e0b0xyg)
-    for g in range(feedsupplyw_ta1e1b1nwzida0e0b0xyg.shape[-1]):
-        foo[...,g] = np.interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg[...,g].ravel(), nv_a1e1b1j1wzida0e0b0xyg[...,g].squeeze(), foo_a1e1b1j1wzida0e0b0xyg.squeeze()).reshape(feedsupplyw_ta1e1b1nwzida0e0b0xyg[...,g].shape)
-        dmd[...,g] = np.interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg[...,g].ravel(), nv_a1e1b1j1wzida0e0b0xyg[...,g].squeeze(), dmd_a1e1b1j1wzida0e0b0xyg.squeeze()).reshape(feedsupplyw_ta1e1b1nwzida0e0b0xyg[...,g].shape)
-        supp[...,g] = np.interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg[...,g].ravel(),nv_a1e1b1j1wzida0e0b0xyg[...,g].squeeze(), supp_a1e1b1j1wzida0e0b0xyg.squeeze()).reshape(feedsupplyw_ta1e1b1nwzida0e0b0xyg[...,g].shape)
+    slc1 = [slice(None)] * len(feedsupplyw_ta1e1b1nwzida0e0b0xyg.shape)
+    slc2 = [slice(None)] * len(nv_a1e1b1j1wzida0e0b0xyg.shape)
+    slc3 = [slice(None)] * len(foo_a1e1b1j1wzida0e0b0xyg.shape) #foo, dmd & sup only have z axis not g axis
+    for g in range(feedsupplyw_ta1e1b1nwzida0e0b0xyg.shape[g_pos]):
+        slc1[g_pos] = slice(g, g+1)
+        slc2[g_pos] = slice(g, g+1)
+        for z in range(feedsupplyw_ta1e1b1nwzida0e0b0xyg.shape[z_pos]):
+            slc1[z_pos] = slice(z, z+1)
+            slc2[z_pos] = slice(z, z+1)
+            slc3[z_pos] = slice(z, z+1)
+            foo[tuple(slc1)] = np.interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg[tuple(slc1)].ravel(), nv_a1e1b1j1wzida0e0b0xyg[tuple(slc2)].squeeze(),
+                                   foo_a1e1b1j1wzida0e0b0xyg[tuple(slc3)].squeeze()).reshape(feedsupplyw_ta1e1b1nwzida0e0b0xyg[tuple(slc1)].shape)
+            dmd[tuple(slc1)] = np.interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg[tuple(slc1)].ravel(), nv_a1e1b1j1wzida0e0b0xyg[tuple(slc2)].squeeze(),
+                                   dmd_a1e1b1j1wzida0e0b0xyg[tuple(slc3)].squeeze()).reshape(feedsupplyw_ta1e1b1nwzida0e0b0xyg[tuple(slc1)].shape)
+            supp[tuple(slc1)] = np.interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg[tuple(slc1)].ravel(),nv_a1e1b1j1wzida0e0b0xyg[tuple(slc2)].squeeze(),
+                                    supp_a1e1b1j1wzida0e0b0xyg[tuple(slc3)].squeeze()).reshape(feedsupplyw_ta1e1b1nwzida0e0b0xyg[tuple(slc1)].shape)
     #old method - made generator 36% slower due to looping
     # axis = sinp.stock['i_n_pos']
     # foo = fun.f_nD_interp(feedsupplyw_ta1e1b1nwzida0e0b0xyg,nv_a1e1b1j1wzida0e0b0xyg,foo_a1e1b1j1wzida0e0b0xyg,axis)
