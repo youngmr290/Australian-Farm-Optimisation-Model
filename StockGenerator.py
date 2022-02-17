@@ -1087,8 +1087,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
        this is why season start is at the start before the other fvps. 
     2. can remove dvp if it clashes for all axis and type ==other. Because repro dvps are used for clustering and season and condense are used for distributing.
     3. prejoin must be in the same v slice across g axis because g activities can transfer to other g activities
-    4. season start must be in the same v slice across all z axis because of weighted average needs all season start to be in same v.
-    5.condense and season start cant clash (unless they have the same vtype) (this doesn't occur for offs because no condense).
+    4. season start must be in the same v slice across all z axis because the weighted average needs all season starts to be in same v.
+    5. condense and season start cant clash (unless they have the same vtype).
+    
+    Nothing garentees that the order of other dvps are the same eg for z1 weaning dvp could be before summer node dvp
+    but for z2 weaning dvp could be after summer node dvp. However, it is probably not that likely that
+    dvps will be in a different order because most dvp dates are the same or similar across axes.
     '''
 
     if not stubble:  # when generating for stubble dvps aren't required
@@ -7399,7 +7403,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ### can only sell drys only if pregnant dams are also being sold.
     dry_retained_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_retained_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact o axis (o is the input axis)
     params['p_drys_retained'] = dict(zip(keys_v1,dry_retained_va1e1b1nwzida0e0b0xyg1.ravel()))
-    #todo include the birth timing in this param when gbal is activated
+    #todo include the birth timing in this param when gbal is activated (currently it only forces retention in scanning dvp. Birth dvp could be activated is gbal used)
 
     ##proportion of drys that are twice dry
     ###expand for p axis
