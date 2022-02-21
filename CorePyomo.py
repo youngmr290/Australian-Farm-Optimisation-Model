@@ -676,6 +676,6 @@ def f_objective(model):
                - model.v_dep[q,s,p7_end,z] - model.v_minroe[q,s,p7_end,z] - model.v_asset[q,s,p7_end,z])
                 * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
                for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
-               -0.0001 * sum(sum(v[s] for s in v) for v in variables))
+               -0.00001 * sum(sum(v[s] for s in v) for v in variables))
 
 
