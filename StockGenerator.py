@@ -7341,8 +7341,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     len_v3 = len(keys_v3)
 
     ##mask for dam activities
-    arrays_k2tvwg1 = [keys_k2, keys_t1, keys_v1, keys_lw1, keys_g1]
-    params['p_mask_dams'] = fun.f1_make_pyomo_dict(mask_dams_k2tva1e1b1nw8zida0e0b0xyg1, arrays_k2tvwg1)
+    arrays_k2tvwzg1 = [keys_k2, keys_t1, keys_v1, keys_lw1, keys_z, keys_g1]
+    params['p_mask_dams'] = fun.f1_make_pyomo_dict(mask_dams_k2tva1e1b1nw8zida0e0b0xyg1, arrays_k2tvwzg1)
 
     ##lower bound dams
     ### this bound can be defined with either tog1 axes or tvg1 axes in exp.xl. Uncomment the relevant code to align with exp.xl
@@ -7356,10 +7356,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     bnd_lower_dams_tVg1 = fun.f_sa(np.array([0],dtype=float), sen.sav['bnd_lo_dams_tVg1'], 5)
     bnd_lower_dams_tVa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_lower_dams_tVg1, left_pos=p_pos, right_pos=-1,
                                                     condition=mask_t1, axis=p_pos-1, condition2=mask_dams_inc_g1, axis2=-1)
+    bnd_lower_dams_tVa1e1b1nwzida0e0b0xyg1 = bnd_lower_dams_tVa1e1b1nwzida0e0b0xyg1 * (index_zidaebxyg==index_zidaebxyg) #need to activate z axis because z is active if you use the lobound method above.
     ### slice the approximated V axis created in Sensitivity.py to the correct length
     bnd_lower_dams_tva1e1b1nwzida0e0b0xyg1 = bnd_lower_dams_tVa1e1b1nwzida0e0b0xyg1[:, 0:len_v1, ...]
-    arrays_tvg1 = [keys_t1, keys_v1, keys_g1]
-    params['p_dams_lobound'] = fun.f1_make_pyomo_dict(bnd_lower_dams_tva1e1b1nwzida0e0b0xyg1, arrays_tvg1)
+    arrays_tvzg1 = [keys_t1, keys_v1, keys_z, keys_g1]
+    params['p_dams_lobound'] = fun.f1_make_pyomo_dict(bnd_lower_dams_tva1e1b1nwzida0e0b0xyg1, arrays_tvzg1)
 
     ##upper bound dams
     ### this bound can be defined with either tog1 axes or tvg1 axes in exp.xl. Uncomment the relevant code to align with exp.xl
@@ -7375,36 +7376,31 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     bnd_upper_dams_tVg1[bnd_upper_dams_tVg1==999999] = np.inf
     bnd_upper_dams_tVa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_upper_dams_tVg1, left_pos=p_pos, right_pos=-1,
                                                     condition=mask_t1, axis=p_pos-1, condition2=mask_dams_inc_g1, axis2=-1)
+    bnd_upper_dams_tVa1e1b1nwzida0e0b0xyg1 = bnd_upper_dams_tVa1e1b1nwzida0e0b0xyg1 * (index_zidaebxyg==index_zidaebxyg) #need to activate z axis because z is active if you use the upbound method above.
     ### slice the approximated V axis created in Sensitivity.py to the correct length
     bnd_upper_dams_tva1e1b1nwzida0e0b0xyg1 = bnd_upper_dams_tVa1e1b1nwzida0e0b0xyg1[:, 0:len_v1, ...]
-    arrays_tvg1 = [keys_t1, keys_v1, keys_g1]
-    params['p_dams_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_dams_tva1e1b1nwzida0e0b0xyg1, arrays_tvg1)
+    arrays_tvzg1 = [keys_t1, keys_v1, keys_z, keys_g1]
+    params['p_dams_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_dams_tva1e1b1nwzida0e0b0xyg1, arrays_tvzg1)
 
     ##proportion of dams mated. inf means the model can optimise the proportion because inf is used to skip the constraint.
-    arrays = [keys_v1, keys_g1]
-    index_vg1 = fun.cartesian_product_simple_transpose(arrays)
-    tup_vg1 = tuple(map(tuple,index_vg1))
     prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
-    prop_dams_mated_vg1 = prop_dams_mated_va1e1b1nwzida0e0b0xyg1.ravel()
-    params['p_prop_dams_mated'] = dict(zip(tup_vg1, prop_dams_mated_vg1))
+    arrays_vzg1 = [keys_v1, keys_z, keys_g1]
+    params['p_prop_dams_mated'] = fun.f1_make_pyomo_dict(prop_dams_mated_va1e1b1nwzida0e0b0xyg1, arrays_vzg1)
 
     ##proportion of dry dams as a propn of preg dams at shearing sale. This is different to the propn in the dry report because it is the propn at a given time rather than per animal at the beginning of mating.
-    # This is used to force retention of drys at the main (t[0]) sale time. You can only sell drys if you sell non-drys. This param indicates the propn of dry that can be sold per non-dry dam.
+    ## This is used to force retention of drys at the main (t[0]) sale time. You can only sell drys if you sell non-drys. This param indicates the propn of dry that can be sold per non-dry dam.
     propn_drys_tpg1 = fun.f_divide(np.sum(o_numbers_end_tpdams*n_drys_b1g1, axis=(e1_pos,b1_pos), keepdims=True),
                               np.sum(o_numbers_end_tpdams * (nyatf_b1nwzida0e0b0xyg>0),axis=(e1_pos,b1_pos), keepdims=True))
     propn_drys_vg1 = sfun.f1_p2v(propn_drys_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1,
                                 period_is_tp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1[:,:,0:1,...]) #only interested in the shearing sale, take e[0] it is the same as e[1] so don't need it.
-    # propn_drys_vg1 = np.max(propn_drys_vg1, axis=) #get the max propn of drys along select axes to reduce size. Needs to be max so that all drys can be s
-    arrays = [keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_y1, keys_g1]
-    index_vanwiyg1 = fun.cartesian_product_simple_transpose(arrays)
-    tup_vanwiyg1 = tuple(map(tuple,index_vanwiyg1))
-    propn_drys_vanwiyg1 = propn_drys_vg1.ravel()
-    params['p_prop_dry_dams'] = dict(zip(tup_vanwiyg1, propn_drys_vanwiyg1))
+    arrays_vanwziyg1 = [keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    params['p_prop_dry_dams'] = fun.f1_make_pyomo_dict(propn_drys_vg1, arrays_vanwziyg1)
 
     ##drys retained (bool used to control if bound constraint is built that limits the number of drys sold using p_prop_dry_dams)
     ### can only sell drys only if pregnant dams are also being sold.
     dry_retained_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_retained_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact o axis (o is the input axis)
-    params['p_drys_retained'] = dict(zip(keys_v1,dry_retained_va1e1b1nwzida0e0b0xyg1.ravel()))
+    arrays_vz = [keys_v1, keys_z]
+    params['p_drys_retained'] = fun.f1_make_pyomo_dict(dry_retained_va1e1b1nwzida0e0b0xyg1, arrays_vz)
     #todo include the birth timing in this param when gbal is activated (currently it only forces retention in scanning dvp. Birth dvp could be activated is gbal used)
 
     ##proportion of drys that are twice dry
@@ -7422,11 +7418,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
     prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 * np.minimum(1,prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1)
     ###create param
-    arrays = [keys_v1, keys_i, keys_y1, keys_g1]
-    index_viyg1 = fun.cartesian_product_simple_transpose(arrays)
-    tup_viyg1 = tuple(map(tuple,index_viyg1))
-    prop_twice_dry_dams_viyg1 = prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1.ravel()
-    params['p_prop_twice_dry_dams'] = dict(zip(tup_viyg1, prop_twice_dry_dams_viyg1))
+    arrays_vziyg1 = [keys_v1, keys_z, keys_i, keys_y1, keys_g1]
+    params['p_prop_twice_dry_dams'] = fun.f1_make_pyomo_dict(prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1, arrays_vziyg1)
     params['p_prejoin_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==prejoin_vtype1] #get the dvp keys which are prejoining (same for all animals hence take slice 0)
     params['p_scan_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==scan_vtype1] #get the dvp keys which are scan (same for all animals hence take slice 0)
 
@@ -7441,8 +7434,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     bnd_lower_offs_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(bnd_lower_offs_tva1e1b1nwzida0e0b0xyg3
                                                          * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
                                                          axis=d_pos, keepdims=True) #cluster d
-    arrays_k3tvxg3 = [keys_k3, keys_t3, keys_v3, keys_x, keys_g3]
-    params['p_offs_lobound'] = fun.f1_make_pyomo_dict(bnd_lower_offs_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3tvxg3)
+    arrays_k3tvzxg3 = [keys_k3, keys_t3, keys_v3, keys_z, keys_x, keys_g3]
+    params['p_offs_lobound'] = fun.f1_make_pyomo_dict(bnd_lower_offs_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3tvzxg3)
 
     ##upper bound offs
     bnd_upper_offs_tsdxg3 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_offs_tsdxg3'], 5) #999999 just an arbitrary high value (cant use np.inf because it becomes nan in the following calcs)
@@ -7456,8 +7449,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     bnd_upper_offs_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(bnd_upper_offs_tva1e1b1nwzida0e0b0xyg3
                                                          * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
                                                          axis=d_pos, keepdims=True) #cluster d
-    arrays_k3tvxg3 = [keys_k3, keys_t3, keys_v3, keys_x, keys_g3]
-    params['p_offs_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_offs_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3tvxg3)
+    arrays_k3tvzxg3 = [keys_k3, keys_t3, keys_v3, keys_z, keys_x, keys_g3]
+    params['p_offs_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_offs_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3tvzxg3)
 
 
 
