@@ -24,11 +24,23 @@ all possible price states as described by continuous distributions.  Rather cont
 need to be approximated by discrete states.
 
 In AFO the user inputs the average price for each commodity. This is then adjusted by a price state scalar
-which returns the commodity price in each discrete price state. The price state
-scalars and the probability of each state are generated from historical prices. A historical price series is
-inputted for each commodity and a multivariate normal distribution is fitted to the data. Grain prices are better
-represented by a log-normal distribution (e.g. :cite:p:`kingwell1996`) thus before fitting the distribution
-grain data undergoes a log transformation. The multivariate normal distribution is then summarised into discrete
+which returns the price of each commodity in each discrete price state. The price state
+scalars and their probability are calculated by fitting a multivariate normal distribution to historical price variation
+scalars. A multivariate distribution is used so that correlations between commodities are accurately
+represented in the resulting price states. The price variation scalars are calculated using two different methods. Both
+methods use historical price data for each commodity.
+Note: Grain prices are better represented by
+a log-normal distribution (e.g. :cite:p:`kingwell1996`) thus before fitting the distribution grain data undergoes
+a log transformation.
+
+For method 1, the weekly price scalars are calculated by dividing the CPI adjusted historical prices by the
+average price for the series. For method 2, the weekly price scalars are calculated by dividing the CPI adjusted historical
+prices by the medium term moving average. A moving average is used to detrend the price series (remove long term price trends).
+The logic behind method 2 is that the price states represented in AFO serve the purpose of capturing yearly price
+variation (i.e variations around the expected price for that year). Thus, including long term price trends may overestimate
+variation within a given year.
+
+The multivariate normal distribution resulting from either method 1 or 2, is then summarised into discrete
 states by dividing up the probability density distribution and calculating the probability (area under the curve)
 and weighted average price of each section of the distribution.
 The price at each point is compared to the average to determine the magnitude
@@ -57,34 +69,70 @@ from scipy.stats import multivariate_normal
 import PropertyInputs as pinp
 
 na=np.newaxis
-##need to generate price senario scalars with a z axis. To start there will only be scalar for woo, meat and grain (all grains get the same)
+
+##########
+##inputs #
+##########
 len_z = len(pinp.general['i_mask_z'])
 len_c1 = 4
 keys_z = pinp.general['i_z_idx']
 keys_c1 = np.array(['c1_%s' % i for i in range(len_c1)])
+method = 1 #0=use raw data, 1=use moving average to detrend data
 
 ##read in CPI adjusted price series
 price_data = pd.read_excel("Raw Price Series.xlsx", sheet_name="Python", index_col=0)
 
-##plot to confirm that the relationship is log normal
+##plot to confirm if the relationship is normal or log normal
 # fig = px.histogram(price_data, x="APW wheat")
 # fig = px.histogram(np.log(price_data), x="APW wheat")
 # fig = px.histogram(price_data, x="Mutton")
 # fig = px.histogram(np.log(price_data), x="Mutton")
 # fig.show()
 
-##select prices used in the distribution and log any that are best fit with log-normal dist 
-adj_prices = price_data[["APW wheat","Mutton"]].copy()
-adj_prices.loc[:,"APW wheat"] = np.log(adj_prices["APW wheat"]) #log fits the grain data better (as seen by the plots above)
+##create price scalars
+if method==0:
+    ##select prices used in the distribution and log any that are best fit with log-normal dist
+    adj_prices = price_data[["APW wheat","Mutton"]].div(price_data[["APW wheat","Mutton"]].mean()).copy()
+    adj_prices.loc[:,"APW wheat"] = np.log(adj_prices["APW wheat"]) #log fits the grain data better (as seen by the plots above)
+    ##graph to check normal
+    # fig = px.histogram(adj_prices, x="APW wheat")
+    # fig.show()
+elif method==1:
+    ##detrend raw prices using moving average.
+    adj_prices = price_data.rolling(window=52).mean().div(price_data).dropna()
+    adj_prices = adj_prices[["APW wheat","Mutton"]].copy()
+    ##graph to check normal
+    # fig = px.histogram(adj_prices, x="APW wheat")
+    # fig.show()
+
+###############################
+# summarise into price states #
+###############################
+'''
+Using the mean and covariance of multiple variables (currently 3 - wool, meat & grain) a multivariate normal 
+distribution is fitted. The distribution is used to return the PDF (probability density function)of different prices. 
+
+Interpretation of the PDF:
+On its own the value returned from a PDF function doesnt mean much. If you were to plot the whole PDF the area under
+the curve would equal 1. 
+It is impossible to provide the probability of obtaining one singular price because there are infinite possibilities.
+Therefore interpreting a PDF is essentially like saying "what is the probability of a price between x and y".
+The answer is equal to the area under the graph. Therefore, in the following code we generate the pdf for a large number
+of prices and then determine the probability of a price within each little chunk.
+ 
+To generate the PDF for a range of values required builiding an array with the desired number of slices.
+The min and max value for each axis is determined by the 3rd standard deviation. This should capture 99.9% of the distribution.
+In the post processing the probability of each chunk is added together to provide a given number of price states.
+
+Note: This is inflexible - if you want to add more variables into the distribution you will need to add code.
+'''
+##build the multivariate distribution function. This function returns the probablility of a given value of each independent variable.
 mu = np.mean(adj_prices)
 cov = np.cov(adj_prices.T) #rows are variables columns are observations.
+rv = multivariate_normal(mu, cov)
 
-#########################################
-# summarise raw price into price states #
-#########################################
-##this is inflexible if you want to add more variables into the distribution
+##build arrays to pass to the distribution function
 ##builds a probability density distribution with 100*100 chunks.
-##the min and max value for each axis is determined by the 3rd standard deviation. This should capture 99.9% of the distribution.
 n_chunks = 100
 x_min = adj_prices["APW wheat"].mean() - 3 * adj_prices["APW wheat"].std()
 x_max = adj_prices["APW wheat"].mean() + 3 * adj_prices["APW wheat"].std()
@@ -96,13 +144,17 @@ y = np.linspace(y_min, y_max, n_chunks)
 y_step = y[1]-y[0]
 X, Y = np.meshgrid(x, y)
 pos = np.dstack((X, Y))
-rv = multivariate_normal(mu, cov)
 Z = rv.pdf(pos)
+
+##plot returned values - this only works for 2 variables
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.plot_surface(X, Y, Z)
 fig.show()
 
+#################
+#post processing#
+#################
 ##calc the probability of the price falling within each chunk (this is basically the area under the graph for a given chunk. Using small chunks means you are essentially calculating the area like a rectangle)
 prob_xy = x_step*y_step*Z
 
@@ -129,13 +181,17 @@ for x_chunk in range(n_blocks):
         x_price_blocks[x_chunk,y_chunk] = np.sum(weighted_x_price_xy[x_start:x_end, y_start:y_end])
         y_price_blocks[x_chunk,y_chunk] = np.sum(weighted_y_price_xy[x_start:x_end, y_start:y_end])
 ###scale the price based on the total prob of each block (part (c) of weighted average) & take exp to convert from log to absolute.
-x_price = np.exp(x_price_blocks / prob_blocks)
-y_price = y_price_blocks / prob_blocks
+if method==0:
+    x_price = np.exp(x_price_blocks / prob_blocks)
+    y_price = y_price_blocks / prob_blocks
+elif method==1:
+    x_price = x_price_blocks / prob_blocks #dont need exp() because grain price is not skewed when using moving average.
+    y_price = y_price_blocks / prob_blocks
 
 ##convert to c1 by flattening
 prob_c1 = prob_blocks.ravel()
-x_price_c1 = x_price.ravel()
-y_price_c1 = y_price.ravel()
+grain_price_scalar_c1 = x_price.ravel()
+meat_price_scalar_c1 = y_price.ravel()
 
 ##error check
 if np.sum(prob_c1)<0.995:
@@ -143,9 +199,9 @@ if np.sum(prob_c1)<0.995:
 ##adjust prob so it adds to exactly 1 (if it only adds to 0.995 there is about 6k randomness)
 prob_c1 = prob_c1 / np.sum(prob_c1)
 
-##convert to a price state scalar - divide by average price
-grain_price_scalar_c1 = x_price_c1 / np.sum(x_price_c1 * prob_c1)
-meat_price_scalar_c1 = y_price_c1 / np.sum(y_price_c1 * prob_c1)
+##adjust scalars so that weighted average is 1. (the price scalars shouldnt change the average price across all price states)
+grain_price_scalar_c1 = grain_price_scalar_c1 / np.sum(grain_price_scalar_c1 * prob_c1)
+meat_price_scalar_c1 = meat_price_scalar_c1 / np.sum(meat_price_scalar_c1 * prob_c1)
 
 ##add z scalar - for now this is just singleton (ie price is the same along z)
 index_z = np.arange(len_z)
