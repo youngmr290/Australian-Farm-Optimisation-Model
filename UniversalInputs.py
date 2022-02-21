@@ -111,10 +111,8 @@ price_variation_inp['grain_price_scalar_c1z'] = pd.read_excel(pricescenarios_xl_
 price_variation_inp['meat_price_scalar_c1z'] = pd.read_excel(pricescenarios_xl_path,sheet_name='meat',index_col=0,header=0,engine='openpyxl').values
 price_variation_inp['wool_price_scalar_c1z'] = pd.read_excel(pricescenarios_xl_path,sheet_name='wool',index_col=0,header=0,engine='openpyxl').values
 price_variation_inp['prob_c1'] = pd.read_excel(pricescenarios_xl_path,sheet_name='prob',index_col=0,header=0,engine='openpyxl').squeeze()
-price_variation_inp['len_c1'] = 1
+price_variation_inp['len_c1'] = len(price_variation_inp['prob_c1'])
 
-#todo if this structure doesn't change then need to add a SA that determines if price variation is included. if it is not included then need to take average anong c1 axis.
-# the best option would be to have inputs sheet in uinp with historical prices and len_c1 then generate everything from there each loop
 print('- finished')
 
 ##reshape require inputs
@@ -272,5 +270,15 @@ def f_universal_inp_sa():
     ###SAA - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_scan_std_c2'] = fun.f_sa(parameters['i_scan_std_c2'].astype(float), sen.saa['rr'], 2
                                            ) * (parameters['i_scan_std_c2'] > 0)  #stays as zero if original value was zero
+
+    ##average c1 axis if price variation is not included
+    price['i_c1_variation_included'] = fun.f_sa(price['i_c1_variation_included'], sen.sav['inc_c1_variation'], 5)
+    if not price['i_c1_variation_included']:
+        price_variation['grain_price_scalar_c1z'] = pd.DataFrame(price_variation['grain_price_scalar_c1z'].mul(price_variation['prob_c1'], axis=0).sum(axis=0),
+                                                                 columns=price_variation['grain_price_scalar_c1z'].index[0:1]).T
+        price_variation['meat_price_scalar_c1z'] = np.sum(price_variation['meat_price_scalar_c1z'] * price_variation['prob_c1'].values[:,None], axis=0, keepdims=True)
+        price_variation['wool_price_scalar_c1z'] = np.sum(price_variation['wool_price_scalar_c1z'] * price_variation['prob_c1'].values[:,None], axis=0, keepdims=True)
+        price_variation['prob_c1'] = pd.Series(price_variation['prob_c1'].sum(), index=price_variation['prob_c1'].index[0:1])
+        price_variation['len_c1'] = len(price_variation['prob_c1'])
 
 

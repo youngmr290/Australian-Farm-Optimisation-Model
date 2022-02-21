@@ -165,6 +165,7 @@ sav_inp['gen_with_t']      = '-'                  #SA to control if sheep genera
 sav_inp['fs_use_pkl']      = '-'                  #SA to control if the pkl fs is used or the excel input fs is used.
 sav_inp['fs_number']      = '-'                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is used for a given trial.
 sav_inp['r2adjust_inc']      = '-'              #SA to control if the r2 feedsupply adjustment from Excel is included.
+sav_inp['inc_c1_variation'] = '-'               #control if price variation is on. This only effects result if risk aversion is included.
 
 ##finance
 sav_inp['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
