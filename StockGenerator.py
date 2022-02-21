@@ -4962,7 +4962,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     dvp_type_next_tva1e1b1nwzida0e0b0xyg1 = dvp_type_next_va1e1b1nwzida0e0b0xyg1 * mask_dvp_type_next_tg1
     ####association between dvp and lambing opp
     index_v1 = np.arange(index_vpa1e1b1nwzida0e0b0xyg1.shape[0])
-    a_o_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1,0)
+    a_prev_o_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1,0)
 
     ###cluster
     a_ppk2g1_slra1e1b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['ia_ppk2g1_rlsb1'], b1_pos, swap=True, ax1=0, ax2=2
@@ -5006,7 +5006,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3 = np.roll(period_is_condense_pa1e1b1nwzida0e0b0xyg3,-1,axis=0)
 
     ####association between dvp and shearing - this is required because in the last dvp that the animal exist (ie when the generator ends) the sheep did not exist at shearing.
-    a_s_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(a_prev_s_pa1e1b1nwzida0e0b0xyg3, a_p_va1e1b1nwzida0e0b0xyg3, axis=0)
+    ##the main practical difference between the prev & next association is for the DVP prior to the first shearing opportunity
+    a_prev_s_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(a_prev_s_pa1e1b1nwzida0e0b0xyg3, a_p_va1e1b1nwzida0e0b0xyg3, axis=0)   #used for masking
+    a_next_s_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(a_next_s_pa1e1b1nwzida0e0b0xyg3, a_p_va1e1b1nwzida0e0b0xyg3, axis=0)   # used for bounds #todo error in the final DVP which points to the previous opportunity
     a_sw_pa1e1b1nwzida0e0b0xyg3 = np.apply_along_axis(fun.f_next_prev_association,0, date_wean_shearing_sa1e1b1nwzida0e0b0xyg3
                                                       , offs_date_end_p, 1, 'right')  #shearing opp with weaning included.
     ###cluster
@@ -5808,7 +5810,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##Mask the decision variables that are not active in this DVP in the matrix - because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = index_wzida0e0b0xyg1 % step_dv_va1e1b1nw8zida0e0b0xyg1 == 0
     ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns eg high high high vs low low low) - this mask is combined with the other w8 masks below
-    mask_nut_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mask_nut_oa1e1b1nwzida0e0b0xyg1, a_o_va1e1b1nwzida0e0b0xyg1, axis=0)
+    mask_nut_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mask_nut_oa1e1b1nwzida0e0b0xyg1, a_prev_o_va1e1b1nwzida0e0b0xyg1, axis=0)
     ###association between the shortlist of nutrition profile inputs and the full range of LW patterns that include starting LW
     a_shortlist_w1 = index_w1 % len_nut_dams
     mask_nut_va1e1b1nwzida0e0b0xyg1 = mask_nut_va1e1b1nwzida0e0b0xyg1[:,:,:,:,:,a_shortlist_w1,...]  # expands the nutrition mask to all lw patterns.
@@ -5883,7 +5885,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##Mask the decision variables that are not active in this DVP in the matrix - because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg3 = (index_wzida0e0b0xyg3 % step_dv_va1e1b1nw8zida0e0b0xyg3) == 0
     ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns eg high high high vs low low low) - this mask is renamed the w8 masks to be consistent with dams
-    mask_nut_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(mask_nut_sa1e1b1nwzida0e0b0xyg3, a_s_va1e1b1nwzida0e0b0xyg3, axis=0)
+    mask_nut_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(mask_nut_sa1e1b1nwzida0e0b0xyg3, a_prev_s_va1e1b1nwzida0e0b0xyg3, axis=0)
     ###association between the shortlist of nutrition profile inputs and the full range of LW patterns that include starting LW
     a_shortlist_w3 = index_w3 % len_nut_offs
     mask_nut_va1e1b1nwzida0e0b0xyg3 = mask_nut_va1e1b1nwzida0e0b0xyg3[:,:,:,:,:,a_shortlist_w3,...]  # expands the nutrition mask to all lw patterns.
@@ -7349,7 +7351,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     # bnd_lower_dams_toa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_lower_dams_tog1, left_pos=p_pos, right_pos=-1,
     #                                                 condition=mask_t1, axis=p_pos-1, condition2=mask_o_dams, axis2=p_pos, condition3=mask_dams_inc_g1, axis3=-1)
     # bnd_lower_dams_tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(bnd_lower_dams_toa1e1b1nwzida0e0b0xyg1,
-    #                                                             a_o_va1e1b1nwzida0e0b0xyg1[na,:,:,0:1,...], #take e[0] because o is not effected by e
+    #                                                             a_prev_o_va1e1b1nwzida0e0b0xyg1[na,:,:,0:1,...], #take e[0] because o is not effected by e
     #                                                             axis=p_pos)  # increments at prejoining
     bnd_lower_dams_tVg1 = fun.f_sa(np.array([0],dtype=float), sen.sav['bnd_lo_dams_tVg1'], 5)
     bnd_lower_dams_tVa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_lower_dams_tVg1, left_pos=p_pos, right_pos=-1,
@@ -7367,7 +7369,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     # bnd_upper_dams_toa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_upper_dams_tog1, left_pos=p_pos, right_pos=-1,
     #                                                 condition=mask_t1, axis=p_pos-1, condition2=mask_o_dams, axis2=p_pos, condition3=mask_dams_inc_g1, axis3=-1)
     # bnd_upper_dams_tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(bnd_upper_dams_toa1e1b1nwzida0e0b0xyg1,
-    #                                                             a_o_va1e1b1nwzida0e0b0xyg1[na,:,:,0:1,...], #take e[0] because o is not effected by e
+    #                                                             a_prev_o_va1e1b1nwzida0e0b0xyg1[na,:,:,0:1,...], #take e[0] because o is not effected by e
     #                                                             axis=p_pos)  # increments at prejoining
     bnd_upper_dams_tVg1 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_dams_tVg1'], 5) #999999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
     bnd_upper_dams_tVg1[bnd_upper_dams_tVg1==999999] = np.inf
@@ -7434,7 +7436,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                           left_pos2=d_pos, right_pos2=x_pos, left_pos3=p_pos, right_pos3=d_pos,
                                                           condition=mask_d_offs, axis=d_pos, condition2=mask_x, axis2=x_pos, condition3=mask_offs_inc_g3, axis3=-1)
     bnd_lower_offs_tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(bnd_lower_offs_tsa1e1b1nwzida0e0b0xyg3,
-                                                                a_s_va1e1b1nwzida0e0b0xyg3[na,...],
+                                                                a_next_s_va1e1b1nwzida0e0b0xyg3[na,...],
                                                                 axis=p_pos)
     bnd_lower_offs_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(bnd_lower_offs_tva1e1b1nwzida0e0b0xyg3
                                                          * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
@@ -7449,7 +7451,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                           left_pos2=d_pos, right_pos2=x_pos, left_pos3=p_pos, right_pos3=d_pos,
                                                           condition=mask_d_offs, axis=d_pos, condition2=mask_x, axis2=x_pos, condition3=mask_offs_inc_g3, axis3=-1)
     bnd_upper_offs_tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(bnd_upper_offs_tsa1e1b1nwzida0e0b0xyg3,
-                                                                a_s_va1e1b1nwzida0e0b0xyg3[na,...],
+                                                                a_next_s_va1e1b1nwzida0e0b0xyg3[na,...],
                                                                 axis=p_pos)
     bnd_upper_offs_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(bnd_upper_offs_tva1e1b1nwzida0e0b0xyg3
                                                          * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
