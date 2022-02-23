@@ -333,7 +333,7 @@ def f1_boundarypyomo_local(params, model):
         ###build bound if turned on
         if bnd_propn_dams_mated_inc:
             ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
-            model.p_prop_dams_mated = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_groups_dams, initialize=params['stock']['p_prop_dams_mated'])
+            model.p_prop_dams_mated = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_groups_dams, default=0, initialize=params['stock']['p_prop_dams_mated'])
             ###constraint
             #todo add an i axis to the constraint
             def f_propn_dams_mated(model, q, s, v, z, g1):
