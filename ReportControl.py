@@ -12,7 +12,7 @@ properties. For example, they can specify which axes to report in the table (as 
 and which to average or another example. The user can also specify report options. For example, what type of profit
 (e.g. is asset opportunity cost included or not) they want to use in the profit by area curve.
 
-To run execute this module with optional args <exp group> <processor number> <report number> <excel display mode>. 
+To run execute this module with optional args <exp group> <processor number> <report number> <excel display mode>.
 If no arguments are passed, all exp groups are reported, 1 processor is used, the 'default' report group is run
 and rows/cols that contain only 0's are collapsed when written to excel.
 
@@ -107,6 +107,7 @@ def f_report(processor, trials, non_exist_trials):
     stacked_woolvalue_dams = pd.DataFrame()  # average wool value dams
     stacked_woolvalue_offs = pd.DataFrame()  # average wool value offs
     stacked_saledate_offs = pd.DataFrame()  # offs sale date
+    stacked_saledateEL_offs = pd.DataFrame()  # offs sale date
     stacked_cfw_dams = pd.DataFrame()  # clean fleece weight dams
     stacked_fd_dams = pd.DataFrame()  # fibre diameter dams
     stacked_cfw_offs = pd.DataFrame()  # clean fleece weight dams
@@ -406,6 +407,24 @@ def f_report(processor, trials, non_exist_trials):
                                    keys=keys, arith=arith, index=index, cols=cols)
             saledate_offs = pd.concat([saledate_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_saledate_offs = rep.f_append_dfs(stacked_saledate_offs, saledate_offs)
+
+        if report_run.loc['run_saledateEL_offs', 'Run']:
+            type = 'stock'
+            prod = 'saledate_k3k5tvnwziaxyg3'
+            na_prod = [0,1]  # q,s
+            weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+            keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+            arith = 1               #weighted average on numbers
+            index = [0]             #q so that it only has 1 row
+            cols = [13]             #g3
+            axis_slice = {}
+            axis_slice[4] = [1,None,1] #t: only the sale slices
+            axis_slice[11] = [1,2,1] #x: Castrate
+
+            saledateEL_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                   keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice).astype('datetime64[D]')
+            saledateEL_offs = pd.concat([saledateEL_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_saledateEL_offs = rep.f_append_dfs(stacked_saledateEL_offs, saledateEL_offs)
 
         if report_run.loc['run_cfw_dams', 'Run']:
             type = 'stock'
@@ -857,8 +876,8 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'prog_numbers_qsk3k5twzia0xg2'
             keys = 'prog_keys_qsk3k5twzia0xg2'
             arith = 2
-            index =[5]   #w
-            cols =[6, 2, 3, 4, 9] #z, dam age, birth type, t slice, gender
+            index =[0]   #q (as a dummy variable)
+            cols =[10, 9, 2, 4] #dam age(2), birth type(3), t slice(4), gender(9), genotype(10)
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -872,7 +891,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_qsk3k5tvnwziaxyg3'
             arith = 2
             index =[5]                  #DVP
-            cols =[8, 13, 11, 2, 3, 4, 7]   #z, g3, Gender, dam age, BTRT, t, w
+            cols =[13, 11, 2, 4]   #g3, Gender, dam age, BTRT, t, w
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -1291,6 +1310,10 @@ def f_report(processor, trials, non_exist_trials):
         stacked_saledate_offs = stacked_saledate_offs.astype(object)
         stacked_saledate_offs[stacked_saledate_offs==np.datetime64('1970-01-01')] = 0
         df_settings = rep.f_df2xl(writer, stacked_saledate_offs, 'saledate_offs', df_settings, option=xl_display_mode)
+    if report_run.loc['run_saledateEL_offs', 'Run']:
+        stacked_saledateEL_offs = stacked_saledateEL_offs.astype(object)
+        stacked_saledateEL_offs[stacked_saledateEL_offs==np.datetime64('1970-01-01')] = 0
+        df_settings = rep.f_df2xl(writer, stacked_saledateEL_offs, 'saledateEL_offs', df_settings, option=display_mode)
     if report_run.loc['run_cfw_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_cfw_dams, 'cfw_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_fd_dams', 'Run']:

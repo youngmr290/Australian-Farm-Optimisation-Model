@@ -2036,6 +2036,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
     period_is_join_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_joined_pa1e1b1nwzida0e0b0xyg1
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
+    #todo 3 lines of temporary code - remove the following lines after the ewe lamb analysis is complete
+    ###start of dvp required for REV on offspring FFCFW
+    period_is_startdvp_vpa1e1b1nwzida0e0b0xyg3 = sfun.f1_period_is_('period_is', dvp_start_va1e1b1nwzida0e0b0xyg3[:,na,...]
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p=date_end_pa1e1b1nwzida0e0b0xyg)
+    period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = np.any(period_is_startdvp_vpa1e1b1nwzida0e0b0xyg3, axis=0)
 
     ##This is the end of the Mating period. (no active e axis - end of mating inclusive of all e slices)
     period_is_matingend_pa1e1b1nwzida0e0b0xyg1 = np.any(np.logical_and(period_is_mating_pa1e1b1nwzida0e0b0xyg1
@@ -4426,6 +4431,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
                                         , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p], stub_lw_idx=stub_lw_idx_dams) #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
+                # #todo 3 lines of temporary code for the Ewe Lamb project
+                # ####Set the FFCFW in the REV and reset the weight at birth
+                # t_ffcfw_start_dams = ffcfw_start_dams.copy()
+                # t_ffcfw_start_dams = sfun.f1_rev_update('random', t_ffcfw_start_dams, rev_trait_values['dams'][p])
+                # ffcfw_start_dams = fun.f_update(ffcfw_start_dams, t_ffcfw_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, nw_start_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
@@ -4708,6 +4718,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ffcfw_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, ffcfw_condensed_offs, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_offs
                                         , stub_lw_idx=stub_lw_idx_offs)
+                # #todo 3 lines of temporary code for the Ewe Lamb project
+                # ####Set the FFCFW in the REV and reset the weight after sale
+                # t_ffcfw_start_offs = ffcfw_start_offs.copy()
+                # t_ffcfw_start_offs = sfun.f1_rev_update('random', t_ffcfw_start_offs, rev_trait_values['offs'][p])
+                # ffcfw_start_offs = fun.f_update(ffcfw_start_offs, t_ffcfw_start_offs, period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p])
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, nw_start_condensed_offs, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_offs
