@@ -236,7 +236,7 @@ def f1_fin_params(params, r_vals):
     overheads(params, r_vals)
 
     ##store params which are inputs
-    params['prob_c1'] = uinp.price_variation['prob_c1']
+    params['prob_c1'] = uinp.price_variation['prob_c1'].to_dict()
     params['overdraw'] = pinp.finance['overdraw_limit']
 
     ##store report
