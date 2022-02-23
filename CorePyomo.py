@@ -669,6 +669,7 @@ def f_objective(model):
     the cost of depreciation and the opportunity cost on the farm assets (total value of all assets times the discount
     rate  (to ensure that the assets generate a minimum ROI)).
     '''
+    #todo: can a comment be added to describe the reason for the 'small number' multiplied by the variables (is it all variables)
     variables = model.component_objects(pe.Var,active=True)
 
     p7_end = list(model.s_season_periods)[-1]
