@@ -333,11 +333,11 @@ def f1_boundarypyomo_local(params, model):
         ###build bound if turned on
         if bnd_propn_dams_mated_inc:
             ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
-            model.p_prop_dams_mated = pe.Param(model.s_dvp_dams, model.s_groups_dams, initialize=params['stock']['p_prop_dams_mated'])
+            model.p_prop_dams_mated = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_groups_dams, initialize=params['stock']['p_prop_dams_mated'])
             ###constraint
             #todo add an i axis to the constraint
             def f_propn_dams_mated(model, q, s, v, z, g1):
-                if model.p_prop_dams_mated[v, g1]==np.inf or all(model.p_mask_dams[k2,t,v,w8,z,g1] == 0 or v=='dv00'   #skip if DVP0 which is a non-mating period in o[0]
+                if model.p_prop_dams_mated[v,z,g1]==np.inf or all(model.p_mask_dams[k2,t,v,w8,z,g1] == 0 or v=='dv00'   #skip if DVP0 which is a non-mating period in o[0]
                                       for k2 in model.s_k2_birth_dams for t in model.s_sale_dams for w8 in model.s_lw_dams):
                     return pe.Constraint.Skip
                 else:
@@ -349,7 +349,7 @@ def f1_boundarypyomo_local(params, model):
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
                                if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1
-                                        ) * (1 - model.p_prop_dams_mated[v, g1])
+                                        ) * (1 - model.p_prop_dams_mated[v,z,g1])
             model.con_propn_dams_mated = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dvp_dams, model.s_season_types, model.s_groups_dams, rule=f_propn_dams_mated,
                                                        doc='proportion of dams mated')
 
