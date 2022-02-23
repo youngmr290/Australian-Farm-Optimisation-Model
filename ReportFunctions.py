@@ -1437,6 +1437,7 @@ def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
     '''
     ##slice axis - slice the keys and the array - if user hasn't specified slice the whole axis will be included
     sl = [slice(None)] * prod.ndim
+    keys = keys.copy()  # need to copy so that it doesnt change the underlying array (because assigning in a loop)
     for axis, slc in axis_slice.items():
         start = slc[0]
         stop = slc[1]
