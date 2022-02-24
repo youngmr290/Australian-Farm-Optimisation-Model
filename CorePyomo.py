@@ -679,14 +679,14 @@ def f_objective(model):
     Thus, when farm profit is low an extra dollar is more valuable than an extra dollar when farm profit is high.
     This means, to some degree, the optimal farm management plan aims to reduce profit variation (i.e. increase
     profit in poor years at the cost of reduced profit in the good years). For example, if the crop and stock
-    enterprise on the modelled farm are similar but grain price are more volatile than
+    enterprise on the modelled farm are similar but grain prices are more volatile, then
     stock prices will shift resources towards the stock enterprise to reduce risk (profit variation).
 
-    The expected return used to calculate utility includes the net cash flow for a give price and weather scenario,
+    The expected return used to calculate utility includes the net cash flow for a given price and weather scenario,
     minus a cost to represent a minimum
-    return on operating costs incurred (MINROE), minus the cost of depreciation and minus the opportunity cost on the
+    return on operating costs incurred (MINROE), minus the cost of depreciation, and minus the opportunity cost on the
     farm assets (total value of all assets times the discount rate  (to ensure that the assets generate a minimum ROI)).
-    MINROE and asset opportunity cost are discussed in more detail in the finance section and their inclusion is
+    MINROE and asset opportunity costs are discussed in more detail in the finance section, and their inclusion is
     controlled by the user.
 
     Constant absolute risk-aversion (CARA) and constant relative risk-aversion (CRRA) are two well known utility functions.
@@ -708,10 +708,10 @@ def f_objective(model):
     when a farmer's wealth is boosted, will be different and more concerned with income stability than those
     that would arise with a CRRA specification. The limitation of the CRRA method is that it can not handle a negative
     terminal state. Additionally, because CRRA is impacted by terminal wealth, MINROE and asset opportunity cost
-    will affect the impact of risk aversion which is not technically correct because these are not real costs incurred
+    will affect the impact of risk aversion, which is not technically correct because these are not real costs incurred
     by the farmer.
 
-    Due to AFO's size linear programing has been used to improve solving efficiency and accuracy.
+    Due to AFO's size, linear programing has been used to improve solving efficiency and accuracy.
     Therefore, the non-linear utility functions are represented by a number of linear segments, a common
     linear programming technique called piecewise representation.
 
