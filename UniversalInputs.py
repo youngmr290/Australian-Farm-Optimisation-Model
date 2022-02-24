@@ -224,6 +224,10 @@ def f_universal_inp_sa():
     fun.f_dict_reset(mach, machine_options_dict_inp)
     fun.f_dict_reset(price_variation, price_variation_inp)
 
+    ##general
+    ###SAV
+    general['i_inc_risk'] = fun.f_sa(general['i_inc_risk'], sen.sav['inc_risk_aversion'], 5)
+
     ##finance
     ###SAV
     finance['minroe'] = fun.f_sa(finance['minroe'], sen.sav['minroe'], 5)  #value for minroe (same sav as below)
