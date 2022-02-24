@@ -45,10 +45,14 @@ except FileNotFoundError:
 if inputs_from_pickle == False:
     print('Reading universal inputs from Excel', end=' ', flush=True)
     with open(universal_pkl_path, "wb") as f:
+        ##general
+        general_inp = fun.xl_all_named_ranges(universal_xl_path,"General")
+        pkl.dump(general_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
+        
         ##prices
         price_inp = fun.xl_all_named_ranges(universal_xl_path,"Price")
         pkl.dump(price_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-        
+
         ##Finance inputs
         finance_inp = fun.xl_all_named_ranges(universal_xl_path,"Finance")
         pkl.dump(finance_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
@@ -83,8 +87,10 @@ if inputs_from_pickle == False:
 ##note this must be in the same order as above
 else:
     with open(universal_pkl_path, "rb") as f:
+        general_inp = pkl.load(f)
+
         price_inp = pkl.load(f)
-        
+
         finance_inp = pkl.load(f)
         
         mach_general_inp = pkl.load(f)
@@ -176,6 +182,7 @@ pastparameters_inp['i_cu4_c4'] = pastparameters_inp['i_cu4_c4'].reshape(pastpara
 ##create a copy of each input dict - so that the base inputs remain unchanged
 ##the copy created is the one used in the actual modules
 ###NOTE: if an input sheet is added remember to add it to the dict reset in f_sa() below.
+general = copy.deepcopy(general_inp)
 price = copy.deepcopy(price_inp)
 finance = copy.deepcopy(finance_inp)
 mach_general = copy.deepcopy(mach_general_inp)
@@ -205,6 +212,7 @@ def f_universal_inp_sa():
     import Sensitivity as sen 
 
     ##reset inputs to base at the start of each trial before applying SA  - old method was to update the SA based on the _inp dict but that doesn't work well when multiple SA on the same variable.
+    fun.f_dict_reset(general, general_inp)
     fun.f_dict_reset(price, price_inp)
     fun.f_dict_reset(finance, finance_inp)
     fun.f_dict_reset(mach_general, mach_general_inp)
@@ -272,8 +280,8 @@ def f_universal_inp_sa():
                                            ) * (parameters['i_scan_std_c2'] > 0)  #stays as zero if original value was zero
 
     ##average c1 axis if price variation is not included
-    price['i_c1_variation_included'] = fun.f_sa(price['i_c1_variation_included'], sen.sav['inc_c1_variation'], 5)
-    if not price['i_c1_variation_included']:
+    general['i_c1_variation_included'] = fun.f_sa(general['i_c1_variation_included'], sen.sav['inc_c1_variation'], 5)
+    if not general['i_c1_variation_included']:
         price_variation['grain_price_scalar_c1z'] = pd.DataFrame(price_variation['grain_price_scalar_c1z'].mul(price_variation['prob_c1'], axis=0).sum(axis=0),
                                                                  columns=price_variation['grain_price_scalar_c1z'].index[0:1]).T
         price_variation['meat_price_scalar_c1z'] = np.sum(price_variation['meat_price_scalar_c1z'] * price_variation['prob_c1'].values[:,None], axis=0, keepdims=True)

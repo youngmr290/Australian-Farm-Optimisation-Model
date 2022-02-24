@@ -5,6 +5,7 @@ author: young
 """
 import time
 import pyomo.environ as pe
+import pyomo.core as pc
 import numpy as np
 # import networkx
 # import pyomo.pysp.util.rapper as rapper
@@ -87,8 +88,8 @@ def coremodel_all(trial_name,model):
     maximise credit in the last period of cashflow (rather than indexing directly with ND$FLOW, i index with the last name in the cashflow periods in case cashflow periods change) 
     minus dep (variable and fixed)
     '''
-    model.profit = pe.Objective(rule=f_objective,sense=pe.maximize)
-    # model.profit.pprint()
+    model.utility = pe.Objective(rule=f_objective,sense=pe.maximize)
+    # model.utility.pprint()
 
     #########
     # solve #
@@ -112,12 +113,20 @@ def coremodel_all(trial_name,model):
         solver.options['tmlim'] = 100  # limit solving time to 100sec in case solver stalls.
     solver_result = solver.solve(model,tee=True)  # turn to true for solver output - may be useful for troubleshooting
     try:  # to handle infeasible (there is no profit component when infeasible)
-        obj = pe.value(model.profit)
+        utility = pe.value(model.utility)
+        terminal_wealth = pe.value(sum(model.v_terminal_wealth[q,s,z,c1] * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
+                                       for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1
+                                       for z in model.s_season_types))
     except ValueError:
-        obj = 0
+        utility = 0
+        terminal_wealth = 0
 
     ##this prints trial name, overall profit and feasibility for each trial
-    print("Displaying Solution for trial: %s\n" % trial_name,'-' * 60,'\n%s' % obj)
+    print(f'\nDisplaying utility for trial: {trial_name}')
+    print(f'{utility}')
+    print(f'\nDisplaying terminal wealth for trial: {trial_name}')
+    print(f'{terminal_wealth}')
+    print('-' * 60)
 
     ##this check if the solver is optimal - if infeasible or error the model will save a file in Output/infeasible/ directory. This will be accessed in reporting to stop you reporting infeasible trials.
     ##the model will keep running the next trials even if one is infeasible.
@@ -140,7 +149,7 @@ def coremodel_all(trial_name,model):
         with open('Output/infeasible/%s.txt' % trial_name,'w') as f:
             f.write("Solver Status: {0}".format(solver_result.solver.termination_condition))
 
-    return obj
+    return terminal_wealth
 
 ##############
 #constriants #
@@ -664,18 +673,98 @@ def f_con_minroe(model):
 
 def f_objective(model):
     '''
-    The objective of the model is to maximise long run average profit. The
-    objective function includes the net cash flow, a cost to represent a minimum return on operating costs incurred,
-    the cost of depreciation and the opportunity cost on the farm assets (total value of all assets times the discount
-    rate  (to ensure that the assets generate a minimum ROI)).
+    The objective of the model is to maximise expected utility (total satisfaction). In the case of risk neutral,
+    expected utility is equivalent to expected profit, meaning that the optimal farm management plan is that that
+    maximises farm profit. In the case of risk aversion, utility increases at a diminishing rate as profit increases.
+    Thus, when farm profit is low an extra dollar is more valuable than an extra dollar when farm profit is high.
+    This means, to some degree, the optimal farm management plan aims to reduce profit variation (i.e. increase
+    profit in poor years at the cost of reduced profit in the good years). For example, if the crop and stock
+    enterprise on the modelled farm are similar but grain price are more volatile than
+    stock prices will shift resources towards the stock enterprise to reduce risk (profit variation).
+
+    The expected return used to calculate utility includes the net cash flow for a give price and weather scenario,
+    minus a cost to represent a minimum
+    return on operating costs incurred (MINROE), minus the cost of depreciation and minus the opportunity cost on the
+    farm assets (total value of all assets times the discount rate  (to ensure that the assets generate a minimum ROI)).
+    MINROE and asset opportunity cost are discussed in more detail in the finance section and their inclusion is
+    controlled by the user.
+
+    Constant absolute risk-aversion (CARA) and constant relative risk-aversion (CRRA) are two well known utility functions.
+    Both have been previously used in stochastic farm modelling (see :cite:p:`KINGWELL1994, kingwell1996`) and both
+    methods are included in AFO (note: alternative utility functions can easily be added).
+    CARA is a negative exponential curve: :math:`U = 1-exp(-a*x)` where :math:`U` is utility, :math:`a` is the
+    Pratt-Arrow coefficient of absolute risk aversion and x is the return to management and capital.
+    The Pratt-Arrow coefficient is a user input that controls the level of risk aversion. :cite:p:`KINGWELL1994'
+    used two levels: 0.000 003 and 0.000 005 to represent moderate and high levels risk-aversion.
+    CRRA is a power function denoted by: :math:`U = W^(1-R) / (1-R)` where :math:`U` is utility, :math:`W` is terminal
+    wealth and :math:`R` is the relative risk aversion coefficient.
+    The relative risk aversion coefficient is a user defined input that controls the level of risk aversion.
+    :cite:p:`kingwell1996' used values within the range of 0.1 to 3.0 to represent low to high levels of risk-aversion.
+
+    Both methods have limitations, most of which can be minimised if the modeler is aware.
+    A CARA specification implies there are no wealth effects on a farmer's income and price security decisions.
+    In practice, the CARA specification means that the farmer's risk management
+    decisions, particularly in favourable states of nature (e.g. good weather-years with high commodity prices)
+    when a farmer's wealth is boosted, will be different and more concerned with income stability than those
+    that would arise with a CRRA specification. The limitation of the CRRA method is that it can not handle a negative
+    terminal state. Additionally, because CRRA is impacted by terminal wealth, MINROE and asset opportunity cost
+    will affect the impact of risk aversion which is not technically correct because these are not real costs incurred
+    by the farmer.
+
+    Due to AFO's size linear programing has been used to improve solving efficiency and accuracy.
+    Therefore, the non-linear utility functions are represented by a number of linear segments, a common
+    linear programming technique called piecewise representation.
+
     '''
+
     variables = model.component_objects(pe.Var,active=True)
-
+    ##terminal wealth transfer constraint - combine cashflow with depreciation, MINROE and asset value
     p7_end = list(model.s_season_periods)[-1]
-    return (sum((model.v_credit[q,s,c1,p7_end,z] - model.v_debit[q,s,c1,p7_end,z]
-               - model.v_dep[q,s,p7_end,z] - model.v_minroe[q,s,p7_end,z] - model.v_asset[q,s,p7_end,z])
-                * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
+    def terminal_wealth(model,q,s,z,c1):
+        return (model.v_terminal_wealth[q,s,z,c1] - model.v_credit[q,s,c1,p7_end,z] + model.v_debit[q,s,c1,p7_end,z] # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
+                   + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset[q,s,p7_end,z]
+                   + 0.00001 * sum(sum(v[s] for s in v) for v in variables)) <=0 #each variable puts a small neg number into objective. This stop cplex selecting variables that dont contribute to the objective (cplex selects variables to remove slack on constraints).
+
+    model.con_terminal_wealth = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, rule=terminal_wealth,
+                                     doc='tallies up terminal wealth so it can be transferred to the utility function.')
+
+
+    ##piecewise utility function - two options CRRA and CARA
+    if not uinp.general['i_inc_risk']:
+        breakpoints = [-500000, 20000001]
+        def f(model, i0, i1, i2, i3, x):
+            '''If no risk utility is equal to profit'''
+            return x
+    elif uinp.general['i_utility_method']=="CARA":
+        a=uinp.general['i_cara_risk_coef']
+        breakpoints = list(range(0, 500000, 25000)) #majority of segements in expected profit range
+        breakpoints.insert(0, -500000) #add a low number to front to handle if profit is very low
+        breakpoints.append(20000001) #add a high number to end to handle if profit is very high
+        def f(model, i0, i1, i2, i3, x):
+            '''CARA/CRRA utility function'''
+            return 1-np.exp(-a*x)
+    elif uinp.general['i_utility_method']=="CRRA":
+        Rr = uinp.general['i_crra_risk_coef']
+        initial_welth = uinp.general['i_crra_initial_wealth']
+        breakpoints = list(range(0, 500000, 25000)) #majority of segements in expected profit range
+        breakpoints.insert(0, -initial_welth/2) #add a low number to front to handle if profit is very low - x cant be less than 0 so I just used half of the initial wealth value
+        breakpoints.append(20000001) #add a high number to end to handle if profit is very high
+        def f(model, i0, i1, i2, i3, x):
+            '''CRRA utility function'''
+            ##This method doesnt handle negitive terminal wealth (x).
+            ##The function also returns a very small number at high terminal wealth which seem to trip out the solver.
+            x+=initial_welth
+            return x**(1-Rr) / (1-Rr)
+    else:
+        raise ValueError("Specify a valid risk method or turn risk off.")
+
+    model.con = pc.Piecewise(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, #sets
+                             model.v_utility, model.v_terminal_wealth, # range and domain variables
+                             pw_pts=breakpoints,
+                             pw_constr_type='UB',
+                             f_rule=f,
+                             pw_repn='SOS2')
+
+    ##objective function (maximise utility)
+    return sum(model.v_utility[q,s,z,c1] * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
                for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
-               -0.00001 * sum(sum(v[s] for s in v) for v in variables))
-
-
