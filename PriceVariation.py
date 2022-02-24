@@ -1,7 +1,7 @@
 '''
 Generate price scenario scalars.
 
-Price scalars have two main purposes
+Price scalars have two main purposes:
 
     #. To account for variations in the price received for a given year due to external market conditions (c1 axis).
     #. To account for variation in prices due to season type.
@@ -19,18 +19,18 @@ Generation of discrete price states:
 
 The need to form discrete approximations of a continuous distributions is a necessary requirement for developing a
 discrete stochastic programming model of farm management responses to price and weather-year states.
-By their nature discrete stochastic programming models cannot consider
+By their nature, discrete stochastic programming models cannot consider
 all possible price states as described by continuous distributions.  Rather continuous variables such as price
 need to be approximated by discrete states.
 
-In AFO the user inputs the average price for each commodity. This is then adjusted by a price state scalar
+In AFO, the user inputs the average price for each commodity. This is then adjusted by a price state scalar
 which returns the price of each commodity in each discrete price state. The price state
 scalars and their probability are calculated by fitting a multivariate normal distribution to historical price variation
 scalars. A multivariate distribution is used so that correlations between commodities are accurately
 represented in the resulting price states. The price variation scalars are calculated using two different methods. Both
 methods use historical price data for each commodity.
-Note: Grain prices are better represented by
-a log-normal distribution (e.g. :cite:p:`kingwell1996`) thus before fitting the distribution grain data undergoes
+Note: Grain and wool prices are better represented by
+a log-normal distribution (e.g. :cite:p:`kingwell1996`) thus before fitting the distribution grain and wool data undergo
 a log transformation.
 
 For method 1, the weekly price scalars are calculated by dividing the CPI adjusted historical prices by the
@@ -46,8 +46,8 @@ and weighted average price of each section of the distribution.
 The price at each point is compared to the average to determine the magnitude
 of the scalar.
 
-To reduce model size and simplify input calibration all meat classes (lamb, shipper,
-mutton, etc) received the same meat price scalar. The same thing happen for classes of wool and types of grain.
+To reduce model size and simplify input calibration, all meat classes (lamb, shipper,
+mutton, etc) received the same meat price scalar. The same thing happens for classes of wool and types of grain.
 This simplification should not compromise the accuracy of the results because subclasses of a given commodity
 tend to have a high correlation (e.g. between 2000 and 2021 the correlation between light lamb and mutton was 96%).
 A further simplification was not to include price variation
@@ -56,7 +56,7 @@ was not justified. The resulting assumptions are that all animal classes are 100
 all wool microns are 100% correlated, all grains are 100% correlated and all input commodities have no variation.
 If these assumptions become limiting it is possible to add the extra detail in the price generation.
 
-The c1 axis is averaged for both the asset constraint and the working capital. This saves space without loosing
+The c1 axis is averaged for both the asset constraint and the working capital. This saves space without losing
 much/any information.
 
 '''
@@ -77,7 +77,7 @@ if __name__=="__main__":
     ##inputs #
     ##########
     len_z = len(pinp.general['i_mask_z'])
-    len_c1 = 4
+    len_c1 = 8
     keys_z = pinp.general['i_z_idx']
     keys_c1 = np.array(['c1_%s' % i for i in range(len_c1)])
     method = 1 #0=use raw data, 1=use moving average to detrend data
@@ -96,17 +96,20 @@ if __name__=="__main__":
     ##create price scalars
     if method==0:
         ##select prices used in the distribution and log any that are best fit with log-normal dist
-        adj_prices = price_data[["APW wheat","Mutton"]].div(price_data[["APW wheat","Mutton"]].mean()).copy()
+        adj_prices = price_data[["APW wheat","Mutton","S 21 MPG"]].div(price_data[["APW wheat","Mutton","S 21 MPG"]].mean()).copy()
         adj_prices.loc[:,"APW wheat"] = np.log(adj_prices["APW wheat"]) #log fits the grain data better (as seen by the plots above)
+        adj_prices.loc[:,"S 21 MPG"] = np.log(adj_prices["S 21 MPG"]) #log fits the wool data better (as seen by the plots above)
         ##graph to check normal
         # fig = px.histogram(adj_prices, x="APW wheat")
+        # fig = px.histogram(adj_prices, x="S 21 MPG")
         # fig.show()
     elif method==1:
         ##detrend raw prices using moving average.
         adj_prices = price_data.rolling(window=52).mean().div(price_data).dropna()
-        adj_prices = adj_prices[["APW wheat","Mutton"]].copy()
+        adj_prices = adj_prices[["APW wheat","Mutton","S 21 MPG"]].copy()
         ##graph to check normal
         # fig = px.histogram(adj_prices, x="APW wheat")
+        # fig = px.histogram(adj_prices, x="S 21 MPG")
         # fig.show()
 
     ###############################
@@ -138,67 +141,84 @@ if __name__=="__main__":
     ##build arrays to pass to the distribution function
     ##builds a probability density distribution with 100*100 chunks.
     n_chunks = 100
-    x_min = adj_prices["APW wheat"].mean() - 3 * adj_prices["APW wheat"].std()
-    x_max = adj_prices["APW wheat"].mean() + 3 * adj_prices["APW wheat"].std()
+    w_min = adj_prices["APW wheat"].mean() - 3 * adj_prices["APW wheat"].std()
+    w_max = adj_prices["APW wheat"].mean() + 3 * adj_prices["APW wheat"].std()
+    w = np.linspace(w_min, w_max, n_chunks)
+    w_step = w[1]-w[0]
+    x_min = adj_prices["Mutton"].mean() - 3 * adj_prices["Mutton"].std()
+    x_max = adj_prices["Mutton"].mean() + 3 * adj_prices["Mutton"].std()
     x = np.linspace(x_min, x_max, n_chunks)
     x_step = x[1]-x[0]
-    y_min = adj_prices["Mutton"].mean() - 3 * adj_prices["Mutton"].std()
-    y_max = adj_prices["Mutton"].mean() + 3 * adj_prices["Mutton"].std()
+    y_min = adj_prices["S 21 MPG"].mean() - 3 * adj_prices["S 21 MPG"].std()
+    y_max = adj_prices["S 21 MPG"].mean() + 3 * adj_prices["S 21 MPG"].std()
     y = np.linspace(y_min, y_max, n_chunks)
     y_step = y[1]-y[0]
-    X, Y = np.meshgrid(x, y)
-    pos = np.dstack((X, Y))
+    W, X, Y = np.meshgrid(w, x, y)
+    pos = np.stack([W,X, Y], axis=-1)
     Z = rv.pdf(pos)
 
     ##plot returned values - this only works for 2 variables
+    rv = multivariate_normal(mu[0:2], cov[0:2,0:2])
+    W, X = np.meshgrid(w, x)
+    pos = np.dstack((W, X))
+    Z_plot = rv.pdf(pos)
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.plot_surface(X, Y, Z)
+    ax.plot_surface(W, X, Z_plot)
     fig.show()
 
     #################
     #post processing#
     #################
     ##calc the probability of the price falling within each chunk (this is basically the area under the graph for a given chunk. Using small chunks means you are essentially calculating the area like a rectangle)
-    prob_xy = x_step*y_step*Z
+    prob_wxy = w_step*x_step*y_step*Z
 
     ##calc the weighted price of each block - price is calculated like a weighted average because each price has a weight depending on the prob of the chunk.
     ##weighted average is done in 3 parts 1. weight price, sum prices in a given block, divide by prob of given block.
     ###part (a) of weighted average
-    weighted_x_price_xy = prob_xy * x[:,na]
-    weighted_y_price_xy = prob_xy * y
+    weighted_w_price_wxy = prob_wxy * w[:,na,na]
+    weighted_x_price_wxy = prob_wxy * x[:,na]
+    weighted_y_price_wxy = prob_wxy * y
 
     ##add chunks together to summarize into fewer bigger blocks
     n_blocks = 2 # number of chunks each variable is broken into. The number of price states = n_variable^n_states
-    prob_blocks = np.zeros([n_blocks, n_blocks])
-    x_price_blocks = np.zeros([n_blocks, n_blocks])
-    y_price_blocks = np.zeros([n_blocks, n_blocks])
-    for x_chunk in range(n_blocks):
-        x_start = int(x_chunk * n_chunks/n_blocks) #start chunk
-        x_end = int(x_start + n_chunks/n_blocks) #end chunk
-        for y_chunk in range(n_blocks):
-            y_start = int(y_chunk * n_chunks/n_blocks)
-            y_end = int(y_start + n_chunks/n_blocks) #end chunk
-            ###sum the prob of each chunk in the block
-            prob_blocks[x_chunk,y_chunk] = np.sum(prob_xy[x_start:x_end, y_start:y_end])
-            ###sum the price of each chunk in the block then scale by the total prob of the block (part (b) of weighted average)
-            x_price_blocks[x_chunk,y_chunk] = np.sum(weighted_x_price_xy[x_start:x_end, y_start:y_end])
-            y_price_blocks[x_chunk,y_chunk] = np.sum(weighted_y_price_xy[x_start:x_end, y_start:y_end])
+    prob_blocks = np.zeros([n_blocks, n_blocks, n_blocks])
+    w_price_blocks = np.zeros([n_blocks, n_blocks, n_blocks])
+    x_price_blocks = np.zeros([n_blocks, n_blocks, n_blocks])
+    y_price_blocks = np.zeros([n_blocks, n_blocks, n_blocks])
+    for w_chunk in range(n_blocks):
+        w_start = int(w_chunk * n_chunks/n_blocks) #start chunk
+        w_end = int(w_start + n_chunks/n_blocks) #end chunk
+        for x_chunk in range(n_blocks):
+            x_start = int(x_chunk * n_chunks/n_blocks) #start chunk
+            x_end = int(x_start + n_chunks/n_blocks) #end chunk
+            for y_chunk in range(n_blocks):
+                y_start = int(y_chunk * n_chunks/n_blocks)
+                y_end = int(y_start + n_chunks/n_blocks) #end chunk
+                ###sum the prob of each chunk in the block
+                prob_blocks[w_chunk,x_chunk,y_chunk] = np.sum(prob_wxy[w_start:w_end, x_start:x_end, y_start:y_end])
+                ###sum the price of each chunk in the block then scale by the total prob of the block (part (b) of weighted average)
+                w_price_blocks[w_chunk,x_chunk,y_chunk] = np.sum(weighted_w_price_wxy[w_start:w_end, x_start:x_end, y_start:y_end])
+                x_price_blocks[w_chunk,x_chunk,y_chunk] = np.sum(weighted_x_price_wxy[w_start:w_end, x_start:x_end, y_start:y_end])
+                y_price_blocks[w_chunk,x_chunk,y_chunk] = np.sum(weighted_y_price_wxy[w_start:w_end, x_start:x_end, y_start:y_end])
     ###scale the price based on the total prob of each block (part (c) of weighted average) & take exp to convert from log to absolute.
     if method==0:
+        w_price = np.exp(w_price_blocks / prob_blocks)
         x_price = np.exp(x_price_blocks / prob_blocks)
         y_price = y_price_blocks / prob_blocks
     elif method==1:
+        w_price = w_price_blocks / prob_blocks #dont need exp() because grain price is not skewed when using moving average.
         x_price = x_price_blocks / prob_blocks #dont need exp() because grain price is not skewed when using moving average.
         y_price = y_price_blocks / prob_blocks
 
     ##convert to c1 by flattening
     prob_c1 = prob_blocks.ravel()
-    grain_price_scalar_c1 = x_price.ravel()
-    meat_price_scalar_c1 = y_price.ravel()
+    grain_price_scalar_c1 = w_price.ravel()
+    meat_price_scalar_c1 = x_price.ravel()
+    wool_price_scalar_c1 = y_price.ravel()
 
     ##error check
-    if np.sum(prob_c1)<0.995:
+    if np.sum(prob_c1)<0.99:
         raise ValueError('c1 prob doesnt add to 1. This can be because the min or max value used to build the distribution is not wide enough.')
     ##adjust prob so it adds to exactly 1 (if it only adds to 0.995 there is about 6k randomness)
     prob_c1 = prob_c1 / np.sum(prob_c1)
@@ -206,12 +226,13 @@ if __name__=="__main__":
     ##adjust scalars so that weighted average is 1. (the price scalars shouldnt change the average price across all price states)
     grain_price_scalar_c1 = grain_price_scalar_c1 / np.sum(grain_price_scalar_c1 * prob_c1)
     meat_price_scalar_c1 = meat_price_scalar_c1 / np.sum(meat_price_scalar_c1 * prob_c1)
+    wool_price_scalar_c1 = wool_price_scalar_c1 / np.sum(wool_price_scalar_c1 * prob_c1)
 
     ##add z scalar - for now this is just singleton (ie price is the same along z)
     index_z = np.arange(len_z)
     grain_price_scalar_c1z = grain_price_scalar_c1[:,na] * (index_z==index_z)
     meat_price_scalar_c1z = meat_price_scalar_c1[:,na] * (index_z==index_z)
-    wool_price_scalar_c1z = meat_price_scalar_c1z #todo hook this up
+    wool_price_scalar_c1z = wool_price_scalar_c1[:,na] * (index_z==index_z)
 
     ##convert to df - if the arrays ever become more than 2d possible it would be better to save them as pkl files.
     ## they are saved as excel file so the user can manually change the value or look at the arrays easily.
