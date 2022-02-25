@@ -694,12 +694,12 @@ def f_objective(model):
     methods are included in AFO (note: alternative utility functions can easily be added).
     CARA is a negative exponential curve: :math:`U = 1-exp(-a*x)` where :math:`U` is utility, :math:`a` is the
     Pratt-Arrow coefficient of absolute risk aversion and x is the return to management and capital.
-    The Pratt-Arrow coefficient is a user input that controls the level of risk aversion. :cite:p:`KINGWELL1994'
+    The Pratt-Arrow coefficient is a user input that controls the level of risk aversion. :cite:p:`KINGWELL1994`
     used two levels: 0.000 003 and 0.000 005 to represent moderate and high levels risk-aversion.
     CRRA is a power function denoted by: :math:`U = W^(1-R) / (1-R)` where :math:`U` is utility, :math:`W` is terminal
     wealth and :math:`R` is the relative risk aversion coefficient.
     The relative risk aversion coefficient is a user defined input that controls the level of risk aversion.
-    :cite:p:`kingwell1996' used values within the range of 0.1 to 3.0 to represent low to high levels of risk-aversion.
+    :cite:p:`kingwell1996` used values within the range of 0.1 to 3.0 to represent low to high levels of risk-aversion.
 
     Both methods have limitations, most of which can be minimised if the modeler is aware.
     A CARA specification implies there are no wealth effects on a farmer's income and price security decisions.
