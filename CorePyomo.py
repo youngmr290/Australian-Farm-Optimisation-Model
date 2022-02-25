@@ -723,7 +723,7 @@ def f_objective(model):
     def terminal_wealth(model,q,s,z,c1):
         return (model.v_terminal_wealth[q,s,z,c1] - model.v_credit[q,s,c1,p7_end,z] + model.v_debit[q,s,c1,p7_end,z] # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
                    + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset[q,s,p7_end,z]
-                   + 0.00001 * sum(sum(v[s] for s in v) for v in variables)) <=0 #each variable puts a small neg number into objective. This stop cplex selecting variables that dont contribute to the objective (cplex selects variables to remove slack on constraints).
+                   + 0.00001 * sum(sum(v[s] for s in v) for v in variables)) <=0 #all variable put a small neg number into objective. This stop cplex selecting variables that dont contribute to the objective (cplex selects variables to remove slack on constraints).
 
     model.con_terminal_wealth = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, rule=terminal_wealth,
                                      doc='tallies up terminal wealth so it can be transferred to the utility function.')

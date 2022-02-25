@@ -7399,8 +7399,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##drys retained (bool used to control if bound constraint is built that limits the number of drys sold using p_prop_dry_dams)
     ### can only sell drys only if pregnant dams are also being sold.
     dry_retained_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_retained_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact o axis (o is the input axis)
-    arrays_vz = [keys_v1, keys_z]
-    params['p_drys_retained'] = fun.f1_make_pyomo_dict(dry_retained_va1e1b1nwzida0e0b0xyg1, arrays_vz)
+    arrays_vzg1 = [keys_v1, keys_z, keys_g1]
+    params['p_drys_retained'] = fun.f1_make_pyomo_dict(dry_retained_va1e1b1nwzida0e0b0xyg1, arrays_vzg1)
     #todo include the birth timing in this param when gbal is activated (currently it only forces retention in scanning dvp. Birth dvp could be activated is gbal used)
 
     ##proportion of drys that are twice dry

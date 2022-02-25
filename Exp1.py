@@ -316,6 +316,7 @@ def main():
     print(f'Number of trials to run: {len(dataset)}')
     print(f'Number of full solutions: {sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data)))}')
     print(f'Exp.xls last saved: {datetime.fromtimestamp(round(os.path.getmtime("exp.xlsx")))}')
+    #todo could intercept if len(dataset) == 0 which leads to an error message
     ##start multiprocessing
     with multiprocessing.Pool(processes=n_processes) as pool:
         ##size 1 has similar speed even for N11 model and allows better reporting (will be even better on a larger model)
