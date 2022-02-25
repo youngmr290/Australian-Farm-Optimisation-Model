@@ -7,7 +7,8 @@ Price scalars have two main purposes:
     #. To account for variation in prices due to season type.
 
 Notwithstanding weather variation, agricultural commodity price is a major source of farm risk
-and must be represented when including farmer risk attitude. For example, if grain price is more variable
+and must be represented when including farmer risk attitude (see the model objective documentation in CorePyomo for
+information about the representation of risk aversion). For example, if grain price is more variable
 than livestock prices, it may be optimal for a risk averse farmer to have a higher livestock focus
 because it will reduce variation in the level of income. Price variation is
 approximated in AFO using user defined number of price states for meat, wool and grain.
