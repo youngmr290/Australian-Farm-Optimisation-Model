@@ -1,6 +1,6 @@
 """
 
-This module determines the proportion of total stubble in each category based on liveweight data from paddock trials
+This module determines the proportion of total stubble in each category based on liveweight data from paddock trials.
 DMD for each category is an input along with information about the sheep in the paddock trials. Stockgenerator is
 then run to determine the LWC (live weight change) provided by each category. Based of off the actual trial LWC
 the proportion of stubble in each category is determined.
@@ -13,10 +13,16 @@ If there are multiple paddock trials that are being used to simulate stubble the
     1. Average the paddock live weight
     2. Simulate each trial differently and then average the results.
 
-The choice of option would be dependant on whether there is information about the livestock for each trial. If there
+The choice of option would be dependent on whether there is information about the livestock for each trial. If there
 is no information about the sheep in each trial then there is no benefit of simulating each trial separately.
 
-The module writes the answers to an excel book which is referenced by AFO - this means this module only needs to be run if you make changes to stub
+The module writes the answers to an excel book which is referenced by AFO - this means this module only needs to be run
+if you make changes to stub inputs or if you change the inputs/formulas that calculate lwc in the generator (it could be
+made so that the stubble generator is run for every trial but this will slow AFO and potentially confuse the interpretation
+of results).
+
+27/2/2022: currently there is only liveweight data for GSM region. Thus cwm uses the same stubble. This would be improved
+by running a stubble trial in the wheatbelt and recording liveweight every week.
 
 @author: young
 """
@@ -159,11 +165,11 @@ adj_intake_p1s1ks2 = intake_p1s1ks2 * (1 - pinp.stubble['quantity_deterioration'
 ###multiply by adjusted intake and sum p axis to return the total intake for each dmd (stubble) category
 total_intake_s1ks2 = np.sum(grazing_days_p1s1ks2 * adj_intake_p1s1ks2, axis=0)
 total_intake_ha_s1ks2 = total_intake_s1ks2 * pinp.stubble['i_sr']
-###divide by biomass to return stubble proportion
+###divide intake by total stubble to return stubble proportion in each category
 harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield penalty is inputted as a harvestable grain
 biomass_k = pinp.stubble['i_trial_yield'] / harvest_index_k
-total_biomass_ks2 = biomass_k[:,na] * stub.f_biomass2residue()
-cat_propn_s1ks2 = total_intake_ha_s1ks2/total_biomass_ks2
+total_residue_ks2 = biomass_k[:,na] * stub.f_biomass2residue()
+cat_propn_s1ks2 = total_intake_ha_s1ks2/total_residue_ks2
 
 # Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
 writer = pd.ExcelWriter('stubble sim.xlsx', engine='xlsxwriter')
