@@ -1354,7 +1354,7 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_lw_dams, 'lw_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_ffcfw_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_ffcfw_dams, 'ffcfw_dams', df_settings, option=xl_display_mode)
-        df_settings = rep.f_df2xl(writer, stacked_ffcfw_dams, 'ffcfw_dams', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_ffcfw_dams, 'ffcfw_dams', df_settings, option=xl_display_mode)
     if True:#report_run.loc['run_ffcfw_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_ffcfw_cut_dams, 'ffcfw_cut_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_ffcfw_yatf', 'Run']:

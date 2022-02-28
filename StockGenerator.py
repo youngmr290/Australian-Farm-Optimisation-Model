@@ -6103,7 +6103,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                          , dvp_type_next_va1e1b1nwzida0e0b0xyg3 == condense_vtype3)[..., na]
     ###Mask the decision variables that are not active in this DVP in the matrix - because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg3 = (index_wzida0e0b0xyg3 % step_dv_va1e1b1nw8zida0e0b0xyg3) == 0
-    ###mask for user defined nutrition profiles (this allows the user to exclude certain nutrition patterns e.g. high high high or low low low) 
+    ###mask for user defined nutrition profiles (this allows the user to exclude certain nutrition patterns e.g. high high high or low low low)
     ### this mask is combined with the main w8 & w9 masks below
     mask_nut_va1e1b1nWzida0e0b0xyg3 = np.take_along_axis(mask_nut_sa1e1b1nWzida0e0b0xyg3, a_prev_s_va1e1b1nwzida0e0b0xyg3, axis=0)
     ####association between the shortlist of nutrition profile inputs and the full range of LW patterns that include starting LW
