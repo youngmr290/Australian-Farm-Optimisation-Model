@@ -116,6 +116,7 @@ def f_report(processor, trials, non_exist_trials):
     stacked_wbe_offs = pd.DataFrame()  # whole body energy content offs
     stacked_lw_dams = pd.DataFrame()  # live weight dams (large array with p, e and b axis)
     stacked_ffcfw_dams = pd.DataFrame()  # fleece free conceptus free weight dams (large array with p, e and b axis)
+    stacked_ffcfw_cut_dams = pd.DataFrame()  # fleece free conceptus free weight dams (large array with p, e and b axis)
     stacked_nv_dams = pd.DataFrame()  # diet nutritive value for dams (large array with p, e and b axis)
     stacked_ffcfw_yatf = pd.DataFrame()  # fleece free conceptus free weight yatf (large array with p, e and b axis)
     stacked_ffcfw_prog = pd.DataFrame()  # fleece free conceptus free weight prog (large array with p, e and b axis)
@@ -571,6 +572,25 @@ def f_report(processor, trials, non_exist_trials):
                                      , index=index, cols=cols, axis_slice=axis_slice)
             ffcfw_dams = pd.concat([ffcfw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_ffcfw_dams = rep.f_append_dfs(stacked_ffcfw_dams, ffcfw_dams)
+
+        #todo remove after ewelamb analysis
+        if True:#report_run.loc['run_ffcfw_cut_dams', 'Run']:
+            type = 'stock'
+            prod = 'ffcfw_dams_k2vPa1nw8ziyg1'
+            na_prod = [0,1,3] #q,s,t
+            weights = 'dams_numbers_qsk2tvanwziy1g1'
+            na_weights = [5]#p
+            keys = 'dams_keys_qsk2tvPanwziy1g1'
+            arith = 1
+            index = [4,5] #v,p
+            cols = [2,8] #k,w
+            axis_slice = {}
+            # axis_slice[0] = [0, 2, 1]
+            ffcfw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
+                                     , na_weights=na_weights, keys=keys, arith=arith
+                                     , index=index, cols=cols, axis_slice=axis_slice)
+            ffcfw_dams = pd.concat([ffcfw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_ffcfw_cut_dams = rep.f_append_dfs(stacked_ffcfw_cut_dams, ffcfw_dams)
 
         if report_run.loc['run_nv_dams', 'Run']:
             ##Average dam NV with p, e & b axis. NV is adjusted for animals that are sold but not adjusted by mortality
@@ -1330,6 +1350,9 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_lw_dams, 'lw_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_ffcfw_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_ffcfw_dams, 'ffcfw_dams', df_settings, option=xl_display_mode)
+        df_settings = rep.f_df2xl(writer, stacked_ffcfw_dams, 'ffcfw_dams', df_settings, option=1)
+    if True:#report_run.loc['run_ffcfw_dams', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_ffcfw_cut_dams, 'ffcfw_cut_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_ffcfw_yatf', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_ffcfw_yatf, 'ffcfw_yatf', df_settings, option=xl_display_mode)
     if report_run.loc['run_nv_dams', 'Run']:

@@ -285,6 +285,7 @@ sav_inp['r2_ik0g1'] = np.full(pinp.sheep['ia_r2_ik0g1'].shape, '-', dtype=object
 sav_inp['r2_ik0g3'] = np.full(pinp.sheep['ia_r2_ik0g3'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k0 axis (wean age) for offs
 sav_inp['r2_isk2g1'] = np.full(pinp.sheep['ia_r2_isk2g1'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k2 axis (LSLN) for dams
 sav_inp['r2_ik5g3'] = np.full(pinp.sheep['ia_r2_ik5g3'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k5 axis (BTRT) for offs
+sav_inp['period_is_reportffcfw_p'] = np.full(500, '-', dtype=object)   #todo remove after ewelamb analysis
 sav_inp['LTW_loops'] = '-'                  #SA to control the number of ltw loops. Default is 1 (ie ltw adjustment not included).
 
 ##stock parameters
