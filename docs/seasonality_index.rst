@@ -71,9 +71,9 @@ The seasons (weather years) that will be modelled need to be selected based on:
     - Outcome of the season (productivity)
 
 The aim is to select seasons with large production variation that have clear indicators that give the most potential
-for implementing tactical management. This will probably be achieved by selecting indicators that maximise the
+for implementing tactical management. This is achieved by selecting indicators that maximise the
 differentiation of outcome between the season groups. But it also needs to account for the timing of the indicator
-and the capacity to make tactical adjustments (eg. no value in finding out it is a good season at harvest).
+and the capacity to make tactical decisions (eg. no value in finding out it is a good season at harvest).
 For example, break of season timing is a clear indicator which can be used to classify season types (e.g. season 1
 could be an early break and season 2 could be a late break). The break of season influences production and it is
 early enough in the year that farmers can adjust their strategy accordingly.
@@ -126,6 +126,41 @@ The weather-years that might need more thought to represent are:
 
 Each season type is allocated a probability based on the historical (or other method) of occurrence. A season type
 with 0 probability could be excluded from the model to reduce size.
+
+Current definition
+^^^^^^^^^^^^^^^^^^
+The key tactical decisions are:
+
+    #. stock liveweight
+    #. pasture deferment
+    #. stock sales
+    #. rotation choice
+    #. biomass usage (ie harvest, fodder or hay)
+
+Determining season types for crop is quite simple. Decisions about rotation are made at the
+time of seeding and decisions about harvest are made at the end of the season.
+Statistical modelling indicated that crop production is primarily
+determined by time of season break and spring rainfall. Thus, for crop, the break of season
+and spring conditions are good seasonal indicators that capture the majority of the production variance
+whilst allowing realistic tactical decisions to be made.
+
+Pasture/livestock are more complicated because their decisions are more continuous. However, discussion with consultants
+and statistical modelling has identified the key points in the season where decisions are made.
+The break of season timing was identified as most important indicator for pasture and livestock management
+because time of break is a good indicator of the amount of early feed available which is the most feed limiting
+time of year. Pasture decisions are generally not made at the first sign of the season break because it takes some time
+for the pasture to establish. Thus, time of sowing has been deemed a suitable indicator for
+pasture decisions. For example, early sowing indicates an early break to the season and more early feed
+therefore a decision could be to stop feedlotting and graze pastures.
+Winter productivity is less variable between seasons due to the
+lower temperatures and thus no winter decision points were included. Spring conditions largely explain
+total pasture production and dry summer feed availability. Which may impact management decisions such as livestock
+liveweight pattern and sale.
+
+Overall, for both crop and pasture/livestock, time of sowing and spring rainfall were determined as
+key indicators of seasonal management. The season definition described above was defined for the Great Southern
+region of Western Australia. The season definition may vary for different regions. Other factors that may be considered
+in future improvements are seasonal impacts on pasture quality and false breaks.
 
 
 Season details
