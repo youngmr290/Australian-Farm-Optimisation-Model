@@ -7052,7 +7052,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                                      axis = (e1_pos, b1_pos), keepdims=True))
 
     ##ffcfw for select p - to keep the report small it doesnt have full p axis - todo this is just for ewelamb analysis - maybe long term just report ffcfw with v axis.
-    period_is_reportffcfw_p = fun.f_sa(False, sen.sav['period_is_reportffcfw_p'], 5).astype(bool)
+    period_is_reportffcfw_p = fun.f_sa(np.array([False]), sen.sav['period_is_reportffcfw_p'], 5)
     # period_is_reportffcfw_p = fun.f_sa(np.full(500,False), sen.sav['period_is_reportffcfw_p'], 5) #use 500 long then cut to the actual len_p because len p is not known when sav is built.
     period_is_reportffcfw_p = period_is_reportffcfw_p[0:len_p]
 
