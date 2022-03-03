@@ -5207,7 +5207,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     either of these things thus shearing and selling in the same period is not a big limitation (the two factors are 
     likely to cancel each other out so likely not a big error).   
     '''
-    
+
     onhandshear_start=time.time()
 
     ##sire - purchased and sold on given date and shorn at main shearing - sires are simulated from weaning but for the pp we only look at a subset
@@ -5334,14 +5334,20 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###t0 = sold at weaning as sucker, t1 & t2 = retained
     ###the other t slices are added further down in the code
     period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2 = period_is_wean_pa1e1b1nwzida0e0b0xyg2
-    ###bound female sale age - this sets the minimum age a female prog can be sold. Default is no min age e.g. can be sold anytime.
+    ###bound wether sale age - default is to allow all ages to be sold. User can change this using wether sale SAV.
+    min_age_castrate_sale_g2 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_age_wether_g3'][mask_yatf_inc_g2], 5)
+    yatf_castrate_sale_mask_pa1e1b1nwzida0e0b0xyg2 = np.logical_or((gender_xyg[mask_x] != 2)
+                                            , age_start_pa1e1b1nwzida0e0b0xyg2 > min_age_castrate_sale_g2)
+    ###bound female sale age - this sets the minimum age a female prog can be sold. Default is no min age eg can be sold anytime.
     min_age_female_sale_dg2 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_age_female_dg3'], 5)
     min_age_female_sale_oa1e1b1nwzida0e0b0xyg2 = fun.f_expand(min_age_female_sale_dg2, left_pos=p_pos, right_pos=-1
                                            , condition=mask_d_offs, axis=p_pos, condition2=mask_yatf_inc_g2, axis2=-1)
     min_age_female_sale_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(min_age_female_sale_oa1e1b1nwzida0e0b0xyg2
                                                         , a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0)
-    yatf_sale_mask_pa1e1b1nwzida0e0b0xyg2 = np.logical_or((gender_xyg[mask_x] != 1)
+    yatf_female_sale_mask_pa1e1b1nwzida0e0b0xyg2 = np.logical_or((gender_xyg[mask_x] != 1)
                                                 , age_start_pa1e1b1nwzida0e0b0xyg2 > min_age_female_sale_pa1e1b1nwzida0e0b0xyg2)
+    ###combine the male and female yatf masks
+    yatf_sale_mask_pa1e1b1nwzida0e0b0xyg2 = np.logical_and(yatf_castrate_sale_mask_pa1e1b1nwzida0e0b0xyg2, yatf_female_sale_mask_pa1e1b1nwzida0e0b0xyg2)
     period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2 = np.logical_and(period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2, yatf_sale_mask_pa1e1b1nwzida0e0b0xyg2)
 
 
