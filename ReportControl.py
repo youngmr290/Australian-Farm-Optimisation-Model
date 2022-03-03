@@ -631,7 +631,7 @@ def f_report(processor, trials, non_exist_trials):
             index = [5] #p
             cols = [4] #v
             axis_slice = {}
-            # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
+            axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
             axis_slice[4] = [0, 7, 1]     #DVPs 0 to 6 inclusive
             ffcfw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
                                      , na_weights=na_weights, keys=keys, arith=arith
@@ -656,7 +656,7 @@ def f_report(processor, trials, non_exist_trials):
             arith = 1
             if lp_vars_inc:
                 index = [5]  #p
-                cols = [14, 8, 3]  #g1, t & b1
+                cols = [14, 7, 3, 8]  #g1, e, t & b1
             else:
                 index =[5] #p
                 cols =[14,7,3,8,10] #g,e,t,b1,w
