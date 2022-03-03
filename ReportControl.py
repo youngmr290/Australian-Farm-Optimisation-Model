@@ -574,7 +574,7 @@ def f_report(processor, trials, non_exist_trials):
             stacked_ffcfw_dams = rep.f_append_dfs(stacked_ffcfw_dams, ffcfw_dams)
 
         #todo remove after ewelamb analysis
-        if True:#report_run.loc['run_ffcfw_cut_dams', 'Run']:
+        if report_run.loc['run_ffcfw_cut_dams', 'Run']:
             type = 'stock'
             prod = 'ffcfw_dams_k2vPa1nw8ziyg1'
             na_prod = [0,1,3] #q,s,t
@@ -582,10 +582,11 @@ def f_report(processor, trials, non_exist_trials):
             na_weights = [5]#p
             keys = 'dams_keys_qsk2tvPanwziy1g1'
             arith = 1
-            index = [4,5] #v,p
-            cols = [2,8] #k,w
+            index = [5] #p
+            cols = [4] #v
             axis_slice = {}
-            # axis_slice[0] = [0, 2, 1]
+            axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
+            axis_slice[4] = [0, 7, 1]     #DVPs 0 to 6 inclusive
             ffcfw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
                                      , na_weights=na_weights, keys=keys, arith=arith
                                      , index=index, cols=cols, axis_slice=axis_slice)
@@ -722,6 +723,7 @@ def f_report(processor, trials, non_exist_trials):
             stacked_nv_offs = rep.f_append_dfs(stacked_nv_offs, nv_offs)
 
         if report_run.loc['run_lamb_survival', 'Run']:
+            #axes are qsk2tvaeb9nwziy1g1      b9 axis is shorten b axis: [0,1,2,3]
             option = 0
             if lp_vars_inc:
                 index =[4]
@@ -753,6 +755,7 @@ def f_report(processor, trials, non_exist_trials):
             stacked_weanper = rep.f_append_dfs(stacked_weanper, weanper)
 
         if report_run.loc['run_scanper', 'Run']:
+            #axes are qsk2tvanwziy1g1
             option = 2
             if lp_vars_inc:
                 index =[4]      #v
@@ -767,6 +770,7 @@ def f_report(processor, trials, non_exist_trials):
             stacked_scanper = rep.f_append_dfs(stacked_scanper, scanper)
 
         if report_run.loc['run_dry_propn', 'Run']:
+            #axes are qsk2tvanwziy1g1
             option = 3
             if lp_vars_inc:
                 index =[4]      #v
