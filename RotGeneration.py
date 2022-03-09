@@ -6,8 +6,8 @@ author: young
 Background
 ----------
 
-This module generate the rotation info and writes it to excel.
-This is because it is a bit slow and only need to be recalculated
+This module generates the rotation phases and writes them to excel.
+This is because it is a bit slow and only needs to be recalculated
 when rotation rules are changed or new land uses are added.
 
 There are three options
@@ -25,7 +25,7 @@ There are three options
 
 Automatic phase generation
 --------------------------
-The process for generating the phases is:
+The process for generating the phases was developed in conjunction with WA cropping advisors and is outlined below:
 
     #. Generate all combinations of the landuses that are possible in each year. The necessary landuses to represent reduces for the older years in the history because the rotations can be generalised.
     #. Run the ‘drop’ rules to delete those phases that are not required because they are unprofitable or non logical and don’t need to be included.
@@ -47,13 +47,15 @@ Parameters that define the rotation phases.
 
     * of consecutive cereal before yields plateau (c_cereal = 3)
     * of consecutive non-annual pasture before annual pasture needs to be resown (resow_a = 4)
+    * of consecutive annual pasture before annual pasture needs to be spraytopped (spray_a = 4). This is required because overtime the pasture composition becomes less ideal (ie brome grass)
     * ...ditto for lucerne (resow_u = 1)
     * ...ditto for tedera (resow_t = 1)
-    * that spraytopping or pasture manipulation impacts on crop yields or pasture seed bank (spraytop = 1).
+    * that spraytopping or pasture manipulation impacts on crop yields or pasture seed bank (spraytop = 2). Meaning
+      that two spraytops has greater weed control than one.
     * that pasture manipulation followed by spraytopping impacts on yields or seed bank (manip_sprayt=2) on the assumption that manipulation + spraytopping has a greater effect than spraytopping alone.
     * of legume pasture that will still be increasing soil N levels (build_n = 5)
     * of non-legume crop to utilise all soil organic N, if built to maximum levels (use_n = 3)
-    * of annual pasture till the seed bank is fully replenished and independent of crop history (build_seed = 2)
+    * of annual pasture till the seed bank is fully replenished and independent of crop history (build_seed = 1)
     * of consecutive non-annual that continues to deplete the seed bank (deplete_seed = 3)
     * of non-canola till canola disease levels have decreased to a minimum (canola_disease = 3)
     * of non-pulse till pulse disease levels have decreased to a minimum (pulse_disease = 3)
@@ -71,6 +73,8 @@ The following rules are implemented to remove illogical rotation phases:
 
     #. If it is annual pasture after 4 other non-annual pasture phases then the annual pasture must be resown
 
+    #. If it is annual pasture after 4 other annual pasture phases then the annual pasture must be spraytopped
+
 The following rules are implemented to remove unprofitable rotation phases:
 
     .. note:: These rules may need to be tweaked for certain analyses. For example, in the seasonal variation model it may
@@ -79,22 +83,21 @@ The following rules are implemented to remove unprofitable rotation phases:
 
     #. No continuous canola (due to canola disease)
 
-    #. No continuous pulse crops (due to pulse disease)
+    #. Two years between pulse crops (due to pulse disease)
 
     #. No pulse crop after a pasture (this would constitute a poor use of N fixed by the legume pasture)
-
-    #. No annual pasture after a spray-topped annual pasture (spray-topping reduces future germination
-       and is almost always solely used to prepare a field for subsequent cropping)
 
     #. No annual pasture (other than spray-topped pasture) after a manipulated annual pasture (usually the
        purpose of pasture manipulation is to help prepare a field for subsequent cropping. However, cropping
        aside, a spray-topped pasture is feasible use of a field that has had its pasture manipulated)
 
-    #. No single year of Tedera or Lucerne (1yr of a perennial is not a likely profitable use of that perennial)
+    #. Perennials can only be in a continuous rotation (perennials are usually situated on soil that doesnt suit anything else)
 
     #. Only a single pasture variety in a rotation phase.
 
-    #. No dry seeding after pasture because of excessive weed burden.
+    #. Only canola after pasture (best use of soil conditions)
+
+    #. No dry seeding after non spraytopped pasture unless RR canola because of excessive weed burden.
 
     #. No saleable crop after fodder (due to excessive weed burden).
 
@@ -111,6 +114,14 @@ import Functions as fun
 import StructuralInputs as sinp
 import PropertyInputs as pinp
 
+'''
+Version 1:
+To cut down the number of rotations we have dropped out some less important lanuses.
+Manipulated pasture is not included because farmers are tending to just spraytop pastures and then resow because
+manipulation reduces carrying capacity too much.
+Chickpeas, Lentils and vetch are not included yet.
+No perenials are included yet. These are not very common in current rotations.
+'''
 ##if you want to use a customised list of rotations this can be set to false - populate the array further down the module.
 customised_rotations = False
 def f_rot_gen():
@@ -118,35 +129,35 @@ def f_rot_gen():
                    , 'bd','wd','rd','zd'
                    , 'a', 'ar'
                    , 's', 'sr'
-                   , 'm'#])
-                    , 'u', 'ur'
-                    , 'x', 'xr'
-                    , 'j', 't', 'jr', 'tr'])
+                   , 'm'])
+                    # , 'u', 'ur'
+                    # , 'x', 'xr'
+                    # , 'j', 't', 'jr', 'tr'])
     yr1 = np.array(['AR', 'SR'
            ,'E1', 'N', 'P', 'OF'
            , 'A'
            , 'S'
-           , 'M'#])
-            , 'U'
-            , 'X'
-            , 'T', 'J'])
+           , 'M'])
+            # , 'U'
+            # , 'X'
+            # , 'T', 'J'])
     yr2 = np.array(['E', 'N', 'P'
            , 'A'
            , 'S'
-           , 'M'#])
-            , 'U'
-            , 'X'
-            , 'T', 'J'])
+           , 'M'])
+            # , 'U'
+            # , 'X'
+            # , 'T', 'J'])
     yr3 = np.array(['E', 'N', 'P'
-           , 'A'#])
-            , 'U'
-            , 'T'])
-    yr4 = np.array(['A','Y'#])
-            , 'U'
-            , 'T'])
-    yr5 = np.array(['A','Y'#])
-            , 'U'
-            , 'T'])
+           , 'A'])
+            # , 'U'
+            # , 'T'])
+    yr4 = np.array(['A','Y'])
+            # , 'U'
+            # , 'T'])
+    yr5 = np.array(['A','Y'])
+            # , 'U'
+            # , 'T'])
 
     arrays=[yr5,yr4,yr3,yr2,yr1,yr0]
     phases=fun.cartesian_product_simple_transpose(arrays)
@@ -175,20 +186,24 @@ def f_rot_gen():
     ##drop rules 1; unprofitable
         ###no cont canola
         phases = phases[~(np.isin(phases[:,i], ['N'])&np.isin(phases[:,i+1], ['N','r','z','rd','zd']))]
-        ###no cont pulse
-        phases = phases[~(np.isin(phases[:,i], ['P'])&np.isin(phases[:,i+1], ['P','l','f']))]
+        ###two years between pulses
+        if i<np.size(phases,1)-2:
+            phases = phases[~(np.isin(phases[:,i], ['P'])&np.isin(phases[:,i+1], ['P','l','f']))]
+            phases = phases[~(np.isin(phases[:,i], ['P'])&np.isin(phases[:,i+2], ['P','l','f']))]
         ###no pulse after pasture
         phases = phases[~(np.isin(phases[:,i], ['AR', 'SR','A','M','S','U','X','T','J'])&np.isin(phases[:,i+1], ['P','l','f']))]
-        ###no pasture after spraytoped
-        phases = phases[~(np.isin(phases[:,i], ['S','SR'])&np.isin(phases[:,i+1], ['AR', 'SR','A', 'M','S','a','ar','s','sr','m']))]
+        # ###no pasture after spraytoped
+        # phases = phases[~(np.isin(phases[:,i], ['S','SR'])&np.isin(phases[:,i+1], ['AR', 'SR','A', 'M','S','a','ar','s','sr','m']))]
         ###only spraytopped pasture after manipulated
         phases = phases[~(np.isin(phases[:,i], ['M'])&np.isin(phases[:,i+1], ['AR', 'A', 'M','a','ar','m']))]
         ###not going to resown tedera after a tedera (in a cont rotation you resow every 10yrs but that is accounted for with 'tc')
         phases = phases[~(np.isin(phases[:,i], ['T','J'])&np.isin(phases[:,i+1], ['tr','jr']))]
         ###not going to resow lucerne after a lucerne (in a cont rotation you resow every 5yrs but that is accounted for with 'uc' & 'xc')
         phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['xr','ur']))]
-        ###no dry seeding after pasture
-        phases = phases[~(np.isin(phases[:,i], ['AR', 'SR','A','M','S','U','X','T','J'])&np.isin(phases[:,i+1], ['bd','wd','rd','zd']))]
+        ###only canola after pasture
+        phases = phases[~(np.isin(phases[:,i], ['AR','SR','A','M','S','U','X','T','J'])&np.isin(phases[:,i+1], ['E', 'E1', 'OF', 'P', 'b', 'h', 'o', 'of', 'w', 'f', 'l', 'bd','wd']))]
+        ###no dry seeding after non spraytopped pasture unless RR canola
+        phases = phases[~(np.isin(phases[:,i], ['A','AR','M','U','X','T','J'])&np.isin(phases[:,i+1], ['bd','wd','zd']))]
         ###no saleable crop after strategic fodder
         phases = phases[~(np.isin(phases[:,i], ['OF'])&np.isin(phases[:,i+1], ['b', 'h', 'o', 'w', 'f', 'l', 'z','r','bd','wd','rd','zd']))]
         ###can't have 1yr of perennial unless it is the earliest yr in the history
@@ -211,12 +226,11 @@ def f_rot_gen():
     resow_cols = 2 #the number of cols where resowing can occur ie in yr0 and 1
     for i in range(resow_cols):
         i+=1
-        ###if there is a previous annual then yr0 doesn't need to be resown
-        ###if there is a previous annual then yr1 doesn't need to be resown
-        a_index =np.any(np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR', 'SR','A','M','S']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['ar', 'sr','AR', 'SR'])
+        ###if continuous annual it must be spraytopped every 5yrs
+        a_index = np.all(np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR','A','M']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['AR','A','M','ar','a','m'])
         phases = phases[~a_index]
         ###if there are not annuals in the history then an annual in yr0 or yr1 must be resown
-        a_index2 = np.all(~np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR', 'SR','A','M','S']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['a', 's','m','A','M','S'])
+        a_index2 = np.all(~np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR','SR','A','M','S']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['a', 's','m','A','M','S'])
         phases = phases[~a_index2]
 
 
