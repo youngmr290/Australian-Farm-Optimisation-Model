@@ -163,23 +163,14 @@ def f_phases():
 
 
 ###############
-#landuses     #
+#landuse sets #
 ###############
-'''
-A1, E1 are special sets used in con2 - currently not used
-Note
-- A1 is also used in pasture functions to build the germ df, so it can't be deleted
-- C is used in stubble module, createmodel & mach
-- C1 is used just in pasture functions
-- sets now include capitals - this shouldn't effect con1 but it makes building the germ df easier
-'''
 landuse = {}
 
 ##landuse indexes
 landuse['All']=general['i_idx_k'] #used in reporting and bounds and as index in precalc modules
 landuse['C']=general['i_idx_k1'] #all crops, used in stubble and mach (not used for rotations)
 landuse['All_pas']=general['i_idx_k2'] #used in reporting
-
 
 ##next set is used in pasture.py for mobilisation of below ground reserves and phase area
 landuse['pasture_sets']={'annual': {'a', 'ar'
@@ -189,7 +180,8 @@ landuse['pasture_sets']={'annual': {'a', 'ar'
                                    , 'x', 'xc', 'xr'}
                         ,'tedera':{'j','jc', 't','tc', 'jr', 'tr'}
                        }
-##G and C1 are just used in pas.py for germination ^can be removed when germination is calculated from sim
+
+##A1, E, P, G and C1 are just used in pas.py for germination ^can be removed when/if germination is calculated from sim
 landuse['G']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'
                 , 'a', 'ar'
                 , 's', 'sr'
@@ -197,44 +189,51 @@ landuse['G']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v'
                 , 'u', 'ur'
                 , 'x', 'xr'
                 , 'j', 't', 'jr', 'tr'
-                , 'G', 'Y', 'E', 'N', 'P', 'OF'
+                , 'G', 'Y', 'B','O','O1','W', 'N', 'L', 'F', 'OF'
                 , 'A', 'AR'
                 , 'S', 'SR'
                 , 'M'
                 , 'U'
                 , 'X'
                 , 'T', 'J'} #all landuses
-##G and C1 are just used in pas.py for germination ^can be removed when germination is calculated from sim
-landuse['C1']={'E', 'N', 'P', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
+landuse['C1']={'B','O','O1','W', 'N', 'L', 'F', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
+landuse['P']={'L', 'F', 'f','i', 'k', 'l', 'v'} #pulses
+landuse['E']={'B','O','O1','W', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd'} #cereals
+landuse['A1']={'a', 's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
+
+##dry sown crops, used in phase.py for seeding param (not used for building rotations)
+landuse['dry_sown'] = {'bd', 'od', 'wd', 'zd','rd'}
+
+##all crops that produce hay - used in machpyomo/coremodel for hay con
+landuse['Hay']={'h'}
 
 
-landuse['dry_sown'] = {'bd', 'od', 'wd', 'zd','rd'} #dry sown crops, used in phase.py for seeding param (not used for building rotations)
-landuse['Hay']={'h'} #all crops that produce hay - used in machpyomo/coremodel for hay con
-
-##sets used in to build rotations
+##########################################
+#Landuse sets used in to build rotations #
+##########################################
 landuse['A']={'a', 'ar','s', 'sr', 'm'
                 , 'A', 'AR'
                 , 'S', 'SR'
                 , 'M'} #annual
-landuse['A1']={'a',  's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
 landuse['AR']={'ar', 'AR'} #resown annual
-landuse['E']={'E', 'E1', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd'} #cereals
-landuse['E1']={'E', 'b', 'bd', 'h', 'o', 'od', 'w', 'wd'} #harvested cereals
+landuse['B']={'B', 'b', 'bd'} #barleys
 landuse['J']={'J', 'j', 'jr'} #tedera
 landuse['M']={'m', 'M'} #manipulated pasture
 landuse['N']={'N', 'z', 'zd', 'r', 'rd'} #canolas
+landuse['O1']={'O', 'h', 'o', 'od'} #oats - only in yr1 doesnt include foder
+landuse['O']={'O', 'O1', 'OF', 'h', 'o', 'od', 'of'} #oats
 landuse['OF']={'OF', 'of'} #oats fodder
-landuse['P']={'P', 'f','i', 'k', 'l', 'v'} #pulses
+landuse['F']={'F', 'f'} #faba
+landuse['L']={'L', 'l'} #lupin
 landuse['S']={'s','sr', 'S', 'SR'} #spray topped pasture
 landuse['SR']={'sr', 'SR'} #spray topped pasture
 landuse['T']={'T', 't', 'tr','J', 'j', 'jr'} #tedera - also includes manipulated tedera because it is combined in yrs 3,4,5
+landuse['W']={'W', 'w', 'wd'} #wheats
 landuse['U']={'u', 'ur', 'U','x', 'xr', 'X'} #lucerne
 landuse['X']={'x', 'xr', 'X'} #lucerne
 landuse['Y']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'
-                , 'Y', 'E', 'E1', 'N', 'P', 'OF'} #anything not pasture
+                , 'Y', 'B','O','O1','W', 'N', 'L', 'F', 'OF'} #anything not pasture
 
-
-'''make each landuse a set so the issuperset func works'''
 landuse['a']={'a'}
 landuse['ar']={'ar'}
 landuse['b']={'b'}

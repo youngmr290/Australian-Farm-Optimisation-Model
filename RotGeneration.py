@@ -62,6 +62,9 @@ Parameters that define the rotation phases.
     * of years of continuous tedera before it needs resowing (tedera_resowing = 10)
     * of Lucerne before it needs to be resown (lucerne_resowing = 5)
 
+    Note: disease can effects crops in the same class quite differently (e.g. barley is often a reasonable break crop
+    for wheat). Because of this crops can not be grouped until yr3 when disease reaches a plateau.
+
     Length of rotation phase = maximum(resow_a, resow_u, resow_t, build_n, use_n, deplete_seed, canola disease,
     pulse disease, spraytop, manip_sprayt) + 1
 
@@ -134,21 +137,21 @@ def f_rot_gen():
                     # , 'x', 'xr'
                     # , 'j', 't', 'jr', 'tr'])
     yr1 = np.array(['AR', 'SR'
-           ,'E1', 'N', 'P', 'OF'
+           ,'B','O1','W', 'N', 'L', 'F', 'OF'
            , 'A'
            , 'S'
            , 'M'])
             # , 'U'
             # , 'X'
             # , 'T', 'J'])
-    yr2 = np.array(['E', 'N', 'P'
+    yr2 = np.array(['B','O','W', 'N', 'L', 'F'
            , 'A'
            , 'S'
            , 'M'])
             # , 'U'
             # , 'X'
             # , 'T', 'J'])
-    yr3 = np.array(['E', 'N', 'P'
+    yr3 = np.array(['B','O','W', 'N', 'L', 'F'
            , 'A'])
             # , 'U'
             # , 'T'])
@@ -188,12 +191,10 @@ def f_rot_gen():
         phases = phases[~(np.isin(phases[:,i], ['N'])&np.isin(phases[:,i+1], ['N','r','z','rd','zd']))]
         ###two years between pulses
         if i<np.size(phases,1)-2:
-            phases = phases[~(np.isin(phases[:,i], ['P'])&np.isin(phases[:,i+1], ['P','l','f']))]
-            phases = phases[~(np.isin(phases[:,i], ['P'])&np.isin(phases[:,i+2], ['P','l','f']))]
+            phases = phases[~(np.isin(phases[:,i], ['L','F'])&np.isin(phases[:,i+1], ['L','F','l','f']))]
+            phases = phases[~(np.isin(phases[:,i], ['L','F'])&np.isin(phases[:,i+2], ['L','F','l','f']))]
         ###no pulse after pasture
-        phases = phases[~(np.isin(phases[:,i], ['AR', 'SR','A','M','S','U','X','T','J'])&np.isin(phases[:,i+1], ['P','l','f']))]
-        # ###no pasture after spraytoped
-        # phases = phases[~(np.isin(phases[:,i], ['S','SR'])&np.isin(phases[:,i+1], ['AR', 'SR','A', 'M','S','a','ar','s','sr','m']))]
+        phases = phases[~(np.isin(phases[:,i], ['AR', 'SR','A','M','S','U','X','T','J'])&np.isin(phases[:,i+1], ['L','F','l','f']))]
         ###only spraytopped pasture after manipulated
         phases = phases[~(np.isin(phases[:,i], ['M'])&np.isin(phases[:,i+1], ['AR', 'A', 'M','a','ar','m']))]
         ###not going to resown tedera after a tedera (in a cont rotation you resow every 10yrs but that is accounted for with 'tc')
@@ -201,7 +202,7 @@ def f_rot_gen():
         ###not going to resow lucerne after a lucerne (in a cont rotation you resow every 5yrs but that is accounted for with 'uc' & 'xc')
         phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['xr','ur']))]
         ###only canola after pasture
-        phases = phases[~(np.isin(phases[:,i], ['AR','SR','A','M','S','U','X','T','J'])&np.isin(phases[:,i+1], ['E', 'E1', 'OF', 'P', 'b', 'h', 'o', 'of', 'w', 'f', 'l', 'bd','wd']))]
+        phases = phases[~(np.isin(phases[:,i], ['AR','SR','A','M','S','U','X','T','J'])&np.isin(phases[:,i+1], ['B','O','O1','W', 'L', 'F', 'OF', 'b', 'h', 'o', 'of', 'w', 'f', 'l', 'bd','wd']))]
         ###no dry seeding after non spraytopped pasture unless RR canola
         phases = phases[~(np.isin(phases[:,i], ['A','AR','M','U','X','T','J'])&np.isin(phases[:,i+1], ['bd','wd','zd']))]
         ###no saleable crop after strategic fodder
