@@ -131,23 +131,23 @@ def f_rot_gen():
     yr0 = np.array(['b', 'h', 'o','of', 'w', 'f', 'l', 'z','r'
                    , 'bd','wd','rd','zd'
                    , 'a', 'ar'
-                   , 's', 'sr'
-                   , 'm'])
+                   , 's', 'sr'])
+                   # , 'm'
                     # , 'u', 'ur'
                     # , 'x', 'xr'
                     # , 'j', 't', 'jr', 'tr'])
     yr1 = np.array(['AR', 'SR'
            ,'B','O1','W', 'N', 'L', 'F', 'OF'
            , 'A'
-           , 'S'
-           , 'M'])
+           , 'S'])
+           # , 'M'
             # , 'U'
             # , 'X'
             # , 'T', 'J'])
     yr2 = np.array(['B','O','W', 'N', 'L', 'F'
            , 'A'
-           , 'S'
-           , 'M'])
+           , 'S'])
+           # , 'M'
             # , 'U'
             # , 'X'
             # , 'T', 'J'])
