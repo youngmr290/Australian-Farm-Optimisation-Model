@@ -94,6 +94,17 @@ The following rules are implemented to remove unprofitable rotation phases:
        purpose of pasture manipulation is to help prepare a field for subsequent cropping. However, cropping
        aside, a spray-topped pasture is feasible use of a field that has had its pasture manipulated)
 
+    #. No annual pasture after two spraytopped pastures. Two spraytops will only be done prior to cropping. Tactical
+       changes into more pasture can still be done after one spraytopped pasture.
+
+    #. No resowing of pastures if the previous landuse is pasture and the following landuse is a crop.
+
+    #. No non spraytopped pasture between spraytopped pasture and crop. Spraytopping is in preperation for cropping so not going to stick a non spraytop pasture inbetween.
+
+    #. No spraytopped pasture between a crop and a non spraytopped pasture. Wouldnt spraytop at the start of pasture phase (spraytopping may happen later in the rotation to tidy up pasture though)
+
+    #. No resowing between spraytoping. No point spraytopping pasture then resowing it and spraying it out again.
+
     #. Perennials can only be in a continuous rotation (perennials are usually situated on soil that doesnt suit anything else)
 
     #. Only a single pasture variety in a rotation phase.
@@ -201,6 +212,20 @@ def f_rot_gen():
         phases = phases[~(np.isin(phases[:,i], ['T','J'])&np.isin(phases[:,i+1], ['tr','jr']))]
         ###not going to resow lucerne after a lucerne (in a cont rotation you resow every 5yrs but that is accounted for with 'uc' & 'xc')
         phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['xr','ur']))]
+        ###only crop after two spraytopped pastures
+        if i<np.size(phases,1)-2:
+            phases = phases[~(np.isin(phases[:,i], ['S','SR'])&np.isin(phases[:,i+1], ['S','SR'])&np.isin(phases[:,i+2], ['AR','A','M','S','SR','ar','a','m','s','sr']))]
+        ###No resowing of pastures if the previous landuse is pasture and the following landuse is a crop
+        if i<np.size(phases,1)-2:
+            phases = phases[~(np.isin(phases[:,i], ['AR','A','M','S','SR'])&np.isin(phases[:,i+1], ['AR','SR'])&np.isin(phases[:,i+2], ['B','O','O1','W','N','L','F','OF','b','h','o','of','w','f','l','z','r','bd','wd','rd','zd']))]
+        ###No non spraytopped pasture between spraytopped pasture and crop
+        if i<np.size(phases,1)-2:
+            phases = phases[~(np.isin(phases[:,i], ['S','SR'])&np.isin(phases[:,i+1], ['AR','A'])&np.isin(phases[:,i+2], ['B','O','O1','W','N','L','F','OF','b','h','o','of','w','f','l','z','r','bd','wd','rd','zd']))]
+        ###No spraytopped pasture between a crop and a non spraytopped pasture
+        if i<np.size(phases,1)-2:
+            phases = phases[~(np.isin(phases[:,i], ['Y','B','O','O1','W','N','L','F','OF'])&np.isin(phases[:,i+1], ['S','SR'])&np.isin(phases[:,i+2], ['AR','A','M','ar','a','m']))]
+        ###No resowing between spraytoping
+        phases = phases[~(np.isin(phases[:,i], ['S','SR'])&np.isin(phases[:,i+1], ['SR','sr']))]
         ###only canola after pasture
         phases = phases[~(np.isin(phases[:,i], ['AR','SR','A','M','S','U','X','T','J'])&np.isin(phases[:,i+1], ['B','O','O1','W', 'L', 'F', 'OF', 'b', 'h', 'o', 'of', 'w', 'f', 'l', 'bd','wd']))]
         ###no dry seeding after non spraytopped pasture unless RR canola
