@@ -173,7 +173,8 @@ def f_rot_gen():
             # , 'U'
             # , 'T'])
 
-    arrays=[yr5,yr4,yr3,yr2,yr1,yr0]
+    # arrays=[yr5,yr4,yr3,yr2,yr1,yr0]
+    arrays=[yr4,yr3,yr2,yr1,yr0]
     phases=fun.cartesian_product_simple_transpose(arrays)
 
 
@@ -249,7 +250,7 @@ def f_rot_gen():
     phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['T','J'])&np.isin(phases[:,np.size(phases,1)-1], ['T','J','t','j']))] #Tedera after a non tedera must be resown
 
     ##annual resowing
-    resow_cols = 2 #the number of cols where resowing can occur ie in yr0 and 1
+    resow_cols = np.size(phases,1)-resow_a #the number of cols where resowing can occur ie in yr0 and 1
     for i in range(resow_cols):
         i+=1
         ###if continuous annual it must be spraytopped every 5yrs
