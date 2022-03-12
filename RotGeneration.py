@@ -201,6 +201,8 @@ def f_rot_gen():
     ##drop rules 1; unprofitable
         ###no cont canola
         phases = phases[~(np.isin(phases[:,i], ['N'])&np.isin(phases[:,i+1], ['N','r','z','rd','zd']))]
+        ###no cont pulse - need this rule and the one below
+        phases = phases[~(np.isin(phases[:,i], ['L','F'])&np.isin(phases[:,i+1], ['L','F','l','f']))]
         ###two years between pulses
         if i<np.size(phases,1)-2:
             phases = phases[~(np.isin(phases[:,i], ['L','F'])&np.isin(phases[:,i+1], ['L','F','l','f']))]
