@@ -5036,7 +5036,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##offs
     ###t0 - retained
-    ###t1&2 - sold slice date_p=sale_date or weight=target weight
+    ###t1&2 - sold slice date_p=sale_date or weight=target weight or sold on the last day of dvp
     ###calc sale date then determine shearing date
     ###sale - on date
     sale_date_tsa1e1b1nwzida0e0b0xyg3 = (sales_offset_tsa1e1b1nwzida0e0b0xyg3 + date_wean_shearing_sa1e1b1nwzida0e0b0xyg3)  #date of dvp plus sale offset
@@ -5050,13 +5050,26 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ####adjust generator lw to reflect the cumulative max per period
     #####lw could go above target then drop back below but it is already sold so the on hand bool shouldn't change. therefore need to use accumulative max and reset each dvp
     weight_tpa1e1b1nwzida0e0b0xyg3= sfun.f1_cum_dvp(o_ffcfw_tpoffs,a_v_pa1e1b1nwzida0e0b0xyg3, axis=p_pos)
-    ###on hand
+    ###period is sale
     #### t0 slice = True - this is handled by the inputs ie weight and date are high therefore not reached therefore on hand == true
-    #### t1 & t2 slice date_p<sale_date and weight<target weight
-    on_hand_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(date_start_pa1e1b1nwzida0e0b0xyg3<sale_date_tpa1e1b1nwzida0e0b0xyg3,
-                                                     weight_tpa1e1b1nwzida0e0b0xyg3<target_weight_tpa1e1b1nwzida0e0b0xyg3)
+    #### t1 & t2 slice date_p<sale_date or weight<target weight (these slice are also sold on the last period of a dvp if there is no other sale opp, see code below)
+    sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(np.logical_and(date_start_pa1e1b1nwzida0e0b0xyg3<=sale_date_tpa1e1b1nwzida0e0b0xyg3,
+                                                                    date_end_pa1e1b1nwzida0e0b0xyg3>=sale_date_tpa1e1b1nwzida0e0b0xyg3),
+                                                     weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
+    ###on hand - combine period_is_sale & period_is_transfer then use cumulative max to convert to on_hand
+    ### note: animals are on hand in the period they are sold ie sale takes place on the last minute of the period.
+    off_hand_tpa1e1b1nwzida0e0b0xyg3 = sfun.f1_cum_dvp(sale_opp_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, axis=1,
+        shift=1)  # this ensures that once they are sold they remain off hand for the rest of the dvp, shift =1 so that sheep are on-hand in the period they are sold because sale is end of period
+    on_hand_tpa1e1b1nwzida0e0b0xyg3 = np.logical_not(off_hand_tpa1e1b1nwzida0e0b0xyg3)
     ###period is sale - one true per dvp when sale actually occurs - sale occurs in the period where sheep were on hand at the beginning and not on hand at the beginning of the next period
     period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(on_hand_tpa1e1b1nwzida0e0b0xyg3==True, np.roll(on_hand_tpa1e1b1nwzida0e0b0xyg3,-1,axis=1)==False)
+    ###make the last period in a dvp sale if no sale has occured previously in the dvp (this doesnt affect on_hand because animals are on hand in the period they are sold and the next period is a new dvp)
+    period_is_enddvp_pa1e1b1nwzida0e0b0xyg3 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg3, shift=-1, axis=0)
+    period_is_sale_enddvp_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_enddvp_pa1e1b1nwzida0e0b0xyg3, on_hand_tpa1e1b1nwzida0e0b0xyg3)
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, period_is_sale_enddvp_tpa1e1b1nwzida0e0b0xyg3)
+    ####set t0 sale_opp to false because no sale in t[0]
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg3[0] = False
+
     ###bound wether sale age - default is to allow all ages to be sold. User can change this using wether sale SAV.
     min_age_wether_sale_g3 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_age_wether_g3'][mask_offs_inc_g3], 5)
     max_age_wether_sale_g3 = fun.f_sa(np.array([sim_years*365]), sen.sav['bnd_max_sale_age_wether_g3'][mask_offs_inc_g3], 5)
@@ -5091,7 +5104,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     period_is_shearing_tpa1e1b1nwzida0e0b0xyg3[0,...] = period_is_shearing_retained_pa1e1b1nwzida0e0b0xyg3
 
     ##Dams
-    ###t0 = sale after shearing
+    ###t0 = sale after shearing or at the end of the dvp
     ###t1 = sale drys
     ###t>=2 = retain
     ### calc shearing then determine sale - if this ever gets a t axis husbandry will need to be altered (f1_adjust_triggervalues_for_t)
@@ -5126,8 +5139,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ####transfer - calculate period_is_finish when the dams are transferred from the current g slice to the destination g slice
     period_is_transfer_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1[na, ...], a_g1_tpa1e1b1nwzida0e0b0xyg1, -1) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1
     ###on hand - combine period_is_sale & period_is_transfer then use cumulative max to convert to on_hand
+    ### note: animals are on hand in the period they are sold ie sale takes place on the last minute of the period.
     off_hand_tpa1e1b1nwzida0e0b0xyg1= sfun.f1_cum_dvp(np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg1,period_is_transfer_tpa1e1b1nwzida0e0b0xyg1),a_v_pa1e1b1nwzida0e0b0xyg1,axis=1, shift=1) #this ensures that once they are sold they remain off hand for the rest of the dvp, shift =1 so that sheep are on-hand in the period they are sold because sale is end of period
     on_hand_tpa1e1b1nwzida0e0b0xyg1 = np.logical_not(off_hand_tpa1e1b1nwzida0e0b0xyg1)
+    ###make the last period in a dvp sale if no sale has occured previously in the dvp (this doesnt affect on_hand because animals are on hand in the period they are sold and the next period is a new dvp)
+    period_is_enddvp_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1, shift=-1, axis=0)
+    period_is_sale_enddvp_tpa1e1b1nwzida0e0b0xyg1 = np.logical_and(np.logical_and(period_is_enddvp_pa1e1b1nwzida0e0b0xyg1, ewe_sale_mask_pa1e1b1nwzida0e0b0xyg1),
+                                                                  on_hand_tpa1e1b1nwzida0e0b0xyg1)
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg1[0] = np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg1, period_is_sale_enddvp_tpa1e1b1nwzida0e0b0xyg1)[0]
 
     ##Yatf
     ###t0 = sold at weaning as sucker, t1 & t2 = retained
