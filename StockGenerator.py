@@ -5088,15 +5088,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###in t0 shearing occurs on specified date, in t1 & t2 it happens a certain number of gen periods before sale.
     ####convert from s/dvp to p
     shearing_offset_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(shearing_offset_tsa1e1b1nwzida0e0b0xyg3, a_sw_pa1e1b1nwzida0e0b0xyg3[na],1)
-    ###shearing can't occur in a different dvp to sale therefore need to cap the offset for periods at the beginning of the dvp ie if sale occurs in p2 of dvp2 and offset is 3 the offset needs to be reduced because shearing must occur in dvp2
+    ###shearing can't occur in a different dvp to sale therefore need to cap the offset for periods at the beginning of the dvp
+    #### ie if sale occurs in p2 of dvp2 and offset is 3 the offset needs to be reduced because shearing must occur in dvp2
     ####get the period number where dvp changes
     prev_dvp_index = fun.f_next_prev_association(offs_date_start_p, dvp_date_pa1e1b1nwzida0e0b0xyg3, 1, 'right')
     periods_since_dvp = np.maximum(0,p_index_pa1e1b1nwzida0e0b0xyg3 - prev_dvp_index)  #first dvp starts at weaning so just put in the max 0 to stop negative results when the p date is less than weaning
     ####period when shearing will occur - this is the min of the shearing offset or the periods since dvp start
     shearing_idx_tpa1e1b1nwzida0e0b0xyg3 = p_index_pa1e1b1nwzida0e0b0xyg3 - np.minimum(shearing_offset_tpa1e1b1nwzida0e0b0xyg3, periods_since_dvp)
-    ###period is shearing is the sale array - offset
+    ###period is shearing is the sale array minus the offset
     shearing_idx_tpa1e1b1nwzida0e0b0xyg3 = period_is_sale_tpa1e1b1nwzida0e0b0xyg3*shearing_idx_tpa1e1b1nwzida0e0b0xyg3.astype(dtype)
-    shearing_idx_tpa1e1b1nwzida0e0b0xyg3[shearing_idx_tpa1e1b1nwzida0e0b0xyg3==0] = np.inf #don't want 0 effecting minimum in next line
+    #### if the offset is -1 or the index is 0 then set to inf so shearing doesn't occur.
+    shearing_offset = np.broadcast_to(shearing_offset_tpa1e1b1nwzida0e0b0xyg3, shearing_idx_tpa1e1b1nwzida0e0b0xyg3.shape)
+    shearing_idx_tpa1e1b1nwzida0e0b0xyg3[shearing_offset==-1] = np.inf
+    ###Remove 0 values so that the minimum value is the index of the period when shearing is occurring.
+    shearing_idx_tpa1e1b1nwzida0e0b0xyg3[shearing_idx_tpa1e1b1nwzida0e0b0xyg3==0] = np.inf
+    ###Carry the shearing index to earlier periods, then match with the period index.
     shearing_idx_tpa1e1b1nwzida0e0b0xyg3= np.flip(np.minimum.accumulate(np.flip(shearing_idx_tpa1e1b1nwzida0e0b0xyg3,1),axis=1),1)
     period_is_shearing_tpa1e1b1nwzida0e0b0xyg3 = p_index_pa1e1b1nwzida0e0b0xyg3 == shearing_idx_tpa1e1b1nwzida0e0b0xyg3
     ###make slice t0 the shear dates for retained offs
