@@ -5106,7 +5106,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     sale_period_pa1e1b1nwzida0e0b0xyg1 = np.minimum(sale_delay_pa1e1b1nwzida0e0b0xyg1, periods_to_dvp) + shear_period_pa1e1b1nwzida0e0b0xyg1
     period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1 = sale_period_pa1e1b1nwzida0e0b0xyg1 == p_index_pa1e1b1nwzida0e0b0xyg
     period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1[0] = False #don't want period 0 to be sale (but it will default to sale because the sale period association is 0 at the beginning which ==index in p[0])
-    ###determine t1 slice - dry dams sold at scanning  #todo this could be removed and rely on the Bound to limit the sale of drys
+    ###determine t1 slice - dry dams sold at scanning
     period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_scan_pa1e1b1nwzida0e0b0xyg1 * (scan_management_pa1e1b1nwzida0e0b0xyg1>=1) * np.logical_not(dry_retained_pa1e1b1nwzida0e0b0xyg1) #not is required because variable is drys off hand ie sold. if forced to retain the variable wants to be false
     #todo  fix the syntax then include the following line with the previous line when gbal is activated
     #                                         or period_is_birth_pa1e1b1nwzida0e0b0xyg1 * (gbal_management_pa1e1b1nwzida0e0b0xyg1 >= 1) * np.logical_not(dry_retained_pa1e1b1nwzida0e0b0xyg1)
