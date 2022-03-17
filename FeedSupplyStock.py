@@ -264,7 +264,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ## this input is required so that confinement can be included in n1 model, without forcing the animal into confinement for the whole year.
     ## This means you can have a given level of NV and it can be either in the paddock or in confinement.
     ## This input works in conjunction with i_confinement_n (see in the feed supply section)
-    confinement_options_r1p6z = pinp.feedsupply['i_confinement_options_r1p6z'].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
+    confinement_options_r1p6z = pinp.feedsupply['i_confinement_options_r1p6z'].astype(np.float)
     ##feed supply adjustment
     feedsupply_adj_options_r2p = pinp.feedsupply['i_feedsupply_adj_options_r2p'][:,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
     ##an association between the k2 cluster (feed adjustment) and reproductive management (scanning, gbal & weaning).
@@ -368,10 +368,10 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     t_fs_gender_pa1e1b1nwzida0e0b0k5yg3 = 0
 
     ##4a) update fs and confinement info with pkl if desired
-    fs_number = sinp.structuralsa['i_fs_number']
+    fs_use_number = sinp.structuralsa['i_fs_use_number']
     if sinp.structuralsa['i_fs_use_pkl']:
         print('pkl fs being used.')
-        with open('pkl/pkl_fs{0}.pkl'.format(fs_number),"rb") as f:
+        with open('pkl/pkl_fs{0}.pkl'.format(fs_use_number),"rb") as f:
             pkl_fs = pkl.load(f)
 
         ###update the feedsupply with the pkl fs
@@ -532,7 +532,7 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
     '''
     import ReportFunctions as rfun
 
-    if sinp.structuralsa['i_fs_create']:
+    if sinp.structuralsa['i_fs_create_pkl']:
         ##inputs
         d_pos = sinp.stock['i_d_pos']
         n_pos = sinp.stock['i_n_pos']
@@ -663,7 +663,7 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         pkl_fs['confinement']['offs'] = optimal_confinement_stpa1e1b1nwzida0e0b0xyg3
 
         ##store rev if trial is rev_create
-        fs_number = sinp.structuralsa['i_fs_number']
+        fs_create_number = sinp.structuralsa['i_fs_create_number']
         directory_path = os.path.dirname(os.path.abspath(__file__))  # path of directory - required when exp is run from a different location (eg in the web app)
-        with open(os.path.join(directory_path, 'pkl/pkl_fs{0}.pkl'.format(fs_number)),"wb") as f:
+        with open(os.path.join(directory_path, 'pkl/pkl_fs{0}.pkl'.format(fs_create_number)),"wb") as f:
             pkl.dump(pkl_fs, f)

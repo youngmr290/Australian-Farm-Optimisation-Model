@@ -130,9 +130,10 @@ def f_structural_inp_sa():
     structuralsa['i_rev_number'] = fun.f_sa(structuralsa['i_rev_number'], sen.sav['rev_number'],5)
     structuralsa['i_rev_trait_inc'] = fun.f_sa(structuralsa['i_rev_trait_inc'], sen.sav['rev_trait_inc'],5)
     structuralsa['i_generate_with_t'] = fun.f_sa(structuralsa['i_generate_with_t'], sen.sav['gen_with_t'],5)
-    structuralsa['i_fs_create'] = fun.f_sa(structuralsa['i_fs_create'], sen.sav['fs_create'],5)
+    structuralsa['i_fs_create_pkl'] = fun.f_sa(structuralsa['i_fs_create_pkl'], sen.sav['fs_create_pkl'],5)
+    structuralsa['i_fs_create_number'] = fun.f_sa(structuralsa['i_fs_create_number'], sen.sav['fs_create_number'],5)
     structuralsa['i_fs_use_pkl'] = fun.f_sa(structuralsa['i_fs_use_pkl'], sen.sav['fs_use_pkl'],5)
-    structuralsa['i_fs_number'] = fun.f_sa(structuralsa['i_fs_number'], sen.sav['fs_number'],5)
+    structuralsa['i_fs_use_number'] = fun.f_sa(structuralsa['i_fs_use_number'], sen.sav['fs_use_number'],5)
     structuralsa['i_r2adjust_inc'] = fun.f_sa(structuralsa['i_r2adjust_inc'], sen.sav['r2adjust_inc'],5)
 
 ##############################
