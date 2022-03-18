@@ -2051,26 +2051,48 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #######################
     #start generator loops#
     #######################
+    '''
+    See google doc for more LTW info. 
+    '''
     ##Start the LTW loop here so that the arrays are reinitialised from the inputs
     ### set the LTW adjustments to zero for the first loop. Sires do not have a LTW adjust because they are born off farm
-    #todo The LTW loop could be set to 1 for trials using a pkl feed supply and N11 if the pkl also included the LTW factor
-    # if N3 then dams would still need to include the LTW loop (although offspring could be LTW_loop = 1)
     sfw_ltwadj_g0 = 1
     sfd_ltwadj_g0 = 0
-    sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = np.ones(tpg1)
+    sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = np.zeros(tpg1)
     sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = np.zeros(tpg1)
     sfw_ltwadj_g2 = 1
     sfd_ltwadj_g2 = 0
-    sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3 = np.ones(tpg3)[:,0, ...]  # slice the p axis to remove
+    sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3 = np.zeros(tpg3)[:,0, ...]  # slice the p axis to remove
     sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3 = np.zeros(tpg3)[:,0, ...]  # slice the p axis to remove
 
-    ##Set whether it is necessary to loop for the LTW calculations.
-    ## If both dams & offs are not used then don't loop.
-    ## If generating for stubble then don't loop because only running a few periods so no life time information is known.
+    ##The default is to have 2 LTW loops. This can be overwritten below.
+    loop_ltw_len = 2
+
+    ##Try to read in LTW adjustment from pkl.
+    ## Overrwrite the number of ltw loops by sav[LTW_loops] if ltw_adj is correctly read in from the feed supply pickle
+    fs_use_number = sinp.structuralsa['i_fs_use_number']
+    if sinp.structuralsa['i_fs_use_pkl']:
+        with open('pkl/pkl_fs{0}.pkl'.format(fs_use_number),"rb") as f:
+            pkl_fs = pkl.load(f)
+        ###update the feedsupply with the pkl fs
+        pkl_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1']
+        pkl_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1']
+        pkl_sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3 = pkl_fs['ltw_adj']['sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3']
+        pkl_sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3 = pkl_fs['ltw_adj']['sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3']
+        try:
+            sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1[...] = pkl_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1
+            sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1[...] = pkl_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1
+            sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3[...] = pkl_sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3
+            sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3[...] = pkl_sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3
+            loop_ltw_len = fun.f_sa(loop_ltw_len, sen.sav['LTW_loops'], 5)
+        except ValueError: #could not broadcast input array from shape x into shape y
+            pass
+
+    ##Turn off ltw loop if:
+        ## If both dams & offs are not used (ie LTW_? == 0) then don't loop.
+        ## If generating for stubble then don't loop because only running a few periods so no life time information is known.
     if (sen.sam['LTW_dams'] == 0 and sen.sam['LTW_offs'] == 0) or stubble:
         loop_ltw_len = 1
-    else:
-        loop_ltw_len = 2
 
     for loop_ltw in range(loop_ltw_len):
         #todo The double loop could be replaced by separating the offspring into their own loop
@@ -2080,6 +2102,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         ####################################
         ### initialise arrays for sim loop  # axis names not always track from now on because they change between p=0 and p=1
         ####################################
+        ##apply the LTW adjustment sensitivity - only plus 1 for sfw
+        ## apply at the top of the loop so that the values that get pickled dont include the sam (incase sam changes between trials)
+        sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = 1 + sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 * sen.sam['LTW_dams']
+        sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 * sen.sam['LTW_dams']
+        sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3 = 1 + sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3 * sen.sam['LTW_offs']
+        sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3 = sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3 * sen.sam['LTW_offs']
 
         ##all groups
         eqn_compare = uinp.sheep['i_eqn_compare']
@@ -4694,9 +4722,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
         if n_fs_dams>1:
             #an approximation of the LTW effect of dam nutrition on the progeny that are the replacement dams
-            sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = 1 + (o_cfw_ltwadj_tpdams * nyatf_b1nwzida0e0b0xyg
-                                                     / npw_std_xyg1 / sfw_a0e0b0xyg1) * sen.sam['LTW_dams']
-            sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_tpdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1 * sen.sam['LTW_dams']
+            sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = (o_cfw_ltwadj_tpdams * nyatf_b1nwzida0e0b0xyg
+                                                     / npw_std_xyg1 / sfw_a0e0b0xyg1)
+            sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_tpdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1
 
         else:
             ## if n==1 the average LTW adjustment for the next generation is the average of the dam effects weighted by
@@ -4705,16 +4733,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             ## Note: The approximation doesn't account for dam mortality during the year or Progeny mortality during lactation
             ## the weighted average is across all active axes except i, y & g1 (because these represent classes that are not combined at prejoining)
             ### CFW (as a proportion of sfw)
-            t_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = 1 + fun.f_weighted_average(o_cfw_ltwadj_tpdams, o_numbers_start_tpdams
+            t_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(o_cfw_ltwadj_tpdams, o_numbers_start_tpdams
                                                                 * nyatf_b1nwzida0e0b0xyg * season_propn_zida0e0b0xyg
                                                                 , axis=(p_pos, a1_pos, e1_pos, b1_pos, w_pos, z_pos)
-                                                                , keepdims=True) / sfw_a0e0b0xyg1 * sen.sam['LTW_dams']
+                                                                , keepdims=True) / sfw_a0e0b0xyg1
 
             ### FD (an absolute adjustment)
             t_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(o_fd_ltwadj_tpdams, o_numbers_start_tpdams
                                                                 * nyatf_b1nwzida0e0b0xyg * season_propn_zida0e0b0xyg
                                                                 , axis=(p_pos, a1_pos, e1_pos, b1_pos, w_pos, z_pos)
-                                                                , keepdims=True) * sen.sam['LTW_dams']
+                                                                , keepdims=True)
 
             ## allocate the LTW adjustment to the slices of g1 based on the female parent of each g1 slice.
             ## nutrition of BBB dams [0:1] affects BB-B, BB-M & BB-T during their lifetime.
@@ -4744,8 +4772,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
                            , axis=b1_pos, keepdims=True)  #0 for dams with no yatf because for those b1 slices there is no corresponding slice in b0
         t_season_propn_pg = np.broadcast_to(season_propn_zida0e0b0xyg, temporary.shape)
-        temporary = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
-        sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3 = 1 + temporary * sen.sam['LTW_offs']
+        sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
 
         ## repeat for FD
         temporary = np.sum(fun.f_dynamic_slice(o_fd_ltwadj_tpdams,w_pos,0,1)
@@ -4755,8 +4782,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
                            , axis=b1_pos, keepdims=True)  #0 for dams with no yatf because for those b1 slices there is no corresponding slice in b0
         t_season_propn_pg = np.broadcast_to(season_propn_zida0e0b0xyg, temporary.shape)
-        temporary = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
-        sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3 = temporary * sen.sam['LTW_offs']
+        sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
+
+        ##store ltw adjustments so they can be pickled
+        ## store on the second last ltw loop to remove randomness when pkl (so that the ltw adj that is pkl is the same as the ltw adj used in final itteration)
+        if loop_ltw == loop_ltw_len-2 or loop_ltw_len==1:
+            pkl_fs_info['sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1'] = sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1
+            pkl_fs_info['sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1'] = sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1
+            pkl_fs_info['sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3'] = sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3
+            pkl_fs_info['sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3'] = sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3
+
 
     postp_start=time.time()
     print(f'completed generator loops: {postp_start - generator_start}')
