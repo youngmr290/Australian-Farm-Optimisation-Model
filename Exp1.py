@@ -279,6 +279,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
 
     ##call function to store optimal feedsupply
+    ###Note: A feed supply optimisation can not be carried out with Exp1.py because the trials aren't carried out sequentially
     fsstk.f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info)
 
     #last step is to print the time for the current trial to run
