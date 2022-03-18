@@ -605,21 +605,15 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         optimal_fs_stpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(feedsupply_stpa1e1b1nwzida0e0b0xyg3,offs_numbers_stpa1e1b1nwzida0e0b0xyg3,w_pos,keepdims=True)
 
         ##update slices that have no numbers with the average fs in a given period.
-        ## The p axis remains active to keep the fs realistic. However in cases where pyomo doesn't select animals in the
-        ## end dvps the generator still needs a feedsupply so p slices with no feedsupply get update with the average fs 
+        ## In cases where pyomo doesn't select animals in the dvps the generator still needs a feedsupply.
+        ## Update using the inputted feedsupply for the current trial (before taking weighted average). This method was chosen because
+        ## it reduced randomness since if no animals are chosen the next trial gets the same fs as the current trial.
+        ## This method wont work so well if the starting fs is not so good. To fix this ensure xl has decent starting fs and/or when generating fs force a small number of animals in all axes.
         ###dams
-        axes = tuple(np.delete(np.arange(optimal_fs_stpa1e1b1nwzida0e0b0xyg1.ndim),optimal_fs_stpa1e1b1nwzida0e0b0xyg1.ndim+p_pos))
-        average_fs_pg1 = fun.f_weighted_average(optimal_fs_stpa1e1b1nwzida0e0b0xyg1, dams_numbers_stpa1e1b1nwzida0e0b0xyg1,
-                                              axis=axes, keepdims=True)
-        average_fs_pg1 = fun.f_update(average_fs_pg1, np.ma.masked_equal(average_fs_pg1, 0).mean(), average_fs_pg1==0) #mean of nonzero
-        optimal_fs_stpa1e1b1nwzida0e0b0xyg1 = fun.f_update(optimal_fs_stpa1e1b1nwzida0e0b0xyg1,average_fs_pg1,
+        optimal_fs_stpa1e1b1nwzida0e0b0xyg1 = fun.f_update(optimal_fs_stpa1e1b1nwzida0e0b0xyg1,fun.f_dynamic_slice(feedsupply_stpa1e1b1nwzida0e0b0xyg1,w_pos,0,1),
                                                            np.sum(dams_numbers_stpa1e1b1nwzida0e0b0xyg1,w_pos,keepdims=True)==0)
         ###offs
-        axes = tuple(np.delete(np.arange(optimal_fs_stpa1e1b1nwzida0e0b0xyg3.ndim),optimal_fs_stpa1e1b1nwzida0e0b0xyg3.ndim+p_pos))
-        average_fs_pg3 = fun.f_weighted_average(optimal_fs_stpa1e1b1nwzida0e0b0xyg3, offs_numbers_stpa1e1b1nwzida0e0b0xyg3,
-                                              axis=axes, keepdims=True)
-        average_fs_pg3 = fun.f_update(average_fs_pg3, np.ma.masked_equal(average_fs_pg3, 0).mean(), average_fs_pg3==0) #mean of nonzero
-        optimal_fs_stpa1e1b1nwzida0e0b0xyg3 = fun.f_update(optimal_fs_stpa1e1b1nwzida0e0b0xyg3, average_fs_pg3,
+        optimal_fs_stpa1e1b1nwzida0e0b0xyg3 = fun.f_update(optimal_fs_stpa1e1b1nwzida0e0b0xyg3, fun.f_dynamic_slice(feedsupply_stpa1e1b1nwzida0e0b0xyg3,w_pos,0,1),
                                                            np.sum(offs_numbers_stpa1e1b1nwzida0e0b0xyg3,w_pos,keepdims=True)==0)
 
         ##populate the min and max slice of j2 axis - min and max slices of j2 are populated based on the same scale as the feedsupply inputs from excel
@@ -644,7 +638,7 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         optimal_confinement_stpa1e1b1nwzida0e0b0xyg3 = optimal_confinement_stpa1e1b1nwzida0e0b0xyg3 > cutoff
 
         ##update confinement - For slices where no animals were selected in pyomo. They still need to be generated with a fs.
-        ## update with the xl inputs.
+        ## update with the xl inputs - need to use xl inputs as default because otherwise if the model doesnt select confinement in one itteration it will not be able to select in a future itteration (unless one of the nut spread options is confinement)
         optimal_confinement_stpa1e1b1nwzida0e0b0xyg1 = fun.f_update(optimal_confinement_stpa1e1b1nwzida0e0b0xyg1, xl_confinement_pa1e1b1nwzida0e0b0xyg1,
                                                           np.sum(dams_numbers_tpa1e1b1nwzida0e0b0xyg1,w_pos,keepdims=True)==0)
         optimal_confinement_stpa1e1b1nwzida0e0b0xyg3 = fun.f_update(optimal_confinement_stpa1e1b1nwzida0e0b0xyg3, xl_confinement_pa1e1b1nwzida0e0b0xyg3,
