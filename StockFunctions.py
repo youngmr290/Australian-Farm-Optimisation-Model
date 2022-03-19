@@ -207,14 +207,14 @@ def f1_DSTw(scan_g, cycles=1):
     return dstwtr_gl0
 
 
-def f1_btrt0(dstwtr_propn,lss,lstw,lstr): #^this function is inflexible ie if you want to add quadruplets
+def f1_btrt0(dstwtr_propn,pss,pstw,pstr): #^this function is inflexible ie if you want to add quadruplets
     '''
     Parameters
     ----------
     dstwtr_propn : np array, proportion of dams that are dry, singles, twin and triplets prior to birth.
-    lss : np array, survival of single born progeny at birth.
-    lstw : np array, survival of twin born progeny at birth.
-    lstr : np array, survival of triplet born progeny at birth.
+    pss : np array, survival of single born progeny at birth.
+    pstw : np array, survival of twin born progeny at birth.
+    pstr : np array, survival of triplet born progeny at birth.
 
     Returns
     -------
@@ -225,13 +225,13 @@ def f1_btrt0(dstwtr_propn,lss,lstw,lstr): #^this function is inflexible ie if yo
     ##progeny numbers is the number of alive progeny in each b0 slice per dam giving birth to that litter size
     ### value is the number of alive progeny in an outcome multiplied by the probability of the outcome.
     ### probability is based on survival of s, tw and tr at birth.
-    progeny_numbers_b0yg = np.zeros((uinp.parameters['i_b0_len'],lss.shape[-2],lss.shape[-1]))
-    progeny_numbers_b0yg[0,...] = lss
-    progeny_numbers_b0yg[1,...] = 2 * lstw**2 #number of progeny surviving when there are no deaths is 2, therefore 2p^2
-    progeny_numbers_b0yg[2,...] = 3 * lstr**3 #number of progeny surviving when there are no deaths is 3, therefore 3p^3
-    progeny_numbers_b0yg[3,...] = 2 * lstw * (1 - lstw)  #the 2 is because it could be either progeny 1 that dies or progeny 2 that dies
-    progeny_numbers_b0yg[4,...] = 2 * (3* lstr**2 * (1 - lstr))  #the 2x is because there are 2 progeny surviving in the litter and the 3x because it could be either progeny 1, 2 or 3 that dies
-    progeny_numbers_b0yg[5,...] = 3* lstr * (1 - lstr)**2  #the 3x because it could be either progeny 1, 2 or 3 that survives
+    progeny_numbers_b0yg = np.zeros((uinp.parameters['i_b0_len'],pss.shape[-2],pss.shape[-1]))
+    progeny_numbers_b0yg[0,...] = pss
+    progeny_numbers_b0yg[1,...] = 2 * pstw**2 #number of progeny surviving when there are no deaths is 2, therefore 2p^2
+    progeny_numbers_b0yg[2,...] = 3 * pstr**3 #number of progeny surviving when there are no deaths is 3, therefore 3p^3
+    progeny_numbers_b0yg[3,...] = 2 * pstw * (1 - pstw)  #the 2 is because it could be either progeny 1 that dies or progeny 2 that dies
+    progeny_numbers_b0yg[4,...] = 2 * (3* pstr**2 * (1 - pstr))  #the 2x is because there are 2 progeny surviving in the litter and the 3x because it could be either progeny 1, 2 or 3 that dies
+    progeny_numbers_b0yg[5,...] = 3* pstr * (1 - pstr)**2  #the 3x because it could be either progeny 1, 2 or 3 that survives
     ##mul progeny numbers array with number of dams giving birth to that litter size to get the number of progeny surviving per dam giving birth.
     a_nfoet_b0 = sinp.stock['a_nfoet_b1'][sinp.stock['i_mask_b0_b1']] #create association between l0 and b0
     btrt_b0yg = progeny_numbers_b0yg * dstwtr_propn[a_nfoet_b0]
@@ -245,40 +245,39 @@ def f1_btrt0(dstwtr_propn,lss,lstw,lstr): #^this function is inflexible ie if yo
     return btrt_propn_b0xyg, progeny_total_xyg
 
 
-#BTRT for b1 - code below not currently used but may be a little helpful later on.
-# def f_btrt1(dstwtr,pss,pstw,pstr): #^this function is inflexible ie if you want to add quadruplets
-#     '''
-#     Parameters
-#     ----------
-#     dstwtr : np array
-#         proportion of dry, singles, twin and triplets.
-#     pss : np array
-#         single survival.
-#     pstw : np array
-#         twin survival.
-#     pstr : np array
-#         triplet survival.
+def f_btrt1(dstwtr_l0yg,pss,pstw,pstr): #^this function is inflexible ie if you want to add quadruplets
+    '''
+    Parameters
+    ----------
+    dstwtr : np array
+        proportion of dry, singles, twin and triplets.
+    pss : np array
+        single survival.
+    pstw : np array
+        twin survival.
+    pstr : np array
+        triplet survival.
 
-#     Returns
-#     -------
-#     btrt_b1nwzida0e0b0xyg : np array
-#         probability of ewe with lambs in each btrt category (eg 11, 22, 21 ...).
+    Returns
+    -------
+    btrt_b1nwzida0e0b0xyg : np array
+        probability of ewe with lambs in each btrt category (eg 11, 22, 21 ...).
 
-#     '''
+    '''
 
-#     ##lamb numbers is the number of lambs in each b0 category, based on survival of s, tw and tr after birth.
-#     lamb_numbers_b1yg = np.zeros((11,pss.shape[-2],pss.shape[-1])) #^where can i reference 11? would be good to have a b1 slice count somewhere.
-#     lamb_numbers_b1yg[0,...] = pss
-#     lamb_numbers_b1yg[1,...] = pstw**2
-#     lamb_numbers_b1yg[2,...] = pstr**3
-#     lamb_numbers_b1yg[3,...] = 2 * pstw * (1 - pstw)  #the 2 is because it could be either lamb 1 that dies or lamb 2 that dies
-#     lamb_numbers_b1yg[4,...] = (3* pstr**2 * (1 - pstr))  # 3x because it could be either lamb 1, 2 or 3 that dies
-#     lamb_numbers_b1yg[5,...] = 3* pstr * (1 - pstr)**2  #the 3x because it could be either lamb 1, 2 or 3 that survives
-#     ##mul lamb numbers array with lambing percentage to get overall btrt
-#     btrt_b1yg = lamb_numbers_b1yg * dstwtr_l0yg[sinp.stock['a_nfoet_b1'] ]
-#     ##add singleton x axis
-#     btrt_b1nwzida0e0b0xyg = np.expand_dims(btrt_b1yg, axis = tuple(range((uinp.parameters['i_cl1_pos'] + 1), -2))) #note i_cl1_pos refers to b1 position
-#     return btrt_b1nwzida0e0b0xyg
+    ##progeny numbers is the number of progeny in each b1 category per animal born, based on peri-natal survival of s, tw and tr.
+    progeny_numbers_b1yg = np.zeros((len(sinp.stock['a_nfoet_b1']), pss.shape[-2], pss.shape[-1]))
+    progeny_numbers_b1yg[2,...] = pss
+    progeny_numbers_b1yg[3,...] = pstw**2
+    progeny_numbers_b1yg[4,...] = pstr**3
+    progeny_numbers_b1yg[5,...] = 2 * pstw * (1 - pstw)  #the 2 is because it could be either progeny 1 that dies or progeny 2 that dies
+    progeny_numbers_b1yg[6,...] = 3* pstr**2 * (1 - pstr)  # 3x because it could be either progeny 1, 2 or 3 that dies
+    progeny_numbers_b1yg[7,...] = 3* pstr * (1 - pstr)**2  #the 3x because it could be either progeny 1, 2 or 3 that survives
+    ##mul progeny numbers array with birth type proportion to get overall btrt
+    btrt_b1yg = progeny_numbers_b1yg * dstwtr_l0yg[sinp.stock['a_nfoet_b1'] ]
+    ##add singleton x axis
+    btrt_b1nwzida0e0b0xyg = np.expand_dims(btrt_b1yg, axis = tuple(range((uinp.parameters['i_cl1_pos'] + 1), -2))) #note i_cl1_pos refers to b1 position
+    return btrt_b1nwzida0e0b0xyg
 
 
 

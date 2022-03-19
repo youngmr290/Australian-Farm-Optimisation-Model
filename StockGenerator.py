@@ -314,6 +314,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     qg2 = (len_q0, len_q1, len_q2, len_p, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g1)
     qg3 = (len_q0, len_q1, len_q2, lenoffs_p, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
     tpg0 = (1, len_p, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
+    pg1 = (len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
+    pg3 = (lenoffs_p, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
     tpg1 = (len_gen_t1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
     tpg2 = (len_gen_t1, len_p, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g1)
     tpg3 = (len_gen_t3, lenoffs_p, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
@@ -617,7 +619,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     pstw_std_yg0, pstw_std_yg1, pstw_std_yg2, pstw_std_yg3 = sfun.f1_c2g(uinp.parameters['i_lstw_std_c2'], uinp.parameters['i_lstw_std_y'], a_c2_c0, i_g3_inc)
     scan_std_yg0, scan_std_yg1, scan_std_yg2, scan_std_yg3 = sfun.f1_c2g(uinp.parameters['i_scan_std_c2'], uinp.parameters['i_scan_std_y'], a_c2_c0, i_g3_inc) #scan_std_yg2/3 not used
     ###scan_std could change across the i axis, however, there is a tradeoff between LW at joining and time in the breeding season so assume these cancel out rather than adjusting by crg_doy here
-    scan_dams_std_yg3 = scan_std_yg1 #offs needs to be the same as dams because scan_std is used to calc starting propn of BTRT which is dependant on dams scanning
+    scan_dams_std_yg3 = scan_std_yg1 #offs needs to be the same as dams because scan_std is used to calc starting propn of BTRT which is dependent on dams scanning
     sfd_yg0, sfd_yg1, sfd_yg2, sfd_yg3 = sfun.f1_c2g(uinp.parameters['i_sfd_c2'], uinp.parameters['i_sfd_y'], a_c2_c0, i_g3_inc)
     sfw_yg0, sfw_yg1, sfw_yg2, sfw_yg3 = sfun.f1_c2g(uinp.parameters['i_sfw_c2'], uinp.parameters['i_sfw_y'], a_c2_c0, i_g3_inc)
     srw_female_yg0, srw_female_yg1, srw_female_yg2, srw_female_yg3 = sfun.f1_c2g(uinp.parameters['i_srw_c2'], uinp.parameters['i_srw_y'], a_c2_c0, i_g3_inc) #srw of a female of the given genotype (this is the definition of the inputs)
@@ -1372,7 +1374,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###########################
     ##genotype calculations   #
     ###########################
-    ##calc proportion of dry, singles, twin and triplets
+    ##calc proportion of dry, singles, twin and triplets based on the genotype as born.
+    ###eg. BBM dams are based on BBB scanning and BBB survival. BBM offspring are based on BBB scanning and BBM survival
     ###calculated without saa['rr_age']. These calculations do not include a 'p' axis because it is one value for all the initial animals
     dstwtr_l0yg0 = np.moveaxis(sfun.f1_DSTw(scan_std_yg0), -1, 0)
     dstwtr_l0yg1 = np.moveaxis(sfun.f1_DSTw(scan_std_yg1), -1, 0)
@@ -1383,11 +1386,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     btrt_propn_b0xyg1, npw_std_xyg1 = sfun.f1_btrt0(dstwtr_l0yg1,pss_std_yg1,pstw_std_yg1,pstr_std_yg1)
     btrt_propn_b0xyg3, npw_std_xyg3 = sfun.f1_btrt0(dstwtr_l0yg3,pss_std_yg3,pstw_std_yg3,pstr_std_yg3)
 
-    # ##Std scanning & survival: proportion of dams in each BTRT b1 category - NM, 00, 11, 22, 33, 21, 32, 31, 10, 20, 30
-    # btrt_b1nwzida0e0b0xy0 = f_btrt1(dstwtr_l0yg0,pss_std_yg0,pstw_std_yg0,pstr_std_yg0)
-    # btrt_b1nwzida0e0b0xy1 = f_btrt1(dstwtr_l0yg1,pss_std_yg1,pstw_std_yg1,pstr_std_yg1)
-    # btrt_b1nwzida0e0b0xy2 = f_btrt1(dstwtr_l0yg2,pss_std_yg2,pstw_std_yg2,pstr_std_yg2)
-    # btrt_b1nwzida0e0b0xy3 = f_btrt1(dstwtr_l0yg3,pss_std_yg3,pstw_std_yg3,pstr_std_yg3)
+    ##Std scanning & survival: proportion of dams in each BTRT b1 category - NM, 00, 11, 22, 33, 21, 32, 31, 10, 20, 30
+    # btrt_propn_b1nwzida0e0b0xy0 = sfun.f_btrt1(dstwtr_l0yg0,pss_std_yg0,pstw_std_yg0,pstr_std_yg0)
+    btrt_propn_b1nwzida0e0b0xy1 = sfun.f_btrt1(dstwtr_l0yg1,pss_std_yg1,pstw_std_yg1,pstr_std_yg1)
+    # btrt_propn_b1nwzida0e0b0xy2 = sfun.f_btrt1(dstwtr_l0yg3,pss_std_yg2,pstw_std_yg2,pstr_std_yg2)
+    # btrt_propn_b1nwzida0e0b0xy3 = sfun.f_btrt1(dstwtr_l0yg3,pss_std_yg3,pstw_std_yg3,pstr_std_yg3)
 
     ###calc adjustments sfw
     adja_sfw_d_a0e0b0xyg0 = np.sum(ce_sire[12, ...] * agedam_propn_da0e0b0xyg0, axis = 0)
@@ -2062,35 +2065,35 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ### set the LTW adjustments to zero for the first loop. Sires do not have a LTW adjust because they are born off farm
     sfw_ltwadj_g0 = 1
     sfd_ltwadj_g0 = 0
-    sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = np.zeros(tpg1)
-    sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = np.zeros(tpg1)
+    sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = np.zeros(pg1)
+    sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = np.zeros(pg1)
     sfw_ltwadj_g2 = 1
     sfd_ltwadj_g2 = 0
-    sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3 = np.zeros(tpg3)[:,0, ...]  # slice the p axis to remove
-    sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3 = np.zeros(tpg3)[:,0, ...]  # slice the p axis to remove
+    sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0:1, ...]  # slice the p axis to convert to singleton
+    sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0:1, ...]  # slice the p axis to convert to singleton
 
-    ##The default is to have 2 LTW loops. This can be overwritten below.
+    ##The default is to have 2 LTW loops, but can be overwritten by SAV.
     loop_ltw_len = 2
+    loop_ltw_len = fun.f_sa(loop_ltw_len, sen.sav['LTW_loops'], 5)
 
     ##Try to read in LTW adjustment from pkl.
-    ## Overrwrite the number of ltw loops by sav[LTW_loops] if ltw_adj is correctly read in from the feed supply pickle
+    ## Overwrite the number of ltw loops if ltw_adj isn't correctly read in from the feed supply pickle
     fs_use_number = sinp.structuralsa['i_fs_use_number']
     if sinp.structuralsa['i_fs_use_pkl']:
         with open('pkl/pkl_fs{0}.pkl'.format(fs_use_number),"rb") as f:
             pkl_fs = pkl.load(f)
         ###update the feedsupply with the pkl fs
-        pkl_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1']
-        pkl_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1']
-        pkl_sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3 = pkl_fs['ltw_adj']['sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3']
-        pkl_sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3 = pkl_fs['ltw_adj']['sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3']
+        pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1']
+        pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1']
+        pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3']
+        pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3']
         try:
-            sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1[...] = pkl_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1
-            sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1[...] = pkl_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1
-            sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3[...] = pkl_sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3
-            sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3[...] = pkl_sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3
-            loop_ltw_len = fun.f_sa(loop_ltw_len, sen.sav['LTW_loops'], 5)
-        except ValueError: #could not broadcast input array from shape x into shape y
-            pass
+            sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1
+            sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
+            sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3[...] = pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3
+            sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3[...] = pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
+        except ValueError: #could not broadcast the ltwadj array from shape x into shape y so carry out at least 2 ltw loops
+            loop_ltw_len = max(loop_ltw_len, 2)
 
     ##Turn off ltw loop if:
         ## If both dams & offs are not used (ie LTW_? == 0) then don't loop.
@@ -2102,16 +2105,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         #todo The double loop could be replaced by separating the offspring into their own loop
         # it doesn't remove the requirement to loop for the dams because they need to have the first loop to generate the inputs for the second loop
         # but it would reduce the number of offspring calculations, allow offspring wean wt to be based on ffcfw_yatf at weaning and allow loop length to be customised
+        # the drawback of a separate loop is that the structure of the function calls would need to be repeated.
+        # an alternative would be to replace "if days_period_g3[p] > 0" with another variable that is defined at the start, like 'calculate_this_period_pg3'
+        # calculate_this_period_pg3 = np.logical_and(np.any(days_period_g3[p]>0), loop_ltw = sen.sav['LTW_loops'] # only calculate the progeny & sires in the final LTW loop
 
         ####################################
         ### initialise arrays for sim loop  # axis names not always track from now on because they change between p=0 and p=1
         ####################################
         ##apply the LTW adjustment sensitivity - only plus 1 for sfw
         ## apply at the top of the loop so that the values that get pickled dont include the sam (incase sam changes between trials)
-        sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = 1 + sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 * sen.sam['LTW_dams']
-        sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 * sen.sam['LTW_dams']
-        sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3 = 1 + sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3 * sen.sam['LTW_offs']
-        sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3 = sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3 * sen.sam['LTW_offs']
+        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 * sen.sam['LTW_dams']
+        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 * sen.sam['LTW_dams']
+        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = 1 + sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 * sen.sam['LTW_offs']
+        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 * sen.sam['LTW_offs']
 
         ##all groups
         eqn_compare = uinp.sheep['i_eqn_compare']
@@ -2722,7 +2728,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                        , d_cfw_ave_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_a0e0b0xyg1, wge_a0e0b0xyg1
                                        , af_wool_pa1e1b1nwzida0e0b0xyg1[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                        , kw_yg1, days_period_pa1e1b1nwzida0e0b0xyg1[p]
-                                       , sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1[:,p, ...], sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1[:,p, ...]
+                                       , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                        , rev_trait_values['dams'][p]
                                        , mec_dams, mel_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                        , lact_propn_pa1e1b1nwzida0e0b0xyg1[p], sam_pi = sam_pi_dams)
@@ -2733,7 +2739,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                        , d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...], sfd_da0e0b0xyg3, wge_da0e0b0xyg3
                                        , af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                        , kw_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p]
-                                       , sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3, sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3
+                                       , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
                                        , rev_trait_values['offs'][p], sam_pi = sam_pi_offs)
 
                 ##energy to offset chilling
@@ -4707,61 +4713,92 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
                 numbers_start_condense_offs = fun.f_update(numbers_start_condense_offs, numbers_start_offs
                                                            , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+            ##This is the end of the p loop
 
         ## Calculate LTW sfw multiplier & sfd addition then repeat the generator loops with updated LTW adjuster
         ### sires don't have an adjuster calculated because they are born off-farm & unrelated to the dam nutrition profile
         ### yatf don't have an adjuster because the LTW project did not show a consistent effect of dam profile on the wool shorn at the lamb shearing.
+        ### CFW is a scalar adjustment so the LTW effect as a proportion of sfw, which can be applied across genotypes
+        ### FD is an absolute change, it not scaled by sfd.
+        ### Note: the ltw adjustment is 0 for dams with no yatf (the LW profile of ewe with no yatf does not affect the next generation)
 
-        ## The LTW adjuster for a period within the range pre-joining to next_period_is_prejoining, is the value from that lambing
+        ## The LTW adjuster from lambing is distributed across the periods from pre-joining to next_period_is_prejoining
         ### The LTW adjuster is retained in the variable through until period_is_prejoining, so it can be accessed when next_period_is_prejoining
+
         ### Create the association between nextperiod_is_prejoin and the current period
         a_nextisprejoin_tpa1e1b1nwzida0e0b0xyg1 = fun.f_next_prev_association(date_end_p, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint)[na] #p indx of period before prejoining - when nextperiod is prejoining this returns the current period
-
-        ## the dam lifetime adjustment (for the p, e1, b1 & w axes) are based on the LW profile of the dams themselves and scaled by the number of progeny they rear as a proportion of the total number weaned.
-        ##Thus ltw adjustment is 0 for dams with no yatf (the LW profile of ewe with no yatf does not effect the next generation)
-        ### cfw is a scalar so it is the LTW effect as a proportion of sfw. FD is a change so it not scaled by sfd.
         ### populate ltwadj with the value from the period before prejoining. That value is the final value that has been carried forward from the whole profile change
         o_cfw_ltwadj_tpdams = np.take_along_axis(o_cfw_ltwadj_tpdams, a_nextisprejoin_tpa1e1b1nwzida0e0b0xyg1, axis=p_pos)
         o_fd_ltwadj_tpdams = np.take_along_axis(o_fd_ltwadj_tpdams, a_nextisprejoin_tpa1e1b1nwzida0e0b0xyg1, axis=p_pos)
 
-        if n_fs_dams>1:
-            #an approximation of the LTW effect of dam nutrition on the progeny that are the replacement dams
-            sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = (o_cfw_ltwadj_tpdams * nyatf_b1nwzida0e0b0xyg
-                                                     / npw_std_xyg1 / sfw_a0e0b0xyg1)
-            sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_tpdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1
+        ## There are 2 scenarios (n_fs_dams==1 & n_fs_dams>1) for which ltwadj needs to be calculated.
+        ## 1. n_fs_dams==1 (t1_sfw_ltwadj_tpdams with singleton p). With only 1 dam nutrition profile (per starting
+        ### weight) all progeny will be from dams with this LW profile. LTWadj for dams and offspring can be estimated
+        ### using a standard structure (age & btrt) for dams and a weighted average across all active axes except i,
+        ### y & g1 (because these represent classes that are not combined at prejoining)
+        ### This makes the assumption that the dams are equally spread across the starting weights.
+        ## 2. n_fs_dams>1 (t2_sfw_ltwadj_tpdams with active p). With multiple feedsupply for dams the ltwadj can only be
+        ### approximated. LTWadj is varied for each class of dams based on the LW profile of the dams themselves and
+        ### scaled by the number of progeny they rear as a proportion of the total number weaned. This ltwadj factor is
+        ### then applied only to that class of dams (rather than averaged and then applied across all classes).
+        ### In this scenario the ltwadj for progeny is unknowable because the optimum dam LW profile is not known.
 
+        ### In both scenarios the offspring ltwadj is calculated the same, based on the w[0] dam profile.
+
+        ### Note: The accuracy of the ltwadj that is saved in the feedsupply pickle could be improved by using the
+        ### actual dam numbers from lp_vars, however, this is not done because this could cause some 'randomness'
+        ### within an experiment with ltwadj varying between trials due to the optimum dam numbers in the 'creating' trial.
+
+        t1_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(o_cfw_ltwadj_tpdams, o_numbers_start_tpdams
+                                                            * nyatf_b1nwzida0e0b0xyg * season_propn_zida0e0b0xyg
+                                                            * btrt_propn_b1nwzida0e0b0xy1
+                                                            * period_is_birth_pa1e1b1nwzida0e0b0xyg1
+                                                            , axis=(p_pos, a1_pos, e1_pos, b1_pos, n_pos, w_pos, z_pos)   #presuming all offspring axes are singleton and don't need to be included
+                                                            , keepdims=True) / sfw_a0e0b0xyg1
+
+        t1_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(o_fd_ltwadj_tpdams, o_numbers_start_tpdams
+                                                            * nyatf_b1nwzida0e0b0xyg * season_propn_zida0e0b0xyg
+                                                            * btrt_propn_b1nwzida0e0b0xy1
+                                                            * period_is_birth_pa1e1b1nwzida0e0b0xyg1
+                                                            , axis=(p_pos, a1_pos, e1_pos, b1_pos, n_pos, w_pos, z_pos)   #presuming all offspring axes are singleton and don't need to be included
+                                                            , keepdims=True)
+
+        t2_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = (o_cfw_ltwadj_tpdams * nyatf_b1nwzida0e0b0xyg
+                                                 / npw_std_xyg1 / sfw_a0e0b0xyg1)
+        t2_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_tpdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1
+
+        if n_fs_dams == 1:
+            #use t1
+            t_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = t1_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1
+            t_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = t1_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1
         else:
-            ## if n==1 the average LTW adjustment for the next generation is the average of the dam effects weighted by
-            ##the number of progeny from each class of dams.
-            ## Note: if the propn mated inputs are set to optimise (np.inf) then it is treated as 100% mated (included in numbers_start)
-            ## Note: The approximation doesn't account for dam mortality during the year or Progeny mortality during lactation
-            ## the weighted average is across all active axes except i, y & g1 (because these represent classes that are not combined at prejoining)
-            ### CFW (as a proportion of sfw)
-            t_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(o_cfw_ltwadj_tpdams, o_numbers_start_tpdams
-                                                                * nyatf_b1nwzida0e0b0xyg * season_propn_zida0e0b0xyg
-                                                                , axis=(p_pos, a1_pos, e1_pos, b1_pos, w_pos, z_pos)
-                                                                , keepdims=True) / sfw_a0e0b0xyg1
+            #use t2
+            t_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = t2_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1
+            t_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = t2_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1
 
-            ### FD (an absolute adjustment)
-            t_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(o_fd_ltwadj_tpdams, o_numbers_start_tpdams
-                                                                * nyatf_b1nwzida0e0b0xyg * season_propn_zida0e0b0xyg
-                                                                , axis=(p_pos, a1_pos, e1_pos, b1_pos, w_pos, z_pos)
-                                                                , keepdims=True)
+        #### If generating with a t axis then take the t slice that corresponds with the animals being retained.
+        if len_gen_t1 > 1:
+            t_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(t_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1, a_t_tpg1, axis=0)[0]
+            t_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(t_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1, a_t_tpg1, axis=0)[0]
+        ### Index the now singleton t axis to remove
+        t_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = t_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1[0]
+        t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = t_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1[0]
 
-            ## allocate the LTW adjustment to the slices of g1 based on the female parent of each g1 slice.
-            ## nutrition of BBB dams [0:1] affects BB-B, BB-M & BB-T during their lifetime.
-            sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1[...] = t_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1[..., 0:1]
-            sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1[...] = t_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1[..., 0:1]
-            ## nutrition of BBM dams [1] affects BM-T [-1] during their lifetime. (Needs to be [-1] to handle if BBT have been masked)
-            if mask_dams_inc_g1[3:4]:
-                sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1[..., -1] = t_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1[..., 1]
-                sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1[..., -1] = t_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1[..., 1]
+        ## allocate the LTW adjustment to the slices of g1 based on the female parent of each g1 slice.
+        ## nutrition of BBB dams [0:1] affects BB-B, BB-M & BB-T during their lifetime.
+        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = t_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., 0:1]
+        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., 0:1]
+        ## nutrition of BBM dams [1] affects BM-T [-1] during their lifetime. (Needs to be [-1] to handle if BBT have been masked)
+        if mask_dams_inc_g1[3:4]:
+            sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., -1] = t_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., 1]
+            sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., -1] = t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., 1]
 
-        ## the offspring lifetime adjustment is based on dam LW pattern 0. The dam pattern must be specified/estimated
+        ## the offspring lifetime adjustment is based on dam LW pattern 0. An estimated dam pattern is required
         ### because there is not a link in the matrix between dam profile and the offspring DVs.
-        ### Note: The offspring LTW adjustment works as it should if N==1 for dams i.e. all the progeny are from pattern 0.
+        ### Note: The offspring LTW adjustment works correctly if dams N==1, because all the progeny are from pattern 0.
         ### The offspring CFW effect is a multiplier based on the dam LTW effect as a proportion of the dam sfw,
-        ### this allows for the offspring to be a different genotype than the dam and get a proportional adjustment
+        ### this allows for the offspring to be a different genotype than the dam and get a proportional adjustment.
+        ### For offspring the weighted average is not required because the offspring relate to specific slices of the dams
         ### For each offspring d slice select the p slice from o_cfw_ltwadj based on a_prevjoining_o_p when period_is_join
         ###         e1 axis in the position of e0
         ###         b1 axis in the position of b0 and simplified using a_b0_b1
@@ -4769,33 +4806,42 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         ###         z axis is the weighted average across season types
         temporary = np.sum(fun.f_dynamic_slice(o_cfw_ltwadj_tpdams,w_pos,0,1) / sfw_a0e0b0xyg1
                            * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg)
-                           * period_is_join_pa1e1b1nwzida0e0b0xyg1, axis=p_pos)
-        ##dams have a e1 axis, whereas offspring have an e0 axis, swap the e1 into position of e0
+                           * period_is_birth_pa1e1b1nwzida0e0b0xyg1, axis=p_pos, keepdims = True)
+        ##dams have an e1 axis, whereas offspring have an e0 axis, swap the e1 into position of e0
         temporary = np.swapaxes(temporary, e1_pos, e0_pos)
         ##the b1 axis needs to be transformed into b0 because they are different lengths.
         temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
                            , axis=b1_pos, keepdims=True)  #0 for dams with no yatf because for those b1 slices there is no corresponding slice in b0
         t_season_propn_pg = np.broadcast_to(season_propn_zida0e0b0xyg, temporary.shape)
-        sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
+        t3_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
 
         ## repeat for FD
         temporary = np.sum(fun.f_dynamic_slice(o_fd_ltwadj_tpdams,w_pos,0,1)
                            * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg)
-                           * period_is_join_pa1e1b1nwzida0e0b0xyg1, axis=p_pos)
+                           * period_is_birth_pa1e1b1nwzida0e0b0xyg1, axis=p_pos, keepdims = True)
         temporary = np.swapaxes(temporary, e1_pos, e0_pos)
         temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
                            , axis=b1_pos, keepdims=True)  #0 for dams with no yatf because for those b1 slices there is no corresponding slice in b0
         t_season_propn_pg = np.broadcast_to(season_propn_zida0e0b0xyg, temporary.shape)
-        sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
+        t3_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
+
+        #### If generating with a t axis then take the t slice that corresponds with the animals being retained.
+        if len_gen_t1 > 1:
+            t3_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(t3_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg3, a_t_tpg1, axis=0)
+            t3_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(t3_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg3, a_t_tpg1, axis=0)
+        ### Index the now singleton t axis to remove
+        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = t3_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg3[0]
+        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = t3_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg3[0]
 
         ##store ltw adjustments so they can be pickled
-        ## store on the second last ltw loop to remove randomness when pkl (so that the ltw adj that is pkl is the same as the ltw adj used in final itteration)
+        ## store on the second last ltw loop to remove randomness when pkl (so that the ltw adj that is pkl is the same as the ltw adj used in final iteration)
         if loop_ltw == loop_ltw_len-2 or loop_ltw_len==1:
-            pkl_fs_info['sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1'] = sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1
-            pkl_fs_info['sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1'] = sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1
-            pkl_fs_info['sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3'] = sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3
-            pkl_fs_info['sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3'] = sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3
+            pkl_fs_info['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1'] = sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1
+            pkl_fs_info['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1'] = sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
+            pkl_fs_info['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3'] = sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3
+            pkl_fs_info['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3'] = sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
 
+        ##This is the end of the LTW loop
 
     postp_start=time.time()
     print(f'completed generator loops: {postp_start - generator_start}')

@@ -645,10 +645,10 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
                                                           np.sum(offs_numbers_tpa1e1b1nwzida0e0b0xyg3,w_pos,keepdims=True)==0)
 
         ##LTW adjustment
-        sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = pkl_fs_info['sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1'].astype('float32')
-        sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = pkl_fs_info['sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1'].astype('float32')
-        sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3 = pkl_fs_info['sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3'].astype('float32')
-        sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3 = pkl_fs_info['sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3'].astype('float32')
+        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs_info['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1'].astype('float32')
+        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs_info['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1'].astype('float32')
+        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = pkl_fs_info['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3'].astype('float32')
+        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = pkl_fs_info['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3'].astype('float32')
 
         ##pkl
         ##stick fs info into dict
@@ -662,10 +662,10 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         pkl_fs['confinement']['sire'] = optimal_confinement_tpa1e1b1nwzida0e0b0xyg0
         pkl_fs['confinement']['dams'] = optimal_confinement_stpa1e1b1nwzida0e0b0xyg1
         pkl_fs['confinement']['offs'] = optimal_confinement_stpa1e1b1nwzida0e0b0xyg3
-        pkl_fs['ltw_adj']['sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1'] = sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1
-        pkl_fs['ltw_adj']['sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1'] = sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1
-        pkl_fs['ltw_adj']['sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3'] = sfw_ltwadj_ta1e1b1nwzida0e0b0xyg3
-        pkl_fs['ltw_adj']['sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3'] = sfd_ltwadj_ta1e1b1nwzida0e0b0xyg3
+        pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1'] = sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1
+        pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1'] = sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
+        pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3'] = sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3
+        pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3'] = sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
 
         ##store rev if trial is rev_create
         fs_create_number = sinp.structuralsa['i_fs_create_number']

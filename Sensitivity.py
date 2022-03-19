@@ -154,6 +154,8 @@ sat_inp['salep_score_scalar'] = 0.0  #Scalar for score impact across the grid
 #SAV #
 ######
 ##if you initialise an array it must be type object (so that you can assign int/float/bool into the array)
+sav_inp['feedsupply_adj_r2p'] = np.full_like(pinp.feedsupply['i_feedsupply_adj_options_r2p'], '-', dtype=object)  #SA value for feedsupply adjustment.
+
 ##general
 sav_inp['steady_state']      = '-'                  #SA to alter if the model is steady state
 sav_inp['inc_node_periods']      = '-'              #SA to alter if season nodes are included in the steady state model (note they are always included in the dsp version this only effects if they are included in steady state)
