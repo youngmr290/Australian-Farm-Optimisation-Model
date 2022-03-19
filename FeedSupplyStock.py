@@ -116,7 +116,7 @@ na=np.newaxis
 def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1nwzida0e0b0xyg,
                  period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1,
                  scan_management_pa1e1b1nwzida0e0b0xyg1, gbal_management_pa1e1b1nwzida0e0b0xyg1, wean_management_pa1e1b1nwzida0e0b0xyg1,
-                 a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, mask_p_offs_p, len_p, pkl_fs_info):
+                 a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, a_t_tpg1, mask_p_offs_p, len_p, pkl_fs_info):
 
     #########
     #inputs #
@@ -381,15 +381,15 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
 
         ###confinement info - only use if n=1 and fs_use_pkl (above) is true
         t_confinement_tpa1e1b1nwzida0e0b0xyg0 = fun.f_update(t_confinement_pa1e1b1nwzida0e0b0xyg0[na], pkl_fs['confinement']['sire'], n_fs_sire==1)
-        t_confinement_tpa1e1b1nwzida0e0b0xyg1 = fun.f_update(t_confinement_pa1e1b1nwzida0e0b0xyg1[na], pkl_fs['confinement']['dams'], n_fs_dams==1)
-        t_confinement_tpa1e1b1nwzida0e0b0xyg3 = fun.f_update(t_confinement_pa1e1b1nwzida0e0b0xyg3[na], pkl_fs['confinement']['offs'], n_fs_offs==1)
+        t_confinement_stpa1e1b1nwzida0e0b0xyg1 = fun.f_update(t_confinement_pa1e1b1nwzida0e0b0xyg1[na], pkl_fs['confinement']['dams'], n_fs_dams==1)
+        t_confinement_stpa1e1b1nwzida0e0b0xyg3 = fun.f_update(t_confinement_pa1e1b1nwzida0e0b0xyg3[na], pkl_fs['confinement']['offs'], n_fs_offs==1)
 
         ###slice t axis if t is not being included in the looping part of sgen
         ### take the 'retain' t slice (slice so that singleton axis remains)
         if not sinp.structuralsa['i_generate_with_t']:
-            t_confinement_stpa1e1b1nwzida0e0b0xyg1 = t_confinement_tpa1e1b1nwzida0e0b0xyg1[:,2:3]
-            t_confinement_stpa1e1b1nwzida0e0b0xyg3 = t_confinement_tpa1e1b1nwzida0e0b0xyg3[:,0:1]
-            t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1[:,2:3]
+            t_confinement_stpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(t_confinement_stpa1e1b1nwzida0e0b0xyg1, a_t_tpg1[na], axis=p_pos - 1)
+            t_confinement_stpa1e1b1nwzida0e0b0xyg3 = t_confinement_stpa1e1b1nwzida0e0b0xyg3[:,0:1]
+            t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = np.take_along_axis(t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1, a_t_tpg1[na], axis=p_pos - 1)
             t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 = t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3[:,0:1]
 
     ###still need to add singleton s&t axis
