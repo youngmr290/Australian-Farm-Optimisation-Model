@@ -590,6 +590,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         a_c2_c0 = pinp.stubble['a_c2_c0']
         i_g3_inc = pinp.stubble['i_g3_inc']
 
+    ###association for the retained t of each g slice
+    a_t_g1 = np.arange(pinp.sheep['i_n_dam_sales'], pinp.sheep['i_n_dam_sales']+len_g1)
+
     ##convert input params from c to g
     ###production params
     agedam_propn_da0e0b0xyg0, agedam_propn_da0e0b0xyg1, agedam_propn_da0e0b0xyg2, agedam_propn_da0e0b0xyg3 = \
@@ -4975,9 +4978,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     transfer_exists_tpa1e1b1nwzida0e0b0xyg1 = np.concatenate([slices_to_add, transfer_exists_tpa1e1b1nwzida0e0b0xyg1],0)
     slices_to_add = ~slices_to_add * np.arange(len_g1)
     a_g1_tpa1e1b1nwzida0e0b0xyg1 = np.concatenate([slices_to_add, a_g1_tpa1e1b1nwzida0e0b0xyg1],0)
-
-    ###retained t
-    a_t_g1 = np.arange(pinp.sheep['i_n_dam_sales'], pinp.sheep['i_n_dam_sales']+len_g1)
 
     ###dvp pointer and index
     a_v_pa1e1b1nwzida0e0b0xyg1 =  np.apply_along_axis(fun.f_next_prev_association, 0, dvp_start_va1e1b1nwzida0e0b0xyg1
