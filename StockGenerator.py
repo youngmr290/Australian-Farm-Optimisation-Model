@@ -590,8 +590,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         a_c2_c0 = pinp.stubble['a_c2_c0']
         i_g3_inc = pinp.stubble['i_g3_inc']
 
-    ###association for the retained t of each g slice
+    ##association for the retained t of each g slice
     a_t_g1 = np.arange(pinp.sheep['i_n_dam_sales'], pinp.sheep['i_n_dam_sales']+len_g1)
+    a_t_tpg1 = fun.f_expand(a_t_g1, p_pos - 2, right_pos=-1)
 
     ##convert input params from c to g
     ###production params
@@ -5407,10 +5408,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         a_gen_t_g1 = np.array([0])
     else:
         a_gen_t_g1 = a_t_g1
-    a_t_tpg1 = fun.f_expand(a_gen_t_g1, p_pos-2, right_pos=-1)
-    t_o_ffcfw_tpdams = np.take_along_axis(o_ffcfw_tpdams, a_t_tpg1, p_pos-1)
-    t_o_cfw_tpdams = np.take_along_axis(o_cfw_tpdams, a_t_tpg1, p_pos-1)
-    t_o_ebg_tpdams = np.take_along_axis(o_ebg_tpdams, a_t_tpg1, p_pos-1)
+    a_gen_t_tpg1 = fun.f_expand(a_gen_t_g1, p_pos-2, right_pos=-1)
+    t_o_ffcfw_tpdams = np.take_along_axis(o_ffcfw_tpdams, a_gen_t_tpg1, p_pos-1)
+    t_o_cfw_tpdams = np.take_along_axis(o_cfw_tpdams, a_gen_t_tpg1, p_pos-1)
+    t_o_ebg_tpdams = np.take_along_axis(o_ebg_tpdams, a_gen_t_tpg1, p_pos-1)
     husbandry_cost_tpg1, husbandry_labour_l2tpg1, husbandry_infrastructure_h1tpg1 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_dams'], mobsize_pa1e1b1nwzida0e0b0xyg1, t_o_ffcfw_tpdams, t_o_cfw_tpdams, operations_triggerlevels_h5h7h2tpg,
         p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg1, period_is_shearing_pa1e1b1nwzida0e0b0xyg1,
