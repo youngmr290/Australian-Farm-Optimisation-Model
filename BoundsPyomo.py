@@ -398,8 +398,8 @@ def f1_boundarypyomo_local(params, model):
         # The bound is only for t[0] (sale at shearing) t[1] (sale at scanning) is handled in the generator.
         if bnd_dry_retained_inc:
             ###build param
-            model.p_prop_dry_dams = pe.Param(model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types, model.s_tol,
-                                             model.s_gen_merit_dams, model.s_groups_dams, initialize=params['stock']['p_prop_dry_dams'])
+            model.p_prop_dry_t0_dams = pe.Param(model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types, model.s_tol,
+                                             model.s_gen_merit_dams, model.s_groups_dams, initialize=params['stock']['p_prop_dry_t0_dams'])
             model.p_drys_retained = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
                                              initialize=params['stock']['p_drys_retained'])
 
@@ -407,14 +407,14 @@ def f1_boundarypyomo_local(params, model):
             def f_retention_drys(model, q, s, v, z, i, g1):
                 '''Force the model so that the drys can only be sold when the other ewes are sold (essentially forcing the retention of drys).
                    The number of drys sold must be less than the sum of the other k2 slices'''
-                #todo add birth timing to p_prop_dry_dams when gbal is activated
+                #todo add birth timing to p_prop_dry_t0_dams when gbal is activated
                 if all(model.p_mask_dams['00-0','t0',v,w,z,g1] for w in model.s_lw_dams)==0 or model.p_drys_retained[v,z,g1]==0:
                     return pe.Constraint.Skip
                 else:
                     return sum(model.v_dams[q,s,'00-0','t0',v,a,n,w,z,i,y,g1]
                                for a in model.s_wean_times for n in model.s_nut_dams for w in model.s_lw_dams for y in model.s_gen_merit_dams
                                if pe.value(model.p_mask_dams['00-0','t0',v,w,z,g1]) == 1
-                               ) <= max(model.p_prop_dry_dams[v,a,n,w,z,i,y,g1] for a in model.s_wean_times for n in model.s_nut_dams  #take max to reduce size. Needs to be max so that all drys can be sold. This will allow a tiny bit of slippage (can sell more slightly more drys than the exact dry propn)
+                               ) <= max(model.p_prop_dry_t0_dams[v,a,n,w,z,i,y,g1] for a in model.s_wean_times for n in model.s_nut_dams  #take max to reduce size. Needs to be max so that all drys can be sold. This will allow a tiny bit of slippage (can sell more slightly more drys than the exact dry propn)
                                         for w in model.s_lw_dams for y in model.s_gen_merit_dams) * sum(model.v_dams[q,s,k2,'t0',v,a,n,w,z,i,y,g1]
                                         for k2 in model.s_k2_birth_dams for a in model.s_wean_times for n in model.s_nut_dams
                                         for w in model.s_lw_dams for y in model.s_gen_merit_dams

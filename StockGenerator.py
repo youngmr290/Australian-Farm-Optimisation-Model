@@ -7454,12 +7454,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ## This is used to force retention of drys at the main (t[0]) sale time. You can only sell drys if you sell non-drys. This param indicates the propn of dry that can be sold per non-dry dam.
     propn_drys_tpg1 = fun.f_divide(np.sum(o_numbers_end_tpdams*n_drys_b1g1, axis=(e1_pos,b1_pos), keepdims=True),
                               np.sum(o_numbers_end_tpdams * (nyatf_b1nwzida0e0b0xyg>0),axis=(e1_pos,b1_pos), keepdims=True))
-    propn_drys_vg1 = sfun.f1_p2v(propn_drys_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1,
-                                period_is_tp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1[:,:,0:1,...]) #only interested in the shearing sale, take e[0] it is the same as e[1] so don't need it.
+    propn_drys_t0_vg1 = sfun.f1_p2v(propn_drys_tpg1[0:1,...], a_v_pa1e1b1nwzida0e0b0xyg1, #only interested in the shearing sale t[0] (t axis will be active if generating with t
+                                period_is_tp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1[:,:,0:1,...]) #take e[0] it is the same as e[1] so don't need it.
     arrays_vanwziyg1 = [keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    params['p_prop_dry_dams'] = fun.f1_make_pyomo_dict(propn_drys_vg1, arrays_vanwziyg1)
+    params['p_prop_dry_t0_dams'] = fun.f1_make_pyomo_dict(propn_drys_t0_vg1, arrays_vanwziyg1)
 
-    ##drys retained (bool used to control if bound constraint is built that limits the number of drys sold using p_prop_dry_dams)
+    ##drys retained (bool used to control if bound constraint is built that limits the number of drys sold using p_prop_dry_t0_dams)
     ### can only sell drys only if pregnant dams are also being sold.
     dry_retained_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_retained_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact o axis (o is the input axis)
     arrays_vzg1 = [keys_v1, keys_z, keys_g1]
