@@ -129,7 +129,7 @@ with 0 probability could be excluded from the model to reduce size.
 
 Current definition
 ^^^^^^^^^^^^^^^^^^
-The key tactical decisions are:
+The key tactical decisions are (see below for the full list):
 
     #. stock liveweight
     #. pasture deferment
@@ -147,20 +147,24 @@ whilst allowing realistic tactical decisions to be made.
 Pasture/livestock are more complicated because their decisions are more continuous. However, discussion with consultants
 and statistical modelling has identified the key points in the season where decisions are made.
 The break of season timing was identified as most important indicator for pasture and livestock management
-because time of break is a good indicator of the amount of early feed available which is the most feed limiting
-time of year. Pasture decisions are generally not made at the first sign of the season break because it takes some time
-for the pasture to establish. Thus, time of sowing has been deemed a suitable indicator for
-pasture decisions. For example, early sowing indicates an early break to the season and more early feed
-therefore a decision could be to stop feedlotting and graze pastures.
+because time of break is a good indicator of the amount of early feed available. Feed is most limiting early in the
+season and thus timing of break is a key indicator for pasture management. For example, in an early break
+season a decision could be to stop feedlotting and graze pastures earlier than usual.
+There is a possibility of the season breaking without any follow up rain causing germinated plants to die. False breaks
+tend to have a greater impact on pasture productivity because some false breaks occur before crops have been sown
+and crops tend to be more resilient (farmers have suggested the following explanations as to why: (i) because they
+are not being grazed (ii) because the crop furrow has greater moisture retention).
+A false break is most likely to occur after an early break thus, to save model size a false break is only
+represented for early break seasons.
 Winter productivity is less variable between seasons due to the
 lower temperatures and thus no winter decision points were included. Spring conditions largely explain
-total pasture production and dry summer feed availability. Which may impact management decisions such as livestock
-liveweight pattern and sale.
+total pasture production and dry summer feed quality and availability. Which may impact management decisions
+such as livestock liveweight pattern and sale timing.
 
-Overall, for both crop and pasture/livestock, time of sowing and spring rainfall were determined as
-key indicators of seasonal management. The season definition described above was defined for the Great Southern
-region of Western Australia. The season definition may vary for different regions. Other factors that may be considered
-in future improvements are seasonal impacts on pasture quality and false breaks.
+Overall, for both crop and pasture/livestock, time of sowing, follow up rains (only for the early break season)
+and spring rainfall were determined as key indicators of seasonal management and outcome.
+The season definition described above was defined for the Great Southern
+region of Western Australia. The season definition may vary for different regions.
 
 
 Season details
