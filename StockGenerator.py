@@ -4763,9 +4763,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                             , axis=(p_pos, a1_pos, e1_pos, b1_pos, n_pos, w_pos, z_pos)   #presuming all offspring axes are singleton and don't need to be included
                                                             , keepdims=True)
 
-        t2_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = (o_cfw_ltwadj_tpdams * nyatf_b1nwzida0e0b0xyg
-                                                 / npw_std_xyg1 / sfw_a0e0b0xyg1)
-        t2_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_tpdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1
+        t2_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = (0.5 * o_cfw_ltwadj_tpdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1**2
+                                                / sfw_a0e0b0xyg1)
+        t2_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = 0.5 * o_fd_ltwadj_tpdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1**2
 
         if n_fs_dams == 1:
             #use t1
