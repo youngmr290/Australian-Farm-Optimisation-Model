@@ -577,7 +577,7 @@ def f_report(processor, trials, non_exist_trials):
         if report_run.loc['run_ffcfw_cut_dams', 'Run']:
             type = 'stock'
             prod = 'ffcfw_dams_k2tvPa1nw8ziyg1'
-            na_prod = [0,1,3] #q,s,t
+            na_prod = [0,1] #q,s
             weights = 'dams_numbers_qsk2tvanwziy1g1'
             na_weights = [5]#p
             keys = 'dams_keys_qsk2tvPanwziy1g1'
