@@ -270,6 +270,13 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
         ##store profit
         lp_vars['profit'] = obj
+        ##store mvf rc
+        lp_vars['mvf'] = {}
+        for v in model.component_objects(pe.Var, active=True):
+            if str(v)=='v_mvf':
+                for index in v:
+                    lp_vars['mvf'][index] = model.rc[v[index]]
+
 
         ##pickle lp info - only if pyomo is run
         with open(os.path.join(directory_path, 'pkl/pkl_lp_vars_{0}.pkl'.format(trial_name)),"wb") as f:

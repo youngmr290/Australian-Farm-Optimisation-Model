@@ -148,6 +148,7 @@ def f_report(processor, trials, non_exist_trials):
     stacked_drynv = pd.DataFrame()  # NV of dry pas
     stacked_drydmd = pd.DataFrame()  # dmd of dry pas
     stacked_avedryfoo = pd.DataFrame()  # Average Foo of dry pas
+    stacked_mvf = pd.DataFrame()  # Average Foo of dry pas
 
     ##read in the pickled results
     for trial_name in trials:
@@ -1088,6 +1089,12 @@ def f_report(processor, trials, non_exist_trials):
             stubcon = pd.concat([stubcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_stubcon = rep.f_append_dfs(stacked_stubcon, stubcon)
 
+        if report_run.loc['run_mvf', 'Run']:
+            #returns consumption in each FP
+            mvf = rep.f_mvf_summary(lp_vars)
+            mvf = pd.concat([mvf],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_mvf = rep.f_append_dfs(stacked_mvf, mvf)
+
     ####################################
     #run between trial reports and save#
     ####################################
@@ -1240,6 +1247,8 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_supcon, 'supcon', df_settings, option=1)
     if report_run.loc['run_stubcon', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_stubcon, 'stubcon', df_settings, option=1)
+    if report_run.loc['run_mvf', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_mvf, 'mvf', df_settings, option=1)
 
 
     df_settings.to_excel(writer, 'df_settings')

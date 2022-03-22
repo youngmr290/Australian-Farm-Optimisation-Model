@@ -550,6 +550,11 @@ def f_stubble_summary(lp_vars, r_vals):
     return stub_fp6zks.groupby(level=(1, 2, 4)).sum().unstack()
 
 
+def f_mvf_summary(lp_vars):
+    mvf_qsp6vq = f_vars2df(lp_vars, 'mvf')
+    return mvf_qsp6vq.unstack([-1,-2])
+
+
 def f_crop_summary(lp_vars, r_vals, option=0):
     '''
     Crop summary. Includes pasture inputs.
