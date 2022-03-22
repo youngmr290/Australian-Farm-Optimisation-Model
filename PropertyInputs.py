@@ -306,6 +306,13 @@ def f_property_inp_sa():
 
         ###sap
         ###saa
+        pasture_inputs[pasture]['GermStd'] = fun.f_sa(pasture_inputs[pasture]['GermStd'], sen.saa[('germ',pasture)], 2)
+        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.saa[('pgr',pasture)], 2)
+        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.saa[('pgr_f',pasture)][...,na], 2)
+        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.saa[('pgr_l',pasture)], 2)
+        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.saa[('pgr',pasture)], 2)
+        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.saa[('pgr_f',pasture)][...,na], 2)
+        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.saa[('pgr_l',pasture)], 2)
         ###sat
         ###sar
 

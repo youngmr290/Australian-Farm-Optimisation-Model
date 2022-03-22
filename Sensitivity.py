@@ -119,6 +119,12 @@ sap_inp['mr_post'] = 0.0           #Post loop maintenance requirement of adults 
 ######
 #SAA #
 ######
+##pasture
+saa_inp['germ','annual']                    = 0.0                                                          # SA addition for germination on all lmus in all periods
+saa_inp['pgr','annual']                     = 0.0                                                          # SA addition for growth on all lmus in all periods
+saa_inp['pgr_f','annual']                   = np.zeros(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA addition for growth in each feed period
+saa_inp['pgr_l','annual']                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA addition for growth on each lmus in all periods
+
 ##stock
 saa_inp['husb_cost_h2'] = np.zeros(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
 saa_inp['husb_labour_l2h2'] = np.zeros(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
