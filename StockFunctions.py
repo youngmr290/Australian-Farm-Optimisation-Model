@@ -2142,7 +2142,7 @@ def f_sale_value(cu0, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj
     ### Temporary value of the age based discount from the relevant month
     temporary_s7tpg = price_mobaverage_s7tpg * (1 + month_discount_s7tpg)
     ###Apply discount if age is greater than threshold age
-    price_mobaverage_s7tpg = fun.f_update(price_mobaverage_s7tpg, temporary_s7tpg, age_end_pg1/30 > discount_age_s7tpg)  #divide 30 to convert to months
+    price_mobaverage_s7tpg = fun.f_update(price_mobaverage_s7tpg, temporary_s7tpg, age_end_pg1/30.4 > discount_age_s7tpg)  #divide 30 to convert to months
 
     ## Some grids are in $/hd. For these grids don't want to multiply grid value by weight (so set weight to 1)
     ### Convert weight to 1 if price is $/hd (price_type == 2)
@@ -2158,7 +2158,7 @@ def f_sale_value(cu0, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj
 
     ## Select the best net sale price from the relevant grids
     ###Mask the grids based on the maximum age, minimum age and the gender for each grid
-    sale_value_c1s7tpg = sale_value_c1s7tpg * mask_s7x_s7tpg * (age_end_pg1/30 <= sale_agemax_s7tpg1) * (age_end_pg1/30 >= sale_agemin_s7tpg1) #divide 30 to convert to months
+    sale_value_c1s7tpg = sale_value_c1s7tpg * mask_s7x_s7tpg * (age_end_pg1/30.4 <= sale_agemax_s7tpg1) * (age_end_pg1/30.4 >= sale_agemin_s7tpg1) #divide 30 to convert to months
     ###Select the maximum value across the grids
     sale_value = np.max(sale_value_c1s7tpg, axis=1)
     sale_grid = np.argmax(sale_value_c1s7tpg, axis=1)
