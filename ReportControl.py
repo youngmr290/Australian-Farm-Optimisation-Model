@@ -692,11 +692,11 @@ def f_report(processor, trials, non_exist_trials):
             #axes are qsk2tvaeb9nwziy1g1      b9 axis is shorten b axis: [0,1,2,3]
             option = 0
             if lp_vars_inc:
-                index =[4]
-                cols =[13,7]   #report must include the b axis otherwise an error is caused because the axis added after the arith.
+                index =[4]      #v
+                cols =[13,11,0,1,10,7]    #g,i,q,s,z & b9 #report must include the b axis otherwise an error is caused because the axis added after the arith.
             else:
                 index = [4]     #v
-                cols =[13,7,9]  #g, b & w
+                cols =[13,11,0,1,10,7,9]  #g,i,q,s,z,b & w
             axis_slice = {}
             lamb_survival = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                                  , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -711,7 +711,7 @@ def f_report(processor, trials, non_exist_trials):
             option = 1
             if lp_vars_inc:
                 index =[4]      #v
-                cols =[11]   #g [11,2]      #g & k2 (needs k2 in the current form).
+                cols =[11,9,0,1,8]   #g,i,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
             else:
                 index = [4]     #v
                 cols = [11,9,0,1,8,7]    #g,i,q,s,z & w  Makes most sense to report all the axes that are individual animals (k2 optional here)
@@ -726,7 +726,7 @@ def f_report(processor, trials, non_exist_trials):
             option = 2
             if lp_vars_inc:
                 index =[4]      #v
-                cols =[11]   #g [11,2]      #g & k2 (needs k2 in the current form).
+                cols =[11,9,0,1,8]   #g,i,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
             else:
                 index = [4]     #v
                 cols = [11,9,0,1,8,7]    #g,i,q,s,z & w  Makes most sense to report all the axes that are individual animals
@@ -741,7 +741,7 @@ def f_report(processor, trials, non_exist_trials):
             option = 3
             if lp_vars_inc:
                 index =[4]      #v
-                cols =[11,2]   #g [11,2]      #g & k2 (needs k2 in the current form).
+                cols =[11,9,0,1,8]   #g,i,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
             else:
                 index = [4]     #v
                 cols = [11,9,0,1,8,7]    #g,i,q,s,z & w  Makes most sense to report all the axes that are individual animals
