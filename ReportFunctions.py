@@ -324,7 +324,7 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
 
 def f_summary(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
-    summary_df = pd.DataFrame(index=[trial], columns=['profit', 'risk neutral obj', 'utility', 'SR', 'Pas %', 'Sup'])
+    summary_df = pd.DataFrame(index=[trial], columns=['profit', 'risk neutral obj', 'utility', 'SR', 'Pas %', 'Sup', 'SRW'])
     ##profit - no minroe and asset
     summary_df.loc[trial, 'profit'] = f_profit(lp_vars, r_vals, option=0)
     ##obj
@@ -336,7 +336,9 @@ def f_summary(lp_vars, r_vals, trial):
     ##pasture %
     summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=4)
     ##supplement
-    summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=4)
+    summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=3)
+    ##SRW
+    summary_df.loc[trial, 'SRW'] = r_vals['stock']['srw']
     return summary_df
 
 
@@ -723,8 +725,8 @@ def f_stock_reshape(lp_vars, r_vals):
 def f_feed_reshape(lp_vars, r_vals):
     '''
     Reshape feed (pasture, residue & crop grazing) lp variables into numpy array.
-    
-    This is seperate to the stock function above to save processing time (and the feed stuff overlaps a lot i.e. 
+
+    This is seperate to the stock function above to save processing time (and the feed stuff overlaps a lot i.e.
     uses same keys).
 
     :param lp_vars: lp variables

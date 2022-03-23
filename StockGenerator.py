@@ -7714,6 +7714,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###############
     '''add report values to report dict and do any additional calculations'''
 
+    ##SRW for BBB ewes
+    fun.f1_make_r_val(r_vals, srw_xyg1[0,0,0], 'srw')
+
     ##create z8 mask to uncluster report vars
     ###dams - cluster e and b (e axis is active from the dvp dates)
     mask_z8var_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, z_pos=z_pos, mask=True)
