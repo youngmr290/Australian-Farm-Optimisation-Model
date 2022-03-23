@@ -5449,7 +5449,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     husbandry_cost_p7tpg0 = husbandry_cost_tpg0 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
     husbandry_cost_wc_c0p7tpg0 = husbandry_cost_tpg0 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
     ###Dams: cost, labour and infrastructure requirements - accounts for yatf costs as well
-    ### for dams remove the generator t axis by selecting the retained t slice. This reduces the array sizes and doesn't lose much detail.
+    ### for dams remove the generator t axis by selecting the retained t slice. This reduces the array sizes and loses minimal detail.
+    ### Note: The t axis would be required if shearing drys prior to sale.
     if len_gen_t1==1:
         a_gen_t_g1 = np.array([0])
     else:
