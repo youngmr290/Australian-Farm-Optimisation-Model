@@ -368,6 +368,8 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     t_fs_gender_pa1e1b1nwzida0e0b0k5yg3 = 0
 
     ##4a) update fs and confinement info with pkl if desired
+    ### It should be possible to use a BBB pkl_fs with a BBT flock if the BBT flock is generating without the t axis.
+    ###Generating without t means that the t axis of pkl_fs is reduced to a singleton, then t & g will broadcast.
     fs_use_number = sinp.structuralsa['i_fs_use_number']
     if sinp.structuralsa['i_fs_use_pkl']:
         print('pkl fs being used.')
