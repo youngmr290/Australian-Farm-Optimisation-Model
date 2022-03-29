@@ -799,14 +799,15 @@ def f_report(processor, trials, non_exist_trials):
             stacked_numbers_offs_p = rep.f_append_dfs(stacked_numbers_offs_p, numbers_offs_p)
 
         if report_run.loc['run_mort_dams', 'Run']:
+            ##note t axis will be singleton unless stock generator was run with active t axis.
             type = 'stock'
-            prod = 'mort_pa1e1b1nwziyg1' #uses b axis instead of k for extra detail when scan=0
+            prod = 'mort_Tpa1e1b1nwziyg1' #uses b axis instead of k for extra detail when scan=0
             weights = 1
             na_weights = []
-            keys = 'dams_keys_paebnwziy1g1'
+            keys = 'dams_keys_Tpaebnwziy1g1'
             arith = 4
-            index =[0]          #period
-            cols =[9, 3, 5]     #genotype, LSLN, w
+            index =[1]          #period
+            cols =[10, 4, 6]     #genotype, LSLN, w
             axis_slice = {}
             # axis_slice[0] = [2, 3, 1]
             # axis_slice[1] = [2, 4, 1]
@@ -817,14 +818,15 @@ def f_report(processor, trials, non_exist_trials):
             stacked_mort_dams = rep.f_append_dfs(stacked_mort_dams, mort_dams)
 
         if report_run.loc['run_mort_offs', 'Run']:
+            ##note t axis will be singleton unless stock generator was run with active t axis.
             type = 'stock'
-            prod = 'mort_pnwzida0e0b0xyg3' #uses b axis instead of k for extra detail when scan=0
+            prod = 'mort_Tpnwzida0e0b0xyg3' #uses b axis instead of k for extra detail when scan=0
             weights = 1
             na_weights = []
-            keys = 'offs_keys_pnwzidaebxyg3'
+            keys = 'offs_keys_Tpnwzidaebxyg3'
             arith = 4
-            index =[0]              #p
-            cols =[11, 8, 2, 9]     #g3, BTRT, w, gender
+            index =[1]              #p
+            cols =[12, 9, 3, 10]     #g3, BTRT, w, gender
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             mort_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
