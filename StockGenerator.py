@@ -297,7 +297,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     index_tva1e1b1nw8zida0e0b0xyg1w9 = index_tva1e1b1nw8zida0e0b0xyg1[...,na]
     index_t2 = np.arange(len_t2)
     index_tva1e1b1nwzida0e0b0xyg2w9 = fun.f_expand(index_t2, p_pos-2)
-    index_tva1e1b1nw8zida0e0b0xyg3w9 = fun.f_expand(np.arange(len_t3), p_pos-2)
+    index_tva1e1b1nw8zida0e0b0xyg3 = fun.f_expand(np.arange(len_t3), p_pos-1)
+    index_tva1e1b1nw8zida0e0b0xyg3w9 = index_tva1e1b1nw8zida0e0b0xyg3[...,na]
     index_xyg = fun.f_expand(np.arange(len_x), x_pos)
 
     prejoin_tup = (a1_pos, b1_pos, e1_pos)
@@ -6927,23 +6928,23 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##mortality - at the start of each dvp mortality is 0. it accumulates over the dvp. This is its own report as well as used in on_hand_mort.
     if pinp.rep['i_store_on_hand_mort'] or pinp.rep['i_store_mort']:
         ###get the cumulative mort for periods in each dvp
-        r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_cum_sum_dvp(o_mortality_dams, a_v_pa1e1b1nwzida0e0b0xyg1)
-        r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_cum_sum_dvp(o_mortality_offs, a_v_pa1e1b1nwzida0e0b0xyg3)
+        r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg1 = sfun.f1_cum_sum_dvp(o_mortality_dams, a_v_pa1e1b1nwzida0e0b0xyg1)
+        r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg3 = sfun.f1_cum_sum_dvp(o_mortality_offs, a_v_pa1e1b1nwzida0e0b0xyg3)
         ###mask w & z slices
         mask_w8z8vars_pa1e1b1nw8zida0e0b0xyg1 = np.take_along_axis(mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1
                                                                  , axis=0)
         mask_w8z8vars_pa1e1b1nw8zida0e0b0xyg3 = np.take_along_axis(mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3
                                                                  , axis=0)
-        r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1 = r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1 * mask_w8z8vars_pa1e1b1nw8zida0e0b0xyg1
-        r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3 = r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3 * mask_w8z8vars_pa1e1b1nw8zida0e0b0xyg3
+        r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg1 = r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg1 * mask_w8z8vars_pa1e1b1nw8zida0e0b0xyg1
+        r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg3 = r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg3 * mask_w8z8vars_pa1e1b1nw8zida0e0b0xyg3
 
     ##on hand mort- this is used for numbers_p report so that the report can have a p axis to increase numbers detail.
     ##              accounts for mortality as well as on hand.
     if pinp.rep['i_store_on_hand_mort']:
         ###add v axis and adjust for onhand
-        r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1 = r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1 * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (
+        r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1 = r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg1 * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (
                                                   a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-        r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg3 = r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3 * on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * (
+        r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg3 = r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg3 * on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * (
                                                   a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
         ###cluster e,b
         r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1,
@@ -7119,9 +7120,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     keys_q = np.array(['q%s' % i for i in range(len_q)])
     keys_s = np.array(['s%s' % i for i in range(len_s)])
     keys_t1 = np.array(['t%s'%i for i in range(len_t1)])
-    keys_T1 = np.array(['t%s'%i for i in range(len_gen_t1)])
+    keys_T1 = np.array(['t%s'%i for i in range(len_gen_t1)]) #generator t keys
     keys_t2 = np.array(['t%s'%i for i in range(len_t2)])
     keys_t3 = np.array(['t%s'%i for i in range(len_t3)])
+    keys_T3 = np.array(['t%s'%i for i in range(len_gen_t3)]) #generator t keys
     keys_v1 = np.array(['dv%02d'%i for i in range(dvp_type_va1e1b1nwzida0e0b0xyg1.shape[0])])
     keys_v3 = np.array(['dv%02d'%i for i in range(dvp_start_va1e1b1nwzida0e0b0xyg3.shape[0])])
     keys_x = pinp.sheep['i_x_idx'][mask_x]
@@ -7640,8 +7642,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvpaebnwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2p6ftvanwziy1g1')
-    fun.f1_make_r_val(r_vals,[keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
-                                            , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_paebnwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_T1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_Tpaebnwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_x, keys_y1, keys_g2],'yatf_keys_qsk2tvpaebnwzixy1g1')
     fun.f1_make_r_val(r_vals,[keys_T1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
@@ -7664,8 +7666,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                             , keys_i, keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tvpnwzidaebxyg3')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3
                                             , keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5p6ftvnwziaxyg3')
-    fun.f1_make_r_val(r_vals,[keys_p3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0
-                                            , keys_x, keys_y3, keys_g3],'offs_keys_pnwzidaebxyg3')
+    fun.f1_make_r_val(r_vals,[keys_T3, keys_p3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0
+                                            , keys_x, keys_y3, keys_g3],'offs_keys_Tpnwzidaebxyg3')
 
     ####std
     zg0_shape = len_z, len_g0
@@ -7819,8 +7821,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ###mort - uses b axis instead of k for extra detail when scan=0
     if pinp.rep['i_store_mort']:
-        fun.f1_make_r_val(r_vals,r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1.squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos)),'mort_pa1e1b1nwziyg1') #no unclustering because this wasn't masked by z8
-        fun.f1_make_r_val(r_vals,r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3.squeeze(axis=(a1_pos, e1_pos, b1_pos)),'mort_pnwzida0e0b0xyg3') #no unclustering because this wasn't masked by z8
+        ####note t axis will be singleton if generator was not run with t axis.
+        fun.f1_make_r_val(r_vals,r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg1.squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos)),'mort_Tpa1e1b1nwziyg1') #no unclustering because this wasn't masked by z8
+        fun.f1_make_r_val(r_vals,r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg3.squeeze(axis=(a1_pos, e1_pos, b1_pos)),'mort_Tpnwzida0e0b0xyg3') #no unclustering because this wasn't masked by z8
 
     ###on hand mort - proportion of each sheep remaining in each period after accounting for mort
     if pinp.rep['i_store_on_hand_mort']:

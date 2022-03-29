@@ -923,7 +923,7 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav, sam_inp, saa_inp, 
 
 def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
     '''
-    This function save a variable in the r_vals dict so it can be accessed in the reporting stage.
+    This function saves a variable in the r_vals dict so it can be accessed in the reporting stage.
 
     The majority of this function concerns unclustering the z axis. This is required for two reasons:
 
@@ -936,6 +936,7 @@ def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
     :param param: param to be stored
     :param maskz8: season identification mask
     :param name: name of r_val
+    :param shape: optional - shape of r_val - this can be used to remove singleton axis.
 
     Note 1: Arrays must broadcast.
     Note 2: if no z axis then param is simply stored in r_vals no need to pass in the mask arg.
