@@ -3858,6 +3858,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 mort_mask_dams = surv_dams > threshold
 
                 ###print warning if min mort is greater than 10% since the previous condense
+                #todo Add a mask on the slices of the dam age groups that are not being mated
+                # so it doesn't provide a warning if ewe lambs are not being mated (and hence the feed supply suits drys)
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]):
                     min_mort = 1- np.max(surv_dams, axis=w_pos)
                     if np.any(min_mort > 0.1):
