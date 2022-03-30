@@ -1,5 +1,5 @@
-# The Australian Farm Optimisation Model (A-F-O)
-Whole Farm Bioeconomical Optimisation Model
+# The Australian Farm Optimisation Model (AFO)
+Whole Farm Bioeconomic Optimisation Model
 
 The base version (steady state linear program) is operational and the developers are working
 on adding seasonal variation which will provide the user the ability to convert the model into
