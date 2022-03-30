@@ -428,8 +428,8 @@ def f_report(processor, trials, non_exist_trials):
             ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
             ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
             type = 'stock'
-            prod = 'lw_dams_k2vpa1e1b1nw8ziyg1'
-            na_prod = [0,1,3] #q,s,t
+            prod = 'lw_dams_k2Tvpa1e1b1nw8ziyg1'
+            na_prod = [0,1] #q,s
             prod_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             na_prodweights = [0,1] #q,s
             weights = 'dams_numbers_qsk2tvanwziy1g1'
@@ -453,8 +453,8 @@ def f_report(processor, trials, non_exist_trials):
             ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
             ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
             type = 'stock'
-            prod = 'ffcfw_dams_k2vpa1e1b1nw8ziyg1'
-            na_prod = [0,1,3] #q,s,t
+            prod = 'ffcfw_dams_k2Tvpa1e1b1nw8ziyg1'
+            na_prod = [0,1] #q,s
             prod_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             na_prodweights = [0,1] #q,s
             weights = 'dams_numbers_qsk2tvanwziy1g1'
@@ -479,8 +479,8 @@ def f_report(processor, trials, non_exist_trials):
             ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
             ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
             type = 'stock'
-            prod = 'nv_dams_k2vpa1e1b1nw8ziyg1'
-            na_prod = [0,1,3] #q,s,t
+            prod = 'nv_dams_k2Tvpa1e1b1nw8ziyg1'
+            na_prod = [0,1] #q,s
             prod_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             na_prodweights = [0,1] #q,s
             weights = 'dams_numbers_qsk2tvanwziy1g1'
@@ -507,8 +507,8 @@ def f_report(processor, trials, non_exist_trials):
             ##For yatf the denom weight also includes a weighting for nyatf. The numerator also gets weighted by this.
             ##v_dam must be used because v_prog has a different w axis than yatf.
             type = 'stock'
-            prod = 'ffcfw_yatf_k2vpa1e1b1nw8zixyg1'
-            na_prod = [0,1,3] #q,s,t                               #t
+            prod = 'ffcfw_yatf_k2Tvpa1e1b1nw8zixyg1'
+            na_prod = [0,1] #q,s
             prod_weights = 'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             na_prodweights = [0,1] #q,s
             weights = 'dams_numbers_qsk2tvanwziy1g1'
@@ -554,8 +554,8 @@ def f_report(processor, trials, non_exist_trials):
             ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
             ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
             type = 'stock'
-            prod = 'ffcfw_offs_k3k5vpnw8zida0e0b0xyg3'
-            na_prod = [0,1,4] #q,s,t
+            prod = 'ffcfw_offs_k3k5Tvpnw8zida0e0b0xyg3'
+            na_prod = [0,1] #q,s
             prod_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             na_prodweights = [0,1] #q,s
             weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
@@ -581,12 +581,12 @@ def f_report(processor, trials, non_exist_trials):
             ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
             ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
             type = 'stock'
-            prod = 'nv_offs_k3k5vpnw8zida0e0b0xyg3'
-            na_prod = [0,1,4] #q,s,t
+            prod = 'nv_offs_k3k5Tvpnw8zida0e0b0xyg3'
+            na_prod = [0,1] #q,s
             prod_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             na_prodweights = [0,1] #q,s
             weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
-            na_weights = [6,11,13,14]
+            na_weights = [6,11,13,14] #p,d,e,b
             den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             na_denweights = [0,1] #q, s
             keys = 'offs_keys_qsk3k5tvpnwzidaebxyg3'
