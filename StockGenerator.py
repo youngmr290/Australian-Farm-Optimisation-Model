@@ -3861,8 +3861,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 mort_mask_dams = surv_dams > threshold
 
                 ###print warning if min mort is greater than 10% since the previous condense
-                #todo Add a mask on the slices of the dam age groups that are not being mated
-                # so it doesn't provide a warning if ewe lambs are not being mated (and hence the feed supply suits drys)
+                ###this is to ensure we are condensing to an animal that the lp will select (ie not point having an animal that has more than 10% mort)
+                ###if ewe lambs is not set up for mating and it is estimated that ewe lambs are mated then a warning is likely to be triggered. No warning will be triggered if estimate mating propn is 0.
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]):
                     min_mort = 1- np.max(surv_dams, axis=w_pos)
                     if np.any(min_mort > 0.1):
@@ -6990,7 +6990,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
         r_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg2 = ffcfw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 \
                                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3) \
-                                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3) #todo cluster d
+                                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
 
     ##NV - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't effect NV
     if pinp.rep['i_store_nv_rep']:
@@ -7750,7 +7750,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     fun.f1_make_r_val(r_vals,r_salevalue_p7tva1e1b1nwzida0e0b0xyg0,'salevalue_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
     fun.f1_make_r_val(r_vals,r_salevalue_k2p7tva1e1b1nwzida0e0b0xyg1,'salevalue_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
-    salevalue_prog_k3k5c1p7tva1e1b1nwzida0e0b0xyg2  #todo what is this for?
     fun.f1_make_r_val(r_vals,r_salevalue_prog_k3k5p7tva1e1b1nwzida0e0b0xyg2,'salevalue_k3k5p7twzia0xg2',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, k3k5p7twziaxyg2_shape)
     fun.f1_make_r_val(r_vals,r_salevalue_k3k5p7tva1e1b1nwzida0e0b0xyg3,'salevalue_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
 
