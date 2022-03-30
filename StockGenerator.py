@@ -482,7 +482,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##gender propn yatf
     gender_propn_xyg = fun.f_expand(pinp.sheep['i_gender_propn_x'], x_pos, condition=mask_x, axis=0).astype(dtype)
 
-    ##drys management
+    ##drys management - two versions: first one controls the bound and the second ones (est) are estimates used in the generator.
+    ## the bound version is not used in the generator otherwise randomness will be introduced. Because changing if drys are retained or not
+    ## alters the numbers in the generator but doesnt necessarily alter the selected flock structure.
     dry_retained_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_dry_retained_forced_o'], p_pos
                                                        , condition=mask_o_dams, axis=p_pos)
     est_drys_retained_scan_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_drys_retained_scan_est_o'], p_pos
@@ -540,14 +542,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     sire_periods_p8g0 = fun.f_expand(pinp.sheep['i_sire_periods_p8g0'], condition=mask_sire_inc_g0, axis=g_pos, condition2=pinp.sheep['i_mask_p8'], axis2=0)
     sire_periods_g0p8 = np.swapaxes(sire_periods_p8g0, 0, 1) #can't swap in function above because g needs to be in pos-1
 
-    ##propn of dams mated - default is inf which gets skipped in the bound constraint hence the model can optimise the propn mated.
+    ##propn of dams mated (bound) - default is inf which gets skipped in the bound constraint hence the model can optimise the propn mated.
+    ##used for bound - the bound version is not used in the generator otherwise randomness could be introduced. Because changing est propn mated
+    ## alters the numbers in the generator but doesnt necessarily alter the selected flock structure.
     prop_dams_mated_og1 = fun.f_sa(np.array([999],dtype=float), sen.sav['bnd_propn_dams_mated_og1'], 5) #999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
     prop_dams_mated_og1[prop_dams_mated_og1==999] = np.inf
     prop_dams_mated_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(prop_dams_mated_og1, left_pos=p_pos, right_pos=-1
                                                          , condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
-    ## estimated propn of dams mated - only use SAV[est] if SAV[bnd] is default, otherwise use SAV[bnd].
+    ##estimated propn of dams mated (generator)
     est_prop_dams_mated_og1 = fun.f_sa(np.array([1],dtype=float), sen.sav['est_propn_dams_mated_og1'], 5) #if an estimate is not specified then use 100% is mated.
-    est_prop_dams_mated_og1 = fun.f_sa(est_prop_dams_mated_og1, sen.sav['bnd_propn_dams_mated_og1'], 5) #overwrite SAV[est] with SAV[bnd] if SAV[bnd] is not default.
     est_prop_dams_mated_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(est_prop_dams_mated_og1, left_pos=p_pos, right_pos=-1
                                                          , condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
 
@@ -1263,7 +1266,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     gbal_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(gbal_oa1e1b1nwzida0e0b0xyg1, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     scan_option_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 
-    ##drys management
+    ##drys management, actual value for the Bounds and an estimate for the generator (dont use bound to control generator otherwise introduce randomness)
     dry_retained_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_retained_oa1e1b1nwzida0e0b0xyg1
                                                              , a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(est_drys_retained_scan_oa1e1b1nwzida0e0b0xyg1
@@ -1326,7 +1329,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fvp_date_start_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_start_fa1e1b1nwzida0e0b0xyg1,a_fvp_pa1e1b1nwzida0e0b0xyg1,0)
     fvp_date_start_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(fvp_start_fa1e1b1nwzida0e0b0xyg3,a_fvp_pa1e1b1nwzida0e0b0xyg3,0)
 
-    ##propn of dams mated, actual value for the Bounds and an estimate for the generator
+    ##propn of dams mated, actual value for the Bounds and an estimate for the generator (dont use bound to control generator otherwise introduce randomness)
     prop_dams_mated_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
     est_prop_dams_mated_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(est_prop_dams_mated_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
 
