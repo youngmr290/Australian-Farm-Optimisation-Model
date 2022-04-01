@@ -4978,9 +4978,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     sale_delay_sa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_sales_delay_sg1'], p_pos, right_pos=g_pos,
                                                     condition=mask_dams_inc_g1, axis=g_pos) #periods after shearing that sale occurs
     ###mask for nutrition profiles. this doesn't have a full w axis because it only has the nutrition options it is expanded to w further down.
-    sav_mask_nut_dams_owi = sen.sav['nut_mask_dams_owi'][:,0:len_nut_dams,:] #This controls if a nutrition pattern is included.
-    mask_nut_dams_owi = fun.f_sa(np.array(True), sav_mask_nut_dams_owi,5) #all nut options included unless SAV is false
-    mask_nut_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(mask_nut_dams_owi,i_pos, left_pos2=w_pos, left_pos3=p_pos,
+    sav_mask_nut_dams_oWi = sen.sav['nut_mask_dams_oWi'][:,0:len_nut_dams,:] #This controls if a nutrition pattern is included.
+    mask_nut_dams_oWi = fun.f_sa(np.array(True), sav_mask_nut_dams_oWi,5) #all nut options included unless SAV is false
+    mask_nut_oa1e1b1nWzida0e0b0xyg1 = fun.f_expand(mask_nut_dams_oWi,i_pos, left_pos2=w_pos, left_pos3=p_pos,
                                                    right_pos2=i_pos, right_pos3=w_pos, condition=pinp.sheep['i_mask_i'],
                                                    axis=i_pos, condition2=mask_o_dams, axis2=p_pos)
     ##offs
@@ -4998,9 +4998,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
 
     ###mask for nutrition profiles. this doesn't have a full w axis because it only has the nutrition options it is expanded to w further down.
-    sav_mask_nut_offs_swix = sen.sav['nut_mask_offs_swix'][:,0:len_nut_offs,...] #This controls if a nutrition pattern is included.
-    mask_nut_offs_swix = fun.f_sa(np.array(True), sav_mask_nut_offs_swix,5) #all nut options included unless SAV is false
-    mask_nut_sa1e1b1nwzida0e0b0xyg3 = fun.f_expand(mask_nut_offs_swix, x_pos, left_pos2=i_pos, left_pos3=w_pos,left_pos4=p_pos,
+    sav_mask_nut_offs_sWix = sen.sav['nut_mask_offs_sWix'][:,0:len_nut_offs,...] #This controls if a nutrition pattern is included.
+    mask_nut_offs_sWix = fun.f_sa(np.array(True), sav_mask_nut_offs_sWix,5) #all nut options included unless SAV is false
+    mask_nut_sa1e1b1nWzida0e0b0xyg3 = fun.f_expand(mask_nut_offs_sWix, x_pos, left_pos2=i_pos, left_pos3=w_pos,left_pos4=p_pos,
                                                    right_pos2=x_pos,right_pos3=i_pos,right_pos4=w_pos,
                                                    condition=pinp.sheep['i_mask_i'], axis=i_pos,
                                                    condition2=mask_shear_g3, axis2=p_pos, condition3=mask_x, axis3=x_pos)
@@ -5926,10 +5926,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##Mask the decision variables that are not active in this DVP in the matrix - because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = index_wzida0e0b0xyg1 % step_dv_va1e1b1nw8zida0e0b0xyg1 == 0
     ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns eg high high high vs low low low) - this mask is combined with the other w8 masks below
-    mask_nut_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mask_nut_oa1e1b1nwzida0e0b0xyg1, a_prev_o_va1e1b1nwzida0e0b0xyg1, axis=0)
+    mask_nut_va1e1b1nWzida0e0b0xyg1 = np.take_along_axis(mask_nut_oa1e1b1nWzida0e0b0xyg1, a_prev_o_va1e1b1nwzida0e0b0xyg1, axis=0)
     ###association between the shortlist of nutrition profile inputs and the full range of LW patterns that include starting LW
     a_shortlist_w1 = index_w1 % len_nut_dams
-    mask_nut_va1e1b1nwzida0e0b0xyg1 = mask_nut_va1e1b1nwzida0e0b0xyg1[:,:,:,:,:,a_shortlist_w1,...]  # expands the nutrition mask to all lw patterns.
+    mask_nut_va1e1b1nwzida0e0b0xyg1 = mask_nut_va1e1b1nWzida0e0b0xyg1[:,:,:,:,:,a_shortlist_w1,...]  # expands the nutrition mask to all lw patterns.
     ### match the pattern requested with the pattern that is the 'history' for that pattern in previous DVPs
     mask_w8nut_va1e1b1nzida0e0b0xyg1w9 = np.sum(mask_nut_va1e1b1nwzida0e0b0xyg1[...,na] *
                                                (np.trunc(index_wzida0e0b0xyg1[...,na] / step_dv_va1e1b1nw8zida0e0b0xyg1[..., na])
@@ -6001,10 +6001,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##Mask the decision variables that are not active in this DVP in the matrix - because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg3 = (index_wzida0e0b0xyg3 % step_dv_va1e1b1nw8zida0e0b0xyg3) == 0
     ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns eg high high high vs low low low) - this mask is renamed the w8 masks to be consistent with dams
-    mask_nut_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(mask_nut_sa1e1b1nwzida0e0b0xyg3, a_prev_s_va1e1b1nwzida0e0b0xyg3, axis=0)
+    mask_nut_va1e1b1nWzida0e0b0xyg3 = np.take_along_axis(mask_nut_sa1e1b1nWzida0e0b0xyg3, a_prev_s_va1e1b1nwzida0e0b0xyg3, axis=0)
     ###association between the shortlist of nutrition profile inputs and the full range of LW patterns that include starting LW
     a_shortlist_w3 = index_w3 % len_nut_offs
-    mask_nut_va1e1b1nwzida0e0b0xyg3 = mask_nut_va1e1b1nwzida0e0b0xyg3[:,:,:,:,:,a_shortlist_w3,...]  # expands the nutrition mask to all lw patterns.
+    mask_nut_va1e1b1nwzida0e0b0xyg3 = mask_nut_va1e1b1nWzida0e0b0xyg3[:,:,:,:,:,a_shortlist_w3,...]  # expands the nutrition mask to all lw patterns.
     ### match the pattern requested with the pattern that is the 'history' for that pattern in previous DVPs
     mask_w8nut_va1e1b1nzida0e0b0xyg3w9 = np.sum(mask_nut_va1e1b1nwzida0e0b0xyg3[...,na] *
                                                (np.trunc(index_wzida0e0b0xyg3[...,na] / step_dv_va1e1b1nw8zida0e0b0xyg3[..., na])
