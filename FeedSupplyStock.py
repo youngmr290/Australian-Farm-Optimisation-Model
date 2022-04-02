@@ -159,6 +159,8 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ##legume proportion in each period
     legume_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_legume_p6z'], z_pos, move=True, source=0, dest=-1,
                                                  left_pos2=p_pos, right_pos2=z_pos)
+    ##Height ratio scalar for the region
+    hr_scalar = pinp.sheep['i_hr_scalar']
     ##estimated foo and dmd for the feed periods (p6) periods
     paststd_foo_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_paststd_foo_zp6j0'],z_pos,move=True,source=0,
                                                        dest=2, left_pos2=n_pos,right_pos2=z_pos,left_pos3=p_pos,
@@ -169,17 +171,20 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     paststd_foo_p6a1e1b1j0wzida0e0b0xyg0, paststd_hf_p6a1e1b1j0wzida0e0b0xyg0 = fsfun.f_foo_convert(cu3, cu4,
                                                                                      paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
-                                                                                     legume_p6a1e1b1nwzida0e0b0xyg, cr_sire,
+                                                                                     legume_p6a1e1b1nwzida0e0b0xyg,
+                                                                                     hr_scalar, cr_sire,
                                                                                      z_pos=sinp.stock['i_z_pos'], treat_z=True)
     paststd_foo_p6a1e1b1j0wzida0e0b0xyg1, paststd_hf_p6a1e1b1j0wzida0e0b0xyg1 = fsfun.f_foo_convert(cu3, cu4,
                                                                                      paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
-                                                                                     legume_p6a1e1b1nwzida0e0b0xyg, cr_dams,
+                                                                                     legume_p6a1e1b1nwzida0e0b0xyg,
+                                                                                     hr_scalar, cr_dams,
                                                                                      z_pos=sinp.stock['i_z_pos'], treat_z=True)
     paststd_foo_p6a1e1b1j0wzida0e0b0xyg3, paststd_hf_p6a1e1b1j0wzida0e0b0xyg3 = fsfun.f_foo_convert(cu3, cu4,
                                                                                      paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
-                                                                                     legume_p6a1e1b1nwzida0e0b0xyg, cr_offs,
+                                                                                     legume_p6a1e1b1nwzida0e0b0xyg,
+                                                                                     hr_scalar, cr_offs,
                                                                                      z_pos=sinp.stock['i_z_pos'], treat_z=True)
     ##treat z axis (have to do it after adjusting foo)
     legume_p6a1e1b1nwzida0e0b0xyg = zfun.f_seasonal_inp(legume_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos)

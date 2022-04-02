@@ -13,5 +13,5 @@ need to plan how this will work:
 """
 #todo maybe these tests are just built into the code where relevant eg whats been done for fvp/dvp
 pasture.py
-1. pasture foo must be greate than 0 after it passes through conversion function.
-foo_shears = np.maximum(0, np.minimum(foo, cu3[2] + cu3[0] * foo + cu3[1] * legume)) #this should be greater than 0
+1. pasture foo must be greater than 0 after it passes through conversion function.
+foo_grazplan = np.maximum(0, np.minimum(foo, cu3[2] + cu3[0] * foo + cu3[1] * legume)) #this should be greater than 0

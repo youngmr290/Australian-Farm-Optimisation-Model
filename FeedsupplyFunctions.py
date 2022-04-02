@@ -118,20 +118,23 @@ def f_hf(hr, cr=None):
     return hf
 
 
-def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1, treat_z=False):
+def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, hr_scalar = 1, cr=None, z_pos=-1, treat_z=False):
     '''
     Adjust FOO for measurement method.
 
     Depending on the region FOO can be measured differently. For example, in WA when measuring FOO
-    feed is cut at a very low level using a scalpel verses NSW where it is cut at a higher level
+    the pasture is cut to ground level using a scalpel versus NSW where it is cut at a higher level
     with shears. This results in the same amount of feed being valued at a higher FOO in WA.
-    The FOO is adjusted to the method which is used in the livestock production equations which
-    is the shears method.
+    The FOO is adjusted in this function to the method which is used in the livestock production equations.
+    This was the shears method but now appears to be total above ground biomass which is as used in WA.
 
     FOO only needs to be adjusted for the intake equations. It does not need to be adjusted for the pasture
-    activities because the pasture growth rate will be the same under both FOO measurement methods.
-    The base FOO level (level which grazing can not occur below) will account for differences in a
-    regions FOO measurement method. Thus in WA the base FOO level is higher than NSW.
+    growth calculations because the FOO in the inputs is consistent with the FOO in the pasture grwoth calcualtions.
+
+    The minimum grazing limit FOO level (level which grazing can not occur below) is specified in FOO units
+    of the livestock grazing equations (this value is removed from available FOO in f_ra().
+    The base level in the pasture grazing intensity calculations is in units of FOO that have been used to define
+    the PGR by FOO inputs. Thus in WA the base level FOO would be higher than NSW.
 
     :param cu3: this parameter should already be slice on the c4 axis.
     :param cu4: this parameter should already be slice on the c4 axis.
@@ -143,20 +146,20 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1, tre
     cu3=cu3[..., conversion_scenario]
     cu4=cu4[..., conversion_scenario]
     ##Convert FOO to hand shears measurement
-    foo_shears = np.maximum(0, np.minimum(foo, cu3[2] + cu3[0] * foo + cu3[1] * legume))
+    foo_grazplan = np.maximum(0, np.minimum(foo, cu3[2] + cu3[0] * foo + cu3[1] * legume))
     ##Estimate height of pasture
     height = np.maximum(0, np.exp(cu4[3] + cu4[0] * foo + cu4[1] * legume + cu4[2] * foo * legume) + cu4[5] + cu4[4] * foo)
     ##Height density (height per unit FOO)
-    hd = fun.f_divide(height, foo_shears) #handles div0 (eg if in feedlot with no pasture or adjusted foo is less than 0)
+    hd = fun.f_divide(height, foo_grazplan) #handles div0 (eg if in feedlot with no pasture or adjusted foo is less than 0)
     ##height ratio
-    hr = pinp.sheep['i_hr_scalar'] * hd / uinp.pastparameters['i_hd_std']
+    hr = hr_scalar * hd / uinp.pastparameters['i_hd_std']
     ##calc hf
     hf = f_hf(hr, cr)
     ##apply z treatment
     if treat_z:
-        foo_shears = zfun.f_seasonal_inp(foo_shears,numpy=True,axis=z_pos)
+        foo_grazplan = zfun.f_seasonal_inp(foo_grazplan,numpy=True,axis=z_pos)
         hf = zfun.f_seasonal_inp(hf,numpy=True,axis=z_pos)
-    return foo_shears, hf
+    return foo_grazplan, hf
 
 def f_ra_cs(foo, hf, cr=None, zf=1):
     '''
@@ -186,6 +189,9 @@ def f_ra_cs(foo, hf, cr=None, zf=1):
         cr5 = cr[5, ...]
         cr6 = cr[6, ...]
         cr13 = cr[13, ...]
+    ##Adjust the FOO level to allow for the ungrazable limit measured in the units of FOO defined by GrazPlan.
+    ### This is so RI=0 when foo == i_min_grazing_limit and just above 0 is foo is just above the limit.
+    foo = foo - uinp.pastparameters['i_min_grazing_limit']
     ##Relative rate of eating (rr) & Relative time spent grazing (rt)
     try:
         ###Scalar version
@@ -257,6 +263,10 @@ def f_ra_mu(foo, hf, zf=1, cu0=None):
         cu0 = uinp.parameters['i_cu0_c2'][0, 0]
     else:
         cu0 = cu0[0, ...]
+    ##Adjust the FOO level to allow for the ungrazable limit measured in the units of FOO defined by GrazPlan.
+    ### This is so RI=0 when foo == i_min_grazing_limit and just above 0 is foo is just above the limit.
+    ### The same minimum limit is used for this equation system as for the GrazPlan equations
+    foo = foo - uinp.pastparameters['i_min_grazing_limit']
     ##Relative availability
     try:
         ###Scalar version
