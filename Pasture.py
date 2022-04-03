@@ -169,6 +169,8 @@ def f_pasture(params, r_vals, nv):
     # poc_days_of_grazing_t       = np.zeros(n_pasture_types, dtype = 'float64')  # number of days after the pasture break that (moist) seeding can begin
     i_legume_zt                 = np.zeros(zt, dtype = 'float64')               # proportion of legume in the sward
     i_hr_scalar_zt              = np.ones(zt, dtype = 'float64')               # Scalar for the pasture height ratio
+    #todo add i_pasture_stage_p6zt = np.ones(p6zt
+    #when calling f_foo_convert from Pasture.py replace the pasture_stage from stock with this pasture stage
     i_restock_grn_propn_t       = np.zeros(n_pasture_types, dtype = 'float64')  # Proportion of the FOO that is green when pastures are restocked after reseeding
     i_nv_maintenance_t         = np.zeros(n_pasture_types, dtype = 'float64')  # approximate nutritive value for maintenance (NV = M/D * relative intake)
 

@@ -167,7 +167,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
                                                        right_pos3=n_pos)
     pasture_stage_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_pasture_stage_p6z'], z_pos, move=True, source=0,
                                                          dest=-1, left_pos2=p_pos, right_pos2=z_pos)  # z is treated in next step
-    ##foo corrected to hand shears and estimated height - the z axis is also treated in this step
+    ##foo corrected to GrazPlan units and estimated height - the z axis is also treated in this step
     paststd_foo_p6a1e1b1j0wzida0e0b0xyg0, paststd_hf_p6a1e1b1j0wzida0e0b0xyg0 = fsfun.f_foo_convert(cu3, cu4,
                                                                                      paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
