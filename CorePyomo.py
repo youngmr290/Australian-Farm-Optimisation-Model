@@ -112,20 +112,22 @@ def coremodel_all(trial_name,model):
         solver = pe.SolverFactory('glpk')
         solver.options['tmlim'] = 100  # limit solving time to 100sec in case solver stalls.
     solver_result = solver.solve(model,tee=True)  # turn to true for solver output - may be useful for troubleshooting
+
+    ##calc profit - profit = terminal wealth (this is the objective without risk) + minroe + asset_cost
     try:  # to handle infeasible (there is no profit component when infeasible)
+        p7_end = list(model.s_season_periods)[-1]
         utility = pe.value(model.utility)
-        terminal_wealth = pe.value(sum(model.v_terminal_wealth[q,s,z,c1] * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
+        profit = pe.value(sum(model.v_terminal_wealth[q,s,z,c1] + model.v_minroe[q,s,p7_end,z] + model.v_asset[q,s,p7_end,z]
+                                       * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
                                        for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1
                                        for z in model.s_season_types))
     except ValueError:
         utility = 0
-        terminal_wealth = 0
+        profit = 0
 
     ##this prints trial name, overall profit and feasibility for each trial
-    print(f'\nDisplaying utility for trial: {trial_name}')
-    print(f'{utility}')
-    print(f'\nDisplaying terminal wealth for trial: {trial_name}')
-    print(f'{terminal_wealth}')
+    print(f'\nDisplaying profit and obj for trial: {trial_name}')
+    print(f'Profit: {profit}   Obj: {utility}')
     print('-' * 60)
 
     ##this check if the solver is optimal - if infeasible or error the model will save a file in Output/infeasible/ directory. This will be accessed in reporting to stop you reporting infeasible trials.
@@ -149,7 +151,7 @@ def coremodel_all(trial_name,model):
         with open('Output/infeasible/%s.txt' % trial_name,'w') as f:
             f.write("Solver Status: {0}".format(solver_result.solver.termination_condition))
 
-    return terminal_wealth
+    return profit, utility
 
 ##############
 #constriants #

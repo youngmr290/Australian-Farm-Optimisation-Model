@@ -1,5 +1,5 @@
 Trial: Quick test
-Quick test profit: -19351.66646095803
+Quick test obj: 544314.8430110802
 Variable v_phase_area
    ('q0', 's0', 'zm0', 'typ', 'AAAAAa', 'lmu2') 16.666666666666686
    ('q0', 's0', 'zm0', 'typ', 'YABABa', 'lmu2') 66.66666666666666

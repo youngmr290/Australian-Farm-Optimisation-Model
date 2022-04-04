@@ -311,11 +311,13 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
 
 def f_summary(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
-    summary_df = pd.DataFrame(index=[trial], columns=['obj', 'profit', 'SR', 'Pas %', 'Sup'])
-    ##obj
-    summary_df.loc[trial, 'obj'] = f_profit(lp_vars, r_vals, option=0)
+    summary_df = pd.DataFrame(index=[trial], columns=['profit', 'risk neutral obj', 'utility', 'SR', 'Pas %', 'Sup'])
     ##profit - no minroe and asset
-    summary_df.loc[trial, 'profit'] = f_profit(lp_vars, r_vals, option=1)
+    summary_df.loc[trial, 'profit'] = f_profit(lp_vars, r_vals, option=0)
+    ##obj
+    summary_df.loc[trial, 'risk neutral obj'] = f_profit(lp_vars, r_vals, option=1)
+    ##utility
+    summary_df.loc[trial, 'utility'] = f_profit(lp_vars, r_vals, option=2)
     ##total dse/ha in fp0
     summary_df.loc[trial, 'SR'] = f_dse(lp_vars, r_vals, method=0, per_ha=True, summary=True)
     ##pasture %
@@ -1170,7 +1172,7 @@ def f_profitloss_table(lp_vars, r_vals):
     pnl.loc[idx[:, :, :, 'Total', 'obj'], 'Full year'] = season_obj_qsz
 
     ##add the objective of all seasons
-    pnl.loc[idx['Weighted obj', '', '', '', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=0) #have to sort to stop preformance warning. Not sure why it only happens for this line.
+    pnl.loc[idx['Weighted obj', '', '', '', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1) #have to sort to stop preformance warning. Not sure why it only happens for this line.
 
     ##round numbers in df
     pnl = pnl.astype(float).round(1)  # have to go to float so rounding works
@@ -1183,8 +1185,9 @@ def f_profitloss_table(lp_vars, r_vals):
 
 def f_profit(lp_vars, r_vals, option=0):
     '''returns profit
-    0- rev - (exp + minroe + asset_opp +dep). This is the model obj.
-    1- rev - (exp + dep)
+    0- Profit = rev - (exp + dep)
+    1- Risk neutral objective = rev - (exp + minroe + asset_opp +dep).
+    2- Utility - this is the same as risk neutral obj if risk aversion is not included
     2- same as 0 but reported for each season
     3- same as 1 but reported for each season
     '''
@@ -1197,7 +1200,9 @@ def f_profit(lp_vars, r_vals, option=0):
     elif option==1:
         minroe = np.sum(minroe_qsp7z[:,:,-1,:] * prob_qsz)  #take end slice of season stages
         asset_value = np.sum(asset_value_qsp7z[:,:,-1,:] * prob_qsz) #take end slice of season stages
-        return lp_vars['profit'] + minroe + asset_value
+        return lp_vars['profit'] - minroe - asset_value
+    elif option == 2:
+        return lp_vars['utility']
     #these options don't exist with the new season structure.
     # elif option == 2:
     #     return obj_profit_z

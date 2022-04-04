@@ -222,11 +222,11 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         bndpy.f1_boundarypyomo_local(params, model)
         pyomocalc_end = time.time()
         print(f'{trial_description}, time for localpyomo: {pyomocalc_end - pyomocalc_start:.2f} finished at {time.ctime()}')
-        obj = core.coremodel_all(trial_name, model)
+        profit, obj = core.coremodel_all(trial_name, model)
         print(f'{trial_description}, time for corepyomo: {time.time() - pyomocalc_end:.2f} finished at {time.ctime()}')
 
         ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
-        fun.write_variablesummary(model, row, exp_data, obj, 1, property_id=pinp.general['i_property_id'])
+        fun.write_variablesummary(model, row, exp_data, profit, 1, property_id=pinp.general['i_property_id'])
 
         ##check if user wants full solution
         if exp_data.index[row][1] == True:
@@ -234,7 +234,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
             model.write(os.path.join(directory_path, 'Output/%s.lp' %trial_name),io_options={'symbolic_solver_labels':True})  #file name has to have capital
 
             ##This writes variable summary for full solution (same file as the temporary version created above)
-            fun.write_variablesummary(model, row, exp_data, obj, property_id=pinp.general['i_property_id'])
+            fun.write_variablesummary(model, row, exp_data, profit, property_id=pinp.general['i_property_id'])
 
             ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
             with open(os.path.join(directory_path, 'Output/Full model - %s.txt' %trial_name), 'w') as f:  #file name has to have capital
@@ -268,8 +268,9 @@ def exp(row):  # called with command: pool.map(exp, dataset)
 
         variables=model.component_objects(pe.Var, active=True)
         lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
-        ##store profit
-        lp_vars['profit'] = obj
+        ##store profit and obj
+        lp_vars['profit'] = profit
+        lp_vars['utility'] = obj
         ##store mvf rc
         lp_vars['mvf'] = {}
         for v in model.component_objects(pe.Var, active=True):
