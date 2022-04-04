@@ -1028,14 +1028,14 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
     tup = tuple(map(tuple,index_masked))
     return dict(zip(tup, param_masked))
 
-def write_variablesummary(model, row, exp_data, obj, option=0):
+def write_variablesummary(model, row, exp_data, obj, option=0, property_id=''):
     '''
 
     :param model: pyomo model
     :param row: trial row
     :param exp_data: exp info
     :param obj: objective value
-    :param option: 0: trial name will be included in file name
+    :param option: 0: trial name and property ID will be included in file name
                    1: file name will be generic
     :return:
     '''
@@ -1044,7 +1044,7 @@ def write_variablesummary(model, row, exp_data, obj, option=0):
     ### written every iteration with generic name (option 1) - can be used to check progress of analysis each iteration
     directory_path = os.path.dirname(os.path.abspath(__file__))
     if option == 0:
-        file = open(os.path.join(directory_path, 'Output/Variable summary %s.txt' % exp_data.index[row][3]),'w')  # file name has to have capital
+        file = open(os.path.join(directory_path, f'Output/Variable summary {exp_data.index[row][3]} - {property_id}.txt'),'w')  # file name has to have capital
     else:
         file = open(os.path.join(directory_path, 'Output/Variable summary.txt'),'w')  # file name has to have capital
     file.write('Trial: %s\n' % exp_data.index[row][3])  # the first line is the name of the trial
