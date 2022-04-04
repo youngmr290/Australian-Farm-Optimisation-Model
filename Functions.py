@@ -1048,7 +1048,7 @@ def write_variablesummary(model, row, exp_data, obj, option=0, property_id=''):
     else:
         file = open(os.path.join(directory_path, 'Output/Variable summary.txt'),'w')  # file name has to have capital
     file.write('Trial: %s\n' % exp_data.index[row][3])  # the first line is the name of the trial
-    file.write('{0} obj: {1}\n'.format(exp_data.index[row][3],obj))  # the second line is profit
+    file.write('{0} profit: {1}\n'.format(exp_data.index[row][3],obj))  # the second line is profit
     for v in model.component_objects(pe.Var,active=True):
         file.write("Variable %s\n" % v)  # \n makes new line
         for index in v:
