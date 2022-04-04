@@ -320,7 +320,7 @@ def f_erosion(i_lmu_conservation_p6lzt, arable_l, pasture_rt):
 
 def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_gp6zt, grn_foo_start_ungrazed_p6lzt
                   , i_foo_graze_propn_gt, grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, i_grn_senesce_eos_p6zt
-                  , i_base_p6zt, i_grn_trampling_ft, i_grn_dig_p6lzt, i_grn_dmd_range_p6zt, i_pasture_stage_p6z
+                  , i_base_p6zt, i_grn_trampling_ft, i_grn_dig_p6lzt, i_grn_dmd_range_p6zt, i_pasture_stage_p6zt
                   , i_legume_zt, i_hr_scalar_zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_greenfeed_exists_p6zt
                   , length_fz, nv_is_not_confinement_f):
     '''
@@ -393,7 +393,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     :param i_grn_trampling_ft: amount of feed that is trampled while green feed is being consumed as a proportion of the feed consumed.
     :param i_grn_dig_p6lzt: DMD of the green feed that would be consumed if animals graze with 25% grazing intensity a sward that has medium FOO level in each feed period on each LMU.
     :param i_grn_dmd_range_p6zt: Range of DMDin the sward between the 25th percentile to the 75th percentile.
-    :param i_pasture_stage_p6z: Maturity of the pasture (establishment or vegetative as defined by CSIRO)
+    :param i_pasture_stage_p6zt: Maturity of the pasture (establishment or vegetative as defined by CSIRO)
     :param i_legume_zt: Legume content of pasture.
     :param i_hr_scalar_zt: Scalar for the height ratio of this pasture.
     :param me_threshold_fp6zt: The nutritive value above which scaling will occur for the NV pool.
@@ -467,7 +467,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     ###Average FOO is calculated using FOO at the end prior to EOS senescence (which assumes all pasture senesces after grazing)
     foo_ave_grnha_gop6lzt = (foo_start_grnha_op6lzt + foo_endprior_grnha_gop6lzt) / 2
     ### pasture params used to convert foo for rel availability
-    pasture_stage_p6lzt = i_pasture_stage_p6z[:, na, :, na]
+    pasture_stage_p6lzt = i_pasture_stage_p6zt[:, na, :, :]
     ### adjust foo and calc hf
     foo_ave_grnha_gop6lzt, hf = fsfun.f_foo_convert(cu3, cu4, foo_ave_grnha_gop6lzt, pasture_stage_p6lzt
                                                     , i_legume_zt, i_hr_scalar_zt, z_pos=-2)
@@ -536,7 +536,7 @@ def f1_senescence(senesce_period_grnha_gop6lzt, senesce_eos_grnha_gop6lzt, dry_d
 
 
 def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_high_p6zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_dryfeed_exists_p6zt
-                  , i_pasture_stage_p6z, nv_is_not_confinement_f, i_legume_zt, i_hr_scalar_zt, n_feed_pools):
+                  , i_pasture_stage_p6zt, nv_is_not_confinement_f, i_legume_zt, i_hr_scalar_zt, n_feed_pools):
     '''
     Calculate the the quality and quantity of dry pasture available throughout the year.
 
@@ -570,7 +570,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     :param me_threshold_fp6zt: the nutritive value above which scaling will occur for the NV pool.
     :param i_me_eff_gainlose_p6zt: Reduction in efficiency if M/D is above requirement for target LW pattern
     :param mask_dryfeed_exists_p6zt: Boolean array stating which periods dry pasture exists.
-    :param i_pasture_stage_p6z: maturity of the pasture (establishment or vegetative as defined by CSIRO)
+    :param i_pasture_stage_p6zt: maturity of the pasture (establishment or vegetative as defined by CSIRO)
     :param nv_is_not_confinement_f: boolean array stating which nv pools are not confinement feeding pools.
     :param i_legume_zt: legume content of pasture.
     :param i_hr_scalar_zt: Scalar for height of the pasture
@@ -590,7 +590,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
 
     ## dry, volume of feed consumed per tonne
     ### adjust foo and calc hf
-    pasture_stage_p6zt = i_pasture_stage_p6z[...,na]
+    pasture_stage_p6zt = i_pasture_stage_p6zt
     dry_foo_dp6zt, hf = fsfun.f_foo_convert(cu3, cu4, dry_foo_dp6zt, pasture_stage_p6zt, i_legume_zt
                                             , i_hr_scalar_zt, z_pos=-2)
     ### calc relative availability - note that the equation system used is the one selected for dams in p=0
@@ -622,7 +622,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
 
 
 def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_legume_zt, i_hr_scalar_zt
-          , i_pasture_stage_p6z, nv_is_not_confinement_f, me_threshold_fp6zt, i_me_eff_gainlose_p6zt):
+          , i_pasture_stage_p6zt, nv_is_not_confinement_f, me_threshold_fp6zt, i_me_eff_gainlose_p6zt):
     '''
     Calculate energy, volume and consumption parameters for pasture consumed on crop paddocks before seeding.
 
@@ -649,7 +649,7 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_
     :param i_poc_foo_p6zt: average foo of pasture on crop paddocks.
     :param i_legume_zt: legume content of pasture.
     :param i_hr_scalar_zt: Scalar for the height of the pasture
-    :param i_pasture_stage_p6z: maturity of the pasture (establishment or vegetative as defined by CSIRO)
+    :param i_pasture_stage_p6zt: maturity of the pasture (establishment or vegetative as defined by CSIRO)
     :param nv_is_not_confinement_f: boolean array stating which nv pools are not confinement feeding pools.
     :return:
         - poc_con_fl - tonnes of dry matter available per hectare per day on crop paddocks before seeding.
@@ -665,7 +665,7 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
         poc_ri_qual_p6z = fsfun.f_rq_cs(i_poc_dmd_p6zt[..., :, 0], i_legume_zt[..., 0])
     ### adjust foo and calc hf
-    i_poc_foo_p6z, hf = fsfun.f_foo_convert(cu3, cu4, i_poc_foo_p6zt[:,:,0], i_pasture_stage_p6z, i_legume_zt[...,0]
+    i_poc_foo_p6z, hf = fsfun.f_foo_convert(cu3, cu4, i_poc_foo_p6zt[:,:,0], i_pasture_stage_p6zt[...,0], i_legume_zt[...,0]
                                             , i_hr_scalar_zt[...,0], z_pos=-1)
     ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used

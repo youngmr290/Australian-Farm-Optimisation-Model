@@ -138,6 +138,9 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, hr_scalar = 1, cr=None
 
     :param cu3: this parameter should already be slice on the c4 axis.
     :param cu4: this parameter should already be slice on the c4 axis.
+    :param treat_z: boolean to control if z axis is treated. Pasture stage is used as an index so in the weighted average
+                    season model the z axis should get treated at the end of this function. This happens for stock but
+                    not for pasture because it would require doubling up lots of code.
     '''
     ##pasture conversion scenario (convert the region and pasture stage to an index
     ### because the second axis of cu3 is a combination of region & stage)

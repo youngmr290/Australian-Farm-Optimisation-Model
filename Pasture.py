@@ -169,8 +169,7 @@ def f_pasture(params, r_vals, nv):
     # poc_days_of_grazing_t       = np.zeros(n_pasture_types, dtype = 'float64')  # number of days after the pasture break that (moist) seeding can begin
     i_legume_zt                 = np.zeros(zt, dtype = 'float64')               # proportion of legume in the sward
     i_hr_scalar_zt              = np.ones(zt, dtype = 'float64')               # Scalar for the pasture height ratio
-    #todo add i_pasture_stage_p6zt = np.ones(p6zt
-    #when calling f_foo_convert from Pasture.py replace the pasture_stage from stock with this pasture stage
+    i_pasture_stage_p6zt        = np.zeros(p6zt,  dtype = 'int64')  # 0 is establishing pasture, 1 is vegetative pasture. Value is used to convert FOO & height for the local pasture pasture measured using the local system to the measurements used in GrazPlan
     i_restock_grn_propn_t       = np.zeros(n_pasture_types, dtype = 'float64')  # Proportion of the FOO that is green when pastures are restocked after reseeding
     i_nv_maintenance_t         = np.zeros(n_pasture_types, dtype = 'float64')  # approximate nutritive value for maintenance (NV = M/D * relative intake)
 
@@ -255,6 +254,8 @@ def f_pasture(params, r_vals, nv):
         i_poc_intake_daily_p6lzt[...,t]       = zfun.f_seasonal_inp(exceldata['POCCons'][:,lmu_mask_l], numpy=True, axis=2)
         i_legume_zt[...,t]                  = zfun.f_seasonal_inp(exceldata['Legume'], numpy=True)
         i_hr_scalar_zt[...,t]                  = zfun.f_seasonal_inp(exceldata['hr_scalar'], numpy=True)
+        i_pasture_stage_p6zt[...,t] = np.rint(zfun.f_seasonal_inp(exceldata['i_pasture_stage_p6z'], numpy=True, axis=1)
+                                             ) #it would be better if z axis was treated after pas_stage has been used (like in stock.py) because it is used as an index. But there wasn't any way to do this without doubling up a lot of code. This is only a limitation in the weighted average version of model.
         i_restock_grn_propn_t[t]            = exceldata['FaG_PropnGrn']
         i_grn_dmd_senesce_redn_p6zt[...,t]   = zfun.f_seasonal_inp(np.swapaxes(exceldata['DigRednSenesce'],0,1), numpy=True, axis=1)
         i_dry_dmd_ave_p6zt[...,t]            = zfun.f_seasonal_inp(np.swapaxes(exceldata['DigDryAve'],0,1), numpy=True, axis=1)
@@ -307,8 +308,8 @@ def f_pasture(params, r_vals, nv):
 
     ##season inputs not required in t loop above
     harv_date_z         = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype(np.datetime64)
-    i_pasture_stage_p6z = np.rint(zfun.f_seasonal_inp(np.moveaxis(pinp.sheep['i_pasture_stage_p6z'],0,-1), numpy=True, axis=-1)
-                                  ).astype(int) #it would be better if z axis was treated after pas_stage has been used (like in stock.py) because it is used as an index. But there wasn't any way to do this without doubling up a lot of code. This is only a limitation in the weighted average version of model.
+    # i_pasture_stage_p6zt = np.rint(zfun.f_seasonal_inp(i_pasture_stage_p6zt, numpy=True, axis=1)
+    #                               ).astype(int) #it would be better if z axis was treated after pas_stage has been used (like in stock.py) because it is used as an index. But there wasn't any way to do this without doubling up a lot of code. This is only a limitation in the weighted average version of model.
     ### pasture params used to convert foo for rel availability
     cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
     cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
@@ -435,7 +436,7 @@ def f_pasture(params, r_vals, nv):
     , foo_ave_grnha_gop6lzt, dmd_diet_grnha_gop6lzt = pfun.f_grn_pasture(
         cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_gp6zt, grn_foo_start_ungrazed_p6lzt
         , i_foo_graze_propn_gt, grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, i_grn_senesce_eos_p6zt
-        , i_base_p6zt, i_grn_trampling_p6t, i_grn_dig_p6lzt, i_grn_dmd_range_p6zt, i_pasture_stage_p6z
+        , i_base_p6zt, i_grn_trampling_p6t, i_grn_dig_p6lzt, i_grn_dmd_range_p6zt, i_pasture_stage_p6zt
         , i_legume_zt, i_hr_scalar_zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_greenfeed_exists_p6zt
         , length_p6z, nv_is_not_confinement_f)
     volume_grnha_fgop6lzt = volume_grnha_fgop6lzt / (1 + sen.sap['pi'])
@@ -444,7 +445,7 @@ def f_pasture(params, r_vals, nv):
     ## dry, dmd & foo of feed consumed
     dry_mecons_t_fdp6zt, dry_volume_t_fdp6zt, dry_dmd_dp6zt, dry_foo_dp6zt = pfun.f_dry_pasture(
         cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_high_p6zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt
-        , mask_dryfeed_exists_p6zt, i_pasture_stage_p6z, nv_is_not_confinement_f, i_legume_zt, i_hr_scalar_zt, n_feed_pools)
+        , mask_dryfeed_exists_p6zt, i_pasture_stage_p6zt, nv_is_not_confinement_f, i_legume_zt, i_hr_scalar_zt, n_feed_pools)
     dry_volume_t_fdp6zt = dry_volume_t_fdp6zt / (1 + sen.sap['pi'])
 
     ## dry, animal removal, mask consumption in periods where dry doesn't exist to remove the decision variable in pyomo.
@@ -463,7 +464,7 @@ def f_pasture(params, r_vals, nv):
     ######
     ##call poc function - info about poc can be found in function doc string.
     poc_con_p6lz, poc_md_fp6z, poc_vol_fp6z = pfun.f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt
-                                                         , i_legume_zt, i_hr_scalar_zt, i_pasture_stage_p6z
+                                                         , i_legume_zt, i_hr_scalar_zt, i_pasture_stage_p6zt
                                                          , nv_is_not_confinement_f, me_threshold_fp6zt, i_me_eff_gainlose_p6zt)
     poc_vol_fp6z = poc_vol_fp6z/ (1 + sen.sap['pi'])
 
