@@ -801,20 +801,18 @@ def f_chem_application():
 
     Number of applications of each chemical option for each rotation.
 
-    AFO represents a customisable number of spraying options (e.g. pre seeding knock down, pre-emergent
-    and post emergent) and the chemical cost of each. The number of applications of each spraying option for each
-    rotation phase is entered by the user or obtained from the simulation output .
-    The number of applications is dependent on the rotation
-    history and the current landuse. This is because the initial levels of weed burden and fungi and
-    pest presence are impacted by previous landuses. Furthermore, chemicals can be specific for certain
-    crops and have varying levels of effectiveness for different weeds and diseases which levels are
-    impacted by previous landuses. Therefore, the number of applications of each spray option is highly
-    dependent on the rotation phase.
+    The number of applications at each spraying time (e.g. pre seeding knock down, pre-emergent,
+    post emergent and fungicide) for each rotation phase is entered by the user or obtained from the simulation output .
+    When determining the number of applications the user must consider both the rotation
+    history and the current landuse. The rotation history is important because it impacts the initial levels of
+    weed and disease burden and fungi. The current landuse is important because different landuses are susceptible
+    to different weeds and diseases. Furthermore, chemicals can be specific for certain
+    crops and have varying levels of effectiveness for different weeds and diseases.
 
     Similar to fertiliser, the number of chemical applications is the
     same for all LMUs because it is assumed that the spray rate varies rather than the frequency of
     application. However, the area sprayed is adjusted by the arable proportion for each LMU. The assumption
-    is that non arable areas do not receive any spray.
+    is that non-arable areas are not sprayed.
 
     '''
     ##read in chem passes
@@ -843,19 +841,18 @@ def f_chem_cost(r_vals):
 
     Calculates the cost of spraying for each rotation phase on each LMU.
 
-    To simplify the input process, the cost of each spray option on the base LMU for each land use is
-    entered as an input by the user. This saves the step of going from a volume of chemical to a cost
-    which means AFO does not need to represent the large array of chemical options available. Making it
-    easier to keep AFO up to date. The chemical cost of each spray option is adjustable by an LMU
-    factor because the spray rate may vary for according to LMU (e.g. a higher chemical concentration
-    may be used on LMU5 vs LMU1).
-
-    The cost of spraying chemicals is made up from the cost of the chemical itself and the machinery
+    The total cost of spraying is made up from the cost of the chemical (herbicide and fungicide) and the machinery
     cost of application (detailed in the machinery section). The
     chemical cost is incurred in the cashflow period when it is applied. The assumption is that
     chemical is purchased shortly before application because farmers wait to see how the year unfolds
     before locking in a spraying plan.
 
+    To simplify the input process, the total cost of herbicide and fungicide on the base LMU for each land use is
+    entered as an input by the user. This saves the step of going from a volume of chemical to a cost
+    which means AFO does not need to represent the large array of chemical options available. Making it
+    easier to keep AFO up to date. The chemical cost is adjusted by an LMU
+    factor to account for the cost of herbicide/fungicide changing for different LMUs (e.g. a more expensive
+    chemical package may be used on heavier soils compared to deep sand).
 
     :return: Total cost of chemical and application for each rotation phase - summed with other cashflow
         items at the end of this section.
@@ -865,8 +862,9 @@ def f_chem_cost(r_vals):
     phases_df = sinp.f_phases()
 
     ##read in necessary bits and adjust indexed
-    i_chem_cost = pinp.crop['chem_cost'].sort_index()
-    chem_by_soil = f1_mask_lmu(pinp.crop['chem_by_lmu'], axis=1) #read in chem by soil
+    # i_chem_cost = pinp.crop['chem_cost'].sort_index() #cost of fungicide per application
+    n_alloc = pinp.crop['chem_info']['chem_cost_alloc'] #allocation of chem cost to category (knockdown, pre-em and post-em). This is used for cashflow allocation.
+    chem_by_soil = f1_mask_lmu(pinp.crop['chem_by_lmu'], axis=1).squeeze() #read in chem by soil
     chem_cost_allocation_p7zn, chem_wc_allocation_c0p7zn = f1_chem_cost_allocation()
     chem_cost_allocation_z_p7n = chem_cost_allocation_p7zn.unstack(1).T
     chem_wc_allocation_z_c0p7n = chem_wc_allocation_c0p7zn.unstack(2).T
@@ -874,16 +872,29 @@ def f_chem_cost(r_vals):
     ##number of applications for each rotation
     chem_applications = f_chem_application()
 
-    ##total chemical cost of each rotation. eg: chem cost per application * number of applications
-    index = pd.MultiIndex.from_arrays([phases_df.iloc[:,-1], phases_df.index], names=['landuse','rot']) #add phase letter to index so it can be merged with the cost per application for each phase
-    t_chem_applications = chem_applications.unstack(level=(1,2)).reindex(index, axis=0, level=1).stack(level=(1,2)) #reindex so the array has same axis so it can be multiplied
-    ###reindex cost and mul with number of applications.
-    i_chem_cost = i_chem_cost.reindex(t_chem_applications.index, axis=0, level=0)
-    chem_cost = t_chem_applications.mul(i_chem_cost).droplevel(0)
+    ##total chem cost
+    if pinp.crop['user_crop_rot']:
+        ### User defined
+        chem_cost = pinp.crop['chem_cost']
+        chem_cost = chem_cost.T.set_index(['chem'], append=True).T.astype(float)
+        chem_cost = zfun.f_seasonal_inp(chem_cost, axis=1)
+    else:
+        ### AusFarm ^need to add code for ausfarm inputs
+        chem_cost
+        chem_cost = pd.DataFrame(chem_cost, index = [phases_df.index, phases_df.iloc[:,-1]])  #make the current landuse the index
+    ### sum herbicide and fungicide cost
+    chem_cost_r_z = chem_cost.groupby(axis=1, level=0).sum()
+    ###arable area.
+    arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
+    ###adjust by arable area and allocate to category (category allocation only affects cashflow timing hence interest)
+    index_zln = pd.MultiIndex.from_product([chem_cost_r_z.columns, arable.index, n_alloc.index])
+    chem_cost_r_zln = chem_cost_r_z.reindex(index_zln, axis=1,level=0)
+    chem_cost_r_zln=chem_cost_r_zln.mul(arable,axis=1,level=1)
+    chem_cost_r_zln=chem_cost_r_zln.mul(n_alloc,axis=1,level=2)
     ### adjust the chem cost for each rotation by lmu
-    chem_by_soil1 = chem_by_soil.stack()
-    chem_cost_rzl_n=chem_cost.unstack().mul(chem_by_soil1,axis=1).stack()
-    ###adjust of interest and p7 period
+    chem_cost_rzl_n=chem_cost_r_zln.mul(chem_by_soil,axis=1, level=1).stack([0,1])
+
+    ##adjust for interest and p7 period
     phase_chem_cost_rzl_p7n = chem_cost_rzl_n.reindex(chem_cost_allocation_z_p7n.columns,axis=1,level=1)
     phase_chem_cost_rl_p7nz = phase_chem_cost_rzl_p7n.unstack(1)
     phase_chem_cost_rl_p7z = phase_chem_cost_rl_p7nz.mul(chem_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the chem
