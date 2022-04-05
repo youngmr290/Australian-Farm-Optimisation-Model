@@ -254,7 +254,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     loss due to a reduced growing season.
 
     .. [#] Base LMU – standardise LMU to which other LMUs are compared against.
-    .. [#] Dry sowing may not incur a yield penalty in seasons with a late break.
+    .. [#] Dry sowing may not incur a yield penalty in seasons with a late break or if more/better herbicide is applied.
 
     :param for_stub: Boolean set to true when calculating the yield that is used to calculate total stubble production.
     :return: Dataframe of rotation yields - passed to pyomo and used to calc grain insurance & stubble handling cost
@@ -1167,7 +1167,8 @@ def f_sow_prov():
     ###add k axis
     period_is_wetseeding_p5zk = period_is_wetseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(wet_sown_landuses), axis=-1)
 
-    ##dry sowing periods
+    ##dry sowing periods - dry seeding occurs up until the start of the season (dry seeding is sowing without knock down spray)
+    ##currently we are saying that dry sowning cant occur between the brk of season and wet seeding start. This may or may not be correct (not if dry seeding occurs after the brk of the season it doesnt need to happen in the children seasons).
     dry_seed_start = np.datetime64(pinp.crop['dry_seed_start'])
     season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'],numpy=True).astype('datetime64')
     period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)
