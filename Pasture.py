@@ -313,6 +313,7 @@ def f_pasture(params, r_vals, nv):
     cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
 
     ###create dry pasture exists mask - in the current structure dry pasture only exists after the growing season.
+    #todo the calculation of these mask will be incorrect in the DSP because the later break seasons have dry in FP0 and FP1
     mask_dryfeed_exists_p6zt[...] = index_f[:, na, na] >= i_dry_exists_zt   #mask periods when dry feed is available to livestock.
     mask_greenfeed_exists_p6zt[...] = index_f[:, na, na] <= i_end_of_gs_zt   #green exists in the period which is the end of growing season hence <=
     mask_dryfeed_exists_next_p6zt = np.roll(mask_dryfeed_exists_p6zt, shift=-1, axis=0)   #dry feed exists in the following feed period
@@ -325,6 +326,7 @@ def f_pasture(params, r_vals, nv):
     for t in range(n_pasture_types):
         for z in range(n_season_types):
             dry_decay_daily_p6zt[0:i_dry_exists_zt[z,t], z, t] = 1  #couldn't do this without loops - advanced indexing doesn't appear to work when taking multiple slices
+    #todo what about dry_decay_daily_p6zt[~mask_dryfeed_exists_p6zt] = 1
     dry_decay_period_p6zt[...] = 1 - (1 - dry_decay_daily_p6zt) ** length_p6z[...,na]
     ### allowance for the decay of dry feed in the days prior to being consumed
     ### because only the feed at the end of period is decayed by dry_decay_period_p6zt
