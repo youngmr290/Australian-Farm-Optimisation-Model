@@ -1291,6 +1291,7 @@ def f_daylength(dayOfYear, lat):
     daylen = 2.0*hourAngle/15.0
     dl[p1] = 24
     dl[p2] = 0
+    #todo Should this be logical_or? JMY thinks it should be.
     dl[~np.logical_and(p2, p1)] = daylen[~np.logical_and(p2, p1)]
     return dl
 

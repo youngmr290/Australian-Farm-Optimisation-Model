@@ -998,6 +998,9 @@ def f_wbe(aw, mw, cg):
 
 
 def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
+    #todo these formulas need to be reviewed, then connected to emissions in Pyomo.
+    # Compare with original Blaxter & Clapperton to check if error in the sign in Tech 2012 paper.
+    # Compare the original MIDAS derivation of animal and feed components
     ##Methane production total
     ch4_total = ch[1, ...] * (intake_f + intake_s)*((ch[2, ...] + ch[3, ...] * md_solid) + (level + 1) * (ch[4, ...] - ch[5, ...] * md_solid))
     ##Methane production animal component
