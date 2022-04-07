@@ -85,6 +85,8 @@ def f_pasture(params, r_vals, nv):
     length_p6z  = per.f_feed_periods(option=1)
     feed_period_dates_p6z = per.f_feed_periods().astype('datetime64[D]')
     date_start_p6z = feed_period_dates_p6z[:-1]
+    date_end_p6z = feed_period_dates_p6z[1:]
+    date_mid_p6z = date_start_p6z + (date_end_p6z - date_start_p6z)/2
 
     # fgop6lt = (n_feed_pools, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
     dgop6lzt = (n_dry_groups, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu,  n_season_types, n_pasture_types)
@@ -147,6 +149,8 @@ def f_pasture(params, r_vals, nv):
     i_grn_dmd_senesce_redn_p6zt  = np.zeros(p6zt,  dtype = 'float64') # reduction in digestibility of green feed when it senesces
     i_dry_dmd_ave_p6zt           = np.zeros(p6zt,  dtype = 'float64') # average digestibility of dry feed. Note the reduction in this value determines the reduction in quality of ungrazed dry feed in each of the dry feed quality pools. The average digestibility of the dry feed sward will depend on selective grazing which is an optimised variable.
     i_dry_dmd_range_p6zt         = np.zeros(p6zt,  dtype = 'float64') # range in digestibility of dry feed if it is not grazed
+    i_dry_dmd_eogs_zt           = np.zeros(zt,  dtype = 'float64') # dmd of dry pasture at the end of the growing season.
+    i_dry_dmd_brk_zt           = np.zeros(zt,  dtype = 'float64') # dmd of dry pasture at the lastest season brk.
     i_dry_foo_high_p6zt          = np.zeros(p6zt,  dtype = 'float64') # expected foo for the dry pasture in the high quality pool
     dry_decay_period_p6zt        = np.zeros(p6zt,  dtype = 'float64') # decline in dry foo for each period
     mask_dryfeed_exists_p6zt     = np.zeros(p6zt,  dtype = bool)      # mask for period when dry feed exists
@@ -260,6 +264,8 @@ def f_pasture(params, r_vals, nv):
         i_grn_dmd_senesce_redn_p6zt[...,t]   = zfun.f_seasonal_inp(np.swapaxes(exceldata['DigRednSenesce'],0,1), numpy=True, axis=1)
         i_dry_dmd_ave_p6zt[...,t]            = zfun.f_seasonal_inp(np.swapaxes(exceldata['DigDryAve'],0,1), numpy=True, axis=1)
         i_dry_dmd_range_p6zt[...,t]          = zfun.f_seasonal_inp(np.swapaxes(exceldata['DigDryRange'],0,1), numpy=True, axis=1)
+        i_dry_dmd_eogs_zt[...,t]          = zfun.f_seasonal_inp(exceldata['i_dry_dmd_eogs_z'], numpy=True, axis=0)
+        i_dry_dmd_brk_zt[...,t]          = zfun.f_seasonal_inp(exceldata['i_dry_dmd_brk_z'], numpy=True, axis=0)
         i_dry_foo_high_p6zt[...,t]           = zfun.f_seasonal_inp(np.swapaxes(exceldata['FOODryH'],0,1), numpy=True, axis=1)
         i_germ_scalar_p6zt[...,t]            = zfun.f_seasonal_inp(np.swapaxes(exceldata['GermScalarFP'],0,1), numpy=True, axis=1)
 
@@ -442,9 +448,21 @@ def f_pasture(params, r_vals, nv):
     volume_grnha_fgop6lzt = volume_grnha_fgop6lzt / (1 + sen.sap['pi'])
 
 
+    ##adjust dmd of dry feed post growing season - this doesnt do anything for perennials that are growing the whole yr.
+    ##For annual pastures the dmd of dry feed is calculated based on the days since senescence.
+    ##For perennials the dry dmd is based on the quality of the green feed that is senesced. Thus for perenials the code below does nothing. For perenials the dmd is just inputted.
+    date_eogs_zt = np.take_along_axis(feed_period_dates_p6z[:,:,na],i_end_of_gs_zt[na]+1, axis=0)[0,...] #+1 because input is the last period when grn exists. [0] to remove singleton p6 axis.
+    date_end_dry = np.max(pinp.general['i_break'].astype('datetime64[D]')) + np.timedelta64(365,'D') #use the latest season brk because a late brk season could follow the current season
+    max_deterioration_period_zt = (date_end_dry - date_eogs_zt).astype(int)
+    daily_deterioration_zt = 1-(i_dry_dmd_brk_zt / i_dry_dmd_eogs_zt)**(1/max_deterioration_period_zt)
+    average_days_since_eogs_p6zt = date_mid_p6z[...,na] + np.timedelta64(365,'D') * (date_mid_p6z[...,na]<date_eogs_zt) - date_eogs_zt
+    dry_dmd_p6zt = i_dry_dmd_eogs_zt * (1-daily_deterioration_zt)**average_days_since_eogs_p6zt.astype(int)
+    ###update dry dmd if end of growing season
+    dry_dmd_ave_p6zt = fun.f_update(i_dry_dmd_ave_p6zt,dry_dmd_p6zt, np.logical_not(mask_greenfeed_exists_p6zt))
+
     ## dry, dmd & foo of feed consumed
     dry_mecons_t_fdp6zt, dry_volume_t_fdp6zt, dry_dmd_dp6zt, dry_foo_dp6zt = pfun.f_dry_pasture(
-        cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_high_p6zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt
+        cu3, cu4, dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_high_p6zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt
         , mask_dryfeed_exists_p6zt, i_pasture_stage_p6zt, nv_is_not_confinement_f, i_legume_zt, i_hr_scalar_zt, n_feed_pools)
     dry_volume_t_fdp6zt = dry_volume_t_fdp6zt / (1 + sen.sap['pi'])
 
