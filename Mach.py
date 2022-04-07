@@ -109,11 +109,11 @@ def sup_mach_cost():
 
 def f_seed_days():
     '''
-    Determines the number of wet and dry seeding days in each period.
+    Determines the max number of seeding days in each p5 period (basically just the length of p5).
+    f_sow_prov in the phase module determines what crops/pastures can sown in each p5 period.
     '''
-    dry_seed_start = np.datetime64(pinp.crop['dry_seed_start'])
     mach_periods = per.f_p_dates_df()
-    start_pz = np.maximum(dry_seed_start, mach_periods.values[:-1])
+    start_pz = mach_periods.values[:-1]
     end_pz = mach_periods.values[1:]
     length_pz = np.maximum(0,(end_pz - start_pz).astype('timedelta64[D]').astype(int))
     days = pd.DataFrame(length_pz, index=mach_periods.index[:-1], columns=mach_periods.columns)
