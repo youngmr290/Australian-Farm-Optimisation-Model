@@ -98,7 +98,7 @@ def f_p_dates_df():
         harv_date = pd.to_datetime(zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0)[0])
         seed_period_lengths = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)[...,0]
         harv_period_lengths = zfun.f_seasonal_inp(pinp.period['harv_period_lengths'],numpy=True,axis=1)[...,0]
-        dry_seeding_start = np.datetime64(pinp.crop['dry_seed_start'])
+        dry_seeding_start = pinp.crop['dry_seed_start']
         wet_seeding_start = pd.to_datetime(f_wet_seeding_start_date()[0])
 
         ##calc period
@@ -107,13 +107,13 @@ def f_p_dates_df():
         #create empty list of dates to be filled by this function
         period_start_dates = []
         #determine the start of the first period, this references feed periods so it has the same yr.
-        start_date_period_0 = pinp.general['i_date_node_zm'][0,0]
+        start_date_period_0 = min(dry_seeding_start, pinp.general['i_date_node_zm'][0,0])
         #end date of all labour periods, simply one yr after start date.
         date_last_period = start_date_period_0 + relativedelta(years=1)
         #start point for the loop counter.
         date = start_date_period_0
         #loop that runs until the loop counter reached the end date.
-        while date <= date_last_period:
+        while date < date_last_period:
             #if not a seed period then
             if date < dry_seeding_start or date > f_period_end_date(wet_seeding_start,seed_period_lengths):
                 #if not a harvest period then just simply add 1 month and append that date to the list
@@ -138,6 +138,8 @@ def f_p_dates_df():
                     period_start_dates.append(f_period_dates(start, length)[i])
                 period_start_dates.append(f_period_end_date(start, length))
                 date = f_period_end_date(start, length) + relativedelta(months=sinp.general['labour_period_len']) + relativedelta(day=1)
+        #add last period end date
+        period_start_dates.append(date_last_period)
         #add the list of dates to the labour dataframe
         periods[keys_z[0]]=period_start_dates
         ##modify index
