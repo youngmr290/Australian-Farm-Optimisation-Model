@@ -578,10 +578,8 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     '''
     #Consumption & deferment of dry feed.
     ## dry, dmd & foo of feed consumed
-    ### do sensitivity adjustment for dry_dmd_input based on increasing/reducing the reduction in dmd from the maximum (starting value)
-    dry_dmd_adj_p6zt  = (i_dry_dmd_ave_p6zt - np.max(i_dry_dmd_ave_p6zt, axis=0)) * sen.sam['dry_dmd_decline','annual']
-    dry_dmd_high_p6zt = np.max(i_dry_dmd_ave_p6zt, axis=0) + dry_dmd_adj_p6zt + i_dry_dmd_range_p6zt/2
-    dry_dmd_low_p6zt  = np.max(i_dry_dmd_ave_p6zt, axis=0) + dry_dmd_adj_p6zt - i_dry_dmd_range_p6zt/2
+    dry_dmd_high_p6zt = i_dry_dmd_ave_p6zt + i_dry_dmd_range_p6zt/2
+    dry_dmd_low_p6zt  = i_dry_dmd_ave_p6zt - i_dry_dmd_range_p6zt/2
     dry_dmd_dp6zt     = np.stack((dry_dmd_low_p6zt, dry_dmd_high_p6zt), axis=0)    # create an array with a new axis 0 by stacking the existing arrays
 
     dry_foo_high_p6zt = i_dry_foo_high_p6zt * 3/4
