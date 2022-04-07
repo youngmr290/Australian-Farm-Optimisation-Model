@@ -324,12 +324,17 @@ def f_sup_labour():
     ##determine time in each labour period
     ###determine the time taken to feed a tonne of feed in each labour period - this depends on the allocation of the labour periods into the entered sup feed dates
     lp_dates_p5z = per.f_p_dates_df()
-    start_p8 = total_time.index.values
-    end_p8 = np.roll(start_p8, -1)
-    end_p8[-1] = end_p8[-1] + np.timedelta64(365, 'D') #increment the first date by 1yr so it becomes the end date for the last period
-    len_p8 = end_p8 - start_p8
-    shape_p5zp8 = lp_dates_p5z.shape + start_p8.shape
-    alloc_p5zp8 = fun.range_allocation_np(lp_dates_p5z.values[...,na], start_p8, len_p8, shape=shape_p5zp8)[:-1]
+    np_lp_dates_p5z = lp_dates_p5z.values
+    lp_start_p5z = np_lp_dates_p5z[:-1]
+    lp_end_p5z = np_lp_dates_p5z[1:]
+    lp_len_p5z = lp_end_p5z - lp_start_p5z
+    dates_p8 = total_time.index.values
+    end = dates_p8[0] + np.timedelta64(365, 'D') #increment the first date by 1yr so it becomes the end date for the last period
+    dates_p8 = np.concatenate([dates_p8,np.array([end])])
+    shape_p8p5z = dates_p8.shape + lp_start_p5z.shape
+    ####allocate labour periods into p8 periods
+    alloc_p8p5z = fun.range_allocation_np(dates_p8[:,na,na], lp_start_p5z, lp_len_p5z, opposite=True, shape=shape_p8p5z)[:-1]
+    alloc_p5zp8 = np.moveaxis(alloc_p8p5z,0,-1)
 
     ##combine allocation with the labour time
     total_time_p8k = total_time.values
