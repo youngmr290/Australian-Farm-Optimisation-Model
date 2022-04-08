@@ -280,7 +280,7 @@ def crop_residue_all(params, r_vals, nv):
     #how far through each period does harv start? note: 0 for each period harv doesn't start in. Used to calc stub consumption limit in harv period
     fp_len_p6z = fp_end_p6z - fp_start_p6z
     cons_propn_p6zk = np.clip(fun.f_divide(fp_len_p6z[...,na] - (fp_end_p6z[...,na] - harv_date_zk), fp_len_p6z[...,na]),0, np.inf)
-    cons_propn_p6zk[cons_propn_p6zk>1] = 0
+    cons_propn_p6zk[cons_propn_p6zk>=1] = 0 #cons_prop can not be 1 else div0 error in pyomo.
 
     ######################
     #apply season mask   #
