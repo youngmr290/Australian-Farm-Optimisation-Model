@@ -72,7 +72,7 @@ def f_pasture(params, r_vals, nv):
     else:
         n_season_types = np.count_nonzero(pinp.general['i_mask_z'])
 
-    index_f = np.arange(n_feed_periods)
+    index_p6 = np.arange(n_feed_periods)
 
     ## indexes required for advanced indexing
     l_idx = np.arange(n_lmu)
@@ -318,10 +318,15 @@ def f_pasture(params, r_vals, nv):
     cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
     cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
 
-    ###create dry pasture exists mask - in the current structure dry pasture only exists after the growing season.
-    #todo the calculation of these mask will be incorrect in the DSP because the later break seasons have dry in FP0 and FP1
-    mask_dryfeed_exists_p6zt[...] = index_f[:, na, na] >= i_dry_exists_zt   #mask periods when dry feed is available to livestock.
-    mask_greenfeed_exists_p6zt[...] = index_f[:, na, na] <= i_end_of_gs_zt   #green exists in the period which is the end of growing season hence <=
+    ###create dry and green pasture exists mask
+    ###in the late brk season dry feed can occur in fp0&1.
+    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True).astype('datetime64')
+    t_index_p6z = np.broadcast_to(index_p6[:,na], date_start_p6z.shape)
+    idx_fp_start_gs_z = t_index_p6z[date_start_p6z==season_break_z] #fp that is break of season (ie start of growing season)
+    mask_dryfeed_exists_p6zt[...] = np.logical_or(index_p6[:, na, na] >= i_dry_exists_zt, index_p6[:, na, na]<idx_fp_start_gs_z[...,na])   #mask periods when dry feed is available to livestock.
+    mask_greenfeed_exists_p6zt[...] = np.logical_or(index_p6[:, na, na] <= i_end_of_gs_zt,       #green exists in the period which is the end of growing season hence <=
+                                                    np.logical_and(index_p6[:, na, na]>=idx_fp_start_gs_z[...,na],
+                                                                   i_end_of_gs_zt < idx_fp_start_gs_z))   #this handles if green feed starts mid fp and wraps around to start fps.
     mask_dryfeed_exists_next_p6zt = np.roll(mask_dryfeed_exists_p6zt, shift=-1, axis=0)   #dry feed exists in the following feed period
 
     ### calculate dry_decay_period (used in reseeding and green&dry)
