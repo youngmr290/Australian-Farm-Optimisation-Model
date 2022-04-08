@@ -334,10 +334,7 @@ def f_pasture(params, r_vals, nv):
     ### dry at the end of the last period or transferred in from senescence in the previous period.
     ### dry_decay_daily does not effect green feed that senesces during the current period.
     dry_decay_daily_p6zt[...] = i_dry_decay_t
-    for t in range(n_pasture_types):
-        for z in range(n_season_types):
-            dry_decay_daily_p6zt[0:i_dry_exists_zt[z,t], z, t] = 1  #couldn't do this without loops - advanced indexing doesn't appear to work when taking multiple slices
-    #todo what about dry_decay_daily_p6zt[~mask_dryfeed_exists_p6zt] = 1
+    dry_decay_daily_p6zt[~mask_dryfeed_exists_p6zt] = 1
     dry_decay_period_p6zt[...] = 1 - (1 - dry_decay_daily_p6zt) ** length_p6z[...,na]
     ### allowance for the decay of dry feed in the days prior to being consumed
     ### because only the feed at the end of period is decayed by dry_decay_period_p6zt
