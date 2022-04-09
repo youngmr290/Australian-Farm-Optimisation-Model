@@ -196,8 +196,8 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     #### the period from destocking to restocking (for germination and growth)
     destock_duration_zt = i_restock_date_zt - i_destock_date_zt
     shape_p6zt = feed_period_dates_fz.shape + (i_destock_date_zt.shape[-1],)
-    periods_destocked_p6zt = fun.range_allocation_np(feed_period_dates_fz[...,na], i_destock_date_zt, destock_duration_zt
-                                                    , shape=shape_p6zt)[0:n_feed_periods,...]
+    periods_destocked_p6zt = fun.f_range_allocation_np(feed_period_dates_fz[...,na], i_destock_date_zt, destock_duration_zt
+                                                    , method=2, shape=shape_p6zt)[0:n_feed_periods,...]
     days_each_period_p6zt = periods_destocked_p6zt * length_fz[..., na]
     #### period when restocking occurs and the proportion through the period that it occurs
     period_zt, proportion_zt = fun.period_proportion_np(feed_period_dates_fz[...,na], i_restock_date_zt)
@@ -538,7 +538,7 @@ def f1_senescence(senesce_period_grnha_gop6lzt, senesce_eos_grnha_gop6lzt, dry_d
 def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_high_p6zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_dryfeed_exists_p6zt
                   , i_pasture_stage_p6zt, nv_is_not_confinement_f, i_legume_zt, i_hr_scalar_zt, n_feed_pools):
     '''
-    Calculate the the quality and quantity of dry pasture available throughout the year.
+    Calculate the quality and quantity of dry pasture available throughout the year.
 
     Dry pasture is represented by a low- and high-quality decision variable. When green feed senesces a proportion
     of the feed enters each pool based on the digestibility of the senescing feed. This representation allows some

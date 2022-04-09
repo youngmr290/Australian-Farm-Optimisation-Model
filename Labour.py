@@ -87,7 +87,7 @@ def f_labour_general(params,r_vals):
     # length = pd.to_timedelta(pinp.labour['leave_manager'], unit='D')
     length = np.array([pinp.labour['leave_manager']]).astype('timedelta64[D]')
     start = np.datetime64(pinp.labour['leave_manager_start_date'])
-    manager_leave_alloc_p5z = fun.range_allocation_np(lp_p5z, start, length, True, shape=lp_p5z.shape)
+    manager_leave_alloc_p5z = fun.f_range_allocation_np(lp_p5z, start, length, shape=lp_p5z.shape)
     manager_leave_p5z = manager_leave_alloc_p5z * length.astype(float)
     manager_leave_p5z = manager_leave_p5z[:-1] #drop last row because it is just the end date of last period
 
@@ -95,7 +95,7 @@ def f_labour_general(params,r_vals):
     ###normal leave
     length = np.array([pinp.labour['leave_permanent']]).astype('timedelta64[D]')
     start = np.datetime64(pinp.labour['leave_permanent_start_date'])
-    perm_leave_alloc_p5z = fun.range_allocation_np(lp_p5z, start, length, True, shape=lp_p5z.shape)
+    perm_leave_alloc_p5z = fun.f_range_allocation_np(lp_p5z, start, length, shape=lp_p5z.shape)
     perm_leave_p5z = perm_leave_alloc_p5z * length.astype(float)
     perm_leave_p5z = perm_leave_p5z[:-1] #drop last row because it is just the end date of last period
     ###sick leave - x days split equally into each period

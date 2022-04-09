@@ -333,7 +333,7 @@ def f_sup_labour():
     dates_p8 = np.concatenate([dates_p8,np.array([end])])
     shape_p8p5z = dates_p8.shape + lp_start_p5z.shape
     ####allocate labour periods into p8 periods
-    alloc_p8p5z = fun.range_allocation_np(dates_p8[:,na,na], lp_start_p5z, lp_len_p5z, opposite=True, shape=shape_p8p5z)[:-1]
+    alloc_p8p5z = fun.f_range_allocation_np(dates_p8[:,na,na], lp_start_p5z, lp_len_p5z, shape=shape_p8p5z)[:-1]
     alloc_p5zp8 = np.moveaxis(alloc_p8p5z,0,-1)
 
     ##combine allocation with the labour time
@@ -345,7 +345,7 @@ def f_sup_labour():
     start_p6z = per.f_feed_periods()[:-1,:]
     length_p6z = per.f_feed_periods(option=1).astype('timedelta64[D]')
     shape_p5p6z = (lp_dates_p5z.shape[0],) + length_p6z.shape
-    alloc_p5p6z = fun.range_allocation_np(lp_dates_p5z.values[:,na,:], start_p6z, length_p6z, True, shape=shape_p5p6z)[:-1]
+    alloc_p5p6z = fun.f_range_allocation_np(lp_dates_p5z.values[:,na,:], start_p6z, length_p6z, shape=shape_p5p6z)[:-1]
 
     ##allocate time to labour period for each feed period - get the time taken in each labour period to feed 1t of feed in each feed period
     total_time_p5p6zk = total_time_p5zk[:,na,...] * alloc_p5p6z[...,na]

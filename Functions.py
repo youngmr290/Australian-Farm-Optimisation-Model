@@ -1138,15 +1138,22 @@ def period_allocation(period_dates,periods,start_d,length=None):
         return allocation_p
 
 
-def range_allocation_np(period_dates, item_start, length=np.array([1]).astype('timedelta64[D]'), opposite=None, shape=None):
-    ''' Numpy version - The proportion of each period that falls in the tested date range or proportion of date range in each period.
+def f_range_allocation_np(period_dates, item_start, length=np.array([1]).astype('timedelta64[D]'), method=1, shape=None):
+    ''' Numpy version - The proportion of a date range that falls within each period or proportion of each period that falls in the tested date range.
+
+    Where possible use the default option (method=1). When using method 2 the date range (item start to
+    item end) must fall within the period array (the user must make this happen but a warning will be thrown if not).
+
+    Note: if a date range that falls partly in p[0] and partly in p[-1] will get 100% allocated to p[-1].
+          This is because we cant have allocation that crosses the season junction. In some cases this may result in over
+          allocation to the last period.
 
     :param period_dates: the start of the periods (including end date of last period) - in a Numpy array np.datetime64. This array must be broadcastable with start
                   (therefore may need to add new axis if start has a dimension). Period axis must be in pos=0.
     :param item_start: the date of the beginning of the date range to test - a numpy array of dates (np.datetime64)
     :param length: the length of the date range to test - an array of timedelta. Must be broadcastable to start.
-    :param opposite: Controls the proportion calculated. True returns the proportion of date range in each period.
-                     None returns the proportion of the period in the date range (2nd arg).
+    :param method: Controls the proportion calculated. Method 1 returns the proportion of date range in each period.
+                     Method 2 returns the proportion of the period in the date range.
     :param shape: this is the shape of returned array, required if both period_dates & start have more than 1 dim
 
     :return: Numpy array with shape(period_dates, start array). Containing the proportion of the
@@ -1166,21 +1173,32 @@ def range_allocation_np(period_dates, item_start, length=np.array([1]).astype('t
     period_dates = period_dates.astype('datetime64[D]')
     item_start = item_start.astype('datetime64[D]')
 
-    ##adjust yr of item occurrence
-    start_of_periods = period_dates[0,...]
-    end_of_periods = start_of_periods + np.timedelta64(364, 'D') #use 364 because end date is the day before the end otherwise can get item that starts on the last day of periods.
-    add_yrs = np.ceil(np.maximum(0,(start_of_periods - item_start).astype('timedelta64[D]').astype(int) / 365))
-    sub_yrs = np.ceil(np.maximum(0,(item_start - end_of_periods).astype('timedelta64[D]').astype(int) / 365))
-    item_start = item_start + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
-    ###handle cases where date + length is after the end of periods. in this situation length gets reduced
-    length = np.minimum(length, (period_dates[-1,...] - item_start).astype('timedelta64[D]'))
+    # only adjust date for default method. Method 2 does not need adjusting because the date fall within the periods.
+    if method==1:
+        ##adjust yr of item occurrence
+        start_of_periods = period_dates[0,...]
+        end_of_periods = start_of_periods + np.timedelta64(364, 'D') #use 364 because end date is the day before the end otherwise can get item that starts on the last day of periods.
+        add_yrs = np.ceil(np.maximum(0,(start_of_periods - item_start).astype('timedelta64[D]').astype(int) / 365))
+        sub_yrs = np.ceil(np.maximum(0,(item_start - end_of_periods).astype('timedelta64[D]').astype(int) / 365))
+        item_start = item_start + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
+        ##handle cases where date + length is after the end of periods. in this situation length gets reduced - this is the easiest method and reduces possible errors due to crossing season junction.
+        length = np.minimum(length, (period_dates[-1,...] - item_start).astype('timedelta64[D]'))
+    elif method==2:
+        ###adjust the period dates (leave item date the same)
+        period_end_dates = period_dates[1:, ...]
+        period_start_dates = period_dates[:-1, ...]
+        item_end = item_start + length #np.timedelta64(364, 'D') #use 364 because end date is the day before the end otherwise can get item that starts on the last day of periods.
+        add_yrs = np.ceil(np.maximum(0,(item_start - period_end_dates).astype('timedelta64[D]').astype(int) / 365))
+        sub_yrs = np.ceil(np.maximum(0,(period_start_dates - item_end).astype('timedelta64[D]').astype(int) / 365))
+        period_start_dates = period_start_dates + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
+        period_end_dates = period_end_dates + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
 
     ##end of period
     item_end = np.minimum(item_start + length, period_dates[-1]) #minimum ensures that the assigned date range is within the period date range.
 
     ##checks if user wants the proportion of each period that falls in the tested date range or proportion of date range in each period
-    if opposite:
-        #check how much of each date range falls within the period
+    if method==1:
+        #check how much of each date range falls within the period (allocate start dates into periods)
         for i in range(len(period_dates)-1):
             per_start = period_dates[i, ...] #[i:i+1] #to keep dim
             per_end = period_dates[i+1, ...]
@@ -1188,14 +1206,19 @@ def range_allocation_np(period_dates, item_start, length=np.array([1]).astype('t
             calc_end = np.minimum(per_end,item_end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
             allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (item_end - item_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the range
     else:
-        #check how much of each period falls within the date range
+        ###check date range falls within periods - period adjustment happens above so this should never be an error unless the inputs are bad.
+        if not np.all(np.min(period_start_dates,axis=0) < item_start and item_end < np.max(period_end_dates, axis=0)):
+            raise Warning('Trying to allocate periods into a date array but date array range is greater than the period range.'
+                          'This indicates poor inputs. You may need to alter the inputs')
+        ###check how much of each period falls within the date range (allocate periods into start dates)
         for i in range(len(period_dates)-1):
-            per_start = period_dates[i, ...] #[i:i+1]
-            per_end = period_dates[i+1, ...]
+            per_start = period_start_dates[i, ...] #[i:i+1]
+            per_end = period_end_dates[i, ...]
             calc_start = np.maximum(per_start,item_start).astype('datetime64[D]')       #select the later of the period start or the start of the range
             calc_end = np.minimum(per_end,item_end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
             allocation_period[i,...] = np.maximum(0, f_divide(calc_end - calc_start
                                                               , per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period, use f_divide in case any period lengths are 0 (this is likely to occur in season version)
+
     return allocation_period
 
 
