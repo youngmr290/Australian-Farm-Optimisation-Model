@@ -1207,7 +1207,7 @@ def f_range_allocation_np(period_dates, item_start, length=np.array([1]).astype(
             allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (item_end - item_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the range
     else:
         ###check date range falls within periods - period adjustment happens above so this should never be an error unless the inputs are bad.
-        if not np.all(np.min(period_start_dates,axis=0) < item_start and item_end < np.max(period_end_dates, axis=0)):
+        if not np.all(np.logical_and(np.min(period_start_dates,axis=0) < item_start, item_end < np.max(period_end_dates, axis=0))):
             raise Warning('Trying to allocate periods into a date array but date array range is greater than the period range.'
                           'This indicates poor inputs. You may need to alter the inputs')
         ###check how much of each period falls within the date range (allocate periods into start dates)
