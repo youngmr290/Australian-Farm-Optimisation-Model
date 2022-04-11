@@ -139,16 +139,14 @@ def crop_residue_all(params, r_vals, nv):
     fp_end_p6z = per.f_feed_periods()[1:].astype('datetime64[D]')
     fp_start_p6z = per.f_feed_periods()[:-1].astype('datetime64[D]')
     harv_date_zk = zfun.f_seasonal_inp(pinp.crop['start_harvest_crops'].values, numpy=True, axis=1).swapaxes(0,1).astype(np.datetime64)
-    # mask_stubble_exists_p6zk = fp_end_p6z[...,na] > harv_date_zk  #^this may need to become an input to handle chaff piles which may be grazed after the brk
     period_is_harvest_p6zk = np.logical_and(fp_end_p6z[...,na] >= harv_date_zk, fp_start_p6z[...,na] <= harv_date_zk)
+    idx_fp_start_stub_zk = fun.searchsort_multiple_dim(fp_start_p6z, harv_date_zk, 1, 0, side='right') - 1
 
     idx_fp_end_stub_z = zfun.f_seasonal_inp(pinp.stubble['i_fp_end_stub_z'], numpy=True, axis=0)
-    t_index_p6zk = np.broadcast_to(index_p6[:,na,na], period_is_harvest_p6zk.shape)
-    idx_fp_start_stub_p6zk = t_index_p6zk[period_is_harvest_p6zk]
 
-    mask_stubble_exists_p6zk = np.logical_or(np.logical_and(index_p6[:,na,na]>=idx_fp_start_stub_p6zk, index_p6[:,na,na]<=idx_fp_end_stub_z[:,na]),
-                                             np.logical_and(idx_fp_end_stub_z[:,na] < idx_fp_start_stub_p6zk,
-                                                            np.logical_or(index_p6[:,na,na]>=idx_fp_start_stub_p6zk, index_p6[:,na,na]<=idx_fp_end_stub_z[:,na])))
+    mask_stubble_exists_p6zk = np.logical_or(np.logical_and(index_p6[:,na,na]>=idx_fp_start_stub_zk, index_p6[:,na,na]<=idx_fp_end_stub_z[:,na]),
+                                             np.logical_and(idx_fp_end_stub_z[:,na] < idx_fp_start_stub_zk,
+                                                            np.logical_or(index_p6[:,na,na]>=idx_fp_start_stub_zk, index_p6[:,na,na]<=idx_fp_end_stub_z[:,na])))
 
 
     # #############################
