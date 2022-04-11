@@ -130,7 +130,7 @@ def cartesian_product_simple_transpose(arrays):
 
 def searchsort_multiple_dim(a, v, axis_a0, axis_v0, axis_a1=None, axis_v1=None, side='left'):
     '''
-    Find the indices into a sorted array a such that, if the corresponding elements in 'v' were inserted before the indices, the order of 'a' would be preserved.
+    Find the indices into a sorted array 'a' such that, if the corresponding elements in 'v' were inserted before the indices, the order of 'a' would be preserved.
     It does this iteratively down the specified axis (therefore the specified axis must be present in both 'a' and 'v'
 
     Parameters:
