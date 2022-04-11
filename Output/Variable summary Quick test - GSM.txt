@@ -109,8 +109,8 @@ Variable v_asset
 Variable v_minroe
    ('q0', 's0', 'zm0', 'typ') 463313.8714440933
 Variable v_learn_allocation
-   ('q0', 's0', 'P03', 'typ') 0.09077526769324162
-   ('q0', 's0', 'P09', 'typ') 0.9092247323067584
+   ('q0', 's0', 'P03') 0.09077526769324162
+   ('q0', 's0', 'P09') 0.9092247323067584
 Variable v_casualsupervision_perm
 Variable v_casualsupervision_manager
    ('q0', 's0', 'P01', 'typ') 16.19398111116776

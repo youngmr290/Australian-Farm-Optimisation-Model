@@ -178,7 +178,7 @@ def f_con_labour_fixed_manager(model):
     '''
     def labour_fixed_manager(model,q,s,p,w,z):
         return -model.v_fixed_labour_manager[q,s,p,w,z] + model.p_planning_labour[p,z] + (
-                    model.p_learn_labour * model.v_learn_allocation[q,s,p,z]) <= 0
+                    model.p_learn_labour * model.v_learn_allocation[q,s,p]) <= 0
 
     model.con_labour_fixed_manager = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods,['mngr'],model.s_season_types,
                                                    rule=labour_fixed_manager,
