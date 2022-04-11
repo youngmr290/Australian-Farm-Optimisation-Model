@@ -136,11 +136,12 @@ def crop_residue_all(params, r_vals, nv):
 
     ##create mask which is stubble available. Stubble is available from the period harvest starts to the beginning of the following growing season.
     ##if the end date of the fp is after harvest then stubble is available.
-    fp_end_p6z = per.f_feed_periods()[1:].astype('datetime64[D]')
-    fp_start_p6z = per.f_feed_periods()[:-1].astype('datetime64[D]')
+    feed_period_dates_p6z = per.f_feed_periods().astype('datetime64[D]')
+    fp_end_p6z = feed_period_dates_p6z[1:]
+    fp_start_p6z = feed_period_dates_p6z[:-1]
     harv_date_zk = zfun.f_seasonal_inp(pinp.crop['start_harvest_crops'].values, numpy=True, axis=1).swapaxes(0,1).astype(np.datetime64)
     period_is_harvest_p6zk = np.logical_and(fp_end_p6z[...,na] >= harv_date_zk, fp_start_p6z[...,na] <= harv_date_zk)
-    idx_fp_start_stub_zk = fun.searchsort_multiple_dim(fp_start_p6z, harv_date_zk, 1, 0, side='right') - 1
+    idx_fp_start_stub_zk = fun.searchsort_multiple_dim(feed_period_dates_p6z, harv_date_zk, 1, 0, side='right') - 1
 
     idx_fp_end_stub_z = zfun.f_seasonal_inp(pinp.stubble['i_fp_end_stub_z'], numpy=True, axis=0)
 

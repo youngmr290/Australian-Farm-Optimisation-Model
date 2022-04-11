@@ -321,8 +321,7 @@ def f_pasture(params, r_vals, nv):
     ###create dry and green pasture exists mask
     ###in the late brk season dry feed can occur in fp0&1.
     season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True).astype('datetime64')
-    t_index_p6z = np.broadcast_to(index_p6[:,na], date_start_p6z.shape)
-    idx_fp_start_gs_z = t_index_p6z[date_start_p6z==season_break_z] #fp that is break of season (ie start of growing season)
+    idx_fp_start_gs_z = fun.searchsort_multiple_dim(feed_period_dates_p6z, season_break_z, 1, 0, side='right') - 1
     mask_dryfeed_exists_p6zt[...] = np.logical_or(index_p6[:, na, na] >= i_dry_exists_zt, index_p6[:, na, na]<idx_fp_start_gs_z[...,na])   #mask periods when dry feed is available to livestock.
     mask_greenfeed_exists_p6zt[...] = np.logical_or(index_p6[:, na, na] <= i_end_of_gs_zt,       #green exists in the period which is the end of growing season hence <=
                                                     np.logical_and(index_p6[:, na, na]>=idx_fp_start_gs_z[...,na],
