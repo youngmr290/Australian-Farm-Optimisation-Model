@@ -325,7 +325,7 @@ def f_pasture(params, r_vals, nv):
     mask_dryfeed_exists_p6zt[...] = np.logical_or(index_p6[:, na, na] >= i_dry_exists_zt, index_p6[:, na, na]<idx_fp_start_gs_z[...,na])   #mask periods when dry feed is available to livestock.
     mask_greenfeed_exists_p6zt[...] = np.logical_or(index_p6[:, na, na] <= i_end_of_gs_zt,       #green exists in the period which is the end of growing season hence <=
                                                     np.logical_and(index_p6[:, na, na]>=idx_fp_start_gs_z[...,na],
-                                                                   i_end_of_gs_zt < idx_fp_start_gs_z))   #this handles if green feed starts mid fp and wraps around to start fps.
+                                                                   i_end_of_gs_zt < idx_fp_start_gs_z[...,na]))   #this handles if green feed starts mid fp and wraps around to start fps.
     mask_dryfeed_exists_next_p6zt = np.roll(mask_dryfeed_exists_p6zt, shift=-1, axis=0)   #dry feed exists in the following feed period
 
     ### calculate dry_decay_period (used in reseeding and green&dry)
