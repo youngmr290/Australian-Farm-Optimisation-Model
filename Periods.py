@@ -188,10 +188,11 @@ def f_feed_periods(option=0):
         date_node_mz = pinp.general['i_date_node_zm'].astype('datetime64').T
         date_node_mz = date_node_mz + (np.timedelta64(365, 'D') * (date_node_mz < fp_std_p6z[0,:]))
         fp_p6z = np.concatenate([fp_std_p6z, date_node_mz])
+        t_fp_p6z = zfun.f_seasonal_inp(fp_p6z, numpy=True, axis=1) #apply z mask so that duplication removing below only looks at the active seasons.
         ###remove duplicate periods
         duplicate_mask_p6 = []
-        for p6 in range(fp_p6z.shape[0]):  # maybe there is a way to do this without a loop.
-            duplicate_mask_p6.append(np.all(np.any(fp_p6z[p6,...] == fp_p6z[0:p6,...], axis=0, keepdims=True)))
+        for p6 in range(t_fp_p6z.shape[0]):  # maybe there is a way to do this without a loop.
+            duplicate_mask_p6.append(np.all(np.any(t_fp_p6z[p6,...] == t_fp_p6z[0:p6,...], axis=0, keepdims=True)))
         fp_p6z = fp_p6z[np.logical_not(duplicate_mask_p6)]
         fp_p6z = np.sort(fp_p6z, axis=0)
     else: #if nodes are not added then the adjusted fps are the same as the std fp.
