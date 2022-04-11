@@ -117,7 +117,7 @@ def coremodel_all(trial_name,model):
     try:  # to handle infeasible (there is no profit component when infeasible)
         p7_end = list(model.s_season_periods)[-1]
         utility = pe.value(model.utility)
-        profit = pe.value(sum(model.v_terminal_wealth[q,s,z,c1] + model.v_minroe[q,s,p7_end,z] + model.v_asset[q,s,p7_end,z]
+        profit = pe.value(sum((model.v_terminal_wealth[q,s,z,c1] + model.v_minroe[q,s,p7_end,z] + model.v_asset[q,s,p7_end,z])
                                        * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
                                        for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1
                                        for z in model.s_season_types))
