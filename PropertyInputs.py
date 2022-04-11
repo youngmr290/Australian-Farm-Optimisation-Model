@@ -422,6 +422,7 @@ def f1_expand_p6():
     ####pasture
     for pasture in sinp.general['pastures'][general['pas_inc']]:
         pasture_inputs[pasture]['POCCons'] = np.take_along_axis(pasture_inputs[pasture]['POCCons'][:,:,na], a_p6std_p6z[:,na,:], axis=0)
+        pasture_inputs[pasture]['i_pasture_stage_p6z'] = np.take_along_axis(pasture_inputs[pasture]['i_pasture_stage_p6z'], a_p6std_p6z, axis=0)
         pasture_inputs[pasture]['DigRednSenesce'] = np.take_along_axis(pasture_inputs[pasture]['DigRednSenesce'], a_p6std_zp6, axis=1)
         pasture_inputs[pasture]['DigDryAve'] = np.take_along_axis(pasture_inputs[pasture]['DigDryAve'], a_p6std_zp6, axis=1)
         pasture_inputs[pasture]['DigDryRange'] = np.take_along_axis(pasture_inputs[pasture]['DigDryRange'], a_p6std_zp6, axis=1)
