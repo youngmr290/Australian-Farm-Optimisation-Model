@@ -361,7 +361,7 @@ def f1_nv_components(paststd_foo_p6a1e1b1j0wzida0e0b0xyg, paststd_dmd_p6a1e1b1j0
     supp_p6a1e1b1j1wzida0e0b0xyg = interp1d([propn,1], suppstd_p6a1e1b1j0wzida0e0b0xyg, axis=n_pos)(np.maximum(index_j1,propn))
 
     ## calculate the M/D of diet from DMD, FOO & proportion of supplement
-    past_md_p6a1e1b1j1wzida0e0b0xyg = fsfun.dmd_to_md(dmd_p6a1e1b1j1wzida0e0b0xyg)
+    past_md_p6a1e1b1j1wzida0e0b0xyg = fsfun.f1_dmd_to_md(dmd_p6a1e1b1j1wzida0e0b0xyg)
 
     ##relative availability - uses dams equation system in p=0
     eqn_group = 5
@@ -450,7 +450,7 @@ def f1_feedsupply(feedsupplyw_ta1e1b1nwzida0e0b0xyg, confinementw_ta1e1b1nwzida0
     ##ME intake from herbage
     mei_herb = mei_solid - mei_supp
     ##M/D of herbage
-    md_herb = fsfun.dmd_to_md(dmd)  # will be 0 if in confinement
+    md_herb = fsfun.f1_dmd_to_md(dmd)  # will be 0 if in confinement
     ##herb intake
     intake_f = fun.f_divide(mei_herb, md_herb) #func to stop div/0 error if confinement
     ##M/D of the diet (solids)

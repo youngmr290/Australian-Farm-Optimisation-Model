@@ -2564,7 +2564,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 else:
                     ###calc dmd and md_herb - done within if statement because dmd & md_herb are calculated differently for stubble sim.
                     dmd_dams = dmd_pwg[p]
-                    md_herb_dams = fsfun.dmd_to_md(dmd_dams)
+                    md_herb_dams = fsfun.f1_dmd_to_md(dmd_dams)
                     
                     ###relative ingestibility (quality) - dams
                     eqn_group = 6
@@ -2599,7 +2599,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 else:
                     ###calc dmd and md_herb - done within if statement because dmd & md_herb are calculated differently for stubble sim.
                     dmd_offs = dmd_pwg[p]
-                    md_herb_offs = fsfun.dmd_to_md(dmd_offs)
+                    md_herb_offs = fsfun.f1_dmd_to_md(dmd_offs)
                     ###relative ingestibility (quality) - offs
                     eqn_group = 6
                     eqn_system = 0  # CSIRO = 0
@@ -3108,7 +3108,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
                 ###calc dmd and md_herb - done within if statement because dmd & md_herb are calculated differently for stubble sim.
                 dmd_yatf = dmd_pwg[p]
-                md_herb_yatf = fsfun.dmd_to_md(dmd_yatf)
+                md_herb_yatf = fsfun.f1_dmd_to_md(dmd_yatf)
 
                 ##relative ingestibility (quality) - yatf
                 eqn_group = 6

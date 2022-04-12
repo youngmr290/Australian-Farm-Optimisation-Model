@@ -15,7 +15,7 @@ def f_vol():
     '''calc volume of 100mj with different digestibility.'''
     dmd_q = pinp.mvf['i_mvf_dmd_q']
     mvf_me = pinp.mvf['i_mvf_me'] #me used for mvf
-    me_q = fsfun.dmd_to_md(dmd_q)
+    me_q = fsfun.f1_dmd_to_md(dmd_q)
 
     ##calc ri quality
     clover_propn = 0.3

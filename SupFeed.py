@@ -237,7 +237,7 @@ def f_sup_md_vol():
 
     ##calc vol
     ###convert md to dmd
-    dmd_k = fsfun.md_to_dmd(energy_k/1000)
+    dmd_k = fsfun.f1_md_to_dmd(energy_k/1000)
     ###calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
         rq_k = fsfun.f_rq_cs(dmd_k, 0)

@@ -461,7 +461,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     dmd_sward_end_grnha_gop6lzt = dmd_sward_start_grnha_op6lzt - ((dmd_diet_grnha_gop6lzt - dmd_sward_start_grnha_op6lzt)
                                                                 * fun.f_divide(i_foo_graze_propn_gt[:, na, na, na, na, :]
                                                                     , 1 - i_foo_graze_propn_gt[:, na, na, na, na, :]))
-    grn_md_grnha_gop6lzt = fsfun.dmd_to_md(dmd_diet_grnha_gop6lzt)
+    grn_md_grnha_gop6lzt = fsfun.f1_dmd_to_md(dmd_diet_grnha_gop6lzt)
 
     ## green, mei & volume
     ###Average FOO is calculated using FOO at the end prior to EOS senescence (which assumes all pasture senesces after grazing)
@@ -609,7 +609,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     dry_volume_t_fdp6zt = dry_volume_t_dp6zt * nv_is_not_confinement_f[:,na,na,na,na] #me from pasture is 0 in the confinement pool
 
     ## dry, ME consumed per kg consumed
-    dry_md_dp6zt        = fsfun.dmd_to_md(dry_dmd_dp6zt)
+    dry_md_dp6zt        = fsfun.f1_dmd_to_md(dry_dmd_dp6zt)
     ## convert to effective quality per tonne
     ### parameters for the dry feed grazing activities: Total ME of the tonne consumed
     confinement_inc = np.any(np.logical_not(nv_is_not_confinement_f))
@@ -678,7 +678,7 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_
     poc_vol_fp6z = poc_vol_p6z * nv_is_not_confinement_f[:,na,na]  # me from pasture is 0 in the confinement pool
 
     ## md per tonne
-    poc_md_p6z = fsfun.dmd_to_md(i_poc_dmd_p6zt[..., 0])
+    poc_md_p6z = fsfun.f1_dmd_to_md(i_poc_dmd_p6zt[..., 0])
     ##reduce me if nv is higher than livestock diet requirement.
     confinement_inc = np.any(np.logical_not(nv_is_not_confinement_f))
     poc_md_fp6z = fsfun.f_effective_mei(1000, poc_md_p6z, me_threshold_fp6zt[...,0]
