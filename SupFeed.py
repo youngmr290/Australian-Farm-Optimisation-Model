@@ -214,14 +214,18 @@ def f_sup_md_vol():
     content of the feed.
     The volume of supplementary feed is calculated based on the quality of the feed. So, lower quality
     supplements (like oats) will substitute more for pasture than high quality supplements (like lupins).
-    It is assumed that the availability of supplementary feed is high and that supplement is consumed as
-    the first component of the animals diet. Furthermore, it is assumed that if sufficient levels of
+    In the generator it is assumed that the availability of supplementary feed is high and that supplement is consumed
+    as the first component of the animals diet. Furthermore, it is assumed that if sufficient levels of
     supplement are offered then all the sheep’s diet will be provided by supplementary feeding.
-    This representation does not include an effect of high protein supplements (like lupins) overcoming
+    In pyomo the optimisation can select a combination of paddock feed and supplement that meets the volume
+    constraint while providing sufficient ME intake for the animals.
+    The volume required for supplement is adjusted (to 80%) because this is necessary to make the substitution rate
+    in the matrix (using volumes) align with the substitution rate calculated using the GrazPlan selection routine.
+    The current representation does not include an effect of high protein supplements (like lupins) overcoming
     a protein deficiency and therefore acting as a 'true' supplement and increasing intake. If this was represented it
     would likely make low rate lupin supplementation optimal in early summer/autumn to overcome a protein deficiency.
 
-    .. note:: Supplement md does not go through f_effective_mei because the quantity of Sup feed can be controlled
+    .. note:: Supplement M/D does not go through f_effective_mei because the quantity of Sup feed can be controlled
               so the animals achieve their target weight profile and aren't gaining then losing weight.
     '''
     #todo review the volume of supplementary feed, especially the max RI==1 and non-inclusion of protein supplementation.
@@ -239,7 +243,9 @@ def f_sup_md_vol():
         rq_k = fsfun.f_rq_cs(dmd_k, 0)
     ###use max(1,...) to make it the same as MIDAS - this increases lupin vol slightly from what the equation returns
     ###do not calculate ra (relative availability) because assume that supplement has high availability
-    vol_kg_k = np.maximum(1, 1 / rq_k)
+    ###Scale supplement volume to 0.8. This value was selected to best fit the substitution rate based on
+    ###feed volumes with the substitution rate calculated using the GrazPlan diet selection routine.
+    vol_kg_k = np.maximum(1, 1 / rq_k) * 0.8
     ###convert vol per kg to per tonne fed - have to adjust for the actual dry matter content and wastage
     vol_tonne_k = vol_kg_k * 1000 * prop_consumed_k * dry_matter_content_k
     vol_tonne_k = vol_tonne_k / (1 + sen.sap['pi'])
