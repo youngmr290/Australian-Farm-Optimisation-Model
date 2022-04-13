@@ -280,7 +280,7 @@ def crop_md_vol(nv):
     crop_vol_fkp6p5zl = crop_vol_kp6p5zl * nv_is_not_confinement_f[:,na,na,na,na,na] #me from crop is 0 in the confinement pool
 
     ## md per tonne
-    crop_md_kp6z = fsfun.dmd_to_md(crop_dmd_kp6z)
+    crop_md_kp6z = fsfun.f1_dmd_to_md(crop_dmd_kp6z)
     ##reduce me if nv is higher than livestock diet requirement.
     crop_md_fkp6p5zl = fsfun.f_effective_mei(1000, crop_md_kp6z[:,:,na,:,na], me_threshold_fp6z[:,na,:,na,:,na]
                                            , nv['confinement_inc'], crop_ri_kp6p5zl, crop_me_eff_gainlose)

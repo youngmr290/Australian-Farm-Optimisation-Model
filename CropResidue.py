@@ -244,7 +244,7 @@ def crop_residue_all(params, r_vals, nv):
     ##convert dmd to M/D
     ## Stubble doesn't include calculation of effective mei because stubble is generally low quality feed with a wide variation in quality within the sward.
     ## Therefore, there is scope to alter average diet quality by altering the grazing time and the proportion of the stubble consumed.
-    md_p6zks1 = np.clip(fsfun.dmd_to_md(dmd_cat_p6zks1), 0, np.inf)
+    md_p6zks1 = np.clip(fsfun.f1_dmd_to_md(dmd_cat_p6zks1), 0, np.inf)
     md_p6zks1 = md_p6zks1 * mask_stubble_exists_p6zk[...,na] #stop md being provided if stubble doesn't exist
     ##reduce me if nv is higher than livestock diet requirement.
     md_fp6zks1 = fsfun.f_effective_mei(1000, md_p6zks1, me_threshold_fp6z[...,na,na]

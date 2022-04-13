@@ -16,7 +16,7 @@ import Periods as per
 #######################################
 #function for feed budget & livestock #
 #######################################
-def dmd_to_md(dmd):
+def f1_dmd_to_md(dmd):
     '''
     Calculation of megajoules energy per kg dry matter (MD) from dry matter digestibility (DMD).
 
@@ -28,17 +28,16 @@ def dmd_to_md(dmd):
     :param dmd: dmd can be a numpy array or a scalar it can be either a percentage or a decimal.
     :returns: M/D in MJ of ME per kg of DM
 
-    Note: this could be expanded to include forage (0.172 * dmd - 1.7)
-          and supplement (.133 * dmd + 23.4 ee + 1.32)
+    Note: this could be expanded to include supplement (M/D = 0.134 * dmd + 0.235 ee + 1.23)  Freer et al 2007 eqn 1.11A
           using an extra 'type' input that is default 'herbage'
     '''
     try:
         if (dmd > 1).all() : dmd /= 100 # if dmd is a list or an array and is not a decimal then convert to decimal (in excel 80% is 0.8 in python)
     except:
         if dmd > 1:          dmd /= 100 # if dmd is a scalar and is not a decimal then convert to decimal   ^ alternative would be to convert scalar values to a list (if dmd isinstance not list: dmd=[dmd]) or perhaps type is float]
-    return np.maximum(0, 17 * dmd - 2)                # formula 1.13C from SCA 1990 pg 9
+    return np.maximum(0, 17.2 * dmd - 1.707)                # formula 1.12A from Freer et al 2007 pg 7.
 
-def md_to_dmd(md):
+def f1_md_to_dmd(md):
     '''
     Calculation of dry matter digestibility (dmd) from megajoule per kg of dry matter (MD).
 
@@ -50,7 +49,7 @@ def md_to_dmd(md):
     :param md: MJ of ME per kg of DM
     :returns: dmd as a decimal
     '''
-    return (md+2)/17
+    return (md + 1.707) / 17.2              # from formula 1.12A from Freer et al 2007 pg 7.
 
 
 def f_effective_mei(dmi, md, threshold_f, confinement_inc, ri=1, eff_above=0.5):
