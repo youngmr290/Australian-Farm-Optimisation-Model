@@ -623,7 +623,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     pstr_std_yg0, pstr_std_yg1, pstr_std_yg2, pstr_std_yg3 = sfun.f1_c2g(uinp.parameters['i_lstr_std_c2'], uinp.parameters['i_lstr_std_y'], a_c2_c0, i_g3_inc)
     pstw_std_yg0, pstw_std_yg1, pstw_std_yg2, pstw_std_yg3 = sfun.f1_c2g(uinp.parameters['i_lstw_std_c2'], uinp.parameters['i_lstw_std_y'], a_c2_c0, i_g3_inc)
     scan_std_yg0, scan_std_yg1, scan_std_yg2, scan_std_yg3 = sfun.f1_c2g(uinp.parameters['i_scan_std_c2'], uinp.parameters['i_scan_std_y'], a_c2_c0, i_g3_inc) #scan_std_yg2/3 not used
-    ###scan_std could change across the i axis, however, there is a tradeoff between LW at joining and time in the breeding season so assume these cancel out rather than adjusting by crg_doy here
+    scan_std_doy_yg0, scan_std_doy_yg1, scan_std_doy_yg2, scan_std_doy_yg3 = sfun.f1_c2g(uinp.parameters['i_scan_std_doy_c2'], uinp.parameters['i_scan_std_doy_y'], a_c2_c0, i_g3_inc)
     scan_dams_std_yg3 = scan_std_yg1 #offs needs to be the same as dams because scan_std is used to calc starting propn of BTRT which is dependent on dams scanning
     sfd_yg0, sfd_yg1, sfd_yg2, sfd_yg3 = sfun.f1_c2g(uinp.parameters['i_sfd_c2'], uinp.parameters['i_sfd_y'], a_c2_c0, i_g3_inc)
     sfw_yg0, sfw_yg1, sfw_yg2, sfw_yg3 = sfun.f1_c2g(uinp.parameters['i_sfw_c2'], uinp.parameters['i_sfw_y'], a_c2_c0, i_g3_inc)
@@ -1382,7 +1382,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##calc proportion of dry, singles, twin and triplets based on the genotype as born.
     ###eg. BBM dams are based on BBB scanning and BBB survival. BBM offspring are based on BBB scanning and BBM survival
     ###calculated without saa['rr_age']. These calculations do not include a 'p' axis because it is one value for all the initial animals
-    dstwtr_l0yg0 = np.moveaxis(sfun.f1_DSTw(scan_std_yg0), -1, 0)
+    dstwtr_l0yg0 = np.moveaxis(sfun.f1_DSTw(scan_std_yg0), -1, 0) #todo add crg_doy_ltw scalar to alter scan_std by TOL
     dstwtr_l0yg1 = np.moveaxis(sfun.f1_DSTw(scan_std_yg1), -1, 0)
     dstwtr_l0yg3 = np.moveaxis(sfun.f1_DSTw(scan_dams_std_yg3), -1, 0)
 
@@ -1830,8 +1830,27 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                         * cl_dams[6, ..., na] * ( cl_dams[12, ..., na] + cl_dams[13, ..., na]
                                         * np.exp(-cl_dams[14, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg2p1))
                                         , weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
-    ##Pattern of conception efficiency (doy)
-    crg_doy_pa1e1b1nwzida0e0b0xyg1 = np.average(np.maximum(0,1 - cb1_dams[1, ..., na] * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 365) * np.sin(lat_rad) / -0.57)), axis = -1)
+    ##Pattern of conception efficiency (doy). Two versions of the equation
+    ### _cs is for the GrazPlan equations to predict the seasonal effect on proportion of DSTwTr - active b1 axis
+    crg_doy_cs_pa1e1b1nwzida0e0b0xyg1 = np.average(np.maximum(0,1 - cb1_dams[1, ..., na]
+                                                * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 365)
+                                                * np.sin(lat_rad) / -0.57)), axis = -1)
+    ### _ltw is for the LTW equations to predict the seasonal effect on reproductive rate - singleton b1 axis
+    ### value is scaled so at the doy of scan_std the value is 1 and doesn't alter scan_std if mating on that day
+    crg_doy_ltw_pa1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.average(np.maximum(0,1 - cf_dams[1, ..., na]
+                                                    * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 365)
+                                                    * np.sin(lat_rad) / -0.57)), axis = -1)
+                                                , np.average(np.maximum(0, 1 - cf_dams[1, ..., na]
+                                                    * (1 - np.sin(2 * np.pi * (scan_std_doy_yg1[..., na] + 10) / 365)
+                                                    * np.sin(lat_rad) / -0.57)), axis=-1))
+    ### _lmat is for the LMAT equations to predict the seasonal effect on proportion of DSTwTr - active b1 axis
+    ### value is scaled so at the doy of scan_std the value is 1  and doesn't alter the proportions if mating on that day.
+    crg_doy_lmat_pa1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.average(np.maximum(0,1 - cb1_dams[1, ..., na]
+                                                    * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 365)
+                                                    * np.sin(lat_rad) / -0.57)), axis = -1)
+                                                , np.average(np.maximum(0, 1 - cb1_dams[1, ..., na]
+                                                    * (1 - np.sin(2 * np.pi * (scan_std_doy_yg1[..., na] + 10) / 365)
+                                                    * np.sin(lat_rad) / -0.57)), axis=-1))
     ##Rumen development factor on PI - yatf
     piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(1/(1 + np.exp(-ci_yatf[3, ..., na]
                                         * (age_p1_pa1e1b1nwzida0e0b0xyg2p1 - ci_yatf[4, ..., na])))
@@ -2910,6 +2929,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ## use the condition of dams in the 11 slice because mated animals can have a different feed supply
                 ## use dams in e[-1] because want the condition of the animal before it conceives. Note all e slices will have the same condition until conceived because they have the same feedsupply until scanning.
                 ffcfw_e1b1sliced = fun.f_dynamic_slice(ffcfw_start_dams, e1_pos, -1, None, b1_pos, 2, 3) #slice e1 & b1 axis
+                relsize_start_dams_e1b1sliced = fun.f_dynamic_slice(relsize_start_dams, e1_pos, -1, None, b1_pos, 2, 3)  #slice e1 & b1 axis
                 ebg_e1b1sliced = fun.f_dynamic_slice(ebg_dams, e1_pos, -1, None, b1_pos, 2, 3) #slice e1 & b1 axis
                 nw_start_dams_e1b1sliced = fun.f_dynamic_slice(nw_start_dams, e1_pos, -1, None, b1_pos, 2, 3) #slice e1 & b1 axis
                 gest_propn_b1sliced = fun.f_dynamic_slice(gest_propn_pa1e1b1nwzida0e0b0xyg1[p], b1_pos, 2, 3) #slice b1 axis
@@ -2923,7 +2943,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##Condition score of the dams at mating
                 cs_mating_dams = sfun.f1_condition_score(rc_mating_dams, cu0_dams)
                 ##Relative size of the dams at mating
-                relsize_mating_dams = relsize_start_dams
+                relsize_mating_dams = relsize_start_dams_e1b1sliced
 
                 ##Dam weight at birth ^probs don't need this since birth is first day of period - just need to pass in ffcfw_start to function
                 # t_w_birth = ffcfw_start_dams + ebg_dams * cg_dams[18, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p] * gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
@@ -3298,7 +3318,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_conception_cs(cf_dams, cb1_dams, relsize_mating_dams, rc_mating_dams
-                                                 , crg_doy_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
+                                                 , crg_doy_cs_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
                                                  , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                  , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]
                                                  , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p])
@@ -3312,8 +3332,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     #todo this need to be replaced by LMAT formula, if cf_conception_start is used in the LMAT formula cf_conception_dams = temp0 will need to be moved out of the if used statement.
                     temp0 = sfun.f_conception_ltw(cf_dams, cu0_dams, relsize_mating_dams, cs_mating_dams
-                                                  , scan_std_pa1e1b1nwzida0e0b0xyg1, doy_pa1e1b1nwzida0e0b0xyg[p]
-                                                  , crg_doy_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
+                                                  , scan_std_pa1e1b1nwzida0e0b0xyg1[p], doy_pa1e1b1nwzida0e0b0xyg[p]
+                                                  , crg_doy_ltw_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
                                                   , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                   , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p])
                     if eqn_used:

@@ -1104,7 +1104,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         ####apply the change to the original calculated proportions
         t_cr += propn_dst_change
 
-        ##Process the Conception REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+        ##Process the Conception REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         ###Conception is the proportion of dams that are dry and a change in conception is assumed to be converting
         ### a dry ewe into a single bearing ewe. It is calculated by altering the proportion of single bearing ewes b1[2].
         ### The proportion of Drys is then calculated (later) as the animals that didn't get pregnant.
