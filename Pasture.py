@@ -276,7 +276,7 @@ def f_pasture(params, r_vals, nv):
         i_germ_scalar_lzt[...,t]            = zfun.f_seasonal_inp(np.swapaxes(exceldata['GermScalarLMU'],0,1), numpy=True, axis=1)[lmu_mask_l,...]
         i_restock_fooscalar_lt[...,t]       = exceldata['FaG_LMU'][lmu_mask_l]  #todo may need a z axis
 
-        i_lmu_conservation_p6lzt[...,t]       = zfun.f_seasonal_inp(exceldata['ErosionLimit'][:, lmu_mask_l], numpy=True, axis=2)
+        i_lmu_conservation_p6lzt[...,t]       = zfun.f_seasonal_inp(np.moveaxis(exceldata['ErosionLimit'],0,-1), numpy=True, axis=-1)[:, lmu_mask_l, :]
 
         i_destock_date_zt[...,t]            = zfun.f_seasonal_inp(exceldata['Date_Destocking'], numpy=True)
         i_destock_foo_zt[...,t]             = zfun.f_seasonal_inp(exceldata['FOOatSeeding'], numpy=True) #ungrazed foo when destocked for reseeding
