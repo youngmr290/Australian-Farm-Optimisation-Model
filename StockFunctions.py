@@ -571,8 +571,8 @@ def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, te
     pitf = np.minimum(1, pitf_high) * np.maximum(1, pitf_low)
     ##Potential intake
     pi = ci[1, ...] * srw * relsize_start * (ci[2, ...] - relsize_start) * picf * pitf * pilf * sam_pi
-    ##Potential intake of pasture - young at foot only
-    pi = (pi - mp2 / cl[6, ...] * cl[25, ...]) * piyf
+    ##Potential intake of pasture - young at foot only. Note milk intake is not removed because PI of yatf is for solids
+    pi = pi * piyf     # milk DM intake = mp2 / cl[6, ...] * cl[25, ...]
     ##Potential intake of pasture - young at foot only
     pi = pi * period_between_birthwean
     return np.maximum(0,pi)

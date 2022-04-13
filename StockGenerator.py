@@ -187,6 +187,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     len_q0	 = uinp.sheep['i_eqn_exists_q0q1'].shape[1]
     len_q1	 = len(uinp.sheep['i_eqn_reportvars_q1'])
     len_q2	 = np.max(uinp.sheep['i_eqn_reportvars_q1'])
+    len_t0 = 1 #alway just one t slice for sires
     len_t1 = pinp.sheep['i_n_dam_sales'] + len_g0
     len_t2 = pinp.sheep['i_t2_len']
     len_t3 = pinp.sheep['i_t3_len']
@@ -310,10 +311,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ############################
     '''only if assigned with a slice'''
     ##unique array shapes required to initialise arrays
-    qg0 = (len_q0, len_q1, len_q2, len_p, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
-    qg1 = (len_q0, len_q1, len_q2, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
-    qg2 = (len_q0, len_q1, len_q2, len_p, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g1)
-    qg3 = (len_q0, len_q1, len_q2, lenoffs_p, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
+    qg0 = (len_q0, len_q1, len_q2, len_t0, len_p, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
+    qg1 = (len_q0, len_q1, len_q2, len_t1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
+    qg2 = (len_q0, len_q1, len_q2, len_t2, len_p, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g1)
+    qg3 = (len_q0, len_q1, len_q2, len_t3, lenoffs_p, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
     tpg0 = (1, len_p, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
     pg1 = (len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
     pg3 = (lenoffs_p, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
@@ -1832,7 +1833,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##Pattern of conception efficiency (doy)
     crg_doy_pa1e1b1nwzida0e0b0xyg1 = np.average(np.maximum(0,1 - cb1_dams[1, ..., na] * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 365) * np.sin(lat_rad) / -0.57)), axis = -1)
     ##Rumen development factor on PI - yatf
-    piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(1/(1 + np.exp(-ci_yatf[3, ..., na] * (age_p1_pa1e1b1nwzida0e0b0xyg2p1 - ci_yatf[4, ..., na]))), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
+    piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(1/(1 + np.exp(-ci_yatf[3, ..., na]
+                                        * (age_p1_pa1e1b1nwzida0e0b0xyg2p1 - ci_yatf[4, ..., na])))
+                                        , weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
     piyf_pa1e1b1nwzida0e0b0xyg2 = piyf_pa1e1b1nwzida0e0b0xyg2 * (nyatf_b1nwzida0e0b0xyg > 0) #set pi to 0 if no yatf.
     ##Foetal normal weight pattern (mid period)
     nwf_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[2, ..., na] * (1 - np.exp(cp_dams[3, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p1)))), weights=age_f_p1_weights_pa1e1b1nwzida0e0b0xyg1p1, axis = -1)
