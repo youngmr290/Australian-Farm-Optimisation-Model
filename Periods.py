@@ -63,10 +63,11 @@ def f_peak_debt_date():
 def f_wet_seeding_start_date():
     seeding_after_season_start_z = zfun.f_seasonal_inp(pinp.period['seeding_after_season_start'], numpy=True, axis=0)
     seeding_after_season_start_z = seeding_after_season_start_z.astype('timedelta64[D]')
+    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True).astype('datetime64')
     # seeding_after_season_start_z = seeding_after_season_start_z.astype(datetime.datetime)
     # seeding_after_season_start_z = pd.to_timedelta(seeding_after_season_start_z,unit='D')
     ##wet seeding starts a specified number of days after season break
-    return f_feed_periods()[0] +  seeding_after_season_start_z
+    return season_break_z +  seeding_after_season_start_z
     # return f_feed_periods().iloc[0].squeeze() +  datetime.timedelta(days = pinp.period['seeding_after_season_start'])
 
 #this function requires start date and length of each period (as a list) and spits out the start dates of each period
