@@ -288,7 +288,7 @@ def f_pasture(params, r_vals, nv):
         i_grn_senesce_daily_p6zt[...,t]       = zfun.f_seasonal_inp(exceldata['SenescePropn'], numpy=True, axis=1)
         i_grn_senesce_eos_p6zt[...,t]        = zfun.f_seasonal_inp(np.asfarray(exceldata['SenesceEOS']), numpy=True, axis=1)
         i_base_p6zt[...,t]                    = zfun.f_seasonal_inp(exceldata['BaseLevelInput'], numpy=True, axis=1)
-        i_grn_dmd_range_p6zt[...,t]           = zfun.f_seasonal_inp(exceldata['DigSpread'], numpy=True, axis=1)
+        i_grn_dmd_range_p6zt[...,t]           = zfun.f_seasonal_inp(np.moveaxis(exceldata['DigSpread'],0,-1), numpy=True, axis=1)
         i_foo_graze_propn_gt[..., t]        = np.asfarray(exceldata['FOOGrazePropn'])
         #### impact of grazing intensity (at the other levels) on PGR during the period
         PGRScalarH_p6z = zfun.f_seasonal_inp(exceldata['PGRScalarH'], numpy=True, axis=1)
