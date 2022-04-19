@@ -94,6 +94,8 @@ def f_period_end_date(start, length):
 
 #This function determines the start dates of the labour periods. generally each period begins at the start of the month except seeding and harvest periods (which need to be separate because the labour force works more hours during those periods)
 def f_p_dates_df():
+    ##For steady state the periods must be generated, because if you take the weighted average of the
+    ## DSP periods you will get the incorrect seeding peirods if seeding start is not the same labour period.
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
         ##put season inputs through season input function
         harv_date = pd.to_datetime(zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0)[0])
