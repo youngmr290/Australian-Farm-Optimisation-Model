@@ -160,7 +160,7 @@ def f_con_casual_bounds(model):
 def f_con_casual_supervision(model):
     '''
     Casual labourers require a certain amount of supervision per period. Supervision can be provided
-    by either permanent or manager staff. This constraint ensures ensures that the supervision requirement
+    by either permanent or manager staff. This constraint ensures that the supervision requirement
     is met.
     '''
     ##casual supervision - can be done by either perm or manager
