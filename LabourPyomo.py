@@ -51,6 +51,10 @@ def f1_labpyomo_local(params, model):
     model.v_casualsupervision_manager = Var(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, bounds=(0,None),
                                             doc='hours of manager labour used for supervision of casual')
 
+    # Perm supervision
+    model.v_permsupervision_manager = Var(model.s_labperiods, model.s_season_types, bounds=(0,None),
+                                            doc='hours of manager labour used for supervision of permanent staff')
+
     # Amount of casual. Casual labour can be optimised for each period
     model.v_quantity_casual = Var(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, bounds=(0,None),
                                   doc='number of casual labour used in each labour period')
@@ -152,6 +156,7 @@ def f1_labpyomo_local(params, model):
     ###############################
     f_con_casual_bounds(model)
     f_con_casual_supervision(model)
+    f_con_perm_supervision(model)
     f_manager_holiday_allocation(model)
     f_perm_holiday_allocation(model)
     f_con_labour_transfer_manager(model)
@@ -182,6 +187,17 @@ def f_con_casual_supervision(model):
         return -model.v_casualsupervision_manager[q,s,p,z] - model.v_casualsupervision_perm[q,s,p,z] + (model.p_casual_supervision[p,z] * model.v_quantity_casual[q,s,p,z]) <= 0
     model.con_casual_supervision = Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, rule = transfer_casual_supervision, doc='casual require supervision from perm or manager')
 
+def f_con_perm_supervision(model):
+    '''
+    perm labourers require a certain amount of supervision per period. Supervision can be provided
+    by either permanent or manager staff. This constraint ensures that the supervision requirement
+    is met.
+    '''
+    ##perm supervision - can be done by either perm or manager
+    def transfer_perm_supervision(model,p,z):
+        return -model.v_permsupervision_manager[p,z] + (model.p_perm_supervision[p,z] * model.v_quantity_perm) <= 0
+    model.con_perm_supervision = Constraint(model.s_labperiods, model.s_season_types, rule = transfer_perm_supervision, doc='perm require supervision from perm or manager')
+
 def f_manager_holiday_allocation(model):
     '''Optimise the timing of manager holidays.'''
     def manager_holiday_allocation(model,q,s):
@@ -198,7 +214,7 @@ def f_con_labour_transfer_manager(model):
     '''Transfer manager labour to livestock, cropping, fixed and supervising activities.'''
     #manager, this is a little more complex because also need to subtract the supervision hours off of the manager supply of workable hours
     def labour_transfer_manager(model,q,s,p,z):
-        return -(model.v_quantity_manager * model.p_manager_hours[p,z]) + (model.v_quantity_perm * model.p_perm_supervision[p,z]) + model.v_casualsupervision_manager[q,s,p,z]      \
+        return -(model.v_quantity_manager * model.p_manager_hours[p,z]) + model.v_permsupervision_manager[p,z] + model.v_casualsupervision_manager[q,s,p,z]      \
         + model.v_manager_holiday_allocation[q,s,p] * model.p_manager_holiday_hours \
         + sum(model.v_sheep_labour_manager[q,s,p,w,z] + model.v_phase_labour_manager[q,s,p,w,z] + model.v_fixed_labour_manager[q,s,p,w,z] for w in model.s_worker_levels)  <= 0
     model.con_labour_transfer_manager = Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, rule = labour_transfer_manager, doc='labour from manager to sheep and crop and fixed')
