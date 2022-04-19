@@ -45,16 +45,6 @@ def f1_labpyomo_local(params, model):
     # variable #
     ############
 
-    # Casual supervision
-    model.v_casualsupervision_perm = Var(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, bounds=(0,None),
-                                         doc='hours of perm labour used for supervision of casual')
-    model.v_casualsupervision_manager = Var(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, bounds=(0,None),
-                                            doc='hours of manager labour used for supervision of casual')
-
-    # Perm supervision
-    model.v_permsupervision_manager = Var(model.s_labperiods, model.s_season_types, bounds=(0,None),
-                                            doc='hours of manager labour used for supervision of permanent staff')
-
     # Amount of casual. Casual labour can be optimised for each period
     model.v_quantity_casual = Var(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, bounds=(0,None),
                                   doc='number of casual labour used in each labour period')
@@ -69,6 +59,16 @@ def f1_labpyomo_local(params, model):
                                                       'max_managers'] != 'inf' else None  # if none convert to python None
     model.v_quantity_manager = Var(bounds=(pinp.labour['min_managers'],max_managers),
                                    doc='number of manager/owner labour used in each labour period')
+
+    # Casual supervision
+    model.v_casualsupervision_perm = Var(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, bounds=(0,None),
+                                         doc='hours of perm labour used for supervision of casual')
+    model.v_casualsupervision_manager = Var(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, bounds=(0,None),
+                                            doc='hours of manager labour used for supervision of casual')
+
+    # Perm supervision
+    model.v_permsupervision_manager = Var(model.s_labperiods, model.s_season_types, bounds=(0,None),
+                                            doc='hours of manager labour used for supervision of permanent staff')
 
     # manager pool
     # Period allocation for manager holidays.
