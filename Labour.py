@@ -46,11 +46,6 @@ def f_labour_general(params,r_vals):
        the overall farm plan and thus spend a fixed amount of time each quarter for farm planning, learning,
        record-keeping, purchasing and selling, and other office work.
 
-    The farm manager and permanent staff have four weeks of holiday each year during December, January, and
-    July. All labour sources take days off for Christmas, New Year’s Day, and Easter. Permanent staff are
-    also allocated a certain number of sick days per year. The user has the ability to alter the length
-    and timing of worker leave
-
     The timeliness and labour intensity of seeding and harvest means staff often work longer days during
     those periods :cite:p:`RN89`. To accommodate this, the user specifies the hours worked by each type of
     staff on the weekdays and weekends for both standard periods and seeding and harvest periods.
@@ -60,6 +55,16 @@ def f_labour_general(params,r_vals):
     labour periods. This is because during seeding and harvest it is likely that less supervision is
     required. Casual staff are generally less experienced and/or acquainted with the farm operation than
     permanent staff and thus require more supervision.
+
+    The farm manager and permanent staff have four weeks of holiday each year. The holiday timing is flexible (optimised
+    by AFO). This is because managers and permanent staff tend to have a less defined schedule often taking multiple
+    smaller holidays during the year or returning to the farm during holidays to check on things.
+    Additionally, in AFO permanent and casual staff require supervision from the manager which means if the manager
+    is forced to take their holidays in one big chunk the model may not be able to access labour resulting in randomness
+    if the period dates change.
+    All labour sources take days off for Christmas, New Year’s Day, and Easter. Permanent staff are
+    also allocated a certain number of sick days per year. The user has the ability to alter the length
+    and timing of worker leave
 
     Casual staff are paid on a per hour basis and the manager and permanent staff are paid an annual wage.
     All labour costs include superannuation and workers’ compensation.
@@ -84,24 +89,17 @@ def f_labour_general(params,r_vals):
     ########
     
     ##manager leave
-    # length = pd.to_timedelta(pinp.labour['leave_manager'], unit='D')
-    length = np.array([pinp.labour['leave_manager']]).astype('timedelta64[D]')
-    start = np.datetime64(pinp.labour['leave_manager_start_date'])
-    manager_leave_alloc_p5z = fun.f_range_allocation_np(lp_p5z, start, length, shape=lp_p5z.shape)
-    manager_leave_p5z = manager_leave_alloc_p5z * length.astype(float)
-    manager_leave_p5z = manager_leave_p5z[:-1] #drop last row because it is just the end date of last period
+    leave_days = np.array([pinp.labour['leave_manager']])
+    manager_leave_hours = leave_days * 2/7 * pinp.labour['daily_hours'].loc['weekends', 'Manager']   \
+                          + leave_days * 5/7 * pinp.labour['daily_hours'].loc['weekdays', 'Manager']
 
     ##perm leave
     ###normal leave
-    length = np.array([pinp.labour['leave_permanent']]).astype('timedelta64[D]')
-    start = np.datetime64(pinp.labour['leave_permanent_start_date'])
-    perm_leave_alloc_p5z = fun.f_range_allocation_np(lp_p5z, start, length, shape=lp_p5z.shape)
-    perm_leave_p5z = perm_leave_alloc_p5z * length.astype(float)
-    perm_leave_p5z = perm_leave_p5z[:-1] #drop last row because it is just the end date of last period
+    leave_days = np.array([pinp.labour['leave_permanent']])
+    perm_leave_hours = leave_days * 2/7 * pinp.labour['daily_hours'].loc['weekends', 'Permanent']   \
+                          + leave_days * 5/7 * pinp.labour['daily_hours'].loc['weekdays', 'Permanent']
     ###sick leave - x days split equally into each period
     perm_sick_leave_p5z = pinp.labour['sick_leave_permanent']/365 * lp_len_p5z
-    ###total leave
-    perm_leave_p5z = perm_leave_p5z + perm_sick_leave_p5z
 
     ##########################
     #hours worked per period #
@@ -109,12 +107,12 @@ def f_labour_general(params,r_vals):
     
     ##determine possible labour days worked by the manager during the week and on weekend in a given labour periods. Note: casual labour has no leave.
     ###available days in the period minus leave multiplied by fraction of weekdays
-    manager_weekdays_p5z = (lp_len_p5z - manager_leave_p5z) * 5/7
-    perm_weekdays_p5z = (lp_len_p5z - perm_leave_p5z) * 5/7
+    manager_weekdays_p5z = (lp_len_p5z) * 5/7
+    perm_weekdays_p5z = (lp_len_p5z - perm_sick_leave_p5z) * 5/7
     cas_weekdays_p5z = (lp_len_p5z) * 5/7
     ###available days in the period minus leave multiplied by fraction of weekend days
-    manager_weekend_p5z = (lp_len_p5z - manager_leave_p5z) * 2/7
-    perm_weekend_p5z = (lp_len_p5z - perm_leave_p5z) * 2/7
+    manager_weekend_p5z = (lp_len_p5z) * 2/7
+    perm_weekend_p5z = (lp_len_p5z - perm_sick_leave_p5z) * 2/7
     cas_weekend_p5z = (lp_len_p5z) * 2/7
 
     ##set up stuff to calc hours work per period be each source
@@ -130,10 +128,10 @@ def f_labour_general(params,r_vals):
     ##manager hours
     ###seeding
     seeding_dailyhours = pinp.labour['daily_hours'].loc['seeding','Manager']
-    manager_hrs_seeding = (lp_len_p5z - manager_leave_p5z) * seeding_occur_p5z * seeding_dailyhours
+    manager_hrs_seeding = (lp_len_p5z) * seeding_occur_p5z * seeding_dailyhours
     ###harv
     harving_dailyhours = pinp.labour['daily_hours'].loc['harvest','Manager']
-    manager_hrs_harv = (lp_len_p5z - manager_leave_p5z) * harv_occur_p5z * harving_dailyhours
+    manager_hrs_harv = (lp_len_p5z) * harv_occur_p5z * harving_dailyhours
     ###weekend hrs
     manager_hrs_weekend = manager_weekend_p5z * np.logical_not(np.logical_or(harv_occur_p5z, seeding_occur_p5z)) * pinp.labour['daily_hours'].loc['weekends','Manager']
     ###weekdays hrs
@@ -143,10 +141,10 @@ def f_labour_general(params,r_vals):
     ##perm hours
     ###seeding
     seeding_dailyhours = pinp.labour['daily_hours'].loc['seeding','Permanent']
-    perm_hrs_seeding = (lp_len_p5z - perm_leave_p5z) * seeding_occur_p5z * seeding_dailyhours
+    perm_hrs_seeding = (lp_len_p5z - perm_sick_leave_p5z) * seeding_occur_p5z * seeding_dailyhours
     ###harv
     harving_dailyhours = pinp.labour['daily_hours'].loc['harvest','Permanent']
-    perm_hrs_harv = (lp_len_p5z - perm_leave_p5z) * harv_occur_p5z * harving_dailyhours
+    perm_hrs_harv = (lp_len_p5z - perm_sick_leave_p5z) * harv_occur_p5z * harving_dailyhours
     ###weekend hrs
     perm_hrs_weekend = perm_weekend_p5z * np.logical_not(np.logical_or(harv_occur_p5z, seeding_occur_p5z)) * pinp.labour['daily_hours'].loc['weekends','Permanent']
     ###weekdays hrs
@@ -245,9 +243,11 @@ def f_labour_general(params,r_vals):
     ##pyomo params
     params['permanent hours'] = dict(zip(tup_p5z, perm_hrs_total_p5z.ravel()))
     params['permanent supervision'] = dict(zip(tup_p5z, perm_supervision_p5z.ravel()))
+    params['permanent_holiday_hours'] = perm_leave_hours
     params['casual hours'] = dict(zip(tup_p5z, cas_hrs_total_p5z.ravel()))
     params['casual supervision'] = dict(zip(tup_p5z, cas_supervision_p5z.ravel()))
     params['manager hours'] = dict(zip(tup_p5z, manager_hrs_total_p5z.ravel()))
+    params['manager_holiday_hours'] = manager_leave_hours
     params['casual ub'] = dict(zip(tup_p5z, ub_cas_p5z.ravel()))
     params['casual lb'] = dict(zip(tup_p5z, lb_cas_p5z.ravel()))
 
