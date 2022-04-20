@@ -326,7 +326,6 @@ def f_pasture(params, r_vals, nv):
     mask_greenfeed_exists_p6zt[...] = np.logical_or(np.logical_and(index_p6[:,na,na]>=idx_fp_start_gs_z[...,na], index_p6[:, na, na] <= i_end_of_gs_zt),       #green exists in the period which is the end of growing season hence <=
                                                     np.logical_and(i_end_of_gs_zt < idx_fp_start_gs_z[...,na],
                                                                    np.logical_or(index_p6[:,na,na]>=idx_fp_start_gs_z[...,na], index_p6[:,na,na]<=i_end_of_gs_zt)))   #this handles if green feed starts mid fp and wraps around to start fps.
-    mask_dryfeed_exists_next_p6zt = np.roll(mask_dryfeed_exists_p6zt, shift=-1, axis=0)   #dry feed exists in the following feed period
 
     ### calculate dry_decay_period (used in reseeding and green&dry)
     ### dry_decay_daily is decay of dry foo at the start of the period that was either
@@ -345,7 +344,7 @@ def f_pasture(params, r_vals, nv):
                                      , length_p6z[..., na])
     ## dry, DM decline (high = low pools)
     ###dry transfer prov is the amount of dry feed that is transferred into the current period from the previous (1000 - decay)
-    dry_transfer_prov_t_p6zt = 1000 * (1-dry_decay_period_p6zt) * mask_dryfeed_exists_next_p6zt #if no dry feed exists in the next period then we don't need the transfer prov DV.
+    dry_transfer_prov_t_p6zt = 1000 * (1-dry_decay_period_p6zt) #note: parent needs to provide if ANY child has dry feed next period
     ###dry transfer required is the amount of dry feed required in the current period to transfer into the next period (1000 mask by dry exists)
     dry_transfer_req_t_p6zt = 1000 * mask_dryfeed_exists_p6zt #this parameter exists so that the constraint wont be built for fp when no dry feed exists.
 

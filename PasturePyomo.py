@@ -256,7 +256,7 @@ def f_con_drypas_between(model):
                  - sum(model.v_drypas_transfer[q,s8,d,p6_prev,z8,t] * model.p_dry_transfer_prov_t[p6_prev,z8,t]
                        * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
                        + model.v_drypas_transfer[q, s8, d, p6_prev, z8, t] * model.p_dry_transfer_prov_t[p6_prev, z8, t]
-                       * model.p_parentz_provbetween_fp[p6_prev, z8, z9] * model.p_sequence_prov_qs8zs9[q_prev, s8, z8, s9]
+                       * model.p_parentz_provbetween_fp[p6_prev, z8, z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
                        for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q,s8])!=0) \
                  + model.v_drypas_transfer[q,s9,d,p6,z9,t] * model.p_dry_transfer_req_t[p6,z9,t] <=0
         else:
