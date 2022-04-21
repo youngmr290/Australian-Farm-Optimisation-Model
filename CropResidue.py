@@ -262,9 +262,11 @@ def crop_residue_all(params, r_vals, nv):
     # allow access to next category#
     ################################
 
+    ##Note: In the sim each category has a minimum of 1kg so that the following transfers always work.
+
     ##quantity of cat A stubble provided from 1t of total stubble at harvest
     cat_a_prov_p6zks1s2 = 1000 * cat_propn_ks1s2 * np.logical_and(np.arange(len(pinp.stubble['i_stub_cat_idx']))[:,na]==0
-                                                      ,period_is_harvest_p6zk[...,na,na]) #Only cat A is provides at harvest
+                                                      ,period_is_harvest_p6zk[...,na,na]) #Only cat A is provided at harvest
 
     ##amount of available stubble required to consume 1t of each cat in each fp
     stub_req_ks1s2 = 1000*(1+tramp_effect_ks1s2)
@@ -352,10 +354,10 @@ def crop_residue_all(params, r_vals, nv):
     params['stub_transfer_prov'] = fun.f1_make_pyomo_dict(stub_transfer_prov_p6zk, arrays_p6zk)
     params['stub_transfer_req'] = fun.f1_make_pyomo_dict(stub_transfer_req_p6zk, arrays_p6zk)
 
-    ###category A transfer 'require' param
+    ###category A transfer param
     params['cat_a_prov'] = fun.f1_make_pyomo_dict(cat_a_prov_p6zks1s2, arrays_p6zks1s2)
 
-    ###category A transfer 'require' param
+    ###category A transfer param
     biomass2residue_kls2 = f_biomass2residue()
     params['biomass2residue_kls2'] = fun.f1_make_pyomo_dict(biomass2residue_kls2, arrays_kls2)
 

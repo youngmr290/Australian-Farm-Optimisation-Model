@@ -3,7 +3,8 @@
 This module determines the proportion of total stubble in each category based on liveweight data from paddock trials.
 DMD for each category is an input along with information about the sheep in the paddock trials. Stockgenerator is
 then run to determine the LWC (live weight change) provided by each category. Based of off the actual trial LWC
-the proportion of stubble in each category is determined.
+the proportion of stubble in each category is determined (every category is set to have at least some stubble
+so that transferring can always occur).
 
 Stockgenerator is run for all sheep groups and then the animal that reflects the trial animal is selected.
 The different DMD levels are reflected along the w axis.
@@ -147,7 +148,7 @@ for k in range(len_k):
             lwc_p1s1ks2[:,:,k,s2] = fun.f_reduce_skipfew(np.average, lwc_ps1g, preserveAxis=(p_pos, s1_pos))
             intake_p1s1ks2[:,:,k,s2] = fun.f_reduce_skipfew(np.average, intake_ps1g, preserveAxis=(p_pos, s1_pos))
 
-##post process the lwc - still in k loop
+##post process the lwc
 ###calc trial lw with p1p2 axis (p2 axis is days)
 len_p2 = int(step / np.timedelta64(1, 'D'))  # convert timedelta to float by dividing by one day
 index_p2 = np.arange(len_p2)
@@ -160,15 +161,21 @@ trial_lwc_p1p2ks2 = trial_lwc_pks2.reshape(-1,len_p2, len_k, len_s2)
 ###calc grazing days in generator period for each dmd - allocate trial lwc to the simulated lwc and sum the p2
 lwc_diff_p1p2s1ks2 = np.abs(lwc_p1s1ks2[:,na,:,:,:] - trial_lwc_p1p2ks2[:,:,na,:,:])
 grazing_days_p1s1ks2 = np.sum(np.equal(np.min(lwc_diff_p1p2s1ks2, axis=2,keepdims=True) , lwc_diff_p1p2s1ks2), axis=1)
-###adjust intake - allowing for trampling and detrioration related to quantity
-adj_intake_p1s1ks2 = intake_p1s1ks2 * (1 - pinp.stubble['quantity_deterioration'][:,na]) ** days_since_harv_p[:, na, na, na]
+###adjust intake - allowing for decay related to quantity (to reflect the amount at harvest). (Trampling done below).
+adj_intake_p1s1ks2 = intake_p1s1ks2 / (1 - pinp.stubble['quantity_deterioration'][:,na]) ** days_since_harv_p[:, na, na, na]
 ###multiply by adjusted intake and sum p axis to return the total intake for each dmd (stubble) category
 total_intake_s1ks2 = np.sum(grazing_days_p1s1ks2 * adj_intake_p1s1ks2, axis=0)
 total_intake_ha_s1ks2 = total_intake_s1ks2 * pinp.stubble['i_sr']
+###adjust for trampling - trampling is done as a percentage of consumed stubble thus trampling doesnt remove categories above because they have already been consumed.
+### Trampling gets added on to reflect the amount of stubble at harvest.
+tramp_ks2 = pinp.stubble['trampling'][:,na]
+total_intake_ha_s1ks2 = total_intake_ha_s1ks2 + tramp_ks2 * np.cumsum(total_intake_ha_s1ks2, axis=0)
+###set a minimum for each category so that the transfer between cats can always occur.
+total_intake_ha_s1ks2 = np.maximum(1, total_intake_ha_s1ks2) #minimum of 1kg in each category so stubble can always be transferred between categories.
 ###divide intake by total stubble to return stubble proportion in each category
 harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield penalty is inputted as a harvestable grain
 biomass_k = pinp.stubble['i_trial_yield'] / harvest_index_k
-total_residue_ks2 = biomass_k[:,na] * stub.f_biomass2residue()
+total_residue_ks2 = biomass_k[:,na] * stub.f_biomass2residue(residuesim=True)
 cat_propn_s1ks2 = total_intake_ha_s1ks2/total_residue_ks2
 
 # Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
