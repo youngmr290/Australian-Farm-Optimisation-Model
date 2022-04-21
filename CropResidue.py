@@ -169,7 +169,7 @@ def crop_residue_all(params, r_vals, nv):
     average_days_since_harv_p6zk = average_days_since_harv_p6zk.astype(float)
 
     ##calc the quantity decline % for each period - used in transfer constraints, need to average the number of days in the period of interest
-    quant_declined_p6zk = (1 - pinp.stubble['quantity_deterioration']) ** average_days_since_harv_p6zk.astype(float)
+    quant_declined_p6zk = (1 - pinp.stubble['quantity_decay']) ** average_days_since_harv_p6zk.astype(float)
 
     ##calc the quality decline % for each period
     ###quality is inputted for the paddock trial date. Therefore use days_since_trial to scale quality.

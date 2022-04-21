@@ -162,7 +162,7 @@ trial_lwc_p1p2ks2 = trial_lwc_pks2.reshape(-1,len_p2, len_k, len_s2)
 lwc_diff_p1p2s1ks2 = np.abs(lwc_p1s1ks2[:,na,:,:,:] - trial_lwc_p1p2ks2[:,:,na,:,:])
 grazing_days_p1s1ks2 = np.sum(np.equal(np.min(lwc_diff_p1p2s1ks2, axis=2,keepdims=True) , lwc_diff_p1p2s1ks2), axis=1)
 ###adjust intake - allowing for decay related to quantity (to reflect the amount at harvest). (Trampling done below).
-adj_intake_p1s1ks2 = intake_p1s1ks2 / (1 - pinp.stubble['quantity_deterioration'][:,na]) ** days_since_harv_p[:, na, na, na]
+adj_intake_p1s1ks2 = intake_p1s1ks2 / (1 - pinp.stubble['quantity_decay'][:,na]) ** days_since_harv_p[:, na, na, na]
 ###multiply by adjusted intake and sum p axis to return the total intake for each dmd (stubble) category
 total_intake_s1ks2 = np.sum(grazing_days_p1s1ks2 * adj_intake_p1s1ks2, axis=0)
 total_intake_ha_s1ks2 = total_intake_s1ks2 * pinp.stubble['i_sr']
