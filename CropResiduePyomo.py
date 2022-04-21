@@ -28,19 +28,19 @@ def f1_stubpyomo_local(params, model):
     # variable         #
     ###################
     ##stubble consumption
-    model.v_stub_con = pe.Var(model.s_sequence_year, model.s_sequence, model.s_feed_pools, model.s_feed_periods, model.s_season_types,
+    model.v_stub_con = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods, model.s_feed_pools,
                               model.s_crops, model.s_stub_cat, model.s_biomass_uses, bounds=(0.0,None),
                               doc='consumption of 1t of stubble')
     ##stubble transfer
-    model.v_stub_transfer = pe.Var(model.s_sequence_year, model.s_sequence, model.s_feed_periods, model.s_season_types,
+    model.v_stub_transfer = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods,
                                    model.s_crops, model.s_stub_cat, model.s_biomass_uses, bounds=(0.0,None),
                                    doc='transfer of 1t of stubble to following period - 1t of stubble at the start of the period that is not consumed but is decayed')
 
     # model.v_stub_harv = pe.Var(model.s_sequence_year, model.s_sequence, model.s_feed_periods, model.s_season_types, model.s_crops, bounds=(0.0,None),
     #                                doc='total stubble at harvest. Used to transfer to stubble constraint')
 
-    model.v_stub_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, bounds=(0,None),
-                                doc='tonnes of total stub in debt (will need to be provided from harvest)')
+    # model.v_stub_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_season_periods, model.s_crops, bounds=(0,None),
+    #                             doc='tonnes of total stub in debt (will need to be provided from harvest)')
 
     # model.v_stub_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_stub_cat, model.s_season_types, bounds=(0,None),
     #                             doc='tonnes of total stub in credit (can be used for feeding)')
@@ -103,13 +103,13 @@ def f_con_stubble_within(model):
         if pe.value(model.p_mask_childz_within_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s]) and pe.value(model.p_stub_transfer_req[p6,z9,k]): #p_stub_transfer_req included to remove constraints when stubble doesn't exist
             sc_prev = list(model.s_stub_cat)[list(model.s_stub_cat).index(sc)-1] #previous stubble cat - used to transfer from current cat to the next, list is required because indexing of an ordered set starts at 1 which means index of 0 chucks error
             p6_prev = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6)-1] #have to convert to a list first because indexing of an ordered set starts at 1
-            return  - sum(model.v_stub_transfer[q,s,p6_prev,z8,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
+            return  - sum(model.v_stub_transfer[q,s,z8,p6_prev,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
                           * model.p_parentz_provwithin_fp[p6_prev,z8,z9] for z8 in model.s_season_types)  \
                     - sum(model.v_use_biomass[q,s,p7,z9,k,l,s2] * model.p_a_p6_p7[p7,p6,z9] * model.p_biomass2residue[k,l,s2]
                           for p7 in model.s_season_periods for l in model.s_lmus) * model.p_a_prov[p6,z9,k,sc,s2] \
-                    + model.v_stub_transfer[q,s,p6,z9,k,sc,s2] * model.p_stub_transfer_req[p6,z9,k] \
-                    + sum(-model.v_stub_con[q,s,f,p6,z9,k,sc_prev,s2] * model.p_bc_prov[k,sc_prev,s2]
-                          + model.v_stub_con[q,s,f,p6,z9,k,sc,s2] * model.p_bc_req[k,sc,s2]
+                    + model.v_stub_transfer[q,s,z9,p6,k,sc,s2] * model.p_stub_transfer_req[p6,z9,k] \
+                    + sum(-model.v_stub_con[q,s,z9,p6,f,k,sc_prev,s2] * model.p_bc_prov[k,sc_prev,s2]
+                          + model.v_stub_con[q,s,z9,p6,f,k,sc,s2] * model.p_bc_req[k,sc,s2]
                           for f in model.s_feed_pools) <=0
         else:
             return pe.Constraint.Skip
@@ -129,16 +129,16 @@ def f_con_stubble_between(model):
             sc_prev = list(model.s_stub_cat)[list(model.s_stub_cat).index(sc)-1] #previous stubble cat - used to transfer from current cat to the next, list is required because indexing of an ordered set starts at 1 which means index of 0 chucks error
             p6_prev = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6)-1] #have to convert to a list first because indexing of an ordered set starts at 1
             q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
-            return  - sum(model.v_stub_transfer[q,s8,p6_prev,z8,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
+            return  - sum(model.v_stub_transfer[q,s8,z8,p6_prev,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
                           * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
-                          + model.v_stub_transfer[q,s8,p6_prev,z8,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
+                          + model.v_stub_transfer[q,s8,z8,p6_prev,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
                           * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
                           for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q,s8])!=0)  \
                     - sum(model.v_use_biomass[q,s9,p7,z9,k,l,s2] * 1000 * model.p_a_p6_p7[p7,p6,z9] * model.p_biomass2residue[k,l,s2]
                           for p7 in model.s_season_periods for l in model.s_lmus) * model.p_a_prov[p6,z9,k,sc,s2] \
-                    + model.v_stub_transfer[q,s9,p6,z9,k,sc,s2] * model.p_stub_transfer_req[p6,z9,k] \
-                    + sum(-model.v_stub_con[q,s9,f,p6,z9,k,sc_prev,s2] * model.p_bc_prov[k,sc_prev,s2]
-                          + model.v_stub_con[q,s9,f,p6,z9,k,sc,s2] * model.p_bc_req[k,sc,s2]
+                    + model.v_stub_transfer[q,s9,z9,p6,k,sc,s2] * model.p_stub_transfer_req[p6,z9,k] \
+                    + sum(-model.v_stub_con[q,s9,z9,p6,f,k,sc_prev,s2] * model.p_bc_prov[k,sc_prev,s2]
+                          + model.v_stub_con[q,s,z9,p6,f,k,sc,s2] * model.p_bc_req[k,sc,s2]
                           for f in model.s_feed_pools) <=0
         else:
             return pe.Constraint.Skip
@@ -170,7 +170,7 @@ def f_stubble_me(model,q,s,p6,f,z):
 
     Used in global constraint (con_me). See CorePyomo
     '''
-    return sum(model.v_stub_con[q,s,f,p6,z,k,sc,s2] * model.p_stub_md[f,p6,z,k,sc]
+    return sum(model.v_stub_con[q,s,z,p6,f,k,sc,s2] * model.p_stub_md[f,p6,z,k,sc]
                for k in model.s_crops for sc in model.s_stub_cat for s2 in model.s_biomass_uses)
     
 ##stubble vol
@@ -180,5 +180,5 @@ def f_stubble_vol(model,q,s,p6,f,z):
 
     Used in global constraint (con_vol). See CorePyomo
     '''
-    return sum(model.v_stub_con[q,s,f,p6,z,k,sc,s2] * model.p_stub_vol[f,p6,z,k,sc]
+    return sum(model.v_stub_con[q,s,z,p6,f,k,sc,s2] * model.p_stub_vol[f,p6,z,k,sc]
                for k in model.s_crops for sc in model.s_stub_cat for s2 in model.s_biomass_uses)

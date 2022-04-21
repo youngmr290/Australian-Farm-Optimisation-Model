@@ -547,9 +547,9 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
 
 def f_stubble_summary(lp_vars, r_vals):
     ##mask to uncluster z axis
-    maskz8_p6z = r_vals['pas']['mask_fp_z8var_p6z']
-    stub_fp6zks = f_vars2df(lp_vars, 'v_stub_con', maskz8_p6z[:,:,na,na,na], z_pos=-4)
-    return stub_fp6zks.groupby(level=(1, 2, 4)).sum().unstack()
+    maskz8_zp6 = r_vals['pas']['mask_fp_z8var_p6z'].T
+    stub_qszp6fks1s2 = f_vars2df(lp_vars, 'v_stub_con', maskz8_zp6[:,:,na,na,na,na], z_pos=-6)
+    return stub_qszp6fks1s2.groupby(level=(2, 3, -2)).sum().unstack()
 
 
 def f_mvf_summary(lp_vars):

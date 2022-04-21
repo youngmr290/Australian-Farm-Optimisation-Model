@@ -276,7 +276,7 @@ def f_con_harv_stub_nap_cons(model):
         if any(model.p_nap_prop[p6,z] or model.p_harv_prop[p6,z,k] for k in model.s_crops):
             return sum(-paspy.f_pas_me(model,q,s,p6,f,z)
                        + sum(model.p_harv_prop[p6,z,k] / (1 - model.p_harv_prop[p6,z,k])
-                             * model.v_stub_con[q,s,f,p6,z,k,sc,s2] * model.p_stub_md[f,p6,z,k,sc]
+                             * model.v_stub_con[q,s,z,p6,f,k,sc,s2] * model.p_stub_md[f,p6,z,k,sc]
                              for k in model.s_crops for sc in model.s_stub_cat for s2 in model.s_biomass_uses)
                        + model.p_nap_prop[p6,z] / (1 - model.p_nap_prop[p6,z]) * paspy.f_nappas_me(model,q,s,p6,f,z)
                        for f in model.s_feed_pools) <= 0
