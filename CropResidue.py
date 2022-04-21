@@ -172,9 +172,8 @@ def crop_residue_all(params, r_vals, nv):
     quant_declined_p6zk = (1 - pinp.stubble['quantity_decay']) ** average_days_since_harv_p6zk.astype(float)
 
     ##calc the quality decline % for each period
-    ###quality is inputted for the paddock trial date. Therefore use days_since_trial to scale quality.
-    average_days_since_trial_p6zk = average_days_since_harv_p6zk - pinp.stubble['i_calibration_offest'] #days will be negative between harvest and trial start
-    qual_declined_p6zk = (1 - pinp.stubble['quality_deterioration']) ** average_days_since_trial_p6zk.astype(float)
+    ###quality of each category is inputted at harvest.
+    qual_declined_p6zk = (1 - pinp.stubble['quality_deterioration']) ** average_days_since_harv_p6zk.astype(float)
 
     ###############
     # M/D & vol   #
