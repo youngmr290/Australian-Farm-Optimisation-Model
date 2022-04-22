@@ -727,7 +727,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'dams_keys_qsk2tvanwziy1g1'
             arith = 2
             index =[4] #v
-            cols =[2, 3] #k2, t
+            cols =[8, 2, 3] #z, k2, t
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -758,7 +758,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'prog_keys_qsk3k5twzia0xg2'
             arith = 2
             index =[5]   #w
-            cols =[2, 3, 4, 9] #dam age, birth type, t slice, gender
+            cols =[6, 2, 3, 4, 9] #z, dam age, birth type, t slice, gender
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -772,7 +772,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_qsk3k5tvnwziaxyg3'
             arith = 2
             index =[5]                  #DVP
-            cols =[13, 11, 2, 3, 4, 7]   #g3, Gender, dam age, BTRT, t, w
+            cols =[8, 13, 11, 2, 3, 4, 7]   #z, g3, Gender, dam age, BTRT, t, w
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
