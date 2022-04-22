@@ -3757,7 +3757,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##Minimum FD since shearing (end)
                 fd_min_sire = np.minimum(fd_min_start_sire, d_fd_sire)
                 ##Staple length if shorn(end)
-                sl_sire = (fl_sire - fl_shear_yg0) / cw_sire[15, ...]
+                sl_sire = (fl_sire - fl_shear_yg0) * cw_sire[15, ...]
                 ##Staple strength if shorn(end)
                 ss_sire = fd_min_sire**2 / fd_sire **2 * cw_sire[16, ...]
 
@@ -3794,7 +3794,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##Minimum FD since shearing (end)
                 fd_min_dams = np.minimum(fd_min_start_dams, d_fd_dams)
                 ##Staple length if shorn(end)
-                sl_dams = (fl_dams - fl_shear_yg0) / cw_dams[15, ...]
+                sl_dams = (fl_dams - fl_shear_yg1) * cw_dams[15, ...]
                 ##Staple strength if shorn(end)
                 ss_dams = fd_min_dams ** 2 / fd_dams ** 2 * cw_dams[16, ...]
 
@@ -3828,7 +3828,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##Minimum FD since shearing (end)
                 fd_min_yatf = np.minimum(fd_min_start_yatf, d_fd_yatf) #d_fd is actually the fd of the weeks growth. Not the change in fd.
                 ##Staple length if shorn(end)
-                sl_yatf = (fl_yatf - fl_shear_yg0) / cw_yatf[15, ...]
+                sl_yatf = (fl_yatf - fl_shear_yg2) * cw_yatf[15, ...]
                 ##Staple strength if shorn(end)
                 ss_yatf = fun.f_divide(fd_min_yatf ** 2 , fd_yatf ** 2 * cw_yatf[16, ...])
 
@@ -3863,7 +3863,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##Minimum FD since shearing (end)
                 fd_min_offs = np.minimum(fd_min_start_offs, d_fd_offs)
                 ##Staple length if shorn(end)
-                sl_offs = (fl_offs - fl_shear_yg0) / cw_offs[15, ...]
+                sl_offs = (fl_offs - fl_shear_yg3) * cw_offs[15, ...]
                 ##Staple strength if shorn(end)
                 ss_offs = fd_min_offs ** 2 / fd_offs ** 2 * cw_offs[16, ...]
 
