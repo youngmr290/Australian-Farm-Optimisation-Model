@@ -203,7 +203,7 @@ def f1_DSTw_adjust(propn_source_b1, cycles_source=2, cycles_destination=1, axis_
     dry_propn_source = t_source[tuple(slc0)]
     dry_propn_destination = dry_propn_source ** (cycles_destination / cycles_source)
     t_destination[tuple(slc0)] = dry_propn_destination
-    t_destination[tuple(slc1)] = t_source[slc1] * (1 - dry_propn_destination) / (1 - dry_propn_source)
+    t_destination[tuple(slc1)] = t_source[tuple(slc1)] * (1 - dry_propn_destination) / (1 - dry_propn_source)
     ##roll the b1 axis to starting position
     propn_destination_b1 = np.roll(t_destination, dry_slice, axis=axis_b1)
     ##reset the NM slice if it exists
