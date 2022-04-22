@@ -280,8 +280,8 @@ def f_universal_inp_sa():
     ###SAM - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_scan_std_c2'] = fun.f_sa(parameters['i_scan_std_c2'].astype(float), sen.sam['rr']) #genotype scanning percent params
     ###SAA - these have to be converted to float so that the blank column becomes nan rather that None
-    parameters['i_scan_std_c2'] = fun.f_sa(parameters['i_scan_std_c2'].astype(float), sen.saa['rr'], 2
-                                           ) * (parameters['i_scan_std_c2'] > 0)  #stays as zero if original value was zero
+    parameters['i_scan_std_c2'] = fun.f_sa(parameters['i_scan_std_c2'].astype(float)
+                                           , sen.saa['rr'] * (parameters['i_scan_std_c2'] > 0), 2)  #no change if original value was zero
 
     ##average c1 axis if price variation is not included
     general['i_c1_variation_included'] = fun.f_sa(general['i_c1_variation_included'], sen.sav['inc_c1_variation'], 5)

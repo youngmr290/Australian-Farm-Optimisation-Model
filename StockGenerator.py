@@ -1696,7 +1696,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     age_end_pa1e1b1nwzida0e0b0xyg3 = (np.maximum(date_end_pa1e1b1nwzida0e0b0xyg, date_weaned_ida0e0b0xyg3 -1) - date_born_ida0e0b0xyg3).astype(int) #use date weaned because the simulation for these animals is starting at weaning.
     age_end_pa1e1b1nwzida0e0b0xyg2 = (np.maximum(np.array([-1]).astype('timedelta64[D]'),np.minimum(date_end_pa1e1b1nwzida0e0b0xyg, date_weaned_pa1e1b1nwzida0e0b0xyg2 -1) - date_born_pa1e1b1nwzida0e0b0xyg2)).astype(int)  #use min and max so that the min age is 0 and the max age is the age at weaning
 
-    ##age mid period , plus one to get the age at the end of the last day of the period ie needed to get the full len of period.
+    ##age mid-period , plus one to get the age at the end of the last day of the period ie needed to get the full len of period.
     age_pa1e1b1nwzida0e0b0xyg0 = (age_start_pa1e1b1nwzida0e0b0xyg0 + age_end_pa1e1b1nwzida0e0b0xyg0 +1) /2
     age_pa1e1b1nwzida0e0b0xyg1 = (age_start_pa1e1b1nwzida0e0b0xyg1 + age_end_pa1e1b1nwzida0e0b0xyg1 +1) /2
     age_pa1e1b1nwzida0e0b0xyg2 = (age_start_pa1e1b1nwzida0e0b0xyg2 + age_end_pa1e1b1nwzida0e0b0xyg2 +1) /2
@@ -1852,9 +1852,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                     * (1 - np.sin(2 * np.pi * (scan_std_doy_yg1[..., na] + 10) / 365)
                                                     * np.sin(lat_rad) / -0.57)), axis=-1))
     ##Rumen development factor on PI - yatf
-    piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(1/(1 + np.exp(-ci_yatf[3, ..., na]
-                                        * (age_p1_pa1e1b1nwzida0e0b0xyg2p1 - ci_yatf[4, ..., na])))
+    piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(fun.f_back_transform(ci_yatf[3, ..., na]
+                                        * (age_p1_pa1e1b1nwzida0e0b0xyg2p1 - ci_yatf[4, ..., na]))
                                         , weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
+    # piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(1/(1 + np.exp(-ci_yatf[3, ..., na]
+    #                                     * (age_p1_pa1e1b1nwzida0e0b0xyg2p1 - ci_yatf[4, ..., na])))
+    #                                     , weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
     piyf_pa1e1b1nwzida0e0b0xyg2 = piyf_pa1e1b1nwzida0e0b0xyg2 * (nyatf_b1nwzida0e0b0xyg > 0) #set pi to 0 if no yatf.
     ##Foetal normal weight pattern (mid period)
     nwf_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[2, ..., na] * (1 - np.exp(cp_dams[3, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p1)))), weights=age_f_p1_weights_pa1e1b1nwzida0e0b0xyg1p1, axis = -1)
@@ -2195,6 +2198,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         ffcfw_start_dams = fun.f_expand(ffcfw_initial_wzida0e0b0xyg1, p_pos, right_pos=w_pos) #add axis w to a1 because e and b axis are sliced before they are added via calculation
         ffcfw_max_start_dams = ffcfw_start_dams
         ffcfw_mating_dams = 0.0
+        lwc_mating_dams = 0.0
         omer_history_start_p3g1[...] = np.nan
         d_cfw_history_start_p2g1[...] = np.nan
         cfw_start_dams = cfw_initial_wzida0e0b0xyg1
@@ -2403,13 +2407,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###PI Size factor (for cattle)
                 zf_sire = np.maximum(1, 1 + cr_sire[7, ...] - relsize_start_sire)
                 ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
-                z1f_sire = 1 / (1 + np.exp(+cg_sire[4, ...] * (relsize1_start_sire - cg_sire[5, ...])))
+                zf1_sire = fun.f_back_transform(cg_sire[4, ...] * (cg_sire[5, ...] - relsize1_start_sire))
+#                zf1_sire = 1 / (1 + np.exp(+cg_sire[4, ...] * (relsize1_start_sire - cg_sire[5, ...])))
                 ###EVG Size factor (increases at maturity)
-                z2f_sire = np.clip((relsize1_start_sire - cg_sire[6, ...]) / (cg_sire[7, ...] - cg_sire[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
-                sam_kg_sire = fun.f_update(1, sen.sam['kg'], z2f_sire == 1)
-                sam_mr_sire = fun.f_update(1, sen.sam['mr'], z2f_sire == 1)
-                sam_pi_sire = fun.f_update(1, sen.sam['pi'], z2f_sire == 1)
+                zf2_sire = np.clip((relsize1_start_sire - cg_sire[6, ...]) / (cg_sire[7, ...] - cg_sire[6, ...]), 0 ,1)
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
+                sam_kg_sire = fun.f_update(1, sen.sam['kg'], zf2_sire == 1)
+                sam_mr_sire = fun.f_update(1, sen.sam['mr'], zf2_sire == 1)
+                sam_pi_sire = fun.f_update(1, sen.sam['pi'], zf2_sire == 1)
 
             ##dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
@@ -2434,13 +2439,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###PI Size factor (for cattle)
                 zf_dams = np.maximum(1, 1 + cr_dams[7, ...] - relsize_start_dams)
                 ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
-                z1f_dams = 1 / (1 + np.exp(+cg_dams[4, ...] * (relsize1_start_dams - cg_dams[5, ...])))
+                zf1_dams = fun.f_back_transform(cg_dams[4, ...] * (cg_dams[5, ...] - relsize1_start_dams))
+#                zf1_dams = 1 / (1 + np.exp(+cg_dams[4, ...] * (relsize1_start_dams - cg_dams[5, ...])))
                 ###EVG Size factor (increases at maturity)
-                z2f_dams = np.clip((relsize1_start_dams - cg_dams[6, ...]) / (cg_dams[7, ...] - cg_dams[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
-                sam_kg_dams = fun.f_update(1, sen.sam['kg'], z2f_dams == 1)
-                sam_mr_dams = fun.f_update(1, sen.sam['mr'], z2f_dams == 1)
-                sam_pi_dams = fun.f_update(1, sen.sam['pi'], z2f_dams == 1)
+                zf2_dams = np.clip((relsize1_start_dams - cg_dams[6, ...]) / (cg_dams[7, ...] - cg_dams[6, ...]), 0 ,1)
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
+                sam_kg_dams = fun.f_update(1, sen.sam['kg'], zf2_dams == 1)
+                sam_mr_dams = fun.f_update(1, sen.sam['mr'], zf2_dams == 1)
+                sam_pi_dams = fun.f_update(1, sen.sam['pi'], zf2_dams == 1)
                 ##sires for mating
                 n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_sire_req(sire_propn_pa1e1b1nwzida0e0b0xyg1g0[p], sire_periods_g0p8, pinp.sheep['i_sire_recovery']
                                                                    , pinp.sheep['i_startyear'], date_end_pa1e1b1nwzida0e0b0xyg[p], period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
@@ -2467,13 +2473,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###PI Size factor (for cattle)
                 zf_offs = np.maximum(1, 1 + cr_offs[7, ...] - relsize_start_offs)
                 ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
-                z1f_offs = 1 / (1 + np.exp(+cg_offs[4, ...] * (relsize1_start_offs - cg_offs[5, ...])))
+                zf1_offs = fun.f_back_transform(cg_offs[4, ...] * (cg_offs[5, ...] - relsize1_start_offs))
+#                zf1_offs = 1 / (1 + np.exp(+cg_offs[4, ...] * (relsize1_start_offs - cg_offs[5, ...])))
                 ###EVG Size factor (increases at maturity)
-                z2f_offs = np.clip((relsize1_start_offs - cg_offs[6, ...]) / (cg_offs[7, ...] - cg_offs[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
-                sam_kg_offs = fun.f_update(1, sen.sam['kg'], z2f_offs == 1)
-                sam_mr_offs = fun.f_update(1, sen.sam['mr'], z2f_offs == 1)
-                sam_pi_offs = fun.f_update(1, sen.sam['pi'], z2f_offs == 1)
+                zf2_offs = np.clip((relsize1_start_offs - cg_offs[6, ...]) / (cg_offs[7, ...] - cg_offs[6, ...]), 0 ,1)
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
+                sam_kg_offs = fun.f_update(1, sen.sam['kg'], zf2_offs == 1)
+                sam_mr_offs = fun.f_update(1, sen.sam['mr'], zf2_offs == 1)
+                sam_pi_offs = fun.f_update(1, sen.sam['pi'], zf2_offs == 1)
 
 
 
@@ -2804,7 +2811,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_sire, rc_start_sire, mei_sire
-                                                                , mem_sire, mew_sire, z1f_sire, z2f_sire, kg_sire, rev_trait_values['sire'][p])
+                                                                , mem_sire, mew_sire, zf1_sire, zf2_sire, kg_sire, rev_trait_values['sire'][p])
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
@@ -2819,7 +2826,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_dams, rc_start_dams, mei_dams
-                                                , mem_dams, mew_dams, z1f_dams, z2f_dams, kg_dams, rev_trait_values['dams'][p], mec_dams, mel_dams
+                                                , mem_dams, mew_dams, zf1_dams, zf2_dams, kg_dams, rev_trait_values['dams'][p], mec_dams, mel_dams
                                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             ebg_dams = temp0
@@ -2835,7 +2842,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_offs, rc_start_offs, mei_offs
-                                                                , mem_offs, mew_offs, z1f_offs, z2f_offs, kg_offs, rev_trait_values['offs'][p])
+                                                                , mem_offs, mew_offs, zf1_offs, zf2_offs, kg_offs, rev_trait_values['offs'][p])
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
@@ -2853,7 +2860,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_mu(cg_sire, rc_start_sire, mei_sire
-                                                                , mem_sire, mew_sire, z1f_sire, z2f_sire, kg_sire, rev_trait_values['sire'][p])
+                                                                , mem_sire, mew_sire, zf1_sire, zf2_sire, kg_sire, rev_trait_values['sire'][p])
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
@@ -2868,7 +2875,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_mu(cg_dams, rc_start_dams, mei_dams
-                                                , mem_dams, mew_dams, z1f_dams, z2f_dams, kg_dams, rev_trait_values['dams'][p], mec_dams, mel_dams
+                                                , mem_dams, mew_dams, zf1_dams, zf2_dams, kg_dams, rev_trait_values['dams'][p], mec_dams, mel_dams
                                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             ebg_dams = temp0
@@ -2884,7 +2891,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_mu(cg_offs, rc_start_offs, mei_offs
-                                                                , mem_offs, mew_offs, z1f_offs, z2f_offs, kg_offs, rev_trait_values['offs'][p])
+                                                                , mem_offs, mew_offs, zf1_offs, zf2_offs, kg_offs, rev_trait_values['offs'][p])
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
@@ -2935,9 +2942,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 gest_propn_b1sliced = fun.f_dynamic_slice(gest_propn_pa1e1b1nwzida0e0b0xyg1[p], b1_pos, 2, 3) #slice b1 axis
                 days_period_b1sliced = fun.f_dynamic_slice(days_period_pa1e1b1nwzida0e0b0xyg1[p], b1_pos, 2, 3) #slice b1 axis
 
-                t_w_mating = np.sum((ffcfw_e1b1sliced + ebg_e1b1sliced * cg_dams[18, ...] * days_period_b1sliced * (1-gest_propn_b1sliced)) \
+                t_w_mating = np.sum((ffcfw_e1b1sliced + ebg_e1b1sliced * days_period_b1sliced * (1-gest_propn_b1sliced)) \
                              * period_is_mating_pa1e1b1nwzida0e0b0xyg1[p], axis=e1_pos, keepdims=True)#Temporary variable for mating weight
                 ffcfw_mating_dams = fun.f_update(ffcfw_mating_dams, t_w_mating, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
+                maternallw_mating_dams = ffcfw_mating_dams * cg_dams[18, ...] # allow for gut fill to calculate maternal LW
+                ##LW change during joining is required for the LMAT conception equation. Using LWC in the single generator period
+                lwc_mating_dams = fun.f_update(lwc_mating_dams, ebg_e1b1sliced, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]) * cg_dams[18, ...]
                 ##Relative condition of the dam at mating - required to determine milk production
                 rc_mating_dams = ffcfw_mating_dams / nw_start_dams_e1b1sliced
                 ##Condition score of the dams at mating
@@ -3071,13 +3081,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###PI Size factor (for cattle)
                 zf_yatf = np.maximum(1, 1 + cr_yatf[7, ...] - relsize_start_yatf)
                 ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
-                z1f_yatf = 1 / (1 + np.exp(+cg_yatf[4, ...] * (relsize1_start_yatf - cg_yatf[5, ...])))
+                zf1_yatf = fun.f_back_transform(cg_yatf[4, ...] * (cg_yatf[5, ...] - relsize1_start_yatf))
+#                zf1_yatf = 1 / (1 + np.exp(+cg_yatf[4, ...] * (relsize1_start_yatf - cg_yatf[5, ...])))
                 ###EVG Size factor (increases at maturity)
-                z2f_yatf = np.clip((relsize1_start_yatf - cg_yatf[6, ...]) / (cg_yatf[7, ...] - cg_yatf[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults (only included here for consistency)
-                sam_kg_yatf = fun.f_update(1, sen.sam['kg'], z2f_yatf == 1)
-                sam_mr_yatf = fun.f_update(1, sen.sam['mr'], z2f_yatf == 1)
-                sam_pi_yatf = fun.f_update(1, sen.sam['pi'], z2f_yatf == 1)
+                zf2_yatf = np.clip((relsize1_start_yatf - cg_yatf[6, ...]) / (cg_yatf[7, ...] - cg_yatf[6, ...]), 0 ,1)
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults (only included here for consistency)
+                sam_kg_yatf = fun.f_update(1, sen.sam['kg'], zf2_yatf == 1)
+                sam_mr_yatf = fun.f_update(1, sen.sam['mr'], zf2_yatf == 1)
+                sam_pi_yatf = fun.f_update(1, sen.sam['pi'], zf2_yatf == 1)
 
 
             ##potential intake - yatf
@@ -3205,7 +3216,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_yatf, rc_start_yatf, mei_yatf, mem_yatf
-                                                                             , mew_yatf, z1f_yatf, z2f_yatf, kg_yatf, rev_trait_values['yatf'][p])
+                                                                             , mew_yatf, zf1_yatf, zf2_yatf, kg_yatf, rev_trait_values['yatf'][p])
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
@@ -3222,7 +3233,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_mu(cg_yatf, rc_start_yatf, mei_yatf, mem_yatf
-                                                                             , mew_yatf, z1f_yatf, z2f_yatf, kg_yatf, rev_trait_values['yatf'][p])
+                                                                             , mew_yatf, zf1_yatf, zf2_yatf, kg_yatf, rev_trait_values['yatf'][p])
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
@@ -3336,6 +3347,22 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                   , crg_doy_ltw_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
                                                   , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                   , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p])
+                    if eqn_used:
+                        cf_conception_dams = temp0*0  #default set to 0 because required in start production function (only used in lmat conception function)
+                        conception_dams = temp0
+                    ## these variables need to be stored even if the equation system is not used so that the equations can be compared
+                    if eqn_compare:
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
+            eqn_system = 2 # MU LMAT = 2
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                    temp0 = sfun.f_conception_lmat(cf_dams, cb1_dams, cu2_dams, maternallw_mating_dams
+                                                   , lwc_mating_dams * 1000, age_pa1e1b1nwzida0e0b0xyg1[p]
+                                                   , crg_doy_lmat_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
+                                                   , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
+                                                   , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]
+                                                   , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
                         cf_conception_dams = temp0*0  #default set to 0 because required in start production function (only used in lmat conception function)
                         conception_dams = temp0
@@ -3527,7 +3554,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_mortality_pregtox_cs(cb1_dams, cg_dams, nw_start_dams, ebg_dams, sd_ebg_dams, days_period_pa1e1b1nwzida0e0b0xyg1[p]
+                    temp0 = sfun.f_mortality_pregtox_cs(cb1_dams, cg_dams, nw_start_dams, ebg_dams, sd_ebg_dams
+                                                    , days_period_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], sen.sap['mortalitye'])
                     if eqn_used:
@@ -3614,10 +3642,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
             ###sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
-                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_sire == 1)   #potential intake
-                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_sire == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
-                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_sire == 1)   #efficiency of gain (kg)
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
+                sam_pi = fun.f_update(1, sen.sam['pi_post'], zf2_sire == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post'], zf2_sire == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post'], zf2_sire == 1)   #efficiency of gain (kg)
                 #### alter potential intake
                 pi_sire = fun.f_sa(pi_sire, sam_pi)
                 #### alter mei
@@ -3635,10 +3663,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
             ###dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
-                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_dams == 1)   #potential intake
-                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_dams == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
-                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_dams == 1)   #efficiency of gain (kg)
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
+                sam_pi = fun.f_update(1, sen.sam['pi_post'], zf2_dams == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post'], zf2_dams == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post'], zf2_dams == 1)   #efficiency of gain (kg)
                 #### alter potential intake
                 pi_dams = fun.f_sa(pi_dams, sam_pi)
                 #### alter mei
@@ -3656,10 +3684,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
             ###yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
-                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_yatf == 1)   #potential intake
-                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_yatf == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
-                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_yatf == 1)   #efficiency of gain (kg)
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
+                sam_pi = fun.f_update(1, sen.sam['pi_post'], zf2_yatf == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post'], zf2_yatf == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post'], zf2_yatf == 1)   #efficiency of gain (kg)
                 #### alter potential intake
                 pi_yatf = fun.f_sa(pi_yatf, sam_pi)
                 #### alter mei (only calculate impact on mei_solid because that passes to the mei parameter in the matrix)
@@ -3678,10 +3706,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
             ###offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
-                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_offs == 1)   #potential intake
-                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_offs == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
-                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_offs == 1)   #efficiency of gain (kg)
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
+                sam_pi = fun.f_update(1, sen.sam['pi_post'], zf2_offs == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post'], zf2_offs == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post'], zf2_offs == 1)   #efficiency of gain (kg)
                 #### alter potential intake
                 pi_offs = fun.f_sa(pi_offs, sam_pi)
                 #### alter mei
@@ -3729,7 +3757,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##Minimum FD since shearing (end)
                 fd_min_sire = np.minimum(fd_min_start_sire, d_fd_sire)
                 ##Staple length if shorn(end)
-                sl_sire = (fl_sire - fl_shear_yg0) / cw_sire[15, ...]
+                sl_sire = (fl_sire - fl_shear_yg0) * cw_sire[15, ...]
                 ##Staple strength if shorn(end)
                 ss_sire = fd_min_sire**2 / fd_sire **2 * cw_sire[16, ...]
 
@@ -3766,7 +3794,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##Minimum FD since shearing (end)
                 fd_min_dams = np.minimum(fd_min_start_dams, d_fd_dams)
                 ##Staple length if shorn(end)
-                sl_dams = (fl_dams - fl_shear_yg0) / cw_dams[15, ...]
+                sl_dams = (fl_dams - fl_shear_yg1) * cw_dams[15, ...]
                 ##Staple strength if shorn(end)
                 ss_dams = fd_min_dams ** 2 / fd_dams ** 2 * cw_dams[16, ...]
 
@@ -3800,7 +3828,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##Minimum FD since shearing (end)
                 fd_min_yatf = np.minimum(fd_min_start_yatf, d_fd_yatf) #d_fd is actually the fd of the weeks growth. Not the change in fd.
                 ##Staple length if shorn(end)
-                sl_yatf = (fl_yatf - fl_shear_yg0) / cw_yatf[15, ...]
+                sl_yatf = (fl_yatf - fl_shear_yg2) * cw_yatf[15, ...]
                 ##Staple strength if shorn(end)
                 ss_yatf = fun.f_divide(fd_min_yatf ** 2 , fd_yatf ** 2 * cw_yatf[16, ...])
 
@@ -3835,7 +3863,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##Minimum FD since shearing (end)
                 fd_min_offs = np.minimum(fd_min_start_offs, d_fd_offs)
                 ##Staple length if shorn(end)
-                sl_offs = (fl_offs - fl_shear_yg0) / cw_offs[15, ...]
+                sl_offs = (fl_offs - fl_shear_yg3) * cw_offs[15, ...]
                 ##Staple strength if shorn(end)
                 ss_offs = fd_min_offs ** 2 / fd_offs ** 2 * cw_offs[16, ...]
 

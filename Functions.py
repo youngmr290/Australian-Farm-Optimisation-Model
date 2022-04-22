@@ -439,7 +439,8 @@ def f_norm_cdf(x, mu, cv=0.2, sd=None):
     ##standardise x. f_divide in case SD is 0 (either mu is 0 or CV is 0)
     xstd = f_divide(x - mu,  sd)
     ##probability (<=x)
-    prob = 1 / (np.exp(-358 / 23 * xstd + 111 * np.arctan(37 / 294 * xstd)) + 1)
+    prob = f_back_transform(358 / 23 * xstd - 111 * np.arctan(37 / 294 * xstd))
+#    prob = 1 / (np.exp(-358 / 23 * xstd + 111 * np.arctan(37 / 294 * xstd)) + 1)
     return prob
 
 
@@ -555,20 +556,22 @@ def f_produce_df(data, rows, columns, row_names=None, column_names=None):
         col_index = pd.MultiIndex.from_product(columns, names=column_names)
     return pd.DataFrame(data, index=row_index, columns=col_index)
 
+def f_back_transform(x):
+    ''' Back transform a value using a derivation of exp(x) / (1 + exp(x))'''
+    return 1 / (1 + np.exp(-x))
+
 def f_sig(x,a,b):
     ''' Sig function CSIRO equation 124 ^the equation below is the sig function from SheepExplorer'''
-    return  1/(1+np.exp(-((2*(np.log(0.95) - np.log(0.05))/(b-a))*(x-(a+b)/2))))
-
+    return f_back_transform(2 * (np.log(0.95) - np.log(0.05)) / (b-a) * (x - (a+b)/2))
+#    return  1/(1+np.exp(-((2*(np.log(0.95) - np.log(0.05))/(b-a))*(x-(a+b)/2))))
 
 def f_ramp(x,a,b):
     ''' RAMP function CSIRO equation 125a'''
     return  np.minimum(1,np.maximum(0,(a-x)/(a-b)))
 
-
 def f_dim(x,y):
     '''a function that minimum value of zero otherwise difference between the 2 inputs '''
     return np.maximum(0,x-y)
-
 
 def f_comb(n,k):
     # ##Create an array of factorial values up to n
@@ -582,7 +585,6 @@ def f_comb(n,k):
     ##Combination
     combinations = factorial[n]/(factorial[k]*factorial[n-k])
     return combinations
-
 
 def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None):
     ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
