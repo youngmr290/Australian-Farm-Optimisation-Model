@@ -4761,7 +4761,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 numbers_start_condense_dams = fun.f_update(numbers_start_condense_dams, numbers_start_dams
                                                            , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
 
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p+1,...] >0): #use p+1 so that initial numbers at birth can be set
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p-1:p+2,...] >0): #use p+2 so that initial numbers get set when birth is next period, p-1 so that numbers get set to 0 after weaning.
                 numbers_start_yatf = sfun.f1_period_start_nums(numbers_end_yatf, prejoin_tup, season_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg
                                         , nyatf_b1=nyatf_b1nwzida0e0b0xyg, gender_propn_x=gender_propn_xyg
