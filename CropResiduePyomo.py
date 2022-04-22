@@ -138,7 +138,7 @@ def f_con_stubble_between(model):
                           for p7 in model.s_season_periods for l in model.s_lmus) * model.p_a_prov[p6,z9,k,sc,s2] \
                     + model.v_stub_transfer[q,s9,z9,p6,k,sc,s2] * model.p_stub_transfer_req[p6,z9,k] \
                     + sum(-model.v_stub_con[q,s9,z9,p6,f,k,sc_prev,s2] * model.p_bc_prov[k,sc_prev,s2]
-                          + model.v_stub_con[q,s,z9,p6,f,k,sc,s2] * model.p_bc_req[k,sc,s2]
+                          + model.v_stub_con[q,s9,z9,p6,f,k,sc,s2] * model.p_bc_req[k,sc,s2]
                           for f in model.s_feed_pools) <=0
         else:
             return pe.Constraint.Skip
