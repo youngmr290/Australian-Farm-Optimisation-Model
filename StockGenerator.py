@@ -6764,8 +6764,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     r_woolvalue_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
 
-    ##sale time - no numbers needed because they don't effect sale date
-    r_saledate_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(date_start_pa1e1b1nwzida0e0b0xyg3.astype('timedelta64[s]'), a_v_pa1e1b1nwzida0e0b0xyg3,
+    ##sale time - no numbers needed because they don't effect sale date. Use date end since sale is end of period.
+    r_saledate_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(date_end_pa1e1b1nwzida0e0b0xyg3.astype('timedelta64[s]'), a_v_pa1e1b1nwzida0e0b0xyg3,
                                                     period_is_tp=period_is_sale_tpa1e1b1nwzida0e0b0xyg3) #have to convert to timedelta so can multiply (converted back to date after the report)
 
     ##cfw per head average for the mob - includes the mortality factor
