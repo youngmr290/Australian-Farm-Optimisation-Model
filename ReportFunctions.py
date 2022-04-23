@@ -820,6 +820,14 @@ def f_stock_cash_summary(lp_vars, r_vals):
     salevalue_qsk3k5p7twzia0xg2 = r_vals['stock']['salevalue_k3k5p7twzia0xg2'] * prog_numbers_qsk3k5twzia0xg2[:, :, :, :, na, ...]
     salevalue_qsk3k5p7tvnwziaxyg3 = r_vals['stock']['salevalue_k3k5p7tvnwziaxyg3'] * offs_numbers_qsk3k5tvnwziaxyg3[:, :, :, :, na, ...]
 
+    ##asset income - used to calculate the change in asset value at the start of season. This is required in the pnl report because sale management can vary across the z axis and then at the start of the season all z get averaged eg z0 might retain sheep and z4 might sell. If there is no asset value then z0 will look worse.
+    assetvalue_startseason_qsp7zg0 = r_vals['stock']['assetvalue_startseason_p7zg0'] * sire_numbers_qsg0[:, :, na, na, :]
+    assetvalue_endseason_qsp7zg0 = r_vals['stock']['assetvalue_endseason_p7zg0'] * sire_numbers_qsg0[:, :, na, na, :]
+    assetvalue_startseason_qsk2p7tva1nwziyg1 = r_vals['stock']['assetvalue_startseason_k2p7tva1nwziyg1'] * dams_numbers_qsk2tvanwziy1g1[:, :, :, na, ...]
+    assetvalue_endseason_qsk2p7tva1nwziyg1 = r_vals['stock']['assetvalue_endseason_k2p7tva1nwziyg1'] * dams_numbers_qsk2tvanwziy1g1[:, :, :, na, ...]
+    assetvalue_startseason_qsk3k5p7tvnwziaxyg3 = r_vals['stock']['assetvalue_startseason_k3k5p7tvnwziaxyg3'] * offs_numbers_qsk3k5tvnwziaxyg3[:, :, :, :, na, ...]
+    assetvalue_endseason_qsk3k5p7tvnwziaxyg3 = r_vals['stock']['assetvalue_endseason_k3k5p7tvnwziaxyg3'] * offs_numbers_qsk3k5tvnwziaxyg3[:, :, :, :, na, ...]
+
     ##wool income
     woolvalue_qsp7zg0 = r_vals['stock']['woolvalue_p7zg0'] * sire_numbers_qsg0[:, :, na, na, :]
     woolvalue_qsk2p7tva1nwziyg1 = r_vals['stock']['woolvalue_k2p7tva1nwziyg1'] * dams_numbers_qsk2tvanwziy1g1[:, :, :, na, ...]
@@ -841,6 +849,18 @@ def f_stock_cash_summary(lp_vars, r_vals):
     offscost_qsp7z = fun.f_reduce_skipfew(np.sum, offs_cost_qsk3k5p7tvnwziaxyg3, preserveAxis=(0,1,4,9))  # sum all axis except q,s,p7,z
 
     sire_purchcost_qsp7z = fun.f_reduce_skipfew(np.sum, sire_purchcost_qsp7zg0, preserveAxis=(0,1,2,3))  # sum all axis except q,s,p7
+
+    ###change in asset value at the season start. This needs to be reported in pnl because at the season start stock numbers get averaged.
+    ### Meaning that if z0 retains animals and z1 sells animals z0 will have a lower aparent profit which is not correct.
+    ### Adding this essentially means that at the end of the season animals are purchased and sold to get back to the starting point (e.g. a good season with more animals sells some animals to the poor season that has less animals so that all seasons have the same starting point).
+    ### Note if weaning occurs in the period before season start there will be an error (value of prog that are sold will get double counted). Easiest solution is to change weaning date.
+    net_assetvalue_sire_qsp7z = (fun.f_reduce_skipfew(np.sum, assetvalue_endseason_qsp7zg0, preserveAxis=(0,1,2,3))
+                                 - np.roll(fun.f_reduce_skipfew(np.sum, assetvalue_startseason_qsp7zg0, preserveAxis=(0,1,2,3)), shift=-1, axis=2))  # sum all axis except q,s,p7. Roll so that the result is in the end p7
+    net_assetvalue_dams_qsp7z = (fun.f_reduce_skipfew(np.sum, assetvalue_endseason_qsk2p7tva1nwziyg1, preserveAxis=(0,1,3,9))
+                                 - np.roll(fun.f_reduce_skipfew(np.sum, assetvalue_startseason_qsk2p7tva1nwziyg1, preserveAxis=(0,1,3,9)), shift=-1, axis=2))  # sum all axis except q,s,p7,z. Roll so that the result is in the end p7
+    net_assetvalue_offs_qsp7z = (fun.f_reduce_skipfew(np.sum, assetvalue_endseason_qsk3k5p7tvnwziaxyg3, preserveAxis=(0,1,4,9))
+                                 - np.roll(fun.f_reduce_skipfew(np.sum, assetvalue_startseason_qsk3k5p7tvnwziaxyg3, preserveAxis=(0,1,4,9)), shift=-1, axis=2))  # sum all axis except q,s,p7,z. Roll so that the result is in the end p7
+    net_asset_qsp7z = net_assetvalue_sire_qsp7z + net_assetvalue_dams_qsp7z + net_assetvalue_offs_qsp7z
 
     ##expenses sup feeding
     ###read in dict from grain summary
@@ -865,11 +885,12 @@ def f_stock_cash_summary(lp_vars, r_vals):
 
     ##get axis in correct order for pnl table
     stocksale_qszp7 = np.moveaxis(stocksale_qsp7z, source=-1, destination=2)
+    net_asset_qszp7 = np.moveaxis(net_asset_qsp7z, source=-1, destination=2)
     wool_qszp7 = np.moveaxis(wool_qsp7z, source=-1, destination=2)
     husbcost_qszp7 = np.moveaxis(husbcost_qsp7z, source=-1, destination=2)
     purchasecost_qszp7 = np.moveaxis(purchasecost_qsp7z, source=-1, destination=2)
     supcost_qsz_p7 = supcost_p7zqs.unstack([2,3,1]).T
-    return stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7
+    return stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, net_asset_qszp7
 
 
 def f_labour_summary(lp_vars, r_vals, option=0):
@@ -1080,7 +1101,7 @@ def f_profitloss_table(lp_vars, r_vals):
     ##read stuff from other functions that is used in rev and cost section
     exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k_p7zqs = f_crop_summary(lp_vars, r_vals, option=0)
     exp_mach_k_p7zqs, mach_insurance_p7z = f_mach_summary(lp_vars, r_vals)
-    stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7 = f_stock_cash_summary(lp_vars, r_vals)
+    stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, net_asset_qsp7z = f_stock_cash_summary(lp_vars, r_vals)
 
     ##other info required below
     all_pas = r_vals['rot']['all_pastures']  # landuse sets
@@ -1095,7 +1116,7 @@ def f_profitloss_table(lp_vars, r_vals):
 
     ##create p/l dataframe
     idx = pd.IndexSlice
-    subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue']
+    subtype_rev = ['grain', 'sheep sales', 'wool', 'season start asset trade', 'Total Revenue']
     subtype_exp = ['crop', 'pasture', 'stock husb', 'stock sup', 'stock purchase', 'machinery', 'labour', 'fixed', 'Total expenses']
     subtype_tot = ['asset_value', 'depreciation', 'minRoe', 'EBTD', 'obj']
     pnl_rev_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Revenue'], subtype_rev], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
@@ -1111,9 +1132,11 @@ def f_profitloss_table(lp_vars, r_vals):
     ##income
     rev_grain_p7_qsz = rev_grain_k_p7zqs.sum(axis=0).unstack([2,3,1])  # sum landuse axis
     ###add to p/l table each as a new row
+    ### season start asset trade - at the start of each season stock numbers are averaged across the z axis. This item essentially accounts for a season with more animals selling some of its animals to seasons with less animals.
     pnl.loc[idx[:, :, :,'Revenue','grain'],:] = rev_grain_p7_qsz.T.reindex(pnl_cols, axis=1).values #reindex because  has been sorted alphabetically
     pnl.loc[idx[:, :, :, 'Revenue', 'sheep sales'], :] = stocksale_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Revenue', 'wool'], :] = wool_qszp7.reshape(-1, len_p7)
+    pnl.loc[idx[:, :, :, 'Revenue', 'season start asset trade'], :] = net_asset_qsp7z.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue'], :] = pnl.loc[pnl.index.get_level_values(3) == 'Revenue'].groupby(axis=0,level=(0,1,2)).sum().values
 
     ##expenses

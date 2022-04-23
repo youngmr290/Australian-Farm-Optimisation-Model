@@ -442,6 +442,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     r_intake_f_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_nw_start_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_salegrid_c1tpa1e1b1nwzida0e0b0xyg2 = np.zeros(c1tpg2, dtype = dtype)
+    salevalue_perdam_tpa1e1b1nwzida0e0b0xyg2 = np.zeros(tpg2, dtype = dtype)
 
 
     ##offs
@@ -2009,6 +2010,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
     period_is_wean_pa1e1b1nwzida0e0b0xyg2 = sfun.f1_period_is_('period_is', date_weaned_pa1e1b1nwzida0e0b0xyg2
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
+    previousperiod_is_wean_pa1e1b1nwzida0e0b0xyg2 = np.roll(period_is_wean_pa1e1b1nwzida0e0b0xyg2, 1, axis=0)
     period_is_wean_pa1e1b1nwzida0e0b0xyg1 = period_is_wean_pa1e1b1nwzida0e0b0xyg2
     # prev_period_is_birth_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_birth_pa1e1b1nwzida0e0b0xyg1,1,axis=p_pos)
     period_is_mating_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_mated_pa1e1b1nwzida0e0b0xyg1
@@ -3993,7 +3995,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
             ###yatf
             o_ffcfw_start_tpyatf[:,p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period, has to be outside of the 'if' because days per period = 0 when weaning occurs (because once they are weaned they are not yatf therefore 0 days per period) because weaning is first day of period. But we need to know the start ffcfw.
-            o_numbers_start_tpyatf[:,p] = numbers_start_yatf #used for npw calculation - use numbers start because weaning is start of period - has to be out of the 'if' because there is 0 days in the period when weaning occurs but we still want to store the start numbers (because once they are weaned they are not yatf therefore 0 days per period)
+            o_numbers_start_tpyatf[:,p] = numbers_start_yatf #used for prog calculations - use numbers start because weaning is start of period - has to be out of the 'if' because there is 0 days in the period when weaning occurs but we still want to store the start numbers (because once they are weaned they are not yatf therefore 0 days per period)
             o_rc_start_tpyatf[:,p] = rc_start_yatf #outside because used for sale value which is weaning which has 0 days per period because weaning is first day (this means the rc at weaning is actually the rc at the start of the previous period because it doesn't recalculate once days per period goes to 0) (because once they are weaned they are not yatf therefore 0 days per period)
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort or have been in the feedlot.
@@ -4765,7 +4767,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 numbers_start_yatf = sfun.f1_period_start_nums(numbers_end_yatf, prejoin_tup, season_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg
                                         , nyatf_b1=nyatf_b1nwzida0e0b0xyg, gender_propn_x=gender_propn_xyg
-                                        , period_is_birth=period_is_birth_pa1e1b1nwzida0e0b0xyg1[p+1], group=2)
+                                        , period_is_birth=period_is_birth_pa1e1b1nwzida0e0b0xyg1[p+1]
+                                        , prevperiod_is_wean=previousperiod_is_wean_pa1e1b1nwzida0e0b0xyg2[p+1], group=2)
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
                     numbers_start_condense_yatf = fun.f_update(numbers_start_condense_yatf, numbers_start_yatf
@@ -4965,6 +4968,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     a_assetvalue_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_assetvalue_p, p_pos)
     assetvalue_timing_pa1e1b1nwzida0e0b0xyg = assetvalue_timing_y[a_assetvalue_pa1e1b1nwzida0e0b0xyg]
     period_is_assetvalue_pa1e1b1nwzida0e0b0xyg = sfun.f1_period_is_('period_is', assetvalue_timing_pa1e1b1nwzida0e0b0xyg, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
+    ###add a5 axis - add start of season and end of season to asset value so the asset value can be stored at the end and start of season. This is just used in the pnl report.
+    period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg = np.stack(np.broadcast_arrays(period_is_assetvalue_pa1e1b1nwzida0e0b0xyg,
+                                                                                period_is_startseason_pa1e1b1nwzida0e0b0xyg,
+                                                                                nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg), axis=0)
     ###feed pool - sheep are grouped based on energy volume ratio
     ##wool
     vm_p4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_vm_p4'], p_pos).astype(dtype)
@@ -5016,7 +5023,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     musters_per_hour_l2h4tpg = fun.f_expand(uinp.sheep['i_husb_muster_labourreq_l2h4'], p_pos-2,swap=True)
     husb_muster_infrastructurereq_h1h4tpg = fun.f_expand(uinp.sheep['i_husb_muster_infrastructurereq_h1h4'], p_pos-2,swap=True).astype(dtype)
     period_is_wean_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_period_is_('period_is', date_weaned_ida0e0b0xyg0, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
-    period_is_wean_pa1e1b1nwzida0e0b0xyg1 = np.logical_or(period_is_wean_pa1e1b1nwzida0e0b0xyg1, sfun.f1_period_is_('period_is', date_weaned_ida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)) #includes the weaning of the dam itself and the yatf because there is husbandry for the ewe when yatf are weaned eg the dams have to be mustered
+    period_is_wean_husb_pa1e1b1nwzida0e0b0xyg1 = np.logical_or(period_is_wean_pa1e1b1nwzida0e0b0xyg1, sfun.f1_period_is_('period_is', date_weaned_ida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)) #includes the weaning of the dam itself and the yatf because there is husbandry for the ewe when yatf are weaned eg the dams have to be mustered
     period_is_wean_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_period_is_('period_is', date_weaned_ida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3)
     gender_xyg = fun.f_expand(np.arange(len(mask_x)), x_pos)
     ##sire
@@ -5340,9 +5347,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##calc wool value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
     ###create mask which is the periods where shearing occurs
-    shear_mask_p0 = np.any(np.logical_or(period_is_shearing_pa1e1b1nwzida0e0b0xyg0, period_is_assetvalue_pa1e1b1nwzida0e0b0xyg), axis=tuple(range(p_pos+1,0)))
-    shear_mask_p1 = np.any(np.logical_or(period_is_shearing_pa1e1b1nwzida0e0b0xyg1, period_is_assetvalue_pa1e1b1nwzida0e0b0xyg), axis=tuple(range(p_pos+1,0)))
-    shear_mask_p3 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_shearing_tpa1e1b1nwzida0e0b0xyg3, period_is_assetvalue_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p]), preserveAxis=1) #preforms np.any across all axis except axis 1
+    shear_mask_p0 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_shearing_pa1e1b1nwzida0e0b0xyg0, period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg), preserveAxis=p_pos) #preforms np.any across all axis except axis 1
+    shear_mask_p1 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_shearing_pa1e1b1nwzida0e0b0xyg1, period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg), preserveAxis=p_pos) #preforms np.any across all axis except axis 1
+    shear_mask_p3 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_shearing_tpa1e1b1nwzida0e0b0xyg3[:,na,...], period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p]), preserveAxis=p_pos) #preforms np.any across all axis except axis 2
     ###create association between p and s
     a_p_p9a1e1b1nwzida0e0b0xyg0 = fun.f_expand(np.nonzero(shear_mask_p0)[0],p_pos)  #take [0] because nonzero function returns tuple
     a_p_p9a1e1b1nwzida0e0b0xyg1 = fun.f_expand(np.nonzero(shear_mask_p1)[0],p_pos)  #take [0] because nonzero function returns tuple
@@ -5415,11 +5422,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
 
     ##Sale value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
-    ###create mask which is the periods where shearing occurs
-    sale_mask_p0 = np.any(period_is_sale_pa1e1b1nwzida0e0b0xyg0, axis=tuple(range(p_pos+1,0)))
-    sale_mask_p1 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg1, period_is_assetvalue_pa1e1b1nwzida0e0b0xyg), preserveAxis=p_pos)  #preforms np.any on all axis except 1. only use the sale slices from the dam t axis
-    sale_mask_p2 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2, period_is_assetvalue_pa1e1b1nwzida0e0b0xyg), preserveAxis=p_pos)  #preforms np.any on all axis except 1. only use the sale slices from the dam t axis
-    sale_mask_p3 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, period_is_assetvalue_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p]), preserveAxis=p_pos)  #preforms np.any on all axis except 1
+    ###create mask which is the periods where sale occurs
+    sale_mask_p0 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_pa1e1b1nwzida0e0b0xyg0, period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg), preserveAxis=p_pos)
+    sale_mask_p1 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg1[:,na,...], period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg), preserveAxis=p_pos)  #preforms np.any on all axis except 1. only use the sale slices from the dam t axis
+    sale_mask_p2 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2, period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg), preserveAxis=p_pos)  #preforms np.any on all axis except 1. only use the sale slices from the dam t axis
+    sale_mask_p3 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg3[:,na,...], period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p]), preserveAxis=p_pos)  #preforms np.any on all axis except 1
     ###manipulate axis with associations
     grid_scorerange_s7s6tpa1e1b1nwzida0e0b0xyg = score_range_s8s6tpa1e1b1nwzida0e0b0xyg[uinp.sheep['ia_s8_s7']] #s8 to s7
     month_scalar_s7tpa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9tp4a1e1b1nwzida0e0b0xyg[:, :, :, a_p4_p][:,0] #month to p, then slice s9 (has to be separate because otherwise advanced indexing is triggered)
@@ -5526,7 +5533,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     husbandry_cost_tpg1, husbandry_labour_l2tpg1, husbandry_infrastructure_h1tpg1 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_dams'], mobsize_pa1e1b1nwzida0e0b0xyg1, t_o_ffcfw_tpdams, t_o_cfw_tpdams, operations_triggerlevels_h5h7h2tpg,
         p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg1, period_is_shearing_pa1e1b1nwzida0e0b0xyg1,
-        period_is_wean_pa1e1b1nwzida0e0b0xyg1, gender_xyg[1], t_o_ebg_tpdams, wool_genes_yg1, husb_operations_muster_propn_h2tpg,
+        period_is_wean_husb_pa1e1b1nwzida0e0b0xyg1, gender_xyg[1], t_o_ebg_tpdams, wool_genes_yg1, husb_operations_muster_propn_h2tpg,
         husb_requisite_cost_h6tpg, husb_operations_requisites_prob_h6h2tpg, operations_per_hour_l2h2tpg,
         husb_operations_infrastructurereq_h1h2tpg, husb_operations_contract_cost_h2tpg, husb_muster_requisites_prob_h6h4tpg,
         musters_per_hour_l2h4tpg, husb_muster_infrastructurereq_h1h4tpg, a_t_g1, nyatf_b1nwzida0e0b0xyg, period_is_join_pa1e1b1nwzida0e0b0xyg1,
@@ -5565,8 +5572,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##combine income and cost from wool, sale and husb.
     ###sire
     ####asset value - calc asset value before adjusting by period is sale and shearing
-    assetvalue_p7tpa1e1b1nwzida0e0b0xyg0 =  ((salevalue_tpa1e1b1nwzida0e0b0xyg0 + woolvalue_tpa1e1b1nwzida0e0b0xyg0)
-                                            * period_is_assetvalue_pa1e1b1nwzida0e0b0xyg * alloc_p7tpa1e1b1nwzida0e0b0xyg)
+    assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg0 =  ((salevalue_tpa1e1b1nwzida0e0b0xyg0 + woolvalue_tpa1e1b1nwzida0e0b0xyg0)
+                                            * period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,na,na,...] * alloc_p7tpa1e1b1nwzida0e0b0xyg)
     ####adjust for period is sale/shear (needs to be done here rather than p2v so that cashflow can be combined).
     salevalue_tpa1e1b1nwzida0e0b0xyg0 = salevalue_tpa1e1b1nwzida0e0b0xyg0 * period_is_sale_pa1e1b1nwzida0e0b0xyg0
     salevalue_c1tpa1e1b1nwzida0e0b0xyg0 = salevalue_c1tpa1e1b1nwzida0e0b0xyg0 * period_is_sale_pa1e1b1nwzida0e0b0xyg0
@@ -5587,9 +5594,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg0 = woolvalue_tpa1e1b1nwzida0e0b0xyg0 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
 
     ###dams
-    ####asset value - calc asset value before adjusting by period is sale and shearing
-    assetvalue_p7tpa1e1b1nwzida0e0b0xyg1 =  ((salevalue_tpa1e1b1nwzida0e0b0xyg1 + woolvalue_tpa1e1b1nwzida0e0b0xyg1)
-                                            * period_is_assetvalue_pa1e1b1nwzida0e0b0xyg * alloc_p7tpa1e1b1nwzida0e0b0xyg)
+    ####asset value - calc asset value before adjusting by period is sale and shearing. Dam asset value includes yatf
+    salevalue_perdam_tpa1e1b1nwzida0e0b0xyg2[:,sale_mask_p2] = salevalue_tp9a1e1b1nwzida0e0b0xyg2 * o_numbers_start_tpyatf[:,sale_mask_p2]
+    assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg1 =  ((salevalue_tpa1e1b1nwzida0e0b0xyg1 + woolvalue_tpa1e1b1nwzida0e0b0xyg1
+                                                + np.sum(salevalue_perdam_tpa1e1b1nwzida0e0b0xyg2, axis=x_pos, keepdims=True)) #sum x axis for yatf
+                                            * period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,na,na,...] * alloc_p7tpa1e1b1nwzida0e0b0xyg)
     ####adjust for period is sale/shear (needs to be done here rather than p2v so that cashflow can be combined).
     salevalue_tpa1e1b1nwzida0e0b0xyg1 = salevalue_tpa1e1b1nwzida0e0b0xyg1 * period_is_sale_tpa1e1b1nwzida0e0b0xyg1
     salevalue_c1tpa1e1b1nwzida0e0b0xyg1 = salevalue_c1tpa1e1b1nwzida0e0b0xyg1 * period_is_sale_tpa1e1b1nwzida0e0b0xyg1
@@ -5616,8 +5625,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ###offs
     ####asset value - calc asset value before adjusting by period is sale and shearing
-    assetvalue_p7tpa1e1b1nwzida0e0b0xyg3 =  ((salevalue_tpa1e1b1nwzida0e0b0xyg3 + woolvalue_tpa1e1b1nwzida0e0b0xyg3)
-                                            * period_is_assetvalue_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p] * alloc_p7tpa1e1b1nwzida0e0b0xyg[:,:,mask_p_offs_p,...])
+    assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg3 =  ((salevalue_tpa1e1b1nwzida0e0b0xyg3 + woolvalue_tpa1e1b1nwzida0e0b0xyg3)
+                                            * period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,na,na,mask_p_offs_p,...] * alloc_p7tpa1e1b1nwzida0e0b0xyg[:,:,mask_p_offs_p,...])
     ####adjust for period is sale/shear (needs to be done here rather than p2v so that cashflow can be combined).
     salevalue_tpa1e1b1nwzida0e0b0xyg3 = salevalue_tpa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
     salevalue_c1tpa1e1b1nwzida0e0b0xyg3 = salevalue_c1tpa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
@@ -5767,7 +5776,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,:,na,...]#add singleton v
     cost_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(husbandry_cost_p7tpg0, numbers_p=o_numbers_end_tpsire,
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,na,...]#add singleton v
-    assetvalue_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(assetvalue_p7tpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
+    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,na,...]#add singleton v
     ###dams
     cashflow_c1p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(cashflow_c1p7tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
@@ -5776,9 +5785,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1)
     cost_p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(husbandry_cost_p7tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1)
-    assetvalue_p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(assetvalue_p7tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1)
-    ###yatf can be sold as sucker, not shorn therefore only include sale value. husbandry is accounted for with dams so don't need that here.
+    ###yatf can be sold as sucker, not shorn therefore only include sale value. husbandry is accounted for with dams so don't need that here. use numbers start because weaning is beginning of period
     salevalue_d_c1p7ta1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v_std(salevalue_c1p7tp9a1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2]
                                                    , numbers_p=(o_numbers_start_tpyatf * o_numbers_start_tpdams)[:,sale_mask_p2]
                                                    , a_any1_p=a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2], index_any1tvp=index_da0e0b0xyg)
@@ -5792,7 +5801,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
     cost_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(husbandry_cost_p7tpg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
-    assetvalue_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(assetvalue_p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
+    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
 
     ##every period - with labour (p5) axis
@@ -6389,12 +6398,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                             mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     ##asset value
-    assetvalue_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', assetvalue_p7tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
+    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
                                                                           mask_vg=mask_z8var_p7tva1e1b1nwzida0e0b0xyg)
-    assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', assetvalue_p7tva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
+    assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1[:,na,...], a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
                                                                  numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
                                                                  mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,...]))
-    assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', assetvalue_p7tva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],
+    assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3[:,na,na,...], a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],
                                                     a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...], numbers_start_tva1e1b1nwzida0e0b0xyg3,
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
@@ -7423,13 +7432,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###purchcost wc - sire
     params['p_purchcost_wc_sire'] = fun.f1_make_pyomo_dict(purchcost_wc_c0p7tva1e1b1nwzida0e0b0xyg0, arrays_c0p7zg0)
 
-    ##asset value
+    ##asset value - take slice 0 to get the asset value at the cashflow date
     ###assetvalue - sire
-    params['p_assetvalue_sire'] = fun.f1_make_pyomo_dict(assetvalue_p7tva1e1b1nwzida0e0b0xyg0, arrays_p7zg0)
+    params['p_assetvalue_sire'] = fun.f1_make_pyomo_dict(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[0], arrays_p7zg0)
     ###assetvalue - dams
-    params['p_assetvalue_dams'] = fun.f1_make_pyomo_dict(assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1, arrays_k2p7tvanwziyg1)
+    params['p_assetvalue_dams'] = fun.f1_make_pyomo_dict(assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1[0], arrays_k2p7tvanwziyg1)
     ###assetvalue - offs
-    params['p_assetvalue_offs'] = fun.f1_make_pyomo_dict(assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3, arrays_k3k5p7tvnwziaxyg3)
+    params['p_assetvalue_offs'] = fun.f1_make_pyomo_dict(assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[0], arrays_k3k5p7tvnwziaxyg3)
 
     ##labour
     ###anyone labour - sire
@@ -7822,6 +7831,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     fun.f1_make_r_val(r_vals,rm_stockinfra_var_h1p7z,'rm_stockinfra_var_h1p7z',mask_season_p7z,z_pos=-1)
     fun.f1_make_r_val(r_vals,rm_stockinfra_fix_h1p7z,'rm_stockinfra_fix_h1p7z',mask_season_p7z,z_pos=-1)
+
+    ###asset value used in pnl report to track changes in stock on hand because different z could sell at different time. e.g. if z0 retains but z3 sells z3 will look more profitable even though it is not.
+    fun.f1_make_r_val(r_vals,assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[1],'assetvalue_startseason_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
+    fun.f1_make_r_val(r_vals,assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[2],'assetvalue_endseason_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
+    fun.f1_make_r_val(r_vals,assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1[1],'assetvalue_startseason_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1[2],'assetvalue_endseason_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[1],'assetvalue_startseason_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[2],'assetvalue_endseason_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
 
     ###purchase costs
     fun.f1_make_r_val(r_vals,purchcost_p7tva1e1b1nwzida0e0b0xyg0,'purchcost_sire_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)

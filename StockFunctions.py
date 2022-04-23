@@ -1843,7 +1843,7 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
 
 
 def f1_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0
-                        , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False):
+                        , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False, prevperiod_is_wean=False):
     ##a) reallocate for season type
     if np.any(period_is_startseason):
         temporary = np.sum(numbers * season_propn_z, axis = season_tup, keepdims=True) #Calculate temporary values as if period_is_break
@@ -1857,6 +1857,7 @@ def f1_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason
     if group==2:
         temp = nyatf_b1 * gender_propn_x   # nyatf is accounting for peri-natal mortality. But doesn't include the differential mortality of female and male offspring at birth
         numbers=fun.f_update(numbers, temp, period_is_birth)
+        numbers=fun.f_update(numbers, 0, prevperiod_is_wean) #set numbers to 0 after weaning
     return numbers
 
 
