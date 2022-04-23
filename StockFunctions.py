@@ -2196,10 +2196,8 @@ def f1_adjust_triggervalues_for_t(animal_triggervalues_h7tpg, operations_trigger
     If the input value for time since 'x' or time to 'x' is 0 then you use t[:] if the value is anything other
     than 0 (i.e. it might be in a different DVP) then t[0] is used.
 
-    Currently only offs have a t axis on period_is_shear so this function only effect them.
-    However, the function is built to handle a t axis on period_is_shear for dams. Although there will still be some
-    potential errors with dams changing g slice (for example crutching). Therefore it is best if dams do not
-    have a t axis on period is shear.
+    For dams. there will still be some
+    potential errors with dams changing g slice (for example crutching).
 
     Note: the generator t axis has been made to a singleton to reduce computational time in the husb calcs. Thus this
     function doesn't do anything for dams unless period_is_shear has a t axis.

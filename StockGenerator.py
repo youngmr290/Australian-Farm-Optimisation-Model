@@ -370,7 +370,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###array for generator
     omer_history_start_p3g1 = np.zeros(p3g1, dtype = 'float64')
     d_cfw_history_start_p2g1 = np.zeros(p2g1, dtype = 'float64')
-    woolvalue_c1tpa1e1b1nwzida0e0b0xyg1 = np.zeros(c1tpg1, dtype =dtype)
+    woolvalue_c1tpa1e1b1nwzida0e0b0xyg1 = np.zeros((len_c1,)+(len_t1,)+tpg1[1:], dtype =dtype)
     salevalue_c1tpa1e1b1nwzida0e0b0xyg1 = np.zeros(c1tpg1, dtype =dtype)
     ###arrays for postprocessing
     o_numbers_start_tpdams = np.zeros(tpg1, dtype =dtype) #default 1 so that dvp0 (p0) has start numbers
@@ -2018,11 +2018,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is_between', date_born_pa1e1b1nwzida0e0b0xyg2
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_born_pa1e1b1nwzida0e0b0xyg2+np.array([(6*7)]).astype('timedelta64[D]'), date_end_pa1e1b1nwzida0e0b0xyg) #This is within 6 weeks of the Birth period
     ###shearing
-    period_is_shearing_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg0
+    period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg0
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
-    period_is_shearing_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg1
+    period_is_mainshearing_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg1
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
-    period_is_shearing_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg3
+    period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg3
                         , date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3)
     period_is_startseason_pa1e1b1nwzida0e0b0xyg = sfun.f1_period_is_('period_is', date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
@@ -2333,11 +2333,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             ##sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                 ###cfw
-                cfw_start_sire = fun.f_update(cfw_start_sire, 0, period_is_shearing_pa1e1b1nwzida0e0b0xyg0[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
+                cfw_start_sire = fun.f_update(cfw_start_sire, 0, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
                 ###fl
-                fl_start_sire = fun.f_update(fl_start_sire, fl_shear_yg0, period_is_shearing_pa1e1b1nwzida0e0b0xyg0[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
+                fl_start_sire = fun.f_update(fl_start_sire, fl_shear_yg0, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
                 ###min fd
-                fd_min_start_sire = fun.f_update(fd_min_start_sire, 1000, period_is_shearing_pa1e1b1nwzida0e0b0xyg0[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
+                fd_min_start_sire = fun.f_update(fd_min_start_sire, 1000, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
 
             ##dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -2367,20 +2367,20 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
             ##Wool Production
                 ###cfw
-                cfw_start_dams = fun.f_update(cfw_start_dams, 0, period_is_shearing_pa1e1b1nwzida0e0b0xyg1[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
+                cfw_start_dams = fun.f_update(cfw_start_dams, 0, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg1[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
                 ###fl
-                fl_start_dams = fun.f_update(fl_start_dams, fl_shear_yg1, period_is_shearing_pa1e1b1nwzida0e0b0xyg1[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
+                fl_start_dams = fun.f_update(fl_start_dams, fl_shear_yg1, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg1[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
                 ###min fd
-                fd_min_start_dams = fun.f_update(fd_min_start_dams, 1000, period_is_shearing_pa1e1b1nwzida0e0b0xyg1[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
+                fd_min_start_dams = fun.f_update(fd_min_start_dams, 1000, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg1[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
 
             ##offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                 ###cfw
-                cfw_start_offs = fun.f_update(cfw_start_offs, 0, period_is_shearing_pa1e1b1nwzida0e0b0xyg3[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
+                cfw_start_offs = fun.f_update(cfw_start_offs, 0, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
                 ###fl
-                fl_start_offs = fun.f_update(fl_start_offs, fl_shear_yg3, period_is_shearing_pa1e1b1nwzida0e0b0xyg3[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
+                fl_start_offs = fun.f_update(fl_start_offs, fl_shear_yg3, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
                 ###min fd
-                fd_min_start_offs = fun.f_update(fd_min_start_offs, 1000, period_is_shearing_pa1e1b1nwzida0e0b0xyg3[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
+                fd_min_start_offs = fun.f_update(fd_min_start_offs, 1000, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3[p-1]) #reset if previous period is shearing (shearing occurs at the end of a period)
 
 
 
@@ -5040,8 +5040,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8y = sfun.f1_period_is_('period_is', sire_periods_g0p8y, date_start_pa1e1b1nwzida0e0b0xyg[...,na,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg[...,na,na])
     period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8 = np.any(period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8y, axis=-1) #condense the y axis - it is now accounted for by p axis
     ##dams
-    sale_delay_sa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_sales_delay_sg1'], p_pos, right_pos=g_pos,
-                                                    condition=mask_dams_inc_g1, axis=g_pos) #periods after shearing that sale occurs
     ###mask for nutrition profiles. this doesn't have a full w axis because it only has the nutrition options it is expanded to w further down.
     sav_mask_nut_dams_oWi = sen.sav['nut_mask_dams_oWi'][:,0:len_nut_dams,:] #This controls if a nutrition pattern is included.
     mask_nut_dams_oWi = fun.f_sa(np.array(True), sav_mask_nut_dams_oWi,5) #all nut options included unless SAV is false
@@ -5051,17 +5049,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##offs
     ###dvp mask - basically the shearing mask plus a true for the first dvp which is weaning
     sale_mask_g3 = np.concatenate([np.array([True]), mask_shear_g3]) #need to add true to the start of the shear mask because the first dvp is weaning
-    ###days from the start of the dvp when sale occurs
-    sales_offset_tsa1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_sales_offset_tsg3'], p_pos, right_pos=g_pos,
+    ###age for sale opp
+    sale_age_tsa1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_sales_age_tsg3'], p_pos, right_pos=g_pos,
                                                        condition=mask_offs_inc_g3, axis=g_pos, condition2=sale_mask_g3, axis2=p_pos)
     ###target weight in a dvp where sale occurs
     target_weight_tsa1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_target_weight_tsg3'], p_pos, right_pos=g_pos,
                                                         condition=mask_offs_inc_g3, axis=g_pos, condition2=sale_mask_g3, axis2=p_pos) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
-    ###number of periods before sale that shearing occurs in each dvp
-    shearing_offset_tsa1e1b1nwzida0e0b0xyg3= fun.f_expand(pinp.sheep['i_shear_prior_tsg3'], p_pos, right_pos=g_pos,
-                                                         condition=mask_offs_inc_g3, axis=g_pos, condition2=sale_mask_g3, axis2=p_pos) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
-
-
     ###mask for nutrition profiles. this doesn't have a full w axis because it only has the nutrition options it is expanded to w further down.
     sav_mask_nut_offs_sWix = sen.sav['nut_mask_offs_sWix'][:,0:len_nut_offs,...] #This controls if a nutrition pattern is included.
     mask_nut_offs_sWix = fun.f_sa(np.array(True), sav_mask_nut_offs_sWix,5) #all nut options included unless SAV is false
@@ -5174,6 +5167,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #######################
     #on hand / shear mask #
     #######################
+    '''
+    All animals onhand at main shearing are shorn. This may be a slight limitation for lambs that are sold a couple
+    of months after main shearing because in reality farmers would wait and shear them before sale. This is tricky
+    to handle in AFO because shearing in the generator is not differentiated with a t axis and if there is a dvp
+    between main shearing and selling wheather the animal was shorn cant be remembered.
+    
+    Animals that are sold are shorn if cfw is above an inputted threshold. For these animals sale and shearing
+    occur in the same gen period. This is because including an offset was getting complex and error prone (particuly
+    if main shearing falls between sale due to selling and sale because this meant the animals got double wool income).
+    In reality farmers tend to wait a bit after shearing before selling because animals are off water and feed for up to
+    48hrs and because animals tend to gain weight at a faster rate directly after shearing. In AFO we dont represent 
+    either of these things thus shearing and selling in the same period is not a big limitation (the two factors are 
+    likely to cancel each other out so likely not a big error).   
+    '''
+    
     onhandshear_start=time.time()
 
     ##sire - purchased and sold on given date and shorn at main shearing - sires are simulated from weaning but for the pp we only look at a subset
@@ -5191,14 +5199,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##offs
     ###t0 - retained
-    ###t1&2 - sold slice date_p=sale_date or weight=target weight or sold on the last day of dvp
+    ###t1 - For dsp sold first period of dvp for SE sold target age or target weight or sold on the last day of dvp (not much value selling at start of dvp for SE model because there is only 1 dvp)
+    ###t2 - sold target age or target weight or sold on the last day of dvp
+
     ###calc sale date then determine shearing date
-    ###sale - on date
-    sale_date_tsa1e1b1nwzida0e0b0xyg3 = (sales_offset_tsa1e1b1nwzida0e0b0xyg3 + date_wean_shearing_sa1e1b1nwzida0e0b0xyg3)  #date of dvp plus sale offset
-    sale_date_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(sale_date_tsa1e1b1nwzida0e0b0xyg3,a_sw_pa1e1b1nwzida0e0b0xyg3[na],1)
-    ####adjust sale date to be last day of period
-    sale_date_idx_tpa1e1b1nwzida0e0b0xyg3 = fun.f_next_prev_association(offs_date_end_p, sale_date_tpa1e1b1nwzida0e0b0xyg3,0, 'left')#sale occurs at the end of the current generator period therefore 0 offset
-    sale_date_tpa1e1b1nwzida0e0b0xyg3 = offs_date_end_p[sale_date_idx_tpa1e1b1nwzida0e0b0xyg3]
+    ###sale - at age
+    sale_age_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(sale_age_tsa1e1b1nwzida0e0b0xyg3,a_sw_pa1e1b1nwzida0e0b0xyg3[na],1)
     ###sale - weight target
     ####convert from shearing/dvp to p array. Increments at dvp ie point to previous sale opp until new dvp then point at next dvp.
     target_weight_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(target_weight_tsa1e1b1nwzida0e0b0xyg3, a_sw_pa1e1b1nwzida0e0b0xyg3[na],1) #gets the target weight for each gen period
@@ -5208,9 +5214,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###period is sale
     #### t0 slice = True - this is handled by the inputs ie weight and date are high therefore not reached therefore on hand == true
     #### t1 & t2 slice date_p<sale_date or weight<target weight (these slice are also sold on the last period of a dvp if there is no other sale opp, see code below)
-    sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(np.logical_and(date_start_pa1e1b1nwzida0e0b0xyg3<=sale_date_tpa1e1b1nwzida0e0b0xyg3,
-                                                                    date_end_pa1e1b1nwzida0e0b0xyg3>=sale_date_tpa1e1b1nwzida0e0b0xyg3),
+    sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(np.logical_and(age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] <= sale_age_tpa1e1b1nwzida0e0b0xyg3,
+                                                                    sale_age_tpa1e1b1nwzida0e0b0xyg3 <= age_end_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p]),
                                                      weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
+    ###if dsp then t1 is sell at start of dvp
+    if not bool_steady_state:
+        sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...] = period_is_startdvp_pa1e1b1nwzida0e0b0xyg3
     ###on hand - combine period_is_sale & period_is_transfer then use cumulative max to convert to on_hand
     ### note: animals are on hand in the period they are sold ie sale takes place on the last minute of the period.
     off_hand_tpa1e1b1nwzida0e0b0xyg3 = sfun.f1_cum_dvp(sale_opp_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, axis=1,
@@ -5240,63 +5249,39 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                 , age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] > min_age_female_sale_da0e0b0xyg3)
     period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, off_sale_mask_pa1e1b1nwzida0e0b0xyg3)
     ###shearing - one true per dvp when shearing actually occurs
-    ###in t0 shearing occurs on specified date, in t1 & t2 it happens a certain number of gen periods before sale.
-    ####convert from s/dvp to p
-    shearing_offset_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(shearing_offset_tsa1e1b1nwzida0e0b0xyg3, a_sw_pa1e1b1nwzida0e0b0xyg3[na],1)
-    ###shearing can't occur in a different dvp to sale therefore need to cap the offset for periods at the beginning of the dvp
-    #### ie if sale occurs in p2 of dvp2 and offset is 3 the offset needs to be reduced because shearing must occur in dvp2
-    ####get the period number where dvp changes
-    prev_dvp_index = fun.f_next_prev_association(offs_date_start_p, dvp_date_pa1e1b1nwzida0e0b0xyg3, 1, 'right')
-    periods_since_dvp = np.maximum(0,p_index_pa1e1b1nwzida0e0b0xyg3 - prev_dvp_index)  #first dvp starts at weaning so just put in the max 0 to stop negative results when the p date is less than weaning
-    ####period when shearing will occur - this is the min of the shearing offset or the periods since dvp start
-    shearing_idx_tpa1e1b1nwzida0e0b0xyg3 = p_index_pa1e1b1nwzida0e0b0xyg3 - np.minimum(shearing_offset_tpa1e1b1nwzida0e0b0xyg3, periods_since_dvp)
-    ###period is shearing is the sale array minus the offset
-    shearing_idx_tpa1e1b1nwzida0e0b0xyg3 = period_is_sale_tpa1e1b1nwzida0e0b0xyg3*shearing_idx_tpa1e1b1nwzida0e0b0xyg3.astype(dtype)
-    #### if the offset is -1 or the index is 0 then set to inf so shearing doesn't occur.
-    shearing_offset = np.broadcast_to(shearing_offset_tpa1e1b1nwzida0e0b0xyg3, shearing_idx_tpa1e1b1nwzida0e0b0xyg3.shape)
-    shearing_idx_tpa1e1b1nwzida0e0b0xyg3[shearing_offset==-1] = np.inf
-    ###Remove 0 values so that the minimum value is the index of the period when shearing is occurring.
-    shearing_idx_tpa1e1b1nwzida0e0b0xyg3[shearing_idx_tpa1e1b1nwzida0e0b0xyg3==0] = np.inf
-    ###Carry the shearing index to earlier periods, then match with the period index.
-    shearing_idx_tpa1e1b1nwzida0e0b0xyg3= np.flip(np.minimum.accumulate(np.flip(shearing_idx_tpa1e1b1nwzida0e0b0xyg3,1),axis=1),1)
-    period_is_shearing_tpa1e1b1nwzida0e0b0xyg3 = p_index_pa1e1b1nwzida0e0b0xyg3 == shearing_idx_tpa1e1b1nwzida0e0b0xyg3
-    ###make slice t0 the shear dates for retained offs
-    period_is_shearing_retained_pa1e1b1nwzida0e0b0xyg3 = period_is_shearing_pa1e1b1nwzida0e0b0xyg3 #same as calculated in the generator.
-    period_is_shearing_tpa1e1b1nwzida0e0b0xyg3[0,...] = period_is_shearing_retained_pa1e1b1nwzida0e0b0xyg3
+    ###shearing occurs at main shearing if the animal is on hand or at sale if cfw is above an inputted threshold.
+    shearing_mincfw_g3 = pinp.sheep['i_shearing_mincfw_g3'][mask_offs_inc_g3]
+    period_is_saleshear_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, o_cfw_tpoffs>=shearing_mincfw_g3)
+    period_is_shearing_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(np.logical_or(period_is_saleshear_tpa1e1b1nwzida0e0b0xyg3,
+                                                                              period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3),
+                                                                on_hand_tpa1e1b1nwzida0e0b0xyg3)
 
     ##Dams
     ###t0 = sale after shearing or at the end of the dvp
-    ###t1 = sale drys
+    ###t1 = Tactical sale at start of dvp (scanning is at the start of dvp so this handles sale of drys. In the DSP it handles sale after finding out new season info)
     ###t>=2 = retain
-    ### calc shearing then determine sale - if this ever gets a t axis husbandry will need to be altered (f1_adjust_triggervalues_for_t)
-    shear_period_pa1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(p_index_pa1e1b1nwzida0e0b0xyg * period_is_shearing_pa1e1b1nwzida0e0b0xyg1)
-    ### all shearing in all t slices is determined by the main shearing date (shearing is the same for all t slices)
-    ###determine t0 sale slice - note sale must occur in the same dvp as shearing so the offset is capped if shearing occurs near the end of a period
-    sale_delay_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(sale_delay_sa1e1b1nwzida0e0b0xyg1, a_prev_s_pa1e1b1nwzida0e0b0xyg1,0)
-    a_dvpnext_p_va1e1b1nwzida0e0b0xyg1 = np.roll(a_p_va1e1b1nwzida0e0b0xyg1,-1,0) #roll backwards to get the gen period index of the next dvp
-    a_dvpnext_p_va1e1b1nwzida0e0b0xyg1[-1,...] = len_p #set the last element to the length of p (because the end period is the equivalent of the next dvp for the end dvp)
-    next_dvp_index_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(a_dvpnext_p_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, 0) #points at the next dvp from the date at the start of the period
-    periods_to_dvp = next_dvp_index_pa1e1b1nwzida0e0b0xyg1 - (p_index_pa1e1b1nwzida0e0b0xyg + 1) #periods to the next dvp. +1 because if the next period is the new dvp you must sell in the current period
-    sale_period_pa1e1b1nwzida0e0b0xyg1 = np.minimum(sale_delay_pa1e1b1nwzida0e0b0xyg1, periods_to_dvp) + shear_period_pa1e1b1nwzida0e0b0xyg1
-    period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1 = sale_period_pa1e1b1nwzida0e0b0xyg1 == p_index_pa1e1b1nwzida0e0b0xyg
-    period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1[0] = False #don't want period 0 to be sale (but it will default to sale because the sale period association is 0 at the beginning which ==index in p[0])
-    ###determine t1 slice - dry dams sold at scanning
-    period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_scan_pa1e1b1nwzida0e0b0xyg1 * (scan_management_pa1e1b1nwzida0e0b0xyg1>=1) * np.logical_not(dry_retained_pa1e1b1nwzida0e0b0xyg1) #not is required because variable is drys off hand ie sold. if forced to retain the variable wants to be false
-    #todo  fix the syntax then include the following line with the previous line when gbal is activated
+    ###determine t0 sale slice - end of dvp part added below
+    period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1 = period_is_mainshearing_pa1e1b1nwzida0e0b0xyg1
+    ###determine t1 slice - tactical sale at start of dvp (sals due to new season info and/or info from scanning)
+    period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1 = period_is_startdvp_pa1e1b1nwzida0e0b0xyg1
+    ####if drys are retained set b1[drys] to false
+    period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1 = period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1 * \
+                                               np.logical_or(np.logical_or(nyatf_b1nwzida0e0b0xyg>0,index_b1nwzida0e0b0xyg==0),
+                                                             np.logical_not(dry_retained_pa1e1b1nwzida0e0b0xyg1)) #not is required because variable is drys off hand ie sold. if forced to retain the variable wants to be false
+    #todo  MRY 24/4/22 I think the code above will now work for gbal.
+    # fix the syntax then include the following line with the previous line when gbal is activated
     #                                         or period_is_birth_pa1e1b1nwzida0e0b0xyg1 * (gbal_management_pa1e1b1nwzida0e0b0xyg1 >= 1) * np.logical_not(dry_retained_pa1e1b1nwzida0e0b0xyg1)
-    period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 * (nfoet_b1nwzida0e0b0xyg==0) #make sure selling is not an option for animals with foet (have to do it this way so that b axis is added)
-    period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...] = False #make sure selling is not an option for not mated  todo may turn on again in seasonality version
+
     ###combine sale t slices (t0 & t1) to produce period is sale
-    shape =  tuple(np.maximum.reduce([period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1.shape, period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1.shape]))
+    shape =  tuple(np.maximum.reduce([period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1.shape, period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1.shape]))
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1 = np.zeros((len_t1,)+shape, dtype=bool) #initialise on hand array with 3 t slices.
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1[...]=False
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1[0] = period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1
-    period_is_sale_tpa1e1b1nwzida0e0b0xyg1[1] = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg1[1] = period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1
     ###bound female sale age - this sets the minimum age dams can be sold. Default is no min age eg can be sold anytime.
     min_age_female_sale_g1 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_age_female_g1'][mask_dams_inc_g1], 5)
     ewe_sale_mask_pa1e1b1nwzida0e0b0xyg1 = age_start_pa1e1b1nwzida0e0b0xyg1 > min_age_female_sale_g1
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1 = np.logical_and(period_is_sale_tpa1e1b1nwzida0e0b0xyg1, ewe_sale_mask_pa1e1b1nwzida0e0b0xyg1)
-
     ####transfer - calculate period_is_finish when the dams are transferred from the current g slice to the destination g slice
     period_is_transfer_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1[na, ...], a_g1_tpa1e1b1nwzida0e0b0xyg1, -1) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1
     ###on hand - combine period_is_sale & period_is_transfer then use cumulative max to convert to on_hand
@@ -5308,6 +5293,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     period_is_sale_enddvp_tpa1e1b1nwzida0e0b0xyg1 = np.logical_and(np.logical_and(period_is_enddvp_pa1e1b1nwzida0e0b0xyg1, ewe_sale_mask_pa1e1b1nwzida0e0b0xyg1),
                                                                   on_hand_tpa1e1b1nwzida0e0b0xyg1)
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1[0] = np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg1, period_is_sale_enddvp_tpa1e1b1nwzida0e0b0xyg1)[0]
+    ###calc period is shear. Shearing occurs before sale if cfw is above an inputted threshold. For t1 shearing occurs in the same period as sale.
+    ###shearing - one true per dvp when shearing actually occurs
+    ###retained animals are shorn at main shearing and sold animals are shorn a certain number of gen periods before sale.
+    ###shearing can't occur in a different dvp to sale
+    ###shearing occurs at main shearing if the animal is on hand or at sale if cfw is above an inputted threshold.
+    shearing_mincfw_g1 = pinp.sheep['i_shearing_mincfw_g1'][mask_dams_inc_g1]
+    period_is_saleshear_tpa1e1b1nwzida0e0b0xyg1 = np.logical_and(period_is_sale_tpa1e1b1nwzida0e0b0xyg1, o_cfw_tpdams>=shearing_mincfw_g1)
+    period_is_shearing_tpa1e1b1nwzida0e0b0xyg1 = np.logical_and(np.logical_or(period_is_saleshear_tpa1e1b1nwzida0e0b0xyg1,
+                                                                              period_is_mainshearing_pa1e1b1nwzida0e0b0xyg1),
+                                                                on_hand_tpa1e1b1nwzida0e0b0xyg1)
 
     ##Yatf
     ###t0 = sold at weaning as sucker, t1 & t2 = retained
@@ -5347,8 +5342,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##calc wool value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
     ###create mask which is the periods where shearing occurs
-    shear_mask_p0 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_shearing_pa1e1b1nwzida0e0b0xyg0, period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg), preserveAxis=p_pos) #preforms np.any across all axis except axis 1
-    shear_mask_p1 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_shearing_pa1e1b1nwzida0e0b0xyg1, period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg), preserveAxis=p_pos) #preforms np.any across all axis except axis 1
+    shear_mask_p0 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0, period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg), preserveAxis=p_pos) #preforms np.any across all axis except axis 1
+    shear_mask_p1 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_shearing_tpa1e1b1nwzida0e0b0xyg1, period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg), preserveAxis=p_pos) #preforms np.any across all axis except axis 1
     shear_mask_p3 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_shearing_tpa1e1b1nwzida0e0b0xyg3[:,na,...], period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p]), preserveAxis=p_pos) #preforms np.any across all axis except axis 2
     ###create association between p and s
     a_p_p9a1e1b1nwzida0e0b0xyg0 = fun.f_expand(np.nonzero(shear_mask_p0)[0],p_pos)  #take [0] because nonzero function returns tuple
@@ -5358,8 +5353,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     index_p9a1e1b1nwzida0e0b0xyg1 = fun.f_expand(np.arange(np.count_nonzero(shear_mask_p1)),p_pos)
     index_p9a1e1b1nwzida0e0b0xyg3 = fun.f_expand(np.arange(np.count_nonzero(shear_mask_p3)),p_pos)
     ###convert period is shearing array to the condensed version
-    period_is_shearing_p9a1e1b1nwzida0e0b0xyg0 = np.compress(shear_mask_p0, period_is_shearing_pa1e1b1nwzida0e0b0xyg0, p_pos)
-    period_is_shearing_p9a1e1b1nwzida0e0b0xyg1 = np.compress(shear_mask_p1, period_is_shearing_pa1e1b1nwzida0e0b0xyg1, p_pos)
+    period_is_shearing_p9a1e1b1nwzida0e0b0xyg0 = np.compress(shear_mask_p0, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0, p_pos)
+    period_is_shearing_tp9a1e1b1nwzida0e0b0xyg1 = np.compress(shear_mask_p1, period_is_shearing_tpa1e1b1nwzida0e0b0xyg1, p_pos)
     period_is_shearing_tp9a1e1b1nwzida0e0b0xyg3 = np.compress(shear_mask_p3, period_is_shearing_tpa1e1b1nwzida0e0b0xyg3, p_pos)
     ###Vegatative Matter if shorn(end)
     vm_p9a1e1b1nwzida0e0b0xyg0 = np.compress(shear_mask_p0, np.take(vm_p4a1e1b1nwzida0e0b0xyg,a_p4_p,p_pos), p_pos) #expand p4 axis to p then mask to p9
@@ -5369,23 +5364,23 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     pmb_p9s4a1e1b1nwzida0e0b0xyg0 = pmb_p4s4a1e1b1nwzida0e0b0xyg[a_p4_p,...][shear_mask_p0]
     pmb_p9s4a1e1b1nwzida0e0b0xyg1 = pmb_p4s4a1e1b1nwzida0e0b0xyg[a_p4_p,...][shear_mask_p1]
     pmb_p9s4a1e1b1nwzida0e0b0xyg3 = pmb_p4s4a1e1b1nwzida0e0b0xyg[a_p4_p[mask_p_offs_p],...][shear_mask_p3]
-    period_current_shearing_p9a1e1b1nwzida0e0b0xyg0 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg0 * period_is_shearing_p9a1e1b1nwzida0e0b0xyg0, axis=0) #returns the period number that the most recent shearing occurred
-    period_current_shearing_p9a1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg1 * period_is_shearing_p9a1e1b1nwzida0e0b0xyg1, axis=0) #returns the period number that the most recent shearing occurred
-    period_current_shearing_tp9a1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg3 * period_is_shearing_tp9a1e1b1nwzida0e0b0xyg3, axis=1) #returns the period number that the most recent shearing occurred
-    period_previous_shearing_p9a1e1b1nwzida0e0b0xyg0 = np.roll(period_current_shearing_p9a1e1b1nwzida0e0b0xyg0, 1, axis=0)*(index_p9a1e1b1nwzida0e0b0xyg0>0)  #returns the period of the previous shearing and sets slice 0 to 0 (because there is no previous shearing for the first shearing)
-    period_previous_shearing_p9a1e1b1nwzida0e0b0xyg1 = np.roll(period_current_shearing_p9a1e1b1nwzida0e0b0xyg1, 1, axis=0)*(index_p9a1e1b1nwzida0e0b0xyg1>0)  #returns the period of the previous shearing and sets slice 0 to 0 (because there is no previous shearing for the first shearing)
-    period_previous_shearing_tp9a1e1b1nwzida0e0b0xyg3 = np.roll(period_current_shearing_tp9a1e1b1nwzida0e0b0xyg3, 1, axis=1)*(index_p9a1e1b1nwzida0e0b0xyg3>0)  #returns the period of the previous shearing and sets slice 0 to 0 (because there is no previous shearing for the first shearing)
+    period_current_shearing_p9a1e1b1nwzida0e0b0xyg0 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg0 * period_is_shearing_p9a1e1b1nwzida0e0b0xyg0, axis=p_pos) #returns the period number that the most recent shearing occurred
+    period_current_shearing_tp9a1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg1 * period_is_shearing_tp9a1e1b1nwzida0e0b0xyg1, axis=p_pos) #returns the period number that the most recent shearing occurred
+    period_current_shearing_tp9a1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg3 * period_is_shearing_tp9a1e1b1nwzida0e0b0xyg3, axis=p_pos) #returns the period number that the most recent shearing occurred
+    period_previous_shearing_p9a1e1b1nwzida0e0b0xyg0 = np.roll(period_current_shearing_p9a1e1b1nwzida0e0b0xyg0, 1, axis=p_pos)*(index_p9a1e1b1nwzida0e0b0xyg0>0)  #returns the period of the previous shearing and sets slice 0 to 0 (because there is no previous shearing for the first shearing)
+    period_previous_shearing_tp9a1e1b1nwzida0e0b0xyg1 = np.roll(period_current_shearing_tp9a1e1b1nwzida0e0b0xyg1, 1, axis=p_pos)*(index_p9a1e1b1nwzida0e0b0xyg1>0)  #returns the period of the previous shearing and sets slice 0 to 0 (because there is no previous shearing for the first shearing)
+    period_previous_shearing_tp9a1e1b1nwzida0e0b0xyg3 = np.roll(period_current_shearing_tp9a1e1b1nwzida0e0b0xyg3, 1, axis=p_pos)*(index_p9a1e1b1nwzida0e0b0xyg3>0)  #returns the period of the previous shearing and sets slice 0 to 0 (because there is no previous shearing for the first shearing)
     periods_since_shearing_p9a1e1b1nwzida0e0b0xyg0 = a_p_p9a1e1b1nwzida0e0b0xyg0 - np.maximum(period_previous_shearing_p9a1e1b1nwzida0e0b0xyg0, date_born_idx_ida0e0b0xyg0)
-    periods_since_shearing_p9a1e1b1nwzida0e0b0xyg1 = a_p_p9a1e1b1nwzida0e0b0xyg1 - np.maximum(period_previous_shearing_p9a1e1b1nwzida0e0b0xyg1, date_born_idx_ida0e0b0xyg1)
+    periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg1 = a_p_p9a1e1b1nwzida0e0b0xyg1 - np.maximum(period_previous_shearing_tp9a1e1b1nwzida0e0b0xyg1, date_born_idx_ida0e0b0xyg1)
     periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 = a_p_p9a1e1b1nwzida0e0b0xyg3 - np.maximum(period_previous_shearing_tp9a1e1b1nwzida0e0b0xyg3, date_born_idx_ida0e0b0xyg3)
     months_since_shearing_p9a1e1b1nwzida0e0b0xyg0 = periods_since_shearing_p9a1e1b1nwzida0e0b0xyg0 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesn't need to be perfect its only an approximation)
-    months_since_shearing_p9a1e1b1nwzida0e0b0xyg1 = periods_since_shearing_p9a1e1b1nwzida0e0b0xyg1 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesn't need to be perfect its only an approximation)
+    months_since_shearing_tp9a1e1b1nwzida0e0b0xyg1 = periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg1 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesn't need to be perfect its only an approximation)
     months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 = periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesn't need to be perfect its only an approximation)
     a_months_since_shearing_p9a1e1b1nwzida0e0b0xyg0 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_p9a1e1b1nwzida0e0b0xyg0)#provides the index of the index which is closest to the actual months since shearing
-    a_months_since_shearing_p9a1e1b1nwzida0e0b0xyg1 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_p9a1e1b1nwzida0e0b0xyg1)#provides the index of the index which is closest to the actual months since shearing
+    a_months_since_shearing_tp9a1e1b1nwzida0e0b0xyg1 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_tp9a1e1b1nwzida0e0b0xyg1)#provides the index of the index which is closest to the actual months since shearing
     a_months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3)#provides the index of the index which is closest to the actual months since shearing
     pmb_p9a1e1b1nwzida0e0b0xyg0 = np.squeeze(np.take_along_axis(pmb_p9s4a1e1b1nwzida0e0b0xyg0,a_months_since_shearing_p9a1e1b1nwzida0e0b0xyg0[:,na,...],1),axis=p_pos) #select the relevant s4 (pmb interval) then squeeze that axis
-    pmb_p9a1e1b1nwzida0e0b0xyg1 = np.squeeze(np.take_along_axis(pmb_p9s4a1e1b1nwzida0e0b0xyg1,a_months_since_shearing_p9a1e1b1nwzida0e0b0xyg1[:,na,...],1),axis=p_pos) #select the relevant s4 (pmb interval) then squeeze that axis
+    pmb_tp9a1e1b1nwzida0e0b0xyg1 = np.squeeze(np.take_along_axis(pmb_p9s4a1e1b1nwzida0e0b0xyg1[na,...],a_months_since_shearing_tp9a1e1b1nwzida0e0b0xyg1[:,:,na,...],2),axis=p_pos) #select the relevant s4 (pmb interval) then squeeze that axis
     pmb_tp9a1e1b1nwzida0e0b0xyg3 = np.squeeze(np.take_along_axis(pmb_p9s4a1e1b1nwzida0e0b0xyg3[na,...],a_months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3[:,:,na,...],2),axis=p_pos) #select the relevant s4 (pmb interval) then squeeze that axis
     ###apply period mask to condense p axis
     cfw_sire_p9 = np.compress(shear_mask_p0, o_cfw_tpsire, p_pos)
@@ -5409,7 +5404,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                               , vm_p9a1e1b1nwzida0e0b0xyg0, pmb_p9a1e1b1nwzida0e0b0xyg0, dtype))
     woolvalue_c1tpa1e1b1nwzida0e0b0xyg1[:,:,shear_mask_p1], woolp_stbnib_dams = (
                             sfun.f_wool_value(woolp_mpg_w4, wool_price_scalar_c1tpg, cfw_dams_p9, fd_dams_p9, sl_dams_p9, ss_dams_p9
-                                              , vm_p9a1e1b1nwzida0e0b0xyg1, pmb_p9a1e1b1nwzida0e0b0xyg1, dtype))
+                                              , vm_p9a1e1b1nwzida0e0b0xyg1, pmb_tp9a1e1b1nwzida0e0b0xyg1, dtype))
     woolvalue_c1tpa1e1b1nwzida0e0b0xyg3[:,:,shear_mask_p3], woolp_stbnib_offs = (
                             sfun.f_wool_value(woolp_mpg_w4, wool_price_scalar_c1tpg, cfw_offs_p9, fd_offs_p9, sl_offs_p9, ss_offs_p9
                                               , vm_p9a1e1b1nwzida0e0b0xyg3, pmb_tp9a1e1b1nwzida0e0b0xyg3, dtype))
@@ -5512,7 +5507,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###Sire: cost, labour and infrastructure requirements
     husbandry_cost_tpg0, husbandry_labour_l2tpg0, husbandry_infrastructure_h1tpg0 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_sire'], mobsize_pa1e1b1nwzida0e0b0xyg0, o_ffcfw_tpsire, o_cfw_tpsire, operations_triggerlevels_h5h7h2tpg,
-        p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg0, period_is_shearing_pa1e1b1nwzida0e0b0xyg0,
+        p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg0, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0,
         period_is_wean_pa1e1b1nwzida0e0b0xyg0, gender_xyg[0], o_ebg_tpsire, wool_genes_yg0, husb_operations_muster_propn_h2tpg,
         husb_requisite_cost_h6tpg, husb_operations_requisites_prob_h6h2tpg, operations_per_hour_l2h2tpg,
         husb_operations_infrastructurereq_h1h2tpg, husb_operations_contract_cost_h2tpg, husb_muster_requisites_prob_h6h4tpg,
@@ -5520,20 +5515,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     husbandry_cost_p7tpg0 = husbandry_cost_tpg0 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
     husbandry_cost_wc_c0p7tpg0 = husbandry_cost_tpg0 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
     ###Dams: cost, labour and infrastructure requirements - accounts for yatf costs as well
-    ### for dams remove the generator t axis by selecting the retained t slice. This reduces the array sizes and loses minimal detail.
-    ### Note: The t axis would be required if shearing drys prior to sale.
-    if len_gen_t1==1:
-        a_gen_t_g1 = np.array([0])
-    else:
-        a_gen_t_g1 = a_t_g1
-    a_gen_t_tpg1 = fun.f_expand(a_gen_t_g1, p_pos-2, right_pos=-1)
-    t_o_ffcfw_tpdams = np.take_along_axis(o_ffcfw_tpdams, a_gen_t_tpg1, p_pos-1)
-    t_o_cfw_tpdams = np.take_along_axis(o_cfw_tpdams, a_gen_t_tpg1, p_pos-1)
-    t_o_ebg_tpdams = np.take_along_axis(o_ebg_tpdams, a_gen_t_tpg1, p_pos-1)
     husbandry_cost_tpg1, husbandry_labour_l2tpg1, husbandry_infrastructure_h1tpg1 = sfun.f_husbandry(
-        uinp.sheep['i_head_adjust_dams'], mobsize_pa1e1b1nwzida0e0b0xyg1, t_o_ffcfw_tpdams, t_o_cfw_tpdams, operations_triggerlevels_h5h7h2tpg,
-        p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg1, period_is_shearing_pa1e1b1nwzida0e0b0xyg1,
-        period_is_wean_husb_pa1e1b1nwzida0e0b0xyg1, gender_xyg[1], t_o_ebg_tpdams, wool_genes_yg1, husb_operations_muster_propn_h2tpg,
+        uinp.sheep['i_head_adjust_dams'], mobsize_pa1e1b1nwzida0e0b0xyg1, o_ffcfw_tpdams, o_cfw_tpdams, operations_triggerlevels_h5h7h2tpg,
+        p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg1, period_is_shearing_tpa1e1b1nwzida0e0b0xyg1,
+        period_is_wean_husb_pa1e1b1nwzida0e0b0xyg1, gender_xyg[1], o_ebg_tpdams, wool_genes_yg1, husb_operations_muster_propn_h2tpg,
         husb_requisite_cost_h6tpg, husb_operations_requisites_prob_h6h2tpg, operations_per_hour_l2h2tpg,
         husb_operations_infrastructurereq_h1h2tpg, husb_operations_contract_cost_h2tpg, husb_muster_requisites_prob_h6h4tpg,
         musters_per_hour_l2h4tpg, husb_muster_infrastructurereq_h1h4tpg, a_t_g1, nyatf_b1nwzida0e0b0xyg, period_is_join_pa1e1b1nwzida0e0b0xyg1,
@@ -5577,8 +5562,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ####adjust for period is sale/shear (needs to be done here rather than p2v so that cashflow can be combined).
     salevalue_tpa1e1b1nwzida0e0b0xyg0 = salevalue_tpa1e1b1nwzida0e0b0xyg0 * period_is_sale_pa1e1b1nwzida0e0b0xyg0
     salevalue_c1tpa1e1b1nwzida0e0b0xyg0 = salevalue_c1tpa1e1b1nwzida0e0b0xyg0 * period_is_sale_pa1e1b1nwzida0e0b0xyg0
-    woolvalue_tpa1e1b1nwzida0e0b0xyg0 = woolvalue_tpa1e1b1nwzida0e0b0xyg0 * period_is_shearing_pa1e1b1nwzida0e0b0xyg0
-    woolvalue_c1tpa1e1b1nwzida0e0b0xyg0 = woolvalue_c1tpa1e1b1nwzida0e0b0xyg0 * period_is_shearing_pa1e1b1nwzida0e0b0xyg0
+    woolvalue_tpa1e1b1nwzida0e0b0xyg0 = woolvalue_tpa1e1b1nwzida0e0b0xyg0 * period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0
+    woolvalue_c1tpa1e1b1nwzida0e0b0xyg0 = woolvalue_c1tpa1e1b1nwzida0e0b0xyg0 * period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0
     ####cashflow and wc
     salevalue_c1p7tpa1e1b1nwzida0e0b0xyg0 = salevalue_c1tpa1e1b1nwzida0e0b0xyg0[:,na,...] * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
     salevalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg0 = salevalue_tpa1e1b1nwzida0e0b0xyg0 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
@@ -5602,8 +5587,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ####adjust for period is sale/shear (needs to be done here rather than p2v so that cashflow can be combined).
     salevalue_tpa1e1b1nwzida0e0b0xyg1 = salevalue_tpa1e1b1nwzida0e0b0xyg1 * period_is_sale_tpa1e1b1nwzida0e0b0xyg1
     salevalue_c1tpa1e1b1nwzida0e0b0xyg1 = salevalue_c1tpa1e1b1nwzida0e0b0xyg1 * period_is_sale_tpa1e1b1nwzida0e0b0xyg1
-    woolvalue_tpa1e1b1nwzida0e0b0xyg1 = woolvalue_tpa1e1b1nwzida0e0b0xyg1 * period_is_shearing_pa1e1b1nwzida0e0b0xyg1
-    woolvalue_c1tpa1e1b1nwzida0e0b0xyg1 = woolvalue_c1tpa1e1b1nwzida0e0b0xyg1 * period_is_shearing_pa1e1b1nwzida0e0b0xyg1
+    woolvalue_tpa1e1b1nwzida0e0b0xyg1 = woolvalue_tpa1e1b1nwzida0e0b0xyg1 * period_is_shearing_tpa1e1b1nwzida0e0b0xyg1
+    woolvalue_c1tpa1e1b1nwzida0e0b0xyg1 = woolvalue_c1tpa1e1b1nwzida0e0b0xyg1 * period_is_shearing_tpa1e1b1nwzida0e0b0xyg1
     ####cashflow and wc
     salevalue_c1p7tpa1e1b1nwzida0e0b0xyg1 = salevalue_c1tpa1e1b1nwzida0e0b0xyg1[:,na,...] * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
     salevalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg1 = salevalue_tpa1e1b1nwzida0e0b0xyg1 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
@@ -6770,31 +6755,31 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##cfw per head average for the mob - includes the mortality factor
     r_cfw_hdmob_tvg0 = sfun.f1_p2v_std(o_cfw_tpsire, numbers_p=o_numbers_end_tpsire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
-                                                  period_is_tvp=period_is_shearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
+                                                  period_is_tvp=period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
     r_cfw_hdmob_tvg1 = sfun.f1_p2v(o_cfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
-                                             on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_shearing_pa1e1b1nwzida0e0b0xyg1)
+                                             on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg1)
     r_cfw_hdmob_tvg3 = sfun.f1_p2v(o_cfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
                                              on_hand_tpa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
     ##cfw per head - wool cut for 1 whole animal, no account for mortality
     r_cfw_hd_tvg0 = sfun.f1_p2v_std(o_cfw_tpsire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
-                                                  period_is_tvp=period_is_shearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
+                                                  period_is_tvp=period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
     r_cfw_hd_tvg1 = sfun.f1_p2v(o_cfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
-                               period_is_tp=period_is_shearing_pa1e1b1nwzida0e0b0xyg1)
+                               period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg1)
     r_cfw_hd_tvg3 = sfun.f1_p2v(o_cfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
                                period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
 
     ##fd per head average for the mob - includes the mortality factor
     r_fd_hdmob_tvg0 = sfun.f1_p2v_std(o_fd_tpsire, numbers_p=o_numbers_end_tpsire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
-                                                  period_is_tvp=period_is_shearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
+                                                  period_is_tvp=period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
     r_fd_hdmob_tvg1 = sfun.f1_p2v(o_fd_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
-                                             on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_shearing_pa1e1b1nwzida0e0b0xyg1)
+                                             on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg1)
     r_fd_hdmob_tvg3 = sfun.f1_p2v(o_fd_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
                                              on_hand_tpa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
     ##fd per head - wool cut for 1 whole animal, no account for mortality
     r_fd_hd_tvg0 = sfun.f1_p2v_std(o_fd_tpsire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
-                                                  period_is_tvp=period_is_shearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
+                                                  period_is_tvp=period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
     r_fd_hd_tvg1 = sfun.f1_p2v(o_fd_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
-                               period_is_tp=period_is_shearing_pa1e1b1nwzida0e0b0xyg1)
+                               period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg1)
     r_fd_hd_tvg3 = sfun.f1_p2v(o_fd_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
                                period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
 
