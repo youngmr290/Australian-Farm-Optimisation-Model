@@ -90,14 +90,14 @@ def f_labour_general(params,r_vals):
     
     ##manager leave
     leave_days = np.array([pinp.labour['leave_manager']])
-    manager_leave_hours = leave_days * 2/7 * pinp.labour['daily_hours'].loc['weekends', 'Manager']   \
-                          + leave_days * 5/7 * pinp.labour['daily_hours'].loc['weekdays', 'Manager']
+    manager_leave_hours = int(leave_days * 2/7 * pinp.labour['daily_hours'].loc['weekends', 'Manager']
+                            + leave_days * 5/7 * pinp.labour['daily_hours'].loc['weekdays', 'Manager'])
 
     ##perm leave
     ###normal leave
     leave_days = np.array([pinp.labour['leave_permanent']])
-    perm_leave_hours = leave_days * 2/7 * pinp.labour['daily_hours'].loc['weekends', 'Permanent']   \
-                          + leave_days * 5/7 * pinp.labour['daily_hours'].loc['weekdays', 'Permanent']
+    perm_leave_hours = int(leave_days * 2/7 * pinp.labour['daily_hours'].loc['weekends', 'Permanent']
+                         + leave_days * 5/7 * pinp.labour['daily_hours'].loc['weekdays', 'Permanent'])
     ###sick leave - x days split equally into each period
     perm_sick_leave_p5z = pinp.labour['sick_leave_permanent']/365 * lp_len_p5z
 
