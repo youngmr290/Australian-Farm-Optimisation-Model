@@ -544,7 +544,7 @@ def f_pasture(params, r_vals, nv):
     #params   #
     ###########
     ##non seasonal
-    params['pasture_area_rt'] = fun.f1_make_pyomo_dict(pasture_rt * 1, arrays_rt)    # times 1 to convert from bool to int eg if the phase is pasture then 1ha of pasture is recorded.
+    params['pasture_area_rt'] = fun.f1_make_pyomo_dict(pasture_rt * 1, arrays_rt)    # times 1 to convert from bool to int e.g. if the phase is pasture then 1ha of pasture is recorded.
 
     params['p_erosion_p7p6lrzt'] = fun.f1_make_pyomo_dict(erosion_p7p6lrzt, arrays_p7p6lrzt)
 

@@ -39,7 +39,7 @@ Instead the user runs AFO with multiple nutrition levels and allows the model to
 generate the optimal feedsupply which is stored in a pkl file and used for subsequent runs.
 
 Generating the feedsupply from the optimal nutrition pattern selected by the model means that the feedsupply
-can easily be optimised for different axis that are not included in the spreadsheet inputs (eg t axis and z axis).
+can easily be optimised for different axis that are not included in the spreadsheet inputs (e.g. t axis and z axis).
 This is carried out in the feedsupply creation experiment (in exp.xl). Depending on the number of w that
 have been included in the trials it may take several iterations to converge on the optimal feedsupply.
 The inclusion of confinement feeding may also be optimised and stored in the pkl file. However, optimising
@@ -204,7 +204,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ###############################
     '''
     AFO feedsupply inputs used to generate livestock are nutritive values however the generator needs information
-    about the feed consumed eg FOO and DMD because these factors impact things like energy required (eg less feed means
+    about the feed consumed e.g. FOO and DMD because these factors impact things like energy required (e.g. less feed means
     more walking). The function creates a relationship between NV and feed components.
 
     yatf don't require this function call since they just get the same fs as dams.
@@ -331,7 +331,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
                                                          , scan_management_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], ...],-1,3)
     ####a_r2_spk0k1k2nwzida0e0b0xyg1 (k2 active) is the feedsupply adjustment option for each k2 input cluster for each scanning options.
     ####The scan axis is required because the feedsupply for a cluster can vary based on how the other classes are clustered
-    #### eg the optimum feedsupply prior to scanning may change depending on whether singles and twins are identified
+    #### e.g. the optimum feedsupply prior to scanning may change depending on whether singles and twins are identified
     #todo the above comment is correct however, it is not represented in the inputs of the model. Undiff/mated is always 0 regardless of the scanning level
     #####take along the scan axis then remove the singleton scan axis with [0]
     a_r2_pk0k1k2nwzida0e0b0xyg1 = np.take_along_axis(a_r2_spk0k1k2nwzida0e0b0xyg1, scan_management_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0]
@@ -676,6 +676,6 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
 
         ##store rev if trial is rev_create
         fs_create_number = sinp.structuralsa['i_fs_create_number']
-        directory_path = os.path.dirname(os.path.abspath(__file__))  # path of directory - required when exp is run from a different location (eg in the web app)
+        directory_path = os.path.dirname(os.path.abspath(__file__))  # path of directory - required when exp is run from a different location (e.g. in the web app)
         with open(os.path.join(directory_path, 'pkl/pkl_fs{0}.pkl'.format(fs_create_number)),"wb") as f:
             pkl.dump(pkl_fs, f)

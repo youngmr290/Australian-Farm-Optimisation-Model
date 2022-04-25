@@ -61,7 +61,7 @@ try:
 except IndexError:  # in case no arg passed to python
     maximum_processes = 1  # available memory / value determined by size of the model being run (~5GB for the small model)
 
-##path of directory - required when exp is run from a different location (eg in the web app)
+##path of directory - required when exp is run from a different location (e.g. in the web app)
 directory_path = os.path.dirname(os.path.abspath(__file__))
     
 #########################

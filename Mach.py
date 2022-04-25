@@ -182,7 +182,7 @@ def f_poc_grazing_days():
     the duration of the machine period’, which can then just be multiplied by the rate of seeding and the number
     of days seeded in each period to get the total number of grazing days. This last step happens in pyomo.
 
-    The assumption is that; seeding is done evenly throughout a given period. In reality this is wrong eg if a
+    The assumption is that; seeding is done evenly throughout a given period. In reality this is wrong e.g. if a
     period is 5 days long but the farmer only has to sow 20ha they will do it on the first day of the period not
     4ha each day of the period. Therefore, the calculation slightly overestimates the amount of grazing achieved.
 
@@ -333,7 +333,7 @@ def f1_seed_cost_alloc():
     '''
     labour period allocation for seeding costs.
 
-    All seeding costs for a seeding activity must be incurred in the current season node eg if seeding happens in node 1
+    All seeding costs for a seeding activity must be incurred in the current season node e.g. if seeding happens in node 1
     the costs must be incurred in node 1, to ensure no seasons get free seeding. This happens by default because labour
     periods include season nodes.
     '''
@@ -445,7 +445,7 @@ def f_sowing_timeliness_penalty():
 
     biomass penalty reduces grain available to sell and reduces stubble production.
 
-    The assumption is that seeding is done evenly throughout a given period. In reality this is wrong eg if a
+    The assumption is that seeding is done evenly throughout a given period. In reality this is wrong e.g. if a
     period is 5 days long but the farmer only has to sow 20ha they will do it on the first day of the period not
     4ha each day of the period. Therefore, the calculation overestimates the biomass penalty.
 
@@ -460,12 +460,12 @@ def f_sowing_timeliness_penalty():
     seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     wet_seeding_penalty_k_z = zfun.f_seasonal_inp(pinp.crop['yield_penalty_wet'], axis=1)
 
-    # ##adjust seeding penalty - crops that are not harvested eg fodder don't have yield penalty. But do have a stubble penalty
+    # ##adjust seeding penalty - crops that are not harvested e.g. fodder don't have yield penalty. But do have a stubble penalty
     # if stub:
-    #     ###if calculating yield penalty for stubble then include all crop (eg include fodders)
+    #     ###if calculating yield penalty for stubble then include all crop (e.g. include fodders)
     #     pass
     # else:
-    #     ###if calculating yield penalty for grain transfer then only include harvested crops (eg don't include fodders)
+    #     ###if calculating yield penalty for grain transfer then only include harvested crops (e.g. don't include fodders)
     #     proportion_grain_harv_k = pd.Series(pinp.stubble['proportion_grain_harv'], index=sinp.landuse['C'])
     #     wet_seeding_penalty_k_z = wet_seeding_penalty_k_z.mul(proportion_grain_harv_k>0, axis=0)
 
@@ -556,7 +556,7 @@ def f_harv_rate_period():
 
     '''
     ##season inputs through function
-    harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0) #when the first crop begins to be harvested (eg when harv periods start)
+    harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0) #when the first crop begins to be harvested (e.g. when harv periods start)
     harv_period_lengths_z = np.sum(zfun.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
     harv_end_z = harv_start_z + harv_period_lengths_z #when all harv is done
     start_harvest_crops = pinp.crop['start_harvest_crops']
@@ -696,7 +696,7 @@ def f_contract_harv_rate():
     Grain harvested per hr by contractor (t/hr).
     '''
     ##season inputs through function
-    harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0) #when the first crop begins to be harvested (eg when harv periods start)
+    harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0) #when the first crop begins to be harvested (e.g. when harv periods start)
     harv_period_lengths_z = np.sum(zfun.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
     harv_end_z = harv_start_z + harv_period_lengths_z #when all harv is done
     start_harvest_crops = pinp.crop['start_harvest_crops']

@@ -152,7 +152,7 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, hr_scalar = 1, cr=None
     ##Estimate height of pasture
     height = np.maximum(0, np.exp(cu4[3] + cu4[0] * foo + cu4[1] * legume + cu4[2] * foo * legume) + cu4[5] + cu4[4] * foo)
     ##Height density (height per unit FOO)
-    hd = fun.f_divide(height, foo_grazplan) #handles div0 (eg if in feedlot with no pasture or adjusted foo is less than 0)
+    hd = fun.f_divide(height, foo_grazplan) #handles div0 (e.g. if in feedlot with no pasture or adjusted foo is less than 0)
     ##height ratio
     hr = hr_scalar * hd / uinp.pastparameters['i_hd_std']
     ##calc hf

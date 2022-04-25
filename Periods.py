@@ -274,7 +274,7 @@ def f_season_periods(keys=False):
 
     ##return keys if wanted
     if keys:
-        keys_p7 = np.array(['zm%s' % i for i in range(len_p7)]) #this is zm because if it were p7 then it gets confusing once the period number is added eg p70 (p7[0])
+        keys_p7 = np.array(['zm%s' % i for i in range(len_p7)]) #this is zm because if it were p7 then it gets confusing once the period number is added e.g. p70 (p7[0])
         return keys_p7
     else:
         return date_season_node_p7z

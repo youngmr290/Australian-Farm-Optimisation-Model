@@ -257,7 +257,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
 
     The decision variable represented in the model is the biomass per hectare on a given LMU at harvest. To account for
     the fact that LMUs are rarely 100% arable due to patches of rocks, gully’s, waterlogged area and uncleared
-    trees the yield is adjusted by the arable proportion. (eg if wheat yields 4 t/ha on LMU5 and LMU5 is 80%
+    trees the yield is adjusted by the arable proportion. (e.g. if wheat yields 4 t/ha on LMU5 and LMU5 is 80%
     arable then 1 unit of the decision variable will yield 3.2t of wheat).
 
     Frost does not impact total biomass however it does impact yield and stubble. Thus, frost is counted for
@@ -1174,7 +1174,7 @@ def f_sow_prov():
         - Area of wet seeding provided by 1ha of the wet seeding activity.
         - Area of dry seeding provided by 1ha of the dry seeding activity.
 
-    This accounts for period and crop eg wet seeding activity only provides sowing to crop after the break.
+    This accounts for period and crop e.g. wet seeding activity only provides sowing to crop after the break.
 
     '''
     ##machine periods
@@ -1274,8 +1274,8 @@ def f1_crop_params(params,r_vals):
 #
 # def f_cont_pas(cost_array):
 #     '''
-#     Calculates the cost for continuous pasture that is resown a proportion of the time. eg tc (cont tedera)
-#     the cost of cont pasture is a combination of the cost of normal and resown eg tc = t + tr (weighted by the frequency of resowing)
+#     Calculates the cost for continuous pasture that is resown a proportion of the time. E.g. tc (cont tedera)
+#     the cost of cont pasture is a combination of the cost of normal and resown e.g. tc = t + tr (weighted by the frequency of resowing)
 #     This function requires the index to be the landuse with no other levels. You can use unstack to ensure landuse is the only index.
 #     Generally this function is applied early in the cost process (before landuse has been dropped)
 #     Cont pasture only needs to exist if the phase has been included in the rotation.

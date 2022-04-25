@@ -820,7 +820,7 @@ def f_stock_cash_summary(lp_vars, r_vals):
     salevalue_qsk3k5p7twzia0xg2 = r_vals['stock']['salevalue_k3k5p7twzia0xg2'] * prog_numbers_qsk3k5twzia0xg2[:, :, :, :, na, ...]
     salevalue_qsk3k5p7tvnwziaxyg3 = r_vals['stock']['salevalue_k3k5p7tvnwziaxyg3'] * offs_numbers_qsk3k5tvnwziaxyg3[:, :, :, :, na, ...]
 
-    ##asset income - used to calculate the change in asset value at the start of season. This is required in the pnl report because sale management can vary across the z axis and then at the start of the season all z get averaged eg z0 might retain sheep and z4 might sell. If there is no asset value then z0 will look worse.
+    ##asset income - used to calculate the change in asset value at the start of season. This is required in the pnl report because sale management can vary across the z axis and then at the start of the season all z get averaged e.g. z0 might retain sheep and z4 might sell. If there is no asset value then z0 will look worse.
     assetvalue_startseason_qsp7zg0 = r_vals['stock']['assetvalue_startseason_p7zg0'] * sire_numbers_qsg0[:, :, na, na, :]
     assetvalue_endseason_qsp7zg0 = r_vals['stock']['assetvalue_endseason_p7zg0'] * sire_numbers_qsg0[:, :, na, na, :]
     assetvalue_startseason_qsk2p7tva1nwziyg1 = r_vals['stock']['assetvalue_startseason_k2p7tva1nwziyg1'] * dams_numbers_qsk2tvanwziy1g1[:, :, :, na, ...]
@@ -1261,7 +1261,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
 
     :key prod (optional, default = 1): str/int/float: if it is a string then it is used as a key for stock_vars, if it is an number that number is used as the prod value
     :key na_prod (optional, default = []): list: position to add new axis
-    :key weights (optional, default = None): str: weights to be used in arith (typically a lp variable eg numbers). Only required when arith>0
+    :key weights (optional, default = None): str: weights to be used in arith (typically a lp variable e.g. numbers). Only required when arith>0
     :key na_weights (optional, default = []): list: position to add new axis
     :key den_weights (optional, default = 1): str: key to variable used to weight the denominator in the weighted average (required p6 reporting)
     :key na_denweights (optional, default = []): list: position to add new axis
@@ -1325,8 +1325,8 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
 def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], axis_slice={}):
     '''
     Depending on the option selected this function can calc:
-        Lamb survival (per ewe at start of dvp when lambing occurs - eg mort is included)
-        Weaning %  (per dam at the start of the dvp when mating occurs - eg mort is included)
+        Lamb survival (per ewe at start of dvp when lambing occurs - e.g. mort is included)
+        Weaning %  (per dam at the start of the dvp when mating occurs - e.g. mort is included)
         Scanning %
         Proportion of dry ewes
 
@@ -1470,7 +1470,7 @@ def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
     '''
     ##slice axis - slice the keys and the array - if user hasn't specified slice the whole axis will be included
     sl = [slice(None)] * prod.ndim
-    keys = keys.copy()  # need to copy so that it doesnt change the underlying array (because assigning in a loop)
+    keys = keys.copy()  # need to copy so that it doesn't change the underlying array (because assigning in a loop)
     for axis, slc in axis_slice.items():
         start = slc[0]
         stop = slc[1]

@@ -319,10 +319,10 @@ def f_cropgraze_biomass_penalty():
     # proportion_grain_harv_k = pinp.stubble['proportion_grain_harv']
     consumption_factor_p6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
 
-    # ##adjust seeding penalty - crops that are not harvested eg fodder don't have yield penalty. But do have a stubble penalty
-    # ###if calculating yield penalty for stubble then include all crop (eg include fodders)
+    # ##adjust seeding penalty - crops that are not harvested e.g. fodder don't have yield penalty. But do have a stubble penalty
+    # ###if calculating yield penalty for stubble then include all crop (e.g. include fodders)
     # stub_yield_reduction_propn_kp6z = yield_reduction_propn_kp6z
-    # ###if calculating yield penalty for grain transfer then only include harvested crops (eg don't include fodders)
+    # ###if calculating yield penalty for grain transfer then only include harvested crops (e.g. don't include fodders)
     # yield_reduction_propn_kp6z = yield_reduction_propn_kp6z * (proportion_grain_harv_k>0)[:,na,na]
 
     # ##calc stubble reduction (kg of stubble per kg of crop DM consumed)

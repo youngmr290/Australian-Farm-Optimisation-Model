@@ -8,9 +8,9 @@ Reports are generated in a two step process. Firstly, each trial undergoes some 
 (e.g. graphing profit by sale price).
 
 Tweaking the output of a given report is done in the ReportControl.py. Here the user specifies the report
-properties. For example they can specify which axes to report in the table (as either rows or columns in the table)
+properties. For example, they can specify which axes to report in the table (as either rows or columns in the table)
 and which to average or another example. The user can also specify report options. For example, what type of profit
-(eg is asset opportunity cost included or not) they want to use in the profit by area curve.
+(e.g. is asset opportunity cost included or not) they want to use in the profit by area curve.
 
 To run execute this module with optional args <processor number> <report number>. If no arguments are passed
 the 1 processor is used and the 'default' report group is run.

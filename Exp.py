@@ -53,7 +53,7 @@ start = time.time()
 ##settings
 force_run=True #force precalcs to be run
 run_pyomo = True #do you want pyomo to run (default is True but if testing reports it can be useful to only run the precalcs)
-directory_path = os.path.dirname(os.path.abspath(__file__)) #path of directory - required when exp is run from a different location (eg in the web app)
+directory_path = os.path.dirname(os.path.abspath(__file__)) #path of directory - required when exp is run from a different location (e.g. in the web app)
 
 #########################
 #Exp loop               #

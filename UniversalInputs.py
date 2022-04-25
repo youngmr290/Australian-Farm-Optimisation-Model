@@ -109,7 +109,7 @@ else:
 
 ##read in price variation inputs from xl - this might change
 price_variation_inp = {}
-###build path this way so the file can be access even if AFO is run from another directory eg readthedocs or web app.
+###build path this way so the file can be access even if AFO is run from another directory e.g. readthedocs or web app.
 directory_path = os.path.dirname(os.path.abspath(__file__))
 pricescenarios_xl_path = os.path.join(directory_path, "PriceScenarios.xlsx")
 ###read price info

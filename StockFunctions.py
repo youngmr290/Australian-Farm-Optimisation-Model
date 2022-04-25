@@ -58,7 +58,7 @@ def f1_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_e
     period_is: string - type of period is calc to return.
     date_start_p: start date of each period (must have all axis).
     date_end_p: end date of each period (must have all axis).
-    date_array: array of dates of interest eg mating dates.
+    date_array: array of dates of interest e.g. mating dates.
     date_array2: array of end dates used to determine if period is between.
 
     Returns
@@ -256,7 +256,7 @@ def f1_btrt0(dstwtr_propn,pss,pstw,pstr): #^this function is inflexible ie if yo
 
     Returns
     -------
-    btrt_b0xyg : np array, proportion of lambs in each btrt category (eg 11, 22, 21 ...).
+    btrt_b0xyg : np array, proportion of lambs in each btrt category (e.g. 11, 22, 21 ...).
     progeny_total_xyg: np array, total number of progeny alive after birth per ewe mated
 
     '''
@@ -296,7 +296,7 @@ def f_btrt1(dstwtr_l0yg,pss,pstw,pstr): #^this function is inflexible ie if you 
     Returns
     -------
     btrt_b1nwzida0e0b0xyg : np array
-        probability of ewe with lambs in each btrt category (eg 11, 22, 21 ...).
+        probability of ewe with lambs in each btrt category (e.g. 11, 22, 21 ...).
 
     '''
 
@@ -491,11 +491,11 @@ def f1_feedsupply(feedsupplyw_ta1e1b1nwzida0e0b0xyg, confinementw_ta1e1b1nwzida0
     ##M/D of the diet (solids)
     md_solid = fun.f_divide(mei_solid, intake_f + intake_s) #yatf have 0 solid intake at start of life.
     ##Proportion of ME as milk
-    mei_propn_milk = fun.f_divide(mp2, mei) #func to stop div/0 error when some animals don't exist eg tol1 animals exist before tol2 animals
+    mei_propn_milk = fun.f_divide(mp2, mei) #func to stop div/0 error when some animals don't exist e.g. tol1 animals exist before tol2 animals
     ##Proportion of ME as supp
-    mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error when some animals don't exist eg tol1 animals exist before tol2 animals
+    mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error when some animals don't exist e.g. tol1 animals exist before tol2 animals
     ##Proportion of ME as herbage
-    mei_propn_herb = fun.f_divide(mei_herb, mei) #func to stop div/0 error when some animals don't exist eg tol1 animals exist before tol2 animals
+    mei_propn_herb = fun.f_divide(mei_herb, mei) #func to stop div/0 error when some animals don't exist e.g. tol1 animals exist before tol2 animals
 
     return mei, foo, dmd, mei_solid, md_solid, md_herb, intake_f, intake_s, mei_propn_milk, mei_propn_supp, mei_propn_herb
 
@@ -507,11 +507,11 @@ def f1_feedsupply_adjust(attempts,feedsupply,itn):
     binary_mask = np.nanmin(attempts[...,1], axis=-1)/np.nanmax(attempts[...,1], axis=-1) < 0 #axis -1 is the itn axis ie take the min and max error from the previous iterations
     ##calc new feedsupply binary - take half of the two feedsupplies that have resulted in the error closest to 0. Only adds the binary result to slices that have a negative and a positive value (done using the mask created above)
     ###feedsupply with negative error that is closest to 0 - this is a little complex because applying a max function to a masked array
-    mask_attempts= np.ma.masked_array(attempts[...,1],attempts[...,1]>0) #np.ma has a true and false the other way around (eg false means keep data) therefore the <> sign is opposite to what you want
+    mask_attempts= np.ma.masked_array(attempts[...,1],attempts[...,1]>0) #np.ma has a true and false the other way around (e.g. false means keep data) therefore the <> sign is opposite to what you want
     neg_bool=np.ma.getdata(mask_attempts.max(axis=-1,keepdims=True)==attempts[...,1]) #returns a maks that states the error that is negative but closest to 0
     neg_bool = neg_bool * binary_mask[...,na] #this just makes sure the neg mask only has a true in the same slice as the pos array (so it can be applied to the feed supply array below)
     ###feedsupply with positive error that is closest to 0 - this is a little complex because applying a max function to a masked array
-    mask_attempts= np.ma.masked_array(attempts[...,1],attempts[...,1]<0) #np.ma has a true and false the other way around (eg false means keep data) therefore the <> sign is opposite to what you want
+    mask_attempts= np.ma.masked_array(attempts[...,1],attempts[...,1]<0) #np.ma has a true and false the other way around (e.g. false means keep data) therefore the <> sign is opposite to what you want
     pos_bool=np.ma.getdata(mask_attempts.min(axis=-1,keepdims=True)==attempts[...,1]) #returns a maks that states the error that is negative but closest to 0
     pos_bool = pos_bool * binary_mask[...,na] #this just makes sure the pos mask only has a true in the same place as the neg mask.
     ##calc feedsupply
@@ -538,7 +538,7 @@ def f1_rev_update(trait_name, trait_value, rev_trait_value):
     trait_idx = sinp.structuralsa['i_rev_trait_name'].tolist().index(trait_name)
     if sinp.structuralsa['i_rev_trait_inc'][trait_idx]:
         if sinp.structuralsa['i_rev_create']:
-            rev_trait_value[trait_name] = trait_value.copy() #have to copy so that traits (eg mort) that are added to using += do not also update the rev value
+            rev_trait_value[trait_name] = trait_value.copy() #have to copy so that traits (e.g. mort) that are added to using += do not also update the rev value
         else:
             trait_value = rev_trait_value[trait_name]
     return trait_value
@@ -640,11 +640,11 @@ def f_intake(pi, ri, md_herb, confinement, intake_s, i_md_supp, mp2=0):
     ###ME intake from herbage
     mei_herb = mei_solid - mei_supp
     ###Proportion of ME as milk
-    mei_propn_milk = fun.f_divide(mp2, mei) #func to stop div/0 error when some animals don't exist eg tol1 animals exist before tol2 animals
+    mei_propn_milk = fun.f_divide(mp2, mei) #func to stop div/0 error when some animals don't exist e.g. tol1 animals exist before tol2 animals
     ###Proportion of ME as supp
-    mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error when some animals don't exist eg tol1 animals exist before tol2 animals
+    mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error when some animals don't exist e.g. tol1 animals exist before tol2 animals
     ###Proportion of ME as herbage
-    mei_propn_herb = fun.f_divide(mei_herb, mei) #func to stop div/0 error when some animals don't exist eg tol1 animals exist before tol2 animals
+    mei_propn_herb = fun.f_divide(mei_herb, mei) #func to stop div/0 error when some animals don't exist e.g. tol1 animals exist before tol2 animals
 
     return mei, mei_solid, intake_f, md_solid, mei_propn_milk, mei_propn_herb, mei_propn_supp
 
@@ -1516,7 +1516,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     mortalityd_yatf = np.mean(mortalityd_yatf_p1p2, axis=(-1,-2))
     ##add sensitivity
     mortalityd_yatf = fun.f_sa(mortalityd_yatf, sap_mortalityp, sa_type = 1, value_min = 0)
-    ##dam mort due to large progeny or lack of energy at birth (dystocia) - returns 0 mort if there is 0 nfoet also the fact that more prog die per dam when the dams has multiple nfoet (eg for a trip only one ewe dies for every 3 yatf)
+    ##dam mort due to large progeny or lack of energy at birth (dystocia) - returns 0 mort if there is 0 nfoet also the fact that more prog die per dam when the dams has multiple nfoet (e.g. for a trip only one ewe dies for every 3 yatf)
     mortalityd_dams = fun.f_divide(np.mean(mortalityd_yatf, axis=sinp.stock['i_x_pos'], keepdims=True) * cd[21,...], nfoet_b1)
     ##Reduce progeny losses due to large progeny (dystocia) - so not double counting progeny losses associated with dam mortality
     mortalityd_yatf = mortalityd_yatf * (1- cd[21,...])
@@ -1805,7 +1805,7 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
             if sinp.structuralsa['i_w_start_len1'] == 2:
                 ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
                 temporary[...] = np.mean(
-                    fun.f_dynamic_slice(ma_var_sorted,sinp.stock['i_w_pos'],i_w_len - int(math.ceil(n_lw / 10)), None), # ceil is used to handle cases where nutrition options is 1 (eg only 3 lw patterns)
+                    fun.f_dynamic_slice(ma_var_sorted,sinp.stock['i_w_pos'],i_w_len - int(math.ceil(n_lw / 10)), None), # ceil is used to handle cases where nutrition options is 1 (e.g. only 3 lw patterns)
                     sinp.stock['i_w_pos'],keepdims=True)  # average of the top lw patterns
 
                 ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
@@ -1815,7 +1815,7 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
 
             else:
                 ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
-                temporary[...] = np.mean(fun.f_dynamic_slice(ma_var_sorted, sinp.stock['i_w_pos'], i_w_len - int(math.ceil(n_lw / 10)), None),  #ceil is used to handle cases where nutrition options is 1 (eg only 3 lw patterns)
+                temporary[...] = np.mean(fun.f_dynamic_slice(ma_var_sorted, sinp.stock['i_w_pos'], i_w_len - int(math.ceil(n_lw / 10)), None),  #ceil is used to handle cases where nutrition options is 1 (e.g. only 3 lw patterns)
                                          sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
 
                 ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (can't use MRYs dynamic slice function because we are assigning)
@@ -2252,7 +2252,7 @@ def f1_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, op
         ##slice operation_triggered array
         operation_triggered_pg = operation_triggered_h2pg[h2,...]
 
-        ##if all values in mask are false (eg no range level needs to be calculated) then skip to next h2 (final array has 1 as default value so nothing needs to happen)
+        ##if all values in mask are false (e.g. no range level needs to be calculated) then skip to next h2 (final array has 1 as default value so nothing needs to happen)
         if any(maskh7_h7):
             ### mask the input arrays to minimise slices of h7
             animal_triggervalues_h7mask_h7pg = adj_animal_triggervalues_h7pg[maskh7_h7]
@@ -2350,7 +2350,7 @@ def f1_husbandry_labour(level_htpg, treatment_units_h8tpg, units_per_labourhour_
     ##calculated using loop to reduce memory
     hours_l2tpg = 0
     for h2 in range(level_htpg.shape[0]):
-        hours_l2tpg += fun.f_divide(level_htpg[h2] * units_htpg[h2] , units_per_labourhour_l2htpg[:,h2], dtype=level_htpg.dtype) #divide by units_per_labourhour_l2hpg because that is how many units can be done per hour eg how many sheep can be drenched per hr
+        hours_l2tpg += fun.f_divide(level_htpg[h2] * units_htpg[h2] , units_per_labourhour_l2htpg[:,h2], dtype=level_htpg.dtype) #divide by units_per_labourhour_l2hpg because that is how many units can be done per hour e.g. how many sheep can be drenched per hr
     return hours_l2tpg
 
 
@@ -2381,7 +2381,7 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_tpg, o_cfw_tpg, operations_trig
     ##An array of the trigger values for the animal classes in each period - these values are compared against a threshold to determine if the husb is required
     animal_triggervalues_h7tpg = f1_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, period_is_wean_pg, gender,
                             o_ebg_tpg, wool_genes, period_is_joining_pg, animal_mated, scan_option, period_is_endmating_pg).astype(dtype)
-    ##The number of treatment units per animal in each period - each slice has a different unit eg mobsize, nyatf etc the treatment unit can be selected and applied for a given husb operation
+    ##The number of treatment units per animal in each period - each slice has a different unit e.g. mobsize, nyatf etc the treatment unit can be selected and applied for a given husb operation
     treatment_units_h8tpg = f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_tpg, o_cfw_tpg, a_nyatf_b1g).astype(dtype)
     ##Is the husb operation triggered in the period for each class
     operation_triggered_h2tpg = f1_operations_triggered(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7h2tpg, a_t_g)
@@ -2444,7 +2444,7 @@ def f1_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_t
 #                         * on_hand_tp * (a_any1_p==index_any1tp)
 #                         * (a_any2_p==index_any2any1tp))
 #     ##convert p to v - info at this link https://stackoverflow.com/questions/50121980/numpy-conditional-sum
-#     ##basically we are summing the p axis for each dvp. the tricky part (which has caused the requirement for the loops) is that dvp pointer is not the same for each axis eg dvp is effected by e axis.
+#     ##basically we are summing the p axis for each dvp. the tricky part (which has caused the requirement for the loops) is that dvp pointer is not the same for each axis e.g. dvp is effected by e axis.
 #     ##so we need to loop though all the axis in the dvp and sum p and assign to a final array.
 #     ##if the axis is size 1 (ie singleton) then we want to take all of that axis ie ':' because just because the dvp pointer has singleton doesn't mean param array has singleton so need to take all slice of the param (unless that is an active dvp axis because that means dvp timing may differ for different slices along that axis so it must be summed in the loop)
 #     shape = production_ftpany.shape[0:sinp.stock['i_p_pos']] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[sinp.stock['i_p_pos']+1:]  # bit messy because need v t and all the other axis (but not p)
@@ -2776,7 +2776,7 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_w9vars_wg=1, index
 
     ## Calculate the proportion distributed to the nearest and assign to that w9 slice
     ### Handle the special cases in f_divide (option=1) where source and destination weights are the same
-    ### weights have converged or the dest and source weight is 0 for all slices (eg if animals don't exist or distribution doesn't occur in the dvp)
+    ### weights have converged or the dest and source weight is 0 for all slices (e.g. if animals don't exist or distribution doesn't occur in the dvp)
     #### nearest
     proportion = fun.f_divide(ffcfw_source_w8g[...,na] - next_nearestw9_w8gw
                               , nearestw9_w8gw - next_nearestw9_w8gw, dtype=dtype, option=1)

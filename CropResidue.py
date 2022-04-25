@@ -194,7 +194,7 @@ def crop_residue_all(params, r_vals, nv):
     len_s1 = len(pinp.stubble['i_stub_cat_dmd_s1'])
 
     ##read in category info frpm xl
-    ###build path this way so the file can be access even if AFO is run from another directory eg readthedocs or web app.
+    ###build path this way so the file can be access even if AFO is run from another directory e.g. readthedocs or web app.
     directory_path = os.path.dirname(os.path.abspath(__file__))
     residue_xl_path = os.path.join(directory_path, "stubble sim.xlsx")
     cat_propn_s1_ks2 = pd.read_excel(residue_xl_path,header=None, engine='openpyxl')
@@ -212,7 +212,7 @@ def crop_residue_all(params, r_vals, nv):
     # ##ri availability (not calced anymore - stubble uses ra=1 now) - first calc stubble foo (stub available) this is the average from all rotations and lmus because we just need one value for foo (crop residue volume is assumed to be the same across lmu - the extra detail could be added)
     # ###try calc the base yield for each crop but if the crop is not one of the rotation phases then assign the average foo (this is only to stop error. it doesn't matter because the crop doesn't exist so the stubble is never used)
     # base_yields = rot_yields_rkl_p7z.droplevel(0, axis=0).groupby(axis=1, level=1).sum() #drop rotation index and sum p7 axis (just want total yield to calc pi)
-    # base_yields = base_yields.replace(0,np.NaN) #replace 0 with nan so if yield inputs are missing (eg set to 0) the foo is still correct (nan gets skipped in pd.mean)
+    # base_yields = base_yields.replace(0,np.NaN) #replace 0 with nan so if yield inputs are missing (e.g. set to 0) the foo is still correct (nan gets skipped in pd.mean)
     # stub_foo_harv_zk = np.zeros((n_seasons, n_crops))
     # for crop, crop_idx in zip(pinp.stubble['i_stub_landuse_idx'], range(n_crops)):
     #     try:
@@ -222,7 +222,7 @@ def crop_residue_all(params, r_vals, nv):
     # stub_foo_harv_zk = np.nan_to_num(stub_foo_harv_zk) #replace nan with 0 (only wanted nan for the mean)
     ###adjust the foo for each category because the good stuff is eaten first therefore there is less foo when the sheep start eating the poorer stubble
     # cat_propn_rolled_ks1 = np.roll(cat_propn_ks1, shift=1, axis=1) #roll along the cat axis. So that the previous cat lines up with the current cat
-    # cat_propn_rolled_ks1[:, 0] = 0 #set the first slice to 0 because no stubble is consumed before cat A is consumed eg there is 100% of foo available when sheep are consuming cat A
+    # cat_propn_rolled_ks1[:, 0] = 0 #set the first slice to 0 because no stubble is consumed before cat A is consumed e.g. there is 100% of foo available when sheep are consuming cat A
     # cat_cum_propn_ks1 = np.cumsum(cat_propn_rolled_ks1, axis=1) #cumulative sum of the component sizes.
     # stubble_foo_zks1 = stub_foo_harv_zk[..., na] *  (1 - cat_cum_propn_ks1)
     ###adjust for quantity delcine due to deterioration

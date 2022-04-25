@@ -460,7 +460,7 @@ def f1_boundarypyomo_local(params, model):
         ###build bound if turned on
         if landuse_bound_inc:
             ##initilise bound - note zero is the equivalent of no bound
-            landuse_bound_k = pd.Series(0,index=model.s_landuses) #use landuse2 because that is the expanded version of pasture phases eg t, tr not just tedera
+            landuse_bound_k = pd.Series(0,index=model.s_landuses) #use landuse2 because that is the expanded version of pasture phases e.g. t, tr not just tedera
             ##set bound - note that setting to zero is the equivalent of no bound
             landuse_bound_k.iloc[0] = 50
             ###dict

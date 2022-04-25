@@ -364,11 +364,11 @@ def f1_stockpyomo_local(params, model):
 # local constraints    #
 ########################
 '''pyomo summary:
-        - if a set has a 9 on the end of it, it is a special constraint set. And it is used to link with a decision variable set (the corresponding letter without 9 eg g? and g9). The
+        - if a set has a 9 on the end of it, it is a special constraint set. And it is used to link with a decision variable set (the corresponding letter without 9 e.g. g? and g9). The
           set without a 9 must be summed.
         - if a given set doesn't have a corresponding 9 set, then you have two options
-            1. transfer from one decision variable to another 1:1 (or at another ratio determined be the param - but it means that it transfers to the same set eg x1_dams transfers to x1_prog)
-            2. treat all decision variable in a set the same. Done by summing. eg the npw provided by each dam t slice can be treated the same because it doesn't make a difference
+            1. transfer from one decision variable to another 1:1 (or at another ratio determined be the param - but it means that it transfers to the same set e.g. x1_dams transfers to x1_prog)
+            2. treat all decision variable in a set the same. Done by summing. E.g. the npw provided by each dam t slice can be treated the same because it doesn't make a difference
                if the progeny came from a dam that gets sold vs retained. (for most of the livestock it has been built in a way that doesn't need summing except for the sets which have a corresponding 9 set).
 
 speed info:
@@ -387,7 +387,7 @@ def f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9
     '''
     def offwithinR(model,q,s,k3,k5,v3,a,z9,i,x,y3,g3,w9):
         v3_prev = l_v3[l_v3.index(v3) - 1]  #used to get the activity number from the last period
-        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys eg k28
+        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys e.g. k28
         ###get the index number - required so numpy array can be indexed
         t_k3 = l_k3.index(k3)
         t_k5 = l_k5.index(k5)
@@ -408,7 +408,7 @@ def f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9
                        for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
                        if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
                        or pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z9,i,a,x,y3,g3,w9]) #doesn't need to use z8 because in the within constraint because z only provides to itsself and children with the same w patten.
-                       ) <=0 #need to use both in the if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
+                       ) <=0 #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
         else:
             return pe.Constraint.Skip
     start_con_offwithinR=time.time()
@@ -425,7 +425,7 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
     def offbetweenR(model,q,s9,k3,k5,v3,a,z9,i,x,y3,g3,w9):
         v3_prev = l_v3[l_v3.index(v3) - 1]  #used to get the activity number from the last period
         q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]  #used to get the activity number from the last period
-        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys eg k28
+        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys e.g. k28
         ###get the index number - required so numpy array can be indexed
         t_k3 = l_k3.index(k3)
         t_k5 = l_k5.index(k5)
@@ -448,7 +448,7 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
                              for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q,s8])!=0)
                        for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
                        if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
-                       or any(pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]) != 0 for z8 in model.s_season_types)) <=0 #need to use both in the if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
+                       or any(pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]) != 0 for z8 in model.s_season_types)) <=0 #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
         else:
             return pe.Constraint.Skip
     start_con_offbetweenR=time.time()
@@ -468,7 +468,7 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
     '''
     def damwithinR(model,q,s,k29,v1,a,z9,i,y1,g9,w9):
         v1_prev = l_v1[l_v1.index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
-        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys eg k28
+        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys e.g. k28
         ###get the index number - required so numpy array can be indexed
         t_k29 = l_k29.index(k29)
         t_v1 = l_v1.index(v1)
@@ -493,7 +493,7 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
                        if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1,g9, w9]) != 0
                        or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z9, i, y1, g1, g9, w9]) #doesn't need to use z8 because in the within constraint because z only provides to itsself and children with the same w patten.
                        or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
-                       ) <=0 #need to use both in the if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
+                       ) <=0 #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
         else:
             return pe.Constraint.Skip
 
@@ -511,12 +511,12 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
        group e.g. BBB to BBT).
     b) Dams to dams in the following decision variable period.
 
-    Note: this constraint is only active when season start is included as a dvp (eg not always active in steady state model).
+    Note: this constraint is only active when season start is included as a dvp (e.g. not always active in steady state model).
     '''
     def dambetweenR(model,q,s9,k29,v1,a,z9,i,y1,g9,w9):
         v1_prev = l_v1[l_v1.index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
         q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
-        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys eg k28
+        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys e.g. k28
         ###get the index number - required so numpy array can be indexed
         t_k29 = l_k29.index(k29)
         t_v1 = l_v1.index(v1)
@@ -560,7 +560,7 @@ def f_con_progR(model):
     '''
     def progR(model, q,s,k3, k5, a, z, i9, x, y1, g1, w9):
         if any(model.p_npw_req[k3, t2, x, g1] for t2 in model.s_sale_prog):
-            return (- sum(model.v_dams[q,s,k5, t1, v1, a, n1, w18, z, i, y1, g1] * model.p_npw[k3, k5, t1, v1, a, n1, w18, z, i, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 eg 11 and 22. we don't need other k2 slices eg nm
+            return (- sum(model.v_dams[q,s,k5, t1, v1, a, n1, w18, z, i, y1, g1] * model.p_npw[k3, k5, t1, v1, a, n1, w18, z, i, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 e.g. 11 and 22. we don't need other k2 slices e.g. nm
                           for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
                           if pe.value(model.p_npw[k3, k5, t1, v1, a, n1, w18, z, i, x, y1, g1, w9, i9])!=0)
                     + sum(model.v_prog[q,s,k3, k5, t2, w9, z, i9, a, x, g1] * model.p_npw_req[k3, t2, x, g1] for t2 in model.s_sale_prog
@@ -673,7 +673,7 @@ def f_con_matingR(model):
 
 def f_con_stockinfra(model):
     '''
-    Ensures enough infrastructure exists for all the animals and the associated events (eg mustering, shearing, etc).
+    Ensures enough infrastructure exists for all the animals and the associated events (e.g. mustering, shearing, etc).
     '''
     def stockinfra(model,q,s,h1,z):
         return -model.v_infrastructure[q,s,h1,z] + sum(model.v_sire[q,s,g0] * model.p_infra_sire[h1,z,g0] for g0 in model.s_groups_sire if model.p_infra_sire[h1,z,g0]!=0)  \

@@ -97,7 +97,7 @@ def sets(model, nv):
     model.s_crops = Set(initialize=sinp.landuse['C'], doc='crop types')
 
 
-    ##all crops and each pasture landuse eg t, tr
+    ##all crops and each pasture landuse e.g. t, tr
     model.s_landuses = Set(initialize=sinp.landuse['All'], doc='landuses')
 
     ##different fert options - used in labourcroppyomo

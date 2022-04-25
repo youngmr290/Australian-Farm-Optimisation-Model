@@ -132,7 +132,7 @@ def f_season_transfer_mask(period_dates_pz, z_pos, period_is_seasonstart_pz=Fals
     good and a bad, that are identified in spring. Both seasons must have the same management through the beginning of
     the year until spring (because the farmer doesn't know if they are having the good or bad year until spring).
 
-    :param period_dates_pz: period dates (eg dvp or cashflow) without end date of last period
+    :param period_dates_pz: period dates (e.g. dvp or cashflow) without end date of last period
     :param z_pos: z axis position
     :param period_is_seasonstart_pz: boolean array with true for season start period
     :param period_axis_pos: axis position of the period in the period date array. (argument not required when generating mask)

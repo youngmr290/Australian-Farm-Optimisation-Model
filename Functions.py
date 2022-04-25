@@ -275,7 +275,7 @@ def f_update(existing_value, new_value, mask_for_new):
 
     '''
     ##dtype for output (primarily needed for pp when int32 and float32 create float64 which we don't want)
-    ##if the new value is an object (eg contains '-') then we want to return the original dtype otherwise return the biggest dtype
+    ##if the new value is an object (e.g. contains '-') then we want to return the original dtype otherwise return the biggest dtype
 
     if isinstance(new_value,np.ndarray) and isinstance(existing_value,np.ndarray):
         if new_value.dtype == object:
@@ -307,15 +307,15 @@ def f_update(existing_value, new_value, mask_for_new):
     # updated = np.ma.masked_array(existing_value, mask_for_new) + np.ma.maskedarray(new_value, np.logical_not(mask_for_new))  #used 'not' rather than '~' because ~False == -1 rather than True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
     updated = existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
 
-    ##convert back to original dtype because adding float32 and int32 returns float64. And sometimes we don't want this eg postprocessing
-    ###use try except because sometimes a single int is update eg in the first iteration on generator. this causes error because only numpy arrays have .dtype.
+    ##convert back to original dtype because adding float32 and int32 returns float64. And sometimes we don't want this e.g. postprocessing
+    ###use try except because sometimes a single int is update e.g. in the first iteration on generator. this causes error because only numpy arrays have .dtype.
     try:
         updated = updated.astype(dtype)
     except AttributeError:
         pass
     except UnboundLocalError:
         pass
-    ###used for core python dtype eg floats/int/str
+    ###used for core python dtype e.g. floats/int/str
     try:
         updated = dtype(updated)
     except TypeError:
@@ -542,7 +542,7 @@ def f_produce_df(data, rows, columns, row_names=None, column_names=None):
         row_index=[0]
     elif not any(isinstance(i, (list, np.ndarray,object)) for i in rows): #check if nested list
         row_index = rows
-    elif len(rows)==1: #check if nested list with one element eg don't need to create multiindex
+    elif len(rows)==1: #check if nested list with one element e.g. don't need to create multiindex
         row_index = rows[0]
     else:
         row_index = pd.MultiIndex.from_product(rows, names=row_names)
@@ -550,7 +550,7 @@ def f_produce_df(data, rows, columns, row_names=None, column_names=None):
         col_index=[0]
     elif not any(isinstance(i, (list, np.ndarray,object)) for i in columns): #check if nested list
         col_index = columns
-    elif len(columns)==1: #check if nested list with one element eg don't need to create multiindex
+    elif len(columns)==1: #check if nested list with one element e.g. don't need to create multiindex
         col_index = columns[0]
     else:
         col_index = pd.MultiIndex.from_product(columns, names=column_names)
@@ -930,7 +930,7 @@ def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
     The majority of this function concerns unclustering the z axis. This is required for two reasons:
 
         1. By the time the r_val is save it would have likely been masked by mask_z8.
-        2. The user may have incorrectly clustered the inputs in excel (eg seasons had different inputs before they
+        2. The user may have incorrectly clustered the inputs in excel (e.g. seasons had different inputs before they
            were identified). This doesn't effect the actual model because z8 is masked until it is identified
            however if the r_val didn't get z8 treatment the reports could contain errors.
 
@@ -1006,7 +1006,7 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
             param_masked = np.concatenate([param_masked,param_cut[mask]],0).astype(dtype)  # applying the mask does the raveling and squeezing of singleton axis
             mask = mask.ravel() #needs to be 1d to mask the index
             ###build index
-            ####adjust if the position given is negative (eg cant use pos=-1)
+            ####adjust if the position given is negative (e.g. cant use pos=-1)
             if index_loop_axis_pos<0:
                 index_loop_axis_pos = len(index) + index_loop_axis_pos
             index_cut = [index[x] if x != index_loop_axis_pos else index[x][i:i+1] for x in range(len(index))]
@@ -1072,7 +1072,7 @@ def period_allocation(period_dates,periods,start_d,length=None):
     Parameters
     ----------
     period_dates : List
-        Dates of the periods you are matching within eg labour periods or cashflow periods
+        Dates of the periods you are matching within e.g. labour periods or cashflow periods
         *note the start date of the period must added to the end of the period if length is passed in
     periods : List
         Name of each period.
@@ -1316,7 +1316,7 @@ def f_daylength(dayOfYear, lat):
 def f_next_prev_association(datearray_slice,*args):
     '''
     Depending on the inputs this function will return the next or previous association.
-    eg it can be used to determine the next lambing opportunity for each period.
+    e.g. it can be used to determine the next lambing opportunity for each period.
     See john stuff.py for alternative methods.
 
     Parameters
@@ -1332,9 +1332,9 @@ def f_next_prev_association(datearray_slice,*args):
     Array
         The function finds the index value of the datearray which is either the next or previous date for a given input date.
         ## The previous opportunity is the latest opportunity date that is less than the date at the end of the period
-        ## eg ('end of the period' so that if joining occurs during the period it is the previous
+        ## e.g. ('end of the period' so that if joining occurs during the period it is the previous
         ## The next opportunity is the earliest joining date that is greater than the date at the start of the period
-        ## eg So it is the prev + 1 except if the joining is occurring within the period, in which case it points to this one.
+        ## e.g. So it is the prev + 1 except if the joining is occurring within the period, in which case it points to this one.
 
 
     '''

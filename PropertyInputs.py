@@ -166,7 +166,7 @@ isk2g = (len_i, len_sc, len_k2, -1)
 ik3g = (len_i, len_k3, -1)
 ik4g = (len_i, len_k4, -1)
 ik5g = (len_i, len_k5, -1)
-t3Sg = (len_t3, len_s+1, -1) #capital S to indicate this is special eg not normal because +1
+t3Sg = (len_t3, len_s+1, -1) #capital S to indicate this is special e.g. not normal because +1
 r1j2P = (len_r1, len_j2, -1) #capital p to indicate this is just the remaining length of input, it is p axis but input is longer
 r1p6z = (len_r1, len_p6, len_z)
 

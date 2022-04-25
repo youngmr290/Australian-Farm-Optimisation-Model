@@ -118,7 +118,7 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
 
     :param date_incurred: week of year when cashflow is incurred (must include z axis)
     :param enterprise: enterprise. If no enterprise is passed in the cashflow is averaged across the c0 axis.
-    :param z_pos: axis position of z (must be negative eg reference from the end).
+    :param z_pos: axis position of z (must be negative e.g. reference from the end).
     :param c0_inc: boolean stating if c0 axis is included in date_incurred
     '''
 
