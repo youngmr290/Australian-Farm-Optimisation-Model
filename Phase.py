@@ -49,6 +49,7 @@ import numpy as np
 import timeit
 import datetime as dt
 import sys
+import os
 
 #AFO modules - cant import pasture or stubble or cropgrazing
 import UniversalInputs as uinp
@@ -68,6 +69,13 @@ import Sensitivity as sen
 
 na = np.newaxis
 
+def f1_sim_inputs(sheet=None, index=None, header=None):
+    ###build path this way so the file can be access even if AFO is run from another directory eg readthedocs or web app.
+    directory_path = os.path.dirname(os.path.abspath(__file__))
+    xl_path = os.path.join(directory_path, "SimInputs.xlsx")
+    return pd.read_excel(xl_path, sheet_name=sheet, index_col=index, header=header, engine='openpyxl')
+
+
 def f1_mask_lmu(df, axis):
     lmu_mask = pinp.general['i_lmu_area'] > 0
     if axis==0:
@@ -79,31 +87,37 @@ def f1_mask_lmu(df, axis):
 
 def f1_rot_check():
     ##check that the rotations match the inputs. If not then re-run rotation generation. If still not the same
-    # quit and leave error message (most likely the user needs to re-run APSIM)
+    ## quit and leave error message (most likely the user needs to re-run APSIM).
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_yields = pinp.crop['yields']
     else:
-        ### AusFarm ^need to complete
-        base_yields
+        ### Simulation version
+        base_yields = f1_sim_inputs(sheet='Yield', index=0, header=0)
 
     phases_df = sinp.f_phases()
 
-    if len(phases_df) != len(base_yields):
-        ##if the rotations don't match inputs then rerun rotation generation.
-        import RotGeneration
-        RotGeneration.f_rot_gen()
+    if len(phases_df) == len(base_yields):
+        if all(base_yields.index==phases_df.index):
+            return
+    ##if the rotations don't match inputs then rerun rotation generation.
+    import RotGeneration
+    RotGeneration.f_rot_gen()
 
-        ##read in newly generated rotations and see if the inputs now match
-        phases_df = sinp.f_phases()
+    ##read in newly generated rotations and see if the inputs now match
+    phases_df = sinp.f_phases()
+    ###update len rot
+    sinp.general['phase_len'] = len(phases_df.columns)
 
-        ##if they still don't match then the user will need to either re-run simulation model (apsim) or change rotgeneration to line up with the rotations that have been simulated.
-        if len(phases_df) != len(base_yields):
-            print('''WARNING: Rotations don't match inputs.
-                   Things to check: 
-                   1. if you have generated new rotations have you re-run AusFarm?
-                   2. the named ranges in for the user defined rotations and inputs are all correct''')
-            sys.exit()
+    ##if they still don't match then the user will need to either re-run simulation model (apsim) or change rotgeneration to line up with the rotations that have been simulated.
+    if len(phases_df) == len(base_yields):
+        if all(base_yields.index==phases_df.index):
+            return
+    print('''WARNING: Rotations don't match inputs.
+           Things to check: 
+           1. if you have generated new rotations have you re-run AusFarm?
+           2. the named ranges in for the user defined rotations and inputs are all correct''')
+    sys.exit()
 
 
 ########################
@@ -270,8 +284,14 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
         base_yields = zfun.f_seasonal_inp(base_yields, axis=1)
         base_yields_rk_z = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
     else:
-        ### AusFarm ^need to add code for ausfarm inputs
-        base_yields_rk_z
+        ###Sim version
+        base_yields_rk_y = f1_sim_inputs(sheet='Yield', index=[0,1], header=0)
+        season_group_yz = f1_sim_inputs(sheet='SeasonGroup', index=0, header=0).stack()
+        ###Convert y to z
+        base_yields_rk_z = base_yields_rk_y.mul(season_group_yz, axis=1, level=0).replace(0, np.nan).groupby(axis=1, level=1).mean().replace(np.nan, 0)
+        ###Mask z axis
+        base_yields_rk_z = zfun.f_seasonal_inp(base_yields_rk_z, axis=1)
+
     base_yields_rkz = base_yields_rk_z.stack()
 
     ##colate other info
@@ -427,28 +447,30 @@ def f_fert_req():
         base_fert = pinp.crop['fert']
         base_fert = base_fert.T.set_index(['fert'], append=True).T.astype(float)
         base_fert = zfun.f_seasonal_inp(base_fert, axis=1)
-        base_fert=base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
-    else:        
-        ### AusFarm ^need to add code for ausfarm inputs
-        base_fert
-        base_fert = pd.DataFrame(base_fert, index = phases_df.iloc[:,-1])  #make the rotation and current landuse the index
+        base_fert_rk_zn = base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
+    else:
+        ###Sim version
+        base_fert_rk_zn = f1_sim_inputs(sheet='Fert Applied', index=[0,1], header=[0,1])
+        ###Mask z axis
+        base_fert_rk_zn = zfun.f_seasonal_inp(base_fert_rk_zn, axis=1, level=0)
+
     ##rename index
-    base_fert.index.rename(['rot','landuse'],inplace=True)
+    base_fert_rk_zn.index.rename(['rot','landuse'],inplace=True)
     ##add the fixed fert - currently this does not have season axis so need to reindex to add season axis
-    fixed_fert = pinp.crop['fixed_fert']
+    fixed_fert_k_n = pinp.crop['fixed_fert']
     keys_z = zfun.f_keys_z()
-    columns = pd.MultiIndex.from_product([keys_z, fixed_fert.columns])
-    fixed_fert = fixed_fert.reindex(columns, axis=1, level=1)
-    base_fert = pd.merge(base_fert, fixed_fert, how='left', left_on='landuse', right_index = True)
+    columns = pd.MultiIndex.from_product([keys_z, fixed_fert_k_n.columns])
+    fixed_fert_k_zn = fixed_fert_k_n.reindex(columns, axis=1, level=1)
+    base_fert_rk_zn = pd.merge(base_fert_rk_zn, fixed_fert_k_zn, how='left', left_on='landuse', right_index = True)
     ##drop landuse from index
-    base_fert = base_fert.droplevel(1,axis=0)
+    base_fert_r_zn = base_fert_rk_zn.droplevel(1,axis=0)
     ## adjust the fert req for each rotation by lmu
-    fert_by_soil = fert_by_soil.stack() #read in fert by soil
-    fert=base_fert.stack(level=0).mul(fert_by_soil,axis=1,level=0).stack()
+    fert_by_soil_nl = fert_by_soil.stack() #read in fert by soil
+    fert_rz_nl = base_fert_r_zn.stack(level=0).mul(fert_by_soil_nl,axis=1,level=0).stack()
     ##account for arable area
-    arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
-    fert=fert.mul(arable, axis=0, level=2) #add arable to df
-    return fert
+    arable_l = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
+    fert_rz_nl = fert_rz_nl.mul(arable_l, axis=0, level=2) #add arable to df
+    return fert_rz_nl
 
 
 def f_fert_passes():
@@ -470,27 +492,30 @@ def f_fert_passes():
         fert_passes = pinp.crop['fert_passes']
         fert_passes = fert_passes.T.set_index(['passes'], append=True).T.astype(float)
         fert_passes = zfun.f_seasonal_inp(fert_passes, axis=1)
-        fert_passes = fert_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
+        fert_passes_rk_zn = fert_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
     else:
-        ### AusFarm
-        fert_passes
-        fert_passes = pd.DataFrame(fert_passes, index = phases_df.iloc[:,-1])  #make the current landuse the index
+        ###Sim version
+        fert_passes_rk_zn = f1_sim_inputs(sheet='No Fert Applications', index=[0,1], header=[0,1])
+        ###Mask z axis
+        fert_passes_rk_zn = zfun.f_seasonal_inp(fert_passes_rk_zn, axis=1, level=0)
+
     ##rename index
-    fert_passes.index.rename(['rot','landuse'],inplace=True)
+    fert_passes_rk_zn.index.rename(['rot','landuse'],inplace=True)
     ####add the fixed fert
-    fixed_fert_passes = pinp.crop['fixed_fert_passes']
+    fixed_fert_passes_k_n = pinp.crop['fixed_fert_passes']
     keys_z = zfun.f_keys_z()
-    columns = pd.MultiIndex.from_product([keys_z, fixed_fert_passes.columns])
-    fixed_fert_passes = fixed_fert_passes.reindex(columns, axis=1, level=1)
-    fert_passes = pd.merge(fert_passes, fixed_fert_passes, how='left', left_on='landuse', right_index = True)
+    columns = pd.MultiIndex.from_product([keys_z, fixed_fert_passes_k_n.columns])
+    fixed_fert_passes_k_zn = fixed_fert_passes_k_n.reindex(columns, axis=1, level=1)
+    fert_passes_rk_zn = pd.merge(fert_passes_rk_zn, fixed_fert_passes_k_zn, how='left', left_on='landuse', right_index = True)
     ##drop landuse from index
-    fert_passes = fert_passes.droplevel(1, axis=0)
+    fert_passes_r_zn = fert_passes_rk_zn.droplevel(1, axis=0)
     ##adjust fert passes by arable area
-    arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
-    index = pd.MultiIndex.from_product([fert_passes.index, arable.index])
-    fert_passes = fert_passes.reindex(index, axis=0,level=0)
-    fert_passes=fert_passes.mul(arable,axis=0,level=1)
-    return fert_passes.stack(level=0).swaplevel(1,2, axis=0) #stack season axis and swap the order so season is level==1
+    arable_l = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
+    fert_passes_rz_n = fert_passes_r_zn.stack(0)
+    col_nl = pd.MultiIndex.from_product([fert_passes_rz_n.columns, arable_l.index])
+    fert_passes_rz_nl = fert_passes_rz_n.reindex(col_nl, axis=1,level=0)
+    fert_passes_rz_nl=fert_passes_rz_nl.mul(arable_l,axis=1,level=1)
+    return fert_passes_rz_nl.stack(1)
 
 
 def f_fert_cost(r_vals):
@@ -667,7 +692,7 @@ def f1_total_fert_req():
     ##add fert for arable area and fert for nonarable area
     fert_total = pd.concat([fertreq_arable, fert_na], axis=1).groupby(axis=1, level=0).sum()
     fert_req = fert_total.stack()
-    return fert_req
+    return fert_req.sort_index()
 
 
 #######################
@@ -821,20 +846,23 @@ def f_chem_application():
 
     if pinp.crop['user_crop_rot']:
         ### User defined
-        base_chem = pinp.crop['chem']
-        base_chem = base_chem.T.set_index(['chem'], append=True).T.astype(float)
-        base_chem = zfun.f_seasonal_inp(base_chem, axis=1)
+        chem_passes = pinp.crop['chem']
+        chem_passes = chem_passes.T.set_index(['chem'], append=True).T.astype(float)
+        chem_passes_r_zn = zfun.f_seasonal_inp(chem_passes, axis=1)
     else:
-        ### AusFarm ^need to add code for ausfarm inputs
-        base_chem
-        base_chem = pd.DataFrame(base_chem, index = [phases_df.index, phases_df.iloc[:,-1]])  #make the current landuse the index
-    ##arable area.
-    arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
-    #adjust chem passes by arable area
-    index = pd.MultiIndex.from_product([base_chem.index, arable.index])
-    base_chem = base_chem.reindex(index, axis=0,level=0)
-    base_chem=base_chem.mul(arable,axis=0,level=1)
-    return base_chem.stack(level=0).swaplevel(1,2, axis=0) #stack season axis and swap order
+        ###Sim version
+        chem_passes_rk_zn = f1_sim_inputs(sheet='No Chem Applications', index=[0,1], header=[0,1])
+        ###Mask z axis
+        chem_passes_rk_zn = zfun.f_seasonal_inp(chem_passes_rk_zn, axis=1, level=0)
+        ###drop landuse from index
+        chem_passes_r_zn = chem_passes_rk_zn.droplevel(1, axis=0)
+    ##adjust chem passes by arable area
+    arable_l = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
+    chem_passes_rz_n = chem_passes_r_zn.stack(0)
+    col_nl = pd.MultiIndex.from_product([chem_passes_rz_n.columns, arable_l.index])
+    chem_passes_rz_nl = chem_passes_rz_n.reindex(col_nl, axis=1,level=0)
+    chem_passes_rz_nl=chem_passes_rz_nl.mul(arable_l,axis=1,level=1)
+    return chem_passes_rz_nl.stack(1).sort_index()
 
 def f_chem_cost(r_vals):
     '''
@@ -877,13 +905,17 @@ def f_chem_cost(r_vals):
         ### User defined
         chem_cost = pinp.crop['chem_cost']
         chem_cost = chem_cost.T.set_index(['chem'], append=True).T.astype(float)
-        chem_cost = zfun.f_seasonal_inp(chem_cost, axis=1)
+        chem_cost_r_zn = zfun.f_seasonal_inp(chem_cost, axis=1)
     else:
-        ### AusFarm ^need to add code for ausfarm inputs
-        chem_cost
-        chem_cost = pd.DataFrame(chem_cost, index = [phases_df.index, phases_df.iloc[:,-1]])  #make the current landuse the index
+        ###Sim version
+        chem_cost_rk_zn = f1_sim_inputs(sheet='Total Chem Cost', index=[0,1], header=[0,1])
+        ###Mask z axis
+        chem_cost_rk_zn = zfun.f_seasonal_inp(chem_cost_rk_zn, axis=1, level=0)
+        ###drop landuse from index
+        chem_cost_r_zn = chem_cost_rk_zn.droplevel(1, axis=0)
+
     ### sum herbicide and fungicide cost
-    chem_cost_r_z = chem_cost.groupby(axis=1, level=0).sum()
+    chem_cost_r_z = chem_cost_r_zn.groupby(axis=1, level=0).sum()
     ###arable area.
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
     ###adjust by arable area and allocate to category (category allocation only affects cashflow timing hence interest)

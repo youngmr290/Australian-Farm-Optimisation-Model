@@ -160,8 +160,8 @@ def f1_expand_p6():
 def f_phases():
     ##rotation phases and constraints read in from excel
     return pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header= None, index_col = 0, engine='openpyxl').T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
-
-
+###add variable that is the number of yrs in the rot phases
+general['phase_len'] = len(f_phases().columns)
 
 ###############
 #landuse sets #

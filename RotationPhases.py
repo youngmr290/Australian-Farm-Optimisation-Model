@@ -160,7 +160,7 @@ def f_landuses_phases(params,r_vals):
 
     '''
     phases=sinp.f_phases()
-    phases_rk = phases.set_index(5, append=True) #add landuse as index level
+    phases_rk = phases.set_index(phases.columns[-1], append=True) #add landuse as index level
     params['phases_rk'] = dict.fromkeys(phases_rk.index,1)
 
     ##store r_vals

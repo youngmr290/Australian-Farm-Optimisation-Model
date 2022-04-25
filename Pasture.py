@@ -305,7 +305,9 @@ def f_pasture(params, r_vals, nv):
         i_fxg_pgr_op6lzt[2,...,t]        = zfun.f_seasonal_inp(np.moveaxis(exceldata['MedPGR'],0,-1), numpy=True, axis=-1)[:,lmu_mask_l,...]  #PGR for high (last entry) is the same as PGR for medium
         i_grn_dig_p6lzt[...,t]           = zfun.f_seasonal_inp(np.moveaxis(exceldata['DigGrn'],0,-1), numpy=True, axis=-1)[:,lmu_mask_l,...]  # numpy array of inputs for green pasture digestibility on each LMU.
 
-        i_phase_germ_dict[pasture]      = pd.DataFrame(exceldata['GermPhases'])  #DataFrame with germ scalar and resown
+        ###to handle different length rotation phases (ie simulation is shorter than pinp) the germ df needs to be sliced.
+        offset = exceldata['GermPhases'].shape[1] - len(phases_rotn_df.columns) - 1 #minus 1 because germ inputs has extra col
+        i_phase_germ_dict[pasture]      = pd.DataFrame(exceldata['GermPhases'][:,offset:])  #DataFrame with germ scalar and resown
         # i_phase_germ_dict[pasture].reset_index(inplace=True)                                # replace index read from Excel with numbers to match later merging
         # i_phase_germ_dict[pasture].columns.values[range(phase_len)] = [*range(phase_len)]   # replace the pasture columns read from Excel with numbers to match later merging
 
