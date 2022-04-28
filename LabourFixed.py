@@ -43,7 +43,7 @@ def fixed(params):
 
     ##super
     super_dates_p8 = pinp.labour['super'].index.values
-    super_length_p8 = pinp.labour['super']['days'].values.astype('timedelta64[D]')
+    super_length_p8 = pinp.labour['super']['days'].values
     super_labour_p8 = pinp.labour['super']['hours'].values
     alloc_p5zp8 = fun.f_range_allocation_np(lp_p5z[...,na], super_dates_p8, super_length_p8)[:-1,:,:]
     super_p5z = np.sum(alloc_p5zp8 * super_labour_p8, axis=-1) #get rid of p8 axis
@@ -52,7 +52,7 @@ def fixed(params):
 
     ##bas
     bas_dates_p8 = pinp.labour['bas'].index.values
-    bas_length_p8 = pinp.labour['bas']['days'].values.astype('timedelta64[D]')
+    bas_length_p8 = pinp.labour['bas']['days'].values
     bas_labour_p8 = pinp.labour['bas']['hours'].values
     alloc_p5zp8 = fun.f_range_allocation_np(lp_p5z[...,na], bas_dates_p8, bas_length_p8)[:-1,:,:]
     bas_p5z = np.sum(alloc_p5zp8 * bas_labour_p8, axis=-1) #get rid of p8 axis
@@ -61,7 +61,7 @@ def fixed(params):
 
     ##planning
     planning_dates_p8 = pinp.labour['planning'].index.values
-    planning_length_p8 = pinp.labour['planning']['days'].values.astype('timedelta64[D]')
+    planning_length_p8 = pinp.labour['planning']['days'].values
     planning_labour_p8 = pinp.labour['planning']['hours'].values
     alloc_p5zp8 = fun.f_range_allocation_np(lp_p5z[...,na], planning_dates_p8, planning_length_p8)[:-1,:,:]
     planning_p5z = np.sum(alloc_p5zp8 * planning_labour_p8, axis=-1) #get rid of p8 axis
@@ -70,7 +70,7 @@ def fixed(params):
 
     ##tax
     tax_dates_p8 = pinp.labour['tax'].index.values
-    tax_length_p8 = pinp.labour['tax']['days'].values.astype('timedelta64[D]')
+    tax_length_p8 = pinp.labour['tax']['days'].values
     tax_labour_p8 = pinp.labour['tax']['hours'].values
     alloc_p5zp8 = fun.f_range_allocation_np(lp_p5z[...,na], tax_dates_p8, tax_length_p8)[:-1,:,:]
     tax_p5z = np.sum(alloc_p5zp8 * tax_labour_p8, axis=-1) #get rid of p8 axis

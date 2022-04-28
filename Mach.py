@@ -115,7 +115,7 @@ def f_seed_days():
     mach_periods = per.f_p_dates_df()
     start_pz = mach_periods.values[:-1]
     end_pz = mach_periods.values[1:]
-    length_pz = np.maximum(0,(end_pz - start_pz).astype('timedelta64[D]').astype(int))
+    length_pz = np.maximum(0,(end_pz - start_pz))
     days = pd.DataFrame(length_pz, index=mach_periods.index[:-1], columns=mach_periods.columns)
     return days
 
@@ -125,7 +125,7 @@ def f_contractseeding_occurs():
     Contract seeding is not hooked up to yield penalty because if your going to hire someone you will hire
     them at the optimum time. Contract seeding is hooked up to poc so this param stops the model having late seeding.
     '''
-    contract_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
+    contract_start_z = per.f_wet_seeding_start_date()
     mach_periods = per.f_p_dates_df()
     start_pz = mach_periods.values[:-1]
     end_pz = mach_periods.values[1:]
@@ -194,27 +194,27 @@ def f_poc_grazing_days():
     mach_periods = per.f_p_dates_df()
     date_start_p5z = mach_periods.values[:-1]
     date_end_p5z = mach_periods.values[1:]
-    defer_period = np.array([pinp.crop['poc_destock']]).astype('timedelta64[D]') #days between seeding and destocking
-    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'],numpy=True).astype('datetime64')
-    wet_seeding_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
+    defer_period = np.array([pinp.crop['poc_destock']]) #days between seeding and destocking
+    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'],numpy=True)
+    wet_seeding_start_z = per.f_wet_seeding_start_date()
 
     ##calc wet seeding days
     start_pz = np.maximum(wet_seeding_start_z, date_start_p5z)
-    seed_days_p5z = np.maximum(0,(date_end_p5z - start_pz).astype('timedelta64[D]').astype(int))
+    seed_days_p5z = np.maximum(0,(date_end_p5z - start_pz))
 
     ##grazing days rectangle component (for p5) and allocation to feed periods (p6)
     base_p6p5z = (np.minimum(date_end_p6z[:,na,:], date_start_p5z - defer_period) \
-                  - np.maximum(season_break_z, date_start_p6z[:,na,:]))/ np.timedelta64(1, 'D')
+                  - np.maximum(season_break_z, date_start_p6z[:,na,:]))
     height_p5z = 1
     poc_grazing_days_rect_p6p5z = np.maximum(0, base_p6p5z * height_p5z)
 
     ##grazing days triangular component (for p5) and allocation to feed periods (p6)
     start_p6p5z = np.maximum(date_start_p6z[:,na,:], np.maximum(season_break_z, date_start_p5z - defer_period))
     end_p6p5z = np.minimum(date_end_p6z[:,na,:], date_end_p5z - defer_period)
-    base_p6p5z = (end_p6p5z - start_p6p5z)/ np.timedelta64(1, 'D')
-    height_start_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z - defer_period) - start_p6p5z)/ np.timedelta64(1, 'D')
+    base_p6p5z = (end_p6p5z - start_p6p5z)
+    height_start_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z - defer_period) - start_p6p5z)
                                                     , seed_days_p5z))
-    height_end_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z - defer_period) - end_p6p5z)/ np.timedelta64(1, 'D')
+    height_end_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z - defer_period) - end_p6p5z)
                                                     , seed_days_p5z))
     poc_grazing_days_tri_p6p5z = np.maximum(0,base_p6p5z * (height_start_p6p5z + height_end_p6p5z) / 2)
 
@@ -358,7 +358,7 @@ def f1_seed_cost_alloc():
 #
 #     fert_info = pinp.crop['fert_info']
 #     fert_date_n = fert_info['app_date'].values
-#     fert_length_n = fert_info['app_len'].values.astype('timedelta64[D]')
+#     fert_length_n = fert_info['app_len'].values
 #     alloc_p7zn = zfun.f1_z_period_alloc(fert_date_n[na,na,:], fert_length_n[na,na,:], z_pos=-2)
 #     ###convert to df
 #     keys_z = zfun.f_keys_z()
@@ -479,10 +479,10 @@ def f_sowing_timeliness_penalty():
     mach_periods_end_pz = mach_periods.values[1:]
 
     ##wet seeding penalty - penalty = average penalty of period (= (start day + end day) / 2 * penalty)
-    seed_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
-    penalty_free_days_z = seed_period_lengths_pz[0].astype('timedelta64[D]')
-    start_day_pz = 1 + (mach_periods_start_pz - (seed_start_z + penalty_free_days_z))/ np.timedelta64(1, 'D')
-    end_day_pz = (mach_periods_end_pz - (seed_start_z + penalty_free_days_z))/ np.timedelta64(1, 'D')
+    seed_start_z = per.f_wet_seeding_start_date()
+    penalty_free_days_z = seed_period_lengths_pz[0]
+    start_day_pz = 1 + (mach_periods_start_pz - (seed_start_z + penalty_free_days_z))
+    end_day_pz = (mach_periods_end_pz - (seed_start_z + penalty_free_days_z))
     wet_penalty_pzk = (start_day_pz + end_day_pz)[...,na] / 2 * wet_seeding_penalty_k_z.T.values
     wet_penalty_pzk = np.clip(wet_penalty_pzk, 0, np.inf)
 
@@ -555,11 +555,11 @@ def f_harv_rate_period():
 
     '''
     ##season inputs through function
-    harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype(np.datetime64) #when the first crop begins to be harvested (eg when harv periods start)
+    harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0) #when the first crop begins to be harvested (eg when harv periods start)
     harv_period_lengths_z = np.sum(zfun.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
-    harv_end_z = harv_start_z + harv_period_lengths_z.astype('timedelta64[D]') #when all harv is done
+    harv_end_z = harv_start_z + harv_period_lengths_z #when all harv is done
     start_harvest_crops = pinp.crop['start_harvest_crops']
-    start_harvest_crops_kz = zfun.f_seasonal_inp(start_harvest_crops.values, numpy=True, axis=1).astype(np.datetime64) #start harvest for each crop
+    start_harvest_crops_kz = zfun.f_seasonal_inp(start_harvest_crops.values, numpy=True, axis=1) #start harvest for each crop
 
     ##harv occur - note: some crops are not harvested in the early harv period
     mach_periods = per.f_p_dates_df()
@@ -605,7 +605,7 @@ def f_max_harv_hours():
     ##inputs
     harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
     harv_period_lengths_z = np.sum(zfun.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
-    harv_end_z = harv_start_z.astype('datetime64') + harv_period_lengths_z.astype('timedelta64[D]') #when all harv is done
+    harv_end_z = harv_start_z + harv_period_lengths_z #when all harv is done
 
     ##does any harvest occur in given period
     mach_periods_start_pz = per.f_p_dates_df()[:-1]
@@ -613,7 +613,7 @@ def f_max_harv_hours():
     harv_occur_pz = np.logical_and(harv_start_z <= mach_periods_start_pz, mach_periods_start_pz < harv_end_z)
 
     ##max harv hour per period
-    days_pz = (mach_periods_end_pz.values - mach_periods_start_pz.values)/ np.timedelta64(1, 'D')
+    days_pz = (mach_periods_end_pz.values - mach_periods_start_pz.values)
     max_hours_pz = days_pz * harv_occur_pz * pinp.mach['daily_harvest_hours']
     return max_hours_pz
 
@@ -695,11 +695,11 @@ def f_contract_harv_rate():
     Grain harvested per hr by contractor (t/hr).
     '''
     ##season inputs through function
-    harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype(np.datetime64) #when the first crop begins to be harvested (eg when harv periods start)
+    harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0) #when the first crop begins to be harvested (eg when harv periods start)
     harv_period_lengths_z = np.sum(zfun.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
-    harv_end_z = harv_start_z + harv_period_lengths_z.astype('timedelta64[D]') #when all harv is done
+    harv_end_z = harv_start_z + harv_period_lengths_z #when all harv is done
     start_harvest_crops = pinp.crop['start_harvest_crops']
-    start_harvest_crops_kz = zfun.f_seasonal_inp(start_harvest_crops.values, numpy=True, axis=1).astype(np.datetime64) #start harvest for each crop
+    start_harvest_crops_kz = zfun.f_seasonal_inp(start_harvest_crops.values, numpy=True, axis=1) #start harvest for each crop
 
     ##harv occur - note: some crops are not harvested in the early harv period
     mach_periods = per.f_p_dates_df()
@@ -783,7 +783,7 @@ def f_hay_making_cost():
     Note: Currently it is assumed that hay is allocated into the same cashflow periods in all seasons.
     '''
     ##cost allocation
-    hay_start = np.array([pinp.crop['hay_making_date']]).astype('datetime64')
+    hay_start = np.array([pinp.crop['hay_making_date']])
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
@@ -1134,7 +1134,7 @@ def f_insurance(r_vals):
     insurance_cost = value_all_mach * uinp.finance['equip_insurance']
     
     ##determine cash period
-    start = np.array([uinp.mach_general['insurance_date']]).astype('datetime64')
+    start = np.array([uinp.mach_general['insurance_date']])
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()

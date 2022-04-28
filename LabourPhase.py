@@ -64,28 +64,28 @@ def f_prep_labour():
 
     ##harvest_prep
     harvest_prep_dates_p8 = pinp.labour['harvest_prep'].index.values
-    harvest_prep_length_p8 = pinp.labour['harvest_prep']['days'].values.astype('timedelta64[D]')
+    harvest_prep_length_p8 = pinp.labour['harvest_prep']['days'].values
     harvest_prep_labour_p8 = pinp.labour['harvest_prep']['hours'].values
     alloc_p5zp8 = fun.f_range_allocation_np(lp_p5z[...,na], harvest_prep_dates_p8, harvest_prep_length_p8)[:-1,:,:]
     harvest_prep_p5z = np.sum(alloc_p5zp8 * harvest_prep_labour_p8, axis=-1) #get rid of p8 axis
 
     ##fert_prep
     fert_prep_dates_p8 = pinp.labour['fert_prep'].index.values
-    fert_prep_length_p8 = pinp.labour['fert_prep']['days'].values.astype('timedelta64[D]')
+    fert_prep_length_p8 = pinp.labour['fert_prep']['days'].values
     fert_prep_labour_p8 = pinp.labour['fert_prep']['hours'].values
     alloc_p5zp8 = fun.f_range_allocation_np(lp_p5z[...,na], fert_prep_dates_p8, fert_prep_length_p8)[:-1,:,:]
     fert_prep_p5z = np.sum(alloc_p5zp8 * fert_prep_labour_p8, axis=-1) #get rid of p8 axis
 
     ##spray_prep
     spray_prep_dates_p8 = pinp.labour['spray_prep'].index.values
-    spray_prep_length_p8 = pinp.labour['spray_prep']['days'].values.astype('timedelta64[D]')
+    spray_prep_length_p8 = pinp.labour['spray_prep']['days'].values
     spray_prep_labour_p8 = pinp.labour['spray_prep']['hours'].values
     alloc_p5zp8 = fun.f_range_allocation_np(lp_p5z[...,na], spray_prep_dates_p8, spray_prep_length_p8)[:-1,:,:]
     spray_prep_p5z = np.sum(alloc_p5zp8 * spray_prep_labour_p8, axis=-1) #get rid of p8 axis
 
     ##seed_prep
     seed_prep_dates_p8 = pinp.labour['seed_prep'].index.values
-    seed_prep_length_p8 = pinp.labour['seed_prep']['days'].values.astype('timedelta64[D]')
+    seed_prep_length_p8 = pinp.labour['seed_prep']['days'].values
     seed_prep_labour_p8 = pinp.labour['seed_prep']['hours'].values
     alloc_p5zp8 = fun.f_range_allocation_np(lp_p5z[...,na], seed_prep_dates_p8, seed_prep_length_p8)[:-1,:,:]
     seed_prep_p5z = np.sum(alloc_p5zp8 * seed_prep_labour_p8, axis=-1) #get rid of p8 axis
@@ -115,7 +115,7 @@ def f_fert_lab_allocation():
 
     fert_info = pinp.crop['fert_info']
     fert_date_n = fert_info['app_date'].values
-    fert_length_n = fert_info['app_len'].values.astype('timedelta64[D]')
+    fert_length_n = fert_info['app_len'].values
     p_dates_p5z = per.f_p_dates_df()
     shape_p5zn = p_dates_p5z.shape+fert_date_n.shape
     alloc_p5zn = fun.f_range_allocation_np(p_dates_p5z.values[...,na], fert_date_n, fert_length_n, shape=shape_p5zn)[:-1,...]
@@ -217,7 +217,7 @@ def f_chem_lab_allocation():
     '''Allocation of chemical applications into each labour period'''
     chem_info = pinp.crop['chem_info']
     chem_date_n = chem_info['app_date'].values
-    chem_length_n = chem_info['app_len'].values.astype('timedelta64[D]')
+    chem_length_n = chem_info['app_len'].values
     p_dates_p5z = per.f_p_dates_df()
     shape_p5zn = p_dates_p5z.shape+chem_date_n.shape
     alloc_p5zn = fun.f_range_allocation_np(p_dates_p5z.values[...,na], chem_date_n, chem_length_n, shape=shape_p5zn)[:-1,...]
@@ -291,9 +291,9 @@ def f_crop_monitoring():
     fixed_crop_monitor = pinp.labour['fixed_crop_monitoring']
     variable_crop_monitor = pinp.labour['variable_crop_monitoring']
     labour_periods_pz = per.f_p_dates_df().values
-    date_start_d = fixed_crop_monitor.columns.values.astype('datetime64[D]')
+    date_start_d = fixed_crop_monitor.columns.values
     date_end_d = np.roll(date_start_d, -1)
-    date_end_d[-1] = date_end_d[-1] + 365 #increment the first date by 1yr so it becomes the end date for the last period
+    date_end_d[-1] = date_end_d[-1] + 364 #increment the first date by 1yr so it becomes the end date for the last period
     length_d = date_end_d - date_start_d
     shape_pzd = labour_periods_pz.shape + date_start_d.shape
     monitoring_allocation_p5zd = fun.f_range_allocation_np(labour_periods_pz[...,na]

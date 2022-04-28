@@ -39,32 +39,27 @@ def f1_sim_periods(start_year, periods_per_year, oldest_animal):
     array of period dates (1D periods)
     array of period end dates (1D periods) (date of the last day in the period)
     index of the periods (for pyomo)
-    step - seconds in each period
+    step - days in each period
+
+    Number of weeks is 52 and the range is 0 to 51
     '''
     n_sim_periods = int(oldest_animal * periods_per_year)
-    start_date = dt.date(year=start_year, month=1,day=1)
-    step = pd.to_timedelta(365.25 / periods_per_year,'D')
-    step = step.to_numpy().astype('timedelta64[s]')
+    step = 364/periods_per_year
     index_p = np.arange(n_sim_periods)
-    date_start_p =  (np.datetime64(start_date) + (step * index_p)).astype('datetime64[D]') #astype day rounds the date to the nearest day
-    date_end_p = (np.datetime64(start_date - dt.timedelta(days=1)) + (step * (index_p+1))).astype('datetime64[D]') #minus one day to get the last day in the period not the first day of the next period.
-    return n_sim_periods, date_start_p, date_end_p, index_p, step
+    date_start_p = index_p * step
+    date_end_p = index_p * step + step-1 #end date is 6 days after start date
+    return n_sim_periods, date_start_p.astype(int), date_end_p.astype(int), index_p, step
 
 
 def f1_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_end_p=0):
     '''
     Parameters
     ----------
-    period_is : string
-        type of period is calc to return.
-    date_start_p : datetime64[D]
-        start date of each period (must have all axis).
-    date_end_p : datetime64[D]
-        end date of each period (must have all axis).
-    date_array : datetime64[D]
-        array of dates of interest eg mating dates.
-    date_array2 : datetime64[D]
-        array of end dates used to determine if period is between.
+    period_is: string - type of period is calc to return.
+    date_start_p: start date of each period (must have all axis).
+    date_end_p: end date of each period (must have all axis).
+    date_array: array of dates of interest eg mating dates.
+    date_array2: array of end dates used to determine if period is between.
 
     Returns
     -------
@@ -339,7 +334,7 @@ def f1_fvpdvp_adj(fvp_start_fa1e1b1nwzida0e0b0xyg, fvp_type_fa1e1b1nwzida0e0b0xy
     fvp_type_fa1e1b1nwzida0e0b0xyg = fvp_type_fa1e1b1nwzida0e0b0xyg[duplicate_fvp_mask_f] #remove fvps that are before weaning for all axis
     ###fvps that are before weaning for only some axis get set to weaning date plus 1 period offset if there are multiple
     pre_wean_fvp_mask = np.logical_and(fvp_start_fa1e1b1nwzida0e0b0xyg <= date_weaned_ida0e0b0xyg, fvp_start_fa1e1b1nwzida0e0b0xyg > date_start_p[0])
-    new_fvp_prewean_fa1e1b1nwzida0e0b0xyg = date_weaned_ida0e0b0xyg + (np.cumsum(pre_wean_fvp_mask, axis=0)-1) * np.timedelta64(step,'D') #if multiple fvps occur at weaning they need to be incremented by 7 days
+    new_fvp_prewean_fa1e1b1nwzida0e0b0xyg = date_weaned_ida0e0b0xyg + (np.cumsum(pre_wean_fvp_mask, axis=0)-1) * step #if multiple fvps occur at weaning they need to be incremented by 7 days
     idx_fa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, new_fvp_prewean_fa1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the new period, side=right so that if the date is already the start of a period it remains in that period.
     new_fvp_prewean_fa1e1b1nwzida0e0b0xyg = date_start_p[idx_fa1e1b1nwzida0e0b0xyg]
     fvp_start_fa1e1b1nwzida0e0b0xyg[pre_wean_fvp_mask] = new_fvp_prewean_fa1e1b1nwzida0e0b0xyg[pre_wean_fvp_mask] #fvps that occur before weaning for some axis are set to wean date plus offset if multiple fvps.
@@ -353,7 +348,7 @@ def f1_fvpdvp_adj(fvp_start_fa1e1b1nwzida0e0b0xyg, fvp_type_fa1e1b1nwzida0e0b0xy
     fvp_type_fa1e1b1nwzida0e0b0xyg = fvp_type_fa1e1b1nwzida0e0b0xyg[duplicate_fvp_mask_f] #remove fvps that are on the last period of the generator
     ###if multiple fvps occur on the last period of the gen (only for some axis and hence aren't removed) date gets offset by 1 period.
     post_fvp_mask = fvp_start_fa1e1b1nwzida0e0b0xyg >= date_start_p[-1]
-    new_fvp_post_fa1e1b1nwzida0e0b0xyg = date_start_p[-1] - (np.cumsum(post_fvp_mask, axis=0)-1) * np.timedelta64(step,'D') #if multiple fvps occur at weaning they need to be incremented by 7 days
+    new_fvp_post_fa1e1b1nwzida0e0b0xyg = date_start_p[-1] - (np.cumsum(post_fvp_mask, axis=0)-1) * step #if multiple fvps occur at weaning they need to be incremented by 7 days
     idx_fa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, new_fvp_post_fa1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the new period, side=right so that if the date is already the start of a period it remains in that period.
     new_fvp_post_fa1e1b1nwzida0e0b0xyg = date_start_p[idx_fa1e1b1nwzida0e0b0xyg]
     fvp_start_fa1e1b1nwzida0e0b0xyg[post_fvp_mask] = new_fvp_post_fa1e1b1nwzida0e0b0xyg[post_fvp_mask] #fvps that occur before weaning for some axis are set to wean date plus offset if multiple fvps.
@@ -1215,7 +1210,7 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, crg_do
         ##Adjust standard scanning percentage based on relative size (to reduce scanning percentage of younger animals)
         scan_std = scan_std * relsize_mating * crg_doy
         ##Slope of the RR vs CS relationship based on time of the year
-        slope = np.maximum(cu0[4, ...], cu0[2, ...] + np.sin(2 * np.pi * doy_p / 365) * cu0[3, ...])
+        slope = np.maximum(cu0[4, ...], cu0[2, ...] + np.sin(2 * np.pi * doy_p / 364) * cu0[3, ...])
         ##Reproduction rate for dams as if mated for the number of cycles in the calibration data.
         repro_rate = scan_std + (cs_mating - 3) * slope
 
@@ -1290,8 +1285,8 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, crg_doy, nfoet_
     else:
         b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
         ##Select slice 24 (Ewe Lamb coefficients) or 25 (mature ewe coefficients) of cb1 & cu2 based on age of the dam
-        cb1_sliced = fun.f_update(cb1[25, ...], cb1[24, ...], age < 365)
-        cu2_sliced = fun.f_update(cu2[25, ...], cu2[24, ...], age < 365)
+        cb1_sliced = fun.f_update(cb1[25, ...], cb1[24, ...], age < 364)
+        cu2_sliced = fun.f_update(cu2[25, ...], cu2[24, ...], age < 364)
         ##Calculate the transformed estimates of litter size proportions (slice cu2 allowing for active i axis)
         t_boundaries = cb1_sliced + cu2_sliced[-1, ...] - (cu2_sliced[0, ...] * maternallw_mating
                                                            + cu2_sliced[1, ...] * maternallw_mating ** 2
@@ -1419,11 +1414,12 @@ def f1_convert_scancycles(dst_propn, nfoet_b1any, cycles = 1):
     return repro_rate_cal
 
 
-def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_recovery, i_startyear, date_end_p, period_is_prejoin_a1e1b1nwzida0e0b0xyg1):
+def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_recovery, date_end_p, period_is_prejoin_a1e1b1nwzida0e0b0xyg1):
     ##Date at end of period adjusted to start year
-    t_date_end_a1e1b1nwzida0e0b0xyg = date_end_p - (365 * (date_end_p.astype('datetime64[Y]').astype(int) + 1970 - i_startyear)).astype('timedelta64[D]')
+    t_date_end_a1e1b1nwzida0e0b0xyg = date_end_p % 364
     ##Date_end falls within the ram mating periods
-    sire_required_a1e1b1nwzida0e0b0xyg1g0p8 = np.logical_and(t_date_end_a1e1b1nwzida0e0b0xyg[...,na,na] >= sire_periods_g0p8.astype('datetime64[D]') , t_date_end_a1e1b1nwzida0e0b0xyg[...,na,na] <= (sire_periods_g0p8.astype('datetime64[D]') + i_sire_recovery)) #add axis for p8 and g1
+    sire_required_a1e1b1nwzida0e0b0xyg1g0p8 = np.logical_and(t_date_end_a1e1b1nwzida0e0b0xyg[...,na,na] >= sire_periods_g0p8,
+                                                             t_date_end_a1e1b1nwzida0e0b0xyg[...,na,na] <= (sire_periods_g0p8 + i_sire_recovery)) #add axis for p8 and g1
     ##Number of rams required per ewe (if this period is joining)
     n_sires = sire_required_a1e1b1nwzida0e0b0xyg1g0p8 * sire_propn_a1e1b1nwzida0e0b0xyg1g0[..., na] * period_is_prejoin_a1e1b1nwzida0e0b0xyg1[..., na,na] #add axis for g1 and p8
     return n_sires
@@ -1435,7 +1431,7 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_rec
 '''The CSIRO system includes 
         1.  a base mortality for all animal classes which is a non reducible amount plus an increment
             The increment is a fixed value and occurs if the animals is below a threshold RC and the rate of LWC is below 20% of the normal weight gain
-        2. a weaner mortality increment if the animal is less than 365 days old and the rate of LWC is less than 20% of normal weight gain
+        2. a weaner mortality increment if the animal is less than 364 days old and the rate of LWC is less than 20% of normal weight gain
         3. progeny mortality that is the sum of
             a. mortality due to exposure at birth (mortalityx) that is a function of ewe RC at birth and the chill index at birth
             b. mortality due to difficult birth (mortalityd - dystocia) that depends on the lamb birth weight and ewe relative condition at birth
@@ -1464,7 +1460,7 @@ def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
 def f_mortality_weaner_cs(cd, cg, age, ebg_start, sd_ebg, d_nw_max,days_period):
     ## mortality increases (cd[13]) for slow growing young animals (< 20% of normal growth rate).
     ### mortality does not increase with severity of under-nutrition, simply a switch based on growth rate
-    ### the mortality increment varies with age. Full increment below 300 days (cd[14]) and ramping down to 0 at 365 days (cd[15])
+    ### the mortality increment varies with age. Full increment below 300 days (cd[14]) and ramping down to 0 at 364 days (cd[15])
     ###distribution on ebg - add distribution to ebg_start_p1 and then average (axis =-1)
     ebg_start_p1 = fun.f_distribution7(ebg_start, sd=sd_ebg)
     mort_weaner_p1 = cd[13, ...,na] * fun.f_ramp(age[...,na], cd[15, ...,na], cd[14, ...,na]

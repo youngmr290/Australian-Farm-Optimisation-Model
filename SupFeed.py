@@ -60,7 +60,7 @@ def f_buy_grain_price(r_vals):
     buy_price_ks2gc1_z = farmgate_price_ks2gc1_z + cartage + transaction_fee
 
     ##allocate farm gate grain price for each cashflow period and calc interest
-    start = np.array([pinp.crop['i_grain_income_date']]).astype('datetime64')
+    start = np.array([pinp.crop['i_grain_income_date']])
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
@@ -303,7 +303,7 @@ def f_sup_labour():
     fill_time = (fill_df.loc['drive time']+fill_df.loc['fill time'])/fill_df.loc['capacity']
     ##time to empty feeder
     empty_df=pinp.supfeed['empty_rate'].T.reset_index() #reindex so it can be combined with silo df
-    empty_df=empty_df.set_index(['index','date']).T
+    empty_df=empty_df.set_index(['index','DOY']).T
     ##convert to hr/m3 for lupins and hr/bale for hay
     grain_density= uinp.supfeed['grain_density'].T.reset_index() #reindex so it can be combined with different grains
     grain_density=grain_density.set_index(['index','silo type']).squeeze()
@@ -335,7 +335,7 @@ def f_sup_labour():
     lp_end_p5z = np_lp_dates_p5z[1:]
     lp_len_p5z = lp_end_p5z - lp_start_p5z
     dates_p8 = total_time.index.values
-    end = dates_p8[0] + np.timedelta64(365, 'D') #increment the first date by 1yr so it becomes the end date for the last period
+    end = dates_p8[0] + 364 #increment the first date by 1yr so it becomes the end date for the last period
     dates_p8 = np.concatenate([dates_p8,np.array([end])])
     shape_p8p5z = dates_p8.shape + lp_start_p5z.shape
     ####allocate labour periods into p8 periods
@@ -349,7 +349,7 @@ def f_sup_labour():
 
     ##link feed periods to labour periods, ie determine the proportion of each feed period in each labour period so the time taken to sup feed can be divided up accordingly
     start_p6z = per.f_feed_periods()[:-1,:]
-    length_p6z = per.f_feed_periods(option=1).astype('timedelta64[D]')
+    length_p6z = per.f_feed_periods(option=1)
     shape_p5p6z = (lp_dates_p5z.shape[0],) + length_p6z.shape
     alloc_p5p6z = fun.f_range_allocation_np(lp_dates_p5z.values[:,na,:], start_p6z, length_p6z, shape=shape_p5p6z)[:-1]
 

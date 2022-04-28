@@ -64,13 +64,7 @@ def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
 
         ##weighted average if steady state
         if pinp.general['steady_state']:
-            try:  # in case array is datearray
-                inp = np.expand_dims(np.average(inp, axis=axis, weights=z_prob), axis)
-            except TypeError:
-                n_inp = inp.astype("datetime64[ns]").astype(np.int64)
-                n_inp = np.expand_dims(np.average(n_inp, axis=axis, weights=z_prob), axis)
-                inp = n_inp.astype("datetime64[ns]")
-                # inp = n_inp.astype('M8[us]').astype('O') #converts to datetime
+            inp = np.expand_dims(np.average(inp, axis=axis, weights=z_prob), axis)
 
     else:
         ##mask the season types
@@ -86,31 +80,22 @@ def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
 
         ##weighted average if steady state
         if pinp.general['steady_state']:
-            try: #in case df is datearray
-                z_prob = pd.Series(z_prob, index=keys_z)
-                if axis==0:
-                    sum_level = list(range(inp.index.nlevels))
-                else:
-                    sum_level = list(range(inp.columns.nlevels))
+            z_prob = pd.Series(z_prob, index=keys_z)
+            if axis==0:
+                sum_level = list(range(inp.index.nlevels))
+            else:
+                sum_level = list(range(inp.columns.nlevels))
 
-                del sum_level[level]
-                if sum_level == []:
-                    inp = inp.mul(z_prob, axis=axis, level=level).sum(axis=axis)
-                    inp = pd.concat([inp],keys=[keys_z[0]],axis=axis) #add z0 index key
-                else:
-                    inp = inp.mul(z_prob, axis=axis, level=level).groupby(axis=axis, level=sum_level).sum()
-                    inp = pd.concat([inp],keys=[keys_z[0]],axis=axis) #add z0 index key
-                    col_level_order = sum_level[:]
-                    col_level_order.insert(level,0)
-                    inp = inp.reorder_levels(col_level_order, axis=axis)
-            except TypeError:
-                #this won't work if columns have two levels (would need to reshape into multi d numpy do the average then reshape to 2-d)
-                n_inp = inp.values.astype(np.int64)
-                n_inp = np.average(n_inp, axis=axis, weights=z_prob)
-                n_inp = n_inp.astype("datetime64[ns]")
-                # n_inp = n_inp.astype('M8[us]').astype('O') #converts to datetime
-                col = pd.MultiIndex.from_tuples([inp.columns[0]])
-                inp = pd.DataFrame(n_inp, index=inp.index, columns=col)
+            del sum_level[level]
+            if sum_level == []:
+                inp = inp.mul(z_prob, axis=axis, level=level).sum(axis=axis)
+                inp = pd.concat([inp],keys=[keys_z[0]],axis=axis) #add z0 index key
+            else:
+                inp = inp.mul(z_prob, axis=axis, level=level).groupby(axis=axis, level=sum_level).sum()
+                inp = pd.concat([inp],keys=[keys_z[0]],axis=axis) #add z0 index key
+                col_level_order = sum_level[:]
+                col_level_order.insert(level,0)
+                inp = inp.reorder_levels(col_level_order, axis=axis)
     return inp
 
 def f_keys_z():
@@ -155,14 +140,14 @@ def f_season_transfer_mask(period_dates_pz, z_pos, period_is_seasonstart_pz=Fals
     :return: within season transfer (z8z9) masks for require and provide.
     '''
     ##inputs
-    date_initiate_z = f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64[D]')
+    date_initiate_z = f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0)
     bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
     if bool_steady_state:
         len_z = 1
     else:
         len_z = np.count_nonzero(pinp.general['i_mask_z'])
     index_z = np.arange(len_z)
-    date_node_zm = f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64[D]')  # treat z axis
+    date_node_zm = f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0)  # treat z axis
 
     ##expand inputs to line z axis to the correct position
     date_node_zm = fun.f_expand(date_node_zm, z_pos-1, right_pos=-1)
@@ -176,13 +161,13 @@ def f_season_transfer_mask(period_dates_pz, z_pos, period_is_seasonstart_pz=Fals
     identity_z8z9 = fun.f_expand(np.identity(parent_z.shape[0]),z_pos-1, right_pos=-1)
 
     ##get dtype consistent
-    period_dates_pz = period_dates_pz.astype('datetime64[D]')
+    period_dates_pz = period_dates_pz
 
     ##adjust period start dates to the base yr (dates must be between break of current season and break of next season)
-    end_of_season_z = start_of_season_z + np.timedelta64(364,'D') #use 364 because end date is the day before brk.
-    add_yrs = np.ceil(np.maximum(0,(start_of_season_z - period_dates_pz).astype('timedelta64[D]').astype(int) / 365))
-    sub_yrs = np.ceil(np.maximum(0,(period_dates_pz - end_of_season_z).astype('timedelta64[D]').astype(int) / 365))
-    adj_period_dates_pz = period_dates_pz + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
+    end_of_season_z = start_of_season_z + 363 #use because that is the last day in the yr (note 1 yr = 364days).
+    add_yrs = np.ceil(np.maximum(0,(start_of_season_z - period_dates_pz) / 364))
+    sub_yrs = np.ceil(np.maximum(0,(period_dates_pz - end_of_season_z) / 364))
+    adj_period_dates_pz = period_dates_pz + add_yrs * 364 - sub_yrs * 364
 
     ##z8 mask when season is identified
     mask_z8var_pz = np.logical_or(date_initiate_z <= adj_period_dates_pz, bool_steady_state) #if it is steadystate then the z8 mask is just true.
@@ -221,7 +206,7 @@ def f_season_transfer_mask(period_dates_pz, z_pos, period_is_seasonstart_pz=Fals
 
 
 
-def f1_z_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=-1):
+def f1_z_period_alloc(item_start=0, item_length=1, z_pos=-1):
     '''
     Allocation of item into season periods (p7).
 
@@ -243,8 +228,8 @@ def f1_z_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=-1
     - p7 axis must be in pos 0
     - item start must contain all axes (including z and p7)
 
-    :param item_start: datetime64 item dates which are allocated into rotation periods. MUST contain all axis of the final array (singleton is fine)
-    :param item_length: datetime64
+    :param item_start: item dates which are allocated into season periods. MUST contain all axis of the final array (singleton is fine)
+    :param item_length: length (weeks) of item being allocated
     :param z_pos:
     :return:
     '''

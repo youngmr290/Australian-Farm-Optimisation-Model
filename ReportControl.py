@@ -324,7 +324,7 @@ def f_report(processor, trials, non_exist_trials):
             index = [5, 7]              #DVP, w
             cols = [13, 2, 3, 4, 11]     #g3, dam age, BTRT, t, gender
             saledate_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
-                                   keys=keys, arith=arith, index=index, cols=cols).astype('datetime64[D]')
+                                   keys=keys, arith=arith, index=index, cols=cols)
             saledate_offs = pd.concat([saledate_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_saledate_offs = rep.f_append_dfs(stacked_saledate_offs, saledate_offs)
 

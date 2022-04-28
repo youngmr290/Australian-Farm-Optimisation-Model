@@ -195,7 +195,7 @@ def f_grain_price(r_vals):
     farmgate_price_ks2gc1_z=f_farmgate_grain_price(r_vals)
 
     ##allocate farm gate grain price for each cashflow period and calc interest
-    start = np.array([pinp.crop['i_grain_income_date']]).astype('datetime64')
+    start = np.array([pinp.crop['i_grain_income_date']])
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
@@ -309,7 +309,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     biomass_rkl_z = biomass_rkz_l.stack().unstack(2)
 
     ##add rotation period axis - if a rotation exists at the beginning of harvest it provides grain and requires harvesting.
-    harv_start_date_z = zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0).astype('datetime64') #this could be changed to include landuse axis.
+    harv_start_date_z = zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0) #this could be changed to include landuse axis.
     alloc_p7z = zfun.f1_z_period_alloc(harv_start_date_z[na,...], z_pos=-1)
     ###convert to df
     keys_z = zfun.f_keys_z()
@@ -772,7 +772,7 @@ def f_phase_stubble_cost(r_vals):
     stub_cost_rl_z = probability_handling_rl_z * stub_cost
 
     ##allocate the cash period and calc interest and working capital
-    start = np.array([pinp.mach['stub_handling_date']]).astype('datetime64') #needed for allocation func
+    start = np.array([pinp.mach['stub_handling_date']]) #needed for allocation func
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
@@ -1005,7 +1005,7 @@ def f_seedcost(r_vals):
     ##account for seeding rate to determine actual cost (divide by 1000 to convert cost to kg)
     seed_cost = seeding_rate.mul(cost/1000,axis=0)
     ##cost allocation
-    start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
+    start_z = per.f_wet_seeding_start_date()
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
@@ -1070,7 +1070,7 @@ def f_insurance(r_vals):
     yields_rl_kz = yields_rl_ks2z.groupby(axis=1, level=[0,2]).max()
     rot_insurance_rl_z = yields_rl_kz.stack(0).droplevel(axis=0, level=-1)
     ##cost allocation
-    start = np.array([uinp.price['crp_insurance_date']]).astype('datetime64')
+    start = np.array([uinp.price['crp_insurance_date']])
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
@@ -1192,8 +1192,8 @@ def f_sow_prov():
 
     ##wet sowing periods
     seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
-    wet_seed_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
-    wet_seed_len_z = np.sum(seed_period_lengths_pz, axis=0).astype('timedelta64[D]')
+    wet_seed_start_z = per.f_wet_seeding_start_date()
+    wet_seed_len_z = np.sum(seed_period_lengths_pz, axis=0)
     wet_seed_end_z = wet_seed_start_z + wet_seed_len_z
     period_is_wetseeding_p5z = (labour_period_start_p5z < wet_seed_end_z) * (labour_period_end_p5z > wet_seed_start_z)
     ###add k axis
@@ -1201,8 +1201,8 @@ def f_sow_prov():
 
     ##dry sowing periods - dry seeding occurs up until the start of the season (dry seeding is sowing without knock down spray)
     ##currently we are saying that dry sowning cant occur between the brk of season and wet seeding start. This may or may not be correct (not if dry seeding occurs after the brk of the season it doesnt need to happen in the children seasons).
-    dry_seed_start = np.datetime64(pinp.crop['dry_seed_start'])
-    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'],numpy=True).astype('datetime64')
+    dry_seed_start = pinp.crop['dry_seed_start']
+    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'],numpy=True)
     period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)
     ###add k axis
     period_is_dryseeding_p5zk = period_is_dryseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(dry_sown_landuses), axis=-1)
@@ -1210,8 +1210,8 @@ def f_sow_prov():
     ##pasture seeding
     pastures = sinp.general['pastures'][pinp.general['pas_inc']]
     zt = (len(keys_z),len(pastures))
-    i_reseeding_date_start_zt = np.zeros(zt, dtype = 'datetime64[D]')
-    i_reseeding_date_end_zt = np.zeros(zt, dtype = 'datetime64[D]')
+    i_reseeding_date_start_zt = np.zeros(zt, dtype = 'float64')
+    i_reseeding_date_end_zt = np.zeros(zt, dtype = 'float64')
     for t,pasture in enumerate(pastures):
         i_reseeding_date_start_zt[...,t] = zfun.f_seasonal_inp(pinp.pasture_inputs[pasture]['Date_Seeding'],numpy=True)
         i_reseeding_date_end_zt[...,t] = zfun.f_seasonal_inp(pinp.pasture_inputs[pasture]['pas_seeding_end'],numpy=True)

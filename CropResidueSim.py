@@ -72,11 +72,11 @@ n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.f1_sim_periods(pinp.sheep['i_startyear'], sinp.stock['i_sim_periods_year'], sinp.stock['i_age_max'])
 
 ###scale trial start to the correct yr in the sim based on animal age
-add_yrs = np.ceil((date_start_p[0] - trial_commencement_date).astype('timedelta64[D]').astype(int) / 365)
+add_yrs = np.ceil((date_start_p[0] - trial_commencement_date) / 364)
 # sub_yrs = np.ceil(np.maximum(0, (item_start - end_of_periods).astype('timedelta64[D]').astype(int) / 365))
-trial_commencement_date = trial_commencement_date + add_yrs * np.timedelta64(365, 'D')
+trial_commencement_date = trial_commencement_date + add_yrs * 364
 ####scale for animal age
-trial_commencement_date = trial_commencement_date + pinp.stubble['animal_age'] * np.timedelta64(365, 'D')
+trial_commencement_date = trial_commencement_date + pinp.stubble['animal_age'] * 364
 
 ##general info
 b0_pos = sinp.stock['i_b0_pos']
@@ -91,7 +91,7 @@ len_s1 = len(pinp.stubble['i_stub_cat_dmd_s1'])
 
 ##determine sgen run periods
 p_start_trial = np.searchsorted(date_start_p, trial_commencement_date)
-p_start_harv = np.searchsorted(date_start_p, trial_commencement_date - np.timedelta64(pinp.stubble['i_calibration_offest'], 'D'))
+p_start_harv = np.searchsorted(date_start_p, trial_commencement_date - pinp.stubble['i_calibration_offest'])
 p_end = p_start_trial + pinp.stubble['trial_length']
 stubble_inp['p_start'] = p_start_trial
 stubble_inp['p_end'] = p_end
@@ -150,7 +150,7 @@ for k in range(len_k):
 
 ##post process the lwc
 ###calc trial lw with p1p2 axis (p2 axis is days)
-len_p2 = int(step / np.timedelta64(1, 'D'))  # convert timedelta to float by dividing by one day
+len_p2 = int(step)
 index_p2 = np.arange(len_p2)
 date_start_p1p2 = date_start_p[..., na] + index_p2
 days_since_trialstart_p1p2 = (date_start_p1p2 - date_start_p[p_start_trial,na]).astype(int)  # days since trial start

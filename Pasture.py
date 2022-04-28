@@ -83,7 +83,7 @@ def f_pasture(params, r_vals, nv):
 
     arable_l = pinp.crop['arable'].squeeze().values[lmu_mask_l]
     length_p6z  = per.f_feed_periods(option=1)
-    feed_period_dates_p6z = per.f_feed_periods().astype('datetime64[D]')
+    feed_period_dates_p6z = per.f_feed_periods()
     date_start_p6z = feed_period_dates_p6z[:-1]
     date_end_p6z = feed_period_dates_p6z[1:]
     date_mid_p6z = date_start_p6z + (date_end_p6z - date_start_p6z)/2
@@ -163,9 +163,9 @@ def f_pasture(params, r_vals, nv):
     # grn_senesce_startfoo_p6t     = np.zeros(p6t,  dtype = 'float64')  # proportion of the FOO at the start of the period that senesces during the period
     # grn_senesce_pgrcons_p6t      = np.zeros(p6t,  dtype = 'float64')  # proportion of the (total or average daily) PGR that senesces during the period (consumption leads to a reduction in senescence)
 
-    i_destock_date_zt           = np.zeros(zt, dtype = 'datetime64[D]')         # date of destocking this pasture type prior to reseeding
+    i_destock_date_zt           = np.zeros(zt, dtype = 'float64')         # date of destocking this pasture type prior to reseeding
     i_destock_foo_zt            = np.zeros(zt, dtype = 'float64')               # kg of FOO that was not grazed prior to destocking for spraying prior to reseeding pasture (if spring sown)
-    i_restock_date_zt           = np.zeros(zt, dtype = 'datetime64[D]')         # date of first grazing of reseeded pasture
+    i_restock_date_zt           = np.zeros(zt, dtype = 'float64')         # date of first grazing of reseeded pasture
     i_restock_foo_arable_t      = np.zeros(n_pasture_types, dtype = 'float64')  # FOO at restocking on the arable area of the resown pastures
     # reseeding_machperiod_t      = np.zeros(n_pasture_types, dtype = 'float64')  # labour/machinery period in which reseeding occurs ^ instantiation may not be required
     i_germination_std_zt        = np.zeros(zt, dtype = 'float64')               # standard level of mobilisation of below ground reserves for the standard soil type in a continuous pasture rotation
@@ -315,14 +315,14 @@ def f_pasture(params, r_vals, nv):
         pasture_rt[:,t]                 = phases_rotn_df.iloc[:,-1].isin(pasture_sets[pasture])
 
     ##season inputs not required in t loop above
-    harv_date_z         = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype(np.datetime64)
+    harv_date_z         = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
     ### pasture params used to convert foo for rel availability
     cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
     cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
 
     ###create dry and green pasture exists mask
     ###in the late brk season dry feed can occur in fp0&1.
-    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True).astype('datetime64')
+    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
     idx_fp_start_gs_z = fun.searchsort_multiple_dim(feed_period_dates_p6z, season_break_z, 1, 0, side='right') - 1
     mask_dryfeed_exists_p6zt[...] = np.logical_or(index_p6[:, na, na] >= i_dry_exists_zt, index_p6[:, na, na]<idx_fp_start_gs_z[...,na])   #mask periods when dry feed is available to livestock.
     mask_greenfeed_exists_p6zt[...] = np.logical_or(np.logical_and(index_p6[:,na,na]>=idx_fp_start_gs_z[...,na], index_p6[:, na, na] <= i_end_of_gs_zt),       #green exists in the period which is the end of growing season hence <=
@@ -454,10 +454,10 @@ def f_pasture(params, r_vals, nv):
     ##For annual pastures the dmd of dry feed is calculated based on the days since senescence.
     ##For perennials the dry dmd is based on the quality of the green feed that is senesced. Thus for perenials the code below does nothing. For perenials the dmd is just inputted.
     date_eogs_zt = np.take_along_axis(feed_period_dates_p6z[:,:,na],i_end_of_gs_zt[na]+1, axis=0)[0,...] #+1 because input is the last period when grn exists. [0] to remove singleton p6 axis.
-    date_end_dry = np.max(pinp.general['i_break'].astype('datetime64[D]')) + np.timedelta64(365,'D') #use the latest season brk because a late brk season could follow the current season
+    date_end_dry = np.max(pinp.general['i_break']) + 364 #use the latest season brk because a late brk season could follow the current season
     max_deterioration_period_zt = (date_end_dry - date_eogs_zt).astype(int)
     daily_deterioration_zt = 1-(i_dry_dmd_brk_zt / i_dry_dmd_eogs_zt)**(1/max_deterioration_period_zt)
-    average_days_since_eogs_p6zt = date_mid_p6z[...,na] + np.timedelta64(365,'D') * (date_mid_p6z[...,na]<date_eogs_zt) - date_eogs_zt
+    average_days_since_eogs_p6zt = date_mid_p6z[...,na] + 364 * (date_mid_p6z[...,na]<date_eogs_zt) - date_eogs_zt
     dry_dmd_p6zt = i_dry_dmd_eogs_zt * (1-daily_deterioration_zt)**average_days_since_eogs_p6zt.astype(int)
     ###update dry dmd if end of growing season
     dry_dmd_ave_p6zt = fun.f_update(i_dry_dmd_ave_p6zt,dry_dmd_p6zt, np.logical_not(mask_greenfeed_exists_p6zt))
@@ -528,7 +528,7 @@ def f_pasture(params, r_vals, nv):
     #adjust params with r axis for rot period   #
     #############################################
     ##p7 allocation
-    alloc_p7p6z = zfun.f1_z_period_alloc(date_start_p6z[na,:,:], length_p6z[na,:,:].astype('timedelta64[D]'), z_pos=-1)
+    alloc_p7p6z = zfun.f1_z_period_alloc(date_start_p6z[na,:,:], length_p6z[na,:,:], z_pos=-1)
     alloc_p7p6lrzt = alloc_p7p6z[:,:,na,na,:,na]
     alloc_p7dp6lrzt = alloc_p7p6z[:,na,:,na,na,:,na]
 

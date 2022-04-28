@@ -116,7 +116,7 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     including a length is that cashflow for a give decision variable can not cross a season junction
     otherwise some seasons do not incur the cashflow.
 
-    :param date_incurred: datetime64 date when cashflow is incurred (must include z axis)
+    :param date_incurred: week of year when cashflow is incurred (must include z axis)
     :param enterprise: enterprise. If no enterprise is passed in the cashflow is averaged across the c0 axis.
     :param z_pos: axis position of z (must be negative eg reference from the end).
     :param c0_inc: boolean stating if c0 axis is included in date_incurred
@@ -126,7 +126,7 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     rate = uinp.finance['i_interest']
     cashflow_date_c0 = per.f_cashflow_date()
     peakdebt_date_c0 = per.f_peak_debt_date()
-    peakdebt_date_c0 = peakdebt_date_c0 + np.timedelta64(365,'D') * (cashflow_date_c0>peakdebt_date_c0) # peak debt is after the start of the cashflow
+    peakdebt_date_c0 = peakdebt_date_c0 + 364 * (cashflow_date_c0>peakdebt_date_c0) # peak debt is after the start of the cashflow
 
     ##expand cashflow and debt date to the same shape as date_incurred
     ndims = -date_incurred.ndim + c0_inc
@@ -135,16 +135,16 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
 
     ##adjust yr of cashflow occurrence so it occurs within the cashflow periods
     start_of_cash_c0 = cashflow_date_c0
-    end_of_cash_c0 = start_of_cash_c0 + np.timedelta64(364,'D') #use 364 because end date is the day before before the end otherwise can get item that starts on the last day of periods.
-    add_yrs_c0 = np.ceil(np.maximum(0,(start_of_cash_c0 - date_incurred).astype('timedelta64[D]').astype(int) / 365))
-    sub_yrs_c0 = np.ceil(np.maximum(0,(date_incurred - end_of_cash_c0).astype('timedelta64[D]').astype(int) / 365))
-    date_incurred_c0 = date_incurred + add_yrs_c0 * np.timedelta64(365, 'D') - sub_yrs_c0 * np.timedelta64(365, 'D')
+    end_of_cash_c0 = start_of_cash_c0 + 363 #use 363 (364 is 1 yr in AFO) because end date is the day before the start of following yr otherwise can get item that starts on the last day of periods.
+    add_yrs_c0 = np.ceil(np.maximum(0,(start_of_cash_c0 - date_incurred) / 364))
+    sub_yrs_c0 = np.ceil(np.maximum(0,(date_incurred - end_of_cash_c0) / 364))
+    date_incurred_c0 = date_incurred + add_yrs_c0 * 364 - sub_yrs_c0 * 364
 
     ##calc interest
-    cashflow_incur_days_c0 = (end_of_cash_c0 - date_incurred_c0).astype('timedelta64[D]').astype(int)
-    wc_incur_days_c0 = (peakdebt_date_c0 - date_incurred_c0).astype('timedelta64[D]').astype(int)
-    cashflow_interest_c0 = (1 + rate / 365) ** cashflow_incur_days_c0
-    wc_interest_c0 = (1 + rate / 365) ** wc_incur_days_c0 * (wc_incur_days_c0>=0) #bool to make wc 0 if the cashflow item occurs between peak debt and cashflow date (this stops an enterprises main income being included in wc constraint).
+    cashflow_incur_days_c0 = (end_of_cash_c0 - date_incurred_c0)
+    wc_incur_days_c0 = (peakdebt_date_c0 - date_incurred_c0)
+    cashflow_interest_c0 = (1 + rate / 364) ** cashflow_incur_days_c0
+    wc_interest_c0 = (1 + rate / 364) ** wc_incur_days_c0 * (wc_incur_days_c0>=0) #bool to make wc 0 if the cashflow item occurs between peak debt and cashflow date (this stops an enterprises main income being included in wc constraint).
 
     ##allocate to cashflow period
     p7_alloc_p7c0 = zfun.f1_z_period_alloc(date_incurred_c0[na,...], z_pos=z_pos)
@@ -185,7 +185,7 @@ def overheads(params, r_vals):
     professional services, insurance and household expense.
     '''
     ##cost allocation - incurred at the beginning of each cash period
-    overhead_start_c0 = per.f_cashflow_date() + np.timedelta64(182,'D')#Overheads are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr)
+    overhead_start_c0 = per.f_cashflow_date() + 182 #Overheads are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr)
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()

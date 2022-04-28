@@ -136,10 +136,10 @@ def crop_residue_all(params, r_vals, nv):
 
     ##create mask which is stubble available. Stubble is available from the period harvest starts to the beginning of the following growing season.
     ##if the end date of the fp is after harvest then stubble is available.
-    feed_period_dates_p6z = per.f_feed_periods().astype('datetime64[D]')
+    feed_period_dates_p6z = per.f_feed_periods()
     fp_end_p6z = feed_period_dates_p6z[1:]
     fp_start_p6z = feed_period_dates_p6z[:-1]
-    harv_date_zk = zfun.f_seasonal_inp(pinp.crop['start_harvest_crops'].values, numpy=True, axis=1).swapaxes(0,1).astype(np.datetime64)
+    harv_date_zk = zfun.f_seasonal_inp(pinp.crop['start_harvest_crops'].values, numpy=True, axis=1).swapaxes(0,1)
     period_is_harvest_p6zk = np.logical_and(fp_end_p6z[...,na] >= harv_date_zk, fp_start_p6z[...,na] <= harv_date_zk)
     idx_fp_start_stub_zk = fun.searchsort_multiple_dim(feed_period_dates_p6z, harv_date_zk, 1, 0, side='right') - 1
 
@@ -163,8 +163,8 @@ def crop_residue_all(params, r_vals, nv):
     # deterioration         #
     #########################
     ##days since harvest (calculated from the end date of each fp)
-    days_since_harv_p6zk = fp_end_p6z[...,na] - harv_date_zk.astype('datetime64[D]')
-    days_since_harv_p6zk[days_since_harv_p6zk.astype(int)<0] = days_since_harv_p6zk[days_since_harv_p6zk.astype(int)<0] + 365  #add 365 to the periods at the start of the year because as far as stubble goes they are after harvest
+    days_since_harv_p6zk = fp_end_p6z[...,na] - harv_date_zk
+    days_since_harv_p6zk[days_since_harv_p6zk.astype(int)<0] = days_since_harv_p6zk[days_since_harv_p6zk.astype(int)<0] + 364  #add 364 to the periods at the start of the year because as far as stubble goes they are after harvest
     average_days_since_harv_p6zk = days_since_harv_p6zk - np.minimum(days_since_harv_p6zk, (fp_end_p6z - fp_start_p6z)[...,na])/2 #subtract half the length of current period to get the average days since harv. Minimum is to handle the period when harvest occurs.
     average_days_since_harv_p6zk = average_days_since_harv_p6zk.astype(float)
 

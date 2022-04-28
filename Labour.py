@@ -80,9 +80,9 @@ def f_labour_general(params,r_vals):
 
     ##initialise period data
     lp_p5z = per.f_p_dates_df().values
-    lp_start_p5z = per.f_p_dates_df().iloc[:-1].values#.astype('datetime64[D]')
-    lp_end_p5z = per.f_p_dates_df().iloc[1:].values#.astype('datetime64[D]')
-    lp_len_p5z = (lp_end_p5z - lp_start_p5z).astype('timedelta64[D]').astype(float)
+    lp_start_p5z = per.f_p_dates_df().iloc[:-1].values#
+    lp_end_p5z = per.f_p_dates_df().iloc[1:].values#
+    lp_len_p5z = (lp_end_p5z - lp_start_p5z)
 
     ########
     #leave #
@@ -99,7 +99,7 @@ def f_labour_general(params,r_vals):
     perm_leave_hours = int(leave_days * 2/7 * pinp.labour['daily_hours'].loc['weekends', 'Permanent']
                          + leave_days * 5/7 * pinp.labour['daily_hours'].loc['weekdays', 'Permanent'])
     ###sick leave - x days split equally into each period
-    perm_sick_leave_p5z = pinp.labour['sick_leave_permanent']/365 * lp_len_p5z
+    perm_sick_leave_p5z = pinp.labour['sick_leave_permanent']/364 * lp_len_p5z
 
     ##########################
     #hours worked per period #
@@ -117,12 +117,12 @@ def f_labour_general(params,r_vals):
 
     ##set up stuff to calc hours work per period be each source
     seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
-    seeding_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
-    seeding_end_z = seeding_start_z + np.sum(seed_period_lengths_pz, axis=0).astype('timedelta64[D]')
+    seeding_start_z = per.f_wet_seeding_start_date()
+    seeding_end_z = seeding_start_z + np.sum(seed_period_lengths_pz, axis=0)
     seeding_occur_p5z =  np.logical_and(seeding_start_z <= lp_start_p5z, lp_start_p5z < seeding_end_z)
     harv_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1)
-    harv_start_z = harv_date_z.astype(np.datetime64)
-    harv_end_z = harv_start_z + np.sum(harv_period_lengths_pz, axis=0).astype('timedelta64[D]')
+    harv_start_z = harv_date_z
+    harv_end_z = harv_start_z + np.sum(harv_period_lengths_pz, axis=0)
     harv_occur_p5z =  np.logical_and(harv_start_z <= lp_start_p5z, lp_start_p5z < harv_end_z)
 
     ##manager hours
@@ -273,7 +273,7 @@ def f_perm_cost(params, r_vals):
     '''
 
     ##cost allocation
-    labour_start_c0 = per.f_cashflow_date() + np.timedelta64(182,'D') #fixed costs are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr)
+    labour_start_c0 = per.f_cashflow_date() + 182 #fixed costs are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr)
     ###call allocation/interset function - needs to be numpy
     ### no enterprise is passed because fixed cost are for both enterprise and thus the interest is the average of both enterprises
     labour_cost_allocation_p7z, labour_wc_allocation_c0p7z = fin.f_cashflow_allocation(labour_start_c0[:,na], z_pos=-1, c0_inc=True)

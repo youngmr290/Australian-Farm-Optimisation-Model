@@ -100,9 +100,9 @@ def f_cropgraze_DM(total_DM=False):
     mach_periods = per.f_p_dates_df()
     date_start_p5z = mach_periods.values[:-1]
     date_end_p5z = mach_periods.values[1:]
-    seeding_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
+    seeding_start_z = per.f_wet_seeding_start_date()
     initial_DM = pinp.cropgraze['i_cropgraze_initial_dm'] #used to calc total DM for relative availability (vol). The initial DM cant be consumed.
-    establishment_days = np.timedelta64(pinp.cropgraze['i_cropgraze_defer_days'], 'D') #days between sowing and grazing
+    establishment_days = pinp.cropgraze['i_cropgraze_defer_days'] #days between sowing and grazing
 
     ##adjust crop growth for lmu (kg/d)
     growth_kp6zl = growth_kp6z[...,na] * growth_lmu_factor_kl[:,na,na,:]
@@ -110,22 +110,22 @@ def f_cropgraze_DM(total_DM=False):
     ##calc total dry matter accumulation in each feed period - the duration of growth in each feed period is adjusted to
     # account for the establishment period because the DM available at the end of the establishment period is an input.
     crop_grazing_start_z = seeding_start_z + establishment_days
-    seed_days_p5z = (date_end_p5z - date_start_p5z).astype('timedelta64[D]').astype(int)
+    seed_days_p5z = (date_end_p5z - date_start_p5z)
 
     ##grazing days rectangle component (for p5) and allocation to feed periods (p6)
     base_p6p5z = (date_end_p6z[:,na,:] - np.maximum(np.maximum(date_end_p5z + establishment_days, crop_grazing_start_z)
-                                                    , date_start_p6z[:,na,:]))/ np.timedelta64(1, 'D')
+                                                    , date_start_p6z[:,na,:]))
     height_p5z = 1
     grazing_days_rect_p6p5z = np.maximum(0, base_p6p5z * height_p5z)
 
     ##grazing days triangular component (for p5) and allocation to feed periods (p6)
     start_p6p5z = np.maximum(date_start_p6z[:,na,:], np.maximum(crop_grazing_start_z, date_start_p5z + establishment_days))
     end_p6p5z = np.minimum(date_end_p6z[:,na,:], date_end_p5z + establishment_days)
-    base_p6p5z = (end_p6p5z - start_p6p5z)/ np.timedelta64(1, 'D')
+    base_p6p5z = (end_p6p5z - start_p6p5z)
     ###calculated based on seeding 1ha/day then divided by seed_days to scale the height back to 1 day (which is that seeding activity)
-    height_start_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z + establishment_days) - start_p6p5z)/ np.timedelta64(1, 'D')
+    height_start_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z + establishment_days) - start_p6p5z)
                                                     , seed_days_p5z))
-    height_end_p6p5z = np.maximum(0,fun.f_divide(((date_end_p5z + establishment_days) - end_p6p5z)/ np.timedelta64(1, 'D')
+    height_end_p6p5z = np.maximum(0,fun.f_divide(((date_end_p5z + establishment_days) - end_p6p5z)
                                                     , seed_days_p5z))
     grazing_days_tri_p6p5z = np.maximum(0,base_p6p5z * (height_start_p6p5z + height_end_p6p5z) / 2)
 
@@ -293,7 +293,7 @@ def crop_md_vol(nv):
     ###can only graze crop sown in p5 if p5 < p6
     date_start_p5z = per.f_p_dates_df().values[:-1]
     date_end_p6z = per.f_feed_periods()[1:]
-    establishment_days = np.timedelta64(pinp.cropgraze['i_cropgraze_defer_days'], 'D') #days between sowing and grazing
+    establishment_days = pinp.cropgraze['i_cropgraze_defer_days'] #days between sowing and grazing
     grazing_exists_p6p5z = date_start_p5z + establishment_days <= date_end_p6z[:,na,:]
     grazing_exists_p6p5z = np.logical_and(grazing_exists_p6z[:,na,:],grazing_exists_p6p5z)
     ###calc season mask
