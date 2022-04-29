@@ -123,7 +123,8 @@ def f_contractseeding_occurs():
     '''
     This function just sets the period when contract seeding must occur (period when wet seeding begins).
     Contract seeding is not hooked up to yield penalty because if your going to hire someone you will hire
-    them at the optimum time. Contract seeding is hooked up to poc so this param stops the model having late seeding.
+    them at the optimum time. Contract seeding is hooked up to poc so this param stops the model having late seeding
+    (contract seeding must occur in the first seeding period).
     '''
     contract_start_z = per.f_wet_seeding_start_date()
     mach_periods = per.f_p_dates_df()
