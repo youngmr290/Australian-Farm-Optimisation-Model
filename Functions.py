@@ -127,7 +127,6 @@ def cartesian_product_simple_transpose(arrays):
         arr[i, ...] = a
     return arr.reshape(la, -1).T
 
-
 def searchsort_multiple_dim(a, v, axis_a0, axis_v0, axis_a1=None, axis_v1=None, side='left'):
     '''
     Find the indices into a sorted array 'a' such that, if the corresponding elements in 'v' were inserted before the indices, the order of 'a' would be preserved.
@@ -330,7 +329,6 @@ def f_update(existing_value, new_value, mask_for_new):
 
     return updated
 
-
 def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den_weights=1):
     '''
     Calculates weighted average (similar to np.average however this will handle:
@@ -442,7 +440,6 @@ def f_norm_cdf(x, mu, cv=0.2, sd=None):
     prob = f_back_transform(358 / 23 * xstd - 111 * np.arctan(37 / 294 * xstd))
 #    prob = 1 / (np.exp(-358 / 23 * xstd + 111 * np.arctan(37 / 294 * xstd)) + 1)
     return prob
-
 
 def f_distribution7(mean, sd=None, cv=None):
     '''
@@ -728,7 +725,6 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
 
     return value
 
-
 def f_run_required(exp_data1):
     '''
     here we check if precalcs and pyomo need to be recalculated. this is slightly complicated by the fact that columns and rows can be added to exp.xls
@@ -827,7 +823,6 @@ def f_read_exp():
         raise exc.TrialError('''Exp.xl has multiple trials with the same name.''')
 
     return exp_data, exp_group_bool
-
 
 def f_group_exp(exp_data, exp_group_bool):
     '''
@@ -981,8 +976,6 @@ def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
     ##store param
     r_vals[name] = param
 
-
-
 def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=None, dtype='float32'):
     '''
     Convert numpy array into dict for pyomo. A loop can be used to reduce memory if required.
@@ -1060,7 +1053,6 @@ def write_variablesummary(model, row, exp_data, obj, option=0, property_id=''):
             except:
                 pass
     file.close()
-
 
 
 ##########################
@@ -1219,7 +1211,6 @@ def f_range_allocation_np(period_dates, item_start, length=np.array([1]), method
 
     return allocation_period
 
-
 def period_proportion_np(period_dates, date_array):
     ''' Numpy version - The period that a given date falls in. and the proportion of the way through the period the date occurs.
 
@@ -1311,7 +1302,6 @@ def f_daylength(dayOfYear, lat):
     #todo Should this be logical_or? JMY thinks it should be.
     dl[~np.logical_and(p2, p1)] = daylen[~np.logical_and(p2, p1)]
     return dl
-
 
 def f_next_prev_association(datearray_slice,*args):
     '''

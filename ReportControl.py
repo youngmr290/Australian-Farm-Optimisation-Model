@@ -81,6 +81,11 @@ def f_report(processor, trials, non_exist_trials):
     '''Function to wrap ReportControl.py so that multiprocessing can be used.'''
     # print('Start processor: {0}'.format(processor))
     # print('Start trials: {0}'.format(trials))
+
+    ## A control to switch between reporting the optimised production level True) and the production assumptions (False)
+    ### Note this is only active for some of the reports. It also changes the axes that are reported.
+    lp_vars_inc = False
+
     ##create empty df to stack each trial results into
     stacked_infeasible = pd.DataFrame().rename_axis('Trial')  # name of any infeasible trials
     stacked_non_exist = pd.DataFrame(non_exist_trials).rename_axis('Trial')  # name of any infeasible trials
@@ -606,38 +611,55 @@ def f_report(processor, trials, non_exist_trials):
         if report_run.loc['run_lamb_survival', 'Run']:
             option = 0
             index =[4]
-            cols =[7]
+            cols =[13,7]   #report must include the b axis otherwise an error is caused because the axis added after the arith.
+            if not lp_vars_inc:
+                index = [4]     #v
+                cols =[13,7]  #g, b & w
             axis_slice = {}
-            lamb_survival = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols, axis_slice=axis_slice)
+            lamb_survival = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
+                                                 , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
             lamb_survival = pd.concat([lamb_survival],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_lamb_survival = rep.f_append_dfs(stacked_lamb_survival, lamb_survival)
 
         if report_run.loc['run_weanper', 'Run']:
-            #todo there is an error here if drys are sold at scanning. We cant think of an easy way to fix it. (note if scan=4 then birth dvp may be different across e axis)
-            #with the current structure w CANNOT be reported
+            #todo there is an error here if drys are sold at scanning. We can't think of an easy way to fix it. (note if scan=4 then birth dvp may be different across e axis)
+            #with the current structure w CANNOT be reported. 23Apr22 - seems to be working when not using lp_vars
+            # problem could be that dams can change w axis between joining (nfoet) and lambing (nyatf)
             option = 1
-            index =[2]
-            cols =[]
+            index =[4]      #v
+            cols =[11]      #g
+            if not lp_vars_inc:
+                index = [4]     #v
+                cols =[11]    #g,
             axis_slice = {}
-            weanper = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols, axis_slice=axis_slice)
+            weanper = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
+                                           , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
             weanper = pd.concat([weanper],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_weanper = rep.f_append_dfs(stacked_weanper, weanper)
 
         if report_run.loc['run_scanper', 'Run']:
             option = 2
-            index =[2]
-            cols =[]
+            index =[4]
+            cols =[11]
+            if not lp_vars_inc:
+                index = [4]     #v
+                cols =[11]    #g, w
             axis_slice = {}
-            scanper = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols, axis_slice=axis_slice)
+            scanper = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
+                                           , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
             scanper = pd.concat([scanper],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_scanper = rep.f_append_dfs(stacked_scanper, scanper)
 
         if report_run.loc['run_dry_propn', 'Run']:
             option = 3
-            index =[2]
-            cols =[]
+            index =[4]
+            cols =[11,2]
+            if not lp_vars_inc:
+                index = [4]     #v
+                cols =[11,2,7]  #g, k2 & w
             axis_slice = {}
-            dry_propn = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols, axis_slice=axis_slice)
+            dry_propn = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
+                                             , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
             dry_propn = pd.concat([dry_propn],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_dry_propn = rep.f_append_dfs(stacked_dry_propn, dry_propn)
 
@@ -802,7 +824,7 @@ def f_report(processor, trials, non_exist_trials):
             ##note t axis will be singleton unless stock generator was run with active t axis.
             type = 'stock'
             prod = 'mort_Tpa1e1b1nwziyg1' #uses b axis instead of k for extra detail when scan=0
-            weights = 1
+            weights = None
             na_weights = []
             keys = 'dams_keys_Tpaebnwziy1g1'
             arith = 4
@@ -821,7 +843,7 @@ def f_report(processor, trials, non_exist_trials):
             ##note t axis will be singleton unless stock generator was run with active t axis.
             type = 'stock'
             prod = 'mort_Tpnwzida0e0b0xyg3' #uses b axis instead of k for extra detail when scan=0
-            weights = 1
+            weights = None
             na_weights = []
             keys = 'offs_keys_Tpnwzidaebxyg3'
             arith = 4
@@ -960,7 +982,7 @@ def f_report(processor, trials, non_exist_trials):
             #returns NV during each FP regardless of whether selected or not
             type = 'pas'
             prod = 'nv_grnha_fgop6lzt'
-            weights = 1
+            weights = None
             keys = 'keys_fgop6lzt'
             arith = 5
             index = [3]
@@ -975,7 +997,7 @@ def f_report(processor, trials, non_exist_trials):
             #returns DMD during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'dmd_diet_grnha_gop6lzt'
-            weights = 1
+            weights = None
             keys = 'keys_gop6lzt'
             arith = 5
             index = [2]
@@ -990,7 +1012,7 @@ def f_report(processor, trials, non_exist_trials):
             #returns average FOO during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'foo_ave_grnha_gop6lzt'
-            weights = 1
+            weights = None
             keys = 'keys_gop6lzt'
             arith = 5
             index = [2]
@@ -1005,7 +1027,7 @@ def f_report(processor, trials, non_exist_trials):
             #returns NV during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'nv_dry_fdp6zt'
-            weights = 1
+            weights = None
             keys = 'keys_fdp6zt'
             arith = 5
             index = [2]
@@ -1020,7 +1042,7 @@ def f_report(processor, trials, non_exist_trials):
             #returns DMD during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'dry_dmd_dp6zt'
-            weights = 1
+            weights = None
             keys = 'keys_dp6zt'
             arith = 5
             index = [1]
@@ -1035,7 +1057,7 @@ def f_report(processor, trials, non_exist_trials):
             #returns average FOO during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'dry_foo_dp6zt'
-            weights = 1
+            weights = None
             keys = 'keys_dp6zt'
             arith = 5
             index = [1]

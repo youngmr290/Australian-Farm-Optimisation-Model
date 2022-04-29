@@ -79,7 +79,7 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
         for col in range(len(df.columns)):
             if (df.iloc[:,col]==0).all():
                 offset = df.index.nlevels
-                col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #convert col number to excel col reference eg 'A:B'
+                col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #convert col number to excel col reference e.g. 'A:B'
                 worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
 
 
@@ -1284,11 +1284,12 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
         ###keys that will become the index and cols for table
         keys = vars[keys_key]
 
-    ##if no weights then make None
-    try:
+    ##An error here means the key provided for weights does not exist in lp_vars
+    ###using None as the default for weights so that an error is generated later if an Arith option is selected that requires weights
+    if weights is not None:
         weights = vars[weights]
-    except KeyError:
-        weights = None
+    # except KeyError:
+    #     weights = np.array([1])   #None
 
     ##initilise prod array from either r_vals or default value (this means you can preform arith with any number - mainly used for pasture when there is no production param)
     if isinstance(prod, str):
@@ -1322,7 +1323,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
         return prod, keys
 
 
-def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], axis_slice={}):
+def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], axis_slice={}, lp_vars_inc=True):
     '''
     Depending on the option selected this function can calc:
         Lamb survival (per ewe at start of dvp when lambing occurs - e.g. mort is included)
@@ -1346,15 +1347,23 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
 
 
 
-    ##params for specific options
+    ##params for all options
+    arith = 2   #changed later if not including the lp_vars
     type = 'stock'
+
+    ##params for specific options
     if option == 0:
         prod = 'nyatf_birth_k2tva1e1b1nw8ziyg1'
         na_prod = [0,1]
         prod2 = 'nfoet_birth_k2tva1e1b1nw8ziyg1'
         na_prod2 = [0,1]
-        weights = 'dams_numbers_qsk2tvanwziy1g1'
-        na_weights = [6,7]
+        if lp_vars_inc:
+            weights = 'dams_numbers_qsk2tvanwziy1g1'
+            na_weights = [6,7]
+        else:
+            weights = None
+            na_weights = []
+            arith = 4
         keys = 'dams_keys_qsk2tvaeb9nwziy1g1'
 
     elif option == 1:
@@ -1362,8 +1371,13 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
         na_prod = [0,1]
         prod2 = 'n_mated_k2tva1nw8ziyg1'
         na_prod2 = [0,1]
-        weights = 'dams_numbers_qsk2tvanwziy1g1'
-        na_weights = []
+        if lp_vars_inc:
+            weights = 'dams_numbers_qsk2tvanwziy1g1'
+            na_weights = []
+        else:
+            weights = None
+            na_weights = []
+            arith = 4
         keys = 'dams_keys_qsk2tvanwziy1g1'
 
     elif option == 2:
@@ -1371,8 +1385,13 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
         na_prod = [0,1]
         prod2 = 'n_mated_k2tva1nw8ziyg1'
         na_prod2 = [0,1]
-        weights = 'dams_numbers_qsk2tvanwziy1g1'
-        na_weights = []
+        if lp_vars_inc:
+            weights = 'dams_numbers_qsk2tvanwziy1g1'
+            na_weights = []
+        else:
+            weights = None
+            na_weights = []
+            arith = 4
         keys = 'dams_keys_qsk2tvanwziy1g1'
 
     elif option == 3:
@@ -1380,12 +1399,14 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
         na_prod = [0,1]
         prod2 = 'n_mated_k2tva1nw8ziyg1'
         na_prod2 = [0,1]
-        weights = 'dams_numbers_qsk2tvanwziy1g1'
-        na_weights = []
+        if lp_vars_inc:
+            weights = 'dams_numbers_qsk2tvanwziy1g1'
+            na_weights = []
+        else:
+            weights = None
+            na_weights = []
+            arith = 4
         keys = 'dams_keys_qsk2tvanwziy1g1'
-
-    ##params for all options
-    arith = 2
 
     ##colate the lp and report vals using f_stock_pasture_summary
     numerator, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -1434,9 +1455,10 @@ def f_numpy2df_error(prod, weights, arith_axis, index, cols):
     if any(error):
         raise exc.AxisError('''Axis error: active axes exist that are not used in arith or being reported as index or columns''')
 
-    ##error 4: preforming arith with no weights
-    if arith_occur and weights is None:
-        raise exc.ArithError('''Arith error: weights are not included''')
+    # This error flag is not required because doing Arith with weights==None throws a python error. Note: some Arith options don't require weights
+    # ##error 4: preforming arith with no weights
+    # if arith_occur and weights is None:
+    #     raise exc.ArithError('''Arith error: weights are not included''')
     return
 
 
@@ -1478,8 +1500,8 @@ def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
         sl[axis] = slice(start, stop, step)
         keys[axis] = keys[axis][start:stop:step]
     ###apply slice to np array
-    prod, prod_weights, weights, den_weights = np.broadcast_arrays(prod, prod_weights, weights,
-                                                     den_weights)  # if arith is being conducted these arrays need to be the same size so slicing can work
+    ### if arith is being conducted these arrays need to be the same size so slicing can work
+    prod, prod_weights, weights, den_weights = np.broadcast_arrays(prod, prod_weights, weights, den_weights)
     prod = prod[tuple(sl)]
     prod_weights = prod_weights[tuple(sl)]
     weights = weights[tuple(sl)]
