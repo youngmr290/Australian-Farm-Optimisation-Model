@@ -1296,14 +1296,16 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     ###using None as the default for weights so that an error is generated later if an Arith option is selected that requires weights
     if weights is not None:
         weights = vars[weights]
-    # except KeyError:
-    #     weights = np.array([1])   #None
+        ###set weights to 0 if very small number (otherwise it can show up in report when it shouldnt)
+        weights[np.isclose(weights, 0)] = 0
 
     ##initilise prod array from either r_vals or default value (this means you can preform arith with any number - mainly used for pasture when there is no production param)
     if isinstance(prod, str):
         prod = r_vals[prod]
     else:
         prod = np.array([prod])
+    ###set prod and weights to 0 if very small number (otherwise it can show up in report when it shouldnt)
+    prod[np.isclose(prod, 0)] = 0
 
     ##initilise prod_weight array from either r_vals or default value
     if isinstance(prod_weights, str):
