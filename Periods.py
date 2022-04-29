@@ -92,77 +92,100 @@ def f_period_end_date(start, length):
 #print(f_period_end_date(f_wet_seeding_start_date(),ci.crop_input['seed_period_lengths']))
 
 
-#This function determines the start dates of the labour periods. generally each period begins at the start of the month except seeding and harvest periods (which need to be separate because the labour force works more hours during those periods)
 def f_p_dates_df():
-    ##For steady state the periods must be generated, because if you take the weighted average of the
-    ## DSP periods you will get the incorrect seeding peirods if seeding start is not the same labour period.
-    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
-        ##put season inputs through season input function
-        harv_date = zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0)[0]
-        seed_period_lengths = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)[...,0]
-        harv_period_lengths = zfun.f_seasonal_inp(pinp.period['harv_period_lengths'],numpy=True,axis=1)[...,0]
-        dry_seeding_start = pinp.crop['dry_seed_start']
-        wet_seeding_start = f_wet_seeding_start_date()[0]
+    periods = pinp.period['i_dsp_lp']
+    ##make df
+    index = ['P%02d' % i for i in range(len(periods))]
+    cols = pinp.general['i_z_idx'] #need to slice off 'typical' because no labour period inputs for typical because it is automatically generated
+    periods = pd.DataFrame(periods, index=index, columns=cols)
+    ##apply season mask
+    periods = zfun.f_seasonal_inp(periods, axis=1)
 
-        ##calc period
-        keys_z = zfun.f_keys_z()
-        periods = pd.DataFrame(columns=keys_z)
-        #create empty list of dates to be filled by this function
-        period_start_dates = []
-        #determine the start of the first period, this references feed periods so it has the same yr.
-        start_date_period_0 = min(dry_seeding_start, pinp.general['i_date_node_zm'][0,0])
-        #end date of all labour periods, simply one yr after start date.
-        date_last_period = start_date_period_0 + 364
-        #start point for the loop counter.
-        date = start_date_period_0
-        #loop that runs until the loop counter reached the end date.
-        while date < date_last_period:
-            #if not a seed period then
-            if date < wet_seeding_start or date > f_period_end_date(wet_seeding_start,seed_period_lengths):
-                #if not a harvest period then just simply add 1 month and append that date to the list
-                if date < harv_date or date > f_period_end_date(harv_date,harv_period_lengths):
-                    period_start_dates.append(date)
-                    date += 30
-                #if harvest period then append the harvest dates to the list and adjust the loop counter (date) to the start of the following time period (time period is determined by standard period length in the input sheet).
-                else:
-                    start = harv_date
-                    length = harv_period_lengths
-                    for i in range(len(f_period_dates(start, length))):
-                        period_start_dates.append(f_period_dates(start, length)[i])
-                    #end period can't be included in harvest date function above because then when that function is used to determine labour hours available in each period the period following harvest will also get more hours.
-                    period_start_dates.append(f_period_end_date(start, length))
-                    date = f_period_end_date(start, length) + 33# - f_period_end_date(start, length)%30
-            #if seed period then append the seed dates to the list and adjust the loop counter (date) to the start of the following time period (time period is determined by standard period length in the input sheet).
+    ##seeding and harv periods
+    harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0)
+    seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
+    harv_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['harv_period_lengths'],numpy=True,axis=1)
+    wet_seeding_start_z = f_wet_seeding_start_date()
+    seeding_periods_pz = np.cumsum(np.concatenate([wet_seeding_start_z[na,:], seed_period_lengths_pz]), axis=0)
+    harv_periods_pz = np.cumsum(np.concatenate([harv_start_z[na,:], harv_period_lengths_pz]), axis=0)
+    seed_and_harv_periods_pz = np.concatenate([seeding_periods_pz,harv_periods_pz])
+
+    ##For the weighted average steady state model the periods are adjusted so that seeding and harv peirods are a labour period
+    if pinp.general['steady_state'] and np.count_nonzero(pinp.general['i_mask_z'])!=1:
+        periods = periods.round(0) #round periods to nearest day
+        ###make all lp at least 7 days
+        for p in range(len(periods)):
+            if p==0:
+                pass
             else:
-                # period_start_dates.append(dry_seeding_start) #add dry seeding period before wet seeding periods.
-                start = wet_seeding_start
-                length = seed_period_lengths
-                for i in range(len(f_period_dates(start, length))):
-                    period_start_dates.append(f_period_dates(start, length)[i])
-                period_start_dates.append(f_period_end_date(start, length))
-                date = f_period_end_date(start, length) + 30 - f_period_end_date(start, length)%30
-        #add last period end date
-        period_start_dates.append(date_last_period)
-        #add the list of dates to the labour dataframe
-        periods[keys_z[0]]=period_start_dates
-        ##modify index
-        index = ['P%02d' % i for i in range(len(periods))]
-        periods.index = index
-    else:
-        periods = pinp.period['i_dsp_lp']
-        ##make df
-        index = ['P%02d' % i for i in range(len(periods))]
-        cols = pinp.general['i_z_idx'][1:] #need to slice off 'typical' because no labour period inputs for typical because it is automatically generated
-        periods = pd.DataFrame(periods, index=index, columns=cols)
-        ##apply season mask
-        mask_z = pinp.general['i_mask_z'][1:] #need to slice off 'typical' because no labour period inputs for typical because it is automatically generated
-        periods = periods.loc[:, mask_z]
+                periods.iloc[p] = max(periods.iloc[p].values, periods.iloc[p-1].values+7)
+        ###make sure last period is 364 days after first
+        periods.iloc[-1] = periods.iloc[0] + 364
+        ###lookup each seeding and harv period and set the closest lp to that date
+        for i in seed_and_harv_periods_pz.squeeze(): #squeeze to remove singleton z
+            ###build a mask which is the closest period
+            mask = (periods - i).abs() == (periods - i).abs().min()
+            periods[mask] = i
+
+        # ##calc period
+        # keys_z = zfun.f_keys_z()
+        # periods = pd.DataFrame(columns=keys_z)
+        # #create empty list of dates to be filled by this function
+        # period_start_dates = []
+        # #determine the start of the first period, this references feed periods so it has the same yr.
+        # start_date_period_0 = min(dry_seeding_start, pinp.general['i_date_node_zm'][0,0])
+        # #end date of all labour periods, simply one yr after start date.
+        # date_last_period = start_date_period_0 + 364
+        # #start point for the loop counter.
+        # date = start_date_period_0
+        # #loop that runs until the loop counter reached the end date.
+        # while date < date_last_period:
+        #     #if not a seed period then
+        #     if date < wet_seeding_start or date > f_period_end_date(wet_seeding_start,seed_period_lengths):
+        #         #if not a harvest period then just simply add 1 month and append that date to the list
+        #         if date < harv_date or date > f_period_end_date(harv_date,harv_period_lengths):
+        #             period_start_dates.append(date)
+        #             date += 30
+        #         #if harvest period then append the harvest dates to the list and adjust the loop counter (date) to the start of the following time period (time period is determined by standard period length in the input sheet).
+        #         else:
+        #             start = harv_date
+        #             length = harv_period_lengths
+        #             for i in range(len(f_period_dates(start, length))):
+        #                 period_start_dates.append(f_period_dates(start, length)[i])
+        #             #end period can't be included in harvest date function above because then when that function is used to determine labour hours available in each period the period following harvest will also get more hours.
+        #             period_start_dates.append(f_period_end_date(start, length))
+        #             date = f_period_end_date(start, length) + 33# - f_period_end_date(start, length)%30
+        #     #if seed period then append the seed dates to the list and adjust the loop counter (date) to the start of the following time period (time period is determined by standard period length in the input sheet).
+        #     else:
+        #         # period_start_dates.append(dry_seeding_start) #add dry seeding period before wet seeding periods.
+        #         start = wet_seeding_start
+        #         length = seed_period_lengths
+        #         for i in range(len(f_period_dates(start, length))):
+        #             period_start_dates.append(f_period_dates(start, length)[i])
+        #         period_start_dates.append(f_period_end_date(start, length))
+        #         date = f_period_end_date(start, length) + 30 - f_period_end_date(start, length)%30
+        # #add last period end date
+        # period_start_dates.append(date_last_period)
+        # #add the list of dates to the labour dataframe
+        # periods[keys_z[0]]=period_start_dates
+        # ##modify index
+        # index = ['P%02d' % i for i in range(len(periods))]
+        # periods.index = index
+
+    ##if dsp check the nodes have been included
+    if not pinp.general['steady_state'] and np.count_nonzero(pinp.general['i_mask_z']) != 1:
         ##error check: node dates must be included in the lab periods
         date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'], numpy=True, axis=0)
         if np.all(np.any(periods.values[:,:,na]==date_node_zm, axis=0)):
             pass
         else:
             raise exc.LabourPeriodError('''Season nodes are not all included in labour periods''')
+
+    ##check that seeding and harv periods begin at the start of a labour period
+    if np.all(np.any(periods.values[:,:,na]==seed_and_harv_periods_pz, axis=0)):
+        pass
+    else:
+        raise exc.LabourPeriodError('''Seeding or harv periods do not begin/end at the start of a labour period.''')
 
     return periods
 
