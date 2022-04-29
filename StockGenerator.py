@@ -738,23 +738,26 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##calc and adjust date born average of group - convert from date of first lamb born to average date born of lambs in the first cycle
     ###sire
-    date_born_ida0e0b0xyg0 = date_born1st_ida0e0b0xyg0 + (0.5 * cf_sire[4, 0:1,:]).astype(int)	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle
+    date_born_ida0e0b0xyg0 = date_born1st_ida0e0b0xyg0 + (0.5 * cf_sire[4, 0:1,:])	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle
     date_born_idx_ida0e0b0xyg0=fun.f_next_prev_association(date_start_p, date_born_ida0e0b0xyg0, 0, 'left')
+    date_born_ida0e0b0xyg0 = date_start_p[date_born_idx_ida0e0b0xyg0]
     ###dams
-    date_born_ida0e0b0xyg1 = date_born1st_ida0e0b0xyg1 + (0.5 * cf_dams[4, 0:1,:]).astype(int)	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle
+    date_born_ida0e0b0xyg1 = date_born1st_ida0e0b0xyg1 + (0.5 * cf_dams[4, 0:1,:])	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle
     date_born_idx_ida0e0b0xyg1 = fun.f_next_prev_association(date_start_p,date_born_ida0e0b0xyg1,0,'left')
+    date_born_ida0e0b0xyg1 = date_start_p[date_born_idx_ida0e0b0xyg1]
     ###yatf - needs to be rounded to start of gen period because this controls the start of a dvp
-    date_born_oa1e1b1nwzida0e0b0xyg2 = date_born1st_oa1e1b1nwzida0e0b0xyg2 + ((index_e1b1nwzida0e0b0xyg + 0.5) * cf_yatf[4, 0:1,:]).astype(int)	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle. e_index is to account for ewe cycles.
+    date_born_oa1e1b1nwzida0e0b0xyg2 = date_born1st_oa1e1b1nwzida0e0b0xyg2 + ((index_e1b1nwzida0e0b0xyg + 0.5) * cf_yatf[4, 0:1,:])	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle. e_index is to account for ewe cycles.
     date_born_idx_oa1e1b1nwzida0e0b0xyg2 =fun.f_next_prev_association(date_start_p, date_born_oa1e1b1nwzida0e0b0xyg2, 0, 'left')
     date_born_oa1e1b1nwzida0e0b0xyg2 = date_start_p[date_born_idx_oa1e1b1nwzida0e0b0xyg2]
     ###offs
-    date_born_ida0e0b0xyg3 = date_born1st_ida0e0b0xyg3 + ((index_e0b0xyg + 0.5) * cf_offs[4, 0:1,:]).astype(int)	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle
+    date_born_ida0e0b0xyg3 = date_born1st_ida0e0b0xyg3 + ((index_e0b0xyg + 0.5) * cf_offs[4, 0:1,:])	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle
     date_born_idx_ida0e0b0xyg3=fun.f_next_prev_association(offs_date_start_p, date_born_ida0e0b0xyg3, 0, 'left')
+    date_born_ida0e0b0xyg3 = date_start_p[date_born_idx_ida0e0b0xyg3]
     ##recalc date_born1st from the adjusted average birth date
     date_born1st_ida0e0b0xyg0 = date_born_ida0e0b0xyg0 - (0.5 * cf_sire[4, 0:1,:]).astype(int)
     date_born1st_ida0e0b0xyg1 = date_born_ida0e0b0xyg1 - (0.5 * cf_dams[4, 0:1,:]).astype(int)
     date_born1st_oa1e1b1nwzida0e0b0xyg2 = date_born_oa1e1b1nwzida0e0b0xyg2[:,:,0:1,...] - (0.5 * cf_yatf[4, 0:1,:]).astype(int) #take slice 0 of e axis
-    date_born1st_ida0e0b0xyg3 = date_born_ida0e0b0xyg3[:,:,:,0:1,...] - (0.5 * cf_offs[4, 0:1,:]).astype(int) #take slice 0 of e axis
+    date_born1st_ida0e0b0xyg3 = date_born_ida0e0b0xyg3[:,:,:,0:1,...] - (0.5 * cf_offs[4, 0:1,:]).astype(int) #take slice 0 of e axis because date born first is from first estrus cycle
 
     ##calc wean date (weaning input is counting from the date of the first lamb)
     date_weaned_ida0e0b0xyg0 = date_born1st_ida0e0b0xyg0 + age_wean1st_e0b0xyg0
