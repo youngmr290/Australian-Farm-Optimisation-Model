@@ -1109,7 +1109,17 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_stubcon', 'Run']:
             #returns consumption in each FP
-            stubcon = rep.f_stubble_summary(lp_vars, r_vals)
+            prod = 1
+            type = 'stub'
+            weights = 'stub_qszp6fks1s2'
+            keys = 'keys_qszp6fks1s2'
+            arith = 2
+            index =[0,1,2,3] #q,s,z,p6
+            cols =[6] #s1 (stub cat)
+            axis_slice = {}
+            # axis_slice[0] = [0, 2, 1]
+            stubcon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+                                   keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             stubcon = pd.concat([stubcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_stubcon = rep.f_append_dfs(stacked_stubcon, stubcon)
 

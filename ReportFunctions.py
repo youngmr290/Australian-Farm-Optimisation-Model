@@ -545,13 +545,6 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         return grain
 
 
-def f_stubble_summary(lp_vars, r_vals):
-    ##mask to uncluster z axis
-    maskz8_zp6 = r_vals['pas']['mask_fp_z8var_p6z'].T
-    stub_qszp6fks1s2 = f_vars2df(lp_vars, 'v_stub_con', maskz8_zp6[:,:,na,na,na,na], z_pos=-6)
-    return stub_qszp6fks1s2.groupby(level=(2, 3, -2)).sum().unstack()
-
-
 def f_mvf_summary(lp_vars):
     mvf_qsp6vq = f_vars2df(lp_vars, 'mvf')
     return mvf_qsp6vq.unstack([-1,-2])
@@ -709,9 +702,12 @@ def f_stock_reshape(lp_vars, r_vals):
     return stock_vars
 
 
-def f_pasture_reshape(lp_vars, r_vals):
+def f_feed_reshape(lp_vars, r_vals):
     '''
-    Reshape pasture lp variables into numpy array
+    Reshape feed (pasture, residue & crop grazing) lp variables into numpy array.
+    
+    This is seperate to the stock function above to save processing time (and the feed stuff overlaps a lot i.e. 
+    uses same keys).
 
     :param lp_vars: lp variables
     :return: dict
@@ -721,6 +717,7 @@ def f_pasture_reshape(lp_vars, r_vals):
     keys_p6 = r_vals['pas']['keys_p6']
     keys_g = r_vals['pas']['keys_g']
     keys_k = r_vals['pas']['keys_k']
+    keys_k1 = r_vals['stub']['keys_k1']
     keys_l = r_vals['pas']['keys_l']
     keys_o = r_vals['pas']['keys_o']
     keys_p5 = r_vals['pas']['keys_p5']
@@ -728,6 +725,8 @@ def f_pasture_reshape(lp_vars, r_vals):
     keys_t = r_vals['pas']['keys_t']
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
+    keys_s1 = r_vals['stub']['keys_s1']
+    keys_s2 = r_vals['stub']['keys_s2']
     keys_z = r_vals['zgen']['keys_z']
 
     len_d = len(keys_d)
@@ -735,59 +734,68 @@ def f_pasture_reshape(lp_vars, r_vals):
     len_p6 = len(keys_p6)
     len_g = len(keys_g)
     len_k = len(keys_k)
+    len_k1 = len(keys_k1)
     len_l = len(keys_l)
     len_o = len(keys_o)
     len_p5 = len(keys_p5)
     len_q = len(keys_q)
     len_r = len(keys_r)
     len_s = len(keys_s)
+    len_s1 = len(keys_s1)
+    len_s2 = len(keys_s2)
     len_t = len(keys_t)
     len_z = len(keys_z)
 
     ##dict to store reshaped pasture stuff in
-    pas_vars = {}
+    feed_vars = {}
 
     # store keys - must be in axis order
-    pas_vars['keys_qsfgop6lzt'] = [keys_q, keys_s, keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
-    pas_vars['keys_fgop6lzt'] = [keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
-    pas_vars['keys_gop6lzt'] = [keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
-    pas_vars['keys_qsfdp6zt'] = [keys_q, keys_s, keys_f, keys_d, keys_p6, keys_z, keys_t]
-    pas_vars['keys_fdp6zt'] = [keys_f, keys_d, keys_p6, keys_z, keys_t]
-    pas_vars['keys_qsdp6zt'] = [keys_q, keys_s, keys_d, keys_p6, keys_z, keys_t]
-    pas_vars['keys_dp6zt'] = [keys_d, keys_p6, keys_z, keys_t]
-    pas_vars['keys_qsfp6lz'] = [keys_q, keys_s, keys_f, keys_p6, keys_l, keys_z]
+    feed_vars['keys_qsfgop6lzt'] = [keys_q, keys_s, keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    feed_vars['keys_qszp6fks1s2'] = [keys_q, keys_s, keys_z, keys_p6, keys_f, keys_k1, keys_s1, keys_s2]
+    feed_vars['keys_fgop6lzt'] = [keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    feed_vars['keys_gop6lzt'] = [keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    feed_vars['keys_qsfdp6zt'] = [keys_q, keys_s, keys_f, keys_d, keys_p6, keys_z, keys_t]
+    feed_vars['keys_fdp6zt'] = [keys_f, keys_d, keys_p6, keys_z, keys_t]
+    feed_vars['keys_qsdp6zt'] = [keys_q, keys_s, keys_d, keys_p6, keys_z, keys_t]
+    feed_vars['keys_dp6zt'] = [keys_d, keys_p6, keys_z, keys_t]
+    feed_vars['keys_qsfp6lz'] = [keys_q, keys_s, keys_f, keys_p6, keys_l, keys_z]
 
     ##shapes
+    ###pasture
     qsfgop6lzt = len_q, len_s, len_f, len_g, len_o, len_p6, len_l, len_z, len_t
     qsfdp6zt = len_q, len_s, len_f, len_d, len_p6, len_z, len_t
     qsdp6zt = len_q, len_s, len_d, len_p6, len_z, len_t
     qsfp6lz = len_q, len_s, len_f, len_p6, len_l, len_z
+    ###residue
+    qszp6fks1s2 = len_q, len_s, len_z, len_p6, len_f, len_k1, len_s1, len_s2
 
     ##reshape z8 mask to uncluster
     maskz8_p6z = r_vals['pas']['mask_fp_z8var_p6z']
+    maskz8_zp6 = maskz8_p6z.T
     maskz8_p6zna = maskz8_p6z[:,:,na]
     maskz8_p6naz = maskz8_p6z[:,na,:]
     maskz8_p6nazna = maskz8_p6z[:,na,:,na]
 
-    ##reshape green pasture hectare variable
-    pas_vars['greenpas_ha_qsfgop6lzt'] = f_vars2np(lp_vars, 'v_greenpas_ha', qsfgop6lzt, maskz8_p6nazna, z_pos=-2)
+    ##pasture
+    ###green pasture hectare variable
+    feed_vars['greenpas_ha_qsfgop6lzt'] = f_vars2np(lp_vars, 'v_greenpas_ha', qsfgop6lzt, maskz8_p6nazna, z_pos=-2)
+    ###dry end period
+    feed_vars['drypas_transfer_qsdp6zt'] = f_vars2np(lp_vars, 'v_drypas_transfer', qsdp6zt, maskz8_p6zna, z_pos=-2)
+    ###nap end period
+    feed_vars['nap_transfer_qsdp6zt'] = f_vars2np(lp_vars, 'v_nap_transfer', qsdp6zt, maskz8_p6zna, z_pos=-2)
+    ###dry consumed
+    feed_vars['drypas_consumed_qsfdp6zt'] = f_vars2np(lp_vars, 'v_drypas_consumed', qsfdp6zt, maskz8_p6zna, z_pos=-2)
+    ###nap consumed
+    feed_vars['nap_consumed_qsfdp6zt'] = f_vars2np(lp_vars, 'v_nap_consumed', qsfdp6zt, maskz8_p6zna, z_pos=-2)
+    ###poc consumed
+    feed_vars['poc_consumed_qsfp6lz'] = f_vars2np(lp_vars, 'v_poc', qsfp6lz, maskz8_p6naz, z_pos=-1)
 
-    ##dry end period
-    pas_vars['drypas_transfer_qsdp6zt'] = f_vars2np(lp_vars, 'v_drypas_transfer', qsdp6zt, maskz8_p6zna, z_pos=-2)
+    ##crop residue
+    ###stubble consumed
+    feed_vars['stub_qszp6fks1s2'] = f_vars2np(lp_vars, 'v_stub_con', qszp6fks1s2, maskz8_zp6[:,:,na,na,na,na], z_pos=-6)
 
-    ##nap end period
-    pas_vars['nap_transfer_qsdp6zt'] = f_vars2np(lp_vars, 'v_nap_transfer', qsdp6zt, maskz8_p6zna, z_pos=-2)
 
-    ##dry consumed
-    pas_vars['drypas_consumed_qsfdp6zt'] = f_vars2np(lp_vars, 'v_drypas_consumed', qsfdp6zt, maskz8_p6zna, z_pos=-2)
-
-    ##nap consumed
-    pas_vars['nap_consumed_qsfdp6zt'] = f_vars2np(lp_vars, 'v_nap_consumed', qsfdp6zt, maskz8_p6zna, z_pos=-2)
-
-    ##poc consumed
-    pas_vars['poc_consumed_qsfp6lz'] = f_vars2np(lp_vars, 'v_poc', qsfp6lz, maskz8_p6naz, z_pos=-1)
-
-    return pas_vars
+    return feed_vars
 
 
 def f_stock_cash_summary(lp_vars, r_vals):
@@ -1246,7 +1254,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     :param lp_vars: dict: results from pyomo
     :param r_vals: dict: report variable
     :param build_df: bool: return df
-    :key type: str: either 'stock' or 'pas' to indicate calc type
+    :key type: str: either 'stock', 'pas' or 'stub' to indicate which r_vals
     :key key: str: dict key for the axis keys
     :key index (optional, default = []): list: axis you want as the index of pandas df (order of list is the index level order).
     :key cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
@@ -1279,8 +1287,8 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
         ###keys that will become the index and cols for table
         keys = r_vals[keys_key]
     else:
-        vars = f_pasture_reshape(lp_vars, r_vals)
-        r_vals = r_vals['pas']
+        vars = f_feed_reshape(lp_vars, r_vals)
+        r_vals = r_vals[type]
         ###keys that will become the index and cols for table
         keys = vars[keys_key]
 

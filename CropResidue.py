@@ -366,4 +366,18 @@ def crop_residue_all(params, r_vals, nv):
     ##vol
     params['vol'] = fun.f1_make_pyomo_dict(vol_fp6zks1, arrays_fp6zks1)
 
+    ###########
+    #report   #
+    ###########
+    ##keys
+    fun.f1_make_r_val(r_vals,keys_k,'keys_k1')
+    fun.f1_make_r_val(r_vals,keys_s1,'keys_s1')
+    fun.f1_make_r_val(r_vals,keys_s2,'keys_s2')
+
+    ##maskz8 used to uncluster lp_vars
+    fun.f1_make_r_val(r_vals,mask_fp_z8var_p6z,'mask_fp_z8var_p6z')
+
+    ##store report vals
+    fun.f1_make_r_val(r_vals,md_fp6zks1,'md_zp6fks1',mask_fp_z8var_p6z[:,:,na,na],z_pos=-3)
+
 
