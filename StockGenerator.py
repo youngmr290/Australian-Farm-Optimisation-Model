@@ -1833,27 +1833,27 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                         * cl_dams[6, ..., na] * ( cl_dams[12, ..., na] + cl_dams[13, ..., na]
                                         * np.exp(-cl_dams[14, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg2p1))
                                         , weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
-    ##Pattern of conception efficiency (doy). Two versions of the equation
-    ### _cs is for the GrazPlan equations to predict the seasonal effect on proportion of DSTwTr - active b1 axis
+    ##Pattern of conception efficiency (doy). Three versions of the equation
+    ### crg_doy_cs is for the GrazPlan equations to predict the seasonal effect on proportion greater than conception rate - active b1 axis
     crg_doy_cs_pa1e1b1nwzida0e0b0xyg1 = np.average(np.maximum(0,1 - cb1_dams[1, ..., na]
                                                 * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364)
                                                 * np.sin(lat_rad) / -0.57)), axis = -1)
-    ### _ltw is for the LTW equations to predict the seasonal effect on reproductive rate - singleton b1 axis
+    ### rr_doy_ltw scales the LTW equations to predict the seasonal effect on reproductive rate - singleton b1 axis
     ### value is scaled so at the doy of scan_std the value is 1 and doesn't alter scan_std if mating on that day
-    crg_doy_ltw_pa1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.average(np.maximum(0,1 - cf_dams[1, ..., na]
+    rr_doy_ltw_pa1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.average(np.maximum(0,1 - cf_dams[1, ..., na]
                                                     * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364)
                                                     * np.sin(lat_rad) / -0.57)), axis = -1)
-                                                , np.average(np.maximum(0, 1 - cf_dams[1, ..., na]
-                                                    * (1 - np.sin(2 * np.pi * (scan_std_doy_yg1[..., na] + 10) / 364)
-                                                    * np.sin(lat_rad) / -0.57)), axis=-1))
-    ### _lmat is for the LMAT equations to predict the seasonal effect on proportion of DSTwTr - active b1 axis
-    ### value is scaled so at the doy of scan_std the value is 1  and doesn't alter the proportions if mating on that day.
-    crg_doy_lmat_pa1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.average(np.maximum(0,1 - cb1_dams[1, ..., na]
-                                                    * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364)
-                                                    * np.sin(lat_rad) / -0.57)), axis = -1)
-                                                , np.average(np.maximum(0, 1 - cb1_dams[1, ..., na]
-                                                    * (1 - np.sin(2 * np.pi * (scan_std_doy_yg1[..., na] + 10) / 364)
-                                                    * np.sin(lat_rad) / -0.57)), axis=-1))
+                                                , np.maximum(0, 1 - cf_dams[1, ...]
+                                                    * (1 - np.sin(2 * np.pi * (scan_std_doy_yg1[...] + 10) / 364)
+                                                    * np.sin(lat_rad) / -0.57)))
+    # ### crl_doy_lmat is for the LMAT equations to predict the seasonal effect on proportion less than conception rate - active b1 axis
+    # ### value is scaled so at the doy of scan_std the value is 1  and doesn't alter the proportions if mating on that day.
+    # crl_doy_lmat_pa1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.average(np.maximum(0,1 - cb1_dams[1, ..., na]
+    #                                                 * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364)
+    #                                                 * np.sin(lat_rad) / -0.57)), axis = -1)
+    #                                             , np.maximum(0, 1 - cb1_dams[1, ...]
+    #                                                 * (1 - np.sin(2 * np.pi * (scan_std_doy_yg1[...] + 10) / 364)
+    #                                                 * np.sin(lat_rad) / -0.57)))
     ##Rumen development factor on PI - yatf
     piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(fun.f_back_transform(ci_yatf[3, ..., na]
                                         * (age_p1_pa1e1b1nwzida0e0b0xyg2p1 - ci_yatf[4, ..., na]))
@@ -3348,7 +3348,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     #todo this need to be replaced by LMAT formula, if cf_conception_start is used in the LMAT formula cf_conception_dams = temp0 will need to be moved out of the if used statement.
                     temp0 = sfun.f_conception_ltw(cf_dams, cu0_dams, relsize_mating_dams, cs_mating_dams
                                                   , scan_std_pa1e1b1nwzida0e0b0xyg1[p], doy_pa1e1b1nwzida0e0b0xyg[p]
-                                                  , crg_doy_ltw_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
+                                                  , rr_doy_ltw_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
                                                   , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                   , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p])
                     if eqn_used:
@@ -3363,7 +3363,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_conception_lmat(cf_dams, cb1_dams, cu2_dams, maternallw_mating_dams
                                                    , lwc_mating_dams * 1000, age_pa1e1b1nwzida0e0b0xyg1[p]
-                                                   , crg_doy_lmat_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
+                                                   , crg_doy_cs_pa1e1b1nwzida0e0b0xyg1[p:p+1], nfoet_b1nwzida0e0b0xyg
                                                    , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                    , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]
                                                    , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p])
