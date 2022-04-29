@@ -201,13 +201,13 @@ def f_con_perm_supervision(model):
 def f_manager_holiday_allocation(model):
     '''Optimise the timing of manager holidays.'''
     def manager_holiday_allocation(model,q,s):
-        return -sum(model.v_manager_holiday_allocation[q,s,p5] for p5 in model.s_labperiods) <= -1
+        return -sum(model.v_manager_holiday_allocation[q,s,p5] for p5 in model.s_labperiods) <= -1 * model.v_quantity_manager
     model.con_manager_holiday_allocation = Constraint(model.s_sequence_year, model.s_sequence, rule=manager_holiday_allocation, doc='allocates manager holiday to each labour period')
 
 def f_perm_holiday_allocation(model):
     '''Optimise the timing of perm holidays.'''
     def perm_holiday_allocation(model,q,s):
-        return -sum(model.v_perm_holiday_allocation[q,s,p5] for p5 in model.s_labperiods) <= -1
+        return -sum(model.v_perm_holiday_allocation[q,s,p5] for p5 in model.s_labperiods) <= -1 * model.v_quantity_perm
     model.con_perm_holiday_allocation = Constraint(model.s_sequence_year, model.s_sequence, rule=perm_holiday_allocation, doc='allocates perm holiday to each labour period')
 
 def f_con_labour_transfer_manager(model):
