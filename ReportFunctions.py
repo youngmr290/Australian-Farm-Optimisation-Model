@@ -319,7 +319,7 @@ def f_summary(lp_vars, r_vals, trial):
     ##utility
     summary_df.loc[trial, 'utility'] = f_profit(lp_vars, r_vals, option=2)
     ##total dse/ha in fp0
-    summary_df.loc[trial, 'SR'] = f_dse(lp_vars, r_vals, method=0, per_ha=True, summary=True)
+    summary_df.loc[trial, 'SR'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary=True)
     ##pasture %
     summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=4)
     ##supplement
@@ -1059,10 +1059,10 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
     ##user can change this if they want to report different axis. Keys must be a list and axis must be tuple. Check names below to get the axis positions.
     sire_preserve_ax = (0, 1, 2 ,3)
     sire_key = [keys_q, keys_s, keys_p6, keys_z]
-    dams_preserve_ax = (0, 1, 3, 5, 9)
-    dams_key = [keys_q, keys_s, keys_p6, keys_v1, keys_z]
-    offs_preserve_ax = (0, 1, 4, 6, 9)
-    offs_key = [keys_q, keys_s, keys_p6, keys_v3, keys_z]
+    dams_preserve_ax = (0, 1, 3, 9)
+    dams_key = [keys_q, keys_s, keys_p6, keys_z]
+    offs_preserve_ax = (0, 1, 4, 9)
+    offs_key = [keys_q, keys_s, keys_p6, keys_z]
 
     if summary: #for summary DSE needs to be calculated with p6 and z axis (q,s,z axis is weighted and summed below)
         sire_preserve_ax = (0, 1, 2 ,3)

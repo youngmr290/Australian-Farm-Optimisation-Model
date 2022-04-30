@@ -1268,10 +1268,6 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_dryfoo, 'dryfoo', df_settings, option=1)
     if report_run.loc['run_napfoo', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_napfoo, 'napfoo', df_settings, option=1)
-    if report_run.loc['run_grncon', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_grncon, 'grncon', df_settings, option=1)
-    if report_run.loc['run_drycon', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_drycon, 'drycon', df_settings, option=1)
     if report_run.loc['run_grnnv', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_grnnv, 'grnnv', df_settings, option=1)
     if report_run.loc['run_grndmd', 'Run']:
@@ -1284,6 +1280,10 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_drydmd, 'drydmd', df_settings, option=1)
     if report_run.loc['run_avedryfoo', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_avedryfoo, 'avedryfoo', df_settings, option=1)
+    if report_run.loc['run_grncon', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_grncon, 'grncon', df_settings, option=1)
+    if report_run.loc['run_drycon', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_drycon, 'drycon', df_settings, option=1)
     if report_run.loc['run_napcon', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_napcon, 'napcon', df_settings, option=1)
     if report_run.loc['run_poccon', 'Run']:

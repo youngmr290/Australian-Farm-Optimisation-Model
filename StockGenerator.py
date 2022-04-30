@@ -7674,6 +7674,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fun.f1_make_r_val(r_vals,keys_y3,'keys_y3')
     fun.f1_make_r_val(r_vals,keys_x,'keys_x')
 
+    ##other random r_vals
+    fun.f1_make_r_val(r_vals,pinp.sheep['i_dse_type'],'dse_type')
+
     ##key lists used to form table headers and indexs
     keys_e = ['e%s'%i for i in range(len_e1)]
     keys_b = sinp.stock['i_lsln_idx_dams']
