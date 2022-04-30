@@ -192,9 +192,10 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_feedbudget', 'Run']:
             option = 0
-            dams_cols = [7] #birth opp
-            offs_cols = [8] #shear opp
-            feed = rep.f_feed_budget(lp_vars, r_vals, option=option, dams_cols=dams_cols, offs_cols=offs_cols)
+            nv_option = 0
+            dams_cols = [6] #birth opp
+            offs_cols = [7] #shear opp
+            feed = rep.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols)
             feed = pd.concat([feed],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_feed = rep.f_append_dfs(stacked_feed, feed)
 

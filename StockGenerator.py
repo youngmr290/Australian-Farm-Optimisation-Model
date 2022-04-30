@@ -7706,8 +7706,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvpaebnwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2p6ftvanwziy1g1')
-    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_o, keys_a, keys_n1, keys_lw1
-                                            , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2p6ftvoanwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_p6, keys_f, keys_t1, keys_o, keys_v1, keys_a, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2p6ftovanwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_T1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_Tpaebnwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
@@ -7732,8 +7732,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                             , keys_i, keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tvpnwzidaebxyg3')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3
                                             , keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5p6ftvnwziaxyg3')
-    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_s3, keys_n3
-                                            , keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5p6ftvsnwziaxyg3')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_s3, keys_v3, keys_n3
+                                            , keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5p6ftsvnwziaxyg3')
     fun.f1_make_r_val(r_vals,[keys_T3, keys_p3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0
                                             , keys_x, keys_y3, keys_g3],'offs_keys_Tpnwzidaebxyg3')
 
@@ -7783,8 +7783,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     k3k5p6ftvnwziaxyg3_shape = len_k3, len_k5, len_p6, len_f, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####p6fv0
-    k2p6ftvoa1nwziyg1_shape = len_k2, len_p6, len_f, len_t1, len_v1, len_o, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    k3k5p6ftvsnwziaxyg3_shape = len_k3, len_k5, len_p6, len_f, len_t3, len_v3, len_s3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
+    k2p6ftova1nwziyg1_shape = len_k2, len_p6, len_f, len_t1, len_o, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    k3k5p6ftsvnwziaxyg3_shape = len_k3, len_k5, len_p6, len_f, len_t3, len_s3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####cg
     p7zg0_shape = len_p7, len_z, len_g0
@@ -7874,15 +7874,38 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fun.f1_make_r_val(r_vals,mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3,'mei_offs_k3k5p6ftvnw8ziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],z_pos, k3k5p6ftvnwziaxyg3_shape)
 
     if sinp.rep['i_store_feedbud']:
-        index_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(np.arange(len_o), p_pos)
-        index_sa1e1b1nwzida0e0b0xyg3 = fun.f_expand(np.arange(len_s3), p_pos)
-        a_s_v_k3k5tvsa1e1b1nwzida0e0b0xyg3 = (np.sum((a_prev_s_va1e1b1nwzida0e0b0xyg3[:,na,...]==index_sa1e1b1nwzida0e0b0xyg3)
-                * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]),
-                axis=d_pos, keepdims=True) > 0)
-        r_mei_k2p6ftvoa1e1b1nwzida0e0b0xyg1 = mei_k2p6ftva1e1b1nwzida0e0b0xyg1[:,:,:,:,:,na,...] * (a_prev_o_va1e1b1nwzida0e0b0xyg1[:,na,:,0:1,...]==index_oa1e1b1nwzida0e0b0xyg1) #take e[o]
-        r_mei_k3k5p6ftvsa1e1b1nwzida0e0b0xyg3 = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3[:,:,:,:,:,:,na,...] * a_s_v_k3k5tvsa1e1b1nwzida0e0b0xyg3[:,:,na,na,...]
-        fun.f1_make_r_val(r_vals,r_mei_k2p6ftvoa1e1b1nwzida0e0b0xyg1,'mei_dams_k2p6ftvoa1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,:,:,na,...],z_pos, k2p6ftvoa1nwziyg1_shape)
-        fun.f1_make_r_val(r_vals,r_mei_k3k5p6ftvsa1e1b1nwzida0e0b0xyg3,'mei_offs_k3k5p6ftvsnw8ziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,:,:,na,...],z_pos, k3k5p6ftvsnwziaxyg3_shape)
+        index_ova1e1b1nwzida0e0b0xyg1 = fun.f_expand(np.arange(len_o), p_pos-1)
+        index_sva1e1b1nwzida0e0b0xyg3 = fun.f_expand(np.arange(len_s3), p_pos-1)
+
+        ###create new stock days with an o axis.
+        stock_days_p6ftova1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(
+            on_hand_tpa1e1b1nwzida0e0b0xyg1[:, na, ...] * nv_propn_ftpdams[:, :, na, ...], a_v_pa1e1b1nwzida0e0b0xyg1
+            , numbers_p=o_numbers_end_tpdams[:, na, ...], days_period_p=days_period_pa1e1b1nwzida0e0b0xyg1
+            , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tp=index_p6tpa1e1b1nwzida0e0b0xyg[:, na, :, na, ...]
+            , a_any2_p=a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, index_any2any1tp = index_ova1e1b1nwzida0e0b0xyg1)
+        stock_days_k2p6ftova1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',
+                stock_days_p6ftova1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                index_k2tva1e1b1nwzida0e0b0xyg1[:, na, na, :, na, ...], numbers_start_vg = numbers_start_tva1e1b1nwzida0e0b0xyg1[:, na, ...],
+                mask_vg = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
+        fun.f1_make_r_val(r_vals,stock_days_k2p6ftova1e1b1nwzida0e0b0xyg1,'stock_days_k2p6ftova1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,:,na,...],z_pos, k2p6ftova1nwziyg1_shape)
+
+        stock_days_p6ftsva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(on_hand_tpa1e1b1nwzida0e0b0xyg3[:, na, ...] * nv_propn_ftpoffs[:, :, na, ...], a_v_pa1e1b1nwzida0e0b0xyg3
+                                                , numbers_p=o_numbers_end_tpoffs[:, na, ...], days_period_p=days_period_cut_pa1e1b1nwzida0e0b0xyg3,
+                                                a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6tpa1e1b1nwzida0e0b0xyg[:,na, :, na, ...],
+                                                a_any2_p=a_prev_s_pa1e1b1nwzida0e0b0xyg3, index_any2any1tp=index_sva1e1b1nwzida0e0b0xyg3)
+        stock_days_k3k5p6ftsva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', stock_days_p6ftsva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,:,na,...],
+                                                        a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,:,na,...], numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg3[:, na, ...],
+                                                        mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
+        fun.f1_make_r_val(r_vals,stock_days_k3k5p6ftsva1e1b1nwzida0e0b0xyg3,'stock_days_k3k5p6ftsvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,:,na,...],z_pos, k3k5p6ftsvnwziaxyg3_shape)
+
+
+        a_s_v_k3k5tsva1e1b1nwzida0e0b0xyg3 = (np.sum((a_prev_s_va1e1b1nwzida0e0b0xyg3==index_sva1e1b1nwzida0e0b0xyg3)
+                * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]), axis=d_pos, keepdims=True) > 0)
+        r_mei_k2p6ftova1e1b1nwzida0e0b0xyg1 = mei_k2p6ftva1e1b1nwzida0e0b0xyg1[:,:,:,:,na,...] * (a_prev_o_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...]==index_ova1e1b1nwzida0e0b0xyg1) #take e[o]
+        r_mei_k3k5p6ftsva1e1b1nwzida0e0b0xyg3 = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3[:,:,:,:,:,na,...] * a_s_v_k3k5tsva1e1b1nwzida0e0b0xyg3[:,:,na,na,...]
+        fun.f1_make_r_val(r_vals,r_mei_k2p6ftova1e1b1nwzida0e0b0xyg1,'mei_dams_k2p6ftova1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,:,na,...],z_pos, k2p6ftova1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_mei_k3k5p6ftsva1e1b1nwzida0e0b0xyg3,'mei_offs_k3k5p6ftsvnw8ziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,:,na,...],z_pos, k3k5p6ftsvnwziaxyg3_shape)
+
 
     fun.f1_make_r_val(r_vals,pi_p6ftva1e1b1nwzida0e0b0xyg0,'pi_sire_p6fzg0',mask_fp_z8var_p6tva1e1b1nwzida0e0b0xyg[:,na,...],z_pos, p6fzg0_shape)
     fun.f1_make_r_val(r_vals,pi_k2p6ftva1e1b1nwzida0e0b0xyg1,'pi_dams_k2p6ftva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],z_pos, k2p6ftva1nwziyg1_shape)

@@ -1453,7 +1453,7 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
     percentage = f_numpy2df(percentage, keys_sliced, index, cols)
     return percentage
 
-def f_feed_budget(lp_vars, r_vals, option=0, dams_cols=[], offs_cols=[]):
+def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_cols=[]):
     '''
     Feed budget: stock mei requirement and feed mei supply.
 
@@ -1462,8 +1462,11 @@ def f_feed_budget(lp_vars, r_vals, option=0, dams_cols=[], offs_cols=[]):
     :param lp_vars: dict: results from pyomo
     :param r_vals: dict: report variable
     :key option (optional, default = 0): int:
-            option 0: NV pool summed (not active)
-            option 1: Active NV pool
+            option 0: mei/hd/day & propn of mei from each feed source
+            option 1: total mei
+    :key nv_option (optional, default = 0): int:
+            option 0: Active NV pool
+            option 1: NV pool summed (not active)
     :key dams_cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
     :key offs_cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
     :return: pandas df
@@ -1557,20 +1560,40 @@ def f_feed_budget(lp_vars, r_vals, option=0, dams_cols=[], offs_cols=[]):
     sup_mei = pd.DataFrame(sup_mei_qszp6f, columns=['Supp']) # add feed type as header
 
     ##stock mei requirement
+    if option==0:
+        arith = 1
+    else:
+        arith = 2
+
+    ###sires
+    type = 'stock'
+    prod = 'mei_sire_p6fzg0'
+    na_prod = [0, 1]  # q,s
+    weights = 'sire_numbers_qsg0'
+    na_weights = [2, 3, 4] #p6, f, z
+    den_weights = 'stock_days_p6fzg0'
+    na_denweights = [0, 1]  # q,s
+    keys = 'sire_keys_qsp6fzg0'
+    index = [0, 1, 4, 2, 3]  # [q,s,z,p6,nv]
+    cols = []
+    mei_sire = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                                 na_weights=na_weights, den_weights=den_weights,
+                                                 na_denweights=na_denweights, keys=keys, arith=arith,
+                                                 index=index, cols=cols)
+    mei_sire.columns = pd.MultiIndex.from_product([['Sire'], mei_sire.columns]) # add stock type as header
+
     ###dams
     type = 'stock'
-    prod = 'mei_dams_k2p6ftvoa1nw8ziyg1'
+    prod = 'mei_dams_k2p6ftova1nw8ziyg1'
     na_prod = [0, 1]  # q,s
     weights = 'dams_numbers_qsk2tvanwziy1g1'
-    na_weights = [3, 4, 7] #p6, f, o
-    den_weights = 'stock_days_k2p6ftva1nwziyg1'
-    na_denweights = [0, 1, 7]  # q,s, o
-    keys = 'dams_keys_qsk2p6ftvoanwziy1g1'
-    arith = 2
+    na_weights = [3, 4, 6] #p6, f, o
+    den_weights = 'stock_days_k2p6ftova1nwziyg1'
+    na_denweights = [0, 1]  # q,s, o
+    keys = 'dams_keys_qsk2p6ftovanwziy1g1'
     index = [0, 1, 11, 3, 4]  # [q,s,z,p6,nv]
     cols = dams_cols
-    mei_dams = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod,
-                                                 weights=weights,
+    mei_dams = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                                  na_weights=na_weights, den_weights=den_weights,
                                                  na_denweights=na_denweights, keys=keys, arith=arith,
                                                  index=index, cols=cols)
@@ -1578,31 +1601,34 @@ def f_feed_budget(lp_vars, r_vals, option=0, dams_cols=[], offs_cols=[]):
 
     ###offs
     type = 'stock'
-    prod = 'mei_offs_k3k5p6ftvsnw8ziaxyg3'
+    prod = 'mei_offs_k3k5p6ftsvnw8ziaxyg3'
     na_prod = [0, 1]  # q,s
     weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
-    na_weights = [4, 5, 8] #p6, f, shear
-    den_weights = 'stock_days_k3k5p6ftvnwziaxyg3'
-    na_denweights = [0, 1, 8]  # q,s, shear
-    keys = 'offs_keys_qsk3k5p6ftvsnwziaxyg3'
-    arith = 2
+    na_weights = [4, 5, 7] #p6, f, shear
+    den_weights = 'stock_days_k3k5p6ftsvnwziaxyg3'
+    na_denweights = [0, 1]  # q,s
+    keys = 'offs_keys_qsk3k5p6ftsvnwziaxyg3'
     index = [0, 1, 11, 4, 5]  # [q,s,z,p6,nv]
     cols = offs_cols
-    mei_offs = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod,
-                                                 weights=weights,
+    mei_offs = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                                  na_weights=na_weights, den_weights=den_weights,
                                                  na_denweights=na_denweights, keys=keys, arith=arith,
                                                  index=index, cols=cols)
     mei_offs.columns = pd.MultiIndex.from_product([['Offs'], mei_offs.columns]) # add stock type as header
 
-    ##stick everything together
-    feed_budget = pd.concat([grn_mei, dry_mei, poc_mei, nap_mei, res_mei, crop_mei, sup_mei, mei_dams, mei_offs], axis=1)
-
-    ##sum nv axis if option 0
+    ##stick feed stuff together
+    feed_budget = pd.concat([grn_mei, dry_mei, poc_mei, nap_mei, res_mei, crop_mei, sup_mei], axis=1)
+    ###calc propn of mei from each feed source
     if option==0:
+        feed_budget = feed_budget.div(feed_budget.sum(axis=1), axis=0)
+    ###add stock mei requirement
+    feed_budget = pd.concat([feed_budget, mei_sire, mei_dams, mei_offs], axis=1)
+
+    ##sum nv axis if nv_option is 1
+    if nv_option==1:
         feed_budget = feed_budget.groupby(axis=0, level=(0,1,2,3)).sum()
 
-    return feed_budget
+    return feed_budget.astype(float).round(1)
 
 
 ############################
