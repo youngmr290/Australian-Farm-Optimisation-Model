@@ -974,7 +974,7 @@ def f_report(processor, trials, non_exist_trials):
         if report_run.loc['run_drycon', 'Run']:
             #returns consumption in each FP
             type = 'pas'
-            prod = 1000
+            prod = 1
             weights = 'drypas_consumed_qsfdp6zt'
             keys = 'keys_qsfdp6zt'
             arith = 2
@@ -1079,7 +1079,7 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_napcon', 'Run']:
             #returns consumption in each FP
-            prod = 1000
+            prod = 1
             type = 'pas'
             weights = 'nap_consumed_qsfdp6zt'
             keys = 'keys_qsfdp6zt'
@@ -1095,7 +1095,7 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_poccon', 'Run']:
             #returns consumption in each FP
-            prod = 1000
+            prod = 1
             type = 'pas'
             weights = 'poc_consumed_qsfp6lz'
             keys = 'keys_qsfp6lz'
@@ -1261,7 +1261,7 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_dse1_dams, 'dse_mei', df_settings, option=0, colstart=dams_start_col)
         df_settings = rep.f_df2xl(writer, stacked_dse1_offs, 'dse_mei', df_settings, option=0, colstart=offs_start_col)
     if report_run.loc['run_pgr', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_pgr, 'pgr', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_pgr, 'Total pg', df_settings, option=1)
     if report_run.loc['run_grnfoo', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_grnfoo, 'grnfoo', df_settings, option=1)
     if report_run.loc['run_dryfoo', 'Run']:
