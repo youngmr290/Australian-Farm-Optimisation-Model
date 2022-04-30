@@ -440,7 +440,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
                                                         + pgr_grnha_gop6lzt * (1 - grn_senesce_pgrcons_p6zt[:, na, :])
                                                         - foo_endprior_grnha_gop6lzt)
                                                        , (1 - grn_senesce_pgrcons_p6zt[:, na, :])))
-    cons_grnha_t_gop6lzt = removal_grnha_gop6lzt / (1 + i_grn_trampling_ft[:, na, na, :])
+    cons_grnha_gop6lzt = removal_grnha_gop6lzt / (1 + i_grn_trampling_ft[:, na, na, :])
 
     ## green, dmd & md from input values and impact of foo & grazing intensity
     ### sward digestibility is reduced with higher FOO (based on start FOO)
@@ -483,7 +483,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
 
     ###reduce me if nv is above diet requirement
     confinement_inc = np.any(np.logical_not(nv_is_not_confinement_f))
-    me_cons_grnha_fgop6lzt = fsfun.f_effective_mei(cons_grnha_t_gop6lzt, grn_md_grnha_gop6lzt
+    me_cons_grnha_fgop6lzt = fsfun.f_effective_mei(cons_grnha_gop6lzt, grn_md_grnha_gop6lzt
                                                   , me_threshold_fp6zt[:, na, na, :, na, ...], confinement_inc
                                                   , grn_ri_gop6lzt, i_me_eff_gainlose_p6zt[:, na, :, :])
     #apply mask - this masks out any green foo at the end of period in periods when green pas doesn't exist.
@@ -492,11 +492,14 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     me_cons_grnha_fgop6lzt = me_cons_grnha_fgop6lzt * nv_is_not_confinement_f[:, na, na, na, na, na, na]
 
     # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
-    volume_grnha_gop6lzt = cons_grnha_t_gop6lzt / grn_ri_gop6lzt
+    volume_grnha_gop6lzt = cons_grnha_gop6lzt / grn_ri_gop6lzt
     #apply mask - this masks out any green foo at the end of period in periods when green pas doesn't exist.
     volume_grnha_gop6lzt = volume_grnha_gop6lzt * mask_greenfeed_exists_p6zt[:, na,...]
     #me from pasture is 0 in the confinement pool
     volume_grnha_fgop6lzt = volume_grnha_gop6lzt * nv_is_not_confinement_f[:, na, na, na, na, na, na]
+
+    ##convert to tonnes
+    cons_grnha_t_gop6lzt = cons_grnha_gop6lzt/1000
     return (me_cons_grnha_fgop6lzt, volume_grnha_fgop6lzt, foo_start_grnha_op6lzt, foo_end_grnha_gop6lzt
            , senesce_period_grnha_gop6lzt, senesce_eos_grnha_gop6lzt, dmd_sward_end_grnha_gop6lzt, pgr_grnha_gop6lzt
            , foo_endprior_grnha_gop6lzt, cons_grnha_t_gop6lzt, foo_ave_grnha_gop6lzt, dmd_diet_grnha_gop6lzt)
