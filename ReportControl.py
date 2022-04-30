@@ -907,19 +907,22 @@ def f_report(processor, trials, non_exist_trials):
             stacked_grnfoo = rep.f_append_dfs(stacked_grnfoo, grnfoo)
 
         if report_run.loc['run_pgr', 'Run']:
-            #returns foo at end of each FP
+            #returns average pgr per day per ha.
+            #to get total PG change arith to 2 and remove den_weights
             type = 'pas'
             prod = 'pgr_grnha_gop6lzt'
             na_prod = [0,1,2] #q,s,f
             weights = 'greenpas_ha_qsfgop6lzt'
+            den_weights = 'days_p6z'
+            na_denweights = [1,3]
             keys = 'keys_qsfgop6lzt'
-            arith = 2
+            arith = 1
             index =[5]
             cols =[6]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
-            pgr = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
-                                   keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            pgr = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights, den_weights=den_weights,
+                                   na_denweights=na_denweights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             pgr = pd.concat([pgr],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_pgr = rep.f_append_dfs(stacked_pgr, pgr)
 
@@ -956,24 +959,30 @@ def f_report(processor, trials, non_exist_trials):
             stacked_napfoo = rep.f_append_dfs(stacked_napfoo, napfoo)
 
         if report_run.loc['run_grncon', 'Run']:
-            #returns consumption in each FP
+            #returns consumption per ha per day
+            # to get total PG change arith to 2 and remove den_weights
             type = 'pas'
             prod = 'cons_grnha_t_gop6lzt'
             na_prod = [0,1]  # q,s
+            prod_weights = 1000 #to convert to kg/ha/day
             weights = 'greenpas_ha_qsfgop6lzt'
+            den_weights = 'days_p6z'
+            na_denweights = [1,3]
             keys = 'keys_qsfgop6lzt'
-            arith = 2
+            arith = 1
             index =[5]
             cols =[]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
-            grncon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
-                                   keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            grncon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, prod_weights=prod_weights,
+                                    type=type, weights=weights, den_weights=den_weights, na_denweights=na_denweights,
+                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             grncon = pd.concat([grncon],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_grncon = rep.f_append_dfs(stacked_grncon, grncon)
 
         if report_run.loc['run_drycon', 'Run']:
-            #returns consumption in each FP
+            #returns total consumption per day in each FP
+            #todo once this is change to per ha variable then change to report consumption per ha per day (same as grn pas)
             type = 'pas'
             prod = 1
             weights = 'drypas_consumed_qsfdp6zt'
