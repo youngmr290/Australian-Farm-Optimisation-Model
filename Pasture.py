@@ -546,18 +546,14 @@ def f_pasture(params, r_vals, nv):
     ##non seasonal
     params['pasture_area_rt'] = fun.f1_make_pyomo_dict(pasture_rt * 1, arrays_rt)    # times 1 to convert from bool to int e.g. if the phase is pasture then 1ha of pasture is recorded.
 
-    params['p_erosion_p7p6lrzt'] = fun.f1_make_pyomo_dict(erosion_p7p6lrzt, arrays_p7p6lrzt)
-
-    params['p_poc_con_p6lz'] = fun.f1_make_pyomo_dict(poc_con_p6lz, arrays_p6lz)
-
-    params['p_poc_md_fp6z'] = fun.f1_make_pyomo_dict(poc_md_fp6z, arrays_fp6z)
-
     ##create season params
 
     params['p_mask_childz_within_fp'] = fun.f1_make_pyomo_dict(mask_reqwithinz8_p6z8 * 1, arrays_p6z8)
     params['p_mask_childz_between_fp'] = fun.f1_make_pyomo_dict(mask_reqbetweenz8_p6z8 * 1, arrays_p6z8)
     params['p_parentz_provwithin_fp'] = fun.f1_make_pyomo_dict(mask_provwithinz8z9_p6z8z9 * 1, arrays_p6z8z9)
     params['p_parentz_provbetween_fp'] = fun.f1_make_pyomo_dict(mask_provbetweenz8z9_p6z8z9 * 1, arrays_p6z8z9)
+
+    params['p_erosion_p7p6lrzt'] = fun.f1_make_pyomo_dict(erosion_p7p6lrzt, arrays_p7p6lrzt)
 
     params['p_harvest_period_prop'] = harvest_period_prop.stack().to_dict()
 
@@ -592,6 +588,11 @@ def f_pasture(params, r_vals, nv):
 
     params['p_poc_vol_fp6z'] = fun.f1_make_pyomo_dict(poc_vol_fp6z, arrays_fp6z)
 
+    params['p_poc_con_p6lz'] = fun.f1_make_pyomo_dict(poc_con_p6lz, arrays_p6lz)
+
+    params['p_poc_md_fp6z'] = fun.f1_make_pyomo_dict(poc_md_fp6z, arrays_fp6z)
+
+
     ###########
     #report   #
     ###########
@@ -617,11 +618,14 @@ def f_pasture(params, r_vals, nv):
     fun.f1_make_r_val(r_vals,pgr_grnha_gop6lzt,'pgr_grnha_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
     fun.f1_make_r_val(r_vals,foo_endprior_grnha_gop6lzt,'foo_end_grnha_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)#Green FOO prior to eos senescence
     fun.f1_make_r_val(r_vals,cons_grnha_t_gop6lzt,'cons_grnha_t_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,me_cons_grnha_fgop6lzt,'me_cons_grnha_fgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
     fun.f1_make_r_val(r_vals,fun.f_divide(me_cons_grnha_fgop6lzt, volume_grnha_fgop6lzt),'nv_grnha_fgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
     fun.f1_make_r_val(r_vals,fun.f_divide(dry_mecons_t_fdp6zt, dry_volume_t_fdp6zt),'nv_dry_fdp6zt',mask_fp_z8var_p6zt,z_pos=-2)
     fun.f1_make_r_val(r_vals,foo_ave_grnha_gop6lzt,'foo_ave_grnha_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
     fun.f1_make_r_val(r_vals,dmd_diet_grnha_gop6lzt,'dmd_diet_grnha_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
     fun.f1_make_r_val(r_vals,dry_foo_dp6zt,'dry_foo_dp6zt',mask_fp_z8var_p6zt,z_pos=-2)
     fun.f1_make_r_val(r_vals,dry_dmd_dp6zt,'dry_dmd_dp6zt',mask_fp_z8var_p6zt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,dry_mecons_t_fdp6zt,'dry_mecons_t_fdp6zt',mask_fp_z8var_p6zt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,poc_md_fp6z,'poc_md_fp6z',mask_fp_z8var_p6z,z_pos=-1)
 
 

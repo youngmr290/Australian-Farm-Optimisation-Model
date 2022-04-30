@@ -270,7 +270,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     index_b0xyg = fun.f_expand(np.arange(len_b0), b0_pos)
     index_b1nwzida0e0b0xyg = fun.f_expand(np.arange(len_b1), b1_pos)
     index_l = np.arange(sinp.stock['i_len_l']) #gbal
-    index_s = np.arange(sinp.stock['i_len_s']) #scan
+    index_sc = np.arange(sinp.stock['i_len_s']) #scan
     index_d = np.arange(len_d)
     index_da0e0b0xyg = fun.f_expand(index_d, d_pos)
     index_e = np.arange(np.max(pinp.sheep['i_join_cycles_ig1']))
@@ -578,6 +578,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                            condition3=mask_x, axis3=x_pos)
     mask_shear_g3 = np.max(date_shear_sida0e0b0xyg3<=offs_date_end_p[-1], axis=tuple(range(i_pos, 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3[mask_shear_g3]
+    len_s3 = np.count_nonzero(mask_shear_g3)
 
     ##if generating for stubble then overwrite some of these inputs to match the stubble trial
     if stubble:
@@ -5877,7 +5878,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     gbal_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(gbal_management_pa1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,0)
     scan_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(scan_management_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1,0)
     a_k2cluster_va1e1b1nwzida0e0b0xyg1 = np.sum(a_ppk2g1_va1e1b1nwzida0e0b0xygsl * (gbal_va1e1b1nwzida0e0b0xyg1[...,na,na] == index_l)
-                                                * (scan_va1e1b1nwzida0e0b0xyg1[...,na,na]==index_s[:,na]), axis = (-1,-2))
+                                                * (scan_va1e1b1nwzida0e0b0xyg1[...,na,na]==index_sc[:,na]), axis = (-1,-2))
     a_k2cluster_va1e1b1nwzida0e0b0xyg1 = a_k2cluster_va1e1b1nwzida0e0b0xyg1 + (len(sinp.stock['a_nfoet_b1'])
                                                                                * index_e1b1nwzida0e0b0xyg
                                                                                * (scan_va1e1b1nwzida0e0b0xyg1 == 4)
@@ -5898,7 +5899,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ### d cluster - to change this cluster definition len_k3 needs to change (which can be done by changing k3_idx).
     a_k3cluster_da0e0b0xyg3 = fun.f_expand(np.minimum(len_k3-1, index_d), d_pos)
     ###b0 and e0 cluster
-    a_k5cluster_da0e0b0xyg3 = np.sum(a_k5cluster_b0xygls * (gbal_da0e0b0xyg3[...,na,na]==index_l[:,na]) * (scan_da0e0b0xyg3[...,na,na]==index_s), axis = (-1,-2))
+    a_k5cluster_da0e0b0xyg3 = np.sum(a_k5cluster_b0xygls * (gbal_da0e0b0xyg3[...,na,na]==index_l[:,na]) * (scan_da0e0b0xyg3[...,na,na]==index_sc), axis = (-1,-2))
     a_k5cluster_da0e0b0xyg3 = a_k5cluster_da0e0b0xyg3 + (len_b0 * index_e0b0xyg * (scan_da0e0b0xyg3 == 4)) #If scanning for foetal age add 6 to the animals in the second & subsequent cycles. 6 is the number of slices in the b0 axes
     len_k5 = np.max(a_k5cluster_da0e0b0xyg3)+1  #Added +1 because python starts at 0.
     index_k5tva1e1b1nwzida0e0b0xyg3 = fun.f_expand(np.arange(len_k5), k5_pos)
@@ -6984,7 +6985,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #big reports #
     ##############
     ##mortality - at the start of each dvp mortality is 0. it accumulates over the dvp. This is its own report as well as used in on_hand_mort.
-    if pinp.rep['i_store_on_hand_mort'] or pinp.rep['i_store_mort']:
+    if sinp.rep['i_store_on_hand_mort'] or sinp.rep['i_store_mort']:
         ###get the cumulative mort for periods in each dvp
         r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg1 = sfun.f1_cum_sum_dvp(o_mortality_dams, a_v_pa1e1b1nwzida0e0b0xyg1)
         r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg3 = sfun.f1_cum_sum_dvp(o_mortality_offs, a_v_pa1e1b1nwzida0e0b0xyg3)
@@ -6998,7 +6999,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##on hand mort- this is used for numbers_p report so that the report can have a p axis to increase numbers detail.
     ##              accounts for mortality as well as on hand.
-    if pinp.rep['i_store_on_hand_mort']:
+    if sinp.rep['i_store_on_hand_mort']:
         ###add v axis and adjust for onhand
         r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1 = r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (
                                                   a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
@@ -7023,7 +7024,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         r_on_hand_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3[r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3==0] = 0 #if mort is 0 the animal is not on hand
 
     ###lw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesn't effect lw
-    if pinp.rep['i_store_lw_rep']:
+    if sinp.rep['i_store_lw_rep']:
         r_lw_sire_tpsire = o_lw_tpsire
         r_lw_dams_k2Tvpdams = (o_lw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                                * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
@@ -7032,7 +7033,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
 
     ##ffcfw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesn't effect ffcfw
-    if pinp.rep['i_store_ffcfw_rep']:
+    if sinp.rep['i_store_ffcfw_rep']:
         r_ffcfw_sire_tpsire = o_ffcfw_tpsire
         r_ffcfw_dams_k2Tvpdams = (o_ffcfw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                                * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
@@ -7046,7 +7047,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
 
     ##NV - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't effect NV
-    if pinp.rep['i_store_nv_rep']:
+    if sinp.rep['i_store_nv_rep']:
         r_nv_sire_pg = nv_tpsire
         r_nv_dams_k2Tvpg = (nv_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
@@ -7679,6 +7680,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     keys_e0 = ['e%s'%i for i in range(len_e0)]
     keys_b0 = sinp.stock['i_btrt_idx_offs']
     keys_b9 = sinp.stock['i_lsln_idx_dams'][1:5]
+    keys_o = np.array(['o%s'%i for i in range(len_o)])
+    keys_s3 = np.array(['s%s'%i for i in range(len_s3)])
     keys_p = np.array(['p%s'%i for i in range(len_p)])
     keys_p3 = keys_p[mask_p_offs_p]
 
@@ -7700,6 +7703,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvpaebnwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2p6ftvanwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_o, keys_a, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2p6ftvoanwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_T1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_Tpaebnwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
@@ -7724,6 +7729,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                             , keys_i, keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tvpnwzidaebxyg3')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3
                                             , keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5p6ftvnwziaxyg3')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_s3, keys_n3
+                                            , keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5p6ftvsnwziaxyg3')
     fun.f1_make_r_val(r_vals,[keys_T3, keys_p3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0
                                             , keys_x, keys_y3, keys_g3],'offs_keys_Tpnwzidaebxyg3')
 
@@ -7771,6 +7778,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     p6fzg0_shape = len_p6, len_f, len_z, len_g0
     k2p6ftva1nwziyg1_shape = len_k2, len_p6, len_f, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5p6ftvnwziaxyg3_shape = len_k3, len_k5, len_p6, len_f, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
+
+    ####p6fv0
+    k2p6ftvoa1nwziyg1_shape = len_k2, len_p6, len_f, len_t1, len_v1, len_o, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    k3k5p6ftvsnwziaxyg3_shape = len_k3, len_k5, len_p6, len_f, len_t3, len_v3, len_s3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####cg
     p7zg0_shape = len_p7, len_z, len_g0
@@ -7854,10 +7865,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fun.f1_make_r_val(r_vals,r_fd_hd_k2tva1e1b1nwzida0e0b0xyg1,'fd_hd_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals,r_fd_hd_k3k5tva1e1b1nwzida0e0b0xyg3,'fd_hd_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
 
-    ###mei and pi and NV (nutritive value)
+    ###mei and pi
     fun.f1_make_r_val(r_vals,mei_p6ftva1e1b1nwzida0e0b0xyg0,'mei_sire_p6fzg0',mask_fp_z8var_p6tva1e1b1nwzida0e0b0xyg[:,na,...],z_pos, p6fzg0_shape)
     fun.f1_make_r_val(r_vals,mei_k2p6ftva1e1b1nwzida0e0b0xyg1,'mei_dams_k2p6ftva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],z_pos, k2p6ftva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals,mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3,'mei_offs_k3k5p6ftvnw8ziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],z_pos, k3k5p6ftvnwziaxyg3_shape)
+
+    if sinp.rep['i_store_feedbud']:
+        index_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(np.arange(len_o), p_pos)
+        index_sa1e1b1nwzida0e0b0xyg3 = fun.f_expand(np.arange(len_s3), p_pos)
+        a_s_v_k3k5tvsa1e1b1nwzida0e0b0xyg3 = (np.sum((a_prev_s_va1e1b1nwzida0e0b0xyg3[:,na,...]==index_sa1e1b1nwzida0e0b0xyg3)
+                * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]),
+                axis=d_pos, keepdims=True) > 0)
+        r_mei_k2p6ftvoa1e1b1nwzida0e0b0xyg1 = mei_k2p6ftva1e1b1nwzida0e0b0xyg1[:,:,:,:,:,na,...] * (a_prev_o_va1e1b1nwzida0e0b0xyg1[:,na,:,0:1,...]==index_oa1e1b1nwzida0e0b0xyg1) #take e[o]
+        r_mei_k3k5p6ftvsa1e1b1nwzida0e0b0xyg3 = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3[:,:,:,:,:,:,na,...] * a_s_v_k3k5tvsa1e1b1nwzida0e0b0xyg3[:,:,na,na,...]
+        fun.f1_make_r_val(r_vals,r_mei_k2p6ftvoa1e1b1nwzida0e0b0xyg1,'mei_dams_k2p6ftvoa1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,:,:,na,...],z_pos, k2p6ftvoa1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_mei_k3k5p6ftvsa1e1b1nwzida0e0b0xyg3,'mei_offs_k3k5p6ftvsnw8ziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,:,:,na,...],z_pos, k3k5p6ftvsnwziaxyg3_shape)
 
     fun.f1_make_r_val(r_vals,pi_p6ftva1e1b1nwzida0e0b0xyg0,'pi_sire_p6fzg0',mask_fp_z8var_p6tva1e1b1nwzida0e0b0xyg[:,na,...],z_pos, p6fzg0_shape)
     fun.f1_make_r_val(r_vals,pi_k2p6ftva1e1b1nwzida0e0b0xyg1,'pi_dams_k2p6ftva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],z_pos, k2p6ftva1nwziyg1_shape)
@@ -7885,18 +7907,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fun.f1_make_r_val(r_vals,nfoet_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1)),'mask_b1b9_preg_b1nwziygb9')
 
     ###mort - uses b axis instead of k for extra detail when scan=0
-    if pinp.rep['i_store_mort']:
+    if sinp.rep['i_store_mort']:
         ####note t axis will be singleton if generator was not run with t axis.
         fun.f1_make_r_val(r_vals,r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg1.squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos)),'mort_Tpa1e1b1nwziyg1') #no unclustering because this wasn't masked by z8
         fun.f1_make_r_val(r_vals,r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg3.squeeze(axis=(a1_pos, e1_pos, b1_pos)),'mort_Tpnwzida0e0b0xyg3') #no unclustering because this wasn't masked by z8
 
     ###on hand mort - proportion of each sheep remaining in each period after accounting for mort
-    if pinp.rep['i_store_on_hand_mort']:
+    if sinp.rep['i_store_on_hand_mort']:
         fun.f1_make_r_val(r_vals,r_on_hand_mort_k2tvpa1e1b1nwzida0e0b0xyg1,'on_hand_mort_k2tvpa1nwziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2tvpa1nwziyg1_shape)
         fun.f1_make_r_val(r_vals,r_on_hand_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3,'on_hand_mort_k3k5tvpnwziaxyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5tvpnwziaxyg3_shape)
 
     ###numbers weights for reports with arrays that keep axis that are not present in lp array.
-    if pinp.rep['i_store_lw_rep'] or pinp.rep['i_store_ffcfw_rep'] or pinp.rep['i_store_nv_rep']:
+    if sinp.rep['i_store_lw_rep'] or sinp.rep['i_store_ffcfw_rep'] or sinp.rep['i_store_nv_rep']:
 
         ###weights the denominator and numerator - required for reports when p, e and b are added and weighted average is taken (otherwise broadcasting the variable activity to the new axis causes error in result)
         ###If these arrays get too big might have to add a second denom weight in reporting.
@@ -7930,13 +7952,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         fun.f1_make_r_val(r_vals,de0b0_denom_weights_prog_k3k5tw8zida0e0b0xyg2,'de0b0_denom_weights_prog_k3k5tw8zida0e0b0xyg2') #no mask because p axis to mask
 
     ###lw - with p, e, b
-    if pinp.rep['i_store_lw_rep']:
+    if sinp.rep['i_store_lw_rep']:
         fun.f1_make_r_val(r_vals,r_lw_sire_tpsire,'lw_sire_pzg0',shape=pzg0_shape) #no v axis to mask
         fun.f1_make_r_val(r_vals,r_lw_dams_k2Tvpdams,'lw_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
         fun.f1_make_r_val(r_vals,r_lw_offs_k3k5Tvpoffs,'lw_offs_k3k5vpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
 
     ###ffcfw - with p, e, b
-    if pinp.rep['i_store_ffcfw_rep']:
+    if sinp.rep['i_store_ffcfw_rep']:
         fun.f1_make_r_val(r_vals,r_ffcfw_sire_tpsire,'ffcfw_sire_pzg0',shape=pzg0_shape) #no v axis to mask
         fun.f1_make_r_val(r_vals,r_ffcfw_dams_k2Tvpdams,'ffcfw_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
         fun.f1_make_r_val(r_vals,r_ffcfw_yatf_k2Tvpyatf,'ffcfw_yatf_k2Tvpa1e1b1nw8zixyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwzixyg1_shape)
@@ -7944,7 +7966,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         fun.f1_make_r_val(r_vals,r_ffcfw_offs_k3k5Tvpoffs,'ffcfw_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
 
     ###NV - with p, e, b
-    if pinp.rep['i_store_nv_rep']:
+    if sinp.rep['i_store_nv_rep']:
         fun.f1_make_r_val(r_vals,r_nv_sire_pg,'nv_sire_pzg0',shape=pzg0_shape) #no v axis to mask
         fun.f1_make_r_val(r_vals,r_nv_dams_k2Tvpg,'nv_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
         fun.f1_make_r_val(r_vals,r_nv_offs_k3k5Tvpg,'nv_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)

@@ -225,6 +225,7 @@ sav_inp['lw_inc'] = '-'     #SA to store LW report values
 sav_inp['ffcfw_inc'] = '-'  #SA to store FFCFW report values
 sav_inp['onhand_mort_p_inc'] = '-'  #SA to store onhand report values
 sav_inp['mort_inc'] = '-'  #SA to store mort report values
+sav_inp['feedbud_inc'] = '-'  #SA to store feed budget report values
 sav_inp['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared
 sav_inp['eqn_used_g0_q1p7'] = np.full(uinp.sheep['i_eqn_used_g0_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
 sav_inp['eqn_used_g1_q1p7'] = np.full(uinp.sheep['i_eqn_used_g1_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use

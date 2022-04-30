@@ -206,7 +206,7 @@ def f_sup_cost(r_vals):
     return total_sup_cost_p7zp6k, total_sup_wc_c0p7zp6k, storage_dep_p7p6zk, storage_asset_p7p6zk
 
 
-def f_sup_md_vol():
+def f_sup_md_vol(r_vals):
     '''
     M/D and DM content of each supplement are known inputs.
     Unlike stubble and pasture, the quantity of supplementary feed consumed (the decision variables)
@@ -265,6 +265,9 @@ def f_sup_md_vol():
     index = pd.MultiIndex.from_product([sup_md_vol.columns, keys_p6, keys_z])
     vol_tonne_kp6z = pd.Series(vol_tonne_kp6z.ravel(), index=index)
     md_tonne_kp6z = pd.Series(md_tonne_kp6z.ravel(), index=index)
+
+    ##store r_vals
+    r_vals['md_tonne_kp6z'] = md_tonne_kp6z
 
     return vol_tonne_kp6z, md_tonne_kp6z
     
@@ -405,7 +408,7 @@ def f1_sup_s2_ks2(r_vals):
 ##collates all the params
 def f_sup_params(params,r_vals):
     total_sup_cost, total_sup_wc, storage_dep, storage_asset = f_sup_cost(r_vals)
-    vol_tonne, md_tonne = f_sup_md_vol()
+    vol_tonne, md_tonne = f_sup_md_vol(r_vals)
     sup_labour = f_sup_labour()
     buy_grain_price, buy_grain_wc, buy_grain_prov_p7z = f_buy_grain_price(r_vals)
     a_p6_p7 = f1_a_p6_p7()

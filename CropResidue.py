@@ -299,6 +299,7 @@ def crop_residue_all(params, r_vals, nv):
     ######################
     ##mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(fp_start_p6z, z_pos=-1, mask=True)
+    mask_fp_z8var_zp6 = mask_fp_z8var_p6z.T
 
     ##apply mask
     cons_propn_p6zk = cons_propn_p6zk * mask_fp_z8var_p6z[...,na]
@@ -374,10 +375,7 @@ def crop_residue_all(params, r_vals, nv):
     fun.f1_make_r_val(r_vals,keys_s1,'keys_s1')
     fun.f1_make_r_val(r_vals,keys_s2,'keys_s2')
 
-    ##maskz8 used to uncluster lp_vars
-    fun.f1_make_r_val(r_vals,mask_fp_z8var_p6z,'mask_fp_z8var_p6z')
-
     ##store report vals
-    fun.f1_make_r_val(r_vals,md_fp6zks1,'md_zp6fks1',mask_fp_z8var_p6z[:,:,na,na],z_pos=-3)
+    fun.f1_make_r_val(r_vals,np.moveaxis(np.moveaxis(md_fp6zks1, 0, 2), 0, 1),'md_zp6fks1',mask_fp_z8var_zp6[:,:,na,na,na],z_pos=0)
 
 

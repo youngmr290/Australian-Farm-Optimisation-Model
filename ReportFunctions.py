@@ -323,7 +323,7 @@ def f_summary(lp_vars, r_vals, trial):
     ##pasture %
     summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=4)
     ##supplement
-    summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=3)
+    summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=4)
     return summary_df
 
 
@@ -479,6 +479,7 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
             #. return dict with sup cost
             #. return total supplement fed in each feed period
             #. return total of each grain supplement fed in each feed period in each season
+            #. return total of each grain supplement fed in each feed period for each feed pool in each season
             #. return total sup fed (weighted by season prob)
 
     '''
@@ -498,6 +499,10 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         return grain_fed_qszkp6
 
     if option == 3:
+        grain_fed_qszkfp6 = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 3, 5, 6)).sum()  # sum grain pool
+        return grain_fed_qszkfp6
+
+    if option == 4:
         keys_q = r_vals['zgen']['keys_q']
         keys_s = r_vals['zgen']['keys_s']
         keys_z = r_vals['zgen']['keys_z']
@@ -749,9 +754,9 @@ def f_feed_reshape(lp_vars, r_vals):
     ##dict to store reshaped pasture stuff in
     feed_vars = {}
 
-    # store keys - must be in axis order
+    ##store keys - must be in axis order
+    ###pasture
     feed_vars['keys_qsfgop6lzt'] = [keys_q, keys_s, keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
-    feed_vars['keys_qszp6fks1s2'] = [keys_q, keys_s, keys_z, keys_p6, keys_f, keys_k1, keys_s1, keys_s2]
     feed_vars['keys_fgop6lzt'] = [keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
     feed_vars['keys_gop6lzt'] = [keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
     feed_vars['keys_qsfdp6zt'] = [keys_q, keys_s, keys_f, keys_d, keys_p6, keys_z, keys_t]
@@ -759,6 +764,10 @@ def f_feed_reshape(lp_vars, r_vals):
     feed_vars['keys_qsdp6zt'] = [keys_q, keys_s, keys_d, keys_p6, keys_z, keys_t]
     feed_vars['keys_dp6zt'] = [keys_d, keys_p6, keys_z, keys_t]
     feed_vars['keys_qsfp6lz'] = [keys_q, keys_s, keys_f, keys_p6, keys_l, keys_z]
+    ###crop residue
+    feed_vars['keys_qszp6fks1s2'] = [keys_q, keys_s, keys_z, keys_p6, keys_f, keys_k1, keys_s1, keys_s2]
+    ###crop grazing
+    feed_vars['keys_qsfkp6p5zl'] = [keys_q, keys_s, keys_f, keys_k1, keys_p6, keys_p5, keys_z, keys_l]
 
     ##shapes
     ###pasture
@@ -768,6 +777,8 @@ def f_feed_reshape(lp_vars, r_vals):
     qsfp6lz = len_q, len_s, len_f, len_p6, len_l, len_z
     ###residue
     qszp6fks1s2 = len_q, len_s, len_z, len_p6, len_f, len_k1, len_s1, len_s2
+    ###crop graze
+    qsfkp6p5zl = len_q, len_s, len_f, len_k1, len_p6, len_p5, len_z, len_l
 
     ##reshape z8 mask to uncluster
     maskz8_p6z = r_vals['pas']['mask_fp_z8var_p6z']
@@ -793,6 +804,10 @@ def f_feed_reshape(lp_vars, r_vals):
     ##crop residue
     ###stubble consumed
     feed_vars['stub_qszp6fks1s2'] = f_vars2np(lp_vars, 'v_stub_con', qszp6fks1s2, maskz8_zp6[:,:,na,na,na,na], z_pos=-6)
+
+    ##crop grazing
+    ###crop consumed
+    feed_vars['crop_consumed_qsfkp6p5zl'] = f_vars2np(lp_vars, 'v_tonnes_crop_consumed', qsfkp6p5zl, maskz8_p6nazna, z_pos=-2)
 
 
     return feed_vars
@@ -1438,6 +1453,156 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
     percentage = f_numpy2df(percentage, keys_sliced, index, cols)
     return percentage
 
+def f_feed_budget(lp_vars, r_vals, option=0, dams_cols=[], offs_cols=[]):
+    '''
+    Feed budget: stock mei requirement and feed mei supply.
+
+    Reported axes for stock can vary.
+
+    :param lp_vars: dict: results from pyomo
+    :param r_vals: dict: report variable
+    :key option (optional, default = 0): int:
+            option 0: NV pool summed (not active)
+            option 1: Active NV pool
+    :key dams_cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
+    :key offs_cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
+    :return: pandas df
+    '''
+    ##mei supply
+    ###grn pasture
+    type = 'pas'
+    prod = 'me_cons_grnha_fgop6lzt'
+    na_prod = [0, 1]  # q,s
+    weights = 'greenpas_ha_qsfgop6lzt'
+    keys = 'keys_qsfgop6lzt'
+    arith = 2
+    index = [0,1,7,5,2] #[q,s,z,p6,nv]
+    cols = []
+    grn_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                         keys=keys, arith=arith, index=index, cols=cols)
+    grn_mei.columns = ['Grn Pas'] # add feed type as header
+
+    ###poc pasture
+    type = 'pas'
+    prod = 'poc_md_fp6z'
+    na_prod = [0, 1, 4]  # q,s,l
+    weights = 'poc_consumed_qsfp6lz'
+    keys = 'keys_qsfp6lz'
+    arith = 2
+    index = [0,1,5,3,2] #[q,s,z,p6,nv]
+    cols = []
+    poc_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                         keys=keys, arith=arith, index=index, cols=cols)
+    poc_mei.columns = ['POC'] # add feed type as header
+
+    ###dry pasture
+    type = 'pas'
+    prod = 'dry_mecons_t_fdp6zt'
+    na_prod = [0, 1]  # q,s
+    weights = 'drypas_consumed_qsfdp6zt'
+    keys = 'keys_qsfdp6zt'
+    arith = 2
+    index = [0,1,5,4,2] #[q,s,z,p6,nv]
+    cols = []
+    dry_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                         keys=keys, arith=arith, index=index, cols=cols)
+    dry_mei.columns = ['Dry Pas'] # add feed type as header
+
+    ###nap pasture
+    type = 'pas'
+    prod = 'dry_mecons_t_fdp6zt' #nap is same md as dry pasture
+    na_prod = [0, 1]  # q,s
+    weights = 'nap_consumed_qsfdp6zt'
+    keys = 'keys_qsfdp6zt'
+    arith = 2
+    index = [0,1,5,4,2] #[q,s,z,p6,nv]
+    cols = []
+    nap_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                         keys=keys, arith=arith, index=index, cols=cols)
+    nap_mei.columns = ['NAP Pas'] # add feed type as header
+
+    ###residue
+    prod = 'md_zp6fks1'
+    na_prod = [0, 1, 7]  # q,s, s2
+    type = 'stub'
+    weights = 'stub_qszp6fks1s2'
+    keys = 'keys_qszp6fks1s2'
+    arith = 2
+    index = [0, 1, 2, 3, 4]  # q,s,z,p6,nv
+    cols = []
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    res_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    res_mei.columns = ['Residue'] # add feed type as header
+
+    ###crop graze
+    prod = 'crop_md_fkp6p5zl'
+    na_prod = [0, 1]  # q,s
+    type = 'crpgrz'
+    weights = 'crop_consumed_qsfkp6p5zl'
+    keys = 'keys_qsfkp6p5zl'
+    arith = 2
+    index = [0, 1, 6, 4, 2]  # q,s,z,p6,nv
+    cols = []
+    crop_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols)
+    crop_mei.columns = ['Crop Graze'] # add feed type as header
+
+    ###sup
+    sup_md_tonne_kp6z = r_vals['sup']['md_tonne_kp6z']
+    grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
+    sup_mei_qsf_kp6z = grain_fed_qszkfp6.unstack([3,5,2]).mul(sup_md_tonne_kp6z, axis=1)
+    sup_mei_qszp6f = sup_mei_qsf_kp6z.unstack().stack([2,1,3]).sum(axis=1)
+    sup_mei = pd.DataFrame(sup_mei_qszp6f, columns=['Supp']) # add feed type as header
+
+    ##stock mei requirement
+    ###dams
+    type = 'stock'
+    prod = 'mei_dams_k2p6ftvoa1nw8ziyg1'
+    na_prod = [0, 1]  # q,s
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    na_weights = [3, 4, 7] #p6, f, o
+    den_weights = 'stock_days_k2p6ftva1nwziyg1'
+    na_denweights = [0, 1, 7]  # q,s, o
+    keys = 'dams_keys_qsk2p6ftvoanwziy1g1'
+    arith = 2
+    index = [0, 1, 11, 3, 4]  # [q,s,z,p6,nv]
+    cols = dams_cols
+    mei_dams = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod,
+                                                 weights=weights,
+                                                 na_weights=na_weights, den_weights=den_weights,
+                                                 na_denweights=na_denweights, keys=keys, arith=arith,
+                                                 index=index, cols=cols)
+    mei_dams.columns = pd.MultiIndex.from_product([['Dams'], mei_dams.columns]) # add stock type as header
+
+    ###offs
+    type = 'stock'
+    prod = 'mei_offs_k3k5p6ftvsnw8ziaxyg3'
+    na_prod = [0, 1]  # q,s
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = [4, 5, 8] #p6, f, shear
+    den_weights = 'stock_days_k3k5p6ftvnwziaxyg3'
+    na_denweights = [0, 1, 8]  # q,s, shear
+    keys = 'offs_keys_qsk3k5p6ftvsnwziaxyg3'
+    arith = 2
+    index = [0, 1, 11, 4, 5]  # [q,s,z,p6,nv]
+    cols = offs_cols
+    mei_offs = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod,
+                                                 weights=weights,
+                                                 na_weights=na_weights, den_weights=den_weights,
+                                                 na_denweights=na_denweights, keys=keys, arith=arith,
+                                                 index=index, cols=cols)
+    mei_offs.columns = pd.MultiIndex.from_product([['Offs'], mei_offs.columns]) # add stock type as header
+
+    ##stick everything together
+    feed_budget = pd.concat([grn_mei, dry_mei, poc_mei, nap_mei, res_mei, crop_mei, sup_mei, mei_dams, mei_offs], axis=1)
+
+    ##sum nv axis if option 0
+    if option==0:
+        feed_budget = feed_budget.groupby(axis=0, level=(0,1,2,3)).sum()
+
+    return feed_budget
 
 
 ############################
@@ -1524,7 +1689,7 @@ def f_arith(prod, prod_weights, weight, den_weights, arith, axis):
     option 0: return production param averaged across all axis that are not reported.
     option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
     option 2: weighted total production summed across all axis that are not reported.
-    option 3: weighted total production for each  (axis not reported are disregarded)
+    option 3: weighted total production for each axis  (axis not reported are disregarded)
     option 4: return weighted average of production param using prod>0 as the weights
     option 5: return the maximum value across all axis that are not reported.
 

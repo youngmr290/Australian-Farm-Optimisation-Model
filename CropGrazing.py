@@ -243,7 +243,7 @@ def f_cropgraze_DM(total_DM=False):
 
 
 
-def crop_md_vol(nv):
+def crop_md_vol(nv, r_vals):
     '''
     Energy provided and volume required from 1t of crop grazing.
 
@@ -303,6 +303,9 @@ def crop_md_vol(nv):
     crop_md_fkp6p5zl = crop_md_fkp6p5zl * mask_fp_z8var_p6z[:,na,:,na] * grazing_exists_p6p5z[...,na]
     crop_vol_fkp6p5zl = crop_vol_fkp6p5zl * mask_fp_z8var_p6z[:,na,:,na] * grazing_exists_p6p5z[...,na]
 
+    ##store report vals
+    fun.f1_make_r_val(r_vals,crop_md_fkp6p5zl,'crop_md_fkp6p5zl',mask_fp_z8var_p6z[:,na,:,na],z_pos=-2)
+
     return crop_md_fkp6p5zl, crop_vol_fkp6p5zl
 
 def f_cropgraze_biomass_penalty():
@@ -348,7 +351,7 @@ def f1_cropgraze_params(params, r_vals, nv):
     # grazecrop_area_rkl = f_graze_crop_area()
     crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z = f_cropgraze_DM()
     biomass_reduction_propn_kp6z = f_cropgraze_biomass_penalty()
-    crop_md_fkp6p5zl, crop_vol_fkp6p5zl = crop_md_vol(nv)
+    crop_md_fkp6p5zl, crop_vol_fkp6p5zl = crop_md_vol(nv, r_vals)
     # DM_reduction_kp6p5zl = f_DM_reduction_seeding_time()
 
     ##keys
@@ -371,7 +374,6 @@ def f1_cropgraze_params(params, r_vals, nv):
     arrays_p6p5z = [keys_p6, keys_p5, keys_z]
     ###mei & pi
     arrays_fkp6p5zl = [keys_f, keys_k, keys_p6, keys_p5, keys_z, keys_l]
-
 
     ##create params
     params['crop_DM_provided_kp6p5z8lz9'] = fun.f1_make_pyomo_dict(crop_DM_provided_kp6p5z8lz9, arrays_kp6p5z8lz9)

@@ -56,6 +56,9 @@ if inputs_from_pickle == False:
         structuralsa_inp = fun.xl_all_named_ranges(structural_xl_path,'StructuralSA',numpy=True)
         pkl.dump(structuralsa_inp,f,protocol=pkl.HIGHEST_PROTOCOL)
 
+        rep_inp = fun.xl_all_named_ranges(structural_xl_path,"Report Settings")
+        pkl.dump(rep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
+
 ##else the inputs are read in from the pickle file
 ##note this must be in the same order as above
 else:
@@ -63,6 +66,7 @@ else:
         general_inp = pkl.load(f)
         stock_inp = pkl.load(f)
         structuralsa_inp = pkl.load(f)
+        rep_inp = pkl.load(f)
 
 print('- finished')
 
@@ -93,6 +97,7 @@ stock_inp['ia_k2_mlsb1'] = np.reshape(stock_inp['ia_k2_mlsb1'],mlsb1)
 general = copy.deepcopy(general_inp)
 stock = copy.deepcopy(stock_inp)
 structuralsa = copy.deepcopy(structuralsa_inp)
+rep = copy.deepcopy(rep_inp)
 
 
 #######################
@@ -113,6 +118,7 @@ def f_structural_inp_sa():
 
     ##reset inputs to base at the start of each trial before applying SA  - old method was to update the SA based on the _inp dict but that doesn't work well when multiple SA on the same variale.
     fun.f_dict_reset(structuralsa, structuralsa_inp)
+    fun.f_dict_reset(rep, rep_inp)
 
 
     ##SAV
@@ -135,6 +141,16 @@ def f_structural_inp_sa():
     structuralsa['i_fs_use_pkl'] = fun.f_sa(structuralsa['i_fs_use_pkl'], sen.sav['fs_use_pkl'],5)
     structuralsa['i_fs_use_number'] = fun.f_sa(structuralsa['i_fs_use_number'], sen.sav['fs_use_number'],5)
     structuralsa['i_r2adjust_inc'] = fun.f_sa(structuralsa['i_r2adjust_inc'], sen.sav['r2adjust_inc'],5)
+
+    ##report controls
+    ###SAV
+    rep['i_store_nv_rep'] = fun.f_sa(rep['i_store_nv_rep'], sen.sav['nv_inc'], 5)
+    rep['i_store_lw_rep'] = fun.f_sa(rep['i_store_lw_rep'], sen.sav['lw_inc'], 5)
+    rep['i_store_ffcfw_rep'] = fun.f_sa(rep['i_store_ffcfw_rep'], sen.sav['ffcfw_inc'], 5)
+    rep['i_store_on_hand_mort'] = fun.f_sa(rep['i_store_on_hand_mort'], sen.sav['onhand_mort_p_inc'], 5)
+    rep['i_store_mort'] = fun.f_sa(rep['i_store_mort'], sen.sav['mort_inc'], 5)
+    rep['i_store_feedbud'] = fun.f_sa(rep['i_store_feedbud'], sen.sav['feedbud_inc'], 5)
+
 
 ##############################
 # handle inputs with p6 axis #

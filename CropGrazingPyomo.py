@@ -35,8 +35,8 @@ def f1_cropgrazepyomo_local(params,model):
         # model.v_grazecrop_ha = pe.Var(model.s_season_periods, model.s_crops, model.s_season_types, model.s_lmus, bounds=(0,None),
         #                               doc='hectares of crop grazed')
 
-        model.v_tonnes_crop_consumed = pe.Var(model.s_sequence_year, model.s_sequence, model.s_feed_pools, model.s_crops, model.s_lmus,
-                                              model.s_feed_periods, model.s_labperiods, model.s_season_types, bounds=(0,None),
+        model.v_tonnes_crop_consumed = pe.Var(model.s_sequence_year, model.s_sequence, model.s_feed_pools, model.s_crops, model.s_feed_periods,
+                                              model.s_labperiods, model.s_season_types,  model.s_lmus,bounds=(0,None),
                                               doc='tonnes of crop consumed by livestock in a p6 that was sown in a p5 (p5 axis tracks when the crop being grazed was sown)')
 
         model.v_tonnes_crop_transfer = pe.Var(model.s_sequence_year, model.s_sequence, model.s_crops, model.s_lmus, model.s_feed_periods, model.s_labperiods, model.s_season_types,
@@ -104,7 +104,7 @@ def f_con_crop_DM_transfer(model):
             return - sum(model.v_contractseeding_ha[q,s,z8,p5,k,l] * model.p_crop_DM_provided[k,p6,p5,z8,l,z9]
                          + model.v_seeding_machdays[q,s,z8,p5,k,l] * model.p_seeding_rate[k,l] * model.p_crop_DM_provided[k,p6,p5,z8,l,z9]
                          for z8 in model.s_season_types) \
-                   + sum(model.v_tonnes_crop_consumed[q,s,f,k,l,p6,p5,z9] * model.p_crop_DM_required[k,p6,p5,z9] for f in model.s_feed_pools) \
+                   + sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,p5,z9,l] * model.p_crop_DM_required[k,p6,p5,z9] for f in model.s_feed_pools) \
                    - sum(model.v_tonnes_crop_transfer[q,s,k,l,p6s,p5,z8] * 1000 * model.p_transfer_exists[p6s,p5,z8]
                          * model.p_parentz_provwithin_fp[p6s,z8,z9] for z8 in model.s_season_types)        \
                    + model.v_tonnes_crop_transfer[q,s,k,l,p6,p5,z9]*1000 \
@@ -140,7 +140,7 @@ def f_grazecrop_biomass_penalty(model,q,s,p7,k,l,z):
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
     if pinp.cropgraze['i_cropgrazing_inc']:
-        return sum(model.v_tonnes_crop_consumed[q,s,f,k,l,p6,p5,z] * model.p_cropgraze_biomass_penalty[k,p6,z] * model.p_a_p6_p7[p7,p6,z] * 1000
+        return sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,p5,z,l] * model.p_cropgraze_biomass_penalty[k,p6,z] * model.p_a_p6_p7[p7,p6,z] * 1000
                    for f in model.s_feed_pools for p6 in model.s_feed_periods for p5 in model.s_labperiods)
     else:
         return 0
@@ -167,7 +167,7 @@ def f_grazecrop_me(model,q,s,p6,f,z):
     Used in global constraint (con_me). See CorePyomo
     '''
     if pinp.cropgraze['i_cropgrazing_inc']:
-        return sum(model.v_tonnes_crop_consumed[q,s,f,k,l,p6,p5,z] * model.p_crop_md[f,k,p6,p5,z,l]
+        return sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,p5,z,l] * model.p_crop_md[f,k,p6,p5,z,l]
                    for k in model.s_crops for l in model.s_lmus for p5 in model.s_labperiods)
     else:
         return 0
@@ -182,7 +182,7 @@ def f_grazecrop_vol(model,q,s,p6,f,z):
     Used in global constraint (con_vol). See CorePyomo
     '''
     if pinp.cropgraze['i_cropgrazing_inc']:
-        return sum(model.v_tonnes_crop_consumed[q,s,f,k,l,p6,p5,z] * model.p_crop_vol[f,k,p6,p5,z,l]
+        return sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,p5,z,l] * model.p_crop_vol[f,k,p6,p5,z,l]
                    for k in model.s_crops for l in model.s_lmus for p5 in model.s_labperiods)
     else:
         return 0

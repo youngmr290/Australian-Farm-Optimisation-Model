@@ -49,9 +49,6 @@ if inputs_from_pickle == False:
         general_inp = fun.xl_all_named_ranges(property_xl_path,"General", numpy=True)
         pkl.dump(general_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        rep_inp = fun.xl_all_named_ranges(property_xl_path,"Report Settings")
-        pkl.dump(rep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
         labour_inp = fun.xl_all_named_ranges(property_xl_path,"Labour")
         pkl.dump(labour_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
@@ -95,8 +92,6 @@ if inputs_from_pickle == False:
 else:
     with open(property_pkl_path, "rb") as f:
         general_inp = pkl.load(f)
-
-        rep_inp = pkl.load(f)
 
         labour_inp = pkl.load(f)
 
@@ -223,7 +218,6 @@ feedsupply_inp['i_confinement_options_r1p6z'] = np.reshape(feedsupply_inp['i_con
 ##the copy created is the one used in the actual modules
 ###NOTE: if an input sheet is added remember to add it to the dict reset in f_sa() below.
 general = copy.deepcopy(general_inp)
-rep = copy.deepcopy(rep_inp)
 labour = copy.deepcopy(labour_inp)
 crop = copy.deepcopy(crop_inp)
 cropgraze = copy.deepcopy(cropgraze_inp)
@@ -259,7 +253,6 @@ def f_property_inp_sa():
 
     ##reset inputs to base at the start of each trial before applying SA - old method was to update the SA based on the _inp dict but that doesn't work well when multiple SA on the same variable.
     fun.f_dict_reset(general, general_inp)
-    fun.f_dict_reset(rep, rep_inp)
     fun.f_dict_reset(labour, labour_inp)
     fun.f_dict_reset(crop, crop_inp)
     fun.f_dict_reset(cropgraze, cropgraze_inp)
@@ -357,14 +350,6 @@ def f_property_inp_sa():
     feedsupply['i_feedsupply_adj_options_r2p'] = fun.f_sa(feedsupply['i_feedsupply_adj_options_r2p'], sen.saa['feedsupply_adj_r2p'], 2)
     ###sat
     ###sar
-
-    ##report controls
-    ###SAV
-    rep['i_store_nv_rep'] = fun.f_sa(rep['i_store_nv_rep'], sen.sav['nv_inc'], 5)
-    rep['i_store_lw_rep'] = fun.f_sa(rep['i_store_lw_rep'], sen.sav['lw_inc'], 5)
-    rep['i_store_ffcfw_rep'] = fun.f_sa(rep['i_store_ffcfw_rep'], sen.sav['ffcfw_inc'], 5)
-    rep['i_store_on_hand_mort'] = fun.f_sa(rep['i_store_on_hand_mort'], sen.sav['onhand_mort_p_inc'], 5)
-    rep['i_store_mort'] = fun.f_sa(rep['i_store_mort'], sen.sav['mort_inc'], 5)
 
     ##mask out unrequired nodes dates - nodes are removed if there are double ups or if a season is not identified at the node (and node is not used as fvp)
     ## has to be here because if affects two inputs so cant put it in f_season_periods.

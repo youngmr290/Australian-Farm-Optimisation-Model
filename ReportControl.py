@@ -93,6 +93,7 @@ def f_report(processor, trials, non_exist_trials):
     stacked_areasum = pd.DataFrame()  # area summary
     stacked_pnl = pd.DataFrame()  # profit and loss statement
     stacked_profitarea = pd.DataFrame()  # profit by land area
+    stacked_feed = pd.DataFrame()  # feed budget
     stacked_saleprice = pd.DataFrame()  # sale price
     stacked_salegrid_dams = pd.DataFrame()  # sale grid
     stacked_salegrid_yatf = pd.DataFrame()  # sale grid
@@ -188,6 +189,14 @@ def f_report(processor, trials, non_exist_trials):
             profitarea.loc[trial_name, 'area'] = rep.f_area_summary(lp_vars,r_vals,area_option)
             profitarea.loc[trial_name,'profit'] = rep.f_profit(lp_vars,r_vals,profit_option)
             stacked_profitarea = rep.f_append_dfs(stacked_profitarea, profitarea)
+
+        if report_run.loc['run_feedbudget', 'Run']:
+            option = 0
+            dams_cols = [7] #birth opp
+            offs_cols = [8] #shear opp
+            feed = rep.f_feed_budget(lp_vars, r_vals, option=option, dams_cols=dams_cols, offs_cols=offs_cols)
+            feed = pd.concat([feed],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_feed = rep.f_append_dfs(stacked_feed, feed)
 
         if report_run.loc['run_saleprice', 'Run']:
             option = 2
@@ -1162,6 +1171,8 @@ def f_report(processor, trials, non_exist_trials):
     if report_run.loc['run_profitarea', 'Run']:
         plot = rep.f_xy_graph(stacked_profitarea)
         plot.savefig('Output/profitarea_curve.png')
+    if report_run.loc['run_feedbudget', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_feed, 'feed budget', df_settings, option=1)
     if report_run.loc['run_saleprice', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_saleprice, 'saleprice', df_settings, option=1)
     if report_run.loc['run_salegrid_dams', 'Run']:
