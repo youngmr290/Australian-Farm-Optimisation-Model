@@ -620,11 +620,12 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_lamb_survival', 'Run']:
             option = 0
-            index =[4]
-            cols =[13,7]   #report must include the b axis otherwise an error is caused because the axis added after the arith.
-            if not lp_vars_inc:
+            if lp_vars_inc:
+                index =[4]
+                cols =[13,7]   #report must include the b axis otherwise an error is caused because the axis added after the arith.
+            else:
                 index = [4]     #v
-                cols =[13,7]  #g, b & w
+                cols =[13,7,9]  #g, b & w
             axis_slice = {}
             lamb_survival = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                                  , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -636,11 +637,12 @@ def f_report(processor, trials, non_exist_trials):
             #with the current structure w CANNOT be reported. 23Apr22 - seems to be working when not using lp_vars
             # problem could be that dams can change w axis between joining (nfoet) and lambing (nyatf)
             option = 1
-            index =[4]      #v
-            cols =[11]      #g
-            if not lp_vars_inc:
-                index = [4]     #v
-                cols =[11]    #g,
+            if lp_vars_inc:
+                index =[4]      #v
+                cols =[11,3]      #g & t. t to test whether the report will work if averaged across the t axis
+            else:
+                index = [4]     #v  dams_keys_qsk2tvanwziy1g1
+                cols = [11,9,0,1,8,3,7]    #g,i,q,s,z,t & w  Makes most sense to report all the axes that are individual animals
             axis_slice = {}
             weanper = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                            , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -649,11 +651,12 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_scanper', 'Run']:
             option = 2
-            index =[4]
-            cols =[11]
-            if not lp_vars_inc:
-                index = [4]     #v
-                cols =[11]    #g, w
+            if lp_vars_inc:
+                index =[4]      #v
+                cols =[11,3]      #g & t. t to test whether the report will work if averaged across the t axis
+            else:
+                index = [4]     #v  dams_keys_qsk2tvanwziy1g1
+                cols = [11,9,0,1,8,3,7]    #g,i,q,s,z,t & w  Makes most sense to report all the axes that are individual animals
             axis_slice = {}
             scanper = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                            , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -662,11 +665,12 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_dry_propn', 'Run']:
             option = 3
-            index =[4]
-            cols =[11,2]
-            if not lp_vars_inc:
-                index = [4]     #v
-                cols =[11,2,7]  #g, k2 & w
+            if lp_vars_inc:
+                index =[4]      #v
+                cols =[11,3]      #g & t. t to test whether the report will work if averaged across the t axis
+            else:
+                index = [4]     #v  dams_keys_qsk2tvanwziy1g1
+                cols = [11,9,0,1,8,3,7]    #g,i,q,s,z,t & w  Makes most sense to report all the axes that are individual animals
             axis_slice = {}
             dry_propn = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                              , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)

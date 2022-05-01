@@ -486,7 +486,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##drys management - two versions: first one controls the bound and the second ones (est) are estimates used in the generator.
     ## the bound version is not used in the generator otherwise randomness will be introduced. Because changing if drys are retained or not
-    ## alters the numbers in the generator but doesnt necessarily alter the selected flock structure.
+    ## alters the numbers in the generator but doesn't necessarily alter the selected flock structure.
     dry_retained_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_dry_retained_forced_o'], p_pos
                                                        , condition=mask_o_dams, axis=p_pos)
     est_drys_retained_scan_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_drys_retained_scan_est_o'], p_pos
@@ -546,7 +546,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##propn of dams mated (bound) - default is inf which gets skipped in the bound constraint hence the model can optimise the propn mated.
     ##used for bound - the bound version is not used in the generator otherwise randomness could be introduced. Because changing est propn mated
-    ## alters the numbers in the generator but doesnt necessarily alter the selected flock structure.
+    ## alters the numbers in the generator but doesn't necessarily alter the selected flock structure.
     prop_dams_mated_og1 = fun.f_sa(np.array([999],dtype=float), sen.sav['bnd_propn_dams_mated_og1'], 5) #999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
     prop_dams_mated_og1[prop_dams_mated_og1==999] = np.inf
     prop_dams_mated_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(prop_dams_mated_og1, left_pos=p_pos, right_pos=-1
@@ -6806,12 +6806,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     r_n_drys_tvg1 = sfun.f1_p2v(n_drys_b1g1*1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
                                 on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_scan_pa1e1b1nwzida0e0b0xyg1)
 
-    ##numbers mated per animal at the start of the dvp.
-    r_n_mated_tvg1 = sfun.f1_p2v(animal_mated_b1g1*1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
-                                on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_mating_pa1e1b1nwzida0e0b0xyg1)
-    ###update dvps that are not mating with mating numbers
-    a_matingv_tvg1 =  np.maximum.accumulate(np.any(r_n_mated_tvg1 != 0, axis=b1_pos, keepdims=True) * index_va1e1b1nwzida0e0b0xyg1, axis=p_pos) #create association pointing at previous/current mating dvp.
-    r_n_mated_tvg1= np.take_along_axis(r_n_mated_tvg1, a_matingv_tvg1, axis=p_pos)
+    ##number of mated animals as a proportion of the dams in each slice each slice
+    ### calculated from the number of ewes mated total (across a1, e1, b1 & y axis) per ewe in the slice.
+    ### This is to be the equivalent of the number of foetuses per ewe
+    n_mated_tpg1 = fun.f_divide(np.sum(animal_mated_b1g1 * o_numbers_end_tpdams, axis=(a1_pos, e1_pos, b1_pos, y_pos), keepdims=True)
+                                , o_numbers_end_tpdams) * (animal_mated_b1g1>0)
+    ###update periods that are not mating with mating numbers
+    a_matingv_tpg1 =  np.maximum.accumulate(np.any(n_mated_tpg1 != 0, axis=b1_pos, keepdims=True)
+                                            * p_index_pa1e1b1nwzida0e0b0xyg, axis=p_pos) #create association pointing at previous/current mating dvp.
+    n_mated_tpg1= np.take_along_axis(n_mated_tpg1, a_matingv_tpg1, axis=p_pos)
+
+    r_n_mated_tvg1 = sfun.f1_p2v(n_mated_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+                                on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_matingend_pa1e1b1nwzida0e0b0xyg1)
 
     ###########################
     # create report params    #
@@ -6938,12 +6944,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #############################################
     #weaning %, scan % and lamb survival reports#
     #############################################
-    ##proportion mated - per ewe at start of dvp (ie accounting for dam mortality)
-    r_n_mated_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_n_mated_tvg1,
-                                                                          a_k2cluster_va1e1b1nwzida0e0b0xyg1,
-                                                                          index_k2tva1e1b1nwzida0e0b0xyg1,
-                                                                       numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
-                                                                       mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)  # no clustering required for scanning percent because it is a measure of all dams
+    ##The inverse of the number of ewes mated as a proportion of the number of ewes at the start of the DVP (accounts for mortality)
+    ### Note: the sum across the a1, e1, b1 & y axes is a single starting animal. Each slice of the other axes are single animals
+    ### Can't call f1_create_production_param() because don't want to cluster the numerator
+    ### Inverse because number of ewes mated is the denominator of the reproduction calculations
+    r_n_mated_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(1, fun.f_divide(np.sum(r_n_mated_tvg1
+                    * mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1
+                    , axis=(a1_pos, b1_pos, e1_pos, y_pos), keepdims=True)
+                , np.sum(numbers_start_tva1e1b1nwzida0e0b0xyg1
+                    * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)
+                    , axis=(a1_pos, b1_pos, e1_pos, y_pos), keepdims=True)), dtype=r_n_mated_tvg1.dtype)
 
     ##proportion of drys - per ewe at start of dvp (ie accounting for dam mortality)
     r_n_drys_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_n_drys_tvg1,
