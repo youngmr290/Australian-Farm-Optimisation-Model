@@ -1628,7 +1628,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     if nv_option==1:
         feed_budget = feed_budget.groupby(axis=0, level=(0,1,2,3)).sum()
 
-    return feed_budget.astype(float).round(1)
+    return feed_budget.astype(float).round(2)
 
 
 ############################
