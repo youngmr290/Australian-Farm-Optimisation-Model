@@ -866,7 +866,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fvp_scan_start_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
 
     ## lactation fvp start - average date of lambing (with e axis if scanning/managing e differentially) (already adjusted to start of gen period)
-    fvp_birth_start_oa1e1b1nwzida0e0b0xyg1 = date_born_oa1e1b1nwzida0e0b0xyg2.copy()
+    fvp_birth_start_oa1e1b1nwzida0e0b0xyg1 = date_born_oa1e1b1nwzida0e0b0xyg2.copy()+step #birth dvp needs to start the period after birth because numbers start needs to reflect the birth status (numbers start doesnt update until the period after birth)
     ### birth fvp/dvp must be the same when e axis is clustered (otherwise something goes wrong in the pp/matrix).
     t_fvp_birth_start_oa1e1b1nwzida0e0b0xyg1 = fvp_birth_start_oa1e1b1nwzida0e0b0xyg1.copy()
     t_fvp_birth_start_oa1e1b1nwzida0e0b0xyg1[...] = fvp_birth_start_oa1e1b1nwzida0e0b0xyg1[:,:,-1:,...] #needs to be the final e slice so that all e slices have lambed when new dvp starts.
