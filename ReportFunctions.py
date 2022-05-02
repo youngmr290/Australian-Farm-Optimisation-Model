@@ -1395,14 +1395,14 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
     elif option == 1:
         prod = 'nyatf_wean_k2tva1nw8ziyg1'
         na_prod = [0,1]
-        prod_weights = 'n_mated_k2tva1nw8ziyg1'
-        na_prodweights = [0,1]
+        prod_weights = 'n_mated_k2va1nw8ziyg1'
+        na_prodweights = [0,1,3]
         cols1 = [0,1,3,4,6,7,8,9,11]   #all axes other than k2, a & y so that these aren't process in arith1.
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
             na_weights = []
-            arith1 = 1
-            arith2 = 1
+            arith1 = 2
+            arith2 = 9
         else:
             weights = None
             na_weights = []
@@ -1414,14 +1414,14 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
     elif option == 2:
         prod = 'nfoet_scan_k2tva1nw8ziyg1'
         na_prod = [0,1]
-        prod_weights = 'n_mated_k2tva1nw8ziyg1'
-        na_prodweights = [0,1]
+        prod_weights = 'n_mated_k2va1nw8ziyg1'
+        na_prodweights = [0,1,3]
         cols1 = [0,1,3,4,6,7,8,9,11]   #all axes other than k2, a & y so that these aren't process in arith1.
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
             na_weights = []
-            arith1 = 1
-            arith2 = 1
+            arith1 = 2
+            arith2 = 9
         else:
             weights = None
             na_weights = []
@@ -1433,14 +1433,14 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
     elif option == 3:
         prod = 'n_drys_k2tva1nw8ziyg1'
         na_prod = [0,1]
-        prod_weights = 'n_mated_k2tva1nw8ziyg1'
-        na_prodweights = [0,1]
+        prod_weights = 'n_mated_k2va1nw8ziyg1'
+        na_prodweights = [0,1,3]
         cols1 = [0,1,3,4,6,7,8,9,11]   #all axes other than k2, a & y so that these aren't process in arith1.
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
             na_weights = []
-            arith1 = 1
-            arith2 = 1
+            arith1 = 2
+            arith2 = 9
         else:
             weights = None
             na_weights = []
@@ -1467,27 +1467,54 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
     ##calc for wean % or scan %
     else:
         # axis_slice[3] = [2, 3, 1]
-        if lp_vars_inc:
-            percentage = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod
-                                    , prod_weights=prod_weights, na_prodweights=na_prodweights
-                                    , weights=weights, na_weights=na_weights, keys=keys
-                                    , arith=arith1, index=index, cols=cols, axis_slice=axis_slice)
-        else:
-            ##Sum the a, e, b & y axes because axes represent animals that were intially a single animal
-            ###Because they were a single animal it is necessary to sum their values
-            ###Add the other axes to Cols so that they are retained in this calculation
-            cols_report = cols.copy()
-            cols = list(set(cols_report) | set(cols1))
-            intermediate, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type
-                                        , prod=prod, na_prod=na_prod, prod_weights=prod_weights
-                                        , na_prodweights=na_prodweights, weights=weights, na_weights=na_weights
-                                        , keys=keys, arith=arith1, index=[], cols=cols, axis_slice=axis_slice)
-            ##Treat the remaining axes as specified
-            ###Set the cols back to those required in the report.
-            ### Note: don't have to exclude the axes processed in arith1 because they are now singleton & not effected by this arith
-            cols = cols_report
-            percentage = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=intermediate
-                                        , keys=keys, arith=arith2, index=index, cols=cols, axis_slice=axis_slice)
+        # if lp_vars_inc:
+        #     percentage = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod
+        #                             , prod_weights=prod_weights, na_prodweights=na_prodweights
+        #                             , weights=weights, na_weights=na_weights, keys=keys
+        #                             , arith=arith1, index=index, cols=cols, axis_slice=axis_slice)
+        # else:
+        ##Sum the a, e, b & y axes because axes represent animals that were intially a single animal
+        ###Because they were a single animal it is necessary to sum their values
+        ###Add the other axes to Cols so that they are retained in this calculation
+        cols_report = cols.copy()
+        cols = list(set(cols_report) | set(cols1))
+        # ##This version needs cols1 = [2,5,10]
+        # intermediate, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type
+        #                             , prod=prod, na_prod=na_prod, prod_weights=prod_weights
+        #                             , na_prodweights=na_prodweights, weights=weights, na_weights=na_weights
+        #                             , keys=keys, arith=arith2, index=[], cols=cols, axis_slice=axis_slice)
+        ##This version needs cols1 = [0,1,3,4,6,7,8,9,11]
+        intermediate, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type
+                                    , prod=prod, na_prod=na_prod, prod_weights=prod_weights
+                                    , na_prodweights=na_prodweights, weights=weights, na_weights=na_weights
+                                    , keys=keys, arith=arith1, index=[], cols=cols, axis_slice=axis_slice)
+        ##Treat the remaining axes as specified
+        ###Set the cols back to those required in the report.
+        ### Note: don't have to exclude the axes processed in arith1 because they are now singleton & not effected by this arith
+        cols = cols_report
+        # percentage = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=intermediate, weights=weights
+        #                                 , na_weights=na_weights
+        #                                 , keys=keys, arith=arith1, index=index, cols=cols, axis_slice=axis_slice)
+        percentage = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=intermediate, weights=weights
+                                    , na_weights=na_weights
+                                    , keys=keys, arith=arith2, index=index, cols=cols, axis_slice=axis_slice)
+    # ##Sum the a, e, b & y axes because axes represent animals that were intially a single animal
+    # ###Because they were a single animal it is necessary to sum their values
+    # ###Add the other axes to Cols so that they are retained in this calculation
+    # cols_report = cols.copy()
+    # cols = list(set(cols_report) | set(cols1))
+    # intermediate, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type
+    #                                                     , prod=prod, na_prod=na_prod, prod_weights=prod_weights
+    #                                                     , na_prodweights=na_prodweights, weights=weights,
+    #                                                     na_weights=na_weights
+    #                                                     , keys=keys, arith=arith1, index=[], cols=cols,
+    #                                                     axis_slice=axis_slice)
+    # ##Treat the remaining axes as specified
+    # ###Set the cols back to those required in the report.
+    # ### Note: don't have to exclude the axes processed in arith1 because they are now singleton & not effected by this arith
+    # cols = cols_report
+    # percentage = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=intermediate, weights=weights
+    #                                      , keys=keys, arith=arith2, index=index, cols=cols, axis_slice=axis_slice)
     return percentage
 
 def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_cols=[]):
@@ -1799,7 +1826,7 @@ def f_arith(prod, prod_weights, weight, den_weights, arith, axis):
         prod = np.sum(prod, tuple(axis), keepdims=keepdims)
     ##option 9
     if arith == 9:
-        prod = fun.f_weighted_average(prod, 1, tuple(axis), keepdims=keepdims, den_weights=den_weights)
+        prod = fun.f_weighted_average(prod, 1, tuple(axis), keepdims=keepdims, den_weights=weight)
 
     return prod
 
