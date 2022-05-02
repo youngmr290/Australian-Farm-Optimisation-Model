@@ -84,7 +84,7 @@ def f_report(processor, trials, non_exist_trials):
 
     ## A control to switch between reporting the optimised production level True) and the production assumptions (False)
     ### Note this is only active for some of the reports. It also changes the axes that are reported.
-    lp_vars_inc = False
+    lp_vars_inc = True
 
     ##create empty df to stack each trial results into
     stacked_infeasible = pd.DataFrame().rename_axis('Trial')  # name of any infeasible trials
@@ -620,11 +620,12 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_lamb_survival', 'Run']:
             option = 0
-            index =[4]
-            cols =[13,7]   #report must include the b axis otherwise an error is caused because the axis added after the arith.
-            if not lp_vars_inc:
+            if lp_vars_inc:
+                index =[4]
+                cols =[13,7]   #report must include the b axis otherwise an error is caused because the axis added after the arith.
+            else:
                 index = [4]     #v
-                cols =[13,7]  #g, b & w
+                cols =[13,7,9]  #g, b & w
             axis_slice = {}
             lamb_survival = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                                  , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -636,11 +637,12 @@ def f_report(processor, trials, non_exist_trials):
             #with the current structure w CANNOT be reported. 23Apr22 - seems to be working when not using lp_vars
             # problem could be that dams can change w axis between joining (nfoet) and lambing (nyatf)
             option = 1
-            index =[4]      #v
-            cols =[11]      #g
-            if not lp_vars_inc:
-                index = [4]     #v
-                cols =[11]    #g,
+            if lp_vars_inc:
+                index =[4]      #v
+                cols =[11,2]   #g [11,2]      #g & k2 (needs k2 in the current form).
+            else:
+                index = [4]     #v  dams_keys_qsk2tvanwziy1g1
+                cols = [11,9,0,1,8,7]    #g,i,q,s,z & w  Makes most sense to report all the axes that are individual animals (k2 optional here)
             axis_slice = {}
             weanper = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                            , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -649,11 +651,12 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_scanper', 'Run']:
             option = 2
-            index =[4]
-            cols =[11]
-            if not lp_vars_inc:
-                index = [4]     #v
-                cols =[11]    #g, w
+            if lp_vars_inc:
+                index =[4]      #v
+                cols =[11,2]   #g [11,2]      #g & k2 (needs k2 in the current form).
+            else:
+                index = [4]     #v  dams_keys_qsk2tvanwziy1g1
+                cols = [11,9,0,1,8,7]    #g,i,q,s,z & w  Makes most sense to report all the axes that are individual animals
             axis_slice = {}
             scanper = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                            , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -662,11 +665,12 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_dry_propn', 'Run']:
             option = 3
-            index =[4]
-            cols =[11,2]
-            if not lp_vars_inc:
-                index = [4]     #v
-                cols =[11,2,7]  #g, k2 & w
+            if lp_vars_inc:
+                index =[4]      #v
+                cols =[11,2]   #g [11,2]      #g & k2 (needs k2 in the current form).
+            else:
+                index = [4]     #v  dams_keys_qsk2tvanwziy1g1
+                cols = [11,9,0,1,8,7]    #g,i,q,s,z & w  Makes most sense to report all the axes that are individual animals
             axis_slice = {}
             dry_propn = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                              , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -929,7 +933,7 @@ def f_report(processor, trials, non_exist_trials):
         if report_run.loc['run_dryfoo', 'Run']:
             #returns foo at end of each FP
             type = 'pas'
-            prod = 1000
+            prod = np.array([1000])
             weights = 'drypas_transfer_qsdp6zt'
             keys = 'keys_qsdp6zt'
             arith = 2
@@ -945,7 +949,7 @@ def f_report(processor, trials, non_exist_trials):
         if report_run.loc['run_napfoo', 'Run']:
             #returns foo at end of each FP
             type = 'pas'
-            prod = 1000
+            prod = np.array([1000])
             weights = 'nap_transfer_qsdp6zt'
             keys = 'keys_qsdp6zt'
             arith = 2
@@ -984,7 +988,7 @@ def f_report(processor, trials, non_exist_trials):
             #returns total consumption per day in each FP
             #todo once this is change to per ha variable then change to report consumption per ha per day (same as grn pas)
             type = 'pas'
-            prod = 1
+            prod = np.array([1])
             weights = 'drypas_consumed_qsfdp6zt'
             keys = 'keys_qsfdp6zt'
             arith = 2
@@ -1089,7 +1093,7 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_napcon', 'Run']:
             #returns consumption in each FP
-            prod = 1
+            prod = np.array([1])
             type = 'pas'
             weights = 'nap_consumed_qsfdp6zt'
             keys = 'keys_qsfdp6zt'
@@ -1105,7 +1109,7 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_poccon', 'Run']:
             #returns consumption in each FP
-            prod = 1
+            prod = np.array([1])
             type = 'pas'
             weights = 'poc_consumed_qsfp6lz'
             keys = 'keys_qsfp6lz'
@@ -1128,7 +1132,7 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_stubcon', 'Run']:
             #returns consumption in each FP
-            prod = 1
+            prod = np.array([1])
             type = 'stub'
             weights = 'stub_qszp6fks1s2'
             keys = 'keys_qszp6fks1s2'
