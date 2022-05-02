@@ -1257,7 +1257,7 @@ def f_profit(lp_vars, r_vals, option=0):
 
 
 def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None, index=[], cols=[], arith=0,
-                            prod=1, na_prod=[], weights=None, na_weights=[], axis_slice={},
+                            prod=np.array([1]), na_prod=[], weights=None, na_weights=[], axis_slice={},
                             na_denweights=[], den_weights=1, na_prodweights=[], prod_weights=1):
     '''
 
@@ -1317,8 +1317,8 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     ##initilise prod array from either r_vals or default value (this means you can preform arith with any number - mainly used for pasture when there is no production param)
     if isinstance(prod, str):
         prod = r_vals[prod]
-    else:
-        prod = np.array([prod])
+    # else:
+    #     prod = np.array([prod])     #this was adding another axis if an array was passed in
     ###set prod and weights to 0 if very small number (otherwise it can show up in report when it shouldnt)
     prod[np.isclose(prod, 0)] = 0
 
@@ -1467,24 +1467,27 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
     ##calc for wean % or scan %
     else:
         # axis_slice[3] = [2, 3, 1]
-        ##Sum the a, e, b & y axes because axes represent animals that were intially a single animal
-        ###Because they were a single animal it is necessary to sum their values
-        ###Add the other axes to Cols so that they are retained in this calculation
-        cols_report = cols.copy()
-        cols = list(set(cols_report) | set(cols1))
-        intermediate, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type
-                                    , prod=prod, na_prod=na_prod, prod_weights=prod_weights
-                                    , na_prodweights=na_prodweights, weights=weights, na_weights=na_weights
-                                    , keys=keys, arith=arith1, index=[], cols=cols, axis_slice=axis_slice)
-        ##Treat the remaining axes as specified
-        ###Set the cols back to those required in the report.
-        ### Note: don't have to exclude the axes processed in arith1 because they are now singleton & not effected by this arith
-        cols = cols_report
-        percentage = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=intermediate, na_prod=[]
+        if lp_vars_inc:
+            percentage = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod
                                     , prod_weights=prod_weights, na_prodweights=na_prodweights
                                     , weights=weights, na_weights=na_weights, keys=keys
-                                    , arith=arith2, index=index, cols=cols, axis_slice=axis_slice)
-
+                                    , arith=arith1, index=index, cols=cols, axis_slice=axis_slice)
+        else:
+            ##Sum the a, e, b & y axes because axes represent animals that were intially a single animal
+            ###Because they were a single animal it is necessary to sum their values
+            ###Add the other axes to Cols so that they are retained in this calculation
+            cols_report = cols.copy()
+            cols = list(set(cols_report) | set(cols1))
+            intermediate, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type
+                                        , prod=prod, na_prod=na_prod, prod_weights=prod_weights
+                                        , na_prodweights=na_prodweights, weights=weights, na_weights=na_weights
+                                        , keys=keys, arith=arith1, index=[], cols=cols, axis_slice=axis_slice)
+            ##Treat the remaining axes as specified
+            ###Set the cols back to those required in the report.
+            ### Note: don't have to exclude the axes processed in arith1 because they are now singleton & not effected by this arith
+            cols = cols_report
+            percentage = f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=intermediate
+                                        , keys=keys, arith=arith2, index=index, cols=cols, axis_slice=axis_slice)
     return percentage
 
 def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_cols=[]):

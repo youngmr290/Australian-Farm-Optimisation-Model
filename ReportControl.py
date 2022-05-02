@@ -84,7 +84,7 @@ def f_report(processor, trials, non_exist_trials):
 
     ## A control to switch between reporting the optimised production level True) and the production assumptions (False)
     ### Note this is only active for some of the reports. It also changes the axes that are reported.
-    lp_vars_inc = False
+    lp_vars_inc = True
 
     ##create empty df to stack each trial results into
     stacked_infeasible = pd.DataFrame().rename_axis('Trial')  # name of any infeasible trials
@@ -933,7 +933,7 @@ def f_report(processor, trials, non_exist_trials):
         if report_run.loc['run_dryfoo', 'Run']:
             #returns foo at end of each FP
             type = 'pas'
-            prod = 1000
+            prod = np.array([1000])
             weights = 'drypas_transfer_qsdp6zt'
             keys = 'keys_qsdp6zt'
             arith = 2
@@ -949,7 +949,7 @@ def f_report(processor, trials, non_exist_trials):
         if report_run.loc['run_napfoo', 'Run']:
             #returns foo at end of each FP
             type = 'pas'
-            prod = 1000
+            prod = np.array([1000])
             weights = 'nap_transfer_qsdp6zt'
             keys = 'keys_qsdp6zt'
             arith = 2
@@ -988,7 +988,7 @@ def f_report(processor, trials, non_exist_trials):
             #returns total consumption per day in each FP
             #todo once this is change to per ha variable then change to report consumption per ha per day (same as grn pas)
             type = 'pas'
-            prod = 1
+            prod = np.array([1])
             weights = 'drypas_consumed_qsfdp6zt'
             keys = 'keys_qsfdp6zt'
             arith = 2
@@ -1093,7 +1093,7 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_napcon', 'Run']:
             #returns consumption in each FP
-            prod = 1
+            prod = np.array([1])
             type = 'pas'
             weights = 'nap_consumed_qsfdp6zt'
             keys = 'keys_qsfdp6zt'
@@ -1109,7 +1109,7 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_poccon', 'Run']:
             #returns consumption in each FP
-            prod = 1
+            prod = np.array([1])
             type = 'pas'
             weights = 'poc_consumed_qsfp6lz'
             keys = 'keys_qsfp6lz'
@@ -1132,7 +1132,7 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_stubcon', 'Run']:
             #returns consumption in each FP
-            prod = 1
+            prod = np.array([1])
             type = 'stub'
             weights = 'stub_qszp6fks1s2'
             keys = 'keys_qszp6fks1s2'

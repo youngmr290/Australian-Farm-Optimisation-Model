@@ -6811,13 +6811,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ### This is to be the equivalent of the number of foetuses per ewe
     n_mated_tpg1 = fun.f_divide(np.sum(animal_mated_b1g1 * o_numbers_end_tpdams, axis=(a1_pos, e1_pos, b1_pos, y_pos), keepdims=True)
                                 , o_numbers_end_tpdams) * (animal_mated_b1g1>0)
-    ###update periods that are not mating with mating numbers
-    a_matingv_tpg1 =  np.maximum.accumulate(np.any(n_mated_tpg1 != 0, axis=b1_pos, keepdims=True)
-                                            * p_index_pa1e1b1nwzida0e0b0xyg, axis=p_pos) #create association pointing at previous/current mating dvp.
-    n_mated_tpg1= np.take_along_axis(n_mated_tpg1, a_matingv_tpg1, axis=p_pos)
-
     r_n_mated_tvg1 = sfun.f1_p2v(n_mated_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
                                 on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_matingend_pa1e1b1nwzida0e0b0xyg1)
+    ###update periods that are not mating with mating numbers
+    a_matingv_tvg1 =  np.maximum.accumulate(np.any(r_n_mated_tvg1 != 0, axis=b1_pos, keepdims=True)
+                                            * index_va1e1b1nwzida0e0b0xyg1, axis=p_pos) #create association pointing at previous/current mating dvp.
+    r_n_mated_tvg1= np.take_along_axis(r_n_mated_tvg1, a_matingv_tvg1, axis=p_pos)
+
 
     ###########################
     # create report params    #
