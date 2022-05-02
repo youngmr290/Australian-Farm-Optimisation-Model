@@ -164,6 +164,7 @@ sav_inp['feedsupply_adj_r2p'] = np.full_like(pinp.feedsupply['i_feedsupply_adj_o
 
 ##general
 sav_inp['steady_state']      = '-'                  #SA to alter if the model is steady state
+sav_inp['mask_z']      = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)   #SA to alter which seasons are included
 sav_inp['inc_node_periods']      = '-'              #SA to alter if season nodes are included in the steady state model (note they are always included in the dsp version this only effects if they are included in steady state)
 sav_inp['rev_create']      = '-'                  #SA to alter if the trial is being used to create rev std values
 sav_inp['rev_number']      = '-'                  #SA to alter rev number - rev number is appended to the std rev value pkl file and can be used to select which rev is used as std for a given trial.

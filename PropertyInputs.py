@@ -269,6 +269,7 @@ def f_property_inp_sa():
     ##general
     ###sav
     general['steady_state'] = fun.f_sa(general['steady_state'], sen.sav['steady_state'], 5)
+    general['i_mask_z'] = fun.f_sa(general['i_mask_z'], sen.sav['mask_z'], 5)
     general['i_inc_node_periods'] = fun.f_sa(general['i_inc_node_periods'], sen.sav['inc_node_periods'], 5)
 
     ###sam
