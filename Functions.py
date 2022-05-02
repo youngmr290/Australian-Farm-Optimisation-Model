@@ -931,8 +931,9 @@ def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
 
     :param r_vals: r_vals dict
     :param param: param to be stored
-    :param maskz8: season identification mask
     :param name: name of r_val
+    :param maskz8: season identification mask
+    :param z_pos: position of z axis from the end (ie this should be negative)
     :param shape: optional - shape of r_val - this can be used to remove singleton axis.
 
     Note 1: Arrays must broadcast.

@@ -376,6 +376,6 @@ def crop_residue_all(params, r_vals, nv):
     fun.f1_make_r_val(r_vals,keys_s2,'keys_s2')
 
     ##store report vals
-    fun.f1_make_r_val(r_vals,np.moveaxis(np.moveaxis(md_fp6zks1, 0, 2), 0, 1),'md_zp6fks1',mask_fp_z8var_zp6[:,:,na,na,na],z_pos=0)
+    fun.f1_make_r_val(r_vals,np.moveaxis(np.moveaxis(md_fp6zks1, 0, 2), 0, 1),'md_zp6fks1',mask_fp_z8var_zp6[:,:,na,na,na],z_pos=-5)
 
 

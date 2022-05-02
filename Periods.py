@@ -182,7 +182,7 @@ def f_p_dates_df():
             raise exc.LabourPeriodError('''Season nodes are not all included in labour periods''')
 
     ##check that seeding and harv periods begin at the start of a labour period
-    if np.all(np.any(periods.values[:,:,na]==seed_and_harv_periods_pz, axis=0)):
+    if np.all(np.any(periods.values[:,na,:]==seed_and_harv_periods_pz, axis=0)):
         pass
     else:
         raise exc.LabourPeriodError('''Seeding or harv periods do not begin/end at the start of a labour period.''')
