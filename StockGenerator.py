@@ -7138,8 +7138,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ####################
     ##this needs to be accounted for when reporting variables that have p6 and v axis because they are both periods that do not align
     ##and the number variable returned from pyomo does not have p6 axis. So need to account for the propn of the dvp that the feed period exists.
-    ##using a_p6_p is not perfect because a_p6_p is such that a generator period is only allocated to a single feed period
-    ## e.g. if the feed period changed mid gen period the proportion will be slightly off (exaggerated for smaller feed periods).
     stock_days_p6ftva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(on_hand_pa1e1b1nwzida0e0b0xyg0 * nv_propn_ftpsire
                                         , numbers_p=o_numbers_end_tpsire, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0
                                         , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...])[:,:,:,na,...]#add singleton v
