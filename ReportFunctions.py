@@ -1358,15 +1358,16 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
 
     :param lp_vars: dict: results from pyomo
     :param r_vals: dict: report variable
-    :key option (optional, default = 0): int:
+    :param option: (optional, default = 0): int:
             option 0: survival %
             option 1: wean %
             option 2: scan %
             option 3: Proportion of dry ewes
-    :key index (optional, default = []): list: axis you want as the index of pandas df (order of list is the index level order).
-    :key cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
-    :key arith_axis (optional, default = []): list: axis to preform arithmetic operation along.
-    :key axis_slice (optional, default = {}): dict: keys (int) is the axis. value (list) is the start, stop and step of the slice
+    :param keys:
+    :param index: (optional, default = []): list: axis you want as the index of pandas df (order of list is the index level order).
+    :param cols: (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
+    :param axis_slice: (optional, default = {}): dict: keys (int) is the axis. value (list) is the start, stop and step of the slice
+    :param lp_vars_inc: weight the report using the results stored in lp_vars. If false, the result is as if single animal in all slices
     :return: pandas df
     '''
 
@@ -1454,20 +1455,24 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
 
     ##calc for wean % or scan % or dry %
     else:
-        ###Add k to cols because k needs to get summed after the calculation
-        ### k needs to be summed after because the calculation returns the n_yatf/n_foet per dam mated. This is split
-        ### across k axis because on average 1 dam will have some of a single and some of a twin.
-        ### Thus the weighted average should not go across k axis. K should simply be summed.
+        ### The columns that describe an individual (initial) animal (a, y & k2- which was e&b) need to be summed
+        ### after the calculation, because the calculation (prod * prod_weights) returns the n_yatf, n_foet or # dry
+        ### per dam mated. These axes comprise a single dam mated and therefore must be summed rather than averaged.
+        ### These axes are excluded from the calculation by adding them to the columns being reported
         cols_report = cols.copy()
         k2_pos=2
-        cols = list(set(cols_report) | set([k2_pos])) #have to include k
+        a1_pos=5
+        y_pos=10
+        cols_summed = [k2_pos, a1_pos, y_pos]
+        cols = list(set(cols_report) | set(cols_summed))
         intermediate, keys_sliced  = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type
                                     , prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                     , weights=weights, na_weights=na_weights, keys=keys, arith=arith, index=index
                                     , cols=cols, axis_slice=axis_slice)
-        ###sum k if not reported and make table
-        if not k2_pos in cols_report:
-            intermediate = np.sum(intermediate, axis=k2_pos, keepdims=True)
+        ###sum k2, a & y if not reported and make table
+        cols_summed = list(set(cols_summed) - set(cols_report))
+        if cols_summed:    #test that this at least one element in the columns to be summed
+            intermediate = np.sum(intermediate, axis=tuple(cols_summed), keepdims=True)
         percentage = f_numpy2df(intermediate, keys_sliced, index, cols_report)
 
     return percentage
@@ -1480,14 +1485,14 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
 
     :param lp_vars: dict: results from pyomo
     :param r_vals: dict: report variable
-    :key option (optional, default = 0): int:
+    :param option: (optional, default = 0): int:
             option 0: mei/hd/day & propn of mei from each feed source
             option 1: total mei
-    :key nv_option (optional, default = 0): int:
+    :param nv_option: (optional, default = 0): int:
             option 0: Active NV pool
             option 1: NV pool summed (not active)
-    :key dams_cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
-    :key offs_cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
+    :param dams_cols: (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
+    :param offs_cols: (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
     :return: pandas df
     '''
     ##mei supply
