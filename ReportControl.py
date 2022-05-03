@@ -964,7 +964,7 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_grncon', 'Run']:
             #returns consumption per ha per day
-            # to get total PG change arith to 2 and remove den_weights
+            # to get total consumption, change arith to 2 and remove den_weights
             type = 'pas'
             prod = 'cons_grnha_t_gop6lzt'
             na_prod = [0,1]  # q,s
