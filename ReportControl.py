@@ -639,7 +639,7 @@ def f_report(processor, trials, non_exist_trials):
             option = 1
             if lp_vars_inc:
                 index =[4]      #v
-                cols =[11,2]   #g [11,2]      #g & k2 (needs k2 in the current form).
+                cols =[11]   #g [11,2]      #g & k2 (needs k2 in the current form).
             else:
                 index = [4]     #v  dams_keys_qsk2tvanwziy1g1
                 cols = [11,9,0,1,8,7]    #g,i,q,s,z & w  Makes most sense to report all the axes that are individual animals (k2 optional here)
@@ -653,7 +653,7 @@ def f_report(processor, trials, non_exist_trials):
             option = 2
             if lp_vars_inc:
                 index =[4]      #v
-                cols =[11,2]   #g [11,2]      #g & k2 (needs k2 in the current form).
+                cols =[11]   #g [11,2]      #g & k2 (needs k2 in the current form).
             else:
                 index = [4]     #v  dams_keys_qsk2tvanwziy1g1
                 cols = [11,9,0,1,8,7]    #g,i,q,s,z & w  Makes most sense to report all the axes that are individual animals

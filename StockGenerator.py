@@ -6951,14 +6951,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #############################################
     #weaning %, scan % and lamb survival reports#
     #############################################
-    ##The inverse of the number of ewes mated as a proportion of the number of ewes at the start of the DVP (accounts for mortality)
+    ##The inverse (1/(rmated/start) == start/rmated) of the number of ewes mated as a proportion of the number of ewes at the start of the DVP (accounts for mortality)
     ### Note: the sum across the a1, e1, b1 & y axes is a single starting animal. Each slice of the other axes are single animals
     ### Can't call f1_create_production_param() because don't want to cluster r_n_mated_tvg1
     ### Inverse because number of ewes mated is the denominator of the reproduction calculations
-    #todo at some point we might want repro reports that don't cluster the e & b axes so that repro of multiple in a clustered mob can be reported
-    #This will require having another version of the follwoing variables that are not clustered & different maths in ReportFunction.py
     mask_sliced = fun.f_dynamic_slice(mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1
-                                      , e1_pos, 0 ,1)
+                                      , e1_pos, 0 ,1) #slice e[0] because dont want to add e axis to rnmated
     r_n_mated_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.sum(numbers_start_tva1e1b1nwzida0e0b0xyg1
                         * mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1
                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)
