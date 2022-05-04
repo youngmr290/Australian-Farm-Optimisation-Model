@@ -2842,7 +2842,6 @@ def f1_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_kt
     '''Can convert total production to per animal production including impact of death if numbers have been included.
     Apply the k clustering and collapse the e, b & d axes
     If numbers_start are not included then only applies k clustering - this is usually done if production is already per head'''
-    #todo these calculations may need to be summed across the a1 & y axes if they ever become active axes.
     if group=='sire':
         return fun.f_divide(production_vg, numbers_start_vg, dtype=production_vg.dtype) * mask_vg
     elif group=='dams':
