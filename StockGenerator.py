@@ -2112,34 +2112,40 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0:1, ...]  # slice the p axis to convert to singleton
     sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0:1, ...]  # slice the p axis to convert to singleton
 
-    ##The default is to have 2 LTW loops, but can be overwritten by SAV.
+    ## 2 LTW loops unless either:
+    ###     a. the feedsupply comes from pickle and pkl_ltwadj can be broadcast.
+    ###     b. the LTW adjustment is set to 0
+    ### The selected number can be increased by SAV.
     loop_ltw_len = 2
-    loop_ltw_len = fun.f_sa(loop_ltw_len, sen.sav['LTW_loops'], 5)
 
-    ##Try to read in LTW adjustment from pkl.
-    ## Overwrite the number of ltw loops if ltw_adj isn't correctly read in from the feed supply pickle
+    ##If using feedsupply from pkl, read in LTW adjustment from pkl.
     fs_use_number = sinp.structuralsa['i_fs_use_number']
     if sinp.structuralsa['i_fs_use_pkl']:
         with open('pkl/pkl_fs{0}.pkl'.format(fs_use_number),"rb") as f:
             pkl_fs = pkl.load(f)
-        ###update the feedsupply with the pkl fs
+        ###update ltwadj with ltwadj from pkl
         pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1']
         pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1']
         pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3']
         pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3']
-        try:
+        try:   #broadcast the ltwadj from pkl to the current feedsupply shape
             sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1
             sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
             sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3[...] = pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3
             sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3[...] = pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
-        except ValueError: #could not broadcast the ltwadj array from shape x into shape y so carry out at least 2 ltw loops
-            loop_ltw_len = max(loop_ltw_len, 2)
+            loop_ltw_len = 1   #set number of loops to 1 if the feedsupply comes from pickle and the ltwadj could be broadcast
+        except ValueError: #could not broadcast the ltwadj array from shape x into shape y so carry out default ltw loops
+            pass
+            # loop_ltw_len = max(loop_ltw_len, 2)
 
     ##Turn off ltw loop if:
         ## If both dams & offs are not used (ie LTW_? == 0) then don't loop.
-        ## If generating for stubble then don't loop because only running a few periods so no life time information is known.
+        ## If generating for stubble then don't loop because only running a few periods so no lifetime information is known.
     if (sen.sam['LTW_dams'] == 0 and sen.sam['LTW_offs'] == 0) or stubble:
         loop_ltw_len = 1
+
+    ##increment the number of loops. This may be specified in the SAV to finetune the LTW effect.
+    loop_ltw_len = loop_ltw_len + fun.f_sa(0, sen.sav['LTW_loops'], 5)
 
     for loop_ltw in range(loop_ltw_len):
         #todo The double loop could be replaced by separating the offspring into their own loop
