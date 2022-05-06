@@ -7366,7 +7366,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###npw required by prog activity
     params['p_npw_req_prog'] = fun.f1_make_pyomo_dict(numbers_prog_req_k3k5tva1e1b1nwzida0e0b0xyg2w9, arrays_k3txg)
     ###number prog weaned
-    params['p_npw_dams'] = fun.f1_make_pyomo_dict(npw_k3k5tva1e1b1nwzida0e0b0xyg1w9i9, arrays_k3k5tva1nw8zixyg1w9i9, loop_axis_pos=w_pos-2, index_loop_axis_pos=-8)
+    params['p_npw_dams'] = fun.f1_make_pyomo_dict(npw_k3k5tva1e1b1nwzida0e0b0xyg1w9i9, arrays_k3k5tva1nw8zixyg1w9i9, loop_axis_pos=w_pos-2, index_loop_axis_pos=-8) #different because the w pos in the param is different to the keys due to singleton axis which are removed.
     ###number prog require by dams
     params['p_progreq_dams'] = fun.f1_make_pyomo_dict(numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k3k5tw8ziyg1g9w9, loop_axis_pos=-1, index_loop_axis_pos=-1)
     ###number prog require by offs
