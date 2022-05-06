@@ -225,10 +225,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##dams & yatf
     w_start_len1 = sinp.structuralsa['i_w_start_len1']
     n_fs_dams = sinp.structuralsa['i_n1_len']
-    n_fvp_periods_dams = np.count_nonzero(fvp_mask_dams)
-    len_w1 = w_start_len1 * n_fs_dams ** n_fvp_periods_dams
+    n_fvps_percondense_dams = np.count_nonzero(fvp_mask_dams)
+    len_w1 = w_start_len1 * n_fs_dams ** n_fvps_percondense_dams
     len_w2 = len_w1 #yatf and dams are same
-    len_nut_dams = (n_fs_dams ** n_fvp_periods_dams)
+    len_nut_dams = (n_fs_dams ** n_fvps_percondense_dams)
 
     ###if generating for stubble then w axis is controlled by dmd levels rather than fvps and nut
     if stubble:
@@ -240,9 +240,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##offspring
     w_start_len3 = sinp.structuralsa['i_w_start_len3']
     n_fs_offs = sinp.structuralsa['i_n3_len']
-    n_fvp_periods_offs= np.count_nonzero(fvp_mask_offs)
-    len_w3 = w_start_len3 * n_fs_offs ** n_fvp_periods_offs
-    len_nut_offs = (n_fs_offs ** n_fvp_periods_offs)
+    n_fvps_percondense_offs= np.count_nonzero(fvp_mask_offs)
+    len_w3 = w_start_len3 * n_fs_offs ** n_fvps_percondense_offs
+    len_nut_offs = (n_fs_offs ** n_fvps_percondense_offs)
     fvp0_offset_ida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_fvp0_offset_ig3'], i_pos, right_pos=g_pos, condition=mask_offs_inc_g3, axis=g_pos,
                                            condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
     fvp1_offset_ida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_fvp1_offset_ig3'], i_pos, right_pos=g_pos, condition=mask_offs_inc_g3, axis=g_pos,
@@ -1352,7 +1352,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     n_prior_fvps_pa1e1b1nwzida0e0b0xyg1 = (n_cum_fvps_pa1e1b1nwzida0e0b0xyg1 -
                                            np.maximum.accumulate(n_cum_fvps_pa1e1b1nwzida0e0b0xyg1 * np.logical_or(period_is_condense_pa1e1b1nwzida0e0b0xyg1
                                                                 , p_index_pa1e1b1nwzida0e0b0xyg==0), axis=0)) #there is no fvps prior to p0 hence index==0
-    a_n_pa1e1b1nwzida0e0b0xyg1 = (np.trunc(index_wzida0e0b0xyg1 / (n_fs_dams ** ((n_fvp_periods_dams-1) - n_prior_fvps_pa1e1b1nwzida0e0b0xyg1))) % n_fs_dams).astype(int) #needs to be int so it can be an indice
+    a_n_pa1e1b1nwzida0e0b0xyg1 = (np.trunc(index_wzida0e0b0xyg1 / (n_fs_dams ** ((n_fvps_percondense_dams-1) - n_prior_fvps_pa1e1b1nwzida0e0b0xyg1))) % n_fs_dams).astype(int) #needs to be int so it can be an indice
     ###offs
     period_is_condense_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_period_is_('period_is', date_condensing_pa1e1b1nwzida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3) #g2 date born is the equivalent of date lambed g1
     period_is_startfvp_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_period_is_('period_is', fvp_date_start_pa1e1b1nwzida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3)
@@ -1360,7 +1360,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     n_prior_fvps_pa1e1b1nwzida0e0b0xyg3 = (n_cum_fvps_pa1e1b1nwzida0e0b0xyg3 -
                                           np.maximum.accumulate(n_cum_fvps_pa1e1b1nwzida0e0b0xyg3 * np.logical_or(period_is_condense_pa1e1b1nwzida0e0b0xyg3
                                                                 , p_index_pa1e1b1nwzida0e0b0xyg3==0), axis=0))
-    a_n_pa1e1b1nwzida0e0b0xyg3 = (np.trunc(index_wzida0e0b0xyg3 / (n_fs_offs ** ((n_fvp_periods_offs-1) - n_prior_fvps_pa1e1b1nwzida0e0b0xyg3))) % n_fs_offs).astype(int) #needs to be int so it can be an indice
+    a_n_pa1e1b1nwzida0e0b0xyg3 = (np.trunc(index_wzida0e0b0xyg3 / (n_fs_offs ** ((n_fvps_percondense_offs-1) - n_prior_fvps_pa1e1b1nwzida0e0b0xyg3))) % n_fs_offs).astype(int) #needs to be int so it can be an indice
 
 
     ######################
@@ -2112,34 +2112,40 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0:1, ...]  # slice the p axis to convert to singleton
     sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0:1, ...]  # slice the p axis to convert to singleton
 
-    ##The default is to have 2 LTW loops, but can be overwritten by SAV.
+    ## 2 LTW loops unless either:
+    ###     a. the feedsupply comes from pickle and pkl_ltwadj can be broadcast.
+    ###     b. the LTW adjustment is set to 0
+    ### The selected number can be increased by SAV.
     loop_ltw_len = 2
-    loop_ltw_len = fun.f_sa(loop_ltw_len, sen.sav['LTW_loops'], 5)
 
-    ##Try to read in LTW adjustment from pkl.
-    ## Overwrite the number of ltw loops if ltw_adj isn't correctly read in from the feed supply pickle
+    ##If using feedsupply from pkl, read in LTW adjustment from pkl.
     fs_use_number = sinp.structuralsa['i_fs_use_number']
     if sinp.structuralsa['i_fs_use_pkl']:
         with open('pkl/pkl_fs{0}.pkl'.format(fs_use_number),"rb") as f:
             pkl_fs = pkl.load(f)
-        ###update the feedsupply with the pkl fs
+        ###update ltwadj with ltwadj from pkl
         pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1']
         pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1']
         pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3']
         pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3']
-        try:
+        try:   #broadcast the ltwadj from pkl to the current feedsupply shape
             sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1
             sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
             sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3[...] = pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3
             sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3[...] = pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
-        except ValueError: #could not broadcast the ltwadj array from shape x into shape y so carry out at least 2 ltw loops
-            loop_ltw_len = max(loop_ltw_len, 2)
+            loop_ltw_len = 1   #set number of loops to 1 if the feedsupply comes from pickle and the ltwadj could be broadcast
+        except ValueError: #could not broadcast the ltwadj array from shape x into shape y so carry out default ltw loops
+            pass
+            # loop_ltw_len = max(loop_ltw_len, 2)
 
     ##Turn off ltw loop if:
         ## If both dams & offs are not used (ie LTW_? == 0) then don't loop.
-        ## If generating for stubble then don't loop because only running a few periods so no life time information is known.
+        ## If generating for stubble then don't loop because only running a few periods so no lifetime information is known.
     if (sen.sam['LTW_dams'] == 0 and sen.sam['LTW_offs'] == 0) or stubble:
         loop_ltw_len = 1
+
+    ##increment the number of loops. This may be specified in the SAV to finetune the LTW effect.
+    loop_ltw_len = loop_ltw_len + fun.f_sa(0, sen.sav['LTW_loops'], 5)
 
     for loop_ltw in range(loop_ltw_len):
         #todo The double loop could be replaced by separating the offspring into their own loop
@@ -3964,7 +3970,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 o_ffcfw_season_tpdams[:,p] = sfun.f1_season_wa(numbers_end_dams, ffcfw_dams, season_tup, mask_min_lw_z_dams
                                                            , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
                 o_ffcfw_condensed_tpdams[:,p] = sfun.f1_condensed(ffcfw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                                              , n_fs_dams, len_w1, n_fvp_periods_dams
+                                                              , n_fs_dams, len_w1, n_fvps_percondense_dams
                                                               , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])  #condensed lw at the end of the period
                 o_nw_start_tpdams[:,p] = nw_start_dams
                 numbers_join_dams = fun.f_update(numbers_join_dams, numbers_start_dams, period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
@@ -4097,7 +4103,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 o_ffcfw_season_tpoffs[:,p] = sfun.f1_season_wa(numbers_end_offs, ffcfw_offs, season_tup, mask_min_lw_z_offs
                                                            , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
                 o_ffcfw_condensed_tpoffs[:,p] = sfun.f1_condensed(ffcfw_offs, idx_sorted_w_offs, condense_w_mask_offs,
-                                                              n_fs_offs, len_w3, n_fvp_periods_offs,
+                                                              n_fs_offs, len_w3, n_fvps_percondense_offs,
                                                               period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])  #condensed lw at the end of the period before fvp0
                 o_nw_start_tpoffs[:,p] = nw_start_offs
                 o_mortality_offs[:,p] = mortality_offs
@@ -4191,168 +4197,168 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 ###FFCFW (condense - fleece free conceptus free)
                 ffcfw_condensed_dams = sfun.f1_condensed(ffcfw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_condensed_dams = sfun.f1_condensed(nw_start_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###FFCFW maximum to date
                 ffcfw_max_condensed_dams = sfun.f1_condensed(ffcfw_max_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of adipose (condense)
                 aw_condensed_dams = sfun.f1_condensed(aw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of muscle (condense)
                 mw_condensed_dams = sfun.f1_condensed(mw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of bone (condense)
                 bw_condensed_dams = sfun.f1_condensed(bw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Organ energy requirement (condense)
                 omer_history_condensed_p3g1 = sfun.f1_condensed(omer_history_dams, idx_sorted_w_dams[na,...]
-                                        , condense_w_mask_dams[na,...], n_fs_dams, len_w1, n_fvp_periods_dams
+                                        , condense_w_mask_dams[na,...], n_fs_dams, len_w1, n_fvps_percondense_dams
                                         , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (condense)
                 cfw_condensed_dams = sfun.f1_condensed(cfw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (condense)
                 d_cfw_history_condensed_p2g1 = sfun.f1_condensed(d_cfw_history_dams_p2, idx_sorted_w_dams[na,...]
-                                        , condense_w_mask_dams[na,...], n_fs_dams, len_w1, n_fvp_periods_dams
+                                        , condense_w_mask_dams[na,...], n_fs_dams, len_w1, n_fvps_percondense_dams
                                         , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Fibre length since shearing (condense)
                 fl_condensed_dams = sfun.f1_condensed(fl_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Average FD since shearing (condense)
                 fd_condensed_dams = sfun.f1_condensed(fd_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Minimum FD since shearing (condense)
                 fd_min_condensed_dams = sfun.f1_condensed(fd_min_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Lagged DR (lactation deficit)
                 ldr_condensed_dams = sfun.f1_condensed(ldr_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Loss of potential milk due to consistent under production
                 lb_condensed_dams = sfun.f1_condensed(lb_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Loss of potential milk due to consistent under production
                 rc_birth_condensed_dams = sfun.f1_condensed(rc_birth_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of foetus (condense)
                 w_f_condensed_dams = sfun.f1_condensed(w_f_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of gravid uterus (condense)
                 guw_condensed_dams = sfun.f1_condensed(guw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Normal weight of foetus (condense)
                 nw_f_condensed_dams = sfun.f1_condensed(nw_f_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Birth weight carryover (running tally of foetal weight diff)
                 cf_w_b_condensed_dams = sfun.f1_condensed(cf_w_b_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###LTW CFW carryover (running tally of CFW diff)
                 cf_cfwltw_condensed_dams = sfun.f1_condensed(cf_cfwltw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###LTW FD carryover (running tally of FD diff)
                 cf_fdltw_condensed_dams = sfun.f1_condensed(cf_fdltw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ##dams LTW CFW (total adjustment, calculated at birth)
                 cfw_ltwadj_condensed_dams = sfun.f1_condensed(cfw_ltwadj_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ##dams LTW FD (total adjustment, calculated at birth)
                 fd_ltwadj_condensed_dams = sfun.f1_condensed(fd_ltwadj_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Carry forward conception
                 cf_conception_condensed_dams = sfun.f1_condensed(cf_conception_dams
                                         , idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weaning weight carryover (running tally of weaning weight diff)
                 cf_w_w_condensed_dams = sfun.f1_condensed(cf_w_w_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Average FOO during lactation (for weaning weight calculation)
                 foo_lact_ave_condensed = sfun.f1_condensed(foo_lact_ave, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
 
             ###yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 ###FFCFW (condense - fleece free conceptus free)
                 ffcfw_condensed_yatf = sfun.f1_condensed(ffcfw_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_condensed_yatf = sfun.f1_condensed(nw_start_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###FFCFW maximum to date
                 ffcfw_max_condensed_yatf = sfun.f1_condensed(ffcfw_max_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of adipose (condense)
                 aw_condensed_yatf = sfun.f1_condensed(aw_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of muscle (condense)
                 mw_condensed_yatf = sfun.f1_condensed(mw_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of bone (condense)
                 bw_condensed_yatf = sfun.f1_condensed(bw_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Organ energy requirement (condense)
                 omer_history_condensed_p3g2 = sfun.f1_condensed(omer_history_yatf, idx_sorted_w_yatf[na,...], condense_w_mask_yatf[na,...]
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (condense)
                 cfw_condensed_yatf = sfun.f1_condensed(cfw_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (condense)
                 d_cfw_history_condensed_p2g2 = sfun.f1_condensed(d_cfw_history_yatf_p2, idx_sorted_w_yatf[na,...], condense_w_mask_yatf[na,...]
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Fibre length since shearing (condense)
                 fl_condensed_yatf = sfun.f1_condensed(fl_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Average FD since shearing (condense)
                 fd_condensed_yatf = sfun.f1_condensed(fd_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Minimum FD since shearing (condense)
                 fd_min_condensed_yatf = sfun.f1_condensed(fd_min_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ##yatf birth weight
                 w_b_condensed_yatf = sfun.f1_condensed(w_b_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ##yatf wean weight
                 w_w_condensed_yatf = sfun.f1_condensed(w_w_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
             ###offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                 ###FFCFW (condense - fleece free conceptus free)
                 ffcfw_condensed_offs = sfun.f1_condensed(ffcfw_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_condensed_offs = sfun.f1_condensed(nw_start_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###FFCFW maximum to date
                 ffcfw_max_condensed_offs = sfun.f1_condensed(ffcfw_max_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Weight of adipose (condense)
                 aw_condensed_offs = sfun.f1_condensed(aw_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Weight of muscle (condense)
                 mw_condensed_offs = sfun.f1_condensed(mw_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Weight of bone (condense)
                 bw_condensed_offs = sfun.f1_condensed(bw_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Organ energy requirement (condense)
                 omer_history_condensed_p3g3 = sfun.f1_condensed(omer_history_offs, idx_sorted_w_offs[na,...], condense_w_mask_offs[na,...]
-                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Clean fleece weight (condense)
                 cfw_condensed_offs = sfun.f1_condensed(cfw_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Clean fleece weight (condense)
                 d_cfw_history_condensed_p2g3 = sfun.f1_condensed(d_cfw_history_offs_p2, idx_sorted_w_offs[na,...], condense_w_mask_offs[na,...]
-                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Fibre length since shearing (condense)
                 fl_condensed_offs = sfun.f1_condensed(fl_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Average FD since shearing (condense)
                 fd_condensed_offs = sfun.f1_condensed(fd_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Minimum FD since shearing (condense)
                 fd_min_condensed_offs = sfun.f1_condensed(fd_min_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
 
             ##condense end numbers - have to condense the numbers before calc start production, but need to condense production using non condensed end numbers
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
@@ -4361,15 +4367,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 numbers_end_condensed_dams = sfun.f1_condensed(numbers_end_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 numbers_end_condensed_yatf = sfun.f1_condensed(numbers_end_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] > 0):
                 numbers_end_condensed_offs = sfun.f1_condensed(numbers_end_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
 
             ##start production - this requires condensed end number
             ###sire
@@ -5106,9 +5112,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
     nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
-    #### the transfer to a dvp_type other than type==0 only occurs when transferring to and from the same genotype
+    #### the transfer to a dvp_type other than type==0 (prejoin) only occurs when transferring to and from the same genotype
     #### this occurs when (index_g1 == a_g1_tg1) and the transfer exists
-    mask_dvp_type_next_tg1 = transfer_exists_tpa1e1b1nwzida0e0b0xyg1 * (index_g1 == a_g1_tpa1e1b1nwzida0e0b0xyg1) #dvp type next is a little more complex for animals transferring. However the destination for transfer is always dvp type next ==0 (either it is going from dvp 2 to 0 or from 0 to 0.
+    mask_dvp_type_next_tg1 = transfer_exists_tpa1e1b1nwzida0e0b0xyg1 * (index_g1 == a_g1_tpa1e1b1nwzida0e0b0xyg1)
+    ####dvp type next is a little more complex for animals transferring.
+    #### However, the destination for transfer is always dvp type next ==0 (either it is going from dvp 2 to 0 or from 0 to 0.
     dvp_type_next_tva1e1b1nwzida0e0b0xyg1 = dvp_type_next_va1e1b1nwzida0e0b0xyg1 * mask_dvp_type_next_tg1
     ####association between dvp and lambing opp
     index_v1 = np.arange(index_vpa1e1b1nwzida0e0b0xyg1.shape[0])
@@ -5916,66 +5924,71 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #Mask animals to nutrition profiles  #
     ######################################
     '''creates a mask that removes unnecessary values in the parameters. Because of the lw branching not every decision
-        variable provides to a unique constraint and therefore some decision variables and constraints can be masked out
-        The inclusion of multiple FVPs in a DVP requires a variable step size based on the number of FVPs in a DVP (n_damfvps_v)
-        and the number of FVPs prior to this DVP (n_prior_damfvps_v)
-        step is equal to the total number of patterns i_w_start_len * (i_n_len ** i_n_fvp_period) divided by the number 
-        of constraints : i_w_start_len * (i_n_len ** i_n_prior_damfvps_v) 
-        or decision variables: i_w_start_len * (i_n_len ** (i_n_prior_damfvps_v + i_n_damfvps_v)). 
-        This can be simplified to a single line equation because the terms cancel out
+        variable provides to a unique constraint and therefore some decision variables and constraints can be masked out.
+        Note: FVPs don't have to be DVPs and DVPs don't have to be FVPs. 
+        So there can be multiple FVPs in a DVP (because of this, the number of DVs at the start of the period is based on the FVP at the end of the DVP) 
+        or multiple DVPs in a FVP (in this case the DVPs within the FVP pass 1:1 on the w8w9 axes between DVPs).
         
+        The calculations require the following variables:
         n_fvps_v is the number of FVPs within the DVP
         n_prior_fvps_v is the number of FVPs prior to the start of this DVP since condensing. 
         So if the DVP dates are say 1 Feb, 1 May & 1 July 
         and the FVP dates are 1 Feb, 1 May, 1 June, 1 July, 1 Oct. Then 
         n_fvps_v = 1,2,2 because 1 fvp in the first DVP and 2 in each of the other two DVPs
         n_prior_fvps_v = 0, 1, 3 which is the cumulative sum of n_fvps_v in the previous DVPs (ie not including this DVP)
-        Note: the values can change along the i axis if the FVP date is not relative to a reproduction event.
+        Note: the values can change along the i axis (time of lambing) if the FVP date is not relative to a reproduction event.
+        
+        The inclusion of multiple FVPs in a DVP requires a variable step size based on the number of FVPs in a DVP (n_fvps_v)
+        and the number of FVPs prior to this DVP (n_prior_fvps_v)
+        step is equal to the total number of patterns i_w_start_len * (i_n_len ** i_n_fvp_period) divided by the number 
+        of constraints : i_w_start_len * (i_n_len ** i_n_prior_fvps_v) 
+        or decision variables: i_w_start_len * (i_n_len ** (i_n_prior_fvps_v + i_n_fvps_v)). 
+        This can be simplified to a single line equation because the terms cancel out
+        
         '''
     allocation_start = time.time()
     ##dams
     n_fvps_va1e1b1nwzida0e0b0xyg1 = np.zeros(dvp_start_va1e1b1nwzida0e0b0xyg1.shape)
     n_prior_fvps_va1e1b1nwzida0e0b0xyg1 = np.zeros(dvp_start_va1e1b1nwzida0e0b0xyg1.shape)
-    prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1.copy()
-    prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1.copy()
+    fvp_start_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1.copy()
+    fvp_end_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1.copy()
     prev_condense_date_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1.copy()
-    ###adjust dates to only include dvps which are also fvps (extra dvps just get the same values)
+    ###adjust dates to only include dvps which are also fvps
+    #### DVPs that are not FVPs just get the same values as the previous FVP except if the DVP is immediately after condense
     dvp_is_fvp_va1e1b1nwzida0e0b0xyg1 = np.any(dvp_start_va1e1b1nwzida0e0b0xyg1==fvp_start_fa1e1b1nwzida0e0b0xyg1[:,na,...], axis=0)
-    prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg1[~dvp_is_fvp_va1e1b1nwzida0e0b0xyg1] = 0 #set dvp dates which are not fvps to the start dvp date, these get overwritten in the next step
-    prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg1) #start of prev dvp that is also an fvp
-    prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg1[~dvp_is_fvp_va1e1b1nwzida0e0b0xyg1] = np.max(fvp_start_fa1e1b1nwzida0e0b0xyg1) #set dvp dates which are not fvps to the start dvp date, these get overwritten in the next step
-    prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg1 = np.flip(np.minimum.accumulate(np.flip(prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg1, axis=0)), axis=0) #start of prev dvp that is also an fvp
+    fvp_start_va1e1b1nwzida0e0b0xyg1[~dvp_is_fvp_va1e1b1nwzida0e0b0xyg1] = 0 #set dvp dates which are not fvps to the start dvp date, these get overwritten in the next step
+    fvp_start_va1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(fvp_start_va1e1b1nwzida0e0b0xyg1) #start of prev dvp that is also an fvp
+    fvp_end_va1e1b1nwzida0e0b0xyg1[~dvp_is_fvp_va1e1b1nwzida0e0b0xyg1] = np.max(fvp_start_fa1e1b1nwzida0e0b0xyg1) #set dvp dates which are not fvps to the start dvp date, these get overwritten in the next step
+    fvp_end_va1e1b1nwzida0e0b0xyg1 = np.flip(np.minimum.accumulate(np.flip(fvp_end_va1e1b1nwzida0e0b0xyg1, axis=0)), axis=0) #start of prev dvp that is also an fvp
     ###previous condense date - used to calc number of fvps since last condensing
     prev_condense_date_va1e1b1nwzida0e0b0xyg1[~(dvp_type_va1e1b1nwzida0e0b0xyg1==condense_vtype1)] = 0
     prev_condense_date_va1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(prev_condense_date_va1e1b1nwzida0e0b0xyg1, axis=0)
-    for i in range(dvp_start_va1e1b1nwzida0e0b0xyg1.shape[0]):
-        if i == dvp_start_va1e1b1nwzida0e0b0xyg1.shape[0] - 1:
-            dvp_start = prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg1[i,...]
-            prev_condense_date = prev_condense_date_va1e1b1nwzida0e0b0xyg1[i,...]
-            n_fvp = ((fvp_start_fa1e1b1nwzida0e0b0xyg1 >= dvp_start)).sum(axis=0)
-            n_fvp_since_condense = ((fvp_start_fa1e1b1nwzida0e0b0xyg1 >= prev_condense_date) & (
-                        fvp_start_fa1e1b1nwzida0e0b0xyg1 < dvp_start)).sum(axis=0)
-        else:
-            dvp_start = prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg1[i,...]
-            prev_condense_date = prev_condense_date_va1e1b1nwzida0e0b0xyg1[i,...]
-            dvp_end = prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg1[i + 1,...]
-            n_fvp = ((fvp_start_fa1e1b1nwzida0e0b0xyg1 >= dvp_start) & (
-                        fvp_start_fa1e1b1nwzida0e0b0xyg1 < dvp_end)).sum(axis=0)
-            n_fvp_since_condense = ((fvp_start_fa1e1b1nwzida0e0b0xyg1 >= prev_condense_date) & (
-                        fvp_start_fa1e1b1nwzida0e0b0xyg1 < dvp_start)).sum(axis=0)
-        n_fvps_va1e1b1nwzida0e0b0xyg1[i,...] = n_fvp
-        n_prior_fvps_va1e1b1nwzida0e0b0xyg1[i,...] = n_fvp_since_condense
+    for v in range(dvp_start_va1e1b1nwzida0e0b0xyg1.shape[0]):
+        dvp_start_v = dvp_start_va1e1b1nwzida0e0b0xyg1[v, ...]
+        prev_condense_date_v = prev_condense_date_va1e1b1nwzida0e0b0xyg1[v, ...]
+        n_fvp_since_condense_v = ((fvp_start_fa1e1b1nwzida0e0b0xyg1 >= prev_condense_date_v)
+                                & (fvp_start_fa1e1b1nwzida0e0b0xyg1 < dvp_start_v)).sum(axis=0)
+        if v < dvp_start_va1e1b1nwzida0e0b0xyg1.shape[0] - 1:
+            dvp_end_v = dvp_start_va1e1b1nwzida0e0b0xyg1[v + 1, ...]
+            n_fvp_v = ((fvp_start_fa1e1b1nwzida0e0b0xyg1 >= dvp_start_v)
+                       & (fvp_start_fa1e1b1nwzida0e0b0xyg1 < dvp_end_v)).sum(axis=0)
+        else:  # the final DVP gets special treatment because of wrap around
+            n_fvp_v = ((fvp_start_fa1e1b1nwzida0e0b0xyg1 >= dvp_start_v)).sum(axis=0)
+        n_fvps_va1e1b1nwzida0e0b0xyg1[v,...] = n_fvp_v
+        n_prior_fvps_va1e1b1nwzida0e0b0xyg1[v,...] = n_fvp_since_condense_v
 
     ###Steps for ‘Numbers Requires’ constraint is determined by the number of prior FVPs
-    step_con_req_va1e1b1nw8zida0e0b0xyg1 = np.power(n_fs_dams, (n_fvp_periods_dams
-                                                              - n_prior_fvps_va1e1b1nwzida0e0b0xyg1))
+    step_con_req_va1e1b1nw8zida0e0b0xyg1 = np.power(n_fs_dams, (n_fvps_percondense_dams
+                                                              - n_prior_fvps_va1e1b1nwzida0e0b0xyg1))   #step is based on the FVPs at the start of the DVP
     ###Steps for the decision variables is determined by the number of current & prior FVPs
-    step_dv_va1e1b1nw8zida0e0b0xyg1 = np.power(n_fs_dams, (n_fvp_periods_dams
+    step_dv_va1e1b1nw8zida0e0b0xyg1 = np.power(n_fs_dams, (n_fvps_percondense_dams
                                                          - n_prior_fvps_va1e1b1nwzida0e0b0xyg1
-                                                         - n_fvps_va1e1b1nwzida0e0b0xyg1))
+                                                         - n_fvps_va1e1b1nwzida0e0b0xyg1))   #step is based on the FVPs at the end of the DVP
     ###Steps for ‘Numbers Provides’ is calculated with a t axis (because the t axis can alter the dvp type of the source relative to the destination)
-    step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(step_dv_va1e1b1nw8zida0e0b0xyg1, n_fs_dams ** n_fvp_periods_dams
-                                                         , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1)[..., na]
+    ###The 'provide' constraint is the same as the DV (because each DVP provides itself) except when the next DVP is condensing
+    step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(step_dv_va1e1b1nw8zida0e0b0xyg1
+                                                            , n_fs_dams ** n_fvps_percondense_dams
+                                                            , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1)[..., na]
 
     ##Mask the decision variables that are not active in this DVP in the matrix - because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = index_wzida0e0b0xyg1 % step_dv_va1e1b1nw8zida0e0b0xyg1 == 0
@@ -5985,16 +5998,22 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     a_shortlist_w1 = index_w1 % len_nut_dams
     mask_nut_va1e1b1nwzida0e0b0xyg1 = mask_nut_va1e1b1nWzida0e0b0xyg1[:,:,:,:,:,a_shortlist_w1,...]  # expands the nutrition mask to all lw patterns.
     ### match the pattern requested with the pattern that is the 'history' for that pattern in previous DVPs
-    mask_w8nut_va1e1b1nzida0e0b0xyg1w9 = np.sum(mask_nut_va1e1b1nwzida0e0b0xyg1[...,na] *
+    mask_w9nut_va1e1b1nzida0e0b0xyg1w9 = np.sum(mask_nut_va1e1b1nwzida0e0b0xyg1[...,na] *
                                                (np.trunc(index_wzida0e0b0xyg1[...,na] / step_dv_va1e1b1nw8zida0e0b0xyg1[..., na])
                                                 == index_w1 / step_dv_va1e1b1nw8zida0e0b0xyg1[...,na]),
-                                               axis=w_pos-1) > 0 #don't keepdims
-    mask_w8nut_va1e1b1nwzida0e0b0xyg1 = np.moveaxis(mask_w8nut_va1e1b1nzida0e0b0xyg1w9,-1,w_pos) #move w9 axis to w position
+                                               axis=w_pos-1) > 0 #don't keepdims so w8 axis is dropped
+    mask_w8nut_va1e1b1nwzida0e0b0xyg1 = np.moveaxis(mask_w9nut_va1e1b1nzida0e0b0xyg1w9,-1,w_pos) #move w9 axis to w position
     ## Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nwzida0e0b0xyg1
     ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesn't mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
     dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1 = np.logical_or(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1
                                                                , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == season_vtype1) #when distribution occurs any w8 can provide w9
+    # ##Mask the provide constraint (w9)
+    # mask_w9provcons_tva1e1b1nw8zida0e0b0xyg1w9 = (np.trunc((index_wzida0e0b0xyg1[...,na]
+    #                                                 * np.logical_not(dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1[...,na])
+    #                                                 + index_w1 * dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1[...,na])
+    #                                             / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9)
+    #                                         == index_w1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9)
     mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
                         * (np.trunc((index_wzida0e0b0xyg1[...,na] * np.logical_not(dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1[...,na])
                                      + index_w1 * dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1[...,na])
@@ -6004,6 +6023,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                     / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9[...,0])
                                            == index_wzida0e0b0xyg1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9[...,0])
     ##Mask numbers required from the previous period (broadcast across t axis) - Note: req does not need a t axis because the destination decision variable don’t change for the transfer
+    ##Mask for the require constraint (w9)
+    # mask_w9reqcons_va1e1b1nw8zida0e0b0xyg1w9 = (np.trunc(index_wzida0e0b0xyg1 / step_con_req_va1e1b1nw8zida0e0b0xyg1)[...,na]
+    #                                            == index_w1 / step_con_req_va1e1b1nw8zida0e0b0xyg1[...,na])
     mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
                         * (np.trunc(index_wzida0e0b0xyg1 / step_con_req_va1e1b1nw8zida0e0b0xyg1)[...,na] == index_w1
                            / step_con_req_va1e1b1nw8zida0e0b0xyg1[...,na])
@@ -6043,14 +6065,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         n_prior_fvps_va1e1b1nwzida0e0b0xyg3[i,...] = n_fvp_since_condense
 
     ###Steps for ‘Numbers Requires’ constraint is determined by the number of prior FVPs
-    step_con_req_va1e1b1nw8zida0e0b0xyg3 = np.power(n_fs_offs, (n_fvp_periods_offs
+    step_con_req_va1e1b1nw8zida0e0b0xyg3 = np.power(n_fs_offs, (n_fvps_percondense_offs
                                                               - n_prior_fvps_va1e1b1nwzida0e0b0xyg3))
     ###Steps for the decision variables is determined by the number of current & prior FVPs
-    step_dv_va1e1b1nw8zida0e0b0xyg3 = np.power(n_fs_offs, (n_fvp_periods_offs
+    step_dv_va1e1b1nw8zida0e0b0xyg3 = np.power(n_fs_offs, (n_fvps_percondense_offs
                                                          - n_prior_fvps_va1e1b1nwzida0e0b0xyg3
                                                          - n_fvps_va1e1b1nwzida0e0b0xyg3))
     ###Steps for ‘Numbers Provides’
-    step_con_prov_va1e1b1nw8zida0e0b0xyg3w9 = fun.f_update(step_dv_va1e1b1nw8zida0e0b0xyg3, n_fs_offs ** n_fvp_periods_offs
+    step_con_prov_va1e1b1nw8zida0e0b0xyg3w9 = fun.f_update(step_dv_va1e1b1nw8zida0e0b0xyg3, n_fs_offs ** n_fvps_percondense_offs
                                                          , dvp_type_next_va1e1b1nwzida0e0b0xyg3 == condense_vtype3)[..., na]
     ##Mask the decision variables that are not active in this DVP in the matrix - because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg3 = (index_wzida0e0b0xyg3 % step_dv_va1e1b1nw8zida0e0b0xyg3) == 0
@@ -6625,10 +6647,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                                                   numbers_start_d_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2)
 
     ##mask w8 (prog) to w9 (dams)
-    step_con_prog2dams = n_fs_dams ** n_fvp_periods_dams
+    step_con_prog2dams = n_fs_dams ** n_fvps_percondense_dams
     mask_numbers_prog2damsw8w9_w9 = (index_w1 % step_con_prog2dams) == 0
     ##mask w8 (prog) to w9 (offs)
-    step_con_prog2offs = n_fs_offs ** n_fvp_periods_offs
+    step_con_prog2offs = n_fs_offs ** n_fvps_percondense_offs
     mask_numbers_prog2offsw8w9_w9 = (index_w3 % step_con_prog2offs) == 0
 
     ###The association between birth time of the progeny and the birth time and lambing opportunity/dam age
