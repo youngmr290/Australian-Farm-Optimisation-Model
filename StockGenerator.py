@@ -5980,16 +5980,24 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###Steps for ‘Numbers Requires’ constraint is determined by the number of prior FVPs
     step_con_req_va1e1b1nw8zida0e0b0xyg1 = np.power(n_fs_dams, (n_fvps_percondense_dams
                                                               - n_prior_fvps_va1e1b1nwzida0e0b0xyg1))   #step is based on the FVPs at the start of the DVP
-    ###Steps for the decision variables is determined by the number of current & prior FVPs
+    ###Steps for the w8 decision variables is determined by the number of current & prior FVPs. w8 is the DV this period
     step_dv_va1e1b1nw8zida0e0b0xyg1 = np.power(n_fs_dams, (n_fvps_percondense_dams
                                                          - n_prior_fvps_va1e1b1nwzida0e0b0xyg1
                                                          - n_fvps_va1e1b1nwzida0e0b0xyg1))   #step is based on the FVPs at the end of the DVP
     ###Steps for ‘Numbers Provides’ is calculated with a t axis (because the t axis can alter the dvp type of the source relative to the destination)
     ###The 'provide' constraint is the same as the DV (because each DVP provides itself) except when the next DVP is condensing
     step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(step_dv_va1e1b1nw8zida0e0b0xyg1
-                                                            , n_fs_dams ** n_fvps_percondense_dams
+                                                            , np.power(n_fs_dams, n_fvps_percondense_dams)
                                                             , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1)[..., na]
-
+    ###Steps for the w9 decision variables is the same as the step for w8 in the following period except when
+    ####the next period is condensing (like step_con_prov).
+    ####The w9 axis is in the position of the w8 because the var is used to mask ffcfw_dest_wg (which has w9 in w8 pos)
+    #### The difference to step_con_prov is that step_w9 allows for multiple DV being provided by a single constraint.
+    step_w9_tva1e1b1nw8zida0e0b0xyg1 = fun.f_update(np.roll(step_dv_va1e1b1nw8zida0e0b0xyg1,-1, axis=p_pos)
+                                                    , np.power(n_fs_dams, n_fvps_percondense_dams
+                                                                - np.roll(n_fvps_va1e1b1nwzida0e0b0xyg1,-1,axis=p_pos))
+                                                    , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1)
+    step_w9_tva1e1b1nw8zida0e0b0xyg1[:,-1,...] = 1  # set the last slice to 1 rather than use value rolled from v[0]
     ##Mask the decision variables that are not active in this DVP in the matrix - because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = index_wzida0e0b0xyg1 % step_dv_va1e1b1nw8zida0e0b0xyg1 == 0
     ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns e.g. high high high vs low low low) - this mask is combined with the other w8 masks below
@@ -6006,29 +6014,30 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ## Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nwzida0e0b0xyg1
     ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesn't mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
-    dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1 = np.logical_or(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1
-                                                               , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == season_vtype1) #when distribution occurs any w8 can provide w9
+    dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1 = np.logical_or(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1
+                                                                , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == season_vtype1) #when distribution occurs any w8 can provide w9
     # ##Mask the provide constraint (w9)
     # mask_w9provcons_tva1e1b1nw8zida0e0b0xyg1w9 = (np.trunc((index_wzida0e0b0xyg1[...,na]
-    #                                                 * np.logical_not(dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1[...,na])
-    #                                                 + index_w1 * dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1[...,na])
+    #                                                 * np.logical_not(dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1[...,na])
+    #                                                 + index_w1 * dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1[...,na])
     #                                             / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9)
     #                                         == index_w1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9)
     mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
-                        * (np.trunc((index_wzida0e0b0xyg1[...,na] * np.logical_not(dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1[...,na])
-                                     + index_w1 * dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1[...,na])
+                        * (np.trunc((index_wzida0e0b0xyg1[...,na] * np.logical_not(dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1[...,na])
+                                     + index_w1 * dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1[...,na])
                                     / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9) == index_w1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9)
     ##Create a mask for the distribution of w8 to w9, with w9 in the w position for the ffcfw_dest_wg
-    mask_w9vars_va1e1b1nw9zida0e0b0xyg1 = (np.trunc(index_wzida0e0b0xyg1 * dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1
-                                                    / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9[...,0])
-                                           == index_wzida0e0b0xyg1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9[...,0])
+    #todo mask_w9vars may also require mask_nut too
+    mask_w9vars_tva1e1b1nw9zida0e0b0xyg1 = np.logical_and(np.trunc(index_wzida0e0b0xyg1 / step_w9_tva1e1b1nw8zida0e0b0xyg1)
+                                                             == index_wzida0e0b0xyg1 / step_w9_tva1e1b1nw8zida0e0b0xyg1
+                                                          , dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1)
     ##Mask numbers required from the previous period (broadcast across t axis) - Note: req does not need a t axis because the destination decision variable don’t change for the transfer
     ##Mask for the require constraint (w9)
     # mask_w9reqcons_va1e1b1nw8zida0e0b0xyg1w9 = (np.trunc(index_wzida0e0b0xyg1 / step_con_req_va1e1b1nw8zida0e0b0xyg1)[...,na]
     #                                            == index_w1 / step_con_req_va1e1b1nw8zida0e0b0xyg1[...,na])
     mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
-                        * (np.trunc(index_wzida0e0b0xyg1 / step_con_req_va1e1b1nw8zida0e0b0xyg1)[...,na] == index_w1
-                           / step_con_req_va1e1b1nw8zida0e0b0xyg1[...,na])
+                        * (np.trunc(index_wzida0e0b0xyg1 / step_con_req_va1e1b1nw8zida0e0b0xyg1)[...,na]
+                           == index_w1 / step_con_req_va1e1b1nw8zida0e0b0xyg1[...,na])
 
     ##offs
     ###create arrays
@@ -6312,7 +6321,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###t0 and t1 are distributed however this is not used because t0 and t1 don't transfer to next dvp
     distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
         ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1, ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1,
-        mask_w9vars_va1e1b1nw9zida0e0b0xyg1,
+        mask_w9vars_tva1e1b1nw9zida0e0b0xyg1,
         index_wzida0e0b0xyg1, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na], condense_vtype1)
     distribution_condense_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
         ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3, ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3,
@@ -6322,7 +6331,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##redistribute at season start - all seasons back into a common season.
     distribution_season_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
         ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1, ffcfw_source_season_va1e1b1nwzida0e0b0xyg1,
-        mask_w9vars_va1e1b1nw9zida0e0b0xyg1,
+        mask_w9vars_tva1e1b1nw9zida0e0b0xyg1,
         index_wzida0e0b0xyg1, dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na], season_vtype1)
     distribution_season_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
         ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3, ffcfw_source_season_va1e1b1nwzida0e0b0xyg3,

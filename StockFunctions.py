@@ -2763,7 +2763,9 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_w9vars_wg=1, index
         the 8 or 9 is dropped from the w if singleton'''
     ##set dtype
     dtype = ffcfw_dest_w8g.dtype
-
+    ##Mask ffcfw_destn using mask_w9 to remove weights of animals that don't exist
+    #todo may require resetting the 0 weights to be the weight of the animal from the same root
+    ffcfw_dest_w8g = ffcfw_dest_w8g * mask_w9vars_wg
     ## Move w axis of dest_w8g to -1 and f_expand to retain the original ‘w’ as a singleton
     ffcfw_dest_wgw9 = fun.f_expand(np.moveaxis(ffcfw_dest_w8g, sinp.stock['i_w_pos'],-1), sinp.stock['i_n_pos']-1, right_pos=sinp.stock['i_z_pos']-1)
     ## create index for w9 based on shape of the (now) last axis (to be used later)
