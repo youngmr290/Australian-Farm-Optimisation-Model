@@ -6000,19 +6000,25 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     step_w9_tva1e1b1nw8zida0e0b0xyg1[:,-1,...] = 1  # set the last slice to 1 rather than use value rolled from v[0]
     ##Mask the decision variables that are not active in this DVP in the matrix - because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = index_wzida0e0b0xyg1 % step_dv_va1e1b1nw8zida0e0b0xyg1 == 0
-    ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns e.g. high high high vs low low low) - this mask is combined with the other w8 masks below
+    ##mask for the user defined nutrition profiles (this allows the user to exclude certain nutrition patterns e.g. high high high or low low low)
+    ### this mask is combined with the main w8 & w9 masks below
     mask_nut_va1e1b1nWzida0e0b0xyg1 = np.take_along_axis(mask_nut_oa1e1b1nWzida0e0b0xyg1, a_prev_o_va1e1b1nwzida0e0b0xyg1, axis=0)
     ###association between the shortlist of nutrition profile inputs and the full range of LW patterns that include starting LW
     a_shortlist_w1 = index_w1 % len_nut_dams
     mask_nut_va1e1b1nwzida0e0b0xyg1 = mask_nut_va1e1b1nWzida0e0b0xyg1[:,:,:,:,:,a_shortlist_w1,...]  # expands the nutrition mask to all lw patterns.
     ### match the pattern requested with the pattern that is the 'history' for that pattern in previous DVPs
-    mask_w9nut_va1e1b1nzida0e0b0xyg1w9 = np.sum(mask_nut_va1e1b1nwzida0e0b0xyg1[...,na] *
+    mask_w8nut_va1e1b1nzida0e0b0xyg1w = np.sum(mask_nut_va1e1b1nwzida0e0b0xyg1[...,na] *
                                                (np.trunc(index_wzida0e0b0xyg1[...,na] / step_dv_va1e1b1nw8zida0e0b0xyg1[..., na])
-                                                == index_w1 / step_dv_va1e1b1nw8zida0e0b0xyg1[...,na]),
-                                               axis=w_pos-1) > 0 #don't keepdims so w8 axis is dropped
-    mask_w8nut_va1e1b1nwzida0e0b0xyg1 = np.moveaxis(mask_w9nut_va1e1b1nzida0e0b0xyg1w9,-1,w_pos) #move w9 axis to w position
+                                                == index_w1 / step_dv_va1e1b1nw8zida0e0b0xyg1[...,na]), axis=w_pos-1) > 0 #don't keepdims so w8 axis is dropped, to allow move
+    mask_w8nut_va1e1b1nw8zida0e0b0xyg1 = np.moveaxis(mask_w8nut_va1e1b1nzida0e0b0xyg1w,-1,w_pos) #move w axis to w8 position
     ## Combine the w8vars mask and the user nutrition mask
-    mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nwzida0e0b0xyg1
+    mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nw8zida0e0b0xyg1
+    ## Mask w9 for the user defined profiles. This is required for the distribution at season start.
+    ### This requires a t axis for the dams because of the transfer between genotype (slices of the g axis). Can be simplified for offs using roll(w8_nut)
+    mask_w9nut_va1e1b1nzida0e0b0xyg1w = np.sum(np.roll(mask_nut_va1e1b1nwzida0e0b0xyg1[..., na], -1, axis = 0) *
+                                                (np.trunc(index_wzida0e0b0xyg1[..., na] / step_w9_tva1e1b1nw8zida0e0b0xyg1[..., na])
+                                                 == index_w1 / step_w9_tva1e1b1nw8zida0e0b0xyg1[..., na]),axis=w_pos-1) > 0 #keepdims so w8 is dropped, to allow move
+    mask_w9nut_va1e1b1nw9zida0e0b0xyg1 = np.moveaxis(mask_w9nut_va1e1b1nzida0e0b0xyg1w, -1, w_pos)  #move w axis to w8 position
     ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesn't mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
     dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1 = np.logical_or(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1
                                                                 , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == season_vtype1) #when distribution occurs any w8 can provide w9
@@ -6031,6 +6037,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     mask_w9vars_tva1e1b1nw9zida0e0b0xyg1 = np.logical_and(np.trunc(index_wzida0e0b0xyg1 / step_w9_tva1e1b1nw8zida0e0b0xyg1)
                                                              == index_wzida0e0b0xyg1 / step_w9_tva1e1b1nw8zida0e0b0xyg1
                                                           , dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1)
+    ## Combine the w9vars mask and the user nutrition mask
+    mask_w9vars_tva1e1b1nw9zida0e0b0xyg1 = mask_w9vars_tva1e1b1nw9zida0e0b0xyg1 * mask_w9nut_va1e1b1nw9zida0e0b0xyg1
     ##Mask numbers required from the previous period (broadcast across t axis) - Note: req does not need a t axis because the destination decision variable don’t change for the transfer
     ##Mask for the require constraint (w9)
     # mask_w9reqcons_va1e1b1nw8zida0e0b0xyg1w9 = (np.trunc(index_wzida0e0b0xyg1 / step_con_req_va1e1b1nw8zida0e0b0xyg1)[...,na]
