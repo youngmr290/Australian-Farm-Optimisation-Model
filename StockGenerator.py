@@ -5353,7 +5353,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##calc wool value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
     ###create mask which is the periods where shearing occurs
     shear_mask_p0 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0, period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg), preserveAxis=p_pos) #preforms np.any across all axis except axis 1
-    shear_mask_p1 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_shearing_tpa1e1b1nwzida0e0b0xyg1, period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg), preserveAxis=p_pos) #preforms np.any across all axis except axis 1
+    shear_mask_p1 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_shearing_tpa1e1b1nwzida0e0b0xyg1[:,na,...], period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg), preserveAxis=p_pos) #preforms np.any across all axis except axis 1
     shear_mask_p3 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_shearing_tpa1e1b1nwzida0e0b0xyg3[:,na,...], period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p]), preserveAxis=p_pos) #preforms np.any across all axis except axis 2
     ###create association between p and s
     a_p_p9a1e1b1nwzida0e0b0xyg0 = fun.f_expand(np.nonzero(shear_mask_p0)[0],p_pos)  #take [0] because nonzero function returns tuple
