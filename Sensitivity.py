@@ -255,10 +255,10 @@ sav_inp['n_fs_dams'] = '-'      #nut options dams
 sav_inp['n_fs_offs'] = '-'      #nut options offs
 sav_inp['n_initial_lw_dams'] = '-'      #number of initial lws dams - note with the current code this can only be 2 or 3
 sav_inp['adjp_lw_initial_w1'] = np.full(sinp.structuralsa['i_adjp_lw_initial_w1'].shape, '-', dtype=object)      #initial lw adjustment dams
-sav_inp['mask_fvp_dams'] = np.full(sinp.structuralsa['i_fvp_mask_dams'].shape, '-', dtype=object)      #SA to mask changeable fvps.
-sav_inp['fvp_is_dvp_dams'] = np.full(sinp.structuralsa['i_dvp_mask_f1'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
-sav_inp['mask_fvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to mask changeable fvps.
-sav_inp['fvp_is_dvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
+sav_inp['mask_fvp_dams'] = np.full(sinp.structuralsa['i_fvp_mask_dams'].shape, '-', dtype=object)      #SA to mask optional fvps.
+sav_inp['fvp_is_dvp_dams'] = np.full(sinp.structuralsa['i_dvp_mask_f1'].shape, '-', dtype=object)      #SA to control if optional fvp is a dvp (note; fvps dont need to be dvps, the only benefit is if new information is available eg if animals uncluster).
+sav_inp['mask_fvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to mask optional fvps.
+sav_inp['fvp_is_dvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to control if optional fvp is a dvp (note; fvps dont need to be dvps, the only benefit is if new information is available eg if animals uncluster).
 sav_inp['r1_izg1'] = np.full(pinp.sheep['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option selected for dams
 sav_inp['r1_izg3'] = np.full(pinp.sheep['ia_r1_zig3'].shape, '-', dtype=object)   #SA to change the base feed option selected for offspring
 sav_inp['r2_ik0g1'] = np.full(pinp.sheep['ia_r2_ik0g1'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k0 axis (wean age) for dams
