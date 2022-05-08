@@ -25,9 +25,12 @@ na=np.newaxis
 
 
 def f1_sim_periods(start_year, periods_per_year, oldest_animal):
+    #todo start_year is not used
     '''
-    Define the dates for the simulation periods.
-    Starts on 1 Jan of the year with the earliest birthdate.
+    Define the days for the simulation periods.
+    The year has 52 weeks with 7 days in a week. The extra day of the year is ignored
+    All calculations are based on a day of the year rather than a date and the periods are weeks of the year
+    This saves managing hte difficulties associated with the extra day in the year and in leap years.
 
     Parameters:
     start_year = int: year to start simulation.
@@ -94,7 +97,12 @@ def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=0, condition=None, axis=0, d
     ----------
     params_c2 : array - parameter array - input from excel.
     y : array - sensitivity array for genetic merit.
+    a_c2_c0 :
+    i_g3_inc : the offspring genotypes that are included in this trial
     var_pos : int - position of last axis when inserted into all axis.
+    condition :
+    axis:
+    dtype :
 
     Returns
     -------
@@ -175,7 +183,7 @@ def f1_DSTw_adjust(propn_source_b1, cycles_source=2, cycles_destination=1, axis_
     propn_source_b1 : np array - The proportion of dams in each b1 slice if mated for the source number of cycles.
     cycles_source: int, optional - the number of cycles from which the input proportions have been estimated.
     cycles_destination: int, optional - the number of cycles for which the prediction is required.
-    axis: int, optional - the axis that has the proportion of each litter size
+    axis_b1 : int, optional - the axis that has the proportion of each litter size
     dry_slice: int, optional - the slice of axis that is the dry animals. If dry_slice is != 0, implies NM exists.
 
     Returns
@@ -586,7 +594,7 @@ def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, te
     :param piyf:
     :param period_between_birthwean:
     :param sam_pi:
-    :return:
+    :return pi:
     '''
     ##Condition factor on PI
     picf= np.minimum(1, rc_start * (ci[20, ...] - rc_start) / (ci[20, ...] - 1))
@@ -2759,8 +2767,43 @@ def f1_cum_sum_dvp(arr,dvp_pointer,axis=0,shift=0):
 
 
 def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w8=None, dvp_type_next_tvgw=0, vtype=0): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
-    '''distributing animals on LW at the start of dvp
-        the 8 or 9 is dropped from the w if singleton'''
+    """Distribute animals between periods when the animals are changing on the period junction. This change can
+    be either 1. condensing at prejoining when animals are 'condensed' from the final number of LW profiles back to
+    the initial number or 2. averaging animals at season start when weights at the end of all the seasons are
+    averaged to become the start weight for the next season.
+
+    The animals are distributed to the 2 nearest neighbours, rather than a distribution across all destination LWs.
+    The aim is that the average weight of the animals in the next period is equal to the average weight at the
+    end of this period. However, this is only possible if the source weight being distributed is between the
+    lowest and highest destination weights.
+
+    If the weight is above the highest destination weight then the weight is rounded down & the extra weight is
+    effectively lost. If the weight is below the lowest weight then that animal is not transferred to the next
+    period and the animal is effectively lost.
+
+    When the distribution is for condensing/pre-joining the destination weights are ffcfw_end for the condensed slices (w9).
+    This is the condensed values of ffcfw_end (of this DVP) rather than ffcfw_start (of the next DVP) because ffcfw_start
+    includes the averaging of LW that occurs as part of f_period_start_prod when the period is prejoin.
+    Clustering based on the condensed weights of lw_start (after averaging across the b1 & e1 axes) would mean
+    that the clustering is occurring based on the proportion of animals in the b1 & e1 axes in the generator
+    (which are based on those animals following the same nutrition profile (H, M or L for that class)), whereas
+    they may have been differentially managed in the matrix, hence the requirement to distribute based on ffcfw_end.
+    The effect if the groups are clustered (i.e. not scanned) is to keep the heavier singles with the heavier twins,
+    rather than distribute the heavy twins with the average singles (which might have a more similar weight).
+    If this didn't occur the LW distribution would allow defacto ‘scanning’ through LW distribution. Although
+    differential management based on LW can be done in practice, in reality there is a distribution of weight
+    (within each class-dry,single,twin) so the split would be imprecise, whereas in the generator all the animals
+    of a class (D,S,Tw) are all the same weight (for a given nutrition profile), so the generator could split
+    them accurately for BTRT based on LW.
+
+    :param ffcfw_dest_w8g: The LW at the end of the DVP for the animals that define each w9 constraint (in w8 axis position)
+    :param ffcfw_source_w8g: The LW at the end of the DVP, of the animals to be distributed
+    :param mask_dest_wg: mask the destination slices for the distribution
+    :param index_w8:
+    :param dvp_type_next_tvgw: the DVP-type of the next DVP
+    :param vtype: the distribution is only returned if the next DVP is of this vtype
+    :return distribution_w8gw9: A v array with a proportion of each tw8g8 decision variable passing into each w9g9 constraint
+    """
     ##set dtype
     dtype = ffcfw_dest_w8g.dtype
 
@@ -2843,7 +2886,7 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     distribution_w8gw9 = np.clip(distribution_nearest_w8gw9 + distribution_nextnearest_w8gw9,0,1)
     # distribution_error = np.any(np.sum(distribution_w8gw9, axis=-1)>1)
 
-    ##Set default for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
+    ##Set defaults for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
     distribution_w8gw9 = fun.f_update(distribution_w8gw9, 1, dvp_type_next_tvgw!=vtype)
     return distribution_w8gw9
 
