@@ -1150,7 +1150,7 @@ def f_profitloss_table(lp_vars, r_vals):
     # pnl_cols = pd.MultiIndex.from_product([keys_c0, keys_p7])
     pnl_cols = keys_p7
     pnl = pd.DataFrame(index=pnl_index, columns=pnl_cols)  # need to initialise df with multiindex so rows can be added
-    pnl = pnl.sort_index() #have to sort to stop preformance warning
+    pnl = pnl.sort_index() #have to sort to stop performance warning
 
     ##income
     rev_grain_p7_qsz = rev_grain_k_p7zqs.sum(axis=0).unstack([2,3,1])  # sum landuse axis
@@ -1218,7 +1218,7 @@ def f_profitloss_table(lp_vars, r_vals):
     pnl.loc[idx[:, :, :, 'Total', 'obj'], 'Full year'] = season_obj_qsz
 
     ##add the objective of all seasons
-    pnl.loc[idx['Weighted obj', '', '', '', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1) #have to sort to stop preformance warning. Not sure why it only happens for this line.
+    pnl.loc[idx['Weighted obj', '', '', '', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1) #have to sort to stop performance warning. Not sure why it only happens for this line.
 
     ##round numbers in df
     pnl = pnl.astype(float).round(1)  # have to go to float so rounding works
@@ -1314,7 +1314,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
         ###set weights to 0 if very small number (otherwise it can show up in report when it shouldnt)
         weights[np.isclose(weights, 0)] = 0
 
-    ##initilise prod array from either r_vals or default value (this means you can preform arith with any number - mainly used for pasture when there is no production param)
+    ##initilise prod array from either r_vals or default value (this means you can perform arith with any number - mainly used for pasture when there is no production param)
     if isinstance(prod, str):
         prod = r_vals[prod]
     # else:
@@ -1335,7 +1335,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     ##other manipulation
     prod, weights, den_weights, prod_weights = f_add_axis(prod, na_prod, prod_weights, na_prodweights, weights, na_weights, den_weights, na_denweights)
     prod, prod_weights, weights, den_weights, keys = f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice)
-    ##preform arith. if an axis is not reported it is included in the arith and the axis disappears
+    ##perform arith. if an axis is not reported it is included in the arith and the axis disappears
     report_idx = index + cols
     arith_axis = list(set(range(len(prod.shape))) - set(report_idx))
     prod = f_arith(prod, prod_weights, weights, den_weights, arith, arith_axis)
@@ -1660,11 +1660,11 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
 ############################
 
 def f_numpy2df_error(prod, weights, arith_axis, index, cols):
-    ##error handle 1: can't preform arithmetic along an axis and also report that axis and the index or col
+    ##error handle 1: can't perform arithmetic along an axis and also report that axis and the index or col
     arith_occur = len(arith_axis) >= 1
     arith_error = any(item in index for item in arith_axis) or any(item in cols for item in arith_axis)
     if arith_occur and arith_error:  # if arith is happening and there is an error in selected axis
-        raise exc.ArithError('''Arith error: can't preform operation along an axis that is going to be reported as the index or col''')
+        raise exc.ArithError('''Arith error: can't perform operation along an axis that is going to be reported as the index or col''')
 
     ##error handle 2: can't report an axis as index and col
     axis_error = any(col in index for col in cols)
@@ -1681,7 +1681,7 @@ def f_numpy2df_error(prod, weights, arith_axis, index, cols):
         raise exc.AxisError('''Axis error: active axes exist that are not used in arith or being reported as index or columns''')
 
     # This error flag is not required because doing Arith with weights==None throws a python error. Note: some Arith options don't require weights
-    # ##error 4: preforming arith with no weights
+    # ##error 4: performing arith with no weights
     # if arith_occur and weights is None:
     #     raise exc.ArithError('''Arith error: weights are not included''')
     return
@@ -1748,7 +1748,7 @@ def f_arith(prod, prod_weights, weight, den_weights, arith, axis):
     :param weight: array: weights (typically the variable associated with the prod param)
     :param den_weight: array: weights the denominator in the weighted average calculation
     :param arith: int: arith option
-    :param axis: list: axes to preform arith along
+    :param axis: list: axes to perform arith along
     :return: array
     '''
     ##adjust prod by prod_weights

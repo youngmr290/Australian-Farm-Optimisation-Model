@@ -21,7 +21,7 @@ class TrialError(Error):
 
 
 class ArithError(Error):
-    """Raised when user has incorrect specifications for preforming arithmetic"""
+    """Raised when user has incorrect specifications for performing arithmetic"""
     pass
 
 

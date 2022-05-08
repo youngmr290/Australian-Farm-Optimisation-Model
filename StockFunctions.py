@@ -2806,12 +2806,11 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     ##set dtype
     dtype = ffcfw_dest_w8g.dtype
 
-    ##ffcfw_destn should be the same for clustered W (due to the season weighted average the decimals can be a tiny bit different.
-    ## This step uses w9 mask to set clusted weights to be the same.
+    ##ffcfw_destn should be the same for clustered W (but due to the season weighted average the decimals can be a tiny bit different).
     if index_w8 is not None:
-        ###create association that point to the first w slice in the w cluster
+        ###create an association that points to the first w slice that is not masked (can be masked by either clustering or mask_nut)
         a_wcluster_w8g = np.maximum.accumulate(index_w8 * mask_dest_wg, axis=sinp.stock['i_w_pos'])
-        ###for each w set it to the first weight in the cluster e.g. if w[0,1,2] are in the same w9 cluster then they will all be set to the w[0] value.
+        ###for each w, set it to the first weight in the cluster e.g. if w[0,1,2] are in the same w cluster then they will all be set to the w[0] value.
         ffcfw_dest_w8g = np.take_along_axis(ffcfw_dest_w8g, a_wcluster_w8g, axis=sinp.stock['i_w_pos'])
 
     ## Move w axis of dest_w8g to -1 and f_expand to retain the original ‘w’ as a singleton
@@ -2828,14 +2827,20 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     diff_abs_w8gw9 = np.abs(diff_w8gw9)
     nearestw9_idx_w8g = np.argmin(diff_abs_w8gw9,axis = -1)
 
-    ## If an index_w8 has been provided (because it is a square w8:w9) then test for equality
-    ### if the source weight is matched to the destination then set index to own slice (so slice distributes to itself)
-    ### required to handle if destination weights are replicated in which case nearestw9_idx will point to first
-    ### occurrence (if w9[0] and w9[54] are the same weight as w8[55] this code will make w8[55] distribute to w9[54] instead of w9[0]).
+    ## If an index_w8 has been provided (because it is a square w8:w9) then test the nearest for equality
+    ### If the source weight matches the destination then set index to the slice of the first clustered weight
+    ### (so the slice distributes to itself or to the equivalent clustered slice)
+    ### Covers two situations:
+    ### 1. if destination weights are replicated
+    ### 2. if a destination weight is masked
+    ### in both cases nearestw9_idx will point to the next lowest unmasked weight e.g. if w9[0] and w9[54] are
+    ### the same weight as w8[55] this code will make w8[55] distribute to w9[54] instead of w9[0].
     ### 8May22 unsure if this is achieving anything important
     if index_w8 is not None:
-        a_wdest_w8 = np.maximum.accumulate(index_w8*mask_dest_wg, axis=sinp.stock['i_w_pos']) #points to the starting w to ensure that 1:1 distributing doesn't occur if a w9 slice is masked
-        nearestw9_idx_w8g = fun.f_update(nearestw9_idx_w8g, a_wdest_w8, np.isclose(ffcfw_source_w8g, ffcfw_dest_w8g))
+        ###create an association that points to the first w slice that is not masked (can be masked by either clustering or mask_nut)
+        a_wcluster_w8g = np.maximum.accumulate(index_w8 * mask_dest_wg, axis=sinp.stock['i_w_pos'])
+        ###points to the clustered/unmasked w to ensure that 1:1 distributing doesn't occur if a w9 slice is masked
+        nearestw9_idx_w8g = fun.f_update(nearestw9_idx_w8g, a_wcluster_w8g, np.isclose(ffcfw_source_w8g, ffcfw_dest_w8g))
 
     ## The nearest destination weight for each source weight & the difference from each w8
     nearestw9_w8gw = np.take_along_axis(ffcfw_dest_wgw9, nearestw9_idx_w8g[...,na], axis=-1)

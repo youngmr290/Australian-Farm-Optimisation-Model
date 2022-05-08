@@ -7,7 +7,7 @@ is in confinement or not.
 
 Animal production is generated for animals following different liveweight profiles throughout the year. There
 are a number of starting liveweights and for each starting liveweight there are a number of feedsupply patterns.
-The LW profiles are not continuous for the entirety of the animals life, rather the animals are distributed to the
+The LW profiles are not continuous for the entirety of the animal's life, rather the animals are distributed to the
 starting liveweights at the beginning of each year (prejoining). This is done to reduce model size.
 
 The standard feedsupply options throughout the year are generated from an input of the expected optimum feedsupply
