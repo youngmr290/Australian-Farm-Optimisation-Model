@@ -719,14 +719,17 @@ def f_objective(model):
 
     '''
 
-    variables = model.component_objects(pe.Var,active=True)
     ##terminal wealth transfer constraint - combine cashflow with depreciation, MINROE and asset value
+    variables = model.component_objects(pe.Var,active=True)
     p7_end = list(model.s_season_periods)[-1]
     def terminal_wealth(model,q,s,z,c1):
-        return (model.v_terminal_wealth[q,s,z,c1] - model.v_credit[q,s,c1,p7_end,z] + model.v_debit[q,s,c1,p7_end,z] # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
-                   + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset[q,s,p7_end,z]
-                   + 0.00001 * sum(sum(v[s] for s in v) for v in variables)) <=0 #all variable put a small neg number into objective. This stop cplex selecting variables that dont contribute to the objective (cplex selects variables to remove slack on constraints).
-
+        if pe.value(model.p_wyear_inc_qs[q,s]):
+            return (model.v_terminal_wealth[q,s,z,c1] - model.v_credit[q,s,c1,p7_end,z] + model.v_debit[q,s,c1,p7_end,z] # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
+                       + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset[q,s,p7_end,z]
+                       + 0.00001 * sum(sum(v[idx] for idx in v) for v in variables
+                                       if v._rule_bounds.val[0] is not None and v._rule_bounds.val[0]>=0)) <=0 #all variables with positive bounds (ie variables that can be negitive e.g. terminal_wealth are exluced) put a small neg number into objective. This stop cplex selecting variables that dont contribute to the objective (cplex selects variables to remove slack on constraints).
+        else:                                                                                                  #note; _rule_bounds.val[0] is the lower bound of each variable
+            return pe.Constraint.Skip
     model.con_terminal_wealth = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, rule=terminal_wealth,
                                      doc='tallies up terminal wealth so it can be transferred to the utility function.')
 

@@ -6983,7 +6983,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ### Can't call f1_create_production_param() because don't want to cluster r_n_mated_tvg1
     ### Inverse because number of ewes mated is the denominator of the reproduction calculations
     #todo at some point we might want repro reports that don't cluster the e & b axes so that repro of multiple in a clustered mob can be reported
-    #This will require having another version of the following variables that are not clustered & different maths in ReportFunction.py
+    # This will require having another version of the following variables that are not clustered & different maths in ReportFunction.py
     mask_sliced = fun.f_dynamic_slice(mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1
                                       , e1_pos, 0 ,1) #slice e[0] because dont want to add e axis to rnmated
     r_n_mated_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.sum(numbers_start_tva1e1b1nwzida0e0b0xyg1
