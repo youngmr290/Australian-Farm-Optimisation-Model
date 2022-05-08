@@ -6274,19 +6274,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1,
                                                                     a_p_va1e1b1nwzida0e0b0xyg1,
                                                                     a_v_pa1e1b1nwzida0e0b0xyg1)
-    ffcfw_source_season_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,
+    ffcfw_source_season_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,
                                                              period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg)  #numbers not required for ffcfw
-    ffcfw_source_season_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_source_season_va1e1b1nwzida0e0b0xyg1,
+    ffcfw_source_season_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_source_season_tva1e1b1nwzida0e0b0xyg1,
                                                                  a_p_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
     ###offs
-    ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
+    ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
                                                                period_is_tp=nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
-    ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3,
+    ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg3,
                                                                    a_p_va1e1b1nwzida0e0b0xyg3,
                                                                    a_v_pa1e1b1nwzida0e0b0xyg3)
-    ffcfw_source_season_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
+    ffcfw_source_season_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
                                                              period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
-    ffcfw_source_season_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_source_season_va1e1b1nwzida0e0b0xyg3,
+    ffcfw_source_season_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_source_season_tva1e1b1nwzida0e0b0xyg3,
                                                                  a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
 
     ## calc the ‘destination’ weight of each group of animal at the end of the period prior to the transfer (transfer is next period is prejoining for the destination animal)
@@ -6299,18 +6299,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1,
                                                                   a_p_va1e1b1nwzida0e0b0xyg1,
                                                                   a_v_pa1e1b1nwzida0e0b0xyg1)
-    ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_season_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,
+    ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_season_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,
                                                            period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg)  #numbers not required for ffcfw
-    ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1,
+    ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1,
                                                                a_p_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
     ###offs
-    ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_condensed_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
+    ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_condensed_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
                                                              period_is_tp=nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
-    ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3,
+    ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3,
                                                                  a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
-    ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_season_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
+    ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_season_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
                                                            period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
-    ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3,
+    ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3,
                                                                a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
 
     ##distributing at condensing - all lws back to starting number of LWs and dams to different sires at prejoining
@@ -6320,17 +6320,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         mask_dest_tva1e1b1nwzida0e0b0xyg1,
         index_wzida0e0b0xyg1, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na], condense_vtype1)
     distribution_condense_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
-        ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3, ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3,
+        ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3, ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg3,
         mask_dest_va1e1b1nwzida0e0b0xyg3[na],
         index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[..., na], condense_vtype3)
 
     ##redistribute at season start - all seasons back into a common season.
     distribution_season_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
-        ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1, ffcfw_source_season_va1e1b1nwzida0e0b0xyg1,
+        ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1, ffcfw_source_season_tva1e1b1nwzida0e0b0xyg1,
         mask_dest_tva1e1b1nwzida0e0b0xyg1,
         index_wzida0e0b0xyg1, dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na], season_vtype1)
     distribution_season_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
-        ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3, ffcfw_source_season_va1e1b1nwzida0e0b0xyg3,
+        ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3, ffcfw_source_season_tva1e1b1nwzida0e0b0xyg3,
         mask_dest_va1e1b1nwzida0e0b0xyg3[na],
         index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[..., na], season_vtype3)
 
