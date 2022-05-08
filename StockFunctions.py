@@ -2758,7 +2758,7 @@ def f1_cum_sum_dvp(arr,dvp_pointer,axis=0,shift=0):
     return final
 
 
-def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_w9vars_wg=1, index_w8=None, dvp_type_next_tvgw=0, vtype=0): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
+def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w8=None, dvp_type_next_tvgw=0, vtype=0): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
     '''distributing animals on LW at the start of dvp
         the 8 or 9 is dropped from the w if singleton'''
     ##set dtype
@@ -2768,7 +2768,7 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_w9vars_wg=1, index
     ## This step uses w9 mask to set clusted weights to be the same.
     if index_w8 is not None:
         ###create association that point to the first w slice in the w cluster
-        a_wcluster_w8g = np.maximum.accumulate(index_w8 * mask_w9vars_wg, axis=sinp.stock['i_w_pos'])
+        a_wcluster_w8g = np.maximum.accumulate(index_w8 * mask_dest_wg, axis=sinp.stock['i_w_pos'])
         ###for each w set it to the first weight in the cluster e.g. if w[0,1,2] are in the same w9 cluster then they will all be set to the w[0] value.
         ffcfw_dest_w8g = np.take_along_axis(ffcfw_dest_w8g, a_wcluster_w8g, axis=sinp.stock['i_w_pos'])
 
@@ -2788,10 +2788,12 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_w9vars_wg=1, index
 
     ## If an index_w8 has been provided (because it is a square w8:w9) then test for equality
     ### if the source weight is matched to the destination then set index to own slice (so slice distributes to itself)
-    #### required if destination weights are replicated and nearestw9_idx is pointing to first occurrence
+    ### required to handle if destination weights are replicated in which case nearestw9_idx will point to first
+    ### occurrence (if w9[0] and w9[54] are the same weight as w8[55] this code will make w8[55] distribute to w9[54] instead of w9[0]).
+    ### 8May22 unsure if this is achieving anything important
     if index_w8 is not None:
-        nearestw9_idx_w8g = fun.f_update(nearestw9_idx_w8g, index_w8
-                                         , np.isclose(ffcfw_source_w8g, ffcfw_dest_w8g * mask_w9vars_wg))
+        a_wdest_w8 = np.maximum.accumulate(index_w8*mask_dest_wg, axis=sinp.stock['i_w_pos']) #points to the starting w to ensure that 1:1 distributing doesn't occur if a w9 slice is masked
+        nearestw9_idx_w8g = fun.f_update(nearestw9_idx_w8g, a_wdest_w8, np.isclose(ffcfw_source_w8g, ffcfw_dest_w8g))
 
     ## The nearest destination weight for each source weight & the difference from each w8
     nearestw9_w8gw = np.take_along_axis(ffcfw_dest_wgw9, nearestw9_idx_w8g[...,na], axis=-1)
@@ -2807,14 +2809,14 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_w9vars_wg=1, index
 
     ## If an index_w8 has been provided then test for equality (as per nearest)
     if index_w8 is not None:
-        next_nearestw9_idx_w8g = fun.f_update(next_nearestw9_idx_w8g, index_w8
-                                              , np.isclose(ffcfw_source_w8g, ffcfw_dest_w8g * mask_w9vars_wg))
+        a_wdest_w8 = np.maximum.accumulate(index_w8*mask_dest_wg, axis=sinp.stock['i_w_pos']) #points to the starting w to ensure that 1:1 distributing doesn't occur if a w9 slice is masked
+        next_nearestw9_idx_w8g = fun.f_update(next_nearestw9_idx_w8g, a_wdest_w8, np.isclose(ffcfw_source_w8g, ffcfw_dest_w8g))
 
     ## the next_nearest destination weight
     next_nearestw9_w8gw = np.take_along_axis(ffcfw_dest_wgw9, next_nearestw9_idx_w8g[...,na], axis=-1)
 
     ## Calculate the proportion distributed to the nearest and assign to that w9 slice
-    ### Handle the special cases in f_divide (option=1) where source and destination weights are the same
+    ### Handle the special cases in f_divide (option=1) where source and destination weights are the same,
     ### weights have converged or the dest and source weight is 0 for all slices (e.g. if animals don't exist or distribution doesn't occur in the dvp)
     #### nearest
     proportion = fun.f_divide(ffcfw_source_w8g[...,na] - next_nearestw9_w8gw

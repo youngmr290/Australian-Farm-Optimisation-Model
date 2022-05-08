@@ -5981,15 +5981,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(step_dv_va1e1b1nw8zida0e0b0xyg1
                                                             , np.power(n_fs_dams, n_fvps_percondense_dams)
                                                             , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1)[..., na]
-    ###Steps for the w9 decision variables is the same as the step for w8 in the following period except when
-    ####the next period is condensing (like step_con_prov).
-    ####The w9 axis is in the position of the w8 because the var is used to mask ffcfw_dest_wg (which has w9 in w8 pos)
-    #### The difference to step_con_prov is that step_w9 allows for multiple DV being provided by a single constraint.
-    step_w9_tva1e1b1nw8zida0e0b0xyg1 = fun.f_update(np.roll(step_dv_va1e1b1nw8zida0e0b0xyg1,-1, axis=p_pos)
-                                                    , np.power(n_fs_dams, n_fvps_percondense_dams
-                                                                - np.roll(n_fvps_va1e1b1nwzida0e0b0xyg1,-1,axis=p_pos))
-                                                    , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1)
-    step_w9_tva1e1b1nw8zida0e0b0xyg1[:,-1,...] = 1  # set the last slice to 1 rather than use value rolled from v[0]
     ###Mask the decision variables that are not active in this DVP in the matrix - because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = index_wzida0e0b0xyg1 % step_dv_va1e1b1nw8zida0e0b0xyg1 == 0
     ###mask for the user defined nutrition profiles (this allows the user to exclude certain nutrition patterns e.g. high high high or low low low)
@@ -6005,106 +5996,119 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     mask_w8nut_va1e1b1nw8zida0e0b0xyg1 = np.moveaxis(mask_w8nut_va1e1b1nzida0e0b0xyg1w,-1,w_pos) #move w axis to w8 position
     ###Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nw8zida0e0b0xyg1
-    ###Mask w9 for the user defined profiles. This is required for the distribution at season start.
-    ### This requires a t axis for the dams because of the transfer between genotype (slices of the g axis).
-    mask_w9nut_va1e1b1nzida0e0b0xyg1w = np.sum(np.roll(mask_nut_va1e1b1nwzida0e0b0xyg1[..., na], -1, axis = 0) *
-                                                (np.trunc(index_wzida0e0b0xyg1[..., na] / step_w9_tva1e1b1nw8zida0e0b0xyg1[..., na])
-                                                 == index_w1 / step_w9_tva1e1b1nw8zida0e0b0xyg1[..., na]),axis=w_pos-1) > 0 #keepdims so w8 is dropped, to allow move
-    mask_w9nut_va1e1b1nw9zida0e0b0xyg1 = np.moveaxis(mask_w9nut_va1e1b1nzida0e0b0xyg1w, -1, w_pos)  #move w axis to w8 position
     ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesn't mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
     dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1 = np.logical_or(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1
                                                                 , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == season_vtype1) #when distribution occurs any w8 can provide w9
-    ##Mask the provide constraint (w9)
+    ###Mask the provide constraint (w9)
     mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
                         * (np.trunc((index_wzida0e0b0xyg1[...,na] * np.logical_not(dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1[...,na])
                                      + index_w1 * dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1[...,na])
                                     / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9) == index_w1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9)
-    ###Create a mask for the distribution of w8 to w9, with w9 in the w position for the ffcfw_dest_wg
-    ### This requires a t axis for the dams because of the transfer between genotype (slices of the g axis)
-    mask_w9vars_tva1e1b1nw9zida0e0b0xyg1 = (np.trunc(index_wzida0e0b0xyg1 / step_w9_tva1e1b1nw8zida0e0b0xyg1)
-                                                     == index_wzida0e0b0xyg1 / step_w9_tva1e1b1nw8zida0e0b0xyg1)
-    ###Combine the w9vars mask and the user nutrition mask
-    mask_w9vars_tva1e1b1nw9zida0e0b0xyg1 = mask_w9vars_tva1e1b1nw9zida0e0b0xyg1 * mask_w9nut_va1e1b1nw9zida0e0b0xyg1
     ###Mask numbers required from the previous period (broadcast across t axis) - Note: req does not need a t axis because the destination decision variable don’t change for the transfer
     ###Mask for the require constraint (w9)
     mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
                         * (np.trunc(index_wzida0e0b0xyg1 / step_con_req_va1e1b1nw8zida0e0b0xyg1)[...,na]
                            == index_w1 / step_con_req_va1e1b1nw8zida0e0b0xyg1[...,na])
+    ###Create a mask for the constraint. This is used in the distribution of w8 to w9
+    ### There are only Trues when next dvp is distribution
+    mask_dest_tva1e1b1nwzida0e0b0xyg1 = (np.trunc(
+        index_wzida0e0b0xyg1 * dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9[
+            ..., 0]) == index_wzida0e0b0xyg1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9[..., 0])
+    ####Add the nut mask so that distribution cant occur to a masked w slice.
+    mask_dest_tva1e1b1nwzida0e0b0xyg1 = mask_dest_tva1e1b1nwzida0e0b0xyg1 * mask_w8nut_va1e1b1nw8zida0e0b0xyg1
+
+    ###This code generate w8 mask for next period with a t axis (t axis is required for dams because of prejoining transfer)
+    # ###Steps for the w9 decision variables is the same as the step for w8 in the following period except when
+    # ####the next period is condensing (like step_con_prov).
+    # ####The w9 axis is in the position of the w8 because the var is used to mask ffcfw_dest_wg (which has w9 in w8 pos)
+    # #### The difference to step_con_prov is that step_w9 allows for multiple DV being provided by a single constraint.
+    # step_w9_tva1e1b1nw8zida0e0b0xyg1 = fun.f_update(np.roll(step_dv_va1e1b1nw8zida0e0b0xyg1,-1, axis=p_pos)
+    #                                                 , np.power(n_fs_dams, n_fvps_percondense_dams
+    #                                                             - np.roll(n_fvps_va1e1b1nwzida0e0b0xyg1,-1,axis=p_pos))
+    #                                                 , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1)
+    # step_w9_tva1e1b1nw8zida0e0b0xyg1[:,-1,...] = 1  # set the last slice to 1 rather than use value rolled from v[0]
+    # ###Mask w9 for the user defined profiles. This is required for the distribution at season start.
+    # ### This requires a t axis for the dams because of the transfer between genotype (slices of the g axis).
+    # mask_w9nut_va1e1b1nzida0e0b0xyg1w = np.sum(np.roll(mask_nut_va1e1b1nwzida0e0b0xyg1[..., na], -1, axis = 0) *
+    #                                             (np.trunc(index_wzida0e0b0xyg1[..., na] / step_w9_tva1e1b1nw8zida0e0b0xyg1[..., na])
+    #                                              == index_w1 / step_w9_tva1e1b1nw8zida0e0b0xyg1[..., na]),axis=w_pos-1) > 0 #keepdims so w8 is dropped, to allow move
+    # mask_w9nut_va1e1b1nw9zida0e0b0xyg1 = np.moveaxis(mask_w9nut_va1e1b1nzida0e0b0xyg1w, -1, w_pos)  #move w axis to w8 position
+    ###Create a mask for the distribution of w8 to w9, with w9 in the w position for the ffcfw_dest_wg
+    ### This requires a t axis for the dams because of the transfer between genotype (slices of the g axis)
+    # mask_w9vars_tva1e1b1nw9zida0e0b0xyg1 = (np.trunc(index_wzida0e0b0xyg1 / step_w9_tva1e1b1nw8zida0e0b0xyg1)
+    #                                                  == index_wzida0e0b0xyg1 / step_w9_tva1e1b1nw8zida0e0b0xyg1)
+    ###Combine the w9vars mask and the user nutrition mask
+    # mask_w9vars_tva1e1b1nw9zida0e0b0xyg1 = mask_w9vars_tva1e1b1nw9zida0e0b0xyg1 * mask_w9nut_va1e1b1nw9zida0e0b0xyg1
 
     ##offs
-    ###create arrays
-    n_fvps_va1e1b1nwzida0e0b0xyg3 = np.zeros(dvp_start_va1e1b1nwzida0e0b0xyg3.shape)
-    n_prior_fvps_va1e1b1nwzida0e0b0xyg3 = np.zeros(dvp_start_va1e1b1nwzida0e0b0xyg3.shape)
-    prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg3 = dvp_start_va1e1b1nwzida0e0b0xyg3.copy()
-    prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg3 = dvp_start_va1e1b1nwzida0e0b0xyg3.copy()
-    prev_condense_date_va1e1b1nwzida0e0b0xyg3 = dvp_start_va1e1b1nwzida0e0b0xyg3.copy()
-    ###adjust dates to only include dvps which are also fvps (extra dvps just get the same values)
-    dvp_is_fvp_va1e1b1nwzida0e0b0xyg3 = np.any(dvp_start_va1e1b1nwzida0e0b0xyg3==fvp_start_fa1e1b1nwzida0e0b0xyg3[:,na,...], axis=0)
-    prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg3[~dvp_is_fvp_va1e1b1nwzida0e0b0xyg3] = 0 #set dvp dates which are not fvps to the start dvp date, these get overwritten in the next step
-    prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate(prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg3) #start of prev dvp that is also an fvp
-    prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg3[~dvp_is_fvp_va1e1b1nwzida0e0b0xyg3] = np.max(fvp_start_fa1e1b1nwzida0e0b0xyg3) #set dvp dates which are not fvps to the start dvp date, these get overwritten in the next step
-    prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg3 = np.flip(np.minimum.accumulate(np.flip(prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg3, axis=0)), axis=0) #start of prev dvp that is also an fvp
     ###previous condense date - used to calc number of fvps since last condensing
+    prev_condense_date_va1e1b1nwzida0e0b0xyg3 = dvp_start_va1e1b1nwzida0e0b0xyg3.copy()
     prev_condense_date_va1e1b1nwzida0e0b0xyg3[~(dvp_type_va1e1b1nwzida0e0b0xyg3==condense_vtype3)] = 0
     prev_condense_date_va1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate(prev_condense_date_va1e1b1nwzida0e0b0xyg3, axis=0)
-    for i in range(dvp_start_va1e1b1nwzida0e0b0xyg3.shape[0]):
-        if i == dvp_start_va1e1b1nwzida0e0b0xyg3.shape[0] - 1:
-            dvp_start = prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg3[i,...]
-            prev_condense_date = prev_condense_date_va1e1b1nwzida0e0b0xyg3[i,...]
-            n_fvp = ((fvp_start_fa1e1b1nwzida0e0b0xyg3 >= dvp_start)).sum(axis=0)
-            n_fvp_since_condense = ((fvp_start_fa1e1b1nwzida0e0b0xyg3 >= prev_condense_date) & (
-                        fvp_start_fa1e1b1nwzida0e0b0xyg3 < dvp_start)).sum(axis=0)
-        else:
-            dvp_start = prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg3[i,...]
-            prev_condense_date = prev_condense_date_va1e1b1nwzida0e0b0xyg3[i,...]
-            dvp_end = prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg3[i + 1,...]
-            n_fvp = ((fvp_start_fa1e1b1nwzida0e0b0xyg3 >= dvp_start) & (
-                        fvp_start_fa1e1b1nwzida0e0b0xyg3 < dvp_end)).sum(axis=0)
-            n_fvp_since_condense = ((fvp_start_fa1e1b1nwzida0e0b0xyg3 >= prev_condense_date) & (
-                        fvp_start_fa1e1b1nwzida0e0b0xyg3 < dvp_start)).sum(axis=0)
-        n_fvps_va1e1b1nwzida0e0b0xyg3[i,...] = n_fvp
-        n_prior_fvps_va1e1b1nwzida0e0b0xyg3[i,...] = n_fvp_since_condense
+    ###calc the number of fvps in each dvp and the number of fvps since condense
+    n_fvps_va1e1b1nwzida0e0b0xyg3 = np.zeros(dvp_start_va1e1b1nwzida0e0b0xyg3.shape)
+    n_prior_fvps_va1e1b1nwzida0e0b0xyg3 = np.zeros(dvp_start_va1e1b1nwzida0e0b0xyg3.shape)
+    for v in range(dvp_start_va1e1b1nwzida0e0b0xyg3.shape[0]):
+        dvp_start_v = dvp_start_va1e1b1nwzida0e0b0xyg3[v, ...]
+        prev_condense_date_v = prev_condense_date_va1e1b1nwzida0e0b0xyg3[v, ...]
+        n_fvp_since_condense_v = ((fvp_start_fa1e1b1nwzida0e0b0xyg3 >= prev_condense_date_v)
+                                & (fvp_start_fa1e1b1nwzida0e0b0xyg3 < dvp_start_v)).sum(axis=0)
+        if v < dvp_start_va1e1b1nwzida0e0b0xyg3.shape[0] - 1:
+            dvp_end_v = dvp_start_va1e1b1nwzida0e0b0xyg3[v + 1, ...]
+            n_fvp_v = ((fvp_start_fa1e1b1nwzida0e0b0xyg3 >= dvp_start_v)
+                       & (fvp_start_fa1e1b1nwzida0e0b0xyg3 < dvp_end_v)).sum(axis=0)
+        else:  # the final DVP gets special treatment because of wrap around
+            n_fvp_v = ((fvp_start_fa1e1b1nwzida0e0b0xyg3 >= dvp_start_v)).sum(axis=0)
+        n_fvps_va1e1b1nwzida0e0b0xyg3[v,...] = n_fvp_v
+        n_prior_fvps_va1e1b1nwzida0e0b0xyg3[v,...] = n_fvp_since_condense_v
 
     ###Steps for ‘Numbers Requires’ constraint is determined by the number of prior FVPs
     step_con_req_va1e1b1nw8zida0e0b0xyg3 = np.power(n_fs_offs, (n_fvps_percondense_offs
-                                                              - n_prior_fvps_va1e1b1nwzida0e0b0xyg3))
-    ###Steps for the decision variables is determined by the number of current & prior FVPs
+                                                              - n_prior_fvps_va1e1b1nwzida0e0b0xyg3))  #step is based on the FVPs at the start of the DVP
+    ###Steps for the w8 decision variables is determined by the number of current & prior FVPs. w8 is the DV this period
     step_dv_va1e1b1nw8zida0e0b0xyg3 = np.power(n_fs_offs, (n_fvps_percondense_offs
                                                          - n_prior_fvps_va1e1b1nwzida0e0b0xyg3
-                                                         - n_fvps_va1e1b1nwzida0e0b0xyg3))
+                                                         - n_fvps_va1e1b1nwzida0e0b0xyg3))  #step is based on the FVPs at the start of the DVP
     ###Steps for ‘Numbers Provides’
-    step_con_prov_va1e1b1nw8zida0e0b0xyg3w9 = fun.f_update(step_dv_va1e1b1nw8zida0e0b0xyg3, n_fs_offs ** n_fvps_percondense_offs
+    ###The 'provide' constraint is the same as the DV (because each DVP provides itself) except when the next DVP is condensing
+    step_con_prov_va1e1b1nw8zida0e0b0xyg3w9 = fun.f_update(step_dv_va1e1b1nw8zida0e0b0xyg3,
+                                                           np.power(n_fs_offs, n_fvps_percondense_offs)
                                                          , dvp_type_next_va1e1b1nwzida0e0b0xyg3 == condense_vtype3)[..., na]
-    ##Mask the decision variables that are not active in this DVP in the matrix - because they share a common nutrition history (broadcast across t axis)
+    ###Mask the decision variables that are not active in this DVP in the matrix - because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg3 = (index_wzida0e0b0xyg3 % step_dv_va1e1b1nw8zida0e0b0xyg3) == 0
-    ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns e.g. high high high vs low low low) - this mask is renamed the w8 masks to be consistent with dams
+    ###mask for user defined nutrition profiles (this allows the user to exclude certain nutrition patterns e.g. high high high or low low low) 
+    ### this mask is combined with the main w8 & w9 masks below
     mask_nut_va1e1b1nWzida0e0b0xyg3 = np.take_along_axis(mask_nut_sa1e1b1nWzida0e0b0xyg3, a_prev_s_va1e1b1nwzida0e0b0xyg3, axis=0)
-    ###association between the shortlist of nutrition profile inputs and the full range of LW patterns that include starting LW
+    ####association between the shortlist of nutrition profile inputs and the full range of LW patterns that include starting LW
     a_shortlist_w3 = index_w3 % len_nut_offs
     mask_nut_va1e1b1nwzida0e0b0xyg3 = mask_nut_va1e1b1nWzida0e0b0xyg3[:,:,:,:,:,a_shortlist_w3,...]  # expands the nutrition mask to all lw patterns.
-    ### match the pattern requested with the pattern that is the 'history' for that pattern in previous DVPs
-    mask_w8nut_va1e1b1nzida0e0b0xyg3w9 = np.sum(mask_nut_va1e1b1nwzida0e0b0xyg3[...,na] *
+    ####match the pattern requested with the pattern that is the 'history' for that pattern in previous DVPs
+    mask_w8nut_va1e1b1nzida0e0b0xyg3w = np.sum(mask_nut_va1e1b1nwzida0e0b0xyg3[...,na] *
                                                (np.trunc(index_wzida0e0b0xyg3[...,na] / step_dv_va1e1b1nw8zida0e0b0xyg3[..., na])
                                                 == index_w3 / step_dv_va1e1b1nw8zida0e0b0xyg3[...,na]),
                                                axis=w_pos-1) > 0 #don't keepdims
-    mask_w8nut_va1e1b1nwzida0e0b0xyg3 = np.moveaxis(mask_w8nut_va1e1b1nzida0e0b0xyg3w9,-1,w_pos) #move w9 axis to w position
-    ## Combine the w8vars mask and the user nutrition mask
+    mask_w8nut_va1e1b1nwzida0e0b0xyg3 = np.moveaxis(mask_w8nut_va1e1b1nzida0e0b0xyg3w,-1,w_pos) #move w axis to correct w position
+    ###Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg3 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_w8nut_va1e1b1nwzida0e0b0xyg3
-    ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesn't mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
+    ###Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesn't mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
     dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3 = np.logical_or(dvp_type_next_va1e1b1nwzida0e0b0xyg3 == condense_vtype3
                                                                , dvp_type_next_va1e1b1nwzida0e0b0xyg3 == season_vtype3) #when distribution occurs any w8 can provide w9
+    ###Mask the provide constraint (w9)
     mask_numbers_provw8w9_va1e1b1nw8zida0e0b0xyg3w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3[...,na] \
                         * (np.trunc((index_wzida0e0b0xyg3[...,na] * np.logical_not(dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3[...,na])
                                      + index_w3 * dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3[...,na])
                                     / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9) == index_w3 / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9)
-    ##Create a mask for the distribution of w8 to w9, with w9 in the w position for the ffcfw_dest_wg
-    mask_w9vars_va1e1b1nw9zida0e0b0xyg3 = (np.trunc(index_wzida0e0b0xyg3 * dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3
-                                                    / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9[...,0])
-                                           == index_wzida0e0b0xyg3 / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9[...,0])
-    ##Mask numbers required from the previous period (broadcast across t axis) - Note: req does not need a t axis because the destination decision variable don’t change for the transfer
+    ###Mask numbers required from the previous period (broadcast across t axis) - Note: req does not need a t axis because the destination decision variable don’t change for the transfer
     mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg3w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3[...,na] \
-                        * (np.trunc(index_wzida0e0b0xyg3 / step_con_req_va1e1b1nw8zida0e0b0xyg3)[...,na] == index_w3
-                           / step_con_req_va1e1b1nw8zida0e0b0xyg3[...,na])
+                        * (np.trunc(index_wzida0e0b0xyg3 / step_con_req_va1e1b1nw8zida0e0b0xyg3)[...,na]
+                           == index_w3 / step_con_req_va1e1b1nw8zida0e0b0xyg3[...,na])
+    ###Create a mask for the constraint. This is used in the distribution of w8 to w9
+    ### There are only Trues when next dvp is distribution
+    mask_dest_va1e1b1nwzida0e0b0xyg3 = (np.trunc(index_wzida0e0b0xyg3 * dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3
+                                                / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9[...,0])
+                                       == index_wzida0e0b0xyg3 / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9[...,0])
+    ####Add the nut mask so that distribution cant occur to a masked w slice.
+    mask_dest_va1e1b1nwzida0e0b0xyg3 = mask_dest_va1e1b1nwzida0e0b0xyg3 * mask_w8nut_va1e1b1nwzida0e0b0xyg3
 
     ####################################################
     #Masking numbers transferred to other ram groups   #
@@ -6313,21 +6317,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###t0 and t1 are distributed however this is not used because t0 and t1 don't transfer to next dvp
     distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
         ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1, ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1,
-        mask_w9vars_tva1e1b1nw9zida0e0b0xyg1,
+        mask_dest_tva1e1b1nwzida0e0b0xyg1,
         index_wzida0e0b0xyg1, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na], condense_vtype1)
     distribution_condense_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
         ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3, ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3,
-        mask_w9vars_va1e1b1nw9zida0e0b0xyg3[na],
+        mask_dest_va1e1b1nwzida0e0b0xyg3[na],
         index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[..., na], condense_vtype3)
 
     ##redistribute at season start - all seasons back into a common season.
     distribution_season_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
         ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1, ffcfw_source_season_va1e1b1nwzida0e0b0xyg1,
-        mask_w9vars_tva1e1b1nw9zida0e0b0xyg1,
+        mask_dest_tva1e1b1nwzida0e0b0xyg1,
         index_wzida0e0b0xyg1, dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na], season_vtype1)
     distribution_season_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
         ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3, ffcfw_source_season_va1e1b1nwzida0e0b0xyg3,
-        mask_w9vars_va1e1b1nw9zida0e0b0xyg3[na],
+        mask_dest_va1e1b1nwzida0e0b0xyg3[na],
         index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[..., na], season_vtype3)
 
     ##combine distributions
