@@ -69,7 +69,7 @@ stubble_inp = {}
 ##sim run periods - start and end p
 trial_commencement_date = np.datetime64(pinp.stubble['start_trial'])
 n_sim_periods, date_start_p, date_end_p, p_index_p, step \
-    = sfun.f1_sim_periods(pinp.sheep['i_startyear'], sinp.stock['i_sim_periods_year'], sinp.stock['i_age_max'])
+    = sfun.f1_sim_periods(sinp.stock['i_sim_periods_year'], sinp.stock['i_age_max'])
 
 ###scale trial start to the correct yr in the sim based on animal age
 add_yrs = np.ceil((date_start_p[0] - trial_commencement_date) / 364)

@@ -24,8 +24,7 @@ import Sensitivity as sen
 na=np.newaxis
 
 
-def f1_sim_periods(start_year, periods_per_year, oldest_animal):
-    #todo start_year is not used
+def f1_sim_periods(periods_per_year, oldest_animal):
     '''
     Define the days for the simulation periods.
     The year has 52 weeks with 7 days in a week. The extra day of the year is ignored
