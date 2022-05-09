@@ -89,7 +89,7 @@ def f1_boundarypyomo_local(params, model):
             ###constraint
             l_p7 = list(model.s_season_periods)
             def rot_lo_bound(model, q, s, p7, r, l, z):
-                if p7 == l_p7[-1]:
+                if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]):
                     return model.v_phase_area[q, s, p7, z, r, l] >= rot_lobound[r,l]
                 else:
                     return pe.Constraint.Skip
@@ -99,8 +99,9 @@ def f1_boundarypyomo_local(params, model):
         ##bound on livestock supplementary feed.
         if sup_lobound_inc:
             def sup_upper_bound(model, q, s, z):
-                return sum(model.v_sup_con[q,s,z,k,g,f,p6] for k in model.s_crops for g in model.s_grain_pools for f in model.s_feed_pools
-                for p6 in model.s_feed_periods) >= 115
+                if pe.value(model.p_wyear_inc_qs[q, s]):
+                    return sum(model.v_sup_con[q,s,z,k,g,f,p6] for k in model.s_crops for g in model.s_grain_pools for f in model.s_feed_pools
+                    for p6 in model.s_feed_periods) >= 115
             model.con_sup_upper_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=sup_upper_bound, doc='upper bound for livestock sup feed')
 
 
@@ -137,15 +138,15 @@ def f1_boundarypyomo_local(params, model):
 
             ###constraint
             def f_dam_lobound(model, q, s, t, v, z, g1):
-                if model.p_dams_lobound[t,v,z,g1]==0 or all(model.p_mask_dams[k2,t,v,w8,z,g1] == 0
-                                                          for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams):
-                    return pe.Constraint.Skip
-                else:
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_dams_lobound[t,v,z,g1]!=0
+                    and any(model.p_mask_dams[k2,t,v,w8,z,g1] != 0 for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams)):
                     return sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1] for k2 in model.s_k2_birth_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
                                if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1
                                ) >= model.p_dams_lobound[t,v,z,g1]
+                else:
+                    return pe.Constraint.Skip
             model.con_dams_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_dams
                                                    , model.s_dvp_dams, model.s_season_types, model.s_groups_dams
                                                    , rule=f_dam_lobound, doc='min number of dams')
@@ -181,15 +182,15 @@ def f1_boundarypyomo_local(params, model):
 
             ###constraint
             def f_dam_upbound(model, q, s, t, v, z, g1):
-                if model.p_dams_upbound[t,v,z,g1]==np.inf or all(model.p_mask_dams[k2,t,v,w8,z,g1] == 0
-                                                                 for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams):
-                    return pe.Constraint.Skip
-                else:
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_dams_upbound[t,v,z,g1]!=np.inf
+                    and any(model.p_mask_dams[k2,t,v,w8,z,g1] != 0 for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams)):
                     return sum(model.v_dams[q,s,k28,t,v,a,n,w8,z,i,y,g1] for k28 in model.s_k2_birth_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
                                if pe.value(model.p_mask_dams[k28,t,v,w8,z,g1]) == 1 #if removes the masked out dams so they don't show up in .lp output.
                                ) <= model.p_dams_upbound[t,v,z,g1]
+                else:
+                    return pe.Constraint.Skip
             model.con_dams_upbound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_dams
                                                    , model.s_dvp_dams, model.s_season_types, model.s_groups_dams
                                                    , rule=f_dam_upbound, doc='max number of dams_tv')
@@ -230,10 +231,13 @@ def f1_boundarypyomo_local(params, model):
 
             ###constraint
             def f_off_lobound(model, q, s, k3, t, v, z, x, g3):
-                return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3]
-                           for k5 in model.s_k5_birth_offs for a in model.s_wean_times for n3 in model.s_nut_offs
-                           for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
-                           ) >= model.p_offs_lobound[k3,t,v,z,x,g3]
+                if pe.value(model.p_wyear_inc_qs[q, s]):
+                    return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3]
+                               for k5 in model.s_k5_birth_offs for a in model.s_wean_times for n3 in model.s_nut_offs
+                               for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
+                               ) >= model.p_offs_lobound[k3,t,v,z,x,g3]
+                else:
+                    return pe.Constraint.Skip
             model.con_offs_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_sale_offs
                                                    , model.s_dvp_offs, model.s_season_types, model.s_gender, model.s_groups_offs
                                                    , rule=f_off_lobound, doc='min number of offs')
@@ -274,10 +278,13 @@ def f1_boundarypyomo_local(params, model):
 
             ###constraint
             def f_off_upbound(model, q, s, k3, t, v, z, x, g3):
-                return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3]
-                           for k5 in model.s_k5_birth_offs for a in model.s_wean_times for n3 in model.s_nut_offs
-                           for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
-                           ) <= model.p_offs_upbound[k3,t,v,z,x,g3]
+                if pe.value(model.p_wyear_inc_qs[q, s]):
+                    return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3]
+                               for k5 in model.s_k5_birth_offs for a in model.s_wean_times for n3 in model.s_nut_offs
+                               for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
+                               ) <= model.p_offs_upbound[k3,t,v,z,x,g3]
+                else:
+                    return pe.Constraint.Skip
             model.con_offs_upbound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_sale_offs
                                                    , model.s_dvp_offs, model.s_season_types, model.s_gender, model.s_groups_offs
                                                    , rule=f_off_upbound, doc='max number of offs')
@@ -292,14 +299,14 @@ def f1_boundarypyomo_local(params, model):
             scan_v = list(params['stock']['p_scan_v_dams'])
             ###constraint - sum all mated dams in scan dvp.
             def f_total_dams_scanned(model,q,s,z):
-                if total_dams_scanned == 999999:
-                    pe.Constraint.Skip
-                else:
+                if pe.value(model.p_wyear_inc_qs[q, s]) and total_dams_scanned != 999999:
                     return sum(model.v_dams[q,s,k28,t,v,a,n,w8,z,i,y,g1] for k28 in model.s_k2_birth_dams for t in model.s_sale_dams
                                for v in model.s_dvp_dams for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
                                if pe.value(model.p_mask_dams[k28,t,v,w8,z,g1]) == 1 and v in scan_v and k28 != 'NM-0') \
                        == total_dams_scanned
+                else:
+                    pe.Constraint.Skip
             model.con_total_dams_scanned = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=f_total_dams_scanned, doc='total dams scanned')
 
         ##force 5yo dam retention - fix a proportion of dams at 6yo scanning dvp.
@@ -313,9 +320,7 @@ def f1_boundarypyomo_local(params, model):
             scan6_v = list(params['stock']['p_scan_v_dams'])[5]
             ###constraint - sum all mated dams in scan dvp.
             def retention_5yo_dams(model,q,s,z):
-                if propn_dams_retained == 999:
-                    pe.Constraint.Skip
-                else:
+                if pe.value(model.p_wyear_inc_qs[q, s]) and propn_dams_retained != 999:
                     return (propn_dams_retained) * sum(model.v_dams[q,s,k28,t,v,a,n,w8,z,i,y,g1] for k28 in model.s_k2_birth_dams
                                                        for t in model.s_sale_dams for v in model.s_dvp_dams
                                                        for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
@@ -326,6 +331,8 @@ def f1_boundarypyomo_local(params, model):
                               for n in model.s_nut_dams for w8 in model.s_lw_dams for i in model.s_tol
                               for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
                               if pe.value(model.p_mask_dams[k28,t,v,w8,z,g1]) == 1 and v in scan6_v)
+                else:
+                    pe.Constraint.Skip
             model.con_retention_5yo_dams = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=retention_5yo_dams, doc='force retention of 5yo dams')
 
         ##bound to fix the proportion of dams being mated - typically used to exclude mating yearlings
@@ -337,8 +344,9 @@ def f1_boundarypyomo_local(params, model):
             ###constraint
             #todo add an i axis to the constraint
             def f_propn_dams_mated(model, q, s, v, z, g1):
-                if model.p_prop_dams_mated[v,z,g1]==np.inf or all(model.p_mask_dams[k2,t,v,w8,z,g1] == 0 or v=='dv00'   #skip if DVP0 which is a non-mating period in o[0]
-                                      for k2 in model.s_k2_birth_dams for t in model.s_sale_dams for w8 in model.s_lw_dams):
+                if (model.p_prop_dams_mated[v,z,g1]==np.inf or not pe.value(model.p_wyear_inc_qs[q, s]) or
+                        all(model.p_mask_dams[k2,t,v,w8,z,g1] == 0 or v=='dv00'   #skip if DVP0 which is a non-mating period in o[0]
+                            for k2 in model.s_k2_birth_dams for t in model.s_sale_dams for w8 in model.s_lw_dams)):
                     return pe.Constraint.Skip
                 else:
                     return sum(model.v_dams[q,s,'NM-0',t,v,a,n,w8,z,i,y,g1] for t in model.s_sale_dams
@@ -376,8 +384,8 @@ def f1_boundarypyomo_local(params, model):
             ###constraint
             def f_propn_drys_sold(model, q, s, v, w, z, i, y, g1):
                 '''Force the model so that the only drys that can be retain are not twice dry (essentially forcing the sale of twice drys)'''
-                if v in scan_v[:-1] and model.p_prop_twice_dry_dams[v,z,i,y,g1]!=0 and any(
-                        model.p_mask_dams['00-0',t,v,w,z,g1]==1 for t in model.s_sale_dams): #use 00 numbers at scanning. Don't want to include the last prejoining dvp because there is no sale limit in the last year.
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and v in scan_v[:-1] and model.p_prop_twice_dry_dams[v,z,i,y,g1]!=0
+                        and any(model.p_mask_dams['00-0',t,v,w,z,g1]==1 for t in model.s_sale_dams)): #use 00 numbers at scanning. Don't want to include the last prejoining dvp because there is no sale limit in the last year.
                     idx_scan = scan_v.index(v) #which prejoining is the current v
                     idx_v_next_prejoin = next_prejoin_v[idx_scan] #all the twice drys must be sold by the following prejoining
                     v_sale = l_v1[l_v1.index(idx_v_next_prejoin) - 1]
@@ -408,9 +416,7 @@ def f1_boundarypyomo_local(params, model):
                 '''Force the model so that the drys can only be sold when the other ewes are sold (essentially forcing the retention of drys).
                    The number of drys sold must be less than the sum of the other k2 slices'''
                 #todo add birth timing to p_prop_dry_t0_dams when gbal is activated
-                if all(model.p_mask_dams['00-0','t0',v,w,z,g1] for w in model.s_lw_dams)==0 or model.p_drys_retained[v,z,g1]==0:
-                    return pe.Constraint.Skip
-                else:
+                if pe.value(model.p_wyear_inc_qs[q, s]) and any(model.p_mask_dams['00-0','t0',v,w,z,g1] for w in model.s_lw_dams)!=0 and model.p_drys_retained[v,z,g1]!=0:
                     return sum(model.v_dams[q,s,'00-0','t0',v,a,n,w,z,i,y,g1]
                                for a in model.s_wean_times for n in model.s_nut_dams for w in model.s_lw_dams for y in model.s_gen_merit_dams
                                if pe.value(model.p_mask_dams['00-0','t0',v,w,z,g1]) == 1
@@ -419,6 +425,8 @@ def f1_boundarypyomo_local(params, model):
                                         for k2 in model.s_k2_birth_dams for a in model.s_wean_times for n in model.s_nut_dams
                                         for w in model.s_lw_dams for y in model.s_gen_merit_dams
                                         if pe.value(model.p_mask_dams['00-0','t0',v,w,z,g1]) == 1) #sums the k2 axis except for drys.
+                else:
+                    return pe.Constraint.Skip
 
             model.con_retention_drys = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dvp_dams, model.s_season_types, model.s_tol, model.s_groups_dams, rule=f_retention_drys,
                                                        doc='force the retention of drys until other dams are sold')
@@ -435,7 +443,7 @@ def f1_boundarypyomo_local(params, model):
             ###constraint
             l_p7 = list(model.s_season_periods)
             def SR_bound(model, q, s, p7, z):
-                if p7 == l_p7[-1]:
+                if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]):
                     rhs_dse = sum(model.v_phase_area[q, s, p7, z, r, l] * model.p_pasture_area[r, t] * pasture_dse_carry[t] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
                     dse = sum((sum(model.v_sire[q,s,g0] * model.p_dse_sire[p6,z,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,z,g0])!=0)
                              + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]
@@ -468,7 +476,7 @@ def f1_boundarypyomo_local(params, model):
             ###constraint
             l_p7 = list(model.s_season_periods)
             def k_bound(model, q, s, p7, k, z):
-                if p7 == l_p7[-1] and landuse_area_bound[k]!=0:  #bound will not be built if param == 0
+                if p7 == l_p7[-1] and landuse_area_bound[k]!=0 and pe.value(model.p_wyear_inc_qs[q, s]):  #bound will not be built if param == 0
                     return(
                            sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_landuse_area[r, k] for r in model.s_phases for l in model.s_lmus)
                            == landuse_area_bound[k])
@@ -484,7 +492,7 @@ def f1_boundarypyomo_local(params, model):
             ###constraint
             l_p7 = list(model.s_season_periods)
             def pas_bound(model, q, s, p7, z):
-                if p7 == l_p7[-1]:
+                if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]):
                     return (sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_pasture_area[r,t]
                                 for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
                             == total_pas_area)

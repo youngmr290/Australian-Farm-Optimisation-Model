@@ -100,7 +100,7 @@ def f_con_crop_DM_transfer(model):
     '''
     def crop_DM_transfer(model,q,s,k,l,p6,p5,z9):
         p6s = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6) - 1]  #previous feedperiod - have to convert to a list first because indexing of an ordered set starts at 1
-        if model.p_crop_DM_required[k,p6,p5,z9]!=0:
+        if pe.value(model.p_wyear_inc_qs[q, s]) and model.p_crop_DM_required[k,p6,p5,z9]!=0:
             return - sum(model.v_contractseeding_ha[q,s,z8,p5,k,l] * model.p_crop_DM_provided[k,p6,p5,z8,l,z9]
                          + model.v_seeding_machdays[q,s,z8,p5,k,l] * model.p_seeding_rate[k,l] * model.p_crop_DM_provided[k,p6,p5,z8,l,z9]
                          for z8 in model.s_season_types) \

@@ -120,8 +120,11 @@ def f_con_seed_period_days(model):
     to account for days that are too wet or dry to seed.
     '''
     def seed_period_days(model,q,s,p,z):
-        return sum(sum(model.v_seeding_machdays[q,s,z,p,k,l] for k in model.s_crops)for l in model.s_lmus) <= \
-        model.p_seed_days[p,z] * model.p_number_seeding_gear * model.p_seeding_occur
+        if pe.value(model.p_wyear_inc_qs[q, s]):
+            return sum(sum(model.v_seeding_machdays[q,s,z,p,k,l] for k in model.s_crops)for l in model.s_lmus) <= \
+            model.p_seed_days[p,z] * model.p_number_seeding_gear * model.p_seeding_occur
+        else:
+            return pe.Constraint.Skip
     model.con_seed_period_days = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, rule=seed_period_days, doc='constrain the number of seeding days per seed period')
 
 def f_con_harv_hours_limit(model):
@@ -133,7 +136,10 @@ def f_con_harv_hours_limit(model):
     of harvest gear (ie two harvesters allows you to harvest twice as much).
     '''
     def harv_hours_limit(model,q,s,p,z):
-        return sum(model.v_harv_hours[q,s,z,p,k] for k in model.s_crops) <= model.p_harv_hrs_max[p,z] * model.p_number_harv_gear
+        if pe.value(model.p_wyear_inc_qs[q, s]):
+            return sum(model.v_harv_hours[q,s,z,p,k] for k in model.s_crops) <= model.p_harv_hrs_max[p,z] * model.p_number_harv_gear
+        else:
+            return pe.Constraint.Skip
     model.con_harv_hours_limit = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, rule=harv_hours_limit, doc='constrain the number of hours of harvest x crop gear can provide')
 
 # def f_con_sow_supply(model):

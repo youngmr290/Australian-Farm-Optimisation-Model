@@ -282,7 +282,7 @@ def f_con_nappas(model):
     l_fp = list(model.s_feed_periods)
     def nappas(model,q,s,d,p6,z9,t):
         p6_prev = l_fp[l_fp.index(p6) - 1] #need the activity level from last feed period
-        if model.p_dry_removal_t[p6,z9,t] == 0 and model.p_dry_transfer_req_t[p6,z9,t] == 0:
+        if (model.p_dry_removal_t[p6,z9,t] == 0 and model.p_dry_transfer_req_t[p6,z9,t] == 0) or not pe.value(model.p_wyear_inc_qs[q, s]):
             return pe.Constraint.Skip
         else:
             return sum(sum(- model.v_phase_area[q,s,p7,z9,r,l] * model.p_nap[p7,d,p6,l,r,z9,t]
@@ -300,9 +300,12 @@ def f_con_pasarea(model):
     This accounts for arable area and destocking for reseeding.
     '''
     def pasarea(model,q,s,p6,l,z,t):
-        return sum(-model.v_phase_area[q,s,p7,z,r,l] * model.p_phase_area[p7,p6,l,r,z,t]
-                   for r in model.s_phases for p7 in model.s_season_periods if pe.value(model.p_phase_area[p7,p6,l,r,z,t]) != 0)   \
-             + sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z,t] for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
+        if pe.value(model.p_wyear_inc_qs[q, s]):
+            return sum(-model.v_phase_area[q,s,p7,z,r,l] * model.p_phase_area[p7,p6,l,r,z,t]
+                       for r in model.s_phases for p7 in model.s_season_periods if pe.value(model.p_phase_area[p7,p6,l,r,z,t]) != 0)   \
+                 + sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z,t] for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
+        else:
+            return pe.Constraint.Skip
     model.con_pasarea = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = pasarea, doc='Pasture area row for growth constraint of each type on each soil for each feed period (ha)')
 
 def f_con_erosion(model):
@@ -311,12 +314,15 @@ def f_con_erosion(model):
     paddocks have some cover as a sustainability measure.
     '''
     def erosion(model,q,s,p6,l,z,t):
-        #senescence is included here because it is passed into the dry feed pool in the following fp. Thus senesced feed is not included in green or dry pasture in the period it senesced.
-        return sum(sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z,t] for f in model.s_feed_pools) * -(model.p_foo_end_grnha[g,o,p6,l,z,t] +
-                   sum(model.p_senesce_grnha[d,g,o,p6,l,z,t] for d in model.s_dry_groups)) for g in model.s_grazing_int for o in model.s_foo_levels) \
-                -  sum(model.v_drypas_transfer[q,s,d,p6,z,t] * 1000 for d in model.s_dry_groups) \
-                + sum(model.v_phase_area[q,s,p7,z,r,l]  * model.p_erosion[p7,p6,l,r,z,t]
-                      for r in model.s_phases for p7 in model.s_season_periods if pe.value(model.p_erosion[p7,p6,l,r,z,t]) != 0) <=0
+        if pe.value(model.p_wyear_inc_qs[q, s]):
+            #senescence is included here because it is passed into the dry feed pool in the following fp. Thus senesced feed is not included in green or dry pasture in the period it senesced.
+            return sum(sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z,t] for f in model.s_feed_pools) * -(model.p_foo_end_grnha[g,o,p6,l,z,t] +
+                       sum(model.p_senesce_grnha[d,g,o,p6,l,z,t] for d in model.s_dry_groups)) for g in model.s_grazing_int for o in model.s_foo_levels) \
+                    -  sum(model.v_drypas_transfer[q,s,d,p6,z,t] * 1000 for d in model.s_dry_groups) \
+                    + sum(model.v_phase_area[q,s,p7,z,r,l]  * model.p_erosion[p7,p6,l,r,z,t]
+                          for r in model.s_phases for p7 in model.s_season_periods if pe.value(model.p_erosion[p7,p6,l,r,z,t]) != 0) <=0
+        else:
+            return pe.Constraint.Skip
     model.con_erosion = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = erosion, doc='total pasture available of each type on each soil type in each feed period')
 
     

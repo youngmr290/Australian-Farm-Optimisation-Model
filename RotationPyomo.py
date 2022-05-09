@@ -191,7 +191,7 @@ def f_con_area(model):
     '''
 
     def area_rule(model, q,  s, p7, l, z):
-        if pe.value(model.p_mask_childz_phase[p7,z]):
+        if pe.value(model.p_mask_childz_phase[p7,z]) and pe.value(model.p_wyear_inc_qs[q, s]):
             return sum(model.v_phase_area[q,s,p7,z,r,l] for r in model.s_phases) <= model.p_area[l]
         else:
             return pe.Constraint.Skip
