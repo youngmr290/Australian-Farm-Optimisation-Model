@@ -1179,6 +1179,8 @@ def f_profitloss_table(lp_vars, r_vals):
     labour_p7qsz = f_labour_summary(lp_vars, r_vals, option=0)
     ####fixed overhead expenses
     exp_fix_p7_z = f_overhead_summary(r_vals).unstack()
+    index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+    exp_fix_p7_qsz = exp_fix_p7_z.reindex(index_qsz, axis=1, level=-1)
     ###add to p/l table each as a new row
     pnl.loc[idx[:, :, :, 'Expense', 'crop'], :] = crop_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'pasture'], :] = pas_p7_qsz.T.values
@@ -1187,7 +1189,7 @@ def f_profitloss_table(lp_vars, r_vals):
     pnl.loc[idx[:, :, :, 'Expense', 'stock purchase'], :] = purchasecost_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Expense', 'machinery'], :] = mach_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'labour'], :] = labour_p7qsz.reshape(len_p7, -1).T
-    pnl.loc[idx[:, :, :, 'Expense', 'fixed'], :] = exp_fix_p7_z.T.values
+    pnl.loc[idx[:, :, :, 'Expense', 'fixed'], :] = exp_fix_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'Total expenses'], :] = pnl.loc[pnl.index.get_level_values(3) == 'Expense'].groupby(axis=0,level=(0,1,2)).sum().values
 
     ##EBIT
