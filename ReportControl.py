@@ -763,7 +763,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'dams_keys_qsk2tvanwziy1g1'
             arith = 2
             index =[4] #v
-            cols =[8, 2, 3] #z, k2, t
+            cols =[0,1,8, 2, 3] #q, s, z, k2, t
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,

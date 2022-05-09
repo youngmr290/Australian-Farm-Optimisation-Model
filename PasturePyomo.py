@@ -192,11 +192,11 @@ def f_con_greenpas_between(model):
                        for r in model.s_phases for p7 in model.s_season_periods
                        if pe.value(model.p_germination[p7,p6,l,r,z9,t])!=0 or model.p_foo_grn_reseeding[p7,p6,l,r,z9,t]!=0)         \
                    + sum(model.v_greenpas_ha[q,s9,f,g,o,p6,l,z9,t] * model.p_foo_start_grnha[o,p6,l,z9,t]   \
-                         - sum(model.v_greenpas_ha[q,s8,f,g,o,p6_prev,l,z8,t] * model.p_foo_end_grnha[g,o,p6_prev,l,z8,t]
+                         - sum(model.v_greenpas_ha[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_foo_end_grnha[g,o,p6_prev,l,z8,t]
                                * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
-                               + model.v_greenpas_ha[q, s8, f, g, o, p6_prev, l, z8, t] * model.p_foo_end_grnha[g, o, p6_prev, l, z8, t]
+                               + model.v_greenpas_ha[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_foo_end_grnha[g,o,p6_prev,l,z8,t]
                                * model.p_parentz_provbetween_fp[p6_prev, z8, z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
-                               for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q,s8])!=0)
+                               for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
                          for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
         else:
             return pe.Constraint.Skip
@@ -246,18 +246,18 @@ def f_con_drypas_between(model):
         if pe.value(model.p_mask_childz_between_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and (model.p_dry_removal_t[p6,z9,t] != 0 or model.p_dry_transfer_req_t[p6,z9,t] != 0):
             return sum(model.v_phase_area[q,s9,p7,z9,r,l] * model.p_foo_dry_reseeding[p7,d,p6,l,r,z9,t]
                        for r in model.s_phases for p7 in model.s_season_periods for l in model.s_lmus)   \
-                 + sum(-sum(model.v_greenpas_ha[q,s8,f,g,o,p6_prev,l,z8,t] * model.p_senesce_grnha[d,g,o,p6_prev,l,z8,t]
+                 + sum(-sum(model.v_greenpas_ha[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_senesce_grnha[d,g,o,p6_prev,l,z8,t]
                             * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
-                            + model.v_greenpas_ha[q, s8, f, g, o, p6_prev, l, z8, t] * model.p_senesce_grnha[d, g, o, p6_prev, l, z8, t]
+                            + model.v_greenpas_ha[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_senesce_grnha[d,g,o,p6_prev,l,z8,t]
                             * model.p_parentz_provbetween_fp[p6_prev, z8, z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
                             for z8 in model.s_season_types for s8 in model.s_sequence for g in model.s_grazing_int
-                            for o in model.s_foo_levels for l in model.s_lmus if pe.value(model.p_wyear_inc_qs[q,s8])!=0)
+                            for o in model.s_foo_levels for l in model.s_lmus if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
                        + model.v_drypas_consumed[q,s9,f,d,p6,z9,t] * model.p_dry_removal_t[p6,z9,t] for f in model.s_feed_pools) \
-                 - sum(model.v_drypas_transfer[q,s8,d,p6_prev,z8,t] * model.p_dry_transfer_prov_t[p6_prev,z8,t]
+                 - sum(model.v_drypas_transfer[q_prev,s8,d,p6_prev,z8,t] * model.p_dry_transfer_prov_t[p6_prev,z8,t]
                        * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
-                       + model.v_drypas_transfer[q, s8, d, p6_prev, z8, t] * model.p_dry_transfer_prov_t[p6_prev, z8, t]
+                       + model.v_drypas_transfer[q_prev,s8,d,p6_prev,z8,t] * model.p_dry_transfer_prov_t[p6_prev,z8,t]
                        * model.p_parentz_provbetween_fp[p6_prev, z8, z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
-                       for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q,s8])!=0) \
+                       for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0) \
                  + model.v_drypas_transfer[q,s9,d,p6,z9,t] * model.p_dry_transfer_req_t[p6,z9,t] <=0
         else:
             return pe.Constraint.Skip

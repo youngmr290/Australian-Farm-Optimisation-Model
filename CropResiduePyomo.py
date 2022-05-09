@@ -129,11 +129,11 @@ def f_con_stubble_between(model):
             sc_prev = list(model.s_stub_cat)[list(model.s_stub_cat).index(sc)-1] #previous stubble cat - used to transfer from current cat to the next, list is required because indexing of an ordered set starts at 1 which means index of 0 chucks error
             p6_prev = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6)-1] #have to convert to a list first because indexing of an ordered set starts at 1
             q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
-            return  - sum(model.v_stub_transfer[q,s8,z8,p6_prev,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
+            return  - sum(model.v_stub_transfer[q_prev,s8,z8,p6_prev,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
                           * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
-                          + model.v_stub_transfer[q,s8,z8,p6_prev,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
+                          + model.v_stub_transfer[q_prev,s8,z8,p6_prev,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
                           * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
-                          for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q,s8])!=0)  \
+                          for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)  \
                     - sum(model.v_use_biomass[q,s9,p7,z9,k,l,s2] * 1000 * model.p_a_p6_p7[p7,p6,z9] * model.p_biomass2residue[k,l,s2]
                           for p7 in model.s_season_periods for l in model.s_lmus) * model.p_a_prov[p6,z9,k,sc,s2] \
                     + model.v_stub_transfer[q,s9,z9,p6,k,sc,s2] * model.p_stub_transfer_req[p6,z9,k] \
