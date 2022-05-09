@@ -123,9 +123,6 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     ##start timer for each loop
     start_time = time.time()
 
-    ##check the rotations and inputs align - this means rotation method can be controlled using a SA
-    phs.f1_rot_check()
-
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][3]
     trial_description = f'{dataset.index(row)+1} {trial_name}'
@@ -142,6 +139,9 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     ##expand p6 axis to include nodes
     sinp.f1_expand_p6()
     pinp.f1_expand_p6()
+    ##check the rotations and inputs align - this means rotation method can be controlled using a SA
+    phs.f1_rot_check()
+
 
     ##create empty dicts - have to do it here because need the trial as the first key, so whole trial can be compared when determining if pyomo needs to be run
     ###params

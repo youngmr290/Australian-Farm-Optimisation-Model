@@ -95,7 +95,10 @@ def f1_rot_check():
         ### Simulation version
         base_yields = f1_sim_inputs(sheet='Yield', index=0, header=0)
 
+    ##read in existing rotations and see if the inputs match
     phases_df = sinp.f_phases()
+    ###add variable that is the number of yrs in the rot phases
+    sinp.general['phase_len'] = len(phases_df.columns)
 
     if len(phases_df) == len(base_yields):
         if all(base_yields.index==phases_df.index):

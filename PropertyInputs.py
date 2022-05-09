@@ -272,6 +272,7 @@ def f_property_inp_sa():
     general['i_mask_z'] = fun.f_sa(general['i_mask_z'], sen.sav['mask_z'], 5)
     general['i_inc_node_periods'] = fun.f_sa(general['i_inc_node_periods'], sen.sav['inc_node_periods'], 5)
     general['i_len_q'] = fun.f_sa(general['i_len_q'], sen.sav['seq_len'], 5)
+    crop['user_crop_rot'] = fun.f_sa(crop['user_crop_rot'], sen.sav['pinp_rot'], 5)
     ###sam
     ###sap
     ###saa

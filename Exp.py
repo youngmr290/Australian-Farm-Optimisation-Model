@@ -105,9 +105,6 @@ for row in range(len(exp_data)):
     ##start timer for each loop
     start_time = time.time()
 
-    ##check the rotations and inputs align - this means rotation method can be controlled using a SA
-    phs.f1_rot_check()
-
     ##check to make sure user wants to run this trial - note pyomo is never run without precalcs being run (this could possibly be change by making a more custom function to check only precalc module time and then altering the 'continue' call below)
     if exp_data1.index[row][0] == False or (exp_data1.loc[exp_data1.index[row],'run_req'].squeeze()==False and force_run==False):
         continue   # move to next row of the trial
@@ -133,6 +130,9 @@ for row in range(len(exp_data)):
     ##expand p6 axis to include nodes
     sinp.f1_expand_p6()
     pinp.f1_expand_p6()
+    ##check the rotations and inputs align - this means rotation method can be controlled using a SA
+    phs.f1_rot_check()
+
 
     ##create empty dicts - have to do it here because need the trial as the first key, so whole trial can be compared when determining if pyomo needs to be run
     ###params

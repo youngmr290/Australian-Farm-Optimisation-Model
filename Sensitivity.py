@@ -178,6 +178,7 @@ sav_inp['fs_use_number']      = '-'                  #SA to alter fs number - fs
 sav_inp['r2adjust_inc']      = '-'              #SA to control if the r2 feedsupply adjustment from Excel is included.
 sav_inp['inc_c1_variation'] = '-'               #control if price variation is on. This only effects result if risk aversion is included.
 sav_inp['inc_risk_aversion'] = '-'              #control if risk aversion is included. Default is not included (ie utility=profit).
+sav_inp['pinp_rot'] = '-'                       #control if using the pinp rotations or the full rotation list (note full rot requires simulation inputs)
 
 ##finance
 sav_inp['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
