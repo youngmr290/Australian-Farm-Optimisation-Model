@@ -94,6 +94,11 @@ def f_report(processor, trials, non_exist_trials):
     stacked_pnl = pd.DataFrame()  # profit and loss statement
     stacked_profitarea = pd.DataFrame()  # profit by land area
     stacked_feed = pd.DataFrame()  # feed budget
+    stacked_season_nodes = pd.DataFrame()  # season periods
+    stacked_feed_periods = pd.DataFrame()  # feed periods
+    stacked_dam_dvp_dates = pd.DataFrame()  # dam dvp dates
+    stacked_repro_dates = pd.DataFrame()  # dam repro dates
+    stacked_offs_dvp_dates = pd.DataFrame()  # offs dvp dates
     stacked_saleprice = pd.DataFrame()  # sale price
     stacked_salegrid_dams = pd.DataFrame()  # sale grid
     stacked_salegrid_yatf = pd.DataFrame()  # sale grid
@@ -198,6 +203,67 @@ def f_report(processor, trials, non_exist_trials):
             feed = rep.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols)
             feed = pd.concat([feed],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_feed = rep.f_append_dfs(stacked_feed, feed)
+
+        if report_run.loc['run_period_dates', 'Run']:
+            ###season nodes (p7)
+            type = 'zgen'
+            prod = 'date_season_node_p7z'
+            keys = 'keys_p7z'
+            arith = 0
+            index =[0] #p7
+            cols = [1] #z
+            season_nodes = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
+                                                       keys=keys, arith=arith, index=index, cols=cols)
+            season_nodes = pd.concat([season_nodes],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_season_nodes = rep.f_append_dfs(stacked_season_nodes, season_nodes)
+
+            ###feed periods (p6)
+            type = 'pas'
+            prod = 'fp_date_start_p6z'
+            keys = 'keys_p6z'
+            arith = 0
+            index =[0] #p6
+            cols = [1] #z
+            feed_periods = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
+                                                       keys=keys, arith=arith, index=index, cols=cols)
+            feed_periods = pd.concat([feed_periods],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_feed_periods = rep.f_append_dfs(stacked_feed_periods, feed_periods)
+
+            ###dams dvp
+            type = 'stock'
+            prod = 'dvp_start_vezg1'
+            keys = 'dams_keys_vezg1'
+            arith = 0
+            index =[0] #v
+            cols = [1,3,2] #e, g, z
+            dam_dvp_dates = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
+                                                       keys=keys, arith=arith, index=index, cols=cols)
+            dam_dvp_dates = pd.concat([dam_dvp_dates],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_dam_dvp_dates = rep.f_append_dfs(stacked_dam_dvp_dates, dam_dvp_dates)
+
+            ###dams repro dates
+            type = 'stock'
+            prod = 'r_repro_dates_roe1g1'
+            keys = 'dams_keys_roeg1'
+            arith = 0
+            index =[1] #o
+            cols = [0,2,3] #r, e, g
+            repro_dates = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
+                                                       keys=keys, arith=arith, index=index, cols=cols)
+            repro_dates = pd.concat([repro_dates],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_repro_dates = rep.f_append_dfs(stacked_repro_dates, repro_dates)
+
+            ###offs dvp
+            type = 'stock'
+            prod = 'dvp_start_vzdxg3'
+            keys = 'offs_keys_vzdxg3'
+            arith = 0
+            index =[0] #v
+            cols = [4,3,2,1] #g, x, d, z
+            offs_dvp_dates = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
+                                                       keys=keys, arith=arith, index=index, cols=cols)
+            offs_dvp_dates = pd.concat([offs_dvp_dates],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_offs_dvp_dates = rep.f_append_dfs(stacked_offs_dvp_dates, offs_dvp_dates)
 
         if report_run.loc['run_saleprice', 'Run']:
             option = 2
@@ -1187,6 +1253,16 @@ def f_report(processor, trials, non_exist_trials):
         plot.savefig('Output/profitarea_curve.png')
     if report_run.loc['run_feedbudget', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_feed, 'feed budget', df_settings, option=1)
+    if report_run.loc['run_period_dates', 'Run']:
+        fp_start_col = len(stacked_season_nodes.columns) + stacked_season_nodes.index.nlevels + 1
+        dam_dvp_start_col = fp_start_col + len(stacked_feed_periods.columns) + stacked_feed_periods.index.nlevels + 1
+        repro_start_col = dam_dvp_start_col + len(stacked_dam_dvp_dates.columns) + stacked_dam_dvp_dates.index.nlevels + 1
+        offs_start_col = repro_start_col + len(stacked_repro_dates.columns) + stacked_repro_dates.index.nlevels + 1
+        df_settings = rep.f_df2xl(writer, stacked_season_nodes, 'period_dates', df_settings, option=0, colstart=0)
+        df_settings = rep.f_df2xl(writer, stacked_feed_periods, 'period_dates', df_settings, option=0, colstart=fp_start_col)
+        df_settings = rep.f_df2xl(writer, stacked_dam_dvp_dates, 'period_dates', df_settings, option=0, colstart=dam_dvp_start_col)
+        df_settings = rep.f_df2xl(writer, stacked_repro_dates, 'period_dates', df_settings, option=0, colstart=repro_start_col)
+        df_settings = rep.f_df2xl(writer, stacked_offs_dvp_dates, 'period_dates', df_settings, option=0, colstart=offs_start_col)
     if report_run.loc['run_saleprice', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_saleprice, 'saleprice', df_settings, option=1)
     if report_run.loc['run_salegrid_dams', 'Run']:

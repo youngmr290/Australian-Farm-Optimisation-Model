@@ -719,13 +719,14 @@ def f_feed_reshape(lp_vars, r_vals):
     '''
     keys_d = r_vals['pas']['keys_d']
     keys_f = r_vals['pas']['keys_f']
-    keys_p6 = r_vals['pas']['keys_p6']
     keys_g = r_vals['pas']['keys_g']
     keys_k = r_vals['pas']['keys_k']
     keys_k1 = r_vals['stub']['keys_k1']
     keys_l = r_vals['pas']['keys_l']
     keys_o = r_vals['pas']['keys_o']
     keys_p5 = r_vals['pas']['keys_p5']
+    keys_p6 = r_vals['pas']['keys_p6']
+    keys_p7 = r_vals['zgen']['keys_p7']
     keys_r = r_vals['pas']['keys_r']
     keys_t = r_vals['pas']['keys_t']
     keys_q = r_vals['zgen']['keys_q']
@@ -768,6 +769,9 @@ def f_feed_reshape(lp_vars, r_vals):
     feed_vars['keys_qszp6fks1s2'] = [keys_q, keys_s, keys_z, keys_p6, keys_f, keys_k1, keys_s1, keys_s2]
     ###crop grazing
     feed_vars['keys_qsfkp6p5zl'] = [keys_q, keys_s, keys_f, keys_k1, keys_p6, keys_p5, keys_z, keys_l]
+    ###periods
+    feed_vars['keys_p7z'] = [keys_p7, keys_z]
+    feed_vars['keys_p6z'] = [keys_p6, keys_z]
 
     ##shapes
     ###pasture

@@ -7737,6 +7737,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     keys_b0 = sinp.stock['i_btrt_idx_offs']
     keys_b9 = sinp.stock['i_lsln_idx_dams'][1:5]
     keys_o = np.array(['o%s'%i for i in range(len_o)])
+    keys_r = ['prejoin', 'scan', 'birth', 'wean'] #used for the repro date report
     keys_s3 = np.array(['s%s'%i for i in range(len_s3)])
     keys_p = np.array(['p%s'%i for i in range(len_p)])
     keys_p3 = keys_p[mask_p_offs_p]
@@ -7789,6 +7790,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                             , keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5p6ftsvnwziaxyg3')
     fun.f1_make_r_val(r_vals,[keys_T3, keys_p3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0
                                             , keys_x, keys_y3, keys_g3],'offs_keys_Tpnwzidaebxyg3')
+    fun.f1_make_r_val(r_vals,[keys_v3, keys_z, keys_d, keys_x, keys_g3],'offs_keys_vzdxg3')
+    fun.f1_make_r_val(r_vals,[keys_v1, keys_e, keys_z, keys_g1],'dams_keys_vezg1')
+    fun.f1_make_r_val(r_vals,[keys_r, keys_o, keys_e, keys_g1],'dams_keys_roeg1')
+
 
     ####std
     zg0_shape = len_z, len_g0
@@ -7848,6 +7853,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     k3k5p7twziaxyg2_shape = len_k3, len_k5, len_p7, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
     k3k5p7tvnwziaxyg3_shape = len_k3, len_k5, len_p7, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
+    ####period dates
+    roe1g1_shape = 4, len_o, len_e1, len_g1 #4 is the number of repro dates stored
+    ve1zg1_shape = len_v1, len_e1, len_z, len_g1
+    vzdxg3_shape = len_v3, len_z, len_d, len_x, len_g3
+
     ###z8 masks for unclustering lp_vars
     fun.f1_make_r_val(r_vals,mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:],'maskz8_k2tvanwziy1g1') #slice off unused axis
     fun.f1_make_r_val(r_vals,mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,0,0,0,:,:,:,:,0,:,0,0,:,:,:],'maskz8_k3k5tvnwziaxyg3') #slice off unused axis
@@ -7901,6 +7911,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ###sale date
     fun.f1_make_r_val(r_vals,r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3,'saledate_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
+
+    ###dvp date
+    r_repro_dates_roe1g1 = np.stack([fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1, fvp_scan_start_oa1e1b1nwzida0e0b0xyg1,
+                                     fvp_birth_start_oa1e1b1nwzida0e0b0xyg1, fvp_wean_start_oa1e1b1nwzida0e0b0xyg1], axis=0)
+    fun.f1_make_r_val(r_vals,dvp_start_va1e1b1nwzida0e0b0xyg1,'dvp_start_vezg1', shape=ve1zg1_shape)
+    fun.f1_make_r_val(r_vals,dvp_start_va1e1b1nwzida0e0b0xyg3,'dvp_start_vzdxg3', shape=vzdxg3_shape)
+    fun.f1_make_r_val(r_vals,r_repro_dates_roe1g1,'r_repro_dates_roe1g1', shape=roe1g1_shape)
 
     ###wbe - this uses generator t axis (thus it can be singleton but it is always broadcastable with normal t)
     fun.f1_make_r_val(r_vals,r_wbe_k2tva1e1b1nwzida0e0b0xyg1,'wbe_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)

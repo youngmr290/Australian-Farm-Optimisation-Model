@@ -110,5 +110,7 @@ def f_season_precalcs(params, r_vals):
     fun.f1_make_r_val(r_vals,keys_q,'keys_q')
     fun.f1_make_r_val(r_vals,keys_s,'keys_s')
     fun.f1_make_r_val(r_vals,keys_z,'keys_z')
+    fun.f1_make_r_val(r_vals,keys_p7,'keys_p7')
     fun.f1_make_r_val(r_vals,p_season_prob_qsz,'z_prob_qsz')
     fun.f1_make_r_val(r_vals,mask_season_p7z,'mask_season_p7z')
+    fun.f1_make_r_val(r_vals,date_season_node_p7z,'date_season_node_p7z')

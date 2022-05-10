@@ -612,6 +612,7 @@ def f_pasture(params, r_vals, nv):
     fun.f1_make_r_val(r_vals,keys_k,'keys_k')
 
     ##store report vals
+    fun.f1_make_r_val(r_vals,date_start_p6z,'fp_date_start_p6z')
     fun.f1_make_r_val(r_vals,pasture_rt,'pasture_area_rt')
     fun.f1_make_r_val(r_vals,pastures,'keys_pastures')
     fun.f1_make_r_val(r_vals,length_p6z,'days_p6z',mask_fp_z8var_p6z,z_pos=-1)
