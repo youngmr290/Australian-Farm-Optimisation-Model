@@ -81,6 +81,7 @@ if inputs_from_pickle == False:
         ###create a dict to store all options - this allows the user to select an option
         machine_options_dict_inp={}
         machine_options_dict_inp[1] = fun.xl_all_named_ranges(universal_xl_path,"Mach 1")
+        machine_options_dict_inp[2] = fun.xl_all_named_ranges(universal_xl_path,"Mach 2")
         pkl.dump(machine_options_dict_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 ##else the inputs are read in from the pickle file
