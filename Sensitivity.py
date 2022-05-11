@@ -26,12 +26,12 @@ len_h5 = pinp.sheep['i_h5_len']
 len_h7 = pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'].shape[-1]
 len_i = pinp.sheep['i_i_len']
 len_k = len(sinp.landuse['C'])
-len_k0 = pinp.sheep['i_k0_len']
-len_k1 = pinp.sheep['i_k1_len']
-len_k2 = pinp.sheep['i_k2_len']
-len_k3 = pinp.sheep['i_k3_len']
-len_k4 = pinp.sheep['i_k4_len']
-len_k5 = pinp.sheep['i_k5_len']
+len_k0 = pinp.sheep['i_k0_len'] #Weaning option
+len_k1 = pinp.sheep['i_k1_len'] #Oestrus cycle
+len_k2 = pinp.sheep['i_k2_len'] #LSLN cluster
+len_k3 = pinp.sheep['i_k3_len'] #dam age cluster
+len_k4 = pinp.sheep['i_k4_len'] #gender
+len_k5 = pinp.sheep['i_k5_len'] #BTRT cluster
 lmu_mask = pinp.general['i_lmu_area'] > 0
 len_l = len(pinp.general['i_lmu_idx'][lmu_mask])
 len_o = pinp.sheep['i_o_len']
@@ -71,6 +71,10 @@ sap_inp['pi']=0 #global potential intake (this increases animal intake without a
 ##general
 sam_inp['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to remove it)
 sam_inp['grainp'] = 1.0   # SA multiplier for all grain prices
+sam_inp['grainp_k'] = np.ones(len_k, dtype=np.float64)   # SA multiplier for grain prices for each crop
+
+##crop
+sam_inp['all_rot_yield'] = 1.0   # SA multiplier for all rotation yield
 
 ## Annual module sensitivity variables - these need to have the same name for each pasture type
 sam_inp['germ','annual']                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods
@@ -178,15 +182,27 @@ sav_inp['fs_use_number']      = '-'                  #SA to alter fs number - fs
 sav_inp['r2adjust_inc']      = '-'              #SA to control if the r2 feedsupply adjustment from Excel is included.
 sav_inp['inc_c1_variation'] = '-'               #control if price variation is on. This only effects result if risk aversion is included.
 sav_inp['inc_risk_aversion'] = '-'              #control if risk aversion is included. Default is not included (ie utility=profit).
+sav_inp['utility_method'] = '-'              #control which utility function is used
+sav_inp['cara_risk_coef'] = '-'              #control risk coefficient for CRRA method
+sav_inp['crra_risk_coef'] = '-'              #control risk coefficient for CRRA method
 sav_inp['pinp_rot'] = '-'                       #control if using the pinp rotations or the full rotation list (note full rot requires simulation inputs)
+sav_inp['mach_option'] = '-'                    #control which machine compliment is used
 
 ##finance
 sav_inp['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
 sav_inp['overdraw_limit']      = '-'          #SA to alter the overdraw limit (amount of money that can be loaned from bank)
+sav_inp['interest_rate']      = '-'           #SA to alter the credit and debit interest from bank
+sav_inp['opp_cost_capital']      = '-'        #SA to alter the opportunity cost of capital
 
 ##price
 sav_inp['grain_percentile'] = '-'  #grain price percentile
 
+##labour
+sav_inp['casual_ub'] = '-'  #casual upper bound all year except seeding and harv
+sav_inp['seedharv_casual_ub'] = '-'  #casual upper bound at seeding and harv
+
+##cropgrazing
+sav_inp['cropgrazing_inc'] = '-'  #control if crop grazing is allowed
 
 ##bounds
 sav_inp['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area

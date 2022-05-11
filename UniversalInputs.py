@@ -228,11 +228,16 @@ def f_universal_inp_sa():
     ##general
     ###SAV
     general['i_inc_risk'] = fun.f_sa(general['i_inc_risk'], sen.sav['inc_risk_aversion'], 5)
+    general['i_utility_method'] = fun.f_sa(general['i_utility_method'], sen.sav['utility_method'], 5)
+    general['i_cara_risk_coef'] = fun.f_sa(general['i_cara_risk_coef'], sen.sav['cara_risk_coef'], 5)
+    general['i_crra_risk_coef'] = fun.f_sa(general['i_crra_risk_coef'], sen.sav['crra_risk_coef'], 5)
 
     ##finance
     ###SAV
     finance['minroe'] = fun.f_sa(finance['minroe'], sen.sav['minroe'], 5)  #value for minroe (same sav as below)
     finance['minroe_dsp'] = fun.f_sa(finance['minroe_dsp'], sen.sav['minroe'], 5)  #value for minroe (same sav as above)
+    finance['i_interest'] = fun.f_sa(finance['i_interest'], sen.sav['interest_rate'], 5)  #value for bank interest rate
+    finance['opportunity_cost_capital'] = fun.f_sa(finance['opportunity_cost_capital'], sen.sav['opp_cost_capital'], 5)  #value for opportunity cost of capital
 
     ##price
     ###sav

@@ -272,7 +272,8 @@ def f_property_inp_sa():
     general['i_mask_z'] = fun.f_sa(general['i_mask_z'], sen.sav['mask_z'], 5)
     general['i_inc_node_periods'] = fun.f_sa(general['i_inc_node_periods'], sen.sav['inc_node_periods'], 5)
     general['i_len_q'] = fun.f_sa(general['i_len_q'], sen.sav['seq_len'], 5)
-    crop['user_crop_rot'] = fun.f_sa(crop['user_crop_rot'], sen.sav['pinp_rot'], 5)
+    labour['max_casual'] = fun.f_sa(labour['max_casual'], sen.sav['casual_ub'], 5)
+    labour['max_casual_seedharv'] = fun.f_sa(labour['max_casual_seedharv'], sen.sav['seedharv_casual_ub'], 5)
     ###sam
     ###sap
     ###saa
@@ -282,6 +283,34 @@ def f_property_inp_sa():
     ##finance
     ###sav
     finance['overdraw_limit'] = fun.f_sa(finance['overdraw_limit'], sen.sav['overdraw_limit'], 5)
+    ###sam
+    ###sap
+    ###saa
+    ###sat
+    ###sar
+
+    ##crop
+    ###sav
+    crop['user_crop_rot'] = fun.f_sa(crop['user_crop_rot'], sen.sav['pinp_rot'], 5)
+    ###sam
+    crop['yields'] = fun.f_sa(crop['yields'], sen.sam['all_rot_yield'])
+    ###sap
+    ###saa
+    ###sat
+    ###sar
+
+    ##machinery
+    ###sav
+    mach['option'] = fun.f_sa(mach['option'], sen.sav['mach_option'], 5)
+    ###sam
+    ###sap
+    ###saa
+    ###sat
+    ###sar
+
+    ##crop grazing
+    ###sav
+    cropgraze['i_cropgrazing_inc'] = fun.f_sa(cropgraze['i_cropgrazing_inc'], sen.sav['cropgrazing_inc'], 5)
     ###sam
     ###sap
     ###saa
