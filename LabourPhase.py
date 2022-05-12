@@ -156,7 +156,7 @@ def f_fert_app_time_ha():
     ##adjust for passes
     time_p7p5z_rln = time_p7p5z_n.reindex(total_passes_rzln.unstack(1).index, axis=1, level=2)
     time_p7p5_rzln = time_p7p5z_rln.unstack().reorder_levels([0,3,1,2], axis=1).sort_index(axis=1)
-    fert_app_time_ha_p7p5_rzln = time_p7p5_rzln.mul(total_passes_rzln, axis=1)
+    fert_app_time_ha_p7p5_rzln = time_p7p5_rzln.mul(total_passes_rzln.sort_index(), axis=1)
     fert_app_time_ha_p7p5_rzl = fert_app_time_ha_p7p5_rzln.groupby(axis=1, level=(0,1,2)).sum() #sum fert type
     fert_app_time_ha_rzlp5p7 = fert_app_time_ha_p7p5_rzl.unstack([1,0])
 
@@ -195,7 +195,7 @@ def f_fert_app_time_t():
     ##combine with total phase fert
     time_p7p5z_rln = time_p7p5z_n.reindex(fert_total_rzln.unstack(1).index, axis=1, level=2)
     time_p7p5_rzln = time_p7p5z_rln.unstack().reorder_levels([0,3,1,2], axis=1).sort_index(axis=1)
-    fert_app_time_tonne_p7p5_rzln = time_p7p5_rzln.mul(fert_total_rzln, axis=1)
+    fert_app_time_tonne_p7p5_rzln = time_p7p5_rzln.mul(fert_total_rzln.sort_index(), axis=1)
     fert_app_time_tonne_p7p5_rzl = fert_app_time_tonne_p7p5_rzln.groupby(axis=1, level=(0,1,2)).sum() #sum fert type
     fert_app_time_tonne_rzlp5p7 = fert_app_time_tonne_p7p5_rzl.unstack([1,0])
 
@@ -258,7 +258,7 @@ def f_chem_app_time_ha():
     ##adjust for passes
     time_p7p5z_rln = time_p7p5z_n.reindex(total_passes_rzln.unstack(1).index, axis=1, level=2)
     time_p7p5_rzln = time_p7p5z_rln.unstack().reorder_levels([0,3,1,2], axis=1).sort_index(axis=1)
-    chem_app_time_p7p5_rzln = time_p7p5_rzln.mul(total_passes_rzln, axis=1)
+    chem_app_time_p7p5_rzln = time_p7p5_rzln.mul(total_passes_rzln.sort_index(), axis=1)
     chem_app_time_p7p5_rzl = chem_app_time_p7p5_rzln.groupby(axis=1, level=(0,1,2)).sum() #sum chem type
     chem_app_time_rzlp5p7 = chem_app_time_p7p5_rzl.unstack([1,0])
 
