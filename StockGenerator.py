@@ -627,6 +627,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     scan_std_yg0, scan_std_yg1, scan_std_yg2, scan_std_yg3 = sfun.f1_c2g(uinp.parameters['i_scan_std_c2'], uinp.parameters['i_scan_std_y'], a_c2_c0, i_g3_inc) #scan_std_yg2/3 not used
     scan_std_doy_yg0, scan_std_doy_yg1, scan_std_doy_yg2, scan_std_doy_yg3 = sfun.f1_c2g(uinp.parameters['i_scan_std_doy_c2'], uinp.parameters['i_scan_std_doy_y'], a_c2_c0, i_g3_inc)
     scan_dams_std_yg3 = scan_std_yg1 #offs needs to be the same as dams because scan_std is used to calc starting propn of BTRT which is dependent on dams scanning
+    nlb_yg0, nlb_yg1, nlb_yg2, nlb_yg3 = sfun.f1_c2g(uinp.parameters['i_nlb_c2'], uinp.parameters['i_nlb_y'], a_c2_c0, i_g3_inc)
     sfd_yg0, sfd_yg1, sfd_yg2, sfd_yg3 = sfun.f1_c2g(uinp.parameters['i_sfd_c2'], uinp.parameters['i_sfd_y'], a_c2_c0, i_g3_inc)
     sfw_yg0, sfw_yg1, sfw_yg2, sfw_yg3 = sfun.f1_c2g(uinp.parameters['i_sfw_c2'], uinp.parameters['i_sfw_y'], a_c2_c0, i_g3_inc)
     srw_female_yg0, srw_female_yg1, srw_female_yg2, srw_female_yg3 = sfun.f1_c2g(uinp.parameters['i_srw_c2'], uinp.parameters['i_srw_y'], a_c2_c0, i_g3_inc) #srw of a female of the given genotype (this is the definition of the inputs)
@@ -3369,7 +3370,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_conception_lmat(cf_dams, cb1_dams, cu2_dams, maternallw_mating_dams
-                                                   , lwc_mating_dams * 1000, age_pa1e1b1nwzida0e0b0xyg1[p]
+                                                   , lwc_mating_dams * 1000, age_pa1e1b1nwzida0e0b0xyg1[p],nlb_yg3
                                                    , crg_doy_cs_pa1e1b1nwzida0e0b0xyg1[p:p+1], nfoet_b1nwzida0e0b0xyg
                                                    , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                    , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]

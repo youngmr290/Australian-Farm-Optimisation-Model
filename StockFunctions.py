@@ -1259,7 +1259,7 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
     return conception
 
 
-def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, crg_doy, nfoet_b1any, nyatf_b1any
+def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, nlb, crg_doy, nfoet_b1any, nyatf_b1any
                       , period_is_mating, index_e1, rev_trait_value, saa_rr):
     ''''
     Calculation of dam conception using CSIRO equation system
@@ -1286,6 +1286,7 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, crg_doy, nfoet_
                            Note: the e and b axis have been handled before passing in.
     :param lwc: Liveweight change of the dam during the generator period in g/hd/d.
     :param age: age of dam mid-period in days. Indexed for p. The i axis can be non-singleton
+    :param nlb: Number of lambs born ASBV - mid parent average (achieved by using nlb_g3).
     :param crg_doy: The scalar for the proportion of dry, single, twins & triplets based on day of the year. Needs converting for crl
     :param nfoet_b1any:
     :param nyatf_b1any:
@@ -1306,7 +1307,9 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, crg_doy, nfoet_
         ##Calculate the transformed estimates of litter size proportions (slice cu2 allowing for active i axis)
         t_boundaries = cb1_sliced + cu2_sliced[-1, ...] - (cu2_sliced[0, ...] * maternallw_mating
                                                            + cu2_sliced[1, ...] * maternallw_mating ** 2
-                                                           + cu2_sliced[2, ...] * age + cu2_sliced[4, ...] * lwc)
+                                                           + cu2_sliced[2, ...] * age
+                                                           + cu2_sliced[4, ...] * lwc
+                                                           + cu2_sliced[6, ...] * nlb)
         ##back transform to probability of having a maximum of a given number of foetuses (opposite to GrazPlan)
         crl = fun.f_back_transform(t_boundaries)
 
