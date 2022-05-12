@@ -94,6 +94,16 @@ def coremodel_all(trial_name,model):
     #########
     # solve #
     #########
+    ##add warmstart guesses - currently warm start file is only read for MIP (i think it might be somethig to do with the link between pyomo and cplex)
+    import pickle as pkl
+    ###read in past trial (need to decide which trial and change trial_name)
+    # with open('pkl/pkl_lp_vars_{0}.pkl'.format(trial_name),"rb") as f:
+    #     lp_vars = pkl.load(f)
+    ###update current variables with old solution (might need to add some error handling for cases when variables differ between the old trial and current trial)
+    # for v in model.component_objects(pe.Var, active=True):
+    #     for s in v:
+    #         prev=lp_vars[str(v)][s]
+    #         v[s] = prev
 
     ##sometimes if there is a bug when solved it is good to write lp here - because the code doesn't run to the other place where lp written
     directory_path = os.path.dirname(os.path.abspath(__file__))
@@ -111,7 +121,7 @@ def coremodel_all(trial_name,model):
         ##solve with glpk
         solver = pe.SolverFactory('glpk')
         solver.options['tmlim'] = 100  # limit solving time to 100sec in case solver stalls.
-    solver_result = solver.solve(model,tee=True)  # turn to true for solver output - may be useful for troubleshooting
+    solver_result = solver.solve(model, warmstart=True, tee=True)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
 
     ##calc profit - profit = terminal wealth (this is the objective without risk) + minroe + asset_cost
     try:  # to handle infeasible (there is no profit component when infeasible)
