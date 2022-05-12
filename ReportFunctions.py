@@ -1400,8 +1400,8 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
     elif option == 1:
         prod = 'nyatf_wean_k2tva1nw8ziyg1'
         na_prod = [0,1]
-        prod_weights = 'n_mated_k2va1nw8ziyg1'
-        na_prodweights = [0,1,3]
+        prod_weights = 'n_mated_k2Tva1nw8ziyg1'
+        na_prodweights = [0,1]
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
             na_weights = []
@@ -1416,8 +1416,8 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
     elif option == 2:
         prod = 'nfoet_scan_k2tva1nw8ziyg1'
         na_prod = [0,1]
-        prod_weights = 'n_mated_k2va1nw8ziyg1'
-        na_prodweights = [0,1,3]
+        prod_weights = 'n_mated_k2Tva1nw8ziyg1'
+        na_prodweights = [0,1]
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
             na_weights = []
@@ -1432,8 +1432,8 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
     elif option == 3:
         prod = 'n_drys_k2tva1nw8ziyg1'
         na_prod = [0,1]
-        prod_weights = 'n_mated_k2va1nw8ziyg1'
-        na_prodweights = [0,1,3]
+        prod_weights = 'n_mated_k2Tva1nw8ziyg1'
+        na_prodweights = [0,1]
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
             na_weights = []
