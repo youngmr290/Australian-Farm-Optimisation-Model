@@ -155,7 +155,7 @@ def f_farmgate_grain_price(r_vals={}):
 
     ##extrapolate price for the selected percentile (can go beyond the data input range)
     percentile_price_ks2_p = percentile_price_k_s2p.stack(0)
-    grain_price_firsts_ks2 = pd.Series(index=percentile_price_ks2_p.index)
+    grain_price_firsts_ks2 = pd.Series(index=percentile_price_ks2_p.index, dtype='float64')
     for ks2 in percentile_price_ks2_p.index:
         grain_price_firsts_ks2[ks2] = fun.np_extrap(np.array([grain_price_percentile]), percentile_price_ks2_p.columns,
                                                     percentile_price_ks2_p.loc[ks2].values)[0] #returns as one value in an array thus take [0]
