@@ -757,7 +757,8 @@ def f_objective(model):
 
     Due to AFO's size, linear programing has been used to improve solving efficiency and accuracy.
     Therefore, the non-linear utility functions are represented by a number of linear segments, a common
-    linear programming technique called piecewise representation.
+    linear programming technique called piecewise representation. When doing risk aversion analysis the
+    user must ensure that the line segments capture the expected spread of terminal wealth.
 
     '''
 
@@ -776,6 +777,17 @@ def f_objective(model):
                                      doc='tallies up terminal wealth so it can be transferred to the utility function.')
 
 
+    ##Notes:
+    ##1.
+    ## there has been cases where including risk stop the model solving correctly.
+    ## This can be helped by customising the segements to more closely fit the expected profit.
+    ## The solver also seems to prefers if all segements are the same size.
+    ##2.
+    ## there is no point having very big segements because all levels of terminal wealth within a segment have a linear
+    ## relationship with utility therefore to reflect risk aversion terminal wealth due to different price (c1) and
+    ## season (z) need to fall into different segments. Therefore the size if the segments should reflect the variation
+    ## between c1 and z.
+
     ##piecewise utility function - two options CRRA and CARA
     if not uinp.general['i_inc_risk']:
         breakpoints = [-500000, 20000001]
@@ -784,22 +796,20 @@ def f_objective(model):
             return x
     elif uinp.general['i_utility_method']=="CARA":
         a=uinp.general['i_cara_risk_coef']
-        breakpoints = list(range(0, 500000, 25000)) #majority of segements in expected profit range
-        breakpoints.insert(0, -500000) #add a low number to front to handle if profit is very low
-        breakpoints.append(20000001) #add a high number to end to handle if profit is very high
+        breakpoints = list(range(-500000, 1000000, 750000)) #majority of segements in expected profit range - these need to line up with terminal wealth before initial wealth is added.
+        breakpoints.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldnt be common to have profit in this seg
         def f(model, i0, i1, i2, i3, x):
             '''CARA/CRRA utility function'''
             return 1-np.exp(-a*x)
     elif uinp.general['i_utility_method']=="CRRA":
         Rr = uinp.general['i_crra_risk_coef']
         initial_welth = uinp.general['i_crra_initial_wealth']
-        breakpoints = list(range(0, 500000, 25000)) #majority of segements in expected profit range
-        breakpoints.insert(0, -initial_welth/2) #add a low number to front to handle if profit is very low - x cant be less than 0 so I just used half of the initial wealth value
-        breakpoints.append(20000001) #add a high number to end to handle if profit is very high
+        breakpoints = list(range(-500000, 1000000, 75000)) #majority of segements in expected profit range - these need to line up with terminal wealth before initial wealth is added.
+        breakpoints.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldnt be common to have profit in this seg
         def f(model, i0, i1, i2, i3, x):
             '''CRRA utility function'''
             ##This method doesnt handle negitive terminal wealth (x).
-            ##The function also returns a very small number at high terminal wealth which seem to trip out the solver.
+            ##The function also returns a very small number at high Rr which seem to trip out the solver.
             x+=initial_welth
             return x**(1-Rr) / (1-Rr)
     else:
