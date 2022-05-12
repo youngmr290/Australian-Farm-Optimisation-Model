@@ -320,7 +320,9 @@ def f1_boundarypyomo_local(params, model):
             scan6_v = list(params['stock']['p_scan_v_dams'])[5]
             ###constraint - sum all mated dams in scan dvp.
             def retention_5yo_dams(model,q,s,z):
-                if pe.value(model.p_wyear_inc_qs[q, s]) and propn_dams_retained != 999:
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and propn_dams_retained != 999
+                        and any(model.p_mask_dams[k2,t,scan5_v,w8,z,g1] != 0 for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams
+                                for t in model.s_sale_dams for g1 in model.s_groups_dams)):
                     return (propn_dams_retained) * sum(model.v_dams[q,s,k28,t,v,a,n,w8,z,i,y,g1] for k28 in model.s_k2_birth_dams
                                                        for t in model.s_sale_dams for v in model.s_dvp_dams
                                                        for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
@@ -332,7 +334,7 @@ def f1_boundarypyomo_local(params, model):
                               for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
                               if pe.value(model.p_mask_dams[k28,t,v,w8,z,g1]) == 1 and v in scan6_v)
                 else:
-                    pe.Constraint.Skip
+                    return pe.Constraint.Skip
             model.con_retention_5yo_dams = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=retention_5yo_dams, doc='force retention of 5yo dams')
 
         ##bound to fix the proportion of dams being mated - typically used to exclude mating yearlings
