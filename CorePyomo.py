@@ -796,7 +796,7 @@ def f_objective(model):
             return x
     elif uinp.general['i_utility_method']==1: #CARA
         a=uinp.general['i_cara_risk_coef']
-        breakpoints = list(range(-500000, 1000000, 750000)) #majority of segements in expected profit range - these need to line up with terminal wealth before initial wealth is added.
+        breakpoints = list(range(-500000, 1000000, 75000)) #majority of segements in expected profit range - these need to line up with terminal wealth before initial wealth is added.
         breakpoints.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldnt be common to have profit in this seg
         def f(model, i0, i1, i2, i3, x):
             '''CARA/CRRA utility function'''
