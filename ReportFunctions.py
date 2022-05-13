@@ -336,7 +336,7 @@ def f_summary(lp_vars, r_vals, trial):
     ##pasture %
     summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=4)
     ##supplement
-    summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=3)
+    summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=4)
     ##SRW
     summary_df.loc[trial, 'SRW'] = r_vals['stock']['srw']
     return summary_df
