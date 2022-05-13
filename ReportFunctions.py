@@ -224,7 +224,7 @@ def f_vars2df(lp_vars, var_key, maskz8=None, z_pos=-1):
 
 
 def f_append_dfs(stacked_df, additional_df):
-    new_stacked_df = stacked_df.append(additional_df)
+    new_stacked_df = pd.concat([stacked_df,additional_df], axis=0)
     ##reset index order. If two dfs are appended with different columns the pandas append function sorts the index.
     cols = stacked_df.columns.union(additional_df.columns,sort=False)
     new_stacked_df = new_stacked_df.reindex(cols,axis=1)
