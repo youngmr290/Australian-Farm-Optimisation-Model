@@ -7914,9 +7914,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     r_repro_dates_roe1zg1 = np.stack([fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1, fvp_scan_start_oa1e1b1nwzida0e0b0xyg1,
                                      fvp_birth_start_oa1e1b1nwzida0e0b0xyg1, fvp_wean_start_oa1e1b1nwzida0e0b0xyg1], axis=0)
     r_repro_dates_roe1g1 = fun.f_dynamic_slice(r_repro_dates_roe1zg1, axis=z_pos, start=0, stop=1) #remove z axis since repro dates dont change along z
-    fun.f1_make_r_val(r_vals,dvp_start_va1e1b1nwzida0e0b0xyg1,'dvp_start_vezg1', shape=ve1zg1_shape)
-    fun.f1_make_r_val(r_vals,dvp_start_va1e1b1nwzida0e0b0xyg3,'dvp_start_vzdxg3', shape=vzdxg3_shape)
-    fun.f1_make_r_val(r_vals,r_repro_dates_roe1g1,'r_repro_dates_roe1g1', shape=roe1g1_shape)
+    fun.f1_make_r_val(r_vals,dvp_start_va1e1b1nwzida0e0b0xyg1 % 364,'dvp_start_vezg1', shape=ve1zg1_shape) #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
+    fun.f1_make_r_val(r_vals,dvp_start_va1e1b1nwzida0e0b0xyg3 % 364,'dvp_start_vzdxg3', shape=vzdxg3_shape) #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
+    fun.f1_make_r_val(r_vals,r_repro_dates_roe1g1 % 364,'r_repro_dates_roe1g1', shape=roe1g1_shape) #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
 
     ###wbe - this uses generator t axis (thus it can be singleton but it is always broadcastable with normal t)
     fun.f1_make_r_val(r_vals,r_wbe_k2tva1e1b1nwzida0e0b0xyg1,'wbe_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)

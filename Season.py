@@ -113,4 +113,4 @@ def f_season_precalcs(params, r_vals):
     fun.f1_make_r_val(r_vals,keys_p7,'keys_p7')
     fun.f1_make_r_val(r_vals,p_season_prob_qsz,'z_prob_qsz')
     fun.f1_make_r_val(r_vals,mask_season_p7z,'mask_season_p7z')
-    fun.f1_make_r_val(r_vals,date_season_node_p7z,'date_season_node_p7z')
+    fun.f1_make_r_val(r_vals,date_season_node_p7z % 364,'date_season_node_p7z') #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
