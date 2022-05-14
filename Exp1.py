@@ -282,13 +282,14 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         ##pickle lp info - only if pyomo is run
         with open(os.path.join(directory_path, 'pkl/pkl_lp_vars_{0}.pkl'.format(trial_name)),"wb") as f:
             pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
+
+    ##call function to store optimal feedsupply - do this before r_vals since completion of r_vals trigger successful completion.
+    ###Note: A feed supply optimisation can not be carried out with Exp1.py because the trials aren't carried out sequentially
+    fsstk.f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info)
+
     ##pickle report values - every time a trial is run (even if pyomo not run)
     with open(os.path.join(directory_path, 'pkl/pkl_r_vals_{0}.pkl'.format(trial_name)),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
-
-    ##call function to store optimal feedsupply
-    ###Note: A feed supply optimisation can not be carried out with Exp1.py because the trials aren't carried out sequentially
-    fsstk.f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info)
 
     #last step is to print the time for the current trial to run
     ##determine expected time to completion - trials left multiplied by average time per trial

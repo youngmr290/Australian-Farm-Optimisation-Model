@@ -272,12 +272,13 @@ for row in range(len(exp_data)):
         ##pickle lp info - only if pyomo is run
         with open(os.path.join(directory_path, 'pkl/pkl_lp_vars_{0}.pkl'.format(trial_name)),"wb") as f:
             pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
+
+    ##call function to store optimal feedsupply - do this before r_vals since completion of r_vals trigger successful completion.
+    fsstk.f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info)
+
     ##pickle report values - every time a trial is run (even if pyomo not run)
     with open(os.path.join(directory_path, 'pkl/pkl_r_vals_{0}.pkl'.format(trial_name)),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
-
-    ##call function to store optimal feedsupply
-    fsstk.f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info)
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run
