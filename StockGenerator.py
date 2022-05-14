@@ -6600,6 +6600,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #################
     '''yatf are first transferred to progeny activity then they are either sold as sucker, transferred to dam or transferred to offs.
     yatf have a t axis due to the dams feedsupply. This t axis is removed and replaced with the prog t axis.'''
+    #todo If the progeny DVs were not clustered on the e&b axes (k5 cluster) this would allow the range of the progeny
+    #weights to be represented when transferring to dams & offs even if scan was less than 2. This would lead to a
+    #greater range of starting weights for the dams and offs selected in v[0]. This would reduce some of the
+    #randomness associated with changing scan_og1.
+    #Steps 1. Don't cluster the npw parameter or the prog DVs
+    #2. Cluster the parameters for prog2dams and prog2offs so they will transfer from unclustered to clustered (dams & offs)
+    #3. In pyomo for the prog2dams and prog2offs constraints, sum the prog DVs across the e & b axis.
     ##condense yatf from total number of finishing lw to 10
     ### mask the ffcfw & salevalue for only those that have numbers > 0. Removes animals that have died or don't exist
     ffcfw_range_ta1e1b1nwzida0e0b0xyg2 = ffcfw_start_d_yatf_ta1e1b1nwzida0e0b0xyg2 * (numbers_start_d_yatf_ta1e1b1nwzida0e0b0xyg2 > 0)
