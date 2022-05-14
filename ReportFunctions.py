@@ -1647,16 +1647,19 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     mei_offs.columns = pd.MultiIndex.from_product([['Offs'], mei_offs.columns]) # add stock type as header
 
     ##stick feed stuff together
-    feed_budget = pd.concat([grn_mei, dry_mei, poc_mei, nap_mei, res_mei, crop_mei, sup_mei], axis=1)
-    ###calc propn of mei from each feed source
-    if option==0:
-        feed_budget = feed_budget.div(feed_budget.sum(axis=1), axis=0)
-    ###add stock mei requirement
-    feed_budget = pd.concat([feed_budget, mei_sire, mei_dams, mei_offs], axis=1)
+    feed_budget_supply = pd.concat([grn_mei, dry_mei, poc_mei, nap_mei, res_mei, crop_mei, sup_mei], axis=1)
+    feed_budget_req = pd.concat([mei_sire, mei_dams, mei_offs], axis=1)
 
     ##sum nv axis if nv_option is 1
     if nv_option==1:
-        feed_budget = feed_budget.groupby(axis=0, level=(0,1,2,3)).sum()
+        feed_budget_supply = feed_budget_supply.groupby(axis=0, level=(0,1,2,3)).sum()
+        feed_budget_req = feed_budget_req.groupby(axis=0, level=(0,1,2,3)).sum()
+
+    ###if option 1 - calc propn of mei from each feed source
+    if option==0:
+        feed_budget_supply = feed_budget_supply.div(feed_budget_supply.sum(axis=1), axis=0)
+    ###add stock mei requirement
+    feed_budget = pd.concat([feed_budget_supply, feed_budget_req], axis=1)
 
     return feed_budget.astype(float).round(2)
 
