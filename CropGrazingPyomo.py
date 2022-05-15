@@ -21,70 +21,71 @@ def cropgraze_precalcs(params, r_vals, nv):
     :param report: dictionary which stores all report values.
 
     '''
-    if pinp.cropgraze['i_cropgrazing_inc']:
-        cgz.f1_cropgraze_params(params, r_vals, nv)
+    cgz.f1_cropgraze_params(params, r_vals, nv)
 
 
 def f1_cropgrazepyomo_local(params,model):
     ''' Builds pyomo variables, parameters and constraints'''
 
+    ############
+    # variable #
+    ############
+    ##if crop grazing is not included set upper bnd to 0
     if pinp.cropgraze['i_cropgrazing_inc']:
-        ############
-        # variable #
-        ############
-        # model.v_grazecrop_ha = pe.Var(model.s_season_periods, model.s_crops, model.s_season_types, model.s_lmus, bounds=(0,None),
-        #                               doc='hectares of crop grazed')
+        ub = None
+    else:
+        ub = 0
 
-        model.v_tonnes_crop_consumed = pe.Var(model.s_sequence_year, model.s_sequence, model.s_feed_pools, model.s_crops, model.s_feed_periods,
-                                              model.s_labperiods, model.s_season_types,  model.s_lmus,bounds=(0,None),
-                                              doc='tonnes of crop consumed by livestock in a p6 that was sown in a p5 (p5 axis tracks when the crop being grazed was sown)')
+    model.v_tonnes_crop_consumed = pe.Var(model.s_sequence_year, model.s_sequence, model.s_feed_pools, model.s_crops, model.s_feed_periods,
+                                          model.s_labperiods, model.s_season_types,  model.s_lmus,bounds=(0,ub),
+                                          doc='tonnes of crop consumed by livestock in a p6 that was sown in a p5 (p5 axis tracks when the crop being grazed was sown)')
 
-        model.v_tonnes_crop_transfer = pe.Var(model.s_sequence_year, model.s_sequence, model.s_crops, model.s_lmus, model.s_feed_periods, model.s_labperiods, model.s_season_types,
-                                              bounds=(0,None), doc='tonnes of crop DM transferred to next feed period (p5 axis tracks when the crop being grazed was sown)')
+    model.v_tonnes_crop_transfer = pe.Var(model.s_sequence_year, model.s_sequence, model.s_crops, model.s_lmus, model.s_feed_periods, model.s_labperiods, model.s_season_types,
+                                          bounds=(0,ub), doc='tonnes of crop DM transferred to next feed period (p5 axis tracks when the crop being grazed was sown)')
 
-        #########
-        # param #
-        #########
-        # model.p_cropgrazing_area = pe.Param(model.s_phases, model.s_crops, model.s_lmus,
-        #                                  initialize=params['grazecrop_area_rkl'], default=0, mutable=False,
-        #                                  doc='area of crop grazing provided by 1ha of rotation')
+    #########
+    # param #
+    #########
+    # model.p_cropgrazing_area = pe.Param(model.s_phases, model.s_crops, model.s_lmus,
+    #                                  initialize=params['grazecrop_area_rkl'], default=0, mutable=False,
+    #                                  doc='area of crop grazing provided by 1ha of rotation')
 
-        model.p_crop_DM_provided = pe.Param(model.s_crops, model.s_feed_periods, model.s_labperiods, model.s_season_types, model.s_lmus,
-                                         model.s_season_types, initialize=params['crop_DM_provided_kp6p5z8lz9'], default=0, mutable=False,
-                                         doc='Grazeable FOO provided by 1ha of rotation')
+    model.p_crop_DM_provided = pe.Param(model.s_crops, model.s_feed_periods, model.s_labperiods, model.s_season_types, model.s_lmus,
+                                     model.s_season_types, initialize=params['crop_DM_provided_kp6p5z8lz9'], default=0, mutable=False,
+                                     doc='Grazeable FOO provided by 1ha of rotation')
 
-        # model.p_crop_DM_reduction = pe.Param(model.s_crops, model.s_feed_periods, model.s_labperiods, model.s_season_types, model.s_lmus,
-        #                                  initialize=params['DM_reduction_kp6p5zl'], default=0, mutable=False,
-        #                                  doc='Reduction in DM due to sowing timing (late sowing means less growth)')
+    # model.p_crop_DM_reduction = pe.Param(model.s_crops, model.s_feed_periods, model.s_labperiods, model.s_season_types, model.s_lmus,
+    #                                  initialize=params['DM_reduction_kp6p5zl'], default=0, mutable=False,
+    #                                  doc='Reduction in DM due to sowing timing (late sowing means less growth)')
 
-        model.p_crop_DM_required = pe.Param(model.s_crops, model.s_feed_periods, model.s_labperiods, model.s_season_types,
-                                            initialize=params['crop_DM_required_kp6p5z'], default=0, mutable=False,
-                                            doc='FOO required for livestock to consume 1t of crop feed (this accounts for wastage)')
+    model.p_crop_DM_required = pe.Param(model.s_crops, model.s_feed_periods, model.s_labperiods, model.s_season_types,
+                                        initialize=params['crop_DM_required_kp6p5z'], default=0, mutable=False,
+                                        doc='FOO required for livestock to consume 1t of crop feed (this accounts for wastage)')
 
-        model.p_transfer_exists = pe.Param(model.s_feed_periods, model.s_labperiods, model.s_season_types,
-                                         initialize=params['transfer_exists_p6p5z'], default=0, mutable=False,
-                                         doc='transfer exists into current feed period')
+    model.p_transfer_exists = pe.Param(model.s_feed_periods, model.s_labperiods, model.s_season_types,
+                                     initialize=params['transfer_exists_p6p5z'], default=0, mutable=False,
+                                     doc='transfer exists into current feed period')
 
-        model.p_cropgraze_biomass_penalty = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types,
-                                                   initialize=params['biomass_reduction_propn_kp6z'], default=0, mutable=False,
-                                                   doc='yield penalty as a proportion of crop consumed')
+    model.p_cropgraze_biomass_penalty = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types,
+                                               initialize=params['biomass_reduction_propn_kp6z'], default=0, mutable=False,
+                                               doc='yield penalty as a proportion of crop consumed')
 
-        # model.p_cropgraze_stubble_penalty = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types,
-        #                                              initialize=params['stubble_reduction_propn_kp6z'], default=0, mutable=False,
-        #                                              doc='stubble penalty as a proportion of crop consumed')
+    # model.p_cropgraze_stubble_penalty = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types,
+    #                                              initialize=params['stubble_reduction_propn_kp6z'], default=0, mutable=False,
+    #                                              doc='stubble penalty as a proportion of crop consumed')
 
-        model.p_crop_md = pe.Param(model.s_feed_pools, model.s_crops, model.s_feed_periods, model.s_labperiods, model.s_season_types, model.s_lmus,
-                                         initialize=params['crop_md_fkp6p5zl'], default=0, mutable=False,
-                                         doc='Energy provided from 1t of crop grazing for each time of sowing (p5 period)')
+    model.p_crop_md = pe.Param(model.s_feed_pools, model.s_crops, model.s_feed_periods, model.s_labperiods, model.s_season_types, model.s_lmus,
+                                     initialize=params['crop_md_fkp6p5zl'], default=0, mutable=False,
+                                     doc='Energy provided from 1t of crop grazing for each time of sowing (p5 period)')
 
-        model.p_crop_vol = pe.Param(model.s_feed_pools, model.s_crops, model.s_feed_periods, model.s_labperiods, model.s_season_types, model.s_lmus,
-                                         initialize=params['crop_vol_kp6p5zl'], default=0, mutable=False,
-                                         doc='Volume required to consume 1t of crop grazing for each time of sowing (p5 period)')
+    model.p_crop_vol = pe.Param(model.s_feed_pools, model.s_crops, model.s_feed_periods, model.s_labperiods, model.s_season_types, model.s_lmus,
+                                     initialize=params['crop_vol_kp6p5zl'], default=0, mutable=False,
+                                     doc='Volume required to consume 1t of crop grazing for each time of sowing (p5 period)')
 
-        ###################################
-        #call local constraints           #
-        ###################################
-        f_con_crop_DM_transfer(model)
+    ###################################
+    #call local constraints           #
+    ###################################
+    f_con_crop_DM_transfer(model)
 
 
 
@@ -139,11 +140,8 @@ def f_grazecrop_biomass_penalty(model,q,s,p7,k,l,z):
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
-    if pinp.cropgraze['i_cropgrazing_inc']:
-        return sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,p5,z,l] * model.p_cropgraze_biomass_penalty[k,p6,z] * model.p_a_p6_p7[p7,p6,z] * 1000
-                   for f in model.s_feed_pools for p6 in model.s_feed_periods for p5 in model.s_labperiods)
-    else:
-        return 0
+    return sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,p5,z,l] * model.p_cropgraze_biomass_penalty[k,p6,z] * model.p_a_p6_p7[p7,p6,z] * 1000
+               for f in model.s_feed_pools for p6 in model.s_feed_periods for p5 in model.s_labperiods)
 
 # def f_grazecrop_stubble_penalty(model,q,s,p7,k,z):
 #     '''
@@ -166,11 +164,8 @@ def f_grazecrop_me(model,q,s,p6,f,z):
 
     Used in global constraint (con_me). See CorePyomo
     '''
-    if pinp.cropgraze['i_cropgrazing_inc']:
-        return sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,p5,z,l] * model.p_crop_md[f,k,p6,p5,z,l]
-                   for k in model.s_crops for l in model.s_lmus for p5 in model.s_labperiods)
-    else:
-        return 0
+    return sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,p5,z,l] * model.p_crop_md[f,k,p6,p5,z,l]
+               for k in model.s_crops for l in model.s_lmus for p5 in model.s_labperiods)
 
 
 
@@ -181,8 +176,5 @@ def f_grazecrop_vol(model,q,s,p6,f,z):
 
     Used in global constraint (con_vol). See CorePyomo
     '''
-    if pinp.cropgraze['i_cropgrazing_inc']:
-        return sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,p5,z,l] * model.p_crop_vol[f,k,p6,p5,z,l]
-                   for k in model.s_crops for l in model.s_lmus for p5 in model.s_labperiods)
-    else:
-        return 0
+    return sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,p5,z,l] * model.p_crop_vol[f,k,p6,p5,z,l]
+               for k in model.s_crops for l in model.s_lmus for p5 in model.s_labperiods)
