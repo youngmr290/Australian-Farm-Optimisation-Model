@@ -347,6 +347,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     d_cfw_history_start_p2g0 = np.zeros(p2g0, dtype = 'float64')
     woolvalue_c1tpa1e1b1nwzida0e0b0xyg0 = np.zeros(c1tpg0, dtype =dtype)
     salevalue_c1tpa1e1b1nwzida0e0b0xyg0 = np.zeros(c1tpg0, dtype =dtype)
+    w_w_yatf = np.array([0])
     ###arrays for postprocessing
     o_numbers_start_tpsire = np.zeros(tpg0, dtype =dtype)
     o_numbers_end_tpsire = np.zeros(tpg0, dtype =dtype)
@@ -418,6 +419,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     o_numbers_start_tpyatf = np.zeros(tpg2, dtype =dtype)
     # o_numbers_end_tpyatf = np.zeros(tpg2, dtype =dtype)
     o_ffcfw_start_tpyatf = np.zeros(tpg2, dtype =dtype)
+    o_wean_w_tpyatf = np.zeros(tpg2, dtype =dtype)
     # o_ffcfw_condensed_tpyatf = np.zeros(tpg2, dtype =dtype)
     o_pi_tpyatf = np.zeros(tpg2, dtype =dtype)
     o_mei_solid_tpyatf = np.zeros(tpg2, dtype =dtype)
@@ -4023,6 +4025,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             o_ffcfw_start_tpyatf[:,p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period, has to be outside of the 'if' because days per period = 0 when weaning occurs (because once they are weaned they are not yatf therefore 0 days per period) because weaning is first day of period. But we need to know the start ffcfw.
             o_numbers_start_tpyatf[:,p] = numbers_start_yatf #used for prog calculations - use numbers start because weaning is start of period - has to be out of the 'if' because there is 0 days in the period when weaning occurs but we still want to store the start numbers (because once they are weaned they are not yatf therefore 0 days per period)
             o_rc_start_tpyatf[:,p] = rc_start_yatf #outside because used for sale value which is weaning which has 0 days per period because weaning is first day (this means the rc at weaning is actually the rc at the start of the previous period because it doesn't recalculate once days per period goes to 0) (because once they are weaned they are not yatf therefore 0 days per period)
+            o_wean_w_tpyatf[:, p] = w_w_yatf #outside the if statement because the days_period_yatf are 0 in the weaning period because weaning is at the start of the period
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort or have been in the feedlot.
                 ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
@@ -5932,11 +5935,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                                 , index_any1tvp=index_da0e0b0xyg)  # Returns the total number of the yatf in the period in which they are weaned - with active d axis
 
     #### Return the weight of the yatf in the period in which they are weaned - with active dam v axis
-    ffcfw_start_v_yatf_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_start_tpyatf, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_wean_pa1e1b1nwzida0e0b0xyg2)
+    ffcfw_start_v_yatf_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_wean_w_tpyatf, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_wean_pa1e1b1nwzida0e0b0xyg2)
     ffcfw_start_v_yatf_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_start_v_yatf_tva1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1)
 
     #### Return the weight of the yatf in the period in which they are weaned - with active d axis
-    ffcfw_start_d_yatf_ta1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v_std(o_ffcfw_start_tpyatf, period_is_tvp=period_is_wean_pa1e1b1nwzida0e0b0xyg2,
+    ffcfw_start_d_yatf_ta1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v_std(o_wean_w_tpyatf, period_is_tvp=period_is_wean_pa1e1b1nwzida0e0b0xyg2,
                                                            a_any1_p=a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2, index_any1tvp=index_da0e0b0xyg)
 
     ###npw - Return the number of the yatf in the period in which they are weaned - with active d axis
