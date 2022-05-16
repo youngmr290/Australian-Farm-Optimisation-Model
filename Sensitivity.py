@@ -86,6 +86,7 @@ sam_inp['dry_dmd_decline','annual']         = 1.0                               
 sam_inp['grn_dmd_declinefoo_f','annual']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on decline in digestibility if green feed is not grazed (to increase FOO)
 sam_inp['grn_dmd_range_f','annual']         = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on range in digestibility of green feed
 sam_inp['grn_dmd_senesce_f','annual']       = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
+sam_inp['conservation_limit_f','annual']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for the conservation limit in each feed period
 # sa_feed_period_inc_t      = True    # growth of this pasture in this period is included
 # sa_lmu_inc_t              = True    # this pasture is included on this lmu
 
@@ -148,6 +149,7 @@ saa_inp['nlb_c2'] = 0.0                #std scanning percentage of a genotype. C
 saa_inp['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
 saa_inp['rr_age_og1'] = np.zeros(pinp.sheep['i_scan_og1'].shape, dtype=np.float64)    # reproductive rate by age. Use shape that has og1
 saa_inp['mortalityx'] = np.zeros(np.max(sinp.stock['a_nfoet_b1'])+1, dtype=np.float64)  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
+saa_inp['wean_wt'] = 0.0            #weaning weight adjustment of yatf. Note: WWt changes without any change in MEI
 
 ######
 #SAT #

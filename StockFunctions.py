@@ -807,7 +807,7 @@ def f_birthweight_mu(cu1, cb1, cg, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, e
 
 def f_weanweight_cs(w_w_yatf, ffcfw_start_yatf, ebg_yatf, days_period, period_is_wean):
     ##set WWt = yatf weight at weaning	
-    t_w_w = (ffcfw_start_yatf + ebg_yatf * days_period)
+    t_w_w = (ffcfw_start_yatf + ebg_yatf * days_period) + sen.saa['wean_wt']  #Note:saa[wean_wt] doesn't have an associated MEI impact.
     ##update weaning weight if it is weaning period
     w_w_yatf = fun.f_update(w_w_yatf, t_w_w, period_is_wean)
     return w_w_yatf
@@ -825,7 +825,8 @@ def f_weanweight_mu(cu1, cb1, cg, cx, ce, nyatf, w_w, cf_w_w_dams, ffcfw_wean_da
     cf_w_w_dams = cf_w_w_dams + d_cf_w_w
     ##add intercept, impact of dam LW at weaning, FOO, BTRT, gender and dam age effects to the carry forward value
     t_w_w = (cf_w_w_dams + cu1[17, -1, ...] + cu1[17, 0, ...] * ffcfw_wean_dams + cu1[17, 5, ...] * foo_ave_end
-             + cu1[17, 6, ...] * foo_ave_end ** 2 + cb1[17, ...] + cx[17, ...] + ce[17, ...]) * (nyatf > 0)
+             + cu1[17, 6, ...] * foo_ave_end ** 2 + cb1[17, ...] + cx[17, ...] + ce[17, ...]
+             + sen.saa['wean_wt']) * (nyatf > 0)  #Note:saa[wean_wt] doesn't have an associated MEI impact.
     ##Update w_w if it is weaning	
     w_w = fun.f_update(w_w, t_w_w, period_is_wean)
     return w_w, cf_w_w_dams, foo_ave_end
