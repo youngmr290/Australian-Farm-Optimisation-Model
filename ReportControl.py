@@ -656,7 +656,7 @@ def f_report(processor, trials, non_exist_trials):
             arith = 1
             if lp_vars_inc:
                 index = [5]  #p
-                cols = [14, 7, 3, 8]  #g1, e, t & b1
+                cols = [14, 8, 3]  #g1, t & b1
             else:
                 index =[5] #p
                 cols =[14,7,3,8,10] #g,e,t,b1,w
