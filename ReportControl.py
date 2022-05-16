@@ -12,8 +12,9 @@ properties. For example, they can specify which axes to report in the table (as 
 and which to average or another example. The user can also specify report options. For example, what type of profit
 (e.g. is asset opportunity cost included or not) they want to use in the profit by area curve.
 
-To run execute this module with optional args <processor number> <report number>. If no arguments are passed
-the 1 processor is used and the 'default' report group is run.
+To run execute this module with optional args <exp group> <processor number> <report number> <excel display mode>. 
+If no arguments are passed, all exp groups are reported, 1 processor is used, the 'default' report group is run
+and rows/cols that contain only 0's are collapsed when written to excel.
 
 The trials to report are controlled in exp.xl.
 The reports to run for a given report number are controlled in exp.xl.
@@ -35,9 +36,6 @@ How to add a report:
     will also need to add it to f_stock_reshape the allows you to get the shape correct
     (remove singleton axis and converts lp_vars from dict to numpy).
 
-.. note:: If reporting dates from a numpy array it is necessary to convert to datetime64[ns] prior to converting to a DataFrame
-    For example:
-    data_df3 = pd.DataFrame(fvp_fdams.astype('datetime64[ns]'))  # conversion to dataframe only works with this datatype
 
 author: Young
 """
@@ -1239,20 +1237,28 @@ def f_report(processor, trials, non_exist_trials):
     df_settings = pd.DataFrame(columns=['index', 'cols'])
 
     ##write to excel
-    df_settings = rep.f_df2xl(writer, stacked_infeasible, 'infeasible', df_settings, option=1)
-    df_settings = rep.f_df2xl(writer, stacked_non_exist,'Non-exist',df_settings,option=0,colstart=0)
+    ###determine the method of reporting rows and columns that are all zeros
+    ### mode 0: df straight into excel
+    ### mode 1: df into excel - collapsing rows/cols that contain only 0's.
+    ### mode 2: df into excel - removing rows/cols that contain only 0's. This method make the writing process faster.
+    try:
+        xl_display_mode = int(sys.argv[4])  # reads in as string so need to convert to int, the script path is the first value.
+    except IndexError:  # in case no arg passed to python
+        xl_display_mode = 1 #default is to collapse rows/cols that are all 0's (ie they exist in excel but are hidden)
 
+    df_settings = rep.f_df2xl(writer, stacked_infeasible, 'infeasible', df_settings, option=xl_display_mode)
+    df_settings = rep.f_df2xl(writer, stacked_non_exist,'Non-exist',df_settings,option=0,colstart=0)
     if report_run.loc['run_summary', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_summary, 'summary', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_summary, 'summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_areasum', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_areasum, 'areasum', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_areasum, 'areasum', df_settings, option=xl_display_mode)
     if report_run.loc['run_pnl', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_pnl, 'pnl', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_pnl, 'pnl', df_settings, option=xl_display_mode)
     if report_run.loc['run_profitarea', 'Run']:
         plot = rep.f_xy_graph(stacked_profitarea)
         plot.savefig('Output/profitarea_curve.png')
     if report_run.loc['run_feedbudget', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_feed, 'feed budget', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_feed, 'feed budget', df_settings, option=xl_display_mode)
     if report_run.loc['run_period_dates', 'Run']:
         fp_start_col = len(stacked_season_nodes.columns) + stacked_season_nodes.index.nlevels + 1
         dam_dvp_start_col = fp_start_col + len(stacked_feed_periods.columns) + stacked_feed_periods.index.nlevels + 1
@@ -1264,83 +1270,83 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_repro_dates, 'period_dates', df_settings, option=0, colstart=repro_start_col)
         df_settings = rep.f_df2xl(writer, stacked_offs_dvp_dates, 'period_dates', df_settings, option=0, colstart=offs_start_col)
     if report_run.loc['run_saleprice', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_saleprice, 'saleprice', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_saleprice, 'saleprice', df_settings, option=xl_display_mode)
     if report_run.loc['run_salegrid_dams', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_salegrid_dams, 'salegrid_dams', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_salegrid_dams, 'salegrid_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_salegrid_yatf', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_salegrid_yatf, 'salegrid_yatf', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_salegrid_yatf, 'salegrid_yatf', df_settings, option=xl_display_mode)
     if report_run.loc['run_salegrid_offs', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_salegrid_offs, 'salegrid_offs', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_salegrid_offs, 'salegrid_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_salevalue_offs', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_salevalue_offs, 'salevalue_offs', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_salevalue_offs, 'salevalue_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_salevalue_dams', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_salevalue_dams, 'salevalue_dams', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_salevalue_dams, 'salevalue_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_salevalue_prog', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_salevalue_prog, 'salevalue_prog', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_salevalue_prog, 'salevalue_prog', df_settings, option=xl_display_mode)
     if report_run.loc['run_woolvalue_offs', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_woolvalue_offs, 'woolvalue_offs', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_woolvalue_offs, 'woolvalue_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_woolvalue_dams', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_woolvalue_dams, 'woolvalue_dams', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_woolvalue_dams, 'woolvalue_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_saledate_offs', 'Run']:
         stacked_saledate_offs = stacked_saledate_offs.astype(object)
         stacked_saledate_offs[stacked_saledate_offs==np.datetime64('1970-01-01')] = 0
-        df_settings = rep.f_df2xl(writer, stacked_saledate_offs, 'saledate_offs', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_saledate_offs, 'saledate_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_cfw_dams', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_cfw_dams, 'cfw_dams', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_cfw_dams, 'cfw_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_fd_dams', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_fd_dams, 'fd_dams', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_fd_dams, 'fd_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_cfw_offs', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_cfw_offs, 'cfw_offs', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_cfw_offs, 'cfw_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_fd_offs', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_fd_offs, 'fd_offs', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_fd_offs, 'fd_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_wbe_dams', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_wbe_dams, 'wbe_dams', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_wbe_dams, 'wbe_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_wbe_offs', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_wbe_offs, 'wbe_offs', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_wbe_offs, 'wbe_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_lw_dams', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_lw_dams, 'lw_dams', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_lw_dams, 'lw_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_ffcfw_dams', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_ffcfw_dams, 'ffcfw_dams', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_ffcfw_dams, 'ffcfw_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_ffcfw_yatf', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_ffcfw_yatf, 'ffcfw_yatf', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_ffcfw_yatf, 'ffcfw_yatf', df_settings, option=xl_display_mode)
     if report_run.loc['run_nv_dams', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_nv_dams, 'nv_dams', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_nv_dams, 'nv_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_ffcfw_prog', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_ffcfw_prog, 'ffcfw_prog', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_ffcfw_prog, 'ffcfw_prog', df_settings, option=xl_display_mode)
     if report_run.loc['run_ffcfw_offs', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_ffcfw_offs, 'ffcfw_offs', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_ffcfw_offs, 'ffcfw_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_nv_offs', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_nv_offs, 'nv_offs', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_nv_offs, 'nv_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_lamb_survival', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_lamb_survival, 'lamb_survival', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_lamb_survival, 'lamb_survival', df_settings, option=xl_display_mode)
     if report_run.loc['run_weanper', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_weanper, 'wean_per', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_weanper, 'wean_per', df_settings, option=xl_display_mode)
     if report_run.loc['run_scanper', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_scanper, 'scan_per', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_scanper, 'scan_per', df_settings, option=xl_display_mode)
     if report_run.loc['run_dry_propn', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_dry_propn, 'dry_propn', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_dry_propn, 'dry_propn', df_settings, option=xl_display_mode)
     if report_run.loc['run_daily_mei_dams', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_daily_mei_dams, 'daily_mei_dams', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_daily_mei_dams, 'daily_mei_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_daily_pi_dams', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_daily_pi_dams, 'daily_pi_dams', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_daily_pi_dams, 'daily_pi_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_daily_mei_offs', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_daily_mei_offs, 'daily_mei_offs', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_daily_mei_offs, 'daily_mei_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_daily_pi_offs', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_daily_pi_offs, 'daily_pi_offs', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_daily_pi_offs, 'daily_pi_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_numbers_dams', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_numbers_dams, 'numbers_dams', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_numbers_dams, 'numbers_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_numbers_dams_p', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_numbers_dams_p, 'numbers_dams_p', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_numbers_dams_p, 'numbers_dams_p', df_settings, option=xl_display_mode)
     if report_run.loc['run_numbers_prog', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_numbers_prog, 'numbers_prog', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_numbers_prog, 'numbers_prog', df_settings, option=xl_display_mode)
     if report_run.loc['run_numbers_offs', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_numbers_offs, 'numbers_offs', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_numbers_offs, 'numbers_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_numbers_offs_p', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_numbers_offs_p, 'numbers_offs_p', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_numbers_offs_p, 'numbers_offs_p', df_settings, option=xl_display_mode)
     if report_run.loc['run_mort_dams', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_mort_dams, 'mort_dams', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_mort_dams, 'mort_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_mort_offs', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_mort_offs, 'mort_offs', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_mort_offs, 'mort_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_dse', 'Run']:
         dams_start_col = len(stacked_dse_sire.columns) + stacked_dse_sire.index.nlevels + 1
         offs_start_col = dams_start_col + len(stacked_dse_dams.columns) + stacked_dse_dams.index.nlevels + 1
@@ -1351,39 +1357,39 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_dse1_dams, 'dse_mei', df_settings, option=0, colstart=dams_start_col)
         df_settings = rep.f_df2xl(writer, stacked_dse1_offs, 'dse_mei', df_settings, option=0, colstart=offs_start_col)
     if report_run.loc['run_pgr', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_pgr, 'Total pg', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_pgr, 'Total pg', df_settings, option=xl_display_mode)
     if report_run.loc['run_grnfoo', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_grnfoo, 'grnfoo', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_grnfoo, 'grnfoo', df_settings, option=xl_display_mode)
     if report_run.loc['run_dryfoo', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_dryfoo, 'dryfoo', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_dryfoo, 'dryfoo', df_settings, option=xl_display_mode)
     if report_run.loc['run_napfoo', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_napfoo, 'napfoo', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_napfoo, 'napfoo', df_settings, option=xl_display_mode)
     if report_run.loc['run_grnnv', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_grnnv, 'grnnv', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_grnnv, 'grnnv', df_settings, option=xl_display_mode)
     if report_run.loc['run_grndmd', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_grndmd, 'grndmd', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_grndmd, 'grndmd', df_settings, option=xl_display_mode)
     if report_run.loc['run_avegrnfoo', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_avegrnfoo, 'avegrnfoo', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_avegrnfoo, 'avegrnfoo', df_settings, option=xl_display_mode)
     if report_run.loc['run_drynv', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_drynv, 'drynv', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_drynv, 'drynv', df_settings, option=xl_display_mode)
     if report_run.loc['run_drydmd', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_drydmd, 'drydmd', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_drydmd, 'drydmd', df_settings, option=xl_display_mode)
     if report_run.loc['run_avedryfoo', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_avedryfoo, 'avedryfoo', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_avedryfoo, 'avedryfoo', df_settings, option=xl_display_mode)
     if report_run.loc['run_grncon', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_grncon, 'grncon', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_grncon, 'grncon', df_settings, option=xl_display_mode)
     if report_run.loc['run_drycon', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_drycon, 'drycon', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_drycon, 'drycon', df_settings, option=xl_display_mode)
     if report_run.loc['run_napcon', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_napcon, 'napcon', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_napcon, 'napcon', df_settings, option=xl_display_mode)
     if report_run.loc['run_poccon', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_poccon, 'poccon', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_poccon, 'poccon', df_settings, option=xl_display_mode)
     if report_run.loc['run_supcon', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_supcon, 'supcon', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_supcon, 'supcon', df_settings, option=xl_display_mode)
     if report_run.loc['run_stubcon', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_stubcon, 'stubcon', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_stubcon, 'stubcon', df_settings, option=xl_display_mode)
     if report_run.loc['run_mvf', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_mvf, 'mvf', df_settings, option=1)
+        df_settings = rep.f_df2xl(writer, stacked_mvf, 'mvf', df_settings, option=xl_display_mode)
 
 
     df_settings.to_excel(writer, 'df_settings')

@@ -53,7 +53,8 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
     :param colstart: start col in excel
     :param option: int: specifying the writing option
                     0: df straight into excel
-                    1: df into excel collapsing empty rows and cols
+                    1: df into excel collapsing empty rows and cols (using the group function is xl - ie the rows/cols are still there they are just minimised)
+                    2: df into excel removing empty rows and cols (the rows/cols are completely removed)
     '''
     ##store df settings
     if df_settings is not None:
@@ -62,8 +63,8 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
     ## round to tidy and so that very small numbers are dropped out in the next step
     df = df.round(3)  
     
-    ## collapse rows and cols with all 0's 
-    if option==1:
+    ## Remove rows and cols with all 0's
+    if option==2:
         ###rows are removed completely to reduce writing time - if all rows are 0 then make the last row True because cant write an empty df to xl.
         row_mask = (df != 0).any(axis=1)
         col_mask = (df != 0).any(axis=0)
@@ -80,24 +81,23 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
     workbook = writer.book
     worksheet = writer.sheets[sheet]
 
-    ###not used anymore because rows with 0 are removed above.
     ## collapse cols with all 0's (rows are removed
-    # if option==1:
-        # for row in range(len(df)-1):   #range(len(df)) hides the last blank row but causes a blank line in some of report.xl
-        #     if (df.iloc[row]==0).all():
-        #         offset = df.columns.nlevels #number of columns used for names
-        #         if offset>1:
-        #             offset += 1 #for some reason if the cols are multiindex the an extra row gets added when writing to excel
-        #         worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to collapse the level initially
+    if option==1:
+        for row in range(len(df)-1):   #range(len(df)) hides the last blank row but causes a blank line in some of report.xl
+            if (df.iloc[row]==0).all():
+                offset = df.columns.nlevels #number of columns used for names
+                if offset>1:
+                    offset += 1 #for some reason if the cols are multiindex the an extra row gets added when writing to excel
+                worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to collapse the level initially
 
-        # for col in range(len(df.columns)):
-        #     if (df.iloc[:,col]==0).all():
-        #         offset = df.index.nlevels
-        #         col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #convert col number to excel col reference e.g. 'A:B'
-        #         worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
+        for col in range(len(df.columns)):
+            if (df.iloc[:,col]==0).all():
+                offset = df.index.nlevels
+                col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #convert col number to excel col reference e.g. 'A:B'
+                worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
 
     ##apply filter
-    if option==2:
+    if option==3:
         # Activate autofilter
         worksheet.autofilter(f'B1:B{len(df)}')
         worksheet.filter_column('B', 'x < 5') # todo this will need to become function argument
@@ -110,7 +110,7 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
                 worksheet.set_row(idx + 1,options={'hidden': True})
 
     ##create chart
-    if option==3:
+    if option==4:
         # Create a chart object.
         chart = workbook.add_chart({'type': 'column'}) # todo this will need to become function argument
         # Configure the series of the chart from the dataframe data.
