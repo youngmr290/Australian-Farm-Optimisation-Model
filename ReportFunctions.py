@@ -58,7 +58,21 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
     ##store df settings
     if df_settings is not None:
         df_settings.loc[sheet] = [df.index.nlevels, df.columns.nlevels]
-
+    
+    ## round to tidy and so that very small numbers are dropped out in the next step
+    df = df.round(3)  
+    
+    ## collapse rows and cols with all 0's 
+    if option==1:
+        ###rows are removed completely to reduce writing time - if all rows are 0 then make the last row True because cant write an empty df to xl.
+        row_mask = (df != 0).any(axis=1)
+        col_mask = (df != 0).any(axis=0)
+        if (row_mask==False).all() and len(row_mask)>0:
+            row_mask[-1] = True
+        if (col_mask==False).all() and len(col_mask)>0:
+            col_mask[-1] = True
+        df = df.loc[row_mask, col_mask]
+    
     ## simple write df to xl
     df.to_excel(writer, sheet, startrow=rowstart, startcol=colstart)
 
@@ -66,22 +80,21 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
     workbook = writer.book
     worksheet = writer.sheets[sheet]
 
-    ## collapse rows and cols with all 0's
-    if option==1:
-        df = df.round(5)  # round so that very small numbers are dropped out in the next step
-        for row in range(len(df)-1):   #todo: in range(len(df)) hides the last blank row but causes a blank line in some of report.xl
-            if (df.iloc[row]==0).all():
-                offset = df.columns.nlevels #number of columns used for names
-                if offset>1:
-                    offset += 1 #for some reason if the cols are multiindex the an extra row gets added when writing to excel
-                worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to collapse the level initially
+    ###not used anymore because rows with 0 are removed above.
+    ## collapse cols with all 0's (rows are removed
+    # if option==1:
+        # for row in range(len(df)-1):   #range(len(df)) hides the last blank row but causes a blank line in some of report.xl
+        #     if (df.iloc[row]==0).all():
+        #         offset = df.columns.nlevels #number of columns used for names
+        #         if offset>1:
+        #             offset += 1 #for some reason if the cols are multiindex the an extra row gets added when writing to excel
+        #         worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to collapse the level initially
 
-        for col in range(len(df.columns)):
-            if (df.iloc[:,col]==0).all():
-                offset = df.index.nlevels
-                col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #convert col number to excel col reference e.g. 'A:B'
-                worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
-
+        # for col in range(len(df.columns)):
+        #     if (df.iloc[:,col]==0).all():
+        #         offset = df.index.nlevels
+        #         col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #convert col number to excel col reference e.g. 'A:B'
+        #         worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
 
     ##apply filter
     if option==2:
