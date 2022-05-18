@@ -267,7 +267,10 @@ for row in range(len(exp_data)):
         for v in model.component_objects(pe.Var, active=True):
             if str(v)=='v_mvf':
                 for index in v:
-                    lp_vars['mvf'][index] = model.rc[v[index]]
+                    try:
+                        lp_vars['mvf'][index] = model.rc[v[index]]
+                    except:
+                        lp_vars['mvf'][index] = 0  #if model doesn't solve then RC might not exist so replace with 0
 
         ##pickle lp info - only if pyomo is run
         with open(os.path.join(directory_path, 'pkl/pkl_lp_vars_{0}.pkl'.format(trial_name)),"wb") as f:
