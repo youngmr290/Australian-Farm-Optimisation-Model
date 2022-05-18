@@ -385,7 +385,7 @@ def f_property_inp_sa():
     sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.saa['r2_isk2g1'], 2).astype('int')
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.saa['r1_izg3'], 2).astype('int')
     sheep['ia_r2_ik5g3'] = fun.f_sa(sheep['ia_r2_ik5g3'], sen.saa['r2_ik5g3'], 2).astype('int')
-    sheep['i_date_born1st_iog'] = fun.f_sa(sheep['i_date_born1st_iog2'], sen.saa['date_born1st_iog'], 2)
+    sheep['i_date_born1st_iog2'] = fun.f_sa(sheep['i_date_born1st_iog2'], sen.saa['date_born1st_iog'], 2)
     #sheep['i_date_born1st_idg3'] = fun.f_sa(sheep['i_date_born1st_idg3'], sen.saa['date_born1st_iog'], 2)
     feedsupply['i_feedsupply_options_r1j2p'] = fun.f_sa(feedsupply['i_feedsupply_options_r1j2p'], sen.saa['feedsupply_r1jp'], 2)
     feedsupply['i_feedsupply_adj_options_r2p'] = fun.f_sa(feedsupply['i_feedsupply_adj_options_r2p'], sen.saa['feedsupply_adj_r2p'], 2)
