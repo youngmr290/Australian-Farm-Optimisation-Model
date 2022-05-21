@@ -1044,6 +1044,26 @@ def f_asset_value_summary(lp_vars, r_vals):
     asset_value_qsp7z = f_vars2np(lp_vars, 'v_asset', qsp7z, mask_season_p7z, z_pos=-1)
     return asset_value_qsp7z
 
+def f_wc_summary(lp_vars, r_vals):
+    ##returns the maximum overdraw from bank
+    keys_p7 = r_vals['fin']['keys_p7']
+    keys_c0 = r_vals['fin']['keys_c0']
+    mask_season_p7z = r_vals['zgen']['mask_season_p7z']
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    len_p7 = len(keys_p7)
+    len_c0 = len(keys_c0)
+    len_q = len(keys_q)
+    len_s = len(keys_s)
+    len_z = len(keys_z)
+    qsc0p7z = len_q, len_s, len_c0, len_p7, len_z
+    overdraw_qsc0p7z = f_vars2np(lp_vars, 'v_wc_debit', qsc0p7z, mask_season_p7z, z_pos=-1)
+    overdraw_qsz = np.max(overdraw_qsc0p7z, axis=(2,3)) #max c0 and p7 axis
+    keys_qsz = [keys_q, keys_s, keys_z]
+    df_overdraw_qsz = f_numpy2df(overdraw_qsz, keys_qsz, [0,1], [2])
+    return df_overdraw_qsz
+
 def f_overhead_summary(r_vals):
     ##overheads/fixed expenses
     exp_fix_c = r_vals['fin']['overheads']
