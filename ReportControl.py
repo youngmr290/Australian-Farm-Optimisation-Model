@@ -901,8 +901,8 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'prog_numbers_qsk3k5twzia0xg2'
             keys = 'prog_keys_qsk3k5twzia0xg2'
             arith = 2
-            index =[0]   #q (as a dummy variable)
-            cols =[10, 9, 2, 4] #dam age(2), birth type(3), t slice(4), gender(9), genotype(10)
+            index =[0,1,5]   #q, s, w
+            cols =[6, 2, 3, 4, 9] #z, dam age, birth type, t slice, gender
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
