@@ -408,10 +408,11 @@ def f1_boundarypyomo_local(params, model):
         # The bound is only for t[0] (sale at shearing) t[1] (sale at scanning) is handled in the generator.
         if bnd_dry_retained_inc:
             ###build param
-            model.p_prop_dry_t0_dams = pe.Param(model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types, model.s_tol,
-                                             model.s_gen_merit_dams, model.s_groups_dams, initialize=params['stock']['p_prop_dry_t0_dams'])
-            model.p_drys_retained = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
-                                             initialize=params['stock']['p_drys_retained'])
+            model.p_prop_dry_t0_dams = pe.Param(model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams
+                                        , model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams
+                                        , default=0, initialize=params['stock']['p_prop_dry_t0_dams'])
+            model.p_drys_retained = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_groups_dams
+                                             , default=0, initialize=params['stock']['p_drys_retained'])
 
             ###constraint
             def f_retention_drys(model, q, s, v, z, i, g1):
