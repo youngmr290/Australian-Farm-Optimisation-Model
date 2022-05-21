@@ -857,7 +857,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'prog_numbers_qsk3k5twzia0xg2'
             keys = 'prog_keys_qsk3k5twzia0xg2'
             arith = 2
-            index =[5]   #w
+            index =[0,1,5]   #q, s, w
             cols =[6, 2, 3, 4, 9] #z, dam age, birth type, t slice, gender
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
