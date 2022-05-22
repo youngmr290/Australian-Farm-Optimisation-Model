@@ -914,9 +914,9 @@ def f_stock_cash_summary(lp_vars, r_vals):
     supp_feedstorage_cost_p7zqs = supp_feedstorage_cost_p7_zkp6qs.groupby(axis=1, level=(0,3,4)).sum().stack([0,1,2]) #sum k & p6
 
     ##infrastructure
-    fixed_infra_cost_p7z = np.sum(r_vals['stock']['rm_stockinfra_fix_h1p7z'], axis=0)
+    fixed_infra_cost_qsp7z = np.sum(r_vals['stock']['rm_stockinfra_fix_h1p7z'], axis=0) * r_vals['zgen']['mask_qs'][:,:,na,na]
     var_infra_cost_qsp7z = np.sum(r_vals['stock']['rm_stockinfra_var_h1p7z'] * stock_vars['infrastructure_qsh1z'][:,:,:,na,:], axis=2)
-    total_infra_cost_qsp7z = fixed_infra_cost_p7z + var_infra_cost_qsp7z
+    total_infra_cost_qsp7z = fixed_infra_cost_qsp7z + var_infra_cost_qsp7z
 
     ##total costs
     husbcost_qsp7z = sirecost_qsp7z + damscost_qsp7z + offscost_qsp7z + total_infra_cost_qsp7z
@@ -967,13 +967,13 @@ def f_labour_summary(lp_vars, r_vals, option=0):
         ###perm
         quantity_perm = f_vars2np(lp_vars, 'v_quantity_perm', 1)  #1 because not sets
         perm_cost_p7z = r_vals['lab']['perm_cost_p7z']
-        perm_cost_p7z = perm_cost_p7z * quantity_perm
+        perm_cost_p7qsz = perm_cost_p7z[:,na,na,:] * quantity_perm * r_vals['zgen']['mask_qs'][:,:,na]
         ###manager
         quantity_manager = f_vars2np(lp_vars, 'v_quantity_manager', 1) #1 because not sets
         manager_cost_p7z = r_vals['lab']['manager_cost_p7z']
-        manager_cost_p7z = manager_cost_p7z * quantity_manager
+        manager_cost_p7qsz = manager_cost_p7z[:,na,na,:] * quantity_manager * r_vals['zgen']['mask_qs'][:,:,na]
         ###total
-        total_lab_cost_p7qsz = cas_cost_p7qsz + perm_cost_p7z[:,na,na,:] + manager_cost_p7z[:,na,na,:]
+        total_lab_cost_p7qsz = cas_cost_p7qsz + perm_cost_p7qsz + manager_cost_p7qsz
         return total_lab_cost_p7qsz
 
     ##labour breakdown for each worker level (table: labour period by worker level)
@@ -1201,8 +1201,9 @@ def f_profitloss_table(lp_vars, r_vals):
 
     ##expenses
     ####machinery
+    df_mask_qs = pd.DataFrame(r_vals['zgen']['mask_qs'],keys_q,keys_s).stack()
     mach_p7zqs = exp_mach_k_p7zqs.sum(axis=0)  # sum landuse
-    mach_p7_qsz = mach_p7zqs.unstack([2,3]).add(mach_insurance_p7z, axis=0).unstack()
+    mach_p7_qsz = mach_p7zqs.unstack([2,3]).add(mach_insurance_p7z, axis=0).mul(df_mask_qs,axis=1).unstack()
     ####crop & pasture
     pasfert_p7_qsz = exp_fert_k_p7zqs[exp_fert_k_p7zqs.index.isin(all_pas)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
     cropfert_p7_qsz = exp_fert_k_p7zqs[~exp_fert_k_p7zqs.index.isin(all_pas)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
@@ -1217,7 +1218,7 @@ def f_profitloss_table(lp_vars, r_vals):
     ####fixed overhead expenses
     exp_fix_p7_z = f_overhead_summary(r_vals).unstack()
     index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
-    exp_fix_p7_qsz = exp_fix_p7_z.reindex(index_qsz, axis=1, level=-1)
+    exp_fix_p7_qsz = exp_fix_p7_z.reindex(index_qsz, axis=1, level=-1).stack().mul(df_mask_qs,axis=1).unstack()
     ###add to p/l table each as a new row
     pnl.loc[idx[:, :, :, 'Expense', 'crop'], :] = crop_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'pasture'], :] = pas_p7_qsz.T.values
