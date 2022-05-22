@@ -98,7 +98,7 @@ def f_buy_grain_price(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, r_buy_grain_price_ks2g_p7z, 'buy_grain_price', mask_season_p7z, z_pos=-1)
-    return buy_grain_price_ks2gc1_p7z.unstack([2,0,1,3]), buy_grain_price_wc_ks2g_c0p7z.unstack([2,0,1]), buy_grain_prov_p7z
+    return buy_grain_price_ks2gc1_p7z.unstack([2,0,1,3]).sort_index(), buy_grain_price_wc_ks2g_c0p7z.unstack([2,0,1]).sort_index(), buy_grain_prov_p7z
 
 def f_sup_cost(r_vals):
     '''
