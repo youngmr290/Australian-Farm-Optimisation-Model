@@ -1685,7 +1685,8 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
 ###########################
 
 def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startseason, mask_min_lw_z, period_is_prejoin=0,
-                         group=None, scan_management=0, gbal=0, drysretained_scan=1, drysretained_birth=1, stub_lw_idx=np.array(np.nan)):
+                         group=None, scan_management=0, gbal=0, drysretained_scan=1, drysretained_birth=1, stub_lw_idx=np.array(np.nan),
+                         len_gen_t=1, a_t_g=0, period_is_startdvp=False):
     '''
     Production is weighted at prejoining across e&b axes and at season start across the z axis.
 
@@ -1707,11 +1708,17 @@ def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_starts
     ##make sure numbers and var are same shape - this is required for the np.average func below
     numbers, var_start = np.broadcast_arrays(numbers,var_start)
 
-    ##a) Calculate temporary values as if period is start of season
+    ##a)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
+    if np.any(period_is_startdvp) and len_gen_t>1:
+        a_t_g = np.broadcast_to(a_t_g, var_start.shape)
+        temporary = np.take_along_axis(var_start, a_t_g, axis=sinp.stock['i_p_pos']) #t is in the p pos
+        var_start = fun.f_update(var_start, temporary, period_is_startdvp)
+
+    ##b) Calculate temporary values as if period is start of season
     if np.any(period_is_startseason):
         var_start = f1_season_wa(numbers, var_start, season_tup, mask_min_lw_z, period_is_startseason)
 
-    ##b) Calculated weighted average of var_start if period_is_prejoin (because the classes from the prior year are re-combined at pre-joining)
+    ##c) Calculated weighted average of var_start if period_is_prejoin (because the classes from the prior year are re-combined at pre-joining)
     ### If the dams have been scanned or assessed for gbal then the number of drys is adjusted based on the estimated management
     ### The adjustment for drys has to be done to the production levels at prejoining rather than to numbers at scan or birth
     ###because adjusting numbers (although more intuitive) affects the apparent mortality of the drys.
@@ -1773,6 +1780,10 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
     also complicate the 1n model since a twin on the std feed pattern may not pass to the std pattern in the next dvp.
     In the current structure at prejoining the e and b axis are weighted. This means that the w[0] activity is
     potentially created from a bigger spread of weights.
+
+    Note 2: in the start functions the sale slices are overwritten by retained at the start of a dvp. Thus the condensed
+    info is overwritten for the sale t slices (which is what we want). Distribution can occur with t axis but doesnt
+    get used because only the retained t provides in the matrix.
 
     :param var: production variable being condensed
     :param lw_idx: index specifying the sorted order of the w axis
@@ -1880,17 +1891,25 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
 
 
 def f1_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0
-                        , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False, prevperiod_is_wean=False):
-    ##a) reallocate for season type
+                        , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False, prevperiod_is_wean=False
+                        ,len_gen_t=1, a_t_g=0, period_is_startdvp=False):
+
+    #a)if generating with t axis reset the sale slices to the retained slice at the start of each dvp
+    if np.any(period_is_startdvp) and len_gen_t>1:
+        a_t_g = np.broadcast_to(a_t_g, numbers.shape)
+        temporary = np.take_along_axis(numbers, a_t_g, axis=sinp.stock['i_p_pos']) #t is in the p pos
+        numbers = fun.f_update(numbers, temporary, period_is_startdvp)
+
+    ##b) reallocate for season type
     if np.any(period_is_startseason):
         temporary = np.sum(numbers * season_propn_z, axis = season_tup, keepdims=True) #Calculate temporary values as if period_is_break
         numbers = fun.f_update(numbers, temporary, period_is_startseason)  #Set values where it is beginning of season
-    ##b)things for dams - prejoining and moving between classes
+    ##c)things for dams - prejoining and moving between classes
     if group==1 and np.any(period_is_prejoin):
-        ##d) new repro cycle (prejoining)
+        ###new repro cycle (prejoining)
         temporary = np.sum(numbers, axis = prejoin_tup, keepdims=True) * numbers_initial_repro #Calculate temporary values as if period_is_prejoin
         numbers = fun.f_update(numbers, temporary, period_is_prejoin)  #Set values where it is beginning of FVP
-    ##c)things just for yatf
+    ##d)things just for yatf
     if group==2:
         temp = nyatf_b1 * gender_propn_x   # nyatf is accounting for peri-natal mortality. But doesn't include the differential mortality of female and male offspring at birth
         numbers=fun.f_update(numbers, temp, period_is_birth)
