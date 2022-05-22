@@ -533,6 +533,9 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
     '''
     Calculates the optimum feedsupply based on the stock activities selected and stores it in a pkl file.
 
+    If an animal is not selected it gets the inputted fs for the current trial (this is not necessarily the xl fs). This
+    method ensures less randomness because if an animal is not selected it will get the same fs as the previous trial.
+
     Note: Sires currently only have one w slice. There is no ability to optimise their lw. Thus optimal fs equals input fs.
 
     Use float32 to speed process when using lots of w.
@@ -611,10 +614,10 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         optimal_fs_stpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(feedsupply_stpa1e1b1nwzida0e0b0xyg1,dams_numbers_stpa1e1b1nwzida0e0b0xyg1,w_pos,keepdims=True)
         optimal_fs_stpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(feedsupply_stpa1e1b1nwzida0e0b0xyg3,offs_numbers_stpa1e1b1nwzida0e0b0xyg3,w_pos,keepdims=True)
 
-        ##update slices that have no numbers with the average fs in a given period.
+        ##update slices that have no numbers.
         ## In cases where pyomo doesn't select animals in the dvps the generator still needs a feedsupply.
-        ## Update using the inputted feedsupply for the current trial (before taking weighted average). This method was chosen because
-        ## it reduced randomness since if no animals are chosen the next trial gets the same fs as the current trial.
+        ## Update using the inputted feedsupply for the current trial (before taking weighted average) (this is not nessecarily the fs from xl).
+        ## This method was chosen because it reduced randomness since if no animals are chosen the next trial gets the same fs as the current trial.
         ## This method wont work so well if the starting fs is not so good. To fix this ensure xl has decent starting fs and/or when generating fs force a small number of animals in all axes.
         ###dams
         optimal_fs_stpa1e1b1nwzida0e0b0xyg1 = fun.f_update(optimal_fs_stpa1e1b1nwzida0e0b0xyg1,fun.f_dynamic_slice(feedsupply_stpa1e1b1nwzida0e0b0xyg1,w_pos,0,1),
