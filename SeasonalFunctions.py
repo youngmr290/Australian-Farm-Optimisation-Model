@@ -95,7 +95,7 @@ def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
                 inp = pd.concat([inp],keys=[keys_z[0]],axis=axis) #add z0 index key
                 col_level_order = sum_level[:]
                 col_level_order.insert(level,0)
-                inp = inp.reorder_levels(col_level_order, axis=axis)
+                inp = inp.reorder_levels(col_level_order, axis=axis).sort_index(axis=axis)
     return inp
 
 def f_keys_z():

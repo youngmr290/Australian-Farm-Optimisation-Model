@@ -236,7 +236,7 @@ def f_grain_price(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, r_grain_price_ks2g_p7z, 'grain_price', mask_season_p7z, z_pos=-1)
-    return grain_price_ks2gc1_p7z.unstack([2,0,1,3]), grain_price_wc_ks2g_c0p7z.unstack([2,0,1])
+    return grain_price_ks2gc1_p7z.unstack([2,0,1,3]).sort_index(), grain_price_wc_ks2g_c0p7z.unstack([2,0,1]).sort_index()
 # a=grain_price()
 
 #########################
@@ -1134,8 +1134,8 @@ def f1_rot_cost(r_vals):
     wc_rl_c0p7z = pd.concat([fert_wc, nap_fert_wc, chem_wc, seedwc, insurance_wc, phase_stubble_wc],axis=1).groupby(axis=1,level=(0,1,2)).sum()
 
     ##stack
-    cost_p7zlr = cost_rl_p7z.unstack([1,0])
-    wc_c0p7zlr = wc_rl_c0p7z.unstack([1,0])
+    cost_p7zlr = cost_rl_p7z.unstack([1,0]).sort_index()
+    wc_c0p7zlr = wc_rl_c0p7z.unstack([1,0]).sort_index()
 
     ##create params for v_phase_increment
     ## costs for v_phase_increment activities are incurred in the season period when the activity is selected
