@@ -499,7 +499,7 @@ def f1_boundarypyomo_local(params, model):
                                 for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
                             == total_pas_area)
                 else:
-                    pe.Constraint.Skip
+                    return pe.Constraint.Skip
             model.con_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, rule=pas_bound,doc='bound on total pasture area')
 
 
