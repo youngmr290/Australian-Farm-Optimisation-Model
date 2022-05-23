@@ -278,7 +278,14 @@ def f_update(existing_value, new_value, mask_for_new):
 
     if isinstance(new_value,np.ndarray) and isinstance(existing_value,np.ndarray):
         if new_value.dtype == object:
-            dtype = existing_value.dtype
+            if np.any(new_value == '-'):  # needs to be an object to perform elementwise comparison
+                new_value[new_value == '-'] = 0
+            is_float = np.any(np.mod(new_value, 1)!=0)
+            ###incase int array is existing but sav has floats
+            if is_float:
+                dtype = max(existing_value.dtype, new_value.astype('float32').dtype) #keeps it as float64 if existing value is float64
+            else:
+                dtype = existing_value.dtype
         else:
             dtype = max(existing_value.dtype, new_value.dtype)
     elif isinstance(new_value,np.ndarray):
