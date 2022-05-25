@@ -461,7 +461,7 @@ def f1_boundarypyomo_local(params, model):
                             for p6 in model.s_feed_periods)
                     return dse == rhs_dse
                 else:
-                    pe.Constraint.Skip
+                    return pe.Constraint.Skip
             model.con_SR_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, rule=SR_bound,
                                                 doc='stocking rate bound for each feed period')
 
@@ -483,8 +483,8 @@ def f1_boundarypyomo_local(params, model):
                            sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_landuse_area[r, k] for r in model.s_phases for l in model.s_lmus)
                            == landuse_area_bound[k])
                 else:
-                    pe.Constraint.Skip
-            model.con_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_landuses, model.s_season_types, rule=k_bound, doc='bound on total pasture area')
+                    return pe.Constraint.Skip
+            model.con_landuse_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_landuses, model.s_season_types, rule=k_bound, doc='bound on total pasture area')
 
         ##total pasture area - hence also total crop area
         ###build bound if turned on
