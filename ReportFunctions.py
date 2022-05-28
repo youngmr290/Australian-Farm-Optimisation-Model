@@ -1685,7 +1685,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
                                                  na_weights=na_weights, den_weights=den_weights,
                                                  na_denweights=na_denweights, keys=keys, arith=arith,
                                                  index=index, cols=cols)
-    mei_sire.columns = pd.MultiIndex.from_product([['Sire'], mei_sire.columns]) # add stock type as header
+    mei_sire = pd.concat([mei_sire], keys=['Sire'], axis=1) # add stock type as header
 
     ###dams
     type = 'stock'
@@ -1702,7 +1702,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
                                                  na_weights=na_weights, den_weights=den_weights,
                                                  na_denweights=na_denweights, keys=keys, arith=arith,
                                                  index=index, cols=cols)
-    mei_dams.columns = pd.MultiIndex.from_product([['Dams'], mei_dams.columns]) # add stock type as header
+    mei_dams = pd.concat([mei_dams], keys=['Dams'], axis=1) # add stock type as header
 
     ###offs
     type = 'stock'
@@ -1719,11 +1719,21 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
                                                  na_weights=na_weights, den_weights=den_weights,
                                                  na_denweights=na_denweights, keys=keys, arith=arith,
                                                  index=index, cols=cols)
-    mei_offs.columns = pd.MultiIndex.from_product([['Offs'], mei_offs.columns]) # add stock type as header
+    mei_offs = pd.concat([mei_offs], keys=['Offs'], axis=1)
 
     ##stick feed stuff together
-    feed_budget_supply = pd.concat([grn_mei, dry_mei, poc_mei, nap_mei, res_mei, crop_mei, sup_mei], axis=1)
-    feed_budget_req = pd.concat([mei_sire, mei_dams, mei_offs], axis=1)
+    ###first make everything have the same number of col levels - not the neatest but couldnt find a better way
+    arrays = [grn_mei, dry_mei, poc_mei, nap_mei, res_mei, crop_mei, sup_mei, mei_sire, mei_dams, mei_offs]
+    ####determine the max number of column levels
+    max_levels=1
+    for array in arrays:
+        max_levels = max(max_levels, array.columns.nlevels)
+    for array in range(len(arrays)):
+        extra_levels = max_levels - arrays[array].columns.nlevels
+        for extra_lev in range(extra_levels):
+            arrays[array] = pd.concat([arrays[array]], keys=[''], axis=1)
+    feed_budget_supply = pd.concat(arrays[0:7], axis=1)
+    feed_budget_req = pd.concat(arrays[7:], axis=1)
 
     ##sum nv axis if nv_option is 1
     if nv_option==1:
