@@ -80,11 +80,13 @@ def xl_all_named_ranges(filename, targetsheets, rangename=None,numpy=False,datat
                             df = pd.DataFrame([cell.value for cell in row] for row in ws[cell_range])
                             #df = pd.DataFrame(cells)
                             #print(df)
+                            ##set headers
                             df.rename(columns=df.iloc[0],inplace=True)
-                            ## drop row that had header names (renaming is more like a copy than a cut)
+                            ###drop row that had header names (renaming is more like a copy than a cut)
                             df.drop(df.index[0],inplace=True)
-                            df = df.set_index(df.iloc[:,0]) #could use rename ie df.rename(index=df.iloc[:,0],inplace=True)
-                            ## now have to drop the first col because renaming/set_index is more like copy than cut hence it doesn't make the index col one just rename index to match col one
+                            ##set index
+                            df.rename(index=df.iloc[:, 0], inplace=True)
+                            ###drop the first col because renaming/set_index is more like copy than cut hence it doesn't make the index col one just rename index to match col one
                             df = df.drop(df.columns[[0]],axis=1) #for some reason this will chuck an error in the index values are int and there is nothing in the top left cell of the df...seems like a bug in python
                             ## manipulate data into cheapest format - results in mainly float32 (strings are still objects) - without this each value is treated as an object (objects use up much more memory) - this change reduced fert df from 150mbs to 20mbs
                             parameters[dn.name] = df.apply(pd.to_numeric, errors='ignore', downcast='float')
