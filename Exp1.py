@@ -243,7 +243,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
 
             ##write rc, duals and slacks to txt file. Duals are slow to write so that option must be turn on
             write_duals = True
-            with open(os.path.join(directory_path, 'Output/Rc and Duals - %s.txt' %trial_name),'w') as f:  #file name has to have capital
+            with open(os.path.join(directory_path, 'Output/Rc Slacks and Duals - %s.txt' %trial_name),'w') as f:  #file name has to have capital
                 f.write('RC\n')
                 for v in model.component_objects(pe.Var, active=True):
                     f.write("Variable %s\n" %v)
