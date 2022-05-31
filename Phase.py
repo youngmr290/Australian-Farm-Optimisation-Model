@@ -220,15 +220,10 @@ def f_grain_price(r_vals):
     # grain_income_allocation_p7zg = grain_income_allocation_p7z.reindex(cols_p7zg, axis=1)#adds level to header so i can mul in the next step
     # grain_price =  farm_gate_price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
     grain_price_ks2gc1_p7z =  farmgate_price_ks2gc1_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
-    # cols_c0p7zg = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, farm_gate_price_k_g.columns])
-    # grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
-    # grain_price_wc =  farm_gate_price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
-    grain_price_wc_ks2gc1_c0p7z =  farmgate_price_ks2gc1_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
 
     ##average c1 axis for wc and report
     c1_prob = uinp.price_variation['prob_c1']
     r_grain_price_ks2g_p7z = grain_price_ks2gc1_p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
-    grain_price_wc_ks2g_c0p7z = grain_price_wc_ks2gc1_c0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
 
     ##store r_vals
     ###make z8 mask - used to uncluster
@@ -236,7 +231,7 @@ def f_grain_price(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, r_grain_price_ks2g_p7z, 'grain_price', mask_season_p7z, z_pos=-1)
-    return grain_price_ks2gc1_p7z.unstack([2,0,1,3]).sort_index(), grain_price_wc_ks2g_c0p7z.unstack([2,0,1]).sort_index()
+    return grain_price_ks2gc1_p7z.unstack([2,0,1,3]).sort_index()
 # a=grain_price()
 
 #########################
@@ -1257,14 +1252,13 @@ def f1_crop_params(params,r_vals):
     biomass = f_rot_biomass()
     biomass2product_kls2 = f_biomass2product()
     propn = f_grain_pool_proportions()
-    grain_price, grain_wc = f_grain_price(r_vals)
+    grain_price = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
     sow_prov_p7p5zk = f_sow_prov()
 
     ##create params
     params['grain_pool_proportions'] = propn.to_dict()
     params['grain_price'] = grain_price.to_dict()
-    params['grain_wc'] = grain_wc.to_dict()
     params['phase_sow_req'] = phasesow_req.to_dict()
     params['sow_prov'] = sow_prov_p7p5zk.to_dict()
     params['rot_cost'] = cost.to_dict()
