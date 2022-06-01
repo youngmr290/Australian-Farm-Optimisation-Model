@@ -6707,7 +6707,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #progeny weaned #
     #################
     '''yatf are first transferred to progeny activity then they are either sold as sucker, transferred to dam or transferred to offs.
-    yatf have a t axis due to the dams feedsupply. This t axis is removed and replaced with the prog t axis.'''
+    yatf have a t axis due to the dams feedsupply. This t axis is removed and replaced with the prog t axis.
+    
+    Prog can be clustered without losing lw info because the distrubutions (prog2 and yatf2prog) are done with
+    active e&b axes.
+    Clustering means the model can only differentially manage based on LW. If the model scans then it can differentially
+    manage based on BTRT.    
+    '''
     ##condense yatf from total number of finishing lw to 10
     ### mask the ffcfw & salevalue for only those that have numbers > 0. Removes animals that have died or don't exist
     ffcfw_range_ta1e1b1nwzida0e0b0xyg2 = ffcfw_start_d_yatf_ta1e1b1nwzida0e0b0xyg2 * (numbers_start_d_yatf_ta1e1b1nwzida0e0b0xyg2 > 0)
