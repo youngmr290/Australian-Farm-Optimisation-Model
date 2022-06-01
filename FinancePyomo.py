@@ -30,8 +30,6 @@ def f1_finpyomo_local(params, model):
     ############
     ##terminal welth used in utility function
     model.v_terminal_wealth = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, bounds = (-500000, 20000000), doc = 'profit minus depreciation, minroe and asset cost')
-    ##utility - used in objective
-    model.v_utility = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, bounds = (None, None), doc = 'utility - used in objective')
     ##credit for a given time period (time period defined by cashflow set)
     model.v_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_c1, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net positive cashflow in a given period')
     ##debit for a given time period (time period defined by cashflow set)

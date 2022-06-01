@@ -781,52 +781,102 @@ def f_objective(model):
     model.con_terminal_wealth = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, rule=terminal_wealth,
                                      doc='tallies up terminal wealth so it can be transferred to the utility function.')
 
-
-    ##Notes:
-    ##1.
-    ## there has been cases where including risk stop the model solving correctly.
-    ## This can be helped by customising the segements to more closely fit the expected profit.
-    ## The solver also seems to prefers if all segements are the same size.
-    ##2.
-    ## there is no point having very big segements because all levels of terminal wealth within a segment have a linear
-    ## relationship with utility therefore to reflect risk aversion terminal wealth due to different price (c1) and
-    ## season (z) need to fall into different segments. Therefore the size if the segments should reflect the variation
-    ## between c1 and z.
-
-    ##piecewise utility function - two options CRRA and CARA
+    ##terminal wealth at each segment
+    tw_points = list(range(0, 1000000, 100000)) #majority of segements in expected profit range - these need to line up with terminal wealth before initial wealth is added.
+    tw_points.insert(0, -500000) #add a low number to end to handle if profit is very low. Note utility will be linear for any values in this segment, thus shouldnt be common to have profit in this seg
+    tw_points.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldnt be common to have profit in this seg
+    tw_points = np.array(tw_points)
     if not uinp.general['i_inc_risk']:
-        breakpoints = [-500000, 20000001]
-        def f(model, i0, i1, i2, i3, x):
-            '''If no risk utility is equal to profit'''
-            return x
+        utility_u = tw_points
+    ##CARA/CRRA utility function
     elif uinp.general['i_utility_method']==1: #CARA
         a=uinp.general['i_cara_risk_coef']
-        breakpoints = list(range(-500000, 1000000, 75000)) #majority of segements in expected profit range - these need to line up with terminal wealth before initial wealth is added.
-        breakpoints.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldnt be common to have profit in this seg
-        def f(model, i0, i1, i2, i3, x):
-            '''CARA/CRRA utility function'''
-            return 1-np.exp(-a*x)
+        utility_u = (1-np.exp(-a*tw_points))*100 #need to multiply by 100 so the solver works (not 100% sure but seems to be due to the small change in obj making it hard to solve)
+    ##CRRA utility function
     elif uinp.general['i_utility_method']==2: #CRRA
         Rr = uinp.general['i_crra_risk_coef']
         initial_welth = uinp.general['i_crra_initial_wealth']
-        breakpoints = list(range(-500000, 1000000, 75000)) #majority of segements in expected profit range - these need to line up with terminal wealth before initial wealth is added.
-        breakpoints.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldnt be common to have profit in this seg
-        def f(model, i0, i1, i2, i3, x):
-            '''CRRA utility function'''
-            ##This method doesnt handle negitive terminal wealth (x).
-            ##The function also returns a very small number at high Rr which seem to trip out the solver.
-            x+=initial_welth
-            return x**(1-Rr) / (1-Rr)
-    else:
-        raise ValueError("Specify a valid risk method or turn risk off.")
+        t_tw_points = tw_points+initial_welth
+        utility_u = t_tw_points**(1-Rr) / (1-Rr)
 
-    model.con = pc.Piecewise(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, #sets
-                             model.v_utility, model.v_terminal_wealth, # range and domain variables
-                             pw_pts=breakpoints,
-                             pw_constr_type='UB',
-                             f_rule=f,
-                             pw_repn='SOS2')
+    keys_u = np.array(['u%s' % i for i in range(len(tw_points))])
+    p_tw_points = dict(zip(keys_u, tw_points))
+    p_utility = dict(zip(keys_u, utility_u))
+    model.s_utility_points = pe.Set(initialize=keys_u, doc='utility segements')
+    model.v_utility_points = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, model.s_utility_points, bounds = (0, None), doc = 'propn of utility from each segement')
+    model.p_tw_points = pe.Param(model.s_utility_points, initialize=p_tw_points, default = 0.0, doc='terminal wealth at the beginning of each segement')
+    model.p_utility = pe.Param(model.s_utility_points, initialize=p_utility, default = 0.0, doc='utility provided by each level of terminal wealth')
+
+    def terminal_wealth_transfer(model,q,s,z,c1):
+        if pe.value(model.p_wyear_inc_qs[q,s]):
+            return -model.v_terminal_wealth[q,s,z,c1] + sum(model.v_utility_points[q,s,z,c1,u] * model.p_tw_points[u]
+                                                            for u in model.s_utility_points) <=0
+        else:
+            return pe.Constraint.Skip
+    model.con_terminal_wealth_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, rule=terminal_wealth_transfer,
+                                     doc='transfers terminal wealth to utility')
+
+    def utility_propn(model,q,s,z,c1):
+        if pe.value(model.p_wyear_inc_qs[q,s]):
+            return sum(model.v_utility_points[q,s,z,c1,u] for u in model.s_utility_points) ==1
+        else:
+            return pe.Constraint.Skip
+    model.con_utility_segment_propn = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, rule=utility_propn,
+                                     doc='ensures ternimal wealth points tally to 1. Required because utility function is concave.')
 
     ##objective function (maximise utility)
-    return sum(model.v_utility[q,s,z,c1] * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
-               for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
+    return sum(sum(model.v_utility_points[q,s,z,c1,u] * model.p_utility[u] for u in model.s_utility_points)
+               * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
+               for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types)
+
+
+
+
+    # ##Notes:
+    # ##1.
+    # ## there has been cases where including risk stop the model solving correctly.
+    # ## This can be helped by customising the segements to more closely fit the expected profit.
+    # ## The solver also seems to prefers if all segements are the same size.
+    # ##2.
+    # ## there is no point having very big segements because all levels of terminal wealth within a segment have a linear
+    # ## relationship with utility therefore to reflect risk aversion terminal wealth due to different price (c1) and
+    # ## season (z) need to fall into different segments. Therefore the size if the segments should reflect the variation
+    # ## between c1 and z.
+    #
+    # ##piecewise utility function - two options CRRA and CARA
+    # if not uinp.general['i_inc_risk']:
+    #     breakpoints = [-500000, 20000001]
+    #     def f(model, i0, i1, i2, i3, x):
+    #         '''If no risk utility is equal to profit'''
+    #         return x
+    # elif uinp.general['i_utility_method']==1: #CARA
+    #     a=uinp.general['i_cara_risk_coef']
+    #     breakpoints = list(range(-500000, 1000000, 75000)) #majority of segements in expected profit range - these need to line up with terminal wealth before initial wealth is added.
+    #     breakpoints.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldnt be common to have profit in this seg
+    #     def f(model, i0, i1, i2, i3, x):
+    #         '''CARA/CRRA utility function'''
+    #         return 1-np.exp(-a*x)
+    # elif uinp.general['i_utility_method']==2: #CRRA
+    #     Rr = uinp.general['i_crra_risk_coef']
+    #     initial_welth = uinp.general['i_crra_initial_wealth']
+    #     breakpoints = list(range(-500000, 1000000, 75000)) #majority of segements in expected profit range - these need to line up with terminal wealth before initial wealth is added.
+    #     breakpoints.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldnt be common to have profit in this seg
+    #     def f(model, i0, i1, i2, i3, x):
+    #         '''CRRA utility function'''
+    #         ##This method doesnt handle negitive terminal wealth (x).
+    #         ##The function also returns a very small number at high Rr which seem to trip out the solver.
+    #         x+=initial_welth
+    #         return x**(1-Rr) / (1-Rr)
+    # else:
+    #     raise ValueError("Specify a valid risk method or turn risk off.")
+    #
+    # model.con = pc.Piecewise(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, #sets
+    #                          model.v_utility, model.v_terminal_wealth, # range and domain variables
+    #                          pw_pts=breakpoints,
+    #                          pw_constr_type='UB',
+    #                          f_rule=f,
+    #                          pw_repn='CC')
+    #
+    # ##objective function (maximise utility)
+    # return sum(model.v_utility[q,s,z,c1] * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
+    #            for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
