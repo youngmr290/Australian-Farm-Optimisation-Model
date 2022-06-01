@@ -480,6 +480,7 @@ Variable v_prog
    ('q0', 's0', 'Adt', '11-0', 't2', 'w005', 'typ', 'Spr', 'aStd', 'C', 'BBB') 0.029720109906214928
    ('q0', 's0', 'Adt', '11-0', 't2', 'w009', 'typ', 'Spr', 'aStd', 'F', 'BBB') 1092.7368162502285
    ('q0', 's0', 'Adt', '11-0', 't2', 'w009', 'typ', 'Spr', 'aStd', 'C', 'BBB') 1488.1770716207009
+Variable v_tradevalue
 Variable v_purchase_dams
 Variable v_purchase_offs
 Variable v_infrastructure

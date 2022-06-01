@@ -58,6 +58,8 @@ def f1_stockpyomo_local(params, model):
                           model.s_sale_prog, model.s_lw_prog, model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender,
                           model.s_groups_prog, bounds = (0,None) , doc='number of offs animals')
 
+    model.v_tradevalue = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,
+                                bounds = (None,None) , doc='value of stock traded between seasons')
     ##purchases
     model.v_purchase_dams = pe.Var(model.s_sequence_year, model.s_sequence, model.s_dvp_dams, model.s_lw_dams, model.s_season_types, model.s_tol, model.s_groups_dams, bounds = (0,None) , doc='number of purchased dam animals')
     model.v_purchase_offs = pe.Var(model.s_sequence_year, model.s_sequence, model.s_dvp_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_groups_offs, bounds = (0,None) , doc='number of purchased offs animals')
@@ -189,6 +191,16 @@ def f1_stockpyomo_local(params, model):
                                  model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
                                  model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
                                  initialize=params['p_cost_offs'], default=0.0, mutable=False, doc='husbandry cost offs')
+
+    ##trade value stock - end of season minus start of season
+    model.p_tradevalue_sire = pe.Param(model.s_season_periods, model.s_season_types, model.s_groups_sire, initialize=params['p_tradevalue_p7zg0'],
+                                  default=0.0, mutable=False, doc='Trade value of sire - value at season start/end')
+    model.p_tradevalue_dams = pe.Param(model.s_k2_birth_dams, model.s_season_periods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
+                                  model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
+                                  initialize=params['p_tradevalue_k2p7tva1nwziyg1'], default=0.0, mutable=False, doc='Trade value of dams - value at season start/end')
+    model.p_tradevalue_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_season_periods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+                                 model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
+                                 initialize=params['p_tradevalue_k3k5p7tvnwziaxyg3'], default=0.0, mutable=False, doc='Trade value of offs - value at season start/end')
 
     ##asset value stock
     model.p_asset_sire = pe.Param(model.s_season_periods, model.s_season_types, model.s_groups_sire, initialize=params['p_assetvalue_sire'],
@@ -356,6 +368,7 @@ def f1_stockpyomo_local(params, model):
     f_con_prog2offsR(model,l_v3)
     f_con_matingR(model)
     f_con_stockinfra(model)
+    f_stock_trade_profit(model)
 
 ########################
 # local constraints    #
@@ -691,6 +704,41 @@ def f_con_stockinfra(model):
             return pe.Constraint.Skip
     model.con_stockinfra = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_infrastructure, model.s_season_types, rule=stockinfra, doc='Requirement for infrastructure (based on number of times yarded and shearing activity)')
 
+def f_stock_trade_profit(model):
+    '''
+    Calculate the difference in the total livestock value at the end of the year vs the start of the year.
+
+    This is used to account for trade in stock between the good year and the poor years when the numbers are averaged.
+    When the numbers are average that is essentially the poor yr buying sheep from the good year but not cashflow occurs.
+    This reflects that transaction so that the poor year can't unfairly increase its utility.
+    This doesn't effect overall profit it only effects which season it gets realised in.
+
+    See further comments in sgen.
+
+    Used in global constraint (con_cashflow). See CorePyomo
+    '''
+
+    # this could be skipped for SE model (e.g. len(model.s_season_periods)>1) but that might get confusing so for now I have left it in.
+    def stock_trade_profit(model, q, s, p7, z):
+        if pe.value(model.p_wyear_inc_qs[q, s]):
+            stock = sum(model.v_sire[q, s, g0] * model.p_tradevalue_sire[p7, z, g0] for g0 in model.s_groups_sire) \
+                    + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_tradevalue_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]
+                              for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                              for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                              if pe.value(model.p_tradevalue_dams[k2, p7, t1, v1, a, n1, w1, z, i, y1, g1]) != 0)
+                          + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3] * model.p_tradevalue_offs[k3,k5,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                                for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs
+                                for v3 in model.s_dvp_offs for n3 in model.s_nut_offs for w3 in model.s_lw_offs
+                                for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
+                                if pe.value(model.p_tradevalue_offs[k3, k5, p7, t3, v3, n3, w3, z, i, a, x, y3, g3]) != 0)
+                          for a in model.s_wean_times for i in model.s_tol)
+            return model.v_tradevalue[q, s, p7, z] - stock <=0
+        else:
+            return pe.Constraint.Skip
+    model.con_stock_trade_profit = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
+                                                 model.s_season_types, rule=stock_trade_profit,
+                                                 doc='Requirement for infrastructure (based on number of times yarded and shearing activity)')
+
     end_cons=time.time()
     # print('time stock con: ', end_cons-end_params)
 
@@ -827,6 +875,29 @@ def f_stock_cost(model,q,s,p7,z):
     return  stock + infrastructure + purchases
 #
 #
+def f_stock_asset(model,q,s,p7,z):
+    '''
+    Calculate the total asset value of livestock.
+
+    Used in global constraint (con_asset). See CorePyomo
+    '''
+
+    infrastructure = sum(model.p_asset_stockinfra[p7,h1] for h1 in model.s_infrastructure)
+    stock = sum(model.v_sire[q,s,g0] * model.p_asset_sire[p7,z,g0] for g0 in model.s_groups_sire) \
+            + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_asset_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]
+                     for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                     for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                      if pe.value(model.p_asset_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
+                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_asset_offs[k3,k5,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                      for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
+                      for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
+                      if pe.value(model.p_asset_offs[k3,k5,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
+               for a in model.s_wean_times for i in model.s_tol)
+    # purchases = sum(sum(model.v_purchase_dams[q,s,v1,w1,i,g1] * sum(model.p_cost_purch_dam[v1,w1,i,g1,c] for c in model.s_season_periods) for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
+    #                 +sum(model.v_purchase_offs[q,s,v3,w3,i,g3] * sum(model.p_cost_purch_offs[v3,w3,i,g3,c] for c in model.s_season_periods) for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)
+    return stock + infrastructure #+ purchases
+
+
 def f_stock_labour_anyone(model,q,s,p5,z):
     '''
     Calculate the total 'anyone' labour required for livestock activities.
@@ -888,28 +959,6 @@ def f_stock_labour_manager(model,q,s,p5,z):
     return stock
 #
 
-
-def f_stock_asset(model,q,s,p7,z):
-    '''
-    Calculate the total asset value of livestock.
-
-    Used in global constraint (con_asset). See CorePyomo
-    '''
-
-    infrastructure = sum(model.p_asset_stockinfra[p7,h1] for h1 in model.s_infrastructure)
-    stock = sum(model.v_sire[q,s,g0] * model.p_asset_sire[p7,z,g0] for g0 in model.s_groups_sire) \
-            + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_asset_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]
-                     for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
-                     for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                      if pe.value(model.p_asset_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
-                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_asset_offs[k3,k5,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]
-                      for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
-                      for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if pe.value(model.p_asset_offs[k3,k5,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
-               for a in model.s_wean_times for i in model.s_tol)
-    # purchases = sum(sum(model.v_purchase_dams[q,s,v1,w1,i,g1] * sum(model.p_cost_purch_dam[v1,w1,i,g1,c] for c in model.s_season_periods) for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
-    #                 +sum(model.v_purchase_offs[q,s,v3,w3,i,g3] * sum(model.p_cost_purch_offs[v3,w3,i,g3,c] for c in model.s_season_periods) for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)
-    return stock + infrastructure #+ purchases
 
 
 ##################################

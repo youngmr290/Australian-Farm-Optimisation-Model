@@ -5074,7 +5074,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     a_assetvalue_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_assetvalue_p, p_pos)
     assetvalue_timing_pa1e1b1nwzida0e0b0xyg = assetvalue_timing_y[a_assetvalue_pa1e1b1nwzida0e0b0xyg]
     period_is_assetvalue_pa1e1b1nwzida0e0b0xyg = sfun.f1_period_is_('period_is', assetvalue_timing_pa1e1b1nwzida0e0b0xyg, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
-    ###add a5 axis - add start of season and end of season to asset value so the asset value can be stored at the end and start of season. This is just used in the pnl report.
+    ###add a5 axis - add start of season and end of season to asset value so the asset value can be stored at the end and start of season. This is used to trade livestock trading.
     period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg = np.stack(np.broadcast_arrays(period_is_assetvalue_pa1e1b1nwzida0e0b0xyg,
                                                                                 period_is_startseason_pa1e1b1nwzida0e0b0xyg,
                                                                                 nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg), axis=0)
@@ -5271,9 +5271,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     a_k5cluster_b0xygls = np.moveaxis(np.moveaxis(a_k5cluster_lsb0xyg, 0,-1),0,-1) #put s and l at the end they are summed away shortly
 
 
-    #######################
-    #on hand / shear mask #
-    #######################
+    ##############################
+    #on hand / sale / shear mask #
+    ##############################
     '''
     All animals onhand at main shearing are shorn. This may be a slight limitation for lambs that are sold a couple
     of months after main shearing because in reality farmers would wait and shear them before sale. This is tricky
@@ -5286,8 +5286,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     In reality farmers tend to wait a bit after shearing before selling because animals are off water and feed for up to
     48hrs and because animals tend to gain weight at a faster rate directly after shearing. In AFO we dont represent 
     either of these things thus shearing and selling in the same period is not a big limitation (the two factors are 
-    likely to cancel each other out so likely not a big error).   
+    likely to cancel each other out so likely not a big error).  
+    
+    There is 3 aspects to the problem of being able to retain an animal from shearing and selling just after in the 
+    new season year and or cashflow year using a tactical sale option.
+    1. The working capital constraint (animals can be retained and sold at the begining of next financial yr to 
+       reduce wc constraint). This is not a problem for SQ & MP (because end balance carries over). It is difficult to solve for DSP/SE
+    2. Gaining utility in the DSP by selling sheep in the low income year (technically this is reducing risk but not 
+       in a very sensible way - it is the same as withdrawing cash from the bank in a poor year.). This problem 
+       has been solved by adding the 'Livestock Trading Profit'.
+    3. Extra cashflow interest achievid by moving income from the end of the previous year to the start fo the next year. 
+       Difficult to handle and maybe not a big issue. 
     '''
+       #todo dad to check -
+       # 1. it is still a problem for sq.
+       # 3. isnt this handled by asset value?
 
     onhandshear_start=time.time()
 
@@ -6554,6 +6567,61 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
 
 
+    ###########################
+    #Livestock trade          #
+    ###########################
+    '''
+    Similar to benchmarking we have a 'Livestock Trading Profit' concept. This is required because when using the DSP
+    stock numbers are averaged at the begining of the each sesaon. Thus essentially the poor season (with less stock numbers)
+    buys some stock from the good season. This is not reflected as a cash transaction and doesnt effect profit
+    but when using risk aversion the model opts to sell more sheep in the poor year when the utility is higher. This gives the
+    appearance that risk is being lowered but the bit that is not captured is that at the start of the season
+    the numbers are averaged across z. Which essentially means the good season is selling more to the poor season.
+    The 'Livestock Trading Profit' captures this transfer.
+
+    LTP = livestock value at end of year - value at start of the year.
+    The value of the stock at the end of the year minus the value at the start of the year should tally to 0 across all z.
+    The concept is a little hard to visualise because the generator is over multiple years (best to think about each yr
+    in the gen as a different age group animal). Because the model is in steady state the animals at the start equal
+    the animals at the end.
+    
+    Potentially we could alter the cost a bit to include a transaction cost. To reflect the effort and genetic loss
+    associated with selling sheep in the poor year and then having to buy them back at the market.
+
+    There is a small amount of error in the calculation because end and start asset value are calculated one gen period apart.
+    Technically it should be the same value but due to clustering there is one value calculated at the end of the year
+    and one at the start.
+    '''
+    ##trade value - end value minus start value (do it here to save time in pyomo)
+    ## a5[1] start of season & a5[2] end of season.
+    ###sire
+    start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0 = assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[1]
+    end_assetvalue_p7tva1e1b1nwzida0e0b0xyg0 = assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[2]
+    assetvalue_p7tva1e1b1nwzida0e0b0xyg0 = end_assetvalue_p7tva1e1b1nwzida0e0b0xyg0 - start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0
+    ###dams
+    start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1[1]
+    end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1[2] * (index_tva1e1b1nw8zida0e0b0xyg1>=2) #only retained animals have an end value (animals that are sold dont have a value)
+    assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 - start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1
+    ###offs
+    start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[1]
+    end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[2] * (index_tva1e1b1nw8zida0e0b0xyg3==0) #only retained animals have an end value (animals that are sold dont have a value)
+    assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 - start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3
+
+    ##if steady state set eveything to 0 - there is no "season start" in SE model so there is no opportunity for trade between seasons
+    if bool_steady_state:
+        ###sire
+        start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0[...] = 0
+        end_assetvalue_p7tva1e1b1nwzida0e0b0xyg0[...] = 0
+        assetvalue_p7tva1e1b1nwzida0e0b0xyg0 = end_assetvalue_p7tva1e1b1nwzida0e0b0xyg0 - start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0
+        ###dams
+        start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1[...] = 0
+        end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1[...] = 0
+        assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 - start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1
+        ###offs
+        start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3[...] = 0
+        end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3[...] = 0
+        assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 - start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3
+
 
     ###########################
     #create numbers params    #
@@ -7562,13 +7630,22 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###purchcost wc - sire
     params['p_purchcost_wc_sire'] = fun.f1_make_pyomo_dict(purchcost_wc_c0p7tva1e1b1nwzida0e0b0xyg0, arrays_c0p7zg0)
 
-    ##asset value - take slice 0 to get the asset value at the cashflow date
-    ###assetvalue - sire
+    ##asset value - take slice a5[0] to get the asset value at the cashflow date
+    ###sire
     params['p_assetvalue_sire'] = fun.f1_make_pyomo_dict(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[0], arrays_p7zg0)
-    ###assetvalue - dams
+    ###dams
     params['p_assetvalue_dams'] = fun.f1_make_pyomo_dict(assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1[0], arrays_k2p7tvanwziyg1)
-    ###assetvalue - offs
+    ###offs
     params['p_assetvalue_offs'] = fun.f1_make_pyomo_dict(assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[0], arrays_k3k5p7tvnwziaxyg3)
+
+    ##trade value
+    ## a5[1] start of season & a5[2] end of season.
+    ###sire
+    params['p_tradevalue_p7zg0'] = fun.f1_make_pyomo_dict(assetvalue_p7tva1e1b1nwzida0e0b0xyg0, arrays_p7zg0)
+    ###dams
+    params['p_tradevalue_k2p7tva1nwziyg1'] = fun.f1_make_pyomo_dict(assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1, arrays_k2p7tvanwziyg1)
+    ###offs
+    params['p_tradevalue_k3k5p7tvnwziaxyg3'] = fun.f1_make_pyomo_dict(assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3, arrays_k3k5p7tvnwziaxyg3)
 
     ##labour
     ###anyone labour - sire
@@ -7994,12 +8071,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fun.f1_make_r_val(r_vals,rm_stockinfra_fix_h1p7z,'rm_stockinfra_fix_h1p7z',mask_season_p7z,z_pos=-1)
 
     ###asset value used in pnl report to track changes in stock on hand because different z could sell at different time. e.g. if z0 retains but z3 sells z3 will look more profitable even though it is not.
-    fun.f1_make_r_val(r_vals,assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[1],'assetvalue_startseason_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
-    fun.f1_make_r_val(r_vals,assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[2],'assetvalue_endseason_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
-    fun.f1_make_r_val(r_vals,assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1[1],'assetvalue_startseason_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
-    fun.f1_make_r_val(r_vals,assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1[2],'assetvalue_endseason_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
-    fun.f1_make_r_val(r_vals,assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[1],'assetvalue_startseason_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
-    fun.f1_make_r_val(r_vals,assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[2],'assetvalue_endseason_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0,'assetvalue_startseason_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
+    fun.f1_make_r_val(r_vals,end_assetvalue_p7tva1e1b1nwzida0e0b0xyg0,'assetvalue_endseason_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
+    fun.f1_make_r_val(r_vals,start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1,'assetvalue_startseason_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1,'assetvalue_endseason_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3,'assetvalue_startseason_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3,'assetvalue_endseason_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
 
     ###purchase costs
     fun.f1_make_r_val(r_vals,purchcost_p7tva1e1b1nwzida0e0b0xyg0,'purchcost_sire_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
