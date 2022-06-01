@@ -6735,7 +6735,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #progeny weaned #
     #################
     '''yatf are first transferred to progeny activity then they are either sold as sucker, transferred to dam or transferred to offs.
-    yatf have a t axis due to the dams feedsupply. This t axis is removed and replaced with the prog t axis.'''
+    yatf have a t axis due to the dams feedsupply. This t axis is removed and replaced with the prog t axis.
+    
+    Prog can be clustered without losing lw info because the distrubutions (prog2 and yatf2prog) are done with
+    active e&b axes.
+    Clustering means the model can only differentially manage based on LW. If the model scans then it can differentially
+    manage based on BTRT.    
+    '''
     #todo If the progeny DVs were not clustered on the e&b axes (k5 cluster) this would allow the range of the progeny
     #weights to be represented when transferring to dams & offs even if scan was less than 2. This would lead to a
     #greater range of starting weights for the dams and offs selected in v[0]. This would reduce some of the
