@@ -7076,9 +7076,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     # period_is_reportffcfw_p = fun.f_sa(np.full(500,False), sen.sav['period_is_reportffcfw_p'], 5) #use 500 long then cut to the actual len_p because len p is not known when sav is built.
     period_is_reportffcfw_p = period_is_reportffcfw_p[0:len_p]
 
+    #take e[0] b[2] to reduce size. Take k2[2] so that the weight of singles is broadcast across the k2 axis inthe report
     r_ffcfw_dams_k2tvPdams = (o_ffcfw_tpdams[:, na, period_is_reportffcfw_p,...] * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_reportffcfw_p] == index_vpa1e1b1nwzida0e0b0xyg1)
                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...] == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,
-                                                                                   :, na, ...]))[:,:,:,:,:,0:1,2:3,...] #take e[] b[2] to reduce size
+                                                                                   :, na, ...]))[2:3,:,:,:,:,0:1,2:3,...]
 
     ##############
     #big reports #

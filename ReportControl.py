@@ -585,7 +585,7 @@ def f_report(processor, trials, non_exist_trials):
             index = [5] #p
             cols = [4] #v
             axis_slice = {}
-            axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
+            # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
             axis_slice[4] = [0, 7, 1]     #DVPs 0 to 6 inclusive
             ffcfw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
                                      , na_weights=na_weights, keys=keys, arith=arith
@@ -1338,7 +1338,7 @@ def f_report(processor, trials, non_exist_trials):
     if report_run.loc['run_saledateEL_offs', 'Run']:
         stacked_saledateEL_offs = stacked_saledateEL_offs.astype(object)
         stacked_saledateEL_offs[stacked_saledateEL_offs==np.datetime64('1970-01-01')] = 0
-        df_settings = rep.f_df2xl(writer, stacked_saledateEL_offs, 'saledateEL_offs', df_settings, option=display_mode)
+        df_settings = rep.f_df2xl(writer, stacked_saledateEL_offs, 'saledateEL_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_cfw_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_cfw_dams, 'cfw_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_fd_dams', 'Run']:
