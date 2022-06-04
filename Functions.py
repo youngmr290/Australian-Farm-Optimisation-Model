@@ -959,7 +959,7 @@ def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
         ##uncluster z so that each season gets complete information
         index_z = f_expand(np.arange(maskz8.shape[z_pos]), z_pos)
         a_zcluster = np.maximum.accumulate(index_z * maskz8, axis=z_pos)
-        a_zcluster = np.broadcast_to(a_zcluster, param.shape)
+        a_zcluster, param = np.broadcast_arrays(a_zcluster, param)
         param = np.take_along_axis(param, a_zcluster, axis=z_pos)
 
         ##add index if pandas
