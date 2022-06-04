@@ -689,6 +689,7 @@ def f_report(processor, trials, non_exist_trials):
             stacked_nv_offs = rep.f_append_dfs(stacked_nv_offs, nv_offs)
 
         if report_run.loc['run_lamb_survival', 'Run']:
+            #axes are qsk2tvaeb9nwziy1g1      b9 axis is shorten b axis: [0,1,2,3]
             option = 0
             if lp_vars_inc:
                 index =[4]
@@ -705,13 +706,14 @@ def f_report(processor, trials, non_exist_trials):
         if report_run.loc['run_weanper', 'Run']:
             #todo there is an error here if drys are sold at scanning. We can't think of an easy way to fix it. (note if scan=4 then birth dvp may be different across e axis)
             #with the current structure w CANNOT be reported. 23Apr22 - seems to be working when not using lp_vars
-            # problem could be that dams can change w axis between joining (nfoet) and lambing (nyatf)
+            # problem could be that dams can change w slice between joining (nfoet) and lambing (nyatf)
+            #axes are qsk2tvanwziy1g1
             option = 1
             if lp_vars_inc:
                 index =[4]      #v
                 cols =[11]   #g [11,2]      #g & k2 (needs k2 in the current form).
             else:
-                index = [4]     #v  dams_keys_qsk2tvanwziy1g1
+                index = [4]     #v
                 cols = [11,9,0,1,8,7]    #g,i,q,s,z & w  Makes most sense to report all the axes that are individual animals (k2 optional here)
             axis_slice = {}
             weanper = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
@@ -720,12 +722,13 @@ def f_report(processor, trials, non_exist_trials):
             stacked_weanper = rep.f_append_dfs(stacked_weanper, weanper)
 
         if report_run.loc['run_scanper', 'Run']:
+            #axes are qsk2tvanwziy1g1
             option = 2
             if lp_vars_inc:
                 index =[4]      #v
                 cols =[11]   #g [11,2]      #g & k2 (needs k2 in the current form).
             else:
-                index = [4]     #v  dams_keys_qsk2tvanwziy1g1
+                index = [4]     #v
                 cols = [11,9,0,1,8,7]    #g,i,q,s,z & w  Makes most sense to report all the axes that are individual animals
             axis_slice = {}
             scanper = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
@@ -734,12 +737,13 @@ def f_report(processor, trials, non_exist_trials):
             stacked_scanper = rep.f_append_dfs(stacked_scanper, scanper)
 
         if report_run.loc['run_dry_propn', 'Run']:
+            #axes are qsk2tvanwziy1g1
             option = 3
             if lp_vars_inc:
                 index =[4]      #v
                 cols =[11,2]   #g [11,2]      #g & k2 (needs k2 in the current form).
             else:
-                index = [4]     #v  dams_keys_qsk2tvanwziy1g1
+                index = [4]     #v
                 cols = [11,9,0,1,8,7]    #g,i,q,s,z & w  Makes most sense to report all the axes that are individual animals
             axis_slice = {}
             dry_propn = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
