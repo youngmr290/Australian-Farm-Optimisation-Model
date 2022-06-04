@@ -723,6 +723,7 @@ def f_report(processor, trials, non_exist_trials):
             stacked_nv_offs = rep.f_append_dfs(stacked_nv_offs, nv_offs)
 
         if report_run.loc['run_lamb_survival', 'Run']:
+            #todo the calculations underpinning this report are still not correct (23May22). Particularly for Maternals
             #axes are qsk2tvaeb9nwziy1g1      b9 axis is shorten b axis: [0,1,2,3]
             option = 0
             if lp_vars_inc:
