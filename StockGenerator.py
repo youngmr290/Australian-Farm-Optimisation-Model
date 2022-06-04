@@ -2135,9 +2135,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0:1, ...]  # slice the p axis to convert to singleton
 
     ## 2 LTW loops unless either:
-    ###     a. the feedsupply comes from pickle and pkl_ltwadj can be broadcast.
-    ###     b. the LTW adjustment is set to 0
-    ### The selected number can be increased by SAV.
+    ###     a. the feedsupply comes from pickle and pkl_ltwadj can be broadcast (loop_ltw_len=1).
+    ###     b. the LTW adjustment for dams & offs are both set to 0 (loop_ltw_len=1)
+    ### Note: The resulting number determined from the above steps can be increased by SAV if extra precision is required.
     loop_ltw_len = 2
 
     ##If using feedsupply from pkl, read in LTW adjustment from pkl.
