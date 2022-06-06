@@ -86,7 +86,7 @@ if inputs_from_pickle == False:
         pkl.dump(mvf_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         pasture_inp=dict()
-        for pasture in sinp.general['pastures'][sinp.general['pastures_exist']]:
+        for pasture in sinp.general['pastures'][general_inp['i_pastures_exist']]:
             pasture_inp[pasture] = fun.xl_all_named_ranges(property_xl_path, pasture, numpy=True)
         pkl.dump(pasture_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
@@ -172,7 +172,7 @@ r1p6z = (len_r1, len_p6, len_z)
 
 
 ###pasture
-for t,pasture in enumerate(sinp.general['pastures'][sinp.general['pastures_exist']]):
+for t,pasture in enumerate(sinp.general['pastures'][general_inp['i_pastures_exist']]):
     inp = pasture_inp[pasture]
     inp['DigRednSenesce'] = np.reshape(inp['DigRednSenesce'], zp6)
     inp['DigDryAve'] = np.reshape(inp['DigDryAve'], zp6)
@@ -325,6 +325,15 @@ def f_property_inp_sa():
     ##crop grazing
     ###sav
     cropgraze['i_cropgrazing_inc'] = fun.f_sa(cropgraze['i_cropgrazing_inc'], sen.sav['cropgrazing_inc'], 5)
+    ###sam
+    ###sap
+    ###saa
+    ###sat
+    ###sar
+
+    ##salt land pasture
+    ###sav
+    saltbush['i_saltbush_inc'] = fun.f_sa(saltbush['i_saltbush_inc'], sen.sav['slp_inc'], 5)
     ###sam
     ###sap
     ###saa

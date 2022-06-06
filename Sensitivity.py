@@ -207,7 +207,11 @@ sav_inp['seedharv_casual_ub'] = '-'  #casual upper bound at seeding and harv
 ##cropgrazing
 sav_inp['cropgrazing_inc'] = '-'  #control if crop grazing is allowed
 
+##salt land pasture
+sav_inp['slp_inc'] = '-'  #control if salt land pasture is included
+
 ##bounds
+sav_inp['bnd_slp_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of slp on each lmu
 sav_inp['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
 sav_inp['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
 sav_inp['bnd_rotn_inc'] = '-'   #SA to turn on the phase area bounds
