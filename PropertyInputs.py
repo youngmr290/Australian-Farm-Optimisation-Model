@@ -58,6 +58,9 @@ if inputs_from_pickle == False:
         cropgraze_inp = fun.xl_all_named_ranges(property_xl_path,"CropGrazing", numpy=True)
         pkl.dump(cropgraze_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
+        saltbush_inp = fun.xl_all_named_ranges(property_xl_path,"Saltbush", numpy=True)
+        pkl.dump(saltbush_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
+
         mach_inp = fun.xl_all_named_ranges(property_xl_path,"Mach")
         pkl.dump(mach_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
@@ -98,6 +101,8 @@ else:
         crop_inp = pkl.load(f)
 
         cropgraze_inp = pkl.load(f)
+
+        saltbush_inp = pkl.load(f)
 
         mach_inp = pkl.load(f)
 
@@ -184,6 +189,14 @@ for t,pasture in enumerate(sinp.general['pastures'][sinp.general['pastures_exist
 ###crop grazing
 cropgraze_inp['i_crop_growth_zkp6'] = np.reshape(cropgraze_inp['i_crop_growth_zkp6'], zkp6)
 
+###saltbush
+saltbush_inp['i_sb_expected_foo_zp6'] = np.reshape(saltbush_inp['i_sb_expected_foo_zp6'], zp6)
+saltbush_inp['i_sb_expected_growth_zp6'] = np.reshape(saltbush_inp['i_sb_expected_growth_zp6'], zp6)
+saltbush_inp['i_sb_growth_reduction_zp6'] = np.reshape(saltbush_inp['i_sb_growth_reduction_zp6'], zp6)
+saltbush_inp['i_sb_ash_content_zp6'] = np.reshape(saltbush_inp['i_sb_ash_content_zp6'], zp6)
+saltbush_inp['i_sb_selectivity_zp6'] = np.reshape(saltbush_inp['i_sb_selectivity_zp6'], zp6)
+saltbush_inp['i_slp_diet_propn_zp6'] = np.reshape(saltbush_inp['i_slp_diet_propn_zp6'], zp6)
+
 ###stock
 sheep_inp['i_pasture_stage_p6z'] = np.reshape(sheep_inp['i_pasture_stage_p6z'], zp6)
 sheep_inp['i_legume_p6z'] = np.reshape(sheep_inp['i_legume_p6z'], zp6)
@@ -221,6 +234,7 @@ general = copy.deepcopy(general_inp)
 labour = copy.deepcopy(labour_inp)
 crop = copy.deepcopy(crop_inp)
 cropgraze = copy.deepcopy(cropgraze_inp)
+saltbush = copy.deepcopy(saltbush_inp)
 mach = copy.deepcopy(mach_inp)
 stubble = copy.deepcopy(stubble_inp)
 finance = copy.deepcopy(finance_inp)
@@ -445,6 +459,13 @@ def f1_expand_p6():
     cropgraze['i_crop_growth_zkp6'] = np.take_along_axis(cropgraze['i_crop_growth_zkp6'], a_p6std_zp6[:,na,:], axis=2)
     cropgraze['i_cropgraze_consumption_factor_zp6'] = np.take_along_axis(cropgraze['i_cropgraze_consumption_factor_zp6'], a_p6std_zp6, axis=1)
 
+    ###saltbush
+    saltbush['i_sb_expected_foo_zp6'] = np.take_along_axis(saltbush['i_sb_expected_foo_zp6'], a_p6std_zp6, axis=1)
+    saltbush['i_sb_expected_growth_zp6'] = np.take_along_axis(saltbush['i_sb_expected_growth_zp6'], a_p6std_zp6, axis=1)
+    saltbush['i_sb_growth_reduction_zp6'] = np.take_along_axis(saltbush['i_sb_growth_reduction_zp6'], a_p6std_zp6, axis=1)
+    saltbush['i_sb_ash_content_zp6'] = np.take_along_axis(saltbush['i_sb_ash_content_zp6'], a_p6std_zp6, axis=1)
+    saltbush['i_sb_selectivity_zp6'] = np.take_along_axis(saltbush['i_sb_selectivity_zp6'], a_p6std_zp6, axis=1)
+    saltbush['i_slp_diet_propn_zp6'] = np.take_along_axis(saltbush['i_slp_diet_propn_zp6'], a_p6std_zp6, axis=1)
 
     ####pasture
     for pasture in sinp.general['pastures'][general['pas_inc']]:
