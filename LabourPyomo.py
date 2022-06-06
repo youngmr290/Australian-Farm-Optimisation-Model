@@ -270,7 +270,7 @@ def f_labour_cost(model,q,s,p7,z):
     Calculate the total cost of the selected labour activities. Perm and manager labour cost is allocated to each
     enterprise based on the fixed cost allocation proportion.
 
-    Used in global constraint (con_cashflow). See CorePyomo
+    Used in global constraint (con_profit). See CorePyomo
     '''
     cas = sum(model.v_quantity_casual[q,s,p5,z] * model.p_casual_cost[p7,z,p5] for p5 in model.s_labperiods)
     perm = model.v_quantity_perm * model.p_perm_cost[p7,z]

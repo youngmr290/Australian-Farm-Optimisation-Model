@@ -264,7 +264,7 @@ def f_mach_cost(model,q,s,p7,z):
     Calculate the cost of machinery for insurance, seeding, harvesting and making hay based on the level
     of machinery activities selected.
 
-    Used in global constraint (con_cashflow). See CorePyomo
+    Used in global constraint (con_profit). See CorePyomo
     '''
 
     hay_cost = model.v_hay_made[q,s,z] * model.p_contracthay_cost[p7,z]
