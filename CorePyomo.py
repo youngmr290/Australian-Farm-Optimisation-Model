@@ -30,6 +30,7 @@ import MVF as mvf
 import Sensitivity as sen
 import Finance as fin
 import CropGrazingPyomo as cgzpy
+import SaltbushPyomo as slppy
 
 
 def coremodel_all(trial_name,model):
@@ -65,6 +66,7 @@ def coremodel_all(trial_name,model):
     f_con_makehay(model)
     # feed supply
     f_con_poc_available(model)
+    f_con_link_understory_saltbush_consumption(model)
     f_con_vol(model)
     f_con_me(model)
     #crop grazing
@@ -527,6 +529,24 @@ def f_con_poc_available(model):
                                             doc='constraint between poc available and consumed')
 
 
+def f_con_link_understory_saltbush_consumption(model):
+    '''
+    Constrains the consumption of understory and saltbush based on the estimated diet selection of animals grazing
+    salt land pasture. Saltbush info comes from saltbushpyomo and understory comes from pasturepyomo.
+    '''
+    def link_us_sb(model,q,s,z,p6,f):
+        if pe.value(model.p_wyear_inc_qs[q, s]) and pinp.saltbush['i_saltbush_inc']:
+            return - slppy.f_saltbush_selection(model,q,s,z,p6,f) \
+                   + sum(model.v_greenpas_ha[q, s, f, g, o, p6, l, z, 'understory'] * model.p_volume_grnha[f, g, o, p6, l, z, 'understory']
+                        for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
+                   + sum(model.v_drypas_consumed[q, s, f, d, p6, z, 'understory'] * model.p_dry_volume_t[f, d, p6, z, 'understory']
+                         for d in model.s_dry_groups) == 0
+        else:
+            return pe.Constraint.Skip
+    model.con_link_understory_saltbush_consumption = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods,model.s_feed_pools,rule=link_us_sb,
+                                            doc='link between the consumption of understory and saltbush')
+
+
 def f_con_me(model):
     '''
     All livestock activities require energy. Provided by pastures, stubbles, supplementary feeding, grazing of green
@@ -546,7 +566,7 @@ def f_con_me(model):
     def me(model,q,s,p6,f,z):
         if pe.value(model.p_wyear_inc_qs[q, s]):
             return -paspy.f_pas_me(model,q,s,p6,f,z) - paspy.f_nappas_me(model,q,s,p6,f,z) - suppy.f_sup_me(model,q,s,p6,f,z) \
-                   - stubpy.f_stubble_me(model,q,s,p6,f,z) - cgzpy.f_grazecrop_me(model,q,s,p6,f,z) \
+                   - stubpy.f_stubble_me(model,q,s,p6,f,z) - cgzpy.f_grazecrop_me(model,q,s,p6,f,z) - slppy.f_saltbush_me(model,q,s,z,p6,f) \
                    + stkpy.f_stock_me(model,q,s,p6,f,z) - mvf.f_mvf_me(model,q,s,p6,f) <= 0
         else:
             return pe.Constraint.Skip
@@ -568,7 +588,7 @@ def f_con_vol(model):
     def vol(model,q,s,p6,f,z):
         if pe.value(model.p_wyear_inc_qs[q, s]):
             return paspy.f_pas_vol(model,q,s,p6,f,z) + suppy.f_sup_vol(model,q,s,p6,f,z) + stubpy.f_stubble_vol(model,q,s,p6,f,z) \
-                   + cgzpy.f_grazecrop_vol(model,q,s,p6,f,z) \
+                   + cgzpy.f_grazecrop_vol(model,q,s,p6,f,z) + slppy.f_saltbush_vol(model,q,s,z,p6,f) \
                    - stkpy.f_stock_pi(model,q,s,p6,f,z) \
                    + mvf.f_mvf_vol(model,q,s,p6,f) <= 0
         else:
@@ -587,7 +607,7 @@ def f_con_profit(model):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         if pe.value(model.p_wyear_inc_qs[q, s]):
             return ((-f1_grain_income(model,q,s,p7,z9,c1) + phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9)
-                    + macpy.f_mach_cost(model,q,s,p7,z9) + suppy.f_sup_cost(model,q,s,p7,z9) + model.p_overhead_cost[p7,z9]
+                    + macpy.f_mach_cost(model,q,s,p7,z9) + suppy.f_sup_cost(model,q,s,p7,z9) + model.p_overhead_cost[p7,z9] + slppy.f_saltbush_cost(model,q,s,z9,p7)
                     - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1) - model.v_tradevalue[q,s,p7,z9]
                     - model.v_debit[q,s,c1,p7,z9] + model.v_credit[q,s,c1,p7,z9])
                     + sum((model.v_debit[q,s,c1,p7_prev,z8] - model.v_credit[q,s,c1,p7_prev,z8]) * model.p_parentz_provwithin_season[p7_prev,z8,z9] * (p7!=p7_start)  #end cashflow doesnot provide start cashflow else unbounded.
@@ -616,7 +636,7 @@ def f_con_workingcap_within(model):
     def working_cap_within(model,q,s,c0,p7,z9):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         if pe.value(model.p_mask_childz_within_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s]):
-            return (phspy.f_rotation_wc(model,q,s,c0,p7,z9) + labpy.f_labour_wc(model,q,s,c0,p7,z9)
+            return (phspy.f_rotation_wc(model,q,s,c0,p7,z9) + labpy.f_labour_wc(model,q,s,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s,c0,p7,z9) + suppy.f_sup_wc(model,q,s,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
                     + stkpy.f_stock_wc(model,q,s,c0,p7,z9)
                     - model.v_wc_debit[q,s,c0,p7,z9]
@@ -648,7 +668,7 @@ def f_con_workingcap_between(model):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
         if pe.value(model.p_mask_childz_between_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]):
-            return (phspy.f_rotation_wc(model,q,s9,c0,p7,z9) + labpy.f_labour_wc(model,q,s9,c0,p7,z9)
+            return (phspy.f_rotation_wc(model,q,s9,c0,p7,z9) + labpy.f_labour_wc(model,q,s9,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s9,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s9,c0,p7,z9) + suppy.f_sup_wc(model,q,s9,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
                     + stkpy.f_stock_wc(model,q,s9,c0,p7,z9)
                     - model.v_wc_debit[q,s9,c0,p7,z9]
@@ -709,7 +729,7 @@ def f_con_minroe(model):
         p7_start = l_p7[0]
         if pe.value(model.p_wyear_inc_qs[q, s]):
             return ((phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9) + macpy.f_mach_cost(model,q,s,p7,z9)
-                    + suppy.f_sup_cost(model,q,s,p7,z9) + stkpy.f_stock_cost(model,q,s,p7,z9))
+                    + suppy.f_sup_cost(model,q,s,p7,z9) + stkpy.f_stock_cost(model,q,s,p7,z9) + slppy.f_saltbush_cost(model,q,s,z9,p7))
                     * fin.f_min_roe()
                     - model.v_minroe[q,s,p7,z9]
                     + sum(model.v_minroe[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]

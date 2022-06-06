@@ -45,6 +45,7 @@ import MVF as mvf
 import CropGrazingPyomo as cgzpy
 import SeasonPyomo as zgenpy
 import FeedSupplyStock as fsstk
+import SaltbushPyomo as slppy
 
 #report the clock time that the experiment was started
 print(f'Experiment commenced at: {time.ctime()}')
@@ -148,6 +149,7 @@ for row in range(len(exp_data)):
     params['crplab']={}
     params['sup']={}
     params['stock']={}
+    params['slp']={}
     params['stub']={}
     params['pas']={}
     ###report values
@@ -163,6 +165,7 @@ for row in range(len(exp_data)):
     r_vals['crplab']={}
     r_vals['sup']={}
     r_vals[ 'stock']={}
+    r_vals['slp']={}
     r_vals['stub']={}
     r_vals['pas']={}
     nv = {} #dict to store nv params from stockgen to be used in pasture
@@ -181,6 +184,7 @@ for row in range(len(exp_data)):
     suppy.sup_precalcs(params['sup'],r_vals['sup'])
     spy.stock_precalcs(params['stock'],r_vals['stock'],nv,pkl_fs_info)
     cgzpy.cropgraze_precalcs(params['crpgrz'],r_vals['crpgrz'], nv) #cropgraze must be after stock because it uses nv dict which is populated in stock.py
+    slppy.saltbush_precalcs(params['slp'],r_vals['slp'], nv) #saltbush must be after stock because it uses nv dict which is populated in stock.py
     stubpy.stub_precalcs(params['stub'],r_vals['stub'], nv) #stub must be after stock because it uses nv dict which is populated in stock.py
     paspy.paspyomo_precalcs(params['pas'],r_vals['pas'], nv) #pas must be after stock because it uses nv dict which is populated in stock.py
     precalc_end = time.time()
@@ -204,6 +208,7 @@ for row in range(len(exp_data)):
         paspy.f1_paspyomo_local(params['pas'], model)
         suppy.f1_suppyomo_local(params['sup'], model)
         cgzpy.f1_cropgrazepyomo_local(params['crpgrz'], model)
+        slppy.f1_saltbushpyomo_local(params['slp'], model)
         stubpy.f1_stubpyomo_local(params['stub'], model)
         spy.f1_stockpyomo_local(params['stock'], model)
         mvf.f1_mvf_pyomo(model)
