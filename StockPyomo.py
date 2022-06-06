@@ -718,7 +718,7 @@ def f_stock_trade_profit(model):
 
     See further comments in sgen.
 
-    Used in global constraint (con_cashflow). See CorePyomo
+    Used in global constraint (con_profit). See CorePyomo
     '''
 
     # this could be skipped for SE model (e.g. len(model.s_season_periods)>1) but that might get confusing so for now I have left it in.
@@ -798,7 +798,7 @@ def f_stock_cashflow(model,q,s,p7,z,c1):
     '''
     Calculate the net cashflow (income - expenses) of livestock and their associated activities.
 
-    Used in global constraint (con_cashflow). See CorePyomo
+    Used in global constraint (con_profit). See CorePyomo
     '''
 
     infrastructure = sum(model.p_rm_stockinfra_fix[h1,p7,z] + model.p_rm_stockinfra_var[h1,p7,z] * model.v_infrastructure[q,s,h1,z]

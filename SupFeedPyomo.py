@@ -86,7 +86,7 @@ def f_sup_cost(model,q,s,p7,z):
     '''
     Calculate the total cost of feeding the selected level of supplement.
 
-    Used in global constraint (con_cashflow). See CorePyomo
+    Used in global constraint (con_profit). See CorePyomo
     '''
 
     return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_cost[p7,z,p6,k]
