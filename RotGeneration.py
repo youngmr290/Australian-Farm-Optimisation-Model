@@ -287,6 +287,23 @@ def f_rot_gen():
     tindex=np.all(np.isin(phases[:,:], ['T','J','t','j']), axis=1)
     phases = phases[~tindex]
 
+    ##################
+    #continuous phase#
+    ##################
+    sp=np.array(['SP','SP','SP','SP','sp'])
+    phases = np.concatenate((phases, [sp])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+
+    tc=np.array(['tc','tc','tc','tc','tc'])
+    phases = np.concatenate((phases, [tc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+
+    jc=np.array(['jc','jc','jc','jc','jc'])
+    phases = np.concatenate((phases, [jc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+
+    uc=np.array(['uc','uc','uc','uc','uc'])
+    phases = np.concatenate((phases, [uc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+
+    xc=np.array(['xc','xc','xc','xc','xc'])
+    phases = np.concatenate((phases, [xc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
 
     ######################
     #simplified rotations#
@@ -327,22 +344,6 @@ def f_rot_gen():
     if pinp.crop['user_crop_rot']:
         phases =pinp.crop['fixed_rotphases'].reset_index().values.astype('str')
 
-    ##################
-    #continuous phase#
-    ##################
-    ##only generate cont phases if there are other phases that contain a resown version of the landuse and a normal version of the landuse because the inputs for the cont phases are generated from a combo of resown and normal phases
-    if np.isin(phases,'tr').any() and np.isin(phases,'t').any():
-        tc=np.array(['tc','tc','tc','tc','tc','tc'])
-        phases = np.concatenate((phases, [tc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
-    if np.isin(phases,'jr').any() and np.isin(phases,'j').any():
-        jc=np.array(['jc','jc','jc','jc','jc','jc'])
-        phases = np.concatenate((phases, [jc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
-    if np.isin(phases,'ur').any() and np.isin(phases,'u').any():
-        uc=np.array(['uc','uc','uc','uc','uc','uc'])
-        phases = np.concatenate((phases, [uc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
-    if np.isin(phases,'xr').any() and np.isin(phases,'x').any():
-        xc=np.array(['xc','xc','xc','xc','xc','xc'])
-        phases = np.concatenate((phases, [xc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
 
     ############################################################################################################################################################################################
     ############################################################################################################################################################################################

@@ -175,6 +175,8 @@ sequences are removed. See RotGeneration_ for the full list of rules.
      - Dry sown Canola (RoundUp Ready)
    * - s
      - Annual (spray-topped)
+   * - sp
+     - Salt land pasture (saltbush plus pasture understory)
    * - sr
      - Annual (spray-topped & resown)
    * - t
