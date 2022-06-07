@@ -302,7 +302,7 @@ def f1_green_area(resown_rt, pasture_rt, periods_destocked_p6zt, arable_l, i_pas
     phase_area_p6lrzt = arable_phase_area_p6lrzt
     ###pasture on the non-arable area is annual pasture only (first pasture type 0:1)
     na_phase_area_p6lrzt = np.sum((1 - (resown_rt[:,na,:] * periods_destocked_p6zt[:, na, na, ...]))
-                                        * (1 - arable_l[:, na, na, na]) * pasture_rt[:, na, :] * i_pasture_coverage_lt[:,na,na,:]
+                                        * (1 - arable_l[:, na, na, na]) * pasture_rt[:, na, :]   # * i_pasture_coverage_lt[:,na,na,:]
                                         , axis = -1, keepdims=True)
     phase_area_p6lrzt[..., 0:1] = phase_area_p6lrzt[..., 0:1] + na_phase_area_p6lrzt
     return phase_area_p6lrzt
