@@ -129,7 +129,7 @@ def coremodel_all(trial_name,model):
     try:  # to handle infeasible (there is no profit component when infeasible)
         p7_end = list(model.s_season_periods)[-1]
         utility = pe.value(model.utility)
-        profit = pe.value(sum((model.v_terminal_wealth[q,s,z,c1] + model.v_minroe[q,s,p7_end,z] + model.v_asset[q,s,p7_end,z])
+        profit = pe.value(sum((model.v_terminal_wealth[q,s,z,c1] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z])
                                        * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
                                        for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1
                                        for z in model.s_season_types))
@@ -706,19 +706,19 @@ def f_con_asset(model):
     '''Tallies the total asset value to ensure that there is a minimum ROI on farm assets. The asset value multiplied
     by opportunity cost on capital is then passed to the objective.
     '''
-    def asset(model,q,s,p7,z9):
+    def asset_cost(model,q,s,p7,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last period
         p7_start = l_p7[0]
         if pe.value(model.p_wyear_inc_qs[q, s]):
             return (suppy.f_sup_asset(model,q,s,p7,z9) + macpy.f_mach_asset(model,p7) + stkpy.f_stock_asset(model,q,s,p7,z9)) * uinp.finance['opportunity_cost_capital'] \
-                   - model.v_asset[q,s,p7,z9] \
-                   + sum(model.v_asset[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
+                   - model.v_asset_cost[q,s,p7,z9] \
+                   + sum(model.v_asset_cost[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
                          for z8 in model.s_season_types) * (p7!=p7_start) <= 0 #end doesn't carry over
         else:
             return pe.Constraint.Skip
-    model.con_asset = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,rule=asset,
-                                    doc='tallies asset from all activities so it can be transferred to objective to represent ROE')
+    model.con_asset = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,rule=asset_cost,
+                                    doc='tallies asset from all activities so it can be transferred to objective to represent ROA')
 
 
 def f_con_minroe(model):
@@ -743,18 +743,18 @@ def f_con_minroe(model):
 def f_objective(model):
     '''
     The objective of the model is to maximise expected utility (total satisfaction). In the case of risk neutral,
-    expected utility is equivalent to expected profit, meaning that the optimal farm management plan is that that
+    expected utility is equivalent to expected profit, meaning that the optimal farm management plan is that which
     maximises farm profit. In the case of risk aversion, utility increases at a diminishing rate as profit increases.
     Thus, when farm profit is low an extra dollar is more valuable than an extra dollar when farm profit is high.
     This means, to some degree, the optimal farm management plan aims to reduce profit variation (i.e. increase
     profit in poor years at the cost of reduced profit in the good years). For example, if the crop and stock
-    enterprise on the modelled farm are similar but grain prices are more volatile, then
-    stock prices will shift resources towards the stock enterprise to reduce risk (profit variation).
+    enterprise on the modelled farm are similar but grain prices are more volatile, then risk aversion
+    will shift resources towards the stock enterprise to reduce risk (profit variation).
 
     The expected return used to calculate utility includes the net cash flow for a given price and weather scenario,
     minus a cost to represent a minimum
     return on operating costs incurred (MINROE), minus the cost of depreciation, and minus the opportunity cost on the
-    farm assets (total value of all assets times the discount rate  (to ensure that the assets generate a minimum ROI)).
+    farm assets (total value of all assets times the discount rate  (to ensure that the assets generate a minimum ROA)).
     MINROE and asset opportunity costs are discussed in more detail in the finance section, and their inclusion is
     controlled by the user.
 
@@ -780,7 +780,7 @@ def f_objective(model):
     will affect the impact of risk aversion, which is not technically correct because these are not real costs incurred
     by the farmer.
 
-    Due to AFO's size, linear programing has been used to improve solving efficiency and accuracy.
+    Due to AFO's size, linear programming has been used to improve solving efficiency and accuracy.
     Therefore, the non-linear utility functions are represented by a number of linear segments, a common
     linear programming technique called piecewise representation. When doing risk aversion analysis the
     user must ensure that the line segments capture the expected spread of terminal wealth.
@@ -793,18 +793,18 @@ def f_objective(model):
     def terminal_wealth(model,q,s,z,c1):
         if pe.value(model.p_wyear_inc_qs[q,s]):
             return (model.v_terminal_wealth[q,s,z,c1] - model.v_credit[q,s,c1,p7_end,z] + model.v_debit[q,s,c1,p7_end,z] # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
-                       + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset[q,s,p7_end,z]
+                       + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z]
                        + 0.00001 * sum(sum(v[idx] for idx in v) for v in variables
-                                       if v._rule_bounds.val[0] is not None and v._rule_bounds.val[0]>=0)) <=0 #all variables with positive bounds (ie variables that can be negitive e.g. terminal_wealth are exluced) put a small neg number into objective. This stop cplex selecting variables that dont contribute to the objective (cplex selects variables to remove slack on constraints).
+                                       if v._rule_bounds.val[0] is not None and v._rule_bounds.val[0]>=0)) <=0 #all variables with positive bounds (ie variables that can be negative e.g. terminal_wealth are excluded) put a small neg number into objective. This stop cplex selecting variables that don't contribute to the objective (cplex selects variables to remove slack on constraints).
         else:                                                                                                  #note; _rule_bounds.val[0] is the lower bound of each variable
             return pe.Constraint.Skip
     model.con_terminal_wealth = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, rule=terminal_wealth,
                                      doc='tallies up terminal wealth so it can be transferred to the utility function.')
 
     ##terminal wealth at each segment
-    tw_points = list(range(0, 1000000, 100000)) #majority of segements in expected profit range - these need to line up with terminal wealth before initial wealth is added.
-    tw_points.insert(0, -500000) #add a low number to end to handle if profit is very low. Note utility will be linear for any values in this segment, thus shouldnt be common to have profit in this seg
-    tw_points.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldnt be common to have profit in this seg
+    tw_points = list(range(0, 1000000, 100000)) #majority of segments in expected profit range - these need to line up with terminal wealth before initial wealth is added.
+    tw_points.insert(0, -500000) #add a low number to end to handle if profit is very low. Note utility will be linear for any values in this segment, thus shouldn't be common to have profit in this seg
+    tw_points.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldn't be common to have profit in this seg
     tw_points = np.array(tw_points)
     if not uinp.general['i_inc_risk']:
         utility_u = tw_points
@@ -822,9 +822,9 @@ def f_objective(model):
     keys_u = np.array(['u%s' % i for i in range(len(tw_points))])
     p_tw_points = dict(zip(keys_u, tw_points))
     p_utility = dict(zip(keys_u, utility_u))
-    model.s_utility_points = pe.Set(initialize=keys_u, doc='utility segements')
-    model.v_utility_points = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, model.s_utility_points, bounds = (0, None), doc = 'propn of utility from each segement')
-    model.p_tw_points = pe.Param(model.s_utility_points, initialize=p_tw_points, default = 0.0, doc='terminal wealth at the beginning of each segement')
+    model.s_utility_points = pe.Set(initialize=keys_u, doc='utility segments')
+    model.v_utility_points = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, model.s_utility_points, bounds = (0, None), doc = 'propn of utility from each segment')
+    model.p_tw_points = pe.Param(model.s_utility_points, initialize=p_tw_points, default = 0.0, doc='terminal wealth at the beginning of each segment')
     model.p_utility = pe.Param(model.s_utility_points, initialize=p_utility, default = 0.0, doc='utility provided by each level of terminal wealth')
 
     def terminal_wealth_transfer(model,q,s,z,c1):
@@ -842,7 +842,7 @@ def f_objective(model):
         else:
             return pe.Constraint.Skip
     model.con_utility_segment_propn = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, rule=utility_propn,
-                                     doc='ensures ternimal wealth points tally to 1. Required because utility function is concave.')
+                                     doc='ensures terminal wealth points tally to 1. Required to stop utility function being unbounded.')
 
     ##objective function (maximise utility)
     return sum(sum(model.v_utility_points[q,s,z,c1,u] * model.p_utility[u] for u in model.s_utility_points)
@@ -855,12 +855,12 @@ def f_objective(model):
     # ##Notes:
     # ##1.
     # ## there has been cases where including risk stop the model solving correctly.
-    # ## This can be helped by customising the segements to more closely fit the expected profit.
-    # ## The solver also seems to prefers if all segements are the same size.
+    # ## This can be helped by customising the segments to more closely fit the expected profit.
+    # ## The solver also seems to prefers if all segments are the same size.
     # ##2.
-    # ## there is no point having very big segements because all levels of terminal wealth within a segment have a linear
+    # ## there is no point having very big segments because all levels of terminal wealth within a segment have a linear
     # ## relationship with utility therefore to reflect risk aversion terminal wealth due to different price (c1) and
-    # ## season (z) need to fall into different segments. Therefore the size if the segments should reflect the variation
+    # ## season (z) need to fall into different segments. Therefore, the size of the segments should reflect the variation
     # ## between c1 and z.
     #
     # ##piecewise utility function - two options CRRA and CARA
@@ -871,19 +871,19 @@ def f_objective(model):
     #         return x
     # elif uinp.general['i_utility_method']==1: #CARA
     #     a=uinp.general['i_cara_risk_coef']
-    #     breakpoints = list(range(-500000, 1000000, 75000)) #majority of segements in expected profit range - these need to line up with terminal wealth before initial wealth is added.
-    #     breakpoints.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldnt be common to have profit in this seg
+    #     breakpoints = list(range(-500000, 1000000, 75000)) #majority of segments in expected profit range - these need to line up with terminal wealth before initial wealth is added.
+    #     breakpoints.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldn't be common to have profit in this seg
     #     def f(model, i0, i1, i2, i3, x):
     #         '''CARA/CRRA utility function'''
     #         return 1-np.exp(-a*x)
     # elif uinp.general['i_utility_method']==2: #CRRA
     #     Rr = uinp.general['i_crra_risk_coef']
     #     initial_welth = uinp.general['i_crra_initial_wealth']
-    #     breakpoints = list(range(-500000, 1000000, 75000)) #majority of segements in expected profit range - these need to line up with terminal wealth before initial wealth is added.
-    #     breakpoints.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldnt be common to have profit in this seg
+    #     breakpoints = list(range(-500000, 1000000, 75000)) #majority of segments in expected profit range - these need to line up with terminal wealth before initial wealth is added.
+    #     breakpoints.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldn't be common to have profit in this seg
     #     def f(model, i0, i1, i2, i3, x):
     #         '''CRRA utility function'''
-    #         ##This method doesnt handle negitive terminal wealth (x).
+    #         ##This method doesnt handle negative terminal wealth (x).
     #         ##The function also returns a very small number at high Rr which seem to trip out the solver.
     #         x+=initial_welth
     #         return x**(1-Rr) / (1-Rr)

@@ -41,7 +41,7 @@ def f1_finpyomo_local(params, model):
     ##dep
     model.v_dep = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'transfers total dep to objective')
     ##dep
-    model.v_asset = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'transfers total value of asset to objective to ensure opportunity cost is represented')
+    model.v_asset_cost = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'transfers total opportunity cost of asset to objective to represent minimum ROA')
     ##minroe
     model.v_minroe = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'total expenditure, used to ensure min return is met')
 
