@@ -32,6 +32,7 @@ def f1_boundarypyomo_local(params, model):
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
     rot_lobound_inc = fun.f_sa(False, sen.sav['bnd_rotn_inc'], 5)  #controls rot bound
+    slp_area_inc = np.any(sen.sav['bnd_slp_area_l'] != '-') #control the area of salt land pasture
     sup_lobound_inc = False #controls sup feed bound
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_dam_inc'], 5) #lower bound dams
     dams_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_dam_inc'], 5) #upper bound on dams
@@ -95,6 +96,24 @@ def f1_boundarypyomo_local(params, model):
                     return pe.Constraint.Skip
             model.con_rotation_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_phases, model.s_lmus, model.s_season_types, rule=rot_lo_bound,
                                                     doc='lo bound for the number of each phase')
+
+
+        ##salt land pasture area
+        if slp_area_inc:
+            ###set the bound
+            slp_area_bnd_l = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_slp_area_l'], 5) #999999 is arbitrary default value which mean skip constraint
+            ###ravel and zip bound and dict
+            slp_area = dict(zip(model.s_lmus, slp_area_bnd_l))
+            ###constraint
+            l_p7 = list(model.s_season_periods)
+            def slp_area_bound(model, q, s, z, l):
+                if pe.value(model.p_wyear_inc_qs[q, s]) and slp_area_bnd_l[l] != 999999:
+                    return model.v_slp_ha[q,s,z,l] == slp_area[l]
+                else:
+                    return pe.Constraint.Skip
+            model.con_rotation_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_lmus, rule=slp_area_bound,
+                                                    doc='bound for the area of salt land pasture on each lmu')
+
 
         ##bound on livestock supplementary feed.
         if sup_lobound_inc:
