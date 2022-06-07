@@ -78,17 +78,25 @@ sam_inp['all_rot_yield'] = 1.0   # SA multiplier for all rotation yield
 
 ## Annual module sensitivity variables - these need to have the same name for each pasture type
 sam_inp['germ','annual']                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods
+sam_inp['germ','understory']                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods
 sam_inp['germ_l','annual']                  = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for germination on each lmus in all periods
+sam_inp['germ_l','understory']                  = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for germination on each lmus in all periods
 sam_inp['pgr','annual']                     = 1.0                                                          # SA multiplier for growth on all lmus in all periods
+sam_inp['pgr','understory']                     = 1.0                                                          # SA multiplier for growth on all lmus in all periods
 sam_inp['pgr_f','annual']                   = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for growth in each feed period
+sam_inp['pgr_f','understory']                   = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for growth in each feed period
 sam_inp['pgr_l','annual']                   = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for growth on each lmus in all periods
+sam_inp['pgr_l','understory']                   = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for growth on each lmus in all periods
 sam_inp['dry_dmd_decline','annual']         = 1.0                                                          # SA multiplier for the decline in digestibility of dry feed
+sam_inp['dry_dmd_decline','understory']         = 1.0                                                          # SA multiplier for the decline in digestibility of dry feed
 sam_inp['grn_dmd_declinefoo_f','annual']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on decline in digestibility if green feed is not grazed (to increase FOO)
+sam_inp['grn_dmd_declinefoo_f','understory']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on decline in digestibility if green feed is not grazed (to increase FOO)
 sam_inp['grn_dmd_range_f','annual']         = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on range in digestibility of green feed
+sam_inp['grn_dmd_range_f','understory']         = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on range in digestibility of green feed
 sam_inp['grn_dmd_senesce_f','annual']       = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
+sam_inp['grn_dmd_senesce_f','understory']       = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
 sam_inp['conservation_limit_f','annual']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for the conservation limit in each feed period
-# sa_feed_period_inc_t      = True    # growth of this pasture in this period is included
-# sa_lmu_inc_t              = True    # this pasture is included on this lmu
+sam_inp['conservation_limit_f','understory']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for the conservation limit in each feed period
 
 ##livestock
 sam_inp['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron
@@ -126,9 +134,13 @@ sap_inp['mr_post'] = 0.0           #Post loop maintenance requirement of adults 
 ######
 ##pasture
 saa_inp['germ','annual']                    = 0.0                                                          # SA addition for germination on all lmus in all periods
+saa_inp['germ','understory']                    = 0.0                                                          # SA addition for germination on all lmus in all periods
 saa_inp['pgr','annual']                     = 0.0                                                          # SA addition for growth on all lmus in all periods
+saa_inp['pgr','understory']                     = 0.0                                                          # SA addition for growth on all lmus in all periods
 saa_inp['pgr_f','annual']                   = np.zeros(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA addition for growth in each feed period
+saa_inp['pgr_f','understory']                   = np.zeros(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA addition for growth in each feed period
 saa_inp['pgr_l','annual']                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA addition for growth on each lmus in all periods
+saa_inp['pgr_l','understory']                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA addition for growth on each lmus in all periods
 
 ##stock
 saa_inp['husb_cost_h2'] = np.zeros(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
