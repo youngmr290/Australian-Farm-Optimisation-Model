@@ -567,6 +567,7 @@ def f_con_progR(model):
     a progeny variable before being transferred to either offspring or dam variables (see prog2dams and prog2offs).
 
     '''
+    #todo v_prog requires a y axis
     def progR(model, q,s,k3, k5, a, z, i9, x, y1, g1, w9):
         if pe.value(model.p_wyear_inc_qs[q, s]) and any(model.p_npw_req[k3, t2, x, g1] for t2 in model.s_sale_prog):
             return (- sum(model.v_dams[q,s,k5, t1, v1, a, n1, w18, z, i, y1, g1] * model.p_npw[k3, k5, t1, v1, a, n1, w18, z, i, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 e.g. 11 and 22. we don't need other k2 slices e.g. nm
@@ -622,6 +623,7 @@ def f_con_prog2damsR(model, l_v1):
     '''
     ##k5 is a set which contains the common k slices (11,22,33) between prog and dams. It is being summed which means any b0 prog can provide a dam.
     ## the same happens for k3. See doc string for further explanation.
+    #todo v_prog requires a y axis
     def prog2damR(model, q,s,v1, z, i, y1, g9, w9):
         if pe.value(model.p_wyear_inc_qs[q, s]) and v1==l_v1[0] \
                 and any(model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9]
@@ -648,6 +650,7 @@ def f_con_prog2offsR(model, l_v3):
     Numbers/transfer of progeny to offs. This transfer only happens in dvp0.
 
     '''
+    #todo v_prog requires a y axis
     def prog2offsR(model,q,s, k3, k5, v3, z, i, a, x, y3, g3, w9):
         if pe.value(model.p_wyear_inc_qs[q, s]) and v3==l_v3[0] and any(model.p_progreq_offs[k3, v3, w38, z, i, x, g3, w9] for w38 in model.s_lw_offs):
             return (sum(- model.v_prog[q,s,k3, k5, t2, w28, z, i, a, x, g3] * model.p_progprov_offs[k3, k5, t2, w28, z, i, a, x, y3, g3, w9] #use g3 (same as g2)
@@ -800,6 +803,7 @@ def f_stock_cashflow(model,q,s,p7,z,c1):
 
     infrastructure = sum(model.p_rm_stockinfra_fix[h1,p7,z] + model.p_rm_stockinfra_var[h1,p7,z] * model.v_infrastructure[q,s,h1,z]
                          for h1 in model.s_infrastructure)
+    #todo v_prog requires a y axis
     stock = sum(model.v_sire[q,s,g0] * model.p_cashflow_sire[c1,p7,z,g0] for g0 in model.s_groups_sire) \
            + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cashflow_dams[k2,c1,p7,t1,v1,a,n1,w1,z,i,y1,g1]
                       for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
