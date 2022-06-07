@@ -107,7 +107,7 @@ def f1_boundarypyomo_local(params, model):
             ###constraint
             l_p7 = list(model.s_season_periods)
             def slp_area_bound(model, q, s, z, l):
-                if pe.value(model.p_wyear_inc_qs[q, s]) and slp_area_bnd_l[l] != 999999:
+                if pe.value(model.p_wyear_inc_qs[q, s]) and slp_area[l] != 999999:
                     return model.v_slp_ha[q,s,z,l] == slp_area[l]
                 else:
                     return pe.Constraint.Skip
