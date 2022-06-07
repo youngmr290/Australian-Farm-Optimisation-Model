@@ -306,8 +306,8 @@ def f_pasture(params, r_vals, nv):
         i_grn_dig_p6lzt[...,t]           = zfun.f_seasonal_inp(np.moveaxis(exceldata['DigGrn'],0,-1), numpy=True, axis=-1)[:,lmu_mask_l,...]  # numpy array of inputs for green pasture digestibility on each LMU.
 
         ###to handle different length rotation phases (ie simulation is shorter than pinp) the germ df needs to be sliced.
-        offset = exceldata['GermPhases'].shape[1] - len(phases_rotn_df.columns) - 1 #minus 1 because germ inputs has extra col
-        i_phase_germ_dict[pasture]      = pd.DataFrame(exceldata['GermPhases'][:,offset:])  #DataFrame with germ scalar and resown
+        offset = exceldata['GermPhases'].shape[-1] - len(phases_rotn_df.columns) - 1 #minus 1 because germ inputs has extra col
+        i_phase_germ_dict[pasture]      = pd.DataFrame(exceldata['GermPhases'][...,offset:])  #DataFrame with germ scalar and resown
         # i_phase_germ_dict[pasture].reset_index(inplace=True)                                # replace index read from Excel with numbers to match later merging
         # i_phase_germ_dict[pasture].columns.values[range(phase_len)] = [*range(phase_len)]   # replace the pasture columns read from Excel with numbers to match later merging
 
@@ -417,7 +417,7 @@ def f_pasture(params, r_vals, nv):
     me_threshold_fp6zt[...] = np.swapaxes(nv['nv_cutoff_ave_p6fz'], axis1=0, axis2=1)[...,na]
     ###threshold is the greater of the maintenance or the NV required in the pool because switching from one below
     ### maintenance feed to another that is further below maintenance doesn't affect average efficiency.
-    me_threshold_fp6zt[me_threshold_fp6zt < i_nv_maintenance_t] = i_nv_maintenance_t
+    me_threshold_fp6zt = fun.f_update(me_threshold_fp6zt, i_nv_maintenance_t, me_threshold_fp6zt < i_nv_maintenance_t)
 
     ## FOO on the non-arable areas in crop paddocks is ungrazed FOO of pasture type 0 (annual), therefore calculate the profile based on the pasture type 0 values
     grn_foo_start_ungrazed_p6lzt, dry_foo_start_ungrazed_p6lzt = pfun.f1_calc_foo_profile(

@@ -209,16 +209,32 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     ### green FOO to start the profile is FOO at destocking plus germination that occurs during the destocking period
     #### assumes FOO at destocking of pasture type 0 on the non arable area is equivalent to the pasture itself.
     grn_foo_na_initial_p6lzt = foo_na_destock_p6zt[:, na, ...] + germination_destocked_p6lzt
-    ##FOO at the end of the destocked period is calculated from the FOO profile from destocking to restocking
+    ####create temp arrays where all t slices have annual params (need to keep the t slices active for the next function so cant just slice the t)
+    t_dry_decay_period_p6zt = np.zeros_like(dry_decay_period_p6zt)
+    t_i_fxg_foo_op6lzt = np.zeros_like(i_fxg_foo_op6lzt)
+    t_c_fxg_a_op6lzt = np.zeros_like(c_fxg_a_op6lzt)
+    t_c_fxg_b_op6lzt = np.zeros_like(c_fxg_b_op6lzt)
+    t_i_grn_senesce_eos_p6zt = np.zeros_like(i_grn_senesce_eos_p6zt)
+    t_grn_senesce_startfoo_p6zt = np.zeros_like(grn_senesce_startfoo_p6zt)
+    t_grn_senesce_pgrcons_p6zt = np.zeros_like(grn_senesce_pgrcons_p6zt)
+    t_dry_decay_period_p6zt[...] = dry_decay_period_p6zt[..., 0:1]
+    t_i_fxg_foo_op6lzt[...] = i_fxg_foo_op6lzt[..., 0:1]
+    t_c_fxg_a_op6lzt[...] = c_fxg_a_op6lzt[..., 0:1]
+    t_c_fxg_b_op6lzt[...] = c_fxg_b_op6lzt[..., 0:1]
+    t_i_grn_senesce_eos_p6zt[...] = i_grn_senesce_eos_p6zt[..., 0:1]
+    t_grn_senesce_startfoo_p6zt[...] = grn_senesce_startfoo_p6zt[..., 0:1]
+    t_grn_senesce_pgrcons_p6zt[...] = grn_senesce_pgrcons_p6zt[..., 0:1]
+
+    ###FOO at the end of the destocked period is calculated from the FOO profile from destocking to restocking
     grn_restock_foo_p6lzt, dry_restock_foo_p6lzt = f1_calc_foo_profile(grn_foo_na_initial_p6lzt  # axes are aligned in the function
-                                                                     , dry_decay_period_p6zt[..., 0:1]
+                                                                     , t_dry_decay_period_p6zt
                                                                      , days_each_period_p6zt
-                                                                     , i_fxg_foo_op6lzt[..., 0:1]
-                                                                     , c_fxg_a_op6lzt[..., 0:1]
-                                                                     , c_fxg_b_op6lzt[..., 0:1]
-                                                                     , i_grn_senesce_eos_p6zt[..., 0:1]
-                                                                     , grn_senesce_startfoo_p6zt[..., 0:1]
-                                                                     , grn_senesce_pgrcons_p6zt[..., 0:1])
+                                                                     , t_i_fxg_foo_op6lzt
+                                                                     , t_c_fxg_a_op6lzt
+                                                                     , t_c_fxg_b_op6lzt
+                                                                     , t_i_grn_senesce_eos_p6zt
+                                                                     , t_grn_senesce_startfoo_p6zt
+                                                                     , t_grn_senesce_pgrcons_p6zt)
 
     ### combine dry and grn foo because the proportion of green at restocking is an input
     #### foo is calculated at the start of period, +1 to get end period FOO.
@@ -717,6 +733,7 @@ def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_fzt
     dry_foo_end_p6lzt     = np.zeros(p6lzt, dtype = 'float64')
     pgr_daily_lt          = np.zeros((n_lmu, n_pasture_types), dtype=float)  #only required if using the ## loop on lmu. The boolean filter method creates the array
 
+    index_t = np.arange(n_pasture_types)
     ## loop through the feed periods and calculate the foo at the start of each period
     for f in range(n_feed_periods):
         grn_foo_start_p6lzt[f,:,:,:] = germination_p6lzt[f,:,:,:] + grn_foo_end_p6lzt[f-1,:,:,:]
@@ -727,9 +744,9 @@ def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_fzt
             ## for pgr by creating an index using searchsorted (requires an lmu loop). ^ More readable than other but requires pgr_daily matrix to be predefined
             for l in [*range(n_lmu)]: #loop through lmu
                 ###find where foo_start fits into the input data
-                idx = fun.searchsort_multiple_dim(i_fxg_foo_op6lzt[:,f,l,z,:], grn_foo_start_p6lzt[f,l,z,:], axis_a0=1, axis_v0=0, side='left')
-                pgr_daily_lt[l] = (       c_fxg_a_op6lzt[idx,f,l,z,:]
-                                  +      c_fxg_b_op6lzt[idx,f,l,z,:]
+                o_idx_t = fun.searchsort_multiple_dim(i_fxg_foo_op6lzt[:,f,l,z,:], grn_foo_start_p6lzt[f,l,z,:], axis_a0=1, axis_v0=0, side='left')
+                pgr_daily_lt[l] = (       c_fxg_a_op6lzt[o_idx_t,f,l,z,index_t] #advanced indexing
+                                  +      c_fxg_b_op6lzt[o_idx_t,f,l,z,index_t] #advanced indexing
                                   * grn_foo_start_p6lzt[f,l,z,:])
             grn_foo_end_p6lzt[f,:,z,:] = (              grn_foo_start_p6lzt[f,:,z,:]
                                          * (1 - grn_senesce_startfoo_p6zt[f,z,:])
