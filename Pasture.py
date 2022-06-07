@@ -140,6 +140,7 @@ def f_pasture(params, r_vals, nv):
 
     i_germ_scalar_lzt           = np.zeros(lzt,  dtype = 'float64') # scale the mobilisation of below ground reserves for each lmu
     i_restock_fooscalar_lt      = np.zeros(lt,  dtype = 'float64')  # scalar for FOO between LMUs when pastures are restocked after reseeding
+    i_pasture_coverage_lt      = np.zeros(lt,  dtype = 'float64')  # scalar for pasture coverage i.e. what propn of the lmu that each pasture grows on.
 
     i_me_eff_gainlose_p6zt        = np.zeros(p6zt,  dtype = 'float64')  # Reduction in efficiency if M/D is above requirement for target LW pattern
     i_grn_trampling_p6t          = np.zeros(p6t,  dtype = 'float64')  # green pasture trampling in each feed period as proportion of intake.
@@ -251,6 +252,7 @@ def f_pasture(params, r_vals, nv):
         exceldata = pinp.pasture_inputs[pasture]           # assign the pasture data to exceldata
         ## map the Excel data into the numpy arrays
         i_germination_std_zt[...,t]         = zfun.f_seasonal_inp(exceldata['GermStd'], numpy=True)
+        i_pasture_coverage_lt[...,t]         = zfun.f_seasonal_inp(exceldata['i_pasture_coverage'], numpy=True)
         # i_ri_foo_t[t]                       = exceldata['RIFOO']
         i_end_of_gs_zt[...,t]               = zfun.f_seasonal_inp(exceldata['EndGS'], numpy=True)
         i_dry_exists_zt[...,t]               = zfun.f_seasonal_inp(exceldata['i_dry_exists'], numpy=True)
@@ -403,7 +405,7 @@ def f_pasture(params, r_vals, nv):
         , length_p6z, n_feed_periods, p6lrzt, p6zt, t_idx, z_idx, l_idx)
 
     ## area of green pasture being grazed and growing
-    phase_area_p6lrzt = pfun.f1_green_area(resown_rt, pasture_rt, periods_destocked_p6zt, arable_l)
+    phase_area_p6lrzt = pfun.f1_green_area(resown_rt, pasture_rt, periods_destocked_p6zt, arable_l, i_pasture_coverage_lt)
 
     ## erosion limit. The minimum FOO at the end of each period#
     erosion_p6lrzt = pfun.f_erosion(i_lmu_conservation_p6lzt, arable_l, pasture_rt)
@@ -432,7 +434,7 @@ def f_pasture(params, r_vals, nv):
     harvest_period_prop = pd.Series(harv_proportion_z, index=index).unstack()
     # params['p_harvest_period_prop']  = dict([(pinp.period['feed_periods'].index[harv_period_z], harv_proportion_z)])
 
-    ### all pasture from na area goes into the Low pool (#1) because it is rank & low quality
+    ### all pasture from na area (on crop paddocks) goes into the Low pool (#1) because it is rank & low quality
     nap_dp6lrzt[0, harv_period_z, l_idx[:,na,na], r_idx[:,na], z_idx, 0] = (
                                              dry_foo_start_ungrazed_p6lzt[harv_period_z, l_idx[:,na], z_idx, 0][:,na,:]
                                            * (1-arable_l[:, na,na])
