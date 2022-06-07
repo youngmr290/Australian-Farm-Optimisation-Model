@@ -1044,7 +1044,7 @@ def f_minroe_summary(lp_vars, r_vals):
     minroe_qsp7z = f_vars2np(lp_vars, 'v_minroe', qsp7z, mask_season_p7z, z_pos=-1)
     return minroe_qsp7z
 
-def f_asset_value_summary(lp_vars, r_vals):
+def f_asset_cost_summary(lp_vars, r_vals):
     ##asset opportunity cost
     keys_p7 = r_vals['fin']['keys_p7']
     mask_season_p7z = r_vals['zgen']['mask_season_p7z']
@@ -1056,8 +1056,8 @@ def f_asset_value_summary(lp_vars, r_vals):
     len_s = len(keys_s)
     len_z = len(keys_z)
     qsp7z = len_q, len_s, len_p7, len_z
-    asset_value_qsp7z = f_vars2np(lp_vars, 'v_asset', qsp7z, mask_season_p7z, z_pos=-1)
-    return asset_value_qsp7z
+    asset_cost_qsp7z = f_vars2np(lp_vars, 'v_asset_cost', qsp7z, mask_season_p7z, z_pos=-1)
+    return asset_cost_qsp7z
 
 def f_wc_summary(lp_vars, r_vals):
     ##returns the maximum overdraw from bank
@@ -1200,7 +1200,7 @@ def f_profitloss_table(lp_vars, r_vals):
     idx = pd.IndexSlice
     subtype_rev = ['grain', 'sheep sales', 'wool', 'season start trade', 'Total Revenue']
     subtype_exp = ['crop', 'pasture', 'stock husb', 'stock sup', 'stock purchase', 'machinery', 'labour', 'fixed', 'Total expenses']
-    subtype_tot = ['asset_value', 'depreciation', 'minRoe', 'EBTD', 'obj']
+    subtype_tot = ['asset_cost', 'depreciation', 'minRoe', 'EBTD', 'obj']
     pnl_rev_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Revenue'], subtype_rev], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
     pnl_exp_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Expense'], subtype_exp], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
     pnl_tot_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Total'], subtype_tot], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
@@ -1267,16 +1267,16 @@ def f_profitloss_table(lp_vars, r_vals):
     minroe_qsp7z = f_minroe_summary(lp_vars,r_vals)
     minroe_qsz = minroe_qsp7z[:,:,-1,:].ravel() #take end slice of season stages
     ###asset opportunity cost
-    asset_value_qsp7z = f_asset_value_summary(lp_vars,r_vals)
-    asset_value_qsz = asset_value_qsp7z[:,:,-1,:].ravel() #take end slice of season stages
+    asset_cost_qsp7z = f_asset_cost_summary(lp_vars,r_vals)
+    asset_cost_qsz = asset_cost_qsp7z[:,:,-1,:].ravel() #take end slice of season stages
 
     ##add the assets & minroe & depreciation
     pnl.loc[idx[:, :, :, 'Total', 'depreciation'], 'Full year'] = dep_qsz
-    pnl.loc[idx[:, :, :, 'Total', 'asset_value'], 'Full year'] = asset_value_qsz
+    pnl.loc[idx[:, :, :, 'Total', 'asset_cost'], 'Full year'] = asset_cost_qsz
     pnl.loc[idx[:, :, :, 'Total', 'minRoe'], 'Full year'] = minroe_qsz
 
     ##add the estimated profit for each season (calced from info above)
-    season_obj_qsz = pnl.loc[idx[:, :, :, 'Total', 'EBTD'], 'Full year'].values - dep_qsz - asset_value_qsz - minroe_qsz
+    season_obj_qsz = pnl.loc[idx[:, :, :, 'Total', 'EBTD'], 'Full year'].values - dep_qsz - asset_cost_qsz - minroe_qsz
     pnl.loc[idx[:, :, :, 'Total', 'obj'], 'Full year'] = season_obj_qsz
 
     ##add the objective of all seasons
@@ -1294,7 +1294,7 @@ def f_profitloss_table(lp_vars, r_vals):
 def f_profit(lp_vars, r_vals, option=0):
     '''returns profit
     0- Profit = rev - (exp + dep)
-    1- Risk neutral objective = rev - (exp + minroe + asset_opp +dep).
+    1- Risk neutral objective = rev - (exp + minroe + asset_cost +dep).
     2- Utility - this is the same as risk neutral obj if risk aversion is not included
     3- range and stdev of profit
     '''
@@ -1302,13 +1302,13 @@ def f_profit(lp_vars, r_vals, option=0):
     prob_c1 =r_vals['fin']['prob_c1'].values
     # obj_profit = f_vars2df(lp_vars, 'profit', keys_z)#.droplevel(1) #drop level 1 because no sets therefore nan
     minroe_qsp7z = f_minroe_summary(lp_vars, r_vals)
-    asset_value_qsp7z = f_asset_value_summary(lp_vars, r_vals)
+    asset_cost_qsp7z = f_asset_cost_summary(lp_vars, r_vals)
     if option == 0:
         return lp_vars['profit']
     elif option==1:
         minroe = np.sum(minroe_qsp7z[:,:,-1,:] * prob_qsz)  #take end slice of season stages
-        asset_value = np.sum(asset_value_qsp7z[:,:,-1,:] * prob_qsz) #take end slice of season stages
-        return lp_vars['profit'] - minroe - asset_value
+        asset_cost = np.sum(asset_cost_qsp7z[:,:,-1,:] * prob_qsz) #take end slice of season stages
+        return lp_vars['profit'] - minroe - asset_cost
     elif option == 2:
         return lp_vars['utility']
     elif option == 3:
