@@ -148,13 +148,14 @@ def searchsort_multiple_dim(a, v, axis_a0, axis_v0, axis_a1=None, axis_v1=None, 
         The position of axis to iterate along. a1 & v1 axis must be same length
 
     '''
-    # final = np.zeros_like(v)
-    # slc_v = [slice(None)] * len(v.shape)
-    # slc_a = [slice(None)] * len(a.shape)
-    # for i in range(v.shape[axis_v]):
-    #     slc_v[axis_v] = slice(i, i+1)
-    #     slc_a[axis_a] = slice(i, i+1)
-    #     final[tuple(slc_v)] = np.searchsorted(np.squeeze(a[tuple(slc_a)]), v[tuple(slc_v)])
+    ##check a0 and v0 are the same length
+    if a.shape[axis_a0] != v.shape[axis_v0]:
+        raise ValueError('axis a0 and axis v0 are not the same length. This indicates an error.')
+    if axis_a1 is not None:
+        if a.shape[axis_a1] != v.shape[axis_v1]:
+            raise ValueError('axis a1 and axis v1 are not the same length. This indicates an error.')
+
+    ##do search sorted
     final = np.zeros_like(v).astype(int)
     slc_a = [slice(None)] * len(a.shape)
     slc_v = [slice(None)] * len(v.shape)
