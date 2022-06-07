@@ -194,6 +194,7 @@ landuse['pasture_sets']={'annual': {'a', 'ar'
                         ,'lucerne':{'u', 'uc', 'ur'
                                    , 'x', 'xc', 'xr'}
                         ,'tedera':{'j','jc', 't','tc', 'jr', 'tr'}
+                        ,'understory':{'sp'}
                        }
 
 ##A1, E, P, G and C1 are just used in pas.py for germination ^can be removed when/if germination is calculated from sim
