@@ -294,15 +294,15 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
 #     return pas_sow_prov_pkz
 
 
-def f1_green_area(resown_rt, pasture_rt, periods_destocked_p6zt, arable_l):
+def f1_green_area(resown_rt, pasture_rt, periods_destocked_p6zt, arable_l, i_pasture_coverage_lt):
     ## area of green pasture being grazed and growing
     ### calculate the area (for all the phases) that is growing pasture for each feed period. The area can be 0 for a pasture phase if it has been destocked for reseeding.
     arable_phase_area_p6lrzt = (1 - (resown_rt[:,na,:] * periods_destocked_p6zt[:, na, na, ...]))  \
-                             * arable_l[:, na, na, na] * pasture_rt[:, na, :]
+                             * arable_l[:, na, na, na] * pasture_rt[:, na, :] * i_pasture_coverage_lt[:,na,na,:]
     phase_area_p6lrzt = arable_phase_area_p6lrzt
     ###pasture on the non-arable area is annual pasture only (first pasture type 0:1)
     na_phase_area_p6lrzt = np.sum((1 - (resown_rt[:,na,:] * periods_destocked_p6zt[:, na, na, ...]))
-                                        * (1 - arable_l[:, na, na, na]) * pasture_rt[:, na, :]
+                                        * (1 - arable_l[:, na, na, na]) * pasture_rt[:, na, :] * i_pasture_coverage_lt[:,na,na,:]
                                         , axis = -1, keepdims=True)
     phase_area_p6lrzt[..., 0:1] = phase_area_p6lrzt[..., 0:1] + na_phase_area_p6lrzt
     return phase_area_p6lrzt
