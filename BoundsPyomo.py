@@ -113,7 +113,7 @@ def f1_boundarypyomo_local(params, model):
                     return model.v_slp_ha[q,s,z,l] == slp_area[l]
                 else:
                     return pe.Constraint.Skip
-            model.con_rotation_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_lmus, rule=slp_area_bound,
+            model.con_slp_area_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_lmus, rule=slp_area_bound,
                                                     doc='bound for the area of salt land pasture on each lmu')
 
 
