@@ -28,11 +28,12 @@ note:
 
 
 def f1_boundarypyomo_local(params, model):
+    lmu_mask = pinp.general['i_lmu_area'] > 0
 
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
     rot_lobound_inc = fun.f_sa(False, sen.sav['bnd_rotn_inc'], 5)  #controls rot bound
-    slp_area_inc = np.any(sen.sav['bnd_slp_area_l'] != '-') #control the area of salt land pasture
+    slp_area_inc = np.any(sen.sav['bnd_slp_area_l'][lmu_mask] != '-') #control the area of salt land pasture
     sup_lobound_inc = False #controls sup feed bound
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_dam_inc'], 5) #lower bound dams
     dams_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_dam_inc'], 5) #upper bound on dams
@@ -73,7 +74,7 @@ def f1_boundarypyomo_local(params, model):
             ###build array
             #rot_lobound_rl = np.zeros((len(model.s_phases), len(model.s_lmus)))
             ###set the bound
-            rot_lobound_rl = fun.f_sa(np.array([0],dtype=float), sen.sav['rot_lobound_rl'], 5)
+            rot_lobound_rl = fun.f_sa(np.array([0],dtype=float), sen.sav['rot_lobound_rl'][:,lmu_mask], 5)
             # rot_lobound_rl[4,0] = 70 #fodder lmu2
             # rot_lobound_rl[0,0] = 150 #AAAAAa
             # rot_lobound_rl[0,1] = 1230 #AAAAAa
@@ -102,7 +103,7 @@ def f1_boundarypyomo_local(params, model):
         ##salt land pasture area
         if slp_area_inc:
             ###set the bound
-            slp_area_bnd_l = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_slp_area_l'], 5) #999999 is arbitrary default value which mean skip constraint
+            slp_area_bnd_l = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_slp_area_l'][lmu_mask], 5) #999999 is arbitrary default value which mean skip constraint
             ###ravel and zip bound and dict
             slp_area = dict(zip(model.s_lmus, slp_area_bnd_l))
             ###constraint
