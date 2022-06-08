@@ -261,7 +261,7 @@ sav_inp['bnd_max_sale_age_female_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-
 sav_inp['rot_lobound_rl'] = np.full((len_r,) + (len_l,), '-', dtype=object)
 
 ##pasture
-sav_inp['pas_inc'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA value for pastures included mask
+sav_inp['pas_inc_t'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA value for pastures included mask
 
 ##Stock
 sav_inp['nv_inc'] = '-'    #SA to store NV report values
