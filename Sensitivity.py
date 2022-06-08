@@ -32,8 +32,7 @@ len_k2 = pinp.sheep['i_k2_len'] #LSLN cluster
 len_k3 = pinp.sheep['i_k3_len'] #dam age cluster
 len_k4 = pinp.sheep['i_k4_len'] #gender
 len_k5 = pinp.sheep['i_k5_len'] #BTRT cluster
-lmu_mask = pinp.general['i_lmu_area'] > 0
-len_l = len(pinp.general['i_lmu_idx'][lmu_mask])
+len_l = len(pinp.general['i_lmu_idx'])
 len_o = pinp.sheep['i_o_len']
 len_r = len(sinp.f_phases())
 len_s = pinp.sheep['i_s_len'] #s = shear
