@@ -343,7 +343,7 @@ def f_property_inp_sa():
 
     ##pasture
     ###sav
-    general['pas_inc'] = fun.f_sa(general['pas_inc'], sen.sav['pas_inc'], 5)
+    general['pas_inc'] = fun.f_sa(general['pas_inc'], sen.sav['pas_inc_t'], 5)
 
     for pasture in sinp.general['pastures'][general['pas_inc']]: #all pasture inputs are adjusted even if a given pasture is not included
         ###sav
