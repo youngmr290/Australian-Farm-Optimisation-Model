@@ -230,6 +230,7 @@ sav_inp['bnd_rotn_inc'] = '-'   #SA to turn on the phase area bounds
 sav_inp['bnd_sr_inc'] = '-'   #SA to turn on the stocking rate bounds
 sav_inp['bnd_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated
 sav_inp['est_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #estimated proportion of dams mated - used when bnd_propn is default "-"
+sav_inp['bnd_propn_1yofemales_mated_g1'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of 1yo females mated
 sav_inp['bnd_drys_sold_o'] = np.full(pinp.sheep['i_dry_sales_forced_o'].shape, '-', dtype=object)   #SA to force drys to be sold
 sav_inp['bnd_drys_retained_o'] = np.full(pinp.sheep['i_dry_retained_forced_o'].shape, '-', dtype=object)   #SA to force drys to be retained
 sav_inp['est_drys_retained_scan_o'] = np.full(pinp.sheep['i_drys_retained_scan_est_o'].shape, '-', dtype=object)   #Estimate of the propn of drys sold at scanning
