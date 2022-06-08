@@ -560,6 +560,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     est_prop_dams_mated_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(est_prop_dams_mated_og1, left_pos=p_pos, right_pos=-1
                                                          , condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
 
+    ##propn of 1yo females mated (bound) - default is inf which gets skipped in the bound constraint hence the model can optimise the propn mated.
+    prop_1yofemales_mated_g1 = fun.f_sa(np.array([999],dtype=float), sen.sav['bnd_propn_1yofemales_mated_g1'], 5) #999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
+    prop_1yofemales_mated_g1[prop_1yofemales_mated_g1==999] = np.inf
+    prop_1yofemales_mated_zida0e0b0xyg1 = fun.f_expand(prop_1yofemales_mated_g1, left_pos=z_pos-1, right_pos=-1
+                                                         , condition=mask_dams_inc_g1, axis=-1)
+
     ##Shearing date - set to be on the last day of a sim period
     ###sire
     date_shear_sida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_date_shear_sixg0'], x_pos, right_pos=g_pos, swap=True
@@ -1340,7 +1346,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fvp_date_start_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_start_fa1e1b1nwzida0e0b0xyg1,a_fvp_pa1e1b1nwzida0e0b0xyg1,0)
     fvp_date_start_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(fvp_start_fa1e1b1nwzida0e0b0xyg3,a_fvp_pa1e1b1nwzida0e0b0xyg3,0)
 
-    ##propn of dams mated, actual value for the Bounds and an estimate for the generator (dont use bound to control generator otherwise introduce randomness)
+    ##propn of dams mated, actual value for the Bounds and an estimate for the generator (don't use bound to control generator otherwise introduce randomness)
     prop_dams_mated_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
     est_prop_dams_mated_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(est_prop_dams_mated_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
 
@@ -7708,6 +7714,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##mask for dam activities
     arrays_k2tvwzg1 = [keys_k2, keys_t1, keys_v1, keys_lw1, keys_z, keys_g1]
     params['p_mask_dams'] = fun.f1_make_pyomo_dict(mask_dams_k2tva1e1b1nw8zida0e0b0xyg1, arrays_k2tvwzg1)
+    ##mask for prog activities
+    arrays_tzdxg2 = [keys_t2, keys_z, keys_d, keys_x, keys_g2]
+    params['p_mask_prog'] = fun.f1_make_pyomo_dict(mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9, arrays_tzdxg2)
 
     ##lower bound dams
     ### this bound can be defined with either tog1 axes or tvg1 axes in exp.xl. Uncomment the relevant code to align with exp.xl
@@ -7751,6 +7760,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
     arrays_vzg1 = [keys_v1, keys_z, keys_g1]
     params['p_prop_dams_mated'] = fun.f1_make_pyomo_dict(prop_dams_mated_va1e1b1nwzida0e0b0xyg1, arrays_vzg1)
+
+    ##proportion of 1yo females mated as a proportion of female progeny. inf means the model can optimise the proportion because inf is used to skip the constraint.
+    arrays_zg1 = [keys_z, keys_g1]
+    params['p_prop_1yofemales_mated'] = fun.f1_make_pyomo_dict(prop_1yofemales_mated_zida0e0b0xyg1, arrays_zg1)
 
     ##proportion of dry dams as a propn of preg dams at shearing sale. This is different to the propn in the dry report because it is the propn at a given time rather than per animal at the beginning of mating.
     ## This is used to force retention of drys at the main (t[0]) sale time. You can only sell drys if you sell non-drys. This param indicates the propn of dry that can be sold per non-dry dam.
