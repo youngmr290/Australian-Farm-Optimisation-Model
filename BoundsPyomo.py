@@ -125,11 +125,11 @@ def f1_boundarypyomo_local(params, model):
             ###ravel and zip bound and dict
             sb_max_consumption_p6 = dict(zip(model.s_feed_periods, sb_max_consumption_p6))
 
-            def sup_upper_bound(model, q, s, z, p6):
+            def sb_upper_bound(model, q, s, z, p6):
                 if pe.value(model.p_wyear_inc_qs[q, s]) and sb_max_consumption_p6[p6] != 999999:
                     return sum(model.v_tonnes_sb_consumed[q,s,z,p6,f] for f in model.s_feed_pools) <= sb_max_consumption_p6[p6]
-            model.con_slp_upper_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods,
-                                                      rule=sup_upper_bound, doc='upper bound for livestock sb consumption')
+            model.con_sb_upper_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods,
+                                                      rule=sb_upper_bound, doc='upper bound for livestock sb consumption')
 
 
         ##bound on livestock supplementary feed.
