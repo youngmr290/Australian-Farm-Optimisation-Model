@@ -73,9 +73,9 @@ def f1_saltbushpyomo_local(params,model):
                                      initialize=params['sb_vol_zp6f'], default=0, mutable=False,
                                      doc='Volume required to consume 1t of saltbush (just the saltbush not the understory). Note this accounts for adverse effects of salt on animal intake')
 
-    model.p_propn_understory_req = pe.Param(model.s_season_types, model.s_feed_periods,
-                                     initialize=params['propn_understory_req_zp6'], default=0, mutable=False,
-                                     doc='Propn of understory required in diet')
+    model.p_sb_selectivity_zp6 = pe.Param(model.s_season_types, model.s_feed_periods,
+                                     initialize=params['sb_selectivity_zp6'], default=0, mutable=False,
+                                     doc='The ratio of the volume of saltbush consumed to the total volume of feed consumed by stock grazing slp (saltbush and understory)')
 
     ###################################
     #call local constraints           #
@@ -101,7 +101,7 @@ def f_con_slp_area(model):
         if pe.value(model.p_wyear_inc_qs[q, s]) and pinp.saltbush['i_saltbush_inc'] and pe.value(model.p_mask_childz_phase[p7,z]):
             return sum(-model.v_phase_area[q,s,p7,z,r,l] * model.p_phase_slp_area[r]
                        for r in model.s_phases if pe.value(model.p_phase_slp_area[r]) != 0)   \
-                 + model.v_slp_ha[q,s,z,l] <=0
+                 + model.v_slp_ha[q,s,z,l] ==0
         else:
             return pe.Constraint.Skip
     model.con_slp_area = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_season_periods, model.s_lmus, rule=slp_area, doc='Pasture area row for growth constraint of each type on each soil for each feed period (ha)')
@@ -203,7 +203,7 @@ def f_saltbush_selection(model,q,s,z,p6,f):
 
     Used in global constraint (con_link_understory_saltbush_consumption). See CorePyomo
     '''
-    return model.v_tonnes_sb_consumed[q,s,z,p6,f] * model.p_sb_vol[z,p6,f] * model.p_propn_understory_req[z,p6]
+    return model.v_tonnes_sb_consumed[q,s,z,p6,f] * model.p_sb_vol[z,p6,f] * (1-model.p_sb_selectivity_zp6[z,p6])
 
 
 
