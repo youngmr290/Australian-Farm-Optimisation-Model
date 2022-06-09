@@ -145,10 +145,10 @@ def f_report(processor, trials, non_exist_trials):
     stacked_pgr = pd.DataFrame()  # pasture growth
     stacked_grnfoo = pd.DataFrame()  # green foo
     stacked_dryfoo = pd.DataFrame()  # dry foo
-    stacked_napfoo = pd.DataFrame()  # non arable pasture foo
+    stacked_napfoo = pd.DataFrame()  # non-arable pasture foo
     stacked_grncon = pd.DataFrame()  # green pasture consumed
     stacked_drycon = pd.DataFrame()  # dry pasture consumed
-    stacked_napcon = pd.DataFrame()  # non arable pasture feed consumed
+    stacked_napcon = pd.DataFrame()  # non-arable pasture feed consumed
     stacked_poccon = pd.DataFrame()  # pasture on crop paddocks feed consumed
     stacked_supcon = pd.DataFrame()  # supplement feed consumed
     stacked_stubcon = pd.DataFrame()  # stubble feed consumed

@@ -1275,12 +1275,12 @@ def f_profitloss_table(lp_vars, r_vals):
 
     ##EBIT
     ebtd = pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue']].values - pnl.loc[idx[:, :, :, 'Expense', 'Total expenses']].values
-    pnl.loc[idx[:, :, :, 'Total', 'EBTD'], :] = ebtd #interest is counted in the cashflow of each item - it is hard to separate so it is not reported seperately
+    pnl.loc[idx[:, :, :, 'Total', 'EBTD'], :] = ebtd #interest is counted in the cashflow of each item - it is hard to separate so it is not reported separately
 
     ##Full year - add a column which is total of all cashflow period
     pnl['Full year'] = pnl.sum(axis=1)
 
-    ##intrest, depreciation asset opp and minroe
+    ##interest, depreciation asset opp and minroe
     ##add the assets & minroe & depreciation
     pnl.loc[idx[:, :, :, 'Total', 'depreciation'], 'Full year'] = dep_qsz
     pnl.loc[idx[:, :, :, 'Total', 'asset_cost'], 'Full year'] = asset_cost_qsz
@@ -1405,10 +1405,10 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     ###using None as the default for weights so that an error is generated later if an Arith option is selected that requires weights
     if weights is not None:
         weights = vars[weights]
-        ###set weights to 0 if very small number (otherwise it can show up in report when it shouldnt)
+        ###set weights to 0 if very small number (otherwise it can show up in report when it shouldn't)
         weights[np.isclose(weights, 0)] = 0
 
-    ##initilise prod array from either r_vals or default value (this means you can perform arith with any number - mainly used for pasture when there is no production param)
+    ##initialise prod array from either r_vals or default value (this means you can perform arith with any number - mainly used for pasture when there is no production param)
     if isinstance(prod, str):
         prod = r_vals[prod]
     # else:
