@@ -286,7 +286,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'dams_keys_tva1e1b1nwziyg1'
             arith = 0
             index =[1]
-            cols = [0,4,6,10] #t,b,w,g
+            cols = [10,0,4,6] #g,t,b,w
             salegrid_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, 
                                    keys=keys, arith=arith, index=index, cols=cols)
             salegrid_dams = pd.concat([salegrid_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
@@ -298,8 +298,8 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'yatf_keys_Tvaebnwzixy1g2'
             arith = 0
             index =[1]
-            cols = [4,6,9,11] #b,w,x,g
-            salegrid_yatf = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, 
+            cols = [11,9,0,4,6] #g,x,t,b,w
+            salegrid_yatf = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
                                    keys=keys, arith=arith, index=index, cols=cols)
             salegrid_yatf = pd.concat([salegrid_yatf],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_salegrid_yatf = rep.f_append_dfs(stacked_salegrid_yatf, salegrid_yatf)
@@ -320,12 +320,19 @@ def f_report(processor, trials, non_exist_trials):
             type = 'stock'
             prod = 'salevalue_k2p7tva1nwziyg1'
             na_prod = [0,1]  # q,s
-            weights = 'dams_numbers_qsk2tvanwziy1g1'
-            na_weights = [3] #p7
             keys = 'dams_keys_qsk2p7tvanwziy1g1'
-            arith = 1
-            index =[5] #v
-            cols =[2,3,4] #k2,p7,t
+            if lp_vars_inc:
+                weights = 'dams_numbers_qsk2tvanwziy1g1'
+                na_weights = [3]  #p7
+                arith = 1
+                index =[5]      #v
+                cols =[2,3,4]    #k2, p7, t
+            else:
+                weights = None
+                na_weights = []
+                arith = 4
+                index =[5] #v
+                cols =[12,3,4,2,8] #g,p7,t,k2,w
             # axis_slice = {}
             # axis_slice[3] = [0, 1, 1]   #c0: stk
             salevalue_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -337,12 +344,19 @@ def f_report(processor, trials, non_exist_trials):
             type = 'stock'
             prod = 'salevalue_k3k5p7tvnwziaxyg3'
             na_prod = [0,1]  # q,s
-            weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
-            na_weights = [4] #p7
             keys = 'offs_keys_qsk3k5p7tvnwziaxyg3'
-            arith = 1
-            index = [6, 12]     #DVP, gender
-            cols = [4, 14, 5]   #cashflow period, g3, t
+            if lp_vars_inc:
+                weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+                na_weights = [4]  #p7
+                arith = 1
+                index =[6, 12]      #v, x
+                cols =[4, 14, 5]    #cashflow period, g3, t
+            else:
+                weights = None
+                na_weights = []
+                arith = 4
+                index = [6, 12]     #DVP, gender
+                cols = [4, 14, 5, 8]   #cashflow period, g3, t, w
             # axis_slice = {}
             # axis_slice[4] = [0, 1, 1]   #c0: stk
             salevalue_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -354,12 +368,19 @@ def f_report(processor, trials, non_exist_trials):
             type = 'stock'
             prod = 'salevalue_k3k5p7twzia0xg2'
             na_prod = [0,1]  # q,s
-            weights = 'prog_numbers_qsk3k5twzia0xg2'
-            na_weights = [4] #p7
             keys = 'prog_keys_qsk3k5p7twzia0xg2'
-            arith = 1
-            index = [6]     #w
-            cols = [4, 11, 5]   #cashflow period, g2, t
+            if lp_vars_inc:
+                weights = 'prog_numbers_qsk3k5twzia0xg2'
+                na_weights = [4]  #p7
+                arith = 1
+                index =[6]      #w
+                cols =[4, 11, 5]    #cashflow period, g2, t
+            else:
+                weights = None
+                na_weights = []
+                arith = 4
+                index = [6]     #w
+                cols = [4, 11, 5]   #cashflow period, g2, t
             # axis_slice = {}
             # axis_slice[4] = [0, 1, 1]   #c0: stk
             salevalue_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -371,12 +392,19 @@ def f_report(processor, trials, non_exist_trials):
             type = 'stock'
             prod = 'woolvalue_k2p7tva1nwziyg1'
             na_prod = [0,1]  # q,s
-            weights = 'dams_numbers_qsk2tvanwziy1g1'
-            na_weights = [3] #p7
             keys = 'dams_keys_qsk2p7tvanwziy1g1'
-            arith = 1
-            index =[5] #v
-            cols =[3, 4] #p7,t
+            if lp_vars_inc:
+                weights = 'dams_numbers_qsk2tvanwziy1g1'
+                na_weights = [3]  #p7
+                arith = 1
+                index =[5]      #v
+                cols =[2,3,4]    #k2, p7, t
+            else:
+                weights = None
+                na_weights = []
+                arith = 4
+                index =[5] #v
+                cols =[12,3,4,2,8] #g,p7,t,k2,w
             # axis_slice = {}
             # axis_slice[3] = [0, 1, 1]   #c0: stk
             woolvalue_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -437,11 +465,19 @@ def f_report(processor, trials, non_exist_trials):
             type = 'stock'
             prod = 'cfw_hdmob_k2tva1nwziyg1'
             na_prod = [0,1]  # q,s
-            weights = 'dams_numbers_qsk2tvanwziy1g1'
             keys = 'dams_keys_qsk2tvanwziy1g1'
-            arith = 1
-            index =[4]
-            cols =[2, 3]
+            if lp_vars_inc:
+                weights = 'dams_numbers_qsk2tvanwziy1g1'
+                na_weights = []
+                arith = 1
+                index =[4]      #v
+                cols =[2,3]    #k2, t
+            else:
+                weights = None
+                na_weights = []
+                arith = 4
+                index =[4] #v
+                cols =[11,3,2,8] #g,t,k2,w
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]   #LSLN: NM & 00
             cfw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -568,8 +604,12 @@ def f_report(processor, trials, non_exist_trials):
             na_denweights = [0,1] #q,s
             keys = 'dams_keys_qsk2tvpaebnwziy1g1'
             arith = 1
-            index = [5] #p
-            cols = [8] #b
+            if lp_vars_inc:
+                index = [5] #p
+                cols = [8] #b
+            else:    #adding the w axis while still reporting with lp_vars weighting
+                index = [5] #p
+                cols = [2,3,10] #b,w
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             ffcfw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
@@ -606,16 +646,23 @@ def f_report(processor, trials, non_exist_trials):
             type = 'stock'
             prod = 'nv_dams_k2Tvpa1e1b1nw8ziyg1'
             na_prod = [0,1] #q,s
-            prod_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
-            na_prodweights = [0,1] #q,s
-            weights = 'dams_numbers_qsk2tvanwziy1g1'
-            na_weights = [5,7,8]
-            den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
-            na_denweights = [0,1] #q,s
+            prod_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'  #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
+            na_prodweights = [0, 1]  #q,s
+            den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'  #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
+            na_denweights = [0, 1]  #q,s
             keys = 'dams_keys_qsk2tvpaebnwziy1g1'
-            arith = 1
-            index = [5]             #p
-            cols = [14, 8, 3]    #g1, t & b1
+            if lp_vars_inc:
+                weights = 'dams_numbers_qsk2tvanwziy1g1'
+                na_weights = [5, 7, 8]
+                arith = 1
+                index = [5]  #p
+                cols = [14, 8, 3]  #g1, t & b1
+            else:
+                weights = 1
+                na_weights = []
+                arith = 1
+                index =[5] #p
+                cols =[14,7,3,8,10] #g,e,t,b1,w
             axis_slice = {}
             # axis_slice[5] = [0, 1, 1]   #only the first cycle of e1
             nv_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod,
@@ -877,8 +924,12 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'dams_numbers_qsk2tvanwziy1g1'
             keys = 'dams_keys_qsk2tvanwziy1g1'
             arith = 2
-            index =[4] #v
-            cols =[0,1,8, 2, 3] #q, s, z, k2, t
+            if lp_vars_inc:
+                index =[4]      #v
+                cols =[0,1,8, 2, 3] #q, s, z, k2, t
+            else:
+                index =[4] #v
+                cols =[0,1,8, 2, 3, 7] #q, s, z, k2, t, w
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -1108,7 +1159,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'keys_qsfdp6zt'
             arith = 2
             index =[4]
-            cols =[]
+            cols =[3]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             drycon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -1139,7 +1190,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'keys_gop6lzt'
             arith = 5
             index = [2]
-            cols = [0, 1]
+            cols = [1, 0]
             axis_slice = {}
             grndmd = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
@@ -1154,7 +1205,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'keys_gop6lzt'
             arith = 5
             index = [2]
-            cols = [0, 1]
+            cols = [1, 0]
             axis_slice = {}
             grnfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
