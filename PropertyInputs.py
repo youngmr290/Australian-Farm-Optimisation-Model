@@ -335,6 +335,7 @@ def f_property_inp_sa():
     ###sav
     saltbush['i_saltbush_inc'] = fun.f_sa(saltbush['i_saltbush_inc'], sen.sav['slp_inc'], 5)
     ###sam
+    saltbush['i_sb_expected_growth_zp6'] = fun.f_sa(saltbush['i_sb_expected_growth_zp6'], sen.sam['sb_growth'])
     ###sap
     ###saa
     ###sat

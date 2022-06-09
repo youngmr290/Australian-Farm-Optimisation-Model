@@ -34,6 +34,7 @@ def f1_boundarypyomo_local(params, model):
     bounds_inc = True #controls all bounds (typically on)
     rot_lobound_inc = fun.f_sa(False, sen.sav['bnd_rotn_inc'], 5)  #controls rot bound
     slp_area_inc = np.any(sen.sav['bnd_slp_area_l'][lmu_mask] != '-') #control the area of salt land pasture
+    sb_upbound_inc = np.any(sen.sav['bnd_sb_consumption_p6'] != '-') #control the area of salt land pasture
     sup_lobound_inc = False #controls sup feed bound
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_dam_inc'], 5) #lower bound dams
     dams_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_dam_inc'], 5) #upper bound on dams
@@ -117,13 +118,27 @@ def f1_boundarypyomo_local(params, model):
                                                     doc='bound for the area of salt land pasture on each lmu')
 
 
+        ##bound on slp consumption
+        if sb_upbound_inc:
+            ###set the bound
+            sb_max_consumption_p6 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_sb_consumption_p6'], 5) #999999 is arbitrary default value which mean skip constraint
+            ###ravel and zip bound and dict
+            sb_max_consumption_p6 = dict(zip(model.s_feed_periods, sb_max_consumption_p6))
+
+            def sup_upper_bound(model, q, s, z, p6):
+                if pe.value(model.p_wyear_inc_qs[q, s]) and sb_max_consumption_p6[p6] != 999999:
+                    return sum(model.v_tonnes_sb_consumed[q,s,z,p6,f] for f in model.s_feed_pools) <= sb_max_consumption_p6[p6]
+            model.con_slp_upper_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods,
+                                                      rule=sup_upper_bound, doc='upper bound for livestock sb consumption')
+
+
         ##bound on livestock supplementary feed.
         if sup_lobound_inc:
-            def sup_upper_bound(model, q, s, z):
+            def sup_lo_bound(model, q, s, z):
                 if pe.value(model.p_wyear_inc_qs[q, s]):
                     return sum(model.v_sup_con[q,s,z,k,g,f,p6] for k in model.s_crops for g in model.s_grain_pools for f in model.s_feed_pools
                     for p6 in model.s_feed_periods) >= 115
-            model.con_sup_upper_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=sup_upper_bound, doc='upper bound for livestock sup feed')
+            model.con_sup_lo_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=sup_lo_bound, doc='lo bound for livestock sup feed')
 
 
         ##dam lo bound. (the sheep in a given yr equal total for all dvp divided by the number of dvps in 1 yr)
