@@ -576,7 +576,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     date_shear_sida0e0b0xyg1 = date_shear_sida0e0b0xyg1[mask_shear_g1]
     ###off - the first shearing must occur as offspring because if yatf were shorn then all lambs would have to be shorn (ie no scope to not shear the lambs that are going to be fed up and sold)
     #### the offspring decision variables are not linked to the yatf (which are in the dam decision variables) and it would require doubling the dam DVs to have shorn and unshorn yatf
-    ####note: if age_wean_g3 gets a d axis it need to be the same for all animals that get clustered (see date born below)
+    ####note: if age_wean_g3 gets a d axis it needs to be the same for all animals that get clustered (see date born below)
     date_shear_sida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_date_shear_sixg3'], x_pos, right_pos=g_pos, swap=True,left_pos2=i_pos,right_pos2=x_pos,
                                            condition=mask_offs_inc_g3, axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos,
                                            condition3=mask_x, axis3=x_pos)
