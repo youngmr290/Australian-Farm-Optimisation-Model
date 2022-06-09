@@ -150,9 +150,6 @@ def f_saltbush_precalcs(params, r_vals, nv):
     sb_salt_content_normal_feed = pinp.saltbush['i_sb_salt_content_normal_feed']
     sb_animal_typical_intake = pinp.saltbush['i_sb_animal_typical_intake']
 
-    ##% salt land pasture in diet (ie for a given period what propn of the time are sheep grazing salt land pastures vs other feed sources)
-
-
     ##% salt in SLP diet
     slp_diet_salt_content_zp6 = sb_ash_content_zp6 * sb_selectivity_zp6 + sb_salt_content_normal_feed * (1-sb_selectivity_zp6)
 
@@ -182,7 +179,7 @@ def f_saltbush_precalcs(params, r_vals, nv):
     slp_estab_wc_c0p7z = slp_estab_wc_c0p7z * mask_season_p7z
     max_growth_per_ha_zp6l = max_growth_per_ha_zp6l * mask_fp_z8var_zp6[:,:,na]
     transfer_prov_zp6 = transfer_prov_zp6 * mask_fp_z8var_zp6
-    sb_selectivity_zp6 * mask_fp_z8var_zp6
+    propn_understory_req_zp6 = propn_understory_req_zp6 * mask_fp_z8var_zp6
     sb_me_zp6f = sb_me_zp6f * mask_fp_z8var_zp6[:,:,na]
     sb_vol_zp6f = sb_vol_zp6f * mask_fp_z8var_zp6[:,:,na]
 
@@ -215,6 +212,7 @@ def f_saltbush_precalcs(params, r_vals, nv):
 
     ##make r_vals
     fun.f1_make_r_val(r_vals,sb_me_zp6f,'sb_me_zp6f',mask_fp_z8var_zp6[...,na],z_pos=-2)
+    fun.f1_make_r_val(r_vals,slp_estab_cost_p7z,'slp_estab_cost_p7z',mask_season_p7z,z_pos=-1)
 
 
 
