@@ -416,7 +416,7 @@ def f1_boundarypyomo_local(params, model):
             #todo add an i axis to the constraint
             def f_propn_dams_mated(model, q, s, v, z, g1):
                 if (model.p_prop_dams_mated[v,z,g1]==np.inf or not pe.value(model.p_wyear_inc_qs[q, s]) or
-                        all(model.p_mask_dams[k2,t,v,w8,z,g1] == 0 or v=='dv00'   #skip if DVP0 which is a non-mating period in o[0]
+                        all(model.p_mask_dams[k2,t,v,w8,z,g1] == 0
                             for k2 in model.s_k2_birth_dams for t in model.s_sale_dams for w8 in model.s_lw_dams)):
                     return pe.Constraint.Skip
                 else:
