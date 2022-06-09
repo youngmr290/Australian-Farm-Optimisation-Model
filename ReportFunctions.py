@@ -798,6 +798,9 @@ def f_feed_reshape(lp_vars, r_vals):
     feed_vars['keys_qszp6fks1s2'] = [keys_q, keys_s, keys_z, keys_p6, keys_f, keys_k1, keys_s1, keys_s2]
     ###crop grazing
     feed_vars['keys_qsfkp6p5zl'] = [keys_q, keys_s, keys_f, keys_k1, keys_p6, keys_p5, keys_z, keys_l]
+    ###saltbush
+    feed_vars['keys_qszp6f'] = [keys_q, keys_s, keys_z, keys_p6, keys_f]
+    feed_vars['keys_qsp7zl'] = [keys_q, keys_s, keys_p7, keys_z, keys_l]
     ###periods
     feed_vars['keys_p7z'] = [keys_p7, keys_z]
     feed_vars['keys_p6z'] = [keys_p6, keys_z]
@@ -812,6 +815,9 @@ def f_feed_reshape(lp_vars, r_vals):
     qszp6fks1s2 = len_q, len_s, len_z, len_p6, len_f, len_k1, len_s1, len_s2
     ###crop graze
     qsfkp6p5zl = len_q, len_s, len_f, len_k1, len_p6, len_p5, len_z, len_l
+    ###saltbush
+    qszp6f = len_q, len_s, len_z, len_p6, len_f
+    qszl = len_q, len_s, len_z, len_l
 
     ##reshape z8 mask to uncluster
     maskz8_p6z = r_vals['pas']['mask_fp_z8var_p6z']
@@ -841,6 +847,11 @@ def f_feed_reshape(lp_vars, r_vals):
     ##crop grazing
     ###crop consumed
     feed_vars['crop_consumed_qsfkp6p5zl'] = f_vars2np(lp_vars, 'v_tonnes_crop_consumed', qsfkp6p5zl, maskz8_p6nazna, z_pos=-2)
+
+    ##saltbush
+    ###saltbush consumed
+    feed_vars['v_tonnes_sb_consumed_qszp6f'] = f_vars2np(lp_vars, 'v_tonnes_sb_consumed', qszp6f, maskz8_zp6[:,:,na], z_pos=-3)
+    feed_vars['v_slp_ha_qszl'] = f_vars2np(lp_vars, 'v_slp_ha', qszl, z_pos=-2)
 
     return feed_vars
 
@@ -1182,44 +1193,28 @@ def f_profitloss_table(lp_vars, r_vals):
     exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k_p7zqs = f_crop_summary(lp_vars, r_vals, option=0)
     exp_mach_k_p7zqs, mach_insurance_p7z = f_mach_summary(lp_vars, r_vals)
     stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qsp7z = f_stock_cash_summary(lp_vars, r_vals)
+    slp_estab_cost_qsz_p7 = f_stock_pasture_summary(lp_vars, r_vals, type='slp', prod='slp_estab_cost_p7z', na_prod=[0,1,2]
+                                             , weights='v_slp_ha_qszl', na_weights=[2]
+                                             , keys='keys_qsp7zl', arith=2, index=[0,1,3], cols=[2])
+    labour_p7qsz = f_labour_summary(lp_vars, r_vals, option=0)
+    exp_fix_p7_z = f_overhead_summary(r_vals).unstack()
+    dep_qsp7z = f_dep_summary(lp_vars, r_vals)
+    minroe_qsp7z = f_minroe_summary(lp_vars,r_vals)
+    asset_cost_qsp7z = f_asset_cost_summary(lp_vars,r_vals)
 
-    ##other info required below
+
+
+    ##manipulate arrays into correct shape
     all_pas = r_vals['rot']['all_pastures']  # landuse sets
     keys_p7 = r_vals['fin']['keys_p7']
-    # keys_c0 = r_vals['fin']['keys_c0']
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
-    # len_c0p7 = len(keys_c0) * len(keys_p7)
     len_p7 = len(keys_p7)
     len_z = len(keys_z)
-
-    ##create p/l dataframe
-    idx = pd.IndexSlice
-    subtype_rev = ['grain', 'sheep sales', 'wool', 'season start trade', 'Total Revenue']
-    subtype_exp = ['crop', 'pasture', 'stock husb', 'stock sup', 'stock purchase', 'machinery', 'labour', 'fixed', 'Total expenses']
-    subtype_tot = ['asset_cost', 'depreciation', 'minRoe', 'EBTD', 'obj']
-    pnl_rev_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Revenue'], subtype_rev], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
-    pnl_exp_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Expense'], subtype_exp], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
-    pnl_tot_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Total'], subtype_tot], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
-    pnl_dsp_index = pd.MultiIndex.from_product([['Weighted obj'], [''], [''], [''], ['']], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
-    pnl_index = pnl_rev_index.append(pnl_exp_index).append(pnl_tot_index).append(pnl_dsp_index)
-    # pnl_cols = pd.MultiIndex.from_product([keys_c0, keys_p7])
-    pnl_cols = keys_p7
-    pnl = pd.DataFrame(index=pnl_index, columns=pnl_cols)  # need to initialise df with multiindex so rows can be added
-    pnl = pnl.sort_index() #have to sort to stop performance warning
-
-    ##income
+    ###rev
     rev_grain_p7_qsz = rev_grain_k_p7zqs.sum(axis=0).unstack([2,3,1]).sort_index(axis=1)  # sum landuse axis
-    ###add to p/l table each as a new row
-    ### season start trade - at the start of each season stock numbers are averaged across the z axis. This item essentially accounts for a season with more animals selling some of its animals to seasons with less animals.
-    pnl.loc[idx[:, :, :,'Revenue','grain'],:] = rev_grain_p7_qsz.T.reindex(pnl_cols, axis=1).values #reindex because  has been sorted alphabetically
-    pnl.loc[idx[:, :, :, 'Revenue', 'sheep sales'], :] = stocksale_qszp7.reshape(-1, len_p7)
-    pnl.loc[idx[:, :, :, 'Revenue', 'wool'], :] = wool_qszp7.reshape(-1, len_p7)
-    pnl.loc[idx[:, :, :, 'Revenue', 'season start trade'], :] = trade_value_qsp7z.reshape(-1, len_p7)
-    pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue'], :] = pnl.loc[pnl.index.get_level_values(3) == 'Revenue'].groupby(axis=0,level=(0,1,2)).sum().values
-
-    ##expenses
+    ###exp
     ####machinery
     df_mask_qs = pd.DataFrame(r_vals['zgen']['mask_qs'],keys_q,keys_s).stack()
     mach_p7zqs = exp_mach_k_p7zqs.sum(axis=0)  # sum landuse
@@ -1233,15 +1228,43 @@ def f_profitloss_table(lp_vars, r_vals):
     cropmisc_p7_qsz = misc_exp_k_p7zqs[~misc_exp_k_p7zqs.index.isin(all_pas)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
     pas_p7_qsz = pd.concat([pasfert_p7_qsz, paschem_p7_qsz, pasmisc_p7_qsz], axis=0).groupby(axis=0, level=0).sum()
     crop_p7_qsz = pd.concat([cropfert_p7_qsz, cropchem_p7_qsz, cropmisc_p7_qsz], axis=0).groupby(axis=0, level=0).sum()
-    ####labour
-    labour_p7qsz = f_labour_summary(lp_vars, r_vals, option=0)
     ####fixed overhead expenses
-    exp_fix_p7_z = f_overhead_summary(r_vals).unstack()
     index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
     exp_fix_p7_qsz = exp_fix_p7_z.reindex(index_qsz, axis=1, level=-1).stack().mul(df_mask_qs,axis=1).unstack()
-    ###add to p/l table each as a new row
+    ###depreciation
+    dep_qsz = dep_qsp7z[:,:,-1,:].ravel() #take end slice of season stages
+    ###minroe
+    minroe_qsz = minroe_qsp7z[:,:,-1,:].ravel() #take end slice of season stages
+    ###asset opportunity cost
+    asset_cost_qsz = asset_cost_qsp7z[:,:,-1,:].ravel() #take end slice of season stages
+
+    ##create p/l dataframe
+    idx = pd.IndexSlice
+    subtype_rev = ['grain', 'sheep sales', 'wool', 'season start trade', 'Total Revenue']
+    subtype_exp = ['crop', 'pasture', 'slp', 'stock husb', 'stock sup', 'stock purchase', 'machinery', 'labour', 'fixed', 'Total expenses']
+    subtype_tot = ['asset_cost', 'depreciation', 'minRoe', 'EBTD', 'obj']
+    pnl_rev_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Revenue'], subtype_rev], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
+    pnl_exp_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Expense'], subtype_exp], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
+    pnl_tot_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Total'], subtype_tot], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
+    pnl_dsp_index = pd.MultiIndex.from_product([['Weighted obj'], [''], [''], [''], ['']], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
+    pnl_index = pnl_rev_index.append(pnl_exp_index).append(pnl_tot_index).append(pnl_dsp_index)
+    # pnl_cols = pd.MultiIndex.from_product([keys_c0, keys_p7])
+    pnl_cols = keys_p7
+    pnl = pd.DataFrame(index=pnl_index, columns=pnl_cols)  # need to initialise df with multiindex so rows can be added
+    pnl = pnl.sort_index() #have to sort to stop performance warning
+
+    ##income - add to p/l table each as a new row
+    ### Note: season start trade - at the start of each season stock numbers are averaged across the z axis. This item essentially accounts for a season with more animals selling some of its animals to seasons with less animals.
+    pnl.loc[idx[:, :, :,'Revenue','grain'],:] = rev_grain_p7_qsz.T.reindex(pnl_cols, axis=1).values #reindex because  has been sorted alphabetically
+    pnl.loc[idx[:, :, :, 'Revenue', 'sheep sales'], :] = stocksale_qszp7.reshape(-1, len_p7)
+    pnl.loc[idx[:, :, :, 'Revenue', 'wool'], :] = wool_qszp7.reshape(-1, len_p7)
+    pnl.loc[idx[:, :, :, 'Revenue', 'season start trade'], :] = trade_value_qsp7z.reshape(-1, len_p7)
+    pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue'], :] = pnl.loc[pnl.index.get_level_values(3) == 'Revenue'].groupby(axis=0,level=(0,1,2)).sum().values
+
+    ##expenses - add to p/l table each as a new row
     pnl.loc[idx[:, :, :, 'Expense', 'crop'], :] = crop_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'pasture'], :] = pas_p7_qsz.T.values
+    pnl.loc[idx[:, :, :, 'Expense', 'slp'], :] = slp_estab_cost_qsz_p7.values
     pnl.loc[idx[:, :, :, 'Expense', 'stock husb'], :] = husbcost_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Expense', 'stock sup'], :] = supcost_qsz_p7.values
     pnl.loc[idx[:, :, :, 'Expense', 'stock purchase'], :] = purchasecost_qszp7.reshape(-1, len_p7)
@@ -1254,20 +1277,10 @@ def f_profitloss_table(lp_vars, r_vals):
     ebtd = pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue']].values - pnl.loc[idx[:, :, :, 'Expense', 'Total expenses']].values
     pnl.loc[idx[:, :, :, 'Total', 'EBTD'], :] = ebtd #interest is counted in the cashflow of each item - it is hard to separate so it is not reported seperately
 
-    ##add a column which is total of all cashflow period
+    ##Full year - add a column which is total of all cashflow period
     pnl['Full year'] = pnl.sum(axis=1)
 
     ##intrest, depreciation asset opp and minroe
-    ###depreciation
-    dep_qsp7z = f_dep_summary(lp_vars, r_vals)
-    dep_qsz = dep_qsp7z[:,:,-1,:].ravel() #take end slice of season stages
-    ###minroe
-    minroe_qsp7z = f_minroe_summary(lp_vars,r_vals)
-    minroe_qsz = minroe_qsp7z[:,:,-1,:].ravel() #take end slice of season stages
-    ###asset opportunity cost
-    asset_cost_qsp7z = f_asset_cost_summary(lp_vars,r_vals)
-    asset_cost_qsz = asset_cost_qsp7z[:,:,-1,:].ravel() #take end slice of season stages
-
     ##add the assets & minroe & depreciation
     pnl.loc[idx[:, :, :, 'Total', 'depreciation'], 'Full year'] = dep_qsz
     pnl.loc[idx[:, :, :, 'Total', 'asset_cost'], 'Full year'] = asset_cost_qsz
@@ -1585,10 +1598,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     keys = 'keys_qsfgop6lzt'
     arith = 2
     index = [0,1,7,5,2] #[q,s,z,p6,nv]
-    cols = []
+    cols = [8] #t
     grn_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                          keys=keys, arith=arith, index=index, cols=cols)
-    grn_mei.columns = ['Grn Pas'] # add feed type as header
+    grn_mei = pd.concat([grn_mei], keys=['Grn'], axis=1)  # add feed type as header
 
     ###poc pasture
     type = 'pas'
@@ -1611,10 +1624,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     keys = 'keys_qsfdp6zt'
     arith = 2
     index = [0,1,5,4,2] #[q,s,z,p6,nv]
-    cols = []
+    cols = [6] #t
     dry_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                          keys=keys, arith=arith, index=index, cols=cols)
-    dry_mei.columns = ['Dry Pas'] # add feed type as header
+    dry_mei = pd.concat([dry_mei], keys=['Dry Pas'], axis=1)  # add feed type as header
 
     ###nap pasture
     type = 'pas'
@@ -1656,6 +1669,19 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     crop_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                           keys=keys, arith=arith, index=index, cols=cols)
     crop_mei.columns = ['Crop Graze'] # add feed type as header
+
+    ###saltbush (just the saltbush not the understory)
+    prod = 'sb_me_zp6f'
+    na_prod = [0, 1]  # q,s
+    type = 'slp'
+    weights = 'v_tonnes_sb_consumed_qszp6f'
+    keys = 'keys_qszp6f'
+    arith = 2
+    index = [0, 1, 2, 3, 4]  # q,s,z,p6,nv
+    cols = []
+    sb_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols)
+    sb_mei.columns = ['Saltbush'] # add feed type as header
 
     ###sup
     sup_md_tonne_kp6z = r_vals['sup']['md_tonne_kp6z']
@@ -1723,7 +1749,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
 
     ##stick feed stuff together
     ###first make everything have the same number of col levels - not the neatest but couldnt find a better way
-    arrays = [grn_mei, dry_mei, poc_mei, nap_mei, res_mei, crop_mei, sup_mei, mei_sire, mei_dams, mei_offs]
+    arrays = [grn_mei, dry_mei, poc_mei, nap_mei, res_mei, crop_mei, sb_mei, sup_mei, mei_sire, mei_dams, mei_offs]
     ####determine the max number of column levels
     max_levels=1
     for array in arrays:
@@ -1731,9 +1757,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     for array in range(len(arrays)):
         extra_levels = max_levels - arrays[array].columns.nlevels
         for extra_lev in range(extra_levels):
-            arrays[array] = pd.concat([arrays[array]], keys=[''], axis=1)
-    feed_budget_supply = pd.concat(arrays[0:7], axis=1)
-    feed_budget_req = pd.concat(arrays[7:], axis=1)
+            arrays[array].columns = pd.MultiIndex.from_product([arrays[array].columns, ['']])
+            # arrays[array] = pd.concat([arrays[array]], keys=[''], axis=1)
+    feed_budget_supply = pd.concat(arrays[0:8], axis=1)
+    feed_budget_req = pd.concat(arrays[8:], axis=1)
 
     ##sum nv axis if nv_option is 1
     if nv_option==1:
