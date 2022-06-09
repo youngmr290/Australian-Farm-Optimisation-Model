@@ -75,6 +75,9 @@ sam_inp['grainp_k'] = np.ones(len_k, dtype=np.float64)   # SA multiplier for gra
 ##crop
 sam_inp['all_rot_yield'] = 1.0   # SA multiplier for all rotation yield
 
+##saltbush
+sam_inp['sb_growth'] = 1.0   # SA multiplier for the growth of saltbush on slp (applies to all lmus and fp)
+
 ## Annual module sensitivity variables - these need to have the same name for each pasture type
 sam_inp['germ','annual']                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods
 sam_inp['germ','understory']                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods
@@ -223,6 +226,7 @@ sav_inp['slp_inc'] = '-'  #control if salt land pasture is included
 
 ##bounds
 sav_inp['bnd_slp_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of slp on each lmu
+sav_inp['bnd_sb_consumption_p6'] = np.full(len_p6, '-', dtype=object)  #upper bnd on the amount of sb consumed
 sav_inp['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
 sav_inp['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
 sav_inp['bnd_rotn_inc'] = '-'   #SA to turn on the phase area bounds
