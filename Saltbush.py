@@ -137,8 +137,6 @@ def f_saltbush_precalcs(params, r_vals, nv):
     ## intake of the understory. The r squared of the relationship is 0.93. More detail is included in the AFO calibration
     ## directory in the spreadsheet "Saltland pasture diet selection prediction Hayley Norman-June2006.xlsx
     sb_selectivity_zp6 = zfun.f_seasonal_inp(pinp.saltbush['i_sb_selectivity_zp6'], numpy=True, axis=0)
-    ###calc the propn of understory required to eat 1t of saltbush
-    propn_understory_req_zp6 = 1 - sb_selectivity_zp6
 
     ###########################
     # saltbush animal effects #
@@ -179,7 +177,7 @@ def f_saltbush_precalcs(params, r_vals, nv):
     slp_estab_wc_c0p7z = slp_estab_wc_c0p7z * mask_season_p7z
     max_growth_per_ha_zp6l = max_growth_per_ha_zp6l * mask_fp_z8var_zp6[:,:,na]
     transfer_prov_zp6 = transfer_prov_zp6 * mask_fp_z8var_zp6
-    propn_understory_req_zp6 = propn_understory_req_zp6 * mask_fp_z8var_zp6
+    sb_selectivity_zp6 = sb_selectivity_zp6 * mask_fp_z8var_zp6
     sb_me_zp6f = sb_me_zp6f * mask_fp_z8var_zp6[:,:,na]
     sb_vol_zp6f = sb_vol_zp6f * mask_fp_z8var_zp6[:,:,na]
 
@@ -208,7 +206,7 @@ def f_saltbush_precalcs(params, r_vals, nv):
     params['transfer_prov_zp6'] = fun.f1_make_pyomo_dict(transfer_prov_zp6, arrays_zp6)
     params['sb_me_zp6f'] = fun.f1_make_pyomo_dict(sb_me_zp6f, arrays_zp6f)
     params['sb_vol_zp6f'] = fun.f1_make_pyomo_dict(sb_vol_zp6f, arrays_zp6f)
-    params['propn_understory_req_zp6'] = fun.f1_make_pyomo_dict(propn_understory_req_zp6, arrays_zp6)
+    params['sb_selectivity_zp6'] = fun.f1_make_pyomo_dict(sb_selectivity_zp6, arrays_zp6)
 
     ##make r_vals
     fun.f1_make_r_val(r_vals,sb_me_zp6f,'sb_me_zp6f',mask_fp_z8var_zp6[...,na],z_pos=-2)
