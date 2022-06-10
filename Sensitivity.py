@@ -20,6 +20,7 @@ import Periods as per
 len_d = len(pinp.sheep['i_d_idx'])
 len_g0 = sinp.stock['i_mask_g0g3'].shape[0]
 len_g1 = sinp.stock['i_mask_g1g3'].shape[0]
+len_g2 = sinp.stock['i_mask_g2g3'].shape[0]
 len_g3 = sinp.stock['i_mask_g3g3'].shape[0]
 len_h2 = pinp.sheep['i_h2_len']
 len_h5 = pinp.sheep['i_h5_len']
@@ -37,6 +38,7 @@ len_o = pinp.sheep['i_o_len']
 len_r = len(sinp.f_phases())
 len_s = pinp.sheep['i_s_len'] #s = shear
 len_t1 = pinp.sheep['i_n_dam_sales'] + len_g0
+len_t2 = pinp.sheep['i_t2_len']
 len_t3 = pinp.sheep['i_t3_len']
 len_V = 50  #Capital V because it is an (over) estimate to initialise the v axes that will be sliced when len_v is known.
 len_x = pinp.sheep['i_x_len']
@@ -226,14 +228,13 @@ sav_inp['slp_inc'] = '-'  #control if salt land pasture is included
 
 ##bounds
 sav_inp['bnd_slp_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of slp on each lmu
-sav_inp['bnd_sb_consumption_p6'] = np.full(len_p6, '-', dtype=object)  #upper bnd on the amount of sb consumed
+sav_inp['bnd_sb_consumption_p6'] = np.full(len(pinp.period['i_fp_idx']), '-', dtype=object)  #upper bnd on the amount of sb consumed
 sav_inp['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
 sav_inp['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
 sav_inp['bnd_rotn_inc'] = '-'   #SA to turn on the phase area bounds
 sav_inp['bnd_sr_inc'] = '-'   #SA to turn on the stocking rate bounds
 sav_inp['bnd_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated
 sav_inp['est_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #estimated proportion of dams mated - used when bnd_propn is default "-"
-sav_inp['bnd_propn_1yofemales_mated_g1'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of 1yo females mated
 sav_inp['bnd_drys_sold_o'] = np.full(pinp.sheep['i_dry_sales_forced_o'].shape, '-', dtype=object)   #SA to force drys to be sold
 sav_inp['bnd_drys_retained_o'] = np.full(pinp.sheep['i_dry_retained_forced_o'].shape, '-', dtype=object)   #SA to force drys to be retained
 sav_inp['est_drys_retained_scan_o'] = np.full(pinp.sheep['i_drys_retained_scan_est_o'].shape, '-', dtype=object)   #Estimate of the propn of drys sold at scanning
@@ -252,6 +253,8 @@ sav_inp['bnd_lo_off_inc'] = '-'   #control if off lower bound is on.
 sav_inp['bnd_lo_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #min number of offs
 sav_inp['bnd_up_off_inc'] = '-'   #control if off upper bound is on.
 sav_inp['bnd_up_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #max number of offs
+sav_inp['bnd_up_prog_inc'] = '-'   #control if prog upper bound is on.
+sav_inp['bnd_up_prog_tdxg2'] = np.full((len_t2,) + (len_d,) + (len_x,) + (len_g2,), '-', dtype=object)   #max number of offs
 sav_inp['bnd_sr_t'] = np.full(pinp.sheep['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
 sav_inp['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
 sav_inp['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
@@ -261,7 +264,7 @@ sav_inp['bnd_max_sale_age_female_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-
 sav_inp['rot_lobound_rl'] = np.full((len_r,) + (len_l,), '-', dtype=object)
 
 ##pasture
-sav_inp['pas_inc'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA value for pastures included mask
+sav_inp['pas_inc_t'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA value for pastures included mask
 
 ##Stock
 sav_inp['nv_inc'] = '-'    #SA to store NV report values

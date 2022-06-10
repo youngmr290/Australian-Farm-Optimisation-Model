@@ -560,13 +560,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     est_prop_dams_mated_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(est_prop_dams_mated_og1, left_pos=p_pos, right_pos=-1
                                                          , condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
 
-    ##propn of 1yo females mated (bound) - default is inf which gets skipped in the bound constraint hence the model can optimise the propn mated.
-    prop_1yofemales_mated_g1 = fun.f_sa(np.array([999],dtype=float), sen.sav['bnd_propn_1yofemales_mated_g1'], 5) #999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
-    prop_1yofemales_mated_g1[prop_1yofemales_mated_g1==999] = np.inf
-    prop_1yofemales_mated_zida0e0b0xyg1 = fun.f_expand(prop_1yofemales_mated_g1, left_pos=z_pos-1, right_pos=-1
-                                                         , condition=mask_dams_inc_g1, axis=-1)
-
-    ##Shearing date - set to be on the last day of a sim period
+    ##Shearing date - set to be on the last day of a generator period
     ###sire
     date_shear_sida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_date_shear_sixg0'], x_pos, right_pos=g_pos, swap=True
                                           ,left_pos2=i_pos,right_pos2=x_pos, condition=mask_sire_inc_g0, axis=g_pos,
@@ -582,7 +576,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     date_shear_sida0e0b0xyg1 = date_shear_sida0e0b0xyg1[mask_shear_g1]
     ###off - the first shearing must occur as offspring because if yatf were shorn then all lambs would have to be shorn (ie no scope to not shear the lambs that are going to be fed up and sold)
     #### the offspring decision variables are not linked to the yatf (which are in the dam decision variables) and it would require doubling the dam DVs to have shorn and unshorn yatf
-    ####note: if age_wean_g3 gets a d axis it need to be the same for all animals that get clustered (see date born below)
+    ####note: if age_wean_g3 gets a d axis it needs to be the same for all animals that get clustered (see date born below)
     date_shear_sida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_date_shear_sixg3'], x_pos, right_pos=g_pos, swap=True,left_pos2=i_pos,right_pos2=x_pos,
                                            condition=mask_offs_inc_g3, axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos,
                                            condition3=mask_x, axis3=x_pos)
@@ -5189,6 +5183,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                       , date_end_p, 1,'right')
     index_va1e1b1nwzida0e0b0xyg1 = fun.f_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg1)+1), p_pos)
     index_vpa1e1b1nwzida0e0b0xyg1 = fun.f_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg1)+1), p_pos-1)
+
+    ###calculate period pointer here because it needed a_v_p association
+    dvp_is_mating = sfun.f1_p2v(period_is_mating_pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1).astype(dtypeint)
+    dvp_is_mating = fun.f_dynamic_slice(dvp_is_mating, e1_pos, 0, 1) #slice e axis because e axis doesn't alter the mating DVP.
+
     ###other dvp associations and masks
     a_p_va1e1b1nwzida0e0b0xyg1 = fun.f_next_prev_association(date_start_p, dvp_start_va1e1b1nwzida0e0b0xyg1
                                                              , 1, 'right').astype(dtypeint) #returns the period index for the start of each dvp
@@ -7758,12 +7757,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##proportion of dams mated. inf means the model can optimise the proportion because inf is used to skip the constraint.
     prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
+    prop_dams_mated_va1e1b1nwzida0e0b0xyg1[~dvp_is_mating] = np.inf
+    #prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = fun.f_update(prop_dams_mated_va1e1b1nwzida0e0b0xyg1, dvp_is_mating==0, np.inf)
     arrays_vzg1 = [keys_v1, keys_z, keys_g1]
     params['p_prop_dams_mated'] = fun.f1_make_pyomo_dict(prop_dams_mated_va1e1b1nwzida0e0b0xyg1, arrays_vzg1)
-
-    ##proportion of 1yo females mated as a proportion of female progeny. inf means the model can optimise the proportion because inf is used to skip the constraint.
-    arrays_zg1 = [keys_z, keys_g1]
-    params['p_prop_1yofemales_mated'] = fun.f1_make_pyomo_dict(prop_1yofemales_mated_zida0e0b0xyg1, arrays_zg1)
 
     ##proportion of dry dams as a propn of preg dams at shearing sale. This is different to the propn in the dry report because it is the propn at a given time rather than per animal at the beginning of mating.
     ## This is used to force retention of drys at the main (t[0]) sale time. You can only sell drys if you sell non-drys. This param indicates the propn of dry that can be sold per non-dry dam.
@@ -7829,6 +7826,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                          axis=d_pos, keepdims=True) #cluster d
     arrays_k3tvzxg3 = [keys_k3, keys_t3, keys_v3, keys_z, keys_x, keys_g3]
     params['p_offs_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_offs_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3tvzxg3)
+
+    ##upper bound prog
+    bnd_upper_prog_tdxg2 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_prog_tdxg2'], 5) #999999 just an arbitrary high value
+    # bnd_upper_prog_tdxg2[bnd_upper_prog_tdxg2==999999] = np.inf  # (can't use np.inf because it becomes nan in the following calcs)
+    bnd_upper_prog_tva1e1b1nwzida0e0b0xyg2 = fun.f_expand(bnd_upper_prog_tdxg2, left_pos=x_pos, right_pos=-1,
+                                                          left_pos2=d_pos, right_pos2=x_pos, left_pos3=p_pos-1, right_pos3=d_pos,
+                                                          condition=mask_d_offs, axis=d_pos, condition2=mask_x, axis2=x_pos, condition3=mask_offs_inc_g3, axis3=-1)
+    bnd_upper_prog_k3k5tva1e1b1nwzida0e0b0xyg2 = np.sum(bnd_upper_prog_tva1e1b1nwzida0e0b0xyg2
+                                                         * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
+                                                         axis=d_pos, keepdims=True) #cluster d
+    arrays_k3txg2 = [keys_k3, keys_t2, keys_x, keys_g2]
+    params['p_prog_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_prog_k3k5tva1e1b1nwzida0e0b0xyg2, arrays_k3txg2)
 
 
 

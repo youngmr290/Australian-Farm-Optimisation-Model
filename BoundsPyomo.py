@@ -40,10 +40,10 @@ def f1_boundarypyomo_local(params, model):
     dams_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_dam_inc'], 5) #upper bound on dams
     offs_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_off_inc'], 5) #lower bound offs
     offs_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_off_inc'], 5) #upper bound on offs
+    prog_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_prog_inc'], 5) #upper bound on prog
     total_dams_scanned_bound_inc = np.any(sen.sav['bnd_total_dams_scanned'] != '-') #equal to bound on the total number of mated dams at scanning
     force_5yo_retention_inc = np.any(sen.sav['bnd_propn_dam5_retained'] != '-') #force a propn of 5yo dams to be retained.
     bnd_propn_dams_mated_inc = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
-    bnd_propn_1yofemales_mated_inc = np.any(sen.sav['bnd_propn_1yofemales_mated_g1'] != '-')
     bnd_sale_twice_drys_inc = fun.f_sa(False, sen.sav['bnd_sale_twice_dry_inc'], 5) #proportion of drys sold (can be sold at either sale opp)
     bnd_dry_retained_inc = fun.f_sa(False, np.any(pinp.sheep['i_dry_retained_forced_o']), 5) #force the retention of drys in t[0] (t[1] is handled in the generator.
     sr_bound_inc = fun.f_sa(False, sen.sav['bnd_sr_inc'], 5) #controls sr bound
@@ -125,11 +125,11 @@ def f1_boundarypyomo_local(params, model):
             ###ravel and zip bound and dict
             sb_max_consumption_p6 = dict(zip(model.s_feed_periods, sb_max_consumption_p6))
 
-            def sup_upper_bound(model, q, s, z, p6):
+            def sb_upper_bound(model, q, s, z, p6):
                 if pe.value(model.p_wyear_inc_qs[q, s]) and sb_max_consumption_p6[p6] != 999999:
                     return sum(model.v_tonnes_sb_consumed[q,s,z,p6,f] for f in model.s_feed_pools) <= sb_max_consumption_p6[p6]
-            model.con_slp_upper_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods,
-                                                      rule=sup_upper_bound, doc='upper bound for livestock sb consumption')
+            model.con_sb_upper_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods,
+                                                      rule=sb_upper_bound, doc='upper bound for livestock sb consumption')
 
 
         ##bound on livestock supplementary feed.
@@ -267,7 +267,7 @@ def f1_boundarypyomo_local(params, model):
 
             ###constraint
             def f_off_lobound(model, q, s, k3, t, v, z, x, g3):
-                if pe.value(model.p_wyear_inc_qs[q, s]):
+                if pe.value(model.p_wyear_inc_qs[q, s]) and model.p_offs_lobound[k3,t,v,z,x,g3]!=0:
                     return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3]
                                for k5 in model.s_k5_birth_offs for a in model.s_wean_times for n3 in model.s_nut_offs
                                for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
@@ -314,7 +314,7 @@ def f1_boundarypyomo_local(params, model):
 
             ###constraint
             def f_off_upbound(model, q, s, k3, t, v, z, x, g3):
-                if pe.value(model.p_wyear_inc_qs[q, s]):
+                if pe.value(model.p_wyear_inc_qs[q, s]) and model.p_offs_upbound[k3,t,v,z,x,g3]<999999:
                     return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3]
                                for k5 in model.s_k5_birth_offs for a in model.s_wean_times for n3 in model.s_nut_offs
                                for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
@@ -324,6 +324,38 @@ def f1_boundarypyomo_local(params, model):
             model.con_offs_upbound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_sale_offs
                                                    , model.s_dvp_offs, model.s_season_types, model.s_gender, model.s_groups_offs
                                                    , rule=f_off_upbound, doc='max number of offs')
+
+
+        ##prog upper bound
+        if prog_upbound_inc:
+            '''
+            Upper bound prog.
+
+            The constraint sets can be changed for different analysis (this is preferred rather than creating 
+            a new upbound because that keeps this module smaller and easier to navigate etc).
+
+            Process to add/remove constraints sets:
+
+                a) add/remove the set from the constraint below (will also need to add/remove from the sum)
+                b) update empty array initialisation in sensitivity.py
+                c) update param creation in sgen (param index will need the set added/removed)
+            '''
+            ##set bound using SAV
+            model.p_prog_upbound = pe.Param(model.s_k3_damage_offs, model.s_sale_prog, model.s_gender,
+                                            model.s_groups_prog, default=0, initialize=params['stock']['p_prog_upbound'])
+
+            ###constraint
+            def f_prog_upbound(model, q, s, k3, t, x, g2):
+                if pe.value(model.p_wyear_inc_qs[q, s]) and model.p_prog_upbound[k3,t,x,g2]<999999:
+                    return sum(model.v_prog[q,s,k3,k5,t,w,z,i,a,x,g2]
+                               for k5 in model.s_k5_birth_offs for a in model.s_wean_times
+                               for w in model.s_lw_prog for z in model.s_season_types for i in model.s_tol
+                               ) <= model.p_prog_upbound[k3,t,x,g2]
+                else:
+                    return pe.Constraint.Skip
+            model.con_prog_upbound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs
+                                                   , model.s_sale_prog, model.s_gender, model.s_groups_prog
+                                                   , rule=f_prog_upbound, doc='max number of prog')
 
 
         ##total dams scanned. Sums mated dams in all scanning dvps
@@ -375,7 +407,6 @@ def f1_boundarypyomo_local(params, model):
 
         ##bound to fix the proportion of dams being mated - Proportion of mated dams relative to total dams
         ###this bound does not count the number of females that are transferred to offs.
-        #todo this causes sheep to become infeasible in the DSP model. Will need to revisit.
         ###build bound if turned on
         if bnd_propn_dams_mated_inc:
             ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
@@ -385,7 +416,7 @@ def f1_boundarypyomo_local(params, model):
             #todo add an i axis to the constraint
             def f_propn_dams_mated(model, q, s, v, z, g1):
                 if (model.p_prop_dams_mated[v,z,g1]==np.inf or not pe.value(model.p_wyear_inc_qs[q, s]) or
-                        all(model.p_mask_dams[k2,t,v,w8,z,g1] == 0 or v=='dv00'   #skip if DVP0 which is a non-mating period in o[0]
+                        all(model.p_mask_dams[k2,t,v,w8,z,g1] == 0
                             for k2 in model.s_k2_birth_dams for t in model.s_sale_dams for w8 in model.s_lw_dams)):
                     return pe.Constraint.Skip
                 else:
@@ -399,39 +430,6 @@ def f1_boundarypyomo_local(params, model):
                                if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1) * (1 - model.p_prop_dams_mated[v,z,g1])
             model.con_propn_dams_mated = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dvp_dams, model.s_season_types, model.s_groups_dams, rule=f_propn_dams_mated,
                                                        doc='proportion of dams mated')
-
-
-        ##bound to fix the proportion of females mated as ewe lambs - Proportion of mated relative to total females
-        ###includes the number of females that are transferred to offs or sold as suckers.
-        ###build bound if turned on
-        if bnd_propn_1yofemales_mated_inc:
-            ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
-            model.p_prop_1yofemales_mated = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_groups_dams
-                                                  , default=0, initialize=params['stock']['p_prop_1yofemales_mated'])
-            model.p_mask_prog = pe.Param(model.s_sale_prog, model.s_season_types, model.s_age_dams, model.s_gender
-                                         , model.s_groups_prog
-                                         , default=0, initialize=params['stock']['p_mask_prog'])
-
-            ###constraint
-            #todo add an i axis to the constraint
-            def f_propn_1yofemales_mated(model, q, s, z, g1):
-                if (model.p_prop_1yofemales_mated[z,g1]==np.inf or not pe.value(model.p_wyear_inc_qs[q, s]) or
-                        all(model.p_mask_dams[k2,t,'dv03',w8,z,g1] == 0
-                            for k2 in model.s_k2_birth_dams for t in model.s_sale_dams for w8 in model.s_lw_dams)):
-                    return pe.Constraint.Skip
-                else:
-                    return sum(model.v_dams[q,s,'11-0',t,'dv03',a,n,w8,z,i,y,g1] for t in model.s_sale_dams
-                               for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
-                               for i in model.s_tol for y in model.s_gen_merit_dams
-                               if pe.value(model.p_mask_dams['11-0',t,'dv03',w8,z,g1]) == 1
-                               ) == sum(model.v_prog[q,s,k3,k5,t2,w9,z,i9,a0,x,g1] * model.p_prop_1yofemales_mated[t2,z,d,x,g1,w9]
-                                        for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs
-                                        for a0 in model.s_wean_times for x in model.s_gender for w9 in model.s_lw_prog
-                                        for t2 in model.s_sale_prog for i9 in model.s_tol
-                                        if pe.value(model.p_mask_prog[t2,z,k3,x,g1]) == 1)
-            model.con_propn_1yofemales_mated = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dvp_dams
-                                                       , model.s_season_types, model.s_groups_dams
-                                                       , rule=f_propn_1yofemales_mated, doc='proportion of 1yo females mated')
 
         ##bound to fix the proportion of twice dry dams sold. Proportion of twice dry dams is an input in uinp ce[2, ....].
         ###build bound if turned on

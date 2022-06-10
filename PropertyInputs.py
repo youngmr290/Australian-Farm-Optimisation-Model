@@ -336,6 +336,7 @@ def f_property_inp_sa():
     ###sav
     saltbush['i_saltbush_inc'] = fun.f_sa(saltbush['i_saltbush_inc'], sen.sav['slp_inc'], 5)
     ###sam
+    saltbush['i_sb_expected_growth_zp6'] = fun.f_sa(saltbush['i_sb_expected_growth_zp6'], sen.sam['sb_growth'])
     ###sap
     ###saa
     ###sat
@@ -343,7 +344,7 @@ def f_property_inp_sa():
 
     ##pasture
     ###sav
-    general['pas_inc'] = fun.f_sa(general['pas_inc'], sen.sav['pas_inc'], 5)
+    general['pas_inc'] = fun.f_sa(general['pas_inc'], sen.sav['pas_inc_t'], 5)
 
     for pasture in sinp.general['pastures'][general['pas_inc']]: #all pasture inputs are adjusted even if a given pasture is not included
         ###sav
