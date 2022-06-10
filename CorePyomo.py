@@ -539,8 +539,8 @@ def f_con_link_understory_saltbush_consumption(model):
             return - slppy.f_saltbush_selection(model,q,s,z,p6,f) \
                    + sum(model.v_greenpas_ha[q, s, f, g, o, p6, l, z, 'understory'] * model.p_volume_grnha[f, g, o, p6, l, z, 'understory'] * model.p_sb_selectivity_zp6[z,p6]
                         for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
-                   + sum(model.v_drypas_consumed[q, s, f, d, p6, z, 'understory'] * model.p_dry_volume_t[f, d, p6, z, 'understory'] * model.p_sb_selectivity_zp6[z,p6]
-                         for d in model.s_dry_groups) == 0
+                   + sum(model.v_drypas_consumed[q, s, f, d, p6, z, l, 'understory'] * model.p_dry_volume_t[f, d, p6, z, 'understory'] * model.p_sb_selectivity_zp6[z,p6]
+                         for d in model.s_dry_groups for l in model.s_lmus) == 0
         else:
             return pe.Constraint.Skip
     model.con_link_understory_saltbush_consumption = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods,model.s_feed_pools,rule=link_us_sb,

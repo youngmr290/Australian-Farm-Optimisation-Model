@@ -790,8 +790,10 @@ def f_feed_reshape(lp_vars, r_vals):
     feed_vars['keys_fgop6lzt'] = [keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
     feed_vars['keys_gop6lzt'] = [keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
     feed_vars['keys_qsfdp6zt'] = [keys_q, keys_s, keys_f, keys_d, keys_p6, keys_z, keys_t]
+    feed_vars['keys_qsfdp6zlt'] = [keys_q, keys_s, keys_f, keys_d, keys_p6, keys_z, keys_l, keys_t]
     feed_vars['keys_fdp6zt'] = [keys_f, keys_d, keys_p6, keys_z, keys_t]
     feed_vars['keys_qsdp6zt'] = [keys_q, keys_s, keys_d, keys_p6, keys_z, keys_t]
+    feed_vars['keys_qsdp6zlt'] = [keys_q, keys_s, keys_d, keys_p6, keys_z, keys_l, keys_t]
     feed_vars['keys_dp6zt'] = [keys_d, keys_p6, keys_z, keys_t]
     feed_vars['keys_qsfp6lz'] = [keys_q, keys_s, keys_f, keys_p6, keys_l, keys_z]
     ###crop residue
@@ -809,7 +811,9 @@ def f_feed_reshape(lp_vars, r_vals):
     ###pasture
     qsfgop6lzt = len_q, len_s, len_f, len_g, len_o, len_p6, len_l, len_z, len_t
     qsfdp6zt = len_q, len_s, len_f, len_d, len_p6, len_z, len_t
+    qsfdp6zlt = len_q, len_s, len_f, len_d, len_p6, len_z, len_l, len_t
     qsdp6zt = len_q, len_s, len_d, len_p6, len_z, len_t
+    qsdp6zlt = len_q, len_s, len_d, len_p6, len_z, len_l, len_t
     qsfp6lz = len_q, len_s, len_f, len_p6, len_l, len_z
     ###residue
     qszp6fks1s2 = len_q, len_s, len_z, len_p6, len_f, len_k1, len_s1, len_s2
@@ -823,6 +827,7 @@ def f_feed_reshape(lp_vars, r_vals):
     maskz8_p6z = r_vals['pas']['mask_fp_z8var_p6z']
     maskz8_zp6 = maskz8_p6z.T
     maskz8_p6zna = maskz8_p6z[:,:,na]
+    maskz8_p6znana = maskz8_p6z[:,:,na,na]
     maskz8_p6naz = maskz8_p6z[:,na,:]
     maskz8_p6nazna = maskz8_p6z[:,na,:,na]
 
@@ -830,11 +835,11 @@ def f_feed_reshape(lp_vars, r_vals):
     ###green pasture hectare variable
     feed_vars['greenpas_ha_qsfgop6lzt'] = f_vars2np(lp_vars, 'v_greenpas_ha', qsfgop6lzt, maskz8_p6nazna, z_pos=-2)
     ###dry end period
-    feed_vars['drypas_transfer_qsdp6zt'] = f_vars2np(lp_vars, 'v_drypas_transfer', qsdp6zt, maskz8_p6zna, z_pos=-2)
+    feed_vars['drypas_transfer_qsdp6zlt'] = f_vars2np(lp_vars, 'v_drypas_transfer', qsdp6zlt, maskz8_p6znana, z_pos=-3)
     ###nap end period
     feed_vars['nap_transfer_qsdp6zt'] = f_vars2np(lp_vars, 'v_nap_transfer', qsdp6zt, maskz8_p6zna, z_pos=-2)
     ###dry consumed
-    feed_vars['drypas_consumed_qsfdp6zt'] = f_vars2np(lp_vars, 'v_drypas_consumed', qsfdp6zt, maskz8_p6zna, z_pos=-2)
+    feed_vars['drypas_consumed_qsfdp6zlt'] = f_vars2np(lp_vars, 'v_drypas_consumed', qsfdp6zlt, maskz8_p6znana, z_pos=-3)
     ###nap consumed
     feed_vars['nap_consumed_qsfdp6zt'] = f_vars2np(lp_vars, 'v_nap_consumed', qsfdp6zt, maskz8_p6zna, z_pos=-2)
     ###poc consumed
@@ -1619,12 +1624,12 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     ###dry pasture
     type = 'pas'
     prod = 'dry_mecons_t_fdp6zt'
-    na_prod = [0, 1]  # q,s
-    weights = 'drypas_consumed_qsfdp6zt'
-    keys = 'keys_qsfdp6zt'
+    na_prod = [0, 1, 6]  # q,s,l
+    weights = 'drypas_consumed_qsfdp6zlt'
+    keys = 'keys_qsfdp6zlt'
     arith = 2
     index = [0,1,5,4,2] #[q,s,z,p6,nv]
-    cols = [6] #t
+    cols = [7] #t
     dry_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                          keys=keys, arith=arith, index=index, cols=cols)
     dry_mei = pd.concat([dry_mei], keys=['Dry Pas'], axis=1)  # add feed type as header

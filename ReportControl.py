@@ -1056,8 +1056,8 @@ def f_report(processor, trials, non_exist_trials):
             #returns foo at end of each FP
             type = 'pas'
             prod = np.array([1000])
-            weights = 'drypas_transfer_qsdp6zt'
-            keys = 'keys_qsdp6zt'
+            weights = 'drypas_transfer_qsdp6zlt'
+            keys = 'keys_qsdp6zlt'
             arith = 2
             index =[3]
             cols =[2]
@@ -1111,11 +1111,11 @@ def f_report(processor, trials, non_exist_trials):
             #todo once this is change to per ha variable then change to report consumption per ha per day (same as grn pas)
             type = 'pas'
             prod = np.array([1])
-            weights = 'drypas_consumed_qsfdp6zt'
-            keys = 'keys_qsfdp6zt'
+            weights = 'drypas_consumed_qsfdp6zlt'
+            keys = 'keys_qsfdp6zlt'
             arith = 2
             index =[4]
-            cols =[3]
+            cols =[3,7] #d,t
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             drycon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
