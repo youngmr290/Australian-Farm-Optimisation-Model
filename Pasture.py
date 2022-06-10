@@ -309,7 +309,9 @@ def f_pasture(params, r_vals, nv):
 
         ###to handle different length rotation phases (ie simulation is shorter than pinp) the germ df needs to be sliced.
         offset = exceldata['GermPhases'].shape[-1] - len(phases_rotn_df.columns) - 1 #minus 1 because germ inputs has extra col
-        i_phase_germ_dict[pasture]      = pd.DataFrame(exceldata['GermPhases'][...,offset:])  #DataFrame with germ scalar and resown
+        ###to handle if there is only one rotation
+        exceldata['GermPhases'] = exceldata['GermPhases'][na,:] if exceldata['GermPhases'].ndim==1 else exceldata['GermPhases']
+        i_phase_germ_dict[pasture]      = pd.DataFrame(exceldata['GermPhases'][:,offset:])  #DataFrame with germ scalar and resown
         # i_phase_germ_dict[pasture].reset_index(inplace=True)                                # replace index read from Excel with numbers to match later merging
         # i_phase_germ_dict[pasture].columns.values[range(phase_len)] = [*range(phase_len)]   # replace the pasture columns read from Excel with numbers to match later merging
 
