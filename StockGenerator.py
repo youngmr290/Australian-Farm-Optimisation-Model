@@ -65,7 +65,7 @@ import Exceptions as exc
 # @profile
 def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = False):
     """
-    A function to wrap the generator and post processing that can be called by SheepPyomo.
+    A function to wrap the generator and post-processing that can be called by SheepPyomo.
 
     Called after the sensitivity variables have been updated.
     It populates the arrays by looping through the time periods
@@ -257,7 +257,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         len_w3 = stubble['dmd_pw'].shape[1]
 
     ##season nodes - dvp must be added for each node (fvp is optional)
-    date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0) #have to use this rather than season periods because season periods get cut down in SE model but we still might want all the season nodes as dvp/fvp.
+    date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0) #have to use this rather than season periods because season periods get cut down in SE model, but we still might want all the season nodes as dvp/fvp.
     date_node_zidaebxygm = fun.f_expand(date_node_zm, z_pos-1, right_pos=-1)
     len_m = date_node_zidaebxygm.shape[-1]
 
@@ -334,7 +334,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     p3g2 = (len_p3, len_gen_t1, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g2)
     p3g3 = (len_p3, len_gen_t3, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
 
-    ###special one to initilise variables for the generator that are only used for some functions (but are required to have correct shape for condensing)
+    ###special one to initialise variables for the generator that are only used for some functions (but are required to have correct shape for condensing)
     tag1 = (len_gen_t1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
 
     ##output variables for postprocessing & reporting
@@ -456,8 +456,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     woolvalue_c1tpa1e1b1nwzida0e0b0xyg3 = np.zeros((len_c1,)+(len_t3,)+tpg3[1:], dtype =dtype)
     salevalue_c1tpa1e1b1nwzida0e0b0xyg3 = np.zeros(c1tpg3, dtype =dtype)
     ###array for postprocessing
-    o_numbers_start_tpoffs = np.zeros(tpg3, dtype =dtype) # ones so that dvp0 (p0) has start numbers.
-    o_numbers_end_tpoffs = np.zeros(tpg3, dtype =dtype) #ones so that transfer can exist for dvps before weaning
+    o_numbers_start_tpoffs = np.zeros(tpg3, dtype =dtype) # todo is this comment out of date or is the code wrong?  # ones so that dvp0 (p0) has start numbers.
+    o_numbers_end_tpoffs = np.zeros(tpg3, dtype =dtype) #todo is this comment out of date?  #ones so that transfer can exist for dvps before weaning
     o_ffcfw_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_ffcfw_season_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_ffcfw_condensed_tpoffs = np.zeros(tpg3, dtype =dtype)
@@ -521,16 +521,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##association between offspring and sire/dam (used to determine the wean age of sire and dams based on the inputted wean age of offs)
     a_g0_g1 = pinp.sheep['ia_g0_g1'][mask_dams_inc_g1]
     a_g3_g0 = pinp.sheep['ia_g3_g0'][mask_sire_inc_g0]   # the sire association (pure bred B, M & T) are all based on purebred B because there are no pure bred M & T inputs
-    a_g3_g1 = pinp.sheep['ia_g3_g1'][mask_dams_inc_g1]   # if BMT exist then BBM exist and they will be in slice 1, therefore the association value doesn't need to be adjusted for "prior exclusions"
+    a_g3_g1 = pinp.sheep['ia_g3_g1'][mask_dams_inc_g1]   # if BMT exist then BBM exist, and they will be in slice 1, therefore the association value doesn't need to be adjusted for "prior exclusions"
 
     ##age weaning- used to calc wean date and also to calc p1 stuff, sire and dams have no active a0 slice therefore just take the first slice
-    ###note: if age_wean_g3 gets a d axis it need to be the same for all animals that get clustered (see date born below)
+    ###note: if age_wean_g3 gets a d axis it needs to be the same for all animals that get clustered (see date born below)
     age_wean1st_a0e0b0xyg3 = fun.f_expand(pinp.sheep['i_age_wean_a0g3'], a0_pos, right_pos=g_pos, condition=mask_offs_inc_g3,
                                          axis=g_pos, condition2=pinp.sheep['i_mask_a'], axis2=a0_pos)
     age_wean1st_e0b0xyg0 = np.rollaxis(age_wean1st_a0e0b0xyg3[0, ...,a_g3_g0],0,age_wean1st_a0e0b0xyg3.ndim-1) #when you slice one slice of the array and also take multiple slices from another axis the axis with multiple slices jumps to the front therefore need to roll the g axis back to the end
     age_wean1st_e0b0xyg1 = np.rollaxis(age_wean1st_a0e0b0xyg3[0, ...,a_g3_g1],0,age_wean1st_a0e0b0xyg3.ndim-1) #when you slice one slice of the array and also take multiple slices from another axis the axis with multiple slices jumps to the front therefore need to roll the g axis back to the end
 
-    ##date first lamb is born - need to apply i mask to these inputs - make sure animals are born at beginning of gen period
+    ##date first lamb is born - need to apply 'i' mask to these inputs - make sure animals are born at beginning of gen period
     date_born1st_ida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_date_born1st_ig0'], i_pos, right_pos=g_pos, condition=mask_sire_inc_g0,
                                             axis=g_pos, condition2=pinp.sheep['i_masksire_i'], axis2=i_pos)
     date_born1st_ida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_date_born1st_ig1'], i_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
@@ -606,7 +606,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##association for the retained t of each g slice
     a_t_g1 = np.arange(pinp.sheep['i_n_dam_sales'], pinp.sheep['i_n_dam_sales']+len_g1)
     a_t_tpg1 = fun.f_expand(a_t_g1, p_pos - 2, right_pos=-1)
-    a_t_g3 = np.array([0]) #g axis doesnt affect t for offs
+    a_t_g3 = np.array([0]) #g axis doesn't affect t for offs
 
     ##convert input params from c to g
     ###production params
@@ -5335,7 +5335,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     on_hand_tpa1e1b1nwzida0e0b0xyg3 = np.logical_not(off_hand_tpa1e1b1nwzida0e0b0xyg3)
     ###period is sale - one true per dvp when sale actually occurs - sale occurs in the period where sheep were on hand at the beginning and not on hand at the beginning of the next period
     period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(on_hand_tpa1e1b1nwzida0e0b0xyg3==True, np.roll(on_hand_tpa1e1b1nwzida0e0b0xyg3,-1,axis=1)==False)
-    ###make the last period in a dvp sale if no sale has occured previously in the dvp (this doesnt affect on_hand because animals are on hand in the period they are sold and the next period is a new dvp)
+    ###make the last period in a dvp sale if no sale has occurred previously in the dvp (this doesn't effect on_hand because animals are on hand in the period they are sold and the next period is a new dvp)
     period_is_enddvp_pa1e1b1nwzida0e0b0xyg3 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg3, shift=-1, axis=0)
     period_is_sale_enddvp_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_enddvp_pa1e1b1nwzida0e0b0xyg3, on_hand_tpa1e1b1nwzida0e0b0xyg3)
     period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, period_is_sale_enddvp_tpa1e1b1nwzida0e0b0xyg3)
