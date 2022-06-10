@@ -872,7 +872,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fvp_scan_start_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
 
     ## lactation fvp start - average date of lambing (with e axis if scanning/managing e differentially) (already adjusted to start of gen period)
-    fvp_birth_start_oa1e1b1nwzida0e0b0xyg1 = date_born_oa1e1b1nwzida0e0b0xyg2.copy()+step #birth dvp needs to start the period after birth because numbers start needs to reflect the birth status (numbers start doesnt update until the period after birth)
+    fvp_birth_start_oa1e1b1nwzida0e0b0xyg1 = date_born_oa1e1b1nwzida0e0b0xyg2.copy()+step #birth dvp needs to start the period after birth because numbers start needs to reflect the birth status (numbers start doesn't update until the period after birth)
     ### birth fvp/dvp must be the same when e axis is clustered (otherwise something goes wrong in the pp/matrix).
     t_fvp_birth_start_oa1e1b1nwzida0e0b0xyg1 = fvp_birth_start_oa1e1b1nwzida0e0b0xyg1.copy()
     t_fvp_birth_start_oa1e1b1nwzida0e0b0xyg1[...] = fvp_birth_start_oa1e1b1nwzida0e0b0xyg1[:,:,-1:,...] #needs to be the final e slice so that all e slices have lambed when new dvp starts.
@@ -883,7 +883,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##weaning (already adjusted to start of gen period)
     fvp_wean_start_oa1e1b1nwzida0e0b0xyg1 = date_weaned_oa1e1b1nwzida0e0b0xyg2
 
-    ##user defined fvp - rounded to nearest sim period
+    ##user defined fvp - rounded to the nearest sim period
     fvp_other_yi = sinp.structuralsa['i_fvp4_date_i'] + np.arange(np.ceil(sim_years))[:,na] * 364
     fvp_other_ya1e1b1nwzida0e0b0xyg = fun.f_expand(fvp_other_yi, left_pos=i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
     idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, fvp_other_ya1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the period when season breaks (e.g. break of season fvp starts at the beginning of the sim period when season breaks), side=right so that if the date is already the start of a period it remains in that period.
@@ -1111,7 +1111,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     4. season start must be in the same v slice across all z axis because the weighted average needs all season starts to be in same v.
     5. condense and season start cant clash (unless they have the same vtype).
     
-    Nothing garentees that the order of other dvps are the same e.g. for z1 weaning dvp could be before summer node dvp
+    Nothing guarantees that the order of other dvps are the same e.g. for z1 weaning dvp could be before summer node dvp
     but for z2 weaning dvp could be after summer node dvp. However, it is probably not that likely that
     dvps will be in a different order because most dvp dates are the same or similar across axes.
     '''
@@ -1277,7 +1277,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     gbal_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(gbal_oa1e1b1nwzida0e0b0xyg1, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     scan_option_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 
-    ##drys management, actual value for the Bounds and an estimate for the generator (dont use bound to control generator otherwise introduce randomness)
+    ##drys management, actual value for the Bounds and an estimate for the generator (don't use bound to control generator otherwise introduce randomness)
     dry_retained_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_retained_oa1e1b1nwzida0e0b0xyg1
                                                              , a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(est_drys_retained_scan_oa1e1b1nwzida0e0b0xyg1
@@ -1351,7 +1351,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###sire ^not required because sires only have 1 fvp and 1 n slice
     # a_n_pa1e1b1nwzida0e0b0xyg0 = (np.trunc(index_wzida0e0b0xyg0 / (n_fs_sire ** ((n_fvp_periods_g0-1) - fvp_type_pa1e1b1nwzida0e0b0xyg0))) % n_fs_sire).astype(int) #needs to be int so it can be an indice
     ###dams
-    ####for dams period is condense is the same as period is prejoin atm but it is designed so it can be different (the lw_distribution will just need to be updated)
+    ####for dams period_is_condense is the same as period_is_prejoin atm, but it is designed so it can be different (the lw_distribution will just need to be updated)
     period_is_condense_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_condensing_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
     period_is_startfvp_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', fvp_date_start_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     n_cum_fvps_pa1e1b1nwzida0e0b0xyg1 = np.cumsum(period_is_startfvp_pa1e1b1nwzida0e0b0xyg1, axis=0)
@@ -1390,7 +1390,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##genotype calculations   #
     ###########################
     ##calc proportion of dry, singles, twin and triplets based on the genotype as born.
-    ###eg. BBM dams are based on BBB scanning and BBB survival. BBM offspring are based on BBB scanning and BBM survival
+    ###e.g. BBM dams are based on BBB scanning and BBB survival. BBM offspring are based on BBB scanning and BBM survival
     ###calculated without saa['rr_age']. These calculations do not include a 'p' axis because it is one value for all the initial animals
     dstwtr_l0yg0 = np.moveaxis(sfun.f1_DSTw(scan_std_yg0), -1, 0) #todo add crg_doy_ltw scalar to alter scan_std by TOL
     dstwtr_l0yg1 = np.moveaxis(sfun.f1_DSTw(scan_std_yg1), -1, 0)
@@ -1712,7 +1712,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     age_pa1e1b1nwzida0e0b0xyg2 = (age_start_pa1e1b1nwzida0e0b0xyg2 + age_end_pa1e1b1nwzida0e0b0xyg2 +1) /2
     age_pa1e1b1nwzida0e0b0xyg3 = (age_start_pa1e1b1nwzida0e0b0xyg3 + age_end_pa1e1b1nwzida0e0b0xyg3 +1) /2
 
-    ##days in each period for each animal - cant mask the offs p axis because need full axis so it can be used in the generator (if days_period[p] > 0)
+    ##days in each period for each animal - can't mask the offs p axis because need full axis so it can be used in the generator (if days_period[p] > 0)
     days_period_pa1e1b1nwzida0e0b0xyg0 = age_end_pa1e1b1nwzida0e0b0xyg0 +1 - age_start_pa1e1b1nwzida0e0b0xyg0
     days_period_pa1e1b1nwzida0e0b0xyg1 = age_end_pa1e1b1nwzida0e0b0xyg1 +1 - age_start_pa1e1b1nwzida0e0b0xyg1
     days_period_pa1e1b1nwzida0e0b0xyg2 = age_end_pa1e1b1nwzida0e0b0xyg2 +1 - age_start_pa1e1b1nwzida0e0b0xyg2
@@ -1732,7 +1732,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ############################
     ### Daily steps            #
     ############################
-    ##definition for this is that the action e.g. weaning occurs at 12am on the given date. therefore if weaning occurs on day 150 the lambs are counted as weaned lambs on that day.
+    ##definition for this is that the action e.g. weaning, occurs at 12am on the given date. Therefore, if weaning occurs on day 150 the lambs are counted as weaned lambs on that day.
     ##This info determines the side with > or >=
 
 
@@ -2083,7 +2083,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     a_mgt_pa1e1b1nwzida0e0b0xyg1[period_between_scanbirth_mask] = 1 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is not used in V1 but would be post wean
     a_mgt_pa1e1b1nwzida0e0b0xyg1[period_between_birthwean_mask] = 2 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is not used in V1 but would be post wean
 
-    ###dams management in each period based on scanning detail, time of the year (even if you are scanning you cant manage sheep differently before scanning) and management (you can scan and then not differentially manage)
+    ###dams management in each period based on scanning detail, time of the year (even if you are scanning you can't manage sheep differently before scanning) and management (you can scan and then not differentially manage)
     scan_management_pa1e1b1nwzida0e0b0xyg1 = (scan_option_pa1e1b1nwzida0e0b0xyg1) * (a_mgt_pa1e1b1nwzida0e0b0xyg1 >= 1) * pinp.sheep['i_dam_lsln_diffman_t'][1]
     gbal_management_pa1e1b1nwzida0e0b0xyg1 = (gbal_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_mgt_pa1e1b1nwzida0e0b0xyg1 >= 2) * pinp.sheep['i_dam_lsln_diffman_t'][2] + 1  #minus 1 then plus 1 ensures that the wean option before lactation is 1
     wean_management_pa1e1b1nwzida0e0b0xyg1 = (wean_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_mgt_pa1e1b1nwzida0e0b0xyg1 >= 3) * pinp.sheep['i_dam_lsln_diffman_t'][3] + 1  #minus 1 then plus 1 ensures that the wean option before weaning is 1
@@ -2161,7 +2161,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             # loop_ltw_len = max(loop_ltw_len, 2)
 
     ##Turn off ltw loop if:
-        ## If both dams & offs are not used (ie LTW_? == 0) then don't loop.
+        ## If both dams & offs are not used (i.e. LTW_? == 0) then don't loop.
         ## If generating for stubble then don't loop because only running a few periods so no lifetime information is known.
     if (sen.sam['LTW_dams'] == 0 and sen.sam['LTW_offs'] == 0) or stubble:
         loop_ltw_len = 1
@@ -2181,7 +2181,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         ### initialise arrays for sim loop  # axis names not always track from now on because they change between p=0 and p=1
         ####################################
         ##apply the LTW adjustment sensitivity - only plus 1 for sfw
-        ## apply at the top of the loop so that the values that get pickled dont include the sam (incase sam changes between trials)
+        ## apply at the top of the loop so that the values that get pickled don't include the sam (incase sam changes between trials)
         sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 * sen.sam['LTW_dams']
         sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 * sen.sam['LTW_dams']
         sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 = 1 + sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3 * sen.sam['LTW_offs']
@@ -6577,7 +6577,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###########################
     '''
     Similar to benchmarking we have a 'Livestock Trading Profit' concept. This is required because when using the DSP
-    stock numbers are averaged at the begining of the each sesaon. Thus essentially the poor season (with less stock numbers)
+    stock numbers are averaged at the beginning of the each season. Thus essentially the poor season (with less stock numbers)
     buys some stock from the good season. This is not reflected as a cash transaction and doesnt effect profit
     but when using risk aversion the model opts to sell more sheep in the poor year when the utility is higher. This gives the
     appearance that risk is being lowered but the bit that is not captured is that at the start of the season
@@ -6612,7 +6612,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[2] * (index_tva1e1b1nw8zida0e0b0xyg3==0) #only retained animals have an end value (animals that are sold dont have a value)
     assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 - start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3
 
-    ##if steady state set eveything to 0 - there is no "season start" in SE model so there is no opportunity for trade between seasons
+    ##if steady state set everything to 0 - there is no "season start" in SE model so there is no opportunity for trade between seasons
     if bool_steady_state:
         ###sire
         start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0[...] = 0
@@ -6679,7 +6679,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###combine nm and 00 cluster (so matrix can optimise choice of joining or not). DVP type of destination is always 0 for the "provide this period" so don't need to test
     numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = np.sum(numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
     ###combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
-    #^can't just sum across the a slice (decision variable) so allow a0 to provide a1 we will need another a axis (see google doc) - fix this in version 2
+    #^can't just sum across the 'a' slice (decision variable), to allow a0 to provide a1 we will need another 'a' axis (see google doc) - fix this in version 2
     # temporary = np.sum(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=a1_pos-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
     # numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...,na] == 0) #take slice 0 of e (for prejoining all e slices are the same
 
@@ -6705,7 +6705,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary,
                                                                         dvp_type_va1e1b1nwzida0e0b0xyg1[:, :, 0:1, ..., na,na] == prejoin_vtype1)  #take slice 0 of e (for prejoining all e slices are the same)
     ####combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
-    #^can't just sum across the a slice (decision variable) so allow a0 to provide a1 we will need another a axis (see google doc)
+    #^can't just sum across the 'a' slice (decision variable), to allow a0 to provide a1 we will need another 'a' axis (see google doc)
     # temporary = np.sum(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=a1_pos-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
     # numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary, dvp_type_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na] == 0) #take slice 0 of e (for prejoining all e slices are the same
 
@@ -6742,7 +6742,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     '''yatf are first transferred to progeny activity then they are either sold as sucker, transferred to dam or transferred to offs.
     yatf have a t axis due to the dams feedsupply. This t axis is removed and replaced with the prog t axis.
     
-    Prog can be clustered without losing lw info because the distrubutions (prog2 and yatf2prog) are done with
+    Prog can be clustered without losing lw info because the distributions (prog2 and yatf2prog) are done with
     active e&b axes.
     Clustering means the model can only differentially manage based on LW. If the model scans then it can differentially
     manage based on BTRT.    
@@ -7141,14 +7141,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #############################################
     #weaning %, scan % and lamb survival reports#
     #############################################
-    ##The inverse (1/(rmated/start) == start/rmated) of the number of ewes mated as a proportion of the number of ewes at the start of the DVP (accounts for mortality)
+    ##The inverse (1/(r_n_mated/start) == start/r_n_mated) of the number of ewes mated as a proportion of the number of ewes at the start of the DVP (accounts for mortality)
     ### Note: the sum across the a1, e1, b1 & y axes is a single starting animal. Each slice of the other axes are single animals
     ### Can't call f1_create_production_param() because don't want to cluster r_n_mated_tvg1
     ### Inverse because number of ewes mated is the denominator of the reproduction calculations
     #todo at some point we might want repro reports that don't cluster the e & b axes so that repro of multiple in a clustered mob can be reported
     # This will require having another version of the following variables that are not clustered & different maths in ReportFunction.py
     mask_sliced = fun.f_dynamic_slice(mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1
-                                      , e1_pos, 0 ,1) #slice e[0] because dont want to add e axis to rnmated
+                                      , e1_pos, 0 ,1) #slice e[0] because don't want to add e axis to rnmated
     r_n_mated_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.sum(numbers_start_tva1e1b1nwzida0e0b0xyg1
                         * mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1
                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)
@@ -7288,11 +7288,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     days_p6z = per.f_feed_periods(option=1)
     days_p6_p6tva1e1b1nwzida0e0b0xyg = fun.f_expand(days_p6z, z_pos,  left_pos2=p_pos-2, right_pos2=z_pos)
     ###DSE based on MJ/d
-    ####returns the average mj/d for each animal for the each feed period (mei accounts for if the animal is on hand - if the animal is sold the average mei/d will be lower in that dvp)
+    ####returns the average mj/d for each animal for each feed period (mei accounts for if the animal is on hand - if the animal is sold the average mei/d will be lower in that dvp)
     mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 = fun.f_divide(mei_p6ftva1e1b1nwzida0e0b0xyg0, days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...])
     mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 = fun.f_divide(mei_k2p6ftva1e1b1nwzida0e0b0xyg1, days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...])
     mj_ave_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = fun.f_divide(mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3, days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...])
-    ####returns the number of dse of each animal in each dvp - this is combined with the variable numbers in reporting to get the total dse
+    ####returns the number of dse of each animal in each dvp - this is combined with the variable numbers when reporting, to get the total dse
     # note: sires have a single long DVP and are on-hand for multiple years. Therefore, mj_ave is higher (because the decision variable is representing multiple sires)
     dsemj_p6tva1e1b1nwzida0e0b0xyg0 = np.sum(mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 / pinp.sheep['i_dse_mj'], axis = 1)
     dsemj_k2p6tva1e1b1nwzida0e0b0xyg1 = np.sum(mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 / pinp.sheep['i_dse_mj'], axis = 2)
