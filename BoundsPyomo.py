@@ -128,6 +128,8 @@ def f1_boundarypyomo_local(params, model):
             def sb_upper_bound(model, q, s, z, p6, l):
                 if pe.value(model.p_wyear_inc_qs[q, s]) and sb_max_consumption_p6[p6] != 999999:
                     return sum(model.v_tonnes_sb_consumed[q,s,z,p6,f,l] for f in model.s_feed_pools) <= sb_max_consumption_p6[p6]
+                else:
+                    return pe.Constraint.Skip
             model.con_sb_upper_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods,
                                                      model.s_lmus, rule=sb_upper_bound, doc='upper bound for livestock sb consumption')
 
@@ -138,6 +140,8 @@ def f1_boundarypyomo_local(params, model):
                 if pe.value(model.p_wyear_inc_qs[q, s]):
                     return sum(model.v_sup_con[q,s,z,k,g,f,p6] for k in model.s_crops for g in model.s_grain_pools for f in model.s_feed_pools
                     for p6 in model.s_feed_periods) >= 115
+                else:
+                    return pe.Constraint.Skip
             model.con_sup_lo_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=sup_lo_bound, doc='lo bound for livestock sup feed')
 
 
