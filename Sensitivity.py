@@ -99,6 +99,8 @@ sam_inp['grn_dmd_range_f','annual']         = np.ones(len(pinp.period['i_fp_idx'
 sam_inp['grn_dmd_range_f','understory']         = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on range in digestibility of green feed
 sam_inp['grn_dmd_senesce_f','annual']       = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
 sam_inp['grn_dmd_senesce_f','understory']       = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
+sam_inp['dry_dmd_eogs','annual']       = 1.0  # SA multiplier on dry feed quality at the start of dry period.
+sam_inp['dry_dmd_eogs','understory']       = 1.0  # SA multiplier on dry feed quality at the start of dry period.
 sam_inp['conservation_limit_f','annual']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for the conservation limit in each feed period
 sam_inp['conservation_limit_f','understory']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for the conservation limit in each feed period
 
