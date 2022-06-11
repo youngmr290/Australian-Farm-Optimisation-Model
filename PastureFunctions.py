@@ -125,20 +125,20 @@ def f_germination(i_germination_std_zt, i_germ_scalar_lzt, i_germ_scalar_p6zt
 
     ## germination on the non arable area is the maximum germination across phases (continuous pasture) for the first pasture type (annuals)
     ### todo a potential error here when if the allocation of germination across periods varies by rotation phase (because taking max of each period)
-    max_germination_flz = np.max(arable_germination_p6lrzt[..., 0], axis=2)  #use germination_p6lrzt because it includes any sensitivity that is carried out
+    max_germination_flzt = np.max(arable_germination_p6lrzt, axis=2)  #use germination_p6lrzt because it includes any sensitivity that is carried out
 
     ## germination on the non arable area of pasture paddocks. Grows pasture type 0 that can be grazed during the growing season
-    na_germination_flrz = max_germination_flz[..., na, :] * np.any(pasture_rt[:, na, :], axis = -1)
+    na_germination_flrz = max_germination_flzt[..., na, :, 0] * np.any(pasture_rt[:, na, :], axis = -1)
     ## set germination in first period to germination on arable area
     germination_p6lrzt = arable_germination_p6lrzt * arable_l[:, na, na, na]
     ## add germination on the non-arable area to the first pasture type
     germination_p6lrzt[..., 0] += na_germination_flrz * (1 - arable_l[:,na,na])
-    return germination_p6lrzt, max_germination_flz
+    return germination_p6lrzt, max_germination_flzt
 
 def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restock_grn_propn_t, resown_rt
                 , feed_period_dates_fz, i_restock_fooscalar_lt, i_restock_foo_arable_t, dry_decay_period_p6zt
                 , i_fxg_foo_op6lzt, c_fxg_a_op6lzt, c_fxg_b_op6lzt, i_grn_senesce_eos_p6zt
-                , grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, max_germination_flz
+                , grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, max_germination_flzt
                 , length_fz, n_feed_periods, p6lrzt, p6zt, t_idx, z_idx, l_idx):
     '''
     Generates the green & dry FOO that is lost and gained from reseeding pasture.
@@ -164,7 +164,7 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     :param i_grn_senesce_eos_p6zt: proportion of green feed that senesces in period (due to a water deficit or completing life cycle).
     :param grn_senesce_startfoo_p6zt: proportion of start foo that senesces during the period (due to leaf drop).
     :param grn_senesce_pgrcons_p6zt: change of senescence over the period (due to growth and consumption).
-    :param max_germination_flz: maximum germination of annual pasture across all rotations.
+    :param max_germination_flzt: maximum germination of annual pasture across all rotations.
     :return: Change in FOO due to reseeding pasture.
     '''
     #todo test the calculation of FOO on the resown area when the full set of rotation phases is included
@@ -203,7 +203,7 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     period_zt, proportion_zt = fun.period_proportion_np(feed_period_dates_fz[...,na], i_restock_date_zt)
 
     ### germination during destocked period (this is the germination of pasture type 1 but it includes a t axis because the destocked period can vary with pasture type)
-    germination_destocked_p6lzt = max_germination_flz[..., na] * periods_destocked_p6zt[:, na, ...]
+    germination_destocked_p6lzt = max_germination_flzt[...,0:1] * periods_destocked_p6zt[:, na, ...] #slice t for annual because annual pasture is on non-arable area
 
     ### Calculate the FOO profile on the non arable area from destocking through to restocking
     ### green FOO to start the profile is FOO at destocking plus germination that occurs during the destocking period
@@ -226,6 +226,7 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     t_grn_senesce_pgrcons_p6zt[...] = grn_senesce_pgrcons_p6zt[..., 0:1]
 
     ###FOO at the end of the destocked period is calculated from the FOO profile from destocking to restocking
+    #todo should these names should have na in them (because they are non arable)?
     grn_restock_foo_p6lzt, dry_restock_foo_p6lzt = f1_calc_foo_profile(grn_foo_na_initial_p6lzt  # axes are aligned in the function
                                                                      , t_dry_decay_period_p6zt
                                                                      , days_each_period_p6zt
