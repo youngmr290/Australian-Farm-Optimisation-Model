@@ -2069,8 +2069,15 @@ def f1_condition_score(rc_tpg, cu0):
 
 
 #todo needs updating - currently just a copy of the cs function
-def f1_fat_score(rc, cu0):
-    return np.maximum(1, 3 + (rc - 1) / cu0[1, ...]) #FS 1 is the lowest possible measurement. FS1 is between 0 and 5mm of tissue at the GR site.
+def f1_fat_score(rc_tpg, cu0):
+    ''' Calculate fat score from relative condition using relationship from van Burgel et al. 2011.
+    Steps 1. calculate CS
+          2. estimate GR tissue depth using relationship from van Burgel CS = 2.5 + 0.06 GR
+          3. convert to fat score. FS1 = <5mm, FS2 6-10mm, FS3 11-15mm, FS4 16-20mm, FS5 >21mm'''
+    condition_score = f1_condition_score(rc_tpg, cu0)
+    gr_depth = np.maximum(0, (condition_score - 2.5) / 0.06)
+    fat_score = np.clip(np.trunc(np.trunc(gr_depth + 4)/5), 1, 5) #FS 1 is the lowest possible measurement.
+    return fat_score
 
 
 def f1_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None):
