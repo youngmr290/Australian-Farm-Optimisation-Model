@@ -36,10 +36,10 @@ def f1_saltbushpyomo_local(params,model):
                                           doc='tonnes of crop consumed by livestock in a p6 that was sown in a p5 (p5 axis tracks when the crop being grazed was sown)')
 
     model.v_tonnes_sb_consumed = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods,
-                                        model.s_feed_pools,bounds=(0,None),
+                                        model.s_feed_pools, model.s_lmus,bounds=(0,None),
                                         doc='tonnes of saltbush consumed by livestock in a p6')
 
-    model.v_tonnes_sb_transfer = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods,
+    model.v_tonnes_sb_transfer = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods, model.s_lmus,
                                           bounds=(0,None), doc='tonnes of saltbush DM transferred to next feed period')
 
     #########
@@ -113,18 +113,17 @@ def f_con_saltbush_within(model):
     '''
     ##convert feed period set to a list so it can be indexed
     l_fp = list(model.s_feed_periods)
-    def saltbush_foo(model,q,s,z9,p6):
+    def saltbush_foo(model,q,s,z9,p6,l):
         p6_prev = l_fp[l_fp.index(p6) - 1] #need the activity level from last feed period
         if pe.value(model.p_wyear_inc_qs[q,s]) and pe.value(model.p_mask_childz_within_fp[p6,z9]) and pinp.saltbush['i_saltbush_inc']:
-            return - sum(model.v_slp_ha[q,s,z9,l] * model.p_max_growth_per_ha[z9,p6,l]
-                         for l in model.s_lmus if pe.value(model.p_max_growth_per_ha[z9,p6,l])!=0)         \
-                    - sum(model.v_tonnes_sb_transfer[q,s,z8,p6_prev] * model.p_sb_transfer_provide[z8,p6_prev]
+            return - model.v_slp_ha[q,s,z9,l] * model.p_max_growth_per_ha[z9,p6,l] \
+                    - sum(model.v_tonnes_sb_transfer[q,s,z8,p6_prev,l] * model.p_sb_transfer_provide[z8,p6_prev]
                           * model.p_parentz_provwithin_fp[p6_prev,z8,z9] for z8 in model.s_season_types)  \
-                    + sum(model.v_tonnes_sb_consumed[q,s,z9,p6,f] * 1000 for f in model.s_feed_pools)     \
-                    + model.v_tonnes_sb_transfer[q,s,z9,p6] * 1000 <=0
+                    + sum(model.v_tonnes_sb_consumed[q,s,z9,p6,f,l] * 1000 for f in model.s_feed_pools)     \
+                    + model.v_tonnes_sb_transfer[q,s,z9,p6,l] * 1000 <=0
         else:
             return pe.Constraint.Skip
-    model.con_saltbush_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods,
+    model.con_saltbush_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods, model.s_lmus,
                                               rule=saltbush_foo, doc='Within seasons - saltbush feed available in each feed period')
 
 def f_con_saltbush_between(model):
@@ -134,22 +133,21 @@ def f_con_saltbush_between(model):
     '''
     ##convert feed period set to a list so it can be indexed
     l_fp = list(model.s_feed_periods)
-    def saltbush_foo(model,q,s9,z9,p6):
+    def saltbush_foo(model,q,s9,z9,p6,l):
         p6_prev = l_fp[l_fp.index(p6) - 1] #need the activity level from last feed period
         q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
         if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_childz_between_fp[p6,z9]) and pinp.saltbush['i_saltbush_inc']:
-            return - sum(model.v_slp_ha[q,s9,z9,l] * model.p_max_growth_per_ha[z9,p6,l]
-                         for l in model.s_lmus if pe.value(model.p_max_growth_per_ha[z9,p6,l])!=0)         \
-                    - sum(model.v_tonnes_sb_transfer[q,s8,z8,p6_prev] * model.p_sb_transfer_provide[z8,p6_prev]
-                          * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
-                          + model.v_tonnes_sb_transfer[q,s8,z8,p6_prev] * model.p_sb_transfer_provide[z8,p6_prev]
-                          * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
-                          for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)  \
-                    + sum(model.v_tonnes_sb_consumed[q,s9,z9,p6,f] * 1000 for f in model.s_feed_pools)     \
-                    + model.v_tonnes_sb_transfer[q,s9,z9,p6] * 1000 <=0
+            return - model.v_slp_ha[q,s9,z9,l] * model.p_max_growth_per_ha[z9,p6,l]  \
+                   - sum(model.v_tonnes_sb_transfer[q,s8,z8,p6_prev,l] * model.p_sb_transfer_provide[z8,p6_prev]
+                         * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
+                         + model.v_tonnes_sb_transfer[q,s8,z8,p6_prev,l] * model.p_sb_transfer_provide[z8,p6_prev]
+                         * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
+                         for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)  \
+                   + sum(model.v_tonnes_sb_consumed[q,s9,z9,p6,f,l] * 1000 for f in model.s_feed_pools)     \
+                   + model.v_tonnes_sb_transfer[q,s9,z9,p6,l] * 1000 <=0
         else:
             return pe.Constraint.Skip
-    model.con_saltbush_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods,
+    model.con_saltbush_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods, model.s_lmus,
                                               rule=saltbush_foo, doc='between seasons - saltbush feed available in each feed period')
 
 
@@ -181,7 +179,7 @@ def f_saltbush_me(model,q,s,z,p6,f):
     Used in global constraint (con_me). See CorePyomo
     '''
     if pinp.saltbush['i_saltbush_inc']:
-        return model.v_tonnes_sb_consumed[q,s,z,p6,f] * model.p_sb_md[z,p6,f]
+        return sum(model.v_tonnes_sb_consumed[q,s,z,p6,f,l] * model.p_sb_md[z,p6,f] for l in model.s_lmus)
     else:
         return 0
 
@@ -192,18 +190,18 @@ def f_saltbush_vol(model,q,s,z,p6,f):
     Used in global constraint (con_vol). See CorePyomo
     '''
     if pinp.saltbush['i_saltbush_inc']:
-        return model.v_tonnes_sb_consumed[q,s,z,p6,f] * model.p_sb_vol[z,p6,f]
+        return sum(model.v_tonnes_sb_consumed[q,s,z,p6,f,l] * model.p_sb_vol[z,p6,f] for l in model.s_lmus)
     else:
         return 0
 
-def f_saltbush_selection(model,q,s,z,p6,f):
+def f_saltbush_selection(model,q,s,z,p6,f,l):
     '''
     Calculate the amount of understory required to consume 1t of saltbush in each feed period (this is based on the
     animals diet selection which changes during the year)
 
     Used in global constraint (con_link_understory_saltbush_consumption). See CorePyomo
     '''
-    return model.v_tonnes_sb_consumed[q,s,z,p6,f] * model.p_sb_vol[z,p6,f] * (1-model.p_sb_selectivity_zp6[z,p6])
+    return model.v_tonnes_sb_consumed[q,s,z,p6,f,l] * model.p_sb_vol[z,p6,f] * (1-model.p_sb_selectivity_zp6[z,p6])
 
 
 

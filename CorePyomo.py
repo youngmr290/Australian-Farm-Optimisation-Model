@@ -534,17 +534,18 @@ def f_con_link_understory_saltbush_consumption(model):
     Constrains the consumption of understory and saltbush based on the estimated diet selection of animals grazing
     salt land pasture. Saltbush info comes from saltbushpyomo and understory comes from pasturepyomo.
     '''
-    def link_us_sb(model,q,s,z,p6,f):
+    def link_us_sb(model,q,s,z,p6,f,l):
         if pe.value(model.p_wyear_inc_qs[q, s]) and pinp.saltbush['i_saltbush_inc']:
-            return - slppy.f_saltbush_selection(model,q,s,z,p6,f) \
+            return - slppy.f_saltbush_selection(model,q,s,z,p6,f,l) \
                    + sum(model.v_greenpas_ha[q, s, f, g, o, p6, l, z, 'understory'] * model.p_volume_grnha[f, g, o, p6, l, z, 'understory'] * model.p_sb_selectivity_zp6[z,p6]
-                        for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
+                        for g in model.s_grazing_int for o in model.s_foo_levels) \
                    + sum(model.v_drypas_consumed[q, s, f, d, p6, z, l, 'understory'] * model.p_dry_volume_t[f, d, p6, z, 'understory'] * model.p_sb_selectivity_zp6[z,p6]
-                         for d in model.s_dry_groups for l in model.s_lmus) == 0
+                         for d in model.s_dry_groups) == 0
         else:
             return pe.Constraint.Skip
-    model.con_link_understory_saltbush_consumption = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods,model.s_feed_pools,rule=link_us_sb,
-                                            doc='link between the consumption of understory and saltbush')
+    model.con_link_understory_saltbush_consumption = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types,
+                                                                   model.s_feed_periods,model.s_feed_pools, model.s_lmus,rule=link_us_sb,
+                                                                   doc='link between the consumption of understory and saltbush')
 
 
 def f_con_me(model):
