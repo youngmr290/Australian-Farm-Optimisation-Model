@@ -326,7 +326,6 @@ def f_property_inp_sa():
     ###sav
     cropgraze['i_cropgrazing_inc'] = fun.f_sa(cropgraze['i_cropgrazing_inc'], sen.sav['cropgrazing_inc'], 5)
     ###sam
-    cropgraze['i_sb_expected_growth_zp6'] = fun.f_sa(cropgraze['i_sb_expected_growth_zp6'], sen.sav['sb_growth'], 5)
     ###sap
     ###saa
     ###sat
