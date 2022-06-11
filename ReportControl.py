@@ -608,19 +608,16 @@ def f_report(processor, trials, non_exist_trials):
             na_prod = [0,1] #q,s
             prod_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'  #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             na_prodweights = [0, 1]  #q,s
+            weights = 'dams_numbers_qsk2tvanwziy1g1'
+            na_weights = [5, 7, 8]
             den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'  #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             na_denweights = [0, 1]  #q,s
             keys = 'dams_keys_qsk2tvpaebnwziy1g1'
+            arith = 1
             if lp_vars_inc:
-                weights = 'dams_numbers_qsk2tvanwziy1g1'
-                na_weights = [5, 7, 8]
-                arith = 1
                 index = [5]  #p
                 cols = [14, 7, 3, 8]  #g1, e, t & b1
             else:
-                weights = 1
-                na_weights = []
-                arith = 1
                 index =[5] #p
                 cols =[14,7,3,8,10] #g,e,t,b1,w
             axis_slice = {}
