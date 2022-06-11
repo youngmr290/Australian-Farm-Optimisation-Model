@@ -589,7 +589,7 @@ def f_con_prog2damsR(model, l_v1):
     Numbers/transfer of progeny to dams. This transfer only happens in dvp0.
 
     .. note:: Originally this constraint was made such that a dam required a certain proportion of single, twin &
-        triplet progeny. However the requirement was the same for all initial lw patterns of the dams at weaning, this
+        triplet progeny. However, the requirement was the same for all initial lw patterns of the dams at weaning, this
         caused problems when scanning for multiples (which has the effect of differentiating the prog) because the
         multiples are too light to provide sufficient numbers of the high dam starting weight and the single prog are
         too heavy to provide sufficient numbers of the low dam starting weight. It would be possible to reduce the
