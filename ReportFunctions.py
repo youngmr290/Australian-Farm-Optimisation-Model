@@ -801,7 +801,7 @@ def f_feed_reshape(lp_vars, r_vals):
     ###crop grazing
     feed_vars['keys_qsfkp6p5zl'] = [keys_q, keys_s, keys_f, keys_k1, keys_p6, keys_p5, keys_z, keys_l]
     ###saltbush
-    feed_vars['keys_qszp6f'] = [keys_q, keys_s, keys_z, keys_p6, keys_f]
+    feed_vars['keys_qszp6fl'] = [keys_q, keys_s, keys_z, keys_p6, keys_f, keys_l]
     feed_vars['keys_qsp7zl'] = [keys_q, keys_s, keys_p7, keys_z, keys_l]
     ###periods
     feed_vars['keys_p7z'] = [keys_p7, keys_z]
@@ -820,7 +820,7 @@ def f_feed_reshape(lp_vars, r_vals):
     ###crop graze
     qsfkp6p5zl = len_q, len_s, len_f, len_k1, len_p6, len_p5, len_z, len_l
     ###saltbush
-    qszp6f = len_q, len_s, len_z, len_p6, len_f
+    qszp6fl = len_q, len_s, len_z, len_p6, len_f, len_l
     qszl = len_q, len_s, len_z, len_l
 
     ##reshape z8 mask to uncluster
@@ -855,7 +855,7 @@ def f_feed_reshape(lp_vars, r_vals):
 
     ##saltbush
     ###saltbush consumed
-    feed_vars['v_tonnes_sb_consumed_qszp6f'] = f_vars2np(lp_vars, 'v_tonnes_sb_consumed', qszp6f, maskz8_zp6[:,:,na], z_pos=-3)
+    feed_vars['v_tonnes_sb_consumed_qszp6fl'] = f_vars2np(lp_vars, 'v_tonnes_sb_consumed', qszp6fl, maskz8_zp6[:,:,na,na], z_pos=-4)
     feed_vars['v_slp_ha_qszl'] = f_vars2np(lp_vars, 'v_slp_ha', qszl, z_pos=-2)
 
     return feed_vars
@@ -1677,10 +1677,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
 
     ###saltbush (just the saltbush not the understory)
     prod = 'sb_me_zp6f'
-    na_prod = [0, 1]  # q,s
+    na_prod = [0, 1, 5]  # q,s
     type = 'slp'
-    weights = 'v_tonnes_sb_consumed_qszp6f'
-    keys = 'keys_qszp6f'
+    weights = 'v_tonnes_sb_consumed_qszp6fl'
+    keys = 'keys_qszp6fl'
     arith = 2
     index = [0, 1, 2, 3, 4]  # q,s,z,p6,nv
     cols = []
