@@ -208,9 +208,10 @@ def f1_DSTw_adjust(propn_source_b1, cycles_source=2, cycles_destination=1, axis_
     t_destination[tuple(slc1)] = t_source[tuple(slc1)] * (1 - dry_propn_destination) / (1 - dry_propn_source)
     ##roll the b1 axis back to starting position
     propn_destination_b1 = np.roll(t_destination, dry_slice, axis=axis_b1)
-    ##set the NM slice to be same as dry if it exists (default is it exists as part of the b1 axis)
+    ##If the NM slice exists, reset it to starting value (default is it exists as part of the b1 axis)
+    #todo check if this code does anything. Perhaps the NM slice is getting overwritten in f_conception_lmat()
     if dry_slice != 0:
-        propn_destination_b1[tuple(slc0)] = dry_propn_destination
+        propn_destination_b1[tuple(slc0)] = nm_propn
     return propn_destination_b1
 
 
@@ -236,7 +237,7 @@ def f1_DSTw(scan_g, cycles=1):
     scan_power_gs = scan_g[...,na] ** scan_powers_s #raises scan_std to scan_powers_s ie x^0, x^1, x^2, x^3, x^4
     dstwtr_cal_gl0 = np.sum(uinp.sheep['i_scan_coeff_l0s'] * scan_power_gs[...,na,:], axis = -1) #add the coefficients and sum all the elements of the equation ie intercept+ax+bx^2+cx^3+dx^4
 
-    ##convert the litter size proportion for the calibration period to the prediction period (the prediction period is the value of the cycles argument)
+    ##convert the litter size proportion for the calibration period to the prediction period (the prediction period is the value of the 'cycles' argument)
     dstwtr_gl0 = f1_DSTw_adjust(dstwtr_cal_gl0, cycles_source=calibration_cycles, cycles_destination=cycles
                                 , axis_b1=-1, dry_slice=0)
     # t_dstwtr_gl0 = np.zeros_like(dstwtr_cal_gl0)
@@ -1085,6 +1086,10 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
     ''''
     Calculation of dam conception using CSIRO equation system
 
+    Conception is the change in the numbers of animals in each slice of e & b as a proportion of the numbers
+    in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums().
+    This function calculates the change in the proportions (the total should add to 0)
+
     The general approach is to calculate the probability of conception greater than or equal to 1,2,3 foetuses
     Probability is calculated from a sigmoid relationship based on relative size * relative condition at joining
     The estimation of cumulative probability is scaled by a factor that varies with day of year that changes with
@@ -1205,7 +1210,12 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
 
 def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy, nfoet_b1any, nyatf_b1any, period_is_mating
                      , index_e1, rev_trait_value):
-    ''' LTW system: The general calculation is scanning percentage is defined by a linear function of CS
+    '''
+    Conception is the change in the numbers of animals in each slice of e & b as a proportion of the numbers
+    in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums()
+    This function calculates the change in the proportions (the total should add to 0)
+
+    LTW system: The general calculation is scanning percentage is defined by a linear function of CS
     The standard value (CS 3) is determined by the genotype, relative size and adjusted based on day of the year.
     The slope with which RR is adjusted if CS is different from CS3 varies with day of year.
     The proportion of dry, single, twin & triplet is estimated as a function of the scanning percentage using f1_DSTw
@@ -1265,6 +1275,10 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, nlb, crg_doy, n
     ''''
     Calculation of dam conception using CSIRO equation system
 
+    Conception is the change in the numbers of animals in each slice of e & b as a proportion of the numbers
+    in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums()
+    This function calculates the change in the proportions (the total should add to 0)
+
     The general approach is to calculate the probability of conception less than or equal to 1,2,3 foetuses
     similar to f_conception_cs() except LMAT is "less than" and probability is calculated from a back transformed
     calculation with linear and quadratic terms.
@@ -1287,7 +1301,7 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, nlb, crg_doy, n
                            Note: the e and b axis have been handled before passing in.
     :param lwc: Liveweight change of the dam during the generator period in g/hd/d.
     :param age: age of dam mid-period in days. Indexed for p. The i axis can be non-singleton
-    :param nlb: Number of lambs born ASBV - mid parent average (achieved by using nlb_g3).
+    :param nlb: Number of lambs born ASBV - mid-parent average (achieved by using nlb_g3).
     :param crg_doy: The scalar for the proportion of dry, single, twins & triplets based on day of the year. Needs converting for crl
     :param nfoet_b1any:
     :param nyatf_b1any:
@@ -1379,11 +1393,13 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, nlb, crg_doy, n
         ##Process the Conception REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         ###Conception is the proportion of dams that are dry and a change in conception is assumed to be converting
         ### a dry ewe into a single bearing ewe. It is calculated by altering the proportion of single bearing ewes b1[2].
-        ### The proportion of Drys is then calculated (later) as the animals that didn't get pregnant.
+        ### The proportion of Drys is then calculated (later) as the animals that didn't get pregnant. #todo This doesn't seem to happen
+        #todo Easier to follow logic would be to adjust the proportion of drys then scale the other slices up and down holding litter size constant.
+        # Note: litter size has to be correct here in case it is saved in the next section of code
         slc[b1_pos] = slice(2,3)
         t_cr[tuple(slc)] = f1_rev_update('conception', t_cr[tuple(slc)], rev_trait_value)
 
-        ##Process the Litter size REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+        ##Process the Litter size REV: either save the trait value to the dictionary or over-write trait value with value from the dictionary
         ##The litter size REV is stored as the proportion of the pregnant dams that are single-, twin- & triplet-bearing
         ###Steps: Calculate litter size from t_cr, adjust litter size (if required) then recalculate t_cr from new litter size
         ### Calculating litter size (# of foetuses / dam pregnant) requires a mask for the pregnant dams that is the same shape as t_cr
@@ -1782,7 +1798,7 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
     potentially created from a bigger spread of weights.
 
     Note 2: in the start functions the sale slices are overwritten by retained at the start of a dvp. Thus the condensed
-    info is overwritten for the sale t slices (which is what we want). Distribution can occur with t axis but doesnt
+    info is overwritten for the sale t slices (which is what we want). Distribution can occur with t axis but doesn't
     get used because only the retained t provides in the matrix.
 
     :param var: production variable being condensed
@@ -2068,7 +2084,6 @@ def f1_condition_score(rc_tpg, cu0):
     return np.maximum(1, 3 + (rc_tpg - 1) / cu0[1, ...]) #a minimum value of CS=1 is used to remove errors caused by low CS. A CS below 1 is unlikely because the animal would be dead
 
 
-#todo needs updating - currently just a copy of the cs function
 def f1_fat_score(rc_tpg, cu0):
     ''' Calculate fat score from relative condition using relationship from van Burgel et al. 2011.
     Steps 1. calculate CS
