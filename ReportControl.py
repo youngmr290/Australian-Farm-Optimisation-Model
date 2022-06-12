@@ -200,8 +200,8 @@ def f_report(processor, trials, non_exist_trials):
             stacked_profitarea = rep.f_append_dfs(stacked_profitarea, profitarea)
 
         if report_run.loc['run_feedbudget', 'Run']:
-            option = 0
-            nv_option = 0
+            option = 1
+            nv_option = 1
             dams_cols = [6] #birth opp
             offs_cols = [7] #shear opp
             feed = rep.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols)
