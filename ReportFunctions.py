@@ -801,7 +801,7 @@ def f_feed_reshape(lp_vars, r_vals):
     ###crop grazing
     feed_vars['keys_qsfkp6p5zl'] = [keys_q, keys_s, keys_f, keys_k1, keys_p6, keys_p5, keys_z, keys_l]
     ###saltbush
-    feed_vars['keys_qszp6f'] = [keys_q, keys_s, keys_z, keys_p6, keys_f]
+    feed_vars['keys_qszp6fl'] = [keys_q, keys_s, keys_z, keys_p6, keys_f, keys_l]
     feed_vars['keys_qsp7zl'] = [keys_q, keys_s, keys_p7, keys_z, keys_l]
     ###periods
     feed_vars['keys_p7z'] = [keys_p7, keys_z]
@@ -1677,10 +1677,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
 
     ###saltbush (just the saltbush not the understory)
     prod = 'sb_me_zp6f'
-    na_prod = [0, 1]  # q,s
+    na_prod = [0, 1, 5]  # q,s
     type = 'slp'
     weights = 'v_tonnes_sb_consumed_qszp6fl'
-    keys = 'keys_qszp6f'
+    keys = 'keys_qszp6fl'
     arith = 2
     index = [0, 1, 2, 3, 4]  # q,s,z,p6,nv
     cols = []
