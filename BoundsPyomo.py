@@ -104,17 +104,17 @@ def f1_boundarypyomo_local(params, model):
         ##salt land pasture area
         if slp_area_inc:
             ###set the bound
-            slp_area_bnd_l = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_slp_area_l'][lmu_mask], 5) #999999 is arbitrary default value which mean skip constraint
+            # slp_area_bnd_l = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_slp_area_l'][0], 5) #999999 is arbitrary default value which mean skip constraint
             ###ravel and zip bound and dict
-            slp_area = dict(zip(model.s_lmus, slp_area_bnd_l))
+            slp_area = sen.sav['bnd_slp_area_l'][0]
             ###constraint
             l_p7 = list(model.s_season_periods)
-            def slp_area_bound(model, q, s, z, l):
-                if pe.value(model.p_wyear_inc_qs[q, s]) and slp_area[l] != 999999:
-                    return model.v_slp_ha[q,s,z,l] == slp_area[l]
+            def slp_area_bound(model, q, s, z):
+                if pe.value(model.p_wyear_inc_qs[q, s]) and slp_area != 999999:
+                    return sum(model.v_slp_ha[q,s,z,l] for l in model.s_lmus) == slp_area
                 else:
                     return pe.Constraint.Skip
-            model.con_slp_area_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, 'lmu0', rule=slp_area_bound,
+            model.con_slp_area_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=slp_area_bound,
                                                     doc='bound for the area of salt land pasture on each lmu')
 
 
