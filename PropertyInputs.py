@@ -288,6 +288,7 @@ def f_property_inp_sa():
     general['i_len_q'] = fun.f_sa(general['i_len_q'], sen.sav['seq_len'], 5)
     labour['max_casual'] = fun.f_sa(labour['max_casual'], sen.sav['casual_ub'], 5)
     labour['max_casual_seedharv'] = fun.f_sa(labour['max_casual_seedharv'], sen.sav['seedharv_casual_ub'], 5)
+    general['i_lmu_area'] = fun.f_sa(general['i_lmu_area'], sen.sav['lmu_area_l'], 5)
     ###sam
     ###sap
     ###saa

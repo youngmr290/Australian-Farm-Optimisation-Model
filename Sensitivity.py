@@ -208,6 +208,7 @@ sav_inp['cara_risk_coef'] = '-'              #control risk coefficient for CRRA 
 sav_inp['crra_risk_coef'] = '-'              #control risk coefficient for CRRA method
 sav_inp['pinp_rot'] = '-'                       #control if using the pinp rotations or the full rotation list (note full rot requires simulation inputs)
 sav_inp['mach_option'] = '-'                    #control which machine compliment is used
+sav_inp['lmu_area_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
 
 ##finance
 sav_inp['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
