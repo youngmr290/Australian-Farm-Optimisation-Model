@@ -514,6 +514,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     scan_da0e0b0xyg3 = fun.f_expand(pinp.sheep['i_scan_og1'], d_pos, right_pos=g_pos, condition=mask_dams_inc_g1, axis=g_pos,
                                    condition2=mask_d_offs, axis2=d_pos) #need axis up to p so that p association can be applied
 
+    ##Chill adjustment based on litter size and scanning. Note: adjusted later so only active if scanning
+    #todo the scaling across the b1 axis could be improved by making the adjustment after the repro rate of the flock is known
+    #This could account for the number of dams re-allocated based on min(DSE of multiples in exposed, DSE of singles in sheltered)
+    # The current calculation is all multiples allocated to sheltered paddocks and all singles to exposed paddocks.
+    chill_adj_b1nwzida0e0b0xyg1 = pinp.sheep['i_chill_adj'] * fun.f_expand(sinp.stock['i_chill_adj_b1'], b1_pos)
+
     ##post weaning management
     wean_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_wean_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
                                               axis=g_pos, condition2=mask_o_dams, axis2=p_pos) #need axis up to p so that p association can be applied
@@ -1277,6 +1283,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     gbal_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(gbal_oa1e1b1nwzida0e0b0xyg1, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     scan_option_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 
+    ##adjust the chill to represent differential paddock allocation if scanned for multiples or greater
+    chill_adj_pa1e1b1nwzida0e0b0xyg1 = chill_adj_b1nwzida0e0b0xyg1 * (scan_option_pa1e1b1nwzida0e0b0xyg1 >= 2)
+
     ##drys management, actual value for the Bounds and an estimate for the generator (don't use bound to control generator otherwise introduce randomness)
     dry_retained_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_retained_oa1e1b1nwzida0e0b0xyg1
                                                              , a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
@@ -1770,7 +1779,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #todo consider adding p1p2p3 axes for chill for rain, ws & temp_ave.
     chill_index_pa1e1b1nwzida0e0b0xygp1 = (481 + (11.7 + 3.1 * ws_pa1e1b1nwzida0e0b0xyg[..., na] ** 0.5)
                                            * (40 - temp_ave_pa1e1b1nwzida0e0b0xyg[..., na])
-                                           + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygp1)))
+                                           + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygp1))
+                                           + chill_adj_pa1e1b1nwzida0e0b0xyg1[..., na])
     chill_index_pa1e1b1nwzida0e0b0xygp1 = fun.f_sa(chill_index_pa1e1b1nwzida0e0b0xygp1, sen.sam['chill'])
 
     ##Proportion of SRW with age
@@ -2096,11 +2106,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     nv_p6a1e1b1j1wzida0e0b0xyg1,foo_p6a1e1b1j1wzida0e0b0xyg1,dmd_p6a1e1b1j1wzida0e0b0xyg1,supp_p6a1e1b1j1wzida0e0b0xyg1, \
     nv_p6a1e1b1j1wzida0e0b0xyg3,foo_p6a1e1b1j1wzida0e0b0xyg3,dmd_p6a1e1b1j1wzida0e0b0xyg3,supp_p6a1e1b1j1wzida0e0b0xyg3, \
     feedsupplyw_tpa1e1b1nwzida0e0b0xyg0,feedsupplyw_tpa1e1b1nwzida0e0b0xyg1,feedsupplyw_tpa1e1b1nwzida0e0b0xyg3, \
-    confinementw_tpa1e1b1nwzida0e0b0xyg0,confinementw_tpa1e1b1nwzida0e0b0xyg1,confinementw_tpa1e1b1nwzida0e0b0xyg3 = \
-    fsstk.f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1nwzida0e0b0xyg,
-                     period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1,
-                     scan_management_pa1e1b1nwzida0e0b0xyg1, gbal_management_pa1e1b1nwzida0e0b0xyg1, wean_management_pa1e1b1nwzida0e0b0xyg1,
-                     a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, a_t_tpg1, mask_p_offs_p, len_p, pkl_fs_info)
+    confinementw_tpa1e1b1nwzida0e0b0xyg0,confinementw_tpa1e1b1nwzida0e0b0xyg1,confinementw_tpa1e1b1nwzida0e0b0xyg3\
+      = fsstk.f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1nwzida0e0b0xyg
+                          , period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1, scan_management_pa1e1b1nwzida0e0b0xyg1
+                          , gbal_management_pa1e1b1nwzida0e0b0xyg1, wean_management_pa1e1b1nwzida0e0b0xyg1
+                          , a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, a_t_tpg1, mask_p_offs_p, len_p, pkl_fs_info)
 
     '''if running the gen for stubble generation then the feed supply info above gets overwritten with
     the stubble feed from the trial.'''
@@ -7824,6 +7834,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1 = np.roll(est_prop_dams_mated_oa1e1b1nwzida0e0b0xyg1, shift=1, axis=0)
     prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
     prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
+    #todo is multiplying by propn mated correct? Propn mated controls the split between NM & mated. Therefore, should it be * (propn_mated > 0)
     prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 * np.minimum(1,prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1)
     ###create param
     arrays_vziyg1 = [keys_v1, keys_z, keys_i, keys_y1, keys_g1]
