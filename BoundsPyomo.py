@@ -448,7 +448,7 @@ def f1_boundarypyomo_local(params, model):
              This constraint is equal to and really says only retain drys that are not twice dry.'''
             ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
             model.p_prop_twice_dry_dams = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
-                                                   model.s_groups_dams, initialize=params['stock']['p_prop_twice_dry_dams'])
+                                                   model.s_groups_dams, default=0, initialize=params['stock']['p_prop_twice_dry_dams'])
 
             l_v1 = list(model.s_dvp_dams)
             scan_v = list(params['stock']['p_scan_v_dams'])
