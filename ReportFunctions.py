@@ -59,10 +59,10 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
     ##store df settings
     if df_settings is not None:
         df_settings.loc[sheet] = [df.index.nlevels, df.columns.nlevels]
-
+    
     ## round to tidy and so that very small numbers are dropped out in the next step
-    df = df.round(3)
-
+    df = df.round(3)  
+    
     ## Remove rows and cols with all 0's
     if option==2:
         ###rows are removed completely to reduce writing time - if all rows are 0 then make the last row True because cant write an empty df to xl.
@@ -73,7 +73,7 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
         if (col_mask==False).all() and len(col_mask)>0:
             col_mask[-1] = True
         df = df.loc[row_mask, col_mask]
-
+    
     ## simple write df to xl
     df.to_excel(writer, sheet, startrow=rowstart, startcol=colstart)
 

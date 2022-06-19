@@ -2133,8 +2133,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     '''
     ##Start the LTW loop here so that the arrays are reinitialised from the inputs
     ### set the LTW adjustments to zero for the first loop. Sires do not have a LTW adjust because they are born off farm
-    #todo The LTW loop could be set to 1 for trials using a pkl feed supply and N11 if the pkl also included the LTW factor
-    # if N3 then dams would still need to include the LTW loop (although offspring could be LTW_loop = 1)
     sfw_ltwadj_g0 = 1
     sfd_ltwadj_g0 = 0
     sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = np.zeros(pg1)

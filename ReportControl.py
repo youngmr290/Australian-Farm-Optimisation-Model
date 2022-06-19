@@ -202,8 +202,8 @@ def f_report(processor, trials, non_exist_trials):
             stacked_profitarea = rep.f_append_dfs(stacked_profitarea, profitarea)
 
         if report_run.loc['run_feedbudget', 'Run']:
-            option = 1
-            nv_option = 1
+            option = 0
+            nv_option = 0
             dams_cols = [6] #birth opp
             offs_cols = [7] #shear opp
             feed = rep.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols)
@@ -656,7 +656,7 @@ def f_report(processor, trials, non_exist_trials):
             arith = 1
             if lp_vars_inc:
                 index = [5]  #p
-                cols = [14, 8, 3]  #g1, t & b1
+                cols = [14, 7, 3, 8]  #g1, e, t & b1
             else:
                 index =[5] #p
                 cols =[14,7,3,8,10] #g,e,t,b1,w
@@ -1006,7 +1006,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'dams_keys_Tpaebnwziy1g1'
             arith = 4
             index =[1]          #period
-            cols =[10, 4, 3, 6]     #genotype, b, e, w
+            cols =[10, 4, 6]     #genotype, LSLN, w
             axis_slice = {}
             # axis_slice[0] = [2, 3, 1]
             # axis_slice[1] = [2, 4, 1]
