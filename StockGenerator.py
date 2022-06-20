@@ -7799,7 +7799,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##proportion of dams mated. inf means the model can optimise the proportion because inf is used to skip the constraint.
     prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
-    prop_dams_mated_va1e1b1nwzida0e0b0xyg1[~dvp_is_mating] = np.inf
+    prop_dams_mated_va1e1b1nwzida0e0b0xyg1[np.logical_not(dvp_is_mating)] = np.inf
     #prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = fun.f_update(prop_dams_mated_va1e1b1nwzida0e0b0xyg1, dvp_is_mating==0, np.inf)
     arrays_vzg1 = [keys_v1, keys_z, keys_g1]
     params['p_prop_dams_mated'] = fun.f1_make_pyomo_dict(prop_dams_mated_va1e1b1nwzida0e0b0xyg1, arrays_vzg1)
