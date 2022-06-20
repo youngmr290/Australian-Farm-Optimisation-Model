@@ -890,10 +890,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fvp_wean_start_oa1e1b1nwzida0e0b0xyg1 = date_weaned_oa1e1b1nwzida0e0b0xyg2
 
     ##user defined fvp - rounded to the nearest sim period
-    fvp_other_yi = sinp.structuralsa['i_fvp4_date_i'] + np.arange(np.ceil(sim_years))[:,na] * 364
-    fvp_other_ya1e1b1nwzida0e0b0xyg = fun.f_expand(fvp_other_yi, left_pos=i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, fvp_other_ya1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the period when season breaks (e.g. break of season fvp starts at the beginning of the sim period when season breaks), side=right so that if the date is already the start of a period it remains in that period.
-    fvp_other_start_ya1e1b1nwzida0e0b0xyg = date_start_p[idx_ya1e1b1nwzida0e0b0xyg]
+    fvp_other_iu = sinp.structuralsa['i_dams_user_fvp_date_iu']
+    n_user_fvp = fvp_other_iu.shape[-1]
+    user_fvp_u = np.zeros(n_user_fvp, dtype=object)
+    fvp_other_yiu = fvp_other_iu + np.arange(np.ceil(sim_years))[:,na,na] * 364
+    fvp_other_yiu = fun.f_sa(fvp_other_yiu, sen.sav['user_fvp_date_dams_yiu'], 5)
+    for u in range(n_user_fvp):
+        fvp_other_ya1e1b1nwzida0e0b0xyg = fun.f_expand(fvp_other_yiu[u], left_pos=i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
+        idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, fvp_other_ya1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the period when season breaks (e.g. break of season fvp starts at the beginning of the sim period when season breaks), side=right so that if the date is already the start of a period it remains in that period.
+        fvp_other_start_ya1e1b1nwzida0e0b0xyg = date_start_p[idx_ya1e1b1nwzida0e0b0xyg]
+        user_fvp_u[u] = fvp_other_start_ya1e1b1nwzida0e0b0xyg
+
     ##season nodes - these get masked out if steady state.
     node_fvp_m = np.zeros(len_m, dtype=object)
     for m in range(len_m):
@@ -913,22 +920,25 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                date_node_ya1e1b1nwzidaebxyg.shape[1:]]) #create shape which has the max size, this is used for o array
 
     ##broadcast the start arrays so that they are all the same size (except axis 0 can be different size)
+    fvp_begin_start_ba1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1,(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
     fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1,(fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
     fvp_scan_start_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_scan_start_oa1e1b1nwzida0e0b0xyg1,(fvp_scan_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
     fvp_birth_start_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_birth_start_oa1e1b1nwzida0e0b0xyg1,(fvp_birth_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
     fvp_wean_start_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_wean_start_oa1e1b1nwzida0e0b0xyg1,(fvp_wean_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
-    fvp_other_start_ya1e1b1nwzida0e0b0xyg = np.broadcast_to(fvp_other_start_ya1e1b1nwzida0e0b0xyg,(fvp_other_start_ya1e1b1nwzida0e0b0xyg.shape[0],)+tuple(shape))
-    fvp_begin_start_ba1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1,(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
+    for u in range(n_user_fvp):
+        user_fvp_u[u] = np.broadcast_to(user_fvp_u[u],(user_fvp_u[u].shape[0],)+tuple(shape))
     for m in range(len_m):
         node_fvp_m[m] = np.broadcast_to(node_fvp_m[m],(node_fvp_m[m].shape[0],)+tuple(shape))
 
     ##create fvp type arrays. these are the same shape as the start arrays and are filled with the number corresponding to the fvp number
+    fvp_begin_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape, condense_vtype1)
     fvp_prejoin_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1.shape,prejoin_vtype1)
     fvp_scan_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_scan_start_oa1e1b1nwzida0e0b0xyg1.shape, scan_vtype1)
     fvp_birth_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_birth_start_oa1e1b1nwzida0e0b0xyg1.shape, birth_vtype1)
     fvp_wean_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_wean_start_oa1e1b1nwzida0e0b0xyg1.shape, other_vtype1)
-    fvp_other_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_other_start_ya1e1b1nwzida0e0b0xyg.shape, other_vtype1)
-    fvp_begin_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape, condense_vtype1)
+    user_fvp_type_u = np.zeros_like(user_fvp_u)
+    for u in range(n_user_fvp):
+        user_fvp_type_u[u] = np.full(user_fvp_u[u].shape,other_vtype1)
     node_fvp_type_m = np.zeros_like(node_fvp_m)
     for m in range(len_m):
         ##season start dvp/fvp needs its own type because it needs to be distinguishable so that dvp can get distributed (only when season nodes included).
@@ -940,12 +950,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##stack & mask which dvps are included - this must be in the order as per the input mask
     fvp_date_all_f1 = np.array([fvp_begin_start_ba1e1b1nwzida0e0b0xyg1, fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1,
                                 fvp_scan_start_oa1e1b1nwzida0e0b0xyg1, fvp_birth_start_oa1e1b1nwzida0e0b0xyg1,
-                                fvp_wean_start_oa1e1b1nwzida0e0b0xyg1, fvp_other_start_ya1e1b1nwzida0e0b0xyg], dtype=object)
-    fvp_date_all_f1 = np.concatenate([node_fvp_m[0:1], fvp_date_all_f1, node_fvp_m[1:]]) #seasons start needs to be first because it needs to be the first dvp in situations where there is a clash. so that distributing can occur from v_prev.
+                                fvp_wean_start_oa1e1b1nwzida0e0b0xyg1], dtype=object)
+    fvp_date_all_f1 = np.concatenate([node_fvp_m[0:1], fvp_date_all_f1, user_fvp_u, node_fvp_m[1:]]) #seasons start needs to be first because it needs to be the first dvp in situations where there is a clash. so that distributing can occur from v_prev.
     fvp_type_all_f1 = np.array([fvp_begin_type_va1e1b1nwzida0e0b0xyg1, fvp_prejoin_type_va1e1b1nwzida0e0b0xyg1,
                                 fvp_scan_type_va1e1b1nwzida0e0b0xyg1, fvp_birth_type_va1e1b1nwzida0e0b0xyg1,
-                                fvp_wean_type_va1e1b1nwzida0e0b0xyg1, fvp_other_type_va1e1b1nwzida0e0b0xyg1], dtype=object)
-    fvp_type_all_f1 = np.concatenate([node_fvp_type_m[0:1], fvp_type_all_f1, node_fvp_type_m[1:]]) #seasons start needs to be first because it needs to be the first dvp in situations where there is a clash. so that distributing can occur from v_prev.
+                                fvp_wean_type_va1e1b1nwzida0e0b0xyg1], dtype=object)
+    fvp_type_all_f1 = np.concatenate([node_fvp_type_m[0:1], fvp_type_all_f1, user_fvp_type_u, node_fvp_type_m[1:]]) #seasons start needs to be first because it needs to be the first dvp in situations where there is a clash. so that distributing can occur from v_prev.
     fvp1_inc = np.concatenate([fvp_mask_dams[0:1], np.array([True]), fvp_mask_dams[1:]]) #True in the middle is to count for the period from the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesn't occur each year)
     fvp_date_inc_f1 = fvp_date_all_f1[fvp1_inc]
     fvp_type_inc_f1 = fvp_type_all_f1[fvp1_inc]
@@ -1014,18 +1024,35 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fvp_b2_start_ba1e1b1nwzida0e0b0xyg3 = date_weaned_ida0e0b0xyg3 + 2 * (date_shear_sa1e1b1nwzida0e0b0xyg3[0:1] - date_weaned_ida0e0b0xyg3)/3
     idx_ba1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_p, fvp_b2_start_ba1e1b1nwzida0e0b0xyg3,side='right')-1 #makes sure fvp starts on the same date as sim period. (-1 get the start date of current period)
     fvp_b2_start_ba1e1b1nwzida0e0b0xyg3 = offs_date_start_p[idx_ba1e1b1nwzida0e0b0xyg]
+
     ##fvp0 - date shearing plus 1 day because shearing is the last day of period
     fvp_0_start_sa1e1b1nwzida0e0b0xyg3 = date_shear_sa1e1b1nwzida0e0b0xyg3 + np.maximum(1, fvp0_offset_ida0e0b0xyg3) #plus 1 at least 1 because shearing is the last day of the period and the fvp should start after shearing
     idx_sa1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_p, fvp_0_start_sa1e1b1nwzida0e0b0xyg3, 'right')-1 #makes sure fvp starts on the same date as sim period. side=right so that if the date is already the start of a period it remains in that period.
     fvp_0_start_sa1e1b1nwzida0e0b0xyg3 = offs_date_start_p[idx_sa1e1b1nwzida0e0b0xyg]
+
     ##fvp1 - date shearing plus offset1 (this is the first day of sim period)
     fvp_1_start_sa1e1b1nwzida0e0b0xyg3 = date_shear_sa1e1b1nwzida0e0b0xyg3 + (fvp1_offset_ida0e0b0xyg3 * shear_offset_adj_factor_sa1e1b1nwzida0e0b0xyg3).astype(int)
     idx_sa1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_p, fvp_1_start_sa1e1b1nwzida0e0b0xyg3, 'right')-1 #makes sure fvp starts on the same date as sim period, side=right so that if the date is already the start of a period it remains in that period.
     fvp_1_start_sa1e1b1nwzida0e0b0xyg3 = offs_date_start_p[idx_sa1e1b1nwzida0e0b0xyg]
+
     ##fvp2 - date shearing plus offset2 (this is the first day of sim period)
     fvp_2_start_sa1e1b1nwzida0e0b0xyg3 = date_shear_sa1e1b1nwzida0e0b0xyg3 + (fvp2_offset_ida0e0b0xyg3 * shear_offset_adj_factor_sa1e1b1nwzida0e0b0xyg3).astype(int)
     idx_sa1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_p, fvp_2_start_sa1e1b1nwzida0e0b0xyg3, 'right')-1 #makes sure fvp starts on the same date as sim period, side=right so that if the date is already the start of a period it remains in that period.
     fvp_2_start_sa1e1b1nwzida0e0b0xyg3 = offs_date_start_p[idx_sa1e1b1nwzida0e0b0xyg]
+
+    ##user defined fvp - rounded to the nearest sim period
+    fvp_other_iu = sinp.structuralsa['i_offs_user_fvp_date_iu']
+    n_user_fvp = fvp_other_iu.shape[-1]
+    user_fvp_u = np.zeros(n_user_fvp, dtype=object)
+    fvp_other_yiu = fvp_other_iu + np.arange(np.ceil(sim_years))[:,na,na] * 364
+    fvp_other_yiu = fun.f_sa(fvp_other_yiu, sen.sav['user_fvp_date_offs_yiu'], 5)
+    for u in range(n_user_fvp):
+        fvp_other_ya1e1b1nwzida0e0b0xyg = fun.f_expand(fvp_other_yiu[u], left_pos=i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
+        idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, fvp_other_ya1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the period when season breaks (e.g. break of season fvp starts at the beginning of the sim period when season breaks), side=right so that if the date is already the start of a period it remains in that period.
+        fvp_other_start_ya1e1b1nwzida0e0b0xyg = date_start_p[idx_ya1e1b1nwzida0e0b0xyg]
+        user_fvp_u[u] = fvp_other_start_ya1e1b1nwzida0e0b0xyg
+
+
     ##season nodes - these get masked out if steady state.
     node_fvp_m = np.zeros(len_m, dtype=object)
     for m in range(len_m):
@@ -1040,7 +1067,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     shape = np.maximum.reduce([fvp_b0_start_ba1e1b1nwzida0e0b0xyg3.shape[1:], fvp_b1_start_ba1e1b1nwzida0e0b0xyg3.shape[1:],
                                fvp_b2_start_ba1e1b1nwzida0e0b0xyg3.shape[1:], fvp_0_start_sa1e1b1nwzida0e0b0xyg3.shape[1:],
                                fvp_1_start_sa1e1b1nwzida0e0b0xyg3.shape[1:], fvp_2_start_sa1e1b1nwzida0e0b0xyg3.shape[1:],
-                               date_node_ya1e1b1nwzidaebxyg.shape[1:]]) #create shape which has the max size, this is used for o array
+                               fvp_other_start_ya1e1b1nwzida0e0b0xyg.shape[1:], date_node_ya1e1b1nwzidaebxyg.shape[1:]]) #create shape which has the max size, this is used for o array
     ##broadcast the start arrays so that they are all the same size (except axis 0 can be different size)
     fvp_b0_start_ba1e1b1nwzida0e0b0xyg3 = np.broadcast_to(fvp_b0_start_ba1e1b1nwzida0e0b0xyg3,(fvp_b0_start_ba1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape))
     fvp_b1_start_ba1e1b1nwzida0e0b0xyg3 = np.broadcast_to(fvp_b1_start_ba1e1b1nwzida0e0b0xyg3,(fvp_b1_start_ba1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape))
@@ -1048,6 +1075,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fvp_0_start_sa1e1b1nwzida0e0b0xyg3 = np.broadcast_to(fvp_0_start_sa1e1b1nwzida0e0b0xyg3,(fvp_0_start_sa1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape))
     fvp_1_start_sa1e1b1nwzida0e0b0xyg3 = np.broadcast_to(fvp_1_start_sa1e1b1nwzida0e0b0xyg3,(fvp_1_start_sa1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape))
     fvp_2_start_sa1e1b1nwzida0e0b0xyg3 = np.broadcast_to(fvp_2_start_sa1e1b1nwzida0e0b0xyg3,(fvp_2_start_sa1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape))
+    for u in range(n_user_fvp):
+        user_fvp_u[u] = np.broadcast_to(user_fvp_u[u],(user_fvp_u[u].shape[0],)+tuple(shape))
     for m in range(len_m):
         node_fvp_m[m] = np.broadcast_to(node_fvp_m[m],(node_fvp_m[m].shape[0],)+tuple(shape))
 
@@ -1057,6 +1086,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fvp_0_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_0_start_sa1e1b1nwzida0e0b0xyg3.shape, condense_vtype3)
     fvp_1_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_1_start_sa1e1b1nwzida0e0b0xyg3.shape, other_vtype3)
     fvp_2_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_2_start_sa1e1b1nwzida0e0b0xyg3.shape, other_vtype3)
+    user_fvp_type_u = np.zeros_like(user_fvp_u)
+    for u in range(n_user_fvp):
+        user_fvp_type_u[u] = np.full(user_fvp_u[u].shape,other_vtype3)
     for m in range(len_m):
         ##season start dvp/fvp needs its own type because it needs to be distinguishable so that dvp can get distributed (only when season nodes included).
         if m==0:
@@ -1068,11 +1100,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fvp_date_all_f3 = np.array([fvp_b0_start_ba1e1b1nwzida0e0b0xyg3,fvp_b1_start_ba1e1b1nwzida0e0b0xyg3,
                                 fvp_b2_start_ba1e1b1nwzida0e0b0xyg3, fvp_0_start_sa1e1b1nwzida0e0b0xyg3,
                                 fvp_1_start_sa1e1b1nwzida0e0b0xyg3, fvp_2_start_sa1e1b1nwzida0e0b0xyg3], dtype=object)
-    fvp_date_all_f3 = np.concatenate([node_fvp_m[0:1], fvp_date_all_f3, node_fvp_m[1:]]) #seasons start needs to be first because it needs to be the first dvp in situations where there is a clash. so that distributing can occur from v_prev.
+    fvp_date_all_f3 = np.concatenate([node_fvp_m[0:1], fvp_date_all_f3, user_fvp_u, node_fvp_m[1:]]) #seasons start needs to be first because it needs to be the first dvp in situations where there is a clash. so that distributing can occur from v_prev.
     fvp_type_all_f3 = np.array([fvp_b0_type_va1e1b1nwzida0e0b0xyg3, fvp_b1_type_va1e1b1nwzida0e0b0xyg3,
                                 fvp_b2_type_va1e1b1nwzida0e0b0xyg3, fvp_0_type_va1e1b1nwzida0e0b0xyg3,
                                 fvp_1_type_va1e1b1nwzida0e0b0xyg3, fvp_2_type_va1e1b1nwzida0e0b0xyg3], dtype=object)
-    fvp_type_all_f3 = np.concatenate([node_fvp_type_m[0:1], fvp_type_all_f3, node_fvp_type_m[1:]]) #seasons start needs to be first because it needs to be the first dvp in situations where there is a clash. so that distributing can occur from v_prev.
+    fvp_type_all_f3 = np.concatenate([node_fvp_type_m[0:1], fvp_type_all_f3, user_fvp_type_u, node_fvp_type_m[1:]]) #seasons start needs to be first because it needs to be the first dvp in situations where there is a clash. so that distributing can occur from v_prev.
     ###if shearing is less than 3 sim periods after weaning then set the break fvp dates to the first date of the sim (so they aren't used)
     mask_initial_fvp = np.all((date_shear_sa1e1b1nwzida0e0b0xyg3[0:1] - date_weaned_ida0e0b0xyg3) > ((step+1)*3)) #true if not enough gap between weaning and shearing for extra dvps.
     ###create the fvp mask. fvps are masked out depending on what the user has specified (the extra fvps at the start are removed if weaning is within 3weeks of shearing).

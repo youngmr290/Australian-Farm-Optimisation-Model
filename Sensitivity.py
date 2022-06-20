@@ -42,6 +42,7 @@ len_t2 = pinp.sheep['i_t2_len']
 len_t3 = pinp.sheep['i_t3_len']
 len_V = 50  #Capital V because it is an (over) estimate to initialise the v axes that will be sliced when len_v is known.
 len_x = pinp.sheep['i_x_len']
+len_y = int(np.ceil(sinp.stock['i_age_max']))
 len_z = len(pinp.general['i_mask_z'])
 
 
@@ -303,8 +304,10 @@ sav_inp['adjp_lw_initial_w1'] = np.full(sinp.structuralsa['i_adjp_lw_initial_w1'
 sav_inp['adjp_cfw_initial_w1'] = np.full(sinp.structuralsa['i_adjp_cfw_initial_w1'].shape, '-', dtype=object)    #initial cfw adjustment dams
 sav_inp['adjp_fd_initial_w1'] = np.full(sinp.structuralsa['i_adjp_fd_initial_w1'].shape, '-', dtype=object)      #initial fd adjustment dams
 sav_inp['adjp_fl_initial_w1'] = np.full(sinp.structuralsa['i_adjp_fl_initial_w1'].shape, '-', dtype=object)      #initial fl adjustment dams
+sav_inp['user_fvp_date_dams_yiu'] = np.full((len_y,)+sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
 sav_inp['mask_fvp_dams'] = np.full(sinp.structuralsa['i_fvp_mask_dams'].shape, '-', dtype=object)      #SA to mask optional fvps.
 sav_inp['fvp_is_dvp_dams'] = np.full(sinp.structuralsa['i_dvp_mask_f1'].shape, '-', dtype=object)      #SA to control if optional fvp is a dvp (note: fvps don't need to be dvps, the only benefit is if new information is available e.g. if animals uncluster, which allows differential management).
+sav_inp['user_fvp_date_offs_yiu'] = np.full((len_y,)+sinp.structuralsa['i_offs_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
 sav_inp['mask_fvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to mask optional fvps.
 sav_inp['fvp_is_dvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to control if optional fvp is a dvp (note: fvps don't need to be dvps, the only benefit is if new information is available e.g. if animals uncluster, which allows differential management).
 sav_inp['r1_izg1'] = np.full(pinp.sheep['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option selected for dams
