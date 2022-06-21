@@ -120,9 +120,7 @@ def f_con_rotation_within(model):
     the same manner as the transfers of stock, pasture and cashflow with 2 differences:
 
         a.	the inclusion of v_phase_increment which allows extra area of a phase to be selected in each node.
-        b.	the constraint is equal-to rather than less-than. This is necessary to cover a situation in which the
-            cashflow parameter of v_phase_increment is earning money. In this situation the model would be unbounded
-            with a less-than constraint.
+        b.	the constraint is equal-to rather than less-than. This is necessary to cover a situation in which the cashflow parameter of v_phase_increment is earning money. In this situation the model would be unbounded with a less-than constraint.
 
     '''
     def rot_phase_link_within(model,q,s,p7,l,r,z9):

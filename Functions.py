@@ -809,11 +809,14 @@ def f_read_exp(pinp_req=False):
     ##set the group of trials being run. If no argument is passed in then all trials are run. To pass in argument need to run via terminal.
     try:
         exp_group = int(sys.argv[1]) #reads in as string so need to convert to int, the script path is the first value hence take the second.
-    except IndexError: #in case no arg passed to python
+    except (IndexError, ValueError) as e: #in case no arg passed to python
         exp_group = None
 
     ##read excel
-    exp_data = pd.read_excel('exp.xlsx', index_col=None, header=[0,1,2,3], engine='openpyxl')
+    ##build path this way so that readthedocs can read correctly.
+    directory_path = os.path.dirname(os.path.abspath(__file__))
+    exp_xl_path = os.path.join(directory_path, "exp.xlsx")
+    exp_data = pd.read_excel(exp_xl_path, index_col=None, header=[0,1,2,3], engine='openpyxl')
 
     ##determine trials which are in specified experiment group. If no group passed in then all trials will be included in the experiment.
     if exp_group is not None:
