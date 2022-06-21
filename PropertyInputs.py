@@ -28,222 +28,252 @@ na = np.newaxis
 ##############
 #read inputs #
 ##############
-##build path this way so that readthedocs can read correctly.
-directory_path = os.path.dirname(os.path.abspath(__file__))
-property_xl_path = os.path.join(directory_path, "Property.xlsx")
-property_pkl_path = os.path.join(directory_path, "pkl_property.pkl")
-try:
-    if os.path.getmtime(property_xl_path) > os.path.getmtime(property_pkl_path):
-        inputs_from_pickle = False 
-    else: 
-        inputs_from_pickle = True
-        print('Reading property inputs from pickle', end=' ', flush=True)
-except FileNotFoundError:      
-    inputs_from_pickle = False
+##determine which properties are used in current exp
+pinp_req = fun.f_read_exp(pinp_req=True)
+
+##read in inputs
+inputs={}
+for property in pinp_req:
+    inputs[property] = {}
+    ##build path this way so that readthedocs can read correctly.
+    directory_path = os.path.dirname(os.path.abspath(__file__))
+    property_xl_path = os.path.join(directory_path, "Property_{0}.xlsx".format(property))
+    property_pkl_path = os.path.join(directory_path, "pkl_property_{0}.pkl".format(property))
+    try:
+        if os.path.getmtime(property_xl_path) > os.path.getmtime(property_pkl_path):
+            inputs_from_pickle = False
+        else:
+            inputs_from_pickle = True
+            print('Reading property {0} inputs from pickle'.format(property), end=' ', flush=True)
+    except FileNotFoundError:
+        inputs_from_pickle = False
+
+    ##if inputs are not read from pickle then they are read from excel and written to pickle
+    if inputs_from_pickle == False:
+        print('Reading property {0} inputs from Excel'.format(property), end=' ', flush=True)
+        with open(property_pkl_path, "wb") as f:
+            inputs[property]['general_inp'] = fun.xl_all_named_ranges(property_xl_path,"General", numpy=True)
+            pkl.dump(inputs[property]['general_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+
+            inputs[property]['labour_inp'] = fun.xl_all_named_ranges(property_xl_path,"Labour")
+            pkl.dump(inputs[property]['labour_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+
+            inputs[property]['crop_inp'] = fun.xl_all_named_ranges(property_xl_path,"Crop")
+            pkl.dump(inputs[property]['crop_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+
+            inputs[property]['cropgraze_inp'] = fun.xl_all_named_ranges(property_xl_path,"CropGrazing", numpy=True)
+            pkl.dump(inputs[property]['cropgraze_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+
+            inputs[property]['saltbush_inp'] = fun.xl_all_named_ranges(property_xl_path,"Saltbush", numpy=True)
+            pkl.dump(inputs[property]['saltbush_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+
+            inputs[property]['mach_inp'] = fun.xl_all_named_ranges(property_xl_path,"Mach")
+            pkl.dump(inputs[property]['mach_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+
+            inputs[property]['stubble_inp'] = fun.xl_all_named_ranges(property_xl_path,"CropResidue", numpy=True)
+            pkl.dump(inputs[property]['stubble_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+
+            inputs[property]['finance_inp'] = fun.xl_all_named_ranges(property_xl_path,"Finance")
+            pkl.dump(inputs[property]['finance_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+
+            inputs[property]['period_inp'] = fun.xl_all_named_ranges(property_xl_path,"Periods", numpy=True) #automatically read in the periods as dates
+            pkl.dump(inputs[property]['period_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+
+            inputs[property]['sup_inp'] = fun.xl_all_named_ranges(property_xl_path,"Sup Feed")
+            pkl.dump(inputs[property]['sup_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+
+            inputs[property]['sheep_inp']  = fun.xl_all_named_ranges(property_xl_path, 'Sheep', numpy=True)
+            pkl.dump(inputs[property]['sheep_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+
+            inputs[property]['feedsupply_inp']  = fun.xl_all_named_ranges(property_xl_path, 'FeedSupply', numpy=True)
+            pkl.dump(inputs[property]['feedsupply_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+
+            inputs[property]['mvf_inp']  = fun.xl_all_named_ranges(property_xl_path, 'MVEnergy', numpy=True)
+            pkl.dump(inputs[property]['mvf_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+
+            inputs[property]['pasture_inp']=dict()
+            for pasture in sinp.general['pastures'][inputs[property]['general_inp']['i_pastures_exist']]:
+                inputs[property]['pasture_inp'][pasture] = fun.xl_all_named_ranges(property_xl_path, pasture, numpy=True)
+            pkl.dump(inputs[property]['pasture_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+
+    ##else the inputs are read in from the pickle file
+    ##note this must be in the same order as above
+    else:
+        with open(property_pkl_path, "rb") as f:
+            inputs[property]['general_inp'] = pkl.load(f)
+
+            inputs[property]['labour_inp'] = pkl.load(f)
+
+            inputs[property]['crop_inp'] = pkl.load(f)
+
+            inputs[property]['cropgraze_inp'] = pkl.load(f)
+
+            inputs[property]['saltbush_inp'] = pkl.load(f)
+
+            inputs[property]['mach_inp'] = pkl.load(f)
+
+            inputs[property]['stubble_inp'] = pkl.load(f)
+
+            inputs[property]['finance_inp'] = pkl.load(f)
+
+            inputs[property]['period_inp'] = pkl.load(f)
+
+            inputs[property]['sup_inp'] = pkl.load(f)
+
+            inputs[property]['sheep_inp'] = pkl.load(f)
+
+            inputs[property]['feedsupply_inp'] = pkl.load(f)
+
+            inputs[property]['mvf_inp'] = pkl.load(f)
+
+            inputs[property]['pasture_inp'] = pkl.load(f)
+
+    print('- finished')
+
+    ##reshape required inputs
+    ###lengths
+    len_d = len(inputs[property]['sheep_inp']['i_d_idx'])
+    len_h2 = inputs[property]['sheep_inp']['i_h2_len']
+    len_h5 = inputs[property]['sheep_inp']['i_h5_len']
+    len_h7 = inputs[property]['sheep_inp']['i_husb_operations_triggerlevels_h5h7h2'].shape[-1]
+    len_i = inputs[property]['sheep_inp']['i_i_len']
+    len_j2 = inputs[property]['feedsupply_inp']['i_j2_len']
+    len_k = len(sinp.landuse['C'])
+    len_k0 = inputs[property]['sheep_inp']['i_k0_len']
+    len_k1 = inputs[property]['sheep_inp']['i_k1_len']
+    len_k2 = inputs[property]['sheep_inp']['i_k2_len']
+    len_k3 = inputs[property]['sheep_inp']['i_k3_len']
+    len_k4 = inputs[property]['sheep_inp']['i_k4_len']
+    len_k5 = inputs[property]['sheep_inp']['i_k5_len']
+    len_l = len(inputs[property]['general_inp']['i_lmu_area'])
+    len_o = inputs[property]['sheep_inp']['i_o_len']
+    len_p6 = len(inputs[property]['period_inp']['i_fp_idx'])
+    len_r1 = inputs[property]['feedsupply_inp']['i_r1_len']
+    len_s = inputs[property]['sheep_inp']['i_s_len'] #s = shear
+    len_sc = sinp.stock['i_len_s'] #sc = scan
+    len_t3 = inputs[property]['sheep_inp']['i_t3_len']
+    len_x = inputs[property]['sheep_inp']['i_x_len']
+    len_z = len(inputs[property]['general_inp']['i_mask_z'])
 
 
-##if inputs are not read from pickle then they are read from excel and written to pickle
-if inputs_from_pickle == False:
-    print('Reading property inputs from Excel', end=' ', flush=True)
-    with open(property_pkl_path, "wb") as f:
-        general_inp = fun.xl_all_named_ranges(property_xl_path,"General", numpy=True)
-        pkl.dump(general_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-        labour_inp = fun.xl_all_named_ranges(property_xl_path,"Labour")
-        pkl.dump(labour_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-        crop_inp = fun.xl_all_named_ranges(property_xl_path,"Crop")
-        pkl.dump(crop_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-        cropgraze_inp = fun.xl_all_named_ranges(property_xl_path,"CropGrazing", numpy=True)
-        pkl.dump(cropgraze_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-        saltbush_inp = fun.xl_all_named_ranges(property_xl_path,"Saltbush", numpy=True)
-        pkl.dump(saltbush_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-        mach_inp = fun.xl_all_named_ranges(property_xl_path,"Mach")
-        pkl.dump(mach_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-        stubble_inp = fun.xl_all_named_ranges(property_xl_path,"CropResidue", numpy=True)
-        pkl.dump(stubble_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-        finance_inp = fun.xl_all_named_ranges(property_xl_path,"Finance")
-        pkl.dump(finance_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-        period_inp = fun.xl_all_named_ranges(property_xl_path,"Periods", numpy=True) #automatically read in the periods as dates
-        pkl.dump(period_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-        sup_inp = fun.xl_all_named_ranges(property_xl_path,"Sup Feed")
-        pkl.dump(sup_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-        sheep_inp  = fun.xl_all_named_ranges(property_xl_path, 'Sheep', numpy=True)
-        pkl.dump(sheep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-        feedsupply_inp  = fun.xl_all_named_ranges(property_xl_path, 'FeedSupply', numpy=True)
-        pkl.dump(feedsupply_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-        mvf_inp  = fun.xl_all_named_ranges(property_xl_path, 'MVEnergy', numpy=True)
-        pkl.dump(mvf_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-        pasture_inp=dict()
-        for pasture in sinp.general['pastures'][general_inp['i_pastures_exist']]:
-            pasture_inp[pasture] = fun.xl_all_named_ranges(property_xl_path, pasture, numpy=True)
-        pkl.dump(pasture_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-##else the inputs are read in from the pickle file
-##note this must be in the same order as above
-else:
-    with open(property_pkl_path, "rb") as f:
-        general_inp = pkl.load(f)
-
-        labour_inp = pkl.load(f)
-
-        crop_inp = pkl.load(f)
-
-        cropgraze_inp = pkl.load(f)
-
-        saltbush_inp = pkl.load(f)
-
-        mach_inp = pkl.load(f)
-
-        stubble_inp = pkl.load(f)
-
-        finance_inp = pkl.load(f)
-
-        period_inp = pkl.load(f)
-
-        sup_inp = pkl.load(f)
-
-        sheep_inp  = pkl.load(f)
-        
-        feedsupply_inp  = pkl.load(f)
-
-        mvf_inp  = pkl.load(f)
-
-        pasture_inp = pkl.load(f)
-
-print('- finished')
-
-##reshape required inputs
-###lengths
-len_d = len(sheep_inp['i_d_idx'])
-len_h2 = sheep_inp['i_h2_len']
-len_h5 = sheep_inp['i_h5_len']
-len_h7 = sheep_inp['i_husb_operations_triggerlevels_h5h7h2'].shape[-1]
-len_i = sheep_inp['i_i_len']
-len_j2 = feedsupply_inp['i_j2_len']
-len_k = len(sinp.landuse['C'])
-len_k0 = sheep_inp['i_k0_len']
-len_k1 = sheep_inp['i_k1_len']
-len_k2 = sheep_inp['i_k2_len']
-len_k3 = sheep_inp['i_k3_len']
-len_k4 = sheep_inp['i_k4_len']
-len_k5 = sheep_inp['i_k5_len']
-len_l = len(general_inp['i_lmu_area'])
-len_o = sheep_inp['i_o_len']
-len_p6 = len(period_inp['i_fp_idx'])
-len_r1 = feedsupply_inp['i_r1_len']
-len_s = sheep_inp['i_s_len'] #s = shear
-len_sc = sinp.stock['i_len_s'] #sc = scan
-len_t3 = sheep_inp['i_t3_len']
-len_x = sheep_inp['i_x_len']
-len_z = len(general_inp['i_mask_z'])
+    ###shapes
+    zp6 = (len_z, len_p6)
+    zkp6 = (len_z, len_k, len_p6)
+    zp6l = (len_z, len_p6, len_l)
+    zp6j0 = (len_z, len_p6, -1)
+    h2h5h7 = (len_h2, len_h5, len_h7)
+    iog = (len_i, len_o, -1)
+    idg = (len_i, len_d, -1)
+    isxg = (len_i, len_s, len_x, -1)
+    izg = (len_i, len_z, -1)
+    ik0g = (len_i, len_k0, -1)
+    ik1g = (len_i, len_k1, -1)
+    isk2g = (len_i, len_sc, len_k2, -1)
+    ik3g = (len_i, len_k3, -1)
+    ik4g = (len_i, len_k4, -1)
+    ik5g = (len_i, len_k5, -1)
+    t3Sg = (len_t3, len_s+1, -1) #capital S to indicate this is special e.g. not normal because +1
+    r1j2P = (len_r1, len_j2, -1) #capital p to indicate this is just the remaining length of input, it is p axis but input is longer
+    r1p6z = (len_r1, len_p6, len_z)
 
 
-###shapes
-zp6 = (len_z, len_p6)
-zkp6 = (len_z, len_k, len_p6)
-zp6l = (len_z, len_p6, len_l)
-zp6j0 = (len_z, len_p6, -1)
-h2h5h7 = (len_h2, len_h5, len_h7)
-iog = (len_i, len_o, -1)
-idg = (len_i, len_d, -1)
-isxg = (len_i, len_s, len_x, -1)
-izg = (len_i, len_z, -1)
-ik0g = (len_i, len_k0, -1)
-ik1g = (len_i, len_k1, -1)
-isk2g = (len_i, len_sc, len_k2, -1)
-ik3g = (len_i, len_k3, -1)
-ik4g = (len_i, len_k4, -1)
-ik5g = (len_i, len_k5, -1)
-t3Sg = (len_t3, len_s+1, -1) #capital S to indicate this is special e.g. not normal because +1
-r1j2P = (len_r1, len_j2, -1) #capital p to indicate this is just the remaining length of input, it is p axis but input is longer
-r1p6z = (len_r1, len_p6, len_z)
+    ###pasture
+    for t,pasture in enumerate(sinp.general['pastures'][inputs[property]['general_inp']['i_pastures_exist']]):
+        inp = inputs[property]['pasture_inp'][pasture]
+        inp['DigRednSenesce'] = np.reshape(inp['DigRednSenesce'], zp6)
+        inp['DigDryAve'] = np.reshape(inp['DigDryAve'], zp6)
+        inp['DigDryRange'] = np.reshape(inp['DigDryRange'], zp6)
+        inp['FOODryH'] = np.reshape(inp['FOODryH'], zp6)
+        inp['DigSpread'] = np.reshape(inp['DigSpread'], zp6)
+        inp['ErosionLimit'] = np.reshape(inp['ErosionLimit'], zp6l)
+        inp['LowFOO'] = np.reshape(inp['LowFOO'], zp6l)
+        inp['MedFOO'] = np.reshape(inp['MedFOO'], zp6l)
+        inp['LowPGR'] = np.reshape(inp['LowPGR'], zp6l)
+        inp['MedPGR'] = np.reshape(inp['MedPGR'], zp6l)
+        inp['DigGrn'] = np.reshape(inp['DigGrn'], zp6l)
 
+    ###crop grazing
+    cropgraze_inp = inputs[property]['cropgraze_inp']
+    cropgraze_inp['i_crop_growth_zkp6'] = np.reshape(cropgraze_inp['i_crop_growth_zkp6'], zkp6)
 
-###pasture
-for t,pasture in enumerate(sinp.general['pastures'][general_inp['i_pastures_exist']]):
-    inp = pasture_inp[pasture]
-    inp['DigRednSenesce'] = np.reshape(inp['DigRednSenesce'], zp6)
-    inp['DigDryAve'] = np.reshape(inp['DigDryAve'], zp6)
-    inp['DigDryRange'] = np.reshape(inp['DigDryRange'], zp6)
-    inp['FOODryH'] = np.reshape(inp['FOODryH'], zp6)
-    inp['DigSpread'] = np.reshape(inp['DigSpread'], zp6)
-    inp['ErosionLimit'] = np.reshape(inp['ErosionLimit'], zp6l)
-    inp['LowFOO'] = np.reshape(inp['LowFOO'], zp6l)
-    inp['MedFOO'] = np.reshape(inp['MedFOO'], zp6l)
-    inp['LowPGR'] = np.reshape(inp['LowPGR'], zp6l)
-    inp['MedPGR'] = np.reshape(inp['MedPGR'], zp6l)
-    inp['DigGrn'] = np.reshape(inp['DigGrn'], zp6l)
+    ###saltbush
+    saltbush_inp = inputs[property]['saltbush_inp']
+    saltbush_inp['i_sb_expected_foo_zp6'] = np.reshape(saltbush_inp['i_sb_expected_foo_zp6'], zp6)
+    saltbush_inp['i_sb_expected_growth_zp6'] = np.reshape(saltbush_inp['i_sb_expected_growth_zp6'], zp6)
+    saltbush_inp['i_sb_growth_reduction_zp6'] = np.reshape(saltbush_inp['i_sb_growth_reduction_zp6'], zp6)
+    saltbush_inp['i_sb_ash_content_zp6'] = np.reshape(saltbush_inp['i_sb_ash_content_zp6'], zp6)
+    saltbush_inp['i_sb_selectivity_zp6'] = np.reshape(saltbush_inp['i_sb_selectivity_zp6'], zp6)
+    saltbush_inp['i_slp_diet_propn_zp6'] = np.reshape(saltbush_inp['i_slp_diet_propn_zp6'], zp6)
 
-###crop grazing
-cropgraze_inp['i_crop_growth_zkp6'] = np.reshape(cropgraze_inp['i_crop_growth_zkp6'], zkp6)
+    ###stock
+    sheep_inp = inputs[property]['sheep_inp']
+    sheep_inp['i_pasture_stage_p6z'] = np.reshape(sheep_inp['i_pasture_stage_p6z'], zp6)
+    sheep_inp['i_legume_p6z'] = np.reshape(sheep_inp['i_legume_p6z'], zp6)
+    sheep_inp['i_supplement_zp6'] = np.reshape(sheep_inp['i_supplement_zp6'], zp6)
+    sheep_inp['i_paststd_foo_zp6j0'] = np.reshape(sheep_inp['i_paststd_foo_zp6j0'], zp6j0)
+    sheep_inp['i_paststd_dmd_zp6j0'] = np.reshape(sheep_inp['i_paststd_dmd_zp6j0'], zp6j0)
+    sheep_inp['i_density_p6z'] = np.reshape(sheep_inp['i_density_p6z'], zp6)
+    sheep_inp['i_husb_operations_triggerlevels_h5h7h2'] = np.reshape(sheep_inp['i_husb_operations_triggerlevels_h5h7h2'], h2h5h7)
+    sheep_inp['i_date_born1st_iog2'] = np.reshape(sheep_inp['i_date_born1st_iog2'], iog)
+    sheep_inp['i_date_born1st_idg3'] = np.reshape(sheep_inp['i_date_born1st_idg3'], idg)
+    sheep_inp['i_sire_propn_oig1'] = np.reshape(sheep_inp['i_sire_propn_oig1'], iog)
+    sheep_inp['i_date_shear_sixg0'] = np.reshape(sheep_inp['i_date_shear_sixg0'], isxg)
+    sheep_inp['i_date_shear_sixg1'] = np.reshape(sheep_inp['i_date_shear_sixg1'], isxg)
+    sheep_inp['i_date_shear_sixg3'] = np.reshape(sheep_inp['i_date_shear_sixg3'], isxg)
+    sheep_inp['ia_r1_zig0'] = np.reshape(sheep_inp['ia_r1_zig0'], izg)
+    sheep_inp['ia_r1_zig1'] = np.reshape(sheep_inp['ia_r1_zig1'], izg)
+    sheep_inp['ia_r1_zig3'] = np.reshape(sheep_inp['ia_r1_zig3'], izg)
+    sheep_inp['ia_r2_ik0g1'] = np.reshape(sheep_inp['ia_r2_ik0g1'], ik0g)
+    sheep_inp['ia_r2_ik1g1'] = np.reshape(sheep_inp['ia_r2_ik1g1'], ik1g)
+    sheep_inp['ia_r2_isk2g1'] = np.reshape(sheep_inp['ia_r2_isk2g1'], isk2g)
+    sheep_inp['ia_r2_ik0g3'] = np.reshape(sheep_inp['ia_r2_ik0g3'], ik0g)
+    sheep_inp['ia_r2_ik3g3'] = np.reshape(sheep_inp['ia_r2_ik3g3'], ik3g)
+    sheep_inp['ia_r2_ik4g3'] = np.reshape(sheep_inp['ia_r2_ik4g3'], ik4g)
+    sheep_inp['ia_r2_ik5g3'] = np.reshape(sheep_inp['ia_r2_ik5g3'], ik5g)
+    sheep_inp['i_sales_age_tsg3'] = np.reshape(sheep_inp['i_sales_age_tsg3'], t3Sg)
+    sheep_inp['i_target_weight_tsg3'] = np.reshape(sheep_inp['i_target_weight_tsg3'], t3Sg)
+    sheep_inp['ia_i_idg2'] = np.reshape(sheep_inp['ia_i_idg2'], idg)
 
-###saltbush
-saltbush_inp['i_sb_expected_foo_zp6'] = np.reshape(saltbush_inp['i_sb_expected_foo_zp6'], zp6)
-saltbush_inp['i_sb_expected_growth_zp6'] = np.reshape(saltbush_inp['i_sb_expected_growth_zp6'], zp6)
-saltbush_inp['i_sb_growth_reduction_zp6'] = np.reshape(saltbush_inp['i_sb_growth_reduction_zp6'], zp6)
-saltbush_inp['i_sb_ash_content_zp6'] = np.reshape(saltbush_inp['i_sb_ash_content_zp6'], zp6)
-saltbush_inp['i_sb_selectivity_zp6'] = np.reshape(saltbush_inp['i_sb_selectivity_zp6'], zp6)
-saltbush_inp['i_slp_diet_propn_zp6'] = np.reshape(saltbush_inp['i_slp_diet_propn_zp6'], zp6)
+    ###feedsupply
+    feedsupply_inp = inputs[property]['feedsupply_inp']
+    feedsupply_inp['i_feedsupply_options_r1j2p'] = np.reshape(feedsupply_inp['i_feedsupply_options_r1j2p'], r1j2P)
+    feedsupply_inp['i_confinement_options_r1p6z'] = np.reshape(feedsupply_inp['i_confinement_options_r1p6z'], r1p6z)
 
-###stock
-sheep_inp['i_pasture_stage_p6z'] = np.reshape(sheep_inp['i_pasture_stage_p6z'], zp6)
-sheep_inp['i_legume_p6z'] = np.reshape(sheep_inp['i_legume_p6z'], zp6)
-sheep_inp['i_supplement_zp6'] = np.reshape(sheep_inp['i_supplement_zp6'], zp6)
-sheep_inp['i_paststd_foo_zp6j0'] = np.reshape(sheep_inp['i_paststd_foo_zp6j0'], zp6j0)
-sheep_inp['i_paststd_dmd_zp6j0'] = np.reshape(sheep_inp['i_paststd_dmd_zp6j0'], zp6j0)
-sheep_inp['i_density_p6z'] = np.reshape(sheep_inp['i_density_p6z'], zp6)
-sheep_inp['i_husb_operations_triggerlevels_h5h7h2'] = np.reshape(sheep_inp['i_husb_operations_triggerlevels_h5h7h2'], h2h5h7)
-sheep_inp['i_date_born1st_iog2'] = np.reshape(sheep_inp['i_date_born1st_iog2'], iog)
-sheep_inp['i_date_born1st_idg3'] = np.reshape(sheep_inp['i_date_born1st_idg3'], idg)
-sheep_inp['i_sire_propn_oig1'] = np.reshape(sheep_inp['i_sire_propn_oig1'], iog)
-sheep_inp['i_date_shear_sixg0'] = np.reshape(sheep_inp['i_date_shear_sixg0'], isxg)
-sheep_inp['i_date_shear_sixg1'] = np.reshape(sheep_inp['i_date_shear_sixg1'], isxg)
-sheep_inp['i_date_shear_sixg3'] = np.reshape(sheep_inp['i_date_shear_sixg3'], isxg)
-sheep_inp['ia_r1_zig0'] = np.reshape(sheep_inp['ia_r1_zig0'], izg)
-sheep_inp['ia_r1_zig1'] = np.reshape(sheep_inp['ia_r1_zig1'], izg)
-sheep_inp['ia_r1_zig3'] = np.reshape(sheep_inp['ia_r1_zig3'], izg)
-sheep_inp['ia_r2_ik0g1'] = np.reshape(sheep_inp['ia_r2_ik0g1'], ik0g)
-sheep_inp['ia_r2_ik1g1'] = np.reshape(sheep_inp['ia_r2_ik1g1'], ik1g)
-sheep_inp['ia_r2_isk2g1'] = np.reshape(sheep_inp['ia_r2_isk2g1'], isk2g)
-sheep_inp['ia_r2_ik0g3'] = np.reshape(sheep_inp['ia_r2_ik0g3'], ik0g)
-sheep_inp['ia_r2_ik3g3'] = np.reshape(sheep_inp['ia_r2_ik3g3'], ik3g)
-sheep_inp['ia_r2_ik4g3'] = np.reshape(sheep_inp['ia_r2_ik4g3'], ik4g)
-sheep_inp['ia_r2_ik5g3'] = np.reshape(sheep_inp['ia_r2_ik5g3'], ik5g)
-sheep_inp['i_sales_age_tsg3'] = np.reshape(sheep_inp['i_sales_age_tsg3'], t3Sg)
-sheep_inp['i_target_weight_tsg3'] = np.reshape(sheep_inp['i_target_weight_tsg3'], t3Sg)
-sheep_inp['ia_i_idg2'] = np.reshape(sheep_inp['ia_i_idg2'], idg)
-feedsupply_inp['i_feedsupply_options_r1j2p'] = np.reshape(feedsupply_inp['i_feedsupply_options_r1j2p'], r1j2P)
-feedsupply_inp['i_confinement_options_r1p6z'] = np.reshape(feedsupply_inp['i_confinement_options_r1p6z'], r1p6z)
+def f_select_pinp(property):
+    ##create a copy of each input dict - so that the base inputs remain unchanged
+    ##the copy created is the one used in the actual modules
 
-##create a copy of each input dict - so that the base inputs remain unchanged
-##the copy created is the one used in the actual modules
-###NOTE: if an input sheet is added remember to add it to the dict reset in f_sa() below.
-general = copy.deepcopy(general_inp)
-labour = copy.deepcopy(labour_inp)
-crop = copy.deepcopy(crop_inp)
-cropgraze = copy.deepcopy(cropgraze_inp)
-saltbush = copy.deepcopy(saltbush_inp)
-mach = copy.deepcopy(mach_inp)
-stubble = copy.deepcopy(stubble_inp)
-finance = copy.deepcopy(finance_inp)
-period = copy.deepcopy(period_inp)
-supfeed = copy.deepcopy(sup_inp)
-sheep = copy.deepcopy(sheep_inp)
-feedsupply = copy.deepcopy(feedsupply_inp)
-mvf = copy.deepcopy(mvf_inp)
-pasture_inputs = copy.deepcopy(pasture_inp)
+    print('Using property: {0}'.format(property))
+
+    ##needs to be global so inputs can be accessed outside this function
+    global general
+    global labour
+    global crop
+    global cropgraze
+    global saltbush
+    global mach
+    global stubble
+    global finance
+    global period
+    global supfeed
+    global sheep
+    global feedsupply
+    global mvf
+    global pasture_inputs
+    general = copy.deepcopy(inputs[property]['general_inp'])
+    labour = copy.deepcopy(inputs[property]['labour_inp'])
+    crop = copy.deepcopy(inputs[property]['crop_inp'])
+    cropgraze = copy.deepcopy(inputs[property]['cropgraze_inp'])
+    saltbush = copy.deepcopy(inputs[property]['saltbush_inp'])
+    mach = copy.deepcopy(inputs[property]['mach_inp'])
+    stubble = copy.deepcopy(inputs[property]['stubble_inp'])
+    finance = copy.deepcopy(inputs[property]['finance_inp'])
+    period = copy.deepcopy(inputs[property]['period_inp'])
+    supfeed = copy.deepcopy(inputs[property]['sup_inp'])
+    sheep = copy.deepcopy(inputs[property]['sheep_inp'])
+    feedsupply = copy.deepcopy(inputs[property]['feedsupply_inp'])
+    mvf = copy.deepcopy(inputs[property]['mvf_inp'])
+    pasture_inputs = copy.deepcopy(inputs[property]['pasture_inp'])
 
 
 #######################
@@ -264,21 +294,6 @@ def f_property_inp_sa():
     '''
     ##have to import it here since sen.py imports this module
     import Sensitivity as sen
-
-    ##reset inputs to base at the start of each trial before applying SA - old method was to update the SA based on the _inp dict but that doesn't work well when multiple SA on the same variable.
-    fun.f_dict_reset(general, general_inp)
-    fun.f_dict_reset(labour, labour_inp)
-    fun.f_dict_reset(crop, crop_inp)
-    fun.f_dict_reset(cropgraze, cropgraze_inp)
-    fun.f_dict_reset(mach, mach_inp)
-    fun.f_dict_reset(stubble, stubble_inp)
-    fun.f_dict_reset(finance, finance_inp)
-    fun.f_dict_reset(period, period_inp)
-    fun.f_dict_reset(supfeed, sup_inp)
-    fun.f_dict_reset(sheep, sheep_inp)
-    fun.f_dict_reset(feedsupply, feedsupply_inp)
-    fun.f_dict_reset(mvf, mvf_inp)
-    fun.f_dict_reset(pasture_inputs, pasture_inp)
 
     ##general
     ###sav
