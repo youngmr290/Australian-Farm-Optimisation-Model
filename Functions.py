@@ -798,27 +798,36 @@ def f_run_required(exp_data1):
         exp_data1['run_req']=True
     return exp_data1
 
-def f_read_exp():
+def f_read_exp(pinp_req=False):
     '''
 
     1. Read in exp.xl, set index and cols and drop un-required cols.
     2. Determine which trials are in the experiment the user specified to run.
+    3. Determines which property are required for the current exp
     '''
 
     ##set the group of trials being run. If no argument is passed in then all trials are run. To pass in argument need to run via terminal.
     try:
         exp_group = int(sys.argv[1]) #reads in as string so need to convert to int, the script path is the first value hence take the second.
-    except IndexError: #in case no arg passed to python
+    except (IndexError, ValueError) as e: #in case no arg passed to python
         exp_group = None
 
     ##read excel
-    exp_data = pd.read_excel('exp.xlsx', index_col=None, header=[0,1,2,3], engine='openpyxl')
+    ##build path this way so that readthedocs can read correctly.
+    directory_path = os.path.dirname(os.path.abspath(__file__))
+    exp_xl_path = os.path.join(directory_path, "exp.xlsx")
+    exp_data = pd.read_excel(exp_xl_path, index_col=None, header=[0,1,2,3], engine='openpyxl')
 
     ##determine trials which are in specified experiment group. If no group passed in then all trials will be included in the experiment.
     if exp_group is not None:
         exp_group_bool = exp_data.loc[:,('Drop','blank','blank','Exp Group')].values==exp_group
     else:
         exp_group_bool = exp_data.loc[:,('Drop','blank','blank','Exp Group')].values >= 0 #this will remove the blank rows
+
+    ##Determine which property are required for the current exp
+    trial_pinp = exp_data.loc[exp_group_bool, ('Drop', 'blank', 'blank', 'Pinp')]
+    if pinp_req:
+        return trial_pinp.unique()
 
     ##drop irrelevant cols and set index
     exp_data = exp_data.iloc[:, exp_data.columns.get_level_values(0)!='Drop']
@@ -833,7 +842,7 @@ def f_read_exp():
     else:
         raise exc.TrialError('''Exp.xl has multiple trials with the same name.''')
 
-    return exp_data, exp_group_bool
+    return exp_data, exp_group_bool, trial_pinp
 
 def f_group_exp(exp_data, exp_group_bool):
     '''
@@ -845,15 +854,12 @@ def f_group_exp(exp_data, exp_group_bool):
     exp_data = exp_data.loc[exp_group_bool]
     return exp_data
 
-def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav, sam_inp, saa_inp, sap_inp, sar_inp, sat_inp, sav_inp):
-    ##reset SA dicts to base at the start of each trial before applying SA.
-    f_dict_reset(sam, sam_inp)
-    f_dict_reset(sap, sap_inp)
-    f_dict_reset(saa, saa_inp)
-    f_dict_reset(sat, sat_inp)
-    f_dict_reset(sar, sar_inp)
-    f_dict_reset(sav, sav_inp)
+def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav):
+    '''
+    Update default SA arrays from sensitivity.py with values from Exp.xl.
 
+    Each trial sensitivity.py rebuilds the SA arrays so nothing from the previous trial can carry over.
+    '''
     for dic,key1,key2,indx in exp_data:
         ##extract current value
         value = exp_data.loc[exp_data.index[row], (dic,key1,key2,indx)]

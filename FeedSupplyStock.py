@@ -494,6 +494,7 @@ def f1_j2_to_n(t_feedsupply_stpa1e1b1j2wzida0e0b0xyg, t_confinement_pa1e1b1nwzid
     n_pos = sinp.stock['i_n_pos']
     ### the nut_spread inputs are the proportion of std and min or max feed supply.
     ### Unless nut_spread is greater than 3 in which case the value becomes the actual feed supply
+    #todo nutspread >3 doesn't overwrite the value any more.
     ###convert nut_spread inputs to numpy array and cut to the correct length based on number of nutrition options (i_len_n structural input)
     if isinstance(i_nut_spread_n, np.ndarray):
         nut_spread_n = i_nut_spread_n[0:n_fs]

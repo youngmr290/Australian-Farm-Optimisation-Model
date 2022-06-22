@@ -69,7 +69,7 @@ directory_path = os.path.dirname(os.path.abspath(__file__))
 #load exp               # 
 #########################
 ##read in exp and drop all false runs ie runs not being run this time
-exp_data, exp_group_bool = fun.f_read_exp()
+exp_data, exp_group_bool, trial_pinp = fun.f_read_exp()
 exp_data1=exp_data.copy() #copy made so that the run col can be added - the original df is used to allocate sa values (would cause an error if run col existed but i can't drop it because it is used to determine if the trial is run)
 
 
@@ -129,9 +129,13 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     trial_description = f'{dataset.index(row)+1} {trial_name}'
     print(f'\n{trial_description}, Starting trial at: {time.ctime()}')
 
+    ##select property for the current trial
+    property = trial_pinp.iloc[row]
+    pinp.f_select_pinp(property)
+
     ##update sensitivity values
-    fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav
-                     ,sen.sam_inp,sen.saa_inp,sen.sap_inp,sen.sar_inp,sen.sat_inp,sen.sav_inp)
+    sen.create_sa()
+    fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
 
     ##call sa functions - assigns sa variables to relevant inputs
     sinp.f_structural_inp_sa()

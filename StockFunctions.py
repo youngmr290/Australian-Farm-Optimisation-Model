@@ -2868,6 +2868,9 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     distribution_nextnearest_w8gw9 = np.zeros_like(distribution_nearest_w8gw9)
 
     ## Find the index of the destination slice that is nearest to the source weight
+    #todo may be able to save memory here by storing sign(diff_w8gw9).astype(int) for later steps
+    # then calculating in place the absolute value of diff_w8w9 = np.abs(diff_w8gw9, out=diff_w8gw9)
+    # the idea being that it replaces a w8gw9-float with a w8gw9-int
     diff_w8gw9 = ffcfw_dest_wgw9 - ffcfw_source_w8g[...,na]
     diff_abs_w8gw9 = np.abs(diff_w8gw9)
     nearestw9_idx_w8g = np.argmin(diff_abs_w8gw9,axis = -1)
