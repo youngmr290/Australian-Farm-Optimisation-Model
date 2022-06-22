@@ -319,7 +319,7 @@ def f_crop_monitoring():
     keys_k = variable_crop_monitor.index
     cols_p7p5z = pd.MultiIndex.from_product([keys_p7, keys_p5, keys_z])
     variable_crop_monitor = pd.DataFrame(variable_crop_monitor_k_p7p5z, index=keys_k, columns=cols_p7p5z)
-    phases_df = sinp.f_phases()
+    phases_df = pinp.f1_phases()
     phases_df.columns = pd.MultiIndex.from_product([phases_df.columns,[''],['']])
     variable_crop_monitor = pd.merge(phases_df, variable_crop_monitor, how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases
     variable_crop_monitor_r_p7p5z = variable_crop_monitor.drop(list(range(sinp.general['phase_len'])), axis=1)

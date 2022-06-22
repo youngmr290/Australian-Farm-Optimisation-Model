@@ -47,7 +47,7 @@ def create_sa():
     len_k5 = pinp.sheep['i_k5_len'] #BTRT cluster
     len_l = len(pinp.general['i_lmu_idx'])
     len_o = pinp.sheep['i_o_len']
-    len_r = len(sinp.f_phases())
+    len_R = 5000 #just use a big number - it is cut down later (this is because the length of r is not known because it can be affected by SA)
     len_s = pinp.sheep['i_s_len'] #s = shear
     len_t1 = pinp.sheep['i_n_dam_sales'] + len_g0
     len_t2 = pinp.sheep['i_t2_len']
@@ -261,7 +261,7 @@ def create_sa():
     sav['bnd_min_sale_age_female_g1'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a dam can be sold - BBT offspring can be sold but BBT dams can't (because they are BB)
     sav['bnd_min_sale_age_female_dg3'] = np.full((len_d,) + (len_g3,), '-', dtype=object)   #SA to set min age a female can be sold - used to bound prog & offs
     sav['bnd_max_sale_age_female_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
-    sav['rot_lobound_rl'] = np.full((len_r,) + (len_l,), '-', dtype=object)
+    sav['rot_lobound_rl'] = np.full((len_R,) + (len_l,), '-', dtype=object)
     
     ##pasture
     sav['pas_inc_t'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA value for pastures included mask

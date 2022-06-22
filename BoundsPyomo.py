@@ -29,6 +29,7 @@ note:
 
 def f1_boundarypyomo_local(params, model):
     lmu_mask = pinp.general['i_lmu_area'] > 0
+    mask_r = pinp.f1_phases(mask_r=True)
 
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
@@ -75,7 +76,8 @@ def f1_boundarypyomo_local(params, model):
             ###build array
             #rot_lobound_rl = np.zeros((len(model.s_phases), len(model.s_lmus)))
             ###set the bound
-            rot_lobound_rl = fun.f_sa(np.array([0],dtype=float), sen.sav['rot_lobound_rl'][:,lmu_mask], 5)
+            sen.sav['rot_lobound_rl'] = sen.sav['rot_lobound_rl'][0:len(mask_r),:]
+            rot_lobound_rl = fun.f_sa(np.array([0],dtype=float), sen.sav['rot_lobound_rl'][mask_r,:][:,lmu_mask], 5)
             # rot_lobound_rl[4,0] = 70 #fodder lmu2
             # rot_lobound_rl[0,0] = 150 #AAAAAa
             # rot_lobound_rl[0,1] = 1230 #AAAAAa

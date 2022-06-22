@@ -112,7 +112,7 @@ def sets(model, nv):
     model.s_lmus = Set(initialize=pinp.general['i_lmu_idx'][lmu_mask],doc='defined the soil type a given rotation is on')
 
     ##phases
-    model.s_phases = Set(initialize=sinp.f_phases().index,doc='rotation phases set')
+    model.s_phases = Set(initialize=pinp.f1_phases().index,doc='rotation phases set')
 
     ##rotation con1 set
     s_rotcon1 = pd.read_excel('Rotation.xlsx',sheet_name='rotation con1 set',header=None,index_col=0,engine='openpyxl')
