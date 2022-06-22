@@ -92,6 +92,7 @@ def f1_boundarypyomo_local(params, model):
             rot_lobound = dict(zip(tup_rl, rot_lobound))
             ###constraint
             l_p7 = list(model.s_season_periods)
+            #todo was getting a problem when the lo bound was 0. Maybe skip constraint if rot_lobound[r,l]==0
             def rot_lo_bound(model, q, s, p7, r, l, z):
                 if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]):
                     return model.v_phase_area[q, s, p7, z, r, l] >= rot_lobound[r,l]
