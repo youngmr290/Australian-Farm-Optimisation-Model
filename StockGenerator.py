@@ -896,7 +896,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fvp_other_yiu = fvp_other_iu + np.arange(np.ceil(sim_years))[:,na,na] * 364
     fvp_other_yiu = fun.f_sa(fvp_other_yiu, sen.sav['user_fvp_date_dams_yiu'], 5)
     for u in range(n_user_fvp):
-        fvp_other_ya1e1b1nwzida0e0b0xyg = fun.f_expand(fvp_other_yiu[u], left_pos=i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
+        fvp_other_ya1e1b1nwzida0e0b0xyg = fun.f_expand(fvp_other_yiu[...,u], left_pos=i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
         idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, fvp_other_ya1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the period when season breaks (e.g. break of season fvp starts at the beginning of the sim period when season breaks), side=right so that if the date is already the start of a period it remains in that period.
         fvp_other_start_ya1e1b1nwzida0e0b0xyg = date_start_p[idx_ya1e1b1nwzida0e0b0xyg]
         user_fvp_u[u] = fvp_other_start_ya1e1b1nwzida0e0b0xyg

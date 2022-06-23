@@ -35,7 +35,7 @@ def f_saltbush_precalcs(params, r_vals, nv):
     ###########################
     ##inputs
     sb_landuse = pinp.saltbush['i_sb_landuse']
-    phases_rotn_df = sinp.f_phases()
+    phases_rotn_df = pinp.f1_phases()
 
     ##determine which phases provide slp
     phase_is_slp_r = phases_rotn_df.iloc[:,-1] == sb_landuse

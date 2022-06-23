@@ -48,7 +48,6 @@ import pandas as pd
 import numpy as np
 import timeit
 import datetime as dt
-import sys
 import os
 
 #AFO modules - cant import pasture or stubble or cropgrazing
@@ -71,8 +70,9 @@ na = np.newaxis
 
 def f1_sim_inputs(sheet=None, index=None, header=None):
     ###build path this way so the file can be access even if AFO is run from another directory eg readthedocs or web app.
+    property = pinp.general['i_property_id']
     directory_path = os.path.dirname(os.path.abspath(__file__))
-    xl_path = os.path.join(directory_path, "SimInputs.xlsx")
+    xl_path = os.path.join(directory_path, "SimInputs_{0}.xlsx".format(property))
     return pd.read_excel(xl_path, sheet_name=sheet, index_col=index, header=header, engine='openpyxl')
 
 
@@ -83,44 +83,6 @@ def f1_mask_lmu(df, axis):
     if axis==1:
         df = df.loc[:, lmu_mask]
     return df
-
-
-def f1_rot_check():
-    ##check that the rotations match the inputs. If not then re-run rotation generation. If still not the same
-    ## quit and leave error message (most likely the user needs to re-run APSIM).
-    if pinp.crop['user_crop_rot']:
-        ### User defined
-        base_yields = pinp.crop['yields']
-    else:
-        ### Simulation version
-        base_yields = f1_sim_inputs(sheet='Yield', index=0, header=0)
-
-    ##read in existing rotations and see if the inputs match
-    phases_df = sinp.f_phases()
-    ###add variable that is the number of yrs in the rot phases
-    sinp.general['phase_len'] = len(phases_df.columns)
-
-    if len(phases_df) == len(base_yields):
-        if all(base_yields.index==phases_df.index):
-            return
-    ##if the rotations don't match inputs then rerun rotation generation.
-    import RotGeneration
-    RotGeneration.f_rot_gen()
-
-    ##read in newly generated rotations and see if the inputs now match
-    phases_df = sinp.f_phases()
-    ###update len rot
-    sinp.general['phase_len'] = len(phases_df.columns)
-
-    ##if they still don't match then the user will need to either re-run simulation model (apsim) or change rotgeneration to line up with the rotations that have been simulated.
-    if len(phases_df) == len(base_yields):
-        if all(base_yields.index==phases_df.index):
-            return
-    print('''WARNING: Rotations don't match inputs.
-           Things to check: 
-           1. if you have generated new rotations have you re-run AusFarm?
-           2. the named ranges in for the user defined rotations and inputs are all correct''')
-    sys.exit()
 
 
 ########################
@@ -279,7 +241,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
 
     '''
     ##read phases
-    phases_df = sinp.f_phases()
+    phases_df = pinp.f1_phases()
 
     ##read in base yields
     if pinp.crop['user_crop_rot']:
@@ -296,6 +258,8 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
         ###Mask z axis
         base_yields_rk_z = zfun.f_seasonal_inp(base_yields_rk_z, axis=1)
 
+    mask_r = pinp.f1_phases(mask_r=True)
+    base_yields_rk_z = base_yields_rk_z.loc[mask_r,:]
     base_yields_rkz = base_yields_rk_z.stack()
 
     ##colate other info
@@ -441,7 +405,7 @@ def f_fert_req():
 
     '''
     ##read phases
-    phases_df = sinp.f_phases()
+    phases_df = pinp.f1_phases()
 
     ##read in fert by soil
     fert_by_soil = f1_mask_lmu(pinp.crop['fert_by_lmu'], axis=1)
@@ -457,6 +421,8 @@ def f_fert_req():
         base_fert_rk_zn = f1_sim_inputs(sheet='Fert Applied', index=[0,1], header=[0,1])
         ###Mask z axis
         base_fert_rk_zn = zfun.f_seasonal_inp(base_fert_rk_zn, axis=1, level=0)
+    mask_r = pinp.f1_phases(mask_r=True)
+    base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
 
     ##rename index
     base_fert_rk_zn.index.rename(['rot','landuse'],inplace=True)
@@ -488,7 +454,7 @@ def f_fert_passes():
 
     '''
     ##read phases
-    phases_df = sinp.f_phases()
+    phases_df = pinp.f1_phases()
 
     ####read in passes
     if pinp.crop['user_crop_rot']:
@@ -502,6 +468,8 @@ def f_fert_passes():
         fert_passes_rk_zn = f1_sim_inputs(sheet='No Fert Applications', index=[0,1], header=[0,1])
         ###Mask z axis
         fert_passes_rk_zn = zfun.f_seasonal_inp(fert_passes_rk_zn, axis=1, level=0)
+    mask_r = pinp.f1_phases(mask_r=True)
+    fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
 
     ##rename index
     fert_passes_rk_zn.index.rename(['rot','landuse'],inplace=True)
@@ -607,7 +575,7 @@ def f_nap_fert_req():
 
     '''
     ##read phases and add empty header level
-    phases_df2 = sinp.f_phases()
+    phases_df2 = pinp.f1_phases()
     phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns,['']])  # make the df multi index so that when it merges with other df below the indexs remaining separate (otherwise it turn into a one leveled tuple)
     ##adj arable
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)  # read in arable area df
@@ -625,7 +593,7 @@ def f_nap_fert_passes():
 
     '''
     ##read phases and add empty header level
-    phases_df2 = sinp.f_phases()
+    phases_df2 = pinp.f1_phases()
     phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns,['']])  # make the df multi index so that when it merges with other df below the indexs remaining separate (otherwise it turn into a one leveled tuple)
 
     ##passes over non arable pasture area (only for pasture phases because for pasture the non arable areas also receive fert)
@@ -845,9 +813,6 @@ def f_chem_application():
 
     '''
     ##read in chem passes
-    ##read phases
-    phases_df = sinp.f_phases()
-
     if pinp.crop['user_crop_rot']:
         ### User defined
         chem_passes = pinp.crop['chem']
@@ -860,6 +825,9 @@ def f_chem_application():
         chem_passes_rk_zn = zfun.f_seasonal_inp(chem_passes_rk_zn, axis=1, level=0)
         ###drop landuse from index
         chem_passes_r_zn = chem_passes_rk_zn.droplevel(1, axis=0)
+    mask_r = pinp.f1_phases(mask_r=True)
+    chem_passes_r_zn = chem_passes_r_zn.loc[mask_r,:]
+
     ##adjust chem passes by arable area
     arable_l = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
     chem_passes_rz_n = chem_passes_r_zn.stack(0)
@@ -891,7 +859,7 @@ def f_chem_cost(r_vals):
 
     '''
     ##read phases
-    phases_df = sinp.f_phases()
+    phases_df = pinp.f1_phases()
 
     ##read in necessary bits and adjust indexed
     # i_chem_cost = pinp.crop['chem_cost'].sort_index() #cost of fungicide per application
@@ -917,6 +885,8 @@ def f_chem_cost(r_vals):
         chem_cost_rk_zn = zfun.f_seasonal_inp(chem_cost_rk_zn, axis=1, level=0)
         ###drop landuse from index
         chem_cost_r_zn = chem_cost_rk_zn.droplevel(1, axis=0)
+    mask_r = pinp.f1_phases(mask_r=True)
+    chem_cost_r_zn = chem_cost_r_zn.loc[mask_r,:]
 
     ### sum herbicide and fungicide cost
     chem_cost_r_z = chem_cost_r_zn.groupby(axis=1, level=0).sum()
@@ -978,9 +948,9 @@ def f_seedcost(r_vals):
         - arable area
     '''
     ##read phases and add two empty col levels
-    phases_df2 = sinp.f_phases()
+    phases_df2 = pinp.f1_phases()
     phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns,[''],['']])  # make the df multi index so that when it merges with other df below the indexs remaining separate (otherwise it turn into a one leveled tuple)
-    phases_df3 = sinp.f_phases()
+    phases_df3 = pinp.f1_phases()
     phases_df3.columns = pd.MultiIndex.from_product([phases_df3.columns,[''],[''],['']])  # make the df multi index so that when it merges with other df below the indexs remaining separate (otherwise it turn into a one leveled tuple)
 
     ##seasonal inputs
@@ -1154,7 +1124,7 @@ def f_phase_sow_req():
 
     '''
     ##read phases
-    phases_df = sinp.f_phases()
+    phases_df = pinp.f1_phases()
     ##adjust arable area
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
     ##sow = arable area * frequency
@@ -1288,7 +1258,7 @@ def f1_crop_params(params,r_vals):
 #     :param cost_array: df with the cost of the corresponding resown landuse. This array will be returned with the addition of the continuous pasture landuse
 #     '''
 #     ##read phases
-#     phases_df = sinp.f_phases()
+#     phases_df = pinp.f1_phases()
 #
 #     pastures = sinp.general['pastures'][pinp.general['pas_inc']]
 #     ##if cont tedera is in rotation list and tedera is included in the pasture modules then generate the inputs for it

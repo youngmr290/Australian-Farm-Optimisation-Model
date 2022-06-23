@@ -34,7 +34,7 @@ na = np.newaxis
 #
 #     '''
 #     ##read phases
-#     phases_rh = sinp.f_phases().values
+#     phases_rh = pinp.f1_phases().values
 #
 #     ##lmu mask
 #     lmu_mask = pinp.general['i_lmu_area'] > 0

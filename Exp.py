@@ -136,7 +136,7 @@ for row in range(len(exp_data)):
     sinp.f1_expand_p6()
     pinp.f1_expand_p6()
     ##check the rotations and inputs align - this means rotation method can be controlled using a SA
-    phs.f1_rot_check()
+    pinp.f1_phases(check=True)
 
 
     ##create empty dicts - have to do it here because need the trial as the first key, so whole trial can be compared when determining if pyomo needs to be run

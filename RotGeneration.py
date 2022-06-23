@@ -139,6 +139,7 @@ No perenials are included yet. These are not very common in current rotations.
 ##if you want to use a customised list of rotations this can be set to false - populate the array further down the module.
 customised_rotations = False
 def f_rot_gen():
+    print('Running rotation generator')
     yr0 = np.array(['b', 'o', 'w', 'f', 'l', 'z','r'#, 'h','of'- not included in v1 to speed calibration process
                    , 'bd','wd','rd','zd'
                    , 'a', 'ar'

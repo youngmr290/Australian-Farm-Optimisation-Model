@@ -18,6 +18,7 @@ import os.path
 import numpy as np
 import pandas as pd
 import copy
+import sys
 
 ##AFO modules
 import Functions as fun
@@ -530,4 +531,75 @@ def f1_expand_p6():
 
 
 
+##############
+#phases      #
+##############
+def f1_phases(mask_r=False, check=False):
+    '''
+    Rotation info.
+
+    When using pinp rotations they are all included but if using full rotations then a mask is applied.
+    The user can control the mask in SimInputs_{property}.xl.
+    
+    :param mask_r: If True the function returns the rot included mask.
+    :param check: If True the function returns nothing - it is just used to check the correct rotations exist in rot.xl.
+    '''
+    ##rotation phases - read in from excel
+    phases_r = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header=None, index_col=0, engine='openpyxl').T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
+    ###add variable that is the number of yrs in the rot phases
+    sinp.general['phase_len'] = len(phases_r.columns)
+
+    ##check that the rotations match the inputs. If not then re-run rotation generation. If still not the same
+    ## quit and leave error message (most likely the user needs to re-run APSIM).
+    if crop['user_crop_rot']:
+        ### User defined
+        base_yields = crop['yields']
+    else:
+        ### Simulation version
+        ###build path this way so the file can be access even if AFO is run from another directory eg readthedocs or web app.
+        property = general['i_property_id']
+        directory_path = os.path.dirname(os.path.abspath(__file__))
+        xl_path = os.path.join(directory_path, "SimInputs_{0}.xlsx".format(property))
+        base_yields = pd.read_excel(xl_path, sheet_name='Yield', index_col=0, header=0, engine='openpyxl')
+    ###if the rotations don't match inputs then rerun rotation generation.
+    if len(phases_r) != len(base_yields) or any(base_yields.index!=phases_r.index):
+        import RotGeneration
+        RotGeneration.f_rot_gen()
+
+        ###read in newly generated rotations and see if the inputs now match
+        phases_r = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header=None, index_col=0, engine='openpyxl').T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
+        ###update len rot
+        sinp.general['phase_len'] = len(phases_r.columns)
+
+        ##if they still don't match then the user will need to either re-run simulation model (apsim) or change rotgeneration to line up with the rotations that have been simulated.
+        if len(phases_r) != len(base_yields) or any(base_yields.index!=phases_r.index):
+            print('''WARNING: Rotations don't match inputs.
+                   Things to check: 
+                   1. if you are using full rotation have you generated the full inputs for the selected property
+                   2. if you have generated new rotations have you re-generated the full inputs (ie re-run simulation)?
+                   3. the named ranges in for the user defined rotations and inputs are all correct''')
+            sys.exit()
+
+    ##if calling this function to check the rots then simply return nothing once the tests have been passed
+    if check:
+        return
+
+    ##rotation mask - read in from excel
+    if crop['user_crop_rot']:
+        rot_mask_r = crop['i_user_rot_inc_r']
+    else:
+        ###build path this way so the file can be access even if AFO is run from another directory eg readthedocs or web app.
+        property = general['i_property_id']
+        directory_path = os.path.dirname(os.path.abspath(__file__))
+        xl_path = os.path.join(directory_path, "SimInputs_{0}.xlsx".format(property))
+        rot_mask_r = pd.read_excel(xl_path, sheet_name='RotMask', index_col=0, header=0, engine='openpyxl').squeeze().values
+
+    ##if using the full list then apply the rot mask
+    if mask_r:
+        return rot_mask_r
+
+    ##apply mask
+    phases_r = phases_r.loc[rot_mask_r,:]
+
+    return phases_r
 

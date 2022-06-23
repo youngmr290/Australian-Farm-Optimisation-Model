@@ -102,7 +102,7 @@ def f_season_params(params):
     ##inputs
     keys_p7 = per.f_season_periods(keys=True)
     keys_z = zfun.f_keys_z()
-    phases_df = sinp.f_phases()
+    phases_df = pinp.f1_phases()
     landuse_r = phases_df.iloc[:,-1].values
     dry_sown_landuses = sinp.landuse['dry_sown']
     phase_is_drysown_r = np.any(landuse_r[:,na]==list(dry_sown_landuses), axis=-1)
@@ -159,7 +159,7 @@ def f_landuses_phases(params,r_vals):
     * Store rotation list and pasture phases list to report dictionary
 
     '''
-    phases=sinp.f_phases()
+    phases=pinp.f1_phases()
     phases_rk = phases.set_index(phases.columns[-1], append=True) #add landuse as index level
     params['phases_rk'] = dict.fromkeys(phases_rk.index,1)
 
