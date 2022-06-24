@@ -1764,8 +1764,8 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
         for extra_lev in range(extra_levels):
             arrays[array].columns = pd.MultiIndex.from_product([arrays[array].columns, ['']])
             # arrays[array] = pd.concat([arrays[array]], keys=[''], axis=1)
-    feed_budget_supply = pd.concat(arrays[0:8], axis=1)
-    feed_budget_req = pd.concat(arrays[8:], axis=1)
+    feed_budget_supply = pd.concat(arrays[0:8], axis=1).round(0) #round so that little numbers dont cause issues
+    feed_budget_req = pd.concat(arrays[8:], axis=1).round(0) #round so that little numbers dont cause issues
 
     ##sum nv axis if nv_option is 1
     if nv_option==1:
