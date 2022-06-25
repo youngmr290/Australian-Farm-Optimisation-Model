@@ -231,7 +231,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         bndpy.f1_boundarypyomo_local(params, model)
         pyomocalc_end = time.time()
         print(f'{trial_description}, time for localpyomo: {pyomocalc_end - pyomocalc_start:.2f} finished at {time.ctime()}')
-        profit, obj = core.coremodel_all(trial_name, model)
+        profit, obj = core.coremodel_all(trial_name, model, nv)
         print(f'{trial_description}, time for corepyomo: {time.time() - pyomocalc_end:.2f} finished at {time.ctime()}')
 
         ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored

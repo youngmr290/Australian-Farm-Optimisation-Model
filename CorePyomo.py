@@ -33,7 +33,7 @@ import CropGrazingPyomo as cgzpy
 import SaltbushPyomo as slppy
 
 
-def coremodel_all(trial_name,model):
+def coremodel_all(trial_name,model,nv):
     '''
     Wraps all of the core model into a function so it can be run multiple times in a loop
 
@@ -67,6 +67,7 @@ def coremodel_all(trial_name,model):
     # feed supply
     f_con_poc_available(model)
     f_con_link_understory_saltbush_consumption(model)
+    f_con_link_pasture_supplement_consumption(model, nv)
     f_con_vol(model)
     f_con_me(model)
     #crop grazing
@@ -546,6 +547,27 @@ def f_con_link_understory_saltbush_consumption(model):
     model.con_link_understory_saltbush_consumption = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types,
                                                                    model.s_feed_periods,model.s_feed_pools, model.s_lmus,rule=link_us_sb,
                                                                    doc='link between the consumption of understory and saltbush')
+
+
+def f_con_link_pasture_supplement_consumption(model,nv):
+    '''
+    Constrains the consumption of paddock feed with supplement if the animal is not in confinement.
+    This is to represent the fact that livestock will still eat pasture if they're being fed supplement.
+    '''
+    len_nv = nv['len_nv']
+    nv_is_not_confinement_f = np.full(len_nv, True)
+    nv_is_not_confinement_f[-1] = np.logical_not(nv['confinement_inc']) #if confinement is included the last nv pool is confinement.
+    l_f = list(model.s_feed_pools)
+    def link_pas_sup(model,q,s,z,p6,f):
+        f_idx = l_f.index(f)
+        if pe.value(model.p_wyear_inc_qs[q, s]) and nv_is_not_confinement_f[f_idx] and uinp.supfeed['i_sup_selectivity_included']:
+            return - (paspy.f_pas_vol(model,q,s,p6,f,z) + stubpy.f_stubble_vol(model,q,s,p6,f,z)) * model.p_max_sup_selectivity[p6,z] \
+                   + suppy.f_sup_vol(model,q,s,p6,f,z) * (1-model.p_max_sup_selectivity[p6,z]) <= 0
+        else:
+            return pe.Constraint.Skip
+    model.con_link_pasture_supplement_consumption = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types,
+                                                                   model.s_feed_periods,model.s_feed_pools,rule=link_pas_sup,
+                                                                   doc='link between the consumption of paddock feed and supplement when trail feeding.')
 
 
 def f_con_me(model):

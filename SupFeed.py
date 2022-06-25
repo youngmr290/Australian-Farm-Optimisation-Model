@@ -405,6 +405,46 @@ def f1_sup_s2_ks2(r_vals):
     return sup_s2_k_s2.stack()
 
 
+def f1_sup_selectivity():
+    '''
+    Selectivity param of paddock feed to supplement when trail feeding.
+
+    If sheep are being fed grain in the paddock they will still each some pasture. This function builds the
+    parameter which represents the selectivity. This param is multiplied by the feed volume.
+    The default is one meaning that the stock eat an equivalent volume of paddock feed as they do supplement.
+    Using volume is good because it accounts for the impact of foo and quality on the selectivity e.g. if the
+    FOO is low stock won't have to consume as much because the volume is higher.
+
+    This constraint only acts for the green feed periods because we dont want the model to be able to defer pastures
+    by feeding supplement to stock that are not in confinement. This is because if there is green feed the sheep will
+    eat some green feed even if they are being fed supplement.
+
+    '''
+
+    i_max_sup_selectivity = uinp.supfeed['i_max_sup_selectivity']
+
+    ##adjust for p6 - only want this constraint to be active when grn feed exists.
+    ###create dry and green pasture exists mask
+    ###in the late brk season dry feed can occur in fp0&1.
+    feed_period_dates_p6z = per.f_feed_periods()
+    index_p6 = np.arange(feed_period_dates_p6z.shape[0]-1)
+    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
+    idx_fp_start_gs_z = fun.searchsort_multiple_dim(feed_period_dates_p6z, season_break_z, 1, 0, side='right') - 1
+    i_end_of_gs_z = zfun.f_seasonal_inp(pinp.pasture_inputs['annual']['EndGS'], numpy=True)
+    mask_greenfeed_exists_p6z = np.logical_or(np.logical_and(index_p6[:,na]>=idx_fp_start_gs_z, index_p6[:, na] <= i_end_of_gs_z),       #green exists in the period which is the end of growing season hence <=
+                                              np.logical_and(i_end_of_gs_z < idx_fp_start_gs_z,
+                                                             np.logical_or(index_p6[:,na]>=idx_fp_start_gs_z, index_p6[:,na]<=i_end_of_gs_z)))   #this handles if green feed starts mid fp and wraps around to start fps.
+    max_sup_selectivity_p6z = fun.f_update(i_max_sup_selectivity, 1, np.logical_not(mask_greenfeed_exists_p6z)) #can have as much sup as it wants when it is not green
+
+    ##make df
+    keys_z = zfun.f_keys_z()
+    keys_p6 = pinp.period['i_fp_idx']
+    index_p6z = pd.MultiIndex.from_product([keys_p6, keys_z])
+    max_sup_selectivity_p6z = pd.Series(max_sup_selectivity_p6z.ravel(), index=index_p6z)
+
+    return max_sup_selectivity_p6z
+
+
 ##collates all the params
 def f_sup_params(params,r_vals):
     total_sup_cost, total_sup_wc, storage_dep, storage_asset = f_sup_cost(r_vals)
@@ -413,6 +453,7 @@ def f_sup_params(params,r_vals):
     buy_grain_price, buy_grain_wc, buy_grain_prov_p7z = f_buy_grain_price(r_vals)
     a_p6_p7 = f1_a_p6_p7()
     sup_s2_ks2 = f1_sup_s2_ks2(r_vals)
+    max_sup_selectivity_p6z = f1_sup_selectivity()
 
 
     ##create non seasonal params
@@ -430,4 +471,5 @@ def f_sup_params(params,r_vals):
     params['sup_labour'] = sup_labour.stack().to_dict()
     params['a_p6_p7'] = a_p6_p7.to_dict()
     params['sup_s2_ks2'] = sup_s2_ks2.to_dict()
+    params['max_sup_selectivity_p6z'] = max_sup_selectivity_p6z.to_dict()
 
