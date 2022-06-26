@@ -52,6 +52,7 @@ def create_sa():
     len_t1 = pinp.sheep['i_n_dam_sales'] + len_g0
     len_t2 = pinp.sheep['i_t2_len']
     len_t3 = pinp.sheep['i_t3_len']
+    len_P = 500  #Capital P because it is an (over) estimate to initialise the p axes that will be sliced when len_p is known.
     len_V = 50  #Capital V because it is an (over) estimate to initialise the v axes that will be sliced when len_v is known.
     len_x = pinp.sheep['i_x_len']
     len_y = int(np.ceil(sinp.stock['i_age_max']))
@@ -182,8 +183,7 @@ def create_sa():
     #SAV #
     ######
     ##if you initialise an array it must be type object (so that you can assign int/float/bool into the array)
-    sav['feedsupply_adj_r2p'] = np.full_like(pinp.feedsupply['i_feedsupply_adj_options_r2p'], '-', dtype=object)  #SA value for feedsupply adjustment.
-    
+
     ##general
     sav['steady_state']      = '-'                  #SA to alter if the model is steady state
     sav['mask_z']      = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)   #SA to alter which seasons are included
@@ -206,26 +206,29 @@ def create_sa():
     sav['pinp_rot'] = '-'                       #control if using the pinp rotations or the full rotation list (note full rot requires simulation inputs)
     sav['mach_option'] = '-'                    #control which machine compliment is used
     sav['lmu_area_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
-    
+
     ##finance
     sav['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
     sav['overdraw_limit']      = '-'          #SA to alter the overdraw limit (amount of money that can be loaned from bank)
     sav['interest_rate']      = '-'           #SA to alter the credit and debit interest from bank
     sav['opp_cost_capital']      = '-'        #SA to alter the opportunity cost of capital
-    
+
     ##price
     sav['grain_percentile'] = '-'  #grain price percentile
-    
+
     ##labour
     sav['casual_ub'] = '-'  #casual upper bound all year except seeding and harv
     sav['seedharv_casual_ub'] = '-'  #casual upper bound at seeding and harv
-    
+
+    ##sup feed
+    sav['max_sup_selectivity'] = '-'  #control the maximum propn of potential intake used by supplement when paddock feeding.
+
     ##cropgrazing
     sav['cropgrazing_inc'] = '-'  #control if crop grazing is allowed
-    
+
     ##salt land pasture
     sav['slp_inc'] = '-'  #control if salt land pasture is included
-    
+
     ##bounds
     sav['bnd_slp_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of slp on each lmu
     sav['bnd_sb_consumption_p6'] = np.full(len(pinp.period['i_fp_idx']), '-', dtype=object)  #upper bnd on the amount of sb consumed
@@ -267,6 +270,10 @@ def create_sa():
     sav['pas_inc_t'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA value for pastures included mask
     
     ##Stock
+    ###feedsupply
+    sav['feedsupply_adj_r2p'] = np.full_like(pinp.feedsupply['i_feedsupply_adj_options_r2p'], '-', dtype=object)  # SA value for feedsupply adjustment.
+    sav['dams_confinement_P'] = np.full(len_P, '-', dtype=object)  # SA to control the gen periods dams are in confimentment - this gets applied in FeedSupplyStock.py
+    ###others
     sav['nv_inc'] = '-'    #SA to store NV report values
     sav['lw_inc'] = '-'     #SA to store LW report values
     sav['ffcfw_inc'] = '-'  #SA to store FFCFW report values
