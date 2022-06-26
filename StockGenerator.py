@@ -2202,7 +2202,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         loop_ltw_len = 1
 
     ##increment the number of loops. This may be specified in the SAV to finetune the LTW effect.
-    loop_ltw_len = loop_ltw_len + fun.f_sa(0, sen.sav['LTW_loops'], 5)
+    loop_ltw_len = loop_ltw_len + fun.f_sa(0, sen.sav['LTW_loops_increment'], 5)
 
     for loop_ltw in range(loop_ltw_len):
         #todo The double loop could be replaced by separating the offspring into their own loop
@@ -2210,7 +2210,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         # but it would reduce the number of offspring calculations, allow offspring wean wt to be based on ffcfw_yatf at weaning and allow loop length to be customised
         # the drawback of a separate loop is that the structure of the function calls would need to be repeated.
         # an alternative would be to replace "if days_period_g3[p] > 0" with another variable that is defined at the start, like 'calculate_this_period_pg3'
-        # calculate_this_period_pg3 = np.logical_and(np.any(days_period_g3[p]>0), loop_ltw = sen.sav['LTW_loops'] # only calculate the progeny & sires in the final LTW loop
+        # calculate_this_period_pg3 = np.logical_and(np.any(days_period_g3[p]>0), loop_ltw = sen.sav['LTW_loops_increment'] # only calculate the progeny & sires in the final LTW loop
 
         ####################################
         ### initialise arrays for sim loop  # axis names not always track from now on because they change between p=0 and p=1
