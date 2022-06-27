@@ -113,6 +113,7 @@ na=np.newaxis
 
 
 #todo supp feeding in confinement incurs the same costs as paddock feeding. this should be changed. it should also incur some capital cost.
+# it should also have less costs and time for feeding
 
 def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1nwzida0e0b0xyg,
                  period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1,
