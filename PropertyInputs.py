@@ -564,7 +564,7 @@ def f1_phases(mask_r=False, check=False):
     ###if the rotations don't match inputs then rerun rotation generation.
     if len(phases_r) != len(base_yields) or any(base_yields.index!=phases_r.index):
         import RotGeneration
-        RotGeneration.f_rot_gen()
+        RotGeneration.f_rot_gen(crop['user_crop_rot'])
 
         ###read in newly generated rotations and see if the inputs now match
         phases_r = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header=None, index_col=0, engine='openpyxl').T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
