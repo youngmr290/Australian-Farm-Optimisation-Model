@@ -18,11 +18,20 @@ import Saltbush as slp
 params={}
 r_vals={}
 
-exp_data, exp_group_bool = fun.f_read_exp()
+###############
+#User control #
+###############
+trial = 4   #4 is quick test
+
+##sort exp
+exp_data, exp_group_bool, trial_pinp = fun.f_read_exp()
 exp_data = fun.f_group_exp(exp_data, exp_group_bool)
+##select property for the current trial
+pinp.f_select_pinp(trial_pinp.iloc[trial])
+
 ##update sensitivity values
-fun.f_update_sen(4,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav
-                 ,sen.sam_inp,sen.saa_inp,sen.sap_inp,sen.sar_inp,sen.sat_inp,sen.sav_inp) #4 is quick test
+sen.create_sa()
+fun.f_update_sen(trial,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
 ##call sa functions - assigns sa variables to relevant inputs
 sinp.f_structural_inp_sa()
 uinp.f_universal_inp_sa()
