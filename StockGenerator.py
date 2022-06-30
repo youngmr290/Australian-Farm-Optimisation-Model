@@ -2094,13 +2094,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                                                    date_end_pa1e1b1nwzida0e0b0xyg)
 
     ##dvp
-    # dvp_date_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(dvp_start_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,0)
-    period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.any(sfun.f1_period_is_('period_is', dvp_start_va1e1b1nwzida0e0b0xyg1[:,na,...]
-                                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg), axis=0)
-    period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = np.any(sfun.f1_period_is_('period_is', dvp_start_va1e1b1nwzida0e0b0xyg3[:,na,...]
-                                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg), axis=0)[mask_p_offs_p]
-    # nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
-    # nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
+    if stubble: #if generating for stubble then dvps dont matter
+            period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.full_like(date_start_pa1e1b1nwzida0e0b0xyg, False)
+            period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = np.full_like(date_start_pa1e1b1nwzida0e0b0xyg, False)[mask_p_offs_p]
+    else:
+        period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.any(sfun.f1_period_is_('period_is', dvp_start_va1e1b1nwzida0e0b0xyg1[:,na,...]
+                                            , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg), axis=0)
+        period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = np.any(sfun.f1_period_is_('period_is', dvp_start_va1e1b1nwzida0e0b0xyg3[:,na,...]
+                                            , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg), axis=0)[mask_p_offs_p]
+        # dvp_date_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(dvp_start_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,0)
+        # nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
+        # nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
 
     ##################################################
     #adjust lsln management for timing of repro cycle#

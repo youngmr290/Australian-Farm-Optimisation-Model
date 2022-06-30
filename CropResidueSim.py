@@ -75,7 +75,7 @@ stubble_inp = {}
 ##create fs - read from inputs
 
 ##sim run periods - start and end p
-trial_commencement_date = np.datetime64(pinp.stubble['start_trial'])
+trial_commencement_date = pinp.stubble['start_trial']
 n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.f1_sim_periods(sinp.stock['i_sim_periods_year'], sinp.stock['i_age_max'])
 
