@@ -173,7 +173,7 @@ grazing_days_p1s1ks2 = np.sum(np.equal(np.min(lwc_diff_p1p2s1ks2, axis=2,keepdim
 adj_intake_p1s1ks2 = intake_p1s1ks2 / (1 - pinp.stubble['quantity_decay'][:,na]) ** days_since_harv_p[:, na, na, na]
 ###multiply by adjusted intake and sum p axis to return the total intake for each dmd (stubble) category
 total_intake_s1ks2 = np.sum(grazing_days_p1s1ks2 * adj_intake_p1s1ks2, axis=0)
-total_intake_ha_s1ks2 = total_intake_s1ks2 * pinp.stubble['i_sr']
+total_intake_ha_s1ks2 = total_intake_s1ks2 * pinp.stubble['i_sr_s2']
 ###adjust for trampling - trampling is done as a percentage of consumed stubble thus trampling doesnt remove categories above because they have already been consumed.
 ### Trampling gets added on to reflect the amount of stubble at harvest.
 tramp_ks2 = pinp.stubble['trampling'][:,na]

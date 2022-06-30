@@ -732,7 +732,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     '''
     if stubble:
         legume_p6a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['clover_propn_in_sward_stubble']
-        density_p6a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_sr']
+        density_p6a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_sr_s2'][0] #take the harv slice of sr given that it is not important enough to keep the s2 axis
         ws_p4a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_ws']
         rain_p4a1e1b1nwzida0e0b0xygp1[...] = pinp.stubble['i_rain']
         temp_ave_p4a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_temp_ave']
