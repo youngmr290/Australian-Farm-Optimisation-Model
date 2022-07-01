@@ -23,8 +23,8 @@ reshaped in python. The reshaping must be done prior to applying the sensitivity
 the SA is only applied to a given axis. The reshaping occurs in the input.py module straight after
 reading in the input.
 
-The inputs can be adjusted by the user through sensitivities (described in the following section).
-Allowing variation between the different trials. Note; only a subsection of the structural inputs can be
+The inputs can be adjusted by the user through sensitivities (described in the following section)
+allowing variation between the different trials. Note; only a subsection of the structural inputs can be
 adjusted by sensitivity. These can be found in the Structural SA sheet. All other structural inputs are
 fixed and can not be adjusted.
 
@@ -48,7 +48,7 @@ will not necessarily result in a correct weighting across seasons.
 
 .. note:: When generating seasonal inputs you need to make sure the inputs are consistent with being able to identify the
     season. i.e. until a season is distinguished it must have the same inputs as other seasons (e.g. two seasons that
-    are distinguished by spring must get the same amount of fertiliser at seeding because at seeding spring conditions
+    are distinguished by spring must get the same amount of fertiliser at seeding because at seeding, spring conditions
     are unknown).
 
 For version 1 only the key inputs (e.g. yield, variable fert requirement, variable chem requirement, pasture growth,

@@ -3,6 +3,7 @@ Simulation integration
 
 Currently in AFO the crop and pasture modules do not represent the plant life cycle at a biological level (sun, leaf area and soil properties).
 Rather, the modules require inputs of a higher level.
+
 For example:
 
     - The crop module requires the user to specify the yield obtained for a given crop on a given soil type with a certain
@@ -100,7 +101,7 @@ Examples of generic rules:
 
 The development of these generic rotation rules are best done in collaboration with farm consultants or
 agronomists to ensure they are realistic. Furthermore, additional simulation can be conducted to optimise
-the rules. For example, to determine the best level of soil nitrogen a simulation could be run that tests
+the rules. For example, to determine the best level of soil nitrogen, a simulation could be run that tests
 different levels.
 
 
