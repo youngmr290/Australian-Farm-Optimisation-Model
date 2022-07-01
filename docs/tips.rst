@@ -5,7 +5,7 @@ Usage Tips
 Model structure overview
 ------------------------
 
-The general flow of data in the model is;
+The general flow of data in the model is:
 
 Inputs |rarr| apply sensitivities |rarr| adjustments calculations (functions and methods) |rarr|
 pyomo (compiles linear model) |rarr| solve.
@@ -16,25 +16,25 @@ The core units of the model are:
  	iii. Pyomo and solver.
 
 Inputs
-    The model inputs are stored in three excel spread sheets. The first contains inputs that are likely to
-    change for different regions or properties such as farm area and the second, contains inputs that are
+    The model inputs are stored in three excel spreadsheets. The first contains inputs that are likely to
+    change for different regions or properties such as farm area and the second contains inputs that are
     'universal' and likely to be consistent for different regions or properties such as prices. Thirdly,
     the structural inputs, which are typically fixed and only changed by experienced users.
 Precalcs
     The precalcs are the calculations applied to the input data to generate the data for the Pyomo
     parameters (in other terms, the coefficients for the matrix).
 Pyomo
-    This is the ‘guts’ of the model, it defines all the variables and parameters then utilised them to
+    This is the ‘guts’ of the model, it defines all the variables and parameters then utilises them to
     construct the model equations (constraints). Pyomo formulates all the equations into a linear program
     format and passes the file to a solver. Many solvers are compatible with the Pyomo, currently GLPK
     (GNU Linear Programming Kit) (Makhorin 2014) is used.
 
 Firstly, the inputs are read in from excel, they are then adjusted according to the user defined sensitivities.
-For example, the user may be interested in the impact of increasing prices hence the price inputs are
+For example, the user may be interested in the impact of increasing prices, hence the price inputs are
 adjusted. Secondly, each module containing precalcs is executed. The produced parameters are stored in a
 python data structure called a dictionary, which is passed to the Pyomo modules.
 The pyomo section of AFO creates the variables, creates parameters, populates the parameters with the
-coefficients passed in from the precalcs, constructs the model constraints and passes the information to
+coefficients passed in from the precalcs, constructs the model constraints, and passes the information to
 a linear solver. The results from the solver reveal the maximum farm profit and the optimal levels of each
 variable to maximise the profit. From here the user can create
 any number of different reports.
@@ -44,7 +44,7 @@ Execution flow:
     #. Inputs and exp.xlsx read
     #. Determine which trials require running. Trials are only run if set to True in exp.xlsx and the trial
        is out of date (code has changed, inputs have changed or the sensitivity values for that trial have
-       changed since it was last run)
+       changed since it was last run).
     #. Apply the sensitivities.
     #. Run the precalcs.
     #. Run Pyomo.
@@ -76,20 +76,20 @@ a steady state framework. If multiple seasons are included and the steady state 
 then the inputs become the weighted average of the active seasons.
 
 The inputs for each season are included in the relevant inputs sheet. E.g. cropping inputs are in the crop sheet.
-The inputs must be the same across seasons until the period when the season is identified. The clustering ensure
+The inputs must be the same across seasons until the period when the season is identified. The clustering ensures
 the model works correctly even if the inputs are wrong but it will make more sense to have correct inputs.
 
 Debugging tips:
 
-    #. Go back to the steady state version and see if that works. If not fix that first.
-    #. If an aspect of the model looks weird you could set the inputs to be the same across seasons and see if
+    #. Go back to the steady state version and see if that works. If not, fix that first.
+    #. If an aspect of the model appears unexpected you could set the inputs to be the same across seasons and see if
        that highlights the problem more clearly.
-    #. Bound stuff or remove constraints to help identify the location of the error.
+    #. Bound variables or remove constraints to help identify the location of the error.
 
 Pyomo
 -----
 Speed
-Parameters: initialization of large parameters can take time (for example in the stock module). To save time mask out the 0 values when creating the param dict and set default argument in the parameter to 0. This make it quicker to build the dictionary in the first place and makes it much faster to initilise the parameter in pyomo (see stock pyomo for examples of this)
+Parameters: initialization of large parameters can take time (for example in the stock module). To save time, mask out the 0 values when creating the param dict and set the default argument in the parameter to 0. This makes it quicker to build the dictionary in the first place and makes it much faster to initilise the parameter in pyomo (see stock pyomo for examples of this)
 
 Constraints: building constraints can be slow however efficiency can be improved by using if statement which reduce the summing required. Additionally in certain circumstances (eg stock numbers) you can alter the parameters so that duplicate constraints are not built and then use the constraint.skip method to jump over.
 It takes longer than I would have expected to evaluate if statements when building a pyomo constraint so time can be saved when summing by only evaluating required items in the if statement/s.
@@ -97,7 +97,7 @@ It takes longer than I would have expected to evaluate if statements when buildi
 Slacks/duals/rc
 ^^^^^^^^^^^^^^^
 Duals, reduced costs and constraints slacks are not reported by default in pyomo.
-You must explicity specify them. By default AFO does this. However, they are only processed
+You must explicity specify them. By default, AFO does this. However, they are only processed
 if ``full output == True``.
 
 Access duals, rc and duals:

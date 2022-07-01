@@ -18,7 +18,7 @@ Possible model errors
         - The model becomes infeasible if you force in some livestock without allowing purchasing.
     - Solution:
         - This problem is likely caused by dams not being able to provide enough prog to replace themselves.
-          This is because the weight distributions don't align and prog will be getting lost (eg initial dam
+          This is because the weight distributions don't align, and prog will be getting lost (eg initial dam
           weights are not similar enough to the prog weights so the prog are not able to provide dams).
           To fix this you can alter the initial lw of the dams (structural inputs: i_adjp_lw_initial_w1).
 
@@ -39,11 +39,11 @@ Possible model errors
         - If you run one trial it works.
     - Solution:
         - This occurs when an object in pyomo is being called that doesnt exist.
-        - This may be because a bound or constraint is still active from the last trial however
+        - This may be because a bound or constraint is still active from the last trial, however
           the variable that it is referencing has been deleted or changed.
           You need to make sure constrains are being deleted between trials or being re-built correctly.
         - This may be because a variable has been deleted and rebuilt but a constraint referencing that
-          variable was not rebuilt. To fix this the constraint will also need to be deleted and rebuilt.
+          variable was not rebuilt. To fix this, the constraint will also need to be deleted and rebuilt.
 
 5. CPLEX> CPLEX Error  1615: Line 33271: Expected number, found 'n'
 
@@ -61,7 +61,7 @@ Process to debug
 
 #. Simplify the model as much as possible to make it easier to debug (reduce TOL options, reduce lw patterns, reduce genotypes etc).
 
-#. To locate where the problem is you can often just comment out constraints until the model solves. This can further indicate where to look.
+#. To locate where the problem is, you can often just comment out constraints until the model solves. This can further indicate where to look.
 
 #. Go back to the last working version (using the power of git) and compare outputs with current. If you have some idea where the issue is you can even compare the params between the two versions to see if something jumps out.
 
@@ -102,11 +102,11 @@ Pyomo errors
 
 #. No value for uninitialized NumericValue object v_credit[ND$FLOW]
         This means the solver returned a no feasible solution
-        This was caused once by having a very small negative number (-2e-16) returned from the crop sim (sometimes python returns a small negitive number instead of 0), the solver clearly didn’t like it (even though i thought it would just be treated as a 0 or as a small value)
+        This was caused once by having a very small negative number (-2e-16) returned from the crop sim (sometimes python returns a small negitive number instead of 0), the solver clearly didn’t like it (even though I thought it would just be treated as a 0 or as a small value)
 
 #. Writing full solution: No value for uninitialized NumericValue object
         This means a variable has None as its value. This can happen for some variables eg sheep which
         have been masked out and hence are not really included in the model. When writing the full model the
-        constraints are evaluated. This can cause errors if variables have None value. To fix this error you
+        constraints are evaluated. This can cause errors if variables have None value. To fix this error, you
         should skip building constraints which are not required and/or use if statements when summing variables.
         An example is the mating dams propn bound.
