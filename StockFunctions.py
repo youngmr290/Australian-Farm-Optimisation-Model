@@ -1128,15 +1128,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         ##Calculate probability from cumulative probability by the difference between the array and the array
         ### values offset by one slice (difference between '>x' and '>x+1').
         ### End cases work because GBAL are set to 0 probability
-        ### Define the temp array shape & populate with values from crg (values are required for the proportion of the highest parity dams)
-        # t_cr = crg.copy()
-        # slc_nm = [slice(None)] * len(t_cr.shape)
-        # slc_nm[b1_pos] = slice(0,1)
-        # t_cr[tuple(slc_nm)] = 0
         t_cr = np.maximum(0, crg - np.roll(crg, -1, axis=b1_pos))
-        # slc = [slice(None)] * len(t_cr.shape)
-        # slc[b1_pos] = slice(1,-1)
-        # t_cr[tuple(slc)] = np.maximum(0, fun.f_dynamic_slice(crg, b1_pos, 1, -1) - fun.f_dynamic_slice(crg, b1_pos, 2, None))
 
         ##Apply scanning percentage sa to adjust the probability of the number of foetuses.
         ### Carried out here so that the sa affects the REV and is included in proportion of NM
@@ -1323,44 +1315,78 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, nlb, crg_doy, n
         t_boundaries = cb1_sliced + cu2_sliced[-1, ...] - (cu2_sliced[0, ...] * maternallw_mating
                                                            + cu2_sliced[1, ...] * maternallw_mating ** 2
                                                            + cu2_sliced[2, ...] * age
+                                                           + cu2_sliced[3, ...] * age ** 2
                                                            + cu2_sliced[4, ...] * lwc
-                                                           + cu2_sliced[6, ...] * nlb)
+                                                           + cu2_sliced[5, ...] * lwc ** 2
+                                                           + cu2_sliced[6, ...] * nlb
+                                                           + cu2_sliced[7, ...] * nlb ** 2)
         ##back transform to probability of having a maximum of a given number of foetuses (opposite to GrazPlan)
         crl = fun.f_back_transform(t_boundaries)
 
-        ## scale probability of each number of young based on the doy of year
-        ### Calculate the scalar from the GrazPlan scalar. Has to be done after crl is calculated
-        ####Calculation must be done in a loop which requires slices for the calculation
-        crl_doy = np.zeros_like(crl)
+        ## Incorporate the impact of doy on the prediction of RR. Use crg_doy from CSIRO
+        ### Convert LMAT crl to crg (probability of at least a given number of foetuses)
+        #### First, set the NM slice to 0 (so that it can be rolled forward (cr less than 0 == 0%) with a probability of 0)
         slc = [slice(None)] * len(crl.shape)
-        slc_prev = [slice(None)] * len(crl.shape)
-        slc_next = [slice(None)] * len(crl.shape)
-        #loop on b1 because prev slice is used in the calculation.
-        # Not first or last slice because calc requires previous & next slice
-        for b1 in np.arange(1, b1_len - 1):
-            slc[b1_pos] = slice(b1, b1 + 1)
-            slc_prev[b1_pos] = slice(b1 - 1, b1)
-            slc_next[b1_pos] = slice(b1 + 1, b1 + 2)
-            crl_doy[tuple(slc)] = ((1-crl[tuple(slc_prev)]) * crg_doy[tuple(slc)] - (1 - crl[tuple(slc)]) * crg_doy[tuple(slc_next)]
-                            + crl[tuple(slc_prev)] * crl_doy[tuple(slc_prev)]) / crl[tuple(slc)]
-        ### Apply the scalar
-        crl = crl_doy * crl
+        slc[b1_pos] = slice(0, 1)
+        crl[tuple(slc)] = 0
+        #### Calculate crg from crl on the basis that crg[slc] + crl[slc_prev] == 1
+        crg = 1 - np.roll(crl, 1, axis=b1_pos)
+        ### include scaling for day of year
+        crg = crg_doy * crg
+
+        #todo the LMAT function & the CSIRO function are now equivalent from this point on.
+        # a Function could be created that is called by the 2 functions to save duplicating the following code
+
         ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp calculate correctly
-        crl *= (nfoet_b1any == nyatf_b1any)
+        crg *= (nfoet_b1any == nyatf_b1any)
 
         ##Temporary array for probability of a given number of foetuses (calculated from the difference in the cumulative probability)
         ##Calculate probability from cumulative probability by the difference between the array and the array
-        ### values offset by one slice (difference between '<x' and '<x-1').
-        ### To make the end case work requires setting crl[NM] to 0 prior to the calculation (& max(0,calc))
-        ###Define the temp array shape & populate with values from crg (values are required for the proportion of the highest parity dams)
-        # t_cr = crl.copy()
-        # slc_nm = [slice(None)] * len(t_cr.shape)
-        # slc_nm[b1_pos] = slice(0,1)
-        # t_cr[tuple(slc_nm)] = 0
-        t_cr = np.maximum(0, crl - np.roll(crl, 1, axis=b1_pos))
-        # slc = [slice(None)] * len(t_cr.shape)
-        # slc[b1_pos] = slice(2,None)
-        # t_cr[tuple(slc)] = np.maximum(0, fun.f_dynamic_slice(crl, b1_pos, 2, None) - fun.f_dynamic_slice(crl, b1_pos, 1, -1))
+        ### values offset by one slice (difference between '>x' and '>x+1').
+        ### End cases work because GBAL are set to 0 probability
+        t_cr = np.maximum(0, crg - np.roll(crg, -1, axis=b1_pos))
+
+        # ## scale probability of each number of young based on the doy of year
+        # ### Calculate the scalar from the GrazPlan scalar. Has to be done after crl is calculated
+        # crl_doy = np.zeros_like(crl)
+        # slc = [slice(None)] * len(crl.shape)
+        # slc_prev = [slice(None)] * len(crl.shape)
+        # slc_next = [slice(None)] * len(crl.shape)
+        #
+        # ### Set the NM slice to 0 (so that it can be rolled forward (cr less than 0 == 0%) with a probability of 0)
+        # slc[b1_pos] = slice(0, 1)
+        # crl[tuple(slc)] = 0
+        # ### Set the slice after '33' to 1 (so that it can be rolled back (cr less than 4 = 100%) with a probability of 1)
+        # slc[b1_pos] = slice(5, 6)
+        # crl[tuple(slc)] = 1
+        #
+        # ####Calculation must be done in a loop which requires slices for the calculation
+        # ####loop on b1 because prev slice is used in the calculation.
+        # #### Not first or last slice because calc requires previous & next slice
+        # for b1 in np.arange(1, b1_len - 1):
+        #     slc[b1_pos] = slice(b1, b1 + 1)
+        #     slc_prev[b1_pos] = slice(b1 - 1, b1)
+        #     slc_next[b1_pos] = slice(b1 + 1, b1 + 2)
+        #     crl_doy[tuple(slc)] = ((1-crl[tuple(slc_prev)]) * crg_doy[tuple(slc)] - (1 - crl[tuple(slc)]) * crg_doy[tuple(slc_next)]
+        #                     + crl[tuple(slc_prev)] * crl_doy[tuple(slc_prev)]) / crl[tuple(slc)]
+        # ### Apply the scalar
+        # crl = crl_doy * crl
+        # ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp calculate correctly
+        # crl *= (nfoet_b1any == nyatf_b1any)
+        #
+        # ##Temporary array for probability of a given number of foetuses (calculated from the difference in the cumulative probability)
+        # ##Calculate probability from cumulative probability by the difference between the array and the array
+        # ### values offset by one slice (difference between '<x' and '<x-1').
+        # ### To make the end case work requires setting crl[NM] to 0 prior to the calculation (& max(0,calc))
+        # ###Define the temp array shape & populate with values from crg (values are required for the proportion of the highest parity dams)
+        # # t_cr = crl.copy()
+        # # slc_nm = [slice(None)] * len(t_cr.shape)
+        # # slc_nm[b1_pos] = slice(0,1)
+        # # t_cr[tuple(slc_nm)] = 0
+        # t_cr = np.maximum(0, crl - np.roll(crl, 1, axis=b1_pos))
+        # # slc = [slice(None)] * len(t_cr.shape)
+        # # slc[b1_pos] = slice(2,None)
+        # # t_cr[tuple(slc)] = np.maximum(0, fun.f_dynamic_slice(crl, b1_pos, 2, None) - fun.f_dynamic_slice(crl, b1_pos, 1, -1))
 
         ## Adjust the predicted proportions from the calibration number of cycles to 1 cycle (default values for the function)
         ### The prediction equations from the LMAT trial are based on mating for 2 cycles. AFO calculates for each cycle
@@ -1396,6 +1422,7 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, nlb, crg_doy, n
         ### The proportion of Drys is then calculated (later) as the animals that didn't get pregnant. #todo This doesn't seem to happen
         #todo Easier to follow logic would be to adjust the proportion of drys then scale the other slices up and down holding litter size constant.
         # Note: litter size has to be correct here in case it is saved in the next section of code
+        slc = [slice(None)] * len(t_cr.shape)
         slc[b1_pos] = slice(2,3)
         t_cr[tuple(slc)] = f1_rev_update('conception', t_cr[tuple(slc)], rev_trait_value)
 
