@@ -70,6 +70,9 @@ def f1_suppyomo_local(params, model):
     ##buy_grain_prov_mz
     model.p_buy_grain_prov = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['buy_grain_prov_p7z'], default = 0.0, doc='phase periods when buying grain provides into grain transfer (this param exists so that grain is only provided when it is purchased - otherwise it could provide grain in a period when it did not pay e.g. get free grain)')
 
+    ##selectivity of sup to pasture when stock are being trail fed
+    model.p_max_sup_selectivity = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['max_sup_selectivity_p6z'], default = 0.0, doc='link between sup and pasture consumption when trail feeding')
+
     ##sup s2 link - link sup to s2 categories (required because v_sup does not have s2 axis)
     model.p_sup_s2 = pe.Param(model.s_crops, model.s_biomass_uses, initialize=params['sup_s2_ks2'], default = 0.0, doc='link between sup k and s2')
 

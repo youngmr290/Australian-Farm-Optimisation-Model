@@ -243,6 +243,14 @@ def f_universal_inp_sa():
     ###sav
     price['grain_price_percentile'] = fun.f_sa(price['grain_price_percentile'],sen.sav['grain_percentile'], 5)
 
+    ##supfeed
+    ###sav
+    supfeed['i_max_sup_selectivity'] = fun.f_sa(supfeed['i_max_sup_selectivity'], sen.sav['max_sup_selectivity'], 5)
+    ###sam
+    ###sap
+    ###saa
+    ###sat
+    ###sar
 
     ##sheep
     ###SAV

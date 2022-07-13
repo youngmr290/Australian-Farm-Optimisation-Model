@@ -138,9 +138,9 @@ No perenials are included yet. These are not very common in current rotations.
 '''
 ##if you want to use a customised list of rotations this can be set to false - populate the array further down the module.
 customised_rotations = False
-def f_rot_gen():
+def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
     print('Running rotation generator')
-    yr0 = np.array(['b', 'o', 'w', 'f', 'l', 'z','r'#, 'h','of'- not included in v1 to speed calibration process
+    yr0 = np.array(['b', 'o', 'w', 'f', 'l', 'z','r','of'#, 'h'- not included in v1 to speed calibration process
                    , 'bd','wd','rd','zd'
                    , 'a', 'ar'
                    , 's', 'sr'])
@@ -149,7 +149,7 @@ def f_rot_gen():
                     # , 'x', 'xr'
                     # , 'j', 't', 'jr', 'tr'])
     yr1 = np.array(['AR', 'SR1'
-           ,'B','O','W', 'N', 'L', 'F'#, 'OF'
+           ,'B','O','W', 'N', 'L', 'F', 'OF'
            , 'A'
            , 'S1'])
            # , 'M'
@@ -294,17 +294,17 @@ def f_rot_gen():
     sp=np.array(['SP','SP','SP','SP','sp'])
     phases = np.concatenate((phases, [sp])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
 
-    tc=np.array(['tc','tc','tc','tc','tc'])
-    phases = np.concatenate((phases, [tc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
-
-    jc=np.array(['jc','jc','jc','jc','jc'])
-    phases = np.concatenate((phases, [jc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
-
-    uc=np.array(['uc','uc','uc','uc','uc'])
-    phases = np.concatenate((phases, [uc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
-
-    xc=np.array(['xc','xc','xc','xc','xc'])
-    phases = np.concatenate((phases, [xc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+    # tc=np.array(['tc','tc','tc','tc','tc'])
+    # phases = np.concatenate((phases, [tc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+    #
+    # jc=np.array(['jc','jc','jc','jc','jc'])
+    # phases = np.concatenate((phases, [jc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+    #
+    # uc=np.array(['uc','uc','uc','uc','uc'])
+    # phases = np.concatenate((phases, [uc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+    #
+    # xc=np.array(['xc','xc','xc','xc','xc'])
+    # phases = np.concatenate((phases, [xc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
 
     ######################
     #simplified rotations#
@@ -320,7 +320,7 @@ def f_rot_gen():
     ###This bit of code can be used to extract custom rotations only.
     ###You can alter the user_rot array to include to rotations you want to include (all other rotations will be excluded)
     ###The sequence of the rotation is irrelevant ie b b w w is the same as w b b w.
-    ds_user_rot_init = np.array([['ar', 'a', 'w', 'w', 'r', 'b'] #todo should this become an input?
+    ds_user_rot_init = np.array([['ar', 'a', 'w', 'w', 'r', 'b']
                                  ,['r', 'w', 'b', 'r', 'w', 'b']])
 
     if customised_rotations:
@@ -342,7 +342,7 @@ def f_rot_gen():
 
 
     ##option 2: if you want to represent the rotations from property.xlsx
-    if pinp.crop['user_crop_rot']:
+    if user_crop_rot:
         phases =pinp.crop['fixed_rotphases'].reset_index().values.astype('str')
 
 

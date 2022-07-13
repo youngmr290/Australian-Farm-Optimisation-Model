@@ -45,12 +45,20 @@ import CropResidue as stub
 na = np.newaxis
 
 
-exp_data, exp_group_bool = fun.f_read_exp()
+###############
+#User control #
+###############
+trial = 4   #4 is quick test
+
+##sort exp
+exp_data, exp_group_bool, trial_pinp = fun.f_read_exp()
 exp_data = fun.f_group_exp(exp_data, exp_group_bool)
+##select property for the current trial
+pinp.f_select_pinp(trial_pinp.iloc[trial])
+
 ##update sensitivity values
-row = 4 #4 is quick test
-fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav
-                 ,sen.sam_inp,sen.saa_inp,sen.sap_inp,sen.sar_inp,sen.sat_inp,sen.sav_inp)
+sen.create_sa()
+fun.f_update_sen(trial,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
 ##call sa functions - assigns sa variables to relevant inputs
 sinp.f_structural_inp_sa()
 uinp.f_universal_inp_sa()
@@ -67,7 +75,7 @@ stubble_inp = {}
 ##create fs - read from inputs
 
 ##sim run periods - start and end p
-trial_commencement_date = np.datetime64(pinp.stubble['start_trial'])
+trial_commencement_date = pinp.stubble['start_trial']
 n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.f1_sim_periods(sinp.stock['i_sim_periods_year'], sinp.stock['i_age_max'])
 
@@ -165,7 +173,7 @@ grazing_days_p1s1ks2 = np.sum(np.equal(np.min(lwc_diff_p1p2s1ks2, axis=2,keepdim
 adj_intake_p1s1ks2 = intake_p1s1ks2 / (1 - pinp.stubble['quantity_decay'][:,na]) ** days_since_harv_p[:, na, na, na]
 ###multiply by adjusted intake and sum p axis to return the total intake for each dmd (stubble) category
 total_intake_s1ks2 = np.sum(grazing_days_p1s1ks2 * adj_intake_p1s1ks2, axis=0)
-total_intake_ha_s1ks2 = total_intake_s1ks2 * pinp.stubble['i_sr']
+total_intake_ha_s1ks2 = total_intake_s1ks2 * pinp.stubble['i_sr_s2']
 ###adjust for trampling - trampling is done as a percentage of consumed stubble thus trampling doesnt remove categories above because they have already been consumed.
 ### Trampling gets added on to reflect the amount of stubble at harvest.
 tramp_ks2 = pinp.stubble['trampling'][:,na]

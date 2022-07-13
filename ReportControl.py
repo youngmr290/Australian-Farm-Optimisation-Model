@@ -1508,7 +1508,7 @@ def f_report(processor, trials, non_exist_trials):
 
 if __name__ == '__main__':
     ##read in exp log
-    exp_data, experiment_trials = fun.f_read_exp()
+    exp_data, experiment_trials, trial_pinp = fun.f_read_exp()
 
     ##check if trial results are up to date. Out-dated if:
     ##  1. exp.xls has changed

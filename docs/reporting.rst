@@ -1,3 +1,4 @@
+
 Output & Reporting
 ==================
 
@@ -6,7 +7,7 @@ Model output
 Definitions:
 
 * Slacks - this is the slack on each constraint
-* Duals - this is the effect on the objective if the RHS of the constraint is increase by one
+* Duals - this is the effect on the objective if the RHS of the constraint is increased by one
 * Rc - this is the effect on the objective if one extra of a given variable is included
 
 Output
@@ -32,13 +33,13 @@ If the user selects that they want the ‘full output’ in the exp.xlsx the mod
 information:
 
 * A summary of all activity levels.
-* a lp file: this is a file containing the linear equations of the whole model ie what the solver sees. This can be read via the lpviewer.xlsx document to make it easier to navigate.
+* a lp file: this is a file containing the linear equations of the whole model. I.e. what the solver sees. This can be read via the lpviewer.xlsx document to make it easier to navigate.
 * a text file with the full model print out: this contains the all the activities and constraints, you can also see any slack in the constraints
-* A text file with the reduced costs (effect on profit if one more variable forced into solution) of the variables, the duals (effect on profit if RHS is increased by one) of each constraint and the slack on each constraint.
+* A text file with the reduced costs (effect on profit if one more variable is forced into solution) of the variables, the duals (effect on profit if RHS is increased by one) of each constraint and the slack on each constraint.
 
 For reporting:
 
-* A dict (lp_vars) with the model variable results determined from the solver for each trial is saved as a pickle file. The pickle file is loaded each time before the execution therefore if the trial has been run already it is overwritten however if this is the first time the trial has run it is added to the existing dict. This dict can be accessed for post run calculations.
+* A dict (lp_vars) with the model variable results determined from the solver for each trial is saved as a pickle file. The pickle file is loaded each time before the execution, therefore if the trial has been run already it is overwritten. However, if this is the first time the trial has run it is added to the existing dict. This dict can be accessed for post run calculations.
 * A dict (r_vals) with report variables from the pre-calcs. These will include:
 
     * A selection of the parameter values
@@ -46,7 +47,7 @@ For reporting:
 
 Using output
 ^^^^^^^^^^^^
-There are 4 fairly distinct phases in which the model results are used. Each requires different output
+There are 4 fairly distinct phases in which the model results are used. Each requires different outputs
 and is carried out differently. There will be some overlapping between the output required for each
 steps. Eg. when understanding the farm system it might be necessary to check if there is an error in
 the model definition, and likewise when reporting scenarios it might be necessary to understand the farm
@@ -89,8 +90,8 @@ Reporting
 ------------
 How to use
 ^^^^^^^^^^
-Running the reports is much like running the model (see section or running), simply just run
-ReportControl.py inplace of Exp.py. As with running the core model an argument can be passed into the
+Running the reports is much like running the model (see section on running), simply just run
+ReportControl.py inplace of Exp.py. As with running the core model, an argument can be passed into the
 script when running via the terminal which controls which experiment to report. ReportControl.py calls the
 necessary report functions in ReportFunctions.py. For more information on the process to add reports and information regarding the existing
 reports see below.

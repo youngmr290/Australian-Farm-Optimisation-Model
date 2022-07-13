@@ -732,7 +732,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     '''
     if stubble:
         legume_p6a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['clover_propn_in_sward_stubble']
-        density_p6a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_sr']
+        density_p6a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_sr_s2'][0] #take the harv slice of sr given that it is not important enough to keep the s2 axis
         ws_p4a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_ws']
         rain_p4a1e1b1nwzida0e0b0xygp1[...] = pinp.stubble['i_rain']
         temp_ave_p4a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_temp_ave']
@@ -2099,13 +2099,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                                                    date_end_pa1e1b1nwzida0e0b0xyg)
 
     ##dvp
-    # dvp_date_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(dvp_start_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,0)
-    period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.any(sfun.f1_period_is_('period_is', dvp_start_va1e1b1nwzida0e0b0xyg1[:,na,...]
-                                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg), axis=0)
-    period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = np.any(sfun.f1_period_is_('period_is', dvp_start_va1e1b1nwzida0e0b0xyg3[:,na,...]
-                                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg), axis=0)[mask_p_offs_p]
-    # nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
-    # nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
+    if stubble: #if generating for stubble then dvps dont matter
+            period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.full_like(date_start_pa1e1b1nwzida0e0b0xyg, False)
+            period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = np.full_like(date_start_pa1e1b1nwzida0e0b0xyg, False)[mask_p_offs_p]
+    else:
+        period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.any(sfun.f1_period_is_('period_is', dvp_start_va1e1b1nwzida0e0b0xyg1[:,na,...]
+                                            , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg), axis=0)
+        period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = np.any(sfun.f1_period_is_('period_is', dvp_start_va1e1b1nwzida0e0b0xyg3[:,na,...]
+                                            , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg), axis=0)[mask_p_offs_p]
+        # dvp_date_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(dvp_start_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,0)
+        # nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
+        # nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
 
     ##################################################
     #adjust lsln management for timing of repro cycle#
@@ -2207,7 +2211,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         loop_ltw_len = 1
 
     ##increment the number of loops. This may be specified in the SAV to finetune the LTW effect.
-    loop_ltw_len = loop_ltw_len + fun.f_sa(0, sen.sav['LTW_loops'], 5)
+    loop_ltw_len = loop_ltw_len + fun.f_sa(0, sen.sav['LTW_loops_increment'], 5)
 
     for loop_ltw in range(loop_ltw_len):
         #todo The double loop could be replaced by separating the offspring into their own loop
@@ -2215,7 +2219,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         # but it would reduce the number of offspring calculations, allow offspring wean wt to be based on ffcfw_yatf at weaning and allow loop length to be customised
         # the drawback of a separate loop is that the structure of the function calls would need to be repeated.
         # an alternative would be to replace "if days_period_g3[p] > 0" with another variable that is defined at the start, like 'calculate_this_period_pg3'
-        # calculate_this_period_pg3 = np.logical_and(np.any(days_period_g3[p]>0), loop_ltw = sen.sav['LTW_loops'] # only calculate the progeny & sires in the final LTW loop
+        # calculate_this_period_pg3 = np.logical_and(np.any(days_period_g3[p]>0), loop_ltw = sen.sav['LTW_loops_increment'] # only calculate the progeny & sires in the final LTW loop
 
         ####################################
         ### initialise arrays for sim loop  # axis names not always track from now on because they change between p=0 and p=1

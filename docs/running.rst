@@ -8,15 +8,15 @@ the teminal. The model is controlled via the Exp1.py module and exp.xlsx spreads
 but the trials which are run and the application of any sensitivities are controlled using exp.xlsx.
 To customise the execution you can pass in optional args to Exp1.py <experiment number> <processors>
 which control the experiment to be run and the number of processors used. If no arguments are passed
-experiment type 0 will be executed using 1 processor. Once the model has been run two output files per trial will have been
-saved to the pkl folder. To generate an excel report run ReportControl.py. The execution can also
+experiment type 0 will be executed using 1 processor. Once the model has been run two output files per trial are
+saved to the pkl folder. To generate an excel report run ReportControl.py. The execution can also be
 customised by passing in some optional args <experiment number> <processors> <report number>.
 If no arguments are passed experiment type 0 will be reported using 1 processor and the default report settings.
 
 IDLE
 ----
 Scripts can be run by any python interpreter. Although the necessary packages must be installed (this can be done using ``pip``).
-Anaconda comes with the spyder idle. Spyder has its strong points but it becomes tediously slow when
+Anaconda comes with the spyder IDLE. Spyder has its strong points but it becomes tediously slow when
 debugging the livestock module due to the large arrays. So we tend to used Pycharm.
 Pycharm IDLE handles the debugging efficiently and has many useful capabilities built in. For more information
 check out the documentation or youtube help videos. To run AFO from an IDLE, simply navigate to the Exp1.py module and
@@ -48,8 +48,8 @@ experiments in the ‘Exp Group’ column. Trials with the same number are in th
 The user can then select which experiment to run by passing in a number when running the
 scripts from terminal (e.g. python Exp.py 2 this will run all the trials with a 2 in the
 ‘Exp Group’ column). If no argument is passed in then all trials are included. In Pycharm
-you can pass in an argument by right click on the module name then there is an option to
-Create (it changes to Edit once yo have used it). In there is a parameter box which you put
+you can pass in an argument by right clicking on the module name, then there is an option to
+'Create' (it changes to Edit once yo have used it). In there is a parameter box which you put
 a value in. Within an experiment you can use True/False in the ‘Run Trials’ column to
 control if a given trial is executed.
 
