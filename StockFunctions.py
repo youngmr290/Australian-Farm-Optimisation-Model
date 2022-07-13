@@ -807,7 +807,8 @@ def f_birthweight_mu(cu1, cb1, cg, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, e
 
 
 def f_weanweight_cs(w_w_yatf, ffcfw_start_yatf, ebg_yatf, days_period, period_is_wean):
-    ##set WWt = yatf weight at weaning	
+    ##set WWt = yatf weight at weaning
+    #todo ebg needs to be multiplied by cg[18] to allow for gut fill. cg needs to be passed as an arg (or ebg converted to lwg)
     t_w_w = (ffcfw_start_yatf + ebg_yatf * days_period) + sen.saa['wean_wt']  #Note:saa[wean_wt] doesn't have an associated MEI impact.
     ##update weaning weight if it is weaning period
     w_w_yatf = fun.f_update(w_w_yatf, t_w_w, period_is_wean)
@@ -1094,8 +1095,9 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
     Probability is calculated from a sigmoid relationship based on relative size * relative condition at joining
     The estimation of cumulative probability is scaled by a factor that varies with day of year that changes with
     litter size & latitude.
-    The probability is an estimate of the number of dams carrying that number in the third trimester.
-    Some dams conceive (and don't return to service) but don't carry to the third trimester, this is taken into account.
+    The probability is an estimate of the number of dams carrying that number in the third trimester (or birth).
+    Some dams conceive (and don't return to service) but don't carry to the third trimester
+    due to abortion, this is taken into account.
     The values are altered by a sensitivity analysis on scanning percentage
     Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can be controlled for relative economic values
 
@@ -1174,8 +1176,8 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         ###calculate t_cr from the REV adjusted litter size. t_cr will only change from the original value if litter_size REV is active
         t_cr[:,:,:,mask,...] = litter_propn * np.sum(t_cr_masked, b1_pos, keepdims=True)
 
-        ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester
-        ## are added to 00 slice (b1[1:2]) and removed from the NM slice
+        ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester/birth
+        ## are added to 00 slice (b1[1:2]) so that they are removed from the NM slice.
         ###Number is based on a proportion (cf[5]) of the ewes that implant that lose their foetuses/embryos
         ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
         propn_pregnant = np.sum(fun.f_dynamic_slice(t_cr, b1_pos, 2, None), axis=b1_pos, keepdims=True)
@@ -1280,8 +1282,11 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, nlb, crg_doy, n
     The probability is an estimate of the number of dams carrying that number of young to birth if mated for the
     number of cycles assessed in the trial. The parameters could be altered to represent a single cycle however
     this correction hasn't been made (as of Apr 2022) and the adjustment is made in this function.
-    Some dams conceive (and don't return to service) but don't carry to birth (the third trimester),
-    this is taken into account.
+    Some dams conceive (and don't return to service) but don't carry to birth (the third trimester)
+    due to abortion during pregnancy, this is taken into account.
+    #todo The conversion of the prediction from 2 cycles back to one cycle doesn't include this loss
+    # which then increases the proportion of empty ewes and reduces the expected RR.
+    # The correction has been removed for now.
     The values are altered by a sensitivity analysis on scanning percentage
     Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can
     be controlled for relative economic values
@@ -1423,7 +1428,7 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, nlb, crg_doy, n
         #todo Easier to follow logic would be to adjust the proportion of drys then scale the other slices up and down holding litter size constant.
         # Note: litter size has to be correct here in case it is saved in the next section of code
         slc = [slice(None)] * len(t_cr.shape)
-        slc[b1_pos] = slice(2,3)
+        slc[b1_pos] = slice(2,3)   #the singles slice
         t_cr[tuple(slc)] = f1_rev_update('conception', t_cr[tuple(slc)], rev_trait_value)
 
         ##Process the Litter size REV: either save the trait value to the dictionary or over-write trait value with value from the dictionary
@@ -1438,11 +1443,14 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, nlb, crg_doy, n
         ###calculate t_cr from the REV adjusted litter size. t_cr will only change from the original value if litter_size REV is active
         t_cr[:,:,:,mask,...] = litter_propn * np.sum(t_cr_masked, b1_pos, keepdims=True)
 
-        ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester
-        ## are added to 00 slice (b1[1:2]) and removed from the NM slice
-        ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
-        ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
-        propn_pregnant = np.sum(fun.f_dynamic_slice(t_cr, b1_pos, 2, None), axis=b1_pos, keepdims=True)
+        # Have removed this because the conversion from the prediction of 2 cycles back to one cycle is
+        # not representing this source of dry ewes.
+        # Have to retain the step so that the proportion of empty is set to 0 (which means they remain in NM)
+        # ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester/birth
+        # ## are added to 00 slice (b1[1:2]) so that they are removed from the NM slice.
+        # ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
+        # ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
+        propn_pregnant = np.sum(fun.f_dynamic_slice(t_cr, b1_pos, 2, None), axis=b1_pos, keepdims=True) * 0
         slc[b1_pos] = slice(1,2)
         t_cr[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
 
@@ -1697,7 +1705,7 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
     this is to reflect the difference in survival observed in the LTW paddock trial compared with the plot scale trials.
     '''
     ##transformed survival for actual & standard
-    ###distribution on w_b & rc_birth - add distribution to ebg_start_p1 and then average (axis =-1)
+    ###distribution on w_b & rc_birth - add distribution to w_b & w_b_std and then average (axis =-1)
     w_b_p1p2 = fun.f_distribution7(w_b, cv=cv_weight)[...,na,:]
     w_b_std_p1p2 = fun.f_distribution7(w_b_std, cv=cv_weight)[...,na,:]
 
