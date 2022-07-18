@@ -137,11 +137,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     mask_yatf_inc_g2 = np.any(sinp.stock['i_mask_g2g3'] * pinp.sheep['i_g3_inc'], axis =1)
     mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis =1)
     ##o/d mask - if dob is after the end of the sim then it is masked out -  the mask is created before the date of birth is adjusted to the start of a period however it is adjusted to the start of the next period so the mask won't cut out a birth event that actually would occur, additionally this is the birth of the first however the matrix sees the birth of average animal which is also later therefore if anything the mask will leave in unnecessary o slices
-    date_born1st_oa1e1b1nwzida0e0b0xyg2 = fun.f_expand(pinp.sheep['i_date_born1st_iog2'], i_pos, right_pos=g_pos, swap=True,
+    date_born1st_full_oa1e1b1nwzida0e0b0xyg2 = fun.f_expand(pinp.sheep['i_date_born1st_iog2'], i_pos, right_pos=g_pos, swap=True,
                                                       left_pos2=p_pos,right_pos2=i_pos, condition=mask_yatf_inc_g2, axis=g_pos,
                                                       condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
-    mask_o_dams = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
-    mask_d_offs = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
+    mask_o_dams = np.max(date_born1st_full_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
+    mask_d_offs = np.max(date_born1st_full_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_x = pinp.sheep['i_gender_propn_x']>0
     bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
     mask_node_is_fvp = pinp.general['i_node_is_fvp'] * (pinp.general['i_inc_node_periods']
@@ -541,7 +541,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                             axis=g_pos, condition2=pinp.sheep['i_masksire_i'], axis2=i_pos)
     date_born1st_ida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_date_born1st_ig1'], i_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
                                             axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
-    date_born1st_oa1e1b1nwzida0e0b0xyg2 = date_born1st_oa1e1b1nwzida0e0b0xyg2[mask_o_dams,...] #input read in in the mask section
+    date_born1st_oa1e1b1nwzida0e0b0xyg2 = date_born1st_full_oa1e1b1nwzida0e0b0xyg2[mask_o_dams,...] #input read in in the mask section
     date_born1st_ida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_date_born1st_idg3'], d_pos, right_pos=g_pos,
                                             condition=mask_offs_inc_g3, axis=g_pos, condition2=pinp.sheep['i_mask_i']
                                            , axis2=i_pos, condition3=mask_d_offs, axis3=d_pos)
@@ -867,10 +867,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fvp_begin_start_ba1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg[0:1]
 
     ##early pregnancy fvp start - The pre-joining accumulation of the dams from the previous reproduction cycle - this date must correspond to the start date of period
-    prejoining_approx_oa1e1b1nwzida0e0b0xyg1 = date_joined_oa1e1b1nwzida0e0b0xyg1 - sinp.stock['i_prejoin_offset'] #approx date of prejoining - in the next line of code prejoin date is adjusted to be the start of a sim period in which the approx date falls
+    ### Prejoining is masked differently for FVPs compared with the other repro periods because of an effect on n_prior_fvps
+    ### If pre-joining is masked with mask_o_dams (mask based on lambing date) then it causes an error in
+    ### a_n_pa1e1b1nwzida0e0b0xyg1 because n_prior_fvps >= n_fvps_percondense.
+    ### The dates for pre-joining need to be calculated prior to the masking of date_joined_1st
+    ### Approx date of prejoining accounts for gestation period (e[0]) & the pre-joining offset. Then scaled to nearest period
+    prejoining_approx_oa1e1b1nwzida0e0b0xyg1 = date_born1st_full_oa1e1b1nwzida0e0b0xyg2 - cp_dams[1,...,0:1,:] - sinp.stock['i_prejoin_offset']
     idx = np.searchsorted(date_start_p, prejoining_approx_oa1e1b1nwzida0e0b0xyg1, 'right') - 1 #gets the sim period index for the period that prejoining occurs (e.g. prejoining fvp starts at the beginning of the sim period when prejoining approx occurs), side=right so that if the date is already the start of a period it remains in that period.
     prejoining_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx]
-    fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1 = prejoining_oa1e1b1nwzida0e0b0xyg1
+    ### the pj mask is True when pj is before the end of the sim rather than lambing is before the end of the sim
+    maskpj_o_dams = np.max(prejoining_oa1e1b1nwzida0e0b0xyg1<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each prejoin date with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
+    fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1 = prejoining_oa1e1b1nwzida0e0b0xyg1[maskpj_o_dams]
+    ### masked with the lambing mask so that len_o is correct for all uses other than the FVPs.
+    prejoining_oa1e1b1nwzida0e0b0xyg1 = prejoining_oa1e1b1nwzida0e0b0xyg1[mask_o_dams]
 
     ##late pregnancy fvp start - Scanning if carried out, day 90 from joining (ram in) if not scanned.
     late_preg_oa1e1b1nwzida0e0b0xyg1 = date_joined_oa1e1b1nwzida0e0b0xyg1 + join_cycles_ida0e0b0xyg1 * cf_dams[4, 0:1, :] + pinp.sheep['i_scan_day'][scan_oa1e1b1nwzida0e0b0xyg1]
@@ -8160,6 +8169,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fun.f1_make_r_val(r_vals,r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3,'saledate_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
 
     ###dvp date
+    ####Mask prejoin with o_mask so that the FVP arrays can be stacked. The final prejoin date is dropped if prejoin, but not lambing, is before the end of the sim.
+    fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1 = fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1[mask_o_dams]
     r_repro_dates_roe1zg1 = np.stack([fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1, fvp_scan_start_oa1e1b1nwzida0e0b0xyg1,
                                      fvp_birth_start_oa1e1b1nwzida0e0b0xyg1, fvp_wean_start_oa1e1b1nwzida0e0b0xyg1], axis=0)
     r_repro_dates_roe1g1 = fun.f_dynamic_slice(r_repro_dates_roe1zg1, axis=z_pos, start=0, stop=1) #remove z axis since repro dates dont change along z
