@@ -4003,7 +4003,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 numbers_start_condense_dams = np.broadcast_to(numbers_start_condense_dams, numbers_end_dams.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
                 surv_dams = (np.sum(numbers_end_dams,axis=prejoin_tup + (season_tup,), keepdims=True)
                              / np.sum(numbers_start_condense_dams, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
-                threshold = np.minimum(0.9, np.mean(surv_dams, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
+                threshold = np.minimum(0.9, np.nanmean(surv_dams, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
                 mort_mask_dams = surv_dams > threshold
 
                 ###print warning if min mort is greater than 10% since the previous condense
@@ -4159,7 +4159,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 numbers_start_condense_offs = np.broadcast_to(numbers_start_condense_offs, numbers_end_offs.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
                 surv_offs = (np.sum(numbers_end_offs,axis=season_tup, keepdims=True)
                              / np.sum(numbers_start_condense_offs, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10% (don't sum e&b because offs don't change slice)
-                threshold = np.minimum(0.9, np.mean(surv_offs, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
+                #### nanmean so that slices (for example b) that have some slices of w that are all 0 do not affect the calculation of the threshold.
+                #todo is nanmean better than using f_divide() in calculation of surv_offs.
+                #Using f_divide() results in many 0 survival and hence reduces the threshold because the average is lower.
+                #nanmean generates a true_divide warning but seems to generate a better outcome
+                threshold = np.minimum(0.9, np.nanmean(surv_offs, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
                 mort_mask_offs = surv_offs > threshold
 
                 ###print warning if min mort is greater than 10% since the previous condense
