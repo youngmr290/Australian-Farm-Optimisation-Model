@@ -3949,9 +3949,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort (no feedlot mask for sires (only for offs) because feedlotting sires doesn't indicate they are being sold).
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
                 numbers_start_condense_sire = np.broadcast_to(numbers_start_condense_sire, numbers_end_sire.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
-                surv_sire = (np.sum(numbers_end_sire,axis=prejoin_tup + (season_tup,), keepdims=True)
-                             / np.sum(numbers_start_condense_sire, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
-                threshold = np.minimum(0.9, np.mean(surv_sire, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
+                surv_sire = fun.f_divide(np.sum(numbers_end_sire,axis=prejoin_tup + (season_tup,), keepdims=True)
+                                         , np.sum(numbers_start_condense_sire, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
+                threshold = np.minimum(0.9, np.ma.array(surv_sire, mask=surv_sire == 0).mean(axis=w_pos, keepdims=True))  # threshold is the lower of average survival and 90% (animals with 0 survival are not included)
                 mort_mask_sire = surv_sire > threshold
 
                 ###combine mort and feedlot mask - True means the w slice is included in condensing.
@@ -3987,16 +3987,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort  (no feedlot mask for dams (only for offs) because feedlotting dams doesn't indicate they are being sold).
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
                 numbers_start_condense_dams = np.broadcast_to(numbers_start_condense_dams, numbers_end_dams.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
-                surv_dams = (np.sum(numbers_end_dams,axis=prejoin_tup + (season_tup,), keepdims=True)
-                             / np.sum(numbers_start_condense_dams, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
-                threshold = np.minimum(0.9, np.mean(surv_dams, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
+                surv_dams = fun.f_divide(np.sum(numbers_end_dams,axis=prejoin_tup + (season_tup,), keepdims=True)
+                                         , np.sum(numbers_start_condense_dams, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
+                threshold = np.minimum(0.9, np.ma.array(surv_dams, mask=surv_dams == 0).mean(axis=w_pos, keepdims=True))  # threshold is the lower of average survival and 90% (animals with 0 survival are not included)
                 mort_mask_dams = surv_dams > threshold
 
                 ###print warning if min mort is greater than 10% since the previous condense
                 ###this is to ensure we are condensing to an animal that the lp will select (ie not point having an animal that has more than 10% mort)
                 ### Note 1: if ewe lambs is not set up for mating and it is estimated that ewe lambs are mated then a warning is likely to be triggered. No warning will be triggered if estimate mating propn is 0.
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]):
-                    min_mort = 1- np.max(surv_dams, axis=w_pos)
+                    min_mort = 1 - np.max(surv_dams, axis=w_pos)
                     ####only use the retained t slice (animals that have multiple fvps per dvp and are sold in the first fvp only get medium fs in following fvps due to lw clustering e.g. w9 is high medium medium, so this can trigger unwanted mort warning)
                     if len_gen_t1 > 1:
                         min_mort = min_mort[a_t_g1]
@@ -4087,7 +4087,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 numbers_start_condense_yatf = np.broadcast_to(numbers_start_condense_yatf, numbers_end_yatf.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
                 surv_yatf = fun.f_divide(np.sum(numbers_end_yatf,axis=season_tup, keepdims=True)
                                         , np.sum(numbers_start_condense_yatf, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along z axis so need to sum to determine if w has mortality > 10% (don't sum e&b because yatf stay in the same slice)
-                threshold = np.minimum(0.9, np.mean(surv_yatf, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
+                threshold = np.minimum(0.9, np.ma.array(surv_yatf, mask=surv_yatf == 0).mean(axis=w_pos, keepdims=True))  # threshold is the lower of average survival and 90% (animals with 0 survival are not included)
                 mort_mask_yatf = surv_yatf > threshold
 
                 ###combine mort and feedlot mask - True means the w slice is included in condensing.
@@ -4143,14 +4143,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
                 numbers_start_condense_offs = np.broadcast_to(numbers_start_condense_offs, numbers_end_offs.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
-                surv_offs = (np.sum(numbers_end_offs,axis=season_tup, keepdims=True)
-                             / np.sum(numbers_start_condense_offs, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10% (don't sum e&b because offs don't change slice)
-                threshold = np.minimum(0.9, np.mean(surv_offs, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
+                surv_offs = fun.f_divide(np.sum(numbers_end_offs,axis=season_tup, keepdims=True)
+                                         , np.sum(numbers_start_condense_offs, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10% (don't sum e&b because offs don't change slice)
+                threshold = np.minimum(0.9, np.ma.array(surv_offs, mask=surv_offs==0).mean(axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90% (animals with 0 survival are not included)
                 mort_mask_offs = surv_offs > threshold
 
                 ###print warning if min mort is greater than 10% since the previous condense
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]):
-                    min_mort = 1- np.max(surv_offs, axis=w_pos)
+                    min_mort = 1 - np.max(surv_offs, axis=w_pos)
                     ####only use the retained t slice because if there is a dvp that spans two fvp and the animal is sold in
                     #### the first fvp then the fs may not be good in the second fvp (because the w are clustered e.g w9 is hig fs in the first fvp followed by medium)
                     if len_gen_t3 > 1:
