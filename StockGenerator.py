@@ -4161,7 +4161,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                              / np.sum(numbers_start_condense_offs, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10% (don't sum e&b because offs don't change slice)
                 #### nanmean so that slices (for example b) that have some slices of w that are all 0 do not affect the calculation of the threshold.
                 #todo is nanmean better than using f_divide() in calculation of surv_offs.
-                #todo Using f_divide() results in many 0 survival and hence reduces the threshold because the average is lower.
+                #Using f_divide() results in many 0 survival and hence reduces the threshold because the average is lower.
                 #nanmean generates a true_divide warning but seems to generate a better outcome
                 threshold = np.minimum(0.9, np.nanmean(surv_offs, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
                 mort_mask_offs = surv_offs > threshold
