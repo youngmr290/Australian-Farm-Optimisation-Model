@@ -1261,6 +1261,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##prev is just next - 1
 
     ##joining opportunity association
+    ##a_nextprejoining_o returns the final prejoining in the sim if the next prejoining is beyond the end of the sim.
+    ## It doesn't cause errors for the current uses, however, important to check any new uses
     a_nextprejoining_o_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(fun.f_next_prev_association, 0, prejoining_oa1e1b1nwzida0e0b0xyg1, date_start_p, 0,'left')
     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(fun.f_next_prev_association, 0, prejoining_oa1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
     a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(fun.f_next_prev_association, 0, date_joined_oa1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
@@ -1282,6 +1284,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     a_prev_s_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(fun.f_next_prev_association, 0, date_shear_sa1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
     a_prev_s_pa1e1b1nwzida0e0b0xyg3 = np.apply_along_axis(fun.f_next_prev_association, 0, date_shear_sa1e1b1nwzida0e0b0xyg3, offs_date_end_p, 1,'right')
     ##shearing opp (next/current) - points at the next shearing period unless shearing is the current period in which case it points at the current period
+    ##a_next_s returns the final shearing occurrence in the sim if the next shearing is beyond the end of the sim.
+    ## this would cause an error for the use of a_next_s in the calculation of the lo_bound_offs and is corrected in the bound section
     a_next_s_pa1e1b1nwzida0e0b0xyg0 = np.apply_along_axis(fun.f_next_prev_association, 0, date_shear_sa1e1b1nwzida0e0b0xyg0, date_start_p, 0,'left')
     a_next_s_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(fun.f_next_prev_association, 0, date_shear_sa1e1b1nwzida0e0b0xyg1, date_start_p, 0,'left')
     a_next_s_pa1e1b1nwzida0e0b0xyg3 = np.apply_along_axis(fun.f_next_prev_association, 0, date_shear_sa1e1b1nwzida0e0b0xyg3, offs_date_start_p, 0,'left')
@@ -1331,6 +1335,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     date_born_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(date_born_oa1e1b1nwzida0e0b0xyg2, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)
     date_born1st2_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
     date_born2_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(date_born_oa1e1b1nwzida0e0b0xyg2, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
+    ##date_prejoin_next returns the date of the final prejoining in the sim if the next prejoining is beyond the end of the sim.
+    ## this will not cause an error for both of the uses of date_prejoin_next (date_between & calculation of ltw_adj)
     date_prejoin_next_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prejoining_oa1e1b1nwzida0e0b0xyg1, a_nextprejoining_o_pa1e1b1nwzida0e0b0xyg1,0)
     date_prejoin_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prejoining_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0)
     date_joined_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(date_joined_oa1e1b1nwzida0e0b0xyg1, a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1,0)
@@ -7854,6 +7860,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     bnd_lower_offs_tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(bnd_lower_offs_tsa1e1b1nwzida0e0b0xyg3,
                                                                 a_next_s_va1e1b1nwzida0e0b0xyg3[na,...],
                                                                 axis=p_pos)
+    ##Note: when next_s is beyond the end of the sim a_next_s points to the final shearing occurrence.
+    ### this requires a one-off fix so that the bound does not incorrectly operate on the final DVP
     bnd_lower_offs_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(bnd_lower_offs_tva1e1b1nwzida0e0b0xyg3
                                                          * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
                                                          axis=d_pos, keepdims=True) #cluster d
