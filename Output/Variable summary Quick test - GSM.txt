@@ -1,5 +1,5 @@
 Trial: Quick test
-Quick test profit: 730144.949168828
+Quick test profit: 730719.6523981212
 Variable v_phase_area
    ('q0', 's0', 'zm0', 'typ', 'AAAAAa', 'lmu2') 150.0
    ('q0', 's0', 'zm0', 'typ', 'YABABa', 'lmu3') 615.0
@@ -33,27 +33,27 @@ Variable v_unharvested_yield
 Variable v_hay_made
 Variable v_hay_tobe_made
 Variable v_terminal_wealth
-   ('q0', 's0', 'typ', 'c1_0') 191363.17796312066
+   ('q0', 's0', 'typ', 'c1_0') 192225.22906067243
 Variable v_credit
-   ('q0', 's0', 'c1_0', 'zm0', 'typ') 791210.1450239032
+   ('q0', 's0', 'c1_0', 'zm0', 'typ') 791784.8466181711
 Variable v_debit
 Variable v_wc_credit
 Variable v_wc_debit
    ('q0', 's0', 'stk', 'zm0', 'typ') 6595.296851789746
-   ('q0', 's0', 'crp', 'zm0', 'typ') 768734.7989641406
+   ('q0', 's0', 'crp', 'zm0', 'typ') 768162.7937292267
 Variable v_dep
    ('q0', 's0', 'zm0', 'typ') 61041.478788230634
 Variable v_asset_cost
    ('q0', 's0', 'zm0', 'typ') 103336.03926338631
 Variable v_minroe
-   ('q0', 's0', 'zm0', 'typ') 435445.7319423212
+   ('q0', 's0', 'zm0', 'typ') 435158.3840740626
 Variable v_learn_allocation
    ('q0', 's0', 'P00') 0.18287957578497832
    ('q0', 's0', 'P01') 0.07347151140089181
    ('q0', 's0', 'P03') 0.44516524049113515
    ('q0', 's0', 'P04') 0.2984836723229947
 Variable v_quantity_casual
-   ('q0', 's0', 'P01', 'typ') 0.8542470111127954
+   ('q0', 's0', 'P01', 'typ') 1.0753562275920854
    ('q0', 's0', 'P02', 'typ') 1.0737718560618703
    ('q0', 's0', 'P03', 'typ') 1.0980273154471516
    ('q0', 's0', 'P05', 'typ') 0.6834895798699095
@@ -61,7 +61,7 @@ Variable v_quantity_casual
    ('q0', 's0', 'P07', 'typ') 0.1995775356935512
    ('q0', 's0', 'P08', 'typ') 0.6199089526049902
    ('q0', 's0', 'P09', 'typ') 0.10714285714285714
-   ('q0', 's0', 'P10', 'typ') 2.469664707807849
+   ('q0', 's0', 'P10', 'typ') 2.227357411595143
    ('q0', 's0', 'P11', 'typ') 0.9604883625427231
    ('q0', 's0', 'P13', 'typ') 0.833035221729218
 Variable v_quantity_perm
@@ -69,7 +69,7 @@ Variable v_quantity_manager
    None 1.0
 Variable v_casualsupervision_perm
 Variable v_casualsupervision_manager
-   ('q0', 's0', 'P01', 'typ') 14.35135000054674
+   ('q0', 's0', 'P01', 'typ') 18.06598489275118
    ('q0', 's0', 'P02', 'typ') 6.01312248354898
    ('q0', 's0', 'P03', 'typ') 6.148953058130588
    ('q0', 's0', 'P05', 'typ') 20.50468821088036
@@ -77,21 +77,21 @@ Variable v_casualsupervision_manager
    ('q0', 's0', 'P07', 'typ') 8.382256832210098
    ('q0', 's0', 'P08', 'typ') 18.597269317138768
    ('q0', 's0', 'P09', 'typ') 0.6000000089406967
-   ('q0', 's0', 'P10', 'typ') 55.320490279235344
+   ('q0', 's0', 'P10', 'typ') 49.89280676319194
    ('q0', 's0', 'P11', 'typ') 28.814652021273048
    ('q0', 's0', 'P13', 'typ') 39.98569223189105
 Variable v_permsupervision_manager
 Variable v_manager_holiday_allocation
-   ('q0', 's0', 'P01') 0.19847610883163197
+   ('q0', 's0', 'P01') 0.17334794440550488
    ('q0', 's0', 'P02') 0.14439726995512978
    ('q0', 's0', 'P09') 0.10126446838972891
-   ('q0', 's0', 'P10') 0.16270811822574205
-   ('q0', 's0', 'P12') 0.3931540345977672
+   ('q0', 's0', 'P10') 0.1878362826518689
+   ('q0', 's0', 'P12') 0.39315403459776754
 Variable v_perm_holiday_allocation
 Variable v_sheep_labour_manager
    ('q0', 's0', 'P00', 'any', 'typ') 19.924440190662565
    ('q0', 's0', 'P00', 'perm', 'typ') 17.205507807528868
-   ('q0', 's0', 'P01', 'any', 'typ') 62.24017953163741
+   ('q0', 's0', 'P01', 'any', 'typ') 82.16562817576265
    ('q0', 's0', 'P01', 'perm', 'typ') 65.87611118743827
    ('q0', 's0', 'P02', 'perm', 'typ') 31.522067229851803
    ('q0', 's0', 'P03', 'perm', 'typ') 31.495141124775056
@@ -114,7 +114,6 @@ Variable v_sheep_labour_manager
    ('q0', 's0', 'P13', 'perm', 'typ') 156.57199509129015
 Variable v_phase_labour_manager
    ('q0', 's0', 'P00', 'any', 'typ') 2.4000000000000004
-   ('q0', 's0', 'P01', 'any', 'typ') 18.21240002028621
    ('q0', 's0', 'P02', 'perm', 'typ') 1.2749999762911883
    ('q0', 's0', 'P03', 'perm', 'typ') 2.974999944679439
    ('q0', 's0', 'P04', 'any', 'typ') 7.320952442146482
@@ -125,7 +124,7 @@ Variable v_phase_labour_manager
    ('q0', 's0', 'P06', 'perm', 'typ') 11.157142680138353
    ('q0', 's0', 'P07', 'any', 'typ') 13.88000001311302
    ('q0', 's0', 'P07', 'perm', 'typ') 13.87499978300184
-   ('q0', 's0', 'P12', 'any', 'typ') 10.535801687474162
+   ('q0', 's0', 'P12', 'any', 'typ') 10.535801687474105
    ('q0', 's0', 'P13', 'any', 'typ') 12.150155772597998
 Variable v_fixed_labour_manager
    ('q0', 's0', 'P00', 'mngr', 'typ') 14.470052001808568
@@ -145,21 +144,22 @@ Variable v_sheep_labour_permanent
 Variable v_phase_labour_permanent
 Variable v_fixed_labour_permanent
 Variable v_sheep_labour_casual
+   ('q0', 's0', 'P01', 'any', 'typ') 18.93394834823451
    ('q0', 's0', 'P02', 'any', 'typ') 27.82703685168768
    ('q0', 's0', 'P03', 'any', 'typ') 40.833404952968806
    ('q0', 's0', 'P06', 'any', 'typ') 130.07019523407735
    ('q0', 's0', 'P07', 'any', 'typ') 32.54837666086114
    ('q0', 's0', 'P08', 'any', 'typ') 93.31512385433138
-   ('q0', 's0', 'P10', 'any', 'typ') 227.78007335691564
+   ('q0', 's0', 'P10', 'any', 'typ') 173.50323900526948
    ('q0', 's0', 'P11', 'any', 'typ') 186.38338679425888
 Variable v_phase_labour_casual
-   ('q0', 's0', 'P01', 'any', 'typ') 143.51349786694965
+   ('q0', 's0', 'P01', 'any', 'typ') 161.72589788723585
    ('q0', 's0', 'P02', 'any', 'typ') 32.30418708777706
    ('q0', 's0', 'P03', 'any', 'typ') 20.656124712071687
    ('q0', 's0', 'P05', 'any', 'typ') 109.79315406922001
    ('q0', 's0', 'P08', 'any', 'typ') 24.0
    ('q0', 's0', 'P09', 'any', 'typ') 6.0
-   ('q0', 's0', 'P10', 'any', 'typ') 321.1391069063283
+   ('q0', 's0', 'P10', 'any', 'typ') 321.13910690632827
    ('q0', 's0', 'P13', 'any', 'typ') 220.57127095334977
 Variable v_fixed_labour_casual
    ('q0', 's0', 'P05', 'any', 'typ') 26.904761904761905
@@ -257,14 +257,14 @@ Variable v_poc
    ('q0', 's0', 'nv0', 'fp00', 'lmu4', 'typ') 35.19642909589623
    ('q0', 's0', 'nv1', 'fp00', 'lmu3', 'typ') 28.811636833173946
 Variable v_buy_grain
-   ('q0', 's0', 'zm0', 'typ', 'l', 'Harv', 'firsts') 86.40872934297614
-   ('q0', 's0', 'zm0', 'typ', 'l', 'Harv', 'seconds') 235.44444365715438
+   ('q0', 's0', 'zm0', 'typ', 'l', 'Harv', 'firsts') 140.09441037080975
+   ('q0', 's0', 'zm0', 'typ', 'l', 'Harv', 'seconds') 181.75876262932076
 Variable v_sup_con
+   ('q0', 's0', 'typ', 'l', 'firsts', 'nv0', 'fp07') 31.419185620362157
+   ('q0', 's0', 'typ', 'l', 'firsts', 'nv0', 'fp08') 22.266495407471464
    ('q0', 's0', 'typ', 'l', 'firsts', 'nv1', 'fp01') 78.63816045059016
    ('q0', 's0', 'typ', 'l', 'firsts', 'nv2', 'fp00') 7.770568842511311
    ('q0', 's0', 'typ', 'l', 'seconds', 'nv0', 'fp00') 22.690409063960452
-   ('q0', 's0', 'typ', 'l', 'seconds', 'nv0', 'fp07') 31.419185620362157
-   ('q0', 's0', 'typ', 'l', 'seconds', 'nv0', 'fp08') 22.266495407471464
    ('q0', 's0', 'typ', 'l', 'seconds', 'nv0', 'fp09') 106.96016290213612
    ('q0', 's0', 'typ', 'l', 'seconds', 'nv1', 'fp00') 45.44377607555803
    ('q0', 's0', 'typ', 'l', 'seconds', 'nv2', 'fp01') 6.664414587666169
@@ -402,9 +402,9 @@ Variable v_tradevalue
 Variable v_purchase_dams
 Variable v_purchase_offs
 Variable v_infrastructure
-   ('q0', 's0', 'yard', 'typ') 110076.82409079825
+   ('q0', 's0', 'yard', 'typ') 110215.12475743375
    ('q0', 's0', 'shed', 'typ') 17617.79405167171
 Variable v_mvf
 Variable v_utility_points
-   ('q0', 's0', 'typ', 'c1_0', 'u1') 0.04318411018439661
-   ('q0', 's0', 'typ', 'c1_0', 'u3') 0.9568158898156034
+   ('q0', 's0', 'typ', 'c1_0', 'u1') 0.5194369273483188
+   ('q0', 's0', 'typ', 'c1_0', 'u5') 0.48056307265168113
