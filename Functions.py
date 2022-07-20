@@ -806,6 +806,8 @@ def f_read_exp(pinp_req=False):
     3. Determines which property are required for the current exp
     '''
 
+    print('Reading experiment from Excel', end=' ', flush=True)
+
     ##set the group of trials being run. If no argument is passed in then all trials are run. To pass in argument need to run via terminal.
     try:
         exp_group = int(sys.argv[1]) #reads in as string so need to convert to int, the script path is the first value hence take the second.
@@ -827,6 +829,7 @@ def f_read_exp(pinp_req=False):
     ##Determine which property are required for the current exp
     trial_pinp = exp_data.loc[exp_group_bool, ('Drop', 'blank', 'blank', 'Pinp')]
     if pinp_req:
+        print('- finished')
         return trial_pinp.unique()
 
     ##drop irrelevant cols and set index
@@ -838,7 +841,7 @@ def f_read_exp(pinp_req=False):
 
     ##check if any trials have the same name
     if len(experiment_trials) == len(set(experiment_trials)):
-        pass
+        print('- finished')
     else:
         raise exc.TrialError('''Exp.xl has multiple trials with the same name.''')
 
