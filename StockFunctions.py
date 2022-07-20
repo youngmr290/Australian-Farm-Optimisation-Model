@@ -24,7 +24,7 @@ import Sensitivity as sen
 na=np.newaxis
 
 
-def f1_sim_periods(periods_per_year, oldest_animal):
+def f1_sim_periods(periods_per_year, oldest_animal, len_o):
     '''
     Define the days for the simulation periods.
     The year has 52 weeks with 7 days in a week. The extra day of the year is ignored
@@ -37,11 +37,13 @@ def f1_sim_periods(periods_per_year, oldest_animal):
     oldest_animal = float: age of the oldest animal to be simulated (yrs).
 
     Returns:
-    n_sim_periods
-    array of period dates (1D periods)
-    array of period end dates (1D periods) (date of the last day in the period)
-    index of the periods (for pyomo)
-    step - days in each period
+    n_sim_periods: total number of sim periods
+    date_start_p: array of period dates (1D periods)
+    date_start_P: array of period dates that go beyond the end of the simulation (used when rounding dates to the end/start of a generator period)
+    date_end_p: array of period end dates (1D periods) (date of the last day in the period)
+    date_end_P: array of period end dates that go beyond the end of the simulation (used when rounding dates to the end/start of a generator period)
+    index_p: index of the periods (for pyomo)
+    step: days in each period
 
     Number of weeks is 52 and the range is 0 to 51
     '''
@@ -49,8 +51,10 @@ def f1_sim_periods(periods_per_year, oldest_animal):
     step = 364/periods_per_year
     index_p = np.arange(n_sim_periods)
     date_start_p = index_p * step
+    date_start_P = np.arange(len_o * periods_per_year) * step
     date_end_p = index_p * step + step-1 #end date is 6 days after start date
-    return n_sim_periods, date_start_p.astype(int), date_end_p.astype(int), index_p, step
+    date_end_P = np.arange(len_o * periods_per_year) * step + step-1 #end date is 6 days after start date
+    return n_sim_periods, date_start_p.astype(int), date_start_P.astype(int), date_end_p.astype(int), date_end_P.astype(int), index_p, step
 
 
 def f1_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_end_p=0):
