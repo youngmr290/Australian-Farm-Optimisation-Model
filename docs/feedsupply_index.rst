@@ -13,7 +13,7 @@ within each period and are shorter after pasture senescence and the break of sea
 of the period definitions is likely to alter depending on the region being modelled.
 
 Energy is the primary nutritional constraint for extensive ruminant livestock enterprises
-:cite:p:`RN2` (maybe Phil would have a better nutritionist reference to back that comment) as such,
+:cite:p:`RN2` as such,
 energy is the only nutritional element that is constrained in the model to ensure that supply is
 greater than demand.
 The volume [#]_ of each feed is also constrained to ensure that the diet selection is feasible and
@@ -39,7 +39,7 @@ con_me: ME supplied from diet - ME required by stock <= 0
 
 con_vol: Intake capacity of stock - Volume of feed <= 0
 
-If animal with different nutritive value requirements are in the same nutritive value pool
+If animals with different nutritive value requirements are in the same nutritive value pool
 (same constraints) cross-subsidisation of
 volume from animals that require a low quality feed to animals that require a high quality feed
 can occur. For example, consider two animals, one that is losing 100 g/hd/d and one that is
@@ -47,7 +47,7 @@ gaining 150 g/hd/d. The first animal can achieve it's target on low quality feed
 second animal would have to consume
 high quality feed.  However, if both of these animals were constrained using a single nutritive
 value pool with one energy and one volume
-constraints then the energy requirement and intake capacity is combined, such that feeding
+constraints, then the energy requirement and intake capacity is combined, such that feeding
 medium quality feed to both animals meets the constraints. This is likely to be the optimal solution
 because the cost of feed by quality is a convex function and
 therefore the cost minimising solution is to provide an average quality to both classes of
@@ -67,7 +67,7 @@ The M/D of the paddock feed is scaled if the feed quality is above a threshold. 
 the situation when the quality of paddock feed is high and voluntary feed intake would lead
 to greater LW performance than the target LW pattern. To achieve the target LW pattern the
 animals would have to be offered the feed for a period of time, then placed on a restricted
-diet to bring them back to the target pattern before being returned to the high quality
+diet to bring them back to the target pattern, before being returned to the high quality
 paddock feed. An example of this situation is wool growing ewes with access to high quality green lucerne during
 summer (potential growth rate 150 g/hd/d) while the target profile is maintenance. The optimal
 solution could be those animals grazing a combination of lucerne and other low quality
@@ -76,14 +76,14 @@ with no opportunity cost). The practical implementation would require the animal
 the lucerne for a while, then grazing the stubble for a while because they are unlikely
 to volunteer a diet of 50% lucerne and 50% stubble to achieve maintenance. This grazing
 strategy means that the animals would gain weight then lose weight then gain weight then
-lose weight. The overall effect is to maintain but gaining and then losing is not as
+lose weight. The overall effect is to maintain, but gaining and then losing is not as
 energetically efficient as maintenance, which means the diet quantities selected in the optimal
 solution are not technically feasible in reality. Calculations based on efficiency of maintenance
 (:math:`k_m`) and efficiency of storing energy (:math:`k_g`) show that the energy consumed
 above the target level (or maintenance, whichever is greater) is only 50% as effective as if
 the energy intake could have been rationed to the target level.
 
-To represent this the nutritive value of the feed that is above the average animal requirement
+To represent this, the nutritive value of the feed that is above the average animal requirement
 in that NV pool is reduced by a efficiency scalar that is input by the user. The logic is that
 the ME intake above the target quality will be consumed and stored as fat and later mobilised.
 

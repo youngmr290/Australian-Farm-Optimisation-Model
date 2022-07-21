@@ -6,23 +6,23 @@ Rotation background
 
 Modelling of cropping or crop-pasture rotations to date has primarily been based on a predetermined,
 restricted set of rotations as “activities” of a LP matrix :cite:p:`RN78`. For example,
-MIDAS applies this same framework. This approach, however, limits the potential rotations that can be
+MIDAS applies this same framework. However, this approach limits the potential rotations that can be
 selected by the model and does not support the flexible nature of real-life rotation selection. For
 example, if the start to a growing season is late, farmers may opt to reduce the area of crop in
 their rotations. It also results in the necessity to build entirely new modules for each agro-climatic
 region due to differences in crop and rotation choices that are available and applicable to each region.
 
-In AFO we adopt an alternative method proposed by Wimalasuriya and Eigenraam :cite:p:`RN78`, where
+In AFO, we adopt an alternative method proposed by Wimalasuriya and Eigenraam :cite:p:`RN78`, where
 the model solves for the optimal rotation from all possibilities. Each land use [#lmu]_ in the optimal
 solution is determined based on the paddock history and the productivity of the land use that
 follows the given history. This is an unrestricted approach that supports a large range of possible
-rotations and allows greater flexibility for adding new land uses. Additionally, the approach aligns
-more closely with reality, facilitating a more detailed and accurate representation of effects of
+rotations, and allows greater flexibility for adding new land uses. Additionally, the approach aligns
+closer to reality, facilitating a more detailed and accurate representation of the effects of
 weather-year type on rotation choice.
 
 We define a rotation phase as a land use (‘current land use’) with a specific sequence of prior
 land uses (‘history required’). Each rotation phase has a level of production (grain and stubble
-production from crops and a pattern and magnitude of pasture production), a level of costs and
+production from crops and a pattern and magnitude of pasture production), a level of costs, and
 provides a history (‘history provided’). The history provided is the sequence of previous land uses.
 As a simple example, consider the rotation phase Canola: Barley: Wheat. Canola, the current land use.
 Barley – Wheat is the history required and Canola – Wheat is the history provided. To utilise this
@@ -76,7 +76,7 @@ in the rotation phases developed are:
 
         - Oat fodder crop increases pasture germination
 
-        - a pulse crop increases growth of annual pastures (which is represented by an increase in
+        - A pulse crop increases growth of annual pastures (which is represented by an increase in
           germination)
 
 #. A history of legume pasture (annual, Lucerne and Tedera) provides organic nitrogen for subsequent
@@ -97,7 +97,7 @@ in the rotation phases developed are:
 
     a. It is assumed that the maximum level of disease is reached after 4 consecutive years of a land use.
 
-To capture all the factors listed above the length of the rotation phases represented in AFO is
+To capture all the factors listed above, the length of the rotation phases represented in AFO is
 defined to a maximum of 6 years, allowing a history of 5 pastures to be tracked. To reduce the number
 of rotation phases, land uses in the history that are assumed to have the same impact on the production
 and cost of the current land use are grouped into ‘land use sets’ (see `Table 2`_). Whilst still capturing
@@ -123,7 +123,7 @@ represented in each year of a rotation phase:
 * Year 4 → year X [#x]_ : the land use sets Y, A, U, T
 
 Some of the rotation phases constructed will be illogical and must be removed. For example, annual
-pasture is only resown after 4 years of continuous crop therefore, any rotation phase that are
+pasture is only resown after 4 years of continuous crop therefore any rotation phase that are
 generated with resown annual that do not have 4 years of crops preceding it must be removed. See RotGeneration_
 for the full list of illogical rules.
 

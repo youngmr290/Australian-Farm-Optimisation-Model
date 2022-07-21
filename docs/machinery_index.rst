@@ -12,9 +12,9 @@ the land management unit can also impact the variable cost rate and work rate. F
 work rates are slower on heavy clay soils.
 
 A machinery cost applies to all farm activities that require machinery. However, for both
-seeding and harvest, the work rate of the machinery affects the timeliness of completion.
+seeding and harvest, the work rate of the machinery affects the timelines of completion.
 For example, with smaller machinery, seeding takes longer, potentially incurring a late
-seeding yield penalty. Additionally, however, the model can hire contractual services
+seeding yield penalty. Additionally however, the model can hire contractual services
 for seeding and harvest.
 
 There are operating costs and depreciation costs associated with machinery. Operating costs
