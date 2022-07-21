@@ -786,7 +786,9 @@ def f_run_required(exp_data1):
         ##if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xls are the same
         if (keys_current==keys_hist and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(newest)
                                     and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx")
-                                    and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Property.xlsx")
+                                    and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Property_GSM.xlsx")
+                                    and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Property_CWM.xlsx")
+                                    and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Property_SWV.xlsx")
                                     and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Structural.xlsx")):
             ###check if each trial has the same values in exp.xls as last time it was run.
             i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
