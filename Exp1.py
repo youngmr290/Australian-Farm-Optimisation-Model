@@ -78,7 +78,7 @@ exp_data1=exp_data.copy() #copy made so that the run col can be added - the orig
 ##  1. exp.xls has changed
 ##  2. any python module has been updated
 ##  3. the trial needed to be run last time but the user opted not to run that trial
-exp_data1 = fun.f_run_required(exp_data1)
+exp_data1 = fun.f_run_required(exp_data1, trial_pinp)
 
 if __name__ == '__main__':
     ##check Output and pkl folders exist for outputs. If not create.
@@ -300,6 +300,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     fsstk.f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info)
 
     ##pickle report values - every time a trial is run (even if pyomo not run)
+    ## This has to be last because it controls if the trial needs to be run next time the exp is run (f_run_required)
     with open(os.path.join(directory_path, 'pkl/pkl_r_vals_{0}.pkl'.format(trial_name)),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
 
