@@ -1466,7 +1466,7 @@ if __name__ == '__main__':
     ##  1. exp.xls has changed
     ##  2. any python module has been updated
     ##  3. the trial needed to be run last time but the user opted not to run that trial
-    exp_data = fun.f_run_required(exp_data)
+    exp_data = fun.f_run_required(exp_data, trial_pinp)
     exp_data = fun.f_group_exp(exp_data, experiment_trials)  # cut exp_data based on the experiment group
     trial_outdated = exp_data['run_req']  # returns true if trial is out of date
 
