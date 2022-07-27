@@ -4000,7 +4000,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
                 ###print warning if min mort is greater than 10% since the previous condense
                 ###this is to ensure we are condensing to an animal that the lp will select (ie not point having an animal that has more than 10% mort)
-                ### Note 1: if ewe lambs is not set up for mating and it is estimated that ewe lambs are mated then a warning is likely to be triggered. No warning will be triggered if estimate mating propn is 0.
+                ### Note 1: if ewe lambs FS is not set up for mating and it is estimated that ewe lambs are mated then a warning is likely to be triggered. No warning will be triggered if estimate mating propn is 0 because only a very small number of animals will be in the mated b slices and therefore because the b axis is summed to build surv_dams mort wont be significantly effected by them.
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]):
                     min_mort = 1 - np.max(surv_dams, axis=w_pos)
                     ####only use the retained t slice (animals that have multiple fvps per dvp and are sold in the first fvp only get medium fs in following fvps due to lw clustering e.g. w9 is high medium medium, so this can trigger unwanted mort warning)
