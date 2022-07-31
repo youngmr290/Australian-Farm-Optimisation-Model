@@ -4,8 +4,8 @@ author: young
 
 The phase module is driven by the inputs [#i]_ for yield production, fertiliser and chemical
 requirements for each rotation phase on each LMU. For pasture phases this module only generates data for
-fertiliser, chemical and seed (if resown) requirement. Growth, consumption etc is generated in the
-pasture module. Each phase provide a given amount of biomass depending on the rotation history, LMU, frost,
+fertiliser, chemical and seed (if resown) requirement. Growth, consumption, etc is generated in the
+pasture module. Each phase provides a given amount of biomass depending on the rotation history, LMU, frost,
 and arable proportion. AFO can then optimise the area of each rotation
 on each LMU and the best way to utilise the biomass of each rotation phase.
 Biomass can be either harvested for grain, baled for hay or grazed as standing fodder.
@@ -95,9 +95,9 @@ def f_farmgate_grain_price(r_vals={}):
     Calculates the grain price received by the farmer.
 
     The farm gate grain price [#]_ is calculated for each grain pool. Different grain pools are included to
-    represent different grain qualities. Depending on the grain variety used, the season and the farmers skill
+    represent different grain qualities. Depending on the grain variety used, and the season and the farmers skill,
     the grain produced will change quality and hence receive a different price. The price received by the farmer is the
-    market price received less any selling costs. The selling costs includes the transport cost which are
+    market price received less any selling costs. The selling costs includes the transport costs which are
     dependent on the location of the modelled farm, and the selling fees which often includes receival
     and testing fees, and government levies.
 
@@ -301,7 +301,7 @@ def f_biomass2product():
     Harvest index is the amount of the target product (grain or hay) per unit of biomass at harvest (which is the unit of the biomass DV).
     Harvest proportion accounts for grain that is split/spilt during the harvesting process.
     Biomass scalar is the total biomass production from the area baled net of respiration losses relative
-    to biomass at harvest if not baled. Which is to account for difference in biomass between harvest and baling time.
+    to biomass at harvest if not baled. This is to account for difference in biomass between harvest and baling time.
 
     Crop yield can also be adversely impacted by frost during the plants flowing stage :cite:p:`RN144`. Thus,
     the harvest index of each rotation phase is adjusted by a frost factor. The frost factor can be customised for each
@@ -392,7 +392,7 @@ def f_fert_req():
 
     The fertiliser requirement is broken into two sections. Firstly, fixed fertiliser which is the
     amount of each fertiliser that applies to a land use independent of the phase history (e.g. lime
-    which is typically applied routinely irrelevant of the land use history). Secondly, variable
+    which is typically applied routinely, irrelevant of the land use history). Secondly, variable
     fertiliser which is applied to a rotation phase based on both the current land use and the
     history. This method is necessary because crops have varying nutrient requirements, have
     varying methods to obtain nutrients from the soil and leave the soil in varying states (e.g.
@@ -494,7 +494,7 @@ def f_fert_cost(r_vals):
     '''
     Cost of fertilising the arable areas. Includes the fertiliser cost and the application cost.
 
-    The cost of fertilising is made up from the cost of the fertilisers its self, the cost getting
+    The cost of fertilising is made up from the cost of the fertilisers themself, the cost getting
     the fertiliser delivered to the farm and the machinery cost of application (detailed in the machinery section).
     The cost is incurred in the cashflow period when it is applied. The assumption is that fertilizer is
     purchased shortly before application because farmers wait to see how the year unfolds before locking
@@ -568,7 +568,7 @@ def f_nap_fert_req():
     '''
     Fert applied to non arable pasture area.
 
-    Fertiliser is applied to non-arable area in a pasture phases, it is not applied to
+    Fertiliser is applied to non-arable area in pasture phases, it is not applied to
     non-arable pasture in a crop phase because the non-arable pasture in a crop phase is not able to
     be grazed until the end of the year, by which time it is rank and therefore it is a waste of
     money to fertilise. Fertiliser rate for non-arable areas can be adjusted separately to the arable area.
@@ -716,8 +716,8 @@ def f_phase_stubble_cost(r_vals):
     is logical. However, the probability isn’t accurately linked to the likelihood that stubble will actually
     require handling. For instance, just because the average steady-state wht yield of a LMU is 1.75t/ha doesn’t
     necessarily mean that the wheat stubble on that LMU will need handling 1.75/3.5 = 50% of the time.
-    This structure assumes that even if the preceding landuse is pasture the current phase will still get
-    handling cost this is because the rotation phases use sets so you can’t determine exactly which land use is
+    This structure assumes that even if the preceding landuse is pasture, the current phase will still get
+    handling costs. This is because the rotation phases use sets so you can’t determine exactly which land use is
     before or after the current phase.
 
 
@@ -798,9 +798,9 @@ def f_chem_application():
 
     Number of applications of each chemical option for each rotation.
 
-    The number of applications at each spraying time (e.g. pre seeding knock down, pre-emergent,
-    post emergent and fungicide) for each rotation phase is entered by the user or obtained from the simulation output .
-    When determining the number of applications the user must consider both the rotation
+    The number of applications at each spraying time (e.g. pre-seeding knock down, pre-emergent,
+    post-emergent and fungicide) for each rotation phase is entered by the user or obtained from the simulation output .
+    When determining the number of applications, the user must consider both the rotation
     history and the current landuse. The rotation history is important because it impacts the initial levels of
     weed and disease burden and fungi. The current landuse is important because different landuses are susceptible
     to different weeds and diseases. Furthermore, chemicals can be specific for certain
@@ -1018,7 +1018,7 @@ def f_insurance(r_vals):
     Crop insurance cost.
 
     Crop insurance is typically based off the farmers estimation of yield in mid spring (hence active z axis).
-    This is not going to exactly be equal to final yield but it is closer than using the average yield.
+    This is not going to exactly be equal to final yield, but it is closer than using the average yield.
     The small amount of error in this assumption will have little impact due to the small magnitude of
     financial impact of insurance.
 

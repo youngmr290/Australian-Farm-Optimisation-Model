@@ -69,7 +69,7 @@ def f_effective_mei(dmi, md, threshold_f, confinement_inc, ri=1, eff_above=0.5):
        would be better to not represent the reduced efficiency, whereas if that decision variable would not be selected
        then the reduction should be represented.
        Working conclusion: All feedstuffs should go through f_effective_mei. However, the highest nv pool should not
-       be reduced even if the feed quality is greater than then animal demand, on the assumption that the target for
+       be reduced, even if the feed quality is greater than then animal demand, on the assumption that the target for
        these animals is growth and that faster growth would be better.
        The exception to the above is supplement because the quantity of supplement can be controlled so as not to
        result in LWG followed by a period of LWL.
@@ -121,7 +121,7 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, hr_scalar = 1, cr=None
     '''
     Adjust FOO for measurement method.
 
-    Depending on the region FOO can be measured differently. For example, in WA when measuring FOO
+    Depending on the region, FOO can be measured differently. For example, in WA when measuring FOO
     the pasture is cut to ground level using a scalpel versus NSW where it is cut at a higher level
     with shears. This results in the same amount of feed being valued at a higher FOO in WA.
     The FOO is adjusted in this function to the method which is used in the livestock production equations.
@@ -133,7 +133,7 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, hr_scalar = 1, cr=None
     The minimum grazing limit FOO level (level which grazing can not occur below) is specified in FOO units
     of the livestock grazing equations (this value is removed from available FOO in f_ra().
     The base level in the pasture grazing intensity calculations is in units of FOO that have been used to define
-    the PGR by FOO inputs. Thus in WA the base level FOO would be higher than NSW.
+    the PGR by FOO inputs. Thus, in WA, the base level FOO would be higher than NSW.
 
     :param cu3: this parameter should already be slice on the c4 axis.
     :param cu4: this parameter should already be slice on the c4 axis.
@@ -286,7 +286,7 @@ def f_rel_intake(ra, rq, legume, cr=None):
 
     Calculation of relative intake includes the effect of feed availability, feed quality and the interaction.
     This function is not called for feeds (such as supplements) that do not have an 'availability' characteristic.
-    The calculated RI can be greater than 1 - which implies that actual intake can be greater than potential intake
+    The calculated RI can be greater than 1 - which implies that actual intake can be greater than the potential intake
     This can occur if rq is greater than 1, due to the 'legume' effect on the intercept or if DMD is greater than cr1.
 
     NOTE: Only pass cr parameter if called from Stock_generator that have a g axis

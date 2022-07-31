@@ -4,7 +4,7 @@
 author: young
 
 Phase labour represents the labour associated with each rotation phase. This
-includes the both crop and pasture phases. Phase labour includes the labour required
+includes both the crop and pasture phases. Phase labour includes the labour required
 for seeding, harvest, spraying, fertilising and monitoring. The time each operation takes
 is dependent on the rotation phase, LMU and machinery complement. The rate at which
 seeding, harvest, spraying and fertilising can be done is calculated and documented in the machinery
@@ -278,7 +278,7 @@ def f_crop_monitoring():
     '''
     Labour required for monitoring crop paddocks.
 
-    For crop paddocks, monitoring time is broken into two section.
+    For crop paddocks, monitoring time is broken into two sections.
     Firstly, a fixed (irrelevant of crop area) labour requirement which is a user defined input stating
     the hours per week in each labour period. Secondly, a variable labour requirement which is incurred
     for each hectare of crop. This is also an input, but it can vary by crop type as well as period. The

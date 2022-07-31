@@ -157,6 +157,25 @@ Pyomo
 
    CropResiduePyomo
 
+Salt land pasture
+-------------------------------
+
+Precalcs
+^^^^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   Saltbush
+
+Pyomo
+^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   SaltbushPyomo
+
 Supplement
 -------------
 
