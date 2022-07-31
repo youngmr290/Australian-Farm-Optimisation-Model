@@ -309,9 +309,11 @@ def create_sa():
     sav['adjp_cfw_initial_w1'] = np.full(sinp.structuralsa['i_adjp_cfw_initial_w1'].shape, '-', dtype=object)    #initial cfw adjustment dams
     sav['adjp_fd_initial_w1'] = np.full(sinp.structuralsa['i_adjp_fd_initial_w1'].shape, '-', dtype=object)      #initial fd adjustment dams
     sav['adjp_fl_initial_w1'] = np.full(sinp.structuralsa['i_adjp_fl_initial_w1'].shape, '-', dtype=object)      #initial fl adjustment dams
+    sav['user_fvp_date_dams_iu'] = np.full(sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['user_fvp_date_dams_yiu'] = np.full((len_y,)+sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['mask_fvp_dams'] = np.full(sinp.structuralsa['i_fvp_mask_dams'].shape, '-', dtype=object)      #SA to mask optional fvps.
     sav['fvp_is_dvp_dams'] = np.full(sinp.structuralsa['i_dvp_mask_f1'].shape, '-', dtype=object)      #SA to control if optional fvp is a dvp (note: fvps don't need to be dvps, the only benefit is if new information is available e.g. if animals uncluster, which allows differential management).
+    sav['user_fvp_date_offs_iu'] = np.full(sinp.structuralsa['i_offs_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['user_fvp_date_offs_yiu'] = np.full((len_y,)+sinp.structuralsa['i_offs_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['mask_fvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to mask optional fvps.
     sav['fvp_is_dvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to control if optional fvp is a dvp (note: fvps don't need to be dvps, the only benefit is if new information is available e.g. if animals uncluster, which allows differential management).

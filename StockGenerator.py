@@ -891,6 +891,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##user defined fvp - rounded to the nearest sim period
     fvp_other_iu = sinp.structuralsa['i_dams_user_fvp_date_iu']
+    fvp_other_iu = fun.f_sa(fvp_other_iu, sen.sav['user_fvp_date_dams_iu'], 5)
     n_user_fvp = fvp_other_iu.shape[-1]
     user_fvp_u = np.zeros(n_user_fvp, dtype=object)
     fvp_other_yiu = fvp_other_iu + np.arange(np.ceil(sim_years))[:,na,na] * 364
@@ -1042,6 +1043,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##user defined fvp - rounded to the nearest sim period
     fvp_other_iu = sinp.structuralsa['i_offs_user_fvp_date_iu']
+    fvp_other_iu = fun.f_sa(fvp_other_iu, sen.sav['user_fvp_date_offs_iu'], 5)
     n_user_fvp = fvp_other_iu.shape[-1]
     user_fvp_u = np.zeros(n_user_fvp, dtype=object)
     fvp_other_yiu = fvp_other_iu + np.arange(np.ceil(sim_years))[:,na,na] * 364
