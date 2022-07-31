@@ -736,17 +736,29 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
 
     return value
 
-def f_run_required(exp_data1):
+def f_run_required(exp_data1, l_pinp):
     '''
-    here we check if precalcs and pyomo need to be recalculated. this is slightly complicated by the fact that columns and rows can be added to exp.xls
+    Here we check if precalcs and pyomo need to be recalculated. this is slightly complicated by the fact that columns and rows can be added to exp.xls
     and the fact that a user can opt not to run a trial even if it is out of date so the run requirement must be tracked
     have any sa cols been added or removed, are the values the same, has the py code changed since last run?
 
-    this function is also used by report.py to calculate if reports are being generated with out of date data.
+    This function is also used by report.py to calculate if reports are being generated without of date data.
+
+    To trigger trial re-run delete pkl_r_vals{trial_name}.pkl.
     '''
-    ##add run cols to be populated
+    ##add run cols to be populated - this gets updated during this function and stored for next time.
+    ## This tracks if a trial needs to be run but doesnt get run.
     exp_data1['run_req'] = False
 
+    ##try and read in exp from last run - if it doesnt exist then all trials require running.p
+    try: #in case pkl_exp doesn't exist, if it doesnt exist then all trials require running
+        with open('pkl/pkl_exp.pkl',"rb") as f:
+            prev_exp = pkl.load(f)
+    except FileNotFoundError:
+        exp_data1['run_req']=True #if prev exp doesnt exist then that means all trials require running.
+        return exp_data1
+
+    ##calc if any code has been changed since AFO was last run
     ###if only ReportControl.py or ReportFunctions.py have been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't a report
     sorted_list = sorted(glob.iglob('*.py'), key=os.path.getmtime)
     if sorted_list[-1] != 'ReportFunctions.py' and sorted_list[-1] != 'ReportControl.py':
@@ -755,47 +767,52 @@ def f_run_required(exp_data1):
         newest = sorted_list[-2]
     else:
         newest = sorted_list[-3]
+    same_py = os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(newest)
 
-    try: #in case pkl_exp doesn't exist
-        with open('pkl/pkl_exp.pkl',"rb") as f:
-            prev_exp = pkl.load(f)
+    ##calc if inputs have been changed since AFO was run last (checks all pinp that are used in the exps)
+    ###gets the pinp used in the current exp. l_pinp only includes the properties in the current exp but that is fine because the other properties will trigger re-run later.
+    l_pinp = l_pinp.unique()
+    same_xl_inputs = True
+    for pinp in l_pinp:
+        same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(f'Property_{pinp}.xlsx')
+    same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx")
+    same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Structural.xlsx")
 
-        ##get a list of all sa cols (including the name of the trial because two trial may have the same values but have a different name)
-        keys_hist = list(prev_exp.reset_index().columns[3:].values)
-        keys_current = list(exp_data1.reset_index().columns[3:].values)
+    ##calc if any SA have been added or removed since AFO was last run
+    ###get a list of all sa cols (including the name of the trial because two trial may have the same values but have a different name)
+    keys_hist = list(prev_exp.reset_index().columns[3:].values)
+    keys_current = list(exp_data1.reset_index().columns[3:].values)
+    same_SA = keys_current == keys_hist
 
-        ##update prev_exp run column
-        ###if the trial was run the last time the model was run (r_vals are newer than exp.pkl) this trial doesn't need to be re-run unless code or inputs have changed.
-        ###if r_vals don't exist the trial needs to be re-run (this allows the user to delete r_vals to re-run a trial).
-        run_last = []
-        no_r_vals = []
-        for trial in prev_exp.index.get_level_values(3):
-            try:
-                if os.path.getmtime('pkl/pkl_exp.pkl') <= os.path.getmtime('pkl/pkl_r_vals_{0}.pkl'.format(trial)):
-                    run_last.append(True)
-                    no_r_vals.append(False)
-                else:
-                    run_last.append(False)
-                    no_r_vals.append(False)
-            except FileNotFoundError:
+    ##calc if any SA values have been changed for each trial since AFO was last run (this includes the run_req col which tracks if a trial needed to be run last time but wasn't)
+    ###first - update prev_exp run column. this tracks if a trial was run last itteration or if the r_vals were deleted.
+    ###if the trial was run the last time the model was run (r_vals are newer than exp.pkl) this trial doesn't need to be re-run unless code or inputs have changed.
+    ###if r_vals don't exist the trial needs to be re-run (this allows the user to delete r_vals to re-run a trial).
+    run_last = []
+    no_r_vals = []
+    for trial in prev_exp.index.get_level_values(3):
+        try:
+            if os.path.getmtime('pkl/pkl_exp.pkl') <= os.path.getmtime('pkl/pkl_r_vals_{0}.pkl'.format(trial)):
+                run_last.append(True)
+                no_r_vals.append(False)
+            else:
                 run_last.append(False)
-                no_r_vals.append(True)
-        prev_exp.loc[run_last, ('run_req', '', '', '')] = False #set run req to false if trial was run last iteration of the model.
-        prev_exp.loc[no_r_vals, ('run_req', '', '', '')] = True #set run req to True if r_vals don't exist
-
-        ##if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xls are the same
-        if (keys_current==keys_hist and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(newest)
-                                    and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx")
-                                    and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Property.xlsx")
-                                    and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Structural.xlsx")):
-            ###check if each trial has the same values in exp.xls as last time it was run.
-            i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
-            i4 = exp_data1.reset_index().set_index(keys_current).index
-            exp_data1.loc[~i4.isin(i3),('run_req', '', '', '')] = True
-        ##if headers are different or py code has changed then all trials need to be re-run
-        else: exp_data1['run_req']=True
-    except FileNotFoundError:
-        exp_data1['run_req']=True
+                no_r_vals.append(False)
+        except FileNotFoundError:
+            run_last.append(False)
+            no_r_vals.append(True)
+    prev_exp.loc[run_last, ('run_req', '', '', '')] = False #set run req to false if trial was run last iteration of the model.
+    prev_exp.loc[no_r_vals, ('run_req', '', '', '')] = True #set run req to True if r_vals don't exist
+    ###if the same SA are included, the code is the same and the excel inputs are the same then test if the values in exp.xls are the same
+    ### this accounts for the run_req col which tracks if a trial needed running last itteration but was not run.
+    if same_SA and same_py and same_xl_inputs:
+        ##check if each trial has the same values in exp.xls as last time it was run.
+        ## this include the 'run' col which tracks if the exp needed to be run previously and hasnt been.
+        i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
+        i4 = exp_data1.reset_index().set_index(keys_current).index
+        exp_data1.loc[~i4.isin(i3),('run_req', '', '', '')] = True
+    ###if headers are different or py code has changed then all trials need to be re-run
+    else: exp_data1['run_req']=True
     return exp_data1
 
 def f_read_exp(pinp_req=False):

@@ -4000,7 +4000,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
                 ###print warning if min mort is greater than 10% since the previous condense
                 ###this is to ensure we are condensing to an animal that the lp will select (ie not point having an animal that has more than 10% mort)
-                ### Note 1: if ewe lambs is not set up for mating and it is estimated that ewe lambs are mated then a warning is likely to be triggered. No warning will be triggered if estimate mating propn is 0.
+                ### Note 1: if ewe lambs FS is not set up for mating and it is estimated that ewe lambs are mated then a warning is likely to be triggered. No warning will be triggered if estimate mating propn is 0 because only a very small number of animals will be in the mated b slices and therefore because the b axis is summed to build surv_dams mort wont be significantly effected by them.
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]):
                     min_mort = 1 - np.max(surv_dams, axis=w_pos)
                     ####only use the retained t slice (animals that have multiple fvps per dvp and are sold in the first fvp only get medium fs in following fvps due to lw clustering e.g. w9 is high medium medium, so this can trigger unwanted mort warning)
@@ -6910,16 +6910,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ####the total number required for each dam is 1.0 when summed across the progeny k3 (progeny dam age) & k5 (progeny BTRT) axes
     ####collapse the e1 axis on the mask prior to np.sum because can't test for > 0 as per other numbers_req (because need proportions of age & BTRT)
     #### but don't want to increase the numbers if joining for multiple cycles
-    numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * np.sum(np.any(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9 * mask_z8var_va1e1b1nwzida0e0b0xyg1[...,na], axis=e1_pos-1, keepdims=True)[0, ...,na,:]
-                                                                    * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,:,0:1,...,na,na]  # mask based on the t axis for dvp0
-                                                                    * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0) #only NM slice requires prog
-                                                                    * (index_g1[...,na]==index_g1)[...,na]
-                                                                    * btrt_propn_b0xyg1[...,na,na].astype(dtype)
-                                                                    * e0_propn_ida0e0b0xyg[...,na,na].astype(dtype)
-                                                                    * agedam_propn_da0e0b0xyg1[...,na,na].astype(dtype)
-                                                                    * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
-                                                                    * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na],
-                                                                     axis=(e1_pos-2, d_pos-2, b0_pos-2, e0_pos-2),keepdims=True)
+    #### Loop to reduce memory
+    numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 0
+    for d in range(len_d): #loop on b1 to reduce memory
+        numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 += 1 * np.sum(np.any(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9 * mask_z8var_va1e1b1nwzida0e0b0xyg1[...,na], axis=e1_pos-1, keepdims=True)[0, ...,na,:]
+                                                                        * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,:,0:1,...,na,na]  # mask based on the t axis for dvp0
+                                                                        * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0) #only NM slice requires prog
+                                                                        * (index_g1[...,na]==index_g1)[...,na]
+                                                                        * btrt_propn_b0xyg1[...,na,na].astype(dtype)
+                                                                        * e0_propn_ida0e0b0xyg[...,na,na].astype(dtype)
+                                                                        * agedam_propn_da0e0b0xyg1[d:d+1,...,na,na].astype(dtype)
+                                                                        * (a_k3cluster_da0e0b0xyg3[d:d+1,...] == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
+                                                                        * (a_k5cluster_da0e0b0xyg3[d:d+1,...] == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na],
+                                                                         axis=(e1_pos-2, d_pos-2, b0_pos-2, e0_pos-2),keepdims=True)
 
     ##transfer progeny to offs
     ###numbers provide
