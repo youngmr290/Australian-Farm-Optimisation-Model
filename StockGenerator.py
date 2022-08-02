@@ -6467,24 +6467,24 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1, ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1,
         mask_dest_tva1e1b1nwzida0e0b0xyg1,
         index_wzida0e0b0xyg1, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na], condense_vtype1)
-    distribution_condense_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
+    distribution_condense_tva1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
         ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3, ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg3,
         mask_dest_va1e1b1nwzida0e0b0xyg3[na],
         index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[..., na], condense_vtype3)
 
     ##redistribute at season start - all seasons back into a common season.
-    distribution_season_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
+    distribution_season_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
         ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1, ffcfw_source_season_tva1e1b1nwzida0e0b0xyg1,
         mask_dest_tva1e1b1nwzida0e0b0xyg1,
         index_wzida0e0b0xyg1, dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na], season_vtype1)
-    distribution_season_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
+    distribution_season_tva1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
         ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3, ffcfw_source_season_tva1e1b1nwzida0e0b0xyg3,
         mask_dest_va1e1b1nwzida0e0b0xyg3[na],
         index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[..., na], season_vtype3)
 
     ##combine distributions
-    distribution_tva1e1b1nw8zida0e0b0xyg1w9 = distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 * distribution_season_va1e1b1nw8zida0e0b0xyg1w9
-    distribution_va1e1b1nw8zida0e0b0xyg3w9 = distribution_condense_va1e1b1nw8zida0e0b0xyg3w9 * distribution_season_va1e1b1nw8zida0e0b0xyg3w9
+    distribution_tva1e1b1nw8zida0e0b0xyg1w9 = distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 * distribution_season_tva1e1b1nw8zida0e0b0xyg1w9
+    distribution_tva1e1b1nw8zida0e0b0xyg3w9 = distribution_condense_tva1e1b1nw8zida0e0b0xyg3w9 * distribution_season_tva1e1b1nw8zida0e0b0xyg3w9
 
     # ##store cluster associations for use in creating the optimal feedsupply at the end of the trial
     # pkl_fs_info['distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9'] = distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9
@@ -6722,7 +6722,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     # numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...,na] == 0) #take slice 0 of e (for prejoining all e slices are the same
 
     ###offs
-    numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 = (fun.f_divide(np.sum(numbers_end_tva1e1b1nwzida0e0b0xyg3[...,na]  * distribution_va1e1b1nw8zida0e0b0xyg3w9
+    numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 = (fun.f_divide(np.sum(numbers_end_tva1e1b1nwzida0e0b0xyg3[...,na]  * distribution_tva1e1b1nw8zida0e0b0xyg3w9
                                                                            * mask_numbers_provw8w9_va1e1b1nw8zida0e0b0xyg3w9
                                                                            * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
                                                                            * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)[...,na]
