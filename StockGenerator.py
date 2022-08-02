@@ -2464,7 +2464,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             ###################
             ##dependent start #
             ###################
-            ##note: yatf calculated later in the code
             ##sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] > 0):
                 ###GFW (start)
@@ -2530,6 +2529,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_sire_req(sire_propn_pa1e1b1nwzida0e0b0xyg1g0[p], sire_periods_g0p8, pinp.sheep['i_sire_recovery']
                                                                    , date_end_pa1e1b1nwzida0e0b0xyg[p], period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
 
+            ##yatf
+            ##note: most yatf calculated later in the code (except for ffcfw from bw)
+            ###Set FFCFW to the expected birth weight if period is birth
+            ### Required because bw is not calculated until after milk production is calculated
+            if np.any(period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
+                ffcfw_start_yatf = fun.f_update(ffcfw_start_yatf, w_b_std_y_b1nwzida0e0b0xyg1
+                                                , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                ffcfw_max_start_yatf = fun.f_update(ffcfw_max_start_yatf, w_b_std_y_b1nwzida0e0b0xyg1
+                                                    , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
 
             ##offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
@@ -2818,6 +2826,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##milk production
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     ###Expected ffcfw of yatf with p1 axis - each period
+                    #### The test on index_p is to test for the end of lactation. Start of lactation (birth) is always the start of a period
                     ffcfw_exp_a1e1b1nwzida0e0b0xyg2p1 = (ffcfw_start_yatf[..., na] + (index_p1 * cn_yatf[7, ...][...,na])) * (
                                 index_p1 < days_period_pa1e1b1nwzida0e0b0xyg2[...,na][p])
                     ###Expected average metabolic LW of yatf during period
