@@ -458,8 +458,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     woolvalue_c1tpa1e1b1nwzida0e0b0xyg3 = np.zeros((len_c1,)+(len_t3,)+tpg3[1:], dtype =dtype)
     salevalue_c1tpa1e1b1nwzida0e0b0xyg3 = np.zeros(c1tpg3, dtype =dtype)
     ###array for postprocessing
-    o_numbers_start_tpoffs = np.zeros(tpg3, dtype =dtype) # todo is this comment out of date or is the code wrong?  # ones so that dvp0 (p0) has start numbers.
-    o_numbers_end_tpoffs = np.zeros(tpg3, dtype =dtype) #todo is this comment out of date?  #ones so that transfer can exist for dvps before weaning
+    o_numbers_start_tpoffs = np.zeros(tpg3, dtype =dtype) # filled with the initial numbers later, so that dvp0 (p0) has start numbers.
+    o_numbers_end_tpoffs = np.zeros(tpg3, dtype =dtype) # filled with the initial numbers later, so that transfer can exist for dvps before weaning
     o_ffcfw_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_ffcfw_season_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_ffcfw_condensed_tpoffs = np.zeros(tpg3, dtype =dtype)
@@ -517,7 +517,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                    condition2=mask_d_offs, axis2=d_pos) #need axis up to p so that p association can be applied
 
     ##Chill adjustment based on litter size and scanning. Note: adjusted later so only active if scanning
-    #todo the scaling across the b1 axis could be improved by making the adjustment after the repro rate of the flock is known
+    #todo the scaling across the b1 axis could be improved by including scan_std for the flock & std DSE/hd
     #This could account for the number of dams re-allocated based on min(DSE of multiples in exposed, DSE of singles in sheltered)
     # The current calculation is all multiples allocated to sheltered paddocks and all singles to exposed paddocks.
     chill_adj_b1nwzida0e0b0xyg1 = pinp.sheep['i_chill_adj'] * fun.f_expand(sinp.stock['i_chill_adj_b1'], b1_pos)
@@ -2302,7 +2302,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         nw_start_yatf = 0.0
         rc_start_yatf = 0.0
         ffcfw_start_yatf = w_b_std_y_b1nwzida0e0b0xyg1 #this is just an estimate, it is updated with the real weight at birth - needed to calc milk production in birth period because milk prod is calculated before yatf weight is updated)
-        #todo will this cause an error for the second lambing because ffcfw_start_yatf will be last years weaning weight rather than this years expected birth weight - hard to see how the weight can be reset unless it is done the period after weaning
         ffcfw_max_start_yatf = ffcfw_start_yatf
         mortality_birth_yatf=0.0 #required for dam numbers before progeny born
         cfw_start_yatf = 0.0
@@ -3119,6 +3118,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##reset start variables if period is birth
                 ###ffcf weight of yatf
                 ffcfw_start_yatf = fun.f_update(ffcfw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                ffcfw_max_start_yatf = fun.f_update(ffcfw_max_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###normal weight of yatf
                 nw_start_yatf	= fun.f_update(nw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###adipose weight of yatf
