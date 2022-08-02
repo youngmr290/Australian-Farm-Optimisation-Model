@@ -105,6 +105,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ######################
     ##date               #
     ######################
+    #todo The length of the year is hardwired to 364days which implies that n_periods is 52 and step is 7 so why bother calculating
+    # if we want flexibility to adjust periods per year (to save model size) then this needs attention.
     ## define the periods - default (dams and sires)
     sim_years = sinp.stock['i_age_max']
     # sim_years = 4
@@ -121,8 +123,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     date_end_pa1e1b1nwzida0e0b0xyg3 = np.expand_dims(offs_date_end_p, axis = tuple(range(p_pos+1, 0)))
     p_index_pa1e1b1nwzida0e0b0xyg3 = np.expand_dims(p_index_offs_p, axis = tuple(range(p_pos+1, 0)))
     mask_p_offs_p = p_index_p<=(n_sim_periods_offs-1)
-    ##day of the year (first day of each period) todo maybe this should become mid point of period (add plus 3.5)
-    doy_pa1e1b1nwzida0e0b0xyg = date_start_pa1e1b1nwzida0e0b0xyg % 364
+    ##day of the year (mid-point day of each period)
+    doy_pa1e1b1nwzida0e0b0xyg = date_start_pa1e1b1nwzida0e0b0xyg % 364 + step / 2
     ##day length
     dl_pa1e1b1nwzida0e0b0xyg = fun.f_daylength(doy_pa1e1b1nwzida0e0b0xyg, pinp.sheep['i_latitude'])
     ##days in each period

@@ -29,7 +29,7 @@ def f1_sim_periods(periods_per_year, oldest_animal, len_o):
     Define the days for the simulation periods.
     The year has 52 weeks with 7 days in a week. The extra day of the year is ignored
     All calculations are based on a day of the year rather than a date and the periods are weeks of the year
-    This saves managing hte difficulties associated with the extra day in the year and in leap years.
+    This saves managing the difficulties associated with the extra day in the year and in leap years.
 
     Parameters:
     start_year = int: year to start simulation.
@@ -52,8 +52,8 @@ def f1_sim_periods(periods_per_year, oldest_animal, len_o):
     index_p = np.arange(n_sim_periods)
     date_start_p = index_p * step
     date_start_P = np.arange(len_o * periods_per_year) * step
-    date_end_p = index_p * step + step-1 #end date is 6 days after start date
-    date_end_P = np.arange(len_o * periods_per_year) * step + step-1 #end date is 6 days after start date
+    date_end_p = index_p * step + step-1 #end date is the day before the next period start date
+    date_end_P = np.arange(len_o * periods_per_year) * step + step-1 #end date is the day before the next start date
     return n_sim_periods, date_start_p.astype(int), date_start_P.astype(int), date_end_p.astype(int), date_end_P.astype(int), index_p, step
 
 
