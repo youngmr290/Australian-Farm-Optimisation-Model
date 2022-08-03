@@ -302,7 +302,9 @@ def create_sa():
     sav['nut_mask_dams_oWi'] = np.full((pinp.sheep['i_o_len'], len_max_w1, pinp.sheep['i_i_len']), '-', dtype=object)    #masks the nutrition options available e.g. high low high - the options selected are available for each starting weight (ie len_W = len_w/n_start_weights). This array is cut down in the code to the correct w len.
     sav['nut_mask_offs_sWix'] = np.full((pinp.sheep['i_s_len'], len_max_w3, pinp.sheep['i_i_len'], pinp.sheep['i_x_len']), '-', dtype=object)   #masks the nutrition options available e.g. high low high - the options selected are available for each starting weight (ie len_W = len_w/n_start_weights). This array is cut down in the code to the correct w len.
     sav['nut_spread_n1'] = np.full(sinp.structuralsa['i_nut_spread_n1'].shape, '-', dtype=object)      #nut spread dams
+    sav['confinement_n1'] = np.full(sinp.structuralsa['i_confinement_n1'].shape, '-', dtype=object)    #bool array - This control allows confinement to occur if it is turned on for the given p6 period (controlled in feedsupply in property inputs)
     sav['nut_spread_n3'] = np.full(sinp.structuralsa['i_nut_spread_n3'].shape, '-', dtype=object)      #nut spread offs
+    sav['confinement_n3'] = np.full(sinp.structuralsa['i_confinement_n3'].shape, '-', dtype=object)    #bool array - This control allows confinement to occur if it is turned on for the given p6 period (controlled in feedsupply in property inputs)
     sav['n_fs_dams'] = '-'      #nut options dams
     sav['n_fs_offs'] = '-'      #nut options offs
     sav['n_initial_lw_dams'] = '-'      #number of initial lws dams - note with the current code this can only be 2 or 3
