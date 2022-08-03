@@ -1787,7 +1787,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##add p1 axis
     date_start_pa1e1b1nwzida0e0b0xygp1 = date_start_pa1e1b1nwzida0e0b0xyg[...,na] + index_p1
-    doy_pa1e1b1nwzida0e0b0xygp1= doy_pa1e1b1nwzida0e0b0xyg[...,na] + index_p1
+    doy_pa1e1b1nwzida0e0b0xygp1= doy_pa1e1b1nwzida0e0b0xyg[...,na] - step / 2 + index_p1  #calculate the p1 axis from the start day rather than mid-point day
     ##age open ie not capped at weaning
     age_p1_pa1e1b1nwzida0e0b0xyg0p1 = (age_start_open_pa1e1b1nwzida0e0b0xyg0[..., na] + index_p1)
     age_p1_pa1e1b1nwzida0e0b0xyg1p1 = (age_start_open_pa1e1b1nwzida0e0b0xyg1[..., na] + index_p1)
