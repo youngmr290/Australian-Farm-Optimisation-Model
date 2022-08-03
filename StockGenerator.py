@@ -5689,7 +5689,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     sale_finish= time.time()
 
-    ##Husbandry - shearing costs apply to p[0] but they are dropped because no numbers in p[0] #todo add feedbudgeting and labour for maintenance of infrastructure (it is currently has a cost that is representing materials and labour)
+    ##Husbandry - shearing costs apply to p[0] but they are dropped because no numbers in p[0]
+    #todo add feedbudgeting and 'labour for maintenance of infrastructure' (it currently has a cost that is representing materials and labour)
     ###Sire: cost, labour and infrastructure requirements
     husbandry_cost_tpg0, husbandry_labour_l2tpg0, husbandry_infrastructure_h1tpg0 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_sire'], mobsize_pa1e1b1nwzida0e0b0xyg0, o_ffcfw_tpsire, o_cfw_tpsire, operations_triggerlevels_h5h7h2tpg,
@@ -7859,12 +7860,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_twice_dry_dams_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
     ###convert to v axis
     prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
-    ###adjust maidens twice drys for yearling mating (if no yearlings are mated then there can not be any twice dry maidens)
+    ###adjust 2-tooth twice drys for yearling mating (and other age groups if not 100% mated).
+    ### the proportion of yearlings that were mated adjusts the proportion of the dry 2-tooths that are twice dry
+    ### Eg. if no yearlings were mated then no 2-tooths are twice dry.
     ####calc propn of dams mated in previous opportunity uses the estimated proportion of dams mated
     prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1 = np.roll(est_prop_dams_mated_oa1e1b1nwzida0e0b0xyg1, shift=1, axis=0)
     prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
     prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
-    #todo is multiplying by propn mated correct? Propn mated controls the split between NM & mated. Therefore, should it be * (propn_mated > 0)
     prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 * np.minimum(1,prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1)
     ###create param
     arrays_vziyg1 = [keys_v1, keys_z, keys_i, keys_y1, keys_g1]
