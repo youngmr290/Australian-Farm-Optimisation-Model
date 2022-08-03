@@ -307,7 +307,7 @@ def f_update(existing_value, new_value, mask_for_new):
     ##convert '-' to 0 (because '-' * False == '' which causes and error when you add to existing value)
     ##need a try and except in case the new value is not a numpy array (ie it is a single value)
     try:
-        if np.any(new_value.astype('object')=='-'): #needs to be an object to perform elementwise comparison
+        if new_value.dtype==object and np.any(new_value=='-'): #needs to be an object to perform elementwise comparison
                 new_value[new_value=='-'] = 0
                 new_value = new_value.astype(float) #need to convert to number because if str it chucks error below
     except AttributeError:
