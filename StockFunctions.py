@@ -1291,8 +1291,8 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, nlb, crg_doy, n
     Some dams conceive (and don't return to service) but don't carry to birth (the third trimester)
     due to abortion during pregnancy, this is taken into account.
     #todo The conversion of the prediction from 2 cycles back to one cycle doesn't include this loss
-    # which then increases the proportion of empty ewes and reduces the expected RR.
-    # The correction has been removed for now.
+    #which then increases the proportion of empty ewes and reduces the expected RR.
+    #The correction has been removed for now.
     The values are altered by a sensitivity analysis on scanning percentage
     Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can
     be controlled for relative economic values

@@ -517,7 +517,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                    condition2=mask_d_offs, axis2=d_pos) #need axis up to p so that p association can be applied
 
     ##Chill adjustment based on litter size and scanning. Note: adjusted later so only active if scanning
-    #todo the scaling across the b1 axis could be improved by including scan_std for the flock & std DSE/hd
+    #todo the scaling across the b1 axis could be improved by including scan_std for the flock & std DSE/hd (replicating the calculations in the PregScanning exp.xl)
     #This could account for the number of dams re-allocated based on min(DSE of multiples in exposed, DSE of singles in sheltered)
     # The current calculation is all multiples allocated to sheltered paddocks and all singles to exposed paddocks.
     chill_adj_b1nwzida0e0b0xyg1 = pinp.sheep['i_chill_adj'] * fun.f_expand(sinp.stock['i_chill_adj_b1'], b1_pos)
@@ -2271,8 +2271,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         cf_w_b_dams = np.zeros(tag1, dtype =dtype) #this is required as default when mu birth weight function is not being called (it is required in the start production function)
         cf_w_w_start_dams = np.array([0.0])
         cf_w_w_dams = np.zeros(tag1, dtype =dtype) #this is required as default when mu wean function is not being called (it is required in the start production function)
-        cf_conception_start_dams = np.array([0.0])
-        cf_conception_dams = np.zeros(tag1, dtype =dtype) #this is required as default when mu concep function is not being called (it is required in the start production function)
+        # cf_conception_start_dams = np.array([0.0])
+        # cf_conception_dams = np.zeros(tag1, dtype =dtype) #not currently used. Will be used if profile prior to joining (i.e. previous year) is included in the repro functions.
         guw_start_dams = np.array([0.0])
         rc_birth_start_dams = np.array([1.0])
         ffcfw_start_dams = fun.f_expand(ffcfw_initial_wzida0e0b0xyg1, p_pos, right_pos=w_pos) #add axis w to a1 because e and b axis are sliced before they are added via calculation
@@ -2433,8 +2433,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 cf_w_b_start_dams = fun.f_update(cf_w_b_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
                 ###Weaning weight carryover (running tally of foetal weight diff)
                 cf_w_w_start_dams = fun.f_update(cf_w_w_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
-                ###Carry forward conception
-                cf_conception_start_dams = fun.f_update(cf_conception_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
+                # ###Carry forward conception
+                # cf_conception_start_dams = fun.f_update(cf_conception_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
                 ###LTW CFW adjustment carryover (running tally of LTW progeny CFW)
                 cfw_ltwadj_start_dams = fun.f_update(cfw_ltwadj_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
                 cf_cfwltw_start_dams = fun.f_update(cf_cfwltw_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
@@ -3431,15 +3431,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    #todo JMY to adress below and update comments about cf_conception
-                    #todo this need to be replaced by LMAT formula, if cf_conception_start is used in the LMAT formula cf_conception_dams = temp0 will need to be moved out of the if used statement.
                     temp0 = sfun.f_conception_ltw(cf_dams, cu0_dams, relsize_mating_dams, cs_mating_dams
                                                   , scan_std_pa1e1b1nwzida0e0b0xyg1[p], doy_pa1e1b1nwzida0e0b0xyg[p]
                                                   , rr_doy_ltw_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
                                                   , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                   , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p])
                     if eqn_used:
-                        cf_conception_dams = temp0*0  #default set to 0 because required in start production function (only used in lmat conception function)
                         conception_dams = temp0
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     if eqn_compare:
@@ -3455,7 +3452,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                    , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]
                                                    , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
-                        cf_conception_dams = temp0*0  #default set to 0 because required in start production function (only used in lmat conception function)
                         conception_dams = temp0
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     if eqn_compare:
@@ -4354,10 +4350,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##dams LTW FD (total adjustment, calculated at birth)
                 fd_ltwadj_condensed_dams = sfun.f1_condensed(fd_ltwadj_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
-                ###Carry forward conception
-                cf_conception_condensed_dams = sfun.f1_condensed(cf_conception_dams
-                                        , idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
+                # ###Carry forward conception
+                # cf_conception_condensed_dams = sfun.f1_condensed(cf_conception_dams
+                #                         , idx_sorted_w_dams, condense_w_mask_dams
+                #                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weaning weight carryover (running tally of weaning weight diff)
                 cf_w_w_condensed_dams = sfun.f1_condensed(cf_w_w_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
@@ -4737,17 +4733,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
-                ###Carry forward conception
-                cf_conception_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams
-                                        , cf_conception_condensed_dams, prejoin_tup
-                                        , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
-                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
-                                        , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
+                # ###Carry forward conception
+                # cf_conception_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams
+                #                         , cf_conception_condensed_dams, prejoin_tup
+                #                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
+                #                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                #                         , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                #                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
+                #                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
+                #                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
+                #                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
+                #                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weaning weight carryover (running tally of foetal weight diff)
                 cf_w_w_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, cf_w_w_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
