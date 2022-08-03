@@ -143,6 +143,7 @@ def f_structural_inp_sa():
     structuralsa['i_fs_create_number'] = fun.f_sa(structuralsa['i_fs_create_number'], sen.sav['fs_create_number'],5)
     structuralsa['i_fs_use_pkl'] = fun.f_sa(structuralsa['i_fs_use_pkl'], sen.sav['fs_use_pkl'],5)
     structuralsa['i_fs_use_number'] = fun.f_sa(structuralsa['i_fs_use_number'], sen.sav['fs_use_number'],5)
+    structuralsa['i_use_pkl_condensed_start_condition'] = fun.f_sa(structuralsa['i_use_pkl_condensed_start_condition'], sen.sav['use_pkl_condensed_start_condition'],5)
     structuralsa['i_r2adjust_inc'] = fun.f_sa(structuralsa['i_r2adjust_inc'], sen.sav['r2adjust_inc'],5)
 
     ##report controls

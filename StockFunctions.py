@@ -1823,7 +1823,7 @@ def f1_season_wa(numbers, var, season, mask_min_lw_z, period_is_startseason):
     return var
 
 
-def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, period_is_condense):
+def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, period_is_condense, pkl_condensed_value=None, param_name=None):
     """
     Condense variable to x common points along the w axis when period_is_condense.
     Currently this function only handle 2 or 3 initial liveweights. The order of the returned W axis is M, H, L for 3 initial lws or H, L for 2 initial lws.
@@ -1941,6 +1941,25 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
                 temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, sinp.stock['i_w_pos']) #if you get an error here it probably means no animals had mort less than 10%
         ###Update if the period is start of year (shearing for offs and prejoining for dams)
         var = fun.f_update(var, temporary, period_is_condense)
+
+        ###update and use pkl condensed var
+        ###Every trial creates a new pkl that is identified using the fs pkl number. Some trials use stored values and then essentially just create a copy. This is done so that the same fs numbers can be used.
+        ###Note: can't create with w_start_len==2 and use for w_start_len==3 or visa versa (dont think this can happen with fs anyway so shouldnt be a problem).
+        ###see google doc (randomness section) for more info.
+        if param_name is not None:
+            if sinp.structuralsa['i_use_pkl_condensed_start_condition']:
+                ####store t length before updating
+                t_pos = sinp.stock['i_p_pos'] #t is in p pos because p has been sliced
+                i_t_len = var.shape[t_pos]
+                ####update var with pickled value
+                var = pkl_condensed_value[param_name]
+                ####handle when the current trial is n11 and create trial was n33 - start weights are the same just need to slice w axis.
+                if i_w_len!=var.shape[sinp.stock['i_w_pos']]:
+                    var = fun.f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, None, int(var.shape[sinp.stock['i_w_pos']]/sinp.structuralsa['i_w_start_len1']))
+                ####handle when the pkl condensed values dont have a t axis but the t axis is active - this can occur if the condensed params were saved in a trial where t was not active. The t axis still gets stored on the fs even if the generator didnt have an active t therefore it needs to be activated here.
+                if i_t_len!=var.shape[t_pos]:
+                    var = np.concatenate([var]*3, axis=t_pos)
+            pkl_condensed_value[param_name] = var.copy()  # have to copy so that traits (e.g. mort) that are added to using += do not also update the value (not sure the copy is required here but have left it in since it was required for the rev)
 
     return var
 

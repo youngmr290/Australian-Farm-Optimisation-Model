@@ -594,7 +594,7 @@ def f_comb(n,k):
     combinations = factorial[n]/(factorial[k]*factorial[n-k])
     return combinations
 
-def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None):
+def f_dynamic_slice(arr, axis, start, stop, step=1, axis2=None, start2=None, stop2=None, step2=1):
     ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
     if type(arr)==int:
         return arr
@@ -602,13 +602,13 @@ def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None)
         ##first axis slice if it is not singleton
         if arr.shape[axis]!=1:
             sl = [slice(None)] * arr.ndim
-            sl[axis] = slice( start, stop)
+            sl[axis] = slice( start, stop, step)
             arr = arr[tuple(sl)]
         if axis2 is not None:
             ##second axis slice if required and not singleton
             if arr.shape[axis2] != 1:
                 sl = [slice(None)] * arr.ndim
-                sl[axis2] = slice( start2, stop2)
+                sl[axis2] = slice( start2, stop2, step2)
                 arr = arr[tuple(sl)]
         return arr
 
