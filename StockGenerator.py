@@ -5323,32 +5323,42 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #on hand / sale / shear mask #
     ##############################
     '''
-    All animals onhand at main shearing are shorn. This may be a slight limitation for lambs that are sold a couple
-    of months after main shearing because in reality farmers would wait and shear them before sale. This is tricky
+    All animals onhand at main shearing are shorn. This may be a slight limitation for lambs that are destined for sale
+    a few months after main shearing because in reality farmers would wait and shear them before sale. This is tricky
     to handle in AFO because shearing in the generator is not differentiated with a t axis and if there is a dvp
-    between main shearing and selling wheather the animal was shorn cant be remembered.
+    between main shearing and selling, whether the animal was shorn isn't remembered.
     
-    Animals that are sold are shorn if cfw is above an inputted threshold. For these animals sale and shearing
-    occur in the same gen period. This is because including an offset was getting complex and error prone (particuly
-    if main shearing falls between sale due to selling and sale because this meant the animals got double wool income).
+    Animals that are sold are also shorn if cfw at sale is above an inputted threshold. For these animals, sale and shearing
+    occur in the same gen period. This is because including an offset was getting complex and error prone (particularly
+    if main shearing falls between shearing due to selling and sale because this meant the animals got double wool income).
     In reality farmers tend to wait a bit after shearing before selling because animals are off water and feed for up to
     48hrs and because animals tend to gain weight at a faster rate directly after shearing. In AFO we dont represent 
     either of these things thus shearing and selling in the same period is not a big limitation (the two factors are 
     likely to cancel each other out so likely not a big error).  
     
-    There is 3 aspects to the problem of being able to retain an animal from shearing and selling just after in the 
-    new season year and or cashflow year using a tactical sale option.
-    1. The working capital constraint (animals can be retained and sold at the begining of next financial yr to 
-       reduce wc constraint). This is not a problem for SQ & MP (because end balance carries over). It is difficult to solve for DSP/SE
+    There are 3 aspects to the problem of being able to retain an animal at shearing and then selling soon after in the 
+    new season year and/or cashflow year using a tactical sale option.
+    1. The working capital constraint (animals can be retained and sold at the beginning of next financial yr to 
+       reduce wc constraint). 
+       This is not a problem for MP (because final sheep numbers aren't carried to the initial, and the end cashflow 
+       balance carries forward each year).
+       For the SQ model the end cashflow balance carries forward each year, however, there is still a problem that
+       the final sheep numbers are carried to the initial so animals can be retained in the final year and sold 
+       in the initial year to reduce wc requirement.
+       It is difficult to solve for DSP and therefore the capacity of the wc constraint is compromised.
+       A conceptual fix is to remove tactical sale options from the 'better' seasons at the beginning of the year,
+       to force selection of the 'strategic' sale times at the end of the previous year. However, the outcome 
+       could just be to alter the management of the livestock in the "better" years. 
+       Note: there aren't any tactical sale options in the SE model.
     2. Gaining utility in the DSP by selling sheep in the low income year (technically this is reducing risk but not 
-       in a very sensible way - it is the same as withdrawing cash from the bank in a poor year.). This problem 
+       in a very sensible way - it is the same as withdrawing cash from the bank in a poor year). This problem 
        has been solved by adding the 'Livestock Trading Profit'.
-    3. Extra cashflow interest achievid by moving income from the end of the previous year to the start fo the next year. 
-       Difficult to handle and maybe not a big issue. 
+    3. Extra cashflow interest achieved by moving income from the end of the previous year to the start of the next year. 
+       This is handled by the asset value on animals at the start of the year which adds an interest cost for animals
+       retained and this will offset the interest earned.
+       Note: Asset cost is not required in the MP model for the years that cashflow is carried forward, 
+       but is required in the final 'equilibrium' year.  
     '''
-       #todo dad to check -
-       # 1. it is still a problem for sq.
-       # 3. isnt this handled by asset value?
 
     onhandshear_start=time.time()
 
