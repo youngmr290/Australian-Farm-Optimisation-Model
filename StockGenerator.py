@@ -6805,10 +6805,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##numbers required
     ###dams
-    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 =  1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[...,na,:] * mask_numbers_reqt_k2tva1e1b1nwzida0e0b0xyg1g9[:,na,...,na]
+    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = 0
+    for b1 in range(len_b1):  # loop on b1 to reduce memory
+        numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 +=  np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[...,na,:] * mask_numbers_reqt_k2tva1e1b1nwzida0e0b0xyg1g9[:,na,...,na]
                                                                        * mask_z8var_va1e1b1nwzida0e0b0xyg1[...,na,na]
-                                                                       * ((a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1) * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1))[...,na,na]
-                                                                       , axis = (b1_pos-2, e1_pos-2), keepdims=True)>0)
+                                                                       * ((a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,:,:,b1:b1+1,...] == index_k28k29tva1e1b1nwzida0e0b0xyg1)
+                                                                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,:,:,b1:b1+1,...] == index_k2tva1e1b1nwzida0e0b0xyg1))[...,na,na]
+                                                                       , axis = (e1_pos-2), keepdims=True)
+    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = (numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9>0) *1 #*1 to change to float instead of bool
     ####combine nm and 00 cluster for prejoining to scanning
     temporary = np.sum(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
     numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary,
