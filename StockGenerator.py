@@ -7674,12 +7674,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##dams
     ###numbers_req_dams
     params['numbers_req_numpyversion_k2k2tva1nw8ziyg1g9w9'] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:,:,:]  #can't use squeeze here because i need to keep all relevant axis even if singleton. this is used to speed pyomo constraint.
-    params['p_numbers_req_dams'] = fun.f1_make_pyomo_dict(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k2tva1nw8ziyg1g9w9, loop_axis_pos=-1, index_loop_axis_pos=-1)
+    params['p_numbers_req_dams'] = fun.f1_make_pyomo_dict(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k2tva1nw8ziyg1g9w9, loop_axis_pos=p_pos-2, index_loop_axis_pos=-10)
     ###numbers_prov_dams
     ####numbers provided into next period (the norm)
-    params['p_numbers_prov_dams'] = fun.f1_make_pyomo_dict(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k2tvanwziyg1g9w9, loop_axis_pos=-1, index_loop_axis_pos=-1)
+    params['p_numbers_prov_dams'] = fun.f1_make_pyomo_dict(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k2tvanwziyg1g9w9, loop_axis_pos=p_pos-2, index_loop_axis_pos=-10)
     #### provided into this period (when transferring from an earlier lambing ram group to a later lambing)
-    params['p_numbers_provthis_dams'] = fun.f1_make_pyomo_dict(numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k2tvanwziyg1g9w9, loop_axis_pos=-1, index_loop_axis_pos=-1)
+    params['p_numbers_provthis_dams'] = fun.f1_make_pyomo_dict(numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k2tvanwziyg1g9w9, loop_axis_pos=p_pos-2, index_loop_axis_pos=-10)
 
     ##offs related
     ###numbers_req_offs
