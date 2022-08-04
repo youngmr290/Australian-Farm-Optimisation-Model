@@ -94,7 +94,7 @@ def f_con_slp_area(model):
     Constrains the SLP area (used in con_greenpas) on each LMU based on the rotation selected.
 
     This constraint essentially calculates the hectares of salt land pasture based on the rotation phases selected. The
-    p7 axis is not required on v_slp_area because SLP is a continuous phases and therefore exists in all p7.
+    p7 axis is not required on v_slp_area because SLP is a continuous phase and therefore exists in all p7.
     Removing the p7 axis makes the calculations in saltbush pyomo simpler.
     '''
     def slp_area(model,q,s,z,p7,l):

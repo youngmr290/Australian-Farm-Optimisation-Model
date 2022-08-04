@@ -356,7 +356,7 @@ def f_pas_me(model,q,s,p6,f,z):
 
 def f_nappas_me(model,q,s,p6,f,z):
     '''
-    Calculate the total energy provided to each nv pool from the selected level of non arable pasture consumption.
+    Calculate the total energy provided to each nv pool from the selected level of non-arable pasture consumption.
 
     Used in global constraint (con_me). See CorePyomo
     '''

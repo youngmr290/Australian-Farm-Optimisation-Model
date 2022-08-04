@@ -95,7 +95,7 @@ def f1_stubpyomo_local(params, model):
 def f_con_stubble_within(model):
     ''' Links the consumption of a given category with the provision of another category or the transfer of
     stubble to the following period. E.g. category A consumption provides category B. Category B can either be
-    consumed (hence providing cat C) or transferred to the following period.
+    consumed (hence providing category C) or transferred to the following period.
     '''
     ##stubble transfer from category to category and period to period
     ##s2 required because cat propn can vary across s2
@@ -118,9 +118,9 @@ def f_con_stubble_within(model):
 
 
 def f_con_stubble_between(model):
-    ''' Links the consumption of a given category with the provision of another category or the transfer of
+    ''' Links the consumption of a given category with the provision of another category, or the transfer of
     stubble to the following period. E.g. category A consumption provides category B. Category B can either be
-    consumed (hence providing cat C) or transferred to the following period.
+    consumed (hence providing category C) or transferred to the following period.
     '''
     ##stubble transfer from category to category and period to period
     ##s2 required because cat propn can vary across s2
