@@ -7664,16 +7664,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###npw required by prog activity
     params['p_npw_req_prog'] = fun.f1_make_pyomo_dict(numbers_prog_req_k3k5tva1e1b1nwzida0e0b0xyg2w9, arrays_k3txg)
     ###number prog weaned
-    params['p_npw_dams'] = fun.f1_make_pyomo_dict(npw_k3k5tva1e1b1nwzida0e0b0xyg1w9i9, arrays_k3k5tva1nw8zixyg1w9i9, loop_axis_pos=w_pos-2, index_loop_axis_pos=-8) #different because the w pos in the param is different to the keys due to singleton axis which are removed.
+    params['p_npw_dams'] = fun.f1_make_pyomo_dict(npw_k3k5tva1e1b1nwzida0e0b0xyg1w9i9, arrays_k3k5tva1nw8zixyg1w9i9, loop_axis_pos=p_pos-2, index_loop_axis_pos=-11) #different because the w pos in the param is different to the keys due to singleton axis which are removed.
     ###number prog require by dams
-    params['p_progreq_dams'] = fun.f1_make_pyomo_dict(numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k3k5tw8ziyg1g9w9, loop_axis_pos=-1, index_loop_axis_pos=-1)
+    params['p_progreq_dams'] = fun.f1_make_pyomo_dict(numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k3k5tw8ziyg1g9w9, loop_axis_pos=0, index_loop_axis_pos=0) #loop on k2 axis
     ###number prog require by offs
     #todo add a y axis to prog. Requires changing this parameter
-    params['p_progreq_offs'] = fun.f1_make_pyomo_dict(numbers_progreq_k3k5tva1e1b1nw8zida0e0b0xyg3w9, arrays_k3vw8zixg3w9)
+    params['p_progreq_offs'] = fun.f1_make_pyomo_dict(numbers_progreq_k3k5tva1e1b1nw8zida0e0b0xyg3w9, arrays_k3vw8zixg3w9, loop_axis_pos=0, index_loop_axis_pos=0) #loop on k3 axis
     ###number prog provided to dams
-    params['p_progprov_dams'] = fun.f1_make_pyomo_dict(numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9, arrays_k3k5tw8zia0xyg2g9w9)
+    params['p_progprov_dams'] = fun.f1_make_pyomo_dict(numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9, arrays_k3k5tw8zia0xyg2g9w9, loop_axis_pos=0, index_loop_axis_pos=0) #loop on k3 axis
     ###number prog provided to offs
-    params['p_progprov_offs'] = fun.f1_make_pyomo_dict(numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9, arrays_k3k5tw8ziaxyg2w9)
+    params['p_progprov_offs'] = fun.f1_make_pyomo_dict(numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9, arrays_k3k5tw8ziaxyg2w9, loop_axis_pos=0, index_loop_axis_pos=0) #loop on k3 axis
 
     ##dams
     ###numbers_req_dams
@@ -7688,9 +7688,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##offs related
     ###numbers_req_offs
     params['numbers_req_numpyversion_k3k5vw8zixg3w9'] = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,0,:,0,0,0,0,:,:,:,0,0,0,0,:,0,:,:]  #can't use squeeze here because i need to keep all relevant axis even if singleton. this is used to speed pyomo constraint.
-    params['p_numbers_req_offs'] = fun.f1_make_pyomo_dict(numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9, arrays_k3k5vw8zixg3w9)
+    params['p_numbers_req_offs'] = fun.f1_make_pyomo_dict(numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9, arrays_k3k5vw8zixg3w9, loop_axis_pos=p_pos-1, index_loop_axis_pos=-7)
     ###numbers_prov_offs
-    params['p_numbers_prov_offs'] = fun.f1_make_pyomo_dict(numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9, arrays_k3k5tvnw8ziaxyg3w9)
+    params['p_numbers_prov_offs'] = fun.f1_make_pyomo_dict(numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9, arrays_k3k5tvnw8ziaxyg3w9, loop_axis_pos=p_pos-1, index_loop_axis_pos=-10)
 
     ##mei
     ###mei - sire
@@ -7698,7 +7698,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###mei - dams
     params['p_mei_dams'] = fun.f1_make_pyomo_dict(mei_k2p6ftva1e1b1nwzida0e0b0xyg1, arrays_k2p6ftva1nwziyg1)
     ###mei - offs
-    params['p_mei_offs'] = fun.f1_make_pyomo_dict(mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3, arrays_k3k5p6ftvnwziaxyg3)
+    params['p_mei_offs'] = fun.f1_make_pyomo_dict(mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3, arrays_k3k5p6ftvnwziaxyg3, loop_axis_pos=p_pos, index_loop_axis_pos=-9)
 
     ##pi
     ###pi - sire
