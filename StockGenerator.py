@@ -6793,15 +6793,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     # numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...,na] == 0) #take slice 0 of e (for prejoining all e slices are the same
 
     ###offs
-    numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 = (fun.f_divide(np.sum(numbers_end_tva1e1b1nwzida0e0b0xyg3[...,na]  * distribution_tva1e1b1nw8zida0e0b0xyg3w9
-                                                                           * mask_numbers_provw8w9_va1e1b1nw8zida0e0b0xyg3w9
-                                                                           * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
-                                                                           * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)[...,na]
-                                                                           , axis = (d_pos-1, b0_pos-1, e0_pos-1), keepdims=True)
-                                                                , np.sum(numbers_start_tva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
-                                                                         * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)
-                                                                         , axis = (d_pos, b0_pos, e0_pos), keepdims=True)[...,na], dtype=dtype)
-                                                       * mask_numbers_provt_tva1e1b1nw8zida0e0b0xyg3w9)
+    numerator  = 0
+    denominator = 0
+    for b0 in range(len_b0): #loop on b1 to reduce memory
+        numerator += np.sum(numbers_end_tva1e1b1nwzida0e0b0xyg3[...,b0:b0+1,:,:,:,na]  * distribution_tva1e1b1nw8zida0e0b0xyg3w9[...,b0:b0+1,:,:,:,:]
+                            * mask_numbers_provw8w9_va1e1b1nw8zida0e0b0xyg3w9
+                            * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
+                            * (a_k5cluster_da0e0b0xyg3[...,b0:b0+1,:,:,:]==index_k5tva1e1b1nwzida0e0b0xyg3)[...,na]
+                            , axis = (d_pos-1, e0_pos-1), keepdims=True)
+        denominator += np.sum(numbers_start_tva1e1b1nwzida0e0b0xyg3[...,b0:b0+1,:,:,:] * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
+                              * (a_k5cluster_da0e0b0xyg3[...,b0:b0+1,:,:,:]==index_k5tva1e1b1nwzida0e0b0xyg3)
+                              , axis = (d_pos, e0_pos), keepdims=True)[...,na]
+    numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 = fun.f_divide(numerator,denominator, dtype=dtype) * mask_numbers_provt_tva1e1b1nw8zida0e0b0xyg3w9
 
     ##numbers required
     ###dams
