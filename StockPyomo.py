@@ -378,14 +378,14 @@ def f1_stockpyomo_local(params, model):
           set without a 9 must be summed.
         - if a given set doesn't have a corresponding 9 set, then you have two options
             1. transfer from one decision variable to another 1:1 (or at another ratio determined be the param - but it means that it transfers to the same set e.g. x1_dams transfers to x1_prog)
-            2. treat all decision variable in a set the same. Done by summing. E.g. the npw provided by each dam t slice can be treated the same because it doesn't make a difference
+            2. treat all decision variables in a set the same. Done by summing. E.g. the npw provided by each dam t slice can be treated the same because it doesn't make a difference
                if the progeny came from a dam that gets sold vs retained. (for most of the livestock it has been built in a way that doesn't need summing except for the sets which have a corresponding 9 set).
 
 speed info:
 - constraint.skip is fast, the trick is designing the code efficiently so that is knows when to skip.
-- in method 2 i use the param to determine when the constraint should be skipped, this still requires looping through the param
-- in method 3 i use the numpy array to determine when the constraint should be skipped. This is messier and requires some extra code but it is much more efficient reducing time 2x.
-- you can use set filter to build filtered sets instead od skipping the constraint however this made little speed difference. 
+- in method 2 I use the param to determine when the constraint should be skipped, this still requires looping through the param
+- in method 3 I use the numpy array to determine when the constraint should be skipped. This is messier and requires some extra code but it is much more efficient reducing time 2x.
+- you can use set filter to build filtered sets instead of skipping the constraint however this made little speed difference. 
 - using if statements to save summing 0 values is faster but it still takes time to evaluate the if therefore it saves time to select the minimum number of if statements
 - constraints can only be skipped on based on the req param. if the provide side is 0 and you skip the constraint then that would mean there would be no restriction for the require variable.
 '''
@@ -593,7 +593,7 @@ def f_con_prog2damsR(model, l_v1):
         caused problems when scanning for multiples (which has the effect of differentiating the prog) because the
         multiples are too light to provide sufficient numbers of the high dam starting weight and the single prog are
         too heavy to provide sufficient numbers of the low dam starting weight. It would be possible to reduce the
-        maximum initial dam weight and increase the minimum so it works but if we reduce the maximum weight to the
+        maximum initial dam weight and increase the minimum so it works, but if we reduce the maximum weight to the
         highest weight that can be provided by triplets and increase the minimum weight to the lightest
         of the singles then we will have reduced the weight range significantly. So that removes the benefit of improving
         nutrition of dams to increase progeny weaning weight and the light progeny (that are below the lowest dam initial
@@ -672,7 +672,7 @@ def f_con_matingR(model):
     '''
     Sire requirements for mating. Links the number of dams being joined during each mating period with the sire activities.
     The mating periods are necessary to represent because sires may be able to mate with more than one group of
-    dams if joining of different groups is sufficiently dispersed. However, if the mating periods are close together
+    dams if joining of different groups is sufficiently dispersed. However, if the mating periods are close together,
     the same sires may not be ready to use again. These constraints are the link between the number of sires and
     the availability of those sires in multiple periods.
 
@@ -712,9 +712,9 @@ def f_stock_trade_profit(model):
     Calculate the difference in the total livestock value at the end of the year vs the start of the year.
 
     This is used to account for trade in stock between the good year and the poor years when the numbers are averaged.
-    When the numbers are average that is essentially the poor yr buying sheep from the good year but not cashflow occurs.
+    When the numbers are average that is essentially the poor year buying sheep from the good year but no cashflow occurs.
     This reflects that transaction so that the poor year can't unfairly increase its utility.
-    This doesn't effect overall profit it only effects which season it gets realised in.
+    This doesn't effect overall profit, it only effects which season it gets realised in.
 
     See further comments in sgen.
 

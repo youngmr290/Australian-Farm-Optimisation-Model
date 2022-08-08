@@ -113,7 +113,7 @@ def f_con_rotation_within(model):
     Transfer of rotation phase within a year.
 
     The phase area selected in each phase_period must be at least the area selected in the previous period and the
-    increment in the area incurs the costs to date (so that selection at later nodes is not ‘cheaper’ than
+    increment area incurs the costs to date (so that selection at later nodes is not ‘cheaper’ than
     earlier selection).
 
     The transfer of the phases selected in the parent weather-year to the child weather-years is achieved in

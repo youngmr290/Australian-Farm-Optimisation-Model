@@ -1,6 +1,18 @@
 """
 author: young
 
+Salt land pastures (SLP) is a novel feed source that consists of saltbushes and a grazable pasture understory.
+SLP establishment requires labour, specific machinery and financial outlay, however it comes with
+numerous characteristics which make it attractive for certain situations. These characteristics include:
+
+    #. Saline tolerance
+    #. Draw-down of the water table (Barrett-Lennard and Malcolm, 1999). This drawdown allows salts to be flushed
+       from the topsoil of the moderately saline land, thereby creating growing conditions more suited to annual pastures.
+ 	#. Edible leaf for livestock consumption.
+    #. Livestock shelter – shelter provided by shrubs can be used by stock at vulnerable times such as lambing which helps increase animal survival.
+    #. Increased wool growth due to additional nutrients provided by grazing saltbush.
+    #. Reduced erosion risk due to the wind protection provided by the saltbushes year-round.
+
 The saltbush module represents the saltbush component of the salt land pasture landues. The salt land pasture landuse
 is made up from both saltbush and understory. The understory is component is calculated in the pasture module.
 

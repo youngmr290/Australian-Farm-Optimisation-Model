@@ -29,7 +29,7 @@ def f1_sim_periods(periods_per_year, oldest_animal, len_o):
     Define the days for the simulation periods.
     The year has 52 weeks with 7 days in a week. The extra day of the year is ignored
     All calculations are based on a day of the year rather than a date and the periods are weeks of the year
-    This saves managing hte difficulties associated with the extra day in the year and in leap years.
+    This saves managing the difficulties associated with the extra day in the year and in leap years.
 
     Parameters:
     start_year = int: year to start simulation.
@@ -52,8 +52,8 @@ def f1_sim_periods(periods_per_year, oldest_animal, len_o):
     index_p = np.arange(n_sim_periods)
     date_start_p = index_p * step
     date_start_P = np.arange(len_o * periods_per_year) * step
-    date_end_p = index_p * step + step-1 #end date is 6 days after start date
-    date_end_P = np.arange(len_o * periods_per_year) * step + step-1 #end date is 6 days after start date
+    date_end_p = index_p * step + step-1 #end date is the day before the next period start date
+    date_end_P = np.arange(len_o * periods_per_year) * step + step-1 #end date is the day before the next start date
     return n_sim_periods, date_start_p.astype(int), date_start_P.astype(int), date_end_p.astype(int), date_end_P.astype(int), index_p, step
 
 
@@ -871,7 +871,8 @@ def f_progenyfd_mu(cu1, cg, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_st
     return fd_adj, cf_fd_dams
 
 
-def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start, age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect):
+def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start
+           , age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect):
     ##Max milk prodn based on dam rc birth
     mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
     ##Excess ME available for milk	
@@ -886,6 +887,7 @@ def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start,
                                                     - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))
 #    mp1 = cl[7, ...] * mpmax / (1 + np.exp(-(-cl[19, ...] + cl[20, ...] * milk_ratio + cl[21, ...] * ad * (milk_ratio - cl[22, ...] * ad) - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))))
     ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
+    ### Based on the standard parameter values 'Suckling volume of young' is very rarely limiting milk production.
     mp2 = np.minimum(mp1, np.mean(fun.f_dynamic_slice(ffcfw75_exp_yatf, i_x_pos, 1, None), axis = i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
     ##ME for lactation (per day lactating)	
     mel = mp2 / (cl[5, ...] * kl)
@@ -1289,8 +1291,8 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, nlb, crg_doy, n
     Some dams conceive (and don't return to service) but don't carry to birth (the third trimester)
     due to abortion during pregnancy, this is taken into account.
     #todo The conversion of the prediction from 2 cycles back to one cycle doesn't include this loss
-    # which then increases the proportion of empty ewes and reduces the expected RR.
-    # The correction has been removed for now.
+    #which then increases the proportion of empty ewes and reduces the expected RR.
+    #The correction has been removed for now.
     The values are altered by a sensitivity analysis on scanning percentage
     Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can
     be controlled for relative economic values

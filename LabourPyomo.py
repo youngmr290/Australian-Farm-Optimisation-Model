@@ -2,9 +2,9 @@
 """
 author: young
 
-.. note:: Labour is uncondensed in pyomo. We have code which builds constraints for casual, perm and manager
+.. note:: Labour is uncondensed in pyomo. We have code which builds constraints for casual, permanent and manager
     (rather than using a worker level set). The transfer labour variables do have a worker set which
-    indicates what level of job is being done. The level is fixed for each constraint. E.g. manager can do
+    indicates what level of job is being done. The level is fixed for each constraint. E.g. A manager can do
     casual jobs, in con_sheep_anyone (sheep jobs that can be done by anyone) w (worker set) is fixed to ‘casual’.
     Eventually all the labour constraints could be condensed so there is one constraint for all the worker levels.
     This would require using the worker set as a set that is passed into the constraint. Would also need a

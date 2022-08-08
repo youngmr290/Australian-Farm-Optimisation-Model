@@ -25,7 +25,7 @@ def f_v_phase_increment_adj(param, p7_pos, z_pos, p5_pos=None, numpy=False):
     Adjust v_phase param for v_phase_increment.
 
     v_phase_increment must incur the requirement to date for labour and cash for the phase.
-    This is making the assumption that any jobs carried out and any expenditure
+    This is making the assumption that any jobs carried out, and any expenditure
     (fertiliser or chemical applied) will be applied even though the phase is selected later in the year.
     This stops the optimisation selecting the phase in the last node and receiving the income without
     incurring any costs. Note: Yield and stubble do not require increment params because it is not possible to harvest a

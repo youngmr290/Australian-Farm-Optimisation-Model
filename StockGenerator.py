@@ -106,6 +106,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ######################
     ##date               #
     ######################
+    #todo The length of the year is hardwired to 364days which implies that n_periods is 52 and step is 7 so why bother calculating
+    # if we want flexibility to adjust periods per year (to save model size) then this needs attention.
     ## define the periods - default (dams and sires)
     sim_years = sinp.stock['i_age_max']
     # sim_years = 4
@@ -122,8 +124,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     date_end_pa1e1b1nwzida0e0b0xyg3 = np.expand_dims(offs_date_end_p, axis = tuple(range(p_pos+1, 0)))
     p_index_pa1e1b1nwzida0e0b0xyg3 = np.expand_dims(p_index_offs_p, axis = tuple(range(p_pos+1, 0)))
     mask_p_offs_p = p_index_p<=(n_sim_periods_offs-1)
-    ##day of the year (first day of each period) todo maybe this should become mid point of period (add plus 3.5)
-    doy_pa1e1b1nwzida0e0b0xyg = date_start_pa1e1b1nwzida0e0b0xyg % 364
+    ##day of the year (mid-point day of each period)
+    doy_pa1e1b1nwzida0e0b0xyg = date_start_pa1e1b1nwzida0e0b0xyg % 364 + step / 2
     ##day length
     dl_pa1e1b1nwzida0e0b0xyg = fun.f_daylength(doy_pa1e1b1nwzida0e0b0xyg, pinp.sheep['i_latitude'])
     ##days in each period
@@ -457,8 +459,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     woolvalue_c1tpa1e1b1nwzida0e0b0xyg3 = np.zeros((len_c1,)+(len_t3,)+tpg3[1:], dtype =dtype)
     salevalue_c1tpa1e1b1nwzida0e0b0xyg3 = np.zeros(c1tpg3, dtype =dtype)
     ###array for postprocessing
-    o_numbers_start_tpoffs = np.zeros(tpg3, dtype =dtype) # todo is this comment out of date or is the code wrong?  # ones so that dvp0 (p0) has start numbers.
-    o_numbers_end_tpoffs = np.zeros(tpg3, dtype =dtype) #todo is this comment out of date?  #ones so that transfer can exist for dvps before weaning
+    o_numbers_start_tpoffs = np.zeros(tpg3, dtype =dtype) # filled with the initial numbers later, so that dvp0 (p0) has start numbers.
+    o_numbers_end_tpoffs = np.zeros(tpg3, dtype =dtype) # filled with the initial numbers later, so that transfer can exist for dvps before weaning
     o_ffcfw_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_ffcfw_season_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_ffcfw_condensed_tpoffs = np.zeros(tpg3, dtype =dtype)
@@ -516,7 +518,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                    condition2=mask_d_offs, axis2=d_pos) #need axis up to p so that p association can be applied
 
     ##Chill adjustment based on litter size and scanning. Note: adjusted later so only active if scanning
-    #todo the scaling across the b1 axis could be improved by making the adjustment after the repro rate of the flock is known
+    #todo the scaling across the b1 axis could be improved by including scan_std for the flock & std DSE/hd (replicating the calculations in the PregScanning exp.xl)
     #This could account for the number of dams re-allocated based on min(DSE of multiples in exposed, DSE of singles in sheltered)
     # The current calculation is all multiples allocated to sheltered paddocks and all singles to exposed paddocks.
     chill_adj_b1nwzida0e0b0xyg1 = pinp.sheep['i_chill_adj'] * fun.f_expand(sinp.stock['i_chill_adj_b1'], b1_pos)
@@ -1788,7 +1790,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##add p1 axis
     date_start_pa1e1b1nwzida0e0b0xygp1 = date_start_pa1e1b1nwzida0e0b0xyg[...,na] + index_p1
-    doy_pa1e1b1nwzida0e0b0xygp1= doy_pa1e1b1nwzida0e0b0xyg[...,na] + index_p1
+    doy_pa1e1b1nwzida0e0b0xygp1= doy_pa1e1b1nwzida0e0b0xyg[...,na] - step / 2 + index_p1  #calculate the p1 axis from the start day rather than mid-point day
     ##age open ie not capped at weaning
     age_p1_pa1e1b1nwzida0e0b0xyg0p1 = (age_start_open_pa1e1b1nwzida0e0b0xyg0[..., na] + index_p1)
     age_p1_pa1e1b1nwzida0e0b0xyg1p1 = (age_start_open_pa1e1b1nwzida0e0b0xyg1[..., na] + index_p1)
@@ -2272,8 +2274,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         cf_w_b_dams = np.zeros(tag1, dtype =dtype) #this is required as default when mu birth weight function is not being called (it is required in the start production function)
         cf_w_w_start_dams = np.array([0.0])
         cf_w_w_dams = np.zeros(tag1, dtype =dtype) #this is required as default when mu wean function is not being called (it is required in the start production function)
-        cf_conception_start_dams = np.array([0.0])
-        cf_conception_dams = np.zeros(tag1, dtype =dtype) #this is required as default when mu concep function is not being called (it is required in the start production function)
+        # cf_conception_start_dams = np.array([0.0])
+        # cf_conception_dams = np.zeros(tag1, dtype =dtype) #not currently used. Will be used if profile prior to joining (i.e. previous year) is included in the repro functions.
         guw_start_dams = np.array([0.0])
         rc_birth_start_dams = np.array([1.0])
         ffcfw_start_dams = fun.f_expand(ffcfw_initial_wzida0e0b0xyg1, p_pos, right_pos=w_pos) #add axis w to a1 because e and b axis are sliced before they are added via calculation
@@ -2303,7 +2305,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         nw_start_yatf = 0.0
         rc_start_yatf = 0.0
         ffcfw_start_yatf = w_b_std_y_b1nwzida0e0b0xyg1 #this is just an estimate, it is updated with the real weight at birth - needed to calc milk production in birth period because milk prod is calculated before yatf weight is updated)
-        #todo will this cause an error for the second lambing because ffcfw_start_yatf will be last years weaning weight rather than this years expected birth weight - hard to see how the weight can be reset unless it is done the period after weaning
         ffcfw_max_start_yatf = ffcfw_start_yatf
         mortality_birth_yatf=0.0 #required for dam numbers before progeny born
         cfw_start_yatf = 0.0
@@ -2451,8 +2452,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 cf_w_b_start_dams = fun.f_update(cf_w_b_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
                 ###Weaning weight carryover (running tally of foetal weight diff)
                 cf_w_w_start_dams = fun.f_update(cf_w_w_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
-                ###Carry forward conception
-                cf_conception_start_dams = fun.f_update(cf_conception_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
+                # ###Carry forward conception
+                # cf_conception_start_dams = fun.f_update(cf_conception_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
                 ###LTW CFW adjustment carryover (running tally of LTW progeny CFW)
                 cfw_ltwadj_start_dams = fun.f_update(cfw_ltwadj_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
                 cf_cfwltw_start_dams = fun.f_update(cf_cfwltw_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
@@ -2482,7 +2483,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             ###################
             ##dependent start #
             ###################
-            ##note: yatf calculated later in the code
             ##sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] > 0):
                 ###GFW (start)
@@ -2548,6 +2548,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_sire_req(sire_propn_pa1e1b1nwzida0e0b0xyg1g0[p], sire_periods_g0p8, pinp.sheep['i_sire_recovery']
                                                                    , date_end_pa1e1b1nwzida0e0b0xyg[p], period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
 
+            ##yatf
+            ##note: most yatf calculated later in the code (except for ffcfw from bw)
+            ###Set FFCFW to the expected birth weight if period is birth
+            ### Required because bw is not calculated until after milk production is calculated
+            if np.any(period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
+                ffcfw_start_yatf = fun.f_update(ffcfw_start_yatf, w_b_std_y_b1nwzida0e0b0xyg1
+                                                , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                ffcfw_max_start_yatf = fun.f_update(ffcfw_max_start_yatf, w_b_std_y_b1nwzida0e0b0xyg1
+                                                    , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
 
             ##offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
@@ -2836,6 +2845,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##milk production
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     ###Expected ffcfw of yatf with p1 axis - each period
+                    #### The test on index_p is to test for the end of lactation. Start of lactation (birth) is always the start of a period
                     ffcfw_exp_a1e1b1nwzida0e0b0xyg2p1 = (ffcfw_start_yatf[..., na] + (index_p1 * cn_yatf[7, ...][...,na])) * (
                                 index_p1 < days_period_pa1e1b1nwzida0e0b0xyg2[...,na][p])
                     ###Expected average metabolic LW of yatf during period
@@ -3136,6 +3146,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##reset start variables if period is birth
                 ###ffcf weight of yatf
                 ffcfw_start_yatf = fun.f_update(ffcfw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                ffcfw_max_start_yatf = fun.f_update(ffcfw_max_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###normal weight of yatf
                 nw_start_yatf	= fun.f_update(nw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###adipose weight of yatf
@@ -3439,15 +3450,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    #todo JMY to adress below and update comments about cf_conception
-                    #todo this need to be replaced by LMAT formula, if cf_conception_start is used in the LMAT formula cf_conception_dams = temp0 will need to be moved out of the if used statement.
                     temp0 = sfun.f_conception_ltw(cf_dams, cu0_dams, relsize_mating_dams, cs_mating_dams
                                                   , scan_std_pa1e1b1nwzida0e0b0xyg1[p], doy_pa1e1b1nwzida0e0b0xyg[p]
                                                   , rr_doy_ltw_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
                                                   , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                   , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p])
                     if eqn_used:
-                        cf_conception_dams = temp0*0  #default set to 0 because required in start production function (only used in lmat conception function)
                         conception_dams = temp0
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     if eqn_compare:
@@ -3463,7 +3471,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                    , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]
                                                    , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
-                        cf_conception_dams = temp0*0  #default set to 0 because required in start production function (only used in lmat conception function)
                         conception_dams = temp0
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     if eqn_compare:
@@ -4384,11 +4391,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##dams LTW FD (total adjustment, calculated at birth)
                 fd_ltwadj_condensed_dams = sfun.f1_condensed(fd_ltwadj_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , pkl_condensed_values['dams'][p],'fd_ltwadj_dams')
-                ###Carry forward conception
-                cf_conception_condensed_dams = sfun.f1_condensed(cf_conception_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , pkl_condensed_values['dams'][p],'cf_conception_dams')
+                                        , pkl_condensed_values['dams'][p], 'fd_ltwadj_dams')
+                # ###Carry forward conception
+                # cf_conception_condensed_dams = sfun.f1_condensed(cf_conception_dams
+                #                         , idx_sorted_w_dams, condense_w_mask_dams
+                #                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
+                #                         , pkl_condensed_values['dams'][p],'cf_conception_dams'))
                 ###Weaning weight carryover (running tally of weaning weight diff)
                 cf_w_w_condensed_dams = sfun.f1_condensed(cf_w_w_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
@@ -4799,17 +4807,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
-                ###Carry forward conception
-                cf_conception_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams
-                                        , cf_conception_condensed_dams, prejoin_tup
-                                        , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
-                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
-                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
-                                        , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
+                # ###Carry forward conception
+                # cf_conception_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams
+                #                         , cf_conception_condensed_dams, prejoin_tup
+                #                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
+                #                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                #                         , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                #                         , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
+                #                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
+                #                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
+                #                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
+                #                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weaning weight carryover (running tally of foetal weight diff)
                 cf_w_w_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, cf_w_w_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
@@ -5389,32 +5397,42 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #on hand / sale / shear mask #
     ##############################
     '''
-    All animals onhand at main shearing are shorn. This may be a slight limitation for lambs that are sold a couple
-    of months after main shearing because in reality farmers would wait and shear them before sale. This is tricky
+    All animals onhand at main shearing are shorn. This may be a slight limitation for lambs that are destined for sale
+    a few months after main shearing because in reality farmers would wait and shear them before sale. This is tricky
     to handle in AFO because shearing in the generator is not differentiated with a t axis and if there is a dvp
-    between main shearing and selling wheather the animal was shorn cant be remembered.
+    between main shearing and selling, whether the animal was shorn isn't remembered.
     
-    Animals that are sold are shorn if cfw is above an inputted threshold. For these animals sale and shearing
-    occur in the same gen period. This is because including an offset was getting complex and error prone (particuly
-    if main shearing falls between sale due to selling and sale because this meant the animals got double wool income).
+    Animals that are sold are also shorn if cfw at sale is above an inputted threshold. For these animals, sale and shearing
+    occur in the same gen period. This is because including an offset was getting complex and error prone (particularly
+    if main shearing falls between shearing due to selling and sale because this meant the animals got double wool income).
     In reality farmers tend to wait a bit after shearing before selling because animals are off water and feed for up to
     48hrs and because animals tend to gain weight at a faster rate directly after shearing. In AFO we dont represent 
     either of these things thus shearing and selling in the same period is not a big limitation (the two factors are 
     likely to cancel each other out so likely not a big error).  
     
-    There is 3 aspects to the problem of being able to retain an animal from shearing and selling just after in the 
-    new season year and or cashflow year using a tactical sale option.
-    1. The working capital constraint (animals can be retained and sold at the begining of next financial yr to 
-       reduce wc constraint). This is not a problem for SQ & MP (because end balance carries over). It is difficult to solve for DSP/SE
+    There are 3 aspects to the problem of being able to retain an animal at shearing and then selling soon after in the 
+    new season year and/or cashflow year using a tactical sale option.
+    1. The working capital constraint (animals can be retained and sold at the beginning of next financial yr to 
+       reduce wc constraint). 
+       This is not a problem for MP (because final sheep numbers aren't carried to the initial, and the end cashflow 
+       balance carries forward each year).
+       For the SQ model the end cashflow balance carries forward each year, however, there is still a problem that
+       the final sheep numbers are carried to the initial so animals can be retained in the final year and sold 
+       in the initial year to reduce wc requirement.
+       It is difficult to solve for DSP and therefore the capacity of the wc constraint is compromised.
+       A conceptual fix is to remove tactical sale options from the 'better' seasons at the beginning of the year,
+       to force selection of the 'strategic' sale times at the end of the previous year. However, the outcome 
+       could just be to alter the management of the livestock in the "better" years. 
+       Note: there aren't any tactical sale options in the SE model.
     2. Gaining utility in the DSP by selling sheep in the low income year (technically this is reducing risk but not 
-       in a very sensible way - it is the same as withdrawing cash from the bank in a poor year.). This problem 
+       in a very sensible way - it is the same as withdrawing cash from the bank in a poor year). This problem 
        has been solved by adding the 'Livestock Trading Profit'.
-    3. Extra cashflow interest achievid by moving income from the end of the previous year to the start fo the next year. 
-       Difficult to handle and maybe not a big issue. 
+    3. Extra cashflow interest achieved by moving income from the end of the previous year to the start of the next year. 
+       This is handled by the asset value on animals at the start of the year which adds an interest cost for animals
+       retained and this will offset the interest earned.
+       Note: Asset cost is not required in the MP model for the years that cashflow is carried forward, 
+       but is required in the final 'equilibrium' year.  
     '''
-       #todo dad to check -
-       # 1. it is still a problem for sq.
-       # 3. isnt this handled by asset value?
 
     onhandshear_start=time.time()
 
@@ -5745,7 +5763,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     sale_finish= time.time()
 
-    ##Husbandry - shearing costs apply to p[0] but they are dropped because no numbers in p[0] #todo add feedbudgeting and labour for maintenance of infrastructure (it is currently has a cost that is representing materials and labour)
+    ##Husbandry - shearing costs apply to p[0] but they are dropped because no numbers in p[0]
+    #todo add feedbudgeting and 'labour for maintenance of infrastructure' (it currently has a cost that is representing materials and labour)
     ###Sire: cost, labour and infrastructure requirements
     husbandry_cost_tpg0, husbandry_labour_l2tpg0, husbandry_infrastructure_h1tpg0 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_sire'], mobsize_pa1e1b1nwzida0e0b0xyg0, o_ffcfw_tpsire, o_cfw_tpsire, operations_triggerlevels_h5h7h2tpg,
@@ -7932,12 +7951,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_twice_dry_dams_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
     ###convert to v axis
     prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
-    ###adjust maidens twice drys for yearling mating (if no yearlings are mated then there can not be any twice dry maidens)
+    ###adjust 2-tooth twice drys for yearling mating (and other age groups if not 100% mated).
+    ### the proportion of yearlings that were mated adjusts the proportion of the dry 2-tooths that are twice dry
+    ### Eg. if no yearlings were mated then no 2-tooths are twice dry.
     ####calc propn of dams mated in previous opportunity uses the estimated proportion of dams mated
     prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1 = np.roll(est_prop_dams_mated_oa1e1b1nwzida0e0b0xyg1, shift=1, axis=0)
     prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
     prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
-    #todo is multiplying by propn mated correct? Propn mated controls the split between NM & mated. Therefore, should it be * (propn_mated > 0)
     prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 * np.minimum(1,prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1)
     ###create param
     arrays_vziyg1 = [keys_v1, keys_z, keys_i, keys_y1, keys_g1]

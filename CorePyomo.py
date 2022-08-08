@@ -753,7 +753,7 @@ def f_con_minroe(model):
         if pe.value(model.p_wyear_inc_qs[q, s]):
             return ((phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9) + macpy.f_mach_cost(model,q,s,p7,z9)
                     + suppy.f_sup_cost(model,q,s,p7,z9) + stkpy.f_stock_cost(model,q,s,p7,z9) + slppy.f_saltbush_cost(model,q,s,z9,p7))
-                    * fin.f_min_roe()
+                    * fin.f1_min_roe()
                     - model.v_minroe[q,s,p7,z9]
                     + sum(model.v_minroe[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
                           for z8 in model.s_season_types) * (p7 != p7_start)) <= 0  # end doesn't carry over
