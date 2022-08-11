@@ -14,6 +14,12 @@ def f1_seasonpyomo_local(params, model):
     #############
     #parameters #
     #############
+    model.p_mask_season_p6z = pe.Param(model.s_feed_periods, model.s_season_types,
+                                                  initialize=params['p_mask_fp_z8var_p6z'], default=0.0,
+                                                  mutable=False, doc='Mask which z exist in each fp used to skip constraints (all parameters will have already been masked so this only reduces constraint building time)')
+    model.p_mask_season_p7z = pe.Param(model.s_season_periods, model.s_season_types,
+                                                  initialize=params['p_mask_season_p7z'], default=0.0,
+                                                  mutable=False, doc='Mask which z exist in each p7 used to skip constraints (all parameters will have already been masked so this only reduces constraint building time)')
     model.p_parentz_provwithin_season = pe.Param(model.s_season_periods, model.s_season_types, model.s_season_types,
                                                   initialize=params['p_parentz_provwithin_season'], default=0.0,
                                                   mutable=False, doc='Transfer of z8 dv in the previous node to z9 constraint in the current node within years')

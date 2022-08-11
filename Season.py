@@ -11,6 +11,15 @@ na = np.newaxis
 
 def f_season_precalcs(params, r_vals):
     ################
+    #p6z9 mask     #
+    ################
+    ##used to skip constraints
+    feed_period_dates_p6z = per.f_feed_periods()
+    date_start_p6z = feed_period_dates_p6z[:-1]
+    mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
+
+
+    ################
     #z8z9 transfer #
     ################
     ##get param
@@ -83,8 +92,11 @@ def f_season_precalcs(params, r_vals):
     keys_q = np.array(['q%s' % i for i in range(len_q)])
     keys_s = np.array(['s%s' % i for i in range(len_s)])
     keys_z = zfun.f_keys_z()
+    keys_p6 = np.asarray(pinp.period['i_fp_idx'])
     keys_p7 = per.f_season_periods(keys=True)
 
+    ###p6z
+    arrays_p6z = [keys_p6, keys_z]
     ###p7z8
     arrays_p7z8 = [keys_p7, keys_z]
     ###p7z8z9
@@ -96,7 +108,8 @@ def f_season_precalcs(params, r_vals):
     ###qs8zs9 - season sequence
     arrays_qs8zs9 = [keys_q, keys_s, keys_z, keys_s]
 
-
+    params['p_mask_fp_z8var_p6z'] = fun.f1_make_pyomo_dict(mask_fp_z8var_p6z * 1, arrays_p6z)
+    params['p_mask_season_p7z'] = fun.f1_make_pyomo_dict(mask_season_p7z * 1, arrays_p7z8)
     params['p_mask_childz_within_season'] = fun.f1_make_pyomo_dict(mask_reqwithinz8_p7z8*1, arrays_p7z8)
     params['p_mask_childz_between_season'] = fun.f1_make_pyomo_dict(mask_reqbetweenz8_p7z8*1, arrays_p7z8)
     params['p_parentz_provwithin_season'] = fun.f1_make_pyomo_dict(mask_provwithinz8z9_p7z8z9*1, arrays_p7z8z9)
