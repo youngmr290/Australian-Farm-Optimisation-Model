@@ -6358,7 +6358,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###create a t mask for dam decision variables - an animal that is transferring between ram groups only has parameters in the dvp that is transfer
     ###dvp0 has no transfer even though it is dvp type 0
     ###animals that are sold t[0] & t[1] only exist if the period is sale. Note t[1] sale is already masked for scan>=1 & for dry ewes only
-    period_is_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
+    period_is_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)[:,:,:,0:1,...] #slice e[0] transfer not effected by e
     mask_tvars_tva1e1b1nw8zida0e0b0xyg1 = np.logical_or(np.logical_and(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, index_va1e1b1nwzida0e0b0xyg1 != 0)
                                                         , (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
     period_is_sale_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(period_is_sale_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
@@ -7879,8 +7879,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     arrays_k2tvwzg1 = [keys_k2, keys_t1, keys_v1, keys_lw1, keys_z, keys_g1]
     params['p_mask_dams'] = fun.f1_make_pyomo_dict(mask_dams_k2tva1e1b1nw8zida0e0b0xyg1, arrays_k2tvwzg1)
     ##mask for prog activities
-    arrays_tzdxg2 = [keys_t2, keys_z, keys_d, keys_x, keys_g2]
-    params['p_mask_prog'] = fun.f1_make_pyomo_dict(mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9, arrays_tzdxg2)
+    arrays_tdxg2 = [keys_t2, keys_d, keys_x, keys_g2]
+    params['p_mask_prog'] = fun.f1_make_pyomo_dict(mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9, arrays_tdxg2)
 
     ##lower bound dams
     ### this bound can be defined with either tog1 axes or tvg1 axes in exp.xl. Uncomment the relevant code to align with exp.xl
@@ -7931,7 +7931,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ## This is used to force retention of drys at the main (t[0]) sale time. You can only sell drys if you sell non-drys. This param indicates the propn of dry that can be sold per non-dry dam.
     propn_drys_tpg1 = fun.f_divide(np.sum(o_numbers_end_tpdams*n_drys_b1g1, axis=(e1_pos,b1_pos), keepdims=True),
                               np.sum(o_numbers_end_tpdams * (nyatf_b1nwzida0e0b0xyg>0),axis=(e1_pos,b1_pos), keepdims=True))
-    propn_drys_t0_vg1 = sfun.f1_p2v(propn_drys_tpg1[0:1,...], a_v_pa1e1b1nwzida0e0b0xyg1, #only interested in the shearing sale t[0] (t axis will be active if generating with t
+    propn_drys_t0_vg1 = sfun.f1_p2v(propn_drys_tpg1[0:1,...], a_v_pa1e1b1nwzida0e0b0xyg1[:,:,0:1,...], #only interested in the shearing sale t[0] (t axis will be active if generating with t
                                 period_is_tp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1[:,:,0:1,...]) #take e[0] it is the same as e[1] so don't need it.
     arrays_vanwziyg1 = [keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     params['p_prop_dry_t0_dams'] = fun.f1_make_pyomo_dict(propn_drys_t0_vg1, arrays_vanwziyg1)

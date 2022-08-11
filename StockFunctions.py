@@ -2637,7 +2637,7 @@ def f1_p2v(production_p, dvp_pointer_p, numbers_p=np.array([1]), on_hand_tp=True
         pass
     p_pos=sinp.stock['i_p_pos']
     ##broadcast everything - so that i can create final array and mask p
-    final_shape_vp = np.broadcast(production_p, numbers_p, index_any1tp, index_any2any1tp, on_hand_tp, period_is_tp).shape
+    final_shape_vp = np.broadcast(production_p, numbers_p, dvp_pointer_p, index_any1tp, index_any2any1tp, on_hand_tp, period_is_tp).shape
     ###remove p axis
     final_shape = final_shape_vp[:p_pos] + (np.max(dvp_pointer_p)+1,) + final_shape_vp[p_pos+1:]  # bit messy because need v t and all the other axis (but not p)
     ##initilise final array - it is assigned to by slice

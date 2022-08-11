@@ -252,7 +252,7 @@ def f_pasture(params, r_vals, nv):
         exceldata = pinp.pasture_inputs[pasture]           # assign the pasture data to exceldata
         ## map the Excel data into the numpy arrays
         i_germination_std_zt[...,t]         = zfun.f_seasonal_inp(exceldata['GermStd'], numpy=True)
-        i_pasture_coverage_lt[...,t]         = zfun.f_seasonal_inp(exceldata['i_pasture_coverage'], numpy=True)
+        i_pasture_coverage_lt[...,t]         = exceldata['i_pasture_coverage'][lmu_mask_l]
         # i_ri_foo_t[t]                       = exceldata['RIFOO']
         i_end_of_gs_zt[...,t]               = zfun.f_seasonal_inp(exceldata['EndGS'], numpy=True)
         i_dry_exists_zt[...,t]               = zfun.f_seasonal_inp(exceldata['i_dry_exists'], numpy=True)

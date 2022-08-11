@@ -560,7 +560,7 @@ def f_con_link_pasture_supplement_consumption(model,nv):
     l_f = list(model.s_feed_pools)
     def link_pas_sup(model,q,s,z,p6,f):
         f_idx = l_f.index(f)
-        if pe.value(model.p_wyear_inc_qs[q, s]) and nv_is_not_confinement_f[f_idx] and uinp.supfeed['i_sup_selectivity_included']:
+        if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_childz_within_fp[p6,z]) and nv_is_not_confinement_f[f_idx] and uinp.supfeed['i_sup_selectivity_included']:
             return - (paspy.f_pas_vol(model,q,s,p6,f,z) + stubpy.f_stubble_vol(model,q,s,p6,f,z)) * model.p_max_sup_selectivity[p6,z] \
                    + suppy.f_sup_vol(model,q,s,p6,f,z) * (1-model.p_max_sup_selectivity[p6,z]) <= 0
         else:
