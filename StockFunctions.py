@@ -1955,12 +1955,17 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
                 i_t_len = var.shape[t_pos]
                 ####update var with pickled value
                 var = pkl_condensed_value[param_name]
-                ####handle when the current trial is n11 and create trial was n33 - start weights are the same just need to slice w axis.
+                ####handle when the current trial has a number of w slices than the create trial
                 if i_w_len!=var.shape[sinp.stock['i_w_pos']]:
+                    #####cut back to 3 w slices that represent the start animals
                     var = fun.f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, None, int(var.shape[sinp.stock['i_w_pos']]/sinp.structuralsa['i_w_start_len1']))
+                    #####expand back to the number of w in the current trial
+                    a_s_w = (np.arange(i_w_len)/(i_w_len/sinp.structuralsa['i_w_start_len1'])).astype(int)
+                    a_s_twg = fun.f_expand(a_s_w, left_pos=sinp.stock['i_w_pos'], right_pos2=sinp.stock['i_w_pos'], left_pos2=-len(var.shape)-1)
+                    var = np.take_along_axis(var, a_s_twg, axis=sinp.stock['i_w_pos'])
                 ####handle when the pkl condensed values dont have a t axis but the t axis is active - this can occur if the condensed params were saved in a trial where t was not active. The t axis still gets stored on the fs even if the generator didnt have an active t therefore it needs to be activated here.
-                if i_t_len!=var.shape[t_pos]:
-                    var = np.concatenate([var]*3, axis=t_pos)
+                if i_t_len>var.shape[t_pos]:
+                    var = np.concatenate([var]*i_t_len, axis=t_pos) #wont work if pkl trial had t axis but current trial doesnt - to handle this would require passing in the a_t_g association.
             pkl_condensed_value[param_name] = var.copy()  # have to copy so that traits (e.g. mort) that are added to using += do not also update the value (not sure the copy is required here but have left it in since it was required for the rev)
 
     return var
