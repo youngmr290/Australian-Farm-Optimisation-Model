@@ -1941,8 +1941,6 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
                 sl = [slice(None)] * temporary.ndim
                 sl[sinp.stock['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
                 temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, sinp.stock['i_w_pos']) #if you get an error here it probably means no animals had mort less than 10%
-        ###Update if the period is start of year (shearing for offs and prejoining for dams)
-        var = fun.f_update(var, temporary, period_is_condense)
 
         ###update and use pkl condensed var
         ###Every trial creates a new pkl that is identified using the fs pkl number. Some trials use stored values and then essentially just create a copy. This is done so that the same fs numbers can be used.
@@ -1952,22 +1950,24 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
             if sinp.structuralsa['i_use_pkl_condensed_start_condition']:
                 ####store t length before updating
                 t_pos = sinp.stock['i_p_pos'] #t is in p pos because p has been sliced
-                i_t_len = var.shape[t_pos]
-                ####update var with pickled value
-                var = pkl_condensed_value[param_name]
+                i_t_len = temporary.shape[t_pos]
+                ####update temporary with pickled value
+                temporary = pkl_condensed_value[param_name]
                 ####handle when the current trial has a number of w slices than the create trial
-                if i_w_len!=var.shape[sinp.stock['i_w_pos']]:
+                if i_w_len!=temporary.shape[sinp.stock['i_w_pos']]:
                     #####cut back to 3 w slices that represent the start animals
-                    var = fun.f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, None, int(var.shape[sinp.stock['i_w_pos']]/sinp.structuralsa['i_w_start_len1']))
+                    temporary = fun.f_dynamic_slice(temporary, sinp.stock['i_w_pos'], 0, None, int(temporary.shape[sinp.stock['i_w_pos']]/sinp.structuralsa['i_w_start_len1']))
                     #####expand back to the number of w in the current trial
                     a_s_w = (np.arange(i_w_len)/(i_w_len/sinp.structuralsa['i_w_start_len1'])).astype(int)
-                    a_s_twg = fun.f_expand(a_s_w, left_pos=sinp.stock['i_w_pos'], right_pos2=sinp.stock['i_w_pos'], left_pos2=-len(var.shape)-1)
-                    var = np.take_along_axis(var, a_s_twg, axis=sinp.stock['i_w_pos'])
+                    a_s_twg = fun.f_expand(a_s_w, left_pos=sinp.stock['i_w_pos'], right_pos2=sinp.stock['i_w_pos'], left_pos2=-len(temporary.shape)-1)
+                    temporary = np.take_along_axis(temporary, a_s_twg, axis=sinp.stock['i_w_pos'])
                 ####handle when the pkl condensed values dont have a t axis but the t axis is active - this can occur if the condensed params were saved in a trial where t was not active. The t axis still gets stored on the fs even if the generator didnt have an active t therefore it needs to be activated here.
-                if i_t_len>var.shape[t_pos]:
-                    var = np.concatenate([var]*i_t_len, axis=t_pos) #wont work if pkl trial had t axis but current trial doesnt - to handle this would require passing in the a_t_g association.
-            pkl_condensed_value[param_name] = var.copy()  # have to copy so that traits (e.g. mort) that are added to using += do not also update the value (not sure the copy is required here but have left it in since it was required for the rev)
+                if i_t_len>temporary.shape[t_pos]:
+                    temporary = np.concatenate([temporary]*i_t_len, axis=t_pos) #wont work if pkl trial had t axis but current trial doesnt - to handle this would require passing in the a_t_g association.
+            pkl_condensed_value[param_name] = temporary.copy()  # have to copy so that traits (e.g. mort) that are added to using += do not also update the value (not sure the copy is required here but have left it in since it was required for the rev)
 
+        ###Update if the period is condense (shearing for offs and prejoining for dams)
+        var = fun.f_update(var, temporary, period_is_condense)
     return var
 
 
