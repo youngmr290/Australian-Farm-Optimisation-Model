@@ -135,6 +135,8 @@ Manipulated pasture is not included because farmers are tending to just spraytop
 manipulation reduces carrying capacity too much.
 Chickpeas, Lentils and vetch are not included yet.
 No perenials are included yet. These are not very common in current rotations.
+
+Note a2 (pasture with no cost) doesnt provide anything and it doesnt need to because it is only selected until the latest brk.
 '''
 ##if you want to use a customised list of rotations this can be set to false - populate the array further down the module.
 customised_rotations = False
@@ -142,7 +144,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
     print('Running rotation generator')
     yr0 = np.array(['b', 'o', 'w', 'f', 'l', 'z','r','of'#, 'h'- not included in v1 to speed calibration process
                    , 'bd','wd','rd','zd'
-                   , 'a', 'ar'
+                   , 'a', 'ar', 'a2'
                    , 's', 'sr'])
                    # , 'm'
                     # , 'u', 'ur'
@@ -387,7 +389,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
             test2+=req
             mps_bool_req.append(req)
             mps_bool_prov.append(prov)
-        if test==0: #doesn't provide a history
+        if test==0 and rot_phase[-1]!='a2': #doesn't provide a history. Note a2 (pasture with no cost) doesnt provide anything and it doesnt need to because it is only selected until the latest brk.
             print('rot does not provide a history: ',rot_phase)
         if test2==0: #doesn't require a history
             print('rot does not req a history: ',rot_phase)
