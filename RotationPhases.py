@@ -22,9 +22,9 @@ import SeasonalFunctions as zfun
 
 def f_v_phase_increment_adj(param, p7_pos, z_pos, p5_pos=None, numpy=False):
     '''
-    Adjust v_phase param for v_phase_increment.
+    Adjust v_phase param for v_phase_change_increase.
 
-    v_phase_increment must incur the requirement to date for labour and cash for the phase.
+    v_phase_change_increase must incur the requirement to date for labour and cash for the phase.
     This is making the assumption that any jobs carried out, and any expenditure
     (fertiliser or chemical applied) will be applied even though the phase is selected later in the year.
     This stops the optimisation selecting the phase in the last node and receiving the income without
@@ -32,7 +32,7 @@ def f_v_phase_increment_adj(param, p7_pos, z_pos, p5_pos=None, numpy=False):
     rotation before the rotation is selected.
 
     Note labour gets handled slightly different. Labour that occurs in previous labour periods before the season
-        period when v_phase_increment is selected must be completed in the first labour period when the phase is selected.
+        period when v_phase_change_increase is selected must be completed in the first labour period when the phase is selected.
 
     :param param: numpy array or pandas series - parameter with p7 axis.
     :param p7_pos: negative int: axis/level of p7
@@ -126,7 +126,7 @@ def f_season_params(params):
     #     ###if dsp no transfer at the end of yr to the start (different for dry sown landuses since m-1 is essentially the start for them)
     #     mask_phases_rm = np.ones((len(phases_df),len(keys_p7)))
     #     mask_phases_rm[:,-1] = phase_is_drysown_r #only dry sown landuse pass from m[-1] to m[0] because m[-1] is the period when dry sown phases are selected.
-    #     mask_phases_rm[:,-2] = np.logical_not(phase_is_drysown_r) #v_phase dry does not provide into m[-1]. if the model wants dry sown phases it can select via v_phase_increment.
+    #     mask_phases_rm[:,-2] = np.logical_not(phase_is_drysown_r) #v_phase dry does not provide into m[-1]. if the model wants dry sown phases it can select via v_phase_change_increase.
     #
     # ##dry seeding link between season - dry seeding must happen in all seasons that brk after the season with dry seeding.
     # ##the same amount of dry seeding must occur for all seasons with the same break therefore the end season passes back to the start for a given brk.

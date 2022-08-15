@@ -360,7 +360,7 @@ def f_rotation(lp_vars, r_vals):
     phases_df = r_vals['rot']['phases']
     mask_season_p7z = r_vals['zgen']['mask_season_p7z']
     phases_rk = phases_df.set_index(phases_df.columns[-1], append=True)  # add landuse as index level
-    rot_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_increment', mask_season_p7z[:,:,na,na], z_pos=-3) # use phase increment then sum p7 axis so summer crops are included.
+    rot_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_change_increase', mask_season_p7z[:,:,na,na], z_pos=-3) # use phase increment then sum p7 axis so summer crops are included.
     rot_area_qszrl = rot_area_qsp7zrl.groupby(level=(0,1,3,4,5)).sum() #sum p7
     rot_area_qszlrk = rot_area_qszrl.unstack(3).reindex(phases_rk.index, axis=1, level=0).stack([0,1])  # add landuse to the axis
     return phases_rk, rot_area_qszrl, rot_area_qszlrk

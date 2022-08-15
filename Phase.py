@@ -1102,8 +1102,8 @@ def f1_rot_cost(r_vals):
     cost_p7zlr = cost_rl_p7z.unstack([1,0]).sort_index()
     wc_c0p7zlr = wc_rl_c0p7z.unstack([1,0]).sort_index()
 
-    ##create params for v_phase_increment
-    ## costs for v_phase_increment activities are incurred in the season period when the activity is selected
+    ##create params for v_phase_change_increase
+    ## costs for v_phase_change_increase activities are incurred in the season period when the activity is selected
     ## however the interest is calculated as if the cost was incurred at the normal time (this is because interest
     ## is calculated for each separate cost in the functions above).
     increment_cost_p7zlr = rps.f_v_phase_increment_adj(cost_p7zlr,p7_pos=-4,z_pos=-3)

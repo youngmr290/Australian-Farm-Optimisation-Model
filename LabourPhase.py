@@ -160,7 +160,7 @@ def f_fert_app_time_ha():
     fert_app_time_ha_p7p5_rzl = fert_app_time_ha_p7p5_rzln.groupby(axis=1, level=(0,1,2)).sum() #sum fert type
     fert_app_time_ha_rzlp5p7 = fert_app_time_ha_p7p5_rzl.unstack([1,0]).sort_index()
 
-    ##create params for v_phase_increment
+    ##create params for v_phase_change_increase
     increment_fert_app_time_ha_rzlp5p7 = rps.f_v_phase_increment_adj(fert_app_time_ha_rzlp5p7,p7_pos=-1,z_pos=-4,p5_pos=-2)
 
     return fert_app_time_ha_rzlp5p7, increment_fert_app_time_ha_rzlp5p7
@@ -199,7 +199,7 @@ def f_fert_app_time_t():
     fert_app_time_tonne_p7p5_rzl = fert_app_time_tonne_p7p5_rzln.groupby(axis=1, level=(0,1,2)).sum() #sum fert type
     fert_app_time_tonne_rzlp5p7 = fert_app_time_tonne_p7p5_rzl.unstack([1,0]).sort_index()
 
-    ##create params for v_phase_increment
+    ##create params for v_phase_change_increase
     increment_fert_app_time_tonne_rzlp5p7 = rps.f_v_phase_increment_adj(fert_app_time_tonne_rzlp5p7,p7_pos=-1,z_pos=-4,p5_pos=-2)
 
     return fert_app_time_tonne_rzlp5p7, increment_fert_app_time_tonne_rzlp5p7
@@ -262,7 +262,7 @@ def f_chem_app_time_ha():
     chem_app_time_p7p5_rzl = chem_app_time_p7p5_rzln.groupby(axis=1, level=(0,1,2)).sum() #sum chem type
     chem_app_time_rzlp5p7 = chem_app_time_p7p5_rzl.unstack([1,0]).sort_index()
 
-    ##create params for v_phase_increment
+    ##create params for v_phase_change_increase
     increment_chem_app_time_rzlp5p7 = rps.f_v_phase_increment_adj(chem_app_time_rzlp5p7,p7_pos=-1,z_pos=-4,p5_pos=-2)
 
     return chem_app_time_rzlp5p7, increment_chem_app_time_rzlp5p7
@@ -326,7 +326,7 @@ def f_crop_monitoring():
     variable_crop_monitor_r_p7p5z.columns = cols_p7p5z #need to update cols because merging added levels
     variable_crop_monitor_r_p7p5z.index.name = None #remove index name (it got added because of the merge and causes issues later)
     variable_crop_monitor_p7p5zr = variable_crop_monitor_r_p7p5z.unstack().fillna(0) #nan exist because pasture was not included in the merge above
-    ###create params for v_phase_increment
+    ###create params for v_phase_change_increase
     increment_variable_crop_monitor_p7p5zr = rps.f_v_phase_increment_adj(variable_crop_monitor_p7p5zr,p7_pos=-4,z_pos=-2,p5_pos=-3)
 
     ##fixed monitoring

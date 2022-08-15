@@ -133,7 +133,7 @@ def f_phasesow_req(model,q,s,p7,k,l,z):
     Used in global constraint (con_sow). See CorePyomo
     '''
     if any(model.p_phasesow_req[r,k,l] for r in model.s_phases):
-        return sum(model.p_phasesow_req[r,k,l]*model.v_phase_increment[q,s,p7,z,r,l] for r in model.s_phases
+        return sum(model.p_phasesow_req[r,k,l]*model.v_phase_change_increase[q,s,p7,z,r,l] for r in model.s_phases
                    if pe.value(model.p_phasesow_req[r,k,l]) != 0)
     else:
         return 0
@@ -150,7 +150,7 @@ def f_rotation_cost(model,q,s,p7,z):
     Used in objective. See CorePyomo
     '''
     return sum(model.p_rotation_cost[p7,z,l,r]*model.v_phase_area[q,s,p7,z,r,l]
-               + model.p_increment_rotation_cost[p7,z,l,r]*model.v_phase_increment[q,s,p7,z,r,l]
+               + model.p_increment_rotation_cost[p7,z,l,r]*model.v_phase_change_increase[q,s,p7,z,r,l]
                for r in model.s_phases for l in model.s_lmus
                    if pe.value(model.p_rotation_cost[p7,z,l,r]) != 0 or pe.value(model.p_increment_rotation_cost[p7,z,l,r]) != 0)
 
@@ -161,7 +161,7 @@ def f_rotation_wc(model,q,s,c0,p7,z):
     Used in global constraint (con_workingcap). See CorePyomo
     '''
     return sum(model.p_rotation_wc[c0,p7,z,l,r]*model.v_phase_area[q,s,p7,z,r,l]
-               + model.p_increment_rotation_wc[c0,p7,z,l,r]*model.v_phase_increment[q,s,p7,z,r,l]
+               + model.p_increment_rotation_wc[c0,p7,z,l,r]*model.v_phase_change_increase[q,s,p7,z,r,l]
                for r in model.s_phases for l in model.s_lmus
                    if pe.value(model.p_rotation_wc[c0,p7,z,l,r]) != 0 or pe.value(model.p_increment_rotation_wc[c0,p7,z,l,r]) != 0)
 

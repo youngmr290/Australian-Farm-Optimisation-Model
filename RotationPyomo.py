@@ -34,7 +34,7 @@ def f1_rotationpyomo(params, model):
     model.v_phase_area = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_phases,model.s_lmus, bounds=(0,None),doc='cumulative total area (ha) of phase, selected up to and including the current m period')
 
     ##Amount of each phase added in each rotation period on each soil, Positive Variable.
-    model.v_phase_increment = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_phases,model.s_lmus, bounds=(0,None),doc='Increased area (ha) of phase, selected in the current m period')
+    model.v_phase_change_increase = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_phases,model.s_lmus, bounds=(0,None),doc='Increased area (ha) of phase, selected in the current m period')
 
     ####################
     #define parameters #
@@ -59,7 +59,7 @@ def f1_rotationpyomo(params, model):
     #call constraints #
     ###################
     f_con_rotation_between(params, model)
-    f_con_rotation_within(model)
+    f_phase_link_within(model)
     f_con_area(model)
     # f_con_dry_link(model)
 
@@ -108,9 +108,10 @@ def f_con_rotation_between(params, model):
     model.con_rotation_hist_con = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_phase_link, doc='rotation phases constraint')
 
 
-def f_con_rotation_within(model):
+def f_phase_link_within(model):
     '''
-    Transfer of rotation phase within a year.
+    The phase link constraint is used to force the selection of v_phase_change when a phase change is required.
+    This is necessary because v_phase_change incurs costs and includes the requirement for seeding.
 
     The phase area selected in each phase_period must be at least the area selected in the previous period and the
     increment area incurs the costs to date (so that selection at later nodes is not ‘cheaper’ than
@@ -119,21 +120,21 @@ def f_con_rotation_within(model):
     The transfer of the phases selected in the parent weather-year to the child weather-years is achieved in
     the same manner as the transfers of stock, pasture and cashflow with 2 differences:
 
-        a.	the inclusion of v_phase_increment which allows extra area of a phase to be selected in each node.
-        b.	the constraint is equal-to rather than less-than. This is necessary to cover a situation in which the cashflow parameter of v_phase_increment is earning money. In this situation the model would be unbounded with a less-than constraint.
+        a.	the inclusion of v_phase_change_increase which allows extra area of a phase to be selected in each node.
+        b.	the constraint is equal-to rather than less-than. This is necessary to cover a situation in which the cashflow parameter of v_phase_change_increase is earning money. In this situation the model would be unbounded with a less-than constraint.
 
     '''
-    def rot_phase_link_within(model,q,s,p7,l,r,z9):
+    def phase_link_within(model,q,s,p7,l,r,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
         if pe.value(model.p_wyear_inc_qs[q,s]) and pe.value(model.p_mask_childz_phase[p7,z9]):
             return model.v_phase_area[q,s,p7,z9,r,l]  \
-                   - model.v_phase_increment[q,s,p7,z9,r,l] \
+                   - model.v_phase_change_increase[q,s,p7,z9,r,l] \
                    - sum(model.v_phase_area[q,s,p7_prev,z8,r,l] * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
                          for z8 in model.s_season_types) == 0 #end of the previous yr is controlled by between constraint
         else:
             return pe.Constraint.Skip
-    model.con_phase_link_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=rot_phase_link_within, doc='rotation phases constraint')
+    model.con_phase_link_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=phase_link_within, doc='rotation phases constraint')
 
 
 # def f_con_dry_link(model):
@@ -155,8 +156,8 @@ def f_con_rotation_within(model):
 #         l_p7 = list(model.s_season_periods)
 #         ##only build the constraint for m[-1]
 #         if p7 == l_p7[-1] and any(model.p_dryz_link[r,z8,z9] for z8 in model.s_season_types) and pe.value(model.p_mask_childz_phase[p7,z9]):
-#             return - model.v_phase_increment[q,s,p7,z9,r,l] \
-#                    + sum(model.v_phase_increment[q,s,p7,z8,r,l] * model.p_dryz_link[r,z8,z9]
+#             return - model.v_phase_change_increase[q,s,p7,z9,r,l] \
+#                    + sum(model.v_phase_change_increase[q,s,p7,z8,r,l] * model.p_dryz_link[r,z8,z9]
 #                          for z8 in model.s_season_types) <= 0
 #         else:
 #             return pe.Constraint.Skip
@@ -167,8 +168,8 @@ def f_con_rotation_within(model):
     #     l_p7 = list(model.s_season_periods)
     #     ##only build the constraint for m[-1]
     #     if p7 == l_p7[-1] and any(model.p_dryz_link2[r,z8,z9] for z8 in model.s_season_types) and pe.value(model.p_mask_childz_phase[p7,z9]):
-    #         return - model.v_phase_increment[q,s,p7,z9,r,l] \
-    #                + sum(model.v_phase_increment[q,s,p7,z8,r,l] * model.p_dryz_link2[r,z8,z9]
+    #         return - model.v_phase_change_increase[q,s,p7,z9,r,l] \
+    #                + sum(model.v_phase_change_increase[q,s,p7,z8,r,l] * model.p_dryz_link2[r,z8,z9]
     #                      for z8 in model.s_season_types) <= 0
     #     else:
     #         return pe.Constraint.Skip

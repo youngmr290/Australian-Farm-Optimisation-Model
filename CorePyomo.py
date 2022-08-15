@@ -361,9 +361,9 @@ def f_con_phasesow(model):
 
     Notes:
 
-        #. The requirement for seeding is based on v_phase_increment rather than v_phase_area
+        #. The requirement for seeding is based on v_phase_change_increase rather than v_phase_area
         #. a phase can only be sown in the phase_period for which the phase_increment is selected. If there is
-           insufficient seeding capacity then the selection of v_phase_increment must be made in a later phase_period.
+           insufficient seeding capacity then the selection of v_phase_change_increase must be made in a later phase_period.
 
     Note: this is an equals to constraint to stop the model sowing without a landuse so it can get poc and crop
           grazing (both of those activities are provided by seeding).
