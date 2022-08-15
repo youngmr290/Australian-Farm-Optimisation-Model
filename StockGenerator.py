@@ -6870,6 +6870,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                         * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)
                                                           , axis = (b1_pos, e1_pos), keepdims=True)>0)
 
+    ##mask offs activity (used in bounds)
+    mask_offs_k3k5tva1e1b1nw8zida0e0b0xyg3 =  1 * (np.sum(mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3
+                                                        * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
+                                                          , axis = (d_pos), keepdims=True)>0)
+
 
     #################
     #progeny weaned #
@@ -7881,6 +7886,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##mask for prog activities
     arrays_tdxg2 = [keys_t2, keys_d, keys_x, keys_g2]
     params['p_mask_prog'] = fun.f1_make_pyomo_dict(mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9, arrays_tdxg2)
+    ##mask for offs activities
+    arrays_k3vwzxg3 = [keys_k3, keys_v3, keys_lw3, keys_z, keys_x, keys_g3]
+    params['p_mask_offs'] = fun.f1_make_pyomo_dict(mask_offs_k3k5tva1e1b1nw8zida0e0b0xyg3, arrays_k3vwzxg3)
 
     ##lower bound dams
     ### this bound can be defined with either tog1 axes or tvg1 axes in exp.xl. Uncomment the relevant code to align with exp.xl
