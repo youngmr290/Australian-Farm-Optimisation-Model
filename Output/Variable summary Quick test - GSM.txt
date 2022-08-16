@@ -9,7 +9,7 @@ Variable v_phase_area
    ('q0', 's0', 'zm0', 'typ', 'YABABa', 'lmu4') 250.0
    ('q0', 's0', 'zm0', 'typ', 'AYABAb', 'lmu3') 410.0
    ('q0', 's0', 'zm0', 'typ', 'AYABAb', 'lmu4') 250.0
-Variable v_phase_increment
+Variable v_phase_change_increase
    ('q0', 's0', 'zm0', 'typ', 'AAAAAa', 'lmu2') 75.0
    ('q0', 's0', 'zm0', 'typ', 'GGGGAa2', 'lmu2') 75.0
    ('q0', 's0', 'zm0', 'typ', 'GGGGAa2', 'lmu3') 410.0
