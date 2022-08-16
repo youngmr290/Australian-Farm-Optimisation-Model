@@ -113,10 +113,10 @@ def f_season_params(params):
     period_is_seasonstart_p7z = start_phase_periods_p7z==season_start_z
     mask_provwithinz8z9_p7z8z9, mask_provbetweenz8z9_p7z8z9, mask_reqwithinz8_p7z8, mask_reqbetweenz8_p7z8 = zfun.f_season_transfer_mask(
         start_phase_periods_p7z, period_is_seasonstart_pz=period_is_seasonstart_p7z, z_pos=-1) #the req masks don't do the correct job for rotation and hence are not used.
-    ###for rotation the between and within constraints are acting on different things (history vs the acutal phase) therefore
-    ### the req params above don't work because they have been adjusted for season start. so in the following line i make a
-    ### new req param which doesn't account for within or between
-    mask_childz8_p7z8 = zfun.f_season_transfer_mask(start_phase_periods_p7z,z_pos=-1,mask=True)
+    # ###for rotation the between and within constraints are acting on different things (history vs the acutal phase) therefore
+    # ### the req params above don't work because they have been adjusted for season start. so in the following line i make a
+    # ### new req param which doesn't account for within or between
+    # mask_childz8_p7z8 = zfun.f_season_transfer_mask(start_phase_periods_p7z,z_pos=-1,mask=True)
 
     # ##mask phases which transfer in each m
     # if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
@@ -144,7 +144,8 @@ def f_season_params(params):
 
     arrays_p7z8 = [keys_p7, keys_z]
 
-    params['p_mask_childz_phase'] = fun.f1_make_pyomo_dict(mask_childz8_p7z8*1, arrays_p7z8)
+    params['p_mask_childz_within_phase'] = fun.f1_make_pyomo_dict(mask_reqwithinz8_p7z8*1, arrays_p7z8)
+    params['p_mask_childz_between_phase'] = fun.f1_make_pyomo_dict(mask_reqbetweenz8_p7z8*1, arrays_p7z8)
     params['p_parentz_provwithin_phase'] = fun.f1_make_pyomo_dict(mask_provwithinz8z9_p7z8z9*1, arrays_p7z8z9)
     params['p_parentz_provbetween_phase'] = fun.f1_make_pyomo_dict(mask_provbetweenz8z9_p7z8z9*1, arrays_p7z8z9)
     # params['p_mask_phases'] =dict(zip(tup_rm, mask_phases_rm.ravel()*1))
@@ -176,6 +177,62 @@ def f_rot_lmu_params(params):
     ##area
     lmu_mask = pinp.general['i_lmu_area'] > 0
     params['lmu_area'] = dict(zip(pinp.general['i_lmu_idx'][lmu_mask], pinp.general['i_lmu_area'][lmu_mask]))
+
+
+def f_phase_link_params(params):
+    '''
+    Create parameters for phase link constraint. These parameters mask when phase can be changed and also force
+    a change of phase at the break of each season (change is required because some costs e.g. seeding are connected
+    to v_phase_change_increase.
+    '''
+    ##p_phase_area_transfers is a True/False and is False in the p7 period immediately preceding the break of season
+    ## for each weather-year (z). To force a v_phase_change (to current season land-use or to PNC) at the break.
+    ## Dry sown phases can't transfer between seasons but they can at break of the medium and late seasons.
+    ###first calculate which p7 is break for each season
+    i_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
+    start_date_p7z = per.f_season_periods()[:-1, :]  # remove end date of last period
+    end_date_p7z = per.f_season_periods()[1:, :]
+    next_period_is_break_p7z = np.roll(np.logical_and(start_date_p7z<=i_break_z, i_break_z<end_date_p7z), shift=-1, axis=0) #have to do it this way because for 'typ' break of season may not be a node.
+    next_period_isnot_break_p7z = np.logical_not(next_period_is_break_p7z)
+    ###first calculate which p7 is break for each season
+    next_period_is_seasonstart_p7z = np.roll(start_date_p7z==start_date_p7z[0,:], shift=-1, axis=0) #have to do it this way because for 'typ' break of season may not be a node.
+    next_period_isnot_seasonstart_p7z = np.logical_not(next_period_is_seasonstart_p7z)
+    ###third calculate which phases are dry sown
+    dry_sown_landuses = sinp.landuse['dry_sown']
+    phases_df = pinp.f1_phases()
+    landuse_r = phases_df.iloc[:,-1].values
+    phase_is_drysown_r = np.any(landuse_r[:,na]==list(dry_sown_landuses), axis=-1)
+    ###calculate if period is transfer at season break this is false for everything except dry sown phases
+    transfer_break_p7zr = np.logical_or(next_period_isnot_break_p7z[...,na], phase_is_drysown_r)
+    ###calculate if period is transfer at season start - this is true for all phases except dry sown ones
+    transfer_seasonstart_p7zr =np.logical_or(next_period_isnot_seasonstart_p7z[...,na], np.logical_not(phase_is_drysown_r))
+    ###combine
+    p_phase_area_transfers_p7zr = np.logical_and(transfer_break_p7zr, transfer_seasonstart_p7zr)
+
+    ##create mask to control what phases can be changed in each p7
+    phase_can_increase_kp7 = pinp.general['i_phase_can_increase_kp7'] #input to control what landuses can change_increase in each p7
+    phase_can_reduce_kp7 = pinp.general['i_phase_can_reduce_kp7'] #input to control what landuses can change_reduce in each p7
+    ###change k to r
+    keys_k  = np.asarray(list(sinp.landuse['All']))  #landuse
+    phases_rotn_df = pinp.f1_phases()
+    landuse_r = phases_rotn_df.iloc[:, -1].values
+    a_k_rk = landuse_r[:, na] == keys_k
+    phase_can_increase_p7r = np.sum(phase_can_increase_kp7 * a_k_rk[...,na], axis=1).T
+    phase_can_reduce_p7r = np.sum(phase_can_reduce_kp7 * a_k_rk[...,na], axis=1).T
+
+    ##pasture no cost mask to stop pnc being selected after the late break (if the model wants pasture it has to change to normal pasture and will incur any prior costs)
+
+
+    ##make params
+    keys_p7 = per.f_season_periods(keys=True)
+    keys_r = np.array(phases_rotn_df.index).astype('str')
+    keys_z = zfun.f_keys_z()
+    arrays_p7r = [keys_p7, keys_r]
+    arrays_p7zr = [keys_p7, keys_z, keys_r]
+
+    params['p_phase_area_transfers_p7zr'] = fun.f1_make_pyomo_dict(p_phase_area_transfers_p7zr*1, arrays_p7zr)
+    params['p_phase_can_increase_p7r'] = fun.f1_make_pyomo_dict(phase_can_increase_p7r*1, arrays_p7r)
+    params['p_phase_can_reduce_p7r'] = fun.f1_make_pyomo_dict(phase_can_reduce_p7r*1, arrays_p7r)
 
 
 def f_rot_hist_params(params):

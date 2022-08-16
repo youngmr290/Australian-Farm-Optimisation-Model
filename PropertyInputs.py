@@ -448,6 +448,8 @@ def f_property_inp_sa():
     mask_m = np.logical_and(duplicate_mask_m, mask_m)
     general['i_date_node_zm'] = general['i_date_node_zm'][:,mask_m]
     general['i_node_is_fvp'] = general['i_node_is_fvp'][mask_m]
+    general['i_phase_can_increase_kp7'] = general['i_phase_can_increase_kp7'][:,mask_m]
+    general['i_phase_can_reduce_kp7'] = general['i_phase_can_reduce_kp7'][:,mask_m]
 
 ##############################
 # handle inputs with p6 axis #
