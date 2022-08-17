@@ -71,7 +71,7 @@ def f_v_phase_increment_adj(param, p7_pos, z_pos, p5_pos=None, numpy=False):
 
     ##handle labour period axis if it exists
     if p5_pos:
-        ##get p5 periods into corect shape
+        ##get p5 periods into correct shape
         p5_date_p5z = per.f_p_dates_df().values[:-1,...]  # slice off end date p5
         if p5_pos > z_pos:
             p5_date_p5z = np.swapaxes(p5_date_p5z,0,1)  # handle if z axis is before p7 axis

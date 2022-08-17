@@ -494,9 +494,9 @@ def f_fert_cost(r_vals):
     '''
     Cost of fertilising the arable areas. Includes the fertiliser cost and the application cost.
 
-    The cost of fertilising is made up from the cost of the fertilisers themself, the cost getting
+    The cost of fertilising is made up from the cost of the fertilisers, the cost getting
     the fertiliser delivered to the farm and the machinery cost of application (detailed in the machinery section).
-    The cost is incurred in the cashflow period when it is applied. The assumption is that fertilizer is
+    The cost is incurred in the cashflow period when it is applied. The assumption is that fertiliser is
     purchased shortly before application because farmers wait to see how the year unfolds before locking
     in a fertiliser plan.
 
