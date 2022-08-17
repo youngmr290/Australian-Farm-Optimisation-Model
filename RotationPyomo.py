@@ -24,6 +24,7 @@ def rotation_precalcs(params, report):
     rps.f_season_params(params)
     rps.f_phase_link_params(params)
     rps.f_rot_hist_params(params)
+    rps.f_rot_hist4_params(params)
 
 def f1_rotationpyomo(params, model):
     ''' Builds pyomo variables, parameters and constraints'''
@@ -47,6 +48,10 @@ def f1_rotationpyomo(params, model):
     model.p_landuse_area = pe.Param(model.s_phases, model.s_landuses, initialize=params['phases_rk'], doc='landuse in each phase')
     model.p_hist_prov = pe.Param(params['hist_prov'].keys(), initialize=params['hist_prov'], default=0, doc='history provided by  each rotation') #use keys instead of sets to reduce size of param
     model.p_hist_req = pe.Param(params['hist_req'].keys(), initialize=params['hist_req'], default=0, doc='history required by  each rotation') #use keys instead of sets to reduce size of param
+    model.p_hist4_prov = pe.Param(model.s_phases, model.s_landuses, initialize=params['hist4_prov'], doc='history 4 provided by each phase')
+    model.p_hist4_req = pe.Param(model.s_phases, model.s_landuses, initialize=params['hist4_req'], doc='history 4 reguired by each phase')
+    model.p_landuse_is_dual_h4 = pe.Param(model.s_landuses, initialize=params['phase_is_dual_r'], doc='phase is dual landuse - used to skip history 4 con')
+
     # model.p_mask_phases = pe.Param(model.s_phases, model.s_season_periods, initialize=params['p_mask_phases'], doc='mask phases that transfer in each phase period')
     # model.p_dryz_link = pe.Param(model.s_phases, model.s_season_types, model.s_season_types, initialize=params['p_dryz_link'], doc='dry link between seasons (only occurs between m[-1])')
     # model.p_dryz_link2 = pe.Param(model.s_phases, model.s_season_types, model.s_season_types, initialize=params['p_dryz_link2'], doc='dry link between seasons (only occurs between m[-1])')
@@ -71,6 +76,7 @@ def f1_rotationpyomo(params, model):
     #call constraints #
     ###################
     f_con_rotation_between(params, model)
+    f_phase_history4_within(model)
     f_phase_link_within(model)
     f_phase_link_between(model)
     f_con_area(model)
@@ -120,6 +126,25 @@ def f_con_rotation_between(params, model):
 
     model.con_rotation_hist_con = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_phase_link, doc='rotation phases constraint')
 
+def f_phase_history4_within(model):
+    '''
+    Within weather-year constraints for season 2 constrained by the immediately preceding season 1 - for now all
+    this does is allow/constrain the selection of a dual land-use phase based on the phase in season 1.
+    Eg. sorghum after canola can only be selected if canola was the season 1 land-use.
+
+    Note: k is the same as h4 so just use landuse as the h4 set
+    '''
+    def phase_history4_within(model,q,s,p7,l,h4,z9):
+        l_p7 = list(model.s_season_periods)
+        p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last season period
+        if pe.value(model.p_wyear_inc_qs[q,s]) and pe.value(model.p_mask_childz_within_phase[p7,z9]) and model.p_landuse_is_dual_h4[h4]:
+            return sum(model.v_phase_area[q,s,p7,z9,r,l] * model.p_hist4_req[r,h4] \
+                       - sum(model.v_phase_area[q,s,p7_prev,z8,r,l] * model.p_hist4_prov[r,h4] \
+                            * model.p_parentz_provwithin_phase[p7_prev,z8,z9] for z8 in model.s_season_types)
+                       for r in model.s_phases) <= 0
+        else:
+            return pe.Constraint.Skip
+    model.con_phase_history4_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_landuses, model.s_season_types, rule=phase_history4_within, doc='rotation phases constraint - history4')
 
 def f_phase_link_within(model):
     '''
