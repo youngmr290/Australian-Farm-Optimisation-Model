@@ -209,6 +209,16 @@ def f_phase_link_params(params):
     ###combine
     p_phase_area_transfers_p7zr = np.logical_and(transfer_break_p7zr, transfer_seasonstart_p7zr)
 
+    ##pasture no cost mask to stop pnc being selected after the late break (if the model wants pasture it has to change to normal pasture and will incur any prior costs)
+    ###is the phase a2 - only a2 gets masked out because if the model wants pasture it needs to select a real pasture and incur the costs
+    phase_is_a2_r = landuse_r == sinp.general['i_a2_idx']
+    phase_is_not_a2_r = np.logical_not(phase_is_a2_r)
+    ###is next p7 the last - a2 cant be selected all year therefore its transfer is masked out from p7[-2] to p7[-1]
+    a2_transfer_exists_p7z = start_date_p7z < np.roll(start_date_p7z, shift=1, axis=0)[-1,:] #have to roll then select -1 because in the SE model cant select -2
+    p_phase_exists_p7zr = np.logical_or(phase_is_not_a2_r, a2_transfer_exists_p7z[...,na])
+    ###add to existing mask
+    p_phase_area_transfers_p7zr = np.logical_and(p_phase_area_transfers_p7zr, p_phase_exists_p7zr)
+
     ##create mask to control what phases can be changed in each p7
     phase_can_increase_kp7 = pinp.general['i_phase_can_increase_kp7'] #input to control what landuses can change_increase in each p7
     phase_can_reduce_kp7 = pinp.general['i_phase_can_reduce_kp7'] #input to control what landuses can change_reduce in each p7
@@ -219,9 +229,8 @@ def f_phase_link_params(params):
     a_k_rk = landuse_r[:, na] == keys_k
     phase_can_increase_p7r = np.sum(phase_can_increase_kp7 * a_k_rk[...,na], axis=1).T
     phase_can_reduce_p7r = np.sum(phase_can_reduce_kp7 * a_k_rk[...,na], axis=1).T
-
-    ##pasture no cost mask to stop pnc being selected after the late break (if the model wants pasture it has to change to normal pasture and will incur any prior costs)
-
+    ###stop a2 increasing in p7[-1] - this is required for SE model when there is only one p7 period and ensures a2 doesnt exsit in the dsp even if the user accidently said it could.
+    phase_can_increase_p7r[-1,phase_is_a2_r] = False
 
     ##make params
     keys_p7 = per.f_season_periods(keys=True)
