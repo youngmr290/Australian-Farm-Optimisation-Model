@@ -113,6 +113,16 @@ def f_season_params(params):
     period_is_seasonstart_p7z = start_phase_periods_p7z==season_start_z
     mask_provwithinz8z9_p7z8z9, mask_provbetweenz8z9_p7z8z9, mask_reqwithinz8_p7z8, mask_reqbetweenz8_p7z8 = zfun.f_season_transfer_mask(
         start_phase_periods_p7z, period_is_seasonstart_pz=period_is_seasonstart_p7z, z_pos=-1) #the req masks don't do the correct job for rotation and hence are not used.
+
+    ##for the rot_hisory_within constraint the parentz prov param needs to be different.
+    ## within season ancestor provide. This is different to parent provide because in the dual growing season it is likely
+    ## that each growing season will contain more than one p7 slice. In the within year history constraint
+    ## gs0 provides gs2 therefore if gs0 is two p7 long then it is like grandparent provide. Therefore we have to create
+    ## a new z8z9 provide param
+    index_z = np.arange(len(keys_z))
+    mask_childz8_p7z8 = zfun.f_season_transfer_mask(start_phase_periods_p7z, z_pos=-1, mask=True)
+    mask_ancestor_provwithinz8z9_p7z8z9 = np.maximum.accumulate(mask_childz8_p7z8 * index_z, axis=1)[:,na,:] == index_z[:,na]
+
     # ###for rotation the between and within constraints are acting on different things (history vs the acutal phase) therefore
     # ### the req params above don't work because they have been adjusted for season start. so in the following line i make a
     # ### new req param which doesn't account for within or between
@@ -148,6 +158,7 @@ def f_season_params(params):
     params['p_mask_childz_between_phase'] = fun.f1_make_pyomo_dict(mask_reqbetweenz8_p7z8*1, arrays_p7z8)
     params['p_parentz_provwithin_phase'] = fun.f1_make_pyomo_dict(mask_provwithinz8z9_p7z8z9*1, arrays_p7z8z9)
     params['p_parentz_provbetween_phase'] = fun.f1_make_pyomo_dict(mask_provbetweenz8z9_p7z8z9*1, arrays_p7z8z9)
+    params['p_ancestorz_provwithinz_phase'] = fun.f1_make_pyomo_dict(mask_ancestor_provwithinz8z9_p7z8z9*1, arrays_p7z8z9)
     # params['p_mask_phases'] =dict(zip(tup_rm, mask_phases_rm.ravel()*1))
     # params['p_dryz_link'] =dict(zip(tup_rz8z9, mask_drynext_z8z9.ravel()*1))
     # params['p_dryz_link2'] =dict(zip(tup_rz8z9, mask_drystart_z8z9.ravel()*1))
