@@ -196,6 +196,26 @@ def f_phase_link_params(params):
     a change of phase at the break of each season (change is required because some costs e.g. seeding are connected
     to v_phase_change_increase.
     '''
+    ##inputs
+    dry_sown_landuses = sinp.landuse['dry_sown']
+    phases_df = pinp.f1_phases()
+    landuse_r = phases_df.iloc[:,-1].values
+    keys_k  = np.asarray(list(sinp.landuse['All']))  #landuse
+    phases_rotn_df = pinp.f1_phases()
+    keys_p7 = per.f_season_periods(keys=True)
+    keys_r = np.array(phases_rotn_df.index).astype('str')
+    keys_z = zfun.f_keys_z()
+
+    ##a2 (pasture no cost) mask to stop pnc being selected all growing season (if the model wants pasture it has to change to normal pasture and will incur any prior costs)
+    ###is the phase a2 - only a2 gets masked out because if the model wants pasture it needs to select a real pasture and incur the costs
+    p7_end_gs0 = pinp.general['i_gs_p7_end'][0]  # p7 period from growing season 0.
+    p7_end_gs1 = pinp.general['i_gs_p7_end'][1]  # p7 period from growing season 1.
+    phase_is_a2_r = landuse_r == sinp.general['i_a2_idx']
+    ###is next p7 the last - a2 cant be selected all year therefore its transfer is masked out in the last p7 of each growing season
+    a2_phase_exists_p7r = np.full((len(keys_p7),len(keys_r)), True)
+    a2_phase_exists_p7r[p7_end_gs0,phase_is_a2_r] = False
+    a2_phase_exists_p7r[p7_end_gs1,phase_is_a2_r] = False
+
     ##p_phase_area_transfers is a True/False and is False in the p7 period immediately preceding the break of season
     ## for each weather-year (z). To force a v_phase_change (to current season land-use or to PNC) at the break.
     ## Dry sown phases can't transfer between seasons but they can at break of the medium and late seasons.
@@ -209,9 +229,6 @@ def f_phase_link_params(params):
     next_period_is_seasonstart_p7z = np.roll(start_date_p7z==start_date_p7z[0,:], shift=-1, axis=0) #have to do it this way because for 'typ' break of season may not be a node.
     next_period_isnot_seasonstart_p7z = np.logical_not(next_period_is_seasonstart_p7z)
     ###third calculate which phases are dry sown
-    dry_sown_landuses = sinp.landuse['dry_sown']
-    phases_df = pinp.f1_phases()
-    landuse_r = phases_df.iloc[:,-1].values
     phase_is_drysown_r = np.any(landuse_r[:,na]==list(dry_sown_landuses), axis=-1)
     ###calculate if period is transfer at season break this is false for everything except dry sown phases
     transfer_break_p7zr = np.logical_or(next_period_isnot_break_p7z[...,na], phase_is_drysown_r)
@@ -219,34 +236,23 @@ def f_phase_link_params(params):
     transfer_seasonstart_p7zr =np.logical_or(next_period_isnot_seasonstart_p7z[...,na], np.logical_not(phase_is_drysown_r))
     ###combine
     p_phase_area_transfers_p7zr = np.logical_and(transfer_break_p7zr, transfer_seasonstart_p7zr)
-
-    ##pasture no cost mask to stop pnc being selected after the late break (if the model wants pasture it has to change to normal pasture and will incur any prior costs)
-    ###is the phase a2 - only a2 gets masked out because if the model wants pasture it needs to select a real pasture and incur the costs
-    phase_is_a2_r = landuse_r == sinp.general['i_a2_idx']
-    phase_is_not_a2_r = np.logical_not(phase_is_a2_r)
-    ###is next p7 the last - a2 cant be selected all year therefore its transfer is masked out from p7[-2] to p7[-1]
-    a2_transfer_exists_p7z = start_date_p7z < np.roll(start_date_p7z, shift=1, axis=0)[-1,:] #have to roll then select -1 because in the SE model cant select -2
-    p_phase_exists_p7zr = np.logical_or(phase_is_not_a2_r, a2_transfer_exists_p7z[...,na])
-    ###add to existing mask
-    p_phase_area_transfers_p7zr = np.logical_and(p_phase_area_transfers_p7zr, p_phase_exists_p7zr)
+    ###stop a2 transfering into the final p7 of growing season
+    a2_phase_transfers_p7r = np.roll(a2_phase_exists_p7r, shift=-1, axis=0) #if it doesnt exist then there is not transfer from the previous period.
+    p_phase_area_transfers_p7zr = np.logical_and(p_phase_area_transfers_p7zr, a2_phase_transfers_p7r[:,na,:])
 
     ##create mask to control what phases can be changed in each p7
     phase_can_increase_kp7 = pinp.general['i_phase_can_increase_kp7'] #input to control what landuses can change_increase in each p7
     phase_can_reduce_kp7 = pinp.general['i_phase_can_reduce_kp7'] #input to control what landuses can change_reduce in each p7
     ###change k to r
-    keys_k  = np.asarray(list(sinp.landuse['All']))  #landuse
-    phases_rotn_df = pinp.f1_phases()
     landuse_r = phases_rotn_df.iloc[:, -1].values
     a_k_rk = landuse_r[:, na] == keys_k
     phase_can_increase_p7r = np.sum(phase_can_increase_kp7 * a_k_rk[...,na], axis=1).T
     phase_can_reduce_p7r = np.sum(phase_can_reduce_kp7 * a_k_rk[...,na], axis=1).T
-    ###stop a2 increasing in p7[-1] - this is required for SE model when there is only one p7 period and ensures a2 doesnt exsit in the dsp even if the user accidently said it could.
-    phase_can_increase_p7r[-1,phase_is_a2_r] = False
+    ###stop a2 increasing in p7end_gs - this is required for SE model when there is only one p7 period and ensures a2 doesnt exsit in the dsp even if the user accidently said it could.
+    phase_can_increase_p7r[p7_end_gs0,phase_is_a2_r] = False
+    phase_can_increase_p7r[p7_end_gs1,phase_is_a2_r] = False
 
     ##make params
-    keys_p7 = per.f_season_periods(keys=True)
-    keys_r = np.array(phases_rotn_df.index).astype('str')
-    keys_z = zfun.f_keys_z()
     arrays_p7r = [keys_p7, keys_r]
     arrays_p7zr = [keys_p7, keys_z, keys_r]
 
