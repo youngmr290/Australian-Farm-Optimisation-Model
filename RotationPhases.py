@@ -251,13 +251,19 @@ def f_phase_link_params(params):
     ###stop a2 increasing in p7end_gs - this is required for SE model when there is only one p7 period and ensures a2 doesnt exsit in the dsp even if the user accidently said it could.
     phase_can_increase_p7r[p7_end_gs0,phase_is_a2_r] = False
     phase_can_increase_p7r[p7_end_gs1,phase_is_a2_r] = False
+    ###stop phases increasing in the period from season start to break of season, except dry sown landuses. This is
+    ### required because the history constraint doesnt exist between season start and break of season so that last yrs
+    ### phase can cary over in the medium and later break so that dry pasture and stubble can still be grazed
+    season_broken_p7z = end_date_p7z > i_break_z #has the season broken before the end of the given p7
+    phase_can_increase_before_brk_p7zr = np.logical_or(phase_is_drysown_r, season_broken_p7z[...,na])
+    phase_can_increase_p7zr = np.logical_and(phase_can_increase_p7r[:,na,:], phase_can_increase_before_brk_p7zr)
 
     ##make params
     arrays_p7r = [keys_p7, keys_r]
     arrays_p7zr = [keys_p7, keys_z, keys_r]
 
     params['p_phase_area_transfers_p7zr'] = fun.f1_make_pyomo_dict(p_phase_area_transfers_p7zr*1, arrays_p7zr)
-    params['p_phase_can_increase_p7r'] = fun.f1_make_pyomo_dict(phase_can_increase_p7r*1, arrays_p7r)
+    params['p_phase_can_increase_p7zr'] = fun.f1_make_pyomo_dict(phase_can_increase_p7zr*1, arrays_p7zr)
     params['p_phase_can_reduce_p7r'] = fun.f1_make_pyomo_dict(phase_can_reduce_p7r*1, arrays_p7r)
 
 
@@ -266,12 +272,41 @@ def f_rot_hist_params(params):
     Create parameters for landuse history provided and required by each rotation phase.
 
     '''
+    ##inputs
+    keys_p7 = per.f_season_periods(keys=True)
+    keys_z = zfun.f_keys_z()
+    index_p7 = np.arange(len(keys_p7))
+
+    ##Mask to skip constraint in the period from season start to break of season. This is
+    ## required so that last yrs phase can cary over in the medium and later break so that dry pasture and stubble can still be grazed
+    i_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
+    end_date_p7z = per.f_season_periods()[1:, :]
+    season_broken_p7z = end_date_p7z > i_break_z #has the season broken before the end of the given p7
+
+    ##mask to control which p7 are constrained by growing season 0
+    p7_end_gs0 = index_p7[pinp.general['i_gs_p7_end'][0]]  # p7 period from growing season 0.
+    p7_constrained_gs0_p7 = index_p7 > p7_end_gs0
+
+    ##mask to control which p7 are constrained by growing season 1
+    p7_constrained_gs1_p7 = index_p7 <= p7_end_gs0
+
+
+    ##combine the growing season mask and the season broken mask
+    p_inc_hist_gs0_con_p7z = np.logical_and(p7_constrained_gs0_p7[:,na], season_broken_p7z)
+    p_inc_hist_gs1_con_p7z = np.logical_and(p7_constrained_gs1_p7[:,na], season_broken_p7z)
+
+
+    ##history prov and req
     rot_req = pd.read_excel('Rotation.xlsx', sheet_name='rotation_req', header= None, engine='openpyxl')#, index_col = [0,1]) #couldn't get it to read in with multiindex for some reason
     rot_prov = pd.read_excel('Rotation.xlsx', sheet_name='rotation_prov', header= None, engine='openpyxl')#, index_col = [0,1]) #couldn't get it to read in with multiindex for some reason
     rot_req = rot_req.set_index([0,1])
     rot_prov = rot_prov.set_index([0,1])
     params['hist_prov'] = rot_prov.squeeze().to_dict()
     params['hist_req'] = rot_req.squeeze().to_dict()
+
+    arrays_p7z = [keys_p7, keys_z]
+    params['p_inc_hist_gs0_con_p7z'] = fun.f1_make_pyomo_dict(p_inc_hist_gs0_con_p7z*1, arrays_p7z)
+    params['p_inc_hist_gs1_con_p7z'] = fun.f1_make_pyomo_dict(p_inc_hist_gs1_con_p7z*1, arrays_p7z)
 
 def f_rot_hist4_params(params):
     '''

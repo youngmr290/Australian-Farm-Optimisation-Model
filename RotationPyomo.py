@@ -46,6 +46,10 @@ def f1_rotationpyomo(params, model):
     ####################
     model.p_area = pe.Param(model.s_lmus, initialize=params['lmu_area'], doc='available area on farm for each soil')
     model.p_landuse_area = pe.Param(model.s_phases, model.s_landuses, initialize=params['phases_rk'], doc='landuse in each phase')
+    model.p_inc_hist_gs0_con = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['p_inc_hist_gs0_con_p7z']
+                                        , default=0, doc='does the history constraint exist in current p7 - used to skip the hist constraint when season has started but hasnt broken')
+    model.p_inc_hist_gs1_con = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['p_inc_hist_gs1_con_p7z']
+                                        , default=0, doc='does the history constraint exist in current p7 - used to skip the hist constraint when season has started but hasnt broken')
     model.p_hist_prov = pe.Param(params['hist_prov'].keys(), initialize=params['hist_prov'], default=0, doc='history provided by  each rotation') #use keys instead of sets to reduce size of param
     model.p_hist_req = pe.Param(params['hist_req'].keys(), initialize=params['hist_req'], default=0, doc='history required by  each rotation') #use keys instead of sets to reduce size of param
     model.p_hist4_prov = pe.Param(model.s_phases, model.s_landuses, initialize=params['hist4_prov'], doc='history 4 provided by each phase')
@@ -70,7 +74,7 @@ def f1_rotationpyomo(params, model):
                                            default=0.0, mutable=False, doc='mask child require between season in each phase period')
     model.p_phase_area_transfers = pe.Param(model.s_season_periods, model.s_season_types, model.s_phases, initialize=params['p_phase_area_transfers_p7zr'],
                                            default=0.0, mutable=False, doc='mask phase transfer to force a change at season break')
-    model.p_phase_can_increase = pe.Param(model.s_season_periods, model.s_phases, initialize=params['p_phase_can_increase_p7r'],
+    model.p_phase_can_increase = pe.Param(model.s_season_periods, model.s_season_types, model.s_phases, initialize=params['p_phase_can_increase_p7zr'],
                                            default=0.0, mutable=False, doc='mask which phases can change_increase in each p7')
     model.p_phase_can_reduce = pe.Param(model.s_season_periods, model.s_phases, initialize=params['p_phase_can_reduce_p7r'],
                                            default=0.0, mutable=False, doc='mask which phases can change_reduce in each p7')
@@ -109,24 +113,28 @@ def f_con_history_between(params, model):
     this requires ensuring that each rotaion phase selected has a preceding phase that has landuses in the same
     order as the target rotation phase (except for year 0). This is called the history required and history required.
 
+    Note: This constraint is skipped in the period between season start and season break to allow last years landuse
+    to carry over in the medium and late breaks, so that dry pasture and stubble can be grazed. Because there is no
+    history constraint in those period v_phase_change_increase has been masked so that the only phases that can change
+    are dry sown ones (the dry sown phases will be forced to have the right history once the season has broken and
+    due to the seeding cost it will select a dry phase with the correct history from the start).
     '''
 
-    def rot_history_between(model,q,s9,l,h,z9):
+    def rot_history_between(model,q,s9,p7,l,h,z9):
         l_p7 = list(model.s_season_periods)
-        p7_end_gs0 = l_p7[pinp.general['i_gs_p7_end'][0]] #p7 period from growing season 0. This requires the history.
         p7_end_gs1 = l_p7[pinp.general['i_gs_p7_end'][1]] #p7 period from growing season 1. This provides the history.
         l_q = list(model.s_sequence_year)
         q_prev = l_q[l_q.index(q) - 1]
-        if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_season_p7z[p7_end_gs0,z9]):
+        if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_season_p7z[p7,z9]) and model.p_inc_hist_gs1_con[p7,z9]:
             return sum(model.v_phase_area[q_prev,s8,p7_end_gs1,z8,r,l]*model.p_hist_prov[r,h] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
                        + model.v_phase_area[q_prev,s8,p7_end_gs1,z8,r,l] * model.p_hist_prov[r,h] * model.p_endstart_prov_qsz[q_prev,s8,z8]
                        for r in model.s_phases for s8 in model.s_sequence for z8 in model.s_season_types
                        if ((r,)+(h,)) in params['hist_prov'].keys()) \
-                 + sum(model.v_phase_area[q,s9,p7_end_gs0,z9,r,l]*model.p_hist_req[r,h] for r in model.s_phases
+                 + sum(model.v_phase_area[q,s9,p7,z9,r,l]*model.p_hist_req[r,h] for r in model.s_phases
                        if ((r,)+(h,)) in params['hist_req'].keys())<=0
         else:
             return pe.Constraint.Skip
-    model.con_rot_history_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_history_between, doc='rotation phases constraint')
+    model.con_rot_history_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_history_between, doc='rotation phases constraint')
 
 def f_con_history_within(params, model):
     '''
@@ -141,22 +149,21 @@ def f_con_history_within(params, model):
 
     '''
 
-    def rot_history_within(model,q,s9,l,h,z9):
+    def rot_history_within(model,q,s9,p7,l,h,z9):
         l_p7 = list(model.s_season_periods)
         p7_end_gs0 = l_p7[pinp.general['i_gs_p7_end'][0]] #p7 period from growing season 0. This prov the history.
-        p7_end_gs1 = l_p7[pinp.general['i_gs_p7_end'][1]] #p7 period from growing season 1. This req the history.
         l_q = list(model.s_sequence_year)
         q_prev = l_q[l_q.index(q) - 1]
-        if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_season_p7z[p7_end_gs0,z9]) and (p7_end_gs0!=p7_end_gs1):
+        if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_season_p7z[p7_end_gs0,z9]) and model.p_inc_hist_gs1_con[p7,z9]:
             return sum(model.v_phase_area[q_prev,s9,p7_end_gs0,z8,r,l]*model.p_hist_prov[r,h]
                        * model.p_ancestorz_provwithinz_phase[p7_end_gs0,z8,z9]
                        for r in model.s_phases for z8 in model.s_season_types
                        if ((r,)+(h,)) in params['hist_prov'].keys()) \
-                 + sum(model.v_phase_area[q,s9,p7_end_gs1,z9,r,l]*model.p_hist_req[r,h] for r in model.s_phases
+                 + sum(model.v_phase_area[q,s9,p7,z9,r,l]*model.p_hist_req[r,h] for r in model.s_phases
                        if ((r,)+(h,)) in params['hist_req'].keys())<=0
         else:
             return pe.Constraint.Skip
-    model.con_rot_history_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_history_within, doc='rotation phases constraint')
+    model.con_rot_history_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_history_within, doc='rotation phases constraint')
 
 def f_phase_history4_within(model):
     '''
@@ -200,7 +207,7 @@ def f_phase_link_within(model):
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last season period
         if pe.value(model.p_wyear_inc_qs[q,s]) and pe.value(model.p_mask_childz_within_phase[p7,z9]):
             return model.v_phase_area[q,s,p7,z9,r,l]  \
-                   - model.v_phase_change_increase[q,s,p7,z9,r,l] * model.p_phase_can_increase[p7,r] \
+                   - model.v_phase_change_increase[q,s,p7,z9,r,l] * model.p_phase_can_increase[p7,z9,r] \
                    + model.v_phase_change_reduce[q,s,p7,z9,r,l] * model.p_phase_can_reduce[p7,r] \
                    - sum(model.v_phase_area[q,s,p7_prev,z8,r,l] * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
                          for z8 in model.s_season_types) * model.p_phase_area_transfers[p7_prev,z9,r] == 0 #p_phase_area_transfers ensures no transfer at break of season except for dry sown phases
@@ -219,7 +226,7 @@ def f_phase_link_between(model):
         q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
         if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_childz_between_phase[p7,z9]):
             return model.v_phase_area[q,s9,p7,z9,r,l]  \
-                   - model.v_phase_change_increase[q,s9,p7,z9,r,l] * model.p_phase_can_increase[p7,r] \
+                   - model.v_phase_change_increase[q,s9,p7,z9,r,l] * model.p_phase_can_increase[p7,z9,r] \
                    + model.v_phase_change_reduce[q,s9,p7,z9,r,l] * model.p_phase_can_reduce[p7,r] \
                    - sum(model.v_phase_area[q,s8,p7_prev,z8,r,l]
                          * model.p_parentz_provbetween_phase[p7_prev, z8, z9]
