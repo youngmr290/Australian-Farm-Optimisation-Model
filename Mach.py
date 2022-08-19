@@ -140,7 +140,7 @@ def f_poc_grazing_days():
     '''
     Grazing days provided by wet seeding activity (days/ha sown in each mach period/feed period).
 
-    This section represents the grazing achieved on crop paddocks before seeding. The longer seeding is
+    This section represents the grazing achieved on crop paddocks before seeding since the previous node. The longer seeding is
     delayed the more grazing is achieved. The calculations also account for a gap between when pasture
     germinates (the pasture break) and when seeding can begin (the seeding break). Dry seeding doesn't
     provide any grazing, so the calculations are only done using the wet seeding days. The calculations
@@ -154,15 +154,19 @@ def f_poc_grazing_days():
     feed supply will align with the feed demand of the animals (that are calculated for feed periods).
 
     The grazing days associated with the seeding decision variable (per hectare sown) is made up of two parts:
-    A 'rectangular' component which represents the area being grazed each day from the break of season up
-    until the destocking date for the beginning of the machine period.
+    A 'rectangular' component which represents the area being grazed each day from the break of season or the start of
+    the most recent season period up until the destocking date for the beginning of the machine period.
+    The rectangle component must consider the season period because poc only exists when a crop phase has been selected.
+    In the prior season period if the model is waiting to make a landuse decision it can select a temporary pasture (a2)
+    which provides feed. Therefore, to aviod double counting poc is only provided in the current season period. This
+    doesnt effect the triangle component below because the triangle component is based on the current p5 which has to be in the current season period.
     A 'triangle' component which represents the grazing during the seeding period. The area grazed each day
     diminishes associated with destocking the area that is soon to be sown. For example, at the start
     of the period all area can be grazed but by the end of the period once all the area has been destocked
     no grazing can occur. These 2 components must then be allocated to the feed periods.
 
-    'Rectangular' component: The base of the rectangle is defined by the later of the break and the
-    start of the feed period through to the earlier of the end of the feed period or the start of
+    'Rectangular' component: The base of the rectangle is defined by the later of the break, the start of the season period
+     and the start of the feed period through to the earlier of the end of the feed period or the start of
     the machine period.
 
     Triangular component: The base of the triangle starts at the latter of the start of the feed period,
@@ -198,26 +202,31 @@ def f_poc_grazing_days():
     defer_period = np.array([pinp.crop['poc_destock']]) #days between seeding and destocking
     season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'],numpy=True)
     wet_seeding_start_z = per.f_wet_seeding_start_date()
+    date_p7z = per.f_season_periods()
+
+    ##calc the most recent node date for each p5
+    a_p7prev_p5z = fun.searchsort_multiple_dim(date_p7z, date_start_p5z, 1, 1, side='right') - 1
+    p7prev_date_p5z = np.take_along_axis(date_p7z, a_p7prev_p5z, axis=0)
 
     ##calc wet seeding days
     start_pz = np.maximum(wet_seeding_start_z, date_start_p5z)
     seed_days_p5z = np.maximum(0,(date_end_p5z - start_pz))
 
     ##grazing days rectangle component (for p5) and allocation to feed periods (p6)
-    base_p6p5z = (np.minimum(date_end_p6z[:,na,:], date_start_p5z - defer_period) \
-                  - np.maximum(season_break_z, date_start_p6z[:,na,:]))
+    rec_base_p6p5z = (np.minimum(date_end_p6z[:,na,:], date_start_p5z - defer_period) \
+                  - np.maximum(season_break_z, np.maximum(date_start_p6z[:,na,:], p7prev_date_p5z)))
     height_p5z = 1
-    poc_grazing_days_rect_p6p5z = np.maximum(0, base_p6p5z * height_p5z)
+    poc_grazing_days_rect_p6p5z = np.maximum(0, rec_base_p6p5z * height_p5z)
 
     ##grazing days triangular component (for p5) and allocation to feed periods (p6)
     start_p6p5z = np.maximum(date_start_p6z[:,na,:], np.maximum(season_break_z, date_start_p5z - defer_period))
     end_p6p5z = np.minimum(date_end_p6z[:,na,:], date_end_p5z - defer_period)
-    base_p6p5z = (end_p6p5z - start_p6p5z)
+    tri_base_p6p5z = (end_p6p5z - start_p6p5z)
     height_start_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z - defer_period) - start_p6p5z)
                                                     , seed_days_p5z))
     height_end_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z - defer_period) - end_p6p5z)
                                                     , seed_days_p5z))
-    poc_grazing_days_tri_p6p5z = np.maximum(0,base_p6p5z * (height_start_p6p5z + height_end_p6p5z) / 2)
+    poc_grazing_days_tri_p6p5z = np.maximum(0,tri_base_p6p5z * (height_start_p6p5z + height_end_p6p5z) / 2)
 
     ##total grazing days & convert to df
     total_poc_grazing_days_p6p5z = poc_grazing_days_tri_p6p5z + poc_grazing_days_rect_p6p5z
