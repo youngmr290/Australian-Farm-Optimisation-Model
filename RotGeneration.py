@@ -345,7 +345,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
 
     ##option 2: if you want to represent the rotations from property.xlsx
     if user_crop_rot:
-        phases =pinp.crop['fixed_rotphases'].reset_index().values.astype('str')
+        phases = pinp.crop['fixed_rotphases'].reset_index().values.astype('str')
 
 
     ############################################################################################################################################################################################
@@ -383,7 +383,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
             req=1
             prov=-1
             for i in range(len(hist)):
-                req*=rot_phase[i]==hist[i]  #checks each set in a given rotation for the req part of the equation
+                req*=np.isin(rot_phase[i], list(l_hist[i]))  #checks each set in a given rotation for the req part of the equation
                 prov*=np.isin(rot_phase[i+1],list(l_hist[i])) #checks each set in a given rotation for the prov part of the equation
             test+=prov
             test2+=req
