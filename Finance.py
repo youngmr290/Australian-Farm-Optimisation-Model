@@ -107,7 +107,7 @@ na = np.newaxis
 #######################
 # cashflow & interest #
 #######################
-def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
+def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False, early_costs_link_p7_0=False):
     '''
     Allocates cashflow and wc to a season period and accounts for an interest component.
 
@@ -125,6 +125,9 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     :param enterprise: enterprise. If no enterprise is passed in the cashflow is averaged across the c0 axis.
     :param z_pos: axis position of z (must be negative e.g. reference from the end).
     :param c0_inc: boolean stating if c0 axis is included in date_incurred
+    :param early_costs_link_p7_0: boolean stating if costs incurred between 1st Jan and start of season are linked to DV in p7[0].
+           e.g. pasture fertiliser is applied before the season start but it is really a decision that is linked to the
+           start of the pasture phase therefore it has to be linked to p7[0] otherwise the model could change landuses and avoid the cost.
     '''
 
     ##inputs
@@ -152,7 +155,17 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     wc_interest_c0 = (1 + rate / 364) ** wc_incur_days_c0 * (wc_incur_days_c0>=0) #bool to make wc 0 if the cashflow item occurs between peak debt and cashflow date (this stops an enterprises main income being included in wc constraint).
 
     ##allocate to cashflow period
-    p7_alloc_p7c0 = zfun.f1_z_period_alloc(date_incurred_c0[na,...], z_pos=z_pos)
+    ###adjust date incured for the p7 allocation function. This is required for some costs which are incurred early in the year
+    ### but are associated with the start of an activity ie pasture fertilizer is applied before the start of the season
+    ### but as a farmer the decision is linked to the start of the phase. So adjust this adjusts costs that occur after
+    ### the 1st Jan so that the cost get allocated to p7[0]. This is important for rotation because we dont want the
+    ### model to be able to change phases and avoid costs (which it could do if the cost were allocated to p7[-1] DV.
+    season_start = per.f_season_periods()[0, 0]  # slice season node to get season start
+    if early_costs_link_p7_0:
+        t_date_incurred_c0 = np.maximum(date_incurred_c0%364, season_start)
+    else:
+        t_date_incurred_c0 = date_incurred_c0
+    p7_alloc_p7c0 = zfun.f1_z_period_alloc(t_date_incurred_c0[na,...], z_pos=z_pos)
 
     ##add interest adjustment
     final_cashflow_p7c0 = cashflow_interest_c0 * p7_alloc_p7c0
