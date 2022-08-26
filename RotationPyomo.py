@@ -154,7 +154,7 @@ def f_con_history_within(params, model):
         p7_end_gs0 = l_p7[pinp.general['i_gs_p7_end'][0]] #p7 period from growing season 0. This prov the history.
         l_q = list(model.s_sequence_year)
         q_prev = l_q[l_q.index(q) - 1]
-        if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_season_p7z[p7_end_gs0,z9]) and model.p_inc_hist_gs1_con[p7,z9]:
+        if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_season_p7z[p7,z9]) and model.p_inc_hist_gs0_con[p7,z9]:
             return sum(model.v_phase_area[q_prev,s9,p7_end_gs0,z8,r,l]*model.p_hist_prov[r,h]
                        * model.p_ancestorz_provwithinz_phase[p7_end_gs0,z8,z9]
                        for r in model.s_phases for z8 in model.s_season_types

@@ -196,6 +196,10 @@ def f_phase_link_params(params):
     a change of phase at the break of each season (change is required because some costs e.g. seeding are connected
     to v_phase_change_increase.
 
+    Phases from p7_prev dont transfer in the p7 period immediately preceding the break of season
+    for each weather-year (z). To force a v_phase_change (to current season land-use or to PNC) at the break.
+    Dry sown phases can't transfer between seasons but they can at break of the medium and late seasons.
+
     Note: a2 phases dont provide a history. This is required to stop pnc being selected all growing season
     (if the model wants pasture it has to change to normal pasture and will incur any prior costs).
     '''
