@@ -493,6 +493,27 @@ def f_pasture(params, r_vals, nv):
                                                          , nv_is_not_confinement_f, me_threshold_fp6zt, i_me_eff_gainlose_p6zt)
     poc_vol_fp6z = poc_vol_fp6z/ (1 + sen.sap['pi'])
 
+    ######
+    #pnc #
+    ######
+    #todo remove this once new pasture is done - this is just temporary handling of foo when pnc is desocked. (not a great method because we are just guessing the amount of foo to reduce).
+    ## PNC removes foo when the phase is changed. The assumption is that the phase is changed on the first day of the p7 period. POC handles any grazing between the start of p7 and seeding.
+    ## The FOO removed is just equal to the germination with the assumption that any growth is grazed.
+    ###p7 p6 allocation - only the first p6 period in each p7 has a true because phase changes on the first day of p7.
+    date_season_node_p7z = per.f_season_periods()[:-1,:]
+    p6_is_startp7_p7p6z = date_start_p6z == date_season_node_p7z[:,na,:]
+
+    ###foo change when a2 is removed or annual phase is incremented - phase change occurs at the very start of a p7 period so only accounts for foo before the p7 period.
+    foo_phase_change_p6lrzt = np.cumsum(np.roll(germination_p6lrzt, shift=1, axis=0), axis=0) #roll foward one so that current period germ isnt included because phase change occurs on the first day so germ for the current period hasnt occured yet.
+    foo_phase_change_p7p6lrzt = foo_phase_change_p6lrzt * p6_is_startp7_p7p6z[:,:,na,na,:,na]
+    ###foo removed when pnc is reduced (amount reduced is the amount of germination so far)
+    # phase_is_a2_r = landuse_r == sinp.general['i_a2_idx']
+    phase_is_annual_r = np.isin(landuse_r, list(sinp.landuse['pasture_sets']['annual']))
+    foo_removed_pas_reduce_p7p6lrzt = foo_phase_change_p7p6lrzt * phase_is_annual_r[:,na,na]
+    ###foo added when annual pasture is selected (the amount added is only the amount of germination that has already occured)
+    foo_added_annual_increase_p7p6lrzt = foo_phase_change_p7p6lrzt * phase_is_annual_r[:,na,na]
+
+
     ######################
     #apply season mask   #
     ######################
@@ -519,6 +540,8 @@ def f_pasture(params, r_vals, nv):
     dry_transfer_prov_t_p6zt = dry_transfer_prov_t_p6zt * mask_fp_z8var_p6zt
     dry_transfer_req_t_p6zt = dry_transfer_req_t_p6zt * mask_fp_z8var_p6zt
     germination_p6lrzt = germination_p6lrzt * mask_fp_z8var_p6lrzt
+    foo_removed_pas_reduce_p7p6lrzt = foo_removed_pas_reduce_p7p6lrzt * mask_fp_z8var_p6lrzt
+    foo_added_annual_increase_p7p6lrzt = foo_added_annual_increase_p7p6lrzt * mask_fp_z8var_p6lrzt
     nap_dp6lrzt = nap_dp6lrzt * mask_fp_z8var_p6lrzt
     foo_start_grnha_op6lzt = foo_start_grnha_op6lzt * mask_fp_z8var_p6lzt
     foo_end_grnha_gop6lzt = foo_end_grnha_gop6lzt * mask_fp_z8var_p6lzt
@@ -574,6 +597,10 @@ def f_pasture(params, r_vals, nv):
     params['p_dry_transfer_req_t_p6zt'] = fun.f1_make_pyomo_dict(dry_transfer_req_t_p6zt, arrays_p6zt)
 
     params['p_germination_p7p6lrzt'] = fun.f1_make_pyomo_dict(germination_p7p6lrzt, arrays_p7p6lrzt)
+
+    params['p_foo_removed_pas_reduce_p7p6lrzt'] = fun.f1_make_pyomo_dict(foo_removed_pas_reduce_p7p6lrzt, arrays_p7p6lrzt)
+
+    params['p_foo_added_annual_increase_p7p6lrzt'] = fun.f1_make_pyomo_dict(foo_added_annual_increase_p7p6lrzt, arrays_p7p6lrzt)
 
     params['p_nap_p7dp6lrzt'] = fun.f1_make_pyomo_dict(nap_p7dp6lrzt, arrays_p7dp6lrzt)
 
