@@ -376,7 +376,7 @@ def f1_fert_cost_allocation():
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     ##calc interest and allocate to cash period - needs to be numpy
-    fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2, early_costs_link_p7_0=True)
+    fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2)
     ###convert to df
     new_index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, start_df.index])
     fert_cost_allocation_p7zn = pd.Series(fert_cost_allocation_p7zn.ravel(), index=new_index_p7zn)
@@ -784,7 +784,7 @@ def f1_chem_cost_allocation():
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     ##calc interest and allocate to cash period - needs to be numpy
-    chem_cost_allocation_p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2, early_costs_link_p7_0=True)
+    chem_cost_allocation_p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2)
     ###convert to df
     new_index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, start_df.index])
     chem_cost_allocation_p7zn = pd.Series(chem_cost_allocation_p7zn.ravel(), index=new_index_p7zn)
