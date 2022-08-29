@@ -376,7 +376,7 @@ def f1_fert_cost_allocation():
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     ##calc interest and allocate to cash period - needs to be numpy
-    fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2)
+    fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2, is_phase_cost=True)
     ###convert to df
     new_index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, start_df.index])
     fert_cost_allocation_p7zn = pd.Series(fert_cost_allocation_p7zn.ravel(), index=new_index_p7zn)
@@ -748,7 +748,7 @@ def f_phase_stubble_cost(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    stub_cost_allocation_p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
+    stub_cost_allocation_p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1, is_phase_cost=True)
     ###convert to df
     new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
     stub_cost_allocation_p7z = pd.Series(stub_cost_allocation_p7z.ravel(), index=new_index_p7z)
@@ -784,7 +784,7 @@ def f1_chem_cost_allocation():
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     ##calc interest and allocate to cash period - needs to be numpy
-    chem_cost_allocation_p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2)
+    chem_cost_allocation_p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2, is_phase_cost=True)
     ###convert to df
     new_index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, start_df.index])
     chem_cost_allocation_p7zn = pd.Series(chem_cost_allocation_p7zn.ravel(), index=new_index_p7zn)
@@ -983,7 +983,7 @@ def f_seedcost(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    seed_cost_allocation_p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(start_z, enterprise='crp', z_pos=-1)
+    seed_cost_allocation_p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(start_z, enterprise='crp', z_pos=-1, is_phase_cost=True)
     ###convert to df
     new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
     seed_cost_allocation_p7z = pd.Series(seed_cost_allocation_p7z.ravel(), index=new_index_p7z)
@@ -1048,7 +1048,7 @@ def f_insurance(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    insurance_cost_allocation_p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
+    insurance_cost_allocation_p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1, is_phase_cost=True)
     ###convert to df
     new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
     insurance_cost_allocation_p7z = pd.Series(insurance_cost_allocation_p7z.ravel(), index=new_index_p7z)

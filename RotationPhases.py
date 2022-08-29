@@ -28,11 +28,18 @@ def f_v_phase_increment_adj(param, p7_pos, z_pos, p5_pos=None, numpy=False):
     This is making the assumption that any jobs carried out, and any expenditure
     (fertiliser or chemical applied) will be applied even though the phase is selected later in the year.
     This stops the optimisation selecting the phase in the last node and receiving the income without
-    incurring any costs. Note: Yield and stubble do not require increment params because it is not possible to harvest a
+    incurring any costs.
+
+    Note 1: Yield and stubble do not require increment params because it is not possible to harvest a
     rotation before the rotation is selected.
 
-    Note labour gets handled slightly different. Labour that occurs in previous labour periods before the season
+    Note 2: labour gets handled slightly different. Labour that occurs in previous labour periods before the season
         period when v_phase_change_increase is selected must be completed in the first labour period when the phase is selected.
+
+    Note 3: f_v_phase_increment_adj starts counting from the start of season but there are no phase costs/labour between until
+        after the break for each season otherwise costs would get double counted in
+        medium/late breaks where phases are carried over past the start of the season to provide dry pas and stubble area.
+
 
     :param param: numpy array or pandas series - parameter with p7 axis.
     :param p7_pos: negative int: axis/level of p7

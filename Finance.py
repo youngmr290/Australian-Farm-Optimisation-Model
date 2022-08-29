@@ -107,7 +107,7 @@ na = np.newaxis
 #######################
 # cashflow & interest #
 #######################
-def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
+def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False, is_phase_cost=False):
     '''
     Allocates cashflow and wc to a season period and accounts for an interest component.
 
@@ -125,6 +125,7 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     :param enterprise: enterprise. If no enterprise is passed in the cashflow is averaged across the c0 axis.
     :param z_pos: axis position of z (must be negative e.g. reference from the end).
     :param c0_inc: boolean stating if c0 axis is included in date_incurred
+    :param is_phase_cost: boolean stating if the cost is related to v_phase.
     '''
 
     ##inputs
@@ -152,6 +153,16 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     wc_interest_c0 = (1 + rate / 364) ** wc_incur_days_c0 * (wc_incur_days_c0>=0) #bool to make wc 0 if the cashflow item occurs between peak debt and cashflow date (this stops an enterprises main income being included in wc constraint).
 
     ##allocate to cashflow period
+    ###adjust the timing of phases costs so that no cost is incurred between season start and break of season.
+    ### this stops the model getting double costs in medium/late breaks where phases are carried over past the
+    ### start of the season to provide dry pas and stubble area (because it is also accounted for by v_phase_increment).
+    ### note - this is done after calculating interest because want to calc interest using the inputted timing date
+    if is_phase_cost:
+        i_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
+        date_break = fun.f_expand(i_break_z, z_pos) #adjust to get z axis in the correct position.
+        season_start = per.f_season_periods()[0, 0]  # slice season node to get season start
+        between_seasonstart_brkseason = np.logical_and(date_incurred_c0%364>=season_start, date_incurred_c0%364<date_break)
+        date_incurred_c0 = fun.f_update(date_incurred_c0%364, date_break, between_seasonstart_brkseason)
     p7_alloc_p7c0 = zfun.f1_z_period_alloc(date_incurred_c0[na,...], z_pos=z_pos)
 
     ##add interest adjustment
