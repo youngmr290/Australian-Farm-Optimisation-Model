@@ -561,7 +561,11 @@ def f_fert_cost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, phase_fert_cost_rl_p7z, 'phase_fert_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(phase_fert_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'phase_fert_cost_increment', mask_season_p7z, z_pos=-1)
     fun.f1_make_r_val(r_vals, fert_app_cost_ha_rl_p7z + fert_app_cost_tonne_rl_p7z, 'fert_app_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(fert_app_cost_tonne_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'fert_app_cost_increment', mask_season_p7z, z_pos=-1)
     return fert_cost_total, fert_wc_total
 
 def f_nap_fert_req():
@@ -651,7 +655,11 @@ def f_nap_fert_cost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, phase_fert_cost_rl_p7z, 'nap_phase_fert_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(phase_fert_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'nap_phase_fert_cost_increment', mask_season_p7z, z_pos=-1)
     fun.f1_make_r_val(r_vals, total_app_cost_rl_p7z, 'nap_fert_app_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(total_app_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'nap_fert_app_cost_increment', mask_season_p7z, z_pos=-1)
     return nap_fert_cost, nap_fert_wc
 
 def f1_total_fert_req():
@@ -764,6 +772,8 @@ def f_phase_stubble_cost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, rot_stub_cost_rl_p7z, 'stub_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(rot_stub_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'stub_cost_increment', mask_season_p7z, z_pos=-1)
 
     return rot_stub_cost_rl_p7z, rot_stub_wc_rl_c0p7z
 # t_stubcost=f_phase_stubble_cost()
@@ -930,7 +940,11 @@ def f_chem_cost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, phase_chem_cost_rl_p7z, 'chem_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(phase_chem_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'chem_cost_increment', mask_season_p7z, z_pos=-1)
     fun.f1_make_r_val(r_vals, chem_app_cost_rl_p7z, 'chem_app_cost_ha', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(chem_app_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'chem_app_cost_ha_increment', mask_season_p7z, z_pos=-1)
     return total_cost, total_wc
 
 
@@ -1010,6 +1024,8 @@ def f_seedcost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, seedcost_rl_p7z, 'seedcost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(seedcost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'seedcost_increment', mask_season_p7z, z_pos=-1)
 
     return seedcost_rl_p7z, seed_wc_rl_c0p7z
 
@@ -1065,6 +1081,8 @@ def f_insurance(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, rot_insurance_cost_rl_p7z, 'insurance_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(rot_insurance_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'insurance_cost_increment', mask_season_p7z, z_pos=-1)
 
     ##take crp slice of c0 to reduce param size.
     return rot_insurance_cost_rl_p7z, rot_insurance_wc_rl_c0p7z

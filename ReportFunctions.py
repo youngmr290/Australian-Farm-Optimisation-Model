@@ -360,11 +360,15 @@ def f_rotation(lp_vars, r_vals):
     phases_df = r_vals['rot']['phases']
     mask_season_p7z = r_vals['zgen']['mask_season_p7z']
     phases_rk = phases_df.set_index(phases_df.columns[-1], append=True)  # add landuse as index level
-    rot_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_area', mask_season_p7z[:,:,na,na], z_pos=-3)
-    rot_area_qsp7zlrk = rot_area_qsp7zrl.unstack(4).reindex(phases_rk.index, axis=1, level=0).stack([0,1])  # add landuse to the axis
-    rot_area_qszlrk_p7 = rot_area_qsp7zlrk.unstack(2) #unstak p7 - p7 is generally a col where this is used so this saves time later
-    rot_area_qszlr_p7 = rot_area_qsp7zrl.unstack(2) #unstak p7 - p7 is generally a col where this is used so this saves time later
-    return phases_rk, rot_area_qszlr_p7, rot_area_qszlrk_p7
+    v_phase_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_area', mask_season_p7z[:,:,na,na], z_pos=-3)
+    v_phase_change_increase_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_change_increase', mask_season_p7z[:,:,na,na], z_pos=-3)
+    ##add landuse to the axis
+    v_phase_area_qsp7zlrk = v_phase_area_qsp7zrl.unstack(4).reindex(phases_rk.index, axis=1, level=0).stack([0,1])  # add landuse to the axis
+    ##unstack p7 - p7 is generally a col where this is used so this saves time later
+    v_phase_area_qszlrk_p7 = v_phase_area_qsp7zlrk.unstack(2)
+    v_phase_area_qszrl_p7 = v_phase_area_qsp7zrl.unstack(2)
+    v_phase_change_increase_area_qszrl_p7 = v_phase_change_increase_area_qsp7zrl.unstack(2)
+    return phases_rk, v_phase_change_increase_area_qszrl_p7, v_phase_area_qszrl_p7, v_phase_area_qszlrk_p7
 
 
 def f_area_summary(lp_vars, r_vals, option):
@@ -385,7 +389,7 @@ def f_area_summary(lp_vars, r_vals, option):
     '''
 
     ##read from other functions
-    rot_area_qszrl_p7, rot_area_qszlrk_p7 = f_rotation(lp_vars, r_vals)[1:3]
+    rot_area_qszrl_p7, rot_area_qszlrk_p7 = f_rotation(lp_vars, r_vals)[2:4]
     landuse_area_k_p7qszl = rot_area_qszlrk_p7.groupby(axis=0, level=(0,1,2,3,5)).sum().unstack([0,1,2,3])  # area of each landuse (sum lmu and rotation)
 
     ##all rotations by lmu and p7
@@ -441,7 +445,7 @@ def f_mach_summary(lp_vars, r_vals, option=0):
 
     '''
     ##call rotation function to get rotation info
-    phases_rk, rot_area_qszrl_p7 = f_rotation(lp_vars, r_vals)[0:2]
+    phases_rk, v_phase_change_increase_area_qszrl_p7, rot_area_qszrl_p7 = f_rotation(lp_vars, r_vals)[0:3]
     rot_area_zrlqs_p7 = rot_area_qszrl_p7.reorder_levels([2,3,4,0,1], axis=0).sort_index()  # change the order so that reindexing works (new levels being added must be at the end)
 
     ##masks to uncluster z axis
@@ -598,36 +602,69 @@ def f_crop_summary(lp_vars, r_vals, option=0):
 
     '''
     ##call rotation function to get rotation info
-    phases_rk, rot_area_qszrl_p7 = f_rotation(lp_vars, r_vals)[0:2]
-    rot_area_zrlqs_p7 = rot_area_qszrl_p7.reorder_levels([2,3,4,0,1], axis=0).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
+    phases_rk, v_phase_change_increase_area_qszrl_p7, rot_area_qszrl_p7 = f_rotation(lp_vars, r_vals)[0:3]
+    v_phase_area_zrlqs_p7 = rot_area_qszrl_p7.reorder_levels([2,3,4,0,1], axis=0).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
+    v_phase_change_increase_area_zrlqs_p7 = v_phase_change_increase_area_qszrl_p7.reorder_levels([2,3,4,0,1], axis=0).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
     ##expenses
     ###fert
+    ####v_phase
     nap_phase_fert_cost_rl_p7z = r_vals['crop']['nap_phase_fert_cost']
     phase_fert_cost_rl_p7z = r_vals['crop']['phase_fert_cost']
     exp_fert_ha_rl_p7z = pd.concat([phase_fert_cost_rl_p7z, nap_phase_fert_cost_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()
     exp_fert_ha_zrl_p7 = exp_fert_ha_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
-    exp_fert_ha_zrlqs_p7 = exp_fert_ha_zrl_p7.reindex(rot_area_zrlqs_p7.index, axis=0)
-    exp_fert_zrqs_p7 = exp_fert_ha_zrlqs_p7.mul(rot_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
+    exp_fert_ha_zrlqs_p7 = exp_fert_ha_zrl_p7.reindex(v_phase_area_zrlqs_p7.index, axis=0)
+    exp_fert_zrqs_p7 = exp_fert_ha_zrlqs_p7.mul(v_phase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
+    ####v_phase_increment
+    nap_phase_fert_cost_increment_rl_p7z = r_vals['crop']['nap_phase_fert_cost_increment'].unstack([-2,-1])
+    phase_fert_cost_increment_rl_p7z = r_vals['crop']['phase_fert_cost_increment'].unstack([-2,-1])
+    exp_fert_ha_increment_rl_p7z = pd.concat([phase_fert_cost_increment_rl_p7z, nap_phase_fert_cost_increment_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()
+    exp_fert_ha_increment_zrl_p7 = exp_fert_ha_increment_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
+    exp_fert_ha_increment_zrlqs_p7 = exp_fert_ha_increment_zrl_p7.reindex(v_phase_change_increase_area_zrlqs_p7.index, axis=0)
+    exp_fert_increment_zrqs_p7 = exp_fert_ha_increment_zrlqs_p7.mul(v_phase_change_increase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
+    ####combine v_phase and v_phase_increase
+    exp_fert_zrqs_p7 = pd.concat([exp_fert_zrqs_p7, exp_fert_increment_zrqs_p7], axis=1).groupby(axis=1, level=(0)).sum()
     exp_fert_k_p7zqs = exp_fert_zrqs_p7.unstack([0,2,3]).reindex(phases_rk.index, axis=0, level=0).groupby(axis=0,
                                                                             level=1).sum()  # reindex to include landuse and sum rot
+
     ###chem
+    ####v_phase
     chem_cost_rl_p7z = r_vals['crop']['chem_cost']
     chem_cost_zrl_p7 = chem_cost_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
-    chem_cost_zrlqs_p7 = chem_cost_zrl_p7.reindex(rot_area_zrlqs_p7.index, axis=0)
-    exp_chem_zrqs_p7 = chem_cost_zrlqs_p7.mul(rot_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
+    chem_cost_zrlqs_p7 = chem_cost_zrl_p7.reindex(v_phase_area_zrlqs_p7.index, axis=0)
+    exp_chem_zrqs_p7 = chem_cost_zrlqs_p7.mul(v_phase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
+    ####v_phase_increment
+    chem_cost_increment_rl_p7z = r_vals['crop']['chem_cost_increment'].unstack([-2,-1])
+    chem_cost_increment_zrl_p7 = chem_cost_increment_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
+    chem_cost_increment_zrlqs_p7 = chem_cost_increment_zrl_p7.reindex(v_phase_change_increase_area_zrlqs_p7.index, axis=0)
+    exp_chem_increment_zrqs_p7 = chem_cost_increment_zrlqs_p7.mul(v_phase_change_increase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
+    ####combine v_phase and v_phase_increase
+    exp_chem_zrqs_p7 = pd.concat([exp_chem_zrqs_p7, exp_chem_increment_zrqs_p7], axis=1).groupby(axis=1, level=(0)).sum()
     exp_chem_k_p7zqs = exp_chem_zrqs_p7.unstack([0,2,3]).reindex(phases_rk.index, axis=0, level=0).groupby(axis=0,
                                                                             level=1).sum()  # reindex to include landuse and sum rot
+
     ###misc
+    ####v_phase
     stub_cost_rl_p7z = r_vals['crop']['stub_cost']
     insurance_cost_rl_p7z = r_vals['crop']['insurance_cost']
     seedcost_rl_p7z = r_vals['crop']['seedcost']
     misc_exp_ha_rl_p7z = pd.concat([stub_cost_rl_p7z, insurance_cost_rl_p7z, seedcost_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()  # stubble, seed & insurance
     misc_exp_ha_zrl_p7 = misc_exp_ha_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
-    misc_exp_ha_zrlqs_p7 = misc_exp_ha_zrl_p7.reindex(rot_area_zrlqs_p7.index, axis=0)
-    misc_exp_ha_zrqs_p7 = misc_exp_ha_zrlqs_p7.mul(rot_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu, need to reindex because some rotations have been dropped
+    misc_exp_ha_zrlqs_p7 = misc_exp_ha_zrl_p7.reindex(v_phase_area_zrlqs_p7.index, axis=0)
+    misc_exp_ha_zrqs_p7 = misc_exp_ha_zrlqs_p7.mul(v_phase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu, need to reindex because some rotations have been dropped
     # misc_exp_ha_zr_c0p7 = misc_exp_ha_zrl_c0p7.reindex(rot_area_zrl.index).mul(rot_area_zrl, axis=0).sum(axis=0, level=(0,1))  # mul area and sum lmu, need to reindex because some rotations have been dropped
+    ####v_phase_increment
+    stub_cost_increment_rl_p7z = r_vals['crop']['stub_cost_increment'].unstack([-2,-1])
+    insurance_cost_increment_rl_p7z = r_vals['crop']['insurance_cost_increment'].unstack([-2,-1])
+    seedcost_increment_rl_p7z = r_vals['crop']['seedcost_increment'].unstack([-2,-1])
+    misc_exp_ha_increment_rl_p7z = pd.concat([stub_cost_increment_rl_p7z, insurance_cost_increment_rl_p7z, seedcost_increment_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()  # stubble, seed & insurance
+    misc_exp_ha_increment_zrl_p7 = misc_exp_ha_increment_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
+    misc_exp_ha_increment_zrlqs_p7 = misc_exp_ha_increment_zrl_p7.reindex(v_phase_change_increase_area_zrlqs_p7.index, axis=0)
+    misc_exp_ha_increment_zrqs_p7 = misc_exp_ha_increment_zrlqs_p7.mul(v_phase_change_increase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu, need to reindex because some rotations have been dropped
+    ####combine v_phase and v_phase_increase
+    misc_exp_ha_zrqs_p7 = pd.concat([misc_exp_ha_zrqs_p7, misc_exp_ha_increment_zrqs_p7], axis=1).groupby(axis=1, level=(0)).sum()
     misc_exp_k_p7zqs = misc_exp_ha_zrqs_p7.unstack([0,2,3]).reindex(phases_rk.index, axis=0, level=0).groupby(axis=0,
                                                                             level=1).sum()  # reindex to include landuse and sum rot
+
 
     ##revenue. rev = (grain_sold + grain_fed - grain_purchased) * sell_price
     ###read in dict from grain summary
