@@ -376,7 +376,7 @@ def f1_fert_cost_allocation():
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     ##calc interest and allocate to cash period - needs to be numpy
-    fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2)
+    fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2, is_phase_cost=True)
     ###convert to df
     new_index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, start_df.index])
     fert_cost_allocation_p7zn = pd.Series(fert_cost_allocation_p7zn.ravel(), index=new_index_p7zn)
@@ -494,9 +494,9 @@ def f_fert_cost(r_vals):
     '''
     Cost of fertilising the arable areas. Includes the fertiliser cost and the application cost.
 
-    The cost of fertilising is made up from the cost of the fertilisers themself, the cost getting
+    The cost of fertilising is made up from the cost of the fertilisers, the cost getting
     the fertiliser delivered to the farm and the machinery cost of application (detailed in the machinery section).
-    The cost is incurred in the cashflow period when it is applied. The assumption is that fertilizer is
+    The cost is incurred in the cashflow period when it is applied. The assumption is that fertiliser is
     purchased shortly before application because farmers wait to see how the year unfolds before locking
     in a fertiliser plan.
 
@@ -561,7 +561,11 @@ def f_fert_cost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, phase_fert_cost_rl_p7z, 'phase_fert_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(phase_fert_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'phase_fert_cost_increment', mask_season_p7z, z_pos=-1)
     fun.f1_make_r_val(r_vals, fert_app_cost_ha_rl_p7z + fert_app_cost_tonne_rl_p7z, 'fert_app_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(fert_app_cost_tonne_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'fert_app_cost_increment', mask_season_p7z, z_pos=-1)
     return fert_cost_total, fert_wc_total
 
 def f_nap_fert_req():
@@ -651,7 +655,11 @@ def f_nap_fert_cost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, phase_fert_cost_rl_p7z, 'nap_phase_fert_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(phase_fert_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'nap_phase_fert_cost_increment', mask_season_p7z, z_pos=-1)
     fun.f1_make_r_val(r_vals, total_app_cost_rl_p7z, 'nap_fert_app_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(total_app_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'nap_fert_app_cost_increment', mask_season_p7z, z_pos=-1)
     return nap_fert_cost, nap_fert_wc
 
 def f1_total_fert_req():
@@ -748,7 +756,7 @@ def f_phase_stubble_cost(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    stub_cost_allocation_p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
+    stub_cost_allocation_p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1, is_phase_cost=True)
     ###convert to df
     new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
     stub_cost_allocation_p7z = pd.Series(stub_cost_allocation_p7z.ravel(), index=new_index_p7z)
@@ -764,6 +772,8 @@ def f_phase_stubble_cost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, rot_stub_cost_rl_p7z, 'stub_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(rot_stub_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'stub_cost_increment', mask_season_p7z, z_pos=-1)
 
     return rot_stub_cost_rl_p7z, rot_stub_wc_rl_c0p7z
 # t_stubcost=f_phase_stubble_cost()
@@ -784,7 +794,7 @@ def f1_chem_cost_allocation():
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     ##calc interest and allocate to cash period - needs to be numpy
-    chem_cost_allocation_p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2)
+    chem_cost_allocation_p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2, is_phase_cost=True)
     ###convert to df
     new_index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, start_df.index])
     chem_cost_allocation_p7zn = pd.Series(chem_cost_allocation_p7zn.ravel(), index=new_index_p7zn)
@@ -930,7 +940,11 @@ def f_chem_cost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, phase_chem_cost_rl_p7z, 'chem_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(phase_chem_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'chem_cost_increment', mask_season_p7z, z_pos=-1)
     fun.f1_make_r_val(r_vals, chem_app_cost_rl_p7z, 'chem_app_cost_ha', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(chem_app_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'chem_app_cost_ha_increment', mask_season_p7z, z_pos=-1)
     return total_cost, total_wc
 
 
@@ -983,7 +997,7 @@ def f_seedcost(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    seed_cost_allocation_p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(start_z, enterprise='crp', z_pos=-1)
+    seed_cost_allocation_p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(start_z, enterprise='crp', z_pos=-1, is_phase_cost=True)
     ###convert to df
     new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
     seed_cost_allocation_p7z = pd.Series(seed_cost_allocation_p7z.ravel(), index=new_index_p7z)
@@ -1010,6 +1024,8 @@ def f_seedcost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, seedcost_rl_p7z, 'seedcost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(seedcost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'seedcost_increment', mask_season_p7z, z_pos=-1)
 
     return seedcost_rl_p7z, seed_wc_rl_c0p7z
 
@@ -1048,7 +1064,7 @@ def f_insurance(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    insurance_cost_allocation_p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
+    insurance_cost_allocation_p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1, is_phase_cost=True)
     ###convert to df
     new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
     insurance_cost_allocation_p7z = pd.Series(insurance_cost_allocation_p7z.ravel(), index=new_index_p7z)
@@ -1065,6 +1081,8 @@ def f_insurance(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, rot_insurance_cost_rl_p7z, 'insurance_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(rot_insurance_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'insurance_cost_increment', mask_season_p7z, z_pos=-1)
 
     ##take crp slice of c0 to reduce param size.
     return rot_insurance_cost_rl_p7z, rot_insurance_wc_rl_c0p7z
@@ -1102,8 +1120,8 @@ def f1_rot_cost(r_vals):
     cost_p7zlr = cost_rl_p7z.unstack([1,0]).sort_index()
     wc_c0p7zlr = wc_rl_c0p7z.unstack([1,0]).sort_index()
 
-    ##create params for v_phase_increment
-    ## costs for v_phase_increment activities are incurred in the season period when the activity is selected
+    ##create params for v_phase_change_increase
+    ## costs for v_phase_change_increase activities are incurred in the season period when the activity is selected
     ## however the interest is calculated as if the cost was incurred at the normal time (this is because interest
     ## is calculated for each separate cost in the functions above).
     increment_cost_p7zlr = rps.f_v_phase_increment_adj(cost_p7zlr,p7_pos=-4,z_pos=-3)
@@ -1150,6 +1168,12 @@ def f_sow_prov():
 
     This accounts for period and crop e.g. wet seeding activity only provides sowing to crop after the break.
 
+    This also stop seeding (dry and wet) in a false break between the identification and the real break.
+    This is because the soil is a "little bit wet". So in the areas that are wet enough the seed will germinate
+    and in other areas it won't. So this will lead to a patchy crop establishment and make crop management difficult
+    later in the season due to the variation in crop stages.
+    This only effects crop because pasture seeding timing is an input with a z axis so it can be altered there if desired.
+
     '''
     ##machine periods
     labour_period_p5z = per.f_p_dates_df()
@@ -1163,13 +1187,24 @@ def f_sow_prov():
     keys_p7 = per.f_season_periods(keys=True)
     dry_sown_landuses = sinp.landuse['dry_sown']
     wet_sown_landuses = set(sinp.landuse['C']) - dry_sown_landuses #can subtract sets to return differences
+    false_brk_identification_z = zfun.f_seasonal_inp(pinp.general['i_false_brk_identification_z'],numpy=True,axis=0)
+    false_brk_followuprains_z = zfun.f_seasonal_inp(pinp.general['i_false_brk_followuprains_z'],numpy=True,axis=0)
+
+    ##determine which periods crop can't be sown because it is a false break (this doesnt effect seasons with no false brk)
+    ## any p5 period that the false break goes through cant be seeded even if the false brk only partially covers a period.
+    ## to avoid any misrepresentation ensure the false brk timing inputs line up with p5 periods
+    z_is_false_break_z = false_brk_identification_z < false_brk_followuprains_z
+    p5_is_false_break_p5z = np.logical_and(false_brk_identification_z >= labour_period_start_p5z, false_brk_followuprains_z > labour_period_start_p5z)
+    p5z_is_false_break_p5z = np.logical_and(z_is_false_break_z, p5_is_false_break_p5z)
+    p5z_isnot_during_false_break_p5z = np.logical_not(p5z_is_false_break_p5z)
 
     ##wet sowing periods
     seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
     wet_seed_start_z = per.f_wet_seeding_start_date()
     wet_seed_len_z = np.sum(seed_period_lengths_pz, axis=0)
     wet_seed_end_z = wet_seed_start_z + wet_seed_len_z
-    period_is_wetseeding_p5z = (labour_period_start_p5z < wet_seed_end_z) * (labour_period_end_p5z > wet_seed_start_z)
+    period_is_wetseeding_p5z = (labour_period_start_p5z < wet_seed_end_z) * (labour_period_end_p5z > wet_seed_start_z) \
+                               * p5z_isnot_during_false_break_p5z
     ###add k axis
     period_is_wetseeding_p5zk = period_is_wetseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(wet_sown_landuses), axis=-1)
 
@@ -1177,7 +1212,8 @@ def f_sow_prov():
     ##currently we are saying that dry sowning cant occur between the brk of season and wet seeding start. This may or may not be correct (not if dry seeding occurs after the brk of the season it doesnt need to happen in the children seasons).
     dry_seed_start = pinp.crop['dry_seed_start']
     season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'],numpy=True)
-    period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)
+    period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)\
+                               * p5z_isnot_during_false_break_p5z
     ###add k axis
     period_is_dryseeding_p5zk = period_is_dryseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(dry_sown_landuses), axis=-1)
 

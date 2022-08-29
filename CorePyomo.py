@@ -361,9 +361,9 @@ def f_con_phasesow(model):
 
     Notes:
 
-        #. The requirement for seeding is based on v_phase_increment rather than v_phase_area
+        #. The requirement for seeding is based on v_phase_change_increase rather than v_phase_area
         #. a phase can only be sown in the phase_period for which the phase_increment is selected. If there is
-           insufficient seeding capacity then the selection of v_phase_increment must be made in a later phase_period.
+           insufficient seeding capacity then the selection of v_phase_change_increase must be made in a later phase_period.
 
     Note: this is an equals to constraint to stop the model sowing without a landuse so it can get poc and crop
           grazing (both of those activities are provided by seeding).
@@ -460,6 +460,9 @@ def f_con_biomass_transfer(model):
         p7_start = l_p7[0]
         p7_end = l_p7[-1]
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
+            #todo I (John) don't understand the inclusion of v_biomass_debit. It seems that, because a biomass
+            # debit can be carried forward, it allows stubble to be grazed in a p7 period prior to it coming
+            # available from f_rotation_biomass[q,s,p7]
             return -phspy.f_rotation_biomass(model,q,s,p7,k,l,z9) + macpy.f_late_seed_penalty(model,q,s,p7,k,l,z9) \
                    + cgzpy.f_grazecrop_biomass_penalty(model,q,s,p7,k,l,z9) \
                    - model.v_biomass_debit[q,s,p7,z9,k,l] * 1000 * (p7 != p7_end) \

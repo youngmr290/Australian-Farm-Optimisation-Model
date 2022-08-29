@@ -57,6 +57,14 @@ def f1_paspyomo_local(params, model):
                                    model.s_season_types, model.s_pastures, initialize=params['p_germination_p7p6lrzt'],
                                    default=0, mutable=False, doc='pasture germination for each rotation')
 
+    model.p_foo_removed_pas_reduce = pe.Param(model.s_season_periods, model.s_feed_periods, model.s_lmus, model.s_phases,
+                                   model.s_season_types, model.s_pastures, initialize=params['p_foo_removed_pas_reduce_p7p6lrzt'],
+                                   default=0, mutable=False, doc='foo change when a2 is reduced or annual pasture is increase.')
+
+    model.p_foo_added_annual_increase = pe.Param(model.s_season_periods, model.s_feed_periods, model.s_lmus, model.s_phases,
+                                   model.s_season_types, model.s_pastures, initialize=params['p_foo_added_annual_increase_p7p6lrzt'],
+                                   default=0, mutable=False, doc='foo change when a2 is reduced or annual pasture is increase.')
+
     model.p_foo_grn_reseeding = pe.Param(model.s_season_periods, model.s_feed_periods, model.s_lmus, model.s_phases,
                                          model.s_season_types, model.s_pastures, initialize=params['p_foo_grn_reseeding_p7p6lrzt'],
                                          default=0, mutable=False, doc='Change in grn FOO due to destocking and restocking of resown pastures')
@@ -167,6 +175,9 @@ def f_con_greenpas_within(model):
             return sum(model.v_phase_area[q,s,p7,z9,r,l] * (-model.p_germination[p7,p6,l,r,z9,t] - model.p_foo_grn_reseeding[p7,p6,l,r,z9,t])
                        for r in model.s_phases for p7 in model.s_season_periods
                        if pe.value(model.p_germination[p7,p6,l,r,z9,t])!=0 or model.p_foo_grn_reseeding[p7,p6,l,r,z9,t]!=0)         \
+                   + sum(model.p_foo_removed_pas_reduce[p7,p6,l,r,z9,t] * model.v_phase_change_reduce[q,s,p7,z9,r,l]
+                        - model.p_foo_added_annual_increase[p7,p6,l,r,z9,t] * model.p_phase_can_increase[p7,z9,r] * model.v_phase_change_increase[q,s,p7,z9,r,l] #todo the foo linked to v_phase_change will be removed in new pasture
+                        for r in model.s_phases for p7 in model.s_season_periods)                \
                    + sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z9,t] * model.p_foo_start_grnha[o,p6,l,z9,t]   \
                          - sum(model.v_greenpas_ha[q,s,f,g,o,p6_prev,l,z8,t] * model.p_foo_end_grnha[g,o,p6_prev,l,z8,t]
                                * model.p_parentz_provwithin_fp[p6_prev,z8,z9] for z8 in model.s_season_types)
@@ -191,6 +202,9 @@ def f_con_greenpas_between(model):
             return sum(model.v_phase_area[q,s9,p7,z9,r,l] * (-model.p_germination[p7,p6,l,r,z9,t] - model.p_foo_grn_reseeding[p7,p6,l,r,z9,t])
                        for r in model.s_phases for p7 in model.s_season_periods
                        if pe.value(model.p_germination[p7,p6,l,r,z9,t])!=0 or model.p_foo_grn_reseeding[p7,p6,l,r,z9,t]!=0)         \
+                    + sum(model.p_foo_removed_pas_reduce[p7,p6,l,r,z9,t] * model.v_phase_change_reduce[q,s9,p7,z9,r,l] #todo the foo linked to v_phase_change will be removed in new pasture
+                          - model.p_foo_added_annual_increase[p7,p6,l,r,z9,t] * model.p_phase_can_increase[p7,z9,r] * model.v_phase_change_increase[q,s9,p7,z9,r,l]
+                          for r in model.s_phases for p7 in model.s_season_periods)            \
                    + sum(model.v_greenpas_ha[q,s9,f,g,o,p6,l,z9,t] * model.p_foo_start_grnha[o,p6,l,z9,t]   \
                          - sum(model.v_greenpas_ha[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_foo_end_grnha[g,o,p6_prev,l,z8,t]
                                * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]

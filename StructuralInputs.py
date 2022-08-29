@@ -186,7 +186,7 @@ landuse['C']=general['i_idx_k1'] #all crops, used in stubble and mach (not used 
 landuse['All_pas']=general['i_idx_k2'] #used in reporting
 
 ##next set is used in pasture.py for mobilisation of below ground reserves and phase area
-landuse['pasture_sets']={'annual': {'a', 'ar'
+landuse['pasture_sets']={'annual': {'a', 'ar', 'a2'
                                 , 's', 'sr'
                                 , 'm'}
                         ,'lucerne':{'u', 'uc', 'ur'
@@ -196,8 +196,9 @@ landuse['pasture_sets']={'annual': {'a', 'ar'
                        }
 
 ##A1, E, P, G and C1 are just used in pas.py for germination ^can be removed when/if germination is calculated from sim
+## these are also used for PNC landuses.
 landuse['G']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'
-                , 'a', 'ar'
+                , 'a', 'ar', 'a2'
                 , 's', 'sr'
                 , 'sp'
                 , 'm'
@@ -212,10 +213,10 @@ landuse['G']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v'
                 , 'U'
                 , 'X'
                 , 'T', 'J'} #all landuses
-landuse['C1']={'B','O','W', 'N', 'L', 'F', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
-landuse['P']={'L', 'F', 'f','i', 'k', 'l', 'v'} #pulses
-landuse['E']={'B','O','W', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd'} #cereals
-landuse['A1']={'a', 's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
+landuse['C1']={'C1','B','O','W', 'N', 'L', 'F', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
+landuse['P']={'P','L', 'F', 'f','i', 'k', 'l', 'v'} #pulses
+landuse['E']={'E','B','O','W', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd'} #cereals
+landuse['A1']={'a', 'a2', 's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
 
 ##dry sown crops, used in phase.py for seeding param (not used for building rotations)
 landuse['dry_sown'] = {'bd', 'od', 'wd', 'zd','rd'}

@@ -72,8 +72,8 @@ def crop_residue_all(params, r_vals, nv):
 
     The total mass of crop residues at first
     grazing (harvest for stubble and an inputted date for fodder) is calculated as a product of the biomass,
-    harvest index and proportion havrvested (see f_biomass2residue). Overtime if the feed is not consumed it deteriorates in quality
-    and quantity due to adverse effects of weather and the impact of sheep trampling.
+    harvest index and proportion harvested (see f_biomass2residue). Over time if the feed is not consumed it
+    deteriorates in quality and quantity due to adverse effects of weather and the impact of sheep trampling.
 
     Residue production can be positively impacted by frost because frost during the plants flowing stage
     can damage cell tissue and reduce grain fill :cite:p:`RN144`. This results in less grain and more residue
@@ -89,7 +89,7 @@ def crop_residue_all(params, r_vals, nv):
     The proportion in each category was determined using AFO's residue simulator which leverages the AFO
     stock generator (documented in a future section) in combination with trial liveweight data (Riggall 2017 pers comm).
     Using AFO's stock generator, animals that reflect those in the paddock trial were simulated on large range of diet
-    qualities and daily intake, and liveweight change was determined. The livewight change of the simulated animals
+    qualities and daily intake, and liveweight change was determined. The liveweight change of the simulated animals
     was compared with the actual liveweight change in the paddock trial to determine the daily feed quality.
     Based on the number of
     sheep, the sheep intake, and the total crop residue available in the trial, the proportion of residue in each category

@@ -230,7 +230,14 @@ For seasons with a slow spring applying nitrogen to pasture can provide some val
 Rotation
 ^^^^^^^^
 Rotation area can be adjusted depending on the date of season break or other early indicators such as
-residual soil moisture from summer rainfall.
+residual soil moisture from summer rainfall. Choice of rotation phase can also be delayed at the start of the growing
+season for example to ensure it is not a false break. During this period of delay pasture will germinate on these
+paddocks and is able to be grazed (the level of germination is dependent on the rotation history of the paddock).
+
+Summer cropping
+^^^^^^^^^^^^^^^
+The flexible rotation design allows the rotation phase to be changed during the year thus providing the ability
+to represent summer cropping. For example, in a weather-year that has good end of season rainfall.
 
 Fodder crops
 ^^^^^^^^^^^^

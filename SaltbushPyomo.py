@@ -98,7 +98,7 @@ def f_con_slp_area(model):
     Removing the p7 axis makes the calculations in saltbush pyomo simpler.
     '''
     def slp_area(model,q,s,z,p7,l):
-        if pe.value(model.p_wyear_inc_qs[q, s]) and pinp.saltbush['i_saltbush_inc'] and pe.value(model.p_mask_childz_phase[p7,z]):
+        if pe.value(model.p_wyear_inc_qs[q, s]) and pinp.saltbush['i_saltbush_inc'] and pe.value(model.p_mask_season_p7z[p7,z]):
             return sum(-model.v_phase_area[q,s,p7,z,r,l] * model.p_phase_slp_area[r]
                        for r in model.s_phases if pe.value(model.p_phase_slp_area[r]) != 0)   \
                  + model.v_slp_ha[q,s,z,l] ==0

@@ -448,6 +448,8 @@ def f_property_inp_sa():
     mask_m = np.logical_and(duplicate_mask_m, mask_m)
     general['i_date_node_zm'] = general['i_date_node_zm'][:,mask_m]
     general['i_node_is_fvp'] = general['i_node_is_fvp'][mask_m]
+    general['i_phase_can_increase_kp7'] = general['i_phase_can_increase_kp7'][:,mask_m]
+    general['i_phase_can_reduce_kp7'] = general['i_phase_can_reduce_kp7'][:,mask_m]
 
 ##############################
 # handle inputs with p6 axis #
@@ -545,7 +547,13 @@ def f1_phases(mask_r=False, check=False):
     :param check: If True the function returns nothing - it is just used to check the correct rotations exist in rot.xl.
     '''
     ##rotation phases - read in from excel
-    phases_r = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header=None, index_col=0, engine='openpyxl').T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
+    try:
+        phases_r = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header=None, index_col=0, engine='openpyxl').T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
+    except FileNotFoundError:
+        import RotGeneration
+        RotGeneration.f_rot_gen(crop['user_crop_rot'])
+        phases_r = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header=None, index_col=0, engine='openpyxl').T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
+
     ###add variable that is the number of yrs in the rot phases
     sinp.general['phase_len'] = len(phases_r.columns)
 
