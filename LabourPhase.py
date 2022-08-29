@@ -313,7 +313,7 @@ def f_crop_monitoring():
     fixed_crop_monitor = pinp.labour['fixed_crop_monitoring']
     variable_crop_monitor = pinp.labour['variable_crop_monitoring']
     labour_periods_pz = per.f_p_dates_df().values
-    date_start_d = fixed_crop_monitor.columns.values
+    date_start_d = fixed_crop_monitor.columns.values.astype(float)
     date_start_zd = f1_adjust_start_dates(date_start_d)
     date_end_d = np.roll(date_start_d, -1)
     date_end_d[-1] = date_end_d[-1] + 364 #increment the first date by 1yr so it becomes the end date for the last period
