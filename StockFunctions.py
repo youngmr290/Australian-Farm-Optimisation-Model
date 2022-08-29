@@ -2905,9 +2905,11 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     of a class (D,S,Tw) are all the same weight (for a given nutrition profile), so the generator could split
     them accurately for BTRT based on LW.
 
-    Note: A distribution of liveweight be technically correct ie a given class of animal that follow a certain fs
-    will result in multiple final weights. However in AFO it only results in a single weight. A fix could be to add a
-    distribution to the final weights however this would significantly complicate debugging.
+    Note: A distribution of liveweight at the end of a period would be technically correct i.e. a given class of
+    animal that are offered a given feed supply for a period of time will result in spread of final weights, even
+    if all the animals started at the same weight. However, in AFO it only results in a single weight. A fix could
+    be to add a normal distribution to the final weights, however, this would significantly complicate debugging
+    because it would make following a class of animals between periods very difficult.
 
     :param ffcfw_dest_w8g: The LW at the end of the DVP for the animals that define each w9 constraint (in w8 axis position)
     :param ffcfw_source_w8g: The LW at the end of the DVP, of the animals to be distributed

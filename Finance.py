@@ -113,8 +113,8 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False, 
 
     Cashflow allocation always has a length of 1. Meaning that cost is allocated based on the start date when it is
     incurred. Interest is calculated from this date until the end of the cashflow periods. The reason for not
-    including a length is that cashflow for a give decision variable can not cross a season junction
-    otherwise some seasons do not incur the cashflow.
+    including a length is that cashflow for a give decision variable can not cross a node
+    otherwise the child weather years do not incur the cashflow.
 
     Working capital is tallied for each 'main' enterprise (controlled by user inputs).
     The working capital is accumulated from the most recent main income (across all enterprises) until the peak debt
@@ -173,17 +173,22 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False, 
     ##If both stk and crp are both big enterprises then wc is basically reset at the point of main income for both enterprises.
     ## Therefore, in real life, stk wc accumulates from just after harv (main income for crop) until just before shearing
     ## (peak debt for stk). And crp wc accumulates from just after shearing until just before harvest.
-    ##If only one enterprise is big then wc accumulates from just after the main income for that enterprise until just before the main income for that enterprise.
-    ###mask c0 included - enterprises are only included if they are main enterprises (if it is a small enterprise it doesnt need its own wc constraint)
+    ##If only one enterprise is big then wc accumulates from just after the main income for that enterprise until
+    ### just before the main income for that enterprise.
+    ##mask c0 included - enterprises are only included if they are main enterprises (if it is a small enterprise
+    ### it doesn't need its own wc constraint because the income will be insufficient to affect peak debt)
     crop_c0_inc = np.array([pinp.crop['i_crp_c0_inc']])
     stk_c0_inc = np.array([pinp.sheep['i_stk_c0_inc']])
     mask_c0_inc = np.concatenate([stk_c0_inc, crop_c0_inc]) #order of concat is important - needs to be the same as the c0 order in periods.py
     ###date of the most recent main income relative to stk peak debt
-    stk_previous_main_cashflow = np.max(start_of_cash_c0[mask_c0_inc]*(start_of_cash_c0<peakdebt_date_c0[0]%364), axis=0, keepdims=True)
-    crp_previous_main_cashflow = np.max(start_of_cash_c0[mask_c0_inc]*(start_of_cash_c0<peakdebt_date_c0[1]%364), axis=0, keepdims=True)
-    previous_main_cashflow = np.concatenate([stk_previous_main_cashflow,crp_previous_main_cashflow]) #order of concat is important - needs to be the same as the c0 order in periods.py
+    stk_previous_main_cashflow = np.max(start_of_cash_c0[mask_c0_inc] * (start_of_cash_c0<peakdebt_date_c0[0] % 364)
+                                        , axis=0, keepdims=True)
+    crp_previous_main_cashflow = np.max(start_of_cash_c0[mask_c0_inc] * (start_of_cash_c0<peakdebt_date_c0[1] % 364)
+                                        , axis=0, keepdims=True)
+    previous_main_cashflow = np.concatenate([stk_previous_main_cashflow, crp_previous_main_cashflow]) #order of concat is important - needs to be the same as the c0 order in periods.py
     ###check if date incurred falls between last main income (from either enterprise) and peak debt date
-    mask_wc_c0 = np.logical_and(date_incurred_c0%364 >= previous_main_cashflow, date_incurred_c0%364 <= peakdebt_date_c0%364)
+    mask_wc_c0 = np.logical_and(date_incurred_c0 % 364 >= previous_main_cashflow
+                                , date_incurred_c0 % 364 <= peakdebt_date_c0 % 364)
     final_wc_p7c0 = final_wc_p7c0 * mask_wc_c0
 
     ##get axis back into correct order - because all the other code was done before this function so rest of code expects different order
