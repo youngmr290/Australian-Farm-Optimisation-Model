@@ -3,6 +3,11 @@
 This module reads in rotation information that has been generated from RotGeneration.py and manipulates
 it to produce the rotation parameters.
 
+The flexible and detailed handling of rotation decisions allows the representation of paddock history on the
+current landuse to be represented as well as the tactical and strategical decisions that accompany rotation. Such
+as delaying the choice of rotation phase at the start of the growing season and changing rotation phase later in the
+growing season. Or even adding a summer crop if the season permits.
+
 author: young
 """
 
