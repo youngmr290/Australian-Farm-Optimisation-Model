@@ -276,7 +276,7 @@ def f1_boundarypyomo_local(params, model):
             ###constraint
             def f_off_lobound(model, q, s, k3, t, v, z, x, g3):
                 if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_offs_lobound[k3,t,v,z,x,g3]!=0\
-                        and any(model.p_mask_offs[k3,v,w8,z,x,g3] != 0 for w8 in model.s_lw_dams)):
+                        and any(model.p_mask_offs[k3,v,w8,z,x,g3] != 0 for w8 in model.s_lw_offs)):
                     return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3]
                                for k5 in model.s_k5_birth_offs for a in model.s_wean_times for n3 in model.s_nut_offs
                                for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
