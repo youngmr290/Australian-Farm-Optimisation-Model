@@ -125,7 +125,7 @@ def f_con_history_between(params, model):
         p7_end_gs1 = l_p7[pinp.general['i_gs_p7_end'][1]] #p7 period from growing season 1. This provides the history.
         l_q = list(model.s_sequence_year)
         q_prev = l_q[l_q.index(q) - 1]
-        if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_season_p7z[p7,z9]) and pe.value(model.p_inc_hist_gs1_con[p7,z9]):
+        if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_season_p7z[p7,z9]) and pe.value(model.p_inc_hist_gs1_con[p7,z9]) and params['hist_used'][h]:
             return sum(model.v_phase_area[q_prev,s8,p7_end_gs1,z8,r,l]*model.p_hist_prov[r,h] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
                        + model.v_phase_area[q_prev,s8,p7_end_gs1,z8,r,l] * model.p_hist_prov[r,h] * model.p_endstart_prov_qsz[q_prev,s8,z8]
                        for r in model.s_phases for s8 in model.s_sequence for z8 in model.s_season_types
