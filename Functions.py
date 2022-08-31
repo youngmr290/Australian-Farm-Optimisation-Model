@@ -771,7 +771,7 @@ def f_run_required(exp_data1, l_pinp):
 
     ##calc if inputs have been changed since AFO was run last (checks all pinp that are used in the exps)
     ###gets the pinp used in the current exp. l_pinp only includes the properties in the current exp but that is fine because the other properties will trigger re-run later.
-    l_pinp = l_pinp.unique()
+    l_pinp = l_pinp.dropna().unique()
     same_xl_inputs = True
     for pinp in l_pinp:
         same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(f'Property_{pinp}.xlsx')
@@ -847,7 +847,7 @@ def f_read_exp(pinp_req=False):
     trial_pinp = exp_data.loc[exp_group_bool, ('Drop', 'blank', 'blank', 'Pinp')]
     if pinp_req:
         print('- finished')
-        return trial_pinp.unique()
+        return trial_pinp.dropna().unique()
 
     ##drop irrelevant cols and set index
     exp_data = exp_data.iloc[:, exp_data.columns.get_level_values(0)!='Drop']
