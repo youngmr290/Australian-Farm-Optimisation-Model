@@ -242,12 +242,14 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     '''
     ##read phases
     phases_df = pinp.f1_phases()
+    mask_r = pinp.f1_phases(mask_r=True)
 
     ##read in base yields
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_yields = pinp.crop['yields']
         base_yields = zfun.f_seasonal_inp(base_yields, axis=1)
+        base_yields = base_yields.loc[mask_r,:]
         base_yields_rk_z = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
     else:
         ###Sim version
@@ -255,11 +257,10 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
         season_group_yz = f1_sim_inputs(sheet='SeasonGroup', index=0, header=0).stack()
         ###Convert y to z
         base_yields_rk_z = base_yields_rk_y.mul(season_group_yz, axis=1, level=0).replace(0, np.nan).groupby(axis=1, level=1).mean().replace(np.nan, 0)
-        ###Mask z axis
+        ###Mask z & r axis
         base_yields_rk_z = zfun.f_seasonal_inp(base_yields_rk_z, axis=1)
+        base_yields_rk_z = base_yields_rk_z.loc[mask_r,:]
 
-    mask_r = pinp.f1_phases(mask_r=True)
-    base_yields_rk_z = base_yields_rk_z.loc[mask_r,:]
     base_yields_rkz = base_yields_rk_z.stack()
 
     ##colate other info
@@ -406,6 +407,7 @@ def f_fert_req():
     '''
     ##read phases
     phases_df = pinp.f1_phases()
+    mask_r = pinp.f1_phases(mask_r=True)
 
     ##read in fert by soil
     fert_by_soil = f1_mask_lmu(pinp.crop['fert_by_lmu'], axis=1)
@@ -415,14 +417,14 @@ def f_fert_req():
         base_fert = pinp.crop['fert']
         base_fert = base_fert.T.set_index(['fert'], append=True).T.astype(float)
         base_fert = zfun.f_seasonal_inp(base_fert, axis=1)
+        base_fert = base_fert.loc[mask_r,:]
         base_fert_rk_zn = base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
     else:
         ###Sim version
         base_fert_rk_zn = f1_sim_inputs(sheet='Fert Applied', index=[0,1], header=[0,1])
-        ###Mask z axis
+        ###Mask z & r axis
         base_fert_rk_zn = zfun.f_seasonal_inp(base_fert_rk_zn, axis=1, level=0)
-    mask_r = pinp.f1_phases(mask_r=True)
-    base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
+        base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
 
     ##rename index
     base_fert_rk_zn.index.rename(['rot','landuse'],inplace=True)
@@ -455,6 +457,7 @@ def f_fert_passes():
     '''
     ##read phases
     phases_df = pinp.f1_phases()
+    mask_r = pinp.f1_phases(mask_r=True)
 
     ####read in passes
     if pinp.crop['user_crop_rot']:
@@ -462,14 +465,14 @@ def f_fert_passes():
         fert_passes = pinp.crop['fert_passes']
         fert_passes = fert_passes.T.set_index(['passes'], append=True).T.astype(float)
         fert_passes = zfun.f_seasonal_inp(fert_passes, axis=1)
+        fert_passes = fert_passes.loc[mask_r,:]
         fert_passes_rk_zn = fert_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
     else:
         ###Sim version
         fert_passes_rk_zn = f1_sim_inputs(sheet='No Fert Applications', index=[0,1], header=[0,1])
-        ###Mask z axis
+        ###Mask z & r axis
         fert_passes_rk_zn = zfun.f_seasonal_inp(fert_passes_rk_zn, axis=1, level=0)
-    mask_r = pinp.f1_phases(mask_r=True)
-    fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
+        fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
 
     ##rename index
     fert_passes_rk_zn.index.rename(['rot','landuse'],inplace=True)

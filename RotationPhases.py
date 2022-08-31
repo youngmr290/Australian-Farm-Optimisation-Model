@@ -306,6 +306,15 @@ def f_rot_hist_params(params):
     params['hist_prov'] = rot_prov.squeeze().to_dict()
     params['hist_req'] = rot_req.squeeze().to_dict()
 
+    ##create constraint mask - this is required when some rotations have been masked out (e.g unprofitbale rotation) - when rot are masked out it can result in nothing requiring a history therefore meaning the constraint needs to be skipped
+    phases_r = pinp.f1_phases().index #list of phases after the rot mask has been applied
+    masked_rot_req = rot_req[rot_req.index.get_level_values(0).isin(phases_r)] #mask out the removed rotations from req param
+    req_hist = masked_rot_req.index.get_level_values(1).unique() #get the unique histories after rot mask
+    ###histories that are required by any rotations
+    s_rotcon1 = pd.read_excel('Rotation.xlsx', sheet_name='rotation con1 set', header=None, index_col=0, engine='openpyxl').index
+    mask_hist = s_rotcon1.isin(req_hist)
+    params['hist_used'] = dict(zip(s_rotcon1, mask_hist))
+
     arrays_p7z = [keys_p7, keys_z]
     params['p_inc_hist_gs0_con_p7z'] = fun.f1_make_pyomo_dict(p_inc_hist_gs0_con_p7z*1, arrays_p7z)
     params['p_inc_hist_gs1_con_p7z'] = fun.f1_make_pyomo_dict(p_inc_hist_gs1_con_p7z*1, arrays_p7z)
@@ -334,6 +343,6 @@ def f_rot_hist4_params(params):
     ##hist4 prov - this is just the current landuse
     hist4_prov_r = phases_rotn_df.iloc[:, -1:]
     hist4_prov_r = hist4_prov_r.assign(prov= 1)  # add the param value +1 which is the require value in pyomo
-    hist4_prov_rh4 = hist4_prov_r.set_index([5], append=True)
+    hist4_prov_rh4 = hist4_prov_r.set_index(hist4_prov_r.columns[0], append=True) #add landuse as index level
     params['hist4_prov'] = hist4_prov_rh4.squeeze().to_dict()
 
