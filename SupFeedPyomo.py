@@ -27,10 +27,10 @@ def f1_suppyomo_local(params, model):
     ############
     # variable #
     ############
-    model.v_buy_grain = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
-                               doc='tonnes of grain in each pool purchased for sup feeding')
+    model.v_buy_product = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
+                               doc='tonnes of grain/baled product in each pool purchased for sup feeding')
     model.v_sup_con = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_crops, model.s_grain_pools, model.s_feed_pools, model.s_feed_periods,
-                             bounds=(0,None), doc='tonnes of grain consumed in each pool')
+                             bounds=(0,None), doc='tonnes of grain/baled product consumed in each pool')
 
     #########
     #param  #
@@ -68,7 +68,7 @@ def f1_suppyomo_local(params, model):
                                     model.s_crops, model.s_biomass_uses, initialize=params['buy_grain_wc'], default = 0.0, doc='wc to buy grain from neighbour')
 
     ##buy_grain_prov_mz
-    model.p_buy_grain_prov = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['buy_grain_prov_p7z'], default = 0.0, doc='phase periods when buying grain provides into grain transfer (this param exists so that grain is only provided when it is purchased - otherwise it could provide grain in a period when it did not pay e.g. get free grain)')
+    model.p_buy_product_prov = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['buy_grain_prov_p7z'], default = 0.0, doc='phase periods when buying grain/baled product provides into grain transfer (this param exists so that grain is only provided when it is purchased - otherwise it could provide grain in a period when it did not pay e.g. get free grain)')
 
     ##selectivity of sup to pasture when stock are being trail fed
     model.p_max_sup_selectivity = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['max_sup_selectivity_p6z'], default = 0.0, doc='link between sup and pasture consumption when trail feeding')
