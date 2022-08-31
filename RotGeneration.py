@@ -144,7 +144,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
     print('Running rotation generator')
     yr0 = np.array(['b', 'o', 'w', 'f', 'l', 'z','r','of'#, 'h'- not included in v1 to speed calibration process
                    , 'bd','wd','rd','zd'
-                   , 'a', 'ar', 'a2'
+                   , 'a', 'ar'
                    , 's', 'sr'])
                    # , 'm'
                     # , 'u', 'ur'
@@ -290,11 +290,22 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
     tindex=np.all(np.isin(phases[:,:], ['T','J','t','j']), axis=1)
     phases = phases[~tindex]
 
-    ##################
-    #continuous phase#
-    ##################
+    ########################
+    #continuous phase & pnc#
+    ########################
     sp=np.array(['SP','SP','SP','SP','sp'])
     phases = np.concatenate((phases, [sp])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+
+    pnc=np.array([['G','G','G','A','a2']
+                 ,['G','G','A','N','a2']
+                 ,['G','G','A','E','a2']
+                 ,['G','G','A','OF','a2']
+                 ,['G','G','C1','N','a2']
+                 ,['G','G','C1','E','a2']
+                 ,['G','G','C1','P','a2'] #Note APa doesn't exist therefore only necessary option is CPa
+                 ,['G','G','C1','OF','a2']
+                 ])
+    phases = np.concatenate((phases, pnc))
 
     # tc=np.array(['tc','tc','tc','tc','tc'])
     # phases = np.concatenate((phases, [tc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
