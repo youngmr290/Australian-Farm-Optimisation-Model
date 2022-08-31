@@ -35,14 +35,14 @@ def f1_croppyomo_local(params, model):
     model.v_use_biomass = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_lmus, model.s_biomass_uses, bounds=(0,None),
                                 doc='tonnes of biomass in each use category')
 
-    model.v_sell_grain = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
-                                doc='tonnes of grain in each pool sold')
+    model.v_sell_product = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
+                                doc='tonnes of grain/baled product in each pool sold')
 
-    model.v_grain_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
-                                doc='tonnes of grain in debt (will need to be purchased or provided from harvest)')
+    model.v_product_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
+                                doc='tonnes of grain/baled product in debt (will need to be purchased or provided from harvest)')
 
-    model.v_grain_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
-                                doc='tonnes of grain in credit (can be used for sup feeding or sold)')
+    model.v_product_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
+                                doc='tonnes of grain/baled product in credit (can be used for sup feeding or sold)')
 
     model.v_biomass_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_lmus, bounds=(0,None),
                                 doc='tonnes of grain in debt (will need to be purchased or provided from harvest)')
