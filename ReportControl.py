@@ -885,7 +885,7 @@ def f_report(processor, trials, non_exist_trials):
                 cols =[0,1,8, 2, 3] #q, s, z, k2, t
             else:
                 index =[4] #v
-                cols =[0,1,8, 2, 3, 7] #q, s, z, k2, t, w
+                cols =[0,1,8, 2, 3] #q, s, z, k2, t
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -930,7 +930,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_qsk3k5tvnwziaxyg3'
             arith = 2
             index =[5]                  #DVP
-            cols =[8, 13, 11, 2, 3, 4, 7]   #z, g3, Gender, dam age, BTRT, t, w
+            cols =[8, 13, 11, 2, 3, 4]   #z, g3, Gender, dam age, BTRT, t
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
