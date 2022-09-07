@@ -139,9 +139,8 @@ def f_con_saltbush_between(model):
         if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_childz_between_fp[p6,z9]) and pinp.saltbush['i_saltbush_inc']:
             return - model.v_slp_ha[q,s9,z9,l] * model.p_max_growth_per_ha[z9,p6,l]  \
                    - sum(model.v_tonnes_sb_transfer[q,s8,z8,p6_prev,l] * model.p_sb_transfer_provide[z8,p6_prev]
-                         * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
-                         + model.v_tonnes_sb_transfer[q,s8,z8,p6_prev,l] * model.p_sb_transfer_provide[z8,p6_prev]
-                         * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
+                         * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
+                         * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
                          for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)  \
                    + sum(model.v_tonnes_sb_consumed[q,s9,z9,p6,f,l] * 1000 for f in model.s_feed_pools)     \
                    + model.v_tonnes_sb_transfer[q,s9,z9,p6,l] * 1000 <=0
