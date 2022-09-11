@@ -7135,9 +7135,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##number of mated animals as a proportion of the dams in each slice that has initial numbers == 1
     ### calculated from the number of ewes mated total (across a1, e1, b1 & y axis) per ewe in the slice.
     ### This is designed to be the number mated equivalent of the number of foetuses per ewe
-    n_mated_tpg1 = np.sum(animal_mated_b1g1 * o_numbers_end_tpdams, axis=(a1_pos, e1_pos, b1_pos, y_pos), keepdims=True)
+    n_mated_tpg1 = animal_mated_b1g1 * o_numbers_end_tpdams
     r_n_mated_tvg1 = sfun.f1_p2v(n_mated_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, 1,
                                 on_hand_tp=True, period_is_tp=period_is_matingend_pa1e1b1nwzida0e0b0xyg1)
+    n_mated_tpg1 = np.sum(n_mated_tpg1, axis=(a1_pos, e1_pos, b1_pos, y_pos), keepdims=True)
     ###update periods that are not mating with mating numbers
     a_matingv_tvg1 =  np.maximum.accumulate(np.any(r_n_mated_tvg1 != 0, axis=b1_pos, keepdims=True)
                                             * index_va1e1b1nwzida0e0b0xyg1, axis=p_pos) #create association pointing at previous/current mating dvp.
