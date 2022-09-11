@@ -237,6 +237,7 @@ def create_sa():
     sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
     sav['bnd_rotn_inc'] = '-'   #SA to turn on the phase area bounds
     sav['bnd_sr_inc'] = '-'   #SA to turn on the stocking rate bounds
+    sav['bnd_sup_per_dse'] = '-'   #SA to control the supplement per dse (kg/dse)
     sav['bnd_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated
     sav['est_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #estimated proportion of dams mated - used when bnd_propn is default "-"
     sav['bnd_drys_sold_o'] = np.full(pinp.sheep['i_dry_sales_forced_o'].shape, '-', dtype=object)   #SA to force drys to be sold
