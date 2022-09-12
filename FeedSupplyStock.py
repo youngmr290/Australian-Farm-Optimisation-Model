@@ -390,7 +390,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
         t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = pkl_fs['fs']['dams']
         t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 = pkl_fs['fs']['offs']
 
-        ###confinement info - only use if n=1 and fs_use_pkl (above) is true
+        ###confinement info - only use if n=1 and fs_use_pkl (above) is true otherwise fs optimisation could get stuck at local optimum
         t_confinement_tpa1e1b1nwzida0e0b0xyg0 = fun.f_update(t_confinement_pa1e1b1nwzida0e0b0xyg0[na], pkl_fs['confinement']['sire'], n_fs_sire==1)
         t_confinement_stpa1e1b1nwzida0e0b0xyg1 = fun.f_update(t_confinement_pa1e1b1nwzida0e0b0xyg1[na], pkl_fs['confinement']['dams'], n_fs_dams==1)
         t_confinement_stpa1e1b1nwzida0e0b0xyg3 = fun.f_update(t_confinement_pa1e1b1nwzida0e0b0xyg3[na], pkl_fs['confinement']['offs'], n_fs_offs==1)

@@ -8,8 +8,8 @@ represented as different decision variables which allows the optimisation of a w
 
 Data is generated for the following components:
 
-    * Animal live weight and sale values.
-    * Fleece production data, both quantity and quality (including the impact of ewe live weight profile during
+    * Animal liveweight and sale values.
+    * Fleece production data, both quantity and quality (including the impact of the ewe liveweight profile during
       pregnancy on the lifetime performance of the progeny).
     * Dam reproduction levels.
     * Mortality rates of dams, progeny and dry animals.
@@ -40,8 +40,9 @@ The prediction equations included in the data generator can be selected from any
     #. GrazPlan equations as documented in Freer et al. 2012, which are an improved version of the
        Australian Feed Standards (SCA 1990).
     #. Research trials carried out by Murdoch University, DPIRD & DPI Victoria that have quantified
-       the impact of changing nutrition on production. This research began with the Lifetime Wool Trial (refs here) but has continued with a suite of other projects (refs here)
-    #. A selection of other sources that have developed equations to predict animal performance. Including:
+       the impact of changing nutrition on production. This research began with the Lifetime Wool
+       Trial :cite:p:`young2011,thompson2004` but has continued with a suite of other projects :cite:p:`behrendt2019`.
+    #. A selection of other sources that have developed equations to predict animal performance including:
 
         a. Blaxter & Clapperton for enteric methane emissions
         b. NGGI for emissions including methane and nitrous oxide
@@ -54,7 +55,7 @@ The relationships are calculated for a range of age groups for each of the follo
     #. Young at foot - male and female progeny prior to weaning.
     #. Offspring - female or male progeny of the dams from post weaning until sale.
 
-For each animal group there are a range of classes represented and for each class the range of optimised
+For each animal group there are a range of classes represented, and for each class the range of optimised
 management decisions are included. The classes and the management decisions are represented as axes (or dimensions)
 of a multi-dimensional numpy array. Note: numpy, like python, works on a base 0 system so the numbering of the
 slices of each axis begins at 0. The array axes are:
@@ -68,17 +69,17 @@ the pregnancy status of the dam is identified and if it is a separate activity i
 to a dry dam, whereas prior to scanning they are clustered and must be managed the same. The timing of the DVPs
 is based on periods when the management groups change, this includes pre-joining, scanning and birth.
 Animal sale options can be defined for each DVP. The selling opportunity is represented by the t axis and
-(in version 1) there is opportunity for a maximum of 2 sale time per DVP for dams and offspring. Although
+(in version 1) there is opportunity for a maximum of 2 sale times per DVP for dams and offspring. Although
 these selling opportunities can be masked from the matrix if sales in a particular DVP is not desired.
 
-For the dams the annual cycle starts with prejoining and the other DVPs are based on the reproduction calendar:
+For the dams, the annual cycle starts with prejoining and the other DVPs are based on the reproduction calendar:
 early pregnancy (period_between_prejoinscan), late pregnancy (period_between_scanbirth), lactation and post weaning
 recovery (period_between_birthprejoin). The Dams sale time is just after the main shearing, and additionally dry
 ewes can be sold after scanning.
 
-For the offspring (dry stock) the annual cycle starts with shearing. The offspring only require one DVP
+For the offspring (dry stock), the annual cycle starts with shearing. The offspring only require one DVP
 for the year because the animals do not change class and require distributing during the year as do the dams.
-The 2 sale options for Offspring can be input as a combination of either a target date or a target liveweight
+The 2 sale options for offspring can be input as a combination of either a target date or a target liveweight,
 and the animals can be shorn at sale (retained animals are shorn at the main shearing).
 
 The nutrition optimisation structure

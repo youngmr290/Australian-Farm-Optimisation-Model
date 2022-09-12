@@ -2,7 +2,7 @@ Crop and pasture system
 ========================
 
 In this section a brief overview of the crop and pasture system represented in AFO will be provided, followed
-by a detailed description of the phase module in AFO. Cropping is often a large component of
+by a detailed description of the phase module. Cropping is often a large component of
 broadacre farming. Crops are primarily established with a goal of harvesting and selling the grain for
 human or animal consumption. However, crops can also be used as a fodder feed for farm livestock. As
 described in the rotation chapter, the rotation phases specify both the current land use and the land

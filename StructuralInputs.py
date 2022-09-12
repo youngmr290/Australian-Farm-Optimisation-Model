@@ -123,7 +123,9 @@ def f_structural_inp_sa():
 
     ##SAV
     structuralsa['i_nut_spread_n1'] = fun.f_sa(structuralsa['i_nut_spread_n1'], sen.sav['nut_spread_n1'],5)
+    structuralsa['i_confinement_n1'] = fun.f_sa(structuralsa['i_confinement_n1'], sen.sav['confinement_n1'],5)
     structuralsa['i_nut_spread_n3'] = fun.f_sa(structuralsa['i_nut_spread_n3'], sen.sav['nut_spread_n3'],5)
+    structuralsa['i_confinement_n3'] = fun.f_sa(structuralsa['i_confinement_n3'], sen.sav['confinement_n3'],5)
     structuralsa['i_n1_len'] = fun.f_sa(structuralsa['i_n1_len'], sen.sav['n_fs_dams'],5)
     structuralsa['i_n3_len'] = fun.f_sa(structuralsa['i_n3_len'], sen.sav['n_fs_offs'],5)
     structuralsa['i_w_start_len1'] = fun.f_sa(structuralsa['i_w_start_len1'], sen.sav['n_initial_lw_dams'],5)
@@ -143,6 +145,7 @@ def f_structural_inp_sa():
     structuralsa['i_fs_create_number'] = fun.f_sa(structuralsa['i_fs_create_number'], sen.sav['fs_create_number'],5)
     structuralsa['i_fs_use_pkl'] = fun.f_sa(structuralsa['i_fs_use_pkl'], sen.sav['fs_use_pkl'],5)
     structuralsa['i_fs_use_number'] = fun.f_sa(structuralsa['i_fs_use_number'], sen.sav['fs_use_number'],5)
+    structuralsa['i_use_pkl_condensed_start_condition'] = fun.f_sa(structuralsa['i_use_pkl_condensed_start_condition'], sen.sav['use_pkl_condensed_start_condition'],5)
     structuralsa['i_r2adjust_inc'] = fun.f_sa(structuralsa['i_r2adjust_inc'], sen.sav['r2adjust_inc'],5)
 
     ##report controls
@@ -183,7 +186,7 @@ landuse['C']=general['i_idx_k1'] #all crops, used in stubble and mach (not used 
 landuse['All_pas']=general['i_idx_k2'] #used in reporting
 
 ##next set is used in pasture.py for mobilisation of below ground reserves and phase area
-landuse['pasture_sets']={'annual': {'a', 'ar'
+landuse['pasture_sets']={'annual': {'a', 'ar', 'a2'
                                 , 's', 'sr'
                                 , 'm'}
                         ,'lucerne':{'u', 'uc', 'ur'
@@ -193,26 +196,32 @@ landuse['pasture_sets']={'annual': {'a', 'ar'
                        }
 
 ##A1, E, P, G and C1 are just used in pas.py for germination ^can be removed when/if germination is calculated from sim
+## these are also used for PNC landuses.
 landuse['G']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'
-                , 'a', 'ar'
+                , 'a', 'ar', 'a2'
                 , 's', 'sr'
                 , 'sp'
                 , 'm'
                 , 'u', 'ur'
                 , 'x', 'xr'
                 , 'j', 't', 'jr', 'tr'
-                , 'G', 'Y', 'B','O','W', 'N', 'L', 'F', 'OF'
-                , 'A', 'AR'
-                , 'S', 'SR'
+                , 'G', 'Y', 'B','O','O1','W', 'N', 'L', 'F', 'OF'
+                , 'A', 'A1', 'A2', 'AR'
+                , 'S', 'S1', 'SR1'
                 , 'SP'
                 , 'M'
                 , 'U'
                 , 'X'
                 , 'T', 'J'} #all landuses
-landuse['C1']={'B','O','W', 'N', 'L', 'F', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
-landuse['P']={'L', 'F', 'f','i', 'k', 'l', 'v'} #pulses
-landuse['E']={'B','O','W', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd'} #cereals
-landuse['A1']={'a', 's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
+landuse['C1']={'C1','B','O','O1','W', 'N', 'L', 'F', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
+landuse['P']={'P','L', 'F', 'f','i', 'k', 'l', 'v'} #pulses
+landuse['E']={'E','B','O','O1','W', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd'} #cereals
+landuse['Ag0']={'a', 'a2', 's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
+landuse['Ag1']={'Ag1', 'A1', 'AR', 'a', 'ar'} #all non-spraytopped annual sets that can exist in yr1
+landuse['Ag2']={'Ag2', 'A', 'AR', 'A2', 'A1'
+                , 'S', 'S1','SR1'
+                , 'M'} #all annual sets that can exist in yr2
+landuse['Sg1']={'Sg1', 'S','S1','SR1', 's', 'sr'} #all spraytopped annual sets that can exist in yr1
 
 ##dry sown crops, used in phase.py for seeding param (not used for building rotations)
 landuse['dry_sown'] = {'bd', 'od', 'wd', 'zd','rd'}
@@ -224,19 +233,23 @@ landuse['Hay']={'h'}
 ##########################################
 #Landuse sets used in to build rotations #
 ##########################################
-landuse['A']={'a', 'A', 'AR'
+landuse['A1']={'a', 'A1'} #annual yr1
+landuse['A2']={'A2', 'A1', 'AR'} #annual yr2
+landuse['A']={'A', 'A2'
                 , 'S'
                 , 'M'} #annual
+# landuse['A']={'A', 'A3'} #annual
 landuse['AR']={'ar', 'AR'} #resown annual
 landuse['B']={'B', 'b', 'bd'} #barleys
 landuse['J']={'J', 'j', 'jr'} #tedera
 landuse['M']={'m', 'M'} #manipulated pasture
 landuse['N']={'N', 'z', 'zd', 'r', 'rd'} #canolas
-landuse['O']={'O', 'OF', 'h', 'o', 'od'} #oats
+landuse['O1']={'O1', 'h', 'o', 'od'} #oats - only in yr1 doesnt include foder
+landuse['O']={'O', 'O1', 'OF', 'h', 'o', 'od', 'of'} #oats
 landuse['OF']={'OF', 'of'} #oats fodder
 landuse['F']={'F', 'f'} #faba
 landuse['L']={'L', 'l'} #lupin
-landuse['S1']={'S1','s'} #spray topped pasture yr1 - needs to be numbered so that s cannot provide A in yr1
+landuse['S1']={'S1','s'} #spray topped pasture yr1 - needs to be numbered so that sr cannot provide S in yr1
 landuse['SR1']={'SR1','sr'} #spray topped pasture yr1
 landuse['S']={'S','S1','SR1'} #spray topped pasture yr1
 landuse['SP']={'SP','sp'} #salt land pasture (can only be in a cont rotation)

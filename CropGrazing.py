@@ -1,11 +1,11 @@
 '''
 Author: Young
 
-Crop grazing is an option that allows sheep to graze green crop, typically from June until august
-however, this range can be altered in the inputs. Green crops
+Crop grazing is an option that allows sheep to graze green crop, typically from June until August
+however this range can be altered in the inputs. Green crops
 have a higher energy content than green pasture and grow more vertical allowing for easier grazing,
 meaning a lower crop FOO is required to meet the livestock needs. However, a yield and stubble penalty is
-associated with this activity. Trials have recorded varying yield penalties from -15% to +15% but the
+associated with this activity. Trials have recorded varying yield penalties from -15% to +15%, but the
 consensus is that the yield penalty is minimal if the crop is grazed early and lightly. The level of the yield
 penalty is an input which can be easily changed.
 '''
@@ -62,9 +62,9 @@ def f_cropgraze_DM(total_DM=False):
 
     The total DM is calculated from the initial DM plus growth minus the consumption. The initial DM is an inputted amount
     which represents germination and first growth over an establishing period. No grazing can occur during the establishing
-    period. After the establishing period the crop grows at an inputted rate per day and a proportion of this growth
+    period. After the establishing period, the crop grows at an inputted rate per day and a proportion of this growth
     becomes available for consumption. Total DM (used to calc relative availability) is calculated assuming that all
-    the crop available for grazing is consumed. Depending on grazing management this may under estimate DM
+    the crop available for grazing is consumed. Depending on grazing management this may underestimate DM
     however, crop grazing has high availability at low DM levels (due to upright growth) so this limitation is likely
     to be minor.
 
@@ -81,7 +81,7 @@ def f_cropgraze_DM(total_DM=False):
 
     Both DM parameters are built with a z8z9 axis. This is because provision of crop grazing is hooked up to the
     seeding activity which is not transferred to future periods and thus doesn't uncluster but seeding provides
-    crop DM in future periods which may be in nodes. Thus a z8z9 axis is required so that seeding in z[0] provides
+    crop DM in future periods which may be in nodes. Therefore, a z8z9 axis is required so that seeding in z[0] provides
     crop grazing in z[1] and other children.
 
     P5 axis is required to represent sowing time. Sowing time impacts the DM provided in each p6 period.
@@ -310,7 +310,7 @@ def crop_md_vol(nv, r_vals):
 
 def f_cropgraze_biomass_penalty():
     '''
-    biomass penalty associated with the amount of crop consumed.
+    Biomass penalty associated with the amount of crop consumed.
 
     The yield penalty is an inputted proportion of the dry matter consumed. Below it is converted to a biomass
     penalty.

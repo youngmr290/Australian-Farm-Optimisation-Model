@@ -91,14 +91,14 @@ def f1_saltbushpyomo_local(params,model):
 ###################
 def f_con_slp_area(model):
     '''
-    Constrains the slp area (used in con_greenpas) on each LMU based on the rotation selected.
+    Constrains the SLP area (used in con_greenpas) on each LMU based on the rotation selected.
 
     This constraint essentially calculates the hectares of salt land pasture based on the rotation phases selected. The
-    p7 axis is not required on v_slp_area because slp is a continuous phases and therefore exists in all p7.
+    p7 axis is not required on v_slp_area because SLP is a continuous phase and therefore exists in all p7.
     Removing the p7 axis makes the calculations in saltbush pyomo simpler.
     '''
     def slp_area(model,q,s,z,p7,l):
-        if pe.value(model.p_wyear_inc_qs[q, s]) and pinp.saltbush['i_saltbush_inc'] and pe.value(model.p_mask_childz_phase[p7,z]):
+        if pe.value(model.p_wyear_inc_qs[q, s]) and pinp.saltbush['i_saltbush_inc'] and pe.value(model.p_mask_season_p7z[p7,z]):
             return sum(-model.v_phase_area[q,s,p7,z,r,l] * model.p_phase_slp_area[r]
                        for r in model.s_phases if pe.value(model.p_phase_slp_area[r]) != 0)   \
                  + model.v_slp_ha[q,s,z,l] ==0
@@ -139,9 +139,8 @@ def f_con_saltbush_between(model):
         if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_childz_between_fp[p6,z9]) and pinp.saltbush['i_saltbush_inc']:
             return - model.v_slp_ha[q,s9,z9,l] * model.p_max_growth_per_ha[z9,p6,l]  \
                    - sum(model.v_tonnes_sb_transfer[q,s8,z8,p6_prev,l] * model.p_sb_transfer_provide[z8,p6_prev]
-                         * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
-                         + model.v_tonnes_sb_transfer[q,s8,z8,p6_prev,l] * model.p_sb_transfer_provide[z8,p6_prev]
-                         * model.p_parentz_provbetween_fp[p6_prev,z8,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
+                         * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
+                         * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
                          for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)  \
                    + sum(model.v_tonnes_sb_consumed[q,s9,z9,p6,f,l] * 1000 for f in model.s_feed_pools)     \
                    + model.v_tonnes_sb_transfer[q,s9,z9,p6,l] * 1000 <=0

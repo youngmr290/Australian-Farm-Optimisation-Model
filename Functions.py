@@ -307,7 +307,7 @@ def f_update(existing_value, new_value, mask_for_new):
     ##convert '-' to 0 (because '-' * False == '' which causes and error when you add to existing value)
     ##need a try and except in case the new value is not a numpy array (ie it is a single value)
     try:
-        if np.any(new_value.astype('object')=='-'): #needs to be an object to perform elementwise comparison
+        if new_value.dtype==object and np.any(new_value=='-'): #needs to be an object to perform elementwise comparison
                 new_value[new_value=='-'] = 0
                 new_value = new_value.astype(float) #need to convert to number because if str it chucks error below
     except AttributeError:
@@ -594,7 +594,7 @@ def f_comb(n,k):
     combinations = factorial[n]/(factorial[k]*factorial[n-k])
     return combinations
 
-def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None):
+def f_dynamic_slice(arr, axis, start, stop, step=1, axis2=None, start2=None, stop2=None, step2=1):
     ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
     if type(arr)==int:
         return arr
@@ -602,13 +602,13 @@ def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None)
         ##first axis slice if it is not singleton
         if arr.shape[axis]!=1:
             sl = [slice(None)] * arr.ndim
-            sl[axis] = slice( start, stop)
+            sl[axis] = slice( start, stop, step)
             arr = arr[tuple(sl)]
         if axis2 is not None:
             ##second axis slice if required and not singleton
             if arr.shape[axis2] != 1:
                 sl = [slice(None)] * arr.ndim
-                sl[axis2] = slice( start2, stop2)
+                sl[axis2] = slice( start2, stop2, step2)
                 arr = arr[tuple(sl)]
         return arr
 
@@ -771,7 +771,7 @@ def f_run_required(exp_data1, l_pinp):
 
     ##calc if inputs have been changed since AFO was run last (checks all pinp that are used in the exps)
     ###gets the pinp used in the current exp. l_pinp only includes the properties in the current exp but that is fine because the other properties will trigger re-run later.
-    l_pinp = l_pinp.unique()
+    l_pinp = l_pinp.dropna().unique()
     same_xl_inputs = True
     for pinp in l_pinp:
         same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(f'Property_{pinp}.xlsx')
@@ -847,7 +847,7 @@ def f_read_exp(pinp_req=False):
     trial_pinp = exp_data.loc[exp_group_bool, ('Drop', 'blank', 'blank', 'Pinp')]
     if pinp_req:
         print('- finished')
-        return trial_pinp.unique()
+        return trial_pinp.dropna().unique()
 
     ##drop irrelevant cols and set index
     exp_data = exp_data.iloc[:, exp_data.columns.get_level_values(0)!='Drop']
@@ -996,7 +996,7 @@ def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
         ##uncluster z so that each season gets complete information
         index_z = f_expand(np.arange(maskz8.shape[z_pos]), z_pos)
         a_zcluster = np.maximum.accumulate(index_z * maskz8, axis=z_pos)
-        a_zcluster, param = np.broadcast_arrays(a_zcluster, param)
+        a_zcluster = np.broadcast_to(a_zcluster, param.shape)
         param = np.take_along_axis(param, a_zcluster, axis=z_pos)
 
         ##add index if pandas

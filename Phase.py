@@ -4,8 +4,8 @@ author: young
 
 The phase module is driven by the inputs [#i]_ for yield production, fertiliser and chemical
 requirements for each rotation phase on each LMU. For pasture phases this module only generates data for
-fertiliser, chemical and seed (if resown) requirement. Growth, consumption etc is generated in the
-pasture module. Each phase provide a given amount of biomass depending on the rotation history, LMU, frost,
+fertiliser, chemical and seed (if resown) requirement. Growth, consumption, etc is generated in the
+pasture module. Each phase provides a given amount of biomass depending on the rotation history, LMU, frost,
 and arable proportion. AFO can then optimise the area of each rotation
 on each LMU and the best way to utilise the biomass of each rotation phase.
 Biomass can be either harvested for grain, baled for hay or grazed as standing fodder.
@@ -95,9 +95,9 @@ def f_farmgate_grain_price(r_vals={}):
     Calculates the grain price received by the farmer.
 
     The farm gate grain price [#]_ is calculated for each grain pool. Different grain pools are included to
-    represent different grain qualities. Depending on the grain variety used, the season and the farmers skill
+    represent different grain qualities. Depending on the grain variety used, and the season and the farmers skill,
     the grain produced will change quality and hence receive a different price. The price received by the farmer is the
-    market price received less any selling costs. The selling costs includes the transport cost which are
+    market price received less any selling costs. The selling costs includes the transport costs which are
     dependent on the location of the modelled farm, and the selling fees which often includes receival
     and testing fees, and government levies.
 
@@ -242,12 +242,14 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     '''
     ##read phases
     phases_df = pinp.f1_phases()
+    mask_r = pinp.f1_phases(mask_r=True)
 
     ##read in base yields
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_yields = pinp.crop['yields']
         base_yields = zfun.f_seasonal_inp(base_yields, axis=1)
+        base_yields = base_yields.loc[mask_r,:]
         base_yields_rk_z = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
     else:
         ###Sim version
@@ -255,11 +257,10 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
         season_group_yz = f1_sim_inputs(sheet='SeasonGroup', index=0, header=0).stack()
         ###Convert y to z
         base_yields_rk_z = base_yields_rk_y.mul(season_group_yz, axis=1, level=0).replace(0, np.nan).groupby(axis=1, level=1).mean().replace(np.nan, 0)
-        ###Mask z axis
+        ###Mask z & r axis
         base_yields_rk_z = zfun.f_seasonal_inp(base_yields_rk_z, axis=1)
+        base_yields_rk_z = base_yields_rk_z.loc[mask_r,:]
 
-    mask_r = pinp.f1_phases(mask_r=True)
-    base_yields_rk_z = base_yields_rk_z.loc[mask_r,:]
     base_yields_rkz = base_yields_rk_z.stack()
 
     ##colate other info
@@ -301,7 +302,7 @@ def f_biomass2product():
     Harvest index is the amount of the target product (grain or hay) per unit of biomass at harvest (which is the unit of the biomass DV).
     Harvest proportion accounts for grain that is split/spilt during the harvesting process.
     Biomass scalar is the total biomass production from the area baled net of respiration losses relative
-    to biomass at harvest if not baled. Which is to account for difference in biomass between harvest and baling time.
+    to biomass at harvest if not baled. This is to account for difference in biomass between harvest and baling time.
 
     Crop yield can also be adversely impacted by frost during the plants flowing stage :cite:p:`RN144`. Thus,
     the harvest index of each rotation phase is adjusted by a frost factor. The frost factor can be customised for each
@@ -376,7 +377,7 @@ def f1_fert_cost_allocation():
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     ##calc interest and allocate to cash period - needs to be numpy
-    fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2)
+    fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2, is_phase_cost=True)
     ###convert to df
     new_index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, start_df.index])
     fert_cost_allocation_p7zn = pd.Series(fert_cost_allocation_p7zn.ravel(), index=new_index_p7zn)
@@ -392,7 +393,7 @@ def f_fert_req():
 
     The fertiliser requirement is broken into two sections. Firstly, fixed fertiliser which is the
     amount of each fertiliser that applies to a land use independent of the phase history (e.g. lime
-    which is typically applied routinely irrelevant of the land use history). Secondly, variable
+    which is typically applied routinely, irrelevant of the land use history). Secondly, variable
     fertiliser which is applied to a rotation phase based on both the current land use and the
     history. This method is necessary because crops have varying nutrient requirements, have
     varying methods to obtain nutrients from the soil and leave the soil in varying states (e.g.
@@ -406,6 +407,7 @@ def f_fert_req():
     '''
     ##read phases
     phases_df = pinp.f1_phases()
+    mask_r = pinp.f1_phases(mask_r=True)
 
     ##read in fert by soil
     fert_by_soil = f1_mask_lmu(pinp.crop['fert_by_lmu'], axis=1)
@@ -415,14 +417,14 @@ def f_fert_req():
         base_fert = pinp.crop['fert']
         base_fert = base_fert.T.set_index(['fert'], append=True).T.astype(float)
         base_fert = zfun.f_seasonal_inp(base_fert, axis=1)
+        base_fert = base_fert.loc[mask_r,:]
         base_fert_rk_zn = base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
     else:
         ###Sim version
         base_fert_rk_zn = f1_sim_inputs(sheet='Fert Applied', index=[0,1], header=[0,1])
-        ###Mask z axis
+        ###Mask z & r axis
         base_fert_rk_zn = zfun.f_seasonal_inp(base_fert_rk_zn, axis=1, level=0)
-    mask_r = pinp.f1_phases(mask_r=True)
-    base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
+        base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
 
     ##rename index
     base_fert_rk_zn.index.rename(['rot','landuse'],inplace=True)
@@ -455,6 +457,7 @@ def f_fert_passes():
     '''
     ##read phases
     phases_df = pinp.f1_phases()
+    mask_r = pinp.f1_phases(mask_r=True)
 
     ####read in passes
     if pinp.crop['user_crop_rot']:
@@ -462,14 +465,14 @@ def f_fert_passes():
         fert_passes = pinp.crop['fert_passes']
         fert_passes = fert_passes.T.set_index(['passes'], append=True).T.astype(float)
         fert_passes = zfun.f_seasonal_inp(fert_passes, axis=1)
+        fert_passes = fert_passes.loc[mask_r,:]
         fert_passes_rk_zn = fert_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
     else:
         ###Sim version
         fert_passes_rk_zn = f1_sim_inputs(sheet='No Fert Applications', index=[0,1], header=[0,1])
-        ###Mask z axis
+        ###Mask z & r axis
         fert_passes_rk_zn = zfun.f_seasonal_inp(fert_passes_rk_zn, axis=1, level=0)
-    mask_r = pinp.f1_phases(mask_r=True)
-    fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
+        fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
 
     ##rename index
     fert_passes_rk_zn.index.rename(['rot','landuse'],inplace=True)
@@ -494,9 +497,9 @@ def f_fert_cost(r_vals):
     '''
     Cost of fertilising the arable areas. Includes the fertiliser cost and the application cost.
 
-    The cost of fertilising is made up from the cost of the fertilisers its self, the cost getting
+    The cost of fertilising is made up from the cost of the fertilisers, the cost getting
     the fertiliser delivered to the farm and the machinery cost of application (detailed in the machinery section).
-    The cost is incurred in the cashflow period when it is applied. The assumption is that fertilizer is
+    The cost is incurred in the cashflow period when it is applied. The assumption is that fertiliser is
     purchased shortly before application because farmers wait to see how the year unfolds before locking
     in a fertiliser plan.
 
@@ -561,14 +564,18 @@ def f_fert_cost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, phase_fert_cost_rl_p7z, 'phase_fert_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(phase_fert_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'phase_fert_cost_increment', mask_season_p7z, z_pos=-1)
     fun.f1_make_r_val(r_vals, fert_app_cost_ha_rl_p7z + fert_app_cost_tonne_rl_p7z, 'fert_app_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(fert_app_cost_tonne_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'fert_app_cost_increment', mask_season_p7z, z_pos=-1)
     return fert_cost_total, fert_wc_total
 
 def f_nap_fert_req():
     '''
     Fert applied to non arable pasture area.
 
-    Fertiliser is applied to non-arable area in a pasture phases, it is not applied to
+    Fertiliser is applied to non-arable area in pasture phases, it is not applied to
     non-arable pasture in a crop phase because the non-arable pasture in a crop phase is not able to
     be grazed until the end of the year, by which time it is rank and therefore it is a waste of
     money to fertilise. Fertiliser rate for non-arable areas can be adjusted separately to the arable area.
@@ -651,7 +658,11 @@ def f_nap_fert_cost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, phase_fert_cost_rl_p7z, 'nap_phase_fert_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(phase_fert_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'nap_phase_fert_cost_increment', mask_season_p7z, z_pos=-1)
     fun.f1_make_r_val(r_vals, total_app_cost_rl_p7z, 'nap_fert_app_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(total_app_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'nap_fert_app_cost_increment', mask_season_p7z, z_pos=-1)
     return nap_fert_cost, nap_fert_wc
 
 def f1_total_fert_req():
@@ -716,8 +727,8 @@ def f_phase_stubble_cost(r_vals):
     is logical. However, the probability isn’t accurately linked to the likelihood that stubble will actually
     require handling. For instance, just because the average steady-state wht yield of a LMU is 1.75t/ha doesn’t
     necessarily mean that the wheat stubble on that LMU will need handling 1.75/3.5 = 50% of the time.
-    This structure assumes that even if the preceding landuse is pasture the current phase will still get
-    handling cost this is because the rotation phases use sets so you can’t determine exactly which land use is
+    This structure assumes that even if the preceding landuse is pasture, the current phase will still get
+    handling costs. This is because the rotation phases use sets so you can’t determine exactly which land use is
     before or after the current phase.
 
 
@@ -748,7 +759,7 @@ def f_phase_stubble_cost(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    stub_cost_allocation_p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
+    stub_cost_allocation_p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1, is_phase_cost=True)
     ###convert to df
     new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
     stub_cost_allocation_p7z = pd.Series(stub_cost_allocation_p7z.ravel(), index=new_index_p7z)
@@ -764,6 +775,8 @@ def f_phase_stubble_cost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, rot_stub_cost_rl_p7z, 'stub_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(rot_stub_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'stub_cost_increment', mask_season_p7z, z_pos=-1)
 
     return rot_stub_cost_rl_p7z, rot_stub_wc_rl_c0p7z
 # t_stubcost=f_phase_stubble_cost()
@@ -784,7 +797,7 @@ def f1_chem_cost_allocation():
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     ##calc interest and allocate to cash period - needs to be numpy
-    chem_cost_allocation_p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2)
+    chem_cost_allocation_p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2, is_phase_cost=True)
     ###convert to df
     new_index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, start_df.index])
     chem_cost_allocation_p7zn = pd.Series(chem_cost_allocation_p7zn.ravel(), index=new_index_p7zn)
@@ -798,9 +811,9 @@ def f_chem_application():
 
     Number of applications of each chemical option for each rotation.
 
-    The number of applications at each spraying time (e.g. pre seeding knock down, pre-emergent,
-    post emergent and fungicide) for each rotation phase is entered by the user or obtained from the simulation output .
-    When determining the number of applications the user must consider both the rotation
+    The number of applications at each spraying time (e.g. pre-seeding knock down, pre-emergent,
+    post-emergent and fungicide) for each rotation phase is entered by the user or obtained from the simulation output .
+    When determining the number of applications, the user must consider both the rotation
     history and the current landuse. The rotation history is important because it impacts the initial levels of
     weed and disease burden and fungi. The current landuse is important because different landuses are susceptible
     to different weeds and diseases. Furthermore, chemicals can be specific for certain
@@ -930,7 +943,11 @@ def f_chem_cost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, phase_chem_cost_rl_p7z, 'chem_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(phase_chem_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'chem_cost_increment', mask_season_p7z, z_pos=-1)
     fun.f1_make_r_val(r_vals, chem_app_cost_rl_p7z, 'chem_app_cost_ha', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(chem_app_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'chem_app_cost_ha_increment', mask_season_p7z, z_pos=-1)
     return total_cost, total_wc
 
 
@@ -983,7 +1000,7 @@ def f_seedcost(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    seed_cost_allocation_p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(start_z, enterprise='crp', z_pos=-1)
+    seed_cost_allocation_p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(start_z, enterprise='crp', z_pos=-1, is_phase_cost=True)
     ###convert to df
     new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
     seed_cost_allocation_p7z = pd.Series(seed_cost_allocation_p7z.ravel(), index=new_index_p7z)
@@ -1010,6 +1027,8 @@ def f_seedcost(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, seedcost_rl_p7z, 'seedcost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(seedcost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'seedcost_increment', mask_season_p7z, z_pos=-1)
 
     return seedcost_rl_p7z, seed_wc_rl_c0p7z
 
@@ -1018,7 +1037,7 @@ def f_insurance(r_vals):
     Crop insurance cost.
 
     Crop insurance is typically based off the farmers estimation of yield in mid spring (hence active z axis).
-    This is not going to exactly be equal to final yield but it is closer than using the average yield.
+    This is not going to exactly be equal to final yield, but it is closer than using the average yield.
     The small amount of error in this assumption will have little impact due to the small magnitude of
     financial impact of insurance.
 
@@ -1048,7 +1067,7 @@ def f_insurance(r_vals):
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    insurance_cost_allocation_p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
+    insurance_cost_allocation_p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1, is_phase_cost=True)
     ###convert to df
     new_index_p7z = pd.MultiIndex.from_product([keys_p7, keys_z])
     insurance_cost_allocation_p7z = pd.Series(insurance_cost_allocation_p7z.ravel(), index=new_index_p7z)
@@ -1065,6 +1084,8 @@ def f_insurance(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, rot_insurance_cost_rl_p7z, 'insurance_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(rot_insurance_cost_rl_p7z.stack([0,1]).sort_index()
+                                                          ,p7_pos=-2,z_pos=-1), 'insurance_cost_increment', mask_season_p7z, z_pos=-1)
 
     ##take crp slice of c0 to reduce param size.
     return rot_insurance_cost_rl_p7z, rot_insurance_wc_rl_c0p7z
@@ -1102,8 +1123,8 @@ def f1_rot_cost(r_vals):
     cost_p7zlr = cost_rl_p7z.unstack([1,0]).sort_index()
     wc_c0p7zlr = wc_rl_c0p7z.unstack([1,0]).sort_index()
 
-    ##create params for v_phase_increment
-    ## costs for v_phase_increment activities are incurred in the season period when the activity is selected
+    ##create params for v_phase_change_increase
+    ## costs for v_phase_change_increase activities are incurred in the season period when the activity is selected
     ## however the interest is calculated as if the cost was incurred at the normal time (this is because interest
     ## is calculated for each separate cost in the functions above).
     increment_cost_p7zlr = rps.f_v_phase_increment_adj(cost_p7zlr,p7_pos=-4,z_pos=-3)
@@ -1150,6 +1171,12 @@ def f_sow_prov():
 
     This accounts for period and crop e.g. wet seeding activity only provides sowing to crop after the break.
 
+    This also stop seeding (dry and wet) in a false break between the identification and the real break.
+    This is because the soil is a "little bit wet". So in the areas that are wet enough the seed will germinate
+    and in other areas it won't. So this will lead to a patchy crop establishment and make crop management difficult
+    later in the season due to the variation in crop stages.
+    This only effects crop because pasture seeding timing is an input with a z axis so it can be altered there if desired.
+
     '''
     ##machine periods
     labour_period_p5z = per.f_p_dates_df()
@@ -1163,13 +1190,24 @@ def f_sow_prov():
     keys_p7 = per.f_season_periods(keys=True)
     dry_sown_landuses = sinp.landuse['dry_sown']
     wet_sown_landuses = set(sinp.landuse['C']) - dry_sown_landuses #can subtract sets to return differences
+    false_brk_identification_z = zfun.f_seasonal_inp(pinp.general['i_false_brk_identification_z'],numpy=True,axis=0)
+    false_brk_followuprains_z = zfun.f_seasonal_inp(pinp.general['i_false_brk_followuprains_z'],numpy=True,axis=0)
+
+    ##determine which periods crop can't be sown because it is a false break (this doesnt effect seasons with no false brk)
+    ## any p5 period that the false break goes through cant be seeded even if the false brk only partially covers a period.
+    ## to avoid any misrepresentation ensure the false brk timing inputs line up with p5 periods
+    z_is_false_break_z = false_brk_identification_z < false_brk_followuprains_z
+    p5_is_false_break_p5z = np.logical_and(false_brk_identification_z >= labour_period_start_p5z, false_brk_followuprains_z > labour_period_start_p5z)
+    p5z_is_false_break_p5z = np.logical_and(z_is_false_break_z, p5_is_false_break_p5z)
+    p5z_isnot_during_false_break_p5z = np.logical_not(p5z_is_false_break_p5z)
 
     ##wet sowing periods
     seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
     wet_seed_start_z = per.f_wet_seeding_start_date()
     wet_seed_len_z = np.sum(seed_period_lengths_pz, axis=0)
     wet_seed_end_z = wet_seed_start_z + wet_seed_len_z
-    period_is_wetseeding_p5z = (labour_period_start_p5z < wet_seed_end_z) * (labour_period_end_p5z > wet_seed_start_z)
+    period_is_wetseeding_p5z = (labour_period_start_p5z < wet_seed_end_z) * (labour_period_end_p5z > wet_seed_start_z) \
+                               * p5z_isnot_during_false_break_p5z
     ###add k axis
     period_is_wetseeding_p5zk = period_is_wetseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(wet_sown_landuses), axis=-1)
 
@@ -1177,7 +1215,8 @@ def f_sow_prov():
     ##currently we are saying that dry sowning cant occur between the brk of season and wet seeding start. This may or may not be correct (not if dry seeding occurs after the brk of the season it doesnt need to happen in the children seasons).
     dry_seed_start = pinp.crop['dry_seed_start']
     season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'],numpy=True)
-    period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)
+    period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)\
+                               * p5z_isnot_during_false_break_p5z
     ###add k axis
     period_is_dryseeding_p5zk = period_is_dryseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(dry_sown_landuses), axis=-1)
 

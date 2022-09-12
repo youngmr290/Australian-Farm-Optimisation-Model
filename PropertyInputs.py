@@ -162,6 +162,7 @@ for property in pinp_req:
     zkp6 = (len_z, len_k, len_p6)
     zp6l = (len_z, len_p6, len_l)
     zp6j0 = (len_z, len_p6, -1)
+    zp6i = (len_z, len_p6, len_i)
     h2h5h7 = (len_h2, len_h5, len_h7)
     iog = (len_i, len_o, -1)
     idg = (len_i, len_d, -1)
@@ -213,6 +214,9 @@ for property in pinp_req:
     sheep_inp['i_supplement_zp6'] = np.reshape(sheep_inp['i_supplement_zp6'], zp6)
     sheep_inp['i_paststd_foo_zp6j0'] = np.reshape(sheep_inp['i_paststd_foo_zp6j0'], zp6j0)
     sheep_inp['i_paststd_dmd_zp6j0'] = np.reshape(sheep_inp['i_paststd_dmd_zp6j0'], zp6j0)
+    sheep_inp['i_mobsize_sire_zp6i'] = np.reshape(sheep_inp['i_mobsize_sire_zp6i'], zp6i)
+    sheep_inp['i_mobsize_dams_zp6i'] = np.reshape(sheep_inp['i_mobsize_dams_zp6i'], zp6i)
+    sheep_inp['i_mobsize_offs_zp6i'] = np.reshape(sheep_inp['i_mobsize_offs_zp6i'], zp6i)
     sheep_inp['i_density_p6z'] = np.reshape(sheep_inp['i_density_p6z'], zp6)
     sheep_inp['i_husb_operations_triggerlevels_h5h7h2'] = np.reshape(sheep_inp['i_husb_operations_triggerlevels_h5h7h2'], h2h5h7)
     sheep_inp['i_date_born1st_iog2'] = np.reshape(sheep_inp['i_date_born1st_iog2'], iog)
@@ -448,6 +452,8 @@ def f_property_inp_sa():
     mask_m = np.logical_and(duplicate_mask_m, mask_m)
     general['i_date_node_zm'] = general['i_date_node_zm'][:,mask_m]
     general['i_node_is_fvp'] = general['i_node_is_fvp'][mask_m]
+    general['i_phase_can_increase_kp7'] = general['i_phase_can_increase_kp7'][:,mask_m]
+    general['i_phase_can_reduce_kp7'] = general['i_phase_can_reduce_kp7'][:,mask_m]
 
 ##############################
 # handle inputs with p6 axis #
@@ -474,9 +480,9 @@ def f1_expand_p6():
     sheep['i_paststd_dmd_zp6j0'] = np.take_along_axis(sheep['i_paststd_dmd_zp6j0'], a_p6std_zp6[...,na], axis=1)
     sheep['i_pasture_stage_p6z'] = np.take_along_axis(sheep['i_pasture_stage_p6z'], a_p6std_zp6, axis=1)
     sheep['i_density_p6z'] = np.take_along_axis(sheep['i_density_p6z'], a_p6std_zp6, axis=1)
-    sheep['i_mobsize_sire_p6zi'] = np.take_along_axis(sheep['i_mobsize_sire_p6i'][:,na,:], a_p6std_p6z[:,:,na], axis=0)
-    sheep['i_mobsize_dams_p6zi'] = np.take_along_axis(sheep['i_mobsize_dams_p6i'][:,na,:], a_p6std_p6z[:,:,na], axis=0)
-    sheep['i_mobsize_offs_p6zi'] = np.take_along_axis(sheep['i_mobsize_offs_p6i'][:,na,:], a_p6std_p6z[:,:,na], axis=0)
+    sheep['i_mobsize_sire_zp6i'] = np.take_along_axis(sheep['i_mobsize_sire_zp6i'], a_p6std_zp6[...,na], axis=1)
+    sheep['i_mobsize_dams_zp6i'] = np.take_along_axis(sheep['i_mobsize_dams_zp6i'], a_p6std_zp6[...,na], axis=1)
+    sheep['i_mobsize_offs_zp6i'] = np.take_along_axis(sheep['i_mobsize_offs_zp6i'], a_p6std_zp6[...,na], axis=1)
     sheep['i_dse_group'] = np.take_along_axis(sheep['i_dse_group'][:,:,na], a_p6std_p6z[na,:,:], axis=1)
     sheep['i_wg_propn_p6z'] = np.take_along_axis(sheep['i_wg_propn_p6'][:,na], a_p6std_p6z, axis=0)
 
@@ -508,10 +514,10 @@ def f1_expand_p6():
         pasture_inputs[pasture]['DigPOC'] = np.take_along_axis(pasture_inputs[pasture]['DigPOC'], a_p6std_p6z, axis=0)
         pasture_inputs[pasture]['FOOPOC'] = np.take_along_axis(pasture_inputs[pasture]['FOOPOC'], a_p6std_p6z, axis=0)
         pasture_inputs[pasture]['DigSpread'] = np.take_along_axis(pasture_inputs[pasture]['DigSpread'], a_p6std_zp6, axis=1)
-        pasture_inputs[pasture]['PGRScalarH'] = np.take_along_axis(pasture_inputs[pasture]['PGRScalarH'][:,na], a_p6std_p6z, axis=0)
+        pasture_inputs[pasture]['PGRScalarH'] = np.take_along_axis(pasture_inputs[pasture]['PGRScalarH'], a_p6std_p6z, axis=0)
         pasture_inputs[pasture]['BaseLevelInput'] = np.take_along_axis(pasture_inputs[pasture]['BaseLevelInput'][:,na], a_p6std_p6z, axis=0)
         pasture_inputs[pasture]['ErosionLimit'] = np.take_along_axis(pasture_inputs[pasture]['ErosionLimit'], a_p6std_zp6[:,:,na], axis=1)
-        pasture_inputs[pasture]['SenescePropn'] = np.take_along_axis(pasture_inputs[pasture]['SenescePropn'][:,na], a_p6std_p6z, axis=0)
+        pasture_inputs[pasture]['SenescePropn'] = np.take_along_axis(pasture_inputs[pasture]['SenescePropn'], a_p6std_p6z, axis=0)
         pasture_inputs[pasture]['SenesceEOS'] = np.take_along_axis(pasture_inputs[pasture]['SenesceEOS'], a_p6std_p6z, axis=0)
         pasture_inputs[pasture]['LowFOO'] = np.take_along_axis(pasture_inputs[pasture]['LowFOO'], a_p6std_zp6[:,:,na], axis=1)
         pasture_inputs[pasture]['MedFOO'] = np.take_along_axis(pasture_inputs[pasture]['MedFOO'], a_p6std_zp6[:,:,na], axis=1)
@@ -545,7 +551,13 @@ def f1_phases(mask_r=False, check=False):
     :param check: If True the function returns nothing - it is just used to check the correct rotations exist in rot.xl.
     '''
     ##rotation phases - read in from excel
-    phases_r = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header=None, index_col=0, engine='openpyxl').T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
+    try:
+        phases_r = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header=None, index_col=0, engine='openpyxl').T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
+    except FileNotFoundError:
+        import RotGeneration
+        RotGeneration.f_rot_gen(crop['user_crop_rot'])
+        phases_r = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header=None, index_col=0, engine='openpyxl').T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
+
     ###add variable that is the number of yrs in the rot phases
     sinp.general['phase_len'] = len(phases_r.columns)
 

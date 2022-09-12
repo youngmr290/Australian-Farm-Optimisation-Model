@@ -4,7 +4,7 @@ author: young
 
 Supplementary feeding is the supply of additional feed, primarily grain and hay, to livestock.
 Supplementary feeding is commonly used to help meet liveweight targets during Summer and Autumn
-months when pasture is limiting and enhance lamb diet for increase growth prior to sale. Additionally,
+months when pasture is limiting, and enhance lamb diet for increased growth prior to sale. Additionally,
 feeding supplement can be used as a tactic to allow pastures to be deferred. Grain and hay are the
 primary supplements fed and hence represented in the model.
 
@@ -120,7 +120,7 @@ def f_sup_cost(r_vals):
     that all supplement fed for the year is stored on farm. If the capacity of the silos is less than
     the supplement fed (meaning additional supplement is purchased part way through the year) then the
     storage cost will be overestimated. However, discussions with farm consultants suggest that farmers
-    store enough supplement for the whole year an extra to handle a poor year.
+    store enough supplement for the whole year and extra to handle a poor year.
 
     The machinery cost to feed a tonne of supplement is added in this function however it
     is calculated in Mach.py (see Mach.py for details on machinery cost to feed supplement).
@@ -217,12 +217,12 @@ def f_sup_md_vol(r_vals):
     In the generator it is assumed that the availability of supplementary feed is high and that supplement is consumed
     as the first component of the animals diet. Furthermore, it is assumed that if sufficient levels of
     supplement are offered then all the sheep’s diet will be provided by supplementary feeding.
-    In pyomo the optimisation can select a combination of paddock feed and supplement that meets the volume
+    In pyomo, the optimisation can select a combination of paddock feed and supplement that meets the volume
     constraint while providing sufficient ME intake for the animals.
     The volume required for supplement is adjusted (to 80%) because this is necessary to make the substitution rate
     in the matrix (using volumes) align with the substitution rate calculated using the GrazPlan selection routine.
     The current representation does not include an effect of high protein supplements (like lupins) overcoming
-    a protein deficiency and therefore acting as a 'true' supplement and increasing intake. If this was represented it
+    a protein deficiency, and therefore acting as a 'true' supplement and increasing intake. If this was represented it
     would likely make low rate lupin supplementation optimal in early summer/autumn to overcome a protein deficiency.
 
     .. note:: Supplement M/D does not go through f_effective_mei because the quantity of Sup feed can be controlled
@@ -286,8 +286,8 @@ def f_sup_labour():
     To improve the accuracy between different grains, the time taken to fill and empty the feeder rate is
     calculated in cubic meter units (because a m3 is the same for all grain) and then converted to hr/tonne
     in the last step. However m3/hr is not an input many can relate to, so in the effort of making the model
-    easier to calibrate the inputs are entered in a more common format for a specific grain and then converted
-    to m3. For example the inputs used to determine time to empty the feeder are the feeding rate of lupins
+    easier to calibrate, the inputs are entered in a more common format for a specific grain and then converted
+    to m3. For example, the inputs used to determine time to empty the feeder are the feeding rate of lupins
     in kg/sec, this is then adjusted to m3/hr using the density of lupins.
     The time spent traveling between paddocks (not to the silo) is calculated slightly differently. Driving
     from one paddock to the next takes a given amount of time. This time is then allocated to each megajoule

@@ -35,14 +35,14 @@ def f1_croppyomo_local(params, model):
     model.v_use_biomass = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_lmus, model.s_biomass_uses, bounds=(0,None),
                                 doc='tonnes of biomass in each use category')
 
-    model.v_sell_grain = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
-                                doc='tonnes of grain in each pool sold')
+    model.v_sell_product = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
+                                doc='tonnes of grain/baled product in each pool sold')
 
-    model.v_grain_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
-                                doc='tonnes of grain in debt (will need to be purchased or provided from harvest)')
+    model.v_product_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
+                                doc='tonnes of grain/baled product in debt (will need to be purchased or provided from harvest)')
 
-    model.v_grain_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
-                                doc='tonnes of grain in credit (can be used for sup feeding or sold)')
+    model.v_product_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_biomass_uses, model.s_grain_pools, bounds=(0,None),
+                                doc='tonnes of grain/baled product in credit (can be used for sup feeding or sold)')
 
     model.v_biomass_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_crops, model.s_lmus, bounds=(0,None),
                                 doc='tonnes of grain in debt (will need to be purchased or provided from harvest)')
@@ -133,7 +133,7 @@ def f_phasesow_req(model,q,s,p7,k,l,z):
     Used in global constraint (con_sow). See CorePyomo
     '''
     if any(model.p_phasesow_req[r,k,l] for r in model.s_phases):
-        return sum(model.p_phasesow_req[r,k,l]*model.v_phase_increment[q,s,p7,z,r,l] for r in model.s_phases
+        return sum(model.p_phasesow_req[r,k,l]*model.v_phase_change_increase[q,s,p7,z,r,l] for r in model.s_phases
                    if pe.value(model.p_phasesow_req[r,k,l]) != 0)
     else:
         return 0
@@ -150,7 +150,7 @@ def f_rotation_cost(model,q,s,p7,z):
     Used in objective. See CorePyomo
     '''
     return sum(model.p_rotation_cost[p7,z,l,r]*model.v_phase_area[q,s,p7,z,r,l]
-               + model.p_increment_rotation_cost[p7,z,l,r]*model.v_phase_increment[q,s,p7,z,r,l]
+               + model.p_increment_rotation_cost[p7,z,l,r]*model.v_phase_change_increase[q,s,p7,z,r,l]
                for r in model.s_phases for l in model.s_lmus
                    if pe.value(model.p_rotation_cost[p7,z,l,r]) != 0 or pe.value(model.p_increment_rotation_cost[p7,z,l,r]) != 0)
 
@@ -161,7 +161,7 @@ def f_rotation_wc(model,q,s,c0,p7,z):
     Used in global constraint (con_workingcap). See CorePyomo
     '''
     return sum(model.p_rotation_wc[c0,p7,z,l,r]*model.v_phase_area[q,s,p7,z,r,l]
-               + model.p_increment_rotation_wc[c0,p7,z,l,r]*model.v_phase_increment[q,s,p7,z,r,l]
+               + model.p_increment_rotation_wc[c0,p7,z,l,r]*model.v_phase_change_increase[q,s,p7,z,r,l]
                for r in model.s_phases for l in model.s_lmus
                    if pe.value(model.p_rotation_wc[c0,p7,z,l,r]) != 0 or pe.value(model.p_increment_rotation_wc[c0,p7,z,l,r]) != 0)
 

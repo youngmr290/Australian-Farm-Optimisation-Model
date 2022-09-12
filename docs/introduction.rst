@@ -16,11 +16,11 @@ challenge due to the interactions between the various parts of the farming syste
 :cite:p:`RN1`.
 
 The intricacies of the farming system, combined with the farmer’s desire to meet their objective,
-causes whole farm modelling to be a potentially helpful tool to aid decision making
-:cite:p:`RN76`. Whole farm modelling involves detailed representation of the whole
+causes whole farm modelling to be a helpful tool to aid decision making
+:cite:p:`RN76`. Whole farm modelling involves a detailed representation of the whole
 farming system, capturing the biological and economic interactions within a farming system.
-This is important precursor for assessing farm strategy because many aspects of a farming
-system are interrelated such that changing one factor may affect another :cite:p:`RN76`.
+This is an important precursor for assessing farm strategy because many aspects of a farming
+system are interrelated, such that changing one factor may affect another :cite:p:`RN76`.
 
 Agricultural systems are most frequently modelled by dynamic simulation :cite:p:`RN8` or
 mathematical programming :cite:p:`RN2` techniques. Dynamic simulation (DS) is
@@ -30,12 +30,12 @@ encompasses a group of optimisation techniques and is commonly used for whole fa
 :cite:p:`RN9, RN2, RN76`. Both DS and MP often achieve
 more than their simple categorisation implies, as it is feasible to specify an objective in a
 simulation model and search for an optimal solution and MP techniques can represent simulated biological
-detail :cite:p:`RN2`. While MP is not as flexible as DS in representing biological and
-dynamic features it does provide a more powerful and efficient optimisation method. Although MP is not
+details :cite:p:`RN2`. While MP is not as flexible as DS in representing biological and
+dynamic features, it does provide a more powerful and efficient optimisation method. Although MP is not
 as sound at representing biological and dynamic features, this limitation should not be overstated.
 Firstly, at the whole farm level, representing precise biological and dynamic relationships is often
 not of high importance and the overall relationships can be represented at a higher level still
-capturing the necessary detail. Secondly, in the hands of skilled practitioners it is possible to
+capturing the necessary detail. Secondly, in the hands of skilled practitioners, it is possible to
 represent or closely approximate the complex nonlinear biological and dynamic features using MP
 techniques :cite:p:`RN134`. Thirdly, DS and MP are somewhat complementary because they are suited
 to different tasks. For example, simulation models developed to imitate the biological features of
@@ -51,9 +51,9 @@ incorporate resource constraints :cite:p:`RN112`. For example, :cite:t:`RN112`
 combined an agricultural weed simulation called Ryegrass and Integrated Management (RIM) with the
 heuristic technique of compressed-annealing and determined that compressed-annealing was a suitable
 algorithm to identify near-optimal configurations in constrained simulation models of weed populations.
-RIM is a simulation model encompassing around 500 parameters. :cite:t:`RN112` note that including
-additional detail would result in a much larger solution time. Therefore, though heuristic techniques
-such as used by :cite:t:`RN112` are conceptually interesting, it is likely that they may be
+RIM is a simulation model encompassing around 500 parameters. However, :cite:t:`RN112` note that including
+additional detail would result in a much larger solution time. Therefore, although heuristic techniques
+such as those used by :cite:t:`RN112` are conceptually interesting, it is likely that they may be
 computationally challenging if applied to the representation of detailed whole farming systems.
 
 Evaluating farming systems is a dynamic problem where current actions impact future productivity
@@ -62,7 +62,7 @@ change over time; there is future uncertainty and the resource base is exhaustib
 Fundamentally, one must determine the extent to which dynamic situations are represented. A prevalent
 whole farm mathematical program used to examine broadacre farming systems principally in Western Australia
 is MIDAS (Model of an Integrated Dryland Agricultural System)
-:cite:p:`RN42, RN41, RN11, RN75, RN33, RN76`.
+:cite:p:`RN42, RN41, RN11, young2011, RN33, RN76`.
 MIDAS is a static equilibrium model encompassing the key assumption that the same
 management decisions are made repeatedly each year, with that year being an average or modal climatic
 year. However, as discussed by
@@ -86,7 +86,7 @@ Since the development of MUDAS technological innovations and practice changes ha
 broadacre farming (e.g. :cite:p:`RN146`), adding to the complexity of farm management, but simultaneously
 computing power and more versatile computing languages have become available. A possible limitation of
 the MUDAS framework is its exclusion of weather-year sequences i.e. the assumption that the probability
-of incurring a given weather-year is independent of the previous weather-year and the assumption that
+of incurring a given weather-year is independent of the previous weather-year, and the assumption that
 the optimal farm strategy and the tactics employed in a given weather-year is only altered by the starting
 position based on the weighted average of all weather-years. Adding the ability of a model to represent
 weather-year sequence exponentially increases the size of the model, commonly known as the curse of
@@ -111,7 +111,7 @@ AFO is a whole farm linear programming model. The model represents the economic 
 biological details of a farming system including components of rotations, crops, pastures, sheep, stubble,
 supplementary feeding, machinery, labour and finance. Furthermore, it includes land heterogeneity by considering
 enterprise rotations on any number of soil classes. The detail captured in the modules allows various
-management tactics to be represented and if the user opts, seasonal uncertainty can also be represented.
+management tactics to be represented and, if the user opts, seasonal uncertainty can also be represented.
 
 The model is built and calibrated such that
 it represents current farm management technology insofar as the types of machinery complements,
@@ -152,14 +152,14 @@ The core units of AFO are:
        the Pyomo parameters (in other terms, the coefficients for the LP matrix).
 
     #. Pyomo and solver: This is the ‘guts’ of the model. It defines all the variables and parameters
-       then utilised them to construct the model equations (e.g. resource constraints). Pyomo formulates
+       then utilises them to construct the model equations (e.g. resource constraints). Pyomo formulates
        all the equations into a linear program format and passes the file to a solver. Many solvers
        are compatible with the Pyomo. Currently GLPK (GNU Linear Programming Kit) :cite:p:`RN107`
        is used.
 
 The procedure for building and solving AFO is that firstly, the inputs are read in from the Excel files.
 They are then adjusted according to the user’s application of AFO. For example, the user may be
-interested in the impact of increasing prices hence the price inputs are increased. Secondly, each
+interested in the impact of increasing prices, hence the price inputs are increased. Secondly, each
 module containing precalcs is executed. The produced parameters are stored in a python data structure
 called a dictionary. The Pyomo section of the model then creates the variables and parameters, populates
 the parameters with the coefficients from the precalcs, constructs the model constraints and passes
@@ -181,12 +181,12 @@ In the full model the livestock management decisions that are optimised can incl
 
 #. The proportion of the ewe flock mated to different sire genotypes (pure bred, maternal type or 
    terminal)
-#. The inclusion of a cross bred dam component mated to a terminal sire (the dam cross is between 
+#. The inclusion of a cross bred dam component mated to a terminal sire (the dam cross is between
    the purebred and the maternal genotype)
 #. The reproductive life of dams in the flock (based on whole flock feed requirements, reproduction 
    variation by age, the value of CFA dams at different ages, the selection pressure that can be applied on replacement ewes).
 #. Whether to mate ewe lambs and the optimal proportion to mate.
-#. Number of animals carried based on whole of flock, whole of year feed requirements and whole 
+#. Number of animals carried based on whole of flock, whole year feed requirements and whole
    farm feed supply (the feed budget is divided into 10 periods with 4 feed quality pools in each period)
 #. Sale age of each animal group, up to 3 options each year (or each shearing cycle if more 
    frequent than annually).
@@ -199,16 +199,18 @@ In the full model the livestock management decisions that are optimised can incl
 #. Nutrition profile of the animals during the year, based on feed variation periods which relate 
    to reproduction and the time of the seasonal break for dams and seasonal break and 
    turn-off time for the dry animals.
-#. Differential feeding of dams based on litter size, lactation number and foetal age, 
+#. Differential feeding of dams based on litter size, lactation number and foetal age,
    provided the dams are scanned or assessed for ‘gave birth and lost’
-#. Optimal replacement policy including 
-#. The change in reproduction and production over the animals lifetime, 
-#. The potential to increase per head production through culling and a response in the 
-   current generation.
+#. Optimal replacement policy including:
+
+    #. The change in reproduction and production over the animals lifetime,
+    #. The potential to increase per head production through culling and a response in the
+       current generation.
+
 #. Sale value of animals of different ages and different weights
 #. Optimal weaning age for each dam age group
 
-Furthermore, constraints can be applied to the model to limit 
+Furthermore, constraints can be applied to the model to limit:
 
 #. Level of enteric greenhouse gas emissions and emissions of nitrous oxide from faeces and urine.
 #. Bare ground during the summer/autumn period
@@ -231,7 +233,7 @@ The following feed management decisions that are optimised can include:
 #. Value of confinement feeding
 #. Pasture variety 
 #. Pasture deferment
-#. level of supplementary feeding
+#. Level of supplementary feeding
 #. Timing of stubble consumption
 #. Crop grazing
 #. Fodder crops
@@ -239,8 +241,8 @@ The following feed management decisions that are optimised can include:
 
 Additional aspects that can be tested but not optimised include:
 
-#. fertiliser application
-#. impact of varying pasture conservation limits
+#. Fertiliser application
+#. Impact of varying pasture conservation limits
 
 Cropping
 ^^^^^^^^

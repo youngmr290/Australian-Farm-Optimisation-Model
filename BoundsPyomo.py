@@ -37,6 +37,7 @@ def f1_boundarypyomo_local(params, model):
     slp_area_inc = np.any(sen.sav['bnd_slp_area_l'][lmu_mask] != '-') #control the area of salt land pasture
     sb_upbound_inc = np.any(sen.sav['bnd_sb_consumption_p6'] != '-') #upper bound on the quantity of saltbush consumed
     sup_lobound_inc = False #controls sup feed bound
+    sup_per_dse_bnd_inc = sen.sav['bnd_sup_per_dse'] != '-' #lower bound dams #controls sup per dse bound
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_dam_inc'], 5) #lower bound dams
     dams_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_dam_inc'], 5) #upper bound on dams
     offs_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_off_inc'], 5) #lower bound offs
@@ -66,6 +67,8 @@ def f1_boundarypyomo_local(params, model):
         ##params used in multiple bounds
         model.p_mask_dams = pe.Param(model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_lw_dams, model.s_season_types
                                      , model.s_groups_dams, default=0, initialize=params['stock']['p_mask_dams'])
+        model.p_mask_offs = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_lw_offs, model.s_season_types
+                                     , model.s_gender, model.s_groups_dams, default=0, initialize=params['stock']['p_mask_offs'])
 
         ##rotations
         ###build bound if turned on
@@ -147,6 +150,34 @@ def f1_boundarypyomo_local(params, model):
                     return pe.Constraint.Skip
             model.con_sup_lo_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=sup_lo_bound, doc='lo bound for livestock sup feed')
 
+        ##bound on supplement per dse
+        if sup_per_dse_bnd_inc:
+            ### set bound
+            p_sup_per_dse_bnd = sen.sav['bnd_sup_per_dse']
+            ###param - propn of each fp used in the SR
+            ###constraint
+            l_p7 = list(model.s_season_periods)
+            def sup_per_dse_bound(model, q, s, z):
+                if pe.value(model.p_wyear_inc_qs[q, s]):
+                    total_sup = sum(model.v_sup_con[q,s,z,k,g,f,p6] for k in model.s_crops for g in model.s_grain_pools for f in model.s_feed_pools
+                                    for p6 in model.s_feed_periods)
+                    wg_dse = sum((sum(model.v_sire[q,s,g0] * model.p_dse_sire[p6,z,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,z,g0])!=0)
+                             + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]
+                                       for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                                       for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                                       if pe.value(model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1])!=0)
+                                  + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3] * model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                                        for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
+                                        for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
+                                        if pe.value(model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0)
+                                 for a in model.s_wean_times for i in model.s_tol))
+                            * model.p_wg_propn_p6z[p6,z]
+                            for p6 in model.s_feed_periods)
+                    return wg_dse * p_sup_per_dse_bnd == total_sup * 1000
+                else:
+                    return pe.Constraint.Skip
+            model.con_sup_per_dse_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=sup_per_dse_bound,
+                                                doc='total supplement fed per dse for the whole year')
 
         ##dam lo bound. (the sheep in a given yr equal total for all dvp divided by the number of dvps in 1 yr)
         if dams_lobound_inc:
@@ -274,10 +305,12 @@ def f1_boundarypyomo_local(params, model):
 
             ###constraint
             def f_off_lobound(model, q, s, k3, t, v, z, x, g3):
-                if pe.value(model.p_wyear_inc_qs[q, s]) and model.p_offs_lobound[k3,t,v,z,x,g3]!=0:
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_offs_lobound[k3,t,v,z,x,g3]!=0\
+                        and any(model.p_mask_offs[k3,v,w8,z,x,g3] != 0 for w8 in model.s_lw_offs)):
                     return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3]
                                for k5 in model.s_k5_birth_offs for a in model.s_wean_times for n3 in model.s_nut_offs
                                for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
+                               if pe.value(model.p_mask_offs[k3,v,w8,z,x,g3]) == 1
                                ) >= model.p_offs_lobound[k3,t,v,z,x,g3]
                 else:
                     return pe.Constraint.Skip
@@ -533,7 +566,7 @@ def f1_boundarypyomo_local(params, model):
                                         for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                                         for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
                                         if pe.value(model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0)
-                                 for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol))
+                                 for a in model.s_wean_times for i in model.s_tol))
                             * model.p_wg_propn_p6z[p6,z]
                             for p6 in model.s_feed_periods)
                     return dse == rhs_dse

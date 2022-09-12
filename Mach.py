@@ -3,12 +3,12 @@
 
 author: young
 
-The functions in this module calculate the rate at which machinery can be used, the cost incurred
+The functions in this module calculate the rate at which machinery can be used, the cost incurred,
 and the timeliness of certain jobs.
 
 The model has been designed to accommodate a range of machine options. Inputs that are dependent
 on machine size are grouped into their own input sheet, this section can be duplicated as many times
-as necessary to represent different machine sizes and or amount of machinery. The model user can
+as necessary to represent different machine sizes and/ or amount of machinery. The model user can
 then select which machine option they want in the analysis.
 The user inputs the desired machinery option in property input section. If the user wants
 to test the impact of different machine options they can alter the input using a saa sensitivity variable.
@@ -20,7 +20,7 @@ factors in Property.xlsx.
 
 To reduce space and complexity the model currently only represents machinery activities for seeding and
 harvest (all other machinery usage is directly converted to a cost linked with another activity).
-Therefore the hours of machinery use outside of seeding and harvest are not tracked. Hence
+Therefore the hours of machinery use outside of seeding and harvest are not tracked. Hence,
 machinery use outside of seeding and harvest does not incur any variable
 depreciation cost. To minimise this error, the rate of variable depreciation can be increased slightly.
 
@@ -28,11 +28,11 @@ Crops and pasture can be sown dry (i.e. seeding occurs before the opening rains 
 of the growing season) or wet (seeding occurs after the opening rains) :cite:p:`RN119`. Dry seeding can
 be useful in weather-years with a late start to the growing season, maximising the growing season and water
 utilisation because the crop can germinate as soon as the first rains come. Dry seeding begins on
-a date specified by the user and can be performed until the opening rains. Wet seeding occurs a set number
+a date specified by the user, and can be performed until the opening rains. Wet seeding occurs a set number
 of days after the opening rains to allow time for weed germination and application of a knockdown spray.
 Wet seeding can only occur during a proportion of the time because some of
 the time it is either too dry or too wet to seed. The timeliness of sowing can have a large impact on
-crop yields AFO accounts for this using a yield penalty (see yield penalty function for more info).
+crop yields. AFO accounts for this using a yield penalty (see yield penalty function for more info).
 
 AFO also represents the ability to hire contract workers to complete harvest and seeding. This can be
 useful for large operations, farms with poor machinery or farms with poor labour availability.
@@ -77,11 +77,11 @@ def sup_mach_cost():
     
     Cost of machinery to feed 1t of each grain to sheep.
 
-    The task of feeding the supplement has a cost reflecting the fuel and machine repairs and maintenance.
+    The task of feeding the supplement has a cost reflecting the fuel, and machine repairs and maintenance.
     This is a variable cost incurred for each tonne of supplement fed. The cost is calculated simply from
     inputs which state the litres required and repairs and maintenance cost to feed 1 tonne of each supplement.
 
-    .. note:: This method of calculating the cost is satisfactory but it could be improved by linking
+    .. note:: This method of calculating the cost is satisfactory, but it could be improved by linking
         the cost of feeding to the distance travelled which is controlled by the rate of feeding (g/hd),
         sheep numbers and the stocking rate (ie lower stocking rate means sheep are spread over a larger area).
         Rate of feeding could be calculated from the tonnes for feed fed (activity), the frequency of feeding
@@ -122,7 +122,7 @@ def f_seed_days():
 def f_contractseeding_occurs():
     '''
     This function just sets the period when contract seeding must occur (period when wet seeding begins).
-    Contract seeding is not hooked up to yield penalty because if your going to hire someone you will hire
+    Contract seeding is not hooked up to yield penalty because if you're going to hire someone you will hire
     them at the optimum time. Contract seeding is hooked up to poc so this param stops the model having late seeding
     (contract seeding must occur in the first seeding period).
     '''
@@ -140,29 +140,33 @@ def f_poc_grazing_days():
     '''
     Grazing days provided by wet seeding activity (days/ha sown in each mach period/feed period).
 
-    This section represents the grazing achieved on crop paddocks before seeding. The longer seeding is
+    This section represents the grazing achieved on crop paddocks before seeding since the previous node. The longer seeding is
     delayed the more grazing is achieved. The calculations also account for a gap between when pasture
     germinates (the pasture break) and when seeding can begin (the seeding break). Dry seeding doesn't
     provide any grazing, so the calculations are only done using the wet seeding days. The calculations
     allow for destocking a certain number of days before seeding (termed the defer period) to allow the pasture
     leaf area to increase so that the knock down spray is effective.
 
-    Grazing days is the sum of, the area grazed multiplied by the number of days of grazing. As such it is
+    Grazing days is the sum of the area grazed multiplied by the number of days of grazing. As such it is
     dependent on both the area that is being grazed and the duration of grazing. The number of grazing days
     is calculated for each seeding decision variable in each machinery period (p5). However, the number
     of grazing days must be calculated for each feed period (p6) so that the
     feed supply will align with the feed demand of the animals (that are calculated for feed periods).
 
     The grazing days associated with the seeding decision variable (per hectare sown) is made up of two parts:
-    A 'rectangular' component which represents the area being grazed each day from the break of season up
-    until the destocking date for the beginning of the machine period.
+    A 'rectangular' component which represents the area being grazed each day from the break of season or the start of
+    the most recent season period up until the destocking date for the beginning of the machine period.
+    The rectangle component must consider the season period because poc only exists when a crop phase has been selected.
+    In the prior season period if the model is waiting to make a landuse decision it can select a temporary pasture (a2)
+    which provides feed. Therefore, to aviod double counting poc is only provided in the current season period. This
+    doesnt effect the triangle component below because the triangle component is based on the current p5 which has to be in the current season period.
     A 'triangle' component which represents the grazing during the seeding period. The area grazed each day
-    diminishes associated with destocking the area that is soon to be sown. For example at the start
+    diminishes associated with destocking the area that is soon to be sown. For example, at the start
     of the period all area can be grazed but by the end of the period once all the area has been destocked
     no grazing can occur. These 2 components must then be allocated to the feed periods.
 
-    'Rectangular' component: The base of the rectangle is defined by the later of the break and the
-    start of the feed period through to the earlier of the end of the feed period or the start of
+    'Rectangular' component: The base of the rectangle is defined by the later of the break, the start of the season period
+     and the start of the feed period through to the earlier of the end of the feed period or the start of
     the machine period.
 
     Triangular component: The base of the triangle starts at the latter of the start of the feed period,
@@ -198,26 +202,31 @@ def f_poc_grazing_days():
     defer_period = np.array([pinp.crop['poc_destock']]) #days between seeding and destocking
     season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'],numpy=True)
     wet_seeding_start_z = per.f_wet_seeding_start_date()
+    date_p7z = per.f_season_periods()
+
+    ##calc the most recent node date for each p5
+    a_p7prev_p5z = fun.searchsort_multiple_dim(date_p7z, date_start_p5z, 1, 1, side='right') - 1
+    p7prev_date_p5z = np.take_along_axis(date_p7z, a_p7prev_p5z, axis=0)
 
     ##calc wet seeding days
     start_pz = np.maximum(wet_seeding_start_z, date_start_p5z)
     seed_days_p5z = np.maximum(0,(date_end_p5z - start_pz))
 
     ##grazing days rectangle component (for p5) and allocation to feed periods (p6)
-    base_p6p5z = (np.minimum(date_end_p6z[:,na,:], date_start_p5z - defer_period) \
-                  - np.maximum(season_break_z, date_start_p6z[:,na,:]))
+    rec_base_p6p5z = (np.minimum(date_end_p6z[:,na,:], date_start_p5z - defer_period) \
+                  - np.maximum(season_break_z, np.maximum(date_start_p6z[:,na,:], p7prev_date_p5z)))
     height_p5z = 1
-    poc_grazing_days_rect_p6p5z = np.maximum(0, base_p6p5z * height_p5z)
+    poc_grazing_days_rect_p6p5z = np.maximum(0, rec_base_p6p5z * height_p5z)
 
     ##grazing days triangular component (for p5) and allocation to feed periods (p6)
     start_p6p5z = np.maximum(date_start_p6z[:,na,:], np.maximum(season_break_z, date_start_p5z - defer_period))
     end_p6p5z = np.minimum(date_end_p6z[:,na,:], date_end_p5z - defer_period)
-    base_p6p5z = (end_p6p5z - start_p6p5z)
+    tri_base_p6p5z = (end_p6p5z - start_p6p5z)
     height_start_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z - defer_period) - start_p6p5z)
                                                     , seed_days_p5z))
     height_end_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z - defer_period) - end_p6p5z)
                                                     , seed_days_p5z))
-    poc_grazing_days_tri_p6p5z = np.maximum(0,base_p6p5z * (height_start_p6p5z + height_end_p6p5z) / 2)
+    poc_grazing_days_tri_p6p5z = np.maximum(0,tri_base_p6p5z * (height_start_p6p5z + height_end_p6p5z) / 2)
 
     ##total grazing days & convert to df
     total_poc_grazing_days_p6p5z = poc_grazing_days_tri_p6p5z + poc_grazing_days_rect_p6p5z
@@ -298,9 +307,9 @@ def fuel_use_seeding():
     
 def tractor_cost_seeding():
     '''
-    Cost of running tractor for seeding.
+    Cost of running a tractor for seeding.
 
-    Tractor cost includes fuel, oil, grease and r&m. Oil, grease repairs and maintenance are calculated
+    Tractor costs includes fuel, oil, grease and r&m. Oil, grease, repairs and maintenance are calculated
     as a factor of fuel cost (see fuel used function for calculation of fuel used for seeding).
 
     '''
@@ -331,7 +340,7 @@ def maint_cost_seeder():
 
 def f1_seed_cost_alloc():
     '''
-    labour period allocation for seeding costs.
+    Labour period allocation for seeding costs.
 
     All seeding costs for a seeding activity must be incurred in the current season node e.g. if seeding happens in node 1
     the costs must be incurred in node 1, to ensure no seasons get free seeding. This happens by default because labour
@@ -434,16 +443,16 @@ def f_sowing_timeliness_penalty():
     '''
     Calculates the biomass penalty in each mach period due to wet sowing timeliness- kg/ha/period/crop.
 
-    The timeliness of sowing can have a large impact on crop biomasss. AFO accounts for this using a
+    The timelines of sowing can have a large impact on crop biomass. AFO accounts for this using a
     biomass penalty.
 
     Late sowing receives a biomass reduction because the crop has less time to mature (e.g. shorter
-    growing season) and grain filling often occurs during hotter drier conditions :cite:p:`RN121, RN122`.
-    The user can specify the length of time after the beginning of wet seeding that no penalty applies
+    growing season) and grain filling often occurs during hotter, drier conditions :cite:p:`RN121, RN122`.
+    The user can specify the length of time after the beginning of wet seeding that no penalty applies,
     after that a penalty is applied. The biomass reduction is cumulative per day, so the longer sowing is
     delayed the larger the biomass reduction.
 
-    biomass penalty reduces grain available to sell and reduces stubble production.
+    Biomass penalty reduces grain available to sell and reduces stubble production.
 
     The assumption is that seeding is done evenly throughout a given period. In reality this is wrong e.g. if a
     period is 5 days long but the farmer only has to sow 20ha they will do it on the first day of the period not

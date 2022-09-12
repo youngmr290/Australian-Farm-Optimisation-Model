@@ -30,7 +30,7 @@ def f_labour_general(params,r_vals):
     Calculates labour supply, labour cost and supervision requirements.
 
     To capture the dynamics of labour, the year is broken into periods :cite:p:`RN89`. The supply of
-    labour in each period by each labour source is calculated and the labour required by each farm
+    labour in each period by each labour source is calculated, and the labour required by each farm
     activity is determined and assigned to the given period/s.
 
     The amount of time available to work in each period depends on the hours that each worker works
@@ -57,9 +57,9 @@ def f_labour_general(params,r_vals):
     permanent staff and thus require more supervision.
 
     The farm manager and permanent staff have four weeks of holiday each year. The holiday timing is flexible (optimised
-    by AFO). This is because managers and permanent staff tend to have a less defined schedule often taking multiple
+    by AFO). This is because managers and permanent staff tend to have a less defined schedule, often taking multiple
     smaller holidays during the year or returning to the farm during holidays to check on things.
-    Additionally, in AFO permanent and casual staff require supervision from the manager which means if the manager
+    Additionally, in AFO, permanent and casual staff require supervision from the manager which means if the manager
     is forced to take their holidays in one big chunk the model may not be able to access labour resulting in randomness
     if the period dates change.
     All labour sources take days off for Christmas, New Year’s Day, and Easter. Permanent staff are

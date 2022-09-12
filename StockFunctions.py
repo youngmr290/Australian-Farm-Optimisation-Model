@@ -29,7 +29,7 @@ def f1_sim_periods(periods_per_year, oldest_animal, len_o):
     Define the days for the simulation periods.
     The year has 52 weeks with 7 days in a week. The extra day of the year is ignored
     All calculations are based on a day of the year rather than a date and the periods are weeks of the year
-    This saves managing hte difficulties associated with the extra day in the year and in leap years.
+    This saves managing the difficulties associated with the extra day in the year and in leap years.
 
     Parameters:
     start_year = int: year to start simulation.
@@ -52,8 +52,8 @@ def f1_sim_periods(periods_per_year, oldest_animal, len_o):
     index_p = np.arange(n_sim_periods)
     date_start_p = index_p * step
     date_start_P = np.arange(len_o * periods_per_year) * step
-    date_end_p = index_p * step + step-1 #end date is 6 days after start date
-    date_end_P = np.arange(len_o * periods_per_year) * step + step-1 #end date is 6 days after start date
+    date_end_p = index_p * step + step-1 #end date is the day before the next period start date
+    date_end_P = np.arange(len_o * periods_per_year) * step + step-1 #end date is the day before the next start date
     return n_sim_periods, date_start_p.astype(int), date_start_P.astype(int), date_end_p.astype(int), date_end_P.astype(int), index_p, step
 
 
@@ -871,7 +871,8 @@ def f_progenyfd_mu(cu1, cg, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_st
     return fd_adj, cf_fd_dams
 
 
-def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start, age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect):
+def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start
+           , age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect):
     ##Max milk prodn based on dam rc birth
     mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
     ##Excess ME available for milk	
@@ -886,6 +887,7 @@ def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start,
                                                     - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))
 #    mp1 = cl[7, ...] * mpmax / (1 + np.exp(-(-cl[19, ...] + cl[20, ...] * milk_ratio + cl[21, ...] * ad * (milk_ratio - cl[22, ...] * ad) - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))))
     ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
+    ### Based on the standard parameter values 'Suckling volume of young' is very rarely limiting milk production.
     mp2 = np.minimum(mp1, np.mean(fun.f_dynamic_slice(ffcfw75_exp_yatf, i_x_pos, 1, None), axis = i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
     ##ME for lactation (per day lactating)	
     mel = mp2 / (cl[5, ...] * kl)
@@ -1289,8 +1291,8 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, nlb, crg_doy, n
     Some dams conceive (and don't return to service) but don't carry to birth (the third trimester)
     due to abortion during pregnancy, this is taken into account.
     #todo The conversion of the prediction from 2 cycles back to one cycle doesn't include this loss
-    # which then increases the proportion of empty ewes and reduces the expected RR.
-    # The correction has been removed for now.
+    #which then increases the proportion of empty ewes and reduces the expected RR.
+    #The correction has been removed for now.
     The values are altered by a sensitivity analysis on scanning percentage
     Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can
     be controlled for relative economic values
@@ -1823,7 +1825,7 @@ def f1_season_wa(numbers, var, season, mask_min_lw_z, period_is_startseason):
     return var
 
 
-def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, period_is_condense):
+def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, period_is_condense, pkl_condensed_value=None, param_name=None):
     """
     Condense variable to x common points along the w axis when period_is_condense.
     Currently this function only handle 2 or 3 initial liveweights. The order of the returned W axis is M, H, L for 3 initial lws or H, L for 2 initial lws.
@@ -1939,9 +1941,33 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
                 sl = [slice(None)] * temporary.ndim
                 sl[sinp.stock['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
                 temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, sinp.stock['i_w_pos']) #if you get an error here it probably means no animals had mort less than 10%
-        ###Update if the period is start of year (shearing for offs and prejoining for dams)
-        var = fun.f_update(var, temporary, period_is_condense)
 
+        ###update and use pkl condensed var
+        ###Every trial creates a new pkl that is identified using the fs pkl number. Some trials use stored values and then essentially just create a copy. This is done so that the same fs numbers can be used.
+        ###Note: can't create with w_start_len==2 and use for w_start_len==3 or visa versa (dont think this can happen with fs anyway so shouldnt be a problem).
+        ###see google doc (randomness section) for more info.
+        if param_name is not None:
+            if sinp.structuralsa['i_use_pkl_condensed_start_condition']:
+                ####store t length before updating
+                t_pos = sinp.stock['i_p_pos'] #t is in p pos because p has been sliced
+                i_t_len = temporary.shape[t_pos]
+                ####update temporary with pickled value
+                temporary = pkl_condensed_value[param_name]
+                ####handle when the current trial has a number of w slices than the create trial
+                if i_w_len!=temporary.shape[sinp.stock['i_w_pos']]:
+                    #####cut back to 3 w slices that represent the start animals
+                    temporary = fun.f_dynamic_slice(temporary, sinp.stock['i_w_pos'], 0, None, int(temporary.shape[sinp.stock['i_w_pos']]/sinp.structuralsa['i_w_start_len1']))
+                    #####expand back to the number of w in the current trial
+                    a_s_w = (np.arange(i_w_len)/(i_w_len/sinp.structuralsa['i_w_start_len1'])).astype(int)
+                    a_s_twg = fun.f_expand(a_s_w, left_pos=sinp.stock['i_w_pos'], right_pos2=sinp.stock['i_w_pos'], left_pos2=-len(temporary.shape)-1)
+                    temporary = np.take_along_axis(temporary, a_s_twg, axis=sinp.stock['i_w_pos'])
+                ####handle when the pkl condensed values dont have a t axis but the t axis is active - this can occur if the condensed params were saved in a trial where t was not active. The t axis still gets stored on the fs even if the generator didnt have an active t therefore it needs to be activated here.
+                if i_t_len>temporary.shape[t_pos]:
+                    temporary = np.concatenate([temporary]*i_t_len, axis=t_pos) #wont work if pkl trial had t axis but current trial doesnt - to handle this would require passing in the a_t_g association.
+            pkl_condensed_value[param_name] = temporary.copy()  # have to copy so that traits (e.g. mort) that are added to using += do not also update the value (not sure the copy is required here but have left it in since it was required for the rev)
+
+        ###Update if the period is condense (shearing for offs and prejoining for dams)
+        var = fun.f_update(var, temporary, period_is_condense)
     return var
 
 
@@ -2616,7 +2642,7 @@ def f1_p2v(production_p, dvp_pointer_p, numbers_p=np.array([1]), on_hand_tp=True
         pass
     p_pos=sinp.stock['i_p_pos']
     ##broadcast everything - so that i can create final array and mask p
-    final_shape_vp = np.broadcast(production_p, numbers_p, index_any1tp, index_any2any1tp, on_hand_tp, period_is_tp).shape
+    final_shape_vp = np.broadcast(production_p, numbers_p, dvp_pointer_p, index_any1tp, index_any2any1tp, on_hand_tp, period_is_tp).shape
     ###remove p axis
     final_shape = final_shape_vp[:p_pos] + (np.max(dvp_pointer_p)+1,) + final_shape_vp[p_pos+1:]  # bit messy because need v t and all the other axis (but not p)
     ##initilise final array - it is assigned to by slice
@@ -2879,6 +2905,12 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     of a class (D,S,Tw) are all the same weight (for a given nutrition profile), so the generator could split
     them accurately for BTRT based on LW.
 
+    Note: A distribution of liveweight at the end of a period would be technically correct i.e. a given class of
+    animal that are offered a given feed supply for a period of time will result in spread of final weights, even
+    if all the animals started at the same weight. However, in AFO it only results in a single weight. A fix could
+    be to add a normal distribution to the final weights, however, this would significantly complicate debugging
+    because it would make following a class of animals between periods very difficult.
+
     :param ffcfw_dest_w8g: The LW at the end of the DVP for the animals that define each w9 constraint (in w8 axis position)
     :param ffcfw_source_w8g: The LW at the end of the DVP, of the animals to be distributed
     :param mask_dest_wg: mask the destination slices for the distribution
@@ -2978,7 +3010,7 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     # distribution_error = np.any(np.sum(distribution_w8gw9, axis=-1)>1)
 
     ##Set defaults for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
-    distribution_w8gw9 = fun.f_update(distribution_w8gw9, 1, dvp_type_next_tvgw!=vtype)
+    distribution_w8gw9 = fun.f_update(distribution_w8gw9, np.array([1],dtype=np.float32), dvp_type_next_tvgw!=vtype) #make 1 an numpy array so it can be float32 to make f_update more data effcient.
     return distribution_w8gw9
 
 

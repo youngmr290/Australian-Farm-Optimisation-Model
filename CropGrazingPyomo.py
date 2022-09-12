@@ -93,7 +93,7 @@ def f_con_crop_DM_transfer(model):
     '''
     Links seeding with the ability to graze crops.
 
-    Each period following seeding provide feed (if it is within the crop grazing window) which can be consumed
+    Each period following seeding provides feed (if it is within the crop grazing window) which can be consumed
     in the given period. DM that is not consumed is transferred into the following feed period (without
     changing the growth rate of the crop).
 

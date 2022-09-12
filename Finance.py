@@ -2,7 +2,7 @@
 """
 author: young
 
-The financial components of the model include:
+The financial components of the model includes:
 
     - interest
     - cashflow
@@ -107,14 +107,14 @@ na = np.newaxis
 #######################
 # cashflow & interest #
 #######################
-def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
+def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False, is_phase_cost=False):
     '''
     Allocates cashflow and wc to a season period and accounts for an interest component.
 
     Cashflow allocation always has a length of 1. Meaning that cost is allocated based on the start date when it is
     incurred. Interest is calculated from this date until the end of the cashflow periods. The reason for not
-    including a length is that cashflow for a give decision variable can not cross a season junction
-    otherwise some seasons do not incur the cashflow.
+    including a length is that cashflow for a give decision variable can not cross a node
+    otherwise the child weather years do not incur the cashflow.
 
     Working capital is tallied for each 'main' enterprise (controlled by user inputs).
     The working capital is accumulated from the most recent main income (across all enterprises) until the peak debt
@@ -125,6 +125,7 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     :param enterprise: enterprise. If no enterprise is passed in the cashflow is averaged across the c0 axis.
     :param z_pos: axis position of z (must be negative e.g. reference from the end).
     :param c0_inc: boolean stating if c0 axis is included in date_incurred
+    :param is_phase_cost: boolean stating if the cost is related to v_phase.
     '''
 
     ##inputs
@@ -152,6 +153,16 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     wc_interest_c0 = (1 + rate / 364) ** wc_incur_days_c0 * (wc_incur_days_c0>=0) #bool to make wc 0 if the cashflow item occurs between peak debt and cashflow date (this stops an enterprises main income being included in wc constraint).
 
     ##allocate to cashflow period
+    ###adjust the timing of phases costs so that no cost is incurred between season start and break of season.
+    ### this stops the model getting double costs in medium/late breaks where phases are carried over past the
+    ### start of the season to provide dry pas and stubble area (because it is also accounted for by v_phase_increment).
+    ### note - this is done after calculating interest because want to calc interest using the inputted timing date
+    if is_phase_cost:
+        i_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
+        date_break = fun.f_expand(i_break_z, z_pos) #adjust to get z axis in the correct position.
+        season_start = per.f_season_periods()[0, 0]  # slice season node to get season start
+        between_seasonstart_brkseason = np.logical_and(date_incurred_c0%364>=season_start, date_incurred_c0%364<date_break)
+        date_incurred_c0 = fun.f_update(date_incurred_c0%364, date_break, between_seasonstart_brkseason)
     p7_alloc_p7c0 = zfun.f1_z_period_alloc(date_incurred_c0[na,...], z_pos=z_pos)
 
     ##add interest adjustment
@@ -162,17 +173,22 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False):
     ##If both stk and crp are both big enterprises then wc is basically reset at the point of main income for both enterprises.
     ## Therefore, in real life, stk wc accumulates from just after harv (main income for crop) until just before shearing
     ## (peak debt for stk). And crp wc accumulates from just after shearing until just before harvest.
-    ##If only one enterprise is big then wc accumulates from just after the main income for that enterprise until just before the main income for that enterprise.
-    ###mask c0 included - enterprises are only included if they are main enterprises (if it is a small enterprise it doesnt need its own wc constraint)
+    ##If only one enterprise is big then wc accumulates from just after the main income for that enterprise until
+    ### just before the main income for that enterprise.
+    ##mask c0 included - enterprises are only included if they are main enterprises (if it is a small enterprise
+    ### it doesn't need its own wc constraint because the income will be insufficient to affect peak debt)
     crop_c0_inc = np.array([pinp.crop['i_crp_c0_inc']])
     stk_c0_inc = np.array([pinp.sheep['i_stk_c0_inc']])
     mask_c0_inc = np.concatenate([stk_c0_inc, crop_c0_inc]) #order of concat is important - needs to be the same as the c0 order in periods.py
     ###date of the most recent main income relative to stk peak debt
-    stk_previous_main_cashflow = np.max(start_of_cash_c0[mask_c0_inc]*(start_of_cash_c0<peakdebt_date_c0[0]%364), axis=0, keepdims=True)
-    crp_previous_main_cashflow = np.max(start_of_cash_c0[mask_c0_inc]*(start_of_cash_c0<peakdebt_date_c0[1]%364), axis=0, keepdims=True)
-    previous_main_cashflow = np.concatenate([stk_previous_main_cashflow,crp_previous_main_cashflow]) #order of concat is important - needs to be the same as the c0 order in periods.py
+    stk_previous_main_cashflow = np.max(start_of_cash_c0[mask_c0_inc] * (start_of_cash_c0<peakdebt_date_c0[0] % 364)
+                                        , axis=0, keepdims=True)
+    crp_previous_main_cashflow = np.max(start_of_cash_c0[mask_c0_inc] * (start_of_cash_c0<peakdebt_date_c0[1] % 364)
+                                        , axis=0, keepdims=True)
+    previous_main_cashflow = np.concatenate([stk_previous_main_cashflow, crp_previous_main_cashflow]) #order of concat is important - needs to be the same as the c0 order in periods.py
     ###check if date incurred falls between last main income (from either enterprise) and peak debt date
-    mask_wc_c0 = np.logical_and(date_incurred_c0%364 >= previous_main_cashflow, date_incurred_c0%364 <= peakdebt_date_c0%364)
+    mask_wc_c0 = np.logical_and(date_incurred_c0 % 364 >= previous_main_cashflow
+                                , date_incurred_c0 % 364 <= peakdebt_date_c0 % 364)
     final_wc_p7c0 = final_wc_p7c0 * mask_wc_c0
 
     ##get axis back into correct order - because all the other code was done before this function so rest of code expects different order
@@ -235,7 +251,7 @@ def overheads(params, r_vals):
 #################
 #Min ROE        #
 #################
-def f_min_roe():
+def f1_min_roe():
     ##the default inputs for min roe are different for steady-state and stochastic version.
     ##but one SAV controls both inputs. So steady-state and stochastic can fairly be compared.
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
