@@ -102,6 +102,7 @@ def f_report(processor, trials, non_exist_trials):
     stacked_salegrid_dams = pd.DataFrame()  # sale grid
     stacked_salegrid_yatf = pd.DataFrame()  # sale grid
     stacked_salegrid_offs = pd.DataFrame()  # sale grid
+    stacked_saleage_offs = pd.DataFrame()  # sale grid
     stacked_salevalue_dams = pd.DataFrame()  # average sale value dams
     stacked_salevalue_offs = pd.DataFrame()  # average sale value offs
     stacked_salevalue_prog = pd.DataFrame()  # average sale value offs
@@ -313,6 +314,18 @@ def f_report(processor, trials, non_exist_trials):
                                    keys=keys, arith=arith, index=index, cols=cols)
             salegrid_offs = pd.concat([salegrid_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_salegrid_offs = rep.f_append_dfs(stacked_salegrid_offs, salegrid_offs)
+
+        if report_run.loc['run_saleage_offs', 'Run']:
+            type = 'stock'
+            prod = 'saleage_tvnwzida0e0b0xyg3'
+            keys = 'offs_keys_tvnwzida0e0b0xyg3'
+            arith = 0
+            index =[1]
+            cols = [0,6,9,10,12,3] #t,d,b,x,g,w
+            saleage_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, 
+                                   keys=keys, arith=arith, index=index, cols=cols)
+            saleage_offs = pd.concat([saleage_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_saleage_offs = rep.f_append_dfs(stacked_saleage_offs, saleage_offs)
 
         if report_run.loc['run_salevalue_dams', 'Run']:
             type = 'stock'
@@ -1337,6 +1350,8 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_salegrid_yatf, 'salegrid_yatf', df_settings, option=xl_display_mode)
     if report_run.loc['run_salegrid_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_salegrid_offs, 'salegrid_offs', df_settings, option=xl_display_mode)
+    if report_run.loc['run_saleage_offs', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_saleage_offs, 'saleage_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_salevalue_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_salevalue_offs, 'salevalue_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_salevalue_dams', 'Run']:
