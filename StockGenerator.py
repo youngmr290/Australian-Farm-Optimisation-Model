@@ -5451,7 +5451,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##offs
     ###t0 - retained
-    ###t1 - For dsp sold first period of dvp for SE sold target age or target weight or sold on the last day of dvp (not much value selling at start of dvp for SE model because there is only 1 dvp)
+    ###t1 - For dsp (and when nodes are included) sold first period of dvp for SE sold target age or target weight or sold on the last day of dvp (not much value selling at start of dvp for SE model because there is only 1 dvp)
     ###t2 - sold target age or target weight or sold on the last day of dvp
 
     ###calc sale date then determine shearing date
@@ -5470,7 +5470,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                                     sale_age_tpa1e1b1nwzida0e0b0xyg3 <= age_end_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p]),
                                                      weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
     ###if dsp then t1 is sell at start of dvp
-    if not bool_steady_state:
+    if not bool_steady_state or pinp.general['i_inc_node_periods']:
         sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...] = period_is_startdvp_pa1e1b1nwzida0e0b0xyg3
     ###on hand - combine period_is_sale & period_is_transfer then use cumulative max to convert to on_hand
     ### note: animals are on hand in the period they are sold ie sale takes place on the last minute of the period.
