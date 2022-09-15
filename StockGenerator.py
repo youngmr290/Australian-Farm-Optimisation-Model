@@ -5878,6 +5878,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                          - husbandry_cost_p7tpg3)
     wc_c0p7tpa1e1b1nwzida0e0b0xyg3 =  husbandry_cost_wc_c0p7tpg3
     ####report info
+    r_saleage_tpa1e1b1nwzida0e0b0xyg3 = age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
     r_salegrid_tpa1e1b1nwzida0e0b0xyg3 = r_salegrid_tpa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
     r_salevalue_p7tpa1e1b1nwzida0e0b0xyg3 = salevalue_tpa1e1b1nwzida0e0b0xyg3 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg[:,:,mask_p_offs_p]
     r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg3 = woolvalue_tpa1e1b1nwzida0e0b0xyg3 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg[:,:,mask_p_offs_p]
@@ -7072,6 +7073,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1)
     r_salevalue_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_salevalue_p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
+    r_saleage_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_saleage_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
+                                                     on_hand_tpa1e1b1nwzida0e0b0xyg3)
     r_salegrid_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_salegrid_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
                                                      on_hand_tpa1e1b1nwzida0e0b0xyg3)
     r_woolvalue_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
@@ -8231,6 +8234,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg0,'salegrid_zg0', shape=zg0_shape)
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg1,'salegrid_tva1e1b1nwziyg1', shape=tva1e1b1nwziyg1_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg2,'salegrid_Tva1e1b1nwzixyg2', shape=Tva1e1b1nwzixyg2_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
+    fun.f1_make_r_val(r_vals,r_saleage_tva1e1b1nwzida0e0b0xyg3,'saleage_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg3,'salegrid_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
 
     fun.f1_make_r_val(r_vals,r_woolvalue_p7tva1e1b1nwzida0e0b0xyg0,'woolvalue_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
