@@ -535,7 +535,10 @@ def f1_expand_p6():
         index_p6z = np.arange(len(a_p6std_p6z))[:,na]
         pasture_inputs[pasture]['EndGS'] = np.max((a_p6std_p6z == pasture_inputs[pasture]['EndGS']) * index_p6z, axis=0)
         pasture_inputs[pasture]['i_dry_exists'] = np.max((a_p6std_p6z == pasture_inputs[pasture]['i_dry_exists']) * index_p6z, axis=0) \
-                                                  - (np.count_nonzero(a_p6std_p6z == pasture_inputs[pasture]['i_dry_exists'], axis=0) -1) #have to minus count non zero in case an extra fp is added in the period dry pas become available. because in this case we still want to point at the first period it become available (opposite to end of gs)
+                                                  - (np.count_nonzero(a_p6std_p6z == pasture_inputs[pasture]['i_dry_exists'], axis=0) -1) #have to minus count non zero in case an extra fp is added in the period dry pas becomes available. because in this case we still want to point at the first period it become available (opposite to end of gs)
+
+    ###crop residue
+    stubble['i_fp_end_stub_z'] = np.max((a_p6std_p6z == stubble['i_fp_end_stub_z']) * index_p6z, axis=0)
 
     ###fp index needs special handling because it isn't just expanded it is rebuilt
     period['i_fp_idx'] = ['fp%02d'%i for i in range(len(a_p6std_p6z))]
