@@ -151,8 +151,6 @@ def f1_boundarypyomo_local(params, model):
 
         ##bound on supplement per dse
         if sup_per_dse_bnd_inc:
-            ###initilise
-            pasture_dse_carry = {} #populate straight into dict
             ### set bound
             p_sup_per_dse_bnd = sen.sav['bnd_sup_per_dse']
             ###param - propn of each fp used in the SR
@@ -178,7 +176,7 @@ def f1_boundarypyomo_local(params, model):
                 else:
                     return pe.Constraint.Skip
             model.con_sup_per_dse_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=sup_per_dse_bound,
-                                                doc='stocking rate bound for each feed period')
+                                                doc='total supplement fed per dse for the whole year')
 
         ##dam lo bound. (the sheep in a given yr equal total for all dvp divided by the number of dvps in 1 yr)
         if dams_lobound_inc:
