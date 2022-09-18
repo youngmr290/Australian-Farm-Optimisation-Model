@@ -82,7 +82,7 @@ def f_report(processor, trials, non_exist_trials):
 
     ## A control to switch between reporting the optimised production level (True) and the production assumptions (False)
     ### Note this is only active for some of the reports. It also changes the axes that are reported, often adding a w axis
-    lp_vars_inc = False
+    lp_vars_inc = True
 
     ##create empty df to stack each trial results into
     stacked_infeasible = pd.DataFrame().rename_axis('Trial')  # name of any infeasible trials
@@ -285,7 +285,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'dams_keys_tva1e1b1nwziyg1'
             arith = 0
             index =[1]
-            cols = [10,0,4,6] #g,t,b,w
+            cols = [10,0,4] #g,t,b,w
             salegrid_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, 
                                    keys=keys, arith=arith, index=index, cols=cols)
             salegrid_dams = pd.concat([salegrid_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
@@ -297,7 +297,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'yatf_keys_Tvaebnwzixy1g2'
             arith = 0
             index =[1]
-            cols = [11,9,0,4,6] #g,x,t,b,w
+            cols = [11,9,0,4] #g,x,t,b,w
             salegrid_yatf = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
                                    keys=keys, arith=arith, index=index, cols=cols)
             salegrid_yatf = pd.concat([salegrid_yatf],keys=[trial_name],names=['Trial'])  # add trial name as index level
@@ -309,7 +309,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_tvnwzida0e0b0xyg3'
             arith = 0
             index =[1]
-            cols = [0,3,8,9,10,12] #t,w,e,b,x,g
+            cols = [0,8,9,10,12] #t,e,b,x,g
             salegrid_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, 
                                    keys=keys, arith=arith, index=index, cols=cols)
             salegrid_offs = pd.concat([salegrid_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
@@ -321,7 +321,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_tvnwzida0e0b0xyg3'
             arith = 0
             index =[1]
-            cols = [0,6,9,10,12,3] #t,d,b,x,g,w
+            cols = [0,6,9,10,12] #t,d,b,x,g
             saleage_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, 
                                    keys=keys, arith=arith, index=index, cols=cols)
             saleage_offs = pd.concat([saleage_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
@@ -599,7 +599,7 @@ def f_report(processor, trials, non_exist_trials):
             arith = 1
             if lp_vars_inc:
                 index = [5] #p
-                cols = [8] #b
+                cols = [2, 8] #b
             else:    #adding the w axis while still reporting with lp_vars weighting
                 index = [5] #p
                 cols = [2,3,10] #b,w
@@ -707,7 +707,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_qsk3k5tvpnwzidaebxyg3'
             arith = 1
             index = [3, 6]      #k5, p. k5 here to save columns when many w
-            cols = [17, 15, 4, 8]   #g3, x, t, w
+            cols = [17, 15, 2,4]   #g3, x, t, w
             axis_slice = {}
             axis_slice[13] = [0,1,1] #e: first cycle
             axis_slice[11] = [2,-1,1] #dam age: Adult
@@ -943,7 +943,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_qsk3k5tvnwziaxyg3'
             arith = 2
             index =[5]                  #DVP
-            cols =[8, 13, 11, 2, 3, 4]   #z, g3, Gender, dam age, BTRT, t
+            cols =[8, 13, 11, 2, 3, 4,7]   #z, g3, Gender, dam age, BTRT, t
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
