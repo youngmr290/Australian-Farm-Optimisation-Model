@@ -172,7 +172,7 @@ def f_p_dates_df():
         # index = ['P%02d' % i for i in range(len(periods))]
         # periods.index = index
 
-    ##if dsp check the nodes have been included
+    ##if dsp, check the nodes have been included
     if not pinp.general['steady_state'] and np.count_nonzero(pinp.general['i_mask_z']) != 1:
         ##error check: node dates must be included in the lab periods
         date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'], numpy=True, axis=0)
@@ -211,22 +211,24 @@ def f_feed_periods(option=0):
         2 = return association between std feed periods and node adjusted feed periods
     '''
     ##calc feed period dates from inputs plus adjust for node dates.
-    fp_std_p6z = pinp.period['i_dsp_fp_date']
+    fp_p6z = pinp.period['i_dsp_fp_date']
 
-    ###add node dates as feed periods if dsp
-    if pinp.general['i_inc_node_periods'] or np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
-        date_node_mz = pinp.general['i_date_node_zm'].T
-        date_node_mz = date_node_mz + 364 * (date_node_mz < fp_std_p6z[0,:])
-        fp_p6z = np.concatenate([fp_std_p6z, date_node_mz])
-        t_fp_p6z = zfun.f_seasonal_inp(fp_p6z, numpy=True, axis=1) #apply z mask so that duplication removing below only looks at the active seasons.
-        ###remove duplicate periods
-        duplicate_mask_p6 = []
-        for p6 in range(t_fp_p6z.shape[0]):  # maybe there is a way to do this without a loop.
-            duplicate_mask_p6.append(np.all(np.any(t_fp_p6z[p6,...] == t_fp_p6z[0:p6,...], axis=0, keepdims=True)))
-        fp_p6z = fp_p6z[np.logical_not(duplicate_mask_p6)]
-        fp_p6z = np.sort(fp_p6z, axis=0)
-    else: #if nodes are not added then the adjusted fps are the same as the std fp.
-        fp_p6z = pinp.period['i_dsp_fp_date']
+    ##automatically adding nodes to fps resulted in error with scenesence - see google doc dsp section
+    fp_std_p6z = fp_p6z
+    # ###add node dates as feed periods if dsp
+    # if pinp.general['i_inc_node_periods'] or np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
+    #     date_node_mz = pinp.general['i_date_node_zm'].T
+    #     date_node_mz = date_node_mz + 364 * (date_node_mz < fp_std_p6z[0,:])
+    #     fp_p6z = np.concatenate([fp_std_p6z, date_node_mz])
+    #     t_fp_p6z = zfun.f_seasonal_inp(fp_p6z, numpy=True, axis=1) #apply z mask so that duplication removing below only looks at the active seasons.
+    #     ###remove duplicate periods
+    #     duplicate_mask_p6 = []
+    #     for p6 in range(t_fp_p6z.shape[0]):  # maybe there is a way to do this without a loop.
+    #         duplicate_mask_p6.append(np.all(np.any(t_fp_p6z[p6,...] == t_fp_p6z[0:p6,...], axis=0, keepdims=True)))
+    #     fp_p6z = fp_p6z[np.logical_not(duplicate_mask_p6)]
+    #     fp_p6z = np.sort(fp_p6z, axis=0)
+    # else: #if nodes are not added then the adjusted fps are the same as the std fp.
+    #     fp_p6z = pinp.period['i_dsp_fp_date']
 
     ###return association between fp inputs and fp after node adjustment (before handling z axis)
     if option==2:
@@ -236,6 +238,15 @@ def f_feed_periods(option=0):
 
     ###handle z axis
     fp_p6z = zfun.f_seasonal_inp(fp_p6z, numpy=True, axis=1)
+
+    ##if dsp, check the nodes have been included
+    if not pinp.general['steady_state'] and np.count_nonzero(pinp.general['i_mask_z']) != 1:
+        ##error check: node dates must be included in the lab periods
+        date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'], numpy=True, axis=0)
+        if np.all(np.any(fp_p6z[:,:,na]==date_node_zm, axis=0)):
+            pass
+        else:
+            raise exc.FeedPeriodError('''Season nodes are not all included in feed periods''')
 
     ### return array of fp dates
     if option==0:
