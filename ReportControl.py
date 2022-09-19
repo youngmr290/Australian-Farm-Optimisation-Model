@@ -599,7 +599,7 @@ def f_report(processor, trials, non_exist_trials):
             arith = 1
             if lp_vars_inc:
                 index = [5] #p
-                cols = [2, 8] #b
+                cols = [2] #k2
             else:    #adding the w axis while still reporting with lp_vars weighting
                 index = [5] #p
                 cols = [2,3,10] #b,w
