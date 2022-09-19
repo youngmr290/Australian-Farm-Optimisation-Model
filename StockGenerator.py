@@ -5466,7 +5466,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##offs
     ###t0 - retained
-    ###t1 - For dsp sold first period of dvp for SE sold target age or target weight or sold on the last day of dvp (not much value selling at start of dvp for SE model because there is only 1 dvp)
+    ###t1 - For dsp (and when nodes are included) sold first period of dvp for SE sold target age or target weight or sold on the last day of dvp (not much value selling at start of dvp for SE model because there is only 1 dvp)
     ###t2 - sold target age or target weight or sold on the last day of dvp
 
     ###calc sale date then determine shearing date
@@ -5485,7 +5485,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                                     sale_age_tpa1e1b1nwzida0e0b0xyg3 <= age_end_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p]),
                                                      weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
     ###if dsp then t1 is sell at start of dvp
-    if not bool_steady_state:
+    if not bool_steady_state or pinp.general['i_inc_node_periods']:
         sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...] = period_is_startdvp_pa1e1b1nwzida0e0b0xyg3
     ###on hand - combine period_is_sale & period_is_transfer then use cumulative max to convert to on_hand
     ### note: animals are on hand in the period they are sold ie sale takes place on the last minute of the period.
@@ -5893,6 +5893,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                          - husbandry_cost_p7tpg3)
     wc_c0p7tpa1e1b1nwzida0e0b0xyg3 =  husbandry_cost_wc_c0p7tpg3
     ####report info
+    r_saleage_tpa1e1b1nwzida0e0b0xyg3 = age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
     r_salegrid_tpa1e1b1nwzida0e0b0xyg3 = r_salegrid_tpa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
     r_salevalue_p7tpa1e1b1nwzida0e0b0xyg3 = salevalue_tpa1e1b1nwzida0e0b0xyg3 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg[:,:,mask_p_offs_p]
     r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg3 = woolvalue_tpa1e1b1nwzida0e0b0xyg3 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg[:,:,mask_p_offs_p]
@@ -7094,6 +7095,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1)
     r_salevalue_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_salevalue_p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
+    r_saleage_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_saleage_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
+                                                     on_hand_tpa1e1b1nwzida0e0b0xyg3)
     r_salegrid_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_salegrid_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
                                                      on_hand_tpa1e1b1nwzida0e0b0xyg3)
     r_woolvalue_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
@@ -8284,6 +8287,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg0,'salegrid_zg0', shape=zg0_shape)
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg1,'salegrid_tva1e1b1nwziyg1', shape=tva1e1b1nwziyg1_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg2,'salegrid_Tva1e1b1nwzixyg2', shape=Tva1e1b1nwzixyg2_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
+    fun.f1_make_r_val(r_vals,r_saleage_tva1e1b1nwzida0e0b0xyg3,'saleage_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg3,'salegrid_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
 
     fun.f1_make_r_val(r_vals,r_woolvalue_p7tva1e1b1nwzida0e0b0xyg0,'woolvalue_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)

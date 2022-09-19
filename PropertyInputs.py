@@ -438,6 +438,7 @@ def f_property_inp_sa():
     ###sar
 
     ##mask out unrequired nodes dates - nodes are removed if there are double ups or if a season is not identified at the node (and node is not used as fvp)
+    ## includes the masked out season in the test below. This is to remove randomness if comparing with a different season mask. If a season is removed we dont want the number of node periods to change.
     ## has to be here because if affects two inputs so cant put it in f_season_periods.
     ###test for duplicate
     duplicate_mask_m = []
@@ -447,9 +448,13 @@ def f_property_inp_sa():
     ###test if any season is identified at the node
     import SeasonalFunctions as zfun #have to import here since zfun imports pinp.
     mask_zm = np.logical_or(general['i_date_initiate_z'][:,na]==general['i_date_node_zm'], general['i_node_is_fvp'])
-    mask_zm = zfun.f_seasonal_inp(mask_zm,numpy=True,axis=0)
     mask_m = np.any(mask_zm, axis=0)
     mask_m = np.logical_and(duplicate_mask_m, mask_m)
+    ###if steady state and nodes are not included then mask out node period (except p7[0])
+    if np.logical_not(general['i_inc_node_periods']) and (
+            general['steady_state'] or np.count_nonzero(general['i_mask_z']) == 1):
+        mask_m[1:] = False
+    ###mask inputs
     general['i_date_node_zm'] = general['i_date_node_zm'][:,mask_m]
     general['i_node_is_fvp'] = general['i_node_is_fvp'][mask_m]
     general['i_phase_can_increase_kp7'] = general['i_phase_can_increase_kp7'][:,mask_m]
@@ -530,7 +535,10 @@ def f1_expand_p6():
         index_p6z = np.arange(len(a_p6std_p6z))[:,na]
         pasture_inputs[pasture]['EndGS'] = np.max((a_p6std_p6z == pasture_inputs[pasture]['EndGS']) * index_p6z, axis=0)
         pasture_inputs[pasture]['i_dry_exists'] = np.max((a_p6std_p6z == pasture_inputs[pasture]['i_dry_exists']) * index_p6z, axis=0) \
-                                                  - (np.count_nonzero(a_p6std_p6z == pasture_inputs[pasture]['i_dry_exists'], axis=0) -1) #have to minus count non zero in case an extra fp is added in the period dry pas become available. because in this case we still want to point at the first period it become available (opposite to end of gs)
+                                                  - (np.count_nonzero(a_p6std_p6z == pasture_inputs[pasture]['i_dry_exists'], axis=0) -1) #have to minus count non zero in case an extra fp is added in the period dry pas becomes available. because in this case we still want to point at the first period it become available (opposite to end of gs)
+
+    ###crop residue
+    stubble['i_fp_end_stub_z'] = np.max((a_p6std_p6z == stubble['i_fp_end_stub_z']) * index_p6z, axis=0)
 
     ###fp index needs special handling because it isn't just expanded it is rebuilt
     period['i_fp_idx'] = ['fp%02d'%i for i in range(len(a_p6std_p6z))]
