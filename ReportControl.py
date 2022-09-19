@@ -453,7 +453,7 @@ def f_report(processor, trials, non_exist_trials):
             index = [0]             #q so that it only has 1 row
             cols = [13]             #g3
             axis_slice = {}
-            axis_slice[4] = [1,None,1] #t: only the sale slices
+            axis_slice[2] = [1,None,1] #t: only the sale slices
             axis_slice[11] = [1,2,1] #x: Castrate
 
             saledateEL_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -629,9 +629,9 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'dams_keys_qsk2tvPanwziy1g1'
             arith = 1
             index = [5] #p
-            cols = [4] #v
+            cols = [2,4] #k2,v
             axis_slice = {}
-            axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
+            # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
             axis_slice[4] = [0, 7, 1]     #DVPs 0 to 6 inclusive
             ffcfw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
                                      , na_weights=na_weights, keys=keys, arith=arith
