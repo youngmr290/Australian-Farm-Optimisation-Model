@@ -80,6 +80,20 @@ def f_season_precalcs(params, r_vals):
         season_seq_prob_qsz[q, ...] = prob_qsz[q, ...] * np.sum(season_seq_prob_qsz[q-1, :, :, na]
                                                                 * parent_qs9_qs8zs9[q, ...], axis = (0,1))[...,na]
 
+    ##probability of a weather-year in each year of the sequence (which is the cum prob for year 0) for each p7.
+    ## in p7 when the seasons are clustered the parent season probability includes the cluster children.
+    len_p7 = date_season_node_p7z.shape[0]
+    season_prob_p7z = np.zeros((len_p7, len_z))
+    season_prob_p7z[-1,...] = i_season_propn_z
+    for p7 in reversed(range(len_p7-1)):
+        season_prob_p7z[p7,...] = np.sum(season_prob_p7z[p7+1,na,:] * mask_provwithinz8z9_p7z8z9[p7], axis=-1)
+    season_prob_p7z = season_prob_p7z / np.sum(season_prob_p7z, axis=-1, keepdims=True) #scale so prob equals 1
+    prob_qszp7 = mask_s8vars_qs8[..., na, na] * season_prob_p7z.T
+    season_seq_prob_qszp7 = prob_qszp7.copy()
+    for q in range(1, len_q):   #calculate cum prob in a loop because requires summing across z in q_prev
+        season_seq_prob_qszp7[q, ...] = prob_qszp7[q,...] * np.sum(season_seq_prob_qsz[q-1, :, :, na]
+                                                                * parent_qs9_qs8zs9[q,...], axis = (0,1))[:,na,na]
+
     p_wyear_inc_qs = mask_s8vars_qs8  # todo work needed to allow masking ‘sequence of interest’ (which requires a z8 axis).
     p_season_prob_qsz = season_seq_prob_qsz / len_q # Divide by len_q so that the objective value is $/yr rather than $/sequence
 
@@ -105,6 +119,7 @@ def f_season_precalcs(params, r_vals):
     arrays_qs = [keys_q, keys_s]
     ###qsz - season sequence
     arrays_qsz = [keys_q, keys_s, keys_z]
+    arrays_qszp7 = [keys_q, keys_s, keys_z, keys_p7]
     ###qs8zs9 - season sequence
     arrays_qs8zs9 = [keys_q, keys_s, keys_z, keys_s]
 
@@ -116,6 +131,7 @@ def f_season_precalcs(params, r_vals):
     params['p_parentz_provbetween_season'] = fun.f1_make_pyomo_dict(mask_provbetweenz8z9_p7z8z9*1, arrays_p7z8z9)
     params['p_wyear_inc_qs'] = fun.f1_make_pyomo_dict(p_wyear_inc_qs*1, arrays_qs)
     params['p_season_prob_qsz'] = fun.f1_make_pyomo_dict(p_season_prob_qsz, arrays_qsz)
+    params['p_season_seq_prob_qszp7'] = fun.f1_make_pyomo_dict(season_seq_prob_qszp7, arrays_qszp7)
     params['p_endstart_prov_qsz'] = fun.f1_make_pyomo_dict(p_endstart_prov_qsz, arrays_qsz)
     params['p_sequence_prov_qs8zs9'] = fun.f1_make_pyomo_dict(p_sequence_prov_qs8zs9*1, arrays_qs8zs9)
 
