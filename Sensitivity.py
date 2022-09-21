@@ -218,6 +218,7 @@ def create_sa():
     sav['grain_percentile'] = '-'  #grain price percentile
 
     ##labour
+    sav['manager_ub'] = '-'  #manager upper bound
     sav['casual_ub'] = '-'  #casual upper bound all year except seeding and harv
     sav['seedharv_casual_ub'] = '-'  #casual upper bound at seeding and harv
 
