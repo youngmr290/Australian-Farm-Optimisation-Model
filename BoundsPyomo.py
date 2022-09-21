@@ -156,10 +156,12 @@ def f1_boundarypyomo_local(params, model):
             ###param - propn of each fp used in the SR
             ###constraint
             l_p7 = list(model.s_season_periods)
-            def sup_per_dse_bound(model, q, s, z):
+            def sup_per_dse_bound(model, q, s):
                 if pe.value(model.p_wyear_inc_qs[q, s]):
-                    total_sup = sum(model.v_sup_con[q,s,z,k,g,f,p6] for k in model.s_crops for g in model.s_grain_pools for f in model.s_feed_pools
-                                    for p6 in model.s_feed_periods)
+                    total_sup = sum(model.v_sup_con[q,s,z,k,g,f,p6]
+                                    * model.p_a_p6_p7[p7,p6,z] * model.p_season_seq_prob_qszp7[q,s,z,p7]
+                                    for k in model.s_crops for g in model.s_grain_pools for f in model.s_feed_pools
+                                    for p6 in model.s_feed_periods for p7 in model.s_season_periods for z in model.s_season_types)
                     wg_dse = sum((sum(model.v_sire[q,s,g0] * model.p_dse_sire[p6,z,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,z,g0])!=0)
                              + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]
                                        for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -170,12 +172,12 @@ def f1_boundarypyomo_local(params, model):
                                         for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
                                         if pe.value(model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0)
                                  for a in model.s_wean_times for i in model.s_tol))
-                            * model.p_wg_propn_p6z[p6,z]
-                            for p6 in model.s_feed_periods)
+                                 * model.p_wg_propn_p6z[p6, z] * model.p_a_p6_p7[p7,p6,z] * model.p_season_seq_prob_qszp7[q,s,z,p7]
+                                 for p6 in model.s_feed_periods for p7 in model.s_season_periods for z in model.s_season_types)
                     return wg_dse * p_sup_per_dse_bnd == total_sup * 1000
                 else:
                     return pe.Constraint.Skip
-            model.con_sup_per_dse_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=sup_per_dse_bound,
+            model.con_sup_per_dse_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, rule=sup_per_dse_bound,
                                                 doc='total supplement fed per dse for the whole year')
 
         ##dam lo bound. (the sheep in a given yr equal total for all dvp divided by the number of dvps in 1 yr)
@@ -553,9 +555,12 @@ def f1_boundarypyomo_local(params, model):
             ###param - propn of each fp used in the SR
             ###constraint
             l_p7 = list(model.s_season_periods)
-            def SR_bound(model, q, s, p7, z):
-                if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]):
-                    rhs_dse = sum(model.v_phase_area[q, s, p7, z, r, l] * model.p_pasture_area[r, t] * pasture_dse_carry[t] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
+            p7_end_gs0 = l_p7[pinp.general['i_gs_p7_end'][0]]  # p7 period from growing season 0.
+            def SR_bound(model, q, s):
+                if pe.value(model.p_wyear_inc_qs[q, s]):
+                    rhs_dse = sum(model.v_phase_area[q, s, p7_end_gs0, z, r, l] * model.p_pasture_area[r, t] * pasture_dse_carry[t]
+                                  * model.p_season_seq_prob_qszp7[q,s,z,p7_end_gs0]
+                                  for r in model.s_phases for l in model.s_lmus for t in model.s_pastures for z in model.s_season_types)
                     dse = sum((sum(model.v_sire[q,s,g0] * model.p_dse_sire[p6,z,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,z,g0])!=0)
                              + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]
                                        for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -566,12 +571,12 @@ def f1_boundarypyomo_local(params, model):
                                         for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
                                         if pe.value(model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0)
                                  for a in model.s_wean_times for i in model.s_tol))
-                            * model.p_wg_propn_p6z[p6,z]
-                            for p6 in model.s_feed_periods)
+                            * model.p_wg_propn_p6z[p6,z] * model.p_a_p6_p7[p7,p6,z] * model.p_season_seq_prob_qszp7[q,s,z,p7]
+                            for p6 in model.s_feed_periods for p7 in model.s_season_periods for z in model.s_season_types)
                     return dse == rhs_dse
                 else:
                     return pe.Constraint.Skip
-            model.con_SR_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, rule=SR_bound,
+            model.con_SR_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, rule=SR_bound,
                                                 doc='stocking rate bound for each feed period')
 
 
