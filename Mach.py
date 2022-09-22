@@ -439,7 +439,7 @@ def f_contract_seed_cost(r_vals):
 #late seeding & dry seeding penalty    #
 ########################################
 
-def f_sowing_timeliness_penalty():
+def f_sowing_timeliness_penalty(r_vals):
     '''
     Calculates the biomass penalty in each mach period due to wet sowing timeliness- kg/ha/period/crop.
 
@@ -506,8 +506,15 @@ def f_sowing_timeliness_penalty():
     keys_k = wet_seeding_penalty_k_z.index
     keys_p7 = per.f_season_periods(keys=True)
     cols_p7p5zk = pd.MultiIndex.from_product([keys_p7, keys_p5, keys_z, keys_k])
-    penalty = pd.Series(penalty_p7p5zk.ravel(), index=cols_p7p5zk)
-    return penalty
+    penalty_p7p5zk = pd.Series(penalty_p7p5zk.ravel(), index=cols_p7p5zk)
+
+    ##store r_vals
+    ###make z8 mask - used to uncluster
+    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
+    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
+
+    fun.f1_make_r_val(r_vals, penalty_p7p5zk, 'sowing_yield_penalty_p7p5zk', mask_season_p7z[:, na, :, na], z_pos=-2)
+    return penalty_p7p5zk
 
 
 # def f_stubble_penalty():
@@ -1188,7 +1195,7 @@ def f_mach_params(params,r_vals):
     harvest_cost, harvest_wc = f_harvest_cost(r_vals)
     contract_harvest_cost, contract_harvest_wc = f_contract_harvest_cost(r_vals)
     hay_making_cost, hay_making_wc, hay_made_prov_p7z  = f_hay_making_cost()
-    biomass_penalty = f_sowing_timeliness_penalty()
+    biomass_penalty = f_sowing_timeliness_penalty(r_vals)
     # stubble_penalty = f_stubble_penalty()
     poc_grazing_days = f_poc_grazing_days().stack()
     fixed_dep = f_fix_dep()

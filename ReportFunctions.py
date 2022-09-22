@@ -442,6 +442,7 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     :param option:
 
         #. table: total machine cost for each crop in each cash period
+        #. table: total seeding biomass penalty for untimley sowing.
 
     '''
     ##call rotation function to get rotation info
@@ -499,10 +500,49 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     ##insurance
     mach_insurance_p7z = r_vals['mach']['mach_insurance']
 
+    ##yeild penalty from untimley sowing
+    sowing_yield_penalty_p7p5zk = r_vals['mach']['sowing_yield_penalty_p7p5zk']
+    sowing_yield_penalty_p5zk = sowing_yield_penalty_p7p5zk.groupby(level=(1,2,3)).sum() #sum p7
+    sowing_yield_penalty_zp5k = sowing_yield_penalty_p5zk.reorder_levels((1,0,2))
+    ###ha sown by farmer
+    seeding_ha_qszp5_kl = seeding_days_qszp5_kl.mul(seeding_rate_kl.reindex(seeding_days_qszp5_kl.columns), axis=1) # note seeding ha won't equal the rotation area because arable area is included in seed_ha.
+    seeding_ha_qszp5k_l = seeding_ha_qszp5_kl.stack(0)
+    ###reindex penalty param
+    ####add q & s axis
+    sowing_yield_penalty_qsz_kp5 = sowing_yield_penalty_zp5k.unstack((-1,-2)).reindex(seeding_ha_qszp5_kl.unstack(-1).index, axis=0, level=-1)
+    sowing_yield_penalty_qszp5k = sowing_yield_penalty_qsz_kp5.stack((1,0))
+    ####expand k to include pastures
+    sowing_yield_penalty_qszp5k = sowing_yield_penalty_qszp5k.reindex(seeding_ha_qszp5k_l.index)
+    ###calc penalty
+    farmer_penalty_qszp5k_l = seeding_ha_qszp5k_l.mul(sowing_yield_penalty_qszp5k, axis=0)
+    farmer_penalty_qszp5k = farmer_penalty_qszp5k_l.sum(axis=1)
+    contract_penalty_qszp5k = contractseeding_ha_qszp5k.mul(sowing_yield_penalty_qszp5k, axis=0)
+    total_penalty_qszk = farmer_penalty_qszp5k.add(contract_penalty_qszp5k).unstack(3).sum(axis=1)
+    if option == 1:
+        return total_penalty_qszk
     ##return all if option==0
     if option == 0:
         return exp_mach_k_p7zqs, mach_insurance_p7z
 
+def f_biomass_penalty(lp_vars, r_vals):
+    ##seeding
+    seeding_penalty_qszp5k = f_mach_summary(lp_vars, r_vals, option=1)
+
+    ##crop grazing
+    prod = 'crop_grazing_biomass_penalty_kp6z'
+    na_prod = [0, 1, 2, 5, 7]  # q,s,f,p5,l
+    type = 'crpgrz'
+    weights = 'crop_consumed_qsfkp6p5zl'
+    keys = 'keys_qsfkp6p5zl'
+    arith = 2
+    index = [0, 1, 6, 3]  # q,s,z,k
+    cols = []
+    crop_grazing_penalty_qszk = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols)
+
+    penalty = pd.concat([seeding_penalty_qszp5k, crop_grazing_penalty_qszk], axis=1)
+    penalty.columns=['seeding', 'crop_grazing']
+    return penalty
 
 def f_grain_sup_summary(lp_vars, r_vals, option=0):
     '''
@@ -665,11 +705,11 @@ def f_crop_summary(lp_vars, r_vals, option=0):
     misc_exp_k_p7zqs = misc_exp_ha_zrqs_p7.unstack([0,2,3]).reindex(phases_rk.index, axis=0, level=0).groupby(axis=0,
                                                                             level=1).sum()  # reindex to include landuse and sum rot
 
-
     ##revenue. rev = (grain_sold + grain_fed - grain_purchased) * sell_price
     ###read in dict from grain summary
     grain_summary = f_grain_sup_summary(lp_vars, r_vals)
     rev_grain_k_p7zqs = grain_summary['rev_grain_k_p7zqs']
+
     ##return all if option==0
     if option == 0:
         return exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k_p7zqs
@@ -1431,7 +1471,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     :key arith (optional, default = 0): int: arithmetic operation used.
 
                 - option 0: return production param averaged across all axis that are not reported.
-                - option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
+                - option 1: return weighted average of production param (using denominator weight returns production per day the animal is on hand)
                 - option 2: weighted total production summed across all axis that are not reported.
                 - option 3: weighted total production for each  (axis not reported are disregarded)
                 - option 4: return weighted average of production param using prod>0 as the weights
@@ -1919,7 +1959,7 @@ def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
 def f_arith(prod, prod_weights, weight, den_weights, arith, axis):
     '''
     option 0: return production param averaged across all axis that are not reported.
-    option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
+    option 1: return weighted average of production param (using denominator weight returns production per day the animal is on hand)
     option 2: weighted total production summed across all axis that are not reported.
     option 3: weighted total production for each axis  (axis not reported are disregarded)
     option 4: return weighted average of production param using prod>0 as the weights

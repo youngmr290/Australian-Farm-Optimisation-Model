@@ -91,6 +91,7 @@ def f_report(processor, trials, non_exist_trials):
     stacked_areasum = pd.DataFrame()  # area summary
     stacked_pnl = pd.DataFrame()  # profit and loss statement
     stacked_wc = pd.DataFrame()  # max bank overdraw
+    stacked_penalty = pd.DataFrame()  # biomass penalty from seeding timeliness and crop grazing
     stacked_profitarea = pd.DataFrame()  # profit by land area
     stacked_feed = pd.DataFrame()  # feed budget
     stacked_season_nodes = pd.DataFrame()  # season periods
@@ -192,6 +193,11 @@ def f_report(processor, trials, non_exist_trials):
             wc = rep.f_wc_summary(lp_vars, r_vals)
             wc = pd.concat([wc],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_wc = rep.f_append_dfs(stacked_wc, wc)
+
+        if report_run.loc['run_biomass_penalty', 'Run']:
+            penalty = rep.f_biomass_penalty(lp_vars, r_vals)
+            penalty = pd.concat([penalty],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_penalty = rep.f_append_dfs(stacked_penalty, penalty)
 
         if report_run.loc['run_profitarea', 'Run']:
             area_option = 3
@@ -1328,6 +1334,8 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_pnl, 'pnl', df_settings, option=xl_display_mode)
     if report_run.loc['run_wc', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_wc, 'wc', df_settings, option=xl_display_mode)
+    if report_run.loc['run_biomass_penalty', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_penalty, 'biomass_penalty', df_settings, option=xl_display_mode)
     if report_run.loc['run_profitarea', 'Run']:
         plot = rep.f_xy_graph(stacked_profitarea)
         plot.savefig('Output/profitarea_curve.png')

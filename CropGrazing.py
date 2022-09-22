@@ -308,14 +308,14 @@ def crop_md_vol(nv, r_vals):
 
     return crop_md_fkp6p5zl, crop_vol_fkp6p5zl
 
-def f_cropgraze_biomass_penalty():
+def f_cropgraze_biomass_penalty(r_vals):
     '''
     Biomass penalty associated with the amount of crop consumed.
 
     The yield penalty is an inputted proportion of the dry matter consumed. Below it is converted to a biomass
     penalty.
     '''
-    import CropResidue as stub
+    # import CropResidue as stub
     ##inputs
     # stubble_per_grain_k = stub.f_cropresidue_production().values
     biomass_reduction_propn_kp6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_yield_reduction_kp6z'], numpy=True, axis=-1)
@@ -344,13 +344,17 @@ def f_cropgraze_biomass_penalty():
     biomass_reduction_propn_kp6z = biomass_reduction_propn_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
     # stubble_reduction_propn_kp6z = stubble_reduction_propn_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
 
+    ##store report vals
+    fun.f1_make_r_val(r_vals,biomass_reduction_propn_kp6z,'crop_grazing_biomass_penalty_kp6z',mask_fp_z8var_p6z,z_pos=-1)
+
+
     return biomass_reduction_propn_kp6z #, stubble_reduction_propn_kp6z
 
 
 def f1_cropgraze_params(params, r_vals, nv):
     # grazecrop_area_rkl = f_graze_crop_area()
     crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z = f_cropgraze_DM()
-    biomass_reduction_propn_kp6z = f_cropgraze_biomass_penalty()
+    biomass_reduction_propn_kp6z = f_cropgraze_biomass_penalty(r_vals)
     crop_md_fkp6p5zl, crop_vol_fkp6p5zl = crop_md_vol(nv, r_vals)
     # DM_reduction_kp6p5zl = f_DM_reduction_seeding_time()
 
