@@ -183,7 +183,8 @@ def f_report(processor, trials, non_exist_trials):
             stacked_areasum = rep.f_append_dfs(stacked_areasum, areasum)
 
         if report_run.loc['run_pnl', 'Run']:
-            pnl = rep.f_profitloss_table(lp_vars, r_vals)
+            option = 2 #1 = report q, s, & z. 2 = weighted average of q, s, & z
+            pnl = rep.f_profitloss_table(lp_vars, r_vals, option=option)
             pnl = pd.concat([pnl],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_pnl = rep.f_append_dfs(stacked_pnl, pnl)
 

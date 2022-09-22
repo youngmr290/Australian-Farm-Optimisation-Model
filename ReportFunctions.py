@@ -1227,12 +1227,13 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
     return dse_sire, dse_dams, dse_offs
 
 
-def f_profitloss_table(lp_vars, r_vals):
+def f_profitloss_table(lp_vars, r_vals, option=1):
     '''
     Returns profit and loss statement for selected trials. Multiple trials result in a stacked pnl table.
 
     :param lp_vars: dict - results from pyomo
     :param r_vals: dict - report variable
+    :param option: int - controls how q, s and z are reported. Default is to report them. Option 2 does a weighted average.
     :return: dataframe
 
     '''
@@ -1340,11 +1341,24 @@ def f_profitloss_table(lp_vars, r_vals):
     ##add the objective of all seasons
     pnl.loc[idx['Weighted obj', '', '', '', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
 
-    ##round numbers in df
-    pnl = pnl.astype(float).round(1)  # have to go to float so rounding works
-
     ##sort the season level of index
     # pnl = pnl.sort_index(axis=0, level=0) #maybe come back to this. depending what the report loks like with active z axis.
+
+    ##weight the qsz axix if option 2
+    if option==2:
+        keys_q = r_vals['zgen']['keys_q']
+        keys_s = r_vals['zgen']['keys_s']
+        keys_z = r_vals['zgen']['keys_z']
+        index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+        z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+        z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
+        z_prob_qsz = z_prob_qsz.reindex(pnl.index, axis=0)
+        pnl =pnl.mul(z_prob_qsz, axis=0).groupby(level=(-2,-1), axis=0).sum()
+        ###add the objective of all seasons - need to do again because it becomes nan in the step above
+        pnl.loc[idx['Weighted obj', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
+
+    ##round numbers in df
+    pnl = pnl.astype(float).round(1)  # have to go to float so rounding works
 
     return pnl
 
