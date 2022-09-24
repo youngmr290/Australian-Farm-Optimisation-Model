@@ -321,7 +321,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_tvnwzida0e0b0xyg3'
             arith = 0
             index =[1]
-            cols = [0,6,9,10,12,3] #t,d,b,x,g,w
+            cols = [0,6,9,10,12,3] #t,d,b,x,g,w  Note: need to exclude the w axis to report a N33 model
             saleage_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, 
                                    keys=keys, arith=arith, index=index, cols=cols)
             saleage_offs = pd.concat([saleage_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
