@@ -76,7 +76,7 @@ def f1_rotationpyomo(params, model):
                                            default=0.0, mutable=False, doc='mask phase transfer to force a change at season break')
     model.p_phase_can_increase = pe.Param(model.s_season_periods, model.s_season_types, model.s_phases, initialize=params['p_phase_can_increase_p7zr'],
                                            default=0.0, mutable=False, doc='mask which phases can change_increase in each p7')
-    model.p_phase_can_reduce = pe.Param(model.s_season_periods, model.s_phases, initialize=params['p_phase_can_reduce_p7r'],
+    model.p_phase_can_reduce = pe.Param(model.s_phases, model.s_season_periods, model.s_season_types, initialize=params['p_phase_can_reduce_rp7z'],
                                            default=0.0, mutable=False, doc='mask which phases can change_reduce in each p7')
 
     ###################
@@ -208,7 +208,7 @@ def f_phase_link_within(model):
         if pe.value(model.p_wyear_inc_qs[q,s]) and pe.value(model.p_mask_childz_within_phase[p7,z9]):
             return model.v_phase_area[q,s,p7,z9,r,l]  \
                    - model.v_phase_change_increase[q,s,p7,z9,r,l] * model.p_phase_can_increase[p7,z9,r] \
-                   + model.v_phase_change_reduce[q,s,p7,z9,r,l] * model.p_phase_can_reduce[p7,r] \
+                   + model.v_phase_change_reduce[q,s,p7,z9,r,l] * model.p_phase_can_reduce[r,p7,z9] \
                    - sum(model.v_phase_area[q,s,p7_prev,z8,r,l] * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
                          for z8 in model.s_season_types) * model.p_phase_area_transfers[p7_prev,z9,r] == 0 #p_phase_area_transfers ensures no transfer at break of season except for dry sown phases
         else:
@@ -227,7 +227,7 @@ def f_phase_link_between(model):
         if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_childz_between_phase[p7,z9]):
             return model.v_phase_area[q,s9,p7,z9,r,l]  \
                    - model.v_phase_change_increase[q,s9,p7,z9,r,l] * model.p_phase_can_increase[p7,z9,r] \
-                   + model.v_phase_change_reduce[q,s9,p7,z9,r,l] * model.p_phase_can_reduce[p7,r] \
+                   + model.v_phase_change_reduce[q,s9,p7,z9,r,l] * model.p_phase_can_reduce[r,p7,z9] \
                    - sum(model.v_phase_area[q,s8,p7_prev,z8,r,l]
                          * model.p_parentz_provbetween_phase[p7_prev, z8, z9]
                          * (model.p_sequence_prov_qs8zs9[q_prev, s8, z8, s9] + model.p_endstart_prov_qsz[q_prev, s8, z8])
