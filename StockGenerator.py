@@ -1424,7 +1424,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ######################
     #adjust sensitivities#
     ######################
-    saa_mortalityx_b1nwzida0e0b0xyg = fun.f_expand(sen.saa['mortalityx'][sinp.stock['a_nfoet_b1']], b1_pos)
+    saa_mortalityx_oa1e1b1nwzida0e0b0xyg = fun.f_expand(sen.saa['mortalityx_ol0g1'][:,sinp.stock['a_nfoet_b1'],:]
+                                                        , b1_pos, right_pos=g_pos, left_pos2=p_pos, right_pos2=b1_pos
+                                                        , condition=mask_dams_inc_g1, axis=g_pos)#add axes between g & b1, and b1 & p
+    saa_mortalityx_pa1e1b1nwzida0e0b0xyg = np.take_along_axis(saa_mortalityx_oa1e1b1nwzida0e0b0xyg,
+                                                     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     ## sum saa[rr] and saa[rr_age] so there is only one saa to handle in f_conception_cs & f_conception_ltw
     ## Note: the proportions of the BTRT doesn't include rr_age_og1 because those calculations can't vary by age of the dam
     rr_age_og1 = sen.saa['rr_age_og1']
@@ -3691,7 +3695,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     temp0, temp1, temp2 = sfun.f_mortality_progeny_cs(cd_yatf, cb1_yatf, w_b_yatf, rc_start_dams, cv_weight_yatf
                                     , w_b_exp_y_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
                                     , chill_index_pa1e1b1nwzida0e0b0xygp1[p], nfoet_b1nwzida0e0b0xyg
-                                    , rev_trait_values['yatf'][p], sen.sap['mortalityp'], saa_mortalityx_b1nwzida0e0b0xyg)
+                                    , rev_trait_values['yatf'][p], sen.sap['mortalityp'], saa_mortalityx_pa1e1b1nwzida0e0b0xyg[p])
                     if eqn_used:
                         mortality_birth_yatf = temp1 #mortalityd, assign first because it has x axis
                         mortality_birth_yatf += temp0 #mortalityx
@@ -3713,7 +3717,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_yatf[:,p,...]
                                     , w_b_yatf, w_b_ltw_std_yatf, cv_weight_yatf, foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygp1[p]
                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
-                                    , sen.sap['mortalityp'], saa_mortalityx_b1nwzida0e0b0xyg)
+                                    , sen.sap['mortalityp'], saa_mortalityx_pa1e1b1nwzida0e0b0xyg[p])
                     if eqn_used:
                         mortality_birth_yatf = temp0 #mortality
                     if eqn_compare:
