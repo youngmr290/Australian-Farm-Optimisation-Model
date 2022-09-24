@@ -193,16 +193,16 @@ def f_report(processor, trials, non_exist_trials):
             stacked_wc = rep.f_append_dfs(stacked_wc, wc)
 
         if report_run.loc['run_profitarea', 'Run']:
-            area_option = 3
-            profit_option = 0
+            area_option = 3     # 3 table crop & pasture area by lmu & weather-year
+            profit_option = 0   # 0 Profit, 1 Risk neutral Obj, 2 Utility, 3 range and std dev of profit.
             profitarea = pd.DataFrame(index=[trial_name], columns=['area','profit'])
             profitarea.loc[trial_name, 'area'] = rep.f_area_summary(lp_vars,r_vals,area_option)
             profitarea.loc[trial_name,'profit'] = rep.f_profit(lp_vars,r_vals,profit_option)
             stacked_profitarea = rep.f_append_dfs(stacked_profitarea, profitarea)
 
         if report_run.loc['run_feedbudget', 'Run']:
-            option = 0
-            nv_option = 0
+            option = 0      #0 mei/hd/day & propn from each source, 1 total mei
+            nv_option = 0   #0 Separate NV pool, NV pool summed.
             dams_cols = [6] #birth opp
             offs_cols = [7] #shear opp
             feed = rep.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols)
@@ -486,7 +486,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'dams_keys_qsk2tvanwziy1g1'
             arith = 1
             index =[4] #v
-            cols =[2,3] #k,t
+            cols =[11,3,2,8] #g,t,k2,w
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             fd_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
