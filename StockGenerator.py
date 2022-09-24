@@ -1358,9 +1358,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     age_wean1st2_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(age_wean1st_oa1e1b1nwzida0e0b0xyg2, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
     date_weaned2_pa1e1b1nwzida0e0b0xyg2 = date_born1st2_pa1e1b1nwzida0e0b0xyg2 + age_wean1st2_pa1e1b1nwzida0e0b0xyg2 #this needs to increment at prejoining for period between weaning and prejoining, so that it is false after prejoining and before weaning.
 
-    ##yatf sim params - turn d to p axis based on pre-joining (change d slice at birth)
-    ce_yatf = np.expand_dims(ce_yatf, axis = tuple(range(p_pos,d_pos)))
-    ce_pyatf = np.take_along_axis(ce_yatf,a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2[na,...],d_pos)
+    ##sim params - turn d to p axis based on pre-joining (change d slice at birth)
+    t_ce_dams = np.expand_dims(ce_dams, axis = tuple(range(p_pos,d_pos)))
+    ce_pdams = np.take_along_axis(t_ce_dams,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1[na,...],d_pos)
+    t_ce_yatf = np.expand_dims(ce_yatf, axis = tuple(range(p_pos,d_pos)))
+    ce_pyatf = np.take_along_axis(t_ce_yatf,a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2[na,...],d_pos)
 
     ##feed period
     legume_pa1e1b1nwzida0e0b0xyg = np.take_along_axis(legume_p6a1e1b1nwzida0e0b0xyg, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
@@ -3613,7 +3615,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                    temp0 = sfun.f_mortality_weaner_mu()
+                    temp0 = sfun.f_mortality_weaner_mu(cu2_sire)
                     if eqn_used:
                         mortality_sire += temp0
                     if eqn_compare:
@@ -3622,7 +3624,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_mortality_weaner_mu()
+                    temp0 = sfun.f_mortality_weaner_mu(cu2_dams)  #no ce_dams because dam weaners don't have a d axis
                     if eqn_used:
                         mortality_dams += temp0
                     if eqn_compare:
@@ -3631,7 +3633,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                    temp0 = sfun.f_mortality_weaner_mu()
+                    temp0 = sfun.f_mortality_weaner_mu(cu2_offs, ce_dams)
                     if eqn_used:
                         mortality_offs += temp0
                     if eqn_compare:
@@ -3652,7 +3654,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_mortality_dam_mu(cu2_dams, cs_start_dams, cv_cs_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
+                    temp0 = sfun.f_mortality_dam_mu(cu2_dams, ce_pdams[:,p,...], cs_start_dams, cv_cs_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , nfoet_b1nwzida0e0b0xyg, sen.sap['mortalitye'])
                     if eqn_used:
                         mortality_dams += temp0 #dam mort at birth due to low CS
