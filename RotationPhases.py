@@ -249,11 +249,15 @@ def f_phase_link_params(params):
     ##create mask to control what phases can be changed in each p7
     phase_can_increase_kp7 = pinp.general['i_phase_can_increase_kp7'] #input to control what landuses can change_increase in each p7
     phase_can_reduce_kp7 = pinp.general['i_phase_can_reduce_kp7'] #input to control what landuses can change_reduce in each p7
+    ###only pnc can reduce at season brk nodes. This stops phases increasing and reducing to get poc and crop grazing.
+    ### This line of code saves adding a z axis to the input
+    p7_is_between_seasonbrk_and_endbrk_p7z = np.logical_or(start_date_p7z < i_break_z, np.max(i_break_z) < start_date_p7z)
+    phase_can_reduce_kp7z = phase_can_reduce_kp7[...,na] * np.logical_or(p7_is_between_seasonbrk_and_endbrk_p7z, keys_k[:,na,na]=='a2')
     ###change k to r
     landuse_r = phases_rotn_df.iloc[:, -1].values
     a_k_rk = landuse_r[:, na] == keys_k
     phase_can_increase_p7r = np.sum(phase_can_increase_kp7 * a_k_rk[...,na], axis=1).T
-    phase_can_reduce_p7r = np.sum(phase_can_reduce_kp7 * a_k_rk[...,na], axis=1).T
+    phase_can_reduce_rp7z = np.sum(phase_can_reduce_kp7z * a_k_rk[...,na,na], axis=1)
     ###stop phases increasing in the period from season start to break of season, except dry sown landuses. This is
     ### required because the history constraint doesnt exist between season start and break of season so that last yrs
     ### phase can cary over in the medium and later break so that dry pasture and stubble can still be grazed
@@ -262,12 +266,12 @@ def f_phase_link_params(params):
     phase_can_increase_p7zr = np.logical_and(phase_can_increase_p7r[:,na,:], phase_can_increase_before_brk_p7zr)
 
     ##make params
-    arrays_p7r = [keys_p7, keys_r]
+    arrays_rp7z = [ keys_r, keys_p7, keys_z]
     arrays_p7zr = [keys_p7, keys_z, keys_r]
 
     params['p_phase_area_transfers_p7zr'] = fun.f1_make_pyomo_dict(p_phase_area_transfers_p7zr*1, arrays_p7zr)
     params['p_phase_can_increase_p7zr'] = fun.f1_make_pyomo_dict(phase_can_increase_p7zr*1, arrays_p7zr)
-    params['p_phase_can_reduce_p7r'] = fun.f1_make_pyomo_dict(phase_can_reduce_p7r*1, arrays_p7r)
+    params['p_phase_can_reduce_rp7z'] = fun.f1_make_pyomo_dict(phase_can_reduce_rp7z*1, arrays_rp7z)
 
 
 def f_rot_hist_params(params):

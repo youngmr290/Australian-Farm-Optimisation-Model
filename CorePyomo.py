@@ -369,7 +369,8 @@ def f_con_phasesow(model):
           grazing (both of those activities are provided by seeding).
     '''
     def sow_link(model,q,s,p7,k,l,z):
-        if not pe.value(model.p_wyear_inc_qs[q, s]) or type(phspy.f_phasesow_req(model,q,s,p7,k,l,z)) == int:  # if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
+        if not pe.value(model.p_wyear_inc_qs[q, s]) or (
+                type(phspy.f_phasesow_req(model,q,s,p7,k,l,z)) == int and all(model.p_sow_prov[p7,p5,z,k]==0 for p5 in model.s_labperiods)):  # if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
             return pe.Constraint.Skip  # skip constraint if no crop is being sown on given rotation
         else:
             return - sum(model.v_contractseeding_ha[q,s,z,p5,k,l] * model.p_contractseeding_occur[p5,z] * model.p_sow_prov[p7,p5,z,k] for p5 in model.s_labperiods) \
