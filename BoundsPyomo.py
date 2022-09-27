@@ -45,7 +45,10 @@ def f1_boundarypyomo_local(params, model):
     prog_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_prog_inc'], 5) #upper bound on prog
     total_dams_scanned_bound_inc = np.any(sen.sav['bnd_total_dams_scanned'] != '-') #equal to bound on the total number of mated dams at scanning
     force_5yo_retention_inc = np.any(sen.sav['bnd_propn_dam5_retained'] != '-') #force a propn of 5yo dams to be retained.
-    bnd_propn_dams_mated_inc = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
+    propn_mated_inc = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
+    w_set_inc = fun.f_sa(False, sen.sav['propn_mated_w_inc'], 5)
+    bnd_propn_dams_mated_inc = propn_mated_inc and not(w_set_inc) #include bnd_propn_mated without a w set.
+    bnd_propn_dams_mated_w_inc = propn_mated_inc and w_set_inc #include bnd_propn_mated with a w set.
     bnd_sale_twice_drys_inc = fun.f_sa(False, sen.sav['bnd_sale_twice_dry_inc'], 5) #proportion of drys sold (can be sold at either sale opp)
     bnd_dry_retained_inc = fun.f_sa(False, np.any(pinp.sheep['i_dry_retained_forced_o']), 5) #force the retention of drys in t[0] (t[1] is handled in the generator.
     sr_bound_inc = fun.f_sa(False, sen.sav['bnd_sr_inc'], 5) #controls sr bound
@@ -444,7 +447,7 @@ def f1_boundarypyomo_local(params, model):
                     return pe.Constraint.Skip
             model.con_retention_5yo_dams = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=retention_5yo_dams, doc='force retention of 5yo dams')
 
-        ##bound to fix the proportion of dams being mated - Proportion of mated dams relative to total dams
+        ##bound to fix the proportion of dams being mated - Proportion of mated dams relative to total dams, optimised across the w axis
         ###this bound does not count the number of females that are transferred to offs.
         ###build bound if turned on
         if bnd_propn_dams_mated_inc:
@@ -469,6 +472,32 @@ def f1_boundarypyomo_local(params, model):
                                if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1) * (1 - model.p_prop_dams_mated[v,z,g1])
             model.con_propn_dams_mated = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dvp_dams, model.s_season_types, model.s_groups_dams, rule=f_propn_dams_mated,
                                                        doc='proportion of dams mated')
+
+        ##bound to fix the proportion of dams being mated - Proportion fixed optimised across the w axis
+        ###build bound if turned on
+        if bnd_propn_dams_mated_w_inc:
+            ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
+            model.p_prop_dams_mated = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_groups_dams
+                                               , default=0, initialize=params['stock']['p_prop_dams_mated'])
+            ###constraint
+            #todo add an i axis to the constraint
+            def f_propn_dams_mated_w(model, q, s, v, w8, z, g1):
+                if (model.p_prop_dams_mated[v,z,g1]==np.inf or not pe.value(model.p_wyear_inc_qs[q, s]) or
+                        all(model.p_mask_dams[k2,t,v,w8,z,g1] == 0
+                            for k2 in model.s_k2_birth_dams for t in model.s_sale_dams)):
+                    return pe.Constraint.Skip
+                else:
+                    return sum(model.v_dams[q,s,'NM-0',t,v,a,n,w8,z,i,y,g1] for t in model.s_sale_dams
+                               for a in model.s_wean_times for n in model.s_nut_dams
+                               for i in model.s_tol for y in model.s_gen_merit_dams
+                               if pe.value(model.p_mask_dams['NM-0',t,v,w8,z,g1]) == 1
+                               ) == sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1] for k2 in model.s_k2_birth_dams
+                               for t in model.s_sale_dams for a in model.s_wean_times for n in model.s_nut_dams
+                               for i in model.s_tol for y in model.s_gen_merit_dams
+                               if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1) * (1 - model.p_prop_dams_mated[v,z,g1])
+            model.con_propn_dams_mated_w = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dvp_dams
+                                                , model.s_lw_dams, model.s_season_types, model.s_groups_dams
+                                                , rule=f_propn_dams_mated_w, doc='proportion of dams mated with w set')
 
         ##bound to fix the proportion of twice dry dams sold. Proportion of twice dry dams is an input in uinp ce[2, ....].
         ###build bound if turned on
