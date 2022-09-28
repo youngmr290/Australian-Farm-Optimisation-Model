@@ -39,7 +39,7 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
     '''
     Pandas to excel. https://xlsxwriter.readthedocs.io/working_with_pandas.html
 
-        - You can simply stick a dataframe from pandas into excel using df.to_excel() function.
+        - You can simply stick a dataframe from pandas into Excel using df.to_excel() function.
           for this you can specify the workbook the sheet and the start row or col (so you can put
           multiple dfs in one sheet)
         - The next level involves interacting with xlsxwriter. This allows you to do custom things like
@@ -49,12 +49,12 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
     :param df: dataframe going to excel
     :param sheet: str: sheet name.
     :param df_settings: df: df to store number of row and col indexes.
-    :param rowstart: start row in excel
-    :param colstart: start col in excel
+    :param rowstart: start row in Excel
+    :param colstart: start col in Excel
     :param option: int: specifying the writing option
-                    0: df straight into excel
-                    1: df into excel collapsing empty rows and cols (using the group function is xl - ie the rows/cols are still there they are just minimised)
-                    2: df into excel removing empty rows and cols (the rows/cols are completely removed)
+                    0: df straight into Excel
+                    1: df into Excel collapsing empty rows and cols (using the group function is xl - ie the rows/cols are still there they are just minimised)
+                    2: df into Excel removing empty rows and cols (the rows/cols are completely removed)
     '''
     ##store df settings
     if df_settings is not None:
@@ -185,7 +185,7 @@ def f_vars2np(lp_vars, var_key, shape, maskz8=None, z_pos=-1):
     :param shape: shape of desired numpy array
     :param maskz8: z8 mask. Must be broadcastable to lp_vars
     :param z_pos: position of z axis
-    :return: numpy array with unclustered season axis.
+    :return: numpy array with un-clustered season axis.
     '''
 
     vars = np.array(list(lp_vars[var_key].values()))
@@ -442,7 +442,7 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     :param option:
 
         #. table: total machine cost for each crop in each cash period
-        #. table: total seeding biomass penalty for untimley sowing.
+        #. table: total seeding biomass penalty for untimely sowing.
 
     '''
     ##call rotation function to get rotation info
@@ -500,7 +500,7 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     ##insurance
     mach_insurance_p7z = r_vals['mach']['mach_insurance']
 
-    ##yeild penalty from untimley sowing
+    ##yield penalty from untimely sowing
     sowing_yield_penalty_p7p5zk = r_vals['mach']['sowing_yield_penalty_p7p5zk']
     sowing_yield_penalty_p5zk = sowing_yield_penalty_p7p5zk.groupby(level=(1,2,3)).sum() #sum p7
     sowing_yield_penalty_zp5k = sowing_yield_penalty_p5zk.reorder_levels((1,0,2))
@@ -822,7 +822,7 @@ def f_feed_reshape(lp_vars, r_vals):
     '''
     Reshape feed (pasture, residue & crop grazing) lp variables into numpy array.
     
-    This is seperate to the stock function above to save processing time (and the feed stuff overlaps a lot i.e. 
+    This is separate to the stock function above to save processing time (and the feed stuff overlaps a lot i.e.
     uses same keys).
 
     :param lp_vars: lp variables
@@ -1004,7 +1004,7 @@ def f_stock_cash_summary(lp_vars, r_vals):
     sire_purchcost_qsp7z = fun.f_reduce_skipfew(np.sum, sire_purchcost_qsp7zg0, preserveAxis=(0,1,2,3))  # sum all axis except q,s,p7
 
     ###change in asset value at the season start. This needs to be reported in pnl because at the season start stock numbers get averaged.
-    ### Meaning that if z0 retains animals and z1 sells animals z0 will have a lower aparent profit which is not correct.
+    ### Meaning that if z0 retains animals and z1 sells animals z0 will have a lower apparent profit which is not correct.
     ### Adding this essentially means that at the end of the season animals are purchased and sold to get back to the starting point (e.g. a good season with more animals sells some animals to the poor season that has less animals so that all seasons have the same starting point).
     ### Note if weaning occurs in the period before season start there will be an error (value of prog that are sold will get double counted). Easiest solution is to change weaning date.
     trade_value_sire_qsp7z = (fun.f_reduce_skipfew(np.sum, assetvalue_endseason_qsp7zg0, preserveAxis=(0,1,2,3))
@@ -1382,9 +1382,9 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl.loc[idx['Weighted obj', '', '', '', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
 
     ##sort the season level of index
-    # pnl = pnl.sort_index(axis=0, level=0) #maybe come back to this. depending what the report loks like with active z axis.
+    # pnl = pnl.sort_index(axis=0, level=0) #maybe come back to this, depending what the report looks like with active z axis.
 
-    ##weight the qsz axix if option 2
+    ##weight the qsz axis if option 2
     if option==2:
         keys_q = r_vals['zgen']['keys_q']
         keys_s = r_vals['zgen']['keys_s']
@@ -1443,7 +1443,7 @@ def f_profit(lp_vars, r_vals, option=0):
         dep_qsp7z = f_dep_summary(lp_vars, r_vals)
         dep_qsz = dep_qsp7z[:,:,-1,:]
         ###profit for each scenario
-        profit_qsc1z = credit_qsc1z - dep_qsz[:,:,na,:] #dep doesnt vary by price senario
+        profit_qsc1z = credit_qsc1z - dep_qsz[:,:,na,:] #dep doesnt vary by price scenario
         ###stdev and range
         profit_range = np.max(profit_qsc1z) - np.min(profit_qsc1z)
         profit_mean = np.sum(profit_qsc1z * prob_qsz[:,:,na,:] * prob_c1[:,na])
@@ -1477,7 +1477,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
                 - option 4: return weighted average of production param using prod>0 as the weights
                 - option 5: return the maximum value across all axis that are not reported.
 
-    :key prod (optional, default = 1): str/int/float: if it is a string then it is used as a key for stock_vars, if it is an number that number is used as the prod value
+    :key prod (optional, default = 1): str/int/float: if it is a string then it is used as a key for stock_vars, if it is a number that number is used as the prod value
     :key na_prod (optional, default = []): list: position to add new axis
     :key weights (optional, default = None): str: weights to be used in arith (typically a lp variable e.g. numbers). Only required when arith>0
     :key na_weights (optional, default = []): list: position to add new axis
@@ -1514,7 +1514,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
         prod = r_vals[prod]
     # else:
     #     prod = np.array([prod])     #this was adding another axis if an array was passed in
-    ###set prod and weights to 0 if very small number (otherwise it can show up in report when it shouldnt)
+    ###set prod and weights to 0 if very small number (otherwise it can show up in report when it shouldn't)
     prod[np.isclose(prod, 0)] = 0
 
     ##initialise prod_weight array from either r_vals or default value
@@ -1849,7 +1849,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     mei_offs = pd.concat([mei_offs], keys=['Offs'], axis=1)
 
     ##stick feed stuff together
-    ###first make everything have the same number of col levels - not the neatest but couldnt find a better way
+    ###first make everything have the same number of col levels - not the neatest but couldn't find a better way
     arrays = [grn_mei, dry_mei, poc_mei, nap_mei, res_mei, crop_mei, sb_mei, sup_mei, mei_sire, mei_dams, mei_offs]
     ####determine the max number of column levels
     max_levels=1
@@ -2001,7 +2001,7 @@ def f_arith(prod, prod_weights, weight, den_weights, arith, axis):
 
 def f_numpy2df(prod, keys, index, cols):
     if prod.size <= 1 and prod.ndim <= 1:
-        return pd.DataFrame([prod])  # don't need to reshape etc if everything is summed and prod is just one number
+        return pd.DataFrame([prod])  # don't need to reshape etc. if everything is summed and prod is just one number
     ##move x axis to front
     dest = list(range(len(index)))
     prod = np.moveaxis(prod, index, dest)
