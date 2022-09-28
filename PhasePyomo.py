@@ -84,6 +84,8 @@ def f1_croppyomo_local(params, model):
     
     model.p_sow_prov = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_landuses, initialize=params['sow_prov'], default = 0.0, doc='states which landuses can be sown in each p5 period')
 
+    model.p_can_sow = pe.Param(model.s_labperiods, model.s_season_types, model.s_landuses, initialize=params['can_sow_p5zk'], default = 0.0, doc='mask used to stop model sowing to get poc or crop grazing.')
+
 
 #######################################################################################################################################################
 #######################################################################################################################################################

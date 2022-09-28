@@ -1248,8 +1248,10 @@ def f_sow_prov():
 
     ##make df
     index_p7p5zk = pd.MultiIndex.from_product([keys_p7,keys_p5,keys_z,keys_k])
+    index_p5zk = pd.MultiIndex.from_product([keys_p5,keys_z,keys_k])
     sow_prov_p7p5zk = pd.Series(sow_prov_p7p5zk.ravel(), index=index_p7p5zk)
-    return sow_prov_p7p5zk
+    can_sow_p5zk = pd.Series(period_is_seeding_p5zk.ravel(), index=index_p5zk)
+    return sow_prov_p7p5zk, can_sow_p5zk
 
 
 #########
@@ -1263,13 +1265,14 @@ def f1_crop_params(params,r_vals):
     propn = f_grain_pool_proportions()
     grain_price = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
-    sow_prov_p7p5zk = f_sow_prov()
+    sow_prov_p7p5zk, can_sow_p5zk = f_sow_prov()
 
     ##create params
     params['grain_pool_proportions'] = propn.to_dict()
     params['grain_price'] = grain_price.to_dict()
     params['phase_sow_req'] = phasesow_req.to_dict()
     params['sow_prov'] = sow_prov_p7p5zk.to_dict()
+    params['can_sow_p5zk'] = can_sow_p5zk.to_dict()
     params['rot_cost'] = cost.to_dict()
     params['increment_rot_cost'] = increment_cost.to_dict()
     params['rot_wc'] = wc.to_dict()

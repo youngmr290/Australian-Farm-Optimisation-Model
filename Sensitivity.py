@@ -25,7 +25,7 @@ sar = dict()
 
 def create_sa():
     '''
-    Initilises default SA arrays. This gets done each loop incase property inputs changes and to clear last
+    Initialises default SA arrays. This gets done each loop in case property inputs changes and to clear last
     trial SA.'''
     ##len - mostly SA arrays can be initialised using the shape of the array they will be applied to.
     ## the length below need to be the full axis length before masking.
@@ -46,6 +46,7 @@ def create_sa():
     len_k4 = pinp.sheep['i_k4_len'] #gender
     len_k5 = pinp.sheep['i_k5_len'] #BTRT cluster
     len_l = len(pinp.general['i_lmu_idx'])
+    len_l0 = uinp.parameters['i_cl0_len2']
     len_o = pinp.sheep['i_o_len']
     len_R = 5000 #just use a big number - it is cut down later (this is because the length of r is not known because it can be affected by SA)
     len_s = pinp.sheep['i_s_len'] #s = shear
@@ -164,7 +165,7 @@ def create_sa():
     saa['nlb_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
     saa['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
     saa['rr_age_og1'] = np.zeros(pinp.sheep['i_scan_og1'].shape, dtype=np.float64)    # reproductive rate by age. Use shape that has og1
-    saa['mortalityx'] = np.zeros(np.max(sinp.stock['a_nfoet_b1'])+1, dtype=np.float64)  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
+    saa['mortalityx_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype=np.float64)  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
     saa['wean_wt'] = 0.0            #weaning weight adjustment of yatf. Note: WWt changes without any change in MEI
     
     ######
@@ -218,6 +219,7 @@ def create_sa():
     sav['grain_percentile'] = '-'  #grain price percentile
 
     ##labour
+    sav['manager_ub'] = '-'  #manager upper bound
     sav['casual_ub'] = '-'  #casual upper bound all year except seeding and harv
     sav['seedharv_casual_ub'] = '-'  #casual upper bound at seeding and harv
 
@@ -240,6 +242,7 @@ def create_sa():
     sav['bnd_sup_per_dse'] = '-'   #SA to control the supplement per dse (kg/dse)
     sav['bnd_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated
     sav['est_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #estimated proportion of dams mated - used when bnd_propn is default "-"
+    sav['propn_mated_w_inc'] = '-'   #Control if the constraint on proportion mated includes 'w' set
     sav['bnd_drys_sold_o'] = np.full(pinp.sheep['i_dry_sales_forced_o'].shape, '-', dtype=object)   #SA to force drys to be sold
     sav['bnd_drys_retained_o'] = np.full(pinp.sheep['i_dry_retained_forced_o'].shape, '-', dtype=object)   #SA to force drys to be retained
     sav['est_drys_retained_scan_o'] = np.full(pinp.sheep['i_drys_retained_scan_est_o'].shape, '-', dtype=object)   #Estimate of the propn of drys sold at scanning

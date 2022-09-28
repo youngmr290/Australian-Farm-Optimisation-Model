@@ -39,6 +39,10 @@ class LabourPeriodError(Error):
     """Raised when user has NOT included all season nodes in labour periods"""
     pass
 
+class FeedPeriodError(Error):
+    """Raised when user has NOT included all season nodes in labour periods"""
+    pass
+
 class FVPError(Error):
     """Raised when multiple fvps are on the same date"""
     pass

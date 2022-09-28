@@ -173,9 +173,11 @@ def f_ha_days_pasture_crop_paddocks(model,q,s,f,l,z):
     '''
 
     ##number of grazable pasture ha provided by contract seeding
-    ha_days_contract= sum(model.p_poc_grazingdays[f,p,z] * model.v_contractseeding_ha[q,s,z,p,k,l] for k in model.s_crops for p in model.s_labperiods)
+    ha_days_contract= sum(model.p_poc_grazingdays[f,p5,z] * model.v_contractseeding_ha[q,s,z,p5,k,l] * model.p_can_sow[p5,z,k]
+                          for k in model.s_crops for p5 in model.s_labperiods)
     ##number of grazable pasture ha provided by farmer seeding
-    ha_days_personal= sum(model.p_poc_grazingdays[f,p,z] * model.p_seeding_rate[k,l] * model.v_seeding_machdays[q,s,z,p,k,l] for k in model.s_crops for p in model.s_labperiods)
+    ha_days_personal= sum(model.p_poc_grazingdays[f,p5,z] * model.p_seeding_rate[k,l] * model.p_can_sow[p5,z,k] * model.v_seeding_machdays[q,s,z,p5,k,l]
+                          for k in model.s_crops for p5 in model.s_labperiods)
     return ha_days_contract + ha_days_personal
 
 #function to determine late seeding penalty, this will be passed to core model

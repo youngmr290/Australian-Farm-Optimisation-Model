@@ -267,7 +267,7 @@ def f_sup_md_vol(r_vals):
     md_tonne_kp6z = pd.Series(md_tonne_kp6z.ravel(), index=index)
 
     ##store r_vals
-    r_vals['md_tonne_kp6z'] = md_tonne_kp6z
+    fun.f1_make_r_val(r_vals, md_tonne_kp6z, 'md_tonne_kp6z', mask_fp_z8var_p6z, z_pos=-1)
 
     return vol_tonne_kp6z, md_tonne_kp6z
     

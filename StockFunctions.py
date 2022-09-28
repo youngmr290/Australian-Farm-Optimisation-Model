@@ -1151,7 +1151,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         saa_rr = np.squeeze(saa_rr, axis=b1_pos)
         ## apply the sa to the repro rate and convert the adjusted value to a proportion of dry, singles, twins & triplets after 1 cycle
         repro_rate_adj = fun.f_sa(repro_rate, sen.sam['rr'])
-        repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr, 2) * (repro_rate > 0)     # only non-zero if original value was non-zero
+        repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr, 2, value_min=0) * (repro_rate > 0)     # only non-zero if original value was non-zero
         #### Convert the repro rate and adjusted repro rate to a 'standardised' proportion of DST after 1 cycle
         #### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
         propn_dst = np.moveaxis(f1_DSTw(repro_rate, cycles=1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos)
@@ -1416,7 +1416,7 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, nlb, crg_doy, n
         saa_rr = np.squeeze(saa_rr, axis=b1_pos)
         #### apply the sa to the repro rate
         repro_rate_adj = fun.f_sa(repro_rate, sen.sam['rr'])
-        repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr * (repro_rate > 0), 2)     # only adjust if original value was non-zero
+        repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr * (repro_rate > 0), 2, value_min=0)     # only adjust if original value was non-zero
         #### Convert the repro rate and adjusted repro rate to a 'standardised' proportion of DST after 1 cycle
         #### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
         propn_dst = np.moveaxis(f1_DSTw(repro_rate, cycles=1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos)
@@ -1663,19 +1663,20 @@ def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     return mortalityb
 
 
-def f_mortality_weaner_mu():
+def f_mortality_weaner_mu(cu2, ce=0):
     ## The MU base mortality function accounts for the mortality increases for slow growing young animals
-    ## Use coefficient cu2[20, 0, ...]
+    ## Use coefficient cu2[20, 0, ...] & ce[20, ...]
     #todo incorporate Angus Campbell's mortality function as the MU weaner mortality function (to replace the base mortality for weaners)
     return 0
 
 
-def f_mortality_dam_mu(cu2, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
+def f_mortality_dam_mu(cu2, ce, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
     ## transformed Dam mortality at birth due to low CS.
     ###distribution on cs_birth, calculate mort and then average (axis =-1)
     cs_birth_dams_p1 = fun.f_distribution7(cs_birth_dams, cv=cv_cs)
     ###calc mort
-    t_mortalitye_mu_p1 = cu2[22, 0, ...,na] * cs_birth_dams_p1 + cu2[22, 1, ...,na] * cs_birth_dams_p1 ** 2 + cu2[22, -1, ...,na]
+    t_mortalitye_mu_p1 = (cu2[22, 0, ...,na] * cs_birth_dams_p1 + cu2[22, 1, ...,na] * cs_birth_dams_p1 ** 2
+                          + ce[22, ...,na] + cu2[22, -1, ...,na])
     ##Back transform the mortality
     mortalitye_mu_p1 = fun.f_back_transform(t_mortalitye_mu_p1) * period_is_birth[...,na]
 #    mortalitye_mu_p1 = np.exp(t_mortalitye_mu_p1) / (1 + np.exp(t_mortalitye_mu_p1)) * period_is_birth[...,na]
@@ -2156,7 +2157,7 @@ def f1_fat_score(rc_tpg, cu0):
           3. convert to fat score. FS1 = <5mm, FS2 6-10mm, FS3 11-15mm, FS4 16-20mm, FS5 >21mm'''
     condition_score = f1_condition_score(rc_tpg, cu0)
     gr_depth = np.maximum(0, (condition_score - 2.5) / 0.06)
-    fat_score = np.clip(np.trunc(np.trunc(gr_depth + 4)/5), 1, 5) #FS 1 is the lowest possible measurement.
+    fat_score = np.clip((gr_depth + 4)/5, 1, 5) #FS 1 is the lowest possible measurement.
     return fat_score
 
 
@@ -2196,6 +2197,9 @@ def f1_salep_mob(weight_s7tpg, scores_s7s6tpg, cvlw_s7s5tpg, cvscore_s7s6tpg,
         ## Probability for each score step in grid (fat score/CS) based on the mob average score and the CV of quality score
         prob_score_s6tpg = np.maximum(0, fun.f_norm_cdf(np.roll(grid_scorerange_s7s6p5tpg[s7,...], -1, axis = 0), scores_s7s6tpg[s7,...], cvscore_s7s6tpg[s7,...])
                                  - fun.f_norm_cdf(grid_scorerange_s7s6p5tpg[s7,...], scores_s7s6tpg[s7,...], cvscore_s7s6tpg[s7,...]))
+        ###adjust prob so that animals with score less than 1 get allocated to the score 1 slice - assumption is that score 1 is lowest
+        prob_score_s6tpg[0,...] = prob_score_s6tpg[0,...] + (1-np.sum(prob_score_s6tpg, axis=0))
+
         ##Probability for each cell of grid (assuming that weight & score are independent allows multiplying weight and score probabilities)
         prob_grid_s5s6tpg = prob_lw_s5tpg[:,na, ...] * prob_score_s6tpg
 
