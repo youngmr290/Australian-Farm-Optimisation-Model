@@ -2157,7 +2157,7 @@ def f1_fat_score(rc_tpg, cu0):
           3. convert to fat score. FS1 = <5mm, FS2 6-10mm, FS3 11-15mm, FS4 16-20mm, FS5 >21mm'''
     condition_score = f1_condition_score(rc_tpg, cu0)
     gr_depth = np.maximum(0, (condition_score - 2.5) / 0.06)
-    fat_score = np.clip(np.trunc(np.trunc(gr_depth + 4)/5), 1, 5) #FS 1 is the lowest possible measurement.
+    fat_score = np.clip((gr_depth + 4)/5, 1, 5) #FS 1 is the lowest possible measurement.
     return fat_score
 
 
@@ -2197,6 +2197,9 @@ def f1_salep_mob(weight_s7tpg, scores_s7s6tpg, cvlw_s7s5tpg, cvscore_s7s6tpg,
         ## Probability for each score step in grid (fat score/CS) based on the mob average score and the CV of quality score
         prob_score_s6tpg = np.maximum(0, fun.f_norm_cdf(np.roll(grid_scorerange_s7s6p5tpg[s7,...], -1, axis = 0), scores_s7s6tpg[s7,...], cvscore_s7s6tpg[s7,...])
                                  - fun.f_norm_cdf(grid_scorerange_s7s6p5tpg[s7,...], scores_s7s6tpg[s7,...], cvscore_s7s6tpg[s7,...]))
+        ###adjust prob so that animals with score less than 1 get allocated to the score 1 slice - assumption is that score 1 is lowest
+        prob_score_s6tpg[0,...] = prob_score_s6tpg[0,...] + (1-np.sum(prob_score_s6tpg, axis=0))
+
         ##Probability for each cell of grid (assuming that weight & score are independent allows multiplying weight and score probabilities)
         prob_grid_s5s6tpg = prob_lw_s5tpg[:,na, ...] * prob_score_s6tpg
 
