@@ -1358,9 +1358,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     age_wean1st2_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(age_wean1st_oa1e1b1nwzida0e0b0xyg2, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
     date_weaned2_pa1e1b1nwzida0e0b0xyg2 = date_born1st2_pa1e1b1nwzida0e0b0xyg2 + age_wean1st2_pa1e1b1nwzida0e0b0xyg2 #this needs to increment at prejoining for period between weaning and prejoining, so that it is false after prejoining and before weaning.
 
-    ##yatf sim params - turn d to p axis
-    ce_yatf = np.expand_dims(ce_yatf, axis = tuple(range(p_pos,d_pos)))
-    ce_yatf = np.take_along_axis(ce_yatf,a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2[na,...],d_pos)
+    ##sim params - turn d to p axis based on pre-joining (change d slice at birth)
+    t_ce_dams = np.expand_dims(ce_dams, axis = tuple(range(p_pos,d_pos)))
+    ce_pdams = np.take_along_axis(t_ce_dams,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1[na,...],d_pos)
+    t_ce_yatf = np.expand_dims(ce_yatf, axis = tuple(range(p_pos,d_pos)))
+    ce_pyatf = np.take_along_axis(t_ce_yatf,a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2[na,...],d_pos)
 
     ##feed period
     legume_pa1e1b1nwzida0e0b0xyg = np.take_along_axis(legume_p6a1e1b1nwzida0e0b0xyg, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
@@ -1424,7 +1426,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ######################
     #adjust sensitivities#
     ######################
-    saa_mortalityx_b1nwzida0e0b0xyg = fun.f_expand(sen.saa['mortalityx'][sinp.stock['a_nfoet_b1']], b1_pos)
+    saa_mortalityx_oa1e1b1nwzida0e0b0xyg = fun.f_expand(sen.saa['mortalityx_ol0g1'][:,sinp.stock['a_nfoet_b1'],:]
+                                                        , b1_pos, right_pos=g_pos, left_pos2=p_pos, right_pos2=b1_pos
+                                                        , condition=mask_dams_inc_g1, axis=g_pos)#add axes between g & b1, and b1 & p
+    saa_mortalityx_pa1e1b1nwzida0e0b0xyg = np.take_along_axis(saa_mortalityx_oa1e1b1nwzida0e0b0xyg,
+                                                     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     ## sum saa[rr] and saa[rr_age] so there is only one saa to handle in f_conception_cs & f_conception_ltw
     ## Note: the proportions of the BTRT doesn't include rr_age_og1 because those calculations can't vary by age of the dam
     rr_age_og1 = sen.saa['rr_age_og1']
@@ -1462,7 +1468,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###calc adjustments sfw
     adja_sfw_d_a0e0b0xyg0 = np.sum(ce_sire[12, ...] * agedam_propn_da0e0b0xyg0, axis = 0)
     adja_sfw_d_a0e0b0xyg1 = np.sum(ce_dams[12, ...] * agedam_propn_da0e0b0xyg1, axis = 0)
-    adja_sfw_d_pa1e1b1nwzida0e0b0xyg2 = ce_yatf[12,...]
+    adja_sfw_d_pa1e1b1nwzida0e0b0xyg2 = ce_pyatf[12,...]
     adja_sfw_d_da0e0b0xyg3 = ce_offs[12, ...]
     adja_sfw_b0_xyg0 = np.sum(cb0_sire[12, ...] * btrt_propn_b0xyg0, axis = 0)
     adja_sfw_b0_xyg1 = np.sum(cb0_dams[12, ...] * btrt_propn_b0xyg1, axis = 0)
@@ -1476,7 +1482,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###calc adjustments sfd
     adja_sfd_d_a0e0b0xyg0 = np.sum(ce_sire[13, ...] * agedam_propn_da0e0b0xyg0, axis = 0)
     adja_sfd_d_a0e0b0xyg1 = np.sum(ce_dams[13, ...] * agedam_propn_da0e0b0xyg1, axis = 0)
-    adja_sfd_d_pa1e1b1nwzida0e0b0xyg2 = ce_yatf[13, ...]
+    adja_sfd_d_pa1e1b1nwzida0e0b0xyg2 = ce_pyatf[13, ...]
     adja_sfd_d_da0e0b0xyg3 = ce_offs[13, ...]
     adja_sfd_b0_xyg0 = np.sum(cb0_sire[13, ...] * btrt_propn_b0xyg0, axis = 0)
     adja_sfd_b0_xyg1 = np.sum(cb0_dams[13, ...] * btrt_propn_b0xyg1, axis = 0)
@@ -3089,7 +3095,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0, temp1 = sfun.f_birthweight_mu(cu1_yatf, cb1_yatf, cg_yatf, cx_yatf[:,mask_x,...], ce_yatf[:,p-1,...]
+                    temp0, temp1 = sfun.f_birthweight_mu(cu1_yatf, cb1_yatf, cg_yatf, cx_yatf[:,mask_x,...], ce_pyatf[:,p,...]
                                         , w_b_start_yatf, cf_w_b_start_dams, ffcfw_start_dams, ebg_dams
                                         , days_period_pa1e1b1nwzida0e0b0xyg1[p], gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                         , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p]
@@ -3168,8 +3174,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###Normal weight max (if animal is well fed) - yatf
                 nw_max_yatf	= srw_xyg2 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg2[p]) + w_b_yatf * srw_age_pa1e1b1nwzida0e0b0xyg2[p]
                 ##Dependent start: Change in normal weight max - yatf
-                d_nw_max_yatf = fun.f_divide(srw_age_pa1e1b1nwzida0e0b0xyg2[p-1, ...] - srw_age_pa1e1b1nwzida0e0b0xyg2[p, ...] * (srw_xyg2 - w_b_yatf)
-                                             , days_period_pa1e1b1nwzida0e0b0xyg2[p]) #nw_max = srw - (srw - bw) * srw_age[p] so d_nw_max = (srw - (srw-bw) * srw_age[p]) - (srw - (srw - bw) * srw_age[p-1]) and that simplifies to d_nw_max = (srw_age[p-1] - srw_age[p]) * (srw-bw)
+                ###nw_max = srw - (srw - bw) * srw_age[p] so d_nw_max = (srw - (srw-bw) * srw_age[p]) - (srw - (srw - bw) * srw_age[p-1]) and that simplifies to d_nw_max = (srw_age[p-1] - srw_age[p]) * (srw-bw)
+                d_nw_max_yatf = fun.f_divide((srw_age_pa1e1b1nwzida0e0b0xyg2[p-1, ...] - srw_age_pa1e1b1nwzida0e0b0xyg2[p, ...]) * (srw_xyg2 - w_b_yatf)
+                                             , days_period_pa1e1b1nwzida0e0b0xyg2[p])
                 ###GFW (start)
                 gfw_start_yatf = cfw_start_yatf / cw_yatf[3, ...]
                 ###LW (start -with fleece & conceptus)
@@ -3373,7 +3380,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##based on days_period_dams because weaning occurs at start of period so days_period_yatf==0
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0, temp1, temp2 = sfun.f_weanweight_mu(cu1_yatf, cb1_yatf, cg_yatf, cx_yatf[:,mask_x,...]
-                                            , ce_yatf[:,p-1,...], nyatf_b1nwzida0e0b0xyg, w_w_start_yatf, cf_w_w_start_dams
+                                            , ce_pyatf[:,p,...], nyatf_b1nwzida0e0b0xyg, w_w_start_yatf, cf_w_w_start_dams
                                             , ffcfw_start_dams, ebg_dams, foo_dams, foo_lact_ave_start
                                             , days_period_pa1e1b1nwzida0e0b0xyg2[p], age_start_pa1e1b1nwzida0e0b0xyg2[p]
                                             , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p]
@@ -3608,7 +3615,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                    temp0 = sfun.f_mortality_weaner_mu()
+                    temp0 = sfun.f_mortality_weaner_mu(cu2_sire)
                     if eqn_used:
                         mortality_sire += temp0
                     if eqn_compare:
@@ -3617,7 +3624,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_mortality_weaner_mu()
+                    temp0 = sfun.f_mortality_weaner_mu(cu2_dams)  #no ce_dams because dam weaners don't have a d axis
                     if eqn_used:
                         mortality_dams += temp0
                     if eqn_compare:
@@ -3626,7 +3633,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                    temp0 = sfun.f_mortality_weaner_mu()
+                    temp0 = sfun.f_mortality_weaner_mu(cu2_offs, ce_dams)
                     if eqn_used:
                         mortality_offs += temp0
                     if eqn_compare:
@@ -3647,7 +3654,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_mortality_dam_mu(cu2_dams, cs_start_dams, cv_cs_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
+                    temp0 = sfun.f_mortality_dam_mu(cu2_dams, ce_pdams[:,p,...], cs_start_dams, cv_cs_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , nfoet_b1nwzida0e0b0xyg, sen.sap['mortalitye'])
                     if eqn_used:
                         mortality_dams += temp0 #dam mort at birth due to low CS
@@ -3690,7 +3697,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     temp0, temp1, temp2 = sfun.f_mortality_progeny_cs(cd_yatf, cb1_yatf, w_b_yatf, rc_start_dams, cv_weight_yatf
                                     , w_b_exp_y_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
                                     , chill_index_pa1e1b1nwzida0e0b0xygp1[p], nfoet_b1nwzida0e0b0xyg
-                                    , rev_trait_values['yatf'][p], sen.sap['mortalityp'], saa_mortalityx_b1nwzida0e0b0xyg)
+                                    , rev_trait_values['yatf'][p], sen.sap['mortalityp'], saa_mortalityx_pa1e1b1nwzida0e0b0xyg[p])
                     if eqn_used:
                         mortality_birth_yatf = temp1 #mortalityd, assign first because it has x axis
                         mortality_birth_yatf += temp0 #mortalityx
@@ -3704,15 +3711,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     ##calculate the standard BW which is used in the paddock level scaling
                     w_b_ltw_std_yatf, t_cf = sfun.f_birthweight_mu(cu1_yatf, cb1_yatf, cg_yatf, cx_yatf[:,mask_x,...]
-                                                    , ce_yatf[:,p-1,...], w_b_ltw_std_yatf, 0, nw_start_dams, 0
+                                                    , ce_pyatf[:,p,...], w_b_ltw_std_yatf, 0, nw_start_dams, 0
                                                     , days_period_pa1e1b1nwzida0e0b0xyg1[p], gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
-                    temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_yatf[:,p,...]
+                    temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_pyatf[:,p,...]
                                     , w_b_yatf, w_b_ltw_std_yatf, cv_weight_yatf, foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygp1[p]
                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
-                                    , sen.sap['mortalityp'], saa_mortalityx_b1nwzida0e0b0xyg)
+                                    , sen.sap['mortalityp'], saa_mortalityx_pa1e1b1nwzida0e0b0xyg[p])
                     if eqn_used:
                         mortality_birth_yatf = temp0 #mortality
                     if eqn_compare:
