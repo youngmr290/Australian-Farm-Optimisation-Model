@@ -8219,7 +8219,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     k2tva1e1b1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
 
     ####temp for ewe lamb todo remove later
-    k2tvPa1nwziyg1_shape = len_k2, len_gen_t1, len_v1, np.count_nonzero(period_is_reportffcfw_p), len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    k2tvPa1nwziyg1_shape = 1, len_gen_t1, len_v1, np.count_nonzero(period_is_reportffcfw_p), len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
 
     ####kvpeb
     pzg0_shape = len_p, len_z, len_g0
@@ -8414,7 +8414,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ###ffcfw with only a few p slices todo remove this after ewelamb analysis
     fun.f1_make_r_val(r_vals,r_ffcfw_dams_k2tvPdams,'ffcfw_dams_k2tvPa1nw8ziyg1'
-                      , mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2tvPa1nwziyg1_shape)
+                      , mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[2:3,:,:,na,...],z_pos,k2tvPa1nwziyg1_shape)
 
     ###mort - uses b axis instead of k for extra detail when scan=0
     if sinp.rep['i_store_mort']:
