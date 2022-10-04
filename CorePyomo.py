@@ -839,7 +839,7 @@ def f_objective(model):
 
     ##terminal wealth at each segment
     tw_points = list(range(0, 1000000, 100000)) #majority of segments in expected profit range - these need to line up with terminal wealth before initial wealth is added.
-    tw_points.insert(0, -500000) #add a low number to end to handle if profit is very low. Note utility will be linear for any values in this segment, thus shouldn't be common to have profit in this seg
+    tw_points.insert(0, -2000000) #add a low number to end to handle if profit is very low. Note utility will be linear for any values in this segment, thus shouldn't be common to have profit in this seg
     tw_points.append(20000001) #add a high number to end to handle if profit is very high. Note utility will be linear for any values in this last segment, thus shouldn't be common to have profit in this seg
     tw_points = np.array(tw_points)
     if not uinp.general['i_inc_risk']:
