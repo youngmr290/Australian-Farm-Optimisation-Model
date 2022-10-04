@@ -272,7 +272,7 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
 
             #. farmgate grain price
             #. wool price STB price for FNF (free or nearly free of fault)
-            #. sale price for specified grid at given weight and fat score
+            #. sale price for specified grid at given weight and fat score (sale yard price)
 
     :param grid: list - sale grids to report. Has to be int between 0 and 7 inclusive.
     :param weight: float/int - stock weight to report price for.

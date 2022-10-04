@@ -1504,10 +1504,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     w_b_std_b0xyg0 = srw_female_yg0 * np.sum(cb0_sire[15, ...] * btrt_propn_b0xyg0, axis = b0_pos, keepdims=True) * cx_sire[15, 0:1, ...]
     w_b_std_b0xyg1 = srw_female_yg1 * np.sum(cb0_dams[15, ...] * btrt_propn_b0xyg1, axis = b0_pos, keepdims=True) * cx_dams[15, 1:2, ...]
     w_b_std_b0xyg3 = srw_female_yg3 * cb0_offs[15, ...] * cx_offs[15, mask_x,...]
-    ##fetal param - normal birthweight young - used as target birthweight during pregnancy if sheep fed well. Therefore average gender effect.
+    ##fetal param - normal birthweight young - used as target birthweight during pregnancy if sheep fed well. Therefore, average gender effect.
     w_b_std_y_b1nwzida0e0b0xyg1 = srw_female_yg2 * cb1_yatf[15, ...] #gender not considers until actual birth therefore no cx
     ##wool growth efficiency
-    ###wge is sfw divided by srw of a ewe of the given genotype
+    ###wge is sfw divided by srw of a ewe of the given genotype to scale the growth per unit intake by change in expected intake
     wge_a0e0b0xyg0 = sfw_a0e0b0xyg0 / srw_female_yg0
     wge_a0e0b0xyg1 = sfw_a0e0b0xyg1 / srw_female_yg1
     wge_pa1e1b1nwzida0e0b0xyg2 = sfw_pa1e1b1nwzida0e0b0xyg2 / srw_female_yg2
@@ -5773,7 +5773,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemax_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg3, dtype)
 
-    ###create woolvalue with average c1 - this is used for wc/minroe and reporting because we don't think c1 is needed for them
+    ###create salevalue with average c1 - this is used for wc/minroe and reporting because we don't think c1 is needed for them
     salevalue_tpa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(salevalue_c1tpa1e1b1nwzida0e0b0xyg0, prob_c1tpg, axis=0)
     salevalue_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(salevalue_c1tpa1e1b1nwzida0e0b0xyg1, prob_c1tpg, axis=0)
     salevalue_tp9a1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(salevalue_c1tp9a1e1b1nwzida0e0b0xyg2, prob_c1tpg, axis=0)
