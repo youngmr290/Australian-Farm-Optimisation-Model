@@ -1742,9 +1742,10 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
 #functions for end of loop #
 ###########################
 
-def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startseason, mask_min_lw_z, period_is_prejoin=0,
-                         group=None, scan_management=0, gbal=0, drysretained_scan=1, drysretained_birth=1, stub_lw_idx=np.array(np.nan),
-                         len_gen_t=1, a_t_g=0, period_is_startdvp=False):
+def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startseason, mask_min_lw_z, mask_min_wa_lw_w,
+                         mask_max_lw_z, mask_max_wa_lw_w, period_is_prejoin=0, group=None, scan_management=0, gbal=0,
+                         drysretained_scan=1, drysretained_birth=1, stub_lw_idx=np.array(np.nan), len_gen_t=1, a_t_g=0,
+                         period_is_startdvp=False):
     '''
     Production is weighted at prejoining across e&b axes and at season start across the z axis.
 
@@ -1774,7 +1775,7 @@ def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_starts
 
     ##b) Calculate temporary values as if period is start of season
     if np.any(period_is_startseason):
-        var_start = f1_season_wa(numbers, var_start, season_tup, mask_min_lw_z, period_is_startseason)
+        var_start = f1_season_wa(numbers, var_start, season_tup, mask_min_lw_z, mask_min_wa_lw_w, mask_max_lw_z, mask_max_wa_lw_w, period_is_startseason)
 
     ##c) Calculated weighted average of var_start if period_is_prejoin (because the classes from the prior year are re-combined at pre-joining)
     ### If the dams have been scanned or assessed for gbal then the number of drys is adjusted based on the estimated management
@@ -1805,21 +1806,41 @@ def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_starts
     return var_start
 
 
-def f1_season_wa(numbers, var, season, mask_min_lw_z, period_is_startseason):
+def f1_season_wa(numbers, var, season, mask_min_lw_wz, mask_min_wa_lw_w, mask_max_lw_wz, mask_max_wa_lw_w, period_is_startseason):
     '''
-    Perform weighted average across seasons, at the beginning of each season.
-    So all seasons start from a common place.
+    Perform weighted average across seasons, at the beginning of each season, so all seasons start from a common place.
+
     The animals with the lightest liveweight patterns (there could be multiple because depending on the fvp the w axis may be clustered)
      at the time of season start are assigned the lowest live weight from across the z axis rather than the weighted average,
-     so that light animals are not lost in the postprocessing distribution.
+     so that light animals are not lost in the postprocessing distribution. The same occurs with the heaviest animals.
     Don't need to worry about mortality in the different slices because this is not to do with condensing (in condensing we take the weights of animals with less than 10% mort).
+
+    :param numbers: animal numbers from generator
+    :param var: production variable of interest
+    :param season: position of z axis
+    :param mask_min_lw_wz: mask with Trues for the lightest animals across w and z
+    :param mask_min_wa_lw_w: mask with Trues for the lightest animals across w after taking the weighted average of z
+    :param mask_max_lw_wz: mask with Trues for the heaviest animals across w and z
+    :param mask_max_wa_lw_w: mask with Trues for the heaviest animals across w after taking the weighted average of z
+    :param period_is_startseason: boolean array with True for period is start of season
+    :return: production variable with a singleton z axis
     '''
-    temporary = fun.f_weighted_average(var,numbers,season,keepdims=True, non_zero=True)  # gets the weighted average of production in the different seasons
+    ##weighted average along z axis
+    temporary = fun.f_weighted_average(var,numbers,season,keepdims=True, non_zero=True)
+
     ##adjust production for min lw: the w slices with the minimum lw get assigned the production associated with the animal from the season with the lightest animal (this is so the light animals in the poor seasons are not disregarded when distributing in PP).
     ##use masked array to average the production from the z slices with the lightest animal (this is required in case multiple z slices have the same weight animals)
-    masked_var = np.ma.masked_array(var, np.logical_not(mask_min_lw_z))
-    mean_var = np.mean(masked_var, axis=season,keepdims=True) #take the mean in case multiple season slices have the same weight light animal.
-    temporary[np.any(mask_min_lw_z, axis=season, keepdims=True)] = mean_var[np.any(mask_min_lw_z,axis=season, keepdims=True)]
+    masked_var = np.ma.masked_array(var, np.logical_not(mask_min_lw_wz))
+    mean_var = np.mean(masked_var, axis=(season,sinp.stock['i_w_pos']),keepdims=True) #take the mean in case multiple season slices have the same weight light animal.
+    mean_var = np.broadcast_to(mean_var, mask_min_wa_lw_w.shape) #broadcast the w axis
+    temporary[mask_min_wa_lw_w] = mean_var[mask_min_wa_lw_w]
+
+    ##adjust production for max lw: the w slices with the maximum lw get assigned the production associated with the animal from the season with the lightest animal (this is so the light animals in the poor seasons are not disregarded when distributing in PP).
+    ##use masked array to average the production from the z slices with the lightest animal (this is required in case multiple z slices have the same weight animals)
+    masked_var = np.ma.masked_array(var, np.logical_not(mask_max_lw_wz))
+    mean_var = np.mean(masked_var, axis=(season,sinp.stock['i_w_pos']),keepdims=True) #take the mean in case multiple season slices have the same weight light animal.
+    mean_var = np.broadcast_to(mean_var, mask_max_wa_lw_w.shape) #broadcast the w axis
+    temporary[mask_max_wa_lw_w] = mean_var[mask_max_wa_lw_w]
 
     ##Update values if it is start of season
     var = fun.f_update(var, temporary, period_is_startseason)

@@ -206,7 +206,7 @@ def f_season_transfer_mask(period_dates_pz, z_pos, period_is_seasonstart_pz=Fals
 
 
 
-def f1_z_period_alloc(item_start=0, item_length=1, z_pos=-1):
+def f1_z_period_alloc(item_start=0, item_length=1, z_pos=-1, mask_z=True):
     '''
     Allocation of item into season periods (p7).
 
@@ -245,10 +245,12 @@ def f1_z_period_alloc(item_start=0, item_length=1, z_pos=-1):
     shape = (len_p7,) + tuple(np.maximum.reduce([date_node_p7etc.shape[1:], item_start.shape[1:]]))  # create shape which has the max size, this is used for o array
     alloc_metc = fun.f_range_allocation_np(date_node_p7etc, item_start, item_length, shape=shape)
 
-    ##mask z8
-    mask_season_z8 = f_season_transfer_mask(date_node_p7etc[:-1,...],z_pos,mask=True) #slice off end date p7
-
-    return alloc_metc * mask_season_z8
+    if mask_z:
+        ##mask z8
+        mask_season_z8 = f_season_transfer_mask(date_node_p7etc[:-1,...],z_pos,mask=True) #slice off end date p7
+        return alloc_metc * mask_season_z8
+    else:
+        return alloc_metc
 
 
 
