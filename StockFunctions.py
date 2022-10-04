@@ -1734,7 +1734,7 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
     ##Apply SA to progeny mortality at birth (LTW)
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
     mortalityx = fun.f_sa(mortalityx, saa_mortalityx, sa_type = 2, value_min = 0)
-    ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     mortalityx = f1_rev_update('era', mortalityx, rev_trait_value)
     return mortalityx
 
