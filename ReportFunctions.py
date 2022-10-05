@@ -1330,7 +1330,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     idx = pd.IndexSlice
     subtype_rev = ['grain', 'sheep sales', 'wool', 'season start trade', 'Total Revenue']
     subtype_exp = ['crop', 'pasture', 'slp', 'stock husb', 'stock sup', 'stock purchase', 'machinery', 'labour', 'fixed', 'Total expenses']
-    subtype_tot = ['asset_cost', 'depreciation', 'minRoe', 'EBTD', 'obj']
+    subtype_tot = ['opportunity_cost', 'depreciation', 'minRoe', 'EBTD', 'obj']
     pnl_rev_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Revenue'], subtype_rev], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
     pnl_exp_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Expense'], subtype_exp], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
     pnl_tot_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Total'], subtype_tot], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
@@ -1371,7 +1371,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     ##interest, depreciation asset opp and minroe
     ##add the assets & minroe & depreciation
     pnl.loc[idx[:, :, :, 'Total', 'depreciation'], 'Full year'] = dep_qsz
-    pnl.loc[idx[:, :, :, 'Total', 'asset_cost'], 'Full year'] = asset_cost_qsz
+    pnl.loc[idx[:, :, :, 'Total', 'opportunity_cost'], 'Full year'] = asset_cost_qsz
     pnl.loc[idx[:, :, :, 'Total', 'minRoe'], 'Full year'] = minroe_qsz
 
     ##add the estimated profit for each season (calced from info above)
