@@ -395,7 +395,7 @@ def f_area_summary(lp_vars, r_vals, option):
     ##all rotations by lmu and p7
     rot_area_qszr_lp7 = rot_area_qszrl_p7.stack().unstack([-2,-1])
     if option == 0:
-        return rot_area_qszr_lp7.round(2)
+        return rot_area_qszr_lp7.unstack(-2).round(2)
 
     ###pasture area
     all_pas = r_vals['rot']['all_pastures']  # landuse sets
