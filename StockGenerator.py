@@ -1302,6 +1302,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     a_g3_p7_p = np.apply_along_axis(fun.f_next_prev_association, 0, pinp.sheep['i_eqn_date_g3_p7'], date_end_p, 1,'right')
     ##month of each period (0 - 11 not 1 -12 because this is association array)
     a_p4_p = ((date_start_p % 364)/(364/12)).astype(int)
+    a_p4dp_pg = fun.f_expand(((date_start_p % 364)/(364/12)) - a_p4_p, p_pos) #decimal point version (basically this is the proportion of the way through the month)- used to smooth out the step function
     ##feed variation period
     a_fvp_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(fun.f_next_prev_association, 0, fvp_start_fa1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
     a_fvp_pa1e1b1nwzida0e0b0xyg3 = np.apply_along_axis(fun.f_next_prev_association, 0, fvp_start_fa1e1b1nwzida0e0b0xyg3, offs_date_end_p, 1,'right')
@@ -1388,6 +1389,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     temp_ave_pa1e1b1nwzida0e0b0xyg= temp_ave_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
     temp_max_pa1e1b1nwzida0e0b0xyg= temp_max_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
     temp_min_pa1e1b1nwzida0e0b0xyg= temp_min_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
+
+
+    ws_pa1e1b1nwzida0e0b0xyg = ws_p4a1e1b1nwzida0e0b0xyg[a_p4_p] * (1-a_p4dp_pg) \
+                               + ws_p4a1e1b1nwzida0e0b0xyg[(a_p4_p + 1) % 12] * a_p4dp_pg
+    rain_pa1e1b1nwzida0e0b0xygp1 = rain_p4a1e1b1nwzida0e0b0xygp1[a_p4_p] * (1-a_p4dp_pg[...,na]) \
+                               + rain_p4a1e1b1nwzida0e0b0xygp1[(a_p4_p + 1) % 12] * a_p4dp_pg[...,na]
+    temp_ave_pa1e1b1nwzida0e0b0xyg= temp_ave_p4a1e1b1nwzida0e0b0xyg[a_p4_p] * (1-a_p4dp_pg) \
+                               + temp_ave_p4a1e1b1nwzida0e0b0xyg[(a_p4_p + 1) % 12] * a_p4dp_pg
+    temp_max_pa1e1b1nwzida0e0b0xyg= temp_max_p4a1e1b1nwzida0e0b0xyg[a_p4_p] * (1-a_p4dp_pg) \
+                               + temp_max_p4a1e1b1nwzida0e0b0xyg[(a_p4_p + 1) % 12] * a_p4dp_pg
+    temp_min_pa1e1b1nwzida0e0b0xyg= temp_min_p4a1e1b1nwzida0e0b0xyg[a_p4_p] * (1-a_p4dp_pg) \
+                               + temp_min_p4a1e1b1nwzida0e0b0xyg[(a_p4_p + 1) % 12] * a_p4dp_pg
 
     ##feed variation
     # fvp_type_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg1,a_fvp_pa1e1b1nwzida0e0b0xyg1,0)
@@ -5687,13 +5700,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     period_is_shearing_tp9a1e1b1nwzida0e0b0xyg1 = np.compress(shear_mask_p1, period_is_shearing_tpa1e1b1nwzida0e0b0xyg1, p_pos)
     period_is_shearing_tp9a1e1b1nwzida0e0b0xyg3 = np.compress(shear_mask_p3, period_is_shearing_tpa1e1b1nwzida0e0b0xyg3, p_pos)
     ###Vegatative Matter if shorn(end)
-    vm_p9a1e1b1nwzida0e0b0xyg0 = np.compress(shear_mask_p0, np.take(vm_p4a1e1b1nwzida0e0b0xyg,a_p4_p,p_pos), p_pos) #expand p4 axis to p then mask to p9
-    vm_p9a1e1b1nwzida0e0b0xyg1 = np.compress(shear_mask_p1, np.take(vm_p4a1e1b1nwzida0e0b0xyg,a_p4_p,p_pos), p_pos) #expand p4 axis to p then mask to p9
-    vm_p9a1e1b1nwzida0e0b0xyg3 = np.compress(shear_mask_p3, np.take(vm_p4a1e1b1nwzida0e0b0xyg,a_p4_p[mask_p_offs_p],p_pos), p_pos)#expand p4 axis to p then mask to p9
+    vm_lower_step_pa1e1b1nwzida0e0b0xyg = np.take(vm_p4a1e1b1nwzida0e0b0xyg, a_p4_p, p_pos) #lower step is the vm in the current month
+    vm_upper_step_pa1e1b1nwzida0e0b0xyg = np.take(vm_p4a1e1b1nwzida0e0b0xyg, (a_p4_p+1)%12, p_pos) #upper step is the vm in the following month
+    vm_pa1e1b1nwzida0e0b0xyg = vm_lower_step_pa1e1b1nwzida0e0b0xyg * (1-a_p4dp_pg) + vm_upper_step_pa1e1b1nwzida0e0b0xyg * a_p4dp_pg #approx vm based on upper and lower step and the propn of the way through the month each gen period is.
+    vm_p9a1e1b1nwzida0e0b0xyg0 = np.compress(shear_mask_p0, vm_pa1e1b1nwzida0e0b0xyg, p_pos) #expand p4 axis to p then mask to p9
+    vm_p9a1e1b1nwzida0e0b0xyg1 = np.compress(shear_mask_p1, vm_pa1e1b1nwzida0e0b0xyg, p_pos) #expand p4 axis to p then mask to p9
+    vm_p9a1e1b1nwzida0e0b0xyg3 = np.compress(shear_mask_p3, vm_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], p_pos)#expand p4 axis to p then mask to p9
     ###pmb - a little complex because it is dependent on time since previous shearing
-    pmb_p9s4a1e1b1nwzida0e0b0xyg0 = pmb_p4s4a1e1b1nwzida0e0b0xyg[a_p4_p,...][shear_mask_p0]
-    pmb_p9s4a1e1b1nwzida0e0b0xyg1 = pmb_p4s4a1e1b1nwzida0e0b0xyg[a_p4_p,...][shear_mask_p1]
-    pmb_p9s4a1e1b1nwzida0e0b0xyg3 = pmb_p4s4a1e1b1nwzida0e0b0xyg[a_p4_p[mask_p_offs_p],...][shear_mask_p3]
+    pmb_lower_step_ps4a1e1b1nwzida0e0b0xyg = np.take(pmb_p4s4a1e1b1nwzida0e0b0xyg, a_p4_p, p_pos-1) #lower step is the pmb in the current month
+    pmb_upper_step_ps4a1e1b1nwzida0e0b0xyg = np.take(pmb_p4s4a1e1b1nwzida0e0b0xyg, (a_p4_p+1)%12, p_pos-1) #upper step is the pmb in the following month
+    pmb_ps4a1e1b1nwzida0e0b0xyg = pmb_lower_step_ps4a1e1b1nwzida0e0b0xyg * (1-a_p4dp_pg[:,na,...]) + pmb_upper_step_ps4a1e1b1nwzida0e0b0xyg * a_p4dp_pg[:,na,...] #approx pmb based on upper and lower step and the propn of the way through the month each gen period is.
+    pmb_p9s4a1e1b1nwzida0e0b0xyg0 = pmb_ps4a1e1b1nwzida0e0b0xyg[shear_mask_p0]
+    pmb_p9s4a1e1b1nwzida0e0b0xyg1 = pmb_ps4a1e1b1nwzida0e0b0xyg[shear_mask_p1]
+    pmb_p9s4a1e1b1nwzida0e0b0xyg3 = pmb_ps4a1e1b1nwzida0e0b0xyg[mask_p_offs_p][shear_mask_p3]
     period_current_shearing_p9a1e1b1nwzida0e0b0xyg0 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg0 * period_is_shearing_p9a1e1b1nwzida0e0b0xyg0, axis=p_pos) #returns the period number that the most recent shearing occurred
     period_current_shearing_tp9a1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg1 * period_is_shearing_tp9a1e1b1nwzida0e0b0xyg1, axis=p_pos) #returns the period number that the most recent shearing occurred
     period_current_shearing_tp9a1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg3 * period_is_shearing_tp9a1e1b1nwzida0e0b0xyg3, axis=p_pos) #returns the period number that the most recent shearing occurred
@@ -5754,8 +5773,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     sale_mask_p3 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg3[:,na,...], period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p]), preserveAxis=p_pos)  #performs np.any on all axis except 1
     ###manipulate axis with associations
     grid_scorerange_s7s6tpa1e1b1nwzida0e0b0xyg = score_range_s8s6tpa1e1b1nwzida0e0b0xyg[uinp.sheep['ia_s8_s7']] #s8 to s7
-    month_scalar_s7tpa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9tp4a1e1b1nwzida0e0b0xyg[:, :, :, a_p4_p][:,0] #month to p, then slice s9 (has to be separate because otherwise advanced indexing is triggered)
-    month_discount_s7tpa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9tp4a1e1b1nwzida0e0b0xyg[:, :, :, a_p4_p][:,1] #month to p, then slice s9 (has to be separate because otherwise advanced indexing is triggered)
+    month_scalar_s7tpa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9tp4a1e1b1nwzida0e0b0xyg[:, :, :, a_p4_p][:,0] * (1-a_p4dp_pg) \
+                                            + price_adj_months_s7s9tp4a1e1b1nwzida0e0b0xyg[:, :, :, (a_p4_p+1)%12][:,0] * a_p4dp_pg #month to p, then slice s9 (has to be separate because otherwise advanced indexing is triggered)
+    month_discount_s7tpa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9tp4a1e1b1nwzida0e0b0xyg[:, :, :, a_p4_p][:,1] * (1-a_p4dp_pg) \
+                                              + price_adj_months_s7s9tp4a1e1b1nwzida0e0b0xyg[:, :, :, (a_p4_p+1)%12][:,1] * a_p4dp_pg#month to p, then slice s9 (has to be separate because otherwise advanced indexing is triggered)
     ###Sale price grids for selected price percentile and the scalars for LW & quality score
     grid_price_s7s5s6 = sfun.f1_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype)
     r_vals['grid_price_s7s5s6'] = grid_price_s7s5s6
