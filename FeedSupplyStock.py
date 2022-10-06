@@ -369,8 +369,10 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ###d)agedam for offspring
     t_fs_agedam_pa1e1b1nwzik3a0e0b0xyg3 = 0
     ###e)wean age for offspring
-    t_fs_ageweaned_pa1e1b1nwzidk0e0b0xyg3 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg3
-                                                                , a_r2_wean_pa1e1b1nwzida0e0b0xyg3[na,...], axis=0)[0]
+    #todo removed the offs wean adjust for the ewe lamb analysis so that the weaning feed supply is only affecting the dams
+    t_fs_ageweaned_pa1e1b1nwzidk0e0b0xyg3 = 0
+    # np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg3
+    #                                                             , a_r2_wean_pa1e1b1nwzida0e0b0xyg3[na,...], axis=0)[0]
     ###f) btrt for offspring
     t_fs_btrt_pa1e1b1nwzida0e0k4xyg3 = 0
     ###g) gender for offspring
