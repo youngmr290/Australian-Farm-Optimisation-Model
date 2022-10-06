@@ -418,7 +418,7 @@ def f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9
                        for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
                        if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
                        or pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z9,i,a,x,y3,g3,w9]) #doesn't need to use z8 because in the within constraint because z only provides to itsself and children with the same w patten.
-                       ) <=0 #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
+                       ) ==0 #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
         else:
             return pe.Constraint.Skip
     start_con_offwithinR=time.time()
@@ -457,7 +457,7 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
                              for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
                        for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
                        if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
-                       or any(pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]) != 0 for z8 in model.s_season_types)) <=0 #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
+                       or any(pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]) != 0 for z8 in model.s_season_types)) ==0 #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
         else:
             return pe.Constraint.Skip
     start_con_offbetweenR=time.time()
@@ -501,7 +501,7 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
                        if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1,g9, w9]) != 0
                        or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z9, i, y1, g1, g9, w9]) #doesn't need to use z8 because in the within constraint because z only provides to itsself and children with the same w patten.
                        or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
-                       ) <=0 #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
+                       ) ==0 #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
         else:
             return pe.Constraint.Skip
 
@@ -550,7 +550,7 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
                        if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
                        or any(pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0 for z8 in model.s_season_types)#need to use z8 because at season start all z's provide the initiating z's.
                        or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
-                       ) <=0
+                       ) ==0
         else:
             return pe.Constraint.Skip
     start_con_damR=time.time()
