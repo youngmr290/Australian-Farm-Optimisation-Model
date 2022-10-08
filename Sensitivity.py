@@ -225,6 +225,7 @@ def create_sa():
 
     ##sup feed
     sav['max_sup_selectivity'] = '-'  #control the maximum propn of potential intake used by supplement when paddock feeding.
+    sav['inc_sup_selectivity'] = '-'  #control inclusion of the sup selectivity bnd (maximum propn of potential intake used by supplement when paddock feeding).
 
     ##cropgrazing
     sav['cropgrazing_inc'] = '-'  #control if crop grazing is allowed
