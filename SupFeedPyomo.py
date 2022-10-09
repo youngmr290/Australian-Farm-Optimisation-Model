@@ -9,7 +9,7 @@ from pyomo import environ as pe
 import SupFeed as sup
 import PropertyInputs as pinp
 
-def sup_precalcs(params, r_vals):
+def sup_precalcs(params, r_vals, nv):
     '''
     Call crop labour precalc functions.
 
@@ -18,7 +18,7 @@ def sup_precalcs(params, r_vals):
 
     '''
 
-    sup.f_sup_params(params,r_vals)
+    sup.f_sup_params(params,r_vals, nv)
 
     
 def f1_suppyomo_local(params, model):
@@ -37,10 +37,10 @@ def f1_suppyomo_local(params, model):
     ######### 
 
     ##sup cost
-    model.p_sup_cost = pe.Param(model.s_season_periods, model.s_season_types, model.s_feed_periods, model.s_crops, initialize=params['total_sup_cost'], default = 0.0, mutable=True, doc='cost of storing and feeding 1t of sup each period')
+    model.p_sup_cost = pe.Param(model.s_season_periods, model.s_season_types, model.s_feed_periods, model.s_crops, model.s_feed_pools, initialize=params['total_sup_cost'], default = 0.0, mutable=True, doc='cost of storing and feeding 1t of sup each period')
     
     ##sup wc
-    model.p_sup_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_feed_periods, model.s_crops, initialize=params['total_sup_wc'], default = 0.0, mutable=True, doc='wc of storing and feeding 1t of sup each period')
+    model.p_sup_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_feed_periods, model.s_crops, model.s_feed_pools, initialize=params['total_sup_wc'], default = 0.0, mutable=True, doc='wc of storing and feeding 1t of sup each period')
     
     ##sup dep
     model.p_sup_dep = pe.Param(model.s_season_periods, model.s_feed_periods, model.s_season_types, model.s_crops,
@@ -51,7 +51,7 @@ def f1_suppyomo_local(params, model):
                                  initialize=params['storage_asset'], default = 0.0, doc='asset value associated with storing 1t of sup each period')
     
     ##sup labour
-    model.p_sup_labour = pe.Param(model.s_labperiods, model.s_feed_periods, model.s_crops, model.s_season_types, initialize=params['sup_labour'], default = 0.0, mutable=True, doc='labour required to feed each sup in each feed period')
+    model.p_sup_labour = pe.Param(model.s_labperiods, model.s_feed_periods, model.s_season_types, model.s_crops, model.s_feed_pools, initialize=params['sup_labour'], default = 0.0, mutable=True, doc='labour required to feed each sup in each feed period')
     
     ##sup vol
     model.p_sup_vol = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types, initialize=params['vol_tonne'] , default = 0.0, doc='vol per tonne of grain fed')
@@ -92,9 +92,9 @@ def f_sup_cost(model,q,s,p7,z):
     Used in global constraint (con_profit). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_cost[p7,z,p6,k]
+    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_cost[p7,z,p6,k,f]
                for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods
-               if pe.value(model.p_sup_cost[p7,z,p6,k])!=0)
+               if pe.value(model.p_sup_cost[p7,z,p6,k,f])!=0)
 
 def f_sup_wc(model,q,s,c0,p7,z):
     '''
@@ -103,9 +103,9 @@ def f_sup_wc(model,q,s,c0,p7,z):
     Used in global constraint (con_workingcap). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_wc[c0,p7,z,p6,k]
+    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_wc[c0,p7,z,p6,k,f]
                for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods
-               if pe.value(model.p_sup_wc[c0,p7,z,p6,k])!=0)
+               if pe.value(model.p_sup_wc[c0,p7,z,p6,k,f])!=0)
 
 def f_sup_me(model,q,s,p6,f,z):
     '''
@@ -156,9 +156,9 @@ def f_sup_labour(model,q,s,p5,z):
     Used in global constraint (con_labour_any). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_labour[p5,p6,k,z]
+    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_labour[p5,p6,z,k,f]
                for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods
-               if pe.value(model.p_sup_labour[p5,p6,k,z])!=0)
+               if pe.value(model.p_sup_labour[p5,p6,z,k,f])!=0)
     
     
     

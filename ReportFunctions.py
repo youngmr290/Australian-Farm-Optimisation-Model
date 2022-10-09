@@ -1019,12 +1019,13 @@ def f_stock_cash_summary(lp_vars, r_vals):
     ###read in dict from grain summary
     grain_summary = f_grain_sup_summary(lp_vars, r_vals)
     sup_grain_cost_p7zqs = grain_summary['sup_exp_p7zqs']
-    grain_fed_qszkp6 = f_grain_sup_summary(lp_vars, r_vals, option=2)
-    grain_fed_zkp6qs = grain_fed_qszkp6.reorder_levels([2,3,4,0,1]).sort_index() # change the order so that reindexing works (new levels being added must be at the end)
-    supp_feedstorage_cost_p7zp6k = r_vals['sup']['total_sup_cost_p7zp6k']
-    supp_feedstorage_cost_p7_zkp6qs = supp_feedstorage_cost_p7zp6k.unstack([1,3,2]).reindex(grain_fed_zkp6qs.index, axis=1)
-    supp_feedstorage_cost_p7_zkp6qs = supp_feedstorage_cost_p7_zkp6qs.mul(grain_fed_zkp6qs, axis=1)
-    supp_feedstorage_cost_p7zqs = supp_feedstorage_cost_p7_zkp6qs.groupby(axis=1, level=(0,3,4)).sum().stack([0,1,2]) #sum k & p6
+    grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
+
+    grain_fed_zkfp6qs = grain_fed_qszkfp6.reorder_levels([2,3,4,5,0,1]).sort_index() # change the order so that reindexing works (new levels being added must be at the end)
+    supp_feedstorage_cost_p7zp6kf = r_vals['sup']['total_sup_cost_p7zp6kf']
+    supp_feedstorage_cost_p7_zkfp6qs = supp_feedstorage_cost_p7zp6kf.unstack([1,3,4,2]).reindex(grain_fed_zkfp6qs.index, axis=1)
+    supp_feedstorage_cost_p7_zkfp6qs = supp_feedstorage_cost_p7_zkfp6qs.mul(grain_fed_zkfp6qs, axis=1)
+    supp_feedstorage_cost_p7zqs = supp_feedstorage_cost_p7_zkfp6qs.groupby(axis=1, level=(0,4,5)).sum().stack([0,1,2]) #sum k & p6 & f
 
     ##infrastructure
     fixed_infra_cost_qsp7z = np.sum(r_vals['stock']['rm_stockinfra_fix_h1p7z'], axis=0) * r_vals['zgen']['mask_qs'][:,:,na,na]
