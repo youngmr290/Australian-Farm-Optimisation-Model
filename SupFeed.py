@@ -158,6 +158,13 @@ def f_sup_cost(r_vals, nv):
     feeding_cost_k = mac.sup_mach_cost()
     storage_cost_k = grain_info.loc['cost']
 
+    ##confinement costs
+    confinement_infra = pinp.supfeed['i_confinement_infra'].squeeze()
+    ###fixed depreciation
+    confinement_dep = (confinement_infra.loc['price'] - confinement_infra.loc['salvage value']) / confinement_infra.loc['life']
+    ###variable r & m
+    confinement_rm = pinp.supfeed['i_confinement_infra_rm']
+
     ##adjust feeding cost for confinement.
     nv_is_confinement_f = np.full(len_nv, False)
     nv_is_confinement_f[-1] = nv['confinement_inc'] #if confinement is included the last nv pool is confinement.
@@ -167,6 +174,13 @@ def f_sup_cost(r_vals, nv):
     index_fk = pd.MultiIndex.from_product([keys_f, keys_k])
     cost_factor_fk = cost_factor_f.reindex(index_fk, level=0)
     feeding_cost_fk = feeding_cost_k.mul(cost_factor_fk, level=1)
+    ###variable confinemnet infra r&m costs only occur for confinement nv pool
+    confinement_rm_f = confinement_rm * nv_is_confinement_f
+    confinement_rm_f = pd.Series(confinement_rm_f, index=keys_f)
+    feeding_cost_fk = feeding_cost_fk.add(confinement_rm_f, level=0)
+    ###fixed confinemnet infra depreciation is only incured if confinement is included
+    confinement_dep = confinement_dep * nv['confinement_inc']
+
 
     ##feeding cost allocaion
     start_p6z = per.f_feed_periods()[:-1,:]
@@ -193,7 +207,7 @@ def f_sup_cost(r_vals, nv):
     total_sup_wc_c0p7zp6kf = feeding_wc_c0p7zp6k_f.add(storage_wc_c0p7zp6k, axis=0).stack()
 
     ##dep
-    storage_dep_k = grain_info.loc['dep']
+    storage_dep_k = grain_info.loc['dep'] + confinement_dep
     ##asset
     storage_asset_k = grain_info.loc['asset']
     ##allocate both dep and asset to season periods so it can be transferred as seasons unfold
