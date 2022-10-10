@@ -206,8 +206,8 @@ def f_sup_cost(r_vals, nv):
     total_sup_cost_p7zp6kf = feeding_cost_p7zp6k_f.add(storage_cost_p7zp6k, axis=0).stack()
     total_sup_wc_c0p7zp6kf = feeding_wc_c0p7zp6k_f.add(storage_wc_c0p7zp6k, axis=0).stack()
 
-    ##dep
-    storage_dep_k = grain_info.loc['dep'] + confinement_dep
+    ##storage dep
+    storage_dep_k = grain_info.loc['dep']
     ##asset
     storage_asset_k = grain_info.loc['asset']
     ##allocate both dep and asset to season periods so it can be transferred as seasons unfold
@@ -228,7 +228,7 @@ def f_sup_cost(r_vals, nv):
     fun.f1_make_r_val(r_vals, total_sup_cost_p7zp6kf, 'total_sup_cost_p7zp6kf', mask_season_p7z[:,:,na,na], z_pos=-3)
 
     ##return cost, dep and asset value
-    return total_sup_cost_p7zp6kf, total_sup_wc_c0p7zp6kf, storage_dep_p7p6zk, storage_asset_p7p6zk
+    return total_sup_cost_p7zp6kf, total_sup_wc_c0p7zp6kf, storage_dep_p7p6zk, storage_asset_p7p6zk, confinement_dep
 
 
 def f_sup_md_vol(r_vals):
@@ -482,7 +482,7 @@ def f1_sup_selectivity():
 
 ##collates all the params
 def f_sup_params(params,r_vals, nv):
-    total_sup_cost, total_sup_wc, storage_dep, storage_asset = f_sup_cost(r_vals, nv)
+    total_sup_cost, total_sup_wc, storage_dep, storage_asset, confinement_dep = f_sup_cost(r_vals, nv)
     vol_tonne, md_tonne = f_sup_md_vol(r_vals)
     sup_labour = f_sup_labour(nv)
     buy_grain_price, buy_grain_wc, buy_grain_prov_p7z = f_buy_grain_price(r_vals)
@@ -492,6 +492,7 @@ def f_sup_params(params,r_vals, nv):
 
 
     ##create non seasonal params
+    params['confinement_dep'] = confinement_dep
     params['storage_dep'] = storage_dep.to_dict()
     params['storage_asset'] = storage_asset.to_dict()
     params['vol_tonne'] = vol_tonne.to_dict()

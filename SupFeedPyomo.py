@@ -42,10 +42,13 @@ def f1_suppyomo_local(params, model):
     ##sup wc
     model.p_sup_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_feed_periods, model.s_crops, model.s_feed_pools, initialize=params['total_sup_wc'], default = 0.0, mutable=True, doc='wc of storing and feeding 1t of sup each period')
     
+    ##confinement dep
+    model.p_confinement_dep = pe.Param(initialize= params['confinement_dep'], default = 0.0, doc='fixed depreciation of confinement infrastructure')
+    
     ##sup dep
     model.p_sup_dep = pe.Param(model.s_season_periods, model.s_feed_periods, model.s_season_types, model.s_crops,
                                initialize= params['storage_dep'], default = 0.0, doc='depreciation of storing 1t of sup each period')
-    
+
     ##sup asset
     model.p_sup_asset = pe.Param(model.s_season_periods, model.s_feed_periods, model.s_season_types, model.s_crops,
                                  initialize=params['storage_asset'], default = 0.0, doc='asset value associated with storing 1t of sup each period')
@@ -129,12 +132,13 @@ def f_sup_vol(model,q,s,p6,f,z):
 
 def f_sup_dep(model,q,s,p7,z):
     '''
-    Calculate the total depreciation of silos.
+    Calculate the total depreciation of silos and confinement infrastructure (confinement dep is 0 if confinement
+    is not included).
 
     Used in global constraint (con_dep). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_dep[p7,p6,z,k]
+    return model.p_confinement_dep + sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_dep[p7,p6,z,k]
                for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods
                if pe.value(model.p_sup_dep[p7,p6,z,k])!=0)
 
