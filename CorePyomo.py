@@ -566,6 +566,10 @@ def f_con_link_pasture_supplement_consumption(model,nv):
     '''
     Constrains the consumption of paddock feed with supplement if the animal is not in confinement.
     This is to represent the fact that livestock will still eat pasture if they're being fed supplement.
+
+    Note: this constraint can make the model infeasible for n11 because the optimal fs cant be met without supplement.
+    To fix this run n33. This may still be infeasible due to sires who are always n33. But sires nut can be changed in sinp
+    or sires can be removed from the model.
     '''
     len_nv = nv['len_nv']
     nv_is_not_confinement_f = np.full(len_nv, True)
