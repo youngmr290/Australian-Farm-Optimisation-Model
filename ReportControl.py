@@ -606,7 +606,7 @@ def f_report(processor, trials, non_exist_trials):
             arith = 1
             if lp_vars_inc:
                 index = [5] #p
-                cols = [2] #k2
+                cols = [11,2] #z,k2
             else:    #adding the w axis while still reporting with lp_vars weighting
                 index = [5] #p
                 cols = [2,3,10] #b,w
@@ -714,7 +714,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_qsk3k5tvpnwzidaebxyg3'
             arith = 1
             index = [3, 6]      #k5, p. k5 here to save columns when many w
-            cols = [17, 15, 2,4]   #g3, x, t, w
+            cols = [17, 15, 2,9,4]   #g3, x,k3, z,t
             axis_slice = {}
             axis_slice[13] = [0,1,1] #e: first cycle
             axis_slice[11] = [2,-1,1] #dam age: Adult
