@@ -94,6 +94,7 @@ def f_report(processor, trials, non_exist_trials):
     stacked_penalty = pd.DataFrame()  # biomass penalty from seeding timeliness and crop grazing
     stacked_profitarea = pd.DataFrame()  # profit by land area
     stacked_feed = pd.DataFrame()  # feed budget
+    stacked_feed2 = pd.DataFrame()  # feed budget
     stacked_season_nodes = pd.DataFrame()  # season periods
     stacked_feed_periods = pd.DataFrame()  # feed periods
     stacked_dam_dvp_dates = pd.DataFrame()  # dam dvp dates
@@ -215,6 +216,15 @@ def f_report(processor, trials, non_exist_trials):
             feed = rep.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols)
             feed = pd.concat([feed],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_feed = rep.f_append_dfs(stacked_feed, feed)
+
+        if report_run.loc['run_feedbudget', 'Run']:
+            option = 1
+            nv_option = 0
+            dams_cols = [6] #birth opp
+            offs_cols = [7] #shear opp
+            feed = rep.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols)
+            feed = pd.concat([feed],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_feed2 = rep.f_append_dfs(stacked_feed2, feed)
 
         if report_run.loc['run_period_dates', 'Run']:
             ###season nodes (p7)
@@ -1341,6 +1351,7 @@ def f_report(processor, trials, non_exist_trials):
         plot.savefig('Output/profitarea_curve.png')
     if report_run.loc['run_feedbudget', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_feed, 'feed budget', df_settings, option=xl_display_mode)
+        df_settings = rep.f_df2xl(writer, stacked_feed2, 'feed budget total', df_settings, option=xl_display_mode)
     if report_run.loc['run_period_dates', 'Run']:
         fp_start_col = len(stacked_season_nodes.columns) + stacked_season_nodes.index.nlevels + 1
         dam_dvp_start_col = fp_start_col + len(stacked_feed_periods.columns) + stacked_feed_periods.index.nlevels + 1
