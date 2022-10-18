@@ -225,7 +225,7 @@ def f_sup_cost(r_vals, nv):
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, total_sup_cost_p7zp6kf, 'total_sup_cost_p7zp6kf', mask_season_p7z[:,:,na,na], z_pos=-3)
+    fun.f1_make_r_val(r_vals, total_sup_cost_p7zp6kf, 'total_sup_cost_p7zp6kf', mask_season_p7z[:,:,na,na,na], z_pos=-4)
 
     ##return cost, dep and asset value
     return total_sup_cost_p7zp6kf, total_sup_wc_c0p7zp6kf, storage_dep_p7p6zk, storage_asset_p7p6zk, confinement_dep
