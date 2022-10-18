@@ -54,6 +54,7 @@ def create_sa():
     len_t2 = pinp.sheep['i_t2_len']
     len_t3 = pinp.sheep['i_t3_len']
     len_P = 500  #Capital P because it is an (over) estimate to initialise the p axes that will be sliced when len_p is known.
+    len_p6 = len(pinp.period['i_fp_idx'])
     len_V = 50  #Capital V because it is an (over) estimate to initialise the v axes that will be sliced when len_v is known.
     len_x = pinp.sheep['i_x_len']
     len_y = int(np.ceil(sinp.stock['i_age_max']))
@@ -88,8 +89,8 @@ def create_sa():
     sam['germ_l','understory']                  = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for germination on each lmus in all periods
     sam['pgr','annual']                     = 1.0                                                          # SA multiplier for growth on all lmus in all periods
     sam['pgr','understory']                     = 1.0                                                          # SA multiplier for growth on all lmus in all periods
-    sam['pgr_f','annual']                   = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for growth in each feed period
-    sam['pgr_f','understory']                   = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for growth in each feed period
+    sam['pgr_zp6','annual']                   = np.ones((len_z, len_p6),  dtype=np.float64)  # SA multiplier for growth in each feed period
+    sam['pgr_zp6','understory']                   = np.ones((len_z, len_p6),  dtype=np.float64)  # SA multiplier for growth in each feed period
     sam['pgr_l','annual']                   = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for growth on each lmus in all periods
     sam['pgr_l','understory']                   = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for growth on each lmus in all periods
     sam['dry_dmd_decline','annual']         = 1.0                                                          # SA multiplier for the decline in digestibility of dry feed
@@ -142,8 +143,8 @@ def create_sa():
     saa['germ','understory']                    = 0.0                                                          # SA addition for germination on all lmus in all periods
     saa['pgr','annual']                     = 0.0                                                          # SA addition for growth on all lmus in all periods
     saa['pgr','understory']                     = 0.0                                                          # SA addition for growth on all lmus in all periods
-    saa['pgr_f','annual']                   = np.zeros(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA addition for growth in each feed period
-    saa['pgr_f','understory']                   = np.zeros(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA addition for growth in each feed period
+    saa['pgr_zp6','annual']                   = np.zeros((len_z, len_p6),  dtype=np.float64)  # SA addition for growth in each feed period
+    saa['pgr_zp6','understory']                   = np.zeros((len_z, len_p6),  dtype=np.float64)  # SA addition for growth in each feed period
     saa['pgr_l','annual']                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA addition for growth on each lmus in all periods
     saa['pgr_l','understory']                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA addition for growth on each lmus in all periods
     
@@ -225,6 +226,7 @@ def create_sa():
 
     ##sup feed
     sav['max_sup_selectivity'] = '-'  #control the maximum propn of potential intake used by supplement when paddock feeding.
+    sav['inc_sup_selectivity'] = '-'  #control inclusion of the sup selectivity bnd (maximum propn of potential intake used by supplement when paddock feeding).
 
     ##cropgrazing
     sav['cropgrazing_inc'] = '-'  #control if crop grazing is allowed

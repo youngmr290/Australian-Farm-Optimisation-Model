@@ -246,6 +246,7 @@ def f_universal_inp_sa():
     ##supfeed
     ###sav
     supfeed['i_max_sup_selectivity'] = fun.f_sa(supfeed['i_max_sup_selectivity'], sen.sav['max_sup_selectivity'], 5)
+    supfeed['i_sup_selectivity_included'] = fun.f_sa(supfeed['i_sup_selectivity_included'], sen.sav['inc_sup_selectivity'], 5)
     ###sam
     ###sap
     ###saa

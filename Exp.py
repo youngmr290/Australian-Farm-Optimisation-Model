@@ -185,8 +185,8 @@ for row in range(len(exp_data)):
     lfixpy.labfx_precalcs(params['labfx'],r_vals['labfx'])
     labpy.lab_precalcs(params['lab'],r_vals['lab'])
     lphspy.crplab_precalcs(params['crplab'],r_vals['crplab'])
-    suppy.sup_precalcs(params['sup'],r_vals['sup'])
     spy.stock_precalcs(params['stock'],r_vals['stock'],nv,pkl_fs_info)
+    suppy.sup_precalcs(params['sup'],r_vals['sup'], nv) #sup must be after stock because it uses nv dict which is populated in stock.py
     cgzpy.cropgraze_precalcs(params['crpgrz'],r_vals['crpgrz'], nv) #cropgraze must be after stock because it uses nv dict which is populated in stock.py
     slppy.saltbush_precalcs(params['slp'],r_vals['slp'], nv) #saltbush must be after stock because it uses nv dict which is populated in stock.py
     stubpy.stub_precalcs(params['stub'],r_vals['stub'], nv) #stub must be after stock because it uses nv dict which is populated in stock.py

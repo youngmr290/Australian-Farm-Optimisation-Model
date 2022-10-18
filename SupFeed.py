@@ -100,7 +100,7 @@ def f_buy_grain_price(r_vals):
     fun.f1_make_r_val(r_vals, r_buy_grain_price_ks2g_p7z, 'buy_grain_price', mask_season_p7z, z_pos=-1)
     return buy_grain_price_ks2gc1_p7z.unstack([2,0,1,3]).sort_index(), buy_grain_price_wc_ks2g_c0p7z.unstack([2,0,1]).sort_index(), buy_grain_prov_p7z
 
-def f_sup_cost(r_vals):
+def f_sup_cost(r_vals, nv):
     '''
 
     Machinery, storage and depreciation costs incurred to feed 1t of supplement.
@@ -141,6 +141,13 @@ def f_sup_cost(r_vals):
     grain_info.loc['asset'] =  silo_info.loc['asset'].div(grain_info.loc['capacity'], level=1)
     grain_info=grain_info.droplevel(1,axis=1) #drop silo type index
 
+    len_nv = nv['len_nv']
+    keys_f = np.array(['nv{0}'.format(i) for i in range(nv['len_nv'])])
+    keys_p7 = per.f_season_periods(keys=True)
+    keys_k = grain_info.columns
+    keys_c0 = sinp.general['i_enterprises_c0']
+    keys_z = zfun.f_keys_z()
+    keys_p6 = pinp.period['i_fp_idx']
     # ##data to determine cash period
     # cashflow_df = per.f_cashflow_periods()
     # p_dates = cashflow_df['start date']
@@ -151,12 +158,32 @@ def f_sup_cost(r_vals):
     feeding_cost_k = mac.sup_mach_cost()
     storage_cost_k = grain_info.loc['cost']
 
+    ##confinement costs
+    confinement_infra = pinp.supfeed['i_confinement_infra'].squeeze()
+    ###fixed depreciation
+    confinement_dep = (confinement_infra.loc['price'] - confinement_infra.loc['salvage value']) / confinement_infra.loc['life']
+    ###variable r & m
+    confinement_rm = pinp.supfeed['i_confinement_infra_rm']
+
+    ##adjust feeding cost for confinement.
+    nv_is_confinement_f = np.full(len_nv, False)
+    nv_is_confinement_f[-1] = nv['confinement_inc'] #if confinement is included the last nv pool is confinement.
+    confinement_feeding_cost_factor = uinp.supfeed['i_confinement_feeding_cost_factor'] #cost of feeding for confinement vs in paddock.
+    cost_factor_f = fun.f_update(1, confinement_feeding_cost_factor, nv_is_confinement_f)
+    cost_factor_f = pd.Series(cost_factor_f, index=keys_f)
+    index_fk = pd.MultiIndex.from_product([keys_f, keys_k])
+    cost_factor_fk = cost_factor_f.reindex(index_fk, level=0)
+    feeding_cost_fk = feeding_cost_k.mul(cost_factor_fk, level=1)
+    ###variable confinemnet infra r&m costs only occur for confinement nv pool
+    confinement_rm_f = confinement_rm * nv_is_confinement_f
+    confinement_rm_f = pd.Series(confinement_rm_f, index=keys_f)
+    feeding_cost_fk = feeding_cost_fk.add(confinement_rm_f, level=0)
+    ###fixed confinemnet infra depreciation is only incured if confinement is included
+    confinement_dep = confinement_dep * nv['confinement_inc']
+
+
     ##feeding cost allocaion
     start_p6z = per.f_feed_periods()[:-1,:]
-    keys_p7 = per.f_season_periods(keys=True)
-    keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = zfun.f_keys_z()
-    keys_p6 = pinp.period['i_fp_idx']
     sup_cost_allocation_p7zp6, sup_wc_allocation_c0p7zp6 = fin.f_cashflow_allocation(start_p6z.T, enterprise='stk', z_pos=-2)
     ###convert to df
     new_index_p7zp6 = pd.MultiIndex.from_product([keys_p7, keys_z, keys_p6])
@@ -164,30 +191,28 @@ def f_sup_cost(r_vals):
     new_index_c0p7zp6 = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6])
     sup_wc_allocation_c0p7zp6 = pd.Series(sup_wc_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)
     ###reindex
-    cols_p7zp6k = pd.MultiIndex.from_product([keys_p7, keys_z, keys_p6, feeding_cost_k.index])
+    cols_p7zp6k = pd.MultiIndex.from_product([keys_p7, keys_z, keys_p6, keys_k])
     sup_cost_allocation_p7zp6k = sup_cost_allocation_p7zp6.reindex(cols_p7zp6k)
-    cols_c0p7zp6k = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6, feeding_cost_k.index])
+    cols_c0p7zp6k = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6, keys_k])
     sup_wc_allocation_c0p7zp6k = sup_wc_allocation_c0p7zp6.reindex(cols_c0p7zp6k)
 
     ##adjust cost for allocation and interest
-    feeding_cost_p7zp6k = sup_cost_allocation_p7zp6k.mul(feeding_cost_k, level=3)
-    feeding_wc_c0p7zp6k = sup_wc_allocation_c0p7zp6k.mul(feeding_cost_k, level=4)
+    feeding_cost_p7zp6k_f = sup_cost_allocation_p7zp6k.unstack(-1).mul(feeding_cost_fk, axis=1).stack(1)
+    feeding_wc_c0p7zp6k_f = sup_wc_allocation_c0p7zp6k.unstack(-1).mul(feeding_cost_fk, axis=1).stack(1)
     storage_cost_p7zp6k = sup_cost_allocation_p7zp6k.mul(storage_cost_k, level=3)
     storage_wc_c0p7zp6k = sup_wc_allocation_c0p7zp6k.mul(storage_cost_k, level=4)
 
     ##total cost = feeding cost plus storage cost
-    total_sup_cost_p7zp6k = feeding_cost_p7zp6k + storage_cost_p7zp6k
-    total_sup_wc_c0p7zp6k = feeding_wc_c0p7zp6k + storage_wc_c0p7zp6k
+    total_sup_cost_p7zp6kf = feeding_cost_p7zp6k_f.add(storage_cost_p7zp6k, axis=0).stack()
+    total_sup_wc_c0p7zp6kf = feeding_wc_c0p7zp6k_f.add(storage_wc_c0p7zp6k, axis=0).stack()
 
-    ##dep
+    ##storage dep
     storage_dep_k = grain_info.loc['dep']
     ##asset
     storage_asset_k = grain_info.loc['asset']
     ##allocate both dep and asset to season periods so it can be transferred as seasons unfold
     alloc_p7p6z = zfun.f1_z_period_alloc(start_p6z[na,...], z_pos=-1)
     ###make df
-    keys_p7 = per.f_season_periods(keys=True)
-    keys_k = grain_info.columns
     index_p7p6z = pd.MultiIndex.from_product([keys_p7,keys_p6,keys_z])
     alloc_p7p6z = pd.Series(alloc_p7p6z.ravel(), index=index_p7p6z)
     index_p7p6zk = pd.MultiIndex.from_product([keys_p7,keys_p6,keys_z,keys_k])
@@ -200,10 +225,10 @@ def f_sup_cost(r_vals):
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, total_sup_cost_p7zp6k, 'total_sup_cost_p7zp6k', mask_season_p7z[:,:,na,na], z_pos=-3)
+    fun.f1_make_r_val(r_vals, total_sup_cost_p7zp6kf, 'total_sup_cost_p7zp6kf', mask_season_p7z[:,:,na,na], z_pos=-3)
 
     ##return cost, dep and asset value
-    return total_sup_cost_p7zp6k, total_sup_wc_c0p7zp6k, storage_dep_p7p6zk, storage_asset_p7p6zk
+    return total_sup_cost_p7zp6kf, total_sup_wc_c0p7zp6kf, storage_dep_p7p6zk, storage_asset_p7p6zk, confinement_dep
 
 
 def f_sup_md_vol(r_vals):
@@ -272,7 +297,7 @@ def f_sup_md_vol(r_vals):
     return vol_tonne_kp6z, md_tonne_kp6z
     
     
-def f_sup_labour():
+def f_sup_labour(nv):
     '''
     The labour required to feed sheep one tonne of supplement is calculated as the time spent
     traveling to and from the silo, filling the sheep feeder, emptying the feeder, and transporting
@@ -359,18 +384,28 @@ def f_sup_labour():
     ##allocate time to labour period for each feed period - get the time taken in each labour period to feed 1t of feed in each feed period
     total_time_p5p6zk = total_time_p5zk[:,na,...] * alloc_p5p6z[...,na]
 
+    ##adjust feeding labour for confinement.
+    len_nv = nv['len_nv']
+    nv_is_confinement_f = np.full(len_nv, False)
+    nv_is_confinement_f[-1] = nv['confinement_inc'] #if confinement is included the last nv pool is confinement.
+    confinement_feeding_cost_factor = uinp.supfeed['i_confinement_feeding_labour_factor'] #cost of feeding for confinement vs in paddock.
+    cost_factor_f = fun.f_update(1, confinement_feeding_cost_factor, nv_is_confinement_f)
+    total_time_p5p6zkf = total_time_p5p6zk[...,na] * cost_factor_f
+
     ##apply season mask
     date_start_p6z = per.f_feed_periods()[:-1]
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
-    total_time_p5p6zk = total_time_p5p6zk * mask_fp_z8var_p6z[...,na]
+    total_time_p5p6zkf = total_time_p5p6zkf * mask_fp_z8var_p6z[...,na,na]
 
     ##build df
-    total_time_p5_p6zk = total_time_p5p6zk.reshape(total_time_p5p6zk.shape[0],-1)
     keys_z = zfun.f_keys_z()
+    keys_p5 = lp_dates_p5z.index[:-1]
     keys_p6 = pinp.period['i_fp_idx']
-    cols = pd.MultiIndex.from_product([keys_p6, keys_z, total_time.columns])
-    total_time_p5p6k_z = pd.DataFrame(total_time_p5_p6zk, index=lp_dates_p5z.index[:-1], columns=cols).stack([0,2])
-    return total_time_p5p6k_z
+    keys_k = sinp.landuse['C']
+    keys_f = np.array(['nv{0}'.format(i) for i in range(nv['len_nv'])])
+    index = pd.MultiIndex.from_product([keys_p5, keys_p6, keys_z, keys_k, keys_f])
+    total_time_p5p6zkf = pd.Series(total_time_p5p6zkf.ravel(), index=index)
+    return total_time_p5p6zkf
 
 
 def f1_a_p6_p7():
@@ -446,10 +481,10 @@ def f1_sup_selectivity():
 
 
 ##collates all the params
-def f_sup_params(params,r_vals):
-    total_sup_cost, total_sup_wc, storage_dep, storage_asset = f_sup_cost(r_vals)
+def f_sup_params(params,r_vals, nv):
+    total_sup_cost, total_sup_wc, storage_dep, storage_asset, confinement_dep = f_sup_cost(r_vals, nv)
     vol_tonne, md_tonne = f_sup_md_vol(r_vals)
-    sup_labour = f_sup_labour()
+    sup_labour = f_sup_labour(nv)
     buy_grain_price, buy_grain_wc, buy_grain_prov_p7z = f_buy_grain_price(r_vals)
     a_p6_p7 = f1_a_p6_p7()
     sup_s2_ks2 = f1_sup_s2_ks2(r_vals)
@@ -457,6 +492,7 @@ def f_sup_params(params,r_vals):
 
 
     ##create non seasonal params
+    params['confinement_dep'] = confinement_dep
     params['storage_dep'] = storage_dep.to_dict()
     params['storage_asset'] = storage_asset.to_dict()
     params['vol_tonne'] = vol_tonne.to_dict()
@@ -468,7 +504,7 @@ def f_sup_params(params,r_vals):
     ##create season params
     params['total_sup_cost'] = total_sup_cost.to_dict()
     params['total_sup_wc'] = total_sup_wc.to_dict()
-    params['sup_labour'] = sup_labour.stack().to_dict()
+    params['sup_labour'] = sup_labour.to_dict()
     params['a_p6_p7'] = a_p6_p7.to_dict()
     params['sup_s2_ks2'] = sup_s2_ks2.to_dict()
     params['max_sup_selectivity_p6z'] = max_sup_selectivity_p6z.to_dict()
