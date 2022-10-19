@@ -733,7 +733,7 @@ def f_con_dep(model):
         p7_start = l_p7[0]
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return (macpy.f_total_dep(model,q,s,p7,z9) + suppy.f_sup_dep(model,q,s,p7,z9) - model.v_dep[q,s,p7,z9]
-                    + sum(model.v_dep[q,s,p7_prev,z9] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
+                    + sum(model.v_dep[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
                           for z8 in model.s_season_types) * (p7!=p7_start) #end doesn't carry over
                     <= 0)
         else:
