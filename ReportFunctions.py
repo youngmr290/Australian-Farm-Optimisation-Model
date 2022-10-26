@@ -431,7 +431,8 @@ def f_area_summary(lp_vars, r_vals, option):
         pas_area_qsz = fun.f_divide(pasture_area_qsz, rot_area_qsz) * 100
         ###stdev and range
         pas_area_mean = np.sum(pas_area_qsz * z_prob_qsz)
-        pas_area_range = np.max(pas_area_qsz) - np.min(pas_area_qsz)
+        ma_pas_area_qsz = np.ma.masked_array(pas_area_qsz, z_prob_qsz == 0)
+        pas_area_range = np.max(ma_pas_area_qsz) - np.min(ma_pas_area_qsz)
         pas_area_stdev = np.sum((pas_area_qsz - pas_area_mean) ** 2 * z_prob_qsz)**0.5
         return round(pas_area_mean, 1), round(pas_area_range, 1), round(pas_area_stdev, 1)
 
@@ -586,7 +587,8 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         grain_fed_qsz = grain_fed_qszkgvp6.groupby(level=(0,1,2)).sum() #sum all axis except season ones (q,s,z)
         ###stdev and range
         grain_fed_mean = grain_fed_qsz.mul(z_prob_qsz).sum()
-        grain_fed_range = np.max(grain_fed_qsz) - np.min(grain_fed_qsz)
+        ma_grain_fed_qsz = np.ma.masked_array(grain_fed_qsz, z_prob_qsz == 0)
+        grain_fed_range = np.max(ma_grain_fed_qsz) - np.min(ma_grain_fed_qsz)
         grain_fed_stdev = (((grain_fed_qsz - grain_fed_mean) ** 2).mul(z_prob_qsz).sum())**0.5
         return round(grain_fed_mean, 1), round(grain_fed_range, 1), round(grain_fed_stdev, 1),
 
@@ -1256,7 +1258,8 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
         sr_qsz = np.sum(r_vals['stock']['wg_propn_p6z'] * (dse_sire + dse_dams + dse_offs), axis=-2).round(2)  #sum SR for all sheep groups in winter grazed fp (to return winter sr)
         ###stdev and range
         sr_mean = np.sum(sr_qsz * prob_qsz)
-        sr_range = np.max(sr_qsz) - np.min(sr_qsz)
+        ma_sr_qsz = np.ma.masked_array(sr_qsz, prob_qsz==0)
+        sr_range = np.max(ma_sr_qsz) - np.min(ma_sr_qsz)
         sr_stdev = np.sum((sr_qsz - sr_mean) ** 2 * prob_qsz)**0.5
         return sr_mean, sr_range, sr_stdev
 
@@ -1446,7 +1449,8 @@ def f_profit(lp_vars, r_vals, option=0):
         ###profit for each scenario
         profit_qsc1z = credit_qsc1z - dep_qsz[:,:,na,:] #dep doesnt vary by price scenario
         ###stdev and range
-        profit_range = np.max(profit_qsc1z) - np.min(profit_qsc1z)
+        ma_profit_qsc1z = np.ma.masked_array(profit_qsc1z, prob_qsz[:,:,na,:] == 0)
+        profit_range = np.max(ma_profit_qsc1z) - np.min(ma_profit_qsc1z)
         profit_mean = np.sum(profit_qsc1z * prob_qsz[:,:,na,:] * prob_c1[:,na])
         profit_stdev = np.sum((profit_qsc1z - profit_mean)**2 * prob_qsz[:,:,na,:] * prob_c1[:,na])**0.5
         return profit_range, profit_stdev
