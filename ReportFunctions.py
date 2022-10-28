@@ -336,9 +336,9 @@ def f_summary(lp_vars, r_vals, trial):
     ##utility
     summary_df.loc[trial, 'utility'] = f_profit(lp_vars, r_vals, option=2)
     ##total dse/ha in fp0
-    summary_df.loc[trial, 'SR'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary=True)[0]
-    summary_df.loc[trial, 'SR range'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary=True)[1]
-    summary_df.loc[trial, 'SR stdev'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary=True)[2]
+    summary_df.loc[trial, 'SR'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
+    summary_df.loc[trial, 'SR range'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[1]
+    summary_df.loc[trial, 'SR stdev'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[2]
     ##pasture %
     summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=4)[0]
     summary_df.loc[trial, 'Pas % range'] = f_area_summary(lp_vars, r_vals, option=4)[1]
@@ -382,9 +382,10 @@ def f_area_summary(lp_vars, r_vals, option):
 
         #. table all rotations by lmu
         #. total pasture area each season in p7[-1]
-        #. total crop area each season  in p7[-1]
+        #. total crop area each season in p7[-1]
         #. table crop and pasture area by lmu and season
         #. float pasture %, range & stdev in p7[-1]
+        #. landuse area in p7[-1]
 
     '''
 
@@ -408,7 +409,8 @@ def f_area_summary(lp_vars, r_vals, option):
     crop_area_p7qszl = landuse_area_k_p7qszl[~landuse_area_k_p7qszl.index.isin(all_pas)].sum()  # sum landuse
     if option == 2:
         crop_area_qszl = crop_area_p7qszl.loc[crop_area_p7qszl.index.levels[0][-1].tolist()]
-        return crop_area_qszl.sum(level=(0,1,2)).round(0) #sum lmu
+        crop_area_qsz = crop_area_qszl.groupby(level=(0,1,2)).sum().round(0) #sum lmu
+        return crop_area_qsz.unstack(-1)
 
     ##crop & pasture area by lmu
     if option == 3:
@@ -436,6 +438,11 @@ def f_area_summary(lp_vars, r_vals, option):
         pas_area_stdev = np.sum((pas_area_qsz - pas_area_mean) ** 2 * z_prob_qsz)**0.5
         return round(pas_area_mean, 1), round(pas_area_range, 1), round(pas_area_stdev, 1)
 
+    if option==5: #landuse area in p7[-1] (lmu summed)
+        landuse_area_k_qszl = landuse_area_k_p7qszl.loc[:,landuse_area_k_p7qszl.columns.levels[0][-1].tolist()]
+        landuse_area_k_qsz = landuse_area_k_qszl.groupby(axis=1, level=(0,1,2)).sum()
+        landuse_area_qsz_k = landuse_area_k_qsz.T.round(2)
+        return landuse_area_qsz_k
 
 def f_mach_summary(lp_vars, r_vals, option=0):
     '''
@@ -1183,7 +1190,7 @@ def f_overhead_summary(r_vals):
     exp_fix_c = r_vals['fin']['overheads']
     return exp_fix_c
 
-def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
+def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False):
     '''
     DSE calculation.
 
@@ -1196,8 +1203,10 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
 
     :param per_ha: Bool
         if true it returns DSE/ha else it returns total dse
-    :param summary: Bool
-        if true it returns the total DSE/ha in fp0
+    :param summary1: Bool
+        if true it returns the total DSE/ha in winter. Used in the summary report
+    :param summary2: Bool
+        if true it returns the total numbers at the start and end of the season with qsz axis. Used in numbers summary report.
     :return: DSE per pasture hectare for each sheep group.
 
     '''
@@ -1217,10 +1226,15 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
     offs_preserve_ax = (0, 1, 4, 9)
     offs_key = [keys_q, keys_s, keys_p6, keys_z]
 
-    if summary: #for summary DSE needs to be calculated with p6 and z axis (q,s,z axis is weighted and summed below)
+    if summary1: #for summary DSE needs to be calculated with p6 and z axis (q,s,z axis is weighted and summed below)
         sire_preserve_ax = (0, 1, 2 ,3)
         dams_preserve_ax = (0, 1, 3, 9)
         offs_preserve_ax = (0, 1, 4, 9)
+
+    if summary2: #for summary2 DSE needs to be calculated with q,s,z axis
+        sire_preserve_ax = (0, 1, 3)
+        dams_preserve_ax = (0, 1, 9)
+        offs_preserve_ax = (0, 1, 9)
 
     stock_vars = f_stock_reshape(lp_vars, r_vals)
 
@@ -1253,7 +1267,7 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
         dse_dams = fun.f_divide(dse_dams, pasture_area_qsp6z)
         dse_offs = fun.f_divide(dse_offs, pasture_area_qsp6z)
 
-    if summary:
+    if summary1:
         prob_qsz = r_vals['zgen']['z_prob_qsz'][:,:,:]
         sr_qsz = np.sum(r_vals['stock']['wg_propn_p6z'] * (dse_sire + dse_dams + dse_offs), axis=-2).round(2)  #sum SR for all sheep groups in winter grazed fp (to return winter sr)
         ###stdev and range
@@ -1262,6 +1276,26 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
         sr_range = np.max(ma_sr_qsz) - np.min(ma_sr_qsz)
         sr_stdev = np.sum((sr_qsz - sr_mean) ** 2 * prob_qsz)**0.5
         return sr_mean, sr_range, sr_stdev
+    elif summary2:
+        sire_numbers_startseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_startseason_p7zg0']>0)
+                                                           * stock_vars['sire_numbers_qsg0'][:, :, na, na, :], preserveAxis=sire_preserve_ax)
+        sire_numbers_endseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_endseason_p7zg0']>0)
+                                                         * stock_vars['sire_numbers_qsg0'][:, :, na, na, :], preserveAxis=sire_preserve_ax)
+        dams_numbers_startseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_startseason_k2p7tva1nwziyg1']>0)
+                                                                     * stock_vars['dams_numbers_qsk2tvanwziy1g1'][:, :, :, na, ...], preserveAxis=dams_preserve_ax)
+        dams_numbers_endseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_endseason_k2p7tva1nwziyg1']>0)
+                                                                   * stock_vars['dams_numbers_qsk2tvanwziy1g1'][:, :, :, na, ...], preserveAxis=dams_preserve_ax)
+        offs_numbers_startseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_startseason_k3k5p7tvnwziaxyg3']>0)
+                                                                       * stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'][:, :, :, :, na, ...], preserveAxis=offs_preserve_ax)
+        offs_numbers_endseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_endseason_k3k5p7tvnwziaxyg3']>0)
+                                                                     * stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'][:, :, :, :, na, ...], preserveAxis=offs_preserve_ax)
+
+        keys_qszS = [keys_q, keys_s, keys_z, ['start', 'end']]
+        numbers_start_qsz = (sire_numbers_startseason_qsz + dams_numbers_startseason_qsz + offs_numbers_startseason_qsz).round(2)
+        numbers_end_qsz = (sire_numbers_endseason_qsz + dams_numbers_endseason_qsz + offs_numbers_endseason_qsz).round(2)
+        numbers_qsz = np.stack([numbers_start_qsz, numbers_end_qsz], axis=-1)
+        numbers_qsz = f_numpy2df(numbers_qsz, keys_qszS, [0, 1], [2, 3])
+        return numbers_qsz
 
     ##turn to table - rows and cols need to be a list of lists/arrays
     dse_sire = fun.f_produce_df(dse_sire.ravel(), rows=sire_key, columns=[['Sire DSE']])
@@ -1284,7 +1318,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     ##read stuff from other functions that is used in rev and cost section
     exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k_p7zqs = f_crop_summary(lp_vars, r_vals, option=0)
     exp_mach_k_p7zqs, mach_insurance_p7z = f_mach_summary(lp_vars, r_vals)
-    stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qsp7z = f_stock_cash_summary(lp_vars, r_vals)
+    stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qszp7 = f_stock_cash_summary(lp_vars, r_vals)
     slp_estab_cost_qsz_p7 = f_stock_pasture_summary(lp_vars, r_vals, type='slp', prod='slp_estab_cost_p7z', na_prod=[0,1,4]
                                              , weights='v_slp_ha_qszl', na_weights=[2]
                                              , keys='keys_qsp7zl', arith=2, index=[0,1,3], cols=[2])
@@ -1332,14 +1366,15 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
 
     ##create p/l dataframe
     idx = pd.IndexSlice
-    subtype_rev = ['grain', 'sheep sales', 'wool', 'season start trade', 'Total Revenue']
+    subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue']
     subtype_exp = ['crop', 'pasture', 'slp', 'stock husb', 'stock sup', 'stock purchase', 'machinery', 'labour', 'fixed', 'Total expenses']
-    subtype_tot = ['opportunity_cost', 'depreciation', 'minRoe', 'EBTD', 'obj']
+    subtype_tot = ['1 EBITDA', '2 depreciation', '3 asset value change', '4 profit', '5 opportunity_cost', '6 minRoe', '7 obj'] #numbered to keep them in the correct order
     pnl_rev_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Revenue'], subtype_rev], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
     pnl_exp_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Expense'], subtype_exp], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
     pnl_tot_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Total'], subtype_tot], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
-    pnl_dsp_index = pd.MultiIndex.from_product([['Weighted obj'], [''], [''], [''], ['']], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
-    pnl_index = pnl_rev_index.append(pnl_exp_index).append(pnl_tot_index).append(pnl_dsp_index)
+    pnl_dsp_index = pd.MultiIndex.from_product([['Weighted obj - AFO'], [''], [''], [''], ['']], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
+    pnl_dsp2_index = pd.MultiIndex.from_product([['Weighted obj - PNL'], [''], [''], [''], ['']], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
+    pnl_index = pnl_rev_index.append(pnl_exp_index).append(pnl_tot_index).append(pnl_dsp_index).append(pnl_dsp2_index)
     # pnl_cols = pd.MultiIndex.from_product([keys_c0, keys_p7])
     pnl_cols = keys_p7
     pnl = pd.DataFrame(index=pnl_index, columns=pnl_cols)  # need to initialise df with multiindex so rows can be added
@@ -1350,7 +1385,6 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl.loc[idx[:, :, :,'Revenue','grain'],:] = rev_grain_p7_qsz.T.reindex(pnl_cols, axis=1).values #reindex because  has been sorted alphabetically
     pnl.loc[idx[:, :, :, 'Revenue', 'sheep sales'], :] = stocksale_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Revenue', 'wool'], :] = wool_qszp7.reshape(-1, len_p7)
-    pnl.loc[idx[:, :, :, 'Revenue', 'season start trade'], :] = trade_value_qsp7z.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue'], :] = pnl.loc[pnl.index.get_level_values(3) == 'Revenue'].groupby(axis=0,level=(0,1,2)).sum().values
 
     ##expenses - add to p/l table each as a new row
@@ -1365,25 +1399,31 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl.loc[idx[:, :, :, 'Expense', 'fixed'], :] = exp_fix_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'Total expenses'], :] = pnl.loc[pnl.index.get_level_values(3) == 'Expense'].groupby(axis=0,level=(0,1,2)).sum().values
 
-    ##EBIT
+    ##EBITDA
     ebtd = pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue']].values - pnl.loc[idx[:, :, :, 'Expense', 'Total expenses']].values
-    pnl.loc[idx[:, :, :, 'Total', 'EBTD'], :] = ebtd #interest is counted in the cashflow of each item - it is hard to separate so it is not reported separately
+    pnl.loc[idx[:, :, :, 'Total', '1 EBITDA'], :] = ebtd #interest is counted in the cashflow of each item - it is hard to separate so it is not reported separately
 
     ##Full year - add a column which is total of all cashflow period
     pnl['Full year'] = pnl.sum(axis=1)
 
-    ##interest, depreciation asset opp and minroe
+
+    ##farm profit - cash transaction minus depreciation and change in asset value
+    ###depreciation
+    pnl.loc[idx[:, :, :, 'Total', '2 depreciation'], 'Full year'] = dep_qsz
+    ###change in asset value - this is to reflect the change in assets if a poor season sell part of the core flock
+    pnl.loc[idx[:, :, :, 'Total', '3 asset value change'], 'Full year'] = trade_value_qszp7.reshape(-1, len_p7).sum(axis=1)
+    ###calc farm profit - cash transaction minus depreciation and change in asset value
+    profit_qsz = ebtd.sum(axis=1) - dep_qsz + trade_value_qszp7.reshape(-1, len_p7).sum(axis=1)
+    pnl.loc[idx[:, :, :, 'Total', '4 profit'], 'Full year'] = profit_qsz
+
+    ##obj - profit minus asset opp and minroe
     ##add the assets & minroe & depreciation
-    pnl.loc[idx[:, :, :, 'Total', 'depreciation'], 'Full year'] = dep_qsz
-    pnl.loc[idx[:, :, :, 'Total', 'opportunity_cost'], 'Full year'] = asset_cost_qsz
-    pnl.loc[idx[:, :, :, 'Total', 'minRoe'], 'Full year'] = minroe_qsz
+    pnl.loc[idx[:, :, :, 'Total', '5 opportunity_cost'], 'Full year'] = asset_cost_qsz
+    pnl.loc[idx[:, :, :, 'Total', '6 minRoe'], 'Full year'] = minroe_qsz
+    ###add the estimated obj for each season (calced from info above) profit minus opportunity cost and minroe
+    season_obj_qsz = profit_qsz - asset_cost_qsz - minroe_qsz
+    pnl.loc[idx[:, :, :, 'Total', '7 obj'], 'Full year'] = season_obj_qsz
 
-    ##add the estimated profit for each season (calced from info above)
-    season_obj_qsz = pnl.loc[idx[:, :, :, 'Total', 'EBTD'], 'Full year'].values - dep_qsz - asset_cost_qsz - minroe_qsz
-    pnl.loc[idx[:, :, :, 'Total', 'obj'], 'Full year'] = season_obj_qsz
-
-    ##add the objective of all seasons
-    pnl.loc[idx['Weighted obj', '', '', '', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
 
     ##sort the season level of index
     # pnl = pnl.sort_index(axis=0, level=0) #maybe come back to this, depending what the report looks like with active z axis.
@@ -1397,9 +1437,12 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
         z_prob_qsz = r_vals['zgen']['z_prob_qsz']
         z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
         z_prob_qsz = z_prob_qsz.reindex(pnl.index, axis=0)
-        pnl =pnl.mul(z_prob_qsz, axis=0).groupby(level=(-2,-1), axis=0).sum()
-        ###add the objective of all seasons - need to do again because it becomes nan in the step above
-        pnl.loc[idx['Weighted obj', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
+        pnl = pnl.mul(z_prob_qsz, axis=0).groupby(level=(-2,-1), axis=0).sum()
+
+    ##add the objective of all seasons - these should both be the same if the pnl is being calculated correctly
+    ###have to calc here after the step above so it doesnt turn to nan
+    pnl.loc[idx['Weighted obj - AFO', '', '', '', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
+    pnl.loc[idx['Weighted obj - PNL', '', '', '', ''], 'Full year'] = np.sum(season_obj_qsz * r_vals['zgen']['z_prob_qsz'].ravel())
 
     ##round numbers in df
     pnl = pnl.astype(float).round(1)  # have to go to float so rounding works
@@ -1413,6 +1456,7 @@ def f_profit(lp_vars, r_vals, option=0):
     1- Risk neutral objective = rev - (exp + minroe + asset_cost +dep).
     2- Utility - this is the same as risk neutral obj if risk aversion is not included
     3- range and stdev of profit
+    4- profit by zqs
     '''
     prob_qsz =r_vals['zgen']['z_prob_qsz']
     prob_c1 =r_vals['fin']['prob_c1'].values
@@ -1427,7 +1471,7 @@ def f_profit(lp_vars, r_vals, option=0):
         return lp_vars['profit'] - minroe - asset_cost
     elif option == 2:
         return lp_vars['utility']
-    elif option == 3:
+    else:
         keys_p7 = r_vals['fin']['keys_p7']
         keys_c1 = r_vals['fin']['keys_c1']
         mask_season_p7z = r_vals['zgen']['mask_season_p7z']
@@ -1440,20 +1484,30 @@ def f_profit(lp_vars, r_vals, option=0):
         len_s = len(keys_s)
         len_z = len(keys_z)
         qsc1p7z = len_q, len_s, len_c1, len_p7, len_z
-        ###credit (profit before depreciation)
+        ###credit/debit (profit/loss before depreciation and tradevalue)
         credit_qsc1p7z = f_vars2np(lp_vars, 'v_credit', qsc1p7z, mask_season_p7z, z_pos=-1)
+        debit_qsc1p7z = f_vars2np(lp_vars, 'v_debit', qsc1p7z, mask_season_p7z, z_pos=-1)
         credit_qsc1z = credit_qsc1p7z[...,-1,:]
+        debit_qsc1z = debit_qsc1p7z[...,-1,:]
         ###dep
         dep_qsp7z = f_dep_summary(lp_vars, r_vals)
         dep_qsz = dep_qsp7z[:,:,-1,:]
+        ###tradevalue
+        trade_value_qszp7 = f_stock_cash_summary(lp_vars, r_vals)[-1]
+        trade_value_qsz = trade_value_qszp7[...,-1]
         ###profit for each scenario
-        profit_qsc1z = credit_qsc1z - dep_qsz[:,:,na,:] #dep doesnt vary by price scenario
+        profit_qsc1z = credit_qsc1z - debit_qsc1z + trade_value_qsz[:,:,na,:] - dep_qsz[:,:,na,:] #dep & tradevalue doesnt vary by price scenario
         ###stdev and range
         ma_profit_qsc1z = np.ma.masked_array(profit_qsc1z, prob_qsz[:,:,na,:] == 0)
         profit_range = np.max(ma_profit_qsc1z) - np.min(ma_profit_qsc1z)
         profit_mean = np.sum(profit_qsc1z * prob_qsz[:,:,na,:] * prob_c1[:,na])
         profit_stdev = np.sum((profit_qsc1z - profit_mean)**2 * prob_qsz[:,:,na,:] * prob_c1[:,na])**0.5
-        return profit_range, profit_stdev
+        if option == 3:
+            return profit_range, profit_stdev
+        elif option == 4:
+            profit_qsz = np.sum(profit_qsc1z * prob_c1[:,na], axis=2) #average c1
+            index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+            return pd.Series(profit_qsz.ravel(), index=index_qsz).unstack(-1)
 
 
 def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None, index=[], cols=[], arith=0,
