@@ -78,8 +78,8 @@ def coremodel_all(trial_name,model,nv):
     f_con_product_transfer(model)
     #cashflow
     f_con_cashflow(model)
-    f_con_workingcap_within(model)
-    f_con_workingcap_between(model)
+    f_con_totalcap_within(model)
+    f_con_totalcap_between(model)
     f_con_dep(model)
     f_con_asset(model)
     f_con_minroe(model)
@@ -663,28 +663,41 @@ def f_con_cashflow(model):
     model.con_cashflow_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_c1, model.s_season_periods, model.s_season_types,rule=cashflow,
                                                 doc='transfer of cashflow between periods')
 
+def f1_start_asset_value(model,q,s,p7,z):
+    '''total value of assets at the start of the sequence (q[0], p7[0]).'''
+    p7_start = list(model.s_season_periods)[0]
+    q_start = list(model.s_sequence_year)[0]
+    if q==q_start and p7==p7_start:
+        return macpy.f_mach_asset(model,p7) + (-model.v_tradevalue[q, s, p7, z]) #tradevalue in p7[0] is the opening sheep assets
+    else:
+        return 0
 
-def f_con_workingcap_within(model):
+def f_con_totalcap_within(model):
     '''
-    Tallies working capital and transfers to the next period. Cashflow periods exist so that a transfer can
+    Tallies total capital and transfers to the next period. Cashflow periods exist so that a transfer can
     exist between parent and child seasons.
 
-    Working capital is the total costs since the previous 'main' income (e.g. harvest or shearing). Tactical income
-    is not included because it was difficult to see a way to stop the model retaining sheep from the end of last year
-    until the start of the current cashflow period to reduce wc (on farm this does not work because there is no
-    concept of start and end of cashflow like there is in the model).
+    Total capital is a combination of assets and working capital. Working capital is the sum of the
+    expenses minus any income, since the previous 'main' income (e.g. harvest or shearing).
+    This constraint exists so the model user can examine how the farm is structured under different levels of finance.
+    The default is to allow a large amount of finance so that this constraint it not impacting the solution.
 
-    Note: trade value is not included because income is not counted but in the SQ and MP model the starting balance of
-    q[>=1] does include the trade value which is required to stop the model selling extra sheep (that exist due to the
-    weighted average across seasons) in q[0] to artificially increase q[1] starting balance.
+    Start asset value is included to ensure that retaining sheep from the end of last year
+    until the start of the current cashflow period doesn't reduce wc (on farm this does not work because there is no
+    concept of start and end of cashflow like there is in the model). If start asset value was not included the model
+    shift strategical off spring sales that would usually occur at shearing until the start of next season which would
+    reduce wc because sales after main shearing offset wc costs (this would be a problem in both SE and DSP).
 
-    '''
-    def working_cap_within(model,q,s,c0,p7,z9):
+    Note: trade value is not included because it is a valid tactic to sell more animals in a poor season and then buy 
+    them back after peak debt or in SQ start the following year understocked.
+    
+     '''
+    def total_cap_within(model,q,s,c0,p7,z9):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         if pe.value(model.p_mask_childz_within_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s]):
             return (-f1_grain_wc(model,q,s,c0,p7,z9) + phspy.f_rotation_wc(model,q,s,c0,p7,z9) + labpy.f_labour_wc(model,q,s,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s,c0,p7,z9) + suppy.f_sup_wc(model,q,s,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
-                    - stkpy.f_stock_wc(model,q,s,c0,p7,z9)
+                    - stkpy.f_stock_wc(model,q,s,c0,p7,z9) + f1_start_asset_value(model,q,s,p7,z9)
                     - model.v_wc_debit[q,s,c0,p7,z9]
                     + model.v_wc_credit[q,s,c0,p7,z9]
                     + sum((model.v_wc_debit[q,s,c0,p7_prev,z8] - model.v_wc_credit[q,s,c0,p7_prev,z8]) #end working capital doesnot provide start else unbounded constraint.
@@ -692,13 +705,13 @@ def f_con_workingcap_within(model):
                          for z8 in model.s_season_types)) <= 0
         else:
             return pe.Constraint.Skip
-    model.con_workingcap_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap_within,
+    model.con_totalcap_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=total_cap_within,
                                        doc='working capital transfer within year')
 
 
-def f_con_workingcap_between(model):
+def f_con_totalcap_between(model):
     '''
-    Tallies working capital and transfers to the next period. Cashflow periods exist so that a transfer can
+    Tallies total capital and transfers to the next period. Cashflow periods exist so that a transfer can
     exist between parent and child seasons.
 
     Cashflow at the end of the previous yr becomes the starting balance for working capital (cashflow broadcasts
@@ -708,24 +721,23 @@ def f_con_workingcap_between(model):
     cashflow became the start then a high expense high income strategy would not trigger the constraint).
 
     '''
-    def working_cap_between(model,q,s9,c0,p7,z9):
+    def total_cap_between(model,q,s9,c0,p7,z9):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
         if pe.value(model.p_mask_childz_between_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]):
             return (-f1_grain_wc(model,q,s9,c0,p7,z9) + phspy.f_rotation_wc(model,q,s9,c0,p7,z9) + labpy.f_labour_wc(model,q,s9,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s9,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s9,c0,p7,z9) + suppy.f_sup_wc(model,q,s9,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
-                    - stkpy.f_stock_wc(model,q,s9,c0,p7,z9)
+                    - stkpy.f_stock_wc(model,q,s9,c0,p7,z9) + f1_start_asset_value(model,q,s9,p7,z9)
                     - model.v_wc_debit[q,s9,c0,p7,z9]
                     + model.v_wc_credit[q,s9,c0,p7,z9]
                     + sum(sum((model.v_debit[q_prev,s8,c1,p7_prev,z8] - model.v_credit[q_prev,s8,c1,p7_prev,z8]) * model.p_prob_c1[c1]
                               for c1 in model.s_c1)#end cashflow become start wc (only within a sequence).
                           * model.p_parentz_provbetween_season[p7_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
-                        # + (model.v_debit[q_prev,s8,c1,p7_prev,z8] - model.v_credit[q_prev,s8,c1,p7_prev,z8]) #end cashflow become start wc.
-                        #   * model.p_parentz_provbetween_season[p7_prev,z8,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
+                        # note - there is not end to start transfer because there is no opening balance.
                           for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)) <= 0
         else:
             return pe.Constraint.Skip
-    model.con_workingcap_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap_between,
+    model.con_totalcap_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=total_cap_between,
                                        doc='working capital transfer between years')
 
 

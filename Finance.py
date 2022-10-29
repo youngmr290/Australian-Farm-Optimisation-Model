@@ -6,27 +6,26 @@ The financial components of the model includes:
 
     - interest
     - cashflow
-    - working capital overdraw
+    - total capital limit
     - minimum return on expenditure
     - asset opportunity cost
 
 Each module tracks its relevant financial components. The finance module provides a common location to describe the
 finance section of the model and is also home to key finance functions that calculate the interest and working
-capital overdraw of each cashflow item.
+capital of each cashflow item.
 
 To support the sporadic nature of farming income, finance is often drawn from the bank throughout the year to fund
-costly operations such as seeding. This is represented by working capital in AFO. There is a working capital
-constraint for each expected date when peak debt could occur. The default is to have one peak debt date per enterprise
-just before the date the main income for that enterprise is received. The working capital constraints
-tracks the cumulative cashflow for each enterprise and ensures that the maximum overdraw is below a user specified limit.
-This ensure the model doesn't overdraw an unrealistic/undesired level of capital from the bank.
-
-The cumulative cashflow used in the working capital constraint is calculated from cashflow date (a date following the main
-income for an enterprise) to peak debt date (a date when peak debt is expected for an enterprise - typically just
-before the cashflow date). This means the main income for the enterprise is not included in the working
+costly operations such as seeding. In AFO the total capital required for the given farm structure is tallied and can be
+constrained to a user specified level. This allows the user to examine how the business structure would change if
+finance is limited. This can be used to ensure the model doesn't overdraw an unrealistic/undesired level of capital
+from the bank. Total farm capital required is calculated from the value of starting assets plus the sum of all the
+expenses minus any income, between the previous 'main' income (e.g. harvest or shearing) and the peak debt date (a date
+when peak debt is expected for an enterprise - typically just before the main income is received for that enterprise).
+This means the main income for the enterprise is not included in the working
 capital constraint. This is because the aim of the working capital constraint is to allow the user to constrain management
 practises which have high costs. If the main income was included in this constraint there would be no way to
 constrain high cost high reward management practices.
+The default is to have one peak debt date per enterprise, just before the main income for that enterprise is received.
 
 In an equilibrium model there is no start and end point. This complicates the calculation of interest because
 interest must be calculated for a given period. In AFO the interest period starts and finishes after the main income
@@ -270,7 +269,7 @@ def f1_fin_params(params, r_vals):
 
     ##store params which are inputs
     params['prob_c1'] = uinp.price_variation['prob_c1'].to_dict()
-    params['overdraw'] = pinp.finance['overdraw_limit']
+    params['capital_limit'] = pinp.finance['capital_limit']
 
     ##store report
     keys_p7 = per.f_season_periods(keys=True)
