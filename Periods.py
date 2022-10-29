@@ -39,7 +39,7 @@ na = np.newaxis
 #define dates of cashflow   #
 #############################
 def f_cashflow_date():
-    '''cashflow date.'''
+    '''cashflow date. Used to calculate interest. Typically this date is just after the main income for the enterprise.'''
     ##create c0 axis
     cash_date = pinp.sheep['i_date_cashflow_stock_i'][pinp.sheep['i_mask_i']]
     date_cashflow_stock = cash_date.mean(keepdims=True).astype(int) #take mean in case multiple tol included

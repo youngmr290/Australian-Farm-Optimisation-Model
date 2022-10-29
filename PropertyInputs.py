@@ -7,7 +7,7 @@ Inputs specific to a property (or region) including:
 * Labour
 * Supplementary feeding
 * Stubble
-* Farm level finance ie overdraw level
+* Farm level finance ie capital level
 * Farm level machinery ie soil adjustment factors for seeding efficiency
 
 author: young
@@ -318,7 +318,7 @@ def f_property_inp_sa():
 
     ##finance
     ###sav
-    finance['overdraw_limit'] = fun.f_sa(finance['overdraw_limit'], sen.sav['overdraw_limit'], 5)
+    finance['capital_limit'] = fun.f_sa(finance['capital_limit'], sen.sav['capital_limit'], 5)
     ###sam
     ###sap
     ###saa

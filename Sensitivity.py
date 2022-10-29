@@ -212,7 +212,7 @@ def create_sa():
 
     ##finance
     sav['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
-    sav['overdraw_limit']      = '-'          #SA to alter the overdraw limit (amount of money that can be loaned from bank)
+    sav['capital_limit']      = '-'          #SA to alter the capital limit (amount of money that can be loaned from bank)
     sav['interest_rate']      = '-'           #SA to alter the credit and debit interest from bank
     sav['opp_cost_capital']      = '-'        #SA to alter the opportunity cost of capital
 
