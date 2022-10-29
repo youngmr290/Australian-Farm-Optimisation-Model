@@ -77,7 +77,7 @@ def coremodel_all(trial_name,model,nv):
     #grain
     f_con_product_transfer(model)
     #cashflow
-    f_con_profit(model)
+    f_con_cashflow(model)
     f_con_workingcap_within(model)
     f_con_workingcap_between(model)
     f_con_dep(model)
@@ -637,25 +637,25 @@ def f_con_vol(model):
                                   doc='constraint between me available and consumed')
 
 
-def f_con_profit(model):
+def f_con_cashflow(model):
     '''
-    Tallies all profit in each period and transfers to the next period. Season periods exist so that a transfer can
+    Tallies all cashflow in each period and transfers to the next period. Season periods exist so that a transfer can
     exist between parent and child seasons.
     '''
-    def profit_flow(model,q,s,c1,p7,z9):
+    def cashflow(model,q,s,c1,p7,z9):
         p7_start = list(model.s_season_periods)[0]
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return ((-f1_grain_income(model,q,s,p7,z9,c1) + phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9)
                     + macpy.f_mach_cost(model,q,s,p7,z9) + suppy.f_sup_cost(model,q,s,p7,z9) + model.p_overhead_cost[p7,z9] + slppy.f_saltbush_cost(model,q,s,z9,p7)
-                    - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1) - model.v_tradevalue[q,s,p7,z9]
+                    - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1)
                     - model.v_debit[q,s,c1,p7,z9] + model.v_credit[q,s,c1,p7,z9])
                     + sum((model.v_debit[q,s,c1,p7_prev,z8] - model.v_credit[q,s,c1,p7_prev,z8]) * model.p_parentz_provwithin_season[p7_prev,z8,z9] * (p7!=p7_start)  #end cashflow doesnot provide start cashflow else unbounded.
                           for z8 in model.s_season_types)) <= 0
         else:
             return pe.Constraint.Skip
-    model.con_profit_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_c1, model.s_season_periods, model.s_season_types,rule=profit_flow,
-                                                doc='transfer of profit between periods')
+    model.con_cashflow_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_c1, model.s_season_periods, model.s_season_types,rule=cashflow,
+                                                doc='transfer of cashflow between periods')
 
 
 def f_con_workingcap_within(model):
@@ -833,8 +833,9 @@ def f_objective(model):
     def terminal_wealth(model,q,s,z,c1):
         if pe.value(model.p_wyear_inc_qs[q,s]):
             return (model.v_terminal_wealth[q,s,z,c1] - model.v_credit[q,s,c1,p7_end,z] + model.v_debit[q,s,c1,p7_end,z] # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
-                       + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z]
-                       + 0.00001 * sum(sum(v[idx] for idx in v) for v in variables
+                    + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z]
+                    - model.v_tradevalue[q, s, p7_end, z]
+                    + 0.00001 * sum(sum(v[idx] for idx in v) for v in variables
                                        if v._rule_bounds.val[0] is not None and v._rule_bounds.val[0]>=0)) <=0 #all variables with positive bounds (ie variables that can be negative e.g. terminal_wealth are excluded) put a small neg number into objective. This stop cplex selecting variables that don't contribute to the objective (cplex selects variables to remove slack on constraints).
         else:                                                                                                  #note; _rule_bounds.val[0] is the lower bound of each variable
             return pe.Constraint.Skip

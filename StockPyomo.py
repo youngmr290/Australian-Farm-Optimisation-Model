@@ -368,7 +368,7 @@ def f1_stockpyomo_local(params, model):
     f_con_prog2offsR(model,l_v3)
     f_con_matingR(model)
     f_con_stockinfra(model)
-    f_stock_trade_profit(model)
+    f_con_stock_trade_profit(model)
 
 ########################
 # local constraints    #
@@ -705,22 +705,25 @@ def f_con_stockinfra(model):
             return pe.Constraint.Skip
     model.con_stockinfra = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_infrastructure, model.s_season_types, rule=stockinfra, doc='Requirement for infrastructure (based on number of times yarded and shearing activity)')
 
-def f_stock_trade_profit(model):
+def f_con_stock_trade_profit(model):
     '''
     Calculate the difference in the total livestock value at the end of the year vs the start of the year.
 
     This is used to account for trade in stock between the good year and the poor years when the numbers are averaged.
     When the numbers are average that is essentially the poor year buying sheep from the good year but no cashflow occurs.
     This reflects that transaction so that the poor year can't unfairly increase its utility.
-    This doesn't effect overall profit, it only effects which season it gets realised in.
+    This doesn't affect overall profit, it only effects which season it gets realised in.
 
     See further comments in sgen.
 
-    Used in global constraint (con_profit). See CorePyomo
+    Used in global constraint (con_terminal_wealth). See CorePyomo
     '''
 
     # this could be skipped for SE model (e.g. len(model.s_season_periods)>1) but that might get confusing so for now I have left it in.
     def stock_trade_profit(model, q, s, p7, z):
+        l_p7 = list(model.s_season_periods)
+        p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last period
+        p7_start = l_p7[0]
         if pe.value(model.p_wyear_inc_qs[q, s]):
             stock = sum(model.v_sire[q, s, g0] * model.p_tradevalue_sire[p7, z, g0] for g0 in model.s_groups_sire) \
                     + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_tradevalue_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]
@@ -733,7 +736,9 @@ def f_stock_trade_profit(model):
                                 for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
                                 if pe.value(model.p_tradevalue_offs[k3, k5, p7, t3, v3, n3, w3, z, i, a, x, y3, g3]) != 0)
                           for a in model.s_wean_times for i in model.s_tol)
-            return model.v_tradevalue[q, s, p7, z] - stock <=0
+            return model.v_tradevalue[q, s, p7, z] - stock \
+                   - sum(model.v_tradevalue[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z]
+                          for z8 in model.s_season_types) * (p7!=p7_start) <=0 #end doesn't carry over
         else:
             return pe.Constraint.Skip
     model.con_stock_trade_profit = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,

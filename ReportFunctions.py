@@ -1425,8 +1425,10 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl.loc[idx[:, :, :, 'Total', '7 obj'], 'Full year'] = season_obj_qsz
 
 
-    ##sort the season level of index
-    # pnl = pnl.sort_index(axis=0, level=0) #maybe come back to this, depending what the report looks like with active z axis.
+    ##add the objective of all seasons - these should both be the same if the pnl is being calculated correctly
+    ###have to calc here after the step above so it doesnt turn to nan
+    pnl.loc[idx['Weighted obj - AFO', '', '', '', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
+    pnl.loc[idx['Weighted obj - PNL', '', '', '', ''], 'Full year'] = np.sum(season_obj_qsz * r_vals['zgen']['z_prob_qsz'].ravel())
 
     ##weight the qsz axis if option 2
     if option==2:
@@ -1438,11 +1440,9 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
         z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
         z_prob_qsz = z_prob_qsz.reindex(pnl.index, axis=0)
         pnl = pnl.mul(z_prob_qsz, axis=0).groupby(level=(-2,-1), axis=0).sum()
-
-    ##add the objective of all seasons - these should both be the same if the pnl is being calculated correctly
-    ###have to calc here after the step above so it doesnt turn to nan
-    pnl.loc[idx['Weighted obj - AFO', '', '', '', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
-    pnl.loc[idx['Weighted obj - PNL', '', '', '', ''], 'Full year'] = np.sum(season_obj_qsz * r_vals['zgen']['z_prob_qsz'].ravel())
+        ###add the objective of all seasons - need to do again because it becomes nan in the step above
+        pnl.loc[idx['Weighted obj - AFO', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
+        pnl.loc[idx['Weighted obj - PNL', ''], 'Full year'] = np.sum(season_obj_qsz * r_vals['zgen']['z_prob_qsz'].ravel())
 
     ##round numbers in df
     pnl = pnl.astype(float).round(1)  # have to go to float so rounding works
