@@ -526,6 +526,12 @@ def f1_grain_income(model,q,s,p7,z,c1):
             model.v_sell_product[q,s,p7,z,k,s2,g] * model.p_grain_price[p7,z,g,k,s2,c1] - model.v_buy_product[q,s,p7,z,k,s2,g] * model.p_buy_grain_price[
             p7,z,g,k,s2,c1] for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
 
+def f1_grain_wc(model,q,s,c0,p7,z):
+    ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
+    return sum(
+        model.v_sell_product[q,s,p7,z,k,s2,g] * model.p_grain_wc[c0,p7,z,g,k,s2] - model.v_buy_product[q,s,p7,z,k,s2,g] * model.p_buy_grain_wc[
+            c0,p7,z,g,k,s2] for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
+
 
 def f_con_poc_available(model):
     '''
@@ -676,9 +682,9 @@ def f_con_workingcap_within(model):
     def working_cap_within(model,q,s,c0,p7,z9):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         if pe.value(model.p_mask_childz_within_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s]):
-            return (phspy.f_rotation_wc(model,q,s,c0,p7,z9) + labpy.f_labour_wc(model,q,s,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s,z9,c0,p7)
+            return (-f1_grain_wc(model,q,s,c0,p7,z9) + phspy.f_rotation_wc(model,q,s,c0,p7,z9) + labpy.f_labour_wc(model,q,s,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s,c0,p7,z9) + suppy.f_sup_wc(model,q,s,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
-                    + stkpy.f_stock_wc(model,q,s,c0,p7,z9)
+                    - stkpy.f_stock_wc(model,q,s,c0,p7,z9)
                     - model.v_wc_debit[q,s,c0,p7,z9]
                     + model.v_wc_credit[q,s,c0,p7,z9]
                     + sum((model.v_wc_debit[q,s,c0,p7_prev,z8] - model.v_wc_credit[q,s,c0,p7_prev,z8]) #end working capital doesnot provide start else unbounded constraint.
@@ -701,16 +707,14 @@ def f_con_workingcap_between(model):
     the start of the sequence. This means an expensive strategy with a high reward can be bounded using wc (if the end
     cashflow became the start then a high expense high income strategy would not trigger the constraint).
 
-    See further comments above.
-
     '''
     def working_cap_between(model,q,s9,c0,p7,z9):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
         if pe.value(model.p_mask_childz_between_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]):
-            return (phspy.f_rotation_wc(model,q,s9,c0,p7,z9) + labpy.f_labour_wc(model,q,s9,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s9,z9,c0,p7)
+            return (-f1_grain_wc(model,q,s9,c0,p7,z9) + phspy.f_rotation_wc(model,q,s9,c0,p7,z9) + labpy.f_labour_wc(model,q,s9,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s9,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s9,c0,p7,z9) + suppy.f_sup_wc(model,q,s9,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
-                    + stkpy.f_stock_wc(model,q,s9,c0,p7,z9)
+                    - stkpy.f_stock_wc(model,q,s9,c0,p7,z9)
                     - model.v_wc_debit[q,s9,c0,p7,z9]
                     + model.v_wc_credit[q,s9,c0,p7,z9]
                     + sum(sum((model.v_debit[q_prev,s8,c1,p7_prev,z8] - model.v_credit[q_prev,s8,c1,p7_prev,z8]) * model.p_prob_c1[c1]
