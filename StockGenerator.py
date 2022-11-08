@@ -6755,7 +6755,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                             mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     ##asset value
-    ###back calculate the asset value at the end of the last dvp. Technically the asset value at the end
+    ###set start of season assetvalue for season trade to be the same across t & z axis (it has been calculated at the end of the first generator period but we want to reflect the start of the period - at the start all t & z are the same). All T & z need to be the same or the model can optimise trade vale.
+    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1[1, 0, ...] = np.take_along_axis(fun.f_dynamic_slice(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1, z_pos, 0, 1), a_t_tpg1[na,na,...], axis=p_pos-1)[1, 0, ...]
+    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3[1, 0, ...] = np.take_along_axis(fun.f_dynamic_slice(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3, z_pos, 0, 1), a_t_tpg3[na,na,...], axis=p_pos-1)[1, 0, ...]
+    ###back calculate the end of season asset value at the end of the last dvp. Technically the asset value at the end
     #### of the end of the season should equal the asset value at the start of the next season (because this is the
     ### same point in time). However, at the season start a new animal is formed (from the weighted average of all
     ### the seasons), so we can't use the same asset value parameter for the end and the start. We also cant simply calc
@@ -6765,9 +6768,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
            * distribution_season_tva1e1b1nw8zida0e0b0xyg1w9, axis=-1)
     assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3[2,-1,...] = np.sum(np.swapaxes(np.roll(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3, shift=-1, axis=p_pos)[1,0,...,na], axis1=w_pos-1, axis2=-1)
            * distribution_season_tva1e1b1nw8zida0e0b0xyg3w9, axis=-1)
-    ###set assetvalue for season trade to be the same across t axis (it has been calculated at the end of the first generator period but we want to reflect the start of the period - at the start all t are the same). All T need to be the same or the model can optimise trade vale.
-    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1[1, 0, ...] = np.take_along_axis(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1, a_t_tpg1[na,na,...], axis=p_pos-1)[1, 0, ...]
-    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3[1, 0, ...] = np.take_along_axis(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3, a_t_tpg3[na,na,...], axis=p_pos-1)[1, 0, ...]
     ###cluster
     assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
                                                                           mask_vg=mask_z8var_p7tva1e1b1nwzida0e0b0xyg)
