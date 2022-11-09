@@ -324,29 +324,58 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
 
 def f_summary(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
-    summary_df = pd.DataFrame(index=[trial], columns=['profit', 'profit range', 'profit stdev', 'risk neutral obj', 'utility',
-                                                      'SR', 'SR range', 'SR stdev', 'Pas %', 'Pas % range', 'Pas % stdev',
-                                                      'Sup', 'Sup range', 'Sup stdev'])
+    summary_df = pd.DataFrame(index=[trial], columns=['profit', 'profit max', 'profit min', 'profit stdev', 'risk neutral obj', 'utility',
+                                                      'SR', 'SR max', 'SR min', 'SR stdev', 'Pas %', 'Pas % max', 'Pas % min', 'Pas % stdev',
+                                                      'Cereal %', 'Cereal % max', 'Cereal % min', 'Cereal % stdev',
+                                                      'Canola %', 'Canola % max', 'Canola % min', 'Canola % stdev',
+                                                      'Sup', 'Sup max', 'Sup min', 'Sup stdev'])
     ##profit - no minroe and asset
     summary_df.loc[trial, 'profit'] = f_profit(lp_vars, r_vals, option=0)
-    summary_df.loc[trial, 'profit range'] = f_profit(lp_vars, r_vals, option=3)[0]
-    summary_df.loc[trial, 'profit stdev'] = f_profit(lp_vars, r_vals, option=3)[1]
+    profit_max = f_profit(lp_vars, r_vals, option=3)[0]
+    profit_min = f_profit(lp_vars, r_vals, option=3)[1]
+    summary_df.loc[trial, 'profit max'] = profit_max * np.logical_not(profit_min==profit_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'profit min'] = profit_min * np.logical_not(profit_min==profit_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'profit stdev'] = f_profit(lp_vars, r_vals, option=3)[2]
     ##obj
     summary_df.loc[trial, 'risk neutral obj'] = f_profit(lp_vars, r_vals, option=1)
     ##utility
     summary_df.loc[trial, 'utility'] = f_profit(lp_vars, r_vals, option=2)
     ##total dse/ha in fp0
     summary_df.loc[trial, 'SR'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
-    summary_df.loc[trial, 'SR range'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[1]
-    summary_df.loc[trial, 'SR stdev'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[2]
+    SR_max = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[1]
+    SR_min = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[2]
+    summary_df.loc[trial, 'SR max'] = SR_max * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'SR min'] = SR_min * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'SR stdev'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[3]
     ##pasture %
-    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=4)[0]
-    summary_df.loc[trial, 'Pas % range'] = f_area_summary(lp_vars, r_vals, option=4)[1]
-    summary_df.loc[trial, 'Pas % stdev'] = f_area_summary(lp_vars, r_vals, option=4)[2]
+    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+    Pas_max = f_area_summary(lp_vars, r_vals, option=5)[1]
+    Pas_min = f_area_summary(lp_vars, r_vals, option=5)[2]
+    summary_df.loc[trial, 'Pas % max'] = Pas_max * np.logical_not(Pas_min==Pas_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Pas % min'] = Pas_min * np.logical_not(Pas_min==Pas_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Pas % stdev'] = f_area_summary(lp_vars, r_vals, option=5)[3]
+    ##cereal %
+    summary_df.loc[trial, 'Cereal %'] = f_area_summary(lp_vars, r_vals, option=6)[0]
+    Cereal_max = f_area_summary(lp_vars, r_vals, option=6)[1]
+    Cereal_min = f_area_summary(lp_vars, r_vals, option=6)[2]
+    summary_df.loc[trial, 'Cereal % max'] = Cereal_max * np.logical_not(Cereal_min==Cereal_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Cereal % min'] = Cereal_min * np.logical_not(Cereal_min==Cereal_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Cereal % stdev'] = f_area_summary(lp_vars, r_vals, option=6)[3]
+    ##canola %
+    summary_df.loc[trial, 'Canola %'] = f_area_summary(lp_vars, r_vals, option=7)[0]
+    Canola_max = f_area_summary(lp_vars, r_vals, option=7)[1]
+    Canola_min = f_area_summary(lp_vars, r_vals, option=7)[2]
+    summary_df.loc[trial, 'Canola % max'] = Canola_max * np.logical_not(Canola_min==Canola_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Canola % min'] = Canola_min * np.logical_not(Canola_min==Canola_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Canola % stdev'] = f_area_summary(lp_vars, r_vals, option=7)[3]
     ##supplement
     summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
-    summary_df.loc[trial, 'Sup range'] = f_grain_sup_summary(lp_vars, r_vals, option=4)[1]
-    summary_df.loc[trial, 'Sup stdev'] = f_grain_sup_summary(lp_vars, r_vals, option=4)[2]
+    Sup_max = f_grain_sup_summary(lp_vars, r_vals, option=4)[1]
+    Sup_min = f_grain_sup_summary(lp_vars, r_vals, option=4)[2]
+    summary_df.loc[trial, 'Sup max'] = Sup_max * np.logical_not(Sup_min==Sup_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Sup min'] = Sup_min * np.logical_not(Sup_min==Sup_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Sup stdev'] = f_grain_sup_summary(lp_vars, r_vals, option=4)[3]
     return summary_df
 
 
@@ -384,8 +413,10 @@ def f_area_summary(lp_vars, r_vals, option):
         #. total pasture area each season in p7[-1]
         #. total crop area each season in p7[-1]
         #. table crop and pasture area by lmu and season
-        #. float pasture %, range & stdev in p7[-1]
         #. landuse area in p7[-1]
+        #. float pasture %, max, min & stdev in p7[-1]
+        #. float cereal %, max, min & stdev in p7[-1]
+        #. float canola %, max, min & stdev in p7[-1]
 
     '''
 
@@ -419,7 +450,13 @@ def f_area_summary(lp_vars, r_vals, option):
         croppas_area_qszl['crop'] = crop_area_p7qszl
         return croppas_area_qszl.round(0)
 
-    if option==4: #average pasture % in p7[-1]
+    if option==4: #landuse area in p7[-1] (lmu summed)
+        landuse_area_k_qszl = landuse_area_k_p7qszl.loc[:,landuse_area_k_p7qszl.columns.levels[0][-1].tolist()]
+        landuse_area_k_qsz = landuse_area_k_qszl.groupby(axis=1, level=(0,1,2)).sum()
+        landuse_area_qsz_k = landuse_area_k_qsz.T.round(2)
+        return landuse_area_qsz_k
+
+    if option==5 or option==6 or option==7: #average % of pasture/cereal/canola in p7[-1]
         keys_q = r_vals['zgen']['keys_q']
         keys_s = r_vals['zgen']['keys_s']
         keys_z = r_vals['zgen']['keys_z']
@@ -428,21 +465,44 @@ def f_area_summary(lp_vars, r_vals, option):
         z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
         rot_area_qsz_p7 = rot_area_qszrl_p7.groupby(level=(0,1,2)).sum() #sum r & l
         rot_area_qsz = rot_area_qsz_p7.iloc[:, -1]  # slice for p7[-1]
-        pasture_area_p7qsz = pasture_area_p7qszl.groupby(level=(0,1,2,3)).sum() #sum l
-        pasture_area_qsz = pasture_area_p7qsz.unstack(0).iloc[:,-1]  # slice for p7[-1]
-        pas_area_qsz = fun.f_divide(pasture_area_qsz, rot_area_qsz) * 100
-        ###stdev and range
-        pas_area_mean = np.sum(pas_area_qsz * z_prob_qsz)
-        ma_pas_area_qsz = np.ma.masked_array(pas_area_qsz, z_prob_qsz == 0)
-        pas_area_range = np.max(ma_pas_area_qsz) - np.min(ma_pas_area_qsz)
-        pas_area_stdev = np.sum((pas_area_qsz - pas_area_mean) ** 2 * z_prob_qsz)**0.5
-        return round(pas_area_mean, 1), round(pas_area_range, 1), round(pas_area_stdev, 1)
+        if option == 5:
+            pasture_area_p7qsz = pasture_area_p7qszl.groupby(level=(0,1,2,3)).sum() #sum l
+            pasture_area_qsz = pasture_area_p7qsz.unstack(0).iloc[:,-1]  # slice for p7[-1]
+            pas_area_qsz = fun.f_divide(pasture_area_qsz, rot_area_qsz) * 100
+            ###stdev and range
+            pas_area_mean = np.sum(pas_area_qsz * z_prob_qsz)
+            ma_pas_area_qsz = np.ma.masked_array(pas_area_qsz, z_prob_qsz == 0)
+            pas_area_max = np.max(ma_pas_area_qsz)
+            pas_area_min = np.min(ma_pas_area_qsz)
+            pas_area_stdev = np.sum((pas_area_qsz - pas_area_mean) ** 2 * z_prob_qsz)**0.5
+            return round(pas_area_mean, 1), round(pas_area_max, 1), round(pas_area_min, 1), round(pas_area_stdev, 1)
+        if option == 6:
+            all_cereals = r_vals['rot']['all_cereals']  # landuse sets
+            cereal_area_p7qszl = landuse_area_k_p7qszl[landuse_area_k_p7qszl.index.isin(all_cereals)].sum()  # sum landuse
+            cereal_area_p7qsz = cereal_area_p7qszl.groupby(level=(0, 1, 2, 3)).sum()  # sum l
+            cereal_area_qsz = cereal_area_p7qsz.unstack(0).iloc[:, -1]  # slice for p7[-1]
+            cereal_area_qsz = fun.f_divide(cereal_area_qsz, rot_area_qsz) * 100
+            ###stdev and range
+            cereal_area_mean = np.sum(cereal_area_qsz * z_prob_qsz)
+            ma_cereal_area_qsz = np.ma.masked_array(cereal_area_qsz, z_prob_qsz == 0)
+            cereal_area_max = np.max(ma_cereal_area_qsz)
+            cereal_area_min = np.min(ma_cereal_area_qsz)
+            cereal_area_stdev = np.sum((cereal_area_qsz - cereal_area_mean) ** 2 * z_prob_qsz) ** 0.5
+            return round(cereal_area_mean, 1), round(cereal_area_max, 1), round(cereal_area_min, 1), round(cereal_area_stdev, 1)
+        if option == 7:
+            all_canolas = r_vals['rot']['all_canolas']  # landuse sets
+            canola_area_p7qszl = landuse_area_k_p7qszl[landuse_area_k_p7qszl.index.isin(all_canolas)].sum()  # sum landuse
+            canola_area_p7qsz = canola_area_p7qszl.groupby(level=(0, 1, 2, 3)).sum()  # sum l
+            canola_area_qsz = canola_area_p7qsz.unstack(0).iloc[:, -1]  # slice for p7[-1]
+            canola_area_qsz = fun.f_divide(canola_area_qsz, rot_area_qsz) * 100
+            ###stdev and range
+            canola_area_mean = np.sum(canola_area_qsz * z_prob_qsz)
+            ma_canola_area_qsz = np.ma.masked_array(canola_area_qsz, z_prob_qsz == 0)
+            canola_area_max = np.max(ma_canola_area_qsz)
+            canola_area_min = np.min(ma_canola_area_qsz)
+            canola_area_stdev = np.sum((canola_area_qsz - canola_area_mean) ** 2 * z_prob_qsz) ** 0.5
+            return round(canola_area_mean, 1), round(canola_area_max, 1), round(canola_area_min, 1), round(canola_area_stdev, 1)
 
-    if option==5: #landuse area in p7[-1] (lmu summed)
-        landuse_area_k_qszl = landuse_area_k_p7qszl.loc[:,landuse_area_k_p7qszl.columns.levels[0][-1].tolist()]
-        landuse_area_k_qsz = landuse_area_k_qszl.groupby(axis=1, level=(0,1,2)).sum()
-        landuse_area_qsz_k = landuse_area_k_qsz.T.round(2)
-        return landuse_area_qsz_k
 
 def f_mach_summary(lp_vars, r_vals, option=0):
     '''
@@ -595,9 +655,10 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         ###stdev and range
         grain_fed_mean = grain_fed_qsz.mul(z_prob_qsz).sum()
         ma_grain_fed_qsz = np.ma.masked_array(grain_fed_qsz, z_prob_qsz == 0)
-        grain_fed_range = np.max(ma_grain_fed_qsz) - np.min(ma_grain_fed_qsz)
+        grain_fed_max = np.max(ma_grain_fed_qsz)
+        grain_fed_min = np.min(ma_grain_fed_qsz)
         grain_fed_stdev = (((grain_fed_qsz - grain_fed_mean) ** 2).mul(z_prob_qsz).sum())**0.5
-        return round(grain_fed_mean, 1), round(grain_fed_range, 1), round(grain_fed_stdev, 1),
+        return round(grain_fed_mean, 1), round(grain_fed_max, 1), round(grain_fed_min, 1), round(grain_fed_stdev, 1),
 
     ##NOTE: this only works if there is one time of grain purchase/sale
     if option == 0:
@@ -1273,9 +1334,10 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False):
         ###stdev and range
         sr_mean = np.sum(sr_qsz * prob_qsz)
         ma_sr_qsz = np.ma.masked_array(sr_qsz, prob_qsz==0)
-        sr_range = np.max(ma_sr_qsz) - np.min(ma_sr_qsz)
+        sr_max = np.max(ma_sr_qsz)
+        sr_min = np.min(ma_sr_qsz)
         sr_stdev = np.sum((sr_qsz - sr_mean) ** 2 * prob_qsz)**0.5
-        return sr_mean, sr_range, sr_stdev
+        return sr_mean, sr_max, sr_min, sr_stdev
     elif summary2:
         sire_numbers_startseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_startseason_p7zg0']>0)
                                                            * stock_vars['sire_numbers_qsg0'][:, :, na, na, :], preserveAxis=sire_preserve_ax)
@@ -1499,11 +1561,12 @@ def f_profit(lp_vars, r_vals, option=0):
         profit_qsc1z = credit_qsc1z - debit_qsc1z + trade_value_qsz[:,:,na,:] - dep_qsz[:,:,na,:] #dep & tradevalue doesnt vary by price scenario
         ###stdev and range
         ma_profit_qsc1z = np.ma.masked_array(profit_qsc1z, prob_qsz[:,:,na,:] == 0)
-        profit_range = np.max(ma_profit_qsc1z) - np.min(ma_profit_qsc1z)
+        profit_max = np.max(ma_profit_qsc1z)
+        profit_min = np.min(ma_profit_qsc1z)
         profit_mean = np.sum(profit_qsc1z * prob_qsz[:,:,na,:] * prob_c1[:,na])
         profit_stdev = np.sum((profit_qsc1z - profit_mean)**2 * prob_qsz[:,:,na,:] * prob_c1[:,na])**0.5
         if option == 3:
-            return profit_range, profit_stdev
+            return profit_max, profit_min, profit_stdev
         elif option == 4:
             profit_qsz = np.sum(profit_qsc1z * prob_c1[:,na], axis=2) #average c1
             index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
