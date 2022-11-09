@@ -196,7 +196,7 @@ landuse['pasture_sets']={'annual': {'a', 'ar', 'a2'
                        }
 
 ##A1, E, P, G and C1 are just used in pas.py for germination ^can be removed when/if germination is calculated from sim
-## these are also used for PNC landuses.
+## these are also used for PNC landuses. & E is used in reporting
 landuse['G']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'
                 , 'a', 'ar', 'a2'
                 , 's', 'sr'
