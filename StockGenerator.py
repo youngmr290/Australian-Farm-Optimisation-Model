@@ -6759,10 +6759,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1[1, 0, ...] = np.take_along_axis(fun.f_dynamic_slice(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1, z_pos, 0, 1), a_t_tpg1[na,na,...], axis=p_pos-1)[1, 0, ...]
     assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3[1, 0, ...] = np.take_along_axis(fun.f_dynamic_slice(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3, z_pos, 0, 1), a_t_tpg3[na,na,...], axis=p_pos-1)[1, 0, ...]
     ###back calculate the end of season asset value at the end of the last dvp. Technically the asset value at the end
-    #### of the end of the season should equal the asset value at the start of the next season (because this is the
+    #### of the season should equal the asset value at the start of the next season (because this is the
     ### same point in time). However, at the season start a new animal is formed (from the weighted average of all
-    ### the seasons), so we can't use the same asset value parameter for the end and the start. We also cant simply calc
-    ### the asset value for both periods because even just one period has a bit of effect on asset value and allowed the model to optimise tradevalue how it shouldnt.
+    ### the seasons), so we can't use the same asset value parameter for the end and the start. We also can't simply calc
+    ### the asset value for both periods because even just one generator period has a bit of effect on asset value
+    ### due to mortality and LW change and this allowed the model to optimise tradevalue in a way that it shouldn't.
     assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[2,-1,...] = assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[1,0,...] #sires dont get distributed at season start so asset value end = start
     assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1[2,-1,...] = np.sum(np.swapaxes(np.roll(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1, shift=-1, axis=p_pos)[1,0,...,na], axis1=w_pos-1, axis2=-1)
            * distribution_season_tva1e1b1nw8zida0e0b0xyg1w9, axis=-1)
