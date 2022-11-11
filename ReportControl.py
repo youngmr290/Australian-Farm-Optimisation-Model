@@ -82,7 +82,7 @@ def f_report(processor, trials, non_exist_trials):
 
     ## A control to switch between reporting the optimised production level (True) and the production assumptions (False)
     ### Note this is only active for some of the reports. It also changes the axes that are reported, often adding a w axis
-    lp_vars_inc = True
+    lp_vars_inc = False#True
 
     ##create empty df to stack each trial results into
     stacked_infeasible = pd.DataFrame().rename_axis('Trial')  # name of any infeasible trials
@@ -109,7 +109,11 @@ def f_report(processor, trials, non_exist_trials):
     stacked_salegrid_offs = pd.DataFrame()  # sale grid
     stacked_saleage_offs = pd.DataFrame()  # sale grid
     stacked_salevalue_dams = pd.DataFrame()  # average sale value dams
+    stacked_salevalue_dams1 = pd.DataFrame()  # average sale value dams
+    stacked_salevalue_dams2 = pd.DataFrame()  # average sale value dams
     stacked_salevalue_offs = pd.DataFrame()  # average sale value offs
+    stacked_salevalue_offs2 = pd.DataFrame()  # average sale value offs
+    stacked_salevalue_offs3 = pd.DataFrame()  # average sale value offs
     stacked_salevalue_prog = pd.DataFrame()  # average sale value offs
     stacked_woolvalue_dams = pd.DataFrame()  # average wool value dams
     stacked_woolvalue_offs = pd.DataFrame()  # average wool value offs
@@ -182,7 +186,7 @@ def f_report(processor, trials, non_exist_trials):
             stacked_summary = rep.f_append_dfs(stacked_summary, summary)
 
         if report_run.loc['run_areasum', 'Run']:
-            option = 0
+            option = 4
             areasum = rep.f_area_summary(lp_vars, r_vals, option=option)
             areasum = pd.concat([areasum],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_areasum = rep.f_append_dfs(stacked_areasum, areasum)
@@ -380,14 +384,62 @@ def f_report(processor, trials, non_exist_trials):
                 weights = None
                 na_weights = []
                 arith = 4
-                index =[5] #v
-                cols =[12,3,4,2,8] #g,p7,t,k2,w
+                index =[5,3] #v
+                cols =[9,2,12,4,8] #g,p7,t,k2,w
             # axis_slice = {}
             # axis_slice[3] = [0, 1, 1]   #c0: stk
             salevalue_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
             salevalue_dams = pd.concat([salevalue_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_salevalue_dams = rep.f_append_dfs(stacked_salevalue_dams, salevalue_dams)
+
+        if report_run.loc['run_salevalue_dams', 'Run']:
+            type = 'stock'
+            prod = 'assetvalue_startseason_k2p7tva1nwziyg1'
+            na_prod = [0,1]  # q,s
+            keys = 'dams_keys_qsk2p7tvanwziy1g1'
+            if lp_vars_inc:
+                weights = 'dams_numbers_qsk2tvanwziy1g1'
+                na_weights = [3]  #p7
+                arith = 1
+                index =[5]      #v
+                cols =[2,3,4]    #k2, p7, t
+            else:
+                weights = None
+                na_weights = []
+                arith = 4
+                index =[5,3] #v
+                cols =[9,2,12,4,8] #g,p7,t,k2,w
+            # axis_slice = {}
+            # axis_slice[3] = [0, 1, 1]   #c0: stk
+            salevalue_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                   na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+            salevalue_dams = pd.concat([salevalue_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_salevalue_dams1 = rep.f_append_dfs(stacked_salevalue_dams1, salevalue_dams)
+
+        if report_run.loc['run_salevalue_dams', 'Run']:
+            type = 'stock'
+            prod = 'assetvalue_endseason_k2p7tva1nwziyg1'
+            na_prod = [0,1]  # q,s
+            keys = 'dams_keys_qsk2p7tvanwziy1g1'
+            if True:#lp_vars_inc:
+                weights = 'dams_numbers_qsk2tvanwziy1g1'
+                na_weights = [3]  #p7
+                arith = 1
+                index =[5,3]      #v
+                cols =[0,1,9,2,4]    #k2, p7, t
+            else:
+                weights = None
+                na_weights = []
+                arith = 4
+                index =[5,3] #v
+                cols =[9,2,12,4,8] #g,p7,t,k2,w
+            # axis_slice = {}
+            # axis_slice[3] = [0, 1, 1]   #c0: stk
+            salevalue_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                   na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+            salevalue_dams = pd.concat([salevalue_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_salevalue_dams2 = rep.f_append_dfs(stacked_salevalue_dams2, salevalue_dams)
 
         if report_run.loc['run_salevalue_offs', 'Run']:
             type = 'stock'
@@ -404,14 +456,62 @@ def f_report(processor, trials, non_exist_trials):
                 weights = None
                 na_weights = []
                 arith = 4
-                index = [6, 12]     #DVP, gender
-                cols = [4, 14, 5, 8]   #cashflow period, g3, t, w
+                index = [6, 4]     #DVP, gender
+                cols = [9, 12, 5,8]   #cashflow period, g3, t, w
             # axis_slice = {}
             # axis_slice[4] = [0, 1, 1]   #c0: stk
             salevalue_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
             salevalue_offs = pd.concat([salevalue_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_salevalue_offs = rep.f_append_dfs(stacked_salevalue_offs, salevalue_offs)
+
+        if report_run.loc['run_salevalue_offs', 'Run']:
+            type = 'stock'
+            prod = 'assetvalue_startseason_k3k5p7tvnwziaxyg3'
+            na_prod = [0,1]  # q,s
+            keys = 'offs_keys_qsk3k5p7tvnwziaxyg3'
+            if lp_vars_inc:
+                weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+                na_weights = [4]  #p7
+                arith = 1
+                index =[6, 12]      #v, x
+                cols =[4, 14, 5]    #cashflow period, g3, t
+            else:
+                weights = None
+                na_weights = []
+                arith = 4
+                index = [6, 4]     #DVP, gender
+                cols = [9, 12, 5,8]   #cashflow period, g3, t, w
+            # axis_slice = {}
+            # axis_slice[4] = [0, 1, 1]   #c0: stk
+            salevalue_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                   na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+            salevalue_offs = pd.concat([salevalue_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_salevalue_offs2 = rep.f_append_dfs(stacked_salevalue_offs2, salevalue_offs)
+
+        if report_run.loc['run_salevalue_offs', 'Run']:
+            type = 'stock'
+            prod = 'assetvalue_endseason_k3k5p7tvnwziaxyg3'
+            na_prod = [0,1]  # q,s
+            keys = 'offs_keys_qsk3k5p7tvnwziaxyg3'
+            if lp_vars_inc:
+                weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+                na_weights = [4]  #p7
+                arith = 1
+                index =[6, 12]      #v, x
+                cols =[4, 14, 5]    #cashflow period, g3, t
+            else:
+                weights = None
+                na_weights = []
+                arith = 4
+                index = [6, 4]     #DVP, gender
+                cols = [9, 12, 5,8]   #cashflow period, g3, t, w
+            # axis_slice = {}
+            # axis_slice[4] = [0, 1, 1]   #c0: stk
+            salevalue_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                   na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+            salevalue_offs = pd.concat([salevalue_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_salevalue_offs3 = rep.f_append_dfs(stacked_salevalue_offs3, salevalue_offs)
 
         if report_run.loc['run_salevalue_prog', 'Run']:
             type = 'stock'
@@ -936,7 +1036,7 @@ def f_report(processor, trials, non_exist_trials):
                 cols =[0,1,8, 2, 3] #q, s, z, k2, t
             else:
                 index =[4] #v
-                cols =[0,1,8, 2, 3] #q, s, z, k2, t
+                cols =[0,1,8, 2, 3,7] #q, s, z, k2, t
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -981,7 +1081,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_qsk3k5tvnwziaxyg3'
             arith = 2
             index =[5]                  #DVP
-            cols =[8, 13, 11, 2, 3, 4,7]   #z, g3, Gender, dam age, BTRT, t
+            cols =[0,1,8, 13, 4,7]   #q,s,z, g3, Gender, dam age, BTRT, t
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -1401,8 +1501,16 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_saleage_offs, 'saleage_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_salevalue_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_salevalue_offs, 'salevalue_offs', df_settings, option=xl_display_mode)
+    if report_run.loc['run_salevalue_offs', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_salevalue_offs2, 'startvalue_offs', df_settings, option=xl_display_mode)
+    if report_run.loc['run_salevalue_offs', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_salevalue_offs3, 'endvalue_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_salevalue_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_salevalue_dams, 'salevalue_dams', df_settings, option=xl_display_mode)
+    if report_run.loc['run_salevalue_dams', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_salevalue_dams1, 'startvalue_dams', df_settings, option=xl_display_mode)
+    if report_run.loc['run_salevalue_dams', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_salevalue_dams2, 'endvalue_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_salevalue_prog', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_salevalue_prog, 'salevalue_prog', df_settings, option=xl_display_mode)
     if report_run.loc['run_woolvalue_offs', 'Run']:
