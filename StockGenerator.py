@@ -2407,10 +2407,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         ##load in and create condensed start dict - used to standadise the starting animal at condensing time.
         ###load condensed start info from previous trial if being used in this trial.
         if sinp.structuralsa['i_use_pkl_condensed_start_condition']:
-            fs_use_number = sinp.structuralsa['i_fs_use_number']
-            print('pkl condensed start values being used.')
-            with open('pkl/pkl_condensed_values{0}.pkl'.format(fs_use_number), "rb") as f:
-                pkl_condensed_values = pkl.load(f)
+            pkl_condensed_values = pkl_fs['pkl_condensed_values']
         ###create empty to store condensed start info for current trial - this is only stored at the end if fs is stored.
         else:
             pkl_condensed_values = collections.defaultdict(dict)
@@ -8022,15 +8019,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         with open('pkl/pkl_rev_trait{0}.pkl'.format(rev_number),"wb") as f:
             pkl.dump(rev_trait_values, f)
 
-    ##############################
-    # PKL condensed start animal #
-    ##############################
+    ###############################
+    # Save condensed start animal #
+    ###############################
     ##store condensed start info. This is used in future trials to improve fs optimisation. See google doc (randomness section) for more info.
-    if sinp.structuralsa['i_fs_create_pkl']:
-        fs_create_number = sinp.structuralsa['i_fs_create_number']
-        directory_path = os.path.dirname(os.path.abspath( __file__))  # path of directory - required when exp is run from a different location (e.g. in the web app)
-        with open(os.path.join(directory_path, 'pkl/pkl_condensed_values{0}.pkl'.format(fs_create_number)), "wb") as f:
-            pkl.dump(pkl_condensed_values, f)
+    ##this gets saved in the pkl file with other feed info in FeedSupplyStock.py
+    pkl_fs_info['pkl_condensed_values'] = pkl_condensed_values
 
     ################
     # Bound params #
