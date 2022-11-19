@@ -1560,7 +1560,8 @@ def f_profit(lp_vars, r_vals, option=0):
         ###profit for each scenario
         profit_qsc1z = credit_qsc1z - debit_qsc1z + trade_value_qsz[:,:,na,:] - dep_qsz[:,:,na,:] #dep & tradevalue doesnt vary by price scenario
         ###stdev and range
-        ma_profit_qsc1z = np.ma.masked_array(profit_qsc1z, prob_qsz[:,:,na,:] == 0)
+        t_prob_qsz = np.broadcast_to(prob_qsz[:,:,na,:], profit_qsc1z.shape) #broadcast so the next step works
+        ma_profit_qsc1z = np.ma.masked_array(profit_qsc1z, t_prob_qsz[:,:,na,:] == 0)
         profit_max = np.max(ma_profit_qsc1z)
         profit_min = np.min(ma_profit_qsc1z)
         profit_mean = np.sum(profit_qsc1z * prob_qsz[:,:,na,:] * prob_c1[:,na])
