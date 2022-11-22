@@ -7189,7 +7189,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                                         * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,:,0:1,...,na,na]  # mask based on the t axis for dvp0
                                                                         * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0) #only NM slice requires prog
                                                                         * (index_g1[...,na]==index_g1)[...,na]
-                                                                        * btrt_propn_b0xyg1[...,na,na].astype(dtype)
+                                                                        * btrt_propn_b0xyg1[...,na,na].astype(dtype)   #todo this would be better if it had a d axis in this calculation so that propn of DST could vary by age of the dam
                                                                         * e0_propn_ida0e0b0xyg[...,na,na].astype(dtype)
                                                                         * agedam_propn_da0e0b0xyg1[d:d+1,...,na,na].astype(dtype)
                                                                         * (a_k3cluster_da0e0b0xyg3[d:d+1,...] == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
