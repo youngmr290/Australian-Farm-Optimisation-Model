@@ -22,26 +22,15 @@ farming system, capturing the biological and economic interactions within a farm
 This is an important precursor for assessing farm strategy because many aspects of a farming
 system are interrelated, such that changing one factor may affect another :cite:p:`RN76`.
 
-Agricultural systems are most frequently modelled by dynamic simulation :cite:p:`RN8` or
-mathematical programming :cite:p:`RN2` techniques. Dynamic simulation (DS) is
+Agricultural systems are most frequently modelled by dynamic simulation, for example APSIM :cite:p:`RN8` or
+mathematical programming, for example MIDAS :cite:p:`RN2` techniques. Dynamic simulation (DS) is
 frequently applied to represent biological systems encompassing the whole farm :cite:p:`RN105`
 or a subsection of the farm :cite:p:`keating2003, RN23`. Mathematical programming (MP)
 encompasses a group of optimisation techniques and is commonly used for whole farm modelling
 :cite:p:`RN9, RN2, RN76`. Both DS and MP often achieve
 more than their simple categorisation implies, as it is feasible to specify an objective in a
 simulation model and search for an optimal solution and MP techniques can represent simulated biological
-details :cite:p:`RN2`. While MP is not as flexible as DS in representing biological and
-dynamic features, it does provide a more powerful and efficient optimisation method. Although MP is not
-as sound at representing biological and dynamic features, this limitation should not be overstated.
-Firstly, at the whole farm level, representing precise biological and dynamic relationships is often
-not of high importance and the overall relationships can be represented at a higher level still
-capturing the necessary detail. Secondly, in the hands of skilled practitioners, it is possible to
-represent or closely approximate the complex nonlinear biological and dynamic features using MP
-techniques :cite:p:`RN134`. Thirdly, DS and MP are somewhat complementary because they are suited
-to different tasks. For example, simulation models developed to imitate the biological features of
-a farm sub system may generate data for use in whole farm MP models (e.g. :cite:p:`young2010, young2014`).
-
-Heuristic techniques are another branch of commonly used optimisation procedures, including genetic
+details :cite:p:`RN2`. Heuristic techniques are a branch of commonly used optimisation procedures, including genetic
 algorithms :cite:p:`RN109` and simulated annealing :cite:p:`RN113`. These methods use various
 computational algorithms, often inspired by physical processes, to identify solutions in complex search
 spaces :cite:p:`RN111`. Such procedures are valuable for the optimisation of simulation
@@ -55,6 +44,23 @@ RIM is a simulation model encompassing around 500 parameters. However, :cite:t:`
 additional detail would result in a much larger solution time. Therefore, although heuristic techniques
 such as those used by :cite:t:`RN112` are conceptually interesting, it is likely that they may be
 computationally challenging if applied to the representation of detailed whole farming systems.
+The lack of optimisation capability can be a significant limitation of simulation modelling for
+evaluating the economics of on-farm decision making. For example, the profitability of
+mating ewe lambs is dependent on many factors such as ewe live weight before, during and
+after mating, pasture supply, time of lambing and relative prices. Thus, even for a skilled
+simulation user it would be easy to land at a local optimum resulting in inaccurate economic
+advice regarding optimal management of ewe lambs.
+
+While MP is not as flexible as DS in representing biological and
+dynamic features, it does provide a more powerful and efficient optimisation method. Although MP is not
+as sound at representing biological and dynamic features, this limitation should not be overstated.
+Firstly, at the whole farm level, representing precise biological and dynamic relationships is often
+not of high importance and the overall relationships can be represented at a higher level still
+capturing the necessary detail. Secondly, in the hands of skilled practitioners, it is possible to
+represent or closely approximate the complex nonlinear biological and dynamic features using MP
+techniques :cite:p:`RN134`. Thirdly, DS and MP are somewhat complementary because they are suited
+to different tasks. For example, simulation models developed to imitate the biological features of
+a farm sub system may generate data for use in whole farm MP models (e.g. :cite:p:`young2010, young2014`).
 
 Evaluating farming systems is a dynamic problem where current actions impact future productivity
 (e.g. crops in a rotation, livestock breeding or equipment purchases); price and weather states
@@ -65,11 +71,7 @@ is MIDAS (Model of an Integrated Dryland Agricultural System)
 :cite:p:`RN42, RN41, RN11, young2011, RN33, RN76`.
 MIDAS is a static equilibrium model encompassing the key assumption that the same
 management decisions are made repeatedly each year, with that year being an average or modal climatic
-year. However, as discussed by
-
-.. note:: add MRY lit reference
-
-MIDAS fails to represent inter-year variation, which has
+year. However, as discussed by :cite:t:`young2022` MIDAS fails to represent inter-year variation, which has
 been noted as a significant limitation by many of the MIDAS model developers and users
 :cite:p:`Kingwelletal1992, RN76`. A model called MUDAS (Model of an Uncertain Dryland
 Agricultural System) was developed to analyse the impact of risk associated with weather-year
@@ -80,9 +82,8 @@ Representing risk and tactics associated with farm management enabled MUDAS to o
 steady-state limitation of MIDAS and provide more accurate findings concerning farm management.
 However, the added detail increased the size and complexity of the model. Such a large model resulted
 in long solution times and an arduous error-checking and calibration processes. Due to this, MUDAS has
-not been maintained or updated since the 1990’s.
-
-Since the development of MUDAS technological innovations and practice changes have occurred in Australian
+not been maintained or updated since the 1990’s. Moreover, since the development of MUDAS technological
+innovations and practice changes have occurred in Australian
 broadacre farming (e.g. :cite:p:`RN146`), adding to the complexity of farm management, but simultaneously
 computing power and more versatile computing languages have become available. A possible limitation of
 the MUDAS framework is its exclusion of weather-year sequences i.e. the assumption that the probability
