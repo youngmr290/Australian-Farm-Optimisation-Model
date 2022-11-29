@@ -2412,7 +2412,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         ##load in and create condensed start dict - used to standadise the starting animal at condensing time.
         ###load condensed start info from previous trial if being used in this trial.
         if sinp.structuralsa['i_use_pkl_condensed_start_condition']:
-            pkl_condensed_values = pkl_fs['pkl_condensed_values']
+            fs_use_number = sinp.structuralsa['i_fs_use_number']
+            print('pkl condensed start values being used.')
+            with open('pkl/pkl_condensed_values{0}.pkl'.format(fs_use_number), "rb") as f:
+                pkl_condensed_values = pkl.load(f)
         ###create empty to store condensed start info for current trial - this is only stored at the end if fs is stored.
         else:
             pkl_condensed_values = collections.defaultdict(dict)
