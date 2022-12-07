@@ -1074,7 +1074,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'greenpas_ha_qsfgop6lzt'
             keys = 'keys_qsfgop6lzt'
             arith = 2
-            index =[5]
+            index =[7,5]
             cols =[6]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
@@ -1094,7 +1094,7 @@ def f_report(processor, trials, non_exist_trials):
             na_denweights = [1,3]
             keys = 'keys_qsfgop6lzt'
             arith = 1
-            index =[5]
+            index =[7,5]
             cols =[6]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
@@ -1110,7 +1110,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'drypas_transfer_qsdp6zlt'
             keys = 'keys_qsdp6zlt'
             arith = 2
-            index =[3]
+            index =[4,3]
             cols =[2]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
@@ -1126,7 +1126,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'nap_transfer_qsdp6zt'
             keys = 'keys_qsdp6zt'
             arith = 2
-            index =[3]
+            index =[4,3]
             cols =[]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
@@ -1147,8 +1147,8 @@ def f_report(processor, trials, non_exist_trials):
             na_denweights = [1,3]
             keys = 'keys_qsfgop6lzt'
             arith = 1
-            index =[5]
-            cols =[]
+            index =[7,5]
+            cols =[8]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             grncon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, prod_weights=prod_weights,
@@ -1165,7 +1165,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'drypas_consumed_qsfdp6zlt'
             keys = 'keys_qsfdp6zlt'
             arith = 2
-            index =[4]
+            index =[5,4]
             cols =[3,7] #d,t
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
@@ -1181,7 +1181,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = None
             keys = 'keys_fgop6lzt'
             arith = 5
-            index = [3]
+            index = [5,3]
             cols = [2, 1]
             axis_slice = {}
             grnnv = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -1196,7 +1196,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = None
             keys = 'keys_gop6lzt'
             arith = 5
-            index = [2]
+            index = [4,2]
             cols = [1, 0]
             axis_slice = {}
             grndmd = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -1211,7 +1211,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = None
             keys = 'keys_gop6lzt'
             arith = 5
-            index = [2]
+            index = [4,2]
             cols = [1, 0]
             axis_slice = {}
             grnfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -1226,7 +1226,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = None
             keys = 'keys_fdp6zt'
             arith = 5
-            index = [2]
+            index = [3,2]
             cols = [1]
             axis_slice = {}
             drynv = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -1241,7 +1241,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = None
             keys = 'keys_dp6zt'
             arith = 5
-            index = [1]
+            index = [2,1]
             cols = [0]
             axis_slice = {}
             drydmd = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -1256,7 +1256,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = None
             keys = 'keys_dp6zt'
             arith = 5
-            index = [1]
+            index = [2,1]
             cols = [0]
             axis_slice = {}
             dryfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -1271,7 +1271,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'nap_consumed_qsfdp6zt'
             keys = 'keys_qsfdp6zt'
             arith = 2
-            index =[4]
+            index =[5,4]
             cols =[]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
