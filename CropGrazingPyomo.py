@@ -30,18 +30,12 @@ def f1_cropgrazepyomo_local(params,model):
     ############
     # variable #
     ############
-    ##if crop grazing is not included set upper bnd to 0
-    if pinp.cropgraze['i_cropgrazing_inc']:
-        ub = None
-    else:
-        ub = 0
-
     model.v_tonnes_crop_consumed = pe.Var(model.s_sequence_year, model.s_sequence, model.s_feed_pools, model.s_crops, model.s_feed_periods,
-                                          model.s_labperiods, model.s_season_types,  model.s_lmus,bounds=(0,ub),
+                                          model.s_labperiods, model.s_season_types,  model.s_lmus,bounds=(0,None),
                                           doc='tonnes of crop consumed by livestock in a p6 that was sown in a p5 (p5 axis tracks when the crop being grazed was sown)')
 
     model.v_tonnes_crop_transfer = pe.Var(model.s_sequence_year, model.s_sequence, model.s_crops, model.s_lmus, model.s_feed_periods, model.s_labperiods, model.s_season_types,
-                                          bounds=(0,ub), doc='tonnes of crop DM transferred to next feed period (p5 axis tracks when the crop being grazed was sown)')
+                                          bounds=(0,None), doc='tonnes of crop DM transferred to next feed period (p5 axis tracks when the crop being grazed was sown)')
 
     #########
     # param #
