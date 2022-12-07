@@ -272,10 +272,11 @@ def create_sa():
     sav['bnd_min_sale_age_female_dg3'] = np.full((len_d,) + (len_g3,), '-', dtype=object)   #SA to set min age a female can be sold - used to bound prog & offs
     sav['bnd_max_sale_age_female_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
     sav['rot_lobound_rl'] = np.full((len_R,) + (len_l,), '-', dtype=object)
-    
+
     ##pasture
+    sav['poc_inc'] = '-'  #control if poc is included
     sav['pas_inc_t'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA value for pastures included mask
-    
+
     ##Stock
     ###feedsupply
     sav['feedsupply_adj_r2p'] = np.full_like(pinp.feedsupply['i_feedsupply_adj_options_r2p'], '-', dtype=object)  # SA value for feedsupply adjustment.

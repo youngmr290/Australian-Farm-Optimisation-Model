@@ -540,7 +540,7 @@ def f_con_poc_available(model):
     by the foo available to be consumed on each hectare each day (calculated in Pasture.py).
     '''
     def poc(model,q,s,f,l,z):
-        if pe.value(model.p_wyear_inc_qs[q, s]):
+        if pe.value(model.p_wyear_inc_qs[q, s]) and pinp.crop['i_poc_inc']:
             return -macpy.f_ha_days_pasture_crop_paddocks(model,q,s,f,l,z) * model.p_poc_con[f,l,z] + sum(
                 model.v_poc[q,s,v,f,l,z] for v in model.s_feed_pools) <= 0
         else:
