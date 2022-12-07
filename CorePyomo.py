@@ -575,7 +575,7 @@ def f_con_link_pasture_supplement_consumption(model,nv):
 
     Note: this constraint can make the model infeasible for n11 because the optimal fs cant be met without supplement.
     To fix this run n33. This may still be infeasible due to sires who are always n33. But sires nut can be changed in sinp
-    or sires can be removed from the model.
+    or sires can be removed from ME and vol in stockpyomo.
     '''
     len_nv = nv['len_nv']
     nv_is_not_confinement_f = np.full(len_nv, True)
@@ -584,7 +584,7 @@ def f_con_link_pasture_supplement_consumption(model,nv):
     def link_pas_sup(model,q,s,z,p6,f):
         f_idx = l_f.index(f)
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p6z[p6,z]) and nv_is_not_confinement_f[f_idx] and uinp.supfeed['i_sup_selectivity_included']:
-            return - (paspy.f_pas_vol(model,q,s,p6,f,z) + stubpy.f_cropresidue_vol(model,q,s,p6,f,z)) * model.p_max_sup_selectivity[p6,z] \
+            return - (paspy.f_pas_vol2(model,q,s,p6,f,z) + stubpy.f_cropresidue_vol(model,q,s,p6,f,z)) * model.p_max_sup_selectivity[p6,z] \
                    + suppy.f_sup_vol(model,q,s,p6,f,z) * (1-model.p_max_sup_selectivity[p6,z]) <= 0
         else:
             return pe.Constraint.Skip
