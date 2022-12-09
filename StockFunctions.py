@@ -378,7 +378,7 @@ def f1_nv_components(paststd_foo_p6a1e1b1j0wzida0e0b0xyg, paststd_dmd_p6a1e1b1j0
     Generates the relationship between diet NV and, FOO & diet quality (in each feed period and weather-year).
 
     The function generates multiple discrete data points from which FOO & diet M/D can be predicted from diet NV by interpolation.
-    This relationship is required because the same nutritive value can be achieved with a varying combination of FOO and DMD.
+    This relationship is required because the same nutritive value can be achieved with various combinations of FOO and DMD.
     The combination selected affects the animal requirements because:
 
         #. FOO affects the energy requirement associated with walking to find feed.
