@@ -174,7 +174,7 @@ def f_pasture(params, r_vals, nv):
     # poc_days_of_grazing_t       = np.zeros(n_pasture_types, dtype = 'float64')  # number of days after the pasture break that (moist) seeding can begin
     i_legume_zt                 = np.zeros(zt, dtype = 'float64')               # proportion of legume in the sward
     i_hr_scalar_zt              = np.ones(zt, dtype = 'float64')               # Scalar for the pasture height ratio
-    i_pasture_stage_p6zt        = np.zeros(p6zt,  dtype = 'int64')  # 0 is establishing pasture, 1 is vegetative pasture. Value is used to convert FOO & height for the local pasture pasture measured using the local system to the measurements used in GrazPlan
+    i_pasture_stage_p6zt        = np.zeros(p6zt,  dtype = 'float64')  # 0 is establishing pasture, 1 is vegetative pasture. Value is used to convert FOO & height for the local pasture pasture measured using the local system to the measurements used in GrazPlan
     i_restock_grn_propn_t       = np.zeros(n_pasture_types, dtype = 'float64')  # Proportion of the FOO that is green when pastures are restocked after reseeding
     i_nv_maintenance_t         = np.zeros(n_pasture_types, dtype = 'float64')  # approximate nutritive value for maintenance (NV = M/D * relative intake)
 
@@ -260,7 +260,7 @@ def f_pasture(params, r_vals, nv):
         i_poc_intake_daily_p6lzt[...,t]       = zfun.f_seasonal_inp(exceldata['POCCons'][:,lmu_mask_l], numpy=True, axis=2)
         i_legume_zt[...,t]                  = zfun.f_seasonal_inp(exceldata['Legume'], numpy=True)
         i_hr_scalar_zt[...,t]                  = zfun.f_seasonal_inp(exceldata['hr_scalar'], numpy=True)
-        i_pasture_stage_p6zt[...,t] = np.rint(zfun.f_seasonal_inp(exceldata['i_pasture_stage_p6z'], numpy=True, axis=1)
+        i_pasture_stage_p6zt[...,t]         = zfun.f_seasonal_inp(exceldata['i_pasture_stage_p6z'], numpy=True, axis=1
                                              ) #it would be better if z axis was treated after pas_stage has been used (like in stock.py) because it is used as an index. But there wasn't any way to do this without doubling up a lot of code. This is only a limitation in the weighted average version of model.
         i_restock_grn_propn_t[t]            = exceldata['FaG_PropnGrn']
         i_grn_dmd_senesce_redn_p6zt[...,t]   = zfun.f_seasonal_inp(np.swapaxes(exceldata['DigRednSenesce'],0,1), numpy=True, axis=1)
