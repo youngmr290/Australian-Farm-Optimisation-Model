@@ -378,7 +378,7 @@ def f1_nv_components(paststd_foo_p6a1e1b1j0wzida0e0b0xyg, paststd_dmd_p6a1e1b1j0
     Generates the relationship between diet NV and, FOO & diet quality (in each feed period and weather-year).
 
     The function generates multiple discrete data points from which FOO & diet M/D can be predicted from diet NV by interpolation.
-    This relationship is required because the same nutritive value can be achieved with a varying combination of FOO and DMD.
+    This relationship is required because the same nutritive value can be achieved with various combinations of FOO and DMD.
     The combination selected affects the animal requirements because:
 
         #. FOO affects the energy requirement associated with walking to find feed.
@@ -1847,7 +1847,7 @@ def f1_season_wa(numbers, var, season, mask_min_lw_wz, mask_min_wa_lw_w, mask_ma
     return var
 
 
-def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, period_is_condense, pkl_condensed_value=None, param_name=None):
+def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, period_is_condense, mask_gen_condensed_used=None, pkl_condensed_value=None, param_name=None):
     """
     Condense variable to x common points along the w axis when period_is_condense.
     Currently this function only handle 2 or 3 initial liveweights. The order of the returned W axis is M, H, L for 3 initial lws or H, L for 2 initial lws.
@@ -1866,10 +1866,12 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
 
     :param var: production variable being condensed
     :param lw_idx: index specifying the sorted order of the w axis
+    :param condense_w_mask: mask which w slices can be used to build condensed animal e.g. w with mortality greater than 10% are excluded.
     :param i_n_len: number of nutrition options
     :param i_w_len: length of w axis
     :param i_n_fvp_period: number of fvps
     :param period_is_condense: bool array
+    :param mask_gen_condensed_used: mask that specifies which w slices get updated by pkl condensed values.
     :return:
     """
     if np.any(period_is_condense):
@@ -1923,7 +1925,8 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
                         temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, sinp.stock['i_w_pos'])
                                      
             '''
-
+            #todo this function assumes a certain w axis order. we could change this and make it more flexible by using inputs for sinp.structuralsa['i_adjp_lw_initial_w1'].
+            # this is how we did it for the mask_gen_condensed_values_used.
             ###sort var based on animal lw
             ma_var = np.ma.masked_array(var, np.logical_not(condense_w_mask))
             ma_var_sorted = np.take_along_axis(ma_var, lw_idx, axis=sinp.stock['i_w_pos']) #sort into production order (base on lw) so we can select the production of the lowest lw animals with mort less than 10% - note sorts in ascending order
@@ -1950,14 +1953,10 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
                                          sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
 
                 ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (can't use MRYs dynamic slice function because we are assigning)
-                ###if there is 3n then medium condense is the top slice (medium start weight with medium nutrition). It is best to keep the middle w to slice 0 rather than the average because then medium always passes to medium so the user can attempt to more easily optimise the nutrition for medium lw.
-                ###if there is 2n then medium condense is the average of all animals with less than 10% mort.
+                ###the medium condense is the average of all animals with less than 10% mort.
                 sl = [slice(None)] * temporary.ndim
                 sl[sinp.stock['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
-                if i_n_len == 2:
-                    temporary[tuple(sl)] = np.mean(ma_var_sorted, axis=sinp.stock['i_w_pos'], keepdims=True)  # average of all animals with less than 10% mort
-                else:
-                    temporary[tuple(sl)] = fun.f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
+                temporary[tuple(sl)] = np.mean(ma_var_sorted, axis=sinp.stock['i_w_pos'], keepdims=True)  # average of all animals with less than 10% mort
 
                 ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
                 sl = [slice(None)] * temporary.ndim
@@ -1974,24 +1973,60 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
                 t_pos = sinp.stock['i_p_pos'] #t is in p pos because p has been sliced
                 i_t_len = temporary.shape[t_pos]
                 ####update temporary with pickled value
-                temporary = pkl_condensed_value[param_name]
-                ####handle when the current trial has a number of w slices than the create trial
-                if i_w_len!=temporary.shape[sinp.stock['i_w_pos']]:
-                    #####cut back to 3 w slices that represent the start animals
-                    temporary = fun.f_dynamic_slice(temporary, sinp.stock['i_w_pos'], 0, None, int(temporary.shape[sinp.stock['i_w_pos']]/sinp.structuralsa['i_w_start_len1']))
-                    #####expand back to the number of w in the current trial
-                    a_s_w = (np.arange(i_w_len)/(i_w_len/sinp.structuralsa['i_w_start_len1'])).astype(int)
-                    a_s_twg = fun.f_expand(a_s_w, left_pos=sinp.stock['i_w_pos'], right_pos2=sinp.stock['i_w_pos'], left_pos2=-len(temporary.shape)-1)
-                    temporary = np.take_along_axis(temporary, a_s_twg, axis=sinp.stock['i_w_pos'])
-                ####handle when the pkl condensed values dont have a t axis but the t axis is active - this can occur if the condensed params were saved in a trial where t was not active. The t axis still gets stored on the fs even if the generator didnt have an active t therefore it needs to be activated here.
-                if i_t_len>temporary.shape[t_pos]:
-                    temporary = np.concatenate([temporary]*i_t_len, axis=t_pos) #wont work if pkl trial had t axis but current trial doesnt - to handle this would require passing in the a_t_g association.
+                temporary_pkl = pkl_condensed_value[param_name]
+                ####handle when the current trial has a different number of w slices or t slices than the create trial
+                temporary_pkl = f1_adjust_pkl_condensed_axis_len(temporary_pkl, i_w_len, i_t_len)
+                ###update temporary_pkl with temporary for desired w slices - high w and low w are not updated by pkl if
+                ### the condensed animal calculated above has lower or higher weight (because we dont want to weight to vanish. this also handle cases when the fs is altered)
+                temporary = fun.f_update(temporary_pkl, temporary, mask_gen_condensed_used)
             pkl_condensed_value[param_name] = temporary.copy()  # have to copy so that traits (e.g. mort) that are added to using += do not also update the value (not sure the copy is required here but have left it in since it was required for the rev)
 
         ###Update if the period is condense (shearing for offs and prejoining for dams)
         var = fun.f_update(var, temporary, period_is_condense)
     return var
 
+def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
+    ####handle when the current trial has a different number of w slices than the create trial
+    if i_w_len!=temporary.shape[sinp.stock['i_w_pos']]:
+        #####cut back to 3 w slices that represent the start animals
+        temporary = fun.f_dynamic_slice(temporary, sinp.stock['i_w_pos'], 0, None, int(temporary.shape[sinp.stock['i_w_pos']]/sinp.structuralsa['i_w_start_len1']))
+        #####expand back to the number of w in the current trial
+        a_s_w = (np.arange(i_w_len)/(i_w_len/sinp.structuralsa['i_w_start_len1'])).astype(int)
+        a_s_twg = fun.f_expand(a_s_w, left_pos=sinp.stock['i_w_pos'], right_pos2=sinp.stock['i_w_pos'], left_pos2=-len(temporary.shape)-1)
+        temporary = np.take_along_axis(temporary, a_s_twg, axis=sinp.stock['i_w_pos'])
+    ####handle when the pkl condensed values dont have a t axis but the t axis is active - this can occur if the condensed params were saved in a trial where t was not active. The t axis still gets stored on the fs even if the generator didnt have an active t therefore it needs to be activated here.
+    t_pos = sinp.stock['i_p_pos']  # t is in p pos because p has been sliced
+    if i_t_len>temporary.shape[t_pos]:
+        temporary = np.concatenate([temporary]*i_t_len, axis=t_pos) #wont work if pkl trial had t axis but current trial doesnt - to handle this would require passing in the a_t_g association.
+    return temporary
+
+def f1_gen_condensed_used(ffcfw, idx_sorted_w, condense_w_mask, n_fs, len_w, len_t, n_fvps_percondense
+                          , period_is_condense_pa1e1b1nwzida0e0b0xyg, adjp_lw_initial_wzida0e0b0xyg, pkl_condensed_value, param_name):
+    ###When using the pkl condensed values there may be cases when they do not have enough spread (e.g.
+    ### the generated condensed animal is heavier than the pkl condensed animal this would result in weight vanishing in the distribution)
+    ### in these cases the pkl condense values are overwritten by the generated condensed values.
+    #### controls if the generated condensed values are used. False means pkl_condensed_values are used.
+    w_pos = sinp.stock['i_w_pos']
+    mask_gen_condensed_used = True #if it is not period is condense or pkl_condensed_values are not being used then this doesnt get used so just return True.
+    if sinp.structuralsa['i_use_pkl_condensed_start_condition'] and np.any(
+            period_is_condense_pa1e1b1nwzida0e0b0xyg):
+        #####determine which w slices are the heaviest animal
+        max_w_slices = np.isclose(adjp_lw_initial_wzida0e0b0xyg, np.max(adjp_lw_initial_wzida0e0b0xyg, axis=w_pos, keepdims=True))
+        #####determine which w slices are the lightest animal
+        min_w_slices = np.isclose(adjp_lw_initial_wzida0e0b0xyg, np.min(adjp_lw_initial_wzida0e0b0xyg, axis=w_pos, keepdims=True))
+
+        #####calculate condensed lw (without using condensed pkl values).
+        ffcfw_condensed = f1_condensed(ffcfw, idx_sorted_w, condense_w_mask, n_fs, len_w, n_fvps_percondense
+                                             , period_is_condense_pa1e1b1nwzida0e0b0xyg)  # condensed lw at the end of the period
+        #####get pkl condensed weight and handle when the current trial has a different number of w slices or t slices than the create trial
+        pkl_ffcfw_condensed = f1_adjust_pkl_condensed_axis_len(pkl_condensed_value[param_name], len_w, len_t)
+        #####calculate if the slices of the pickled values are to be updated with more extreme values from the generator
+        update_high_with_gen = np.max(ffcfw_condensed, axis=w_pos, keepdims=True) > np.max(pkl_ffcfw_condensed, axis=w_pos, keepdims=True)
+        update_low_with_gen = np.min(ffcfw_condensed, axis=w_pos, keepdims=True) < np.min(pkl_ffcfw_condensed, axis=w_pos, keepdims=True)
+        #####create mask that controls if the generated condensed values are used. False means pkl_condensed_values are used
+        mask_gen_condensed_used = np.logical_or(np.logical_and(update_high_with_gen, max_w_slices),
+                                                     np.logical_and(update_low_with_gen, min_w_slices))
+    return mask_gen_condensed_used
 
 def f1_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0
                         , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False, prevperiod_is_wean=False

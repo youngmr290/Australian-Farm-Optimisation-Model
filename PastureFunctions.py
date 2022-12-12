@@ -706,7 +706,7 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_
     ###Can't graze poc pasture while in confinement so ME is 0
     poc_md_fp6z = poc_md_fp6z * nv_is_not_confinement_f[:,na,na] #me from pasture is 0 in the confinement pool
 
-    return poc_con_p6lz, poc_md_fp6z, poc_vol_fp6z
+    return poc_con_p6lz * pinp.crop['i_poc_inc'], poc_md_fp6z * pinp.crop['i_poc_inc'], poc_vol_fp6z * pinp.crop['i_poc_inc']
 
 
 def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_fzt

@@ -90,6 +90,7 @@ def f_cropgraze_DM(total_DM=False):
     '''
     ##read inputs
     lmu_mask = pinp.general['i_lmu_area'] > 0
+    cropgrazing_inc = pinp.cropgraze['i_cropgrazing_inc']
     growth_kp6z = zfun.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1) #kg/d
     wastage_k = pinp.cropgraze['i_cropgraze_wastage']
     growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl'][:,lmu_mask]
@@ -138,6 +139,8 @@ def f_cropgraze_DM(total_DM=False):
     lmu_mask = pinp.general['i_lmu_area'] > 0
     ###propn of crop grazing possible for each landuse.
     landuse_grazing_kl = pinp.cropgraze['i_cropgrazing_inc_landuse'][:, lmu_mask]
+    ###mask which z crop graing can occur
+    landuse_grazing_kl = landuse_grazing_kl * cropgrazing_inc
 
     ##season mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)

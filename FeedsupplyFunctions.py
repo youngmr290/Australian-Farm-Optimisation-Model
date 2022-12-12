@@ -124,11 +124,14 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, hr_scalar = 1, cr=None
     Depending on the region, FOO can be measured differently. For example, in WA when measuring FOO
     the pasture is cut to ground level using a scalpel versus NSW where it is cut at a higher level
     with shears. This results in the same amount of feed being valued at a higher FOO in WA.
+    Furthermore, there are differences in sward morphology when comparing WA pasture with Victoria and NSW.
+    WA has a higher clover content and for any level of FOO are more prostrate i.e. shorter. These conversion
+    equations also make an adjustment for pasture height, which is returned in the hf variable.
     The FOO is adjusted in this function to the method which is used in the livestock production equations.
     This was the shears method but now appears to be total above ground biomass which is as used in WA.
 
     FOO only needs to be adjusted for the intake equations. It does not need to be adjusted for the pasture
-    growth calculations because the FOO in the inputs is consistent with the FOO in the pasture grwoth calcualtions.
+    growth calculations because the FOO in the inputs is consistent with the FOO in the pasture growth calculations.
 
     The minimum grazing limit FOO level (level which grazing can not occur below) is specified in FOO units
     of the livestock grazing equations (this value is removed from available FOO in f_ra().
@@ -143,14 +146,28 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, hr_scalar = 1, cr=None
     '''
     ##pasture conversion scenario (convert the region and pasture stage to an index
     ### because the second axis of cu3 is a combination of region & stage)
-    conversion_scenario = pinp.sheep['i_region'] * uinp.pastparameters['i_n_pasture_stage'] + pasture_stage
+    ### To allow entry of a decimal for the stage the calculations are carried out for 2 stage and then weighted
+    pasture_stage1 = np.trunc(pasture_stage).astype(np.int)
+    pasture_stage2 = np.minimum(pasture_stage1 + 1, uinp.pastparameters['i_n_pasture_stage'] - 1).astype(np.int)
+    proportion_1 = 1 - pasture_stage % 1
+    conversion_scenario1 = pinp.sheep['i_region'] * uinp.pastparameters['i_n_pasture_stage'] + pasture_stage1
+    conversion_scenario2 = pinp.sheep['i_region'] * uinp.pastparameters['i_n_pasture_stage'] + pasture_stage2
     ##select cu3&4 params for the specified region and stage. Remaining axes are season and formula coefficient (intercept & slope)
-    cu3=cu3[..., conversion_scenario]
-    cu4=cu4[..., conversion_scenario]
+    cu3_1=cu3[..., conversion_scenario1]
+    cu4_1=cu4[..., conversion_scenario1]
+    cu3_2=cu3[..., conversion_scenario2]
+    cu4_2=cu4[..., conversion_scenario2]
     ##Convert FOO to hand shears measurement
-    foo_grazplan = np.maximum(0, np.minimum(foo, cu3[2] + cu3[0] * foo + cu3[1] * legume))
+    foo_grazplan1 = np.maximum(0, np.minimum(foo, cu3_1[2] + cu3_1[0] * foo + cu3_1[1] * legume))
+    foo_grazplan2 = np.maximum(0, np.minimum(foo, cu3_2[2] + cu3_2[0] * foo + cu3_2[1] * legume))
     ##Estimate height of pasture
-    height = np.maximum(0, np.exp(cu4[3] + cu4[0] * foo + cu4[1] * legume + cu4[2] * foo * legume) + cu4[5] + cu4[4] * foo)
+    height1 = np.maximum(0, np.exp(cu4_1[3] + cu4_1[0] * foo + cu4_1[1] * legume + cu4_1[2] * foo * legume)
+                        + cu4_1[5] + cu4_1[4] * foo)
+    height2 = np.maximum(0, np.exp(cu4_2[3] + cu4_2[0] * foo + cu4_2[1] * legume + cu4_2[2] * foo * legume)
+                        + cu4_2[5] + cu4_2[4] * foo)
+    ##Calculate the weighted average for foo & height based on the pasture_stage
+    foo_grazplan = foo_grazplan1 * proportion_1 + foo_grazplan2 * (1 - proportion_1)
+    height = height1 * proportion_1 + height2 * (1 - proportion_1)
     ##Height density (height per unit FOO)
     hd = fun.f_divide(height, foo_grazplan) #handles div0 (e.g. if in feedlot with no pasture or adjusted foo is less than 0)
     ##height ratio

@@ -1805,7 +1805,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     :param r_vals: dict: report variable
     :param option: (optional, default = 0): int:
             option 0: mei/hd/day & propn of mei from each feed source
-            option 1: total mei
+            option 1: total mei / day
     :param nv_option: (optional, default = 0): int:
             option 0: Active NV pool
             option 1: NV pool summed (not active)
@@ -1994,6 +1994,11 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     ###if option 1 - calc propn of mei from each feed source
     if option==0:
         feed_budget_supply = feed_budget_supply.div(feed_budget_supply.sum(axis=1), axis=0)
+    else:
+        days_zp6 = pd.DataFrame(r_vals['pas']['days_p6z'], index=r_vals['pas']['keys_p6'], columns=r_vals['zgen']['keys_z']).T.stack()
+        feed_budget_supply = feed_budget_supply.unstack([0,1,-1]).div(days_zp6, axis=0).stack([-3,-2,-1]).reorder_levels([2,3,0,1,4])
+        feed_budget_req = feed_budget_req.unstack([0,1,-1]).div(days_zp6, axis=0).stack([-3,-2,-1]).reorder_levels([2,3,0,1,4])
+
     ###add stock mei requirement
     feed_budget = pd.concat([feed_budget_supply, feed_budget_req], axis=1)
 
