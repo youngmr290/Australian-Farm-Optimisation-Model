@@ -1014,6 +1014,39 @@ def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
     ##store param
     r_vals[name] = param
 
+class PyomoArrayGetter():
+
+    def __init__(self, array, indexes):
+        if type(array) == pd.Series:
+            array = array.to_numpy()
+        self.array = array.flatten()
+        self.indexes = []
+        for index in indexes:
+            d = {}
+            for j, val in enumerate(index):
+                d[val] = j
+            self.indexes.append([d, len(index), 1])
+        last = None
+        for index in reversed(self.indexes):
+            if last:
+                index[2] *= last[2] * last[1]
+            last = index
+        l = self.indexes[0][1] * self.indexes[0][2]
+        print(l, len(self.array))
+        assert l == len(
+            self.array), f"Label and Array should define same length: {l}, {len(self.array)}"
+
+    def __call__(self, model, *args):
+        try:
+            index = 0
+            for i, arg in enumerate(args):
+                index += self.indexes[i][0][arg] * self.indexes[i][2]
+            return self.array[index]
+        except Exception as e:
+            print(e)
+            return 0
+
+
 def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=None, dtype='float32'):
     '''
     Convert numpy array into dict for pyomo. A loop can be used to reduce memory if required.
@@ -1022,44 +1055,10 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
 
     :param param: numpy array
     :param index: list of index arrays
-    :param loop_axis_pos: optional: position of axis that is being looped on (arg not required if no loop)
-    :param index_loop_axis_pos: optional: position of axis that is being looped on in the index array (arg not required if no loop)
-    :return: dict for pyomo
     '''
-    ##build in loop to reduce memory for some big params
-    if loop_axis_pos:
-        param_masked = np.array([],dtype=dtype)
-        index_masked = np.array([])
-        for i in range(param.shape[loop_axis_pos]):
-            ###mask out values=0
-            param_cut = f_dynamic_slice(param, loop_axis_pos, start=i, stop=i+1)
-            mask = param_cut != 0
-            param_masked = np.concatenate([param_masked,param_cut[mask]],0).astype(dtype)  # applying the mask does the raveling and squeezing of singleton axis
-            mask = mask.ravel() #needs to be 1d to mask the index
-            ###build index
-            ####adjust if the position given is negative (e.g. cant use pos=-1)
-            if index_loop_axis_pos<0:
-                index_loop_axis_pos = len(index) + index_loop_axis_pos
-            index_cut = [index[x] if x != index_loop_axis_pos else index[x][i:i+1] for x in range(len(index))]
-            index_cut = cartesian_product_simple_transpose(index_cut)
-            index_masked = np.vstack([index_masked,index_cut[mask,:]]) if index_masked.size else index_cut[mask,:]
-    else:
-        ###mask out values=0
-        mask = param!=0
-        ###build index
-        index = cartesian_product_simple_transpose(index)
-        ###mask param and index
-        param_masked = param[mask]  # applying the mask does the raveling and squeezing of array
-        mask = mask.ravel() #needs to be 1d to mask the index
-        index_masked = index[mask,:]
+    return PyomoArrayGetter(param, index)
 
-    ##error check - index and param should be same length but zip() doesn't throw error if they are different length
-    if len(index_masked) != len(param_masked):
-        raise exc.ParamError('''Index and param must be the same length''')
 
-    ##make index a tuple and zip with param and make dict
-    tup = tuple(map(tuple,index_masked))
-    return dict(zip(tup, param_masked))
 
 def write_variablesummary(model, row, exp_data, obj, option=0, property_id=''):
     '''
