@@ -2157,8 +2157,10 @@ def f1_woolprice():
                           for i in range(uinp.sheep['i_woolp_fdprem_w4w5'].shape[0])])
     ##adjust FD premium using sav
     fdprem_w4 = fun.f_sa(fdprem_w4, sen.sav['woolp_fdprem'], 5)
-    ##Wool price for the analysis (Note: fdprem is the premium per micron from the base)
-    mpg_w4 = mpg_stdfd * (1 + fdprem_w4) ** (uinp.sheep['i_woolp_fd_std'] - uinp.sheep['i_woolp_fd_range_w4'])
+#    ##Wool price for the analysis (Note: fdprem is the premium per micron from the base)
+#    mpg_w4 = mpg_stdfd * (1 + fdprem_w4) ** (uinp.sheep['i_woolp_fd_std'] - uinp.sheep['i_woolp_fd_range_w4']) #todo can be removed when the new system is operting
+    ##Wool price for the analysis (Note: fdprem is the price difference compared with the base FD)
+    mpg_w4 = mpg_stdfd * (1 + fdprem_w4)
     return mpg_w4
 
 
