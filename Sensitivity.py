@@ -61,132 +61,20 @@ def create_sa():
     len_z = len(pinp.general['i_mask_z'])
     
     
-    ############
-    #SAP Global#
-    ############
+    ###########
+    # Global  #
+    ###########
     
     ##Global
     sap['pi']=0 #global potential intake (this increases animal intake without altering animal energy profile, to alter the energy profile use ci[1:2,...]
-    
-    ######
-    #SAM #
-    ######
-    ##general
-    sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to remove it)
-    sam['grainp'] = 1.0   # SA multiplier for all grain prices
-    sam['grainp_k'] = np.ones(len_k, dtype=np.float64)   # SA multiplier for grain prices for each crop
-    
-    ##crop
-    sam['all_rot_yield'] = 1.0   # SA multiplier for all rotation yield
-    
-    ##saltbush
-    sam['sb_growth'] = 1.0   # SA multiplier for the growth of saltbush on slp (applies to all lmus and fp)
-    
-    ## Annual module sensitivity variables - these need to have the same name for each pasture type
-    sam['germ','annual']                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods
-    sam['germ','understory']                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods
-    sam['germ_l','annual']                  = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for germination on each lmus in all periods
-    sam['germ_l','understory']                  = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for germination on each lmus in all periods
-    sam['pgr','annual']                     = 1.0                                                          # SA multiplier for growth on all lmus in all periods
-    sam['pgr','understory']                     = 1.0                                                          # SA multiplier for growth on all lmus in all periods
-    sam['pgr_zp6','annual']                   = np.ones((len_z, len_p6),  dtype=np.float64)  # SA multiplier for growth in each feed period
-    sam['pgr_zp6','understory']                   = np.ones((len_z, len_p6),  dtype=np.float64)  # SA multiplier for growth in each feed period
-    sam['pgr_l','annual']                   = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for growth on each lmus in all periods
-    sam['pgr_l','understory']                   = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for growth on each lmus in all periods
-    sam['dry_dmd_decline','annual']         = 1.0                                                          # SA multiplier for the decline in digestibility of dry feed
-    sam['dry_dmd_decline','understory']         = 1.0                                                          # SA multiplier for the decline in digestibility of dry feed
-    sam['grn_dmd_declinefoo_f','annual']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on decline in digestibility if green feed is not grazed (to increase FOO)
-    sam['grn_dmd_declinefoo_f','understory']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on decline in digestibility if green feed is not grazed (to increase FOO)
-    sam['grn_dmd_range_f','annual']         = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on range in digestibility of green feed
-    sam['grn_dmd_range_f','understory']         = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on range in digestibility of green feed
-    sam['grn_dmd_senesce_f','annual']       = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
-    sam['grn_dmd_senesce_f','understory']       = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
-    sam['conservation_limit_f','annual']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for the conservation limit in each feed period
-    sam['conservation_limit_f','understory']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for the conservation limit in each feed period
-    
-    ##livestock
-    sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron
-    sam['salep_max'] = 1.0                      #max sale price in grid
-    sam['salep_month_adjust_s7s9p4'] = np.ones(uinp.sheep['i_salep_months_priceadj_s7s9p4'].shape, dtype=np.float64)      #monthly sale price
-    sam['kg'] = 1.0                             #energy efficiency of adults (zf2==1)
-    sam['mr'] = 1.0                             #Maintenance requirement of adults (zf2==1)
-    sam['pi'] = 1.0                             #Potential intake of adults (zf2==1)
-    sam['LTW_dams'] = 1.0                       #adjust impact of life time wool fleece effects
-    sam['LTW_offs'] = 1.0                       #adjust impact of life time wool fleece effects
-    sam['pi_post'] = 1.0                        #Post loop potential intake of adults (zf2==1)
-    sam['chill'] = 1.0                        #intermediate sam on chill.
-    
-    ##stock parameters
-    sam['ci_c2'] = np.ones(uinp.parameters['i_ci_c2'].shape, dtype=np.float64)  #intake params for genotypes
-    sam['sfw_c2'] = 1.0                         #std fleece weight genotype params
-    sam['rr'] = 1.0                        #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
-    sam['husb_cost_h2'] = np.ones(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
-    sam['husb_mustering_h2'] = np.ones(uinp.sheep['i_husb_operations_muster_propn_h2'].shape, dtype=np.float64)  #SA value for mustering required for husbandry operations.
-    sam['husb_labour_l2h2'] = np.ones(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
-    
-    ######
-    #SAP #
-    ######
-    sap['evg'] = 0.0               #energy content of liveweight gain - this is a high level sa, it impacts within a calculation not on an input and is only implemented on adults
-    sap['mortalityp'] = 0.0        #Scale the calculated progeny mortality at birth relative - this is a high level sa, it impacts within a calculation not on an input
-    sap['mortalitye'] = 0.0        #Scale the calculated dam mortality at birth - this is a high level sa, it impacts within a calculation not on an input
-    sap['mortalityb'] = 0.0        #Scale the calculated base mortality - this is a high level sa, it impacts within a calculation not on an input
-    sap['kg_post'] = 0.0           #Post loop energy efficiency of adults (zf2==1)
-    sap['mr_post'] = 0.0           #Post loop maintenance requirement of adults (zf2==1)
-    
-    
-    ######
-    #SAA #
-    ######
-    ##pasture
-    saa['germ','annual']                    = 0.0                                                          # SA addition for germination on all lmus in all periods
-    saa['germ','understory']                    = 0.0                                                          # SA addition for germination on all lmus in all periods
-    saa['pgr','annual']                     = 0.0                                                          # SA addition for growth on all lmus in all periods
-    saa['pgr','understory']                     = 0.0                                                          # SA addition for growth on all lmus in all periods
-    saa['pgr_zp6','annual']                   = np.zeros((len_z, len_p6),  dtype=np.float64)  # SA addition for growth in each feed period
-    saa['pgr_zp6','understory']                   = np.zeros((len_z, len_p6),  dtype=np.float64)  # SA addition for growth in each feed period
-    saa['pgr_l','annual']                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA addition for growth on each lmus in all periods
-    saa['pgr_l','understory']                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA addition for growth on each lmus in all periods
-    
-    ##stock
-    saa['husb_cost_h2'] = np.zeros(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
-    saa['husb_labour_l2h2'] = np.zeros(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
-    saa['r1_izg1'] = np.zeros(pinp.sheep['ia_r1_zig1'].shape, dtype=int)   #SA to change the base feed option selected for dams
-    saa['r1_izg3'] = np.zeros(pinp.sheep['ia_r1_zig3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
-    saa['r2_isk2g1'] = np.zeros(pinp.sheep['ia_r2_isk2g1'].shape, dtype=int)   #SA to change the base feed option selected for dams
-    saa['r2_ik5g3'] = np.zeros(pinp.sheep['ia_r2_ik5g3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
-    saa['date_born1st_iog'] = np.zeros(pinp.sheep['i_date_born1st_iog2'].shape, dtype=int)  #SA to adjust lambing date (used for ewe lambs).
-    saa['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype=np.float64)  #SA value for feedsupply.
-    saa['feedsupply_adj_r2p'] = np.zeros(pinp.feedsupply['i_feedsupply_adj_options_r2p'].shape, dtype=np.float64)  #SA value for feedsupply adjustment.
-    
-    ##stock parameters
-    saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
-    saa['cl0_c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype=np.float64)  #SA value for litter size genotype params.
-    saa['scan_std_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
-    saa['nlb_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
-    saa['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
-    saa['rr_age_og1'] = np.zeros(pinp.sheep['i_scan_og1'].shape, dtype=np.float64)    # reproductive rate by age. Use shape that has og1
-    saa['mortalityx_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype=np.float64)  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
-    saa['wean_wt'] = 0.0            #weaning weight adjustment of yatf. Note: WWt changes without any change in MEI
-    
-    ######
-    #SAT #
-    ######
-    sat['salep_weight_scalar'] = 0.0 #Scalar for LW impact across grid 1
-    sat['salep_score_scalar'] = 0.0  #Scalar for score impact across the grid
-    
-    
-    ######
-    #SAR #
-    ######
-    
-    
-    ######
-    #SAV #
-    ######
-    ##if you initialise an array it must be type object (so that you can assign int/float/bool into the array)
 
-    ##general
+
+
+
+    ##########
+    #general #
+    ##########
+    ##SAV
     sav['steady_state']      = '-'                  #SA to alter if the model is steady state
     sav['mask_z']      = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)   #SA to alter which seasons are included
     sav['inc_node_periods']      = '-'              #SA to alter if season nodes are included in the steady state model (note they are always included in the dsp version this only effects if they are included in steady state)
@@ -209,79 +97,150 @@ def create_sa():
     sav['pinp_rot'] = '-'                       #control if using the pinp rotations or the full rotation list (note full rot requires simulation inputs)
     sav['mach_option'] = '-'                    #control which machine compliment is used
     sav['lmu_area_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
+    ##SAM
+    sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to remove it)
+    sam['grainp'] = 1.0   # SA multiplier for all grain prices
+    sam['grainp_k'] = np.ones(len_k, dtype=np.float64)   # SA multiplier for grain prices for each crop
+    ##SAP
+    ##SAA
+    ##SAT
+    ##SAR
 
-    ##finance
+    ##########
+    #finance #
+    ##########
+    ##SAV
     sav['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
     sav['capital_limit']      = '-'          #SA to alter the capital limit (amount of money that can be loaned from bank)
     sav['interest_rate']      = '-'           #SA to alter the credit and debit interest from bank
     sav['opp_cost_capital']      = '-'        #SA to alter the opportunity cost of capital
+    ##SAM
+    ##SAP
+    ##SAA
+    ##SAT
+    ##SAR
 
-    ##price
+    ########
+    #Price #
+    ########
+    ##SAV
     sav['grain_percentile'] = '-'  #grain price percentile
+    ##SAM
+    ##SAP
+    ##SAA
+    ##SAT
+    sat['salep_weight_scalar'] = 0.0 #Scalar for LW impact across grid 1
+    sat['salep_score_scalar'] = 0.0  #Scalar for score impact across the grid
+    ##SAR
 
-    ##labour
+
+    #########
+    #Labour #
+    #########
+    ##SAV
     sav['manager_ub'] = '-'  #manager upper bound
     sav['casual_ub'] = '-'  #casual upper bound all year except seeding and harv
     sav['seedharv_casual_ub'] = '-'  #casual upper bound at seeding and harv
+    ##SAM
+    ##SAP
+    ##SAA
+    ##SAT
+    ##SAR
 
-    ##sup feed
+    ###########
+    #Sup feed #
+    ###########
+    ##SAV
     sav['max_sup_selectivity'] = '-'  #control the maximum propn of potential intake used by supplement when paddock feeding.
     sav['inc_sup_selectivity'] = '-'  #control inclusion of the sup selectivity bnd (maximum propn of potential intake used by supplement when paddock feeding).
+    ##SAM
+    ##SAP
+    ##SAA
+    ##SAT
+    ##SAR
 
-    ##cropgrazing
+    ##############
+    #Cropgrazing #
+    ##############
+    ##SAV
     sav['cropgrazing_inc'] = '-'  #control if crop grazing is allowed
+    ##SAM
+    ##SAP
+    ##SAA
+    ##SAT
+    ##SAR
 
-    ##salt land pasture
+    ####################
+    #Salt land pasture #
+    ####################
+    ##SAV
     sav['slp_inc'] = '-'  #control if salt land pasture is included
+    ##SAM
+    sam['sb_growth'] = 1.0   # SA multiplier for the growth of saltbush on slp (applies to all lmus and fp)
+    ##SAP
+    ##SAA
+    ##SAT
+    ##SAR
 
-    ##bounds
-    sav['bnd_slp_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of slp on each lmu
-    sav['bnd_sb_consumption_p6'] = np.full(len(pinp.period['i_fp_idx']), '-', dtype=object)  #upper bnd on the amount of sb consumed
-    sav['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
-    sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
-    sav['bnd_rotn_inc'] = '-'   #SA to turn on the phase area bounds
-    sav['bnd_sr_inc'] = '-'   #SA to turn on the stocking rate bounds
-    sav['bnd_sup_per_dse'] = '-'   #SA to control the supplement per dse (kg/dse)
-    sav['bnd_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated
-    sav['est_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #estimated proportion of dams mated - used when bnd_propn is default "-"
-    sav['propn_mated_w_inc'] = '-'   #Control if the constraint on proportion mated includes 'w' set
-    sav['bnd_drys_sold_o'] = np.full(pinp.sheep['i_dry_sales_forced_o'].shape, '-', dtype=object)   #SA to force drys to be sold
-    sav['bnd_drys_retained_o'] = np.full(pinp.sheep['i_dry_retained_forced_o'].shape, '-', dtype=object)   #SA to force drys to be retained
-    sav['est_drys_retained_scan_o'] = np.full(pinp.sheep['i_drys_retained_scan_est_o'].shape, '-', dtype=object)   #Estimate of the propn of drys sold at scanning
-    sav['est_drys_retained_birth_o'] = np.full(pinp.sheep['i_drys_retained_birth_est_o'].shape, '-', dtype=object)   #Estimate of the propn of drys sold at birth
-    sav['bnd_sale_twice_dry_inc'] = '-'   #SA to include the bound which forces twice dry dams to be sold
-    sav['bnd_twice_dry_propn'] = '-'   #SA to change twice dry dam proportion
-    sav['bnd_lo_dam_inc'] = '-'   #control if dam lower bound is on.
-    sav['bnd_lo_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1,), '-', dtype=object)   #min number of dams
-    sav['bnd_lo_dams_tVg1'] = np.full((len_t1,) + (len_V,) + (len_g1,), '-', dtype=object)   #min number of dams
-    sav['bnd_up_dam_inc'] = '-'   #control if dam upper bound is on.
-    sav['bnd_up_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1,), '-', dtype=object)   #max number of dams
-    sav['bnd_up_dams_tVg1'] = np.full((len_t1,) + (len_V,) + (len_g1,), '-', dtype=object)   #max number of dams
-    sav['bnd_total_dams_scanned'] = '-'   #total dams scanned (summed over all dvps) - this also controls if bound is on.
-    sav['bnd_propn_dam5_retained'] = '-'   #propn of 5yo dams retained - this also controls if bound is on.
-    sav['bnd_lo_off_inc'] = '-'   #control if off lower bound is on.
-    sav['bnd_lo_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #min number of offs
-    sav['bnd_up_off_inc'] = '-'   #control if off upper bound is on.
-    sav['bnd_up_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #max number of offs
-    sav['bnd_up_prog_inc'] = '-'   #control if prog upper bound is on.
-    sav['bnd_up_prog_tdxg2'] = np.full((len_t2,) + (len_d,) + (len_x,) + (len_g2,), '-', dtype=object)   #max number of offs
-    sav['bnd_sr_t'] = np.full(pinp.sheep['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
-    sav['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
-    sav['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
-    sav['bnd_min_sale_age_female_g1'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a dam can be sold - BBT offspring can be sold but BBT dams can't (because they are BB)
-    sav['bnd_min_sale_age_female_dg3'] = np.full((len_d,) + (len_g3,), '-', dtype=object)   #SA to set min age a female can be sold - used to bound prog & offs
-    sav['bnd_max_sale_age_female_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
-    sav['rot_lobound_rl'] = np.full((len_R,) + (len_l,), '-', dtype=object)
+    #######
+    #crop #
+    #######
+    ##SAV
+    ##SAM
+    sam['all_rot_yield'] = 1.0   # SA multiplier for all rotation yield
+    ##SAP
+    ##SAA
+    ##SAT
+    ##SAR
 
-    ##pasture
+    ############
+    # Pasture  #   these need to have the same name for each pasture type
+    ############
+    ##SAV
     sav['poc_inc'] = '-'  #control if poc is included
     sav['pas_inc_t'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA value for pastures included mask
+    ##SAM
+    sam['germ','annual']                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods
+    sam['germ','understory']                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods
+    sam['germ_l','annual']                  = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for germination on each lmus in all periods
+    sam['germ_l','understory']                  = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for germination on each lmus in all periods
+    sam['pgr','annual']                     = 1.0                                                          # SA multiplier for growth on all lmus in all periods
+    sam['pgr','understory']                     = 1.0                                                          # SA multiplier for growth on all lmus in all periods
+    sam['pgr_zp6','annual']                   = np.ones((len_z, len_p6),  dtype=np.float64)  # SA multiplier for growth in each feed period
+    sam['pgr_zp6','understory']                   = np.ones((len_z, len_p6),  dtype=np.float64)  # SA multiplier for growth in each feed period
+    sam['pgr_l','annual']                   = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for growth on each lmus in all periods
+    sam['pgr_l','understory']                   = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for growth on each lmus in all periods
+    sam['dry_dmd_decline','annual']         = 1.0                                                          # SA multiplier for the decline in digestibility of dry feed
+    sam['dry_dmd_decline','understory']         = 1.0                                                          # SA multiplier for the decline in digestibility of dry feed
+    sam['grn_dmd_declinefoo_f','annual']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on decline in digestibility if green feed is not grazed (to increase FOO)
+    sam['grn_dmd_declinefoo_f','understory']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on decline in digestibility if green feed is not grazed (to increase FOO)
+    sam['grn_dmd_range_f','annual']         = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on range in digestibility of green feed
+    sam['grn_dmd_range_f','understory']         = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on range in digestibility of green feed
+    sam['grn_dmd_senesce_f','annual']       = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
+    sam['grn_dmd_senesce_f','understory']       = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
+    sam['conservation_limit_f','annual']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for the conservation limit in each feed period
+    sam['conservation_limit_f','understory']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for the conservation limit in each feed period
+    ##SAP
+    ##SAA pasture
+    saa['germ','annual']                    = 0.0                                                          # SA addition for germination on all lmus in all periods
+    saa['germ','understory']                    = 0.0                                                          # SA addition for germination on all lmus in all periods
+    saa['pgr','annual']                     = 0.0                                                          # SA addition for growth on all lmus in all periods
+    saa['pgr','understory']                     = 0.0                                                          # SA addition for growth on all lmus in all periods
+    saa['pgr_zp6','annual']                   = np.zeros((len_z, len_p6),  dtype=np.float64)  # SA addition for growth in each feed period
+    saa['pgr_zp6','understory']                   = np.zeros((len_z, len_p6),  dtype=np.float64)  # SA addition for growth in each feed period
+    saa['pgr_l','annual']                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA addition for growth on each lmus in all periods
+    saa['pgr_l','understory']                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA addition for growth on each lmus in all periods
+    ##SAT
+    ##SAR
 
-    ##Stock
-    ###feedsupply
+    ############
+    #livestock #
+    ############
+    ##SAV
+    ###stock feedsupply
     sav['feedsupply_adj_r2p'] = np.full_like(pinp.feedsupply['i_feedsupply_adj_options_r2p'], '-', dtype=object)  # SA value for feedsupply adjustment.
     sav['dams_confinement_P'] = np.full(len_P, '-', dtype=object)  # SA to control the gen periods dams are in confimentment - this gets applied in FeedSupplyStock.py. Note, this will overwrite pkl so if using pkl to optimise confinement you most likely don’t want to use this SAV.
-    ###others
+    ###stock others
     sav['nv_inc'] = '-'    #SA to store NV report values
     sav['lw_inc'] = '-'     #SA to store LW report values
     sav['ffcfw_inc'] = '-'  #SA to store FFCFW report values
@@ -334,7 +293,109 @@ def create_sa():
     sav['r2_isk2g1'] = np.full(pinp.sheep['ia_r2_isk2g1'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k2 axis (LSLN) for dams
     sav['r2_ik5g3'] = np.full(pinp.sheep['ia_r2_ik5g3'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k5 axis (BTRT) for offs
     sav['LTW_loops_increment'] = '-'                  #SA to Increment the number of LTW loops carried out in the code. The base is 2 loops with 0 increment but if using pkl fs or ltw_adj is 0 then base is 0 loops.
+    ##SAM
+    sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron
+    sam['salep_max'] = 1.0                      #max sale price in grid
+    sam['salep_month_adjust_s7s9p4'] = np.ones(uinp.sheep['i_salep_months_priceadj_s7s9p4'].shape, dtype=np.float64)      #monthly sale price
+    sam['kg'] = 1.0                             #energy efficiency of adults (zf2==1)
+    sam['mr'] = 1.0                             #Maintenance requirement of adults (zf2==1)
+    sam['pi'] = 1.0                             #Potential intake of adults (zf2==1)
+    sam['LTW_dams'] = 1.0                       #adjust impact of life time wool fleece effects
+    sam['LTW_offs'] = 1.0                       #adjust impact of life time wool fleece effects
+    sam['pi_post'] = 1.0                        #Post loop potential intake of adults (zf2==1)
+    sam['chill'] = 1.0                        #intermediate sam on chill.
+    ##SAP
+    sap['evg'] = 0.0               #energy content of liveweight gain - this is a high level sa, it impacts within a calculation not on an input and is only implemented on adults
+    sap['mortalityp'] = 0.0        #Scale the calculated progeny mortality at birth relative - this is a high level sa, it impacts within a calculation not on an input
+    sap['mortalitye'] = 0.0        #Scale the calculated dam mortality at birth - this is a high level sa, it impacts within a calculation not on an input
+    sap['mortalityb'] = 0.0        #Scale the calculated base mortality (for all animals) - this is a high level sa, it impacts within a calculation not on an input
+    sap['kg_post'] = 0.0           #Post loop energy efficiency of adults (zf2==1)
+    sap['mr_post'] = 0.0           #Post loop maintenance requirement of adults (zf2==1)
+    ##SAA
+    saa['husb_cost_h2'] = np.zeros(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
+    saa['husb_labour_l2h2'] = np.zeros(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
+    saa['r1_izg1'] = np.zeros(pinp.sheep['ia_r1_zig1'].shape, dtype=int)   #SA to change the base feed option selected for dams
+    saa['r1_izg3'] = np.zeros(pinp.sheep['ia_r1_zig3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
+    saa['r2_isk2g1'] = np.zeros(pinp.sheep['ia_r2_isk2g1'].shape, dtype=int)   #SA to change the base feed option selected for dams
+    saa['r2_ik5g3'] = np.zeros(pinp.sheep['ia_r2_ik5g3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
+    saa['date_born1st_iog'] = np.zeros(pinp.sheep['i_date_born1st_iog2'].shape, dtype=int)  #SA to adjust lambing date (used for ewe lambs).
+    saa['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype=np.float64)  #SA value for feedsupply.
+    saa['feedsupply_adj_r2p'] = np.zeros(pinp.feedsupply['i_feedsupply_adj_options_r2p'].shape, dtype=np.float64)  #SA value for feedsupply adjustment.
+    ##SAT
+    ##SAR
 
-    ##stock parameters
+    #####################
+    ##stock parameters  #
+    #####################
+    ##SAV
     sav['srw_c2'] = np.full(uinp.parameters['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
     sav['cl0_c2'] = np.full(uinp.parameters['i_cl0_c2'].shape, '-', dtype=object)  #SA value for litter size genotype params.
+    ##SAM
+    sam['ci_c2'] = np.ones(uinp.parameters['i_ci_c2'].shape, dtype=np.float64)  #intake params for genotypes
+    sam['sfw_c2'] = 1.0                         #std fleece weight genotype params
+    sam['rr'] = 1.0                        #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
+    sam['husb_cost_h2'] = np.ones(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
+    sam['husb_mustering_h2'] = np.ones(uinp.sheep['i_husb_operations_muster_propn_h2'].shape, dtype=np.float64)  #SA value for mustering required for husbandry operations.
+    sam['husb_labour_l2h2'] = np.ones(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
+    ##SAP
+    saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
+    saa['cl0_c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype=np.float64)  #SA value for litter size genotype params.
+    saa['scan_std_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
+    saa['nlb_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
+    saa['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
+    saa['rr_age_og1'] = np.zeros(pinp.sheep['i_scan_og1'].shape, dtype=np.float64)    # reproductive rate by age. Use shape that has og1
+    saa['mortalityx_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype=np.float64)  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
+    saa['wean_wt'] = 0.0            #weaning weight adjustment of yatf. Note: WWt changes without any change in MEI
+    ##SAA
+    ##SAT
+    ##SAR
+
+    ##########
+    ##Bounds #
+    ##########
+    ##SAV
+    sav['bnd_slp_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of slp on each lmu
+    sav['bnd_sb_consumption_p6'] = np.full(len(pinp.period['i_fp_idx']), '-', dtype=object)  #upper bnd on the amount of sb consumed
+    sav['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
+    sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
+    sav['bnd_rotn_inc'] = '-'   #SA to turn on the phase area bounds
+    sav['bnd_sr_inc'] = '-'   #SA to turn on the stocking rate bounds
+    sav['bnd_sup_per_dse'] = '-'   #SA to control the supplement per dse (kg/dse)
+    sav['bnd_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated
+    sav['est_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #estimated proportion of dams mated - used when bnd_propn is default "-"
+    sav['propn_mated_w_inc'] = '-'   #Control if the constraint on proportion mated includes 'w' set
+    sav['bnd_drys_sold_o'] = np.full(pinp.sheep['i_dry_sales_forced_o'].shape, '-', dtype=object)   #SA to force drys to be sold
+    sav['bnd_drys_retained_o'] = np.full(pinp.sheep['i_dry_retained_forced_o'].shape, '-', dtype=object)   #SA to force drys to be retained
+    sav['est_drys_retained_scan_o'] = np.full(pinp.sheep['i_drys_retained_scan_est_o'].shape, '-', dtype=object)   #Estimate of the propn of drys sold at scanning
+    sav['est_drys_retained_birth_o'] = np.full(pinp.sheep['i_drys_retained_birth_est_o'].shape, '-', dtype=object)   #Estimate of the propn of drys sold at birth
+    sav['bnd_sale_twice_dry_inc'] = '-'   #SA to include the bound which forces twice dry dams to be sold
+    sav['bnd_twice_dry_propn'] = '-'   #SA to change twice dry dam proportion
+    sav['bnd_lo_dam_inc'] = '-'   #control if dam lower bound is on.
+    sav['bnd_lo_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1,), '-', dtype=object)   #min number of dams
+    sav['bnd_lo_dams_tVg1'] = np.full((len_t1,) + (len_V,) + (len_g1,), '-', dtype=object)   #min number of dams
+    sav['bnd_up_dam_inc'] = '-'   #control if dam upper bound is on.
+    sav['bnd_up_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1,), '-', dtype=object)   #max number of dams
+    sav['bnd_up_dams_tVg1'] = np.full((len_t1,) + (len_V,) + (len_g1,), '-', dtype=object)   #max number of dams
+    sav['bnd_total_dams_scanned'] = '-'   #total dams scanned (summed over all dvps) - this also controls if bound is on.
+    sav['bnd_propn_dam5_retained'] = '-'   #propn of 5yo dams retained - this also controls if bound is on.
+    sav['bnd_lo_off_inc'] = '-'   #control if off lower bound is on.
+    sav['bnd_lo_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #min number of offs
+    sav['bnd_up_off_inc'] = '-'   #control if off upper bound is on.
+    sav['bnd_up_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #max number of offs
+    sav['bnd_up_prog_inc'] = '-'   #control if prog upper bound is on.
+    sav['bnd_up_prog_tdxg2'] = np.full((len_t2,) + (len_d,) + (len_x,) + (len_g2,), '-', dtype=object)   #max number of offs
+    sav['bnd_sr_t'] = np.full(pinp.sheep['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
+    sav['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
+    sav['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
+    sav['bnd_min_sale_age_female_g1'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a dam can be sold - BBT offspring can be sold but BBT dams can't (because they are BB)
+    sav['bnd_min_sale_age_female_dg3'] = np.full((len_d,) + (len_g3,), '-', dtype=object)   #SA to set min age a female can be sold - used to bound prog & offs
+    sav['bnd_max_sale_age_female_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
+    sav['rot_lobound_rl'] = np.full((len_R,) + (len_l,), '-', dtype=object)
+    ##SAM
+    ##SAP
+    ##SAA
+    ##SAT
+    ##SAR
+
+
+
