@@ -97,6 +97,7 @@ def create_sa():
     sav['pinp_rot'] = '-'                       #control if using the pinp rotations or the full rotation list (note full rot requires simulation inputs)
     sav['mach_option'] = '-'                    #control which machine compliment is used
     sav['lmu_area_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
+    sav['lmu_arable_propn_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
     ##SAM
     sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to remove it)
     sam['grainp'] = 1.0   # SA multiplier for all grain prices
@@ -114,7 +115,10 @@ def create_sa():
     sav['capital_limit']      = '-'          #SA to alter the capital limit (amount of money that can be loaned from bank)
     sav['interest_rate']      = '-'           #SA to alter the credit and debit interest from bank
     sav['opp_cost_capital']      = '-'        #SA to alter the opportunity cost of capital
+    sav['fixed_dep_rate'] = '-'               #SA to alter the fixed rate of machinery depreciation per year
+    sav['equip_insurance_rate'] = '-'         #SA to alter the insurance cost (% of machine value)
     ##SAM
+    sam['overheads'] = 1.0                    #SA to alter the overhead costs
     ##SAP
     ##SAA
     ##SAT
@@ -125,7 +129,20 @@ def create_sa():
     ########
     ##SAV
     sav['grain_percentile'] = '-'  #grain price percentile
+    sav['woolp_mpg_percentile'] = '-'               #sa value for the wool price percentile
+    sav['woolp_mpg'] = '-'                          # sa value for wool price at std micron
+    sav['woolp_fdprem_percentile'] = '-'            # sa value for fd premium percentile (premium received by fd compared to std)
+    sav['woolp_fdprem'] = '-'                       # sa value for fd premium
+    sav['salep_percentile'] = '-'                   #Value for percentile for all sale grids
+    sav['salep_max'] = '-'                          #max sale price in grid
+    sav['fert_cost'] = np.full(len(uinp.price['fert_cost']), '-', dtype=object) #SA value for fert price $/t
+    sav['manager_cost'] = '-' #SA value for manager cost per year
+    sav['permanent_cost'] = '-' #SA value for permanent cost per year
+    sav['casual_cost'] = '-' #SA value for casual cost per hour
     ##SAM
+    sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron
+    sam['salep_max'] = 1.0                      #max sale price in grid
+    sam['salep_month_adjust_s7s9p4'] = np.ones(uinp.sheep['i_salep_months_priceadj_s7s9p4'].shape, dtype=np.float64)      #monthly sale price
     ##SAP
     ##SAA
     ##SAT
@@ -256,12 +273,6 @@ def create_sa():
     sav['g3_included']      = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)      # SA value for the inclusion of each offspring genotype
     sav['genotype']         = np.full(pinp.sheep['a_c2_c0'].shape, '-', dtype=object)       # this is the selection of the genotypes of the sires for B, M & T
     sav['scan_og1']         = np.full(pinp.sheep['i_scan_og1'].shape, '-', dtype=object)    # SA value for the scanning management option
-    sav['woolp_mpg_percentile'] = '-'               #sa value for the wool price percentile
-    sav['woolp_mpg'] = '-'                          # sa value for wool price at std micron
-    sav['woolp_fdprem_percentile'] = '-'            # sa value for fd premium percentile (premium received by fd compared to std)
-    sav['woolp_fdprem'] = '-'                       # sa value for fd premium
-    sav['salep_percentile'] = '-'                   #Value for percentile for all sale grids
-    sav['salep_max'] = '-'                          #max sale price in grid
     len_max_w1 = sinp.structuralsa['i_w_start_len1'] * len(sinp.structuralsa['i_nut_spread_n1']) ** (
             len(sinp.stock['i_fixed_fvp_mask_dams'])+len(sinp.structuralsa['i_fvp_mask_dams'])) #the max size of w if all n and fvps included.
     len_max_w3 = sinp.structuralsa['i_w_start_len3'] * len(sinp.structuralsa['i_nut_spread_n3']) ** len(sinp.structuralsa['i_fvp_mask_offs']) #the max size of w if all n and fvps included.
@@ -294,9 +305,6 @@ def create_sa():
     sav['r2_ik5g3'] = np.full(pinp.sheep['ia_r2_ik5g3'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k5 axis (BTRT) for offs
     sav['LTW_loops_increment'] = '-'                  #SA to Increment the number of LTW loops carried out in the code. The base is 2 loops with 0 increment but if using pkl fs or ltw_adj is 0 then base is 0 loops.
     ##SAM
-    sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron
-    sam['salep_max'] = 1.0                      #max sale price in grid
-    sam['salep_month_adjust_s7s9p4'] = np.ones(uinp.sheep['i_salep_months_priceadj_s7s9p4'].shape, dtype=np.float64)      #monthly sale price
     sam['kg'] = 1.0                             #energy efficiency of adults (zf2==1)
     sam['mr'] = 1.0                             #Maintenance requirement of adults (zf2==1)
     sam['pi'] = 1.0                             #Potential intake of adults (zf2==1)
