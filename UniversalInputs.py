@@ -238,10 +238,16 @@ def f_universal_inp_sa():
     finance['minroe_dsp'] = fun.f_sa(finance['minroe_dsp'], sen.sav['minroe'], 5)  #value for minroe (same sav as above)
     finance['i_interest'] = fun.f_sa(finance['i_interest'], sen.sav['interest_rate'], 5)  #value for bank interest rate
     finance['opportunity_cost_capital'] = fun.f_sa(finance['opportunity_cost_capital'], sen.sav['opp_cost_capital'], 5)  #value for opportunity cost of capital
+    finance['fixed_dep'] = fun.f_sa(finance['fixed_dep'], sen.sav['fixed_dep_rate'], 5)  #value for fixed rate of machinery depreciation per year
+    finance['equip_insurance'] = fun.f_sa(finance['equip_insurance'], sen.sav['equip_insurance_rate'], 5)  #value for machinery insurance (as a propn of total value)
 
     ##price
     ###sav
     price['grain_price_percentile'] = fun.f_sa(price['grain_price_percentile'],sen.sav['grain_percentile'], 5)
+    price['fert_cost'] = fun.f_sa(price['fert_cost'], sen.sav['fert_cost'][:,None], 5)
+    price['manager_cost'] = fun.f_sa(price['manager_cost'], sen.sav['manager_cost'], 5)
+    price['permanent_cost'] = fun.f_sa(price['permanent_cost'], sen.sav['permanent_cost'], 5)
+    price['casual_cost'] = fun.f_sa(price['casual_cost'], sen.sav['casual_cost'], 5)
 
     ##supfeed
     ###sav

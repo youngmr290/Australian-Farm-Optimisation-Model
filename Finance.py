@@ -98,6 +98,7 @@ import numpy as np
 import UniversalInputs as uinp
 import StructuralInputs as sinp
 import PropertyInputs as pinp
+import Sensitivity as sen
 import Periods as per
 import Functions as fun
 import SeasonalFunctions as zfun
@@ -228,6 +229,7 @@ def overheads(params, r_vals):
     ##cost - overheads are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr).
     overheads = pinp.general['i_overheads']
     overheads = overheads.sum()
+    overheads = fun.f_sa(overheads, sen.sam['overheads'], 0)
     overhead_cost_p7z = overhead_cost_allocation_p7z * overheads
     overhead_wc_c0p7z = overhead_wc_allocation_c0p7z * overheads
 

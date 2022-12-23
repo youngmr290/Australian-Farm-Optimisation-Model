@@ -162,12 +162,7 @@ def f_fert_app_time_ha():
     '''
 
     ##fert passes - arable (arable area accounted for in passes function)
-    passes_arable = phs.f_fert_passes()
-    ##non arable fert passes
-    passes_na = phs.f_nap_fert_passes() #on pasture phases only
-    ##add fert for arable area and fert for nonarable area, na_fert doesn't have season axis so need to reindex first
-    passes_na = passes_na.unstack().reindex(passes_arable.unstack().index, axis=0, level=0).stack()
-    total_passes_rzln = pd.concat([passes_arable, passes_na], axis=1).groupby(axis=1, level=0).sum().stack()
+    total_passes_rzln = phs.f_fert_passes().stack()
     ##time taken to cover 1ha while spreading
     time_ha_n = mac.time_ha().squeeze()
     ##adjust fert labour across each labour period
@@ -191,7 +186,6 @@ def f_fert_app_time_ha():
 #time/t - need to convert m3 to tone and allocate into lab periods
 def f_fert_app_time_t():
     '''
-
     Fertilising labour part 2: time required per tonne.
 
     The labour required for fertilising is calculated in two parts. Part 2 is the time required per tonne
@@ -201,7 +195,7 @@ def f_fert_app_time_t():
 
     '''
     ##fert used in each rotation phase
-    fert_total_rzln = phs.f1_total_fert_req()/1000 #convert to tonnes
+    fert_total_rzln = phs.f_fert_req().stack().sort_index()/1000 #convert to tonnes
 
     ##time per tonne
     spreader_proportion = pd.DataFrame([pinp.crop['fert_info']['spreader_proportion']])

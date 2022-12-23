@@ -551,9 +551,8 @@ def f_mach_summary(lp_vars, r_vals, option=0):
 
     ##fert & chem mach cost
     fert_app_cost_rl_p7z = r_vals['crop']['fert_app_cost']
-    nap_fert_app_cost_rl_p7z = r_vals['crop']['nap_fert_app_cost']#.unstack().reindex(fert_app_cost_rzl_c.unstack().index, axis=0,level=0).stack()
     chem_app_cost_ha_rl_p7z = r_vals['crop']['chem_app_cost_ha']
-    fertchem_cost_rl_p7z = pd.concat([fert_app_cost_rl_p7z, nap_fert_app_cost_rl_p7z, chem_app_cost_ha_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()  # cost per ha
+    fertchem_cost_rl_p7z = pd.concat([fert_app_cost_rl_p7z, chem_app_cost_ha_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()  # cost per ha
 
     fertchem_cost_zrl_p7 = fertchem_cost_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
     fertchem_cost_zrlqs_p7 = fertchem_cost_zrl_p7.reindex(rot_area_zrlqs_p7.index, axis=0)
@@ -718,17 +717,13 @@ def f_crop_summary(lp_vars, r_vals, option=0):
     ##expenses
     ###fert
     ####v_phase
-    nap_phase_fert_cost_rl_p7z = r_vals['crop']['nap_phase_fert_cost']
     phase_fert_cost_rl_p7z = r_vals['crop']['phase_fert_cost']
-    exp_fert_ha_rl_p7z = pd.concat([phase_fert_cost_rl_p7z, nap_phase_fert_cost_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()
-    exp_fert_ha_zrl_p7 = exp_fert_ha_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
+    exp_fert_ha_zrl_p7 = phase_fert_cost_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
     exp_fert_ha_zrlqs_p7 = exp_fert_ha_zrl_p7.reindex(v_phase_area_zrlqs_p7.index, axis=0)
     exp_fert_zrqs_p7 = exp_fert_ha_zrlqs_p7.mul(v_phase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
     ####v_phase_increment
-    nap_phase_fert_cost_increment_rl_p7z = r_vals['crop']['nap_phase_fert_cost_increment'].unstack([-2,-1])
     phase_fert_cost_increment_rl_p7z = r_vals['crop']['phase_fert_cost_increment'].unstack([-2,-1])
-    exp_fert_ha_increment_rl_p7z = pd.concat([phase_fert_cost_increment_rl_p7z, nap_phase_fert_cost_increment_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()
-    exp_fert_ha_increment_zrl_p7 = exp_fert_ha_increment_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
+    exp_fert_ha_increment_zrl_p7 = phase_fert_cost_increment_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
     exp_fert_ha_increment_zrlqs_p7 = exp_fert_ha_increment_zrl_p7.reindex(v_phase_change_increase_area_zrlqs_p7.index, axis=0)
     exp_fert_increment_zrqs_p7 = exp_fert_ha_increment_zrlqs_p7.mul(v_phase_change_increase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
     ####combine v_phase and v_phase_increase

@@ -2157,12 +2157,23 @@ def f1_woolprice():
                           for i in range(uinp.sheep['i_woolp_fdprem_w4w5'].shape[0])])
     ##adjust FD premium using sav
     fdprem_w4 = fun.f_sa(fdprem_w4, sen.sav['woolp_fdprem'], 5)
-    ##Wool price for the analysis (Note: fdprem is the premium per micron from the base)
-    mpg_w4 = mpg_stdfd * (1 + fdprem_w4) ** (uinp.sheep['i_woolp_fd_std'] - uinp.sheep['i_woolp_fd_range_w4'])
-    return mpg_w4
+    ##Wool price for the analysis (Note: fdprem is the price difference compared with the base FD)
+    mpg_w4 = mpg_stdfd * (1 + fdprem_w4)
+
+    ##STB scalar - the scalar is different for merino vs crossbreed because the component params differ.
+    mer_stb_scalar_w4 = np.sum(uinp.sheep['i_woolp_component_mer_propn_w3'] * uinp.sheep['i_woolp_component_price_w4w3'] * (
+                1 + np.interp(uinp.sheep['i_woolp_fd_range_w4'][:,na] + uinp.sheep['i_woolp_component_mer_fd_w3'], uinp.sheep['i_woolp_fd_range_w4'], fdprem_w4)) / (
+                       1 + fdprem_w4[:,na]), axis=-1)
+    xb_stb_scalar_w4 = np.sum(uinp.sheep['i_woolp_component_xb_propn_w3'] * uinp.sheep['i_woolp_component_price_w4w3'] * (
+                1 + np.interp(uinp.sheep['i_woolp_fd_range_w4'][:,na] + uinp.sheep['i_woolp_component_xb_fd_w3'], uinp.sheep['i_woolp_fd_range_w4'], fdprem_w4)) / (
+                       1 + fdprem_w4[:,na]), axis=-1)
+    ###combine mer & xb. The selection of one or the other is based on the FD. If fd >= 26 then use XB.
+    stb_scalar_w4 = mer_stb_scalar_w4
+    stb_scalar_w4[uinp.sheep['i_woolp_fd_range_w4']>=26] = xb_stb_scalar_w4[uinp.sheep['i_woolp_fd_range_w4']>=26]
+    return mpg_w4 * stb_scalar_w4
 
 
-def f_wool_value(mpg_w4, wool_price_scalar_c1w4tpg, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg,dtype=None):
+def f_wool_value(stb_mpg_w4, wool_price_scalar_c1w4tpg, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg,dtype=None):
     '''Calculate the net value of the wool on the sheep's back (cost of shearing is not included in these calculations)
     Includes adjusting price for FD, level of fault (VM & predicted hauteur) and all components of the clip (STB)
     FNF is 'free or nearly free' i.e. wool with no fault (low VM & high SS)
@@ -2172,7 +2183,7 @@ def f_wool_value(mpg_w4, wool_price_scalar_c1w4tpg, cfw_pg, fd_pg, sl_pg, ss_pg,
     ##call function to calculate predicted hauteur (ph), CV of hauteur (cvh) and romaine
     ph_pg, cvh_pg, romaine_pg = f_wool_additional(fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg)
     ##STB price for FNF (free or nearly free of fault)
-    fnfstb_pg = np.interp(fd_pg, uinp.sheep['i_woolp_fd_range_w4'], mpg_w4 * uinp.sheep['i_stb_scalar_w4']).astype(dtype)
+    fnfstb_pg = np.interp(fd_pg, uinp.sheep['i_woolp_fd_range_w4'], stb_mpg_w4 ).astype(dtype)
     ##vm price adj
     vm_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_vm_adj_w4w6'], uinp.sheep['i_woolp_vm_range_w6']
                                            , uinp.sheep['i_woolp_fd_range_w4'], vm_pg,fd_pg).astype(dtype)
