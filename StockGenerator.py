@@ -1521,7 +1521,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##fetal param - normal birthweight young - used as target birthweight during pregnancy if sheep fed well. Therefore, average gender effect.
     w_b_std_y_b1nwzida0e0b0xyg1 = srw_female_yg2 * cb1_yatf[15, ...] #gender not considers until actual birth therefore no cx
     ##wool growth efficiency
-    ###wge is sfw divided by srw of a ewe of the given genotype to scale the growth per unit intake by change in expected intake
+    ###wge is sfw divided by srw of a ewe of the given genotype. Scales the growth per unit intake to allow for the expected change in intake due to SRW
+    ###Use SRW of the ewe so that males have same efficiency as females and hence grow more wool due to higher intake.
     wge_a0e0b0xyg0 = sfw_a0e0b0xyg0 / srw_female_yg0
     wge_a0e0b0xyg1 = sfw_a0e0b0xyg1 / srw_female_yg1
     wge_pa1e1b1nwzida0e0b0xyg2 = sfw_pa1e1b1nwzida0e0b0xyg2 / srw_female_yg2
