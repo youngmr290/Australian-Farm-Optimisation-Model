@@ -90,7 +90,7 @@ def f_cropgraze_DM(total_DM=False):
     '''
     ##read inputs
     lmu_mask = pinp.general['i_lmu_area'] > 0
-    cropgrazing_inc = pinp.cropgraze['i_cropgrazing_inc']
+    cropgrazing_inc_z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgrazing_inc_z'],numpy=True,axis=-1)
     growth_kp6z = zfun.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1) #kg/d
     wastage_k = pinp.cropgraze['i_cropgraze_wastage']
     growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl'][:,lmu_mask]
@@ -140,7 +140,7 @@ def f_cropgraze_DM(total_DM=False):
     ###propn of crop grazing possible for each landuse.
     landuse_grazing_kl = pinp.cropgraze['i_cropgrazing_inc_landuse'][:, lmu_mask]
     ###mask which z crop graing can occur
-    landuse_grazing_kl = landuse_grazing_kl * cropgrazing_inc
+    landuse_grazing_klz = landuse_grazing_kl[:,:,na] * cropgrazing_inc_z
 
     ##season mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
@@ -176,7 +176,7 @@ def f_cropgraze_DM(total_DM=False):
         transfer_exists_p6p5z = transfer_exists_p6p5z * mask_fp_z8var_p6z[:,na,:]
         crop_DM_required_kp6p5z = crop_DM_required_kp6p5z * mask_fp_z8var_p6z[:,na,:]
 
-        return crop_DM_provided_kp6p5z8lz9 * landuse_grazing_kl[:,na,na,na,:,na], crop_DM_required_kp6p5z, transfer_exists_p6p5z
+        return crop_DM_provided_kp6p5z8lz9 * landuse_grazing_klz[:,na,na,na,:,:], crop_DM_required_kp6p5z, transfer_exists_p6p5z
 
     else:
         ##crop foo mid way through feed period after consumption - used to calc vol in the next function.
@@ -185,7 +185,7 @@ def f_cropgraze_DM(total_DM=False):
                                                      date_start_p5z + establishment_days >= date_start_p6z[:,na,:]) #only get initial DM in the fp when seeding first occurs.
         crop_foo_kp6p5zl =  initial_DM_p6p5z[...,na] + np.cumsum(total_dm_growth_kp6p5zl * (1-consumption_factor_p6z[:,na,:,na])
                                                             , axis=1) - total_dm_growth_kp6p5zl/2 * (1-consumption_factor_p6z[:,na,:,na])
-        return crop_foo_kp6p5zl * landuse_grazing_kl[:,na,na,na,:]
+        return crop_foo_kp6p5zl * np.swapaxes(landuse_grazing_klz,-1,-2)[:,na,na,:,:]
 
 # def f_DM_reduction_seeding_time():
 #     '''

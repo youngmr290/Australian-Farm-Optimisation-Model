@@ -6909,6 +6909,32 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1[...] = 0
         assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3[...] = 0
 
+    ##temp mask used to control which z get tactics.
+    ##if a z has no tactics the variable level must equal the weighted average of the other z.
+    ###which z have no tactics
+    mask_no_tactics_z = fun.f_sa(False, sen.sav['mask_stock_no_tactics_z'], 5)
+    mask_no_tactics_z = zfun.f_seasonal_inp(mask_no_tactics_z, numpy=True, axis=0).astype(bool)
+    mask_no_tactics_zg = fun.f_expand(mask_no_tactics_z, z_pos)
+    ###probability of each z8 that prov z9 without tactics
+    t_prob_z8ida0e0b0xygz9 = season_propn_zida0e0b0xyg[:,na]
+    ###dams
+    t_prob_k2tva1e1b1nw8zida0e0b0xyg1z9 = t_prob_z8ida0e0b0xygz9 * (mask_w8vars_va1e1b1nw8zida0e0b0xyg1[:,:,0:1,...] * mask_z8var_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...] * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1)[...,na]
+    non_tactic_prov_k2tva1e1b1nw8zida0e0b0xyg1z9 = fun.f_divide(t_prob_k2tva1e1b1nw8zida0e0b0xyg1z9,np.sum(t_prob_k2tva1e1b1nw8zida0e0b0xyg1z9, axis=z_pos-1, keepdims=True))
+    ####prov for z without tactics
+    base_z8idaebxygz9 = index_zidaebxyg[...,na]==index_z
+    ####prov for z
+    non_tactic_prov_k2tva1e1b1nw8zida0e0b0xyg1z9 = fun.f_update(base_z8idaebxygz9, non_tactic_prov_k2tva1e1b1nw8zida0e0b0xyg1z9, mask_no_tactics_zg[...,na])
+    ###offs
+    t_prob_va1e1b1nw8zida0e0b0xyg3z9 = t_prob_z8ida0e0b0xygz9 * (mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)[...,0:1,:,:,:,0:1,:,:,na]
+    non_tactic_prov_va1e1b1nw8zida0e0b0xyg3z9 = fun.f_divide(t_prob_va1e1b1nw8zida0e0b0xyg3z9,np.sum(t_prob_va1e1b1nw8zida0e0b0xyg3z9, axis=z_pos-1, keepdims=True))
+    ####prov for z without tactics
+    base_z8idaebxygz9 = index_zidaebxyg[...,na]==index_z
+    ####prov for z
+    non_tactic_prov_va1e1b1nw8zida0e0b0xyg3z9 = fun.f_update(base_z8idaebxygz9, non_tactic_prov_va1e1b1nw8zida0e0b0xyg3z9, mask_no_tactics_zg[...,na])
+
+
+
+
     ###########################
     #create numbers params    #
     ###########################
@@ -7759,6 +7785,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###nsire req
     arrays_k2tvanwziyg1g0p8 = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g0, keys_p8]
 
+
+    arrays_k2tvwz8z9 = [keys_k2, keys_t1, keys_v1, keys_lw1, keys_z, keys_z]
+    arrays_vwz8z9 = [keys_v3, keys_lw3, keys_z, keys_z]
+
     ##prog related
     ###npw req
     arrays_k3txg = [keys_k3, keys_t2, keys_x, keys_g2]
@@ -7866,6 +7896,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     arrays_p7h1 = [keys_p7_end,keys_h1]
     params['p_infra'] = fun.f1_make_pyomo_dict(assetvalue_infra_h1, arrays_p7h1)
 
+
+    params['non_tactic_prov_k2tvwz8z9'] = fun.f1_make_pyomo_dict(non_tactic_prov_k2tva1e1b1nw8zida0e0b0xyg1z9, arrays_k2tvwz8z9)
+    params['non_tactic_prov_vwz8z9'] = fun.f1_make_pyomo_dict(non_tactic_prov_va1e1b1nw8zida0e0b0xyg3z9, arrays_vwz8z9)
 
     ##sire related
     ###sires provided

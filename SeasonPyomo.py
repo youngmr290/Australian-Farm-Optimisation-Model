@@ -14,6 +14,9 @@ def f1_seasonpyomo_local(params, model):
     #############
     #parameters #
     #############
+    model.p_non_tactic_prov_z8z9 = pe.Param(model.s_season_types, model.s_season_types,
+                                                  initialize=params['p_non_tactic_prov_z8z9'], default=0.0,
+                                                  mutable=False, doc='param to constrain activity level in a season based on the activity level in other seasons.')
     model.p_mask_season_p6z = pe.Param(model.s_feed_periods, model.s_season_types,
                                                   initialize=params['p_mask_fp_z8var_p6z'], default=0.0,
                                                   mutable=False, doc='Mask which z exist in each fp used to skip constraints (all parameters will have already been masked so this only reduces constraint building time)')

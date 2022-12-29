@@ -87,6 +87,9 @@ def create_sa():
     sav['gen_with_t']      = '-'                  #SA to control if sheep generator is run with active t axis.
     sav['fs_use_pkl']      = '-'                  #SA to control if the pkl fs is used or the excel input fs is used.
     sav['fs_use_number']      = '-'                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is used for a given trial.
+    sav['go_mask_create_number']      = '-'                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is created for a given trial.
+    sav['go_mask_use_number']      = '-'                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is created for a given trial.
+    sav['go_mask_z_inc_z']      = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is created for a given trial.
     sav['use_pkl_condensed_start_condition'] = '-'  #SA to control if the pkl values are used for the start animal at condensing
     sav['r2adjust_inc']      = '-'              #SA to control if the r2 feedsupply adjustment from Excel is included.
     sav['inc_c1_variation'] = '-'               #control if price variation is on. This only effects result if risk aversion is included.
@@ -98,6 +101,9 @@ def create_sa():
     sav['mach_option'] = '-'                    #control which machine compliment is used
     sav['lmu_area_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
     sav['lmu_arable_propn_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
+    sav['mask_no_tactics_z'] = np.full(len_z, '-', dtype=object)  #control what z tactics are allowed.
+    sav['mask_stock_no_tactics_z'] = np.full(len_z, '-', dtype=object)  #control what z tactics are allowed.
+
     ##SAM
     sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to remove it)
     sam['grainp'] = 1.0   # SA multiplier for all grain prices
@@ -180,7 +186,7 @@ def create_sa():
     #Cropgrazing #
     ##############
     ##SAV
-    sav['cropgrazing_inc'] = '-'  #control if crop grazing is allowed
+    sav['cropgrazing_inc_z'] = np.full(len_z, '-', dtype=object)  #control if crop grazing is allowed
     ##SAM
     ##SAP
     ##SAA
@@ -214,7 +220,7 @@ def create_sa():
     # Pasture  #   these need to have the same name for each pasture type
     ############
     ##SAV
-    sav['poc_inc'] = '-'  #control if poc is included
+    sav['poc_inc_z'] = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)   #control if poc is included
     sav['pas_inc_t'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA value for pastures included mask
     ##SAM
     sam['germ','annual']                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods

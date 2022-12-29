@@ -347,7 +347,7 @@ def f_property_inp_sa():
 
     ##crop grazing
     ###sav
-    cropgraze['i_cropgrazing_inc'] = fun.f_sa(cropgraze['i_cropgrazing_inc'], sen.sav['cropgrazing_inc'], 5)
+    cropgraze['i_cropgrazing_inc_z'] = fun.f_sa(cropgraze['i_cropgrazing_inc'], sen.sav['cropgrazing_inc_z'], 5).astype(bool)
     ###sam
     ###sap
     ###saa
@@ -366,7 +366,7 @@ def f_property_inp_sa():
 
     ##pasture
     ###sav
-    crop['i_poc_inc'] = fun.f_sa(crop['i_poc_inc'], sen.sav['poc_inc'], 5)
+    crop['i_poc_inc_z'] = fun.f_sa(crop['i_poc_inc'], sen.sav['poc_inc_z'], 5).astype(bool)
     general['pas_inc'] = fun.f_sa(general['pas_inc'], sen.sav['pas_inc_t'], 5)
 
     for pasture in sinp.general['pastures'][general['pas_inc']]: #all pasture inputs are adjusted even if a given pasture is not included

@@ -540,7 +540,7 @@ def f_con_poc_available(model):
     by the foo available to be consumed on each hectare each day (calculated in Pasture.py).
     '''
     def poc(model,q,s,f,l,z):
-        if pe.value(model.p_wyear_inc_qs[q, s]) and pinp.crop['i_poc_inc']:
+        if pe.value(model.p_wyear_inc_qs[q, s]) and model.p_poc_con[f,l,z]:
             return -macpy.f_ha_days_pasture_crop_paddocks(model,q,s,f,l,z) * model.p_poc_con[f,l,z] + sum(
                 model.v_poc[q,s,v,f,l,z] for v in model.s_feed_pools) <= 0
         else:
@@ -584,8 +584,8 @@ def f_con_link_pasture_supplement_consumption(model,nv):
     def link_pas_sup(model,q,s,z,p6,f):
         f_idx = l_f.index(f)
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p6z[p6,z]) and nv_is_not_confinement_f[f_idx] and uinp.supfeed['i_sup_selectivity_included']:
-            return - (paspy.f_pas_vol2(model,q,s,p6,f,z) + stubpy.f_cropresidue_vol(model,q,s,p6,f,z)) * model.p_max_sup_selectivity[p6,z] \
-                   + suppy.f_sup_vol(model,q,s,p6,f,z) * (1-model.p_max_sup_selectivity[p6,z]) <= 0
+            return - (paspy.f_pas_me(model,q,s,p6,f,z) + stubpy.f_cropresidue_me(model,q,s,p6,f,z)) * model.p_max_sup_selectivity[p6,z] \
+                   + suppy.f_sup_me(model,q,s,p6,f,z) * (1-model.p_max_sup_selectivity[p6,z]) <= 0
         else:
             return pe.Constraint.Skip
     model.con_link_pasture_supplement_consumption = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types,
@@ -636,7 +636,7 @@ def f_con_vol(model):
             return paspy.f_pas_vol(model,q,s,p6,f,z) + suppy.f_sup_vol(model,q,s,p6,f,z) + stubpy.f_cropresidue_vol(model,q,s,p6,f,z) \
                    + cgzpy.f_grazecrop_vol(model,q,s,p6,f,z) + slppy.f_saltbush_vol(model,q,s,z,p6,f) \
                    - stkpy.f_stock_pi(model,q,s,p6,f,z) \
-                   + mvf.f_mvf_vol(model,q,s,p6,f) <= 0
+                   + mvf.f_mvf_vol(model,q,s,p6,f) == 0
         else:
             return pe.Constraint.Skip
     model.con_vol = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods,model.s_feed_pools,model.s_season_types,rule=vol,

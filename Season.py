@@ -100,6 +100,20 @@ def f_season_precalcs(params, r_vals):
     p_sequence_prov_qs8zs9 = mask_s8vars_qs8[:,:,na,na] * (index_q[:,na,na,na] != (len_q - 1)) * mask_provqs8z8s9_qs8z8s9
     p_endstart_prov_qsz = mask_s8vars_qs8[:,:,na] * (index_q[:,na,na] == (len_q - 1)) * season_seq_prob_qsz
 
+
+    ##temp mask used to control which z get tactics.
+    ##if a z has no tactics the variable level must equal the weighted average of the other z.
+    ###which z have no tactics
+    import Sensitivity as sen
+    mask_no_tactics_z = fun.f_sa(False, sen.sav['mask_no_tactics_z'], 5)
+    mask_no_tactics_z = zfun.f_seasonal_inp(mask_no_tactics_z, numpy=True, axis=0).astype(bool)
+    ###prov for z with tactics
+    base_z8z9 = index_z==index_z[:,na]
+    ###prov for z without tactics
+    t_prob_z8z9 = i_season_propn_z[:,na] #* np.logical_not(base_z8z9)
+    non_tactic_prov_z8z9 = fun.f_divide(t_prob_z8z9,np.sum(t_prob_z8z9, axis=0))
+    non_tactic_prov_z8z9 = fun.f_update(base_z8z9, non_tactic_prov_z8z9, mask_no_tactics_z)
+
     ##########
     #params  #
     ##########
@@ -115,6 +129,8 @@ def f_season_precalcs(params, r_vals):
     arrays_p7z8 = [keys_p7, keys_z]
     ###p7z8z9
     arrays_p7z8z9 = [keys_p7, keys_z, keys_z]
+    ###z8z9
+    arrays_z8z9 = [keys_z, keys_z]
     ###qs - season sequence
     arrays_qs = [keys_q, keys_s]
     ###qsz - season sequence
@@ -123,6 +139,7 @@ def f_season_precalcs(params, r_vals):
     ###qs8zs9 - season sequence
     arrays_qs8zs9 = [keys_q, keys_s, keys_z, keys_s]
 
+    params['p_non_tactic_prov_z8z9'] = fun.f1_make_pyomo_dict(non_tactic_prov_z8z9*1, arrays_z8z9)
     params['p_mask_fp_z8var_p6z'] = fun.f1_make_pyomo_dict(mask_fp_z8var_p6z * 1, arrays_p6z)
     params['p_mask_season_p7z'] = fun.f1_make_pyomo_dict(mask_season_p7z * 1, arrays_p7z8)
     params['p_mask_childz_within_season'] = fun.f1_make_pyomo_dict(mask_reqwithinz8_p7z8*1, arrays_p7z8)

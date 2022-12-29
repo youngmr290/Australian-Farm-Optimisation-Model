@@ -82,6 +82,7 @@ def f1_rotationpyomo(params, model):
     ###################
     #call constraints #
     ###################
+    f_con_rot_non_tactic_z(model)
     f_con_history_between(params, model)
     f_con_history_within(params, model)
     f_phase_history4_within(model)
@@ -102,6 +103,18 @@ def f1_rotationpyomo(params, model):
 ######################
 ##rotation constraints are usually the same each loop. but if the lmu mask changes they need to be built again
 ##thus they are just built each loop. Maybe this could be changed if running lots of rotations.
+
+def f_con_rot_non_tactic_z(model):
+    '''
+    '''
+
+    def rot_non_tactic_z(model,q,s,p7,l,r,z9):
+        if pe.value(model.p_wyear_inc_qs[q,s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
+            return model.v_phase_area[q,s,p7,z9,r,l] \
+                   - sum(model.v_phase_area[q,s,p7,z8,r,l]*model.p_non_tactic_prov_z8z9[z8,z9] for z8 in model.s_season_types)<=0
+        else:
+            return pe.Constraint.Skip
+    model.con_rot_non_tactic_z = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=rot_non_tactic_z, doc='rotation phases constraint')
 
 def f_con_history_between(params, model):
     '''

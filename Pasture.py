@@ -650,6 +650,8 @@ def f_pasture(params, r_vals, nv):
     fun.f1_make_r_val(r_vals,length_p6z,'days_p6z',mask_fp_z8var_p6z,z_pos=-1)
     fun.f1_make_r_val(r_vals,pgr_grnha_gop6lzt,'pgr_grnha_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
     fun.f1_make_r_val(r_vals,foo_endprior_grnha_gop6lzt,'foo_end_grnha_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)#Green FOO prior to eos senescence
+    fun.f1_make_r_val(r_vals,foo_start_grnha_op6lzt,'foo_start_grnha_op6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,i_foo_graze_propn_gt,'i_foo_graze_propn_gt')
     fun.f1_make_r_val(r_vals,cons_grnha_t_gop6lzt,'cons_grnha_t_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
     fun.f1_make_r_val(r_vals,me_cons_grnha_fgop6lzt,'me_cons_grnha_fgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
     fun.f1_make_r_val(r_vals,fun.f_divide(me_cons_grnha_fgop6lzt, volume_grnha_fgop6lzt),'nv_grnha_fgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)

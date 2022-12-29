@@ -453,8 +453,8 @@ def f_area_summary(lp_vars, r_vals, option):
     if option==4: #landuse area in p7[-1] (lmu summed)
         landuse_area_k_qszl = landuse_area_k_p7qszl.loc[:,landuse_area_k_p7qszl.columns.levels[0][-1].tolist()]
         landuse_area_k_qsz = landuse_area_k_qszl.groupby(axis=1, level=(0,1,2)).sum()
-        landuse_area_qsz_k = landuse_area_k_qsz.T.round(2)
-        return landuse_area_qsz_k
+        landuse_area_qsz_kl = landuse_area_k_qszl.stack(-1).T.round(2)
+        return landuse_area_qsz_kl
 
     if option==5 or option==6 or option==7: #average % of pasture/cereal/canola in p7[-1]
         keys_q = r_vals['zgen']['keys_q']
