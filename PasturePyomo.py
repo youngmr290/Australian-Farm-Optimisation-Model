@@ -343,7 +343,7 @@ def f_con_gi(model):
                                         doc='mask v_grnpas_has. 1 means the variable must be 0')
 
     l_z = np.array(list(model.s_season_types))
-    mask_z_inc = fun.f_sa(np.array([True]), sen.sav['go_mask_z_inc_z'], 5)  # controls which z get the mask - default is all z
+    mask_z_inc = fun.f_sa(np.array([False]), sen.sav['go_mask_z_inc_z'], 5)  # controls which z get the mask - default is no z
     mask_z_inc = zfun.f_seasonal_inp(mask_z_inc, numpy=True, axis=0).astype(bool)
     l_z = l_z[mask_z_inc]
     def gi(model):

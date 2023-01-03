@@ -469,7 +469,8 @@ def f1_sup_selectivity():
     mask_greenfeed_exists_p6z = np.logical_or(np.logical_and(index_p6[:,na]>=idx_fp_start_gs_z, index_p6[:, na] <= i_end_of_gs_z),       #green exists in the period which is the end of growing season hence <=
                                               np.logical_and(i_end_of_gs_z < idx_fp_start_gs_z,
                                                              np.logical_or(index_p6[:,na]>=idx_fp_start_gs_z, index_p6[:,na]<=i_end_of_gs_z)))   #this handles if green feed starts mid fp and wraps around to start fps.
-    max_sup_selectivity_p6z = fun.f_update(i_max_sup_selectivity, 1, np.logical_not(mask_greenfeed_exists_p6z)) #can have as much sup as it wants when it is not green
+    poc_inc_z = zfun.f_seasonal_inp(pinp.crop['i_poc_inc_z'], numpy=True, axis=-1)
+    max_sup_selectivity_p6z = fun.f_update(i_max_sup_selectivity, 1, np.logical_or(poc_inc_z,np.logical_not(mask_greenfeed_exists_p6z))) #can have as much sup as it wants when it is not green
 
     ##make df
     keys_z = zfun.f_keys_z()
