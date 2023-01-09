@@ -77,6 +77,7 @@ def create_sa():
     ##SAV
     sav['steady_state']      = '-'                  #SA to alter if the model is steady state
     sav['mask_z']      = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)   #SA to alter which seasons are included
+    sav['prob_z']      = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)   #SA to alter which seasons are included
     sav['inc_node_periods']      = '-'              #SA to alter if season nodes are included in the steady state model (note they are always included in the dsp version this only effects if they are included in steady state)
     sav['seq_len']      = '-'                     #SA to alter the length of the season sequence in the SQ model
     sav['rev_create']      = '-'                  #SA to alter if the trial is being used to create rev std values
