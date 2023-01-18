@@ -2,11 +2,12 @@
 
 author: young
 
-Supplementary feeding is the supply of additional feed, primarily grain and hay, to livestock.
-Supplementary feeding is commonly used to help meet liveweight targets during Summer and Autumn
-months when pasture is limiting, and enhance lamb diet for increased growth prior to sale. Additionally,
-feeding supplement can be used as a tactic to allow pastures to be deferred. Grain and hay are the
-primary supplements fed and hence represented in the model.
+Supplementary feeding is the supply of additional feed to livestock, primarily grain and hay (which are both
+represented in the model). Supplementary feeding is commonly used to help meet production targets such as
+lamb growth rates prior to sale, or to fill the feed gap to allow higher stocking rates during the summer
+and autumn months when pastures and crop residues are limiting. Additionally, feeding supplement can be
+used as a tactic to allow pastures to be deferred early in the growing season which increases subsequent
+pasture growth rates.
 
 Grain and hay for supplementary feeding can either be grown on farm or purchased from another
 farmer at farm gate price (net price of a product after selling costs have been subtracted)

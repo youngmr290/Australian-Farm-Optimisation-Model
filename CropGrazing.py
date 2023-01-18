@@ -3,7 +3,7 @@ Author: Young
 
 Crop grazing is an option that allows sheep to graze green crop, typically from June until August
 however this range can be altered in the inputs. Green crops
-have a higher energy content than green pasture and grow more vertical allowing for easier grazing,
+have a higher energy content than green pasture and grow more erect allowing for easier grazing,
 meaning a lower crop FOO is required to meet the livestock needs. However, a yield and stubble penalty is
 associated with this activity. Trials have recorded varying yield penalties from -15% to +15%, but the
 consensus is that the yield penalty is minimal if the crop is grazed early and lightly. The level of the yield

@@ -10,20 +10,23 @@ The pasture feed source can be supplemented with concentrates, and in a mixed cr
 the pasture can be complemented with dry residues from crop production (stubbles).
 The biology and logistics of pasture growth rate that are represented in AFO is:
 
-    * PGR is dependent on pasture leaf area, which is quantified by the level of feed on offer (FOO, kg of DM/ha),
-    * PGR for each pasture type varies with the phase during its life cycle, soil moisture and sunlight. All are quantified by land management unit, time of year and season.
-    * The mobilisation of below ground reserves (germination) of annual pastures at the break of season is dependent on the seed bank. Seed bank is controlled by the rotation in which the pasture is grown.
-    * The mobilisation of below ground reserves of perennial pastures at the break of season can also be adjusted by rotation, however perennials ususally aren't grown in rotation with crops.
-    * The digestibility of the diet selected by animals grazing pasture is dependent on their capacity for selective grazing which depends on FOO and grazing intensity.
-    * The intake of animals grazing pasture is dependent on FOO and diet DMD.
-    * The risk of resource degradation increases when ground cover is lower so there is a minimum limit to ground cover
+    * Pasture growth rate (PGR) is dependent on pasture leaf area, which is quantified by the level of feed on offer (FOO, kg of DM/ha). Additionally, PGR for each pasture type varies with the phase during its life cycle, soil moisture, sunlight and level of growth modifier applied. All are quantified by land management unit (LMU), time of year and weather-year.
+    * The available FOO depends on the grazing intensity.
+    * The mobilisation of below ground reserves (germination) of annual pastures at the break of season is dependent on the seed bank. Seed bank is controlled by the rotation in which the pasture is grown and varies with LMU.
+    * The mobilisation of below ground reserves of perennial pastures at the break of season can also be adjusted by rotation, however perennials usually aren’t grown in rotation with crops.
+    * The intake of animals grazing pasture is dependent on FOO and diet dry matter digestibility (DMD).
+    * The digestibility of the diet selected by animals grazing green pasture is dependent on the sward digestibility and the animal’s capacity for selective grazing. Sward digestibility varies depending on the pasture species, the time of year and the LMU. Selectivity depends on FOO and grazing intensity.
+    * Dry pasture that is not consumed is deferred to later in the year with a reduction in both quality and quantity. Livestock can select a higher quality diet when first grazing the dry pasture and quality reduces with extra grazing.
+    * Livestock trample both green and dry pasture while foraging.
+    * The risk of resource degradation increases when ground cover is lower so there is a minimum limit to ground cover during both the green and dry phases of the year.
+
 
 The decision variables that can be optimised in AFO that represent the above biology are:
 
     * The rotation phases in which pasture can be grown on each LMU
-    * A discrete range of FOO level (low, medium and high) at the start of each feed period
-    * A discrete range of the severity of defoliation (0, 25%, 50% & 100%) in each feed period
-    * The level of growth modifiers (nitrogen or gibberelic acid) applied to the pasture
+    * FOO profile during the year that is represented by a discrete range of FOO levels at the start of each feed period
+    * Grazing intensity and the variation during the year that is represented by a discrete range of the severity of defoliation in each feed period
+    * The level of growth modifiers (nitrogen or gibberellic acid) applied to the pasture
     * The quantity of dry feed consumed from each of 2 dry feed quality groups in each feed period
 
 Nutritive value of pasture is determined by the metabolisable energy per unit of dry matter, the relative
