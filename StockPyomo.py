@@ -410,15 +410,15 @@ def f_con_dams_non_tactic_z(model):
     '''
     '''
 
-    def dams_non_tactic_z(model,q,s,k,t1,v1,a,n1,z9,i,y1,g1,w):
+    def dams_non_tactic_z(model,q,s,k,t1,v1,a,n1,z9,i,y1,g1):
         if pe.value(model.p_wyear_inc_qs[q,s]) and t1!="t2":
-            return + model.v_dams[q,s,k,t1,v1,a,n1,w,z9,i,y1,g1] \
-                   - sum(model.v_dams[q,s,k,t1,v1,a,n1,w,z8,i,y1,g1]*model.p_non_tactic_prov_k2tvwz8z9[k,t1,v1,w,z8,z9] for z8 in model.s_season_types)==0
+            return + sum(model.v_dams[q,s,k,t1,v1,a,n1,w,z9,i,y1,g1] \
+                   - sum(model.v_dams[q,s,k,t1,v1,a,n1,w,z8,i,y1,g1]*model.p_non_tactic_prov_k2tvwz8z9[k,t1,v1,w,z8,z9] for z8 in model.s_season_types) for w in model.s_lw_dams)==0
         else:
             return pe.Constraint.Skip
     model.con_dams_non_tactic_z = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_sale_dams,
                                                 model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
-                                   model.s_groups_dams, model.s_lw_dams, rule=dams_non_tactic_z, doc='damsation phases constraint')
+                                   model.s_groups_dams,  rule=dams_non_tactic_z, doc='damsation phases constraint')
 
 
 def f_con_offs_non_tactic_z(model):
