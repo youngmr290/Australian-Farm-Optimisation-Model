@@ -6914,7 +6914,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###which z have no tactics
     mask_no_tactics_z = fun.f_sa(False, sen.sav['mask_stock_no_tactics_z'], 5)
     mask_no_tactics_z = zfun.f_seasonal_inp(mask_no_tactics_z, numpy=True, axis=0).astype(bool)
-    mask_no_tactics_zg = fun.f_expand(mask_no_tactics_z, z_pos)
+    # mask_no_tactics_zg = fun.f_expand(mask_no_tactics_z, z_pos)
     ###probability of each z8 that prov z9 without tactics
     t_prob_z8ida0e0b0xygz9 = season_propn_zida0e0b0xyg[:,na]
     ###dams
@@ -6923,14 +6923,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ####prov for z without tactics
     base_z8idaebxygz9 = index_zidaebxyg[...,na]==index_z
     ####prov for z
-    non_tactic_prov_k2tva1e1b1nw8zida0e0b0xyg1z9 = fun.f_update(base_z8idaebxygz9, non_tactic_prov_k2tva1e1b1nw8zida0e0b0xyg1z9, mask_no_tactics_zg[...,na])
+    non_tactic_prov_k2tva1e1b1nw8zida0e0b0xyg1z9 = fun.f_update(base_z8idaebxygz9, non_tactic_prov_k2tva1e1b1nw8zida0e0b0xyg1z9, mask_no_tactics_z)
     ###offs
     t_prob_va1e1b1nw8zida0e0b0xyg3z9 = t_prob_z8ida0e0b0xygz9 * (mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)[...,0:1,:,:,:,0:1,:,:,na]
     non_tactic_prov_va1e1b1nw8zida0e0b0xyg3z9 = fun.f_divide(t_prob_va1e1b1nw8zida0e0b0xyg3z9,np.sum(t_prob_va1e1b1nw8zida0e0b0xyg3z9, axis=z_pos-1, keepdims=True))
     ####prov for z without tactics
     base_z8idaebxygz9 = index_zidaebxyg[...,na]==index_z
     ####prov for z
-    non_tactic_prov_va1e1b1nw8zida0e0b0xyg3z9 = fun.f_update(base_z8idaebxygz9, non_tactic_prov_va1e1b1nw8zida0e0b0xyg3z9, mask_no_tactics_zg[...,na])
+    non_tactic_prov_va1e1b1nw8zida0e0b0xyg3z9 = fun.f_update(base_z8idaebxygz9, non_tactic_prov_va1e1b1nw8zida0e0b0xyg3z9, mask_no_tactics_z)
 
 
 
