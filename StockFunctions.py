@@ -1671,7 +1671,7 @@ def f_mortality_weaner_mu(cu2, ce=0):
     return 0
 
 
-def f_mortality_dam_mu(cu2, ce, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
+def f_mortality_dam_mu(cu2, ce, cb1, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
     ## transformed Dam mortality at birth due to low CS.
     ###distribution on cs_birth, calculate mort and then average (axis =-1)
     cs_birth_dams_p1 = fun.f_distribution7(cs_birth_dams, cv=cv_cs)
@@ -1679,11 +1679,11 @@ def f_mortality_dam_mu(cu2, ce, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1,
     t_mortalitye_mu_p1 = (cu2[22, 0, ...,na] * cs_birth_dams_p1 + cu2[22, 1, ...,na] * cs_birth_dams_p1 ** 2
                           + ce[22, ...,na] + cu2[22, -1, ...,na])
     ##Back transform the mortality
-    mortalitye_mu_p1 = fun.f_back_transform(t_mortalitye_mu_p1) * period_is_birth[...,na]
-#    mortalitye_mu_p1 = np.exp(t_mortalitye_mu_p1) / (1 + np.exp(t_mortalitye_mu_p1)) * period_is_birth[...,na]
+    mortalitye_mu_p1 = fun.f_back_transform(t_mortalitye_mu_p1)
+    ##Average across the p1 axis (range of CS within the mob)
     mortalitye_mu = np.mean(mortalitye_mu_p1, axis=-1)
-    ##no increase in mortality for the non reproducing ewes (n_foet == 0)
-    mortalitye_mu = mortalitye_mu * (nfoet_b1 > 0)
+    ##Vertical shift in mortality based on litter size and only increase mortality if period is birth and reproducing ewes
+    mortalitye_mu = (mortalitye_mu + cb1[22, ...]) * period_is_birth * (nfoet_b1 > 0)
     ##Adjust by sensitivity on dam mortality
     mortalitye_mu = fun.f_sa(mortalitye_mu, sap_mortalitye, sa_type = 1, value_min = 0)
     return mortalitye_mu
