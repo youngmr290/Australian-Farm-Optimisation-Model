@@ -1581,9 +1581,9 @@ def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_b
     (Twin) Dam mortality in last 6 weeks (preg tox). This increments mortality associated with LWL in the base mortality function.
 
     Preg tox is short for pregnancy toxaemia. It is associated with ketosis where the ewe switches into burning fat
-    (rather than carbohydrates) because they are losing weight. It is predominantly a problem for twin bearing ewes
-    because they have the highest energy demands close to lambing and the least capacity to eat more (because their
-    insides are full of lambs and this restricts stomach capacity). It is usually also more of a problem for ewes
+    (rather than carbohydrates) because they are losing weight. It is predominantly a problem for multiple bearing ewes
+    because they have the highest energy demands close to lambing and the least capacity to eat more (because stomach
+    capacity is restricted due to the volume of the conceptus). It is usually also more of a problem for ewes
     that start out in better condition.
     '''
     ###distribution on ebg - add distribution to ebg_start_p1 and then average (axis =-1)
@@ -1619,10 +1619,10 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     ##Reduce progeny losses due to large progeny (dystocia) - so not double counting progeny losses associated with dam mortality
     mortalityd_yatf = mortalityd_yatf * (1- cd[21,...])
     ##Exposure index
-    xo_p1p2 = cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_p1p2 + cd[10, ..., na,na] * chill_index_p1[..., na] + cb1[11, ..., na,na]
+    xo_p1p2 = cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_p1p2 + cd[10, ..., na,na] * chill_index_p1[..., na] \
+              + cb1[11, ..., na,na]
     ##Progeny mortality at birth from exposure
     mortalityx = np.average(fun.f_back_transform(xo_p1p2), axis=(-1, -2)) * period_is_birth  #axis -1 & -2 are p1 & p2
-#    mortalityx = np.average(np.exp(xo_p1p2) / (1 + np.exp(xo_p1p2)) ,axis = (-1,-2)) * period_is_birth #axis -1 is p1
     ##Apply SA to progeny mortality due to exposure
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
     mortalityx = fun.f_sa(mortalityx, saa_mortalityx, sa_type = 2, value_min = 0)
@@ -1728,8 +1728,6 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
     ##back transform survival & convert to mortality
     mortalityx = (1 - np.average(fun.f_back_transform(t_survival_p1p2),axis = (-1,-2))) * period_is_birth #p1 axis averaged
     mortalityx_std = (1 - np.average(fun.f_back_transform(t_survival_std_p1p2),axis = (-1,-2))) * period_is_birth #p1 axis averaged
-#    mortalityx = (1 - np.average(1 / (1 + np.exp(-t_survival_p1p2)),axis = (-1,-2))) * period_is_birth #p1 axis averaged
-#    mortalityx_std = (1 - np.average(1 / (1 + np.exp(-t_survival_std_p1p2)),axis = (-1,-2))) * period_is_birth #p1 axis averaged
     ##Scale progeny survival using paddock level scalars
     mortalityx = mortalityx_std + (mortalityx - mortalityx_std) * cb1[9, ...]
     ##Apply SA to progeny mortality at birth (LTW)
