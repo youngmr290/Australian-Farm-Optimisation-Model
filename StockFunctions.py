@@ -1609,8 +1609,8 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     ###distribution on w_b & rc_birth - add distribution to ebg_start_p1 and then average (axis =-1)
     w_b_p1p2 = fun.f_distribution7(w_b, cv=cv_weight)[...,na]
     rc_birth_p1p2 = fun.f_distribution7(rc_birth, cv=cv_weight)[...,na,:]
-    mortalityd_yatf_p1p2 = fun.f_sig(fun.f_divide(w_b_p1p2, w_b_exp_y[...,na,na]) * np.maximum(1, rc_birth_p1p2),
-                                 cb1[6, ...,na,na], cb1[7, ...,na,na]) * period_is_birth[...,na,na]
+    mortalityd_yatf_p1p2 = fun.f_sig(fun.f_divide(w_b_p1p2, w_b_exp_y[...,na,na]) * np.maximum(1, rc_birth_p1p2)
+                                     , cb1[6, ...,na,na], cb1[7, ...,na,na]) * period_is_birth[...,na,na]
     mortalityd_yatf = np.mean(mortalityd_yatf_p1p2, axis=(-1,-2))
     ##add sensitivity
     mortalityd_yatf = fun.f_sa(mortalityd_yatf, sap_mortalityp, sa_type = 1, value_min = 0)
@@ -1619,8 +1619,8 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     ##Reduce progeny losses due to large progeny (dystocia) - so not double counting progeny losses associated with dam mortality
     mortalityd_yatf = mortalityd_yatf * (1- cd[21,...])
     ##Exposure index
-    xo_p1p2 = cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_p1p2 + cd[10, ..., na,na] * chill_index_p1[..., na] \
-              + cb1[11, ..., na,na]
+    xo_p1p2 = (cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_p1p2 + cd[10, ..., na,na] * chill_index_p1[..., na]
+               + cb1[11, ..., na,na])
     ##Progeny mortality at birth from exposure
     mortalityx = np.average(fun.f_back_transform(xo_p1p2), axis=(-1, -2)) * period_is_birth  #axis -1 & -2 are p1 & p2
     ##Apply SA to progeny mortality due to exposure
