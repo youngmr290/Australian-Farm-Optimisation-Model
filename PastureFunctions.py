@@ -490,14 +490,14 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     foo_ave_grnha_gop6lzt = (foo_start_grnha_op6lzt + foo_endprior_grnha_gop6lzt) / 2
     ### pasture params used to convert foo for rel availability
     pasture_stage_p6lzt = i_pasture_stage_p6zt[:, na, :, :]
-    ### adjust foo and calc hf
-    foo_ave_grnha_gop6lzt, hf = fsfun.f_foo_convert(cu3, cu4, foo_ave_grnha_gop6lzt, pasture_stage_p6lzt
+    ### adjust foo and calc hf - only used for intake equations
+    intake_foo_ave_grnha_gop6lzt, hf = fsfun.f_foo_convert(cu3, cu4, foo_ave_grnha_gop6lzt, pasture_stage_p6lzt
                                                     , i_legume_zt, i_hr_scalar_zt, z_pos=-2)
     ### calc relative availability - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][5, 0] == 0:  #csiro function used
-        grn_ri_availability_gop6lzt = fsfun.f_ra_cs(foo_ave_grnha_gop6lzt, hf)
+        grn_ri_availability_gop6lzt = fsfun.f_ra_cs(intake_foo_ave_grnha_gop6lzt, hf)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][5, 0] == 1:  #Murdoch function used
-        grn_ri_availability_gop6lzt = fsfun.f_ra_mu(foo_ave_grnha_gop6lzt, hf)
+        grn_ri_availability_gop6lzt = fsfun.f_ra_mu(intake_foo_ave_grnha_gop6lzt, hf)
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6, 0] == 0:  #csiro function used
         grn_ri_quality_gop6lzt = fsfun.f_rq_cs(dmd_diet_grnha_gop6lzt, i_legume_zt)
