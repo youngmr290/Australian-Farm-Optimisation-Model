@@ -261,9 +261,289 @@ def f_xy_graph(data):
 
 
 ###################
-# input summaries #
+# variable setup  #
 ###################
+def f_stock_reshape(lp_vars, r_vals):
+    '''
+    Stock reshape. Gets everything into the correct shape.
+    Returns a dictionary with stock params.
+    '''
+    ##keys
+    keys_p7 = r_vals['fin']['keys_p7']
+    keys_a = r_vals['stock']['keys_a']
+    keys_d = r_vals['stock']['keys_d']
+    keys_g0 = r_vals['stock']['keys_g0']
+    keys_g1 = r_vals['stock']['keys_g1']
+    keys_g2 = r_vals['stock']['keys_g2']
+    keys_g3 = r_vals['stock']['keys_g3']
+    keys_f = r_vals['stock']['keys_f']
+    keys_h1 = r_vals['stock']['keys_h1']
+    keys_i = r_vals['stock']['keys_i']
+    keys_k2 = r_vals['stock']['keys_k2']
+    keys_k3 = r_vals['stock']['keys_k3']
+    keys_k5 = r_vals['stock']['keys_k5']
+    keys_lw1 = r_vals['stock']['keys_lw1']
+    keys_lw3 = r_vals['stock']['keys_lw3']
+    keys_lw_prog = r_vals['stock']['keys_lw_prog']
+    keys_n1 = r_vals['stock']['keys_n1']
+    keys_n3 = r_vals['stock']['keys_n3']
+    keys_p8 = r_vals['stock']['keys_p8']
+    keys_t1 = r_vals['stock']['keys_t1']
+    keys_t2 = r_vals['stock']['keys_t2']
+    keys_t3 = r_vals['stock']['keys_t3']
+    keys_v1 = r_vals['stock']['keys_v1']
+    keys_v3 = r_vals['stock']['keys_v3']
+    keys_y0 = r_vals['stock']['keys_y0']
+    keys_y1 = r_vals['stock']['keys_y1']
+    keys_y3 = r_vals['stock']['keys_y3']
+    keys_x = r_vals['stock']['keys_x']
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    keys_p6 = r_vals['stock']['keys_p6']
+    keys_p5 = r_vals['lab']['keys_p5']
+    keys_pastures = r_vals['pas']['keys_pastures']
 
+    ##axis len
+    len_a = len(keys_a)
+    len_p7 = len(keys_p7)
+    len_d = len(keys_d)
+    len_g0 = len(keys_g0)
+    len_g1 = len(keys_g1)
+    len_g2 = len(keys_g2)
+    len_g3 = len(keys_g3)
+    len_f = len(keys_f)
+    len_h1 = len(keys_h1)
+    len_i = len(keys_i)
+    len_k2 = len(keys_k2)
+    len_k3 = len(keys_k3)
+    len_k5 = len(keys_k5)
+    len_lw1 = len(keys_lw1)
+    len_lw3 = len(keys_lw3)
+    len_lw_prog = len(keys_lw_prog)
+    len_n1 = len(keys_n1)
+    len_n3 = len(keys_n3)
+    len_p8 = len(keys_p8)
+    len_q = len(keys_q)
+    len_s = len(keys_s)
+    len_t1 = len(keys_t1)
+    len_t2 = len(keys_t2)
+    len_t3 = len(keys_t3)
+    len_v1 = len(keys_v1)
+    len_v3 = len(keys_v3)
+    len_y0 = len(keys_y0)
+    len_y1 = len(keys_y1)
+    len_y3 = len(keys_y3)
+    len_x = len(keys_x)
+    len_z = len(keys_z)
+    len_p6 = len(keys_p6)
+    len_p5 = len(keys_p5)
+
+    ##create dict for reshaped variables
+    stock_vars = {}
+
+    ##animal numbers
+    ###shapes
+    sire_shape = len_q, len_s, len_g0
+    dams_shape = len_q, len_s, len_k2, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1
+    prog_shape = len_q, len_s, len_k3, len_k5, len_t2, len_lw_prog, len_z, len_i, len_a, len_x, len_g2
+    offs_shape = len_q, len_s, len_k3, len_k5, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3
+    infra_shape = len_q, len_s, len_h1, len_z
+    ###sire
+    stock_vars['sire_numbers_qsg0'] = f_vars2np(lp_vars, 'v_sire', sire_shape).astype(float)
+    ###dams
+    maskz8_k2tvanwziy1g1 = r_vals['stock']['maskz8_k2tvanwziy1g1']
+    stock_vars['dams_numbers_qsk2tvanwziy1g1'] = f_vars2np(lp_vars, 'v_dams', dams_shape, maskz8_k2tvanwziy1g1,
+                                                           z_pos=-4).astype(float)
+    ###prog
+    stock_vars['prog_numbers_qsk3k5twzia0xg2'] = f_vars2np(lp_vars, 'v_prog', prog_shape).astype(float)
+    ###offs
+    maskz8_k3k5tvnwziaxyg3 = r_vals['stock']['maskz8_k3k5tvnwziaxyg3']
+    stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'] = f_vars2np(lp_vars, 'v_offs', offs_shape, maskz8_k3k5tvnwziaxyg3,
+                                                             z_pos=-6).astype(float)
+    ###infrastructure
+    stock_vars['infrastructure_qsh1z'] = f_vars2np(lp_vars, 'v_infrastructure', infra_shape).astype(float)
+
+    return stock_vars
+
+
+def f_feed_reshape(lp_vars, r_vals):
+    '''
+    Reshape feed (pasture, residue & crop grazing) lp variables into numpy array.
+
+    This is separate to the stock function above to save processing time (and the feed stuff overlaps a lot i.e.
+    uses same keys).
+
+    :param lp_vars: lp variables
+    :return: dict
+    '''
+    keys_d = r_vals['pas']['keys_d']
+    keys_f = r_vals['pas']['keys_f']
+    keys_g = r_vals['pas']['keys_g']
+    keys_k = r_vals['pas']['keys_k']
+    keys_k1 = r_vals['stub']['keys_k1']
+    keys_l = r_vals['pas']['keys_l']
+    keys_o = r_vals['pas']['keys_o']
+    keys_p5 = r_vals['pas']['keys_p5']
+    keys_p6 = r_vals['pas']['keys_p6']
+    keys_p7 = r_vals['zgen']['keys_p7']
+    keys_r = r_vals['pas']['keys_r']
+    keys_t = r_vals['pas']['keys_t']
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_s1 = r_vals['stub']['keys_s1']
+    keys_s2 = r_vals['stub']['keys_s2']
+    keys_z = r_vals['zgen']['keys_z']
+
+    len_d = len(keys_d)
+    len_f = len(keys_f)
+    len_p6 = len(keys_p6)
+    len_g = len(keys_g)
+    len_k = len(keys_k)
+    len_k1 = len(keys_k1)
+    len_l = len(keys_l)
+    len_o = len(keys_o)
+    len_p5 = len(keys_p5)
+    len_q = len(keys_q)
+    len_r = len(keys_r)
+    len_s = len(keys_s)
+    len_s1 = len(keys_s1)
+    len_s2 = len(keys_s2)
+    len_t = len(keys_t)
+    len_z = len(keys_z)
+
+    ##dict to store reshaped pasture stuff in
+    feed_vars = {}
+
+    ##store keys - must be in axis order
+    ###pasture
+    feed_vars['keys_qsfgop6lzt'] = [keys_q, keys_s, keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    feed_vars['keys_fgop6lzt'] = [keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    feed_vars['keys_gop6lzt'] = [keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    feed_vars['keys_qsfdp6zt'] = [keys_q, keys_s, keys_f, keys_d, keys_p6, keys_z, keys_t]
+    feed_vars['keys_qsfdp6zlt'] = [keys_q, keys_s, keys_f, keys_d, keys_p6, keys_z, keys_l, keys_t]
+    feed_vars['keys_fdp6zt'] = [keys_f, keys_d, keys_p6, keys_z, keys_t]
+    feed_vars['keys_qsdp6zt'] = [keys_q, keys_s, keys_d, keys_p6, keys_z, keys_t]
+    feed_vars['keys_qsdp6zlt'] = [keys_q, keys_s, keys_d, keys_p6, keys_z, keys_l, keys_t]
+    feed_vars['keys_dp6zt'] = [keys_d, keys_p6, keys_z, keys_t]
+    feed_vars['keys_qsfp6lz'] = [keys_q, keys_s, keys_f, keys_p6, keys_l, keys_z]
+    ###crop residue
+    feed_vars['keys_qszp6fks1s2'] = [keys_q, keys_s, keys_z, keys_p6, keys_f, keys_k1, keys_s1, keys_s2]
+    ###crop grazing
+    feed_vars['keys_qsfkp6p5zl'] = [keys_q, keys_s, keys_f, keys_k1, keys_p6, keys_p5, keys_z, keys_l]
+    ###saltbush
+    feed_vars['keys_qszp6fl'] = [keys_q, keys_s, keys_z, keys_p6, keys_f, keys_l]
+    feed_vars['keys_qsp7zl'] = [keys_q, keys_s, keys_p7, keys_z, keys_l]
+    ###periods
+    feed_vars['keys_p7z'] = [keys_p7, keys_z]
+    feed_vars['keys_p6z'] = [keys_p6, keys_z]
+
+    ##shapes
+    ###pasture
+    qsfgop6lzt = len_q, len_s, len_f, len_g, len_o, len_p6, len_l, len_z, len_t
+    qsfdp6zt = len_q, len_s, len_f, len_d, len_p6, len_z, len_t
+    qsfdp6zlt = len_q, len_s, len_f, len_d, len_p6, len_z, len_l, len_t
+    qsdp6zt = len_q, len_s, len_d, len_p6, len_z, len_t
+    qsdp6zlt = len_q, len_s, len_d, len_p6, len_z, len_l, len_t
+    qsfp6lz = len_q, len_s, len_f, len_p6, len_l, len_z
+    ###residue
+    qszp6fks1s2 = len_q, len_s, len_z, len_p6, len_f, len_k1, len_s1, len_s2
+    ###crop graze
+    qsfkp6p5zl = len_q, len_s, len_f, len_k1, len_p6, len_p5, len_z, len_l
+    ###saltbush
+    qszp6fl = len_q, len_s, len_z, len_p6, len_f, len_l
+    qszl = len_q, len_s, len_z, len_l
+
+    ##reshape z8 mask to uncluster
+    maskz8_p6z = r_vals['pas']['mask_fp_z8var_p6z']
+    maskz8_zp6 = maskz8_p6z.T
+    maskz8_p6zna = maskz8_p6z[:, :, na]
+    maskz8_p6znana = maskz8_p6z[:, :, na, na]
+    maskz8_p6naz = maskz8_p6z[:, na, :]
+    maskz8_p6nazna = maskz8_p6z[:, na, :, na]
+
+    ##pasture
+    ###green pasture hectare variable
+    feed_vars['greenpas_ha_qsfgop6lzt'] = f_vars2np(lp_vars, 'v_greenpas_ha', qsfgop6lzt, maskz8_p6nazna, z_pos=-2)
+    ###dry end period
+    feed_vars['drypas_transfer_qsdp6zlt'] = f_vars2np(lp_vars, 'v_drypas_transfer', qsdp6zlt, maskz8_p6znana, z_pos=-3)
+    ###nap end period
+    feed_vars['nap_transfer_qsdp6zt'] = f_vars2np(lp_vars, 'v_nap_transfer', qsdp6zt, maskz8_p6zna, z_pos=-2)
+    ###dry consumed
+    feed_vars['drypas_consumed_qsfdp6zlt'] = f_vars2np(lp_vars, 'v_drypas_consumed', qsfdp6zlt, maskz8_p6znana,
+                                                       z_pos=-3)
+    ###nap consumed
+    feed_vars['nap_consumed_qsfdp6zt'] = f_vars2np(lp_vars, 'v_nap_consumed', qsfdp6zt, maskz8_p6zna, z_pos=-2)
+    ###poc consumed
+    feed_vars['poc_consumed_qsfp6lz'] = f_vars2np(lp_vars, 'v_poc', qsfp6lz, maskz8_p6naz, z_pos=-1)
+
+    ##crop residue
+    ###stubble consumed
+    feed_vars['stub_qszp6fks1s2'] = f_vars2np(lp_vars, 'v_stub_con', qszp6fks1s2, maskz8_zp6[:, :, na, na, na, na],
+                                              z_pos=-6)
+
+    ##crop grazing
+    ###crop consumed
+    feed_vars['crop_consumed_qsfkp6p5zl'] = f_vars2np(lp_vars, 'v_tonnes_crop_consumed', qsfkp6p5zl, maskz8_p6nazna,
+                                                      z_pos=-2)
+
+    ##saltbush
+    ###saltbush consumed
+    feed_vars['v_tonnes_sb_consumed_qszp6fl'] = f_vars2np(lp_vars, 'v_tonnes_sb_consumed', qszp6fl,
+                                                          maskz8_zp6[:, :, na, na], z_pos=-4)
+    feed_vars['v_slp_ha_qszl'] = f_vars2np(lp_vars, 'v_slp_ha', qszl, z_pos=-2)
+
+    return feed_vars
+
+
+def f_mach_reshape(lp_vars, r_vals):
+    '''
+    Reshape mach lp variables into numpy array.
+
+
+    :param lp_vars: lp variables
+    :return: dict
+    '''
+    keys_k = r_vals['pas']['keys_k']
+    keys_l = r_vals['pas']['keys_l']
+    keys_p5 = r_vals['pas']['keys_p5']
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+
+    len_k = len(keys_k)
+    len_l = len(keys_l)
+    len_p5 = len(keys_p5)
+    len_q = len(keys_q)
+    len_s = len(keys_s)
+    len_z = len(keys_z)
+
+    ##dict to store reshaped pasture stuff in
+    mach_vars = {}
+
+    ##store keys - must be in axis order
+    mach_vars['keys_qszp5kl'] = [keys_q, keys_s, keys_z, keys_p5, keys_k, keys_l]
+
+    ##shapes
+    qszp5kl = len_q, len_s, len_z, len_p5, len_k, len_l
+
+    ##reshape z8 mask to uncluster
+    maskz8_p5z = r_vals['lab']['maskz8_p5z']
+    maskz8_zp5 = maskz8_p5z.T
+    maskz8_zp5nana = maskz8_zp5[:, :, na, na]
+
+    ##pasture
+    ###green pasture hectare variable
+    mach_vars['v_contractseeding_ha'] = f_vars2np(lp_vars, 'v_contractseeding_ha', qszp5kl, maskz8_zp5nana, z_pos=-4)
+    ###dry end period
+    mach_vars['v_seeding_machdays'] = f_vars2np(lp_vars, 'v_seeding_machdays', qszp5kl, maskz8_zp5nana, z_pos=-4)
+
+    return mach_vars
+
+
+#########################################
+# intermediate report building functions#
+#########################################
 def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
     '''Returns price summaries
 
@@ -318,9 +598,6 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
         return saleprice
 
 
-#########################################
-# intermediate report building functions#
-#########################################
 
 def f_summary(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
@@ -778,234 +1055,6 @@ def f_crop_summary(lp_vars, r_vals, option=0):
     ##return all if option==0
     if option == 0:
         return exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k_p7zqs
-
-
-def f_stock_reshape(lp_vars, r_vals):
-    '''
-    Stock reshape. Gets everything into the correct shape.
-    Returns a dictionary with stock params.
-    '''
-    ##keys
-    keys_p7 = r_vals['fin']['keys_p7']
-    keys_a = r_vals['stock']['keys_a']
-    keys_d = r_vals['stock']['keys_d']
-    keys_g0 = r_vals['stock']['keys_g0']
-    keys_g1 = r_vals['stock']['keys_g1']
-    keys_g2 = r_vals['stock']['keys_g2']
-    keys_g3 = r_vals['stock']['keys_g3']
-    keys_f = r_vals['stock']['keys_f']
-    keys_h1 = r_vals['stock']['keys_h1']
-    keys_i = r_vals['stock']['keys_i']
-    keys_k2 = r_vals['stock']['keys_k2']
-    keys_k3 = r_vals['stock']['keys_k3']
-    keys_k5 = r_vals['stock']['keys_k5']
-    keys_lw1 = r_vals['stock']['keys_lw1']
-    keys_lw3 = r_vals['stock']['keys_lw3']
-    keys_lw_prog = r_vals['stock']['keys_lw_prog']
-    keys_n1 = r_vals['stock']['keys_n1']
-    keys_n3 = r_vals['stock']['keys_n3']
-    keys_p8 = r_vals['stock']['keys_p8']
-    keys_t1 = r_vals['stock']['keys_t1']
-    keys_t2 = r_vals['stock']['keys_t2']
-    keys_t3 = r_vals['stock']['keys_t3']
-    keys_v1 = r_vals['stock']['keys_v1']
-    keys_v3 = r_vals['stock']['keys_v3']
-    keys_y0 = r_vals['stock']['keys_y0']
-    keys_y1 = r_vals['stock']['keys_y1']
-    keys_y3 = r_vals['stock']['keys_y3']
-    keys_x = r_vals['stock']['keys_x']
-    keys_q = r_vals['zgen']['keys_q']
-    keys_s = r_vals['zgen']['keys_s']
-    keys_z = r_vals['zgen']['keys_z']
-    keys_p6 = r_vals['stock']['keys_p6']
-    keys_p5 = r_vals['lab']['keys_p5']
-    keys_pastures = r_vals['pas']['keys_pastures']
-
-    ##axis len
-    len_a = len(keys_a)
-    len_p7 = len(keys_p7)
-    len_d = len(keys_d)
-    len_g0 = len(keys_g0)
-    len_g1 = len(keys_g1)
-    len_g2 = len(keys_g2)
-    len_g3 = len(keys_g3)
-    len_f = len(keys_f)
-    len_h1 = len(keys_h1)
-    len_i = len(keys_i)
-    len_k2 = len(keys_k2)
-    len_k3 = len(keys_k3)
-    len_k5 = len(keys_k5)
-    len_lw1 = len(keys_lw1)
-    len_lw3 = len(keys_lw3)
-    len_lw_prog = len(keys_lw_prog)
-    len_n1 = len(keys_n1)
-    len_n3 = len(keys_n3)
-    len_p8 = len(keys_p8)
-    len_q = len(keys_q)
-    len_s = len(keys_s)
-    len_t1 = len(keys_t1)
-    len_t2 = len(keys_t2)
-    len_t3 = len(keys_t3)
-    len_v1 = len(keys_v1)
-    len_v3 = len(keys_v3)
-    len_y0 = len(keys_y0)
-    len_y1 = len(keys_y1)
-    len_y3 = len(keys_y3)
-    len_x = len(keys_x)
-    len_z = len(keys_z)
-    len_p6 = len(keys_p6)
-    len_p5 = len(keys_p5)
-
-    ##create dict for reshaped variables
-    stock_vars = {}
-
-
-    ##animal numbers
-    ###shapes
-    sire_shape = len_q, len_s, len_g0
-    dams_shape = len_q, len_s, len_k2, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1
-    prog_shape = len_q, len_s, len_k3, len_k5, len_t2, len_lw_prog, len_z, len_i, len_a, len_x, len_g2
-    offs_shape = len_q, len_s, len_k3, len_k5, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3
-    infra_shape = len_q, len_s, len_h1, len_z
-    ###sire
-    stock_vars['sire_numbers_qsg0'] = f_vars2np(lp_vars, 'v_sire', sire_shape).astype(float)
-    ###dams
-    maskz8_k2tvanwziy1g1 = r_vals['stock']['maskz8_k2tvanwziy1g1']
-    stock_vars['dams_numbers_qsk2tvanwziy1g1'] = f_vars2np(lp_vars, 'v_dams', dams_shape, maskz8_k2tvanwziy1g1, z_pos=-4).astype(float)
-    ###prog
-    stock_vars['prog_numbers_qsk3k5twzia0xg2'] = f_vars2np(lp_vars, 'v_prog', prog_shape).astype(float)
-    ###offs
-    maskz8_k3k5tvnwziaxyg3 = r_vals['stock']['maskz8_k3k5tvnwziaxyg3']
-    stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'] = f_vars2np(lp_vars, 'v_offs', offs_shape, maskz8_k3k5tvnwziaxyg3, z_pos=-6).astype(float)
-    ###infrastructure
-    stock_vars['infrastructure_qsh1z'] = f_vars2np(lp_vars, 'v_infrastructure', infra_shape).astype(float)
-
-    return stock_vars
-
-
-def f_feed_reshape(lp_vars, r_vals):
-    '''
-    Reshape feed (pasture, residue & crop grazing) lp variables into numpy array.
-    
-    This is separate to the stock function above to save processing time (and the feed stuff overlaps a lot i.e.
-    uses same keys).
-
-    :param lp_vars: lp variables
-    :return: dict
-    '''
-    keys_d = r_vals['pas']['keys_d']
-    keys_f = r_vals['pas']['keys_f']
-    keys_g = r_vals['pas']['keys_g']
-    keys_k = r_vals['pas']['keys_k']
-    keys_k1 = r_vals['stub']['keys_k1']
-    keys_l = r_vals['pas']['keys_l']
-    keys_o = r_vals['pas']['keys_o']
-    keys_p5 = r_vals['pas']['keys_p5']
-    keys_p6 = r_vals['pas']['keys_p6']
-    keys_p7 = r_vals['zgen']['keys_p7']
-    keys_r = r_vals['pas']['keys_r']
-    keys_t = r_vals['pas']['keys_t']
-    keys_q = r_vals['zgen']['keys_q']
-    keys_s = r_vals['zgen']['keys_s']
-    keys_s1 = r_vals['stub']['keys_s1']
-    keys_s2 = r_vals['stub']['keys_s2']
-    keys_z = r_vals['zgen']['keys_z']
-
-    len_d = len(keys_d)
-    len_f = len(keys_f)
-    len_p6 = len(keys_p6)
-    len_g = len(keys_g)
-    len_k = len(keys_k)
-    len_k1 = len(keys_k1)
-    len_l = len(keys_l)
-    len_o = len(keys_o)
-    len_p5 = len(keys_p5)
-    len_q = len(keys_q)
-    len_r = len(keys_r)
-    len_s = len(keys_s)
-    len_s1 = len(keys_s1)
-    len_s2 = len(keys_s2)
-    len_t = len(keys_t)
-    len_z = len(keys_z)
-
-    ##dict to store reshaped pasture stuff in
-    feed_vars = {}
-
-    ##store keys - must be in axis order
-    ###pasture
-    feed_vars['keys_qsfgop6lzt'] = [keys_q, keys_s, keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
-    feed_vars['keys_fgop6lzt'] = [keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
-    feed_vars['keys_gop6lzt'] = [keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
-    feed_vars['keys_qsfdp6zt'] = [keys_q, keys_s, keys_f, keys_d, keys_p6, keys_z, keys_t]
-    feed_vars['keys_qsfdp6zlt'] = [keys_q, keys_s, keys_f, keys_d, keys_p6, keys_z, keys_l, keys_t]
-    feed_vars['keys_fdp6zt'] = [keys_f, keys_d, keys_p6, keys_z, keys_t]
-    feed_vars['keys_qsdp6zt'] = [keys_q, keys_s, keys_d, keys_p6, keys_z, keys_t]
-    feed_vars['keys_qsdp6zlt'] = [keys_q, keys_s, keys_d, keys_p6, keys_z, keys_l, keys_t]
-    feed_vars['keys_dp6zt'] = [keys_d, keys_p6, keys_z, keys_t]
-    feed_vars['keys_qsfp6lz'] = [keys_q, keys_s, keys_f, keys_p6, keys_l, keys_z]
-    ###crop residue
-    feed_vars['keys_qszp6fks1s2'] = [keys_q, keys_s, keys_z, keys_p6, keys_f, keys_k1, keys_s1, keys_s2]
-    ###crop grazing
-    feed_vars['keys_qsfkp6p5zl'] = [keys_q, keys_s, keys_f, keys_k1, keys_p6, keys_p5, keys_z, keys_l]
-    ###saltbush
-    feed_vars['keys_qszp6fl'] = [keys_q, keys_s, keys_z, keys_p6, keys_f, keys_l]
-    feed_vars['keys_qsp7zl'] = [keys_q, keys_s, keys_p7, keys_z, keys_l]
-    ###periods
-    feed_vars['keys_p7z'] = [keys_p7, keys_z]
-    feed_vars['keys_p6z'] = [keys_p6, keys_z]
-
-    ##shapes
-    ###pasture
-    qsfgop6lzt = len_q, len_s, len_f, len_g, len_o, len_p6, len_l, len_z, len_t
-    qsfdp6zt = len_q, len_s, len_f, len_d, len_p6, len_z, len_t
-    qsfdp6zlt = len_q, len_s, len_f, len_d, len_p6, len_z, len_l, len_t
-    qsdp6zt = len_q, len_s, len_d, len_p6, len_z, len_t
-    qsdp6zlt = len_q, len_s, len_d, len_p6, len_z, len_l, len_t
-    qsfp6lz = len_q, len_s, len_f, len_p6, len_l, len_z
-    ###residue
-    qszp6fks1s2 = len_q, len_s, len_z, len_p6, len_f, len_k1, len_s1, len_s2
-    ###crop graze
-    qsfkp6p5zl = len_q, len_s, len_f, len_k1, len_p6, len_p5, len_z, len_l
-    ###saltbush
-    qszp6fl = len_q, len_s, len_z, len_p6, len_f, len_l
-    qszl = len_q, len_s, len_z, len_l
-
-    ##reshape z8 mask to uncluster
-    maskz8_p6z = r_vals['pas']['mask_fp_z8var_p6z']
-    maskz8_zp6 = maskz8_p6z.T
-    maskz8_p6zna = maskz8_p6z[:,:,na]
-    maskz8_p6znana = maskz8_p6z[:,:,na,na]
-    maskz8_p6naz = maskz8_p6z[:,na,:]
-    maskz8_p6nazna = maskz8_p6z[:,na,:,na]
-
-    ##pasture
-    ###green pasture hectare variable
-    feed_vars['greenpas_ha_qsfgop6lzt'] = f_vars2np(lp_vars, 'v_greenpas_ha', qsfgop6lzt, maskz8_p6nazna, z_pos=-2)
-    ###dry end period
-    feed_vars['drypas_transfer_qsdp6zlt'] = f_vars2np(lp_vars, 'v_drypas_transfer', qsdp6zlt, maskz8_p6znana, z_pos=-3)
-    ###nap end period
-    feed_vars['nap_transfer_qsdp6zt'] = f_vars2np(lp_vars, 'v_nap_transfer', qsdp6zt, maskz8_p6zna, z_pos=-2)
-    ###dry consumed
-    feed_vars['drypas_consumed_qsfdp6zlt'] = f_vars2np(lp_vars, 'v_drypas_consumed', qsfdp6zlt, maskz8_p6znana, z_pos=-3)
-    ###nap consumed
-    feed_vars['nap_consumed_qsfdp6zt'] = f_vars2np(lp_vars, 'v_nap_consumed', qsfdp6zt, maskz8_p6zna, z_pos=-2)
-    ###poc consumed
-    feed_vars['poc_consumed_qsfp6lz'] = f_vars2np(lp_vars, 'v_poc', qsfp6lz, maskz8_p6naz, z_pos=-1)
-
-    ##crop residue
-    ###stubble consumed
-    feed_vars['stub_qszp6fks1s2'] = f_vars2np(lp_vars, 'v_stub_con', qszp6fks1s2, maskz8_zp6[:,:,na,na,na,na], z_pos=-6)
-
-    ##crop grazing
-    ###crop consumed
-    feed_vars['crop_consumed_qsfkp6p5zl'] = f_vars2np(lp_vars, 'v_tonnes_crop_consumed', qsfkp6p5zl, maskz8_p6nazna, z_pos=-2)
-
-    ##saltbush
-    ###saltbush consumed
-    feed_vars['v_tonnes_sb_consumed_qszp6fl'] = f_vars2np(lp_vars, 'v_tonnes_sb_consumed', qszp6fl, maskz8_zp6[:,:,na,na], z_pos=-4)
-    feed_vars['v_slp_ha_qszl'] = f_vars2np(lp_vars, 'v_slp_ha', qszl, z_pos=-2)
-
-    return feed_vars
 
 
 def f_stock_cash_summary(lp_vars, r_vals):
