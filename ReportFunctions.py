@@ -1332,7 +1332,7 @@ def f_overhead_summary(r_vals):
     exp_fix_c = r_vals['fin']['overheads']
     return exp_fix_c
 
-def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False):
+def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False, summary3=False):
     '''
     DSE calculation.
 
@@ -1346,9 +1346,11 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False):
     :param per_ha: Bool
         if true it returns DSE/ha else it returns total dse
     :param summary1: Bool
-        if true it returns the total DSE/ha in winter. Used in the summary report
+        if true it returns the total expected DSE/ha in winter. Used in the summary report
     :param summary2: Bool
         if true it returns the total numbers at the start and end of the season with qsz axis. Used in numbers summary report.
+    :param summary1: Bool
+        if true it returns the total DSE/ha in winter for each season.
     :return: DSE per pasture hectare for each sheep group.
 
     '''
@@ -1439,6 +1441,11 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False):
         numbers_qsz = np.stack([numbers_start_qsz, numbers_end_qsz], axis=-1)
         numbers_qsz = f_numpy2df(numbers_qsz, keys_qszS, [0, 1], [2, 3])
         return numbers_qsz
+
+    elif summary3:
+        sr_qsz = np.sum(r_vals['stock']['wg_propn_p6z'] * (dse_sire + dse_dams + dse_offs), axis=-2).round(2)  #sum SR for all sheep groups in winter grazed fp (to return winter sr)
+        keys_qsz = [keys_q, keys_s, keys_z]
+        return f_numpy2df(sr_qsz, keys_qsz, [0, 1, 2], [])
 
     ##turn to table - rows and cols need to be a list of lists/arrays
     dse_sire = fun.f_produce_df(dse_sire.ravel(), rows=sire_key, columns=[['Sire DSE']])
