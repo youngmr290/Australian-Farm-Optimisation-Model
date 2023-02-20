@@ -920,7 +920,7 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g,
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
     ##Wool growth (protein weight-as shorn i.e. not DM) if there was no lag
     d_cfw_nolag_g = cw_g[8, ...] * wge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
-    ##Process the CFW REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the CFW REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_cfw_nolag_g = f1_rev_update('cfw', d_cfw_nolag_g, rev_trait_value)
     ##Wool growth (protein weight) with lag and updated history
     d_cfw_g, d_cfw_history_p2g = f1_history(d_cfw_history_start_p2g, d_cfw_nolag_g, days_period_g)
@@ -930,7 +930,7 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g,
     mew_g = new_g / kw_yg #can be negative because mem assumes 4g of wool is grown. If less is grown then mew 'returns' the energy.
     ##Fibre diameter for the days growth
     d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
-    ##Process the FD REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the FD REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_fd_g = f1_rev_update('fd', d_fd_g, rev_trait_value)
     ##Surface Area
     area = cc_g[1, ...] * ffcfw_start_g ** (2/3)
@@ -1007,7 +1007,7 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     pcg = cg[12, ...] + zf1 * (cg[13, ...] - cg[14, ...] * (level - 1)) - zf2 * cg[15, ...] * (rc_start - 1)
     ##Empty bodyweight gain
     ebg = neg / evg
-    ##Process the Liveweight REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the Liveweight REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
     ##Protein gain
     pg = pcg * ebg
@@ -1032,7 +1032,7 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     evg = c_evg * (1 + sen.sap['evg'] * zf2)
     ##Empty bodyweight gain
     ebg = neg / evg
-    ##Process the Liveweight REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the Liveweight REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
     # ##Protein gain
     # pg = pcg * ebg
@@ -1170,7 +1170,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         slc[b1_pos] = slice(2,3)
         t_cr[tuple(slc)] = f1_rev_update('conception', t_cr[tuple(slc)], rev_trait_value)
 
-        ##Process the Litter size REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+        ##Process the Litter size REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         ##The litter size REV is stored as the proportion of the pregnant dams that are single-, twin- & triplet-bearing
         ###Steps: Calculate litter size from t_cr, adjust litter size (if required) then recalculate t_cr from new litter size
         ### Calculating litter size (# of foetuses / dam pregnant) requires a mask for the pregnant dams that is the same shape as t_cr
@@ -1532,7 +1532,8 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_rec
             a. mortality due to exposure at birth (mortalityx) that is a function of ewe RC at birth and the chill index at birth
             b. mortality due to difficult birth (mortalityd - dystocia) that depends on the lamb birth weight and ewe relative condition at birth
         4. dam mortality that is the sum of
-            a. mortality due to preg toxemia in the last 6 weeks of pregnancy. This occurs for multiple bearing dams and is affected by rate of LW loss
+            a. mortality due to preg toxemia in the last 6 weeks of pregnancy. This occurs for multiple bearing dams and is affected by rate of LW loss.
+               This is calculated each week and the mortality is summed, rather than calculated from the sum of the LW change.
             b. mortality due to dystocia (calculated in f_mortality_progeny_cs). It is assumed that ewe death is associated with a fixed proportion of the lambs deaths from dystocia.
             '''
 def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max, days_period, rev_trait_value, sap_mortalityb):
@@ -1548,7 +1549,7 @@ def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     mortalityb = np.mean(mortalityb_p1p2, axis=(-1,-2))
     ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
-    ##Process the Mortality REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the Mortality REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     mortalityb = f1_rev_update('mortality', mortalityb, rev_trait_value)
     return mortalityb
 
@@ -1570,7 +1571,7 @@ def f_mortality_dam_cs():
     Peri natal (at birth) Dam mortality.
     Currently the CSIRO system includes dam mortality due to PregTox (f_mortality_pregtox_cs) and dam mortality due to
     dystocia (included in f_mortality_progeny_cs) but there is no calculation of deaths from other causes,
-    such as those that might effect twin bearing dams at birth.
+    such as those that might affect twin bearing dams at birth.
     '''
     return 0
 
@@ -1625,7 +1626,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     ##Apply SA to progeny mortality due to exposure
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
     mortalityx = fun.f_sa(mortalityx, saa_mortalityx, sa_type = 2, value_min = 0)
-    ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     mortalityx = f1_rev_update('era', mortalityx, rev_trait_value)
     return mortalityx, mortalityd_yatf, mortalityd_dams
 
@@ -1649,16 +1650,16 @@ def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ###distribution on ebg & rc_start, calculate mort and then average (axis =-1,-2)
     ebg_start_p1p2 = fun.f_distribution7(ebg_start, sd=sd_ebg)[...,na]
     rc_start_p1p2 = fun.f_distribution7(rc_start, cv=cv_weight)[...,na,:]
-    ###calc mort scalars
+    ###calc mort scalars for the hybrid mortality function
     rc_mortality_scalar_p1p2 = (np.minimum(0, rc_start_p1p2 - cd[24, ...,na,na])
                                 / (cd[23, ...,na,na] - cd[24, ...,na,na]))**2
-    ebg_mortality_scalar_p1p2 = (np.minimum(0, ebg_start_p1p2 * cg[18, ...,na,na] - cd[26, ...,na,na] - d_nw_max[...,na,na])
+    ebg_mortality_scalar_p1p2 = (np.minimum(0, (ebg_start_p1p2 * cg[18, ...,na,na] - d_nw_max[...,na,na]) - cd[26, ...,na,na])
                                  / (cd[25, ...,na,na] - cd[26, ...,na,na]))**2
     mortalityb_p1p2 = (cd[1, ...,na,na] + cd[22, ...,na,na] * rc_mortality_scalar_p1p2 * ebg_mortality_scalar_p1p2) * days_period[...,na,na]  #mul by days period to convert from mort per day to per period
     mortalityb = np.mean(mortalityb_p1p2, axis=(-1,-2))
     ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
-    ##Process the Mortality REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the Mortality REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     mortalityb = f1_rev_update('mortality', mortalityb, rev_trait_value)
     return mortalityb
 
