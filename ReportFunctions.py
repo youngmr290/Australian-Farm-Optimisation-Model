@@ -868,6 +868,43 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     if option == 0:
         return exp_mach_k_p7zqs, mach_insurance_p7z
 
+def f_available_cropgrazing(lp_vars, r_vals):
+    '''
+    Calculates the total crop that CAN be grazed based on seeding timing (the actual amount consumed is optimised).
+    '''
+    mach_vars = f_mach_reshape(lp_vars, r_vals)
+    v_contractseeding_ha_qszp5kl = mach_vars['v_contractseeding_ha']
+    v_seeding_machdays_qszp5kl = mach_vars['v_seeding_machdays']
+
+    ##calc ha sown by farmer
+    seeding_rate_kl = r_vals['mach']['seeding_rate']
+    farmerseeding_ha_qszp5kl = v_seeding_machdays_qszp5kl * np.array(seeding_rate_kl)
+
+    ##total ha sown
+    ha_sown_qszp5kl = v_contractseeding_ha_qszp5kl + farmerseeding_ha_qszp5kl
+    ###cut the k axis to show just the crops
+    keys_k = r_vals['pas']['keys_k']
+    keys_k1 = r_vals['stub']['keys_k1']
+    mask_k = np.any(keys_k1[:,na] == keys_k, axis=0)
+    ha_sown_qszp5kl = np.compress(mask_k, ha_sown_qszp5kl, axis=-2)
+
+    ##total crop DM available for grazing
+    crop_DM_provided_z8p5p6klz9 = np.moveaxis(r_vals['crpgrz']['crop_DM_provided_kp6p5z8lz9'], [0,1,2,3],[3,2,1,0])
+    crop_DM_required_zp5p6k = np.moveaxis(r_vals['crpgrz']['crop_DM_required_kp6p5z'], [0,1,2,3],[3,2,1,0])
+    ###adjust for trampling/wastage to calc total available for consumption
+    crop_DM_available_z8p5p6klz9 = fun.f_divide(crop_DM_provided_z8p5p6klz9, crop_DM_required_zp5p6k[...,na,na])
+    ###convert from per ha to total
+    total_crop_DM_qsp6z9 = np.sum(ha_sown_qszp5kl[...,na,:,:,na] * crop_DM_available_z8p5p6klz9, axis=(2,3,5,6)) #sum z8, p5, k, l
+
+    ##convert to df
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    keys_p6 = r_vals['pas']['keys_p6']
+    keys_qsp6z = [keys_q, keys_s, keys_p6, keys_z]
+    df_crop_available_qsz_p6 = f_numpy2df(total_crop_DM_qsp6z9, keys_qsp6z, [0,1,3], [2])
+    return df_crop_available_qsz_p6
+
 def f_biomass_penalty(lp_vars, r_vals):
     ##seeding
     seeding_penalty_qszp5k = f_mach_summary(lp_vars, r_vals, option=1)

@@ -55,7 +55,7 @@ na = np.newaxis
 #     cropgraze_area_rkl = graze_area_kl * a_r_k_rk[...,na]
 #     return cropgraze_area_rkl
 
-def f_cropgraze_DM(total_DM=False):
+def f_cropgraze_DM(r_vals=None, total_DM=False):
     '''
     Calculates the dry matter (DM) available for grazing on crop paddocks and the total DM used to calculate relative
     availability.
@@ -90,7 +90,7 @@ def f_cropgraze_DM(total_DM=False):
     '''
     ##read inputs
     lmu_mask = pinp.general['i_lmu_area'] > 0
-    cropgrazing_inc = pinp.cropgraze['i_cropgrazing_inc']
+    cropgrazing_inc_z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgrazing_inc_z'],numpy=True,axis=-1)
     growth_kp6z = zfun.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1) #kg/d
     wastage_k = pinp.cropgraze['i_cropgraze_wastage']
     growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl'][:,lmu_mask]
@@ -140,7 +140,7 @@ def f_cropgraze_DM(total_DM=False):
     ###propn of crop grazing possible for each landuse.
     landuse_grazing_kl = pinp.cropgraze['i_cropgrazing_inc_landuse'][:, lmu_mask]
     ###mask which z crop graing can occur
-    landuse_grazing_kl = landuse_grazing_kl * cropgrazing_inc
+    landuse_grazing_klz = landuse_grazing_kl[:,:,na] * cropgrazing_inc_z
 
     ##season mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
@@ -176,7 +176,13 @@ def f_cropgraze_DM(total_DM=False):
         transfer_exists_p6p5z = transfer_exists_p6p5z * mask_fp_z8var_p6z[:,na,:]
         crop_DM_required_kp6p5z = crop_DM_required_kp6p5z * mask_fp_z8var_p6z[:,na,:]
 
-        return crop_DM_provided_kp6p5z8lz9 * landuse_grazing_kl[:,na,na,na,:,na], crop_DM_required_kp6p5z, transfer_exists_p6p5z
+        crop_DM_provided_kp6p5z8lz9 = crop_DM_provided_kp6p5z8lz9 * landuse_grazing_klz[:,na,na,na,:,:]
+
+        ##store report vals
+        fun.f1_make_r_val(r_vals, crop_DM_provided_kp6p5z8lz9, 'crop_DM_provided_kp6p5z8lz9') #doesnt need unclustering because of z9 axis
+        fun.f1_make_r_val(r_vals, crop_DM_required_kp6p5z, 'crop_DM_required_kp6p5z') #doesnt need unclustering because of z9 axis
+
+        return crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z
 
     else:
         ##crop foo mid way through feed period after consumption - used to calc vol in the next function.
@@ -185,7 +191,7 @@ def f_cropgraze_DM(total_DM=False):
                                                      date_start_p5z + establishment_days >= date_start_p6z[:,na,:]) #only get initial DM in the fp when seeding first occurs.
         crop_foo_kp6p5zl =  initial_DM_p6p5z[...,na] + np.cumsum(total_dm_growth_kp6p5zl * (1-consumption_factor_p6z[:,na,:,na])
                                                             , axis=1) - total_dm_growth_kp6p5zl/2 * (1-consumption_factor_p6z[:,na,:,na])
-        return crop_foo_kp6p5zl * landuse_grazing_kl[:,na,na,na,:]
+        return crop_foo_kp6p5zl * np.swapaxes(landuse_grazing_klz,-1,-2)[:,na,na,:,:]
 
 # def f_DM_reduction_seeding_time():
 #     '''
@@ -321,7 +327,7 @@ def f_cropgraze_biomass_penalty(r_vals):
     # import CropResidue as stub
     ##inputs
     # stubble_per_grain_k = stub.f_cropresidue_production().values
-    yield_reduction_propn_kp6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_yield_reduction_kp6z'], numpy=True, axis=-1)
+    biomass_reduction_propn_kp6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_yield_reduction_kp6z'], numpy=True, axis=-1)
     # proportion_grain_harv_k = pinp.stubble['proportion_grain_harv']
     consumption_factor_p6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
 
@@ -336,7 +342,7 @@ def f_cropgraze_biomass_penalty(r_vals):
 
     ##convert from yield penalty to biomass penalty - required because input is grain yield reduction per tonne of crop consumed
     harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield penalty is inputted as the harvestable grain
-    biomass_reduction_propn_kp6z = yield_reduction_propn_kp6z / harvest_index_k[:,na,na]
+    biomass_reduction_propn_kp6z = biomass_reduction_propn_kp6z / harvest_index_k[:,na,na]
 
     ##apply season mask and grazing exists mask
     ###calc mask if crop can be grazed - doesn't need to include p5 since no p5 set in the constraint.
@@ -356,7 +362,7 @@ def f_cropgraze_biomass_penalty(r_vals):
 
 def f1_cropgraze_params(params, r_vals, nv):
     # grazecrop_area_rkl = f_graze_crop_area()
-    crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z = f_cropgraze_DM()
+    crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z = f_cropgraze_DM(r_vals=r_vals)
     biomass_reduction_propn_kp6z = f_cropgraze_biomass_penalty(r_vals)
     crop_md_fkp6p5zl, crop_vol_fkp6p5zl = crop_md_vol(nv, r_vals)
     # DM_reduction_kp6p5zl = f_DM_reduction_seeding_time()

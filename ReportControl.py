@@ -158,6 +158,8 @@ def f_report(processor, trials, non_exist_trials):
     stacked_poccon = pd.DataFrame()  # pasture on crop paddocks feed consumed
     stacked_supcon = pd.DataFrame()  # supplement feed consumed
     stacked_stubcon = pd.DataFrame()  # stubble feed consumed
+    stacked_cropcon = pd.DataFrame()  # crop consumed from early season crop grazing
+    stacked_cropcon_available = pd.DataFrame()  # crop consumed from early season crop grazing
     stacked_grnnv = pd.DataFrame()  # NV of green pas
     stacked_grndmd = pd.DataFrame()  # dmd of green pas
     stacked_avegrnfoo = pd.DataFrame()  # Average Foo of green pas
@@ -1319,6 +1321,27 @@ def f_report(processor, trials, non_exist_trials):
             stubcon = pd.concat([stubcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_stubcon = rep.f_append_dfs(stacked_stubcon, stubcon)
 
+        if report_run.loc['run_cropcon', 'Run']:
+            ##crop grazing
+            prod = np.array([1])
+            type = 'crpgrz'
+            weights = 'crop_consumed_qsfkp6p5zl'
+            keys = 'keys_qsfkp6p5zl'
+            arith = 2
+            index = [0, 1, 6]  # q,s,z
+            cols = [4,3] #p6
+            axis_slice = {}
+            cropcon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+                                                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            cropcon = pd.concat([cropcon], keys=[trial_name], names=['Trial'])  # add trial name as index level
+            stacked_cropcon = rep.f_append_dfs(stacked_cropcon, cropcon)
+
+        if report_run.loc['run_cropcon', 'Run']:
+            #returns consumption in each FP
+            cropcon_available = rep.f_available_cropgrazing(lp_vars, r_vals)
+            cropcon_available = pd.concat([cropcon_available],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_cropcon_available = rep.f_append_dfs(stacked_cropcon_available, cropcon_available)
+
         if report_run.loc['run_mvf', 'Run']:
             #returns consumption in each FP
             mvf = rep.f_mvf_summary(lp_vars)
@@ -1510,6 +1533,10 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_supcon, 'supcon', df_settings, option=xl_display_mode)
     if report_run.loc['run_stubcon', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_stubcon, 'stubcon', df_settings, option=xl_display_mode)
+    if report_run.loc['run_cropcon', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_cropcon, 'cropcon', df_settings, option=xl_display_mode)
+    if report_run.loc['run_cropcon', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_cropcon_available, 'cropcon_avail', df_settings, option=xl_display_mode)
     if report_run.loc['run_mvf', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_mvf, 'mvf', df_settings, option=xl_display_mode)
 
