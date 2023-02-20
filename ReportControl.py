@@ -199,7 +199,7 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_numbers_qsz', 'Run']:
             method = 0 #dse based on NW
-            numbers_qsz = rep.f_dse(lp_vars, r_vals, method, per_ha=False, summary1=False, summary2=True)
+            numbers_qsz = rep.f_dse(lp_vars, r_vals, method, per_ha=True, summary1=False, summary2=False, summary3=True)
             numbers_qsz = pd.concat([numbers_qsz],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_numbers_qsz = rep.f_append_dfs(stacked_numbers_qsz, numbers_qsz)
 
@@ -997,7 +997,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_qsk3k5p6ftvnwziaxyg3'
             arith = 1
             index =[7, 4]       #DVP, fp
-            cols =[15, 3, 5]    #g3, BTRT, nv
+            cols =[15]    #g3, BTRT, nv
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             daily_mei_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -1017,7 +1017,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_qsk3k5p6ftvnwziaxyg3'
             arith = 1
             index =[7, 4]       #DVP, fp
-            cols =[15, 3, 5]    #g3, BTRT, nv
+            cols =[15]    #g3, BTRT, nv
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             daily_pi_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -1036,7 +1036,7 @@ def f_report(processor, trials, non_exist_trials):
                 cols =[0,1,8, 2, 3] #q, s, z, k2, t
             else:
                 index =[4] #v
-                cols =[0,1,8, 2, 3,7] #q, s, z, k2, t
+                cols =[0,1,8] #q, s, z, k2, t
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -1052,8 +1052,8 @@ def f_report(processor, trials, non_exist_trials):
             na_weights = [5]
             keys = 'dams_keys_qsk2tvpanwziy1g1'
             arith = 2
-            index =[4, 5]
-            cols =[2, 3, 8]
+            index =[5]
+            cols =[0,1,9]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_dams_p = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -1081,7 +1081,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_qsk3k5tvnwziaxyg3'
             arith = 2
             index =[5]                  #DVP
-            cols =[0,1,8, 13, 4,7]   #q,s,z, g3, Gender, dam age, BTRT, t
+            cols =[0,1,8]   #q,s,z, g3, Gender, dam age, BTRT, t
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -1098,7 +1098,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_qsk3k5tvpnwziaxyg3'
             arith = 2
             index =[6]              #p
-            cols =[14, 2,12,3,4,8]  #genotype, dam age, gender, BTRT, t, w
+            cols =[0,1,9]  #genotype, dam age, gender, BTRT, t, w
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_offs_p = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -1174,8 +1174,8 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'greenpas_ha_qsfgop6lzt'
             keys = 'keys_qsfgop6lzt'
             arith = 2
-            index =[7,5]
-            cols =[6]
+            index = [0,1,7,5]
+            cols = [6]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             grnfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
@@ -1308,13 +1308,14 @@ def f_report(processor, trials, non_exist_trials):
             #returns average FOO during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'foo_ave_grnha_gop6lzt'
-            weights = None
-            keys = 'keys_gop6lzt'
-            arith = 5
-            index = [4,2]
-            cols = [1, 0]
+            na_prod = [0, 1,2]  # q,sf
+            weights = 'greenpas_ha_qsfgop6lzt'
+            keys = 'keys_qsfgop6lzt'
+            arith = 2
+            index = [0,1,7,5]
+            cols = [6]
             axis_slice = {}
-            grnfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+            grnfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             grnfoo = pd.concat([grnfoo],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_avegrnfoo = rep.f_append_dfs(stacked_avegrnfoo, grnfoo)
