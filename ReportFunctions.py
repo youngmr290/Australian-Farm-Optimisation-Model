@@ -2093,6 +2093,41 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     return feed_budget.astype(float).round(2)
 
 
+def f_grazing_summary(lp_vars, r_vals):
+    '''
+    Green pasture grazing summary
+    :return: data table with zp6lo as index and g and column. Containing the hectares of each activity, average foo and starting foo.
+    '''
+    feed_vars = f_feed_reshape(lp_vars, r_vals)
+    greenpas_ha_qsfgop6lzt = feed_vars['greenpas_ha_qsfgop6lzt']
+    foo_ave_grnha_gop6lzt = r_vals['pas']['foo_ave_grnha_gop6lzt']
+    foo_start_grnha_op6lzt = r_vals['pas']['foo_start_grnha_op6lzt']
+    foo_gi_gt = r_vals['pas']['i_foo_graze_propn_gt']
+
+    ##calc average foo for f (nv pool), o (start foo) and g (grazing int)
+    foo_ave_grnha_qsp6lzt = fun.f_weighted_average(foo_ave_grnha_gop6lzt, greenpas_ha_qsfgop6lzt, axis=(2,3,4))
+
+    ##sum f axis to return total ha of each pasture activity
+    greenpas_ha_qsgop6lzt = np.sum(greenpas_ha_qsfgop6lzt, axis=2)
+
+    ##combine everything
+    graze_info_iqsgop6lzt = np.stack(np.broadcast_arrays(greenpas_ha_qsgop6lzt, foo_start_grnha_op6lzt[na,na,na], foo_ave_grnha_qsp6lzt[:,:,na,na,...]), axis=0)
+
+    ##make df
+    keys_g = r_vals['pas']['keys_g']
+    keys_l = r_vals['pas']['keys_l']
+    keys_o = r_vals['pas']['keys_o']
+    keys_p6 = r_vals['pas']['keys_p6']
+    keys_t = r_vals['pas']['keys_t']
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    keys_i = ["area", "foo start", "ave_foo"]
+    keys_iqsgop6lzt = [keys_i, keys_q, keys_s, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+
+    graze_info_qsztlp6o_ig = f_numpy2df(graze_info_iqsgop6lzt, keys_iqsgop6lzt, [1,2,7,8,6,5,4], [0,3])
+    return graze_info_qsztlp6o_ig
+
 ############################
 # functions for numpy arrays#
 ############################
