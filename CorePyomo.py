@@ -126,7 +126,8 @@ def coremodel_all(trial_name,model,nv):
         solver_result = solver.solve(model, warmstart=True, tee=True)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
     elif method=="HiGHS":
         # solver = appsi.solvers.Highs()
-        solver = pe.SolverFactory('appsi_highs')
+        # solver = pe.SolverFactory('appsi_highs')
+        solver = pe.SolverFactory('cbc')
 
         solver_result = solver.solve(model)
     else:
