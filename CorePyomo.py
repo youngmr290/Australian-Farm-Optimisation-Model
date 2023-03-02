@@ -115,9 +115,9 @@ def coremodel_all(trial_name,model,nv):
     model.write(os.path.join(directory_path, 'Output/test.lp'),io_options={'symbolic_solver_labels': True})  # comment this out when not debugging
 
     ##tells the solver you want duals and rc
-    model.dual = pe.Suffix(direction=pe.Suffix.IMPORT)
-    model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
-    model.slack = pe.Suffix(direction=pe.Suffix.IMPORT)
+    # model.dual = pe.Suffix(direction=pe.Suffix.IMPORT)
+    # model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
+    # model.slack = pe.Suffix(direction=pe.Suffix.IMPORT)
     ##solve - uses cplex if it exists else glpk - tee=True will print out solver information.
     method="HiGHS"
     if method=="CPLEX" and not shutil.which("cplex") == None:
