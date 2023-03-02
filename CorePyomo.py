@@ -7,6 +7,8 @@ import time
 import pyomo.environ as pe
 import pyomo.core as pc
 import numpy as np
+# from pyomo.contrib import appsi
+# import highspy
 # import networkx
 # import pyomo.pysp.util.rapper as rapper
 # import pyomo.pysp.plugins.csvsolutionwriter as csvw
@@ -117,14 +119,21 @@ def coremodel_all(trial_name,model,nv):
     model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
     model.slack = pe.Suffix(direction=pe.Suffix.IMPORT)
     ##solve - uses cplex if it exists else glpk - tee=True will print out solver information.
-    if not shutil.which("cplex") == None:
+    method="glpk"
+    if method=="CPLEX" and not shutil.which("cplex") == None:
         ##solve with cplex if it exists
         solver = pe.SolverFactory('cplex')
+        solver_result = solver.solve(model, warmstart=True, tee=True)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
+    elif method=="HiGHS":
+        # solver = appsi.solvers.Highs()
+        solver = pe.SolverFactory('appsi_highs')
+
+        solver_result = solver.solve(model)
     else:
         ##solve with glpk
         solver = pe.SolverFactory('glpk')
-        solver.options['tmlim'] = 100  # limit solving time to 100sec in case solver stalls.
-    solver_result = solver.solve(model, warmstart=True, tee=True)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
+        # solver.options['tmlim'] = 100  # limit solving time to 100sec in case solver stalls.
+        solver_result = solver.solve(model, tee=True)  # tee=True for solver output - may be useful for troubleshooting
 
     ##calc profit - profit = terminal wealth (this is the objective without risk) + minroe + asset_cost
     try:  # to handle infeasible (there is no profit component when infeasible)
@@ -851,8 +860,9 @@ def f_objective(model):
             return (model.v_terminal_wealth[q,s,z,c1] - model.v_credit[q,s,c1,p7_end,z] + model.v_debit[q,s,c1,p7_end,z] # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
                     + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z]
                     - model.v_tradevalue[q, s, p7_end, z]
-                    + 0.00001 * sum(sum(v[idx] for idx in v) for v in variables
-                                       if v._rule_bounds.val[0] is not None and v._rule_bounds.val[0]>=0)) <=0 #all variables with positive bounds (ie variables that can be negative e.g. terminal_wealth are excluded) put a small neg number into objective. This stop cplex selecting variables that don't contribute to the objective (cplex selects variables to remove slack on constraints).
+                    # + 0.00001 * sum(sum(v[idx] for idx in v) for v in variables
+                    #                    if v._rule_bounds.val[0] is not None and v._rule_bounds.val[0]>=0)
+                    ) <=0 #all variables with positive bounds (ie variables that can be negative e.g. terminal_wealth are excluded) put a small neg number into objective. This stop cplex selecting variables that don't contribute to the objective (cplex selects variables to remove slack on constraints).
         else:                                                                                                  #note; _rule_bounds.val[0] is the lower bound of each variable
             return pe.Constraint.Skip
     model.con_terminal_wealth = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, rule=terminal_wealth,
