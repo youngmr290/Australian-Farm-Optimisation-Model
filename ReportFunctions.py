@@ -261,460 +261,8 @@ def f_xy_graph(data):
 
 
 ###################
-# input summaries #
+# variable setup  #
 ###################
-
-def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
-    '''Returns price summaries
-
-    :param r_vals:
-    :param option:
-
-            #. farmgate grain price
-            #. wool price STB price for FNF (free or nearly free of fault)
-            #. sale price for specified grid at given weight and fat score (sale yard price)
-
-    :param grid: list - sale grids to report. Has to be int between 0 and 7 inclusive.
-    :param weight: float/int - stock weight to report price for.
-    :param fs: int - fat score to report price for. Has to be number between 1-5 inclusive.
-    :return: price summary df
-    '''
-
-    ##grain price - farmgate (price received by farmer)
-    if option == 0:
-        return r_vals['crop']['farmgate_price']
-
-    ##wool price - grid price
-    if option == 1:
-        return pd.Series(r_vals['stock']['woolp_mpg_w4'], index=r_vals['fd_range'])
-
-    ##sale price - grid price
-    if option == 2:
-        ###create dataframe
-        sale_index = pd.MultiIndex(levels=[[], [], []],
-                                   codes=[[], [], []],
-                                   names=['Grid', 'Weight', 'Fat Score'])
-        saleprice = pd.DataFrame(index=sale_index, columns=['Price $/kg',
-                                                            'Price $/hd'])  # need to initialise df with multiindex so rows can be added
-
-        grid_price_s7s5s6 = r_vals['stock']['grid_price_s7s5s6']
-        weight_range_s7s5 = r_vals['stock']['weight_range_s7s5']
-        grid_keys = r_vals['stock']['salegrid_keys']
-        for t_grid, t_weight, t_fs in zip(grid, weight, fs):
-            ##grid name - used in table index
-            grid_name = grid_keys[t_grid]
-            ##index grid and fs
-            price_s5 = grid_price_s7s5s6[t_grid, :, t_fs]
-            ##interpolate to get price for specified weight
-            lookup_weights = weight_range_s7s5[t_grid, :]
-            price = np.interp(t_weight, lookup_weights, price_s5)
-            ##attach to df
-            ###if price is less than 10 it is assumed to be $/kg else $/hd
-            if price < 10:
-                col = 'Price $/kg'
-            else:
-                col = 'Price $/hd'
-            saleprice.loc[(grid_name, t_weight, t_fs), col] = price
-        return saleprice
-
-
-#########################################
-# intermediate report building functions#
-#########################################
-
-def f_summary(lp_vars, r_vals, trial):
-    '''Returns a simple 1 row summary of the trial (season results are averaged)'''
-    summary_df = pd.DataFrame(index=[trial], columns=['profit', 'profit range', 'profit stdev', 'risk neutral obj', 'utility',
-                                                      'SR', 'SR range', 'SR stdev', 'Pas %', 'Pas % range', 'Pas % stdev',
-                                                      'Sup', 'Sup range', 'Sup stdev'])
-    ##profit - no minroe and asset
-    summary_df.loc[trial, 'profit'] = f_profit(lp_vars, r_vals, option=0)
-    summary_df.loc[trial, 'profit range'] = f_profit(lp_vars, r_vals, option=3)[0]
-    summary_df.loc[trial, 'profit stdev'] = f_profit(lp_vars, r_vals, option=3)[1]
-    ##obj
-    summary_df.loc[trial, 'risk neutral obj'] = f_profit(lp_vars, r_vals, option=1)
-    ##utility
-    summary_df.loc[trial, 'utility'] = f_profit(lp_vars, r_vals, option=2)
-    ##total dse/ha in fp0
-    summary_df.loc[trial, 'SR'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary=True)[0]
-    summary_df.loc[trial, 'SR range'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary=True)[1]
-    summary_df.loc[trial, 'SR stdev'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary=True)[2]
-    ##pasture %
-    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=4)[0]
-    summary_df.loc[trial, 'Pas % range'] = f_area_summary(lp_vars, r_vals, option=4)[1]
-    summary_df.loc[trial, 'Pas % stdev'] = f_area_summary(lp_vars, r_vals, option=4)[2]
-    ##supplement
-    summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
-    summary_df.loc[trial, 'Sup range'] = f_grain_sup_summary(lp_vars, r_vals, option=4)[1]
-    summary_df.loc[trial, 'Sup stdev'] = f_grain_sup_summary(lp_vars, r_vals, option=4)[2]
-    return summary_df
-
-
-
-
-def f_rotation(lp_vars, r_vals):
-    '''
-    manipulates the rotation solution into usable format. This is used in many function.
-    '''
-    ##rotation
-    phases_df = r_vals['rot']['phases']
-    mask_season_p7z = r_vals['zgen']['mask_season_p7z']
-    phases_rk = phases_df.set_index(phases_df.columns[-1], append=True)  # add landuse as index level
-    v_phase_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_area', mask_season_p7z[:,:,na,na], z_pos=-3)
-    v_phase_change_increase_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_change_increase', mask_season_p7z[:,:,na,na], z_pos=-3)
-    ##add landuse to the axis
-    v_phase_area_qsp7zlrk = v_phase_area_qsp7zrl.unstack(4).reindex(phases_rk.index, axis=1, level=0).stack([0,1])  # add landuse to the axis
-    ##unstack p7 - p7 is generally a col where this is used so this saves time later
-    v_phase_area_qszlrk_p7 = v_phase_area_qsp7zlrk.unstack(2)
-    v_phase_area_qszrl_p7 = v_phase_area_qsp7zrl.unstack(2)
-    v_phase_change_increase_area_qszrl_p7 = v_phase_change_increase_area_qsp7zrl.unstack(2)
-    return phases_rk, v_phase_change_increase_area_qszrl_p7, v_phase_area_qszrl_p7, v_phase_area_qszlrk_p7
-
-
-def f_area_summary(lp_vars, r_vals, option):
-    '''
-    Rotation & landuse area summary. With multiple output levels.
-    return options:
-
-    :param lp_vars: dict
-    :param r_vals: dict
-    :key option:
-
-        #. table all rotations by lmu
-        #. total pasture area each season in p7[-1]
-        #. total crop area each season  in p7[-1]
-        #. table crop and pasture area by lmu and season
-        #. float pasture %, range & stdev in p7[-1]
-
-    '''
-
-    ##read from other functions
-    rot_area_qszrl_p7, rot_area_qszlrk_p7 = f_rotation(lp_vars, r_vals)[2:4]
-    landuse_area_k_p7qszl = rot_area_qszlrk_p7.groupby(axis=0, level=(0,1,2,3,5)).sum().unstack([0,1,2,3])  # area of each landuse (sum lmu and rotation)
-
-    ##all rotations by lmu and p7
-    rot_area_qszr_lp7 = rot_area_qszrl_p7.stack().unstack([-2,-1])
-    if option == 0:
-        return rot_area_qszr_lp7.round(2)
-
-    ###pasture area
-    all_pas = r_vals['rot']['all_pastures']  # landuse sets
-    pasture_area_p7qszl = landuse_area_k_p7qszl[landuse_area_k_p7qszl.index.isin(all_pas)].sum()  # sum landuse
-    if option == 1:
-        pasture_area_qszl = pasture_area_p7qszl.loc[pasture_area_p7qszl.index.levels[0][-1].tolist()] #slice for p7[-1]
-        return pasture_area_qszl.groupby(level=(0,1,2)).sum().round(0) #sum lmu
-
-    ###crop area
-    crop_area_p7qszl = landuse_area_k_p7qszl[~landuse_area_k_p7qszl.index.isin(all_pas)].sum()  # sum landuse
-    if option == 2:
-        crop_area_qszl = crop_area_p7qszl.loc[crop_area_p7qszl.index.levels[0][-1].tolist()]
-        return crop_area_qszl.sum(level=(0,1,2)).round(0) #sum lmu
-
-    ##crop & pasture area by lmu
-    if option == 3:
-        croppas_area_qszl = pd.DataFrame()
-        croppas_area_qszl['pasture'] = pasture_area_p7qszl
-        croppas_area_qszl['crop'] = crop_area_p7qszl
-        return croppas_area_qszl.round(0)
-
-    if option==4: #average pasture % in p7[-1]
-        keys_q = r_vals['zgen']['keys_q']
-        keys_s = r_vals['zgen']['keys_s']
-        keys_z = r_vals['zgen']['keys_z']
-        index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
-        z_prob_qsz = r_vals['zgen']['z_prob_qsz']
-        z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
-        rot_area_qsz_p7 = rot_area_qszrl_p7.groupby(level=(0,1,2)).sum() #sum r & l
-        rot_area_qsz = rot_area_qsz_p7.iloc[:, -1]  # slice for p7[-1]
-        pasture_area_p7qsz = pasture_area_p7qszl.groupby(level=(0,1,2,3)).sum() #sum l
-        pasture_area_qsz = pasture_area_p7qsz.unstack(0).iloc[:,-1]  # slice for p7[-1]
-        pas_area_qsz = fun.f_divide(pasture_area_qsz, rot_area_qsz) * 100
-        ###stdev and range
-        pas_area_mean = np.sum(pas_area_qsz * z_prob_qsz)
-        pas_area_range = np.max(pas_area_qsz) - np.min(pas_area_qsz)
-        pas_area_stdev = np.sum((pas_area_qsz - pas_area_mean) ** 2 * z_prob_qsz)**0.5
-        return round(pas_area_mean, 1), round(pas_area_range, 1), round(pas_area_stdev, 1)
-
-
-def f_mach_summary(lp_vars, r_vals, option=0):
-    '''
-    Machine summary.
-    :param option:
-
-        #. table: total machine cost for each crop in each cash period
-        #. table: total seeding biomass penalty for untimely sowing.
-
-    '''
-    ##call rotation function to get rotation info
-    phases_rk, v_phase_change_increase_area_qszrl_p7, rot_area_qszrl_p7 = f_rotation(lp_vars, r_vals)[0:3]
-    rot_area_zrlqs_p7 = rot_area_qszrl_p7.reorder_levels([2,3,4,0,1], axis=0).sort_index()  # change the order so that reindexing works (new levels being added must be at the end)
-
-    ##masks to uncluster z axis
-    maskz8_zp5 = r_vals['lab']['maskz8_p5z'].T
-
-    ##harv
-    contractharv_hours_qszp5k = f_vars2df(lp_vars, 'v_contractharv_hours', maskz8_zp5[:,:,na], z_pos=-3)
-    contractharv_hours_zp5kqs = contractharv_hours_qszp5k.reorder_levels([2,3,4,0,1]).sort_index()  # change the order so that reindexing works (new levels being added must be at the end)
-    harv_hours_qszp5k = f_vars2df(lp_vars, 'v_harv_hours', maskz8_zp5[:,:,na], z_pos=-3)
-    harv_hours_zp5kqs = harv_hours_qszp5k.reorder_levels([2,3,4,0,1]).sort_index()  # change the order so that reindexing works (new levels being added must be at the end)
-    contract_harvest_cost_zp5k_p7 = r_vals['mach']['contract_harvest_cost'].unstack(0)
-    contract_harvest_cost_zp5kqs_p7 = contract_harvest_cost_zp5k_p7.reindex(contractharv_hours_zp5kqs.index, axis=0)
-    own_harvest_cost_zp5k_p7 = r_vals['mach']['harvest_cost'].unstack(0)
-    own_harvest_cost_zp5kqs_p7 = own_harvest_cost_zp5k_p7.reindex(harv_hours_zp5kqs.index, axis=0)
-    harvest_cost_zp5kqs_p7 = contract_harvest_cost_zp5kqs_p7.mul(contractharv_hours_zp5kqs, axis=0) + own_harvest_cost_zp5kqs_p7.mul(harv_hours_zp5kqs, axis=0)
-    harvest_cost_zkqs_p7 = harvest_cost_zp5kqs_p7.groupby(axis=0, level=(0,2,3,4)).sum() #sum p5
-
-    ##seeding
-    seeding_days_qszp5_kl = f_vars2df(lp_vars, 'v_seeding_machdays', maskz8_zp5[:,:,na,na], z_pos=-4).unstack([4,5])
-    seeding_rate_kl = r_vals['mach']['seeding_rate'].stack()
-    seeding_ha_qszp5_kl = seeding_days_qszp5_kl.mul(seeding_rate_kl.reindex(seeding_days_qszp5_kl.columns), axis=1) # note seeding ha won't equal the rotation area because arable area is included in seed_ha.
-    seeding_ha_zp5lkqs = seeding_ha_qszp5_kl.stack([0,1]).reorder_levels([2,3,5,4,0,1]).sort_index()
-    seeding_cost_zp5l_p7 = r_vals['mach']['seeding_cost'].unstack(0)
-    seeding_cost_zp5lkqs_p7 = seeding_cost_zp5l_p7.reindex(seeding_ha_zp5lkqs.index, axis=0)
-    seeding_cost_own_zkqs_p7 = seeding_cost_zp5lkqs_p7.mul(seeding_ha_zp5lkqs, axis=0).groupby(axis=0, level=(0,3,4,5)).sum()  # sum lmu axis and p5
-
-    contractseeding_ha_qszp5k = f_vars2df(lp_vars, 'v_contractseeding_ha', maskz8_zp5[:,:,na,na], z_pos=-4).groupby(level=(0,1,2,3,4)).sum()  # sum lmu axis (cost doesn't vary by lmu for contract)
-    contractseeding_ha_zp5kqs = contractseeding_ha_qszp5k.reorder_levels([2,3,4,0,1]).sort_index()
-    contractseed_cost_ha_zp5_p7 = r_vals['mach']['contractseed_cost'].unstack(0)
-    contractseed_cost_ha_zp5kqs_p7 = contractseed_cost_ha_zp5_p7.reindex(contractseeding_ha_zp5kqs.index, axis=0)
-    seeding_cost_contract_zkqs_p7 =  contractseed_cost_ha_zp5kqs_p7.mul(contractseeding_ha_zp5kqs, axis=0).groupby(axis=0, level=(0,2,3,4)).sum()  # sum p5
-    seeding_cost_zkqs_p7 = seeding_cost_contract_zkqs_p7 + seeding_cost_own_zkqs_p7
-    # seeding_cost_c0p7z_k = seeding_cost_c0p7_zk.stack(0)
-
-    ##fert & chem mach cost
-    fert_app_cost_rl_p7z = r_vals['crop']['fert_app_cost']
-    nap_fert_app_cost_rl_p7z = r_vals['crop']['nap_fert_app_cost']#.unstack().reindex(fert_app_cost_rzl_c.unstack().index, axis=0,level=0).stack()
-    chem_app_cost_ha_rl_p7z = r_vals['crop']['chem_app_cost_ha']
-    fertchem_cost_rl_p7z = pd.concat([fert_app_cost_rl_p7z, nap_fert_app_cost_rl_p7z, chem_app_cost_ha_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()  # cost per ha
-
-    fertchem_cost_zrl_p7 = fertchem_cost_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
-    fertchem_cost_zrlqs_p7 = fertchem_cost_zrl_p7.reindex(rot_area_zrlqs_p7.index, axis=0)
-    fertchem_cost_zrqs_p7 = fertchem_cost_zrlqs_p7.mul(rot_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
-    fertchem_cost_k_p7zqs = fertchem_cost_zrqs_p7.unstack([0,2,3]).reindex(phases_rk.index, axis=0, level=0).groupby(axis=0,level=1).sum()  # reindex to include landuse and sum rot
-    fertchem_cost_zkqs_p7 = fertchem_cost_k_p7zqs.stack([1,2,3]).swaplevel(0,1)
-
-    ##combine all costs
-    exp_mach_zkqs_p7 = pd.concat([fertchem_cost_zkqs_p7, seeding_cost_zkqs_p7, harvest_cost_zkqs_p7
-                               ], axis=0).groupby(axis=0, level=(0,1,2,3)).sum()
-    exp_mach_k_p7zqs = exp_mach_zkqs_p7.unstack([0,2,3])
-    ##insurance
-    mach_insurance_p7z = r_vals['mach']['mach_insurance']
-
-    ##yield penalty from untimely sowing
-    sowing_yield_penalty_p7p5zk = r_vals['mach']['sowing_yield_penalty_p7p5zk']
-    sowing_yield_penalty_p5zk = sowing_yield_penalty_p7p5zk.groupby(level=(1,2,3)).sum() #sum p7
-    sowing_yield_penalty_zp5k = sowing_yield_penalty_p5zk.reorder_levels((1,0,2))
-    ###ha sown by farmer
-    seeding_ha_qszp5_kl = seeding_days_qszp5_kl.mul(seeding_rate_kl.reindex(seeding_days_qszp5_kl.columns), axis=1) # note seeding ha won't equal the rotation area because arable area is included in seed_ha.
-    seeding_ha_qszp5k_l = seeding_ha_qszp5_kl.stack(0)
-    ###reindex penalty param
-    ####add q & s axis
-    sowing_yield_penalty_qsz_kp5 = sowing_yield_penalty_zp5k.unstack((-1,-2)).reindex(seeding_ha_qszp5_kl.unstack(-1).index, axis=0, level=-1)
-    sowing_yield_penalty_qszp5k = sowing_yield_penalty_qsz_kp5.stack((1,0))
-    ####expand k to include pastures
-    sowing_yield_penalty_qszp5k = sowing_yield_penalty_qszp5k.reindex(seeding_ha_qszp5k_l.index)
-    ###calc penalty
-    farmer_penalty_qszp5k_l = seeding_ha_qszp5k_l.mul(sowing_yield_penalty_qszp5k, axis=0)
-    farmer_penalty_qszp5k = farmer_penalty_qszp5k_l.sum(axis=1)
-    contract_penalty_qszp5k = contractseeding_ha_qszp5k.mul(sowing_yield_penalty_qszp5k, axis=0)
-    total_penalty_qszk = farmer_penalty_qszp5k.add(contract_penalty_qszp5k).unstack(3).sum(axis=1)
-    if option == 1:
-        return total_penalty_qszk
-    ##return all if option==0
-    if option == 0:
-        return exp_mach_k_p7zqs, mach_insurance_p7z
-
-def f_biomass_penalty(lp_vars, r_vals):
-    ##seeding
-    seeding_penalty_qszp5k = f_mach_summary(lp_vars, r_vals, option=1)
-
-    ##crop grazing
-    prod = 'crop_grazing_biomass_penalty_kp6z'
-    na_prod = [0, 1, 2, 5, 7]  # q,s,f,p5,l
-    type = 'crpgrz'
-    weights = 'crop_consumed_qsfkp6p5zl'
-    keys = 'keys_qsfkp6p5zl'
-    arith = 2
-    index = [0, 1, 6, 3]  # q,s,z,k
-    cols = []
-    crop_grazing_penalty_qszk = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
-                                          keys=keys, arith=arith, index=index, cols=cols)
-
-    penalty = pd.concat([seeding_penalty_qszp5k, crop_grazing_penalty_qszk], axis=1)
-    penalty.columns=['seeding', 'crop_grazing']
-    return penalty
-
-def f_grain_sup_summary(lp_vars, r_vals, option=0):
-    '''
-    Summary of grain, supplement and their costs
-
-    :param option: int:
-
-            #. return dict with sup cost
-            #. return total supplement fed in each feed period
-            #. return total of each grain supplement fed in each feed period in each season
-            #. return total of each grain supplement fed in each feed period for each feed pool in each season
-            #. return total sup fed (weighted by season prob)
-
-    '''
-    ##z masks to uncluster lp_vars
-    mask_season_p7z = r_vals['zgen']['mask_season_p7z']
-    maskz8_zp6 = r_vals['pas']['mask_fp_z8var_p6z'].T
-
-    ##grain fed
-    grain_fed_qszkgvp6 = f_vars2df(lp_vars, 'v_sup_con', maskz8_zp6[:,na,na,na,:], z_pos=-5)
-
-    if option == 1:
-        grain_fed_qszp6 = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 6)).sum()  # sum feed pool, landuse and grain pool
-        return grain_fed_qszp6.to_frame()
-
-    if option == 2:
-        grain_fed_qszkp6 = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 3, 6)).sum()  # sum feed pool and grain pool
-        return grain_fed_qszkp6
-
-    if option == 3:
-        grain_fed_qszkfp6 = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 3, 5, 6)).sum()  # sum grain pool
-        return grain_fed_qszkfp6
-
-    if option == 4:
-        keys_q = r_vals['zgen']['keys_q']
-        keys_s = r_vals['zgen']['keys_s']
-        keys_z = r_vals['zgen']['keys_z']
-        index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
-        z_prob_qsz = r_vals['zgen']['z_prob_qsz']
-        z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
-        grain_fed_qsz = grain_fed_qszkgvp6.groupby(level=(0,1,2)).sum() #sum all axis except season ones (q,s,z)
-        ###stdev and range
-        grain_fed_mean = grain_fed_qsz.mul(z_prob_qsz).sum()
-        grain_fed_range = np.max(grain_fed_qsz) - np.min(grain_fed_qsz)
-        grain_fed_stdev = (((grain_fed_qsz - grain_fed_mean) ** 2).mul(z_prob_qsz).sum())**0.5
-        return round(grain_fed_mean, 1), round(grain_fed_range, 1), round(grain_fed_stdev, 1),
-
-    ##NOTE: this only works if there is one time of grain purchase/sale
-    if option == 0:
-        ##create dict to store grain variables
-        grain = {}
-        ##prices
-        grains_sale_price_zks2g_p7 = r_vals['crop']['grain_price'].stack().reorder_levels([3,0,1,2]).sort_index()
-        grains_buy_price_zks2g_p7 = r_vals['sup']['buy_grain_price'].stack().reorder_levels([3,0,1,2]).sort_index()
-
-        ##grain purchased
-        grain_purchased_qsp7zks2g = f_vars2df(lp_vars,'v_buy_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
-        grain_purchased_qszks2g = grain_purchased_qsp7zks2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
-        grain_purchased_zks2gqs = grain_purchased_qszks2g.reorder_levels([2,3,4,5,0,1]) .sort_index()#change the order so that reindexing works (new levels being added must be at the end)
-
-        ##grain sold
-        grain_sold_qsp7zks2g = f_vars2df(lp_vars,'v_sell_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
-        grain_sold_qszks2g = grain_sold_qsp7zks2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
-        grain_sold_zks2gqs = grain_sold_qszks2g.reorder_levels([2,3,4,5,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
-
-        ##grain fed - s2 axis added because sup feed is allocated to a given s2 slice and therefore the variable doesn't have an active s2 axis
-        sup_s2_ks2 = r_vals['sup']['sup_s2_k_s2'].stack()
-        grain_fed_qszkg = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 3, 4)).sum()  # sum feed pool and feed period
-        grain_fed_qszg_ks2 = grain_fed_qszkg.unstack(3).mul(sup_s2_ks2, axis=1, level=0)
-        grain_fed_zks2gqs = grain_fed_qszg_ks2.stack([0,1]).reorder_levels([2,4,5,3,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
-
-        ##total grain produced by crop enterprise
-        total_grain_produced_zks2gqs = grain_sold_zks2gqs + grain_fed_zks2gqs - grain_purchased_zks2gqs  # total grain produced by crop enterprise
-        grains_sale_price_zks2gqs_p7 = grains_sale_price_zks2g_p7.reindex(total_grain_produced_zks2gqs.index, axis=0)
-        grains_buy_price_zks2gqs_p7 = grains_buy_price_zks2g_p7.reindex(total_grain_produced_zks2gqs.index, axis=0)
-        rev_grain_k_p7zqs = grains_sale_price_zks2gqs_p7.mul(total_grain_produced_zks2gqs, axis=0).unstack([0,4,5]).groupby(axis=0, level=0).sum()  # sum grain pool and s2
-        grain['rev_grain_k_p7zqs'] = rev_grain_k_p7zqs
-
-        ##supplementary cost: cost = sale_price * (grain_fed - grain_purchased) + buy_price * grain_purchased
-        sup_exp_zqs_p7 = (grains_sale_price_zks2gqs_p7.mul(grain_fed_zks2gqs - grain_purchased_zks2gqs, axis=0)
-                     + grains_buy_price_zks2gqs_p7.mul(grain_purchased_zks2gqs, axis=0)).groupby(axis=0,level=(0,4,5)).sum()  # sum grain pool & landuse & s2
-        grain['sup_exp_p7zqs'] = sup_exp_zqs_p7.unstack([0,1,2])
-        return grain
-
-
-def f_mvf_summary(lp_vars):
-    mvf_qsp6vq = f_vars2df(lp_vars, 'mvf')
-    return mvf_qsp6vq.unstack([-1,-2])
-
-
-def f_crop_summary(lp_vars, r_vals, option=0):
-    '''
-    Crop summary. Includes pasture inputs.
-    :param option:
-
-        #. Return - tuple: fert cost, chem cost, miscellaneous costs and grain revenue for each landuse
-
-    '''
-    ##call rotation function to get rotation info
-    phases_rk, v_phase_change_increase_area_qszrl_p7, rot_area_qszrl_p7 = f_rotation(lp_vars, r_vals)[0:3]
-    v_phase_area_zrlqs_p7 = rot_area_qszrl_p7.reorder_levels([2,3,4,0,1], axis=0).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
-    v_phase_change_increase_area_zrlqs_p7 = v_phase_change_increase_area_qszrl_p7.reorder_levels([2,3,4,0,1], axis=0).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
-    ##expenses
-    ###fert
-    ####v_phase
-    nap_phase_fert_cost_rl_p7z = r_vals['crop']['nap_phase_fert_cost']
-    phase_fert_cost_rl_p7z = r_vals['crop']['phase_fert_cost']
-    exp_fert_ha_rl_p7z = pd.concat([phase_fert_cost_rl_p7z, nap_phase_fert_cost_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()
-    exp_fert_ha_zrl_p7 = exp_fert_ha_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
-    exp_fert_ha_zrlqs_p7 = exp_fert_ha_zrl_p7.reindex(v_phase_area_zrlqs_p7.index, axis=0)
-    exp_fert_zrqs_p7 = exp_fert_ha_zrlqs_p7.mul(v_phase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
-    ####v_phase_increment
-    nap_phase_fert_cost_increment_rl_p7z = r_vals['crop']['nap_phase_fert_cost_increment'].unstack([-2,-1])
-    phase_fert_cost_increment_rl_p7z = r_vals['crop']['phase_fert_cost_increment'].unstack([-2,-1])
-    exp_fert_ha_increment_rl_p7z = pd.concat([phase_fert_cost_increment_rl_p7z, nap_phase_fert_cost_increment_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()
-    exp_fert_ha_increment_zrl_p7 = exp_fert_ha_increment_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
-    exp_fert_ha_increment_zrlqs_p7 = exp_fert_ha_increment_zrl_p7.reindex(v_phase_change_increase_area_zrlqs_p7.index, axis=0)
-    exp_fert_increment_zrqs_p7 = exp_fert_ha_increment_zrlqs_p7.mul(v_phase_change_increase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
-    ####combine v_phase and v_phase_increase
-    exp_fert_zrqs_p7 = pd.concat([exp_fert_zrqs_p7, exp_fert_increment_zrqs_p7], axis=1).groupby(axis=1, level=(0)).sum()
-    exp_fert_k_p7zqs = exp_fert_zrqs_p7.unstack([0,2,3]).reindex(phases_rk.index, axis=0, level=0).groupby(axis=0,
-                                                                            level=1).sum()  # reindex to include landuse and sum rot
-
-    ###chem
-    ####v_phase
-    chem_cost_rl_p7z = r_vals['crop']['chem_cost']
-    chem_cost_zrl_p7 = chem_cost_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
-    chem_cost_zrlqs_p7 = chem_cost_zrl_p7.reindex(v_phase_area_zrlqs_p7.index, axis=0)
-    exp_chem_zrqs_p7 = chem_cost_zrlqs_p7.mul(v_phase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
-    ####v_phase_increment
-    chem_cost_increment_rl_p7z = r_vals['crop']['chem_cost_increment'].unstack([-2,-1])
-    chem_cost_increment_zrl_p7 = chem_cost_increment_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
-    chem_cost_increment_zrlqs_p7 = chem_cost_increment_zrl_p7.reindex(v_phase_change_increase_area_zrlqs_p7.index, axis=0)
-    exp_chem_increment_zrqs_p7 = chem_cost_increment_zrlqs_p7.mul(v_phase_change_increase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
-    ####combine v_phase and v_phase_increase
-    exp_chem_zrqs_p7 = pd.concat([exp_chem_zrqs_p7, exp_chem_increment_zrqs_p7], axis=1).groupby(axis=1, level=(0)).sum()
-    exp_chem_k_p7zqs = exp_chem_zrqs_p7.unstack([0,2,3]).reindex(phases_rk.index, axis=0, level=0).groupby(axis=0,
-                                                                            level=1).sum()  # reindex to include landuse and sum rot
-
-    ###misc
-    ####v_phase
-    stub_cost_rl_p7z = r_vals['crop']['stub_cost']
-    insurance_cost_rl_p7z = r_vals['crop']['insurance_cost']
-    seedcost_rl_p7z = r_vals['crop']['seedcost']
-    misc_exp_ha_rl_p7z = pd.concat([stub_cost_rl_p7z, insurance_cost_rl_p7z, seedcost_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()  # stubble, seed & insurance
-    misc_exp_ha_zrl_p7 = misc_exp_ha_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
-    misc_exp_ha_zrlqs_p7 = misc_exp_ha_zrl_p7.reindex(v_phase_area_zrlqs_p7.index, axis=0)
-    misc_exp_ha_zrqs_p7 = misc_exp_ha_zrlqs_p7.mul(v_phase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu, need to reindex because some rotations have been dropped
-    # misc_exp_ha_zr_c0p7 = misc_exp_ha_zrl_c0p7.reindex(rot_area_zrl.index).mul(rot_area_zrl, axis=0).sum(axis=0, level=(0,1))  # mul area and sum lmu, need to reindex because some rotations have been dropped
-    ####v_phase_increment
-    stub_cost_increment_rl_p7z = r_vals['crop']['stub_cost_increment'].unstack([-2,-1])
-    insurance_cost_increment_rl_p7z = r_vals['crop']['insurance_cost_increment'].unstack([-2,-1])
-    seedcost_increment_rl_p7z = r_vals['crop']['seedcost_increment'].unstack([-2,-1])
-    misc_exp_ha_increment_rl_p7z = pd.concat([stub_cost_increment_rl_p7z, insurance_cost_increment_rl_p7z, seedcost_increment_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()  # stubble, seed & insurance
-    misc_exp_ha_increment_zrl_p7 = misc_exp_ha_increment_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
-    misc_exp_ha_increment_zrlqs_p7 = misc_exp_ha_increment_zrl_p7.reindex(v_phase_change_increase_area_zrlqs_p7.index, axis=0)
-    misc_exp_ha_increment_zrqs_p7 = misc_exp_ha_increment_zrlqs_p7.mul(v_phase_change_increase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu, need to reindex because some rotations have been dropped
-    ####combine v_phase and v_phase_increase
-    misc_exp_ha_zrqs_p7 = pd.concat([misc_exp_ha_zrqs_p7, misc_exp_ha_increment_zrqs_p7], axis=1).groupby(axis=1, level=(0)).sum()
-    misc_exp_k_p7zqs = misc_exp_ha_zrqs_p7.unstack([0,2,3]).reindex(phases_rk.index, axis=0, level=0).groupby(axis=0,
-                                                                            level=1).sum()  # reindex to include landuse and sum rot
-
-    ##revenue. rev = (grain_sold + grain_fed - grain_purchased) * sell_price
-    ###read in dict from grain summary
-    grain_summary = f_grain_sup_summary(lp_vars, r_vals)
-    rev_grain_k_p7zqs = grain_summary['rev_grain_k_p7zqs']
-
-    ##return all if option==0
-    if option == 0:
-        return exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k_p7zqs
-
-
 def f_stock_reshape(lp_vars, r_vals):
     '''
     Stock reshape. Gets everything into the correct shape.
@@ -794,7 +342,6 @@ def f_stock_reshape(lp_vars, r_vals):
     ##create dict for reshaped variables
     stock_vars = {}
 
-
     ##animal numbers
     ###shapes
     sire_shape = len_q, len_s, len_g0
@@ -806,12 +353,14 @@ def f_stock_reshape(lp_vars, r_vals):
     stock_vars['sire_numbers_qsg0'] = f_vars2np(lp_vars, 'v_sire', sire_shape).astype(float)
     ###dams
     maskz8_k2tvanwziy1g1 = r_vals['stock']['maskz8_k2tvanwziy1g1']
-    stock_vars['dams_numbers_qsk2tvanwziy1g1'] = f_vars2np(lp_vars, 'v_dams', dams_shape, maskz8_k2tvanwziy1g1, z_pos=-4).astype(float)
+    stock_vars['dams_numbers_qsk2tvanwziy1g1'] = f_vars2np(lp_vars, 'v_dams', dams_shape, maskz8_k2tvanwziy1g1,
+                                                           z_pos=-4).astype(float)
     ###prog
     stock_vars['prog_numbers_qsk3k5twzia0xg2'] = f_vars2np(lp_vars, 'v_prog', prog_shape).astype(float)
     ###offs
     maskz8_k3k5tvnwziaxyg3 = r_vals['stock']['maskz8_k3k5tvnwziaxyg3']
-    stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'] = f_vars2np(lp_vars, 'v_offs', offs_shape, maskz8_k3k5tvnwziaxyg3, z_pos=-6).astype(float)
+    stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'] = f_vars2np(lp_vars, 'v_offs', offs_shape, maskz8_k3k5tvnwziaxyg3,
+                                                             z_pos=-6).astype(float)
     ###infrastructure
     stock_vars['infrastructure_qsh1z'] = f_vars2np(lp_vars, 'v_infrastructure', infra_shape).astype(float)
 
@@ -821,7 +370,7 @@ def f_stock_reshape(lp_vars, r_vals):
 def f_feed_reshape(lp_vars, r_vals):
     '''
     Reshape feed (pasture, residue & crop grazing) lp variables into numpy array.
-    
+
     This is separate to the stock function above to save processing time (and the feed stuff overlaps a lot i.e.
     uses same keys).
 
@@ -908,10 +457,10 @@ def f_feed_reshape(lp_vars, r_vals):
     ##reshape z8 mask to uncluster
     maskz8_p6z = r_vals['pas']['mask_fp_z8var_p6z']
     maskz8_zp6 = maskz8_p6z.T
-    maskz8_p6zna = maskz8_p6z[:,:,na]
-    maskz8_p6znana = maskz8_p6z[:,:,na,na]
-    maskz8_p6naz = maskz8_p6z[:,na,:]
-    maskz8_p6nazna = maskz8_p6z[:,na,:,na]
+    maskz8_p6zna = maskz8_p6z[:, :, na]
+    maskz8_p6znana = maskz8_p6z[:, :, na, na]
+    maskz8_p6naz = maskz8_p6z[:, na, :]
+    maskz8_p6nazna = maskz8_p6z[:, na, :, na]
 
     ##pasture
     ###green pasture hectare variable
@@ -921,7 +470,8 @@ def f_feed_reshape(lp_vars, r_vals):
     ###nap end period
     feed_vars['nap_transfer_qsdp6zt'] = f_vars2np(lp_vars, 'v_nap_transfer', qsdp6zt, maskz8_p6zna, z_pos=-2)
     ###dry consumed
-    feed_vars['drypas_consumed_qsfdp6zlt'] = f_vars2np(lp_vars, 'v_drypas_consumed', qsfdp6zlt, maskz8_p6znana, z_pos=-3)
+    feed_vars['drypas_consumed_qsfdp6zlt'] = f_vars2np(lp_vars, 'v_drypas_consumed', qsfdp6zlt, maskz8_p6znana,
+                                                       z_pos=-3)
     ###nap consumed
     feed_vars['nap_consumed_qsfdp6zt'] = f_vars2np(lp_vars, 'v_nap_consumed', qsfdp6zt, maskz8_p6zna, z_pos=-2)
     ###poc consumed
@@ -929,18 +479,619 @@ def f_feed_reshape(lp_vars, r_vals):
 
     ##crop residue
     ###stubble consumed
-    feed_vars['stub_qszp6fks1s2'] = f_vars2np(lp_vars, 'v_stub_con', qszp6fks1s2, maskz8_zp6[:,:,na,na,na,na], z_pos=-6)
+    feed_vars['stub_qszp6fks1s2'] = f_vars2np(lp_vars, 'v_stub_con', qszp6fks1s2, maskz8_zp6[:, :, na, na, na, na],
+                                              z_pos=-6)
 
     ##crop grazing
     ###crop consumed
-    feed_vars['crop_consumed_qsfkp6p5zl'] = f_vars2np(lp_vars, 'v_tonnes_crop_consumed', qsfkp6p5zl, maskz8_p6nazna, z_pos=-2)
+    feed_vars['crop_consumed_qsfkp6p5zl'] = f_vars2np(lp_vars, 'v_tonnes_crop_consumed', qsfkp6p5zl, maskz8_p6nazna,
+                                                      z_pos=-2)
 
     ##saltbush
     ###saltbush consumed
-    feed_vars['v_tonnes_sb_consumed_qszp6fl'] = f_vars2np(lp_vars, 'v_tonnes_sb_consumed', qszp6fl, maskz8_zp6[:,:,na,na], z_pos=-4)
+    feed_vars['v_tonnes_sb_consumed_qszp6fl'] = f_vars2np(lp_vars, 'v_tonnes_sb_consumed', qszp6fl,
+                                                          maskz8_zp6[:, :, na, na], z_pos=-4)
     feed_vars['v_slp_ha_qszl'] = f_vars2np(lp_vars, 'v_slp_ha', qszl, z_pos=-2)
 
     return feed_vars
+
+
+def f_mach_reshape(lp_vars, r_vals):
+    '''
+    Reshape mach lp variables into numpy array.
+
+
+    :param lp_vars: lp variables
+    :return: dict
+    '''
+    keys_k = r_vals['pas']['keys_k']
+    keys_l = r_vals['pas']['keys_l']
+    keys_p5 = r_vals['pas']['keys_p5']
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+
+    len_k = len(keys_k)
+    len_l = len(keys_l)
+    len_p5 = len(keys_p5)
+    len_q = len(keys_q)
+    len_s = len(keys_s)
+    len_z = len(keys_z)
+
+    ##dict to store reshaped pasture stuff in
+    mach_vars = {}
+
+    ##store keys - must be in axis order
+    mach_vars['keys_qszp5kl'] = [keys_q, keys_s, keys_z, keys_p5, keys_k, keys_l]
+
+    ##shapes
+    qszp5kl = len_q, len_s, len_z, len_p5, len_k, len_l
+
+    ##reshape z8 mask to uncluster
+    maskz8_p5z = r_vals['lab']['maskz8_p5z']
+    maskz8_zp5 = maskz8_p5z.T
+    maskz8_zp5nana = maskz8_zp5[:, :, na, na]
+
+    ##pasture
+    ###green pasture hectare variable
+    mach_vars['v_contractseeding_ha'] = f_vars2np(lp_vars, 'v_contractseeding_ha', qszp5kl, maskz8_zp5nana, z_pos=-4)
+    ###dry end period
+    mach_vars['v_seeding_machdays'] = f_vars2np(lp_vars, 'v_seeding_machdays', qszp5kl, maskz8_zp5nana, z_pos=-4)
+
+    return mach_vars
+
+
+#########################################
+# intermediate report building functions#
+#########################################
+def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
+    '''Returns price summaries
+
+    :param r_vals:
+    :param option:
+
+            #. farmgate grain price
+            #. wool price STB price for FNF (free or nearly free of fault)
+            #. sale price for specified grid at given weight and fat score (sale yard price)
+
+    :param grid: list - sale grids to report. Has to be int between 0 and 7 inclusive.
+    :param weight: float/int - stock weight to report price for.
+    :param fs: int - fat score to report price for. Has to be number between 1-5 inclusive.
+    :return: price summary df
+    '''
+
+    ##grain price - farmgate (price received by farmer)
+    if option == 0:
+        return r_vals['crop']['farmgate_price']
+
+    ##wool price - grid price
+    if option == 1:
+        return pd.Series(r_vals['stock']['woolp_mpg_w4'], index=r_vals['fd_range'])
+
+    ##sale price - grid price
+    if option == 2:
+        ###create dataframe
+        sale_index = pd.MultiIndex(levels=[[], [], []],
+                                   codes=[[], [], []],
+                                   names=['Grid', 'Weight', 'Fat Score'])
+        saleprice = pd.DataFrame(index=sale_index, columns=['Price $/kg',
+                                                            'Price $/hd'])  # need to initialise df with multiindex so rows can be added
+
+        grid_price_s7s5s6 = r_vals['stock']['grid_price_s7s5s6']
+        weight_range_s7s5 = r_vals['stock']['weight_range_s7s5']
+        grid_keys = r_vals['stock']['salegrid_keys']
+        for t_grid, t_weight, t_fs in zip(grid, weight, fs):
+            ##grid name - used in table index
+            grid_name = grid_keys[t_grid]
+            ##index grid and fs
+            price_s5 = grid_price_s7s5s6[t_grid, :, t_fs]
+            ##interpolate to get price for specified weight
+            lookup_weights = weight_range_s7s5[t_grid, :]
+            price = np.interp(t_weight, lookup_weights, price_s5)
+            ##attach to df
+            ###if price is less than 10 it is assumed to be $/kg else $/hd
+            if price < 10:
+                col = 'Price $/kg'
+            else:
+                col = 'Price $/hd'
+            saleprice.loc[(grid_name, t_weight, t_fs), col] = price
+        return saleprice
+
+
+
+def f_summary(lp_vars, r_vals, trial):
+    '''Returns a simple 1 row summary of the trial (season results are averaged)'''
+    summary_df = pd.DataFrame(index=[trial], columns=['profit', 'profit max', 'profit min', 'profit stdev', 'risk neutral obj', 'utility',
+                                                      'SR', 'SR max', 'SR min', 'SR stdev', 'Pas %', 'Pas % max', 'Pas % min', 'Pas % stdev',
+                                                      'Cereal %', 'Cereal % max', 'Cereal % min', 'Cereal % stdev',
+                                                      'Canola %', 'Canola % max', 'Canola % min', 'Canola % stdev',
+                                                      'Sup', 'Sup max', 'Sup min', 'Sup stdev'])
+    ##profit - no minroe and asset
+    summary_df.loc[trial, 'profit'] = f_profit(lp_vars, r_vals, option=0)
+    profit_max = f_profit(lp_vars, r_vals, option=3)[0]
+    profit_min = f_profit(lp_vars, r_vals, option=3)[1]
+    summary_df.loc[trial, 'profit max'] = profit_max * np.logical_not(profit_min==profit_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'profit min'] = profit_min * np.logical_not(profit_min==profit_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'profit stdev'] = f_profit(lp_vars, r_vals, option=3)[2]
+    ##obj
+    summary_df.loc[trial, 'risk neutral obj'] = f_profit(lp_vars, r_vals, option=1)
+    ##utility
+    summary_df.loc[trial, 'utility'] = f_profit(lp_vars, r_vals, option=2)
+    ##total dse/ha in fp0
+    summary_df.loc[trial, 'SR'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
+    SR_max = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[1]
+    SR_min = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[2]
+    summary_df.loc[trial, 'SR max'] = SR_max * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'SR min'] = SR_min * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'SR stdev'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[3]
+    ##pasture %
+    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+    Pas_max = f_area_summary(lp_vars, r_vals, option=5)[1]
+    Pas_min = f_area_summary(lp_vars, r_vals, option=5)[2]
+    summary_df.loc[trial, 'Pas % max'] = Pas_max * np.logical_not(Pas_min==Pas_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Pas % min'] = Pas_min * np.logical_not(Pas_min==Pas_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Pas % stdev'] = f_area_summary(lp_vars, r_vals, option=5)[3]
+    ##cereal %
+    summary_df.loc[trial, 'Cereal %'] = f_area_summary(lp_vars, r_vals, option=6)[0]
+    Cereal_max = f_area_summary(lp_vars, r_vals, option=6)[1]
+    Cereal_min = f_area_summary(lp_vars, r_vals, option=6)[2]
+    summary_df.loc[trial, 'Cereal % max'] = Cereal_max * np.logical_not(Cereal_min==Cereal_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Cereal % min'] = Cereal_min * np.logical_not(Cereal_min==Cereal_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Cereal % stdev'] = f_area_summary(lp_vars, r_vals, option=6)[3]
+    ##canola %
+    summary_df.loc[trial, 'Canola %'] = f_area_summary(lp_vars, r_vals, option=7)[0]
+    Canola_max = f_area_summary(lp_vars, r_vals, option=7)[1]
+    Canola_min = f_area_summary(lp_vars, r_vals, option=7)[2]
+    summary_df.loc[trial, 'Canola % max'] = Canola_max * np.logical_not(Canola_min==Canola_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Canola % min'] = Canola_min * np.logical_not(Canola_min==Canola_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Canola % stdev'] = f_area_summary(lp_vars, r_vals, option=7)[3]
+    ##supplement
+    summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
+    Sup_max = f_grain_sup_summary(lp_vars, r_vals, option=4)[1]
+    Sup_min = f_grain_sup_summary(lp_vars, r_vals, option=4)[2]
+    summary_df.loc[trial, 'Sup max'] = Sup_max * np.logical_not(Sup_min==Sup_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Sup min'] = Sup_min * np.logical_not(Sup_min==Sup_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Sup stdev'] = f_grain_sup_summary(lp_vars, r_vals, option=4)[3]
+    return summary_df
+
+
+
+
+def f_rotation(lp_vars, r_vals):
+    '''
+    manipulates the rotation solution into usable format. This is used in many function.
+    '''
+    ##rotation
+    phases_df = r_vals['rot']['phases']
+    mask_season_p7z = r_vals['zgen']['mask_season_p7z']
+    phases_rk = phases_df.set_index(phases_df.columns[-1], append=True)  # add landuse as index level
+    v_phase_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_area', mask_season_p7z[:,:,na,na], z_pos=-3)
+    v_phase_change_increase_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_change_increase', mask_season_p7z[:,:,na,na], z_pos=-3)
+    ##add landuse to the axis
+    v_phase_area_qsp7zlrk = v_phase_area_qsp7zrl.unstack(4).reindex(phases_rk.index, axis=1, level=0).stack([0,1])  # add landuse to the axis
+    ##unstack p7 - p7 is generally a col where this is used so this saves time later
+    v_phase_area_qszlrk_p7 = v_phase_area_qsp7zlrk.unstack(2)
+    v_phase_area_qszrl_p7 = v_phase_area_qsp7zrl.unstack(2)
+    v_phase_change_increase_area_qszrl_p7 = v_phase_change_increase_area_qsp7zrl.unstack(2)
+    return phases_rk, v_phase_change_increase_area_qszrl_p7, v_phase_area_qszrl_p7, v_phase_area_qszlrk_p7
+
+
+def f_area_summary(lp_vars, r_vals, option):
+    '''
+    Rotation & landuse area summary. With multiple output levels.
+    return options:
+
+    :param lp_vars: dict
+    :param r_vals: dict
+    :key option:
+
+        #. table all rotations by lmu
+        #. total pasture area each season in p7[-1]
+        #. total crop area each season in p7[-1]
+        #. table crop and pasture area by lmu and season
+        #. landuse area in p7[-1]
+        #. float pasture %, max, min & stdev in p7[-1]
+        #. float cereal %, max, min & stdev in p7[-1]
+        #. float canola %, max, min & stdev in p7[-1]
+
+    '''
+
+    ##read from other functions
+    rot_area_qszrl_p7, rot_area_qszlrk_p7 = f_rotation(lp_vars, r_vals)[2:4]
+    landuse_area_k_p7qszl = rot_area_qszlrk_p7.groupby(axis=0, level=(0,1,2,3,5)).sum().unstack([0,1,2,3])  # area of each landuse (sum lmu and rotation)
+
+    ##all rotations by lmu and p7
+    rot_area_qszr_lp7 = rot_area_qszrl_p7.stack().unstack([-2,-1])
+    if option == 0:
+        return rot_area_qszr_lp7.round(2)
+
+    ###pasture area
+    all_pas = r_vals['rot']['all_pastures']  # landuse sets
+    pasture_area_p7qszl = landuse_area_k_p7qszl[landuse_area_k_p7qszl.index.isin(all_pas)].sum()  # sum landuse
+    if option == 1:
+        pasture_area_qszl = pasture_area_p7qszl.loc[pasture_area_p7qszl.index.levels[0][-1].tolist()] #slice for p7[-1]
+        return pasture_area_qszl.groupby(level=(0,1,2)).sum().round(0) #sum lmu
+
+    ###crop area
+    crop_area_p7qszl = landuse_area_k_p7qszl[~landuse_area_k_p7qszl.index.isin(all_pas)].sum()  # sum landuse
+    if option == 2:
+        crop_area_qszl = crop_area_p7qszl.loc[crop_area_p7qszl.index.levels[0][-1].tolist()]
+        crop_area_qsz = crop_area_qszl.groupby(level=(0,1,2)).sum().round(0) #sum lmu
+        return crop_area_qsz.unstack(-1)
+
+    ##crop & pasture area by lmu
+    if option == 3:
+        croppas_area_qszl = pd.DataFrame()
+        croppas_area_qszl['pasture'] = pasture_area_p7qszl
+        croppas_area_qszl['crop'] = crop_area_p7qszl
+        return croppas_area_qszl.round(0)
+
+    if option==4: #landuse area in p7[-1] (lmu summed)
+        landuse_area_k_qszl = landuse_area_k_p7qszl.loc[:,landuse_area_k_p7qszl.columns.levels[0][-1].tolist()]
+        landuse_area_k_qsz = landuse_area_k_qszl.groupby(axis=1, level=(0,1,2)).sum()
+        landuse_area_qsz_k = landuse_area_k_qsz.T.round(2)
+        return landuse_area_qsz_k
+
+    if option==5 or option==6 or option==7: #average % of pasture/cereal/canola in p7[-1]
+        keys_q = r_vals['zgen']['keys_q']
+        keys_s = r_vals['zgen']['keys_s']
+        keys_z = r_vals['zgen']['keys_z']
+        index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+        z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+        z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
+        rot_area_qsz_p7 = rot_area_qszrl_p7.groupby(level=(0,1,2)).sum() #sum r & l
+        rot_area_qsz = rot_area_qsz_p7.iloc[:, -1]  # slice for p7[-1]
+        if option == 5:
+            pasture_area_p7qsz = pasture_area_p7qszl.groupby(level=(0,1,2,3)).sum() #sum l
+            pasture_area_qsz = pasture_area_p7qsz.unstack(0).iloc[:,-1]  # slice for p7[-1]
+            pas_area_qsz = fun.f_divide(pasture_area_qsz, rot_area_qsz) * 100
+            ###stdev and range
+            pas_area_mean = np.sum(pas_area_qsz * z_prob_qsz)
+            ma_pas_area_qsz = np.ma.masked_array(pas_area_qsz, z_prob_qsz == 0)
+            pas_area_max = np.max(ma_pas_area_qsz)
+            pas_area_min = np.min(ma_pas_area_qsz)
+            pas_area_stdev = np.sum((pas_area_qsz - pas_area_mean) ** 2 * z_prob_qsz)**0.5
+            return round(pas_area_mean, 1), round(pas_area_max, 1), round(pas_area_min, 1), round(pas_area_stdev, 1)
+        if option == 6:
+            all_cereals = r_vals['rot']['all_cereals']  # landuse sets
+            cereal_area_p7qszl = landuse_area_k_p7qszl[landuse_area_k_p7qszl.index.isin(all_cereals)].sum()  # sum landuse
+            cereal_area_p7qsz = cereal_area_p7qszl.groupby(level=(0, 1, 2, 3)).sum()  # sum l
+            cereal_area_qsz = cereal_area_p7qsz.unstack(0).iloc[:, -1]  # slice for p7[-1]
+            cereal_area_qsz = fun.f_divide(cereal_area_qsz, rot_area_qsz) * 100
+            ###stdev and range
+            cereal_area_mean = np.sum(cereal_area_qsz * z_prob_qsz)
+            ma_cereal_area_qsz = np.ma.masked_array(cereal_area_qsz, z_prob_qsz == 0)
+            cereal_area_max = np.max(ma_cereal_area_qsz)
+            cereal_area_min = np.min(ma_cereal_area_qsz)
+            cereal_area_stdev = np.sum((cereal_area_qsz - cereal_area_mean) ** 2 * z_prob_qsz) ** 0.5
+            return round(cereal_area_mean, 1), round(cereal_area_max, 1), round(cereal_area_min, 1), round(cereal_area_stdev, 1)
+        if option == 7:
+            all_canolas = r_vals['rot']['all_canolas']  # landuse sets
+            canola_area_p7qszl = landuse_area_k_p7qszl[landuse_area_k_p7qszl.index.isin(all_canolas)].sum()  # sum landuse
+            canola_area_p7qsz = canola_area_p7qszl.groupby(level=(0, 1, 2, 3)).sum()  # sum l
+            canola_area_qsz = canola_area_p7qsz.unstack(0).iloc[:, -1]  # slice for p7[-1]
+            canola_area_qsz = fun.f_divide(canola_area_qsz, rot_area_qsz) * 100
+            ###stdev and range
+            canola_area_mean = np.sum(canola_area_qsz * z_prob_qsz)
+            ma_canola_area_qsz = np.ma.masked_array(canola_area_qsz, z_prob_qsz == 0)
+            canola_area_max = np.max(ma_canola_area_qsz)
+            canola_area_min = np.min(ma_canola_area_qsz)
+            canola_area_stdev = np.sum((canola_area_qsz - canola_area_mean) ** 2 * z_prob_qsz) ** 0.5
+            return round(canola_area_mean, 1), round(canola_area_max, 1), round(canola_area_min, 1), round(canola_area_stdev, 1)
+
+
+def f_mach_summary(lp_vars, r_vals, option=0):
+    '''
+    Machine summary.
+    :param option:
+
+        #. table: total machine cost for each crop in each cash period
+        #. table: total seeding biomass penalty for untimely sowing.
+
+    '''
+    ##call rotation function to get rotation info
+    phases_rk, v_phase_change_increase_area_qszrl_p7, rot_area_qszrl_p7 = f_rotation(lp_vars, r_vals)[0:3]
+    rot_area_zrlqs_p7 = rot_area_qszrl_p7.reorder_levels([2,3,4,0,1], axis=0).sort_index()  # change the order so that reindexing works (new levels being added must be at the end)
+
+    ##masks to uncluster z axis
+    maskz8_zp5 = r_vals['lab']['maskz8_p5z'].T
+
+    ##harv
+    contractharv_hours_qszp5k = f_vars2df(lp_vars, 'v_contractharv_hours', maskz8_zp5[:,:,na], z_pos=-3)
+    contractharv_hours_zp5kqs = contractharv_hours_qszp5k.reorder_levels([2,3,4,0,1]).sort_index()  # change the order so that reindexing works (new levels being added must be at the end)
+    harv_hours_qszp5k = f_vars2df(lp_vars, 'v_harv_hours', maskz8_zp5[:,:,na], z_pos=-3)
+    harv_hours_zp5kqs = harv_hours_qszp5k.reorder_levels([2,3,4,0,1]).sort_index()  # change the order so that reindexing works (new levels being added must be at the end)
+    contract_harvest_cost_zp5k_p7 = r_vals['mach']['contract_harvest_cost'].unstack(0)
+    contract_harvest_cost_zp5kqs_p7 = contract_harvest_cost_zp5k_p7.reindex(contractharv_hours_zp5kqs.index, axis=0)
+    own_harvest_cost_zp5k_p7 = r_vals['mach']['harvest_cost'].unstack(0)
+    own_harvest_cost_zp5kqs_p7 = own_harvest_cost_zp5k_p7.reindex(harv_hours_zp5kqs.index, axis=0)
+    harvest_cost_zp5kqs_p7 = contract_harvest_cost_zp5kqs_p7.mul(contractharv_hours_zp5kqs, axis=0) + own_harvest_cost_zp5kqs_p7.mul(harv_hours_zp5kqs, axis=0)
+    harvest_cost_zkqs_p7 = harvest_cost_zp5kqs_p7.groupby(axis=0, level=(0,2,3,4)).sum() #sum p5
+
+    ##seeding
+    seeding_days_qszp5_kl = f_vars2df(lp_vars, 'v_seeding_machdays', maskz8_zp5[:,:,na,na], z_pos=-4).unstack([4,5])
+    seeding_rate_kl = r_vals['mach']['seeding_rate'].stack()
+    seeding_ha_qszp5_kl = seeding_days_qszp5_kl.mul(seeding_rate_kl.reindex(seeding_days_qszp5_kl.columns), axis=1) # note seeding ha won't equal the rotation area because arable area is included in seed_ha.
+    seeding_ha_zp5lkqs = seeding_ha_qszp5_kl.stack([0,1]).reorder_levels([2,3,5,4,0,1]).sort_index()
+    seeding_cost_zp5l_p7 = r_vals['mach']['seeding_cost'].unstack(0)
+    seeding_cost_zp5lkqs_p7 = seeding_cost_zp5l_p7.reindex(seeding_ha_zp5lkqs.index, axis=0)
+    seeding_cost_own_zkqs_p7 = seeding_cost_zp5lkqs_p7.mul(seeding_ha_zp5lkqs, axis=0).groupby(axis=0, level=(0,3,4,5)).sum()  # sum lmu axis and p5
+
+    contractseeding_ha_qszp5k = f_vars2df(lp_vars, 'v_contractseeding_ha', maskz8_zp5[:,:,na,na], z_pos=-4).groupby(level=(0,1,2,3,4)).sum()  # sum lmu axis (cost doesn't vary by lmu for contract)
+    contractseeding_ha_zp5kqs = contractseeding_ha_qszp5k.reorder_levels([2,3,4,0,1]).sort_index()
+    contractseed_cost_ha_zp5_p7 = r_vals['mach']['contractseed_cost'].unstack(0)
+    contractseed_cost_ha_zp5kqs_p7 = contractseed_cost_ha_zp5_p7.reindex(contractseeding_ha_zp5kqs.index, axis=0)
+    seeding_cost_contract_zkqs_p7 =  contractseed_cost_ha_zp5kqs_p7.mul(contractseeding_ha_zp5kqs, axis=0).groupby(axis=0, level=(0,2,3,4)).sum()  # sum p5
+    seeding_cost_zkqs_p7 = seeding_cost_contract_zkqs_p7 + seeding_cost_own_zkqs_p7
+    # seeding_cost_c0p7z_k = seeding_cost_c0p7_zk.stack(0)
+
+    ##fert & chem mach cost
+    fert_app_cost_rl_p7z = r_vals['crop']['fert_app_cost']
+    chem_app_cost_ha_rl_p7z = r_vals['crop']['chem_app_cost_ha']
+    fertchem_cost_rl_p7z = pd.concat([fert_app_cost_rl_p7z, chem_app_cost_ha_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()  # cost per ha
+
+    fertchem_cost_zrl_p7 = fertchem_cost_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
+    fertchem_cost_zrlqs_p7 = fertchem_cost_zrl_p7.reindex(rot_area_zrlqs_p7.index, axis=0)
+    fertchem_cost_zrqs_p7 = fertchem_cost_zrlqs_p7.mul(rot_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
+    fertchem_cost_k_p7zqs = fertchem_cost_zrqs_p7.unstack([0,2,3]).reindex(phases_rk.index, axis=0, level=0).groupby(axis=0,level=1).sum()  # reindex to include landuse and sum rot
+    fertchem_cost_zkqs_p7 = fertchem_cost_k_p7zqs.stack([1,2,3]).swaplevel(0,1)
+
+    ##combine all costs
+    exp_mach_zkqs_p7 = pd.concat([fertchem_cost_zkqs_p7, seeding_cost_zkqs_p7, harvest_cost_zkqs_p7
+                               ], axis=0).groupby(axis=0, level=(0,1,2,3)).sum()
+    exp_mach_k_p7zqs = exp_mach_zkqs_p7.unstack([0,2,3])
+    ##insurance
+    mach_insurance_p7z = r_vals['mach']['mach_insurance']
+
+    ##yield penalty from untimely sowing
+    sowing_yield_penalty_p7p5zk = r_vals['mach']['sowing_yield_penalty_p7p5zk']
+    sowing_yield_penalty_p5zk = sowing_yield_penalty_p7p5zk.groupby(level=(1,2,3)).sum() #sum p7
+    sowing_yield_penalty_zp5k = sowing_yield_penalty_p5zk.reorder_levels((1,0,2))
+    ###ha sown by farmer
+    seeding_ha_qszp5_kl = seeding_days_qszp5_kl.mul(seeding_rate_kl.reindex(seeding_days_qszp5_kl.columns), axis=1) # note seeding ha won't equal the rotation area because arable area is included in seed_ha.
+    seeding_ha_qszp5k_l = seeding_ha_qszp5_kl.stack(0)
+    ###reindex penalty param
+    ####add q & s axis
+    sowing_yield_penalty_qsz_kp5 = sowing_yield_penalty_zp5k.unstack((-1,-2)).reindex(seeding_ha_qszp5_kl.unstack(-1).index, axis=0, level=-1)
+    sowing_yield_penalty_qszp5k = sowing_yield_penalty_qsz_kp5.stack((1,0))
+    ####expand k to include pastures
+    sowing_yield_penalty_qszp5k = sowing_yield_penalty_qszp5k.reindex(seeding_ha_qszp5k_l.index)
+    ###calc penalty
+    farmer_penalty_qszp5k_l = seeding_ha_qszp5k_l.mul(sowing_yield_penalty_qszp5k, axis=0)
+    farmer_penalty_qszp5k = farmer_penalty_qszp5k_l.sum(axis=1)
+    contract_penalty_qszp5k = contractseeding_ha_qszp5k.mul(sowing_yield_penalty_qszp5k, axis=0)
+    total_penalty_qszk = farmer_penalty_qszp5k.add(contract_penalty_qszp5k).unstack(3).sum(axis=1)
+    if option == 1:
+        return total_penalty_qszk
+    ##return all if option==0
+    if option == 0:
+        return exp_mach_k_p7zqs, mach_insurance_p7z
+
+def f_available_cropgrazing(lp_vars, r_vals):
+    '''
+    Calculates the total crop that CAN be grazed based on seeding timing (the actual amount consumed is optimised).
+    '''
+    mach_vars = f_mach_reshape(lp_vars, r_vals)
+    v_contractseeding_ha_qszp5kl = mach_vars['v_contractseeding_ha']
+    v_seeding_machdays_qszp5kl = mach_vars['v_seeding_machdays']
+
+    ##calc ha sown by farmer
+    seeding_rate_kl = r_vals['mach']['seeding_rate']
+    farmerseeding_ha_qszp5kl = v_seeding_machdays_qszp5kl * np.array(seeding_rate_kl)
+
+    ##total ha sown
+    ha_sown_qszp5kl = v_contractseeding_ha_qszp5kl + farmerseeding_ha_qszp5kl
+    ###cut the k axis to show just the crops
+    keys_k = r_vals['pas']['keys_k']
+    keys_k1 = r_vals['stub']['keys_k1']
+    mask_k = np.any(keys_k1[:,na] == keys_k, axis=0)
+    ha_sown_qszp5kl = np.compress(mask_k, ha_sown_qszp5kl, axis=-2)
+
+    ##total crop DM available for grazing
+    crop_DM_provided_z8p5p6klz9 = np.moveaxis(r_vals['crpgrz']['crop_DM_provided_kp6p5z8lz9'], [0,1,2,3],[3,2,1,0])
+    crop_DM_required_zp5p6k = np.moveaxis(r_vals['crpgrz']['crop_DM_required_kp6p5z'], [0,1,2,3],[3,2,1,0])
+    ###adjust for trampling/wastage to calc total available for consumption
+    crop_DM_available_z8p5p6klz9 = fun.f_divide(crop_DM_provided_z8p5p6klz9, crop_DM_required_zp5p6k[...,na,na])
+    ###convert from per ha to total
+    total_crop_DM_qsp6z9 = np.sum(ha_sown_qszp5kl[...,na,:,:,na] * crop_DM_available_z8p5p6klz9, axis=(2,3,5,6)) #sum z8, p5, k, l
+
+    ##convert to df
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    keys_p6 = r_vals['pas']['keys_p6']
+    keys_qsp6z = [keys_q, keys_s, keys_p6, keys_z]
+    df_crop_available_qsz_p6 = f_numpy2df(total_crop_DM_qsp6z9, keys_qsp6z, [0,1,3], [2])
+    return df_crop_available_qsz_p6
+
+def f_biomass_penalty(lp_vars, r_vals):
+    ##seeding
+    seeding_penalty_qszp5k = f_mach_summary(lp_vars, r_vals, option=1)
+
+    ##crop grazing
+    prod = 'crop_grazing_biomass_penalty_kp6z'
+    na_prod = [0, 1, 2, 5, 7]  # q,s,f,p5,l
+    type = 'crpgrz'
+    weights = 'crop_consumed_qsfkp6p5zl'
+    keys = 'keys_qsfkp6p5zl'
+    arith = 2
+    index = [0, 1, 6, 3]  # q,s,z,k
+    cols = []
+    crop_grazing_penalty_qszk = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols)
+
+    penalty = pd.concat([seeding_penalty_qszp5k, crop_grazing_penalty_qszk], axis=1)
+    penalty.columns=['seeding', 'crop_grazing']
+    return penalty
+
+def f_grain_sup_summary(lp_vars, r_vals, option=0):
+    '''
+    Summary of grain, supplement and their costs
+
+    :param option: int:
+
+            #. return dict with sup cost
+            #. return total supplement fed in each feed period
+            #. return total of each grain supplement fed in each feed period in each season
+            #. return total of each grain supplement fed in each feed period for each feed pool in each season
+            #. return total sup fed (weighted by season prob)
+
+    '''
+    ##z masks to uncluster lp_vars
+    mask_season_p7z = r_vals['zgen']['mask_season_p7z']
+    maskz8_zp6 = r_vals['pas']['mask_fp_z8var_p6z'].T
+
+    ##grain fed
+    grain_fed_qszkgvp6 = f_vars2df(lp_vars, 'v_sup_con', maskz8_zp6[:,na,na,na,:], z_pos=-5)
+
+    if option == 1:
+        grain_fed_qszp6 = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 6)).sum()  # sum feed pool, landuse and grain pool
+        return grain_fed_qszp6.to_frame()
+
+    if option == 2:
+        grain_fed_qszkp6 = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 3, 6)).sum()  # sum feed pool and grain pool
+        return grain_fed_qszkp6
+
+    if option == 3:
+        grain_fed_qszkfp6 = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 3, 5, 6)).sum()  # sum grain pool
+        return grain_fed_qszkfp6
+
+    if option == 4:
+        keys_q = r_vals['zgen']['keys_q']
+        keys_s = r_vals['zgen']['keys_s']
+        keys_z = r_vals['zgen']['keys_z']
+        index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+        z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+        z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
+        grain_fed_qsz = grain_fed_qszkgvp6.groupby(level=(0,1,2)).sum() #sum all axis except season ones (q,s,z)
+        ###stdev and range
+        grain_fed_mean = grain_fed_qsz.mul(z_prob_qsz).sum()
+        ma_grain_fed_qsz = np.ma.masked_array(grain_fed_qsz, z_prob_qsz == 0)
+        grain_fed_max = np.max(ma_grain_fed_qsz)
+        grain_fed_min = np.min(ma_grain_fed_qsz)
+        grain_fed_stdev = (((grain_fed_qsz - grain_fed_mean) ** 2).mul(z_prob_qsz).sum())**0.5
+        return round(grain_fed_mean, 1), round(grain_fed_max, 1), round(grain_fed_min, 1), round(grain_fed_stdev, 1),
+
+    ##NOTE: this only works if there is one time of grain purchase/sale
+    if option == 0:
+        ##create dict to store grain variables
+        grain = {}
+        ##prices
+        grains_sale_price_zks2g_p7 = r_vals['crop']['grain_price'].stack().reorder_levels([3,0,1,2]).sort_index()
+        grains_buy_price_zks2g_p7 = r_vals['sup']['buy_grain_price'].stack().reorder_levels([3,0,1,2]).sort_index()
+
+        ##grain purchased
+        grain_purchased_qsp7zks2g = f_vars2df(lp_vars,'v_buy_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
+        grain_purchased_qszks2g = grain_purchased_qsp7zks2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
+        grain_purchased_zks2gqs = grain_purchased_qszks2g.reorder_levels([2,3,4,5,0,1]) .sort_index()#change the order so that reindexing works (new levels being added must be at the end)
+
+        ##grain sold
+        grain_sold_qsp7zks2g = f_vars2df(lp_vars,'v_sell_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
+        grain_sold_qszks2g = grain_sold_qsp7zks2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
+        grain_sold_zks2gqs = grain_sold_qszks2g.reorder_levels([2,3,4,5,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
+
+        ##grain fed - s2 axis added because sup feed is allocated to a given s2 slice and therefore the variable doesn't have an active s2 axis
+        sup_s2_ks2 = r_vals['sup']['sup_s2_k_s2'].stack()
+        grain_fed_qszkg = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 3, 4)).sum()  # sum feed pool and feed period
+        grain_fed_qszg_ks2 = grain_fed_qszkg.unstack(3).mul(sup_s2_ks2, axis=1, level=0)
+        grain_fed_zks2gqs = grain_fed_qszg_ks2.stack([0,1]).reorder_levels([2,4,5,3,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
+
+        ##total grain produced by crop enterprise
+        total_grain_produced_zks2gqs = grain_sold_zks2gqs + grain_fed_zks2gqs - grain_purchased_zks2gqs  # total grain produced by crop enterprise
+        grains_sale_price_zks2gqs_p7 = grains_sale_price_zks2g_p7.reindex(total_grain_produced_zks2gqs.index, axis=0)
+        grains_buy_price_zks2gqs_p7 = grains_buy_price_zks2g_p7.reindex(total_grain_produced_zks2gqs.index, axis=0)
+        rev_grain_k_p7zqs = grains_sale_price_zks2gqs_p7.mul(total_grain_produced_zks2gqs, axis=0).unstack([0,4,5]).groupby(axis=0, level=0).sum()  # sum grain pool and s2
+        grain['rev_grain_k_p7zqs'] = rev_grain_k_p7zqs
+
+        ##supplementary cost: cost = sale_price * (grain_fed - grain_purchased) + buy_price * grain_purchased
+        sup_exp_zqs_p7 = (grains_sale_price_zks2gqs_p7.mul(grain_fed_zks2gqs - grain_purchased_zks2gqs, axis=0)
+                     + grains_buy_price_zks2gqs_p7.mul(grain_purchased_zks2gqs, axis=0)).groupby(axis=0,level=(0,4,5)).sum()  # sum grain pool & landuse & s2
+        grain['sup_exp_p7zqs'] = sup_exp_zqs_p7.unstack([0,1,2])
+        return grain
+
+
+def f_mvf_summary(lp_vars):
+    mvf_qsp6vq = f_vars2df(lp_vars, 'mvf')
+    return mvf_qsp6vq.unstack([-1,-2])
+
+
+def f_crop_summary(lp_vars, r_vals, option=0):
+    '''
+    Crop summary. Includes pasture inputs.
+    :param option:
+
+        #. Return - tuple: fert cost, chem cost, miscellaneous costs and grain revenue for each landuse
+
+    '''
+    ##call rotation function to get rotation info
+    phases_rk, v_phase_change_increase_area_qszrl_p7, rot_area_qszrl_p7 = f_rotation(lp_vars, r_vals)[0:3]
+    v_phase_area_zrlqs_p7 = rot_area_qszrl_p7.reorder_levels([2,3,4,0,1], axis=0).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
+    v_phase_change_increase_area_zrlqs_p7 = v_phase_change_increase_area_qszrl_p7.reorder_levels([2,3,4,0,1], axis=0).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
+    ##expenses
+    ###fert
+    ####v_phase
+    phase_fert_cost_rl_p7z = r_vals['crop']['phase_fert_cost']
+    exp_fert_ha_zrl_p7 = phase_fert_cost_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
+    exp_fert_ha_zrlqs_p7 = exp_fert_ha_zrl_p7.reindex(v_phase_area_zrlqs_p7.index, axis=0)
+    exp_fert_zrqs_p7 = exp_fert_ha_zrlqs_p7.mul(v_phase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
+    ####v_phase_increment
+    phase_fert_cost_increment_rl_p7z = r_vals['crop']['phase_fert_cost_increment'].unstack([-2,-1])
+    exp_fert_ha_increment_zrl_p7 = phase_fert_cost_increment_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
+    exp_fert_ha_increment_zrlqs_p7 = exp_fert_ha_increment_zrl_p7.reindex(v_phase_change_increase_area_zrlqs_p7.index, axis=0)
+    exp_fert_increment_zrqs_p7 = exp_fert_ha_increment_zrlqs_p7.mul(v_phase_change_increase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
+    ####combine v_phase and v_phase_increase
+    exp_fert_zrqs_p7 = pd.concat([exp_fert_zrqs_p7, exp_fert_increment_zrqs_p7], axis=1).groupby(axis=1, level=(0)).sum()
+    exp_fert_k_p7zqs = exp_fert_zrqs_p7.unstack([0,2,3]).reindex(phases_rk.index, axis=0, level=0).groupby(axis=0,
+                                                                            level=1).sum()  # reindex to include landuse and sum rot
+
+    ###chem
+    ####v_phase
+    chem_cost_rl_p7z = r_vals['crop']['chem_cost']
+    chem_cost_zrl_p7 = chem_cost_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
+    chem_cost_zrlqs_p7 = chem_cost_zrl_p7.reindex(v_phase_area_zrlqs_p7.index, axis=0)
+    exp_chem_zrqs_p7 = chem_cost_zrlqs_p7.mul(v_phase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
+    ####v_phase_increment
+    chem_cost_increment_rl_p7z = r_vals['crop']['chem_cost_increment'].unstack([-2,-1])
+    chem_cost_increment_zrl_p7 = chem_cost_increment_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
+    chem_cost_increment_zrlqs_p7 = chem_cost_increment_zrl_p7.reindex(v_phase_change_increase_area_zrlqs_p7.index, axis=0)
+    exp_chem_increment_zrqs_p7 = chem_cost_increment_zrlqs_p7.mul(v_phase_change_increase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
+    ####combine v_phase and v_phase_increase
+    exp_chem_zrqs_p7 = pd.concat([exp_chem_zrqs_p7, exp_chem_increment_zrqs_p7], axis=1).groupby(axis=1, level=(0)).sum()
+    exp_chem_k_p7zqs = exp_chem_zrqs_p7.unstack([0,2,3]).reindex(phases_rk.index, axis=0, level=0).groupby(axis=0,
+                                                                            level=1).sum()  # reindex to include landuse and sum rot
+
+    ###misc
+    ####v_phase
+    stub_cost_rl_p7z = r_vals['crop']['stub_cost']
+    insurance_cost_rl_p7z = r_vals['crop']['insurance_cost']
+    seedcost_rl_p7z = r_vals['crop']['seedcost']
+    misc_exp_ha_rl_p7z = pd.concat([stub_cost_rl_p7z, insurance_cost_rl_p7z, seedcost_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()  # stubble, seed & insurance
+    misc_exp_ha_zrl_p7 = misc_exp_ha_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
+    misc_exp_ha_zrlqs_p7 = misc_exp_ha_zrl_p7.reindex(v_phase_area_zrlqs_p7.index, axis=0)
+    misc_exp_ha_zrqs_p7 = misc_exp_ha_zrlqs_p7.mul(v_phase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu, need to reindex because some rotations have been dropped
+    # misc_exp_ha_zr_c0p7 = misc_exp_ha_zrl_c0p7.reindex(rot_area_zrl.index).mul(rot_area_zrl, axis=0).sum(axis=0, level=(0,1))  # mul area and sum lmu, need to reindex because some rotations have been dropped
+    ####v_phase_increment
+    stub_cost_increment_rl_p7z = r_vals['crop']['stub_cost_increment'].unstack([-2,-1])
+    insurance_cost_increment_rl_p7z = r_vals['crop']['insurance_cost_increment'].unstack([-2,-1])
+    seedcost_increment_rl_p7z = r_vals['crop']['seedcost_increment'].unstack([-2,-1])
+    misc_exp_ha_increment_rl_p7z = pd.concat([stub_cost_increment_rl_p7z, insurance_cost_increment_rl_p7z, seedcost_increment_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()  # stubble, seed & insurance
+    misc_exp_ha_increment_zrl_p7 = misc_exp_ha_increment_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
+    misc_exp_ha_increment_zrlqs_p7 = misc_exp_ha_increment_zrl_p7.reindex(v_phase_change_increase_area_zrlqs_p7.index, axis=0)
+    misc_exp_ha_increment_zrqs_p7 = misc_exp_ha_increment_zrlqs_p7.mul(v_phase_change_increase_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu, need to reindex because some rotations have been dropped
+    ####combine v_phase and v_phase_increase
+    misc_exp_ha_zrqs_p7 = pd.concat([misc_exp_ha_zrqs_p7, misc_exp_ha_increment_zrqs_p7], axis=1).groupby(axis=1, level=(0)).sum()
+    misc_exp_k_p7zqs = misc_exp_ha_zrqs_p7.unstack([0,2,3]).reindex(phases_rk.index, axis=0, level=0).groupby(axis=0,
+                                                                            level=1).sum()  # reindex to include landuse and sum rot
+
+    ##revenue. rev = (grain_sold + grain_fed - grain_purchased) * sell_price
+    ###read in dict from grain summary
+    grain_summary = f_grain_sup_summary(lp_vars, r_vals)
+    rev_grain_k_p7zqs = grain_summary['rev_grain_k_p7zqs']
+
+    ##return all if option==0
+    if option == 0:
+        return exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k_p7zqs
 
 
 def f_stock_cash_summary(lp_vars, r_vals):
@@ -1157,7 +1308,7 @@ def f_asset_cost_summary(lp_vars, r_vals):
     return asset_cost_qsp7z
 
 def f_wc_summary(lp_vars, r_vals):
-    ##returns the maximum overdraw from bank
+    ##returns the maximum capital
     keys_p7 = r_vals['fin']['keys_p7']
     keys_c0 = r_vals['fin']['keys_c0']
     mask_season_p7z = r_vals['zgen']['mask_season_p7z']
@@ -1170,18 +1321,18 @@ def f_wc_summary(lp_vars, r_vals):
     len_s = len(keys_s)
     len_z = len(keys_z)
     qsc0p7z = len_q, len_s, len_c0, len_p7, len_z
-    overdraw_qsc0p7z = f_vars2np(lp_vars, 'v_wc_debit', qsc0p7z, mask_season_p7z, z_pos=-1)
-    overdraw_qsz = np.max(overdraw_qsc0p7z, axis=(2,3)) #max c0 and p7 axis
+    capital_qsc0p7z = f_vars2np(lp_vars, 'v_wc_debit', qsc0p7z, mask_season_p7z, z_pos=-1)
+    capital_qsz = np.max(capital_qsc0p7z, axis=(2,3)) #max c0 and p7 axis
     keys_qsz = [keys_q, keys_s, keys_z]
-    df_overdraw_qsz = f_numpy2df(overdraw_qsz, keys_qsz, [0,1], [2])
-    return df_overdraw_qsz
+    df_capital_qsz = f_numpy2df(capital_qsz, keys_qsz, [0,1], [2])
+    return df_capital_qsz
 
 def f_overhead_summary(r_vals):
     ##overheads/fixed expenses
     exp_fix_c = r_vals['fin']['overheads']
     return exp_fix_c
 
-def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
+def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False, summary3=False):
     '''
     DSE calculation.
 
@@ -1194,8 +1345,12 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
 
     :param per_ha: Bool
         if true it returns DSE/ha else it returns total dse
-    :param summary: Bool
-        if true it returns the total DSE/ha in fp0
+    :param summary1: Bool
+        if true it returns the total expected DSE/ha in winter. Used in the summary report
+    :param summary2: Bool
+        if true it returns the total numbers at the start and end of the season with qsz axis. Used in numbers summary report.
+    :param summary1: Bool
+        if true it returns the total DSE/ha in winter for each season.
     :return: DSE per pasture hectare for each sheep group.
 
     '''
@@ -1215,10 +1370,15 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
     offs_preserve_ax = (0, 1, 4, 9)
     offs_key = [keys_q, keys_s, keys_p6, keys_z]
 
-    if summary: #for summary DSE needs to be calculated with p6 and z axis (q,s,z axis is weighted and summed below)
+    if summary1: #for summary DSE needs to be calculated with p6 and z axis (q,s,z axis is weighted and summed below)
         sire_preserve_ax = (0, 1, 2 ,3)
         dams_preserve_ax = (0, 1, 3, 9)
         offs_preserve_ax = (0, 1, 4, 9)
+
+    if summary2: #for summary2 DSE needs to be calculated with q,s,z axis
+        sire_preserve_ax = (0, 1, 3)
+        dams_preserve_ax = (0, 1, 9)
+        offs_preserve_ax = (0, 1, 9)
 
     stock_vars = f_stock_reshape(lp_vars, r_vals)
 
@@ -1251,14 +1411,41 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
         dse_dams = fun.f_divide(dse_dams, pasture_area_qsp6z)
         dse_offs = fun.f_divide(dse_offs, pasture_area_qsp6z)
 
-    if summary:
+    if summary1:
         prob_qsz = r_vals['zgen']['z_prob_qsz'][:,:,:]
         sr_qsz = np.sum(r_vals['stock']['wg_propn_p6z'] * (dse_sire + dse_dams + dse_offs), axis=-2).round(2)  #sum SR for all sheep groups in winter grazed fp (to return winter sr)
         ###stdev and range
         sr_mean = np.sum(sr_qsz * prob_qsz)
-        sr_range = np.max(sr_qsz) - np.min(sr_qsz)
+        ma_sr_qsz = np.ma.masked_array(sr_qsz, prob_qsz==0)
+        sr_max = np.max(ma_sr_qsz)
+        sr_min = np.min(ma_sr_qsz)
         sr_stdev = np.sum((sr_qsz - sr_mean) ** 2 * prob_qsz)**0.5
-        return sr_mean, sr_range, sr_stdev
+        return sr_mean, sr_max, sr_min, sr_stdev
+    elif summary2:
+        sire_numbers_startseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_startseason_p7zg0']>0)
+                                                           * stock_vars['sire_numbers_qsg0'][:, :, na, na, :], preserveAxis=sire_preserve_ax)
+        sire_numbers_endseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_endseason_p7zg0']>0)
+                                                         * stock_vars['sire_numbers_qsg0'][:, :, na, na, :], preserveAxis=sire_preserve_ax)
+        dams_numbers_startseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_startseason_k2p7tva1nwziyg1']>0)
+                                                                     * stock_vars['dams_numbers_qsk2tvanwziy1g1'][:, :, :, na, ...], preserveAxis=dams_preserve_ax)
+        dams_numbers_endseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_endseason_k2p7tva1nwziyg1']>0)
+                                                                   * stock_vars['dams_numbers_qsk2tvanwziy1g1'][:, :, :, na, ...], preserveAxis=dams_preserve_ax)
+        offs_numbers_startseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_startseason_k3k5p7tvnwziaxyg3']>0)
+                                                                       * stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'][:, :, :, :, na, ...], preserveAxis=offs_preserve_ax)
+        offs_numbers_endseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_endseason_k3k5p7tvnwziaxyg3']>0)
+                                                                     * stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'][:, :, :, :, na, ...], preserveAxis=offs_preserve_ax)
+
+        keys_qszS = [keys_q, keys_s, keys_z, ['start', 'end']]
+        numbers_start_qsz = (sire_numbers_startseason_qsz + dams_numbers_startseason_qsz + offs_numbers_startseason_qsz).round(2)
+        numbers_end_qsz = (sire_numbers_endseason_qsz + dams_numbers_endseason_qsz + offs_numbers_endseason_qsz).round(2)
+        numbers_qsz = np.stack([numbers_start_qsz, numbers_end_qsz], axis=-1)
+        numbers_qsz = f_numpy2df(numbers_qsz, keys_qszS, [0, 1], [2, 3])
+        return numbers_qsz
+
+    elif summary3:
+        sr_qsz = np.sum(r_vals['stock']['wg_propn_p6z'] * (dse_sire + dse_dams + dse_offs), axis=-2).round(2)  #sum SR for all sheep groups in winter grazed fp (to return winter sr)
+        keys_qsz = [keys_q, keys_s, keys_z]
+        return f_numpy2df(sr_qsz, keys_qsz, [0, 1, 2], [])
 
     ##turn to table - rows and cols need to be a list of lists/arrays
     dse_sire = fun.f_produce_df(dse_sire.ravel(), rows=sire_key, columns=[['Sire DSE']])
@@ -1281,7 +1468,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     ##read stuff from other functions that is used in rev and cost section
     exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k_p7zqs = f_crop_summary(lp_vars, r_vals, option=0)
     exp_mach_k_p7zqs, mach_insurance_p7z = f_mach_summary(lp_vars, r_vals)
-    stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qsp7z = f_stock_cash_summary(lp_vars, r_vals)
+    stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qszp7 = f_stock_cash_summary(lp_vars, r_vals)
     slp_estab_cost_qsz_p7 = f_stock_pasture_summary(lp_vars, r_vals, type='slp', prod='slp_estab_cost_p7z', na_prod=[0,1,4]
                                              , weights='v_slp_ha_qszl', na_weights=[2]
                                              , keys='keys_qsp7zl', arith=2, index=[0,1,3], cols=[2])
@@ -1329,14 +1516,15 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
 
     ##create p/l dataframe
     idx = pd.IndexSlice
-    subtype_rev = ['grain', 'sheep sales', 'wool', 'season start trade', 'Total Revenue']
+    subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue']
     subtype_exp = ['crop', 'pasture', 'slp', 'stock husb', 'stock sup', 'stock purchase', 'machinery', 'labour', 'fixed', 'Total expenses']
-    subtype_tot = ['opportunity_cost', 'depreciation', 'minRoe', 'EBTD', 'obj']
+    subtype_tot = ['1 EBITDA', '2 depreciation', '3 asset value change', '4 profit', '5 opportunity_cost', '6 minRoe', '7 obj'] #numbered to keep them in the correct order
     pnl_rev_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Revenue'], subtype_rev], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
     pnl_exp_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Expense'], subtype_exp], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
     pnl_tot_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Total'], subtype_tot], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
-    pnl_dsp_index = pd.MultiIndex.from_product([['Weighted obj'], [''], [''], [''], ['']], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
-    pnl_index = pnl_rev_index.append(pnl_exp_index).append(pnl_tot_index).append(pnl_dsp_index)
+    pnl_dsp_index = pd.MultiIndex.from_product([['Weighted obj - AFO'], [''], [''], [''], ['']], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
+    pnl_dsp2_index = pd.MultiIndex.from_product([['Weighted obj - PNL'], [''], [''], [''], ['']], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
+    pnl_index = pnl_rev_index.append(pnl_exp_index).append(pnl_tot_index).append(pnl_dsp_index).append(pnl_dsp2_index)
     # pnl_cols = pd.MultiIndex.from_product([keys_c0, keys_p7])
     pnl_cols = keys_p7
     pnl = pd.DataFrame(index=pnl_index, columns=pnl_cols)  # need to initialise df with multiindex so rows can be added
@@ -1347,7 +1535,6 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl.loc[idx[:, :, :,'Revenue','grain'],:] = rev_grain_p7_qsz.T.reindex(pnl_cols, axis=1).values #reindex because  has been sorted alphabetically
     pnl.loc[idx[:, :, :, 'Revenue', 'sheep sales'], :] = stocksale_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Revenue', 'wool'], :] = wool_qszp7.reshape(-1, len_p7)
-    pnl.loc[idx[:, :, :, 'Revenue', 'season start trade'], :] = trade_value_qsp7z.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue'], :] = pnl.loc[pnl.index.get_level_values(3) == 'Revenue'].groupby(axis=0,level=(0,1,2)).sum().values
 
     ##expenses - add to p/l table each as a new row
@@ -1362,28 +1549,36 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl.loc[idx[:, :, :, 'Expense', 'fixed'], :] = exp_fix_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'Total expenses'], :] = pnl.loc[pnl.index.get_level_values(3) == 'Expense'].groupby(axis=0,level=(0,1,2)).sum().values
 
-    ##EBIT
+    ##EBITDA
     ebtd = pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue']].values - pnl.loc[idx[:, :, :, 'Expense', 'Total expenses']].values
-    pnl.loc[idx[:, :, :, 'Total', 'EBTD'], :] = ebtd #interest is counted in the cashflow of each item - it is hard to separate so it is not reported separately
+    pnl.loc[idx[:, :, :, 'Total', '1 EBITDA'], :] = ebtd #interest is counted in the cashflow of each item - it is hard to separate so it is not reported separately
 
     ##Full year - add a column which is total of all cashflow period
     pnl['Full year'] = pnl.sum(axis=1)
 
-    ##interest, depreciation asset opp and minroe
+
+    ##farm profit - cash transaction minus depreciation and change in asset value
+    ###depreciation
+    pnl.loc[idx[:, :, :, 'Total', '2 depreciation'], 'Full year'] = dep_qsz
+    ###change in asset value - this is to reflect the change in assets if a poor season sell part of the core flock
+    pnl.loc[idx[:, :, :, 'Total', '3 asset value change'], 'Full year'] = trade_value_qszp7.reshape(-1, len_p7).sum(axis=1)
+    ###calc farm profit - cash transaction minus depreciation and change in asset value
+    profit_qsz = ebtd.sum(axis=1) - dep_qsz + trade_value_qszp7.reshape(-1, len_p7).sum(axis=1)
+    pnl.loc[idx[:, :, :, 'Total', '4 profit'], 'Full year'] = profit_qsz
+
+    ##obj - profit minus asset opp and minroe
     ##add the assets & minroe & depreciation
-    pnl.loc[idx[:, :, :, 'Total', 'depreciation'], 'Full year'] = dep_qsz
-    pnl.loc[idx[:, :, :, 'Total', 'opportunity_cost'], 'Full year'] = asset_cost_qsz
-    pnl.loc[idx[:, :, :, 'Total', 'minRoe'], 'Full year'] = minroe_qsz
+    pnl.loc[idx[:, :, :, 'Total', '5 opportunity_cost'], 'Full year'] = asset_cost_qsz
+    pnl.loc[idx[:, :, :, 'Total', '6 minRoe'], 'Full year'] = minroe_qsz
+    ###add the estimated obj for each season (calced from info above) profit minus opportunity cost and minroe
+    season_obj_qsz = profit_qsz - asset_cost_qsz - minroe_qsz
+    pnl.loc[idx[:, :, :, 'Total', '7 obj'], 'Full year'] = season_obj_qsz
 
-    ##add the estimated profit for each season (calced from info above)
-    season_obj_qsz = pnl.loc[idx[:, :, :, 'Total', 'EBTD'], 'Full year'].values - dep_qsz - asset_cost_qsz - minroe_qsz
-    pnl.loc[idx[:, :, :, 'Total', 'obj'], 'Full year'] = season_obj_qsz
 
-    ##add the objective of all seasons
-    pnl.loc[idx['Weighted obj', '', '', '', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
-
-    ##sort the season level of index
-    # pnl = pnl.sort_index(axis=0, level=0) #maybe come back to this, depending what the report looks like with active z axis.
+    ##add the objective of all seasons - these should both be the same if the pnl is being calculated correctly
+    ###have to calc here after the step above so it doesnt turn to nan
+    pnl.loc[idx['Weighted obj - AFO', '', '', '', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
+    pnl.loc[idx['Weighted obj - PNL', '', '', '', ''], 'Full year'] = np.sum(season_obj_qsz * r_vals['zgen']['z_prob_qsz'].ravel())
 
     ##weight the qsz axis if option 2
     if option==2:
@@ -1394,9 +1589,10 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
         z_prob_qsz = r_vals['zgen']['z_prob_qsz']
         z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
         z_prob_qsz = z_prob_qsz.reindex(pnl.index, axis=0)
-        pnl =pnl.mul(z_prob_qsz, axis=0).groupby(level=(-2,-1), axis=0).sum()
+        pnl = pnl.mul(z_prob_qsz, axis=0).groupby(level=(-2,-1), axis=0).sum()
         ###add the objective of all seasons - need to do again because it becomes nan in the step above
-        pnl.loc[idx['Weighted obj', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
+        pnl.loc[idx['Weighted obj - AFO', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
+        pnl.loc[idx['Weighted obj - PNL', ''], 'Full year'] = np.sum(season_obj_qsz * r_vals['zgen']['z_prob_qsz'].ravel())
 
     ##round numbers in df
     pnl = pnl.astype(float).round(1)  # have to go to float so rounding works
@@ -1410,6 +1606,7 @@ def f_profit(lp_vars, r_vals, option=0):
     1- Risk neutral objective = rev - (exp + minroe + asset_cost +dep).
     2- Utility - this is the same as risk neutral obj if risk aversion is not included
     3- range and stdev of profit
+    4- profit by zqs
     '''
     prob_qsz =r_vals['zgen']['z_prob_qsz']
     prob_c1 =r_vals['fin']['prob_c1'].values
@@ -1424,7 +1621,7 @@ def f_profit(lp_vars, r_vals, option=0):
         return lp_vars['profit'] - minroe - asset_cost
     elif option == 2:
         return lp_vars['utility']
-    elif option == 3:
+    else:
         keys_p7 = r_vals['fin']['keys_p7']
         keys_c1 = r_vals['fin']['keys_c1']
         mask_season_p7z = r_vals['zgen']['mask_season_p7z']
@@ -1437,19 +1634,32 @@ def f_profit(lp_vars, r_vals, option=0):
         len_s = len(keys_s)
         len_z = len(keys_z)
         qsc1p7z = len_q, len_s, len_c1, len_p7, len_z
-        ###credit (profit before depreciation)
+        ###credit/debit (profit/loss before depreciation and tradevalue)
         credit_qsc1p7z = f_vars2np(lp_vars, 'v_credit', qsc1p7z, mask_season_p7z, z_pos=-1)
+        debit_qsc1p7z = f_vars2np(lp_vars, 'v_debit', qsc1p7z, mask_season_p7z, z_pos=-1)
         credit_qsc1z = credit_qsc1p7z[...,-1,:]
+        debit_qsc1z = debit_qsc1p7z[...,-1,:]
         ###dep
         dep_qsp7z = f_dep_summary(lp_vars, r_vals)
         dep_qsz = dep_qsp7z[:,:,-1,:]
+        ###tradevalue
+        trade_value_qszp7 = f_stock_cash_summary(lp_vars, r_vals)[-1]
+        trade_value_qsz = trade_value_qszp7[...,-1]
         ###profit for each scenario
-        profit_qsc1z = credit_qsc1z - dep_qsz[:,:,na,:] #dep doesnt vary by price scenario
+        profit_qsc1z = credit_qsc1z - debit_qsc1z + trade_value_qsz[:,:,na,:] - dep_qsz[:,:,na,:] #dep & tradevalue doesnt vary by price scenario
         ###stdev and range
-        profit_range = np.max(profit_qsc1z) - np.min(profit_qsc1z)
+        t_prob_qsz = np.broadcast_to(prob_qsz[:,:,na,:], profit_qsc1z.shape) #broadcast so the next step works
+        ma_profit_qsc1z = np.ma.masked_array(profit_qsc1z, t_prob_qsz[:,:,na,:] == 0)
+        profit_max = np.max(ma_profit_qsc1z)
+        profit_min = np.min(ma_profit_qsc1z)
         profit_mean = np.sum(profit_qsc1z * prob_qsz[:,:,na,:] * prob_c1[:,na])
         profit_stdev = np.sum((profit_qsc1z - profit_mean)**2 * prob_qsz[:,:,na,:] * prob_c1[:,na])**0.5
-        return profit_range, profit_stdev
+        if option == 3:
+            return profit_max, profit_min, profit_stdev
+        elif option == 4:
+            profit_qsz = np.sum(profit_qsc1z * prob_c1[:,na], axis=2) #average c1
+            index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+            return pd.Series(profit_qsz.ravel(), index=index_qsz).unstack(-1)
 
 
 def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None, index=[], cols=[], arith=0,
@@ -1683,7 +1893,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     :param r_vals: dict: report variable
     :param option: (optional, default = 0): int:
             option 0: mei/hd/day & propn of mei from each feed source
-            option 1: total mei
+            option 1: total mei / day
     :param nv_option: (optional, default = 0): int:
             option 0: Active NV pool
             option 1: NV pool summed (not active)
@@ -1872,11 +2082,51 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     ###if option 1 - calc propn of mei from each feed source
     if option==0:
         feed_budget_supply = feed_budget_supply.div(feed_budget_supply.sum(axis=1), axis=0)
+    else:
+        days_zp6 = pd.DataFrame(r_vals['pas']['days_p6z'], index=r_vals['pas']['keys_p6'], columns=r_vals['zgen']['keys_z']).T.stack()
+        feed_budget_supply = feed_budget_supply.unstack([0,1,-1]).div(days_zp6, axis=0).stack([-3,-2,-1]).reorder_levels([2,3,0,1,4])
+        feed_budget_req = feed_budget_req.unstack([0,1,-1]).div(days_zp6, axis=0).stack([-3,-2,-1]).reorder_levels([2,3,0,1,4])
+
     ###add stock mei requirement
     feed_budget = pd.concat([feed_budget_supply, feed_budget_req], axis=1)
 
     return feed_budget.astype(float).round(2)
 
+
+def f_grazing_summary(lp_vars, r_vals):
+    '''
+    Green pasture grazing summary
+    :return: data table with zp6lo as index and g and column. Containing the hectares of each activity, average foo and starting foo.
+    '''
+    feed_vars = f_feed_reshape(lp_vars, r_vals)
+    greenpas_ha_qsfgop6lzt = feed_vars['greenpas_ha_qsfgop6lzt']
+    foo_ave_grnha_gop6lzt = r_vals['pas']['foo_ave_grnha_gop6lzt']
+    foo_start_grnha_op6lzt = r_vals['pas']['foo_start_grnha_op6lzt']
+    foo_gi_gt = r_vals['pas']['i_foo_graze_propn_gt']
+
+    ##calc average foo for f (nv pool), o (start foo) and g (grazing int)
+    foo_ave_grnha_qsp6lzt = fun.f_weighted_average(foo_ave_grnha_gop6lzt, greenpas_ha_qsfgop6lzt, axis=(2,3,4))
+
+    ##sum f axis to return total ha of each pasture activity
+    greenpas_ha_qsgop6lzt = np.sum(greenpas_ha_qsfgop6lzt, axis=2)
+
+    ##combine everything
+    graze_info_iqsgop6lzt = np.stack(np.broadcast_arrays(greenpas_ha_qsgop6lzt, foo_start_grnha_op6lzt[na,na,na], foo_ave_grnha_qsp6lzt[:,:,na,na,...]), axis=0)
+
+    ##make df
+    keys_g = r_vals['pas']['keys_g']
+    keys_l = r_vals['pas']['keys_l']
+    keys_o = r_vals['pas']['keys_o']
+    keys_p6 = r_vals['pas']['keys_p6']
+    keys_t = r_vals['pas']['keys_t']
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    keys_i = ["area", "foo start", "ave_foo"]
+    keys_iqsgop6lzt = [keys_i, keys_q, keys_s, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+
+    graze_info_qsztlp6o_ig = f_numpy2df(graze_info_iqsgop6lzt, keys_iqsgop6lzt, [1,2,7,8,6,5,4], [0,3])
+    return graze_info_qsztlp6o_ig
 
 ############################
 # functions for numpy arrays#

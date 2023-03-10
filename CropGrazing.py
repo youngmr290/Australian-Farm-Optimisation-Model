@@ -3,7 +3,7 @@ Author: Young
 
 Crop grazing is an option that allows sheep to graze green crop, typically from June until August
 however this range can be altered in the inputs. Green crops
-have a higher energy content than green pasture and grow more vertical allowing for easier grazing,
+have a higher energy content than green pasture and grow more erect allowing for easier grazing,
 meaning a lower crop FOO is required to meet the livestock needs. However, a yield and stubble penalty is
 associated with this activity. Trials have recorded varying yield penalties from -15% to +15%, but the
 consensus is that the yield penalty is minimal if the crop is grazed early and lightly. The level of the yield
@@ -55,7 +55,7 @@ na = np.newaxis
 #     cropgraze_area_rkl = graze_area_kl * a_r_k_rk[...,na]
 #     return cropgraze_area_rkl
 
-def f_cropgraze_DM(total_DM=False):
+def f_cropgraze_DM(r_vals=None, total_DM=False):
     '''
     Calculates the dry matter (DM) available for grazing on crop paddocks and the total DM used to calculate relative
     availability.
@@ -90,6 +90,7 @@ def f_cropgraze_DM(total_DM=False):
     '''
     ##read inputs
     lmu_mask = pinp.general['i_lmu_area'] > 0
+    cropgrazing_inc = pinp.cropgraze['i_cropgrazing_inc']
     growth_kp6z = zfun.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1) #kg/d
     wastage_k = pinp.cropgraze['i_cropgraze_wastage']
     growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl'][:,lmu_mask]
@@ -138,6 +139,8 @@ def f_cropgraze_DM(total_DM=False):
     lmu_mask = pinp.general['i_lmu_area'] > 0
     ###propn of crop grazing possible for each landuse.
     landuse_grazing_kl = pinp.cropgraze['i_cropgrazing_inc_landuse'][:, lmu_mask]
+    ###mask which z crop graing can occur
+    landuse_grazing_kl = landuse_grazing_kl * cropgrazing_inc
 
     ##season mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
@@ -173,7 +176,13 @@ def f_cropgraze_DM(total_DM=False):
         transfer_exists_p6p5z = transfer_exists_p6p5z * mask_fp_z8var_p6z[:,na,:]
         crop_DM_required_kp6p5z = crop_DM_required_kp6p5z * mask_fp_z8var_p6z[:,na,:]
 
-        return crop_DM_provided_kp6p5z8lz9 * landuse_grazing_kl[:,na,na,na,:,na], crop_DM_required_kp6p5z, transfer_exists_p6p5z
+        crop_DM_provided_kp6p5z8lz9 = crop_DM_provided_kp6p5z8lz9 * landuse_grazing_kl[:,na,na,na,:,na]
+
+        ##store report vals
+        fun.f1_make_r_val(r_vals, crop_DM_provided_kp6p5z8lz9, 'crop_DM_provided_kp6p5z8lz9') #doesnt need unclustering because of z9 axis
+        fun.f1_make_r_val(r_vals, crop_DM_required_kp6p5z, 'crop_DM_required_kp6p5z') #doesnt need unclustering because of z9 axis
+
+        return crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z
 
     else:
         ##crop foo mid way through feed period after consumption - used to calc vol in the next function.
@@ -353,7 +362,7 @@ def f_cropgraze_biomass_penalty(r_vals):
 
 def f1_cropgraze_params(params, r_vals, nv):
     # grazecrop_area_rkl = f_graze_crop_area()
-    crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z = f_cropgraze_DM()
+    crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z = f_cropgraze_DM(r_vals=r_vals)
     biomass_reduction_propn_kp6z = f_cropgraze_biomass_penalty(r_vals)
     crop_md_fkp6p5zl, crop_vol_fkp6p5zl = crop_md_vol(nv, r_vals)
     # DM_reduction_kp6p5zl = f_DM_reduction_seeding_time()

@@ -89,11 +89,16 @@ def f_report(processor, trials, non_exist_trials):
     stacked_non_exist = pd.DataFrame(non_exist_trials).rename_axis('Trial')  # name of any infeasible trials
     stacked_summary = pd.DataFrame()  # 1 line summary of each trial
     stacked_areasum = pd.DataFrame()  # area summary
+    stacked_profit = pd.DataFrame()  # profit
+    stacked_numbers_qsz = pd.DataFrame()  # total dse by qsz
+    stacked_croparea_qsz = pd.DataFrame()  # total crop by qsz
     stacked_pnl = pd.DataFrame()  # profit and loss statement
     stacked_wc = pd.DataFrame()  # max bank overdraw
     stacked_penalty = pd.DataFrame()  # biomass penalty from seeding timeliness and crop grazing
     stacked_profitarea = pd.DataFrame()  # profit by land area
     stacked_feed = pd.DataFrame()  # feed budget
+    stacked_feed2 = pd.DataFrame()  # feed budget
+    stacked_grazing = pd.DataFrame()  # grazing summary
     stacked_season_nodes = pd.DataFrame()  # season periods
     stacked_feed_periods = pd.DataFrame()  # feed periods
     stacked_dam_dvp_dates = pd.DataFrame()  # dam dvp dates
@@ -154,6 +159,8 @@ def f_report(processor, trials, non_exist_trials):
     stacked_poccon = pd.DataFrame()  # pasture on crop paddocks feed consumed
     stacked_supcon = pd.DataFrame()  # supplement feed consumed
     stacked_stubcon = pd.DataFrame()  # stubble feed consumed
+    stacked_cropcon = pd.DataFrame()  # crop consumed from early season crop grazing
+    stacked_cropcon_available = pd.DataFrame()  # crop consumed from early season crop grazing
     stacked_grnnv = pd.DataFrame()  # NV of green pas
     stacked_grndmd = pd.DataFrame()  # dmd of green pas
     stacked_avegrnfoo = pd.DataFrame()  # Average Foo of green pas
@@ -182,6 +189,24 @@ def f_report(processor, trials, non_exist_trials):
             areasum = rep.f_area_summary(lp_vars, r_vals, option=option)
             areasum = pd.concat([areasum],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_areasum = rep.f_append_dfs(stacked_areasum, areasum)
+
+        if report_run.loc['run_profit', 'Run']:
+            option = 4 #profit by zqs
+            profit = rep.f_profit(lp_vars, r_vals, option=option)
+            profit = pd.concat([profit],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_profit = rep.f_append_dfs(stacked_profit, profit)
+
+        if report_run.loc['run_numbers_qsz', 'Run']:
+            method = 0 #dse based on NW
+            numbers_qsz = rep.f_dse(lp_vars, r_vals, method, per_ha=False, summary1=False, summary2=True)
+            numbers_qsz = pd.concat([numbers_qsz],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_numbers_qsz = rep.f_append_dfs(stacked_numbers_qsz, numbers_qsz)
+
+        if report_run.loc['run_croparea_qsz', 'Run']:
+            area_option = 2 #total crop area
+            croparea_qsz = rep.f_area_summary(lp_vars,r_vals,area_option)
+            croparea_qsz = pd.concat([croparea_qsz],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_croparea_qsz = rep.f_append_dfs(stacked_croparea_qsz, croparea_qsz)
 
         if report_run.loc['run_pnl', 'Run']:
             option = 2 #1 = report q, s, & z. 2 = weighted average of q, s, & z
@@ -215,6 +240,20 @@ def f_report(processor, trials, non_exist_trials):
             feed = rep.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols)
             feed = pd.concat([feed],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_feed = rep.f_append_dfs(stacked_feed, feed)
+
+        if report_run.loc['run_feedbudget', 'Run']:
+            option = 1
+            nv_option = 0
+            dams_cols = [6] #birth opp
+            offs_cols = [7] #shear opp
+            feed = rep.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols)
+            feed = pd.concat([feed],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_feed2 = rep.f_append_dfs(stacked_feed2, feed)
+
+        if report_run.loc['run_feedbudget', 'Run']:
+            grazing = rep.f_grazing_summary(lp_vars, r_vals)
+            grazing = pd.concat([grazing],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_grazing = rep.f_append_dfs(stacked_grazing, grazing)
 
         if report_run.loc['run_period_dates', 'Run']:
             ###season nodes (p7)
@@ -1043,7 +1082,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'greenpas_ha_qsfgop6lzt'
             keys = 'keys_qsfgop6lzt'
             arith = 2
-            index =[5]
+            index =[7,5]
             cols =[6]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
@@ -1063,7 +1102,7 @@ def f_report(processor, trials, non_exist_trials):
             na_denweights = [1,3]
             keys = 'keys_qsfgop6lzt'
             arith = 1
-            index =[5]
+            index =[7,5]
             cols =[6]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
@@ -1079,7 +1118,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'drypas_transfer_qsdp6zlt'
             keys = 'keys_qsdp6zlt'
             arith = 2
-            index =[3]
+            index =[4,3]
             cols =[2]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
@@ -1095,7 +1134,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'nap_transfer_qsdp6zt'
             keys = 'keys_qsdp6zt'
             arith = 2
-            index =[3]
+            index =[4,3]
             cols =[]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
@@ -1116,8 +1155,8 @@ def f_report(processor, trials, non_exist_trials):
             na_denweights = [1,3]
             keys = 'keys_qsfgop6lzt'
             arith = 1
-            index =[5]
-            cols =[]
+            index =[7,5]
+            cols =[8]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             grncon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, prod_weights=prod_weights,
@@ -1134,7 +1173,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'drypas_consumed_qsfdp6zlt'
             keys = 'keys_qsfdp6zlt'
             arith = 2
-            index =[4]
+            index =[5,4]
             cols =[3,7] #d,t
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
@@ -1150,7 +1189,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = None
             keys = 'keys_fgop6lzt'
             arith = 5
-            index = [3]
+            index = [5,3]
             cols = [2, 1]
             axis_slice = {}
             grnnv = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -1165,7 +1204,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = None
             keys = 'keys_gop6lzt'
             arith = 5
-            index = [2]
+            index = [4,2]
             cols = [1, 0]
             axis_slice = {}
             grndmd = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -1180,7 +1219,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = None
             keys = 'keys_gop6lzt'
             arith = 5
-            index = [2]
+            index = [4,2]
             cols = [1, 0]
             axis_slice = {}
             grnfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -1195,7 +1234,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = None
             keys = 'keys_fdp6zt'
             arith = 5
-            index = [2]
+            index = [3,2]
             cols = [1]
             axis_slice = {}
             drynv = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -1210,7 +1249,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = None
             keys = 'keys_dp6zt'
             arith = 5
-            index = [1]
+            index = [2,1]
             cols = [0]
             axis_slice = {}
             drydmd = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -1225,7 +1264,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = None
             keys = 'keys_dp6zt'
             arith = 5
-            index = [1]
+            index = [2,1]
             cols = [0]
             axis_slice = {}
             dryfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -1240,7 +1279,7 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'nap_consumed_qsfdp6zt'
             keys = 'keys_qsfdp6zt'
             arith = 2
-            index =[4]
+            index =[5,4]
             cols =[]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
@@ -1288,6 +1327,27 @@ def f_report(processor, trials, non_exist_trials):
             stubcon = pd.concat([stubcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_stubcon = rep.f_append_dfs(stacked_stubcon, stubcon)
 
+        if report_run.loc['run_cropcon', 'Run']:
+            ##crop grazing
+            prod = np.array([1])
+            type = 'crpgrz'
+            weights = 'crop_consumed_qsfkp6p5zl'
+            keys = 'keys_qsfkp6p5zl'
+            arith = 2
+            index = [0, 1, 6]  # q,s,z
+            cols = [4,3] #p6
+            axis_slice = {}
+            cropcon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+                                                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            cropcon = pd.concat([cropcon], keys=[trial_name], names=['Trial'])  # add trial name as index level
+            stacked_cropcon = rep.f_append_dfs(stacked_cropcon, cropcon)
+
+        if report_run.loc['run_cropcon', 'Run']:
+            #returns consumption in each FP
+            cropcon_available = rep.f_available_cropgrazing(lp_vars, r_vals)
+            cropcon_available = pd.concat([cropcon_available],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_cropcon_available = rep.f_append_dfs(stacked_cropcon_available, cropcon_available)
+
         if report_run.loc['run_mvf', 'Run']:
             #returns consumption in each FP
             mvf = rep.f_mvf_summary(lp_vars)
@@ -1330,6 +1390,12 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_summary, 'summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_areasum', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_areasum, 'areasum', df_settings, option=xl_display_mode)
+    if report_run.loc['run_profit', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_profit, 'profit', df_settings, option=xl_display_mode)
+    if report_run.loc['run_numbers_qsz', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_numbers_qsz, 'numbers_qsz', df_settings, option=xl_display_mode)
+    if report_run.loc['run_croparea_qsz', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_croparea_qsz, 'croparea_qsz', df_settings, option=xl_display_mode)
     if report_run.loc['run_pnl', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_pnl, 'pnl', df_settings, option=xl_display_mode)
     if report_run.loc['run_wc', 'Run']:
@@ -1341,6 +1407,8 @@ def f_report(processor, trials, non_exist_trials):
         plot.savefig('Output/profitarea_curve.png')
     if report_run.loc['run_feedbudget', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_feed, 'feed budget', df_settings, option=xl_display_mode)
+        df_settings = rep.f_df2xl(writer, stacked_feed2, 'feed budget total', df_settings, option=xl_display_mode)
+        df_settings = rep.f_df2xl(writer, stacked_grazing, 'grazing summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_period_dates', 'Run']:
         fp_start_col = len(stacked_season_nodes.columns) + stacked_season_nodes.index.nlevels + 1
         dam_dvp_start_col = fp_start_col + len(stacked_feed_periods.columns) + stacked_feed_periods.index.nlevels + 1
@@ -1472,6 +1540,10 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_supcon, 'supcon', df_settings, option=xl_display_mode)
     if report_run.loc['run_stubcon', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_stubcon, 'stubcon', df_settings, option=xl_display_mode)
+    if report_run.loc['run_cropcon', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_cropcon, 'cropcon', df_settings, option=xl_display_mode)
+    if report_run.loc['run_cropcon', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_cropcon_available, 'cropcon_avail', df_settings, option=xl_display_mode)
     if report_run.loc['run_mvf', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_mvf, 'mvf', df_settings, option=xl_display_mode)
 

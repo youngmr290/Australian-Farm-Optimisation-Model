@@ -378,7 +378,7 @@ def f1_nv_components(paststd_foo_p6a1e1b1j0wzida0e0b0xyg, paststd_dmd_p6a1e1b1j0
     Generates the relationship between diet NV and, FOO & diet quality (in each feed period and weather-year).
 
     The function generates multiple discrete data points from which FOO & diet M/D can be predicted from diet NV by interpolation.
-    This relationship is required because the same nutritive value can be achieved with a varying combination of FOO and DMD.
+    This relationship is required because the same nutritive value can be achieved with various combinations of FOO and DMD.
     The combination selected affects the animal requirements because:
 
         #. FOO affects the energy requirement associated with walking to find feed.
@@ -920,7 +920,7 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g,
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
     ##Wool growth (protein weight-as shorn i.e. not DM) if there was no lag
     d_cfw_nolag_g = cw_g[8, ...] * wge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
-    ##Process the CFW REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the CFW REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_cfw_nolag_g = f1_rev_update('cfw', d_cfw_nolag_g, rev_trait_value)
     ##Wool growth (protein weight) with lag and updated history
     d_cfw_g, d_cfw_history_p2g = f1_history(d_cfw_history_start_p2g, d_cfw_nolag_g, days_period_g)
@@ -930,7 +930,7 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g,
     mew_g = new_g / kw_yg #can be negative because mem assumes 4g of wool is grown. If less is grown then mew 'returns' the energy.
     ##Fibre diameter for the days growth
     d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
-    ##Process the FD REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the FD REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_fd_g = f1_rev_update('fd', d_fd_g, rev_trait_value)
     ##Surface Area
     area = cc_g[1, ...] * ffcfw_start_g ** (2/3)
@@ -1007,7 +1007,7 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     pcg = cg[12, ...] + zf1 * (cg[13, ...] - cg[14, ...] * (level - 1)) - zf2 * cg[15, ...] * (rc_start - 1)
     ##Empty bodyweight gain
     ebg = neg / evg
-    ##Process the Liveweight REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the Liveweight REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
     ##Protein gain
     pg = pcg * ebg
@@ -1032,7 +1032,7 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     evg = c_evg * (1 + sen.sap['evg'] * zf2)
     ##Empty bodyweight gain
     ebg = neg / evg
-    ##Process the Liveweight REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the Liveweight REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
     # ##Protein gain
     # pg = pcg * ebg
@@ -1170,7 +1170,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         slc[b1_pos] = slice(2,3)
         t_cr[tuple(slc)] = f1_rev_update('conception', t_cr[tuple(slc)], rev_trait_value)
 
-        ##Process the Litter size REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+        ##Process the Litter size REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         ##The litter size REV is stored as the proportion of the pregnant dams that are single-, twin- & triplet-bearing
         ###Steps: Calculate litter size from t_cr, adjust litter size (if required) then recalculate t_cr from new litter size
         ### Calculating litter size (# of foetuses / dam pregnant) requires a mask for the pregnant dams that is the same shape as t_cr
@@ -1532,7 +1532,8 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_rec
             a. mortality due to exposure at birth (mortalityx) that is a function of ewe RC at birth and the chill index at birth
             b. mortality due to difficult birth (mortalityd - dystocia) that depends on the lamb birth weight and ewe relative condition at birth
         4. dam mortality that is the sum of
-            a. mortality due to preg toxemia in the last 6 weeks of pregnancy. This occurs for multiple bearing dams and is affected by rate of LW loss
+            a. mortality due to preg toxemia in the last 6 weeks of pregnancy. This occurs for multiple bearing dams and is affected by rate of LW loss.
+               This is calculated each week and the mortality is summed, rather than calculated from the sum of the LW change.
             b. mortality due to dystocia (calculated in f_mortality_progeny_cs). It is assumed that ewe death is associated with a fixed proportion of the lambs deaths from dystocia.
             '''
 def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max, days_period, rev_trait_value, sap_mortalityb):
@@ -1548,7 +1549,7 @@ def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     mortalityb = np.mean(mortalityb_p1p2, axis=(-1,-2))
     ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
-    ##Process the Mortality REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the Mortality REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     mortalityb = f1_rev_update('mortality', mortalityb, rev_trait_value)
     return mortalityb
 
@@ -1570,7 +1571,7 @@ def f_mortality_dam_cs():
     Peri natal (at birth) Dam mortality.
     Currently the CSIRO system includes dam mortality due to PregTox (f_mortality_pregtox_cs) and dam mortality due to
     dystocia (included in f_mortality_progeny_cs) but there is no calculation of deaths from other causes,
-    such as those that might effect twin bearing dams at birth.
+    such as those that might affect twin bearing dams at birth.
     '''
     return 0
 
@@ -1580,9 +1581,9 @@ def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_b
     (Twin) Dam mortality in last 6 weeks (preg tox). This increments mortality associated with LWL in the base mortality function.
 
     Preg tox is short for pregnancy toxaemia. It is associated with ketosis where the ewe switches into burning fat
-    (rather than carbohydrates) because they are losing weight. It is predominantly a problem for twin bearing ewes
-    because they have the highest energy demands close to lambing and the least capacity to eat more (because their
-    insides are full of lambs and this restricts stomach capacity). It is usually also more of a problem for ewes
+    (rather than carbohydrates) because they are losing weight. It is predominantly a problem for multiple bearing ewes
+    because they have the highest energy demands close to lambing and the least capacity to eat more (because stomach
+    capacity is restricted due to the volume of the conceptus). It is usually also more of a problem for ewes
     that start out in better condition.
     '''
     ###distribution on ebg - add distribution to ebg_start_p1 and then average (axis =-1)
@@ -1608,8 +1609,8 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     ###distribution on w_b & rc_birth - add distribution to ebg_start_p1 and then average (axis =-1)
     w_b_p1p2 = fun.f_distribution7(w_b, cv=cv_weight)[...,na]
     rc_birth_p1p2 = fun.f_distribution7(rc_birth, cv=cv_weight)[...,na,:]
-    mortalityd_yatf_p1p2 = fun.f_sig(fun.f_divide(w_b_p1p2, w_b_exp_y[...,na,na]) * np.maximum(1, rc_birth_p1p2),
-                                 cb1[6, ...,na,na], cb1[7, ...,na,na]) * period_is_birth[...,na,na]
+    mortalityd_yatf_p1p2 = fun.f_sig(fun.f_divide(w_b_p1p2, w_b_exp_y[...,na,na]) * np.maximum(1, rc_birth_p1p2)
+                                     , cb1[6, ...,na,na], cb1[7, ...,na,na]) * period_is_birth[...,na,na]
     mortalityd_yatf = np.mean(mortalityd_yatf_p1p2, axis=(-1,-2))
     ##add sensitivity
     mortalityd_yatf = fun.f_sa(mortalityd_yatf, sap_mortalityp, sa_type = 1, value_min = 0)
@@ -1618,14 +1619,14 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     ##Reduce progeny losses due to large progeny (dystocia) - so not double counting progeny losses associated with dam mortality
     mortalityd_yatf = mortalityd_yatf * (1- cd[21,...])
     ##Exposure index
-    xo_p1p2 = cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_p1p2 + cd[10, ..., na,na] * chill_index_p1[..., na] + cb1[11, ..., na,na]
+    xo_p1p2 = (cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_p1p2 + cd[10, ..., na,na] * chill_index_p1[..., na]
+               + cb1[11, ..., na,na])
     ##Progeny mortality at birth from exposure
     mortalityx = np.average(fun.f_back_transform(xo_p1p2), axis=(-1, -2)) * period_is_birth  #axis -1 & -2 are p1 & p2
-#    mortalityx = np.average(np.exp(xo_p1p2) / (1 + np.exp(xo_p1p2)) ,axis = (-1,-2)) * period_is_birth #axis -1 is p1
     ##Apply SA to progeny mortality due to exposure
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
     mortalityx = fun.f_sa(mortalityx, saa_mortalityx, sa_type = 2, value_min = 0)
-    ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     mortalityx = f1_rev_update('era', mortalityx, rev_trait_value)
     return mortalityx, mortalityd_yatf, mortalityd_dams
 
@@ -1649,16 +1650,16 @@ def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ###distribution on ebg & rc_start, calculate mort and then average (axis =-1,-2)
     ebg_start_p1p2 = fun.f_distribution7(ebg_start, sd=sd_ebg)[...,na]
     rc_start_p1p2 = fun.f_distribution7(rc_start, cv=cv_weight)[...,na,:]
-    ###calc mort scalars
+    ###calc mort scalars for the hybrid mortality function
     rc_mortality_scalar_p1p2 = (np.minimum(0, rc_start_p1p2 - cd[24, ...,na,na])
                                 / (cd[23, ...,na,na] - cd[24, ...,na,na]))**2
-    ebg_mortality_scalar_p1p2 = (np.minimum(0, ebg_start_p1p2 * cg[18, ...,na,na] - cd[26, ...,na,na] - d_nw_max[...,na,na])
+    ebg_mortality_scalar_p1p2 = (np.minimum(0, (ebg_start_p1p2 * cg[18, ...,na,na] - d_nw_max[...,na,na]) - cd[26, ...,na,na])
                                  / (cd[25, ...,na,na] - cd[26, ...,na,na]))**2
     mortalityb_p1p2 = (cd[1, ...,na,na] + cd[22, ...,na,na] * rc_mortality_scalar_p1p2 * ebg_mortality_scalar_p1p2) * days_period[...,na,na]  #mul by days period to convert from mort per day to per period
     mortalityb = np.mean(mortalityb_p1p2, axis=(-1,-2))
     ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
-    ##Process the Mortality REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ##Process the Mortality REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     mortalityb = f1_rev_update('mortality', mortalityb, rev_trait_value)
     return mortalityb
 
@@ -1670,7 +1671,7 @@ def f_mortality_weaner_mu(cu2, ce=0):
     return 0
 
 
-def f_mortality_dam_mu(cu2, ce, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
+def f_mortality_dam_mu(cu2, ce, cb1, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
     ## transformed Dam mortality at birth due to low CS.
     ###distribution on cs_birth, calculate mort and then average (axis =-1)
     cs_birth_dams_p1 = fun.f_distribution7(cs_birth_dams, cv=cv_cs)
@@ -1678,11 +1679,11 @@ def f_mortality_dam_mu(cu2, ce, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1,
     t_mortalitye_mu_p1 = (cu2[22, 0, ...,na] * cs_birth_dams_p1 + cu2[22, 1, ...,na] * cs_birth_dams_p1 ** 2
                           + ce[22, ...,na] + cu2[22, -1, ...,na])
     ##Back transform the mortality
-    mortalitye_mu_p1 = fun.f_back_transform(t_mortalitye_mu_p1) * period_is_birth[...,na]
-#    mortalitye_mu_p1 = np.exp(t_mortalitye_mu_p1) / (1 + np.exp(t_mortalitye_mu_p1)) * period_is_birth[...,na]
+    mortalitye_mu_p1 = fun.f_back_transform(t_mortalitye_mu_p1)
+    ##Average across the p1 axis (range of CS within the mob)
     mortalitye_mu = np.mean(mortalitye_mu_p1, axis=-1)
-    ##no increase in mortality for the non reproducing ewes (n_foet == 0)
-    mortalitye_mu = mortalitye_mu * (nfoet_b1 > 0)
+    ##Vertical shift in mortality based on litter size and only increase mortality if period is birth and reproducing ewes
+    mortalitye_mu = (mortalitye_mu + cb1[22, ...]) * period_is_birth * (nfoet_b1 > 0)
     ##Adjust by sensitivity on dam mortality
     mortalitye_mu = fun.f_sa(mortalitye_mu, sap_mortalitye, sa_type = 1, value_min = 0)
     return mortalitye_mu
@@ -1727,8 +1728,6 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
     ##back transform survival & convert to mortality
     mortalityx = (1 - np.average(fun.f_back_transform(t_survival_p1p2),axis = (-1,-2))) * period_is_birth #p1 axis averaged
     mortalityx_std = (1 - np.average(fun.f_back_transform(t_survival_std_p1p2),axis = (-1,-2))) * period_is_birth #p1 axis averaged
-#    mortalityx = (1 - np.average(1 / (1 + np.exp(-t_survival_p1p2)),axis = (-1,-2))) * period_is_birth #p1 axis averaged
-#    mortalityx_std = (1 - np.average(1 / (1 + np.exp(-t_survival_std_p1p2)),axis = (-1,-2))) * period_is_birth #p1 axis averaged
     ##Scale progeny survival using paddock level scalars
     mortalityx = mortalityx_std + (mortalityx - mortalityx_std) * cb1[9, ...]
     ##Apply SA to progeny mortality at birth (LTW)
@@ -1847,7 +1846,7 @@ def f1_season_wa(numbers, var, season, mask_min_lw_wz, mask_min_wa_lw_w, mask_ma
     return var
 
 
-def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, period_is_condense, pkl_condensed_value=None, param_name=None):
+def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, period_is_condense, mask_gen_condensed_used=None, pkl_condensed_value=None, param_name=None):
     """
     Condense variable to x common points along the w axis when period_is_condense.
     Currently this function only handle 2 or 3 initial liveweights. The order of the returned W axis is M, H, L for 3 initial lws or H, L for 2 initial lws.
@@ -1866,10 +1865,12 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
 
     :param var: production variable being condensed
     :param lw_idx: index specifying the sorted order of the w axis
+    :param condense_w_mask: mask which w slices can be used to build condensed animal e.g. w with mortality greater than 10% are excluded.
     :param i_n_len: number of nutrition options
     :param i_w_len: length of w axis
     :param i_n_fvp_period: number of fvps
     :param period_is_condense: bool array
+    :param mask_gen_condensed_used: mask that specifies which w slices get updated by pkl condensed values.
     :return:
     """
     if np.any(period_is_condense):
@@ -1923,7 +1924,8 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
                         temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, sinp.stock['i_w_pos'])
                                      
             '''
-
+            #todo this function assumes a certain w axis order. we could change this and make it more flexible by using inputs for sinp.structuralsa['i_adjp_lw_initial_w1'].
+            # this is how we did it for the mask_gen_condensed_values_used.
             ###sort var based on animal lw
             ma_var = np.ma.masked_array(var, np.logical_not(condense_w_mask))
             ma_var_sorted = np.take_along_axis(ma_var, lw_idx, axis=sinp.stock['i_w_pos']) #sort into production order (base on lw) so we can select the production of the lowest lw animals with mort less than 10% - note sorts in ascending order
@@ -1950,14 +1952,10 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
                                          sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
 
                 ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (can't use MRYs dynamic slice function because we are assigning)
-                ###if there is 3n then medium condense is the top slice (medium start weight with medium nutrition). It is best to keep the middle w to slice 0 rather than the average because then medium always passes to medium so the user can attempt to more easily optimise the nutrition for medium lw.
-                ###if there is 2n then medium condense is the average of all animals with less than 10% mort.
+                ###the medium condense is the average of all animals with less than 10% mort.
                 sl = [slice(None)] * temporary.ndim
                 sl[sinp.stock['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
-                if i_n_len == 2:
-                    temporary[tuple(sl)] = np.mean(ma_var_sorted, axis=sinp.stock['i_w_pos'], keepdims=True)  # average of all animals with less than 10% mort
-                else:
-                    temporary[tuple(sl)] = fun.f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
+                temporary[tuple(sl)] = np.mean(ma_var_sorted, axis=sinp.stock['i_w_pos'], keepdims=True)  # average of all animals with less than 10% mort
 
                 ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
                 sl = [slice(None)] * temporary.ndim
@@ -1974,24 +1972,60 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
                 t_pos = sinp.stock['i_p_pos'] #t is in p pos because p has been sliced
                 i_t_len = temporary.shape[t_pos]
                 ####update temporary with pickled value
-                temporary = pkl_condensed_value[param_name]
-                ####handle when the current trial has a number of w slices than the create trial
-                if i_w_len!=temporary.shape[sinp.stock['i_w_pos']]:
-                    #####cut back to 3 w slices that represent the start animals
-                    temporary = fun.f_dynamic_slice(temporary, sinp.stock['i_w_pos'], 0, None, int(temporary.shape[sinp.stock['i_w_pos']]/sinp.structuralsa['i_w_start_len1']))
-                    #####expand back to the number of w in the current trial
-                    a_s_w = (np.arange(i_w_len)/(i_w_len/sinp.structuralsa['i_w_start_len1'])).astype(int)
-                    a_s_twg = fun.f_expand(a_s_w, left_pos=sinp.stock['i_w_pos'], right_pos2=sinp.stock['i_w_pos'], left_pos2=-len(temporary.shape)-1)
-                    temporary = np.take_along_axis(temporary, a_s_twg, axis=sinp.stock['i_w_pos'])
-                ####handle when the pkl condensed values dont have a t axis but the t axis is active - this can occur if the condensed params were saved in a trial where t was not active. The t axis still gets stored on the fs even if the generator didnt have an active t therefore it needs to be activated here.
-                if i_t_len>temporary.shape[t_pos]:
-                    temporary = np.concatenate([temporary]*i_t_len, axis=t_pos) #wont work if pkl trial had t axis but current trial doesnt - to handle this would require passing in the a_t_g association.
+                temporary_pkl = pkl_condensed_value[param_name]
+                ####handle when the current trial has a different number of w slices or t slices than the create trial
+                temporary_pkl = f1_adjust_pkl_condensed_axis_len(temporary_pkl, i_w_len, i_t_len)
+                ###update temporary_pkl with temporary for desired w slices - high w and low w are not updated by pkl if
+                ### the condensed animal calculated above has lower or higher weight (because we dont want to weight to vanish. this also handle cases when the fs is altered)
+                temporary = fun.f_update(temporary_pkl, temporary, mask_gen_condensed_used)
             pkl_condensed_value[param_name] = temporary.copy()  # have to copy so that traits (e.g. mort) that are added to using += do not also update the value (not sure the copy is required here but have left it in since it was required for the rev)
 
         ###Update if the period is condense (shearing for offs and prejoining for dams)
         var = fun.f_update(var, temporary, period_is_condense)
     return var
 
+def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
+    ####handle when the current trial has a different number of w slices than the create trial
+    if i_w_len!=temporary.shape[sinp.stock['i_w_pos']]:
+        #####cut back to 3 w slices that represent the start animals
+        temporary = fun.f_dynamic_slice(temporary, sinp.stock['i_w_pos'], 0, None, int(temporary.shape[sinp.stock['i_w_pos']]/sinp.structuralsa['i_w_start_len1']))
+        #####expand back to the number of w in the current trial
+        a_s_w = (np.arange(i_w_len)/(i_w_len/sinp.structuralsa['i_w_start_len1'])).astype(int)
+        a_s_twg = fun.f_expand(a_s_w, left_pos=sinp.stock['i_w_pos'], right_pos2=sinp.stock['i_w_pos'], left_pos2=-len(temporary.shape)-1)
+        temporary = np.take_along_axis(temporary, a_s_twg, axis=sinp.stock['i_w_pos'])
+    ####handle when the pkl condensed values dont have a t axis but the t axis is active - this can occur if the condensed params were saved in a trial where t was not active. The t axis still gets stored on the fs even if the generator didnt have an active t therefore it needs to be activated here.
+    t_pos = sinp.stock['i_p_pos']  # t is in p pos because p has been sliced
+    if i_t_len>temporary.shape[t_pos]:
+        temporary = np.concatenate([temporary]*i_t_len, axis=t_pos) #wont work if pkl trial had t axis but current trial doesnt - to handle this would require passing in the a_t_g association.
+    return temporary
+
+def f1_gen_condensed_used(ffcfw, idx_sorted_w, condense_w_mask, n_fs, len_w, len_t, n_fvps_percondense
+                          , period_is_condense_pa1e1b1nwzida0e0b0xyg, adjp_lw_initial_wzida0e0b0xyg, pkl_condensed_value, param_name):
+    ###When using the pkl condensed values there may be cases when they do not have enough spread (e.g.
+    ### the generated condensed animal is heavier than the pkl condensed animal this would result in weight vanishing in the distribution)
+    ### in these cases the pkl condense values are overwritten by the generated condensed values.
+    #### controls if the generated condensed values are used. False means pkl_condensed_values are used.
+    w_pos = sinp.stock['i_w_pos']
+    mask_gen_condensed_used = True #if it is not period is condense or pkl_condensed_values are not being used then this doesnt get used so just return True.
+    if sinp.structuralsa['i_use_pkl_condensed_start_condition'] and np.any(
+            period_is_condense_pa1e1b1nwzida0e0b0xyg):
+        #####determine which w slices are the heaviest animal
+        max_w_slices = np.isclose(adjp_lw_initial_wzida0e0b0xyg, np.max(adjp_lw_initial_wzida0e0b0xyg, axis=w_pos, keepdims=True))
+        #####determine which w slices are the lightest animal
+        min_w_slices = np.isclose(adjp_lw_initial_wzida0e0b0xyg, np.min(adjp_lw_initial_wzida0e0b0xyg, axis=w_pos, keepdims=True))
+
+        #####calculate condensed lw (without using condensed pkl values).
+        ffcfw_condensed = f1_condensed(ffcfw, idx_sorted_w, condense_w_mask, n_fs, len_w, n_fvps_percondense
+                                             , period_is_condense_pa1e1b1nwzida0e0b0xyg)  # condensed lw at the end of the period
+        #####get pkl condensed weight and handle when the current trial has a different number of w slices or t slices than the create trial
+        pkl_ffcfw_condensed = f1_adjust_pkl_condensed_axis_len(pkl_condensed_value[param_name], len_w, len_t)
+        #####calculate if the slices of the pickled values are to be updated with more extreme values from the generator
+        update_high_with_gen = np.max(ffcfw_condensed, axis=w_pos, keepdims=True) > np.max(pkl_ffcfw_condensed, axis=w_pos, keepdims=True)
+        update_low_with_gen = np.min(ffcfw_condensed, axis=w_pos, keepdims=True) < np.min(pkl_ffcfw_condensed, axis=w_pos, keepdims=True)
+        #####create mask that controls if the generated condensed values are used. False means pkl_condensed_values are used
+        mask_gen_condensed_used = np.logical_or(np.logical_and(update_high_with_gen, max_w_slices),
+                                                     np.logical_and(update_low_with_gen, min_w_slices))
+    return mask_gen_condensed_used
 
 def f1_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0
                         , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False, prevperiod_is_wean=False
@@ -2122,12 +2156,23 @@ def f1_woolprice():
                           for i in range(uinp.sheep['i_woolp_fdprem_w4w5'].shape[0])])
     ##adjust FD premium using sav
     fdprem_w4 = fun.f_sa(fdprem_w4, sen.sav['woolp_fdprem'], 5)
-    ##Wool price for the analysis (Note: fdprem is the premium per micron from the base)
-    mpg_w4 = mpg_stdfd * (1 + fdprem_w4) ** (uinp.sheep['i_woolp_fd_std'] - uinp.sheep['i_woolp_fd_range_w4'])
-    return mpg_w4
+    ##Wool price for the analysis (Note: fdprem is the price difference compared with the base FD)
+    mpg_w4 = mpg_stdfd * (1 + fdprem_w4)
+
+    ##STB scalar - the scalar is different for merino vs crossbreed because the component params differ.
+    mer_stb_scalar_w4 = np.sum(uinp.sheep['i_woolp_component_mer_propn_w3'] * uinp.sheep['i_woolp_component_price_w4w3'] * (
+                1 + np.interp(uinp.sheep['i_woolp_fd_range_w4'][:,na] + uinp.sheep['i_woolp_component_mer_fd_w3'], uinp.sheep['i_woolp_fd_range_w4'], fdprem_w4)) / (
+                       1 + fdprem_w4[:,na]), axis=-1)
+    xb_stb_scalar_w4 = np.sum(uinp.sheep['i_woolp_component_xb_propn_w3'] * uinp.sheep['i_woolp_component_price_w4w3'] * (
+                1 + np.interp(uinp.sheep['i_woolp_fd_range_w4'][:,na] + uinp.sheep['i_woolp_component_xb_fd_w3'], uinp.sheep['i_woolp_fd_range_w4'], fdprem_w4)) / (
+                       1 + fdprem_w4[:,na]), axis=-1)
+    ###combine mer & xb. The selection of one or the other is based on the FD. If fd >= 26 then use XB.
+    stb_scalar_w4 = mer_stb_scalar_w4
+    stb_scalar_w4[uinp.sheep['i_woolp_fd_range_w4']>=26] = xb_stb_scalar_w4[uinp.sheep['i_woolp_fd_range_w4']>=26]
+    return mpg_w4 * stb_scalar_w4
 
 
-def f_wool_value(mpg_w4, wool_price_scalar_c1w4tpg, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg,dtype=None):
+def f_wool_value(stb_mpg_w4, wool_price_scalar_c1w4tpg, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg,dtype=None):
     '''Calculate the net value of the wool on the sheep's back (cost of shearing is not included in these calculations)
     Includes adjusting price for FD, level of fault (VM & predicted hauteur) and all components of the clip (STB)
     FNF is 'free or nearly free' i.e. wool with no fault (low VM & high SS)
@@ -2137,7 +2182,7 @@ def f_wool_value(mpg_w4, wool_price_scalar_c1w4tpg, cfw_pg, fd_pg, sl_pg, ss_pg,
     ##call function to calculate predicted hauteur (ph), CV of hauteur (cvh) and romaine
     ph_pg, cvh_pg, romaine_pg = f_wool_additional(fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg)
     ##STB price for FNF (free or nearly free of fault)
-    fnfstb_pg = np.interp(fd_pg, uinp.sheep['i_woolp_fd_range_w4'], mpg_w4 * uinp.sheep['i_stb_scalar_w4']).astype(dtype)
+    fnfstb_pg = np.interp(fd_pg, uinp.sheep['i_woolp_fd_range_w4'], stb_mpg_w4 ).astype(dtype)
     ##vm price adj
     vm_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_vm_adj_w4w6'], uinp.sheep['i_woolp_vm_range_w6']
                                            , uinp.sheep['i_woolp_fd_range_w4'], vm_pg,fd_pg).astype(dtype)

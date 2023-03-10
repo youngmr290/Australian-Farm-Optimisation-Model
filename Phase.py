@@ -182,10 +182,15 @@ def f_grain_price(r_vals):
     # grain_income_allocation_p7zg = grain_income_allocation_p7z.reindex(cols_p7zg, axis=1)#adds level to header so i can mul in the next step
     # grain_price =  farm_gate_price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
     grain_price_ks2gc1_p7z =  farmgate_price_ks2gc1_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
+    # cols_c0p7zg = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, farm_gate_price_k_g.columns])
+    # grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
+    # grain_price_wc =  farm_gate_price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
+    grain_price_wc_ks2gc1_c0p7z =  farmgate_price_ks2gc1_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
 
     ##average c1 axis for wc and report
     c1_prob = uinp.price_variation['prob_c1']
     r_grain_price_ks2g_p7z = grain_price_ks2gc1_p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
+    grain_price_wc_ks2g_c0p7z = grain_price_wc_ks2gc1_c0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
 
     ##store r_vals
     ###make z8 mask - used to uncluster
@@ -193,7 +198,7 @@ def f_grain_price(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, r_grain_price_ks2g_p7z, 'grain_price', mask_season_p7z, z_pos=-1)
-    return grain_price_ks2gc1_p7z.unstack([2,0,1,3]).sort_index()
+    return grain_price_ks2gc1_p7z.unstack([2,0,1,3]).sort_index(), grain_price_wc_ks2g_c0p7z.unstack([2,0,1]).sort_index()
 # a=grain_price()
 
 #########################
@@ -391,19 +396,26 @@ def f_fert_req():
     '''
     Fert required by 1ha of each rotation phase (kg/ha) after accounting for arable area.
 
-    The fertiliser requirement is broken into two sections. Firstly, fixed fertiliser which is the
-    amount of each fertiliser that applies to a land use independent of the phase history (e.g. lime
-    which is typically applied routinely, irrelevant of the land use history). Secondly, variable
-    fertiliser which is applied to a rotation phase based on both the current land use and the
-    history. This method is necessary because crops have varying nutrient requirements, have
-    varying methods to obtain nutrients from the soil and leave the soil in varying states (e.g.
-    pulse crop are able to fix nitrogen which typically reduces their requirement for external
-    nitrogen and also leaves the soil with more nitrogen for the following years).
+    Different land uses have varying nutrient requirements,
+    varying methods of obtaining nutrients from the soil and leave the soil in varying states (e.g.
+    pulse crop fix nitrogen which typically reduces their requirement for external
+    nitrogen and leaves the soil with a higher nitrogen content for the following year/s).
+    To accommodate these factors the fertiliser requirement section is broken into three sections. Firstly,
+    fixed fertiliser, which is the fertiliser that is applied to all rotation phases (e.g. lime
+    which is typically applied routinely, irrelevant of the land use history). Secondly, land use specific fertiliser,
+    which is applied based on the current land use independent of the phase history. Lastly, rotation phase specific
+    fertiliser, which is applied based on both the current land use and the
+    history.
 
-    For both fixed and variable applications the fertiliser requirement for each rotation phase, for
-    the base LMU is entered by the user or obtained from the simulation output for each rotation.
-    The fertiliser requirement is then adjusted by an LMU factor and the arable area factor.
+    Fertiliser is applied to non-arable area in pasture phases, it is not applied to
+    non-arable pasture in a crop phase because the non-arable pasture in a crop phase is not able to
+    be grazed until the end of the year, by which time it is rank and therefore a waste of
+    money to fertilise. Fertiliser rate for non-arable areas can be adjusted separately to the arable area.
 
+    The fertiliser requirement is input by the user for the base LMU.
+    The fertiliser requirement is then adjusted by an LMU factor and an arable area factor.
+
+    Note: this function is also used in the LabourCropPyomo
     '''
     ##read phases
     phases_df = pinp.f1_phases()
@@ -411,7 +423,8 @@ def f_fert_req():
 
     ##read in fert by soil
     fert_by_soil = f1_mask_lmu(pinp.crop['fert_by_lmu'], axis=1)
-    ##read in fert
+
+    ##read in rotation phase specific fert - fert that can vary by phase
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_fert = pinp.crop['fert']
@@ -425,24 +438,37 @@ def f_fert_req():
         ###Mask z & r axis
         base_fert_rk_zn = zfun.f_seasonal_inp(base_fert_rk_zn, axis=1, level=0)
         base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
-
-    ##rename index
+    ###rename index
     base_fert_rk_zn.index.rename(['rot','landuse'],inplace=True)
-    ##add the fixed fert - currently this does not have season axis so need to reindex to add season axis
-    fixed_fert_k_n = pinp.crop['fixed_fert']
-    keys_z = zfun.f_keys_z()
-    columns = pd.MultiIndex.from_product([keys_z, fixed_fert_k_n.columns])
-    fixed_fert_k_zn = fixed_fert_k_n.reindex(columns, axis=1, level=1)
-    base_fert_rk_zn = pd.merge(base_fert_rk_zn, fixed_fert_k_zn, how='left', left_on='landuse', right_index = True)
+
+    ##fixed fert (fert that is applied to every phase) - currently this does not have season axis so need to reindex to add season axis
+    base_fert_rkz_n = base_fert_rk_zn.stack(level=0)
+    fixed_fert_rkz_n = pd.DataFrame(pinp.crop['i_fixed_fert'][1], index=base_fert_rkz_n.index, columns=pinp.crop['i_fixed_fert'][0:1], dtype=float)
+    base_fert_rkz_n = pd.concat([base_fert_rkz_n, fixed_fert_rkz_n], axis=1).groupby(axis=1, level=0).sum()
+
+    ##landuse specific fert (currently this is just pasture fert ie pas fert is irrelevant of rotation history) - currently this does not have season axis so need to reindex to add season axis
+    landuse_fert_k_n = pinp.crop['i_pas_fert']
+    landuse_fert_rkz_n = landuse_fert_k_n.reindex(base_fert_rkz_n.index, axis=0, level=1)
+    base_fert_rkz_n = pd.concat([base_fert_rkz_n, landuse_fert_rkz_n], axis=1).groupby(axis=1, level=0).sum()
+
+    ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
+    nap_fert_scalar_k = pinp.crop['i_nap_fert_scalar_k'].squeeze()
+    nap_fert_rkz_n = base_fert_rkz_n.mul(nap_fert_scalar_k, axis=0, level=1)
+
     ##drop landuse from index
-    base_fert_r_zn = base_fert_rk_zn.droplevel(1,axis=0)
+    base_fert_rz_n = base_fert_rkz_n.droplevel(1,axis=0)
+    nap_fert_rz_n = nap_fert_rkz_n.droplevel(1,axis=0)
+
     ## adjust the fert req for each rotation by lmu
     fert_by_soil_nl = fert_by_soil.stack() #read in fert by soil
-    fert_rz_nl = base_fert_r_zn.stack(level=0).mul(fert_by_soil_nl,axis=1,level=0).stack()
+    fert_rz_nl = base_fert_rz_n.mul(fert_by_soil_nl,axis=1,level=0)
+    nap_fert_rz_nl = nap_fert_rz_n.mul(fert_by_soil_nl,axis=1,level=0)
+
     ##account for arable area
     arable_l = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
-    fert_rz_nl = fert_rz_nl.mul(arable_l, axis=0, level=2) #add arable to df
-    return fert_rz_nl
+    fert_rz_nl = fert_rz_nl.mul(arable_l, axis=1, level=1) #add arable to df
+    nap_fert_rz_nl = nap_fert_rz_nl.mul(1-arable_l, axis=1, level=1) #add arable to df
+    return fert_rz_nl.fillna(0).stack(1) + nap_fert_rz_nl.fillna(0).stack(1)
 
 
 def f_fert_passes():
@@ -473,24 +499,46 @@ def f_fert_passes():
         ###Mask z & r axis
         fert_passes_rk_zn = zfun.f_seasonal_inp(fert_passes_rk_zn, axis=1, level=0)
         fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
-
-    ##rename index
+    ###rename index
     fert_passes_rk_zn.index.rename(['rot','landuse'],inplace=True)
-    ####add the fixed fert
-    fixed_fert_passes_k_n = pinp.crop['fixed_fert_passes']
-    keys_z = zfun.f_keys_z()
-    columns = pd.MultiIndex.from_product([keys_z, fixed_fert_passes_k_n.columns])
-    fixed_fert_passes_k_zn = fixed_fert_passes_k_n.reindex(columns, axis=1, level=1)
-    fert_passes_rk_zn = pd.merge(fert_passes_rk_zn, fixed_fert_passes_k_zn, how='left', left_on='landuse', right_index = True)
+
+    ##fixed fert (fert that is applied to every phase) - currently this does not have season axis so need to reindex to add season axis
+    fert_passes_rkz_n = fert_passes_rk_zn.stack(level=0)
+    fixed_fert_passes_rkz_n = pd.DataFrame(pinp.crop['i_fixed_fert_passes'][1], index=fert_passes_rkz_n.index, columns=pinp.crop['i_fixed_fert'][0:1], dtype=float)
+    fert_passes_rkz_n = pd.concat([fert_passes_rkz_n, fixed_fert_passes_rkz_n], axis=1).groupby(axis=1, level=0).sum()
+
+    ##landuse specific fert (currently this is just pasture fert ie pas fert is irrelevant of rotation history) - currently this does not have season axis so need to reindex to add season axis
+    landuse_fert_passes_k_n = pinp.crop['i_pas_fert_passes']
+    landuse_fert_passes_rkz_n = landuse_fert_passes_k_n.reindex(fert_passes_rkz_n.index, axis=0, level=1)
+    fert_passes_rkz_n = pd.concat([fert_passes_rkz_n, landuse_fert_passes_rkz_n], axis=1).groupby(axis=1, level=0).sum()
+
+    ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
+    nap_fert_passes_scalar_k = pinp.crop['i_nap_fert_passes_scalar_k'].squeeze()
+    nap_fert_passes_rkz_n = fert_passes_rkz_n.mul(nap_fert_passes_scalar_k, axis=0, level=1)
+
     ##drop landuse from index
-    fert_passes_r_zn = fert_passes_rk_zn.droplevel(1, axis=0)
+    fert_passes_rz_n = fert_passes_rkz_n.droplevel(1,axis=0)
+    nap_fert_passes_rz_n = nap_fert_passes_rkz_n.droplevel(1,axis=0)
+
+
+    # ####add the fixed fert
+    # fixed_fert_passes_k_n = pinp.crop['fixed_fert_passes']
+    # keys_z = zfun.f_keys_z()
+    # columns = pd.MultiIndex.from_product([keys_z, fixed_fert_passes_k_n.columns])
+    # fixed_fert_passes_k_zn = fixed_fert_passes_k_n.reindex(columns, axis=1, level=1)
+    # fert_passes_rk_zn = pd.merge(fert_passes_rk_zn, fixed_fert_passes_k_zn, how='left', left_on='landuse', right_index = True)
+    # ##drop landuse from index
+    # fert_passes_r_zn = fert_passes_rk_zn.droplevel(1, axis=0)
+
     ##adjust fert passes by arable area
     arable_l = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
-    fert_passes_rz_n = fert_passes_r_zn.stack(0)
+    # fert_passes_rz_n = fert_passes_r_zn.stack(0)
     col_nl = pd.MultiIndex.from_product([fert_passes_rz_n.columns, arable_l.index])
     fert_passes_rz_nl = fert_passes_rz_n.reindex(col_nl, axis=1,level=0)
+    nap_fert_passes_rz_nl = nap_fert_passes_rz_n.reindex(col_nl, axis=1,level=0)
     fert_passes_rz_nl=fert_passes_rz_nl.mul(arable_l,axis=1,level=1)
-    return fert_passes_rz_nl.stack(1)
+    nap_fert_passes_rz_nl=nap_fert_passes_rz_nl.mul(arable_l,axis=1,level=1)
+    return fert_passes_rz_nl.fillna(0).stack(1) + nap_fert_passes_rz_nl.fillna(0).stack(1)
 
 
 def f_fert_cost(r_vals):
@@ -570,112 +618,6 @@ def f_fert_cost(r_vals):
     fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(fert_app_cost_tonne_rl_p7z.stack([0,1]).sort_index()
                                                           ,p7_pos=-2,z_pos=-1), 'fert_app_cost_increment', mask_season_p7z, z_pos=-1)
     return fert_cost_total, fert_wc_total
-
-def f_nap_fert_req():
-    '''
-    Fert applied to non arable pasture area.
-
-    Fertiliser is applied to non-arable area in pasture phases, it is not applied to
-    non-arable pasture in a crop phase because the non-arable pasture in a crop phase is not able to
-    be grazed until the end of the year, by which time it is rank and therefore it is a waste of
-    money to fertilise. Fertiliser rate for non-arable areas can be adjusted separately to the arable area.
-
-    '''
-    ##read phases and add empty header level
-    phases_df2 = pinp.f1_phases()
-    phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns,['']])  # make the df multi index so that when it merges with other df below the indexs remaining separate (otherwise it turn into a one leveled tuple)
-    ##adj arable
-    arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)  # read in arable area df
-    fertreq_na = pinp.crop['nap_fert'].reset_index().set_index(['fert','landuse'])
-    fertreq_na = f1_mask_lmu(fertreq_na, axis=1)
-    fertreq_na = fertreq_na.mul(1 - arable)
-    ##merge with full df
-    fertreq_na = pd.merge(phases_df2, fertreq_na.unstack(0), how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
-    fertreq_na = fertreq_na.drop(list(range(sinp.general['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
-    return fertreq_na
-
-def f_nap_fert_passes():
-    '''
-    Hectares of fertilising required over non arable area.
-
-    '''
-    ##read phases and add empty header level
-    phases_df2 = pinp.f1_phases()
-    phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns,['']])  # make the df multi index so that when it merges with other df below the indexs remaining separate (otherwise it turn into a one leveled tuple)
-
-    ##passes over non arable pasture area (only for pasture phases because for pasture the non arable areas also receive fert)
-    passes_na = pinp.crop['nap_passes'].reset_index().set_index(['fert','landuse'])
-    passes_na = f1_mask_lmu(passes_na, axis=1)
-    arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #need to adjust for only non arable area
-    passes_na= passes_na.mul(1-arable) #adjust for the non arable area
-    ##merge with full df
-    passes_na = pd.merge(phases_df2, passes_na.unstack(0), how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
-    passes_na = passes_na.drop(list(range(sinp.general['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
-    return passes_na
-
-def f_nap_fert_cost(r_vals):
-    '''
-    Cost of fertilising the non arable areas. Includes the fertiliser cost and the application cost.
-
-    .. note:: Currently setup so that only pasture phases get fertiliser on the non arable areas
-        hence it needs to be a separate function.
-
-    '''
-    fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn = f1_fert_cost_allocation()
-    cost=uinp.price['fert_cost'].squeeze()
-    transport=uinp.price['fert_cartage_cost']  #transport cost
-    fertreq = f_nap_fert_req()
-
-    ##fert cost
-    total_cost = cost + transport #total cost = fert cost and transport.
-    phase_fert_cost_rl_n = fertreq.mul(total_cost, axis=1)/1000  #div by 1000 to convert to $/kg
-    phase_fert_cost_rl_p7zn = phase_fert_cost_rl_n.reindex(fert_cost_allocation_p7zn.index, axis=1, level=2)
-    phase_fert_cost_rl_p7z = phase_fert_cost_rl_p7zn.mul(fert_cost_allocation_p7zn, axis=1).groupby(axis=1, level=(0,1)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
-    phase_fert_wc_rl_c0p7zn = phase_fert_cost_rl_n.reindex(fert_wc_allocation_c0p7zn.index, axis=1, level=3)
-    phase_fert_wc_rl_c0p7z = phase_fert_wc_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).groupby(axis=1, level=(0,1,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
-
-    ##application cost per tonne
-    app_cost_tonne_rl_n = fertreq.mul(mac.fert_app_cost_t(), axis=1)/1000  #div by 1000 to convert to $/kg
-    ##application cost per ha
-    passes = f_nap_fert_passes()
-    app_cost_ha_rl_n = passes.mul(mac.fert_app_cost_ha(), axis=1) #cost for 1 pass for each fert.
-    ##total application cost in each cash period
-    total_app_cost_rl_n = (app_cost_tonne_rl_n+app_cost_ha_rl_n)
-    total_app_cost_rl_p7zn = total_app_cost_rl_n.reindex(fert_cost_allocation_p7zn.index, axis=1, level=2)
-    total_app_cost_rl_p7z = total_app_cost_rl_p7zn.mul(fert_cost_allocation_p7zn, axis=1).groupby(axis=1, level=(0,1)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
-    total_app_wc_rl_c0p7zn = total_app_cost_rl_n.reindex(fert_wc_allocation_c0p7zn.index, axis=1, level=3)
-    total_app_wc_rl_c0p7z = total_app_wc_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).groupby(axis=1, level=(0,1,2)).sum()  # sum the wc of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
-
-    ##total fert and app cost
-    nap_fert_cost = phase_fert_cost_rl_p7z + total_app_cost_rl_p7z
-
-    ##total fert and app wc
-    nap_fert_wc = phase_fert_wc_rl_c0p7z + total_app_wc_rl_c0p7z
-
-    ##store r_vals
-    ###make z8 mask - used to uncluster
-    date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
-    mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
-    ###store
-    fun.f1_make_r_val(r_vals, phase_fert_cost_rl_p7z, 'nap_phase_fert_cost', mask_season_p7z, z_pos=-1)
-    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(phase_fert_cost_rl_p7z.stack([0,1]).sort_index()
-                                                          ,p7_pos=-2,z_pos=-1), 'nap_phase_fert_cost_increment', mask_season_p7z, z_pos=-1)
-    fun.f1_make_r_val(r_vals, total_app_cost_rl_p7z, 'nap_fert_app_cost', mask_season_p7z, z_pos=-1)
-    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(total_app_cost_rl_p7z.stack([0,1]).sort_index()
-                                                          ,p7_pos=-2,z_pos=-1), 'nap_fert_app_cost_increment', mask_season_p7z, z_pos=-1)
-    return nap_fert_cost, nap_fert_wc
-
-def f1_total_fert_req():
-    '''returns the total fert req after accounting for arable area.
-       this is used in the LabourCropPyomo'''
-    fertreq_arable = f_fert_req()
-    ##fert required on the non arable areas - only for pasture phases. Currently no season axis so need to reindex
-    fert_na = f_nap_fert_req()
-    fert_na = fert_na.unstack().reindex(fertreq_arable.unstack().index, axis=0).stack()
-    ##add fert for arable area and fert for nonarable area
-    fert_total = pd.concat([fertreq_arable, fert_na], axis=1).groupby(axis=1, level=0).sum()
-    fert_req = fert_total.stack()
-    return fert_req.sort_index()
 
 
 #######################
@@ -1109,15 +1051,14 @@ def f1_rot_cost(r_vals):
     '''collates all the rotation costs'''
 
     fert_cost, fert_wc = f_fert_cost(r_vals)
-    nap_fert_cost, nap_fert_wc = f_nap_fert_cost(r_vals)
     chem_cost, chem_wc = f_chem_cost(r_vals)
     seedcost, seedwc = f_seedcost(r_vals)
     insurance_cost, insurance_wc = f_insurance(r_vals)
     phase_stubble_cost, phase_stubble_wc = f_phase_stubble_cost(r_vals)
 
     #note if any array has dtype object then pandas throws error (No axis named 1 for object type Series)
-    cost_rl_p7z = pd.concat([fert_cost, nap_fert_cost, chem_cost, seedcost, insurance_cost, phase_stubble_cost],axis=1).groupby(axis=1,level=(0,1)).sum()
-    wc_rl_c0p7z = pd.concat([fert_wc, nap_fert_wc, chem_wc, seedwc, insurance_wc, phase_stubble_wc],axis=1).groupby(axis=1,level=(0,1,2)).sum()
+    cost_rl_p7z = pd.concat([fert_cost, chem_cost, seedcost, insurance_cost, phase_stubble_cost],axis=1).groupby(axis=1,level=(0,1)).sum()
+    wc_rl_c0p7z = pd.concat([fert_wc, chem_wc, seedwc, insurance_wc, phase_stubble_wc],axis=1).groupby(axis=1,level=(0,1,2)).sum()
 
     ##stack
     cost_p7zlr = cost_rl_p7z.unstack([1,0]).sort_index()
@@ -1263,13 +1204,14 @@ def f1_crop_params(params,r_vals):
     biomass = f_rot_biomass()
     biomass2product_kls2 = f_biomass2product()
     propn = f_grain_pool_proportions()
-    grain_price = f_grain_price(r_vals)
+    grain_price, grain_wc = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
     sow_prov_p7p5zk, can_sow_p5zk = f_sow_prov()
 
     ##create params
     params['grain_pool_proportions'] = propn.to_dict()
     params['grain_price'] = grain_price.to_dict()
+    params['grain_wc'] = grain_wc.to_dict()
     params['phase_sow_req'] = phasesow_req.to_dict()
     params['sow_prov'] = sow_prov_p7p5zk.to_dict()
     params['can_sow_p5zk'] = can_sow_p5zk.to_dict()

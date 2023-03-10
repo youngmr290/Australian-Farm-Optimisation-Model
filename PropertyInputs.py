@@ -7,7 +7,7 @@ Inputs specific to a property (or region) including:
 * Labour
 * Supplementary feeding
 * Stubble
-* Farm level finance ie overdraw level
+* Farm level finance ie capital level
 * Farm level machinery ie soil adjustment factors for seeding efficiency
 
 author: young
@@ -304,12 +304,14 @@ def f_property_inp_sa():
     ###sav
     general['steady_state'] = fun.f_sa(general['steady_state'], sen.sav['steady_state'], 5)
     general['i_mask_z'] = fun.f_sa(general['i_mask_z'], sen.sav['mask_z'], 5)
+    general['i_season_propn_z'] = fun.f_sa(general['i_season_propn_z'], sen.sav['prob_z'], 5)
     general['i_inc_node_periods'] = fun.f_sa(general['i_inc_node_periods'], sen.sav['inc_node_periods'], 5)
     general['i_len_q'] = fun.f_sa(general['i_len_q'], sen.sav['seq_len'], 5)
     labour['max_managers'] = fun.f_sa(labour['max_managers'], sen.sav['manager_ub'], 5)
     labour['max_casual'] = fun.f_sa(labour['max_casual'], sen.sav['casual_ub'], 5)
     labour['max_casual_seedharv'] = fun.f_sa(labour['max_casual_seedharv'], sen.sav['seedharv_casual_ub'], 5)
     general['i_lmu_area'] = fun.f_sa(general['i_lmu_area'], sen.sav['lmu_area_l'], 5)
+    crop['i_lmu_area'] = fun.f_sa(crop['arable'], sen.sav['lmu_arable_propn_l'], 5)
     ###sam
     ###sap
     ###saa
@@ -318,7 +320,7 @@ def f_property_inp_sa():
 
     ##finance
     ###sav
-    finance['overdraw_limit'] = fun.f_sa(finance['overdraw_limit'], sen.sav['overdraw_limit'], 5)
+    finance['capital_limit'] = fun.f_sa(finance['capital_limit'], sen.sav['capital_limit'], 5)
     ###sam
     ###sap
     ###saa
@@ -365,6 +367,7 @@ def f_property_inp_sa():
 
     ##pasture
     ###sav
+    crop['i_poc_inc'] = fun.f_sa(crop['i_poc_inc'], sen.sav['poc_inc'], 5)
     general['pas_inc'] = fun.f_sa(general['pas_inc'], sen.sav['pas_inc_t'], 5)
 
     for pasture in sinp.general['pastures'][general['pas_inc']]: #all pasture inputs are adjusted even if a given pasture is not included
@@ -374,10 +377,10 @@ def f_property_inp_sa():
         pasture_inputs[pasture]['GermScalarLMU'] = fun.f_sa(pasture_inputs[pasture]['GermScalarLMU'], sen.sam[('germ_l',pasture)])
         pasture_inputs[pasture]['ErosionLimit'] = fun.f_sa(pasture_inputs[pasture]['ErosionLimit'], sen.sam[('conservation_limit_f',pasture)][...,na])
         pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.sam[('pgr',pasture)])
-        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.sam[('pgr_f',pasture)][...,na])
+        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.sam[('pgr_zp6',pasture)][...,na])
         pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.sam[('pgr_l',pasture)])
         pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.sam[('pgr',pasture)])
-        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.sam[('pgr_f',pasture)][...,na])
+        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.sam[('pgr_zp6',pasture)][...,na])
         pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.sam[('pgr_l',pasture)])
         pasture_inputs[pasture]['DigDryAve'] = (pasture_inputs[pasture]['DigDryAve'] * sen.sam[('dry_dmd_decline',pasture)]
                                                 + np.max(pasture_inputs[pasture]['DigDryAve'],axis=1) * (1 - sen.sam[('dry_dmd_decline',pasture)]))
@@ -389,10 +392,10 @@ def f_property_inp_sa():
         ###saa
         pasture_inputs[pasture]['GermStd'] = fun.f_sa(pasture_inputs[pasture]['GermStd'], sen.saa[('germ',pasture)], 2)
         pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.saa[('pgr',pasture)], 2)
-        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.saa[('pgr_f',pasture)][...,na], 2)
+        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.saa[('pgr_zp6',pasture)][...,na], 2)
         pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.saa[('pgr_l',pasture)], 2)
         pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.saa[('pgr',pasture)], 2)
-        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.saa[('pgr_f',pasture)][...,na], 2)
+        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.saa[('pgr_zp6',pasture)][...,na], 2)
         pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.saa[('pgr_l',pasture)], 2)
         ###sat
         ###sar

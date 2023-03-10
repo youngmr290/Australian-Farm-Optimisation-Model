@@ -77,9 +77,9 @@ def coremodel_all(trial_name,model,nv):
     #grain
     f_con_product_transfer(model)
     #cashflow
-    f_con_profit(model)
-    f_con_workingcap_within(model)
-    f_con_workingcap_between(model)
+    f_con_cashflow(model)
+    f_con_totalcap_within(model)
+    f_con_totalcap_between(model)
     f_con_dep(model)
     f_con_asset(model)
     f_con_minroe(model)
@@ -526,6 +526,12 @@ def f1_grain_income(model,q,s,p7,z,c1):
             model.v_sell_product[q,s,p7,z,k,s2,g] * model.p_grain_price[p7,z,g,k,s2,c1] - model.v_buy_product[q,s,p7,z,k,s2,g] * model.p_buy_grain_price[
             p7,z,g,k,s2,c1] for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
 
+def f1_grain_wc(model,q,s,c0,p7,z):
+    ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
+    return sum(
+        model.v_sell_product[q,s,p7,z,k,s2,g] * model.p_grain_wc[c0,p7,z,g,k,s2] - model.v_buy_product[q,s,p7,z,k,s2,g] * model.p_buy_grain_wc[
+            c0,p7,z,g,k,s2] for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
+
 
 def f_con_poc_available(model):
     '''
@@ -534,7 +540,7 @@ def f_con_poc_available(model):
     by the foo available to be consumed on each hectare each day (calculated in Pasture.py).
     '''
     def poc(model,q,s,f,l,z):
-        if pe.value(model.p_wyear_inc_qs[q, s]):
+        if pe.value(model.p_wyear_inc_qs[q, s]) and pinp.crop['i_poc_inc']:
             return -macpy.f_ha_days_pasture_crop_paddocks(model,q,s,f,l,z) * model.p_poc_con[f,l,z] + sum(
                 model.v_poc[q,s,v,f,l,z] for v in model.s_feed_pools) <= 0
         else:
@@ -569,7 +575,7 @@ def f_con_link_pasture_supplement_consumption(model,nv):
 
     Note: this constraint can make the model infeasible for n11 because the optimal fs cant be met without supplement.
     To fix this run n33. This may still be infeasible due to sires who are always n33. But sires nut can be changed in sinp
-    or sires can be removed from the model.
+    or sires can be removed from ME and vol in stockpyomo.
     '''
     len_nv = nv['len_nv']
     nv_is_not_confinement_f = np.full(len_nv, True)
@@ -578,7 +584,7 @@ def f_con_link_pasture_supplement_consumption(model,nv):
     def link_pas_sup(model,q,s,z,p6,f):
         f_idx = l_f.index(f)
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p6z[p6,z]) and nv_is_not_confinement_f[f_idx] and uinp.supfeed['i_sup_selectivity_included']:
-            return - (paspy.f_pas_vol(model,q,s,p6,f,z) + stubpy.f_cropresidue_vol(model,q,s,p6,f,z)) * model.p_max_sup_selectivity[p6,z] \
+            return - (paspy.f_pas_vol2(model,q,s,p6,f,z) + stubpy.f_cropresidue_vol(model,q,s,p6,f,z)) * model.p_max_sup_selectivity[p6,z] \
                    + suppy.f_sup_vol(model,q,s,p6,f,z) * (1-model.p_max_sup_selectivity[p6,z]) <= 0
         else:
             return pe.Constraint.Skip
@@ -637,48 +643,61 @@ def f_con_vol(model):
                                   doc='constraint between me available and consumed')
 
 
-def f_con_profit(model):
+def f_con_cashflow(model):
     '''
-    Tallies all profit in each period and transfers to the next period. Season periods exist so that a transfer can
+    Tallies all cashflow in each period and transfers to the next period. Season periods exist so that a transfer can
     exist between parent and child seasons.
     '''
-    def profit_flow(model,q,s,c1,p7,z9):
+    def cashflow(model,q,s,c1,p7,z9):
         p7_start = list(model.s_season_periods)[0]
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return ((-f1_grain_income(model,q,s,p7,z9,c1) + phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9)
                     + macpy.f_mach_cost(model,q,s,p7,z9) + suppy.f_sup_cost(model,q,s,p7,z9) + model.p_overhead_cost[p7,z9] + slppy.f_saltbush_cost(model,q,s,z9,p7)
-                    - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1) - model.v_tradevalue[q,s,p7,z9]
+                    - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1)
                     - model.v_debit[q,s,c1,p7,z9] + model.v_credit[q,s,c1,p7,z9])
                     + sum((model.v_debit[q,s,c1,p7_prev,z8] - model.v_credit[q,s,c1,p7_prev,z8]) * model.p_parentz_provwithin_season[p7_prev,z8,z9] * (p7!=p7_start)  #end cashflow doesnot provide start cashflow else unbounded.
                           for z8 in model.s_season_types)) <= 0
         else:
             return pe.Constraint.Skip
-    model.con_profit_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_c1, model.s_season_periods, model.s_season_types,rule=profit_flow,
-                                                doc='transfer of profit between periods')
+    model.con_cashflow_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_c1, model.s_season_periods, model.s_season_types,rule=cashflow,
+                                                doc='transfer of cashflow between periods')
 
+def f1_start_asset_value(model,q,s,p7,z):
+    '''total value of assets at the start of the sequence (q[0], p7[0]).'''
+    p7_start = list(model.s_season_periods)[0]
+    q_start = list(model.s_sequence_year)[0]
+    if q==q_start and p7==p7_start:
+        return macpy.f_mach_asset(model,p7) + (-model.v_tradevalue[q, s, p7, z]) #tradevalue in p7[0] is the opening sheep assets
+    else:
+        return 0
 
-def f_con_workingcap_within(model):
+def f_con_totalcap_within(model):
     '''
-    Tallies working capital and transfers to the next period. Cashflow periods exist so that a transfer can
+    Tallies total capital and transfers to the next period. Cashflow periods exist so that a transfer can
     exist between parent and child seasons.
 
-    Working capital is the total costs since the previous 'main' income (e.g. harvest or shearing). Tactical income
-    is not included because it was difficult to see a way to stop the model retaining sheep from the end of last year
-    until the start of the current cashflow period to reduce wc (on farm this does not work because there is no
-    concept of start and end of cashflow like there is in the model).
+    Total capital is a combination of assets and working capital. Working capital is the sum of the
+    expenses minus any income, since the previous 'main' income (e.g. harvest or shearing).
+    This constraint exists so the model user can examine how the farm is structured under different levels of finance.
+    The default is to allow a large amount of finance so that this constraint it not impacting the solution.
 
-    Note: trade value is not included because income is not counted but in the SQ and MP model the starting balance of
-    q[>=1] does include the trade value which is required to stop the model selling extra sheep (that exist due to the
-    weighted average across seasons) in q[0] to artificially increase q[1] starting balance.
+    Start asset value is included to ensure that retaining sheep from the end of last year
+    until the start of the current cashflow period doesn't reduce wc (on farm this does not work because there is no
+    concept of start and end of cashflow like there is in the model). If start asset value was not included the model
+    shift strategical off spring sales that would usually occur at shearing until the start of next season which would
+    reduce wc because sales after main shearing offset wc costs (this would be a problem in both SE and DSP).
 
-    '''
-    def working_cap_within(model,q,s,c0,p7,z9):
+    Note: trade value is not included because it is a valid tactic to sell more animals in a poor season and then buy
+    them back after peak debt or in SQ start the following year understocked.
+
+     '''
+    def total_cap_within(model,q,s,c0,p7,z9):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         if pe.value(model.p_mask_childz_within_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s]):
-            return (phspy.f_rotation_wc(model,q,s,c0,p7,z9) + labpy.f_labour_wc(model,q,s,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s,z9,c0,p7)
+            return (-f1_grain_wc(model,q,s,c0,p7,z9) + phspy.f_rotation_wc(model,q,s,c0,p7,z9) + labpy.f_labour_wc(model,q,s,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s,c0,p7,z9) + suppy.f_sup_wc(model,q,s,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
-                    + stkpy.f_stock_wc(model,q,s,c0,p7,z9)
+                    - stkpy.f_stock_wc(model,q,s,c0,p7,z9) + f1_start_asset_value(model,q,s,p7,z9)
                     - model.v_wc_debit[q,s,c0,p7,z9]
                     + model.v_wc_credit[q,s,c0,p7,z9]
                     + sum((model.v_wc_debit[q,s,c0,p7_prev,z8] - model.v_wc_credit[q,s,c0,p7_prev,z8]) #end working capital doesnot provide start else unbounded constraint.
@@ -686,13 +705,13 @@ def f_con_workingcap_within(model):
                          for z8 in model.s_season_types)) <= 0
         else:
             return pe.Constraint.Skip
-    model.con_workingcap_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap_within,
+    model.con_totalcap_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=total_cap_within,
                                        doc='working capital transfer within year')
 
 
-def f_con_workingcap_between(model):
+def f_con_totalcap_between(model):
     '''
-    Tallies working capital and transfers to the next period. Cashflow periods exist so that a transfer can
+    Tallies total capital and transfers to the next period. Cashflow periods exist so that a transfer can
     exist between parent and child seasons.
 
     Cashflow at the end of the previous yr becomes the starting balance for working capital (cashflow broadcasts
@@ -701,27 +720,24 @@ def f_con_workingcap_between(model):
     the start of the sequence. This means an expensive strategy with a high reward can be bounded using wc (if the end
     cashflow became the start then a high expense high income strategy would not trigger the constraint).
 
-    See further comments above.
-
     '''
-    def working_cap_between(model,q,s9,c0,p7,z9):
+    def total_cap_between(model,q,s9,c0,p7,z9):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
         if pe.value(model.p_mask_childz_between_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]):
-            return (phspy.f_rotation_wc(model,q,s9,c0,p7,z9) + labpy.f_labour_wc(model,q,s9,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s9,z9,c0,p7)
+            return (-f1_grain_wc(model,q,s9,c0,p7,z9) + phspy.f_rotation_wc(model,q,s9,c0,p7,z9) + labpy.f_labour_wc(model,q,s9,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s9,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s9,c0,p7,z9) + suppy.f_sup_wc(model,q,s9,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
-                    + stkpy.f_stock_wc(model,q,s9,c0,p7,z9)
+                    - stkpy.f_stock_wc(model,q,s9,c0,p7,z9) + f1_start_asset_value(model,q,s9,p7,z9)
                     - model.v_wc_debit[q,s9,c0,p7,z9]
                     + model.v_wc_credit[q,s9,c0,p7,z9]
                     + sum(sum((model.v_debit[q_prev,s8,c1,p7_prev,z8] - model.v_credit[q_prev,s8,c1,p7_prev,z8]) * model.p_prob_c1[c1]
                               for c1 in model.s_c1)#end cashflow become start wc (only within a sequence).
                           * model.p_parentz_provbetween_season[p7_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
-                        # + (model.v_debit[q_prev,s8,c1,p7_prev,z8] - model.v_credit[q_prev,s8,c1,p7_prev,z8]) #end cashflow become start wc.
-                        #   * model.p_parentz_provbetween_season[p7_prev,z8,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
+                        # note - there is not end to start transfer because there is no opening balance.
                           for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)) <= 0
         else:
             return pe.Constraint.Skip
-    model.con_workingcap_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap_between,
+    model.con_totalcap_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=total_cap_between,
                                        doc='working capital transfer between years')
 
 
@@ -733,7 +749,7 @@ def f_con_dep(model):
         p7_start = l_p7[0]
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return (macpy.f_total_dep(model,q,s,p7,z9) + suppy.f_sup_dep(model,q,s,p7,z9) - model.v_dep[q,s,p7,z9]
-                    + sum(model.v_dep[q,s,p7_prev,z9] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
+                    + sum(model.v_dep[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
                           for z8 in model.s_season_types) * (p7!=p7_start) #end doesn't carry over
                     <= 0)
         else:
@@ -833,8 +849,9 @@ def f_objective(model):
     def terminal_wealth(model,q,s,z,c1):
         if pe.value(model.p_wyear_inc_qs[q,s]):
             return (model.v_terminal_wealth[q,s,z,c1] - model.v_credit[q,s,c1,p7_end,z] + model.v_debit[q,s,c1,p7_end,z] # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
-                       + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z]
-                       + 0.00001 * sum(sum(v[idx] for idx in v) for v in variables
+                    + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z]
+                    - model.v_tradevalue[q, s, p7_end, z]
+                    + 0.00001 * sum(sum(v[idx] for idx in v) for v in variables
                                        if v._rule_bounds.val[0] is not None and v._rule_bounds.val[0]>=0)) <=0 #all variables with positive bounds (ie variables that can be negative e.g. terminal_wealth are excluded) put a small neg number into objective. This stop cplex selecting variables that don't contribute to the objective (cplex selects variables to remove slack on constraints).
         else:                                                                                                  #note; _rule_bounds.val[0] is the lower bound of each variable
             return pe.Constraint.Skip
