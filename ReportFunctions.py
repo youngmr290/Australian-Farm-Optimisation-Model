@@ -188,9 +188,9 @@ def f_vars2np(lp_vars, var_key, shape, maskz8=None, z_pos=-1):
     :return: numpy array with un-clustered season axis.
     '''
 
-    vars = np.array(list(lp_vars[var_key].values()))
+    vars = np.array(list(lp_vars[var_key].values())).astype(float)
     vars = vars.reshape(shape)
-    vars[vars == None] = 0  # replace None with 0
+    vars[np.isnan(vars)] = 0  # replace nan with 0
 
     ##uncluster z so that each season gets complete information
     if maskz8 is not None:
@@ -668,8 +668,9 @@ def f_rotation(lp_vars, r_vals):
     phases_rk = phases_df.set_index(phases_df.columns[-1], append=True)  # add landuse as index level
     v_phase_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_area', mask_season_p7z[:,:,na,na], z_pos=-3)
     v_phase_change_increase_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_change_increase', mask_season_p7z[:,:,na,na], z_pos=-3)
-    ##add landuse to the axis
+    ##add landuse to the axis & remove level names
     v_phase_area_qsp7zlrk = v_phase_area_qsp7zrl.unstack(4).reindex(phases_rk.index, axis=1, level=0).stack([0,1])  # add landuse to the axis
+    v_phase_area_qsp7zlrk.index.names = [None] * v_phase_area_qsp7zlrk.index.nlevels
     ##unstack p7 - p7 is generally a col where this is used so this saves time later
     v_phase_area_qszlrk_p7 = v_phase_area_qsp7zlrk.unstack(2)
     v_phase_area_qszrl_p7 = v_phase_area_qsp7zrl.unstack(2)

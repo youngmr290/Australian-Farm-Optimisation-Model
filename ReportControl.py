@@ -225,10 +225,10 @@ def f_report(processor, trials, non_exist_trials):
             stacked_penalty = rep.f_append_dfs(stacked_penalty, penalty)
 
         if report_run.loc['run_profitarea', 'Run']:
-            area_option = 3     # 3 table crop & pasture area by lmu & weather-year
+            area_option = 2     # 2 total crop area each season in p7[-1]
             profit_option = 0   # 0 Profit, 1 Risk neutral Obj, 2 Utility, 3 range and std dev of profit.
             profitarea = pd.DataFrame(index=[trial_name], columns=['area','profit'])
-            profitarea.loc[trial_name, 'area'] = rep.f_area_summary(lp_vars,r_vals,area_option)
+            profitarea.loc[trial_name, 'area'] = rep.f_area_summary(lp_vars,r_vals,area_option).squeeze()
             profitarea.loc[trial_name,'profit'] = rep.f_profit(lp_vars,r_vals,profit_option)
             stacked_profitarea = rep.f_append_dfs(stacked_profitarea, profitarea)
 
