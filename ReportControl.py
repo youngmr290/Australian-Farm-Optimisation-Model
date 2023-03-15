@@ -2,7 +2,7 @@
 
 Background and usage
 ---------------------
-Reports are generated in a two step process. Firstly, each trial undergoes some ‘within trial’ calculations
+Reports are generated in a two-step process. Firstly, each trial undergoes some ‘within trial’ calculations
 (e.g. calc the sale price for a trial), the results are stacked together and stored in a table
 (each report has its own table). The resulting table can then undergo some ‘between trial’ calculations
 (e.g. graphing profit by sale price).
@@ -30,9 +30,9 @@ How to add a report:
 #. in ReportControl.py build the 'within trial' and 'between trial' sections (this can easily be done by copying
    existing code and making the relevant changes).
 
-.. tip:: When creating r_vals values try and do it in obvious spots so it is easier to understand later.
+.. tip:: When creating r_vals values try and do it in obvious spots, so it is easier to understand later.
 
-.. note:: For livestock: livestock is slightly more complicated. If you add a r_val or lp_vars you
+.. note:: For livestock: livestock is slightly more complicated. If you add an r_val or lp_vars you
     will also need to add it to f_stock_reshape the allows you to get the shape correct
     (remove singleton axis and converts lp_vars from dict to numpy).
 
@@ -58,7 +58,7 @@ print(f'Reporting commenced at: {time.ctime()}')
 start = time.time()
 
 
-##read in excel that controls which reports to run and slice for the selected experiment.
+##read in the Excel sheet that controls which reports to run and slice for the selected experiment.
 ## If no arg passed in or the experiment is not set up with custom col in report_run then default col is used
 report_run = pd.read_excel('exp.xlsx', sheet_name='Run Report', index_col=[0], header=[0,1], engine='openpyxl')
 try:
@@ -81,7 +81,7 @@ def f_report(processor, trials, non_exist_trials):
     # print('Start trials: {0}'.format(trials))
 
     ## A control to switch between reporting the optimised production level (True) and the production assumptions (False)
-    ### Note this is only active for some of the reports. It also changes the axes that are reported, often adding a w axis
+    ### Note this is only active for some reports. It also changes the axes that are reported, often adding a w axis
     lp_vars_inc = False
 
     ##create empty df to stack each trial results into
@@ -167,7 +167,7 @@ def f_report(processor, trials, non_exist_trials):
     stacked_drynv = pd.DataFrame()  # NV of dry pas
     stacked_drydmd = pd.DataFrame()  # dmd of dry pas
     stacked_avedryfoo = pd.DataFrame()  # Average Foo of dry pas
-    stacked_mvf = pd.DataFrame()  # Average Foo of dry pas
+    stacked_mvf = pd.DataFrame()  # Marginal value of feed
 
     ##read in the pickled results
     for trial_name in trials:
@@ -1257,7 +1257,7 @@ def f_report(processor, trials, non_exist_trials):
             drydmd = pd.concat([drydmd],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_drydmd = rep.f_append_dfs(stacked_drydmd, drydmd)
 
-        if report_run.loc['run_dryfoo', 'Run']:
+        if report_run.loc['run_avedryfoo', 'Run']:
             #returns average FOO during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'dry_foo_dp6zt'
@@ -1358,17 +1358,17 @@ def f_report(processor, trials, non_exist_trials):
     #run between trial reports and save#
     ####################################
     print("Writing to Excel")
-    ##first check that excel is not open (microsoft puts a lock on files so they can't be updated from elsewhere while open)
+    ##first check that Excel is not open (Microsoft puts a lock on files, so they can't be updated from elsewhere while open)
     if os.path.isfile("Output/Report{0}.xlsx".format(processor)): #to check if report.xl exists
         while True:   # repeat until the try statement succeeds
             try:
-                myfile = open("Output/Report{0}.xlsx".format(processor),"w") # chucks an error if excel file is open
+                myfile = open("Output/Report{0}.xlsx".format(processor),"w") # chucks an error if Excel file is open
                 break                             # exit the loop
             except IOError:
                 input("Could not open file! Please close Excel. Press Enter to retry.")
                 # restart the loop
 
-    ## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
+    ## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in Excel
     writer = pd.ExcelWriter('Output/Report{0}.xlsx'.format(processor),engine='xlsxwriter')
 
     ##make empty df to store row and col index settings. Used when combining multiple report.xl
@@ -1376,13 +1376,13 @@ def f_report(processor, trials, non_exist_trials):
 
     ##write to excel
     ###determine the method of reporting rows and columns that are all zeros
-    ### mode 0: df straight into excel
-    ### mode 1: df into excel - collapsing rows/cols that contain only 0's.
-    ### mode 2: df into excel - removing rows/cols that contain only 0's. This method make the writing process faster.
+    ### mode 0: df straight into Excel
+    ### mode 1: df into Excel - collapsing rows/cols that contain only 0's.
+    ### mode 2: df into Excel - removing rows/cols that contain only 0's. This method make the writing process faster.
     try:
         xl_display_mode = int(sys.argv[4])  # reads in as string so need to convert to int, the script path is the first value.
     except IndexError:  # in case no arg passed to python
-        xl_display_mode = 1 #default is to collapse rows/cols that are all 0's (ie they exist in excel but are hidden)
+        xl_display_mode = 1 #default is to collapse rows/cols that are all 0's (ie they exist in Excel but are hidden)
 
     df_settings = rep.f_df2xl(writer, stacked_infeasible, 'infeasible', df_settings, option=xl_display_mode)
     df_settings = rep.f_df2xl(writer, stacked_non_exist,'Non-exist',df_settings,option=0,colstart=0)
@@ -1558,7 +1558,7 @@ if __name__ == '__main__':
     ##read in exp log
     exp_data, experiment_trials, trial_pinp = fun.f_read_exp()
 
-    ##check if trial results are up to date. Out-dated if:
+    ##check if trial results are up-to-date. Out-dated if:
     ##  1. exp.xls has changed
     ##  2. any python module has been updated
     ##  3. the trial needed to be run last time but the user opted not to run that trial
@@ -1571,7 +1571,7 @@ if __name__ == '__main__':
         pd.Series(exp_data.index.get_level_values(2)).fillna(0).astype(
             bool)]  # this is slightly complicated because blank rows in exp.xl result in nan, so nan must be converted to 0.
 
-    ##check the trials you want to run exist and are up to date - if trial doesn't exist it is removed from trials to
+    ##check the trials you want to run exist and are up-to-date - if trial doesn't exist it is removed from trials to
     # report array so that the others can still be run. A list of trials that don't exist is the 'non_exist' sheet in report excel.
     trials, non_exist_trials = rep.f_errors(trial_outdated,trials)
 
