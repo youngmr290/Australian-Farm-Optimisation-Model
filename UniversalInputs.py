@@ -253,6 +253,8 @@ def f_universal_inp_sa():
     ###sav
     supfeed['i_max_sup_selectivity'] = fun.f_sa(supfeed['i_max_sup_selectivity'], sen.sav['max_sup_selectivity'], 5)
     supfeed['i_sup_selectivity_included'] = fun.f_sa(supfeed['i_sup_selectivity_included'], sen.sav['inc_sup_selectivity'], 5)
+    supfeed['i_confinement_feeding_cost_factor'] = fun.f_sa(supfeed['i_confinement_feeding_cost_factor'], sen.sav['confinement_feeding_cost_factor'], 5)
+    supfeed['i_confinement_feeding_labour_factor'] = fun.f_sa(supfeed['i_confinement_feeding_labour_factor'], sen.sav['confinement_feeding_labour_factor'], 5)
     ###sam
     ###sap
     ###saa
