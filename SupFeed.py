@@ -293,7 +293,7 @@ def f_sup_md_vol(r_vals, nv):
     ##apply season mask
     date_start_p6z = per.f_feed_periods()[:-1]
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z,z_pos=-1,mask=True)
-    vol_tonne_fkp6z = vol_tonne_fk[:,na,na] * mask_fp_z8var_p6z
+    vol_tonne_fkp6z = vol_tonne_fk[:,:,na,na] * mask_fp_z8var_p6z
     md_tonne_fkp6z = md_tonne_fk[:,:,na,na] * mask_fp_z8var_p6z
 
     ##build df
