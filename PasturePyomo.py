@@ -386,14 +386,14 @@ def f_pas_vol(model,q,s,p6,f,z):
            + sum(model.v_poc[q,s,f,p6,l,z] * model.p_poc_vol[f,p6,z] for l in model.s_lmus) #have to sum lmu here again, otherwise other axis will broadcast
 
 
-def f_pas_vol2(model,q,s,p6,f,z):
+def f_pas_me2(model,q,s,p6,f,z):
     '''
-    Calculate the total volume of pasture consumed, not including POC.
+    Calculate the total me of pasture consumed, not including POC.
     This is used in con_link_pasture_supplement_consumption to stop pasture being deferred. POC is excluded because
     putting sheep on poc is basically like using the crop paddock as the confinement paddock.
 
     Used in global constraint (con_link_pasture_supplement_consumption). See CorePyomo
     '''
-    return sum(sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z,t] * model.p_volume_grnha[f,g,o,p6,l,z,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
-               + sum(sum(model.v_drypas_consumed[q,s,f,d,p6,z,l,t] * model.p_dry_volume_t[f,d,p6,z,t] for l in model.s_lmus) \
-               +         model.v_nap_consumed[q,s,f,d,p6,z,t] * model.p_dry_volume_t[f,d,p6,z,t] for d in model.s_dry_groups) for t in model.s_pastures)
+    return sum(sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z,t] * model.p_me_cons_grnha[f,g,o,p6,l,z,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
+               + sum(sum(model.v_drypas_consumed[q,s,f,d,p6,z,l,t] * model.p_dry_mecons_t[f,d,p6,z,t] for l in model.s_lmus) \
+               +         model.v_nap_consumed[q,s,f,d,p6,z,t] * model.p_dry_mecons_t[f,d,p6,z,t] for d in model.s_dry_groups) for t in model.s_pastures)
