@@ -686,7 +686,7 @@ def f_con_matingR(model):
                        if pe.value(model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8])!=0) <=0
         else:
             return pe.Constraint.Skip
-    # model.con_matingR = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_groups_sire, model.s_sire_periods, rule=mating, doc='sire requirement for mating')
+    model.con_matingR = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_groups_sire, model.s_sire_periods, rule=mating, doc='sire requirement for mating')
 
 def f_con_stockinfra(model):
     '''
@@ -770,7 +770,7 @@ def f_stock_me(model,q,s,p6,f,z):
     Used in global constraint (con_me). See CorePyomo
     '''
 
-    return sum(model.v_sire[q,s,g0] * model.p_mei_sire[p6,f,z,g0] for g0 in model.s_groups_sire)\
+    return sum(model.v_sire[q,s,g0] *0* model.p_mei_sire[p6,f,z,g0] for g0 in model.s_groups_sire)\
            + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_mei_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
@@ -789,7 +789,7 @@ def f_stock_pi(model,q,s,p6,f,z):
     Used in global constraint (con_vol). See CorePyomo
     '''
 
-    return sum(model.v_sire[q,s,g0] * model.p_pi_sire[p6,f,z,g0] for g0 in model.s_groups_sire)\
+    return sum(model.v_sire[q,s,g0] *0* model.p_pi_sire[p6,f,z,g0] for g0 in model.s_groups_sire)\
            + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_pi_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams

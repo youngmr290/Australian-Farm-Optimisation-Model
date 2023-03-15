@@ -864,8 +864,8 @@ def f_report(processor, trials, non_exist_trials):
             na_denweights = [0,1] #q,s
             keys = 'dams_keys_qsk2p6ftvanwziy1g1'
             arith = 1               # for FP only
-            index = [6, 3]          # [1]
-            cols = [2, 4]           # [0]
+            index = [3]          # [1]
+            cols = []           # [0]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             daily_mei_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -1098,16 +1098,16 @@ def f_report(processor, trials, non_exist_trials):
             prod = 'pgr_grnha_gop6lzt'
             na_prod = [0,1,2] #q,s,f
             weights = 'greenpas_ha_qsfgop6lzt'
-            den_weights = 'days_p6z'
-            na_denweights = [1,3]
+            # den_weights = 'days_p6z'
+            # na_denweights = [1,3]
             keys = 'keys_qsfgop6lzt'
-            arith = 1
+            arith = 2
             index =[7,5]
             cols =[6]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
-            pgr = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights, den_weights=den_weights,
-                                   na_denweights=na_denweights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            pgr = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                              keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             pgr = pd.concat([pgr],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_pgr = rep.f_append_dfs(stacked_pgr, pgr)
 

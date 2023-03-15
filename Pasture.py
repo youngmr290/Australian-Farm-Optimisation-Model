@@ -391,6 +391,8 @@ def f_pasture(params, r_vals, nv):
     germination_p6lrzt, max_germination_flzt = pfun.f_germination(i_germination_std_zt, i_germ_scalar_lzt
                                                                 , i_germ_scalar_p6zt, pasture_rt, arable_l
                                                                 , pastures, phase_germresow_df, i_phase_germ_dict, rt)
+    saa_germ_p6lz = zfun.f_seasonal_inp(np.compress(lmu_mask_l, sen.saa['germ_p6lz', 'annual'],axis=1), numpy=True, axis=-1)
+    germination_p6lrzt = germination_p6lrzt + saa_germ_p6lz[:,:,na,:,na]
 
     resown_rt = np.zeros(rt)
     seeding_freq_k = pinp.crop['i_seeding_frequency']

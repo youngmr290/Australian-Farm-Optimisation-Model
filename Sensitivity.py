@@ -171,6 +171,8 @@ def create_sa():
     ##SAV
     sav['max_sup_selectivity'] = '-'  #control the maximum propn of potential intake used by supplement when paddock feeding.
     sav['inc_sup_selectivity'] = '-'  #control inclusion of the sup selectivity bnd (maximum propn of potential intake used by supplement when paddock feeding).
+    sav['confinement_feeding_cost_factor'] = '-'  #reduction factor for sup feeding cost when in confinement
+    sav['confinement_feeding_labour_factor'] = '-'  #reduction factor for sup feeding labour when in confinement
     ##SAM
     ##SAP
     ##SAA
@@ -241,6 +243,7 @@ def create_sa():
     ##SAP
     ##SAA pasture
     saa['germ','annual']                    = 0.0                                                          # SA addition for germination on all lmus in all periods
+    saa['germ_p6lz','annual']                   = np.zeros((len_p6, len_l, len_z),  dtype=np.float64)  # SA addition for growth in each feed period
     saa['germ','understory']                    = 0.0                                                          # SA addition for germination on all lmus in all periods
     saa['pgr','annual']                     = 0.0                                                          # SA addition for growth on all lmus in all periods
     saa['pgr','understory']                     = 0.0                                                          # SA addition for growth on all lmus in all periods

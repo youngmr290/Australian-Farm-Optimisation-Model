@@ -44,7 +44,7 @@ def f1_paspyomo_local(params, model):
                                   model.s_season_types, model.s_pastures,bounds=(0,None),
                                   doc='tonnes of low and high quality dry pasture on crop paddocks transferred to the following periods in each feed period')
     model.v_poc = pe.Var(model.s_sequence_year, model.s_sequence, model.s_feed_pools, model.s_feed_periods, model.s_lmus,
-                         model.s_season_types, bounds=(0,None),
+                         model.s_season_types, bounds=(0,0),
                          doc='tonnes of poc consumed by each sheep pool in each period on each lmu')
 
     ####################

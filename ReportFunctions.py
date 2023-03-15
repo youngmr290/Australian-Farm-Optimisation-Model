@@ -1996,10 +1996,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     sb_mei.columns = ['Saltbush'] # add feed type as header
 
     ###sup
-    sup_md_tonne_kp6z = r_vals['sup']['md_tonne_kp6z']
+    sup_md_tonne_fkp6z = r_vals['sup']['md_tonne_fkp6z']
     grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
-    sup_mei_qsf_kp6z = grain_fed_qszkfp6.unstack([3,5,2]).sort_index(axis=1).mul(sup_md_tonne_kp6z, axis=1)
-    sup_mei_qszp6f = sup_mei_qsf_kp6z.unstack().stack([2,1,3]).sort_index(axis=1).sum(axis=1)
+    sup_mei_qs_fkp6z = grain_fed_qszkfp6.unstack([4,3,5,2]).sort_index(axis=1).mul(sup_md_tonne_fkp6z, axis=1)
+    sup_mei_qszp6f = sup_mei_qs_fkp6z.stack([3,2,0]).sort_index(axis=1).sum(axis=1)
     sup_mei = pd.DataFrame(sup_mei_qszp6f, columns=['Supp']) # add feed type as header
 
     ##stock mei requirement

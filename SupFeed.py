@@ -232,7 +232,7 @@ def f_sup_cost(r_vals, nv):
     return total_sup_cost_p7zp6kf, total_sup_wc_c0p7zp6kf, storage_dep_p7p6zk, storage_asset_p7p6zk, confinement_dep
 
 
-def f_sup_md_vol(r_vals):
+def f_sup_md_vol(r_vals, nv):
     '''
     M/D and DM content of each supplement are known inputs.
     Unlike stubble and pasture, the quantity of supplementary feed consumed (the decision variables)
@@ -251,6 +251,10 @@ def f_sup_md_vol(r_vals):
     a protein deficiency, and therefore acting as a 'true' supplement and increasing intake. If this was represented it
     would likely make low rate lupin supplementation optimal in early summer/autumn to overcome a protein deficiency.
 
+    A portion of supplement fed in the paddock is wasted and hence not consumed. This is accounted for by
+    reducing the ME and Vol of the supplement decision variable (the supplement decision variable is the supplement fed
+    not the supplement consumed by livestock). In confinement, it is assumed that no supplement is wasted.
+
     .. note:: Supplement M/D does not go through f_effective_mei because the quantity of Sup feed can be controlled
               so the animals achieve their target weight profile and aren't gaining then losing weight.
     '''
@@ -260,6 +264,19 @@ def f_sup_md_vol(r_vals):
     energy_k = sup_md_vol.loc['energy'].values
     dry_matter_content_k = sup_md_vol.loc['dry matter content'].values
     prop_consumed_k = sup_md_vol.loc['prop consumed'].values
+    prop_consumed_confinement_k = sup_md_vol.loc['prop consumed confinement'].values
+
+    ##adjust wastage for confinement (no wastage in confinement).
+    len_nv = nv['len_nv']
+    nv_is_confinement_f = np.full(len_nv, False)
+    nv_is_confinement_f[-1] = nv['confinement_inc'] #if confinement is included the last nv pool is confinement.
+    prop_consumed_fk = fun.f_update(prop_consumed_k, prop_consumed_confinement_k, nv_is_confinement_f[:,na])
+
+    ##adjust wastage for confinement (no wastage in confinement).
+    len_nv = nv['len_nv']
+    nv_is_confinement_f = np.full(len_nv, False)
+    nv_is_confinement_f[-1] = nv['confinement_inc'] #if confinement is included the last nv pool is confinement.
+    prop_consumed_fk = fun.f_update(prop_consumed_k, 1, nv_is_confinement_f[:,na])
 
     ##calc vol
     ###convert md to dmd
@@ -273,29 +290,30 @@ def f_sup_md_vol(r_vals):
     ###feed volumes with the substitution rate calculated using the GrazPlan diet selection routine.
     vol_kg_k = np.maximum(1, 1 / rq_k) * 0.8
     ###convert vol per kg to per tonne fed - have to adjust for the actual dry matter content and wastage
-    vol_tonne_k = vol_kg_k * 1000 * prop_consumed_k * dry_matter_content_k
-    vol_tonne_k = vol_tonne_k / (1 + sen.sap['pi'])
+    vol_tonne_fk = vol_kg_k * 1000 * prop_consumed_fk * dry_matter_content_k
+    vol_tonne_fk = vol_tonne_fk / (1 + sen.sap['pi'])
 
     ##calc ME (note: value in dict is MJ/t of DM, so doesn't need to be multiplied by 1000)
-    md_tonne_k = energy_k * prop_consumed_k * dry_matter_content_k
+    md_tonne_fk = energy_k * prop_consumed_fk * dry_matter_content_k
 
     ##apply season mask
     date_start_p6z = per.f_feed_periods()[:-1]
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z,z_pos=-1,mask=True)
-    vol_tonne_kp6z = vol_tonne_k[:,na,na] * mask_fp_z8var_p6z
-    md_tonne_kp6z = md_tonne_k[:,na,na] * mask_fp_z8var_p6z
+    vol_tonne_fkp6z = vol_tonne_fk[:,na,na] * mask_fp_z8var_p6z
+    md_tonne_fkp6z = md_tonne_fk[:,:,na,na] * mask_fp_z8var_p6z
 
     ##build df
     keys_z = zfun.f_keys_z()
     keys_p6 = pinp.period['i_fp_idx']
-    index = pd.MultiIndex.from_product([sup_md_vol.columns, keys_p6, keys_z])
-    vol_tonne_kp6z = pd.Series(vol_tonne_kp6z.ravel(), index=index)
-    md_tonne_kp6z = pd.Series(md_tonne_kp6z.ravel(), index=index)
+    keys_f = np.array(['nv{0}'.format(i) for i in range(nv['len_nv'])])
+    index = pd.MultiIndex.from_product([keys_f, sup_md_vol.columns, keys_p6, keys_z])
+    vol_tonne_fkp6z = pd.Series(vol_tonne_fkp6z.ravel(), index=index)
+    md_tonne_fkp6z = pd.Series(md_tonne_fkp6z.ravel(), index=index)
 
     ##store r_vals
-    fun.f1_make_r_val(r_vals, md_tonne_kp6z, 'md_tonne_kp6z', mask_fp_z8var_p6z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, md_tonne_fkp6z, 'md_tonne_fkp6z', mask_fp_z8var_p6z, z_pos=-1)
 
-    return vol_tonne_kp6z, md_tonne_kp6z
+    return vol_tonne_fkp6z, md_tonne_fkp6z
     
     
 def f_sup_labour(nv):
@@ -484,7 +502,7 @@ def f1_sup_selectivity():
 ##collates all the params
 def f_sup_params(params,r_vals, nv):
     total_sup_cost, total_sup_wc, storage_dep, storage_asset, confinement_dep = f_sup_cost(r_vals, nv)
-    vol_tonne, md_tonne = f_sup_md_vol(r_vals)
+    vol_tonne, md_tonne = f_sup_md_vol(r_vals, nv)
     sup_labour = f_sup_labour(nv)
     buy_grain_price, buy_grain_wc, buy_grain_prov_p7z = f_buy_grain_price(r_vals)
     a_p6_p7 = f1_a_p6_p7()

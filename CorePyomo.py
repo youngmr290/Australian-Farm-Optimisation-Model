@@ -584,8 +584,8 @@ def f_con_link_pasture_supplement_consumption(model,nv):
     def link_pas_sup(model,q,s,z,p6,f):
         f_idx = l_f.index(f)
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p6z[p6,z]) and nv_is_not_confinement_f[f_idx] and uinp.supfeed['i_sup_selectivity_included']:
-            return - (paspy.f_pas_vol2(model,q,s,p6,f,z) + stubpy.f_cropresidue_vol(model,q,s,p6,f,z)) * model.p_max_sup_selectivity[p6,z] \
-                   + suppy.f_sup_vol(model,q,s,p6,f,z) * (1-model.p_max_sup_selectivity[p6,z]) <= 0
+            return - (paspy.f_pas_me(model,q,s,p6,f,z) + stubpy.f_cropresidue_me(model,q,s,p6,f,z)) * model.p_max_sup_selectivity[p6,z] \
+                   + suppy.f_sup_me(model,q,s,p6,f,z) * (1-model.p_max_sup_selectivity[p6,z]) <= 0
         else:
             return pe.Constraint.Skip
     model.con_link_pasture_supplement_consumption = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types,
@@ -852,7 +852,7 @@ def f_objective(model):
                     + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z]
                     - model.v_tradevalue[q, s, p7_end, z]
                     + 0.00001 * sum(sum(v[idx] for idx in v) for v in variables
-                                       if v._rule_bounds.val[0] is not None and v._rule_bounds.val[0]>=0)) <=0 #all variables with positive bounds (ie variables that can be negative e.g. terminal_wealth are excluded) put a small neg number into objective. This stop cplex selecting variables that don't contribute to the objective (cplex selects variables to remove slack on constraints).
+                                       if v._rule_bounds._initializer.val[0] is not None and v._rule_bounds._initializer.val[0]>=0)) <=0 #all variables with positive bounds (ie variables that can be negative e.g. terminal_wealth are excluded) put a small neg number into objective. This stop cplex selecting variables that don't contribute to the objective (cplex selects variables to remove slack on constraints).
         else:                                                                                                  #note; _rule_bounds.val[0] is the lower bound of each variable
             return pe.Constraint.Skip
     model.con_terminal_wealth = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, rule=terminal_wealth,
