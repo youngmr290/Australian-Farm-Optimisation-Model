@@ -1620,7 +1620,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     mortalityd_yatf = mortalityd_yatf * (1- cd[21,...])
     ##Exposure index
     xo_p1p2 = (cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_p1p2 + cd[10, ..., na,na] * chill_index_p1[..., na]
-               + cb1[11, ..., na,na])
+               + cb1[10, ..., na,na])
     ##Progeny mortality at birth from exposure
     mortalityx = np.average(fun.f_back_transform(xo_p1p2), axis=(-1, -2)) * period_is_birth  #axis -1 & -2 are p1 & p2
     ##Apply SA to progeny mortality due to exposure

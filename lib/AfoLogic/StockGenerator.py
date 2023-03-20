@@ -681,8 +681,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     cb1_dams = cl0_dams[:,sinp.stock['a_nfoet_b1']] + cl1_dams[:,sinp.stock['a_nyatf_b1']]
     cb1_yatf = cl0_yatf[:,sinp.stock['a_nfoet_b1']] + cl1_yatf[:,sinp.stock['a_nyatf_b1']]
     ###Alter select slices only for yatf (yatf don't have cb0 axis - instead they use cb1 so it aligns with dams)
-    ###The b1 parameters that are relevant to the dams relate to either number of foetus (entered as cl0) or number of yatf (entered as cl1). However, because the yatf also use the b1 axis some parameters that change based on the combination of birth type and rear type (BTRT - b0) are needed in the b1 axis for the yatf.
+    ###The b1 parameters that are relevant to the dams relate to either number of foetus (entered as cl0) or number of yatf (entered as cl1).
+    ### However, because the yatf also use the b1 axis some parameters that change based on the combination of
+    ### birth type and rear type (BTRT - b0) are needed in the b1 axis for the yatf.
     ###The only role for these parameters is for estimating values for the yatf
+    cb1_yatf[11, ...] = np.expand_dims(cb0_yatf[11, sinp.stock['ia_b0_b1']], axis = tuple(range(uinp.parameters['i_cl1_pos']+1,-3))) #add singleton axis between b0 and x so that b0 array aligns with b1
     cb1_yatf[12, ...] = np.expand_dims(cb0_yatf[12, sinp.stock['ia_b0_b1']], axis = tuple(range(uinp.parameters['i_cl1_pos']+1,-3))) #add singleton axis between b0 and x so that b0 array aligns with b1
     cb1_yatf[13, ...] = np.expand_dims(cb0_yatf[13, sinp.stock['ia_b0_b1']], axis = tuple(range(uinp.parameters['i_cl1_pos']+1,-3))) #add singleton axis between b0 and x so that b0 array aligns with b1
     cb1_yatf[17, ...] = np.expand_dims(cb0_yatf[17, sinp.stock['ia_b0_b1']], axis = tuple(range(uinp.parameters['i_cl1_pos']+1,-3))) #add singleton axis between b0 and x so that b0 array aligns with b1
@@ -1514,12 +1517,20 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     srw_xyg2 = srw_female_yg2 * cx_yatf[11, mask_x,...] #all gender slices
     srw_xyg3 = srw_female_yg3 * cx_offs[11, mask_x,...] #all gender slices
 
-    ##Standard birth weight -
+    ###BTRT adjustment for srw
+    srw_b0xyg0 = srw_xyg0 * np.sum(cb0_sire[11, ...] * btrt_propn_b0xyg0, axis = 0)
+    srw_b0xyg1 = srw_xyg1 * np.sum(cb0_dams[11, ...] * btrt_propn_b0xyg1, axis = 0)
+    srw_b1xyg2 = srw_xyg2 * cb1_yatf[11, ...]
+    srw_b0xyg3 = srw_xyg3 * cb0_offs[11, ...]
+
+    ##Standard birth weight. Does not include the gender scalar on SRW because std BW is related to the female SRW
+    ###Std BW doesn't include the BTRT scalar. This is not clear, does a triplet born dam gives birth to a smaller single lamb? Maybe but this calculation assumes not.
+    #todo 20Mar23 I now think that this calculaltion should include srw_b0 - reconsider and implement if still agreeing
     w_b_std_b0xyg0 = srw_female_yg0 * np.sum(cb0_sire[15, ...] * btrt_propn_b0xyg0, axis = b0_pos, keepdims=True) * cx_sire[15, 0:1, ...]
     w_b_std_b0xyg1 = srw_female_yg1 * np.sum(cb0_dams[15, ...] * btrt_propn_b0xyg1, axis = b0_pos, keepdims=True) * cx_dams[15, 1:2, ...]
     w_b_std_b0xyg3 = srw_female_yg3 * cb0_offs[15, ...] * cx_offs[15, mask_x,...]
     ##fetal param - normal birthweight young - used as target birthweight during pregnancy if sheep fed well. Therefore, average gender effect.
-    w_b_std_y_b1nwzida0e0b0xyg1 = srw_female_yg2 * cb1_yatf[15, ...] #gender not considers until actual birth therefore no cx
+    w_b_std_y_b1nwzida0e0b0xyg1 = srw_female_yg2 * cb1_yatf[15, ...] #gender not considered until actual birth therefore no cx
     ##wool growth efficiency
     ###wge is sfw divided by srw of a ewe of the given genotype. Scales the growth per unit intake to allow for the expected change in intake due to SRW
     ###Use SRW of the ewe so that males have same efficiency as females and hence grow more wool due to higher intake.
@@ -1579,6 +1590,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##convert variable from c2 to g (yatf is not used, only here because it is return from the function) then adjust by initial lw pattern
     lw_initial_yg0, lw_initial_yg1, lw_initial_yatf, lw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_lw_initial_c2'], uinp.parameters['i_lw_initial_y'], a_c2_c0, i_g3_inc)
     ###the initial lw input is a proportion of srw
+    ### Uses srw_female to remove the randomness that would occur with srw_b0 when changing RR.
     lw_initial_wzida0e0b0xyg0 = (lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)) * srw_female_yg0
     lw_initial_wzida0e0b0xyg1 = (lw_initial_yg1 * (1 + adjp_lw_initial_wzida0e0b0xyg1)) * srw_female_yg1
     lw_initial_wzida0e0b0xyg3 = (lw_initial_yg3 * (1 + adjp_lw_initial_wzida0e0b0xyg3)) * srw_female_yg3
@@ -1848,15 +1860,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     chill_index_pa1e1b1nwzida0e0b0xygp1 = fun.f_sa(chill_index_pa1e1b1nwzida0e0b0xygp1, sen.sam['chill'])
 
     ##Proportion of SRW with age
-    srw_age_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.exp(-cn_sire[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg0p1 / srw_xyg0[..., na] ** cn_sire[2, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg0p1, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(-cn_dams[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg1p1 / srw_xyg1[..., na] ** cn_dams[2, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg1p1, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.exp(-cn_yatf[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg2p1 / srw_xyg2[..., na] ** cn_yatf[2, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.exp(-cn_offs[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg3p1 / srw_xyg3[..., na] ** cn_offs[2, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg3p1, axis = -1)
+    srw_age_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.exp(-cn_sire[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg0p1
+                            / srw_b0xyg0[..., na] ** cn_sire[2, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg0p1, axis = -1)
+    srw_age_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(-cn_dams[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg1p1
+                            / srw_b0xyg1[..., na] ** cn_dams[2, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg1p1, axis = -1)
+    srw_age_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.exp(-cn_yatf[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg2p1
+                            / srw_b1xyg2[..., na] ** cn_yatf[2, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
+    srw_age_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.exp(-cn_offs[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg3p1
+                            / srw_b0xyg3[..., na] ** cn_offs[2, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg3p1, axis = -1)
 
-    #srw_age_pa1e1b1nwzida0e0b0xyg0 = np.nanmean(np.exp(-cn_sire[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg0p1 / srw_xyg0[..., na] ** cn_sire[2, ..., na]), axis = -1)
-    #srw_age_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.exp(-cn_dams[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg1p1 / srw_xyg1[..., na] ** cn_dams[2, ..., na]), axis = -1)
-    #srw_age_pa1e1b1nwzida0e0b0xyg2 = np.nanmean(np.exp(-cn_yatf[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg2p1 / srw_xyg2[..., na] ** cn_yatf[2, ..., na]), axis = -1)
-    #srw_age_pa1e1b1nwzida0e0b0xyg3 = np.nanmean(np.exp(-cn_offs[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg3p1 / srw_xyg3[..., na] ** cn_offs[2, ..., na]), axis = -1)
+    #srw_age_pa1e1b1nwzida0e0b0xyg0 = np.nanmean(np.exp(-cn_sire[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg0p1 / srw_b0xyg0[..., na] ** cn_sire[2, ..., na]), axis = -1)
+    #srw_age_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.exp(-cn_dams[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg1p1 / srw_b0xyg1[..., na] ** cn_dams[2, ..., na]), axis = -1)
+    #srw_age_pa1e1b1nwzida0e0b0xyg2 = np.nanmean(np.exp(-cn_yatf[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg2p1 / srw_b1xyg2[..., na] ** cn_yatf[2, ..., na]), axis = -1)
+    #srw_age_pa1e1b1nwzida0e0b0xyg3 = np.nanmean(np.exp(-cn_offs[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg3p1 / srw_b0xyg3[..., na] ** cn_offs[2, ..., na]), axis = -1)
 
     ##age factor wool part 1- reduces fleece growth early in life
     af1_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(cw_sire[5, ..., na] + (1 - cw_sire[5, ..., na])
@@ -2010,9 +2026,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     d_cfw_ave_pa1e1b1nwzida0e0b0xyg3 = sfw_da0e0b0xyg3 * af_wool_pa1e1b1nwzida0e0b0xyg3 / 364
 
     ##Expected relative size
-    relsize_exp_a1e1b1nwzida0e0b0xyg0  = (srw_xyg0 - (srw_xyg0 - w_b_std_b0xyg0) * np.exp(-cn_sire[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg0) / (srw_xyg0**cn_sire[2, ...]))) / srw_xyg0
-    relsize_exp_a1e1b1nwzida0e0b0xyg1  = (srw_xyg1 - (srw_xyg1 - w_b_std_b0xyg1) * np.exp(-cn_dams[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg1) / (srw_xyg1**cn_dams[2, ...]))) / srw_xyg1
-    relsize_exp_a1e1b1nwzida0e0b0xyg3  = (srw_xyg3 - (srw_xyg3 - w_b_std_b0xyg3) * np.exp(-cn_offs[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg3) / (srw_xyg3**cn_offs[2, ...]))) / srw_xyg3
+    relsize_exp_a1e1b1nwzida0e0b0xyg0  = (srw_b0xyg0 - (srw_b0xyg0 - w_b_std_b0xyg0) * np.exp(-cn_sire[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg0) / (srw_b0xyg0**cn_sire[2, ...]))) / srw_b0xyg0
+    relsize_exp_a1e1b1nwzida0e0b0xyg1  = (srw_b0xyg1 - (srw_b0xyg1 - w_b_std_b0xyg1) * np.exp(-cn_dams[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg1) / (srw_b0xyg1**cn_dams[2, ...]))) / srw_b0xyg1
+    relsize_exp_a1e1b1nwzida0e0b0xyg3  = (srw_b0xyg3 - (srw_b0xyg3 - w_b_std_b0xyg3) * np.exp(-cn_offs[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg3) / (srw_b0xyg3**cn_offs[2, ...]))) / srw_b0xyg3
 
     ##adjust ce sim param (^ ce12 &13 should be scaled by relsize (similar to ce15)) -  (^instead of setting ce with relsize adjustment then adjusting birth weight could just adjust birthweight directly with relsize factor - to avoid doing this code below)
     shape = (ce_sire.shape[0],) + relsize_exp_a1e1b1nwzida0e0b0xyg0.shape #get shape of the new ce array
@@ -2039,9 +2055,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     w_b_exp_a1e1b1nwzida0e0b0xyg3 = w_b_std_b0xyg3 * ce_offs[15, ...]
 
     ##Normal weight max (if animal is well fed)
-    nw_max_pa1e1b1nwzida0e0b0xyg0 = srw_xyg0 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg0) + w_b_exp_a1e1b1nwzida0e0b0xyg0 * srw_age_pa1e1b1nwzida0e0b0xyg0
-    nw_max_pa1e1b1nwzida0e0b0xyg1 = srw_xyg1 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg1) + w_b_exp_a1e1b1nwzida0e0b0xyg1 * srw_age_pa1e1b1nwzida0e0b0xyg1
-    nw_max_pa1e1b1nwzida0e0b0xyg3 = srw_xyg3 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg3) + w_b_exp_a1e1b1nwzida0e0b0xyg3 * srw_age_pa1e1b1nwzida0e0b0xyg3
+    nw_max_pa1e1b1nwzida0e0b0xyg0 = srw_b0xyg0 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg0) + w_b_exp_a1e1b1nwzida0e0b0xyg0 * srw_age_pa1e1b1nwzida0e0b0xyg0
+    nw_max_pa1e1b1nwzida0e0b0xyg1 = srw_b0xyg1 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg1) + w_b_exp_a1e1b1nwzida0e0b0xyg1 * srw_age_pa1e1b1nwzida0e0b0xyg1
+    nw_max_pa1e1b1nwzida0e0b0xyg3 = srw_b0xyg3 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg3) + w_b_exp_a1e1b1nwzida0e0b0xyg3 * srw_age_pa1e1b1nwzida0e0b0xyg3
 
     ##Change in normal weight max - the last period will be 0 by default but this is okay because nw hits an asymptote so change in will be 0 in the last period.
     d_nw_max_pa1e1b1nwzida0e0b0xyg0 = np.zeros_like(nw_max_pa1e1b1nwzida0e0b0xyg0)
@@ -2516,9 +2532,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###staple length
                 sl_start_sire = fl_start_sire * cw_sire[15,...]
                 ###Relative size (start) - dams & sires
-                relsize_start_sire = np.minimum(1, nw_start_sire / srw_xyg0)
+                relsize_start_sire = np.minimum(1, nw_start_sire / srw_b0xyg0)
                 ###Relative size for LWG (start). Capped by current LW
-                relsize1_start_sire = np.minimum(ffcfw_max_start_sire, nw_max_pa1e1b1nwzida0e0b0xyg0[p]) / srw_xyg0
+                relsize1_start_sire = np.minimum(ffcfw_max_start_sire, nw_max_pa1e1b1nwzida0e0b0xyg0[p]) / srw_b0xyg0
                 ###PI Size factor (for cattle)
                 zf_sire = np.maximum(1, 1 + cr_sire[7, ...] - relsize_start_sire)
                 ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
@@ -2548,9 +2564,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###staple length
                 sl_start_dams = fl_start_dams * cw_dams[15,...]
                 ###Relative size (start) - dams & sires
-                relsize_start_dams = np.minimum(1, nw_start_dams / srw_xyg1)
+                relsize_start_dams = np.minimum(1, nw_start_dams / srw_b0xyg1)
                 ###Relative size for LWG (start). Capped by current LW
-                relsize1_start_dams = np.minimum(ffcfw_max_start_dams, nw_max_pa1e1b1nwzida0e0b0xyg1[p]) / srw_xyg1
+                relsize1_start_dams = np.minimum(ffcfw_max_start_dams, nw_max_pa1e1b1nwzida0e0b0xyg1[p]) / srw_b0xyg1
                 ###PI Size factor (for cattle)
                 zf_dams = np.maximum(1, 1 + cr_dams[7, ...] - relsize_start_dams)
                 ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
@@ -2591,9 +2607,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###staple length
                 sl_start_offs = fl_start_offs * cw_offs[15,...]
                 ###Relative size (start) - dams & sires
-                relsize_start_offs = np.minimum(1, nw_start_offs / srw_xyg3)
+                relsize_start_offs = np.minimum(1, nw_start_offs / srw_b0xyg3)
                 ###Relative size for LWG (start). Capped by current LW
-                relsize1_start_offs = np.minimum(ffcfw_max_start_offs, nw_max_pa1e1b1nwzida0e0b0xyg3[p]) / srw_xyg3
+                relsize1_start_offs = np.minimum(ffcfw_max_start_offs, nw_max_pa1e1b1nwzida0e0b0xyg3[p]) / srw_b0xyg3
                 ###PI Size factor (for cattle)
                 zf_offs = np.maximum(1, 1 + cr_offs[7, ...] - relsize_start_offs)
                 ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
@@ -2630,7 +2646,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0 = sfun.f_potential_intake_cs(ci_sire, cl_sire, srw_xyg0, relsize_start_sire, rc_start_sire, temp_lc_sire
+                        temp0 = sfun.f_potential_intake_cs(ci_sire, cl_sire, srw_b0xyg0, relsize_start_sire, rc_start_sire, temp_lc_sire
                                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg0[p]
                                                            , sam_pi = sam_pi_sire)
@@ -2641,7 +2657,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0 = sfun.f_potential_intake_cs(ci_dams, cl_dams, srw_xyg1, relsize_start_dams, rc_start_dams, temp_lc_dams
+                        temp0 = sfun.f_potential_intake_cs(ci_dams, cl_dams, srw_b0xyg1, relsize_start_dams, rc_start_dams, temp_lc_dams
                                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg1[p]
                                                            , rc_birth_start = rc_birth_dams, pi_age_y = pi_age_y_pa1e1b1nwzida0e0b0xyg1[p]
@@ -2653,7 +2669,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0 = sfun.f_potential_intake_cs(ci_offs, cl_offs, srw_xyg3, relsize_start_offs, rc_start_offs, temp_lc_offs
+                        temp0 = sfun.f_potential_intake_cs(ci_offs, cl_offs, srw_b0xyg3, relsize_start_offs, rc_start_offs, temp_lc_offs
                                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg3[p]
                                                            , sam_pi = sam_pi_offs)
@@ -2668,7 +2684,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0 = sfun.f_potential_intake_mu(srw_xyg0)
+                        temp0 = sfun.f_potential_intake_mu(srw_b0xyg0)
                         if eqn_used:
                             pi_sire = temp0
                         if eqn_compare:
@@ -2676,7 +2692,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0 = sfun.f_potential_intake_mu(srw_xyg1)
+                        temp0 = sfun.f_potential_intake_mu(srw_b0xyg1)
                         if eqn_used:
                             pi_dams = temp0
                         if eqn_compare:
@@ -2684,7 +2700,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0 = sfun.f_potential_intake_mu(srw_xyg3)
+                        temp0 = sfun.f_potential_intake_mu(srw_b0xyg3)
                         if eqn_used:
                             pi_offs = temp0
                         if eqn_compare:
@@ -2870,7 +2886,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     ffcfw75_exp_yatf = np.sum(ffcfw_exp_a1e1b1nwzida0e0b0xyg2p1 ** 0.75, axis=-1) / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg2[p, ...])
 
                     mp2_dams, mel_dams, nel_dams, ldr_dams, lb_dams \
-                        = sfun.f_milk(cl_dams, srw_xyg1, relsize_start_dams, rc_birth_dams, mei_dams, meme_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p]
+                        = sfun.f_milk(cl_dams, srw_b0xyg1, relsize_start_dams, rc_birth_dams, mei_dams, meme_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p]
                             , rc_start_dams, ffcfw75_exp_yatf, lb_start_dams, ldr_start_dams, age_pa1e1b1nwzida0e0b0xyg2[p]
                             , mp_age_y_pa1e1b1nwzida0e0b0xyg1[p], mp2_age_y_pa1e1b1nwzida0e0b0xyg1[p], x_pos
                             , days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_dams, lact_nut_effect_pa1e1b1nwzida0e0b0xyg1[p])
@@ -3184,10 +3200,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
                 ##Yatf dependent start values
                 ###Normal weight max (if animal is well fed) - yatf
-                nw_max_yatf	= srw_xyg2 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg2[p]) + w_b_yatf * srw_age_pa1e1b1nwzida0e0b0xyg2[p]
+                nw_max_yatf	= srw_b1xyg2 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg2[p]) + w_b_yatf * srw_age_pa1e1b1nwzida0e0b0xyg2[p]
                 ##Dependent start: Change in normal weight max - yatf
                 ###nw_max = srw - (srw - bw) * srw_age[p] so d_nw_max = (srw - (srw-bw) * srw_age[p]) - (srw - (srw - bw) * srw_age[p-1]) and that simplifies to d_nw_max = (srw_age[p-1] - srw_age[p]) * (srw-bw)
-                d_nw_max_yatf = fun.f_divide((srw_age_pa1e1b1nwzida0e0b0xyg2[p-1, ...] - srw_age_pa1e1b1nwzida0e0b0xyg2[p, ...]) * (srw_xyg2 - w_b_yatf)
+                d_nw_max_yatf = fun.f_divide((srw_age_pa1e1b1nwzida0e0b0xyg2[p-1, ...] - srw_age_pa1e1b1nwzida0e0b0xyg2[p, ...]) * (srw_b1xyg2 - w_b_yatf)
                                              , days_period_pa1e1b1nwzida0e0b0xyg2[p])
                 ###GFW (start)
                 gfw_start_yatf = cfw_start_yatf / cw_yatf[3, ...]
@@ -3203,9 +3219,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###staple length
                 sl_start_yatf = fl_start_yatf * cw_yatf[15,...]
                 ###Relative size (start) - dams & sires
-                relsize_start_yatf = np.minimum(1, nw_start_yatf / srw_xyg2)
+                relsize_start_yatf = np.minimum(1, nw_start_yatf / srw_b1xyg2)
                 ###Relative size for LWG (start). Capped by current LW
-                relsize1_start_yatf = np.minimum(ffcfw_max_start_yatf, nw_max_yatf) / srw_xyg2
+                relsize1_start_yatf = np.minimum(ffcfw_max_start_yatf, nw_max_yatf) / srw_b1xyg2
                 ###PI Size factor (for cattle)
                 zf_yatf = np.maximum(1, 1 + cr_yatf[7, ...] - relsize_start_yatf)
                 ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
@@ -3225,7 +3241,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0 = sfun.f_potential_intake_cs(ci_yatf, cl_yatf, srw_xyg2, relsize_start_yatf, rc_start_yatf, temp_lc_yatf
+                    temp0 = sfun.f_potential_intake_cs(ci_yatf, cl_yatf, srw_b1xyg2, relsize_start_yatf, rc_start_yatf, temp_lc_yatf
                                                        , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                        , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg2[p]
                                                        , mp2 = mp2_yatf, piyf = piyf_pa1e1b1nwzida0e0b0xyg2[p]
