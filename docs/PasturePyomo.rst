@@ -1,7 +1,7 @@
 PasturePyomo module
 ===================
 
-.. automodule:: PasturePyomo
+.. automodule:: AfoLogic.PasturePyomo
    :members:
    :undoc-members:
    :show-inheritance:

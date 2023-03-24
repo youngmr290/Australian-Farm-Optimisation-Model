@@ -1,7 +1,7 @@
 Phase module
 ============
 
-.. automodule:: Phase
+.. automodule:: AfoLogic.Phase
    :members:
    :undoc-members:
    :show-inheritance:

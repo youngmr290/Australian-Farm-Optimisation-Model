@@ -1,7 +1,7 @@
 StructuralInputs module
 =======================
 
-.. automodule:: StructuralInputs
+.. automodule:: AfoLogic.StructuralInputs
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,7 +1,7 @@
 Labour module
 =============
 
-.. automodule:: Labour
+.. automodule:: AfoLogic.Labour
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,7 +1,7 @@
 FinancePyomo module
 ===================
 
-.. automodule:: FinancePyomo
+.. automodule:: AfoLogic.FinancePyomo
    :members:
    :undoc-members:
    :show-inheritance:

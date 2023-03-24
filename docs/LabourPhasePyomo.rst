@@ -1,7 +1,7 @@
 LabourPhasePyomo module
 =======================
 
-.. automodule:: LabourPhasePyomo
+.. automodule:: AfoLogic.LabourPhasePyomo
    :members:
    :undoc-members:
    :show-inheritance:

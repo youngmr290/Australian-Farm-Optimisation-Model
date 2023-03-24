@@ -1,7 +1,7 @@
 StockFunctions module
 =====================
 
-.. automodule:: StockFunctions
+.. automodule:: AfoLogic.StockFunctions
    :members:
    :undoc-members:
    :show-inheritance:

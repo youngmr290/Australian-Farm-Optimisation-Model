@@ -1,7 +1,7 @@
 PriceVariation module
 =====================
 
-.. automodule:: PriceVariation
+.. automodule:: AfoLogic.PriceVariation
    :members:
    :undoc-members:
    :show-inheritance:

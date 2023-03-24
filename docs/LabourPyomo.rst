@@ -1,6 +1,6 @@
 LabourPyomo module
 ==================
 
-.. automodule:: LabourPyomo
+.. automodule:: AfoLogic.LabourPyomo
    :members:
    :show-inheritance:

@@ -1,5 +1,5 @@
 Feed supply functions module
 ============================
 
-.. automodule:: FeedsupplyFunctions
+.. automodule:: AfoLogic.FeedsupplyFunctions
    :members:

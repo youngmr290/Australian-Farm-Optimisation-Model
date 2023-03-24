@@ -1,6 +1,6 @@
 Crop residues module
 ====================
 
-.. automodule:: CropResidue
+.. automodule:: AfoLogic.CropResidue
    :members:
    :show-inheritance:

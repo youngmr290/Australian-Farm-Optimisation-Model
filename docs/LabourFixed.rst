@@ -1,7 +1,7 @@
 LabourFixed module
 ==================
 
-.. automodule:: LabourFixed
+.. automodule:: AfoLogic.LabourFixed
    :members:
    :undoc-members:
    :show-inheritance:

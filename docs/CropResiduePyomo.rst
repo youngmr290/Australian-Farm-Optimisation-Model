@@ -1,7 +1,7 @@
 Crop residue pyomo module
 =========================
 
-.. automodule:: CropResiduePyomo
+.. automodule:: AfoLogic.CropResiduePyomo
    :members:
    :undoc-members:
    :show-inheritance:

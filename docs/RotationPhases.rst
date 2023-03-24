@@ -1,7 +1,7 @@
 RotationPhases module
 =====================
 
-.. automodule:: RotationPhases
+.. automodule:: AfoLogic.RotationPhases
    :members:
    :undoc-members:
    :show-inheritance:

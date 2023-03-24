@@ -1,5 +1,5 @@
 LabourPhase module
 ==================
 
-.. automodule:: LabourPhase
+.. automodule:: AfoLogic.LabourPhase
    :members:

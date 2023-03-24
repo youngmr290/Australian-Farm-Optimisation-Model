@@ -1,7 +1,7 @@
 Finance module
 ==============
 
-.. automodule:: Finance
+.. automodule:: AfoLogic.Finance
    :members:
 
 

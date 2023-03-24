@@ -1,7 +1,7 @@
 SupFeedPyomo module
 ===================
 
-.. automodule:: SupFeedPyomo
+.. automodule:: AfoLogic.SupFeedPyomo
    :members:
    :undoc-members:
    :show-inheritance:

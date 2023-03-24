@@ -1,6 +1,6 @@
 Mach module
 ===========
 
-.. automodule:: Mach
+.. automodule:: AfoLogic.Mach
    :members:
    :show-inheritance:

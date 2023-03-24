@@ -1,6 +1,6 @@
 RotGeneration module
 ====================
 
-.. automodule:: RotGeneration
+.. automodule:: AfoLogic.RotGeneration
    :undoc-members:
    :show-inheritance:

@@ -3,6 +3,6 @@ Stock feedsupply construction
 
 
 
-.. automodule:: FeedSupplyStock
+.. automodule:: AfoLogic.FeedSupplyStock
    :undoc-members:
    :show-inheritance:

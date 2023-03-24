@@ -1,7 +1,7 @@
 ReportFunctions module
 ======================
 
-.. automodule:: ReportFunctions
+.. automodule:: AfoLogic.ReportFunctions
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,6 +1,6 @@
 SupFeed module
 ==============
 
-.. automodule:: SupFeed
+.. automodule:: AfoLogic.SupFeed
    :members:
    :show-inheritance:

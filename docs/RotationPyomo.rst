@@ -1,7 +1,7 @@
 RotationPyomo module
 ====================
 
-.. automodule:: RotationPyomo
+.. automodule:: AfoLogic.RotationPyomo
    :members:
    :undoc-members:
    :show-inheritance:

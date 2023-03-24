@@ -1,7 +1,7 @@
 StockPyomo module
 =================
 
-.. automodule:: StockPyomo
+.. automodule:: AfoLogic.StockPyomo
    :members:
    :undoc-members:
    :show-inheritance:

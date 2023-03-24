@@ -1,6 +1,6 @@
 Salt land pasture module
 ========================
 
-.. automodule:: Saltbush
+.. automodule:: AfoLogic.Saltbush
    :members:
    :show-inheritance:

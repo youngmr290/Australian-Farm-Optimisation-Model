@@ -1,6 +1,6 @@
 Salt land pasture pyomo module
 ==============================
 
-.. automodule:: SaltbushPyomo
+.. automodule:: AfoLogic.SaltbushPyomo
    :members:
    :show-inheritance:

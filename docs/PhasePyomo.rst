@@ -1,7 +1,7 @@
 PhasePyomo module
 =================
 
-.. automodule:: PhasePyomo
+.. automodule:: AfoLogic.PhasePyomo
    :members:
    :undoc-members:
    :show-inheritance:

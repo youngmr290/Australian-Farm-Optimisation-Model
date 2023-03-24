@@ -1,7 +1,7 @@
 PropertyInputs module
 =====================
 
-.. automodule:: PropertyInputs
+.. automodule:: AfoLogic.PropertyInputs
    :members:
    :undoc-members:
    :show-inheritance:

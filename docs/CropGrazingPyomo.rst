@@ -1,6 +1,6 @@
 Crop grazing pyomo module
 =========================
 
-.. automodule:: CropGrazingPyomo
+.. automodule:: AfoLogic.CropGrazingPyomo
    :members:
    :show-inheritance:

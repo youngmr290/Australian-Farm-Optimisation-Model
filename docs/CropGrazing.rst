@@ -1,6 +1,6 @@
 Crop grazing module
 ====================
 
-.. automodule:: CropGrazing
+.. automodule:: AfoLogic.CropGrazing
    :members:
    :show-inheritance:

@@ -1,6 +1,6 @@
 MachPyomo module
 ================
 
-.. automodule:: MachPyomo
+.. automodule:: AfoLogic.MachPyomo
    :members:
    :show-inheritance:

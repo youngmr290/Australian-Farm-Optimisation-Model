@@ -1,28 +1,30 @@
 __pycache__
+*/__pycache__
+/.idea
 venv
 flowcharts
+/redundant
+/Output
+/pkl
+/docs/_build
+/docs/_static
+/docs/_templates
 /John stuff.py
 /*.txt
 /*.lp
 /*.xls*
-/redundant
-/Output
+*/*.xlsm
 /log
 /.spyproject
 /flowcharts
 /Archive*
 /*.dia
-/*.pkl
+*/*.pkl
 /*.npy
 /Crop sim.xlsx
-/Michael code ideas.py
+*/Michael code ideas.py
 /.pylint.d
-/.idea
-/pkl
 /*.json
 /*.csv
 /*.jpg
-/docs/_build
-/docs/_static
-/docs/_templates
 

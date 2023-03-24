@@ -1,7 +1,7 @@
 UniversalInputs module
 ======================
 
-.. automodule:: UniversalInputs
+.. automodule:: AfoLogic.UniversalInputs
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,7 +1,7 @@
 PastureFunctions module
 =======================
 
-.. automodule:: PastureFunctions
+.. automodule:: AfoLogic.PastureFunctions
    :members:
    :undoc-members:
    :show-inheritance:

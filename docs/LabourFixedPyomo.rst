@@ -1,7 +1,7 @@
 LabourFixedPyomo module
 =======================
 
-.. automodule:: LabourFixedPyomo
+.. automodule:: AfoLogic.LabourFixedPyomo
    :members:
    :undoc-members:
    :show-inheritance:
