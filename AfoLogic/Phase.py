@@ -71,8 +71,7 @@ na = np.newaxis
 def f1_sim_inputs(sheet=None, index=None, header=None):
     ###build path this way so the file can be access even if AFO is run from another directory eg readthedocs or web app.
     property = pinp.general['i_property_id']
-    directory_path = os.path.dirname(os.path.abspath(__file__))
-    xl_path = os.path.join(directory_path, "SimInputs_{0}.xlsx".format(property))
+    xl_path = "ExcelInputs/SimInputs_{0}.xlsx".format(property)
     return pd.read_excel(xl_path, sheet_name=sheet, index_col=index, header=header, engine='openpyxl')
 
 
