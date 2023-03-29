@@ -50,6 +50,7 @@ def create_sa():
     len_l = len(pinp.general['i_lmu_idx'])
     len_l0 = uinp.parameters['i_cl0_len2']
     len_n = len(uinp.general['i_fert_idx'])
+    len_n1 = len(uinp.general['i_chem_idx'])
     len_o = pinp.sheep['i_o_len']
     len_R = 5000 #just use a big number - it is cut down later (this is because the length of r is not known because it can be affected by SA)
     len_s = pinp.sheep['i_s_len'] #s = shear
@@ -211,15 +212,20 @@ def create_sa():
     ##SAV
     sav['lmu_yield_adj_kl'] = np.full((len_k, len_l), '-', dtype=object)    # SA value for yield adjustment by LMU
     sav['lmu_fert_adj_nl'] = np.full((len_n, len_l), '-', dtype=object)    # SA value for fert adjustment by LMU
+    sav['lmu_chem_adj_l'] = np.full(len_l, '-', dtype=object)    # SA value for chem adjustment by LMU
     ##SAM
     sam['all_rot_yield'] = 1.0   # SA multiplier for all rotation yield
     sam['crop_yield_k'] = np.ones(len_k, dtype=np.float64)    # SA multiplier for all rotation yield
     sam['crop_fert_kn'] = np.ones((len_k, len_n), dtype=np.float64) #SA multipler on crop fertiliser
     sam['pas_fert_kn'] = np.ones((len_pas_k, len_n), dtype=np.float64) #SA multipler on pas fertiliser
+    sam['crop_chem_k'] = np.ones(len_k, dtype=np.float64) #SA multipler on crop chem package cost (ie all chem timing are scalled the same)
+    sam['pas_chem_k'] = np.ones(len_pas_k, dtype=np.float64) #SA multipler on pas chem package cost (ie all chem timing are scalled the same)
     ##SAP
     ##SAA
     saa['crop_fert_passes_kn'] = np.zeros((len_k, len_n), dtype=np.float64) #SA adder on crop fertiliser passes
     saa['pas_fert_passes_kn'] = np.zeros((len_pas_k, len_n), dtype=np.float64) #SA adder on pas fertiliser passes
+    saa['crop_chem_passes_kn1'] = np.zeros((len_k, len_n1), dtype=np.float64) #SA adder on crop chem passes
+    saa['pas_chem_passes_kn1'] = np.zeros((len_pas_k, len_n1), dtype=np.float64) #SA adder on pas chem passes
     ##SAT
     ##SAR
 
