@@ -95,7 +95,10 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, lp_vars, r_va
     ##start writing
     if not rot_phases.equals(old_rot_phases):
         try:
-            writer = pd.ExcelWriter('ExcelInputs/Rotation.xlsx', engine='xlsxwriter')
+            path_to_afo_excel = "../../ExcelInputs"
+            directory_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path_to_afo_excel)
+            rotation_path = os.path.join(directory_path, "Rotation.xlsx")
+            writer = pd.ExcelWriter(rotation_path, engine='xlsxwriter')
             ##list of rotations - index: tuple, values: expanded version of rotation
             rot_phases.to_excel(writer, sheet_name='rotation list',index=True,header=False)
             ##con1 - the paramater for which history each rotation provides and requires
