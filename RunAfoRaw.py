@@ -1,10 +1,10 @@
 import time
 
-from RawVersion import LoadExcelInputs as dxl
-from RawVersion import LoadExp as exp
-from RawVersion import RawVersionExtras as rve
-from AfoLogic import AfoInit as afo
-from RawVersion import SaveOutputs as out
+from lib.RawVersion import LoadExcelInputs as dxl
+from lib.RawVersion import LoadExp as exp
+from lib.RawVersion import RawVersionExtras as rve
+from lib.AfoLogic import AfoInit as afo
+from lib.RawVersion import SaveOutputs as out
 
 start_time = time.time()
 
