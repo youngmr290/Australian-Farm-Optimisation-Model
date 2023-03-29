@@ -247,13 +247,12 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     ##read phases
     phases_df = pinp.phases_r
     mask_r = pinp.rot_mask_r
+    keys_k = sinp.landuse['C']
 
     ##read in base yields
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_yields = pinp.crop['yields']
-        base_yields = zfun.f_seasonal_inp(base_yields, axis=1)
-        base_yields = base_yields.loc[mask_r,:]
         base_yields_rk_z = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
     else:
         ###Sim version
@@ -261,10 +260,14 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
         season_group_yz = f1_sim_inputs(sheet='SeasonGroup', index=0, header=0).stack()
         ###Convert y to z
         base_yields_rk_z = base_yields_rk_y.mul(season_group_yz, axis=1, level=0).replace(0, np.nan).groupby(axis=1, level=1).mean().replace(np.nan, 0)
-        ###Mask z & r axis
-        base_yields_rk_z = zfun.f_seasonal_inp(base_yields_rk_z, axis=1)
-        base_yields_rk_z = base_yields_rk_z.loc[mask_r,:]
 
+    ##Mask z & r axis
+    base_yields_rk_z = zfun.f_seasonal_inp(base_yields_rk_z, axis=1)
+    base_yields_rk_z = base_yields_rk_z.loc[mask_r,:]
+
+    ##apply sam with k axis
+    crop_yield_k = pd.Series(sen.sam['crop_yield_k'], index=keys_k)
+    base_yields_rk_z = base_yields_rk_z.mul(crop_yield_k, axis=0, level=1).fillna(0)
     base_yields_rkz = base_yields_rk_z.stack()
 
     ##colate other info

@@ -231,6 +231,7 @@ def f_property_inp_sa(pinp_defaults):
     ##crop
     ###sav
     crop['user_crop_rot'] = fun.f_sa(crop['user_crop_rot'], sen.sav['pinp_rot'], 5)
+    crop['yield_by_lmu'] = fun.f_sa(crop['yield_by_lmu'], sen.sav['lmu_yield_adj_kl'], 5)
     ###sam
     crop['yields'] = fun.f_sa(crop['yields'], sen.sam['all_rot_yield'])
     ###sap

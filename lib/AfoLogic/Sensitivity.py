@@ -207,8 +207,10 @@ def create_sa():
     #crop #
     #######
     ##SAV
+    sav['lmu_yield_adj_kl'] = np.full((len_k, len_l), '-', dtype=object)    # SA value for yield adjustment by LMU
     ##SAM
     sam['all_rot_yield'] = 1.0   # SA multiplier for all rotation yield
+    sam['crop_yield_k'] = np.ones(len_k, dtype=np.float64)    # SA multiplier for all rotation yield
     ##SAP
     ##SAA
     ##SAT
