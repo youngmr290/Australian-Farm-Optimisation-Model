@@ -21,9 +21,9 @@ from openpyxl import load_workbook
 from openpyxl.worksheet.cell_range import CellRange
 
 from . import LoadExp as exp
-from AfoLogic import StructuralInputs as sinp
-from AfoLogic import UniversalInputs as uinp
-from AfoLogic import PropertyInputs as pinp
+from lib.AfoLogic import StructuralInputs as sinp
+from lib.AfoLogic import UniversalInputs as uinp
+from lib.AfoLogic import PropertyInputs as pinp
 
 
 def f_load_stubble():
