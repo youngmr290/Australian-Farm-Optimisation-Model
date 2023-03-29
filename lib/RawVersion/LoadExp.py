@@ -20,8 +20,8 @@ import sys
 import glob
 from datetime import datetime
 
-from lib.AfoLogic import Functions as fun
-from lib.AfoLogic import Exceptions as exc
+from ..AfoLogic import Functions as fun
+from ..AfoLogic import Exceptions as exc
 
 def f_read_exp(pinp_req=False):
     '''
