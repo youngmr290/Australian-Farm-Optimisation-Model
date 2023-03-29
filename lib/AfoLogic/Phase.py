@@ -430,16 +430,15 @@ def f_fert_req():
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_fert = pinp.crop['fert']
+        ###set index and headers
         base_fert = base_fert.T.set_index(['fert'], append=True).T.astype(float)
-        base_fert = zfun.f_seasonal_inp(base_fert, axis=1)
-        base_fert = base_fert.loc[mask_r,:]
         base_fert_rk_zn = base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
     else:
         ###Sim version
         base_fert_rk_zn = f1_sim_inputs(sheet='Fert Applied', index=[0,1], header=[0,1])
-        ###Mask z & r axis
-        base_fert_rk_zn = zfun.f_seasonal_inp(base_fert_rk_zn, axis=1, level=0)
-        base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
+    ###Mask z & r axis
+    base_fert_rk_zn = zfun.f_seasonal_inp(base_fert_rk_zn, axis=1, level=0)
+    base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
     ###rename index
     base_fert_rk_zn.index.rename(['rot','landuse'],inplace=True)
 
@@ -456,6 +455,17 @@ def f_fert_req():
     ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
     nap_fert_scalar_k = pinp.crop['i_nap_fert_scalar_k'].squeeze()
     nap_fert_rkz_n = base_fert_rkz_n.mul(nap_fert_scalar_k, axis=0, level=1)
+
+    ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
+    keys_n = uinp.general['i_fert_idx']
+    keys_k = sinp.landuse['C']
+    keys_k2 = sinp.landuse['All_pas']
+    crop_fert_k_n = pd.DataFrame(sen.sam['crop_fert_kn'], index=keys_k, columns=keys_n)
+    pas_fert_k_n = pd.DataFrame(sen.sam['pas_fert_kn'], index=keys_k2, columns=keys_n)
+    fert_sam_k_n = pd.concat([crop_fert_k_n, pas_fert_k_n])
+    fert_sam_krz_n = fert_sam_k_n.reindex(base_fert_rkz_n.index, index=0, level=1)
+    base_fert_rkz_n = base_fert_rkz_n.mul(fert_sam_krz_n)
+    nap_fert_rkz_n = nap_fert_rkz_n.mul(fert_sam_krz_n)
 
     ##drop landuse from index
     base_fert_rz_n = base_fert_rkz_n.droplevel(1,axis=0)
@@ -492,15 +502,13 @@ def f_fert_passes():
         ### User defined
         fert_passes = pinp.crop['fert_passes']
         fert_passes = fert_passes.T.set_index(['passes'], append=True).T.astype(float)
-        fert_passes = zfun.f_seasonal_inp(fert_passes, axis=1)
-        fert_passes = fert_passes.loc[mask_r,:]
         fert_passes_rk_zn = fert_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
     else:
         ###Sim version
         fert_passes_rk_zn = f1_sim_inputs(sheet='No Fert Applications', index=[0,1], header=[0,1])
-        ###Mask z & r axis
-        fert_passes_rk_zn = zfun.f_seasonal_inp(fert_passes_rk_zn, axis=1, level=0)
-        fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
+    ###Mask z & r axis
+    fert_passes_rk_zn = zfun.f_seasonal_inp(fert_passes_rk_zn, axis=1, level=0)
+    fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
     ###rename index
     fert_passes_rk_zn.index.rename(['rot','landuse'],inplace=True)
 
@@ -517,6 +525,17 @@ def f_fert_passes():
     ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
     nap_fert_passes_scalar_k = pinp.crop['i_nap_fert_passes_scalar_k'].squeeze()
     nap_fert_passes_rkz_n = fert_passes_rkz_n.mul(nap_fert_passes_scalar_k, axis=0, level=1)
+
+    ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
+    keys_n = uinp.general['i_fert_idx']
+    keys_k = sinp.landuse['C']
+    keys_k2 = sinp.landuse['All_pas']
+    crop_fert_passesk_n = pd.DataFrame(sen.saa['crop_fert_passes_kn'], index=keys_k, columns=keys_n)
+    pas_fert_passesk_n = pd.DataFrame(sen.saa['pas_fert_passes_kn'], index=keys_k2, columns=keys_n)
+    fert_passes_saa_k_n = pd.concat([crop_fert_passesk_n, pas_fert_passesk_n])
+    fert_passes_saa_krz_n = fert_passes_saa_k_n.reindex(fert_passes_rkz_n.index, index=0, level=1)
+    fert_passes_rkz_n = fert_passes_rkz_n.add(fert_passes_saa_krz_n)
+    nap_fert_passes_rkz_n = nap_fert_passes_rkz_n.add(fert_passes_saa_krz_n)
 
     ##drop landuse from index
     fert_passes_rz_n = fert_passes_rkz_n.droplevel(1,axis=0)
