@@ -222,6 +222,8 @@ def f_property_inp_sa(pinp_defaults):
     ##finance
     ###sav
     finance['capital_limit'] = fun.f_sa(finance['capital_limit'], sen.sav['capital_limit'], 5)
+    general['i_overheads'] = fun.f_sa(general['i_overheads'], sen.sav['overheads'], 5)
+
     ###sam
     ###sap
     ###saa

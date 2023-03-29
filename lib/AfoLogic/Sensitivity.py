@@ -122,8 +122,8 @@ def create_sa():
     sav['opp_cost_capital']      = '-'        #SA to alter the opportunity cost of capital
     sav['fixed_dep_rate'] = '-'               #SA to alter the fixed rate of machinery depreciation per year
     sav['equip_insurance_rate'] = '-'         #SA to alter the insurance cost (% of machine value)
+    sav['overheads'] = np.full(len(pinp.general['i_overheads']), '-', dtype=object)  #SA to alter the overhead costs
     ##SAM
-    sam['overheads'] = 1.0                    #SA to alter the overhead costs
     ##SAP
     ##SAA
     ##SAT
