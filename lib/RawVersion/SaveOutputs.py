@@ -6,9 +6,9 @@ import os.path
 import pickle as pkl
 import warnings
 
-from ..AfoLogic import Functions as fun
-from ..AfoLogic import PropertyInputs as pinp
-from ..AfoLogic import FeedSupplyStock as fsstk
+from lib.AfoLogic import Functions as fun
+from lib.AfoLogic import PropertyInputs as pinp
+from lib.AfoLogic import FeedSupplyStock as fsstk
 
 def f_save_trial_outputs(exp_data, row, trial_name, model, profit, lp_vars, r_vals, pkl_fs_info, d_rot_info):
     ##check Output folders exist for outputs. If not create.

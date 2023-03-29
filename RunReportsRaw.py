@@ -6,10 +6,10 @@ import multiprocessing
 import glob
 import time
 
-from AfoLogic import ReportFunctions as rfun
-from AfoLogic import ReportControl as rep
-from RawVersion import LoadExp as exp
-from RawVersion import RawVersionReportExtras as rve
+from lib.AfoLogic import ReportFunctions as rfun
+from lib.AfoLogic import ReportControl as rep
+from lib.RawVersion import LoadExp as exp
+from lib.RawVersion import RawVersionReportExtras as rve
 
 
 #report the clock time that the experiment was started

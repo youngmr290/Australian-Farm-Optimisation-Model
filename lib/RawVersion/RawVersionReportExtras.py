@@ -3,7 +3,7 @@ import numpy as np
 import sys
 import os
 
-from ..AfoLogic import ReportFunctions as rfun
+from lib.AfoLogic import ReportFunctions as rfun
 
 
 def f_create_report_dfs(non_exist_trials):
