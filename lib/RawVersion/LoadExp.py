@@ -93,7 +93,7 @@ def f_run_required(exp_data1, l_pinp):
 
     ##calc if any code has been changed since AFO was last run
     ###if only ReportControl.py or ReportFunctions.py have been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't a report
-    sorted_list = sorted(glob.iglob('AfoLogic/*.py'), key=os.path.getmtime)
+    sorted_list = sorted(glob.iglob('lib/AfoLogic/*.py'), key=os.path.getmtime)
     if sorted_list[-1] != 'ReportFunctions.py' and sorted_list[-1] != 'ReportControl.py':
         newest = sorted_list[-1]
     elif sorted_list[-2] != 'ReportFunctions.py' and sorted_list[-2] != 'ReportControl.py':
