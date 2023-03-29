@@ -9,6 +9,7 @@ import warnings
 from ..AfoLogic import Functions as fun
 from ..AfoLogic import PropertyInputs as pinp
 from ..AfoLogic import FeedSupplyStock as fsstk
+from lib.RawVersion import LoadExcelInputs as dxl
 
 def f_save_trial_outputs(exp_data, row, trial_name, model, profit, lp_vars, r_vals, pkl_fs_info, d_rot_info):
     ##check Output folders exist for outputs. If not create.
@@ -87,20 +88,25 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, lp_vars, r_va
     mps_bool_prov = d_rot_info["rot_prov"]
     rot_hist = d_rot_info["s_rotcon1"]
 
+    ##load excel version to see if they need to be updated
+    xl_d_rot_info = dxl.f_load_phases()
+    old_rot_phases = xl_d_rot_info["phases_r"]
+
     ##start writing
-    try:
-        path_to_afo_excel = "../../ExcelInputs"
-        directory_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path_to_afo_excel)
-        rotation_path = os.path.join(directory_path, "Rotation.xlsx")
-        writer = pd.ExcelWriter(rotation_path, engine='xlsxwriter')
-        ##list of rotations - index: tuple, values: expanded version of rotation
-        rot_phases.to_excel(writer, sheet_name='rotation list',index=True,header=False)
-        ##con1 - the paramater for which history each rotation provides and requires
-        mps_bool_req.to_excel(writer, sheet_name='rotation_req',index=False,header=False)
-        mps_bool_prov.to_excel(writer, sheet_name='rotation_prov',index=False,header=False)
-        ##con1 set - passed into the pyomo constraint
-        rot_hist.to_excel(writer, sheet_name='rotation con1 set',index=True,header=False)
-        ##finish writing and save
-        writer.save()
-    except PermissionError:
-        warnings.warn("Warning: Rotation.xlsx open therefore can't save new copy")
+    if not rot_phases.equals(old_rot_phases):
+        try:
+            path_to_afo_excel = "../../ExcelInputs"
+            directory_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path_to_afo_excel)
+            rotation_path = os.path.join(directory_path, "Rotation.xlsx")
+            writer = pd.ExcelWriter(rotation_path, engine='xlsxwriter')
+            ##list of rotations - index: tuple, values: expanded version of rotation
+            rot_phases.to_excel(writer, sheet_name='rotation list',index=True,header=False)
+            ##con1 - the paramater for which history each rotation provides and requires
+            mps_bool_req.to_excel(writer, sheet_name='rotation_req',index=False,header=False)
+            mps_bool_prov.to_excel(writer, sheet_name='rotation_prov',index=False,header=False)
+            ##con1 set - passed into the pyomo constraint
+            rot_hist.to_excel(writer, sheet_name='rotation con1 set',index=True,header=False)
+            ##finish writing and save
+            writer.save()
+        except PermissionError:
+            warnings.warn("Warning: Rotation.xlsx open therefore can't save new copy")

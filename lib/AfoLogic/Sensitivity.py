@@ -40,6 +40,7 @@ def create_sa():
     len_h7 = pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'].shape[-1]
     len_i = pinp.sheep['i_i_len']
     len_k = len(sinp.landuse['C'])
+    len_pas_k = len(sinp.landuse['All_pas'])
     len_k0 = pinp.sheep['i_k0_len'] #Weaning option
     len_k1 = pinp.sheep['i_k1_len'] #Oestrus cycle
     len_k2 = pinp.sheep['i_k2_len'] #LSLN cluster
@@ -48,6 +49,8 @@ def create_sa():
     len_k5 = pinp.sheep['i_k5_len'] #BTRT cluster
     len_l = len(pinp.general['i_lmu_idx'])
     len_l0 = uinp.parameters['i_cl0_len2']
+    len_n = len(uinp.general['i_fert_idx'])
+    len_n1 = len(uinp.general['i_chem_idx'])
     len_o = pinp.sheep['i_o_len']
     len_R = 5000 #just use a big number - it is cut down later (this is because the length of r is not known because it can be affected by SA)
     len_s = pinp.sheep['i_s_len'] #s = shear
@@ -119,8 +122,8 @@ def create_sa():
     sav['opp_cost_capital']      = '-'        #SA to alter the opportunity cost of capital
     sav['fixed_dep_rate'] = '-'               #SA to alter the fixed rate of machinery depreciation per year
     sav['equip_insurance_rate'] = '-'         #SA to alter the insurance cost (% of machine value)
+    sav['overheads'] = np.full(len(pinp.general['i_overheads']), '-', dtype=object)  #SA to alter the overhead costs
     ##SAM
-    sam['overheads'] = 1.0                    #SA to alter the overhead costs
     ##SAP
     ##SAA
     ##SAT
@@ -207,10 +210,22 @@ def create_sa():
     #crop #
     #######
     ##SAV
+    sav['lmu_yield_adj_kl'] = np.full((len_k, len_l), '-', dtype=object)    # SA value for yield adjustment by LMU
+    sav['lmu_fert_adj_nl'] = np.full((len_n, len_l), '-', dtype=object)    # SA value for fert adjustment by LMU
+    sav['lmu_chem_adj_l'] = np.full(len_l, '-', dtype=object)    # SA value for chem adjustment by LMU
     ##SAM
     sam['all_rot_yield'] = 1.0   # SA multiplier for all rotation yield
+    sam['crop_yield_k'] = np.ones(len_k, dtype=np.float64)    # SA multiplier for all rotation yield
+    sam['crop_fert_kn'] = np.ones((len_k, len_n), dtype=np.float64) #SA multipler on crop fertiliser
+    sam['pas_fert_kn'] = np.ones((len_pas_k, len_n), dtype=np.float64) #SA multipler on pas fertiliser
+    sam['crop_chem_k'] = np.ones(len_k, dtype=np.float64) #SA multipler on crop chem package cost (ie all chem timing are scalled the same)
+    sam['pas_chem_k'] = np.ones(len_pas_k, dtype=np.float64) #SA multipler on pas chem package cost (ie all chem timing are scalled the same)
     ##SAP
     ##SAA
+    saa['crop_fert_passes_kn'] = np.zeros((len_k, len_n), dtype=np.float64) #SA adder on crop fertiliser passes
+    saa['pas_fert_passes_kn'] = np.zeros((len_pas_k, len_n), dtype=np.float64) #SA adder on pas fertiliser passes
+    saa['crop_chem_passes_kn1'] = np.zeros((len_k, len_n1), dtype=np.float64) #SA adder on crop chem passes
+    saa['pas_chem_passes_kn1'] = np.zeros((len_pas_k, len_n1), dtype=np.float64) #SA adder on pas chem passes
     ##SAT
     ##SAR
 

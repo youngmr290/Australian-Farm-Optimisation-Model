@@ -71,8 +71,7 @@ na = np.newaxis
 def f1_sim_inputs(sheet=None, index=None, header=None):
     ###build path this way so the file can be access even if AFO is run from another directory eg readthedocs or web app.
     property = pinp.general['i_property_id']
-    directory_path = os.path.dirname(os.path.abspath(__file__))
-    xl_path = os.path.join(directory_path, "SimInputs_{0}.xlsx".format(property))
+    xl_path = "ExcelInputs/SimInputs_{0}.xlsx".format(property)
     return pd.read_excel(xl_path, sheet_name=sheet, index_col=index, header=header, engine='openpyxl')
 
 
@@ -248,13 +247,12 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     ##read phases
     phases_df = pinp.phases_r
     mask_r = pinp.rot_mask_r
+    keys_k = sinp.landuse['C']
 
     ##read in base yields
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_yields = pinp.crop['yields']
-        base_yields = zfun.f_seasonal_inp(base_yields, axis=1)
-        base_yields = base_yields.loc[mask_r,:]
         base_yields_rk_z = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
     else:
         ###Sim version
@@ -262,10 +260,14 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
         season_group_yz = f1_sim_inputs(sheet='SeasonGroup', index=0, header=0).stack()
         ###Convert y to z
         base_yields_rk_z = base_yields_rk_y.mul(season_group_yz, axis=1, level=0).replace(0, np.nan).groupby(axis=1, level=1).mean().replace(np.nan, 0)
-        ###Mask z & r axis
-        base_yields_rk_z = zfun.f_seasonal_inp(base_yields_rk_z, axis=1)
-        base_yields_rk_z = base_yields_rk_z.loc[mask_r,:]
 
+    ##Mask z & r axis
+    base_yields_rk_z = zfun.f_seasonal_inp(base_yields_rk_z, axis=1)
+    base_yields_rk_z = base_yields_rk_z.loc[mask_r,:]
+
+    ##apply sam with k axis
+    crop_yield_k = pd.Series(sen.sam['crop_yield_k'], index=keys_k)
+    base_yields_rk_z = base_yields_rk_z.mul(crop_yield_k, axis=0, level=1).fillna(0)
     base_yields_rkz = base_yields_rk_z.stack()
 
     ##colate other info
@@ -428,16 +430,15 @@ def f_fert_req():
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_fert = pinp.crop['fert']
+        ###set index and headers
         base_fert = base_fert.T.set_index(['fert'], append=True).T.astype(float)
-        base_fert = zfun.f_seasonal_inp(base_fert, axis=1)
-        base_fert = base_fert.loc[mask_r,:]
         base_fert_rk_zn = base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
     else:
         ###Sim version
         base_fert_rk_zn = f1_sim_inputs(sheet='Fert Applied', index=[0,1], header=[0,1])
-        ###Mask z & r axis
-        base_fert_rk_zn = zfun.f_seasonal_inp(base_fert_rk_zn, axis=1, level=0)
-        base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
+    ###Mask z & r axis
+    base_fert_rk_zn = zfun.f_seasonal_inp(base_fert_rk_zn, axis=1, level=0)
+    base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
     ###rename index
     base_fert_rk_zn.index.rename(['rot','landuse'],inplace=True)
 
@@ -454,6 +455,17 @@ def f_fert_req():
     ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
     nap_fert_scalar_k = pinp.crop['i_nap_fert_scalar_k'].squeeze()
     nap_fert_rkz_n = base_fert_rkz_n.mul(nap_fert_scalar_k, axis=0, level=1)
+
+    ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
+    keys_n = uinp.general['i_fert_idx']
+    keys_k = sinp.landuse['C']
+    keys_k2 = sinp.landuse['All_pas']
+    crop_fert_k_n = pd.DataFrame(sen.sam['crop_fert_kn'], index=keys_k, columns=keys_n)
+    pas_fert_k_n = pd.DataFrame(sen.sam['pas_fert_kn'], index=keys_k2, columns=keys_n)
+    fert_sam_k_n = pd.concat([crop_fert_k_n, pas_fert_k_n])
+    fert_sam_krz_n = fert_sam_k_n.reindex(base_fert_rkz_n.index, index=0, level=1)
+    base_fert_rkz_n = base_fert_rkz_n.mul(fert_sam_krz_n)
+    nap_fert_rkz_n = nap_fert_rkz_n.mul(fert_sam_krz_n)
 
     ##drop landuse from index
     base_fert_rz_n = base_fert_rkz_n.droplevel(1,axis=0)
@@ -490,15 +502,13 @@ def f_fert_passes():
         ### User defined
         fert_passes = pinp.crop['fert_passes']
         fert_passes = fert_passes.T.set_index(['passes'], append=True).T.astype(float)
-        fert_passes = zfun.f_seasonal_inp(fert_passes, axis=1)
-        fert_passes = fert_passes.loc[mask_r,:]
         fert_passes_rk_zn = fert_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
     else:
         ###Sim version
         fert_passes_rk_zn = f1_sim_inputs(sheet='No Fert Applications', index=[0,1], header=[0,1])
-        ###Mask z & r axis
-        fert_passes_rk_zn = zfun.f_seasonal_inp(fert_passes_rk_zn, axis=1, level=0)
-        fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
+    ###Mask z & r axis
+    fert_passes_rk_zn = zfun.f_seasonal_inp(fert_passes_rk_zn, axis=1, level=0)
+    fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
     ###rename index
     fert_passes_rk_zn.index.rename(['rot','landuse'],inplace=True)
 
@@ -515,6 +525,17 @@ def f_fert_passes():
     ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
     nap_fert_passes_scalar_k = pinp.crop['i_nap_fert_passes_scalar_k'].squeeze()
     nap_fert_passes_rkz_n = fert_passes_rkz_n.mul(nap_fert_passes_scalar_k, axis=0, level=1)
+
+    ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
+    keys_n = uinp.general['i_fert_idx']
+    keys_k = sinp.landuse['C']
+    keys_k2 = sinp.landuse['All_pas']
+    crop_fert_passes_k_n = pd.DataFrame(sen.saa['crop_fert_passes_kn'], index=keys_k, columns=keys_n)
+    pas_fert_passes_k_n = pd.DataFrame(sen.saa['pas_fert_passes_kn'], index=keys_k2, columns=keys_n)
+    fert_passes_saa_k_n = pd.concat([crop_fert_passes_k_n, pas_fert_passes_k_n])
+    fert_passes_saa_krz_n = fert_passes_saa_k_n.reindex(fert_passes_rkz_n.index, index=0, level=1)
+    fert_passes_rkz_n = fert_passes_rkz_n.add(fert_passes_saa_krz_n)
+    nap_fert_passes_rkz_n = nap_fert_passes_rkz_n.add(fert_passes_saa_krz_n)
 
     ##drop landuse from index
     fert_passes_rz_n = fert_passes_rkz_n.droplevel(1,axis=0)
@@ -767,25 +788,36 @@ def f_chem_application():
     is that non-arable areas are not sprayed.
 
     '''
+    ##read phases
+    phases_df = pinp.phases_r
+
     ##read in chem passes
     if pinp.crop['user_crop_rot']:
         ### User defined
         chem_passes = pinp.crop['chem']
         chem_passes = chem_passes.T.set_index(['chem'], append=True).T.astype(float)
-        chem_passes_r_zn = zfun.f_seasonal_inp(chem_passes, axis=1)
+        chem_passes_rk_zn = chem_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
     else:
         ###Sim version
         chem_passes_rk_zn = f1_sim_inputs(sheet='No Chem Applications', index=[0,1], header=[0,1])
-        ###Mask z axis
-        chem_passes_rk_zn = zfun.f_seasonal_inp(chem_passes_rk_zn, axis=1, level=0)
-        ###drop landuse from index
-        chem_passes_r_zn = chem_passes_rk_zn.droplevel(1, axis=0)
+    ###Mask r & z axis
+    chem_passes_rk_zn = zfun.f_seasonal_inp(chem_passes_rk_zn, axis=1, level=0)
     mask_r = pinp.rot_mask_r
-    chem_passes_r_zn = chem_passes_r_zn.loc[mask_r,:]
-
+    chem_passes_rk_zn = chem_passes_rk_zn.loc[mask_r,:]
+    ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
+    keys_n = uinp.general['i_chem_idx']
+    keys_k = sinp.landuse['C']
+    keys_k2 = sinp.landuse['All_pas']
+    crop_chem_passes_k_n = pd.DataFrame(sen.saa['crop_chem_passes_kn1'], index=keys_k, columns=keys_n)
+    pas_chem_passes_k_n = pd.DataFrame(sen.saa['pas_chem_passes_kn1'], index=keys_k2, columns=keys_n)
+    chem_passes_saa_k_n = pd.concat([crop_chem_passes_k_n, pas_chem_passes_k_n])
+    chem_passes_rkz_n = chem_passes_rk_zn.stack(0)
+    chem_passes_saa_krz_n = chem_passes_saa_k_n.reindex(chem_passes_rkz_n.index, index=0, level=1)
+    chem_passes_rkz_n = chem_passes_rkz_n.add(chem_passes_saa_krz_n)
+    ###drop landuse from index
+    chem_passes_rz_n = chem_passes_rkz_n.droplevel(1, axis=0)
     ##adjust chem passes by arable area
     arable_l = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
-    chem_passes_rz_n = chem_passes_r_zn.stack(0)
     col_nl = pd.MultiIndex.from_product([chem_passes_rz_n.columns, arable_l.index])
     chem_passes_rz_nl = chem_passes_rz_n.reindex(col_nl, axis=1,level=0)
     chem_passes_rz_nl=chem_passes_rz_nl.mul(arable_l,axis=1,level=1)
@@ -832,17 +864,25 @@ def f_chem_cost(r_vals):
         ### User defined
         chem_cost = pinp.crop['chem_cost']
         chem_cost = chem_cost.T.set_index(['chem'], append=True).T.astype(float)
+        chem_cost_rk_zn = chem_cost.set_index(
+            [phases_df.index, phases_df.iloc[:, -1]])  # make the rotation and current landuse the index
         chem_cost_r_zn = zfun.f_seasonal_inp(chem_cost, axis=1)
     else:
         ###Sim version
         chem_cost_rk_zn = f1_sim_inputs(sheet='Total Chem Cost', index=[0,1], header=[0,1])
-        ###Mask z axis
-        chem_cost_rk_zn = zfun.f_seasonal_inp(chem_cost_rk_zn, axis=1, level=0)
-        ###drop landuse from index
-        chem_cost_r_zn = chem_cost_rk_zn.droplevel(1, axis=0)
+    ###Mask r & z axis
+    chem_cost_rk_zn = zfun.f_seasonal_inp(chem_cost_rk_zn, axis=1, level=0)
     mask_r = pinp.rot_mask_r
-    chem_cost_r_zn = chem_cost_r_zn.loc[mask_r,:]
-
+    chem_cost_rk_zn = chem_cost_rk_zn.loc[mask_r,:]
+    ###apply SAM
+    keys_k = sinp.landuse['C']
+    keys_k2 = sinp.landuse['All_pas']
+    crop_chem_k = pd.Series(sen.sam['crop_chem_k'], index=keys_k)
+    pas_chem_k = pd.Series(sen.sam['pas_chem_k'], index=keys_k2)
+    chem_sam_k = pd.concat([crop_chem_k, pas_chem_k])
+    chem_cost_rk_zn = chem_cost_rk_zn.mul(chem_sam_k, axis=0, level=1)
+    ###drop landuse from index
+    chem_cost_r_zn = chem_cost_rk_zn.droplevel(1, axis=0)
     ### sum herbicide and fungicide cost
     chem_cost_r_z = chem_cost_r_zn.groupby(axis=1, level=0).sum()
     ###arable area.
@@ -854,8 +894,7 @@ def f_chem_cost(r_vals):
     chem_cost_r_zln=chem_cost_r_zln.mul(n_alloc,axis=1,level=2)
     ### adjust the chem cost for each rotation by lmu
     chem_cost_rzl_n=chem_cost_r_zln.mul(chem_by_soil,axis=1, level=1).stack([0,1])
-
-    ##adjust for interest and p7 period
+    ###adjust for interest and p7 period
     phase_chem_cost_rzl_p7n = chem_cost_rzl_n.reindex(chem_cost_allocation_z_p7n.columns,axis=1,level=1)
     phase_chem_cost_rl_p7nz = phase_chem_cost_rzl_p7n.unstack(1)
     phase_chem_cost_rl_p7z = phase_chem_cost_rl_p7nz.mul(chem_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the chem

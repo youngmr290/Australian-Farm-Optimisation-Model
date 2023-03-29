@@ -652,7 +652,7 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
             sa=sa.copy()#have to copy the np arrays so that the original sa is not changed
         except:
             pass
-        value = f_update(value, sa, sa != '-')
+        value = f_update(value, sa, sa != '-') #sa has to be object or this give FutureWarning
 
     return value
 
