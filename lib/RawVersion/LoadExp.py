@@ -40,7 +40,10 @@ def f_read_exp(pinp_req=False):
         exp_group = None
 
     ##read excel
-    exp_data = pd.read_excel("ExcelInputs/exp.xlsx", index_col=None, header=[0,1,2,3], engine='openpyxl')
+    path_to_afo_excel = "../../ExcelInputs"
+    directory_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path_to_afo_excel)
+    exp_location = os.path.join(directory_path, "exp.xlsx")
+    exp_data = pd.read_excel(exp_location, index_col=None, header=[0,1,2,3], engine='openpyxl')
 
     ##determine trials which are in specified experiment group. If no group passed in then all trials will be included in the experiment.
     if exp_group is not None:
@@ -106,10 +109,15 @@ def f_run_required(exp_data1, l_pinp):
     ###gets the pinp used in the current exp. l_pinp only includes the properties in the current exp but that is fine because the other properties will trigger re-run later.
     l_pinp = l_pinp.dropna().unique()
     same_xl_inputs = True
+    path_to_afo_excel = "../../ExcelInputs"
+    directory_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path_to_afo_excel)
     for pinp in l_pinp:
-        same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(f'ExcelInputs/Property_{pinp}.xlsx')
-    same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("ExcelInputs/Universal.xlsx")
-    same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("ExcelInputs/Structural.xlsx")
+        property_location = os.path.join(directory_path, f"Property_{pinp}.xlsx")
+        same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(property_location)
+    universal_location = os.path.join(directory_path, "Universal.xlsx")
+    same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(universal_location)
+    property_location = os.path.join(directory_path, f"Structural.xlsx")
+    same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(property_location)
 
     ##calc if any SA have been added or removed since AFO was last run
     ###get a list of all sa cols (including the name of the trial because two trial may have the same values but have a different name)
@@ -193,7 +201,10 @@ def f_load_experiment_data(force_run):
     total_trials = sum(exp_data.index[row][0] == True for row in range(len(exp_data)))
     print(f'Number of trials to run: {total_trials}')
     print(f'Number of full solutions: {sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data)))}')
-    print(f'exp.xls last saved: {datetime.fromtimestamp(round(os.path.getmtime("ExcelInputs/exp.xlsx")))}')
+    path_to_afo_excel = "../../ExcelInputs"
+    directory_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path_to_afo_excel)
+    exp_location = os.path.join(directory_path, "exp.xlsx")
+    print(f'exp.xls last saved: {datetime.fromtimestamp(round(os.path.getmtime(exp_location)))}')
 
     return exp_data, exp_data1, dataset, trial_pinp, total_trials
 
