@@ -60,7 +60,7 @@ def f_load_phases():
 
     return {"phases_r": phases_r, "rot_req": rot_req, "rot_prov": rot_prov, "s_rotcon1": s_rotcon1}
 
-def f_load_excel_default_inputs():
+def f_load_excel_default_inputs(use_pkl=True):
     '''Function to load inputs from excel (univeral, structural, property, price variation, rotation and stubble)'''
 
     #########################################################################################################################################################################################################
@@ -79,7 +79,7 @@ def f_load_excel_default_inputs():
         if os.path.getmtime(structural_xl_path) > os.path.getmtime(structural_pkl_path):
             inputs_from_pickle = False
         else:
-            inputs_from_pickle = True
+            inputs_from_pickle = True and use_pkl
             print('Reading structural inputs from pickle',end=' ',flush=True)
     except FileNotFoundError:
         inputs_from_pickle = False
@@ -135,7 +135,7 @@ def f_load_excel_default_inputs():
             if os.path.getmtime(property_xl_path) > os.path.getmtime(property_pkl_path):
                 inputs_from_pickle = False
             else:
-                inputs_from_pickle = True
+                inputs_from_pickle = True and use_pkl
                 print('Reading property {0} inputs from pickle'.format(property), end=' ', flush=True)
         except FileNotFoundError:
             inputs_from_pickle = False
@@ -241,7 +241,7 @@ def f_load_excel_default_inputs():
         if os.path.getmtime(universal_xl_path) > os.path.getmtime(universal_pkl_path):
             inputs_from_pickle = False
         else:
-            inputs_from_pickle = True
+            inputs_from_pickle = True and use_pkl
             print('Reading universal inputs from pickle', end=' ', flush=True)
     except FileNotFoundError:
         inputs_from_pickle = False
