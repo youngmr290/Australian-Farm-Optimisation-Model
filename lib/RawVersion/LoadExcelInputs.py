@@ -64,7 +64,7 @@ def f_load_phases():
 
     return {"phases_r": phases_r, "rot_req": rot_req, "rot_prov": rot_prov, "s_rotcon1": s_rotcon1}
 
-def f_load_excel_default_inputs(use_pkl=True):
+def f_load_excel_default_inputs(use_pkl=True, load_all_pinp=False):
     '''Function to load inputs from excel (univeral, structural, property, price variation, rotation and stubble)'''
 
     #########################################################################################################################################################################################################
@@ -128,7 +128,10 @@ def f_load_excel_default_inputs(use_pkl=True):
     #########################################################################################################################################################################################################
 
     ##determine which properties are used in current exp
-    pinp_defaults_req = exp.f_read_exp(pinp_req=True)
+    if not load_all_pinp:
+        pinp_defaults_req = exp.f_read_exp(pinp_req=True)
+    else: #this is required for the web app which needs to load all excel.
+        pinp_defaults_req = ['GSM', 'CWM', 'SWV']
 
     ##read in inputs
     pinp_defaults={}
