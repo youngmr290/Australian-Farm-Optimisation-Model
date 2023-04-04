@@ -122,6 +122,7 @@ The feed management decisions that are optimised can include:
     11.	Salt land pasture grazing management.
     12.	Conserving surplus pasture as hay or silage.
     13.	The level of growth modifier (e.g. nitrogen fertiliser) applied to pasture.
+
 The model can also represent and compare (but not optimise in a single model solution):
 
     1.	The level of phosphate fertiliser application to pastures.

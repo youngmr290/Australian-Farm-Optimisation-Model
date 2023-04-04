@@ -167,11 +167,11 @@ Some of the key improvements of AFO over previous optimisation models include;
 
 i.	Inclusion of price and weather uncertainty, the associated short-term management tactics and farmer risk attitude.
 ii.	Increased rotation options.
-iii.	Extra detail on the biology of livestock production that allows:
-    a.	Inclusion of optimisation of the nutrition profile of livestock during the year.
-    b.	A larger array of livestock management options such as time of lambing and time of sale.
-iv.	Improved pasture representation that includes production effects of varying grazing intensity.
-v.	More detailed representation of crop residue that includes multiple feed pools based on quality and quantity.
+iii. Extra detail on the biology of livestock production that allows:
+    a. Inclusion of optimisation of the nutrition profile of livestock during the year.
+    b. A larger array of livestock management options such as time of lambing and time of sale.
+iv. Improved pasture representation that includes production effects of varying grazing intensity.
+v. More detailed representation of crop residue that includes multiple feed pools based on quality and quantity.
 
 Additionally, developing AFO in Python has resulted in a flexible framework that overcomes many previous
 structural challenges such as scalability. The structure allows the user to alter the biological detail to
