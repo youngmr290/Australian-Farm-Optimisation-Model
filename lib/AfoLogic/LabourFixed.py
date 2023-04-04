@@ -1,19 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Nov  1 08:57:13 2019
+In addition to the labour requirement described in the other sections of the model, there is a fixed
+labour requirement which reflects the labour required for administration tasks such as BAS, tax and
+pay roll, farm planning and upskill activities such as attending conferences or field days.
 
-module: labour fixed and learn module 
-
-key: green section title is major title 
-     '#' around a title is a minor section title
-     std '#' comment about a given line of code
-     
-formatting; try to avoid capitals (reduces possible mistakes in future)
-
-note: the different aspects of fixed labour can be allocated to different labour pools
-      currently i have labour learn and planning in the farmer and permanent pool and the rest in all pools. ie a farmer or permanent staff can only
-      provide the time to learn however anyone can provide time to complete tax stuff.
-    
     
 @author: young
 """

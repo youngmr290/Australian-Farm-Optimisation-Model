@@ -7,11 +7,16 @@ represented in the model). Supplementary feeding is commonly used to help meet p
 lamb growth rates prior to sale, or to fill the feed gap to allow higher stocking rates during the summer
 and autumn months when pastures and crop residues are limiting. Additionally, feeding supplement can be
 used as a tactic to allow pastures to be deferred early in the growing season which increases subsequent
-pasture growth rates.
+pasture growth rates through increasing leaf area index.
 
-Grain and hay for supplementary feeding can either be grown on farm or purchased from another
-farmer at farm gate price (net price of a product after selling costs have been subtracted)
-plus the transaction and transport costs.
+AFO represents a range of supplements including, oats, lupins and hay. Grain and hay as supplementary
+feeds can either be grown on farm or purchased from another farmer at a farm-gate price (i.e. net price
+of a product after selling costs have been subtracted) plus the transaction and transport costs.
+Supplementary feeding incurs a depreciation cost associated with storage infrastructure and variable
+costs associated with insurance, silo preparation, insect management, grain shrinkage/losses and machinery
+usage when feeding the supplement. The costs are calculated per tonne to allow for variations in grain
+density and amounts fed. Supplementary feeding also incurs a labour requirement for time spent traveling
+to and from the silo, filling the sheep feeder, emptying the feeder, and transporting between paddocks.
 
 .. note:: Other grains can be added as supplements. Just remember to add their inputs in the mach
     sheet in universal.xlsx for each machine option and  the sup sheet in both universal.xlsx and property.xlsx.

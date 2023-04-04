@@ -1,28 +1,28 @@
 """
 author: young
 
-Salt land pastures (SLP) is a novel feed source that consists of saltbushes and a grazable pasture understory.
-SLP establishment requires labour, specific machinery and financial outlay, however it comes with
-numerous characteristics which make it attractive for certain situations. These characteristics include:
+Salt land pastures (SLP) are a novel feed source that consists of saltbushes and a grazable pasture understory. SLP
+establishment requires labour, specific machinery and a significant financial outlay, however it comes with numerous
+characteristics which make it attractive for certain situations. These characteristics include:
 
-    #. Saline tolerance
-    #. Draw-down of the water table (Barrett-Lennard and Malcolm, 1999). This drawdown allows salts to be flushed
-       from the topsoil of the moderately saline land, thereby creating growing conditions more suited to annual pastures.
- 	#. Edible leaf for livestock consumption.
-    #. Livestock shelter – shelter provided by shrubs can be used by stock at vulnerable times such as lambing which helps increase animal survival.
-    #. Increased wool growth due to additional nutrients provided by grazing saltbush.
-    #. Reduced erosion risk due to the wind protection provided by the saltbushes year-round.
+    1.	Saline tolerance and can therefore be established on land management units that would have had very low productivity.
+    2.	Draw-down of the water table (Barrett-Lennard and Malcolm, 1999). This drawdown allows salts to be flushed from the topsoil of the moderately saline land, thereby creating growing conditions more suited to higher productivity annual pastures and perhaps leads to long term rehabilitation of the area.
+    3.	Edible leaf for livestock consumption.
+    4.	Livestock shelter – shelter provided by shrubs can be used by stock at vulnerable times such as lambing which helps increase animal survival.
+    5.	Increased wool growth due to additional nutrients provided by grazing saltbush.
+    6.	Reduced erosion risk due to the wind protection provided by the saltbushes year-round.
 
-The saltbush module represents the saltbush component of the salt land pasture landues. The salt land pasture landuse
-is made up from both saltbush and understory. The understory is component is calculated in the pasture module.
+The salt land pasture land use is a combination of saltbush and understory. The saltbush module represents the
+saltbush component and the understory component is calculated in the pasture module.
 
-This module includes:
+The saltbush module includes the:
 
-    - salt land pasture cost
-    - saltbush productivity
-    - saltbush feed value
-    - diet selectivity
-    - impact of salt intake on animal biology
+    •	cost of salt land pasture establishment and maintenance.
+    •	productivity of saltbush during the year based on grazing management.
+    •	feed value of saltbush during the year.
+    •	diet selectivity of salt bush versus understory.
+    •	impact of salt consumption on animal intake.
+
 
 """
 import numpy as np

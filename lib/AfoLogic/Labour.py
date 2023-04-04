@@ -1,11 +1,55 @@
 # -*- coding: utf-8 -*-
 """
 author: young
+
+This module covers the labour supply. Note the labour requirements for various aspects of the farming system
+are calculated and documented in the relevant modules.
+
+To capture the dynamics of labour, the year is broken into labour periods :cite:p:`RN89`. The supply of
+labour in each period by each labour source is calculated, and the labour required by each farm
+activity is determined and assigned to the given period/s.
+
+The amount of labour available in each period depends on the number of labour units and the hours worked
+each day. Labour can be supplied by three sources:
+
+#. Casual staff – In the unrestricted model, casual staff can come and go at any time throughout the
+   year as required. However, the user can fix the number of casual staff employed
+   during each period of the year.
+
+#. Permanent staff – Permanent staff work on the property all year (with an allocation for leave).
+
+#. Manager staff (commonly the farm owner) – The farm manager works on the property all year. They control
+   the overall farm plan and thus spend a fixed amount of time each quarter on farm planning, learning,
+   record-keeping, purchasing and selling, and other office work.
+
+Farm labour tasks can be allocated to a specific labour source where required. For example, farm planning must
+be completed by manager staff. Any labour source can complete unallocated tasks. To realistically reflect the
+labour hierarchy, casual and permanent staff both require a certain amount of supervision from the farm manager.
+The proportion of supervision is specified separately for seeding and harvesting. This is because during seeding
+and harvest it is likely that less supervision is required. Casual staff are generally less experienced and/or
+acquainted with the farm operation than permanent staff and thus require more supervision.
+
+The importance of timeliness and the high labour requirement of seeding and harvest means staff often
+work longer days during those periods :cite:p:`RN89`. To accommodate this, the user specifies the hours
+worked by each type of staff on the weekdays and weekends for both standard periods and seeding and harvest periods.
+
+The farm manager and permanent staff have four weeks of holiday each year. The holiday timing is flexible (optimised
+by AFO). This is because managers and permanent staff tend to have a less defined schedule, often taking multiple
+smaller holidays during the year or returning to the farm during holidays to check on things.
+Additionally, in AFO, permanent and casual staff require supervision from the manager which means if the manager
+is forced to take their holidays in one big chunk the model may not be able to access labour resulting in
+inconsistencies if the period dates change.
+All labour sources take days off for Christmas, New Year’s Day, and Easter. Permanent staff are
+also allocated a certain number of sick days per year. The user has the ability to alter the length
+and timing of worker leave
+
+Casual staff are paid on a per hour basis and the manager and permanent staff are paid an annual wage.
+All labour costs include superannuation and workers’ compensation insurance.
 """
 #python modules
 import pandas as pd
 import numpy as np
-import datetime 
+import datetime
 from dateutil.relativedelta import relativedelta
 
 #AFO modules
@@ -29,45 +73,6 @@ def f_labour_general(params,r_vals):
     '''
     Calculates labour supply, labour cost and supervision requirements.
 
-    To capture the dynamics of labour, the year is broken into periods :cite:p:`RN89`. The supply of
-    labour in each period by each labour source is calculated, and the labour required by each farm
-    activity is determined and assigned to the given period/s.
-
-    The amount of time available to work in each period depends on the hours that each worker works
-    each day. Labour can be supplied by three sources:
-
-    #. Casual staff – In the unrestricted model casual staff can come and go at any time throughout the
-       year as the model chooses. However, the user has the power to fix the number of casual staff employed
-       during each part of the year.
-
-    #. Permanent staff – Permanent staff work on the property all year.
-
-    #. Manager staff (commonly the farm owner) – The farm manager works on the property all year. They control
-       the overall farm plan and thus spend a fixed amount of time each quarter for farm planning, learning,
-       record-keeping, purchasing and selling, and other office work.
-
-    The timeliness and labour intensity of seeding and harvest means staff often work longer days during
-    those periods :cite:p:`RN89`. To accommodate this, the user specifies the hours worked by each type of
-    staff on the weekdays and weekends for both standard periods and seeding and harvest periods.
-
-    Casual and permanent staff both require a certain amount of supervision from the farm manager. The
-    proportion of supervision is specified separately for seeding and harvesting periods and all other
-    labour periods. This is because during seeding and harvest it is likely that less supervision is
-    required. Casual staff are generally less experienced and/or acquainted with the farm operation than
-    permanent staff and thus require more supervision.
-
-    The farm manager and permanent staff have four weeks of holiday each year. The holiday timing is flexible (optimised
-    by AFO). This is because managers and permanent staff tend to have a less defined schedule, often taking multiple
-    smaller holidays during the year or returning to the farm during holidays to check on things.
-    Additionally, in AFO, permanent and casual staff require supervision from the manager which means if the manager
-    is forced to take their holidays in one big chunk the model may not be able to access labour resulting in randomness
-    if the period dates change.
-    All labour sources take days off for Christmas, New Year’s Day, and Easter. Permanent staff are
-    also allocated a certain number of sick days per year. The user has the ability to alter the length
-    and timing of worker leave
-
-    Casual staff are paid on a per hour basis and the manager and permanent staff are paid an annual wage.
-    All labour costs include superannuation and workers’ compensation.
 
 
     '''

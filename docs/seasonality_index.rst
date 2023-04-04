@@ -1,69 +1,60 @@
-Seasonality
-==================
+Uncertainty and short term tactics
+==================================
+The two main sources of uncertainty in Australian farming systems are the high variance of world
+prices for most agricultural commodities (e.g. Hazell et al., 1990) and climate variability, which
+results in significant production variability (Feng et al., 2022, Laurie et al., 2018). To deal with
+short-term variability within the system, farmers implement tactical adjustments that deviate from
+the long-term strategic plan. Tactical adjustments are applied in response to unfolding opportunities
+or threats and aim to generate additional income or to avoid losses (Pannell et al., 2000). In AFO
+price and weather variation is represented as a number of discrete options along with a range of
+relevant tactical adjustment options.
 
-Summary
---------
+In AFO the user has the capacity to included or exclude price and weather uncertainty.
 
-The steady state version of AFO assumes an average season. The model inputs are determined from the weighted average
-of each season. For example, in a simplified environment where there are only three seasons; good, bad and average
-each with a 33% chance of occurring and continuous wheat yields of 5, 2 and 3 tonnes/ha respectively. The input to
-the steady state model for continuous wheat yield would be 3.33t/ha. There are two main assumptions with this method:
+Weather uncertainty
+-------------------
+Weather uncertainty in AFO can be included or excluded and the representation of uncertainty can be more or
+less detailed. Variability or uncertainty is represented using the modelling approach of discrete stochastic
+programming (Cocks, 1968, Rae, 1971, Crean et al., 2013). Discrete stochastic programming is a formulation
+of a decision tree. It requires the explicit specification of management choices and their possible consequences.
+The nodes or event forks are usually represented by a relatively small number of discrete outcomes. The
+inclusion of uncertainty allows management decisions to be made as the year unfolds
+(Norton and Hazell, 1986, Hardaker et al., 1991), which has been noted as an important aspect of farm
+management (Pannell et al., 2000, McCown et al., 2006). The three different AFO frameworks are:
 
-    - A good year is as good as a poor year is poor (e.g. the relationship between season quality and profit is linear).
-      However, many farmers argue that poor years have a larger negative impact than the positive impact of good seasons.
-    - Farmers manage their farm the same irrespective of how the season is unfolding. However, in reality farmers can
-      modify their management as the season unfolds (e.g. in the face of a late break, crop area can be reduced).
-
-For analysis where these assumptions are limiting, the user can leverage AFO's discrete stochastic programming (DSP)
-functionality to represent uncertain parameters. Discrete stochastic programming describes how some management
-decisions can be made after a state of nature is observed :cite:p:`NortonHazell1986, Hardaker1991`.
-This implies that the farm manager has scope for either avoiding losses or profiting from an unfolding event.
-Decision making in farming is highly dependent on how the weather unfolds. Given some information about the start
-of a weather-year and probabilities of associated finishes to the year, farmers may alter their management plan.
-For example in a season that is unfolding favorably, a tactic to maximise farm profit may be to crop additional
-area and run a higher stocking rate on the remaining pasture. The sequential nature of farm decision making
-means that it can be represented by discrete stochastic programming. However, due to the model size restrictions,
-the continuous nature of decision making must be represented by as few discrete points as possible. Resulting
-in a simplified representation of the decision-making process and uncertainty surrounding outcomes.
-
-In the DSP version of AFO the user defines a number of likely season types, their probability, the associated
-inputs, and the length of the sequence. Note: the number of season types selected and the length of the sequence
-is determined as a trade off between model size and detail. Typically farm DSP models have used a one year
-sequence :cite:p:`KINGWELL1994, Schäfer2017`. However, AFO provides the option to represent a sequence of season
-types. This allows the model to manage a season differently based on the previous season.  AFO optimises the farm
-management based on the probabilities of each season sequence and its production. There are two key concepts
-that need to be included in the program to ensure reality is represented:
-
-    #. Every sequence is linked such that they all start from a common point (the weighted average of all the
-       endpoints). In practical terms what this means is that the farm is in the same state at the beginning of all
-       sequences. This means you can't start a good season sequence with more sheep than a poor season sequence.
-    #. Management tactics applied in different seasons can not be implemented until the type of season is identified.
-       For example, in a season with a poor spring it is not possible to seed less crop than a season with a good
-       spring because at the time of seeding the spring conditions are unknown.
-
-At each decision point represented in the model, tactics or adjustments can be made which represent the decision
-farmers make. Once a season type has been identified the tactics and adjustments made can be different from the
-other seasons.  Discussions with farmers and farm consultants revealed the more important tactical or adjustment
-options that farmers considered for various sorts of weather-years. Primarily these tactical options involved
-changes in enterprise areas, changes in the rates of fertilisers applied to crops and changes in stocking rates
-through some combination of alteration of pasture areas and the sale, agistment or retention of livestock (see
-full list of tactics below).
-
-Some tactical options have an impact in the following year. Representation of these options requires accounting
-for both their initial year and subsequent year effects. Initial year effects are the changes in inputs, costs
-and production that occur in the year of adjustment. Thus replacing one hectare of pasture by a hectare of wheat
-would mean accounting for the net change in inputs, costs and production of having both the extra hectare of
-wheat and the one less hectare of pasture. Subsequent effects of this adjustment would be the effects on soil
-fertility, weed burden and pasture availability in subsequent years, and the associated changes to crop and
-pasture inputs and outputs.
-
-The DSP method may not be the best option for all projects because it complicates result interpretation,
-significantly increases model size and requires more detailed inputs.
+    (i)	Deterministic static equilibrium programming (SE) (e.g. MIDAS - (e.g. Kingwell and Pannell, 1987)).
+        SE represents the farming system with a single discrete state. Representing a farm system as a single
+        state requires use of expected inputs and outputs (e.g. the wheat yield is the average of all years).
+        It assumes every year is the same and the finishing state equals the starting state. Thus, only strategic
+        (long term) management is represented and management does not change between years because there is only
+        one branch of the decision tree being represented.
+    (ii) Single year discrete stochastic programming (DSP) (e.g. MUDAS - (e.g. Kingwell et al., 1991)). DSP
+         represents the farm system with multiple discrete states where each state represents a different
+         weather-year that can have separate inputs and management decisions to reflect different prices and weather
+         conditions. All states begin from a common point that is determined by the weighted average of the end of
+         all the weather-years, but then separate at various nodes during the production year to unveil the particular nature
+         of that weather-year. Once a weather-year has been identified, subsequent decisions can be differentiated based
+         on the known information about that given weather-year. For example, in AFO one node is the start of the growing
+         season or 'break of season'. If that start is what is known colloquially as an 'early break', then after that
+         starting point those types of weather-years can be managed differently to weather-years where the break occurs
+         later. For example, in an early break it may be optimal to crop more area and run a higher stocking rate and
+         vice-versa for a late break, although these decisions can only be made after the break of season is known. However,
+         at the break of the season the subsequent conditions are uncertain (e.g. 30% chance of a poor spring and a 70%
+         chance of a good spring). Thus, the decisions made at the break of season must factor in future uncertainty
+         about the spring conditions. DSP examines each possible outcome and its probability to determine the optimal
+         decisions. These decisions are a suite of tactical adjustments made at each node that complement or adjust
+         an overarching farm management strategy.
+    (iii) Multi-year discrete stochastic programming (SQ) (Xie and Huang, 2018). SQ is similar to DSP with
+          the difference being that the discrete states represent a sequence of weather-years in equilibrium rather
+          than a single year in equilibrium. Optimisation of management within the sequence of weather years fully
+          accounts for the temporal effects of management change between years. In AFO, the production data in the
+          SQ is the same as the DSP for the individual weather-years. The difference is that the SQ framework more
+          accurately represents carryover management implications from the previous year. For example, if stock
+          were sold in the previous year the current year would start from a destocked position.
 
 
 Defining the seasons
---------------------
-
+^^^^^^^^^^^^^^^^^^^^
 The seasons (weather years) that will be modelled need to be selected based on:
 
     - Indicators of the season (points in the year when a season can be identified)
@@ -206,139 +197,6 @@ For the stock this means each season node has to be a DVP so that the animals ca
 means each season node needs to be a feed period to allow the transfer of feed. Furthermore, season start node is
 required so that activity levels in each season can start from a common point (weighted average of the end condition).
 
-
-Tactics
---------
-
-There are many tactical or adjustment options represented in AFO that reflect a farmers reality. The tactics revolve
-around land use area adjustment, machinery and labour adjustment, seasonal sheep live weight patterns and sheep
-agistment, pasture and stubble management, supplementary feeding and application rates of nitrogenous fertilisers.
-The same tactical adjustments are made to all seasons that are clustered (cannot be distinguished) at the time a
-decision is made. E.g. tactical adjustments dependent on an early season break are the same for all seasons which
-have an early break irrelevant of what happens in spring because at the time of making the break of season decision
-the spring conditions are unknown.
-
-Seeding cereals into pasture
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Cereal crops tend to have better early vigour than pastures, thus sowing some cereals into pasture provide some
-additional feed early in the growing season.
-
-Spring application of N to pasture
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-For seasons with a slow spring applying nitrogen to pasture can provide some valuable additional FOO.
-
-Rotation
-^^^^^^^^
-Rotation area can be adjusted depending on the date of season break or other early indicators such as
-residual soil moisture from summer rainfall. Choice of rotation phase can also be delayed at the start of the growing
-season for example to ensure it is not a false break. During this period of delay pasture will germinate on these
-paddocks and is able to be grazed (the level of germination is dependent on the rotation history of the paddock).
-
-Summer cropping
-^^^^^^^^^^^^^^^
-The flexible rotation design allows the rotation phase to be changed during the year thus providing the ability
-to represent summer cropping. For example, in a weather-year that has good end of season rainfall.
-
-Fodder crops
-^^^^^^^^^^^^
-In adverse seasons where either livestock feed is short or crops are frosted or are not worthy of harvest,
-saleable crops can be turned to fodder. I.e. instead of harvesting a crop it is grazed by livestock as a good
-source of summer feed.
-
-Bale crops
-^^^^^^^^^^^^
-Crops that were planted with the expectation of being harvested for grain can be baled as hay.
-This may occur in adverse seasons where either livestock feed is short or crops are frosted or are not worthy of harvest.
-
-Winter crop grazing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Saleable crops can be grazed early in the growing season with little yield penalties. This can provide
-additional feed in seasons with a slow start.
-
-Labour supply
-^^^^^^^^^^^^^
-Perm and manager labour is fixed (must be the same for each season type) however, casual labour can be
-optimised for each season as it unfolds.
-
-Machinery contracting
-^^^^^^^^^^^^^^^^^^^^^
-If the timeliness of an activity is an issue, contract services can be selected to improve the work rate.
-This could be valuable in a late break to ensure the crops get the maximum possible growing season.
-
-Dry seeding
-^^^^^^^^^^^
-A useful tactic to improve timeliness of seeding to ensure crops get the maximum possible growing season.
-
-Crop inputs
-^^^^^^^^^^^
-Cropping inputs can be tactically adjusted depending on how the season unfolds. This can not currently be
-optimised by AFO however the user can manually adjust the inputs to capture expected seasonal inputs adjustments.
-
-Summer cropping
-^^^^^^^^^^^^^^^
-Currently this is not implemented. Rotations do have a node axis which would allow this type of transfer. Just
-need to work out a way to do the history transfer.
-Summer cropping would need to be a new landuse (so it can have a different harvest date and grain income date).
-
-Agistment
-^^^^^^^^^
-Agisting livestock can be a useful tactic if farm management/circumstances are different. For example,
-it may be profitable to agist livestock to a farm that is 100% cropping as there is lots of stubble available during summer.
-
-Confinement feeding
-^^^^^^^^^^^^^^^^^^^
-Confinement feeding can be a good tactic to allow pasture deferment at the beginning of the season or
-to keep ground cover on paddocks in the late summer and autumn.
-
-Supplement feeding
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-In paddock supplement feeding can be used as a tactic to help finish lambs for sale, ensure dams reach
-target conditions for reproduction or help meet energy requirements during seasons with poor pasture growth.
-
-Changing liveweight
-^^^^^^^^^^^^^^^^^^^
-Altering livestock weight can be used as a tactic to handle varying feed availability due to seasonal variation.
-
-Early weaning
-^^^^^^^^^^^^^
-There are multiple weaning times in the generator for the offspring and the young at foot, however only one
-weaning time for the dams. This is handled by a proportion of the yatf having to be weaned at the standard
-time to be replacements. Otherwise the replacements would likely be selected from the earliest weaning and
-there would be a period from the early weaning to the standard weaning in which the weaners would not be being fed.
-
-If early weaning of all progeny is required in the seasonality version of the model then the standard weaning
-time for those season types would need to be altered so that replacements are drawn from the early weaning time.
-Or weaning age (a0) would need to be included in the dam axes.
-
-Not mating dams
-^^^^^^^^^^^^^^^
-Including an unmated cluster for the dams in each year will allow the tactic of not mating the dams. If a
-seasonal outlook (of sufficient accuracy) can be made prior to joining then there is the option of not mating
-ewes in a poor season. This is probably more related to the conditions in eastern Australia where a failed
-spring is a more common occurrence and a reasonable forecast of spring rainfall may be available at joining
-(if it is a late joining flock - March or April).
-
-Selling scanned dry dams or other dams at scanning
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Currently the sale at scanning only includes selling the scanned dry dams. This could be expanded to
-other scanning parities by altering the definition of the animals that can be in the t axis for sold at
-scanning. Note; this might also have implications with the k2 cluster, which is clustering the e1b1 axes
-into decision variables.
-
-Retain dry ewes
-^^^^^^^^^^^^^^^
-Often the strategy is to sell dry ewes, however if the season is favorable a tactical adjustment could be
-to retain the drys to get a wool cut and attempt to mate them the following year.
-
-Selling at other times
-^^^^^^^^^^^^^^^^^^^^^^
-Dams and offspring sale time and market can be adjusted depending on the season. For example, the target
-market for offspring might be the abattoir however, in a poor season, they could be turned off into the
-store market. Note extra sale times can be added by expanding the t axis or by adding sale options such
-that sale can occur in each DVP (only one sale can exist per dvp per t slice). For example, dams could
-currently have 2 sale options in each DVP (because there are 2 slices in the t axis). Therefore other
-tactical selling options could be added without expanding the size of the t axis in the post processing.
-
 Price Variation
 ---------------
 
@@ -346,3 +204,32 @@ Price Variation
    :maxdepth: 1
 
    PriceVariation
+
+Tactics
+--------
+There are many tactical or adjustment options represented in AFO that reflect a farmer’s reality. The
+tactics are similar to, but an expansion of those represented by Kingwell et al. (1992) and revolve
+around land use area adjustment, land use inputs, whether a crop is harvested, baled or grazed as a
+standing crop, intensity of machinery use, labour utilisation, seasonal sheep liveweight patterns,
+tactical sale of sheep, grazing management of pasture and stubble, and supplementary feeding. The
+same tactical adjustments are made to all weather-years that are indistinguishable from one another
+at the time a tactical decision is implemented. Such weather-years are clustered at that decision
+point, as the node that later differentiates these weather-years is still in the future. By illustration,
+tactical adjustments selected at the early season break node have to be the same for all weather-years
+that have an early break, because at the time of making the break of season tactical decision the
+occurrence of follow-up rain and the spring conditions are unknown. Typical tactical adjustments include:
+
+    •	Rotation phase - The area of each land use can be adjusted depending on the date of season break or other early indicators such as residual soil moisture from summer rainfall. Choice of rotation phase can also be delayed at the break of season, for example waiting to ensure it is not a false break. During this period of delay, pasture will germinate on these paddocks and is able to be grazed (the level of germination is dependent on the rotation history of the paddock). The potential for tactical adjustment of rotation phases depends on the land use history on each LMU because the choice for current land use is constrained by the land use history. Likewise, tactical adjustment affects subsequent rotation phase choice through its impact on altering the land use history provided.
+    •	Land use inputs – In favourable weather-years additional chemicals and fertiliser can be applied to maximise yields and vice versa in poor weather-years. Note, in this analysis the input level for each land use on each land management unit in each weather-year is optimised by the user externally to the model, reliant on expert agronomist advice for the study region. The optimisation accounted for the clustering of the weather-years.
+    •	Fodder crops - In adverse weather-years where either livestock feed is limiting or crops are frosted or are not worth harvesting, saleable crops can be turned into standing fodder. That is, instead of harvesting a crop it is grazed by livestock as summer feed.
+    •	Bale crops - Crops planted with the expectation of being harvested for grain can be baled as hay. This may occur in adverse weather-years where either livestock feed is limiting or crops are frosted or are not worth harvesting.
+    •	Labour supply - Permanent and manager labour is fixed (I.e. must be the same for all weather-years). However, casual labour can be optimised for each weather-year as it unfolds.
+    •	Machinery contracting - If the timeliness of an activity is an issue, contract services can be selected to improve the work rate. This could be valuable in a late break weather-year to ensure the crops get the maximum possible growing season. Note, the assumption that contracting services are available can be changed.
+    •	Dry seeding - A useful tactic to improve timeliness of seeding is to sow into dry soil, before the opening rains, to ensure crops experience the maximum possible growing season. If dry seeding is selected it is implemented for all weather-years that have yet to have the season break.
+    •	Confinement feeding - Confinement feeding can be a good tactic to allow pasture deferment at the beginning of a growing season or to keep ground cover on paddocks in the late summer and autumn.
+    •	Supplement feeding – In-paddock supplement feeding can be used as a tactic to help finish lambs for sale, ensure ewes reach target conditions for reproduction or to help meet energy requirements during weather-years with poor pasture growth.
+    •	Changing liveweight - Altering livestock liveweight targets can be used as a tactic to handle varying feed availability due to seasonal variation e.g. animals can lose weight in poor feed years but this is associated with lower production per head.
+    •	Not mating ewes - If the feed supply is sufficiently poor prior to joining then there is the option of not mating ewes. This might be most relevant if mating ewe lambs.
+    •	Selling scanned dry ewes or other ewes at scanning – Sale of dry sheep can be a useful tactic if the year is unfolding unfavourably.
+    •	Retain dry ewes - If the strategy is to sell dry ewes, and the weather-year is favourable, a tactical adjustment can be to retain the dry ewes until shearing, thereby generating wool income and then a further decision is to retain them for mating the following year.
+    •	Selling at other times – The ewes and lambs’ sale time can be adjusted with the value received depending on the liveweight and condition of the animals at sale. In AFO there are ten selling opportunities throughout the year for ewes and eight sale opportunities for lambs and wethers.

@@ -797,11 +797,11 @@ def f_con_minroe(model):
 
 def f_objective(model):
     '''
-    The objective of the model is to maximise expected utility (total satisfaction). In the case of risk neutral,
+    The objective of the model is to maximise expected utility. In the case of risk neutrality,
     expected utility is equivalent to expected profit, meaning that the optimal farm management plan is that which
     maximises farm profit. In the case of risk aversion, utility increases at a diminishing rate as profit increases.
-    Thus, when farm profit is low an extra dollar is more valuable than an extra dollar when farm profit is high.
-    This means, to some degree, the optimal farm management plan aims to reduce profit variation (i.e. increase
+    Thus, when farm profit is low, an extra dollar of profit provide more utility than when farm profit is high.
+    This means, a risk adverse farmer aims to reduce profit variation (i.e. increase
     profit in poor years at the cost of reduced profit in the good years). For example, if the crop and stock
     enterprise on the modelled farm are similar but grain prices are more volatile, then risk aversion
     will shift resources towards the stock enterprise to reduce risk (profit variation).
@@ -830,15 +830,13 @@ def f_objective(model):
     In practice, the CARA specification means that the farmer's risk management
     decisions, particularly in favourable states of nature (e.g. good weather-years with high commodity prices)
     when a farmer's wealth is boosted, will be different and more concerned with income stability than those
-    that would arise with a CRRA specification. The limitation of the CRRA method is that it can not handle a negative
-    terminal state. Additionally, because CRRA is impacted by terminal wealth, MINROE and asset opportunity cost
+    that would arise with a CRRA specification. The limitation of the CRRA method is that it cannot handle a negative
+    terminal state. Additionally, because CRRA is impacted by terminal wealth, MINROE and asset opportunity cost (discussed in the finance section)
     will affect the impact of risk aversion, which is not technically correct because these are not real costs incurred
     by the farmer.
 
-    Due to AFO's size, linear programming has been used to improve solving efficiency and accuracy.
-    Therefore, the non-linear utility functions are represented by a number of linear segments, a common
-    linear programming technique called piecewise representation. When doing risk aversion analysis the
-    user must ensure that the line segments capture the expected spread of terminal wealth.
+    The utility functions discussed above are non-linear. To accommodate this in AFO, a piecewise technique is
+    applied which approximates the function using 13 linear segments.
 
     '''
 

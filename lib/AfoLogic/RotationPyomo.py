@@ -198,9 +198,9 @@ def f_phase_link_within(model):
     The transfer of the phases selected in the parent weather-year to the child weather-years is achieved in
     the same manner as the transfers of stock, pasture and cashflow with 2 differences:
 
-        a.	the inclusion of v_phase_change_increase which allows extra area of a phase to be selected in each node.
-        b.	the constraint is equal-to rather than less-than. This is necessary to cover a situation in which the cashflow
-            parameter of v_phase_change_increase is earning money. In this situation the model would be unbounded with a less-than constraint.
+        a. the inclusion of v_phase_change_increase which allows extra area of a phase to be selected in each node.
+        b. the constraint is equal-to rather than less-than. This is necessary to cover a situation in which the cashflow
+           parameter of v_phase_change_increase is earning money. In this situation the model would be unbounded with a less-than constraint.
 
     '''
     def phase_link_within(model,q,s,p7,l,r,z9):

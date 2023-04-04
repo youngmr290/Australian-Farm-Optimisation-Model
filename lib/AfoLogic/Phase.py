@@ -2,28 +2,31 @@
 
 author: young
 
-The phase module is driven by the inputs [#i]_ for yield production, fertiliser and chemical
-requirements for each rotation phase on each LMU. For pasture phases this module only generates data for
-fertiliser, chemical and seed (if resown) requirement. Growth, consumption, etc is generated in the
-pasture module. Each phase provides a given amount of biomass depending on the rotation history, LMU, frost,
-and arable proportion. AFO can then optimise the area of each rotation
-on each LMU and the best way to utilise the biomass of each rotation phase.
-Biomass can be either harvested for grain, baled for hay or grazed as standing fodder.
-AFO does not currently simulate the biology of crop plant growth under different technical
-management. Thus, the model is unable to optimise technical aspects of cropping such as timing and
-level of controls [#j]_. However, the user has the capacity to do this more manually by altering the
-inputs (more like the technique of simulation modelling) or by including additional land uses
-which represent varying levels of production and controls. When determining the inputs for each
-rotation the user must consider the rotation history. The rotation history can influence the soil
-fertility, weed burden and disease and pest levels. These factors impact the potential yield and
-the optimal level of controls.
+The phase module calculates the costs and crop production of each phase. For pasture phases, production is
+calculated in the pasture module.
+
+The inputs [#i]_ include phase yield (for pasture this is 0), fertiliser and chemical requirements,
+frost damage, seeding rates, soil type, residue management, proportion of arable area, commodity prices,
+fees and levies. To accurately reflect rotation history, soil type and weather effects on phase production
+and management, many of these user inputs vary by rotation history, soil type and weather conditions.
+For example, the rotation phase history can influence the soil fertility, weed burden and disease and pest
+levels. These factors impact the potential yield and the level of fertiliser and chemicals.
+
+Each phase provides a certain amount of biomass based on the inputs above. Accordingly, AFO can optimise
+the area of each rotation phase on each LMU and the best way to utilise the biomass of each rotation phase.
+Biomass can be either harvested for grain, baled for hay or grazed as standing fodder. AFO does not currently
+simulate the biology of crop plant growth under different technical management. Thus, AFO does not optimise
+technical aspects of cropping such as timing and level of fertiliser applications. However, the user has
+the capacity to do this manually by altering the inputs (à la management of inputs in simulation modelling)
+or by including additional land uses which represent varying levels of inputs and production.
+
 
 There are two methods that can be used to generate cropping inputs for the model:
 
 #. Manually enter the inputs for selected rotation phases:
 
-    The user can manually input the fertiliser and chemical requirement of given phases in a rotation
-    and the resulting yield. To do this accurately requires an in-depth knowledge of cropping in the
+    The user can manually input the fertiliser and chemical requirements and resulting yields of each rotation phase.
+    To do this accurately requires an in-depth knowledge of cropping in the
     location being modelled. Thus, the process is often done in collaboration with a consultant or
     specialist in the field. This input method can be limiting if the user is hoping to include a
     large number of rotation phases or landuses that are not well established in the given location
@@ -33,12 +36,27 @@ There are two methods that can be used to generate cropping inputs for the model
 
     APSIM is a whole farm simulation model widely used in Australia. APSIM has detailed modules which
     use robust relationships to simulate plant growth. The parameters used in APSIM can be altered to
-    represent plant growth in many different situations. For example, different soil conditions. A-F-O users
-    can use APSIM to generate yield, fertiliser requirement, number of fertiliser applications, chemical
-    requirement and number of chemical applications for a wide range of rotations.
+    represent plant growth in many different situations. For example, different rainfall or soil conditions. AFO users
+    can use APSIM to generate yield of crops in a given rotation under a specified fertiliser and chemical regime.
+
+The crop management decisions that are optimised can include:
+
+    1.	Area of each rotation phase on each soil type in each weather year depending on paddock history.
+    2.	Area of each crop harvested, baled or grazed.
+    3.	Contractual services for seeding or harvesting.
+    4.	Labour allocation.
+    5.	Time of sowing.
+
+The model can also represent and compare (but not optimise in a single model solution):
+
+    1.	Fertiliser application rate and timing.
+    2.	Chemical application rate and timing.
+    3.	Seeding rate.
+    4.	Alternative cultivars.
+    5.	Seeding technology.
+
 
 .. [#i] Inputs – AFO parameters.
-.. [#j] Controls – chemicals and fertilisers.
 
 
 """

@@ -166,7 +166,7 @@ def f_poc_grazing_days():
     no grazing can occur. These 2 components must then be allocated to the feed periods.
 
     'Rectangular' component: The base of the rectangle is defined by the later of the break, the start of the season period
-     and the start of the feed period through to the earlier of the end of the feed period or the start of
+    and the start of the feed period through to the earlier of the end of the feed period or the start of
     the machine period.
 
     Triangular component: The base of the triangle starts at the latter of the start of the feed period,

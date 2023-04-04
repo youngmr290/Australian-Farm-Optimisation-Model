@@ -4,49 +4,53 @@ Rotation
 Rotation background
 -------------------
 
-Modelling of cropping or crop-pasture rotations to date has primarily been based on a predetermined,
-restricted set of rotations as “activities” of a LP matrix :cite:p:`RN78`. For example,
-MIDAS applies this same framework. However, this approach limits the potential rotations that can be
-selected by the model and does not support the flexible nature of real-life rotation selection. For
-example, if the start to a growing season is late, farmers may opt to reduce the area of crop in
-their rotations. It also results in the necessity to build entirely new modules for each agro-climatic
-region due to differences in crop and rotation choices that are available and applicable to each region.
+Modelling of cropping or crop-pasture rotations to date has primarily been based on a predetermined
+restricted set of rotations represented as "activities" in a LP matrix :cite:p:`RN78`.
+However, this approach often limits the potential rotations that can be
+selected by the model and does not capture the flexible nature of real-life rotation selection especially in the
+face of unfolding seasonal conditions. For example, using a fixed rotation structure, it is not possible to
+alter the rotation in response to the timing of early season rainfall. It also results in the necessity
+to build entirely new modules for each agro-climatic region due to differences in crop and rotation
+choices that are available and applicable to each region.
 
-In AFO, we adopt an alternative method proposed by Wimalasuriya and Eigenraam :cite:p:`RN78`, where
-the model solves for the optimal rotation from all possibilities. Each land use [#lmu]_ in the optimal
-solution is determined based on the paddock history and the productivity of the land use that
-follows the given history. This is an unrestricted approach that supports a large range of possible
-rotations, and allows greater flexibility for adding new land uses. Additionally, the approach aligns
-closer to reality, facilitating a more detailed and accurate representation of the effects of
-weather-year type on rotation choice.
 
-We define a rotation phase as a land use (‘current land use’) with a specific sequence of prior
-land uses (‘history required’). Each rotation phase has a level of production (grain and stubble
-production from crops and a pattern and magnitude of pasture production), a level of costs, and
-provides a history (‘history provided’). The history provided is the sequence of previous land uses.
-As a simple example, consider the rotation phase Canola: Barley: Wheat. Canola, the current land use.
-Barley – Wheat is the history required and Canola – Wheat is the history provided. To utilise this
-rotation structure in LP requires introducing a constraint to ensure that for the model to select
-a given rotation phase the history required must match a history provide from another rotation.
+In AFO, we adopt an alternative method proposed by Wimalasuriya and Eigenraam :cite:p:`RN78`, where the "activities"
+in the model are rotation phases. A rotation phase is a land use with a specific sequence of prior land uses [#landuse]_
+('history required'). A constraint is included to ensure that for the model to select a given rotation phase,
+the 'history required' must match the 'history provided' from another rotation phase. The model solves for
+the optimal rotation through a selection of rotation phases. This is an unrestricted approach that supports
+a large range of possible rotations and allows greater flexibility for adding new land uses. Additionally,
+the approach aligns closer to reality, facilitating a more detailed and accurate representation of the
+effects of weather-year type on rotation choice.
+
+Each rotation phase requires a history and provides a history. As a simple example, consider the rotation
+phase barley - wheat: canola in which canola is the current land use. Barley followed by wheat is the
+history required and wheat followed by canola is the history provided. Based on the current land use
+and the land use history the level of production (grain and stubble production from crop phases and,
+seed set and germination from pasture phases), the costs, the machinery requirement and the labour
+requirement are determined.
 
 The terminology used in AFO to distinguish each land use in a rotation is that the current land
 use is termed year 0. The prior year land use is year 1 and so on working backwards through the
 rotation phase. For example, in the rotation Canola: Barley: Wheat; Canola is year 0, Barley is
 year 1 and Wheat is year 2.
 
-The rotation phases are designed to be as simple or general as possible, covering all potential
-performance and management variants. A myriad of rotation phases are considered involving land
-uses over a set number of years, and then the infeasible options are removed.
+The rotation phases are designed to be as simple and general as possible while still capturing
+important performance and management variants. The system employed is to generate all possible
+combinations of the land use sequences over a set number of years, then the infeasible options
+are removed and the remainder are generalised where possible e.g. wheat, barley and oats may
+be generalised to cereal in the phase history if the type of crop does not affect subsequent
+productivity or costs.
 
-The length of the rotation phases and the level of generalisation possible is determined such
-that the impacts of the history required on the current land use production and costs are captured.
+The length of the rotation phases and the level of generalisation is determined so
+that the impacts of the history on the current land use production and costs are captured.
 These can be summarised by:
 
 #. The need to track the number of crop phases to determine if an annual pasture needs reseeding.
 #. The need to track the effect of a land use on the productivity or costs of subsequent land uses.
    This can be either:
 
-    a. Fixing of soil nitrogen and the effect on following crops. This requires tracking:
+    a. Fixing of soil nitrogen and its subsequent effect on following crops. This requires tracking:
 
         - The number of years of the legume as it affects the quantity of organic nitrogen.
 
@@ -56,7 +60,7 @@ These can be summarised by:
 
     c. Impact on weed seed levels
 
-#. The impact of cropping on subsequent annual pasture germination.
+#. The impact of cropping on subsequent annual pasture seed bank and germination.
 
 The impacts and assumptions of land use history on production and costs that are being captured
 in the rotation phases developed are:
@@ -64,17 +68,17 @@ in the rotation phases developed are:
 #. Annual pasture will be resown if the four most recent land uses in the history are crops.
    Resowing impacts the current year and the succeeding year.
 
-#. Lucerne (or Tedera) will be resown if the immediately preceding land use is not Lucerne (or Tedera)
+#. Lucerne (or Tedera) will be resown if the immediately preceding land use is not Lucerne (or Tedera).
 
 #. The impacts of spray-topping and manipulating pastures lasts for two years.
 
-#. Germination of annual pasture is affected by
+#. Germination of annual pasture is affected by:
 
     a. The two most recent land uses in the history.
 
-    b. The crop type immediately prior to the resown annual pasture. Specifically:
+    b. The crop type immediately prior to the annual pasture. Specifically:
 
-        - Oat fodder crop increases pasture germination
+        - Germination is higher after an oat fodder crop.
 
         - A pulse crop increases growth of annual pastures (which is represented by an increase in
           germination)
@@ -82,20 +86,19 @@ in the rotation phases developed are:
 #. A history of legume pasture (annual, Lucerne and Tedera) provides organic nitrogen for subsequent
    non-legume crops (cereal or Canola).
 
-    a. The amount of organic nitrogen increases up to 5 years of consecutive legume pasture.
+    a. The amount of organic nitrogen increases up to four years of consecutive legume pasture.
 
-    b. The utilisation of the organic nitrogen lasts for 2 years for a non-legume crop if 1 or 2 years
-       of preceding legume pastures occur. It lasts for 3 years if there is 3+ years of legume pasture.
+    b. The impact of the organic nitrogen lasts for a maximum of three years.
 
 #. Pulse crops provide organic nitrogen for subsequent non-legume crops.
 
-    a. The impact of the organic nitrogen lasts for a maximum of 3 years.
+    a. The impact of the organic nitrogen lasts for a maximum of three years.
 
-#. Leaf disease and root disease builds up for each land use and reduces productivity of subsequent
-   repeats of the land use. There is variation in the length of the break required and the duration
-   of the benefit.
+#. Leaf disease and root disease builds up for each land use and reduces productivity for consecutive land uses.
 
     a. It is assumed that the maximum level of disease is reached after 4 consecutive years of a land use.
+    b. There is variation in the length of the break (interval in years between the same land use)
+       required and the duration of the benefits of a break.
 
 To capture all the factors listed above, the length of the rotation phases represented in AFO is
 defined to a maximum of 6 years, allowing a history of 5 pastures to be tracked. To reduce the number
@@ -122,9 +125,9 @@ represented in each year of a rotation phase:
 
 * Year 4 → year X [#x]_ : the land use sets Y, A, U, T
 
-Some of the rotation phases constructed will be illogical and must be removed. For example, annual
+Some of the rotation phases constructed will be illogical and are removed. For example, annual
 pasture is only resown after 4 years of continuous crop therefore any rotation phase that are
-generated with resown annual that do not have 4 years of crops preceding it must be removed. See RotGeneration_
+generated with resown annual that do not have 4 years of crops preceding it can be removed. See RotGeneration_
 for the full list of illogical rules.
 
 To further reduce the possible number of rotation phases in the model, unprofitable and unused land
@@ -267,7 +270,7 @@ area can not be cropped however it is accessible by livestock.
     which is annual pasture with high spring FOO following multiple cereals.
 
 
-.. [#lmu] Use of paddock in a given year.
+.. [#landuse] Use of paddock in a given year.
 .. [#x] Year X is the final year of the rotation phase. This is set by the user.
 .. [#tc] Continuous Tedera/Lucerne are separate land use so that resowing every 10 years can be included.
 

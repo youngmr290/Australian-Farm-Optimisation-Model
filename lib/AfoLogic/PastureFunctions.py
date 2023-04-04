@@ -1,48 +1,50 @@
 """
 author: Young
 
-Pasture is the primary livestock feed source because in an extensive farming system it is a cost effective
-source of energy that is available for the entire year. Different pasture types can be
-represented by adding inputs for each pasture type. The default pasture type is “annual pasture”, however
-this can be changed by altering the inputs.
+Pasture is the primary livestock feed source because in an extensive farming system it is a cost-effective source of 
+energy available for the entire year. Different pasture types can be represented by altering the inputs for each 
+pasture type. The default pasture type is "annual pasture". However, by altering the inputs, perennial pastures 
+and mixed swards can be represented.
 
-The pasture feed source can be supplemented with concentrates, and in a mixed crop-livestock farm system
-the pasture can be complemented with dry residues from crop production (stubbles).
-The biology and logistics of pasture growth rate that are represented in AFO is:
+Pastures are often included in a rotation to provide a break from cropping, which can rejuvenate soil conditions, 
+provide disease and pest management and provide a cheap feed source for livestock. The pasture module generates 
+the pasture production (as discussed below) and the costs and labour associated with seeding, monitoring, 
+fertilising and spraying. Similar to cropping, the inputs vary based on rotation history, soil type and weather. 
+AFO can then optimise the area of each pasture phase to include on each land management unit (LMU).
 
-    * Pasture growth rate (PGR) is dependent on pasture leaf area, which is quantified by the level of feed on offer (FOO, kg of DM/ha). Additionally, PGR for each pasture type varies with the phase during its life cycle, soil moisture, sunlight and level of growth modifier applied. All are quantified by land management unit (LMU), time of year and weather-year.
-    * The available FOO depends on the grazing intensity.
-    * The mobilisation of below ground reserves (germination) of annual pastures at the break of season is dependent on the seed bank. Seed bank is controlled by the rotation in which the pasture is grown and varies with LMU.
-    * The mobilisation of below ground reserves of perennial pastures at the break of season can also be adjusted by rotation, however perennials usually aren’t grown in rotation with crops.
-    * The intake of animals grazing pasture is dependent on FOO and diet dry matter digestibility (DMD).
-    * The digestibility of the diet selected by animals grazing green pasture is dependent on the sward digestibility and the animal’s capacity for selective grazing. Sward digestibility varies depending on the pasture species, the time of year and the LMU. Selectivity depends on FOO and grazing intensity.
-    * Dry pasture that is not consumed is deferred to later in the year with a reduction in both quality and quantity. Livestock can select a higher quality diet when first grazing the dry pasture and quality reduces with extra grazing.
-    * Livestock trample both green and dry pasture while foraging.
-    * The risk of resource degradation increases when ground cover is lower so there is a minimum limit to ground cover during both the green and dry phases of the year.
+Pasture feed sources can be supplemented with concentrates, and in a mixed crop-livestock farm system the pasture 
+can be complemented with dry residues from crop production (stubbles). The biology and logistics of pasture 
+growth rate that are represented in AFO is:
 
+    •	Pasture growth rate (PGR) is dependent on pasture leaf area, which is quantified by the level of feed on offer (FOO, kg of DM/ha). Additionally, PGR for each pasture type varies with the phase during its life cycle, soil moisture, sunlight and level of growth modifier applied. All are quantified by their land management unit (LMU), time of year and weather-year.
+    •	The average FOO during a feed period depends on FOO at the beginning of the period, the grazing intensity and the PGR during the period.
+    •	The mobilisation of below-ground reserves (germination) of annual pastures at the break of season is dependent on the seed bank. The seed bank is controlled by the rotation in which the pasture is grown and varies with LMU.
+    •	The mobilisation of below ground reserves of perennial pastures at the break of season can also be adjusted by rotation. However, perennials usually are not grown in rotation with crops.
+    •	The maximum intake of animals grazing pasture depends on FOO and diet dry matter digestibility (DMD). Intake can be less than maximum which implies that the optimum solution can include rationing of animal intake via rotational grazing.
+    •	The digestibility of the diet selected by animals grazing green pasture depends on the sward digestibility and the animal's capacity for selective grazing. Sward digestibility varies depending on the pasture species, the time of year, the LMU and the FOO of the pasture. Selectivity depends on FOO and grazing intensity.
+    •	Dry pasture that is not consumed is deferred to later in the year, with a reduction in both its quality and quantity. Livestock can select a higher quality diet when first grazing the dry pasture but quality reduces with extra grazing.
+    •	Livestock trample both green and dry pasture while foraging in proportion to the amount consumed.
+    •	The risk of resource degradation increases when ground cover is lower so there is a user defined minimum limit to ground cover during both the green and dry phases of the year.
 
-The decision variables that can be optimised in AFO that represent the above biology are:
+The decision variables optimised in AFO, that represent the above biology are the:
 
-    * The rotation phases in which pasture can be grown on each LMU
-    * FOO profile during the year that is represented by a discrete range of FOO levels at the start of each feed period
-    * Grazing intensity and the variation during the year that is represented by a discrete range of the severity of defoliation in each feed period
-    * The level of growth modifiers (nitrogen or gibberellic acid) applied to the pasture
-    * The quantity of dry feed consumed from each of 2 dry feed quality groups in each feed period
-
-Nutritive value of pasture is determined by the metabolisable energy per unit of dry matter, the relative
+    •	rotation phases in which pasture can be grown on each LMU.
+    •	FOO profile during the year that is represented by a discrete range of FOO levels at the start of each feed period.
+    •	grazing intensity and the variation across feed periods during the year is represented by a discrete range of the severity of defoliation in each feed period.
+    •	level of growth modifiers (nitrogen or gibberellic acid) applied to the pasture.
+    •	quantity of dry feed consumed from each of 2 dry feed quality groups in each feed period.
+    
+The nutritive value of pasture is determined by the metabolisable energy per unit of dry matter, the relative 
 ingestibility and the relative availability. This varies with:
 
     1.	Feed period.
-    2.	The level of FOO. The greater the FOO, the lower the average digestibility of the sward. Lower digestibility
-        of high FOO sward is associated with the lignification that occurs in older foliage, which is represented by
-        a reduction in average digestibility associated with the number of days that the sward would need to be
-        deferred to achieve the higher FOO.
-        Higher digestibility of a low FOO sward is associated with the higher digestibility of new growth that
-        constitutes a higher proportion of the sward. There can be some error associated with this assumption
-        if the low FOO was generated by grazing a high FOO sward back to a low FOO, in which case most of the
-        DM would be stalk at the base of the plant. Which compares to a sward that has been maintained at a
-        low FOO level since the break of the season.
-    3.	Grazing intensity. With heavy grazing there is little scope for selection, so the diet digestibility equals the sward digestibility. With light grazing there is scope for selection and diet quality approaches that of high quality leaf. Note, increasing the energy content of the feed also improves the ingestibility of the feed.
+    2.	The level of FOO. The greater the FOO, the lower the average digestibility of the sward. Lower digestibility of a high FOO sward is associated with the lignification that occurs in older foliage. Higher digestibility of a low FOO sward is associated with the higher digestibility of new growth that constitutes a higher proportion of the sward. There can be some error associated with this assumption if the low FOO was generated by grazing a high FOO sward back to a low FOO, in which case most of the DM would be stalk at the base of the plant which compares to a sward maintained at a low FOO level since the break of the season.
+    3.	Grazing intensity. With heavy grazing there is little scope for selection, so the diet digestibility equals the sward digestibility. With light grazing there is scope for selection and diet quality that approaches that of high quality leaf. Note, increasing the energy content of the feed also improves the ingestibility of the feed (Freer et al., 2007).
+
+Pasture on non-arable areas in the crop paddocks is modelled as above with a few additions. Firstly, pasture on
+non-arable area is represented as a continuous annual pasture. Secondly, non-arable pasture on crop paddocks is
+not available for grazing until after harvest and therefore it goes into the low-quality dry feed pool. Accordingly,
+pasture on non-arable areas of the crop paddocks does not receive any farm inputs.
 
 Pasture is split into the following functions (see PastureFunctions):
 
@@ -408,7 +410,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     :param grn_senesce_startfoo_p6zt: The proportion of the green feed at the start of the period that senesces.
     :param grn_senesce_pgrcons_p6zt: The proportion of the green feed that grows during the period that senesces (or the reduction in senescence if FOO reduces due to grazing).
     :param i_grn_senesce_eos_p6zt: The proportion of the green feed at the end of the period that senesces because it is the end of the growing season.
-    :param i_base_p6zt: The base FOO level which represents the level below which the pasture can’t be grazed. This base
+    :param i_base_p6zt: The base FOO level which represents the level below which the pasture can't be grazed. This base
                       level is set with several criteria in mind; the physical limit at which animals can graze, an
                       erosion limit below which farmers wouldn't or shouldn't graze; the optimum level of FOO based on
                       the trade-off between PGR and FOO.
@@ -568,12 +570,12 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     Dry pasture is represented by a low and high-quality decision variable. When green feed senesces a proportion
     of the feed enters each pool based on the digestibility of the senescing feed. This representation allows some
     diet selection to occur, with the higher quality component grazed by different sheep than the lower quality.
-    The ‘high’ pool has digestibility of the 25th percentile and the ‘low’ group the 75th percentile. If the nutritive
+    The 'high' pool has digestibility of the 25th percentile and the 'low' group the 75th percentile. If the nutritive
     value of the feed is greater than the livestock's requirement the quality is reduced by a given factor (see fsfun.f_effective_mei).
 
-    Non arable area on crop paddocks grow pasture all season, calculated as an ungrazed green annual pasture
+    Non-arable areas of crop paddocks grow pasture all season, calculated as an ungrazed green annual pasture
     (see f_grn_pas). After harvest pasture on non-arable areas can be consumed. All pasture grown on the
-    non-arable area of crop paddock is allocated to the low-quality dry pasture pool because it has grown
+    non-arable areas of crop paddocks is allocated to the low-quality dry pasture pool because it has grown
     all year without being grazed.
 
     Dry pasture that is not consumed is passed to the same pool in the next period and the average quality
@@ -656,14 +658,15 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_
     The livestock intake volume required to consume 1 tonne of pasture on crop paddocks.
     - adjusted for feed period
 
-    Pasture can be grazed on crop paddocks if seeding occurs after pasture germination. Grazing can occur between
-    pasture germination and destocking. Destocking date occurs a certain number of days before seeding, this is to
-    allow the pasture leaf area to grow so that the knock down spray is effective. The amount of pasture that can be
-    consumed per day is a user defined input that can vary by LMU. The grazing days provided by each seeding activity
+    Green pasture can be grazed on crop paddocks if destocking for seeding occurs after pasture germination.
+    Pasture grazed on the crop paddocks in the period before destocking for spraying and seeding is represented
+    as a pre-specified quality and maximum quantity available each day on the area that is yet to be seeded,
+    with the additional requirement that pasture must be destocked 10 days prior to seeding to allow time for
+    an effective knockdown spray. Grazing days are provided by the seeding activity which
     are calculated in mach.py and depend on the time between the break of season and destocking prior to seeding.
 
     The main assumption/limitation of the poc representation is that the pasture consumption per lmu per day per ha
-    is a fixed value per feed period. This means grazing management of POC isn't optimised.
+    is a fixed value per feed period.
 
     :param cu3: params used to convert foo for rel availability.
     :param cu4: params used to convert height for rel availability.

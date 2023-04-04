@@ -1,61 +1,71 @@
 '''
-Generate price scenario scalars.
+Summary
+-------
+Notwithstanding weather variation, agricultural commodity price is a major source of farm risk.
+There are two main methods to include price variation in whole farm LP.
+
+    1.	Expected price variation (e.g. Kingwell, 1994): Expected price variation represents price
+        variation by applying a discrete distribution to cashflow items after management decisions have been
+        made. This method of representing price variation assumes that there is no knowledge of the
+        price state, prior to purchasing or selling a commodity. The only known information is the
+        expected price (i.e. a farmer does not know if they are in a high or low price year until
+        they purchase or sell). Therefore, price variation has no impact on farm management for a
+        risk neutral farmer. However, for a risk averse farmer price variation can alter their
+        management. For example, if the grain price is more variable than livestock prices, it
+        may be optimal for a risk averse farmer to have a higher livestock focus because it will
+        reduce the variation in farm profit between years.
+    2.	Forecasted price variation (Apland and Hauer, 1993): Forecasted price variation is a more
+        realistic method achieved by including discrete states based on forecast information, allowing
+        decision-making to change based on the forecasted conditions. The forecasted states are
+        adjusted using a discrete distribution to reflect the actual prices received at purchase
+        or sale. This requires a stochastic programming approach that increases model size and complexity.
+
+AFO currently uses method 1 because price variation has not been a major focus as yet.
+Nonetheless, a likely valuable future improvement for AFO would be to include forecasted
+price variation. AFO’s flexible structure would facilitate inclusion of such price variation.
+
+Currently, price variation is approximated in AFO using a range of discrete price states
+for meat, wool and grain. The need to form discrete approximations of a continuous distributions
+is a necessary requirement for developing a LP model of farm management responses to price and
+weather-year states. By their nature, discrete stochastic programming models cannot consider
+all possible price states as described by continuous distributions. Rather continuous variables
+such as price need to be approximated by discrete states.
 
 Price scalars have two main purposes:
 
     #. To account for variations in the price received for a given year due to external market conditions (c1 axis).
     #. To account for variation in prices due to season type.
 
-Notwithstanding weather variation, agricultural commodity price is a major source of farm risk
-and must be represented when including farmer risk attitude (see the model objective documentation in CorePyomo for
-information about the representation of risk aversion). For example, if the grain price is more variable
-than livestock prices, it may be optimal for a risk averse farmer to have a higher livestock focus
-because it will reduce variation in the level of income. Price variation is
-approximated in AFO using user defined number of price states for meat, wool and grain.
-The price states were determined from a multivariate price distribution so that correlation between commodities
-was captured.
+Within year price cycles are accounted for in AFO for products such as sale sheep that can be sold at
+different times during the year. Including the within year price cycles ensures that optimisation of the
+nutrition of sale sheep represents that sale data has an effect on expected price. Representing the
+annual price cycle also ensures that strategic management such as time of lambing is also evaluated
+correctly given the impact of time of lambing on likely turn-off dates.
 
+Generation of discrete price states
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The price state scalars and their probabilities are calculated by fitting a multivariate normal
+distribution to historical prices, then summarises as discrete states by dividing the multi-dimensional
+probability density distribution into segments. A multivariate distribution is used so that
+correlations between commodities are accurately represented in the resulting price states.
+Grain and wool prices are better represented by log-normal distributions :cite:p:`kingwell1996`.
+Thus, before fitting the distribution, grain and wool data were subject to a log transformation.
+Additionally, the historical prices were CPI adjusted and detrended using a long-term moving average.
+The reason for detrending the price data was that the price states represented in AFO serve the
+purpose of capturing yearly price variation (i.e. variations around the expected price for that
+year) rather than capturing within year price cycles.
 
-Generation of discrete price states:
-
-The need to form discrete approximations of a continuous distributions is a necessary requirement for developing a
-discrete stochastic programming model of farm management responses to price and weather-year states.
-By their nature, discrete stochastic programming models cannot consider
-all possible price states as described by continuous distributions.  Rather continuous variables such as price
-need to be approximated by discrete states.
-
-In AFO, the user inputs the average price for each commodity. This is then adjusted by a price state scalar
-which returns the price of each commodity in each discrete price state. The price state
-scalars and their probability are calculated by fitting a multivariate normal distribution to historical price variation
-scalars. A multivariate distribution is used so that correlations between commodities are accurately
-represented in the resulting price states. The price variation scalars are calculated using two different methods. Both
-methods use historical price data for each commodity.
-Note: Grain and wool prices are better represented by
-a log-normal distribution (e.g. :cite:p:`kingwell1996`) thus before fitting the distribution grain and wool data undergo
-a log transformation.
-
-For method 1, the weekly price scalars are calculated by dividing the CPI adjusted historical prices by the
-average price for the series. For method 2, the weekly price scalars are calculated by dividing the CPI adjusted historical
-prices by the medium term moving average. A moving average is used to detrend the price series (remove long term price trends).
-The logic behind method 2 is that the price states represented in AFO serve the purpose of capturing yearly price
-variation (i.e variations around the expected price for that year). Thus, including long term price trends may overestimate
-variation within a given year.
-
-The multivariate normal distribution resulting from either method 1 or 2, is then summarised into discrete
-states by dividing up the probability density distribution and calculating the probability (area under the curve)
-and weighted average price of each section of the distribution.
-The price at each point is compared to the average to determine the magnitude
-of the scalar.
-
-To reduce model size and simplify input calibration, all meat classes (lamb, shipper,
-mutton, etc) received the same meat price scalar. The same thing happens for classes of wool and types of grain.
-This simplification should not compromise the accuracy of the results because subclasses of a given commodity
-tend to have a high correlation (e.g. between 2000 and 2021 the correlation between light lamb and mutton was 96%).
-A further simplification was not to include price variation
-for input costs because input costs tend to vary less and therefore the additional model size
+To reduce model size and simplify input calibration, all meat classes (lamb, shipper, mutton, etc)
+receive the same meat price scalar. The same thing happens for classes of wool and types of grain.
+This simplification should not compromise the accuracy of the results because subclasses of a given
+commodity tend to have a high correlation (e.g. between 2000 and 2021 the correlation between light
+lamb and mutton was 96%). A further simplification was excluding price variation for input costs
+because input costs tend to vary less :cite:p:`kingwell1996` and therefore the additional model size
 was not justified. The resulting assumptions are that all animal classes are 100% correlated,
-all wool microns are 100% correlated, all grains are 100% correlated and all input commodities have no variation.
-If these assumptions become limiting it is possible to add the extra detail in the price generation.
+all wool microns are 100% correlated, all grains are 100% correlated and all input commodities
+have no variation. This assumption is not entirely accurate (e.g. canola and wheat prices are
+not 100% correlated) however, if in future analysis, price variation is of high importance this
+can easily be rectified by expanding the inputs.
 
 The c1 axis is averaged for both the asset constraint and the working capital. This saves space without losing
 much/any information.
@@ -68,7 +78,7 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
 
-import PropertyInputs as pinp
+from . import PropertyInputs as pinp
 
 na=np.newaxis
 
