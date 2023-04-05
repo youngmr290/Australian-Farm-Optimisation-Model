@@ -154,7 +154,7 @@ def coremodel_all(trial_name,model,nv):
     print(f'Profit: {profit}   Obj: {utility}')
     print('-' * 60)
 
-    infeasible_trial_file_path = relativeFile.find(__file__, "../../Output/infeasible", trial_name)
+    infeasible_trial_file_path = relativeFile.find(__file__, "../../Output/infeasible", trial_name + ".txt")
 
     ##this check if the solver is optimal - if infeasible or error the model will save a file in Output/infeasible/ directory. This will be accessed in reporting to stop you reporting infeasible trials.
     ##the model will keep running the next trials even if one is infeasible.
