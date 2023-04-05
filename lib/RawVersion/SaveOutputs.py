@@ -9,6 +9,7 @@ import warnings
 from ..AfoLogic import Functions as fun
 from ..AfoLogic import PropertyInputs as pinp
 from ..AfoLogic import FeedSupplyStock as fsstk
+from ..AfoLogic import relativeFile
 from lib.RawVersion import LoadExcelInputs as dxl
 
 def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info):
@@ -95,9 +96,7 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
     ##start writing
     if not rot_phases.equals(old_rot_phases):
         try:
-            path_to_afo_excel = "../../ExcelInputs"
-            directory_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path_to_afo_excel)
-            rotation_path = os.path.join(directory_path, "Rotation.xlsx")
+            rotation_path = relativeFile.find(__file__, "../../ExcelInputs", "Rotation.xlsx")
             writer = pd.ExcelWriter(rotation_path, engine='xlsxwriter')
             ##list of rotations - index: tuple, values: expanded version of rotation
             rot_phases.to_excel(writer, sheet_name='rotation list',index=True,header=False)

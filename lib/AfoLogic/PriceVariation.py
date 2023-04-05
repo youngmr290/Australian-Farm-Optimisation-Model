@@ -77,7 +77,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
 
+
 from . import PropertyInputs as pinp
+from . import relativeFile
 
 na=np.newaxis
 
@@ -93,8 +95,8 @@ if __name__=="__main__":
     method = 1 #0=use raw data, 1=use moving average to detrend data
 
     ##read in CPI adjusted price series
-    directory_path = os.path.dirname(os.path.abspath(__file__))
-    price_data = pd.read_excel(os.path.join(directory_path, "Raw Price Series.xlsx"), sheet_name="Python", index_col=0)
+    price_data_path = relativeFile.find(__file__, "./", "Raw Price Series.xlsx")
+    price_data = pd.read_excel(price_data_path, sheet_name="Python", index_col=0)
 
     ##plot to confirm if the relationship is normal or log normal
     # fig = px.histogram(price_data, x="APW wheat")

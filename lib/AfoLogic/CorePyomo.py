@@ -31,7 +31,7 @@ from . import Sensitivity as sen
 from . import Finance as fin
 from . import CropGrazingPyomo as cgzpy
 from . import SaltbushPyomo as slppy
-
+from . import relativeFile
 
 def coremodel_all(trial_name,model,nv):
     '''
@@ -154,9 +154,7 @@ def coremodel_all(trial_name,model,nv):
     print(f'Profit: {profit}   Obj: {utility}')
     print('-' * 60)
 
-    path_to_output_infeasible = "../../Output/infeasible"
-    directory_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path_to_output_infeasible)
-    infeasible_trial_file_path = os.path.join(directory_path, trial_name)
+    infeasible_trial_file_path = relativeFile.find(__file__, "../../Output/infeasible", trial_name)
 
     ##this check if the solver is optimal - if infeasible or error the model will save a file in Output/infeasible/ directory. This will be accessed in reporting to stop you reporting infeasible trials.
     ##the model will keep running the next trials even if one is infeasible.
