@@ -14,14 +14,16 @@ from lib.RawVersion import LoadExcelInputs as dxl
 
 def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info):
     ##check Output folders exist for outputs. If not create.
-    if os.path.isdir('Output'):
+    output_path = relativeFile.find(__file__, "../../Output", "")
+    output_infeasible_path = relativeFile.find(__file__, "../../Output/infeasible", "")
+    if os.path.isdir(output_path):
         pass
     else:
-        os.mkdir('Output')
-    if os.path.isdir('Output/infeasible'):
+        os.mkdir(output_path)
+    if os.path.isdir(output_infeasible_path):
         pass
     else:
-        os.mkdir('Output/infeasible')
+        os.mkdir(output_infeasible_path)
 
 
     ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
@@ -66,7 +68,8 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
                         print("      ", index, model.dual[c[index]], file=f)
 
     ##pickle lp info
-    with open('pkl/pkl_lp_vars_{0}.pkl'.format(trial_name),"wb") as f:
+    pkl_lp_vars_path = relativeFile.find(__file__, "../../pkl", "pkl_lp_vars_{0}.pkl".format(trial_name))
+    with open(pkl_lp_vars_path, "wb") as f:
         pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
 
     ##call function to store optimal feedsupply - do this before r_vals since completion of r_vals trigger successful completion.
@@ -75,7 +78,8 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
 
     ##pickle report values - every time a trial is run (even if pyomo not run)
     ## This has to be last because it controls if the trial needs to be run next time the exp is run (f_run_required)
-    with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
+    pkl_r_vals_path = relativeFile.find(__file__, "../../pkl", "pkl_r_vals_{0}.pkl".format(trial_name))
+    with open(pkl_r_vals_path, "wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
 
 
