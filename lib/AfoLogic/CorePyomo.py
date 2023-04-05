@@ -123,7 +123,7 @@ def coremodel_all(trial_name,model,nv):
         ##solve with glpk
         solver = pe.SolverFactory('glpk')
         solver.options['tmlim'] = 100  # limit solving time to 100sec in case solver stalls.
-    solver_result = solver.solve(model, tee=True)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
+    solver_result = solver.solve(model, warmstart=True, tee=True)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
 
     ##calc profit - profit = terminal wealth (this is the objective without risk) + minroe + asset_cost
     try:  # to handle infeasible (there is no profit component when infeasible)
