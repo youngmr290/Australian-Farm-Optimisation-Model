@@ -41,7 +41,7 @@ def f_read_exp(pinp_req=False):
         exp_group = None
 
     ##read excel
-    exp_location = relativeFile.find(__file__, "../../ExcelInputs", "exp.xlsx")
+    exp_location = relativeFile.findExcel("exp.xlsx")
     exp_data = pd.read_excel(exp_location, index_col=None, header=[0,1,2,3], engine='openpyxl')
 
     ##determine trials which are in specified experiment group. If no group passed in then all trials will be included in the experiment.
@@ -112,11 +112,11 @@ def f_run_required(exp_data1, l_pinp):
     l_pinp = l_pinp.dropna().unique()
     same_xl_inputs = True
     for pinp in l_pinp:
-        property_location = relativeFile.find(__file__, "../../ExcelInputs", f"Property_{pinp}.xlsx")
+        property_location = relativeFile.findExcel(f"Property_{pinp}.xlsx")
         same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(property_location)
-    universal_location = relativeFile.find(__file__, "../../ExcelInputs", "Universal.xlsx")
+    universal_location = relativeFile.findExcel("Universal.xlsx")
     same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(universal_location)
-    property_location = relativeFile.find(__file__, "../../ExcelInputs", "Structural.xlsx")
+    property_location = relativeFile.findExcel("Structural.xlsx")
     same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(property_location)
 
     ##calc if any SA have been added or removed since AFO was last run
@@ -201,7 +201,7 @@ def f_load_experiment_data(force_run):
     total_trials = sum(exp_data.index[row][0] == True for row in range(len(exp_data)))
     print(f'Number of trials to run: {total_trials}')
     print(f'Number of full solutions: {sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data)))}')
-    exp_location = relativeFile.find(__file__, "../../ExcelInputs", "exp.xlsx")
+    exp_location = relativeFile.findExcel("exp.xlsx")
     print(f'exp.xls last saved: {datetime.fromtimestamp(round(os.path.getmtime(exp_location)))}')
 
     return exp_data, exp_data1, dataset, trial_pinp, total_trials

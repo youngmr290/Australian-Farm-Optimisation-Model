@@ -3,7 +3,9 @@ import numpy as np
 import sys
 import os
 
+
 from ..AfoLogic import ReportFunctions as rfun
+from ..AfoLogic import relativeFile
 
 
 def f_create_report_dfs(non_exist_trials):
@@ -430,17 +432,18 @@ def f_save_reports(report_run, reports, processor):
     ####################################
     print("Writing to Excel")
     ##first check that Excel is not open (Microsoft puts a lock on files, so they can't be updated from elsewhere while open)
-    if os.path.isfile("Output/Report{0}.xlsx".format(processor)): #to check if report.xl exists
+    report_file_path = relativeFile.find(__file__, "../../Output", "Report{0}.xlsx".format(processor))
+    if os.path.isfile(report_file_path): #to check if report.xl exists
         while True:   # repeat until the try statement succeeds
             try:
-                myfile = open("Output/Report{0}.xlsx".format(processor),"w") # chucks an error if Excel file is open
+                myfile = open(report_file_path,"w") # chucks an error if Excel file is open
                 break                             # exit the loop
             except IOError:
                 input("Could not open file! Please close Excel. Press Enter to retry.")
                 # restart the loop
 
     ## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in Excel
-    writer = pd.ExcelWriter('Output/Report{0}.xlsx'.format(processor),engine='xlsxwriter')
+    writer = pd.ExcelWriter(report_file_path, engine='xlsxwriter')
 
     ##make empty df to store row and col index settings. Used when combining multiple report.xl
     df_settings = pd.DataFrame(columns=['index', 'cols'])

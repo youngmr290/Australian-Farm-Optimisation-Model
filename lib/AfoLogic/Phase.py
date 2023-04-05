@@ -79,6 +79,7 @@ from . import Finance as fin
 from . import Mach as mac
 from . import RotationPhases as rps
 from . import Sensitivity as sen
+from . import relativeFile
 
 ####################
 #general functions #
@@ -89,8 +90,7 @@ na = np.newaxis
 def f1_sim_inputs(sheet=None, index=None, header=None):
     ###build path this way so the file can be access even if AFO is run from another directory eg readthedocs or web app.
     property = pinp.general['i_property_id']
-    xl_path = "ExcelInputs/SimInputs_{0}.xlsx".format(property)
-    return pd.read_excel(xl_path, sheet_name=sheet, index_col=index, header=header, engine='openpyxl')
+    return pd.read_excel(relativeFile.findExcel("SimInputs_{0}.xlsx".format(property)), sheet_name=sheet, index_col=index, header=header, engine='openpyxl')
 
 
 def f1_mask_lmu(df, axis):

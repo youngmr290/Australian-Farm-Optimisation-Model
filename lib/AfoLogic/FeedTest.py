@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 
 import FeedSupplyStock as fgen
+from . import relativeFile
 #import Functions as fun
 
 print("")
@@ -21,7 +22,7 @@ print("")
 na = np.newaxis
 
 ## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
-writer = pd.ExcelWriter('Output/r_NV.xlsx',engine='xlsxwriter', datetime_format="dd-mmm-yy")
+writer = pd.ExcelWriter(relativeFile.find(__file__, "../../Output", 'r_NV.xlsx'),engine='xlsxwriter', datetime_format="dd-mmm-yy")
 ### Set some standard values for the workbook
 workbook = writer.book
 format_0hidden2dp = workbook.add_format({'num_format': '# ##0.00;-0.00;;@'})

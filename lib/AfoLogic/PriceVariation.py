@@ -95,7 +95,7 @@ if __name__=="__main__":
     method = 1 #0=use raw data, 1=use moving average to detrend data
 
     ##read in CPI adjusted price series
-    price_data_path = relativeFile.find(__file__, "./", "Raw Price Series.xlsx")
+    price_data_path = relativeFile.findExcel("Raw Price Series.xlsx")
     price_data = pd.read_excel(price_data_path, sheet_name="Python", index_col=0)
 
     ##plot to confirm if the relationship is normal or log normal
@@ -255,7 +255,7 @@ if __name__=="__main__":
 
 
     ##write to xl - it would be good to have it with a named range  and have all the tables in the same sheet so that the read in process could be simplified.
-    writer = pd.ExcelWriter('PriceScenarios.xlsx',engine='xlsxwriter')
+    writer = pd.ExcelWriter(relativeFile.findExcel('PriceScenarios.xlsx'),engine='xlsxwriter')
     grain_price_scalar_c1z.to_excel(writer, sheet_name='grain')
     meat_price_scalar_c1z.to_excel(writer, sheet_name='meat')
     wool_price_scalar_c1z.to_excel(writer, sheet_name='wool')

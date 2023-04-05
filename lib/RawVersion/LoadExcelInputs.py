@@ -30,8 +30,7 @@ from ..AfoLogic import relativeFile
 def f_load_stubble():
     ##read in category info frpm xl
     ###build path
-    residue_xl_path = relativeFile.find(__file__, "../../ExcelInputs", "stubble sim.xlsx")
-    cat_propn_s1_ks2 = pd.read_excel(residue_xl_path,header=None, engine='openpyxl')
+    cat_propn_s1_ks2 = pd.read_excel(relativeFile.findExcel("stubble sim.xlsx"),header=None, engine='openpyxl')
     return cat_propn_s1_ks2
 
 def f_load_phases():
@@ -43,7 +42,7 @@ def f_load_phases():
 
     '''
     ##rotation phases - read in from excel
-    rot_xl_path = relativeFile.find(__file__, "../../ExcelInputs", "Rotation.xlsx")
+    rot_xl_path = relativeFile.findExcel("Rotation.xlsx")
     try:
         phases_r = pd.read_excel(rot_xl_path, sheet_name='rotation list', header=None, index_col=0,
                                  engine='openpyxl').T.reset_index(drop=True).T  # reset the col headers to std ie 0,1,2 etc
@@ -73,8 +72,8 @@ def f_load_excel_default_inputs(use_pkl=True, load_all_pinp=False):
     ##dict to store structural inputs
     sinp_defaults={}
 
-    structural_xl_path = relativeFile.find(__file__, "../../ExcelInputs", "Structural.xlsx")
-    structural_pkl_path = relativeFile.find(__file__, "../../ExcelInputs", "pkl_structural.pkl")
+    structural_xl_path = relativeFile.findExcel("Structural.xlsx")
+    structural_pkl_path = relativeFile.findExcel("pkl_structural.pkl")
 
     try:
         if os.path.getmtime(structural_xl_path) > os.path.getmtime(structural_pkl_path):
@@ -133,8 +132,8 @@ def f_load_excel_default_inputs(use_pkl=True, load_all_pinp=False):
     for property in pinp_defaults_req:
         pinp_defaults[property] = {}
         ##build path.
-        property_xl_path = relativeFile.find(__file__, "../../ExcelInputs", "Property_{0}.xlsx".format(property))
-        property_pkl_path = relativeFile.find(__file__, "../../ExcelInputs", "pkl_property_{0}.pkl".format(property))
+        property_xl_path = relativeFile.findExcel("Property_{0}.xlsx".format(property))
+        property_pkl_path = relativeFile.findExcel("pkl_property_{0}.pkl".format(property))
 
         try:
             if os.path.getmtime(property_xl_path) > os.path.getmtime(property_pkl_path):
@@ -238,8 +237,8 @@ def f_load_excel_default_inputs(use_pkl=True, load_all_pinp=False):
     uinp_defaults={}
 
     ##build path
-    universal_xl_path = relativeFile.find(__file__, "../../ExcelInputs", "Universal.xlsx")
-    universal_pkl_path = relativeFile.find(__file__, "../../ExcelInputs", "pkl_universal.pkl")
+    universal_xl_path = relativeFile.findExcel("Universal.xlsx")
+    universal_pkl_path = relativeFile.findExcel("pkl_universal.pkl")
 
     try:
         if os.path.getmtime(universal_xl_path) > os.path.getmtime(universal_pkl_path):
@@ -320,7 +319,7 @@ def f_load_excel_default_inputs(use_pkl=True, load_all_pinp=False):
     ##read in price variation inputs from xl - this might change
     price_variation_inp = {}
     ###build path
-    pricescenarios_xl_path = relativeFile.find(__file__, "../../ExcelInputs", "PriceScenarios.xlsx")
+    pricescenarios_xl_path = relativeFile.findExcel("PriceScenarios.xlsx")
     ###read price info
     price_variation_inp['grain_price_scalar_c1z'] = pd.read_excel(pricescenarios_xl_path,sheet_name='grain',index_col=0,header=0,engine='openpyxl')
     price_variation_inp['meat_price_scalar_c1z'] = pd.read_excel(pricescenarios_xl_path,sheet_name='meat',index_col=0,header=0,engine='openpyxl').values

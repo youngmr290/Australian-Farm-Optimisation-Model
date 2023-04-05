@@ -96,7 +96,7 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
     ##start writing
     if not rot_phases.equals(old_rot_phases):
         try:
-            rotation_path = relativeFile.find(__file__, "../../ExcelInputs", "Rotation.xlsx")
+            rotation_path = relativeFile.findExcel("Rotation.xlsx")
             writer = pd.ExcelWriter(rotation_path, engine='xlsxwriter')
             ##list of rotations - index: tuple, values: expanded version of rotation
             rot_phases.to_excel(writer, sheet_name='rotation list',index=True,header=False)
