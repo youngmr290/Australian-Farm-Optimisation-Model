@@ -60,10 +60,10 @@ def run_afo(row):
 
     ##run AFO
     global d_rot_info
-    model, profit, lp_vars, r_vals, pkl_fs_info, d_rot_info = afo.exp(user_sa, property, trial_name, trial_description, sinp_defaults, uinp_defaults, pinp_defaults, d_rot_info, cat_propn_s1_ks2)
+    model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info = afo.exp(user_sa, property, trial_name, trial_description, sinp_defaults, uinp_defaults, pinp_defaults, d_rot_info, cat_propn_s1_ks2)
 
     ##save AFO outputs
-    out.f_save_trial_outputs(exp_data, row, trial_name, model, profit, lp_vars, r_vals, pkl_fs_info, d_rot_info)
+    out.f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info)
 
     #last step is to print the time for the current trial to run
     ##determine expected time to completion - trials left multiplied by average time per trial

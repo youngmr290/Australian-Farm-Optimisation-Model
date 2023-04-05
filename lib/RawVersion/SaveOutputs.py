@@ -11,7 +11,7 @@ from ..AfoLogic import PropertyInputs as pinp
 from ..AfoLogic import FeedSupplyStock as fsstk
 from lib.RawVersion import LoadExcelInputs as dxl
 
-def f_save_trial_outputs(exp_data, row, trial_name, model, profit, lp_vars, r_vals, pkl_fs_info, d_rot_info):
+def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info):
     ##check Output folders exist for outputs. If not create.
     if os.path.isdir('Output'):
         pass
@@ -27,7 +27,7 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, lp_vars, r_va
     fun.write_variablesummary(model, row, exp_data, profit, 1, property_id=pinp.general['i_property_id'])
 
     ##check if user wants full solution
-    if exp_data.index[row][1] == True:
+    if exp_data.index[row][1] == True and not trial_infeasible:
         ##make lp file
         model.write('Output/%s.lp' %trial_name,io_options={'symbolic_solver_labels':True})  #file name has to have capital
 

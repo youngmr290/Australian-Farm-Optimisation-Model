@@ -41,13 +41,13 @@ for row in dataset:
     user_sa = rve.f_process_user_sa(exp_data, row)
 
     ##run AFO
-    model, profit, lp_vars, r_vals, pkl_fs_info, d_rot_info = afo.exp(user_sa, property, trial_name, trial_description, sinp_defaults, uinp_defaults, pinp_defaults, d_rot_info, cat_propn_s1_ks2)
+    model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info = afo.exp(user_sa, property, trial_name, trial_description, sinp_defaults, uinp_defaults, pinp_defaults, d_rot_info, cat_propn_s1_ks2)
 
     ##tally trials run for print statements
     run += 1
 
     ##save AFO outputs
-    out.f_save_trial_outputs(exp_data, row, trial_name, model, profit, lp_vars, r_vals, pkl_fs_info, d_rot_info)
+    out.f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info)
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run

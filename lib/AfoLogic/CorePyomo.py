@@ -163,6 +163,7 @@ def coremodel_all(trial_name,model,nv):
     if (solver_result.solver.status == pe.SolverStatus.ok) and (
             solver_result.solver.termination_condition == pe.TerminationCondition.optimal):
         print('OPTIMAL LP SOLUTION FOUND')  # Do nothing when the solution in optimal and feasible
+        trial_infeasible = False
         ###trys to delete the infeasible file because the trial is now optimal
         try:
             os.remove(infeasible_trial_file_path)
@@ -170,16 +171,18 @@ def coremodel_all(trial_name,model,nv):
             pass
     elif (solver_result.solver.termination_condition == pe.TerminationCondition.infeasible):
         print('***INFEASIBLE LP SOLUTION***')
+        trial_infeasible = True
         ###save infeasible file
         with open(infeasible_trial_file_path,'w') as f:
             f.write("Solver Status: {0}".format(solver_result.solver.termination_condition))
     else:  # Something else is wrong - solver may have stalled.
         print('***Solver Status: error (other)***')
+        trial_infeasible = True
         ###save infeasible file
         with open(infeasible_trial_file_path,'w') as f:
             f.write("Solver Status: {0}".format(solver_result.solver.termination_condition))
 
-    return profit, utility
+    return profit, utility, trial_infeasible
 
 ##############
 #constriants #

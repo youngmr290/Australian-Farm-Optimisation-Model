@@ -168,7 +168,7 @@ def exp(user_data, property, trial_name, trial_description, sinp_defaults, uinp_
     bndpy.f1_boundarypyomo_local(params, model)
     pyomocalc_end = time.time()
     print(f'{trial_description}, time for localpyomo: {pyomocalc_end - pyomocalc_start:.2f} finished at {time.ctime()}')
-    profit, obj = core.coremodel_all(trial_name, model, nv)
+    profit, obj, trial_infeasible = core.coremodel_all(trial_name, model, nv)
     print(f'{trial_description}, time for corepyomo: {time.time() - pyomocalc_end:.2f} finished at {time.ctime()}')
 
     ##build lp_vars
@@ -188,5 +188,5 @@ def exp(user_data, property, trial_name, trial_description, sinp_defaults, uinp_
                     lp_vars['mvf'][index] = 0  #if model doesn't solve then RC might not exist so replace with 0
 
 
-    return model, profit, lp_vars, r_vals, pkl_fs_info, d_rot_info
+    return model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info
 
