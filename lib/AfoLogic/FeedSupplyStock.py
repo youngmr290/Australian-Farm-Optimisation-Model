@@ -381,7 +381,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     if sinp.structuralsa['i_fs_use_pkl']:
         print(f'pkl_fs{fs_use_number} being used.')
         pkl_fs_path = relativeFile.find(__file__, "../../pkl", f"pkl_fs{fs_use_number}.pkl")
-        with open(pkl_fs_path,"rb") as f:
+        with open(pkl_fs_path,"rb") as f: #todo should move this to LoadInputs section. Because in the web app this will come from database.
             pkl_fs = pkl.load(f)
 
         ###update the feedsupply with the pkl fs
