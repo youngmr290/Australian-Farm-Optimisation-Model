@@ -22,6 +22,7 @@ from datetime import datetime
 
 from ..AfoLogic import Functions as fun
 from ..AfoLogic import Exceptions as exc
+from ..AfoLogic import relativeFile
 
 def f_read_exp(pinp_req=False):
     '''
@@ -40,9 +41,7 @@ def f_read_exp(pinp_req=False):
         exp_group = None
 
     ##read excel
-    path_to_afo_excel = "../../ExcelInputs"
-    directory_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path_to_afo_excel)
-    exp_location = os.path.join(directory_path, "exp.xlsx")
+    exp_location = relativeFile.findExcel("exp.xlsx")
     exp_data = pd.read_excel(exp_location, index_col=None, header=[0,1,2,3], engine='openpyxl')
 
     ##determine trials which are in specified experiment group. If no group passed in then all trials will be included in the experiment.
@@ -97,9 +96,7 @@ def f_run_required(exp_data1, l_pinp):
     ##calc if any code has been changed since AFO was last run
     ###if only ReportControl.py or ReportFunctions.py have been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't a report
 
-    path_to_afo = "../AfoLogic"
-    directory_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path_to_afo)
-    python_files_dir = os.path.join(directory_path, "*.py")
+    python_files_dir = relativeFile.find(__file__, "../AfoLogic", "*.py")
     
     sorted_list = sorted(glob.iglob(python_files_dir), key=os.path.getmtime)
     if sorted_list[-1] != 'ReportFunctions.py' and sorted_list[-1] != 'ReportControl.py':
@@ -114,14 +111,12 @@ def f_run_required(exp_data1, l_pinp):
     ###gets the pinp used in the current exp. l_pinp only includes the properties in the current exp but that is fine because the other properties will trigger re-run later.
     l_pinp = l_pinp.dropna().unique()
     same_xl_inputs = True
-    path_to_afo_excel = "../../ExcelInputs"
-    directory_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path_to_afo_excel)
     for pinp in l_pinp:
-        property_location = os.path.join(directory_path, f"Property_{pinp}.xlsx")
+        property_location = relativeFile.findExcel(f"Property_{pinp}.xlsx")
         same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(property_location)
-    universal_location = os.path.join(directory_path, "Universal.xlsx")
+    universal_location = relativeFile.findExcel("Universal.xlsx")
     same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(universal_location)
-    property_location = os.path.join(directory_path, f"Structural.xlsx")
+    property_location = relativeFile.findExcel("Structural.xlsx")
     same_xl_inputs &= os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(property_location)
 
     ##calc if any SA have been added or removed since AFO was last run
@@ -206,9 +201,7 @@ def f_load_experiment_data(force_run):
     total_trials = sum(exp_data.index[row][0] == True for row in range(len(exp_data)))
     print(f'Number of trials to run: {total_trials}')
     print(f'Number of full solutions: {sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data)))}')
-    path_to_afo_excel = "../../ExcelInputs"
-    directory_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path_to_afo_excel)
-    exp_location = os.path.join(directory_path, "exp.xlsx")
+    exp_location = relativeFile.findExcel("exp.xlsx")
     print(f'exp.xls last saved: {datetime.fromtimestamp(round(os.path.getmtime(exp_location)))}')
 
     return exp_data, exp_data1, dataset, trial_pinp, total_trials

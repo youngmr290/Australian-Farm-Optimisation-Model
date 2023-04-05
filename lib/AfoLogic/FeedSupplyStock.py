@@ -107,7 +107,7 @@ from . import Functions as fun
 from . import FeedsupplyFunctions as fsfun
 from . import SeasonalFunctions as zfun
 from . import Sensitivity as sen
-
+from . import relativeFile
 
 na=np.newaxis
 
@@ -380,7 +380,8 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     fs_use_number = sinp.structuralsa['i_fs_use_number']
     if sinp.structuralsa['i_fs_use_pkl']:
         print(f'pkl_fs{fs_use_number} being used.')
-        with open('pkl/pkl_fs{0}.pkl'.format(fs_use_number),"rb") as f:
+        pkl_fs_path = relativeFile.find(__file__, "../../pkl", f"pkl_fs{fs_use_number}.pkl")
+        with open(pkl_fs_path,"rb") as f:
             pkl_fs = pkl.load(f)
 
         ###update the feedsupply with the pkl fs
@@ -690,5 +691,6 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         fs_create_number = sinp.structuralsa['i_fs_create_number']
         # directory_path = os.path.dirname(os.path.abspath(__file__))  # path of directory - required when exp is run from a different location (e.g. in the web app)
         # with open(os.path.join(directory_path, 'pkl/pkl_fs{0}.pkl'.format(fs_create_number)),"wb") as f:
-        with open('pkl/pkl_fs{0}.pkl'.format(fs_create_number),"wb") as f:
+        pkl_fs = relativeFile.find(__file__, "../../pkl", 'pkl_fs{0}.pkl'.format(fs_create_number))
+        with open(pkl_fs, "wb") as f:
             pkl.dump(pkl_fs, f)

@@ -6,7 +6,7 @@ import multiprocessing
 import glob
 import time
 
-from lib.AfoLogic import ReportFunctions as rfun
+from lib.AfoLogic import ReportFunctions as rfun, relativeFile
 from lib.AfoLogic import ReportControl as rep
 from lib.RawVersion import LoadExp as exp
 from lib.RawVersion import RawVersionReportExtras as rve
@@ -19,7 +19,7 @@ start = time.time()
 ##load report data
 ##read in the Excel sheet that controls which reports to run and slice for the selected experiment.
 ## If no arg passed in or the experiment is not set up with custom col in report_run then default col is used
-report_run = pd.read_excel('ExcelInputs/exp.xlsx', sheet_name='Run Report', index_col=[0], header=[0,1], engine='openpyxl')
+report_run = pd.read_excel(relativeFile.findExcel('exp.xlsx'), sheet_name='Run Report', index_col=[0], header=[0,1], engine='openpyxl')
 try:
     exp_group = int(sys.argv[3])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
 except:  # in case no arg passed to python
@@ -72,7 +72,8 @@ if __name__ == '__main__':
     trials, non_exist_trials = rfun.f_errors(trial_outdated,trials)
 
     ##clear the old report.xlsx
-    for f in glob.glob("Output/Report*.xlsx"):
+    reports = relativeFile.find(__file__, "./Output", "Report*.xlsx")
+    for f in glob.glob(reports):
         os.remove(f)
 
 

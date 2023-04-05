@@ -41,6 +41,7 @@ import Functions as fun
 import Sensitivity as sen
 import StockGenerator as sgen
 import CropResidue as stub
+from . import relativeFile
 
 na = np.newaxis
 
@@ -187,7 +188,8 @@ total_residue_ks2 = biomass_k[:,na] * stub.f_biomass2residue(residuesim=True)
 cat_propn_s1ks2 = total_intake_ha_s1ks2/total_residue_ks2
 
 # Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
-writer = pd.ExcelWriter('stubble sim.xlsx', engine='xlsxwriter')
+stubble_sim_path = relativeFile.findExcel('stubble sim.xlsx')
+writer = pd.ExcelWriter(stubble_sim_path, engine='xlsxwriter')
 cat_propn_s1_ks2 = pd.DataFrame(cat_propn_s1ks2.reshape(len_s1,len_k*len_s2))
 cat_propn_s1_ks2.to_excel(writer,index=False,header=False)
 writer.save()

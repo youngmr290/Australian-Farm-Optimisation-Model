@@ -23,6 +23,7 @@ import sys
 ##AFO modules
 from . import Functions as fun
 from . import StructuralInputs as sinp
+from . import relativeFile
 
 na = np.newaxis
 
@@ -492,8 +493,7 @@ def f1_phases(d_rot_info):
         ### Simulation version
         ###build path this way so the file can be access even if AFO is run from another directory eg readthedocs or web app.
         property = general['i_property_id']
-        directory_path = os.path.dirname(os.path.abspath(__file__))
-        xl_path = os.path.join(directory_path, "SimInputs_{0}.xlsx".format(property))
+        xl_path = relativeFile.findExcel("SimInputs_{0}.xlsx".format(property))
         base_yields = pd.read_excel(xl_path, sheet_name='Yield', index_col=0, header=0, engine='openpyxl')
     ###if the rotations don't match inputs then rerun rotation generation.
     if len(phases_r) != len(base_yields) or any(base_yields.index!=phases_r.index):
@@ -521,8 +521,7 @@ def f1_phases(d_rot_info):
     else:
         ###build path this way so the file can be access even if AFO is run from another directory eg readthedocs or web app.
         property = general['i_property_id']
-        directory_path = os.path.dirname(os.path.abspath(__file__))
-        xl_path = os.path.join(directory_path, "SimInputs_{0}.xlsx".format(property))
+        xl_path = relativeFile.findExcel("SimInputs_{0}.xlsx".format(property))
         rot_mask_r = pd.read_excel(xl_path, sheet_name='RotMask', index_col=0, header=0, engine='openpyxl').squeeze().values
 
     ##apply mask
