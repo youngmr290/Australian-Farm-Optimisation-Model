@@ -2537,9 +2537,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 relsize1_start_sire = np.minimum(ffcfw_max_start_sire, nw_max_pa1e1b1nwzida0e0b0xyg0[p]) / srw_b0xyg0
                 ###PI Size factor (for cattle)
                 zf_sire = np.maximum(1, 1 + cr_sire[7, ...] - relsize_start_sire)
-                ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
-                zf1_sire = fun.f_back_transform(cg_sire[4, ...] * (cg_sire[5, ...] - relsize1_start_sire))
-#                zf1_sire = 1 / (1 + np.exp(+cg_sire[4, ...] * (relsize1_start_sire - cg_sire[5, ...])))
+                ###EVG Size factor (decreases as z increases)
+                ####Note: This equation purposefully has the opposite sign for cg[4] to Freer et al 2012
+                ####There is an error in the documentation and this representation is consistent with Sheep Explorer.
+                zf1_sire = fun.f_back_transform(-cg_sire[4, ...] * (relsize1_start_sire - cg_sire[5, ...]))
                 ###EVG Size factor (increases at maturity)
                 zf2_sire = np.clip((relsize1_start_sire - cg_sire[6, ...]) / (cg_sire[7, ...] - cg_sire[6, ...]), 0 ,1)
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
@@ -2569,9 +2570,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 relsize1_start_dams = np.minimum(ffcfw_max_start_dams, nw_max_pa1e1b1nwzida0e0b0xyg1[p]) / srw_b0xyg1
                 ###PI Size factor (for cattle)
                 zf_dams = np.maximum(1, 1 + cr_dams[7, ...] - relsize_start_dams)
-                ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
-                zf1_dams = fun.f_back_transform(cg_dams[4, ...] * (cg_dams[5, ...] - relsize1_start_dams))
-#                zf1_dams = 1 / (1 + np.exp(+cg_dams[4, ...] * (relsize1_start_dams - cg_dams[5, ...])))
+                ###EVG Size factor (decreases as z increases)
+                ####Note: This equation purposefully has the opposite sign for cg[4] to Freer et al 2012
+                ####There is an error in the documentation and this representation is consistent with Sheep Explorer.
+                zf1_dams = fun.f_back_transform(-cg_dams[4, ...] * (relsize1_start_dams - cg_dams[5, ...]))
                 ###EVG Size factor (increases at maturity)
                 zf2_dams = np.clip((relsize1_start_dams - cg_dams[6, ...]) / (cg_dams[7, ...] - cg_dams[6, ...]), 0 ,1)
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
@@ -2612,9 +2614,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 relsize1_start_offs = np.minimum(ffcfw_max_start_offs, nw_max_pa1e1b1nwzida0e0b0xyg3[p]) / srw_b0xyg3
                 ###PI Size factor (for cattle)
                 zf_offs = np.maximum(1, 1 + cr_offs[7, ...] - relsize_start_offs)
-                ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
-                zf1_offs = fun.f_back_transform(cg_offs[4, ...] * (cg_offs[5, ...] - relsize1_start_offs))
-#                zf1_offs = 1 / (1 + np.exp(+cg_offs[4, ...] * (relsize1_start_offs - cg_offs[5, ...])))
+                ###EVG Size factor (decreases as z increases)
+                ####Note: This equation purposefully has the opposite sign for cg[4] to Freer et al 2012
+                ####There is an error in the documentation and this representation is consistent with Sheep Explorer.
+                zf1_offs = fun.f_back_transform(-cg_offs[4, ...] * (relsize1_start_offs - cg_offs[5, ...]))
                 ###EVG Size factor (increases at maturity)
                 zf2_offs = np.clip((relsize1_start_offs - cg_offs[6, ...]) / (cg_offs[7, ...] - cg_offs[6, ...]), 0 ,1)
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
@@ -3224,9 +3227,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 relsize1_start_yatf = np.minimum(ffcfw_max_start_yatf, nw_max_yatf) / srw_b1xyg2
                 ###PI Size factor (for cattle)
                 zf_yatf = np.maximum(1, 1 + cr_yatf[7, ...] - relsize_start_yatf)
-                ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
-                zf1_yatf = fun.f_back_transform(cg_yatf[4, ...] * (cg_yatf[5, ...] - relsize1_start_yatf))
-#                zf1_yatf = 1 / (1 + np.exp(+cg_yatf[4, ...] * (relsize1_start_yatf - cg_yatf[5, ...])))
+                ###EVG Size factor (decreases as z increases)
+                ####Note: This equation purposefully has the opposite sign for cg[4] to Freer et al 2012
+                ####There is an error in the documentation and this representation is consistent with Sheep Explorer.
+                zf1_yatf = fun.f_back_transform(-cg_yatf[4, ...] * (relsize1_start_yatf - cg_yatf[5, ...]))
                 ###EVG Size factor (increases at maturity)
                 zf2_yatf = np.clip((relsize1_start_yatf - cg_yatf[6, ...]) / (cg_yatf[7, ...] - cg_yatf[6, ...]), 0 ,1)
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults (only included here for consistency)
