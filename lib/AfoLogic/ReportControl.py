@@ -69,11 +69,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
     if infeasible is None:
         infeasible_path = relativeFile.find(__file__, "../../Output/infeasible", f"{trial_name}.txt")
         if os.path.isfile(infeasible_path):
-            reports["infeasible"] = pd.DataFrame([trial_name]).rename_axis('Trial')
-            lp_vars = fun.f_clean_dict(lp_vars)  # if a trial is infeasible or doesn't solve all the lp values are None. This function converts them to 0 so the report can still run.
+            infeasible = True
         else:
-            reports["infeasible"] = pd.DataFrame()
-    elif infeasible == True:
+            infeasible = False
+    if infeasible == True:
         reports["infeasible"] = pd.DataFrame([trial_name]).rename_axis('Trial')
         lp_vars = fun.f_clean_dict(lp_vars)  # if a trial is infeasible or doesn't solve all the lp values are None. This function converts them to 0 so the report can still run.
     else:

@@ -842,9 +842,7 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     ##combine all costs
     exp_mach_zkqs_p7 = pd.concat([fertchem_cost_zkqs_p7, seeding_cost_zkqs_p7, harvest_cost_zkqs_p7
                                ], axis=0).groupby(axis=0, level=(0,1,2,3)).sum()
-    # exp_mach_k_p7zqs = exp_mach_zkqs_p7.unstack([0,2,3])
-    # exp_mach_k_p7zqs = exp_mach_zkqs_p7.unstack(level=[0,2,3])
-    exp_mach_k_p7zqs = exp_mach_zkqs_p7.unstack(0).unstack(1).unstack(1)
+    exp_mach_k_p7zqs = exp_mach_zkqs_p7.unstack([0,2,3])
     ##insurance
     mach_insurance_p7z = r_vals['mach']['mach_insurance']
 
