@@ -669,7 +669,7 @@ def f_rotation(lp_vars, r_vals):
     v_phase_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_area', mask_season_p7z[:,:,na,na], z_pos=-3)
     v_phase_change_increase_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_change_increase', mask_season_p7z[:,:,na,na], z_pos=-3)
     ##add landuse to the axis & remove level names
-    v_phase_area_qsp7zlrk = v_phase_area_qsp7zrl.unstack(4).reindex(phases_rk.index, axis=1, level=0).stack([0,1])  # add landuse to the axis
+    v_phase_area_qsp7zlrk = v_phase_area_qsp7zrl.unstack(4).reindex(phases_rk.index, axis=1, level=0).stack().stack()  # add landuse to the axis
     v_phase_area_qsp7zlrk.index.names = [None] * v_phase_area_qsp7zlrk.index.nlevels
     ##unstack p7 - p7 is generally a col where this is used so this saves time later
     v_phase_area_qszlrk_p7 = v_phase_area_qsp7zlrk.unstack(2)
@@ -841,7 +841,9 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     ##combine all costs
     exp_mach_zkqs_p7 = pd.concat([fertchem_cost_zkqs_p7, seeding_cost_zkqs_p7, harvest_cost_zkqs_p7
                                ], axis=0).groupby(axis=0, level=(0,1,2,3)).sum()
-    exp_mach_k_p7zqs = exp_mach_zkqs_p7.unstack([0,2,3])
+    # exp_mach_k_p7zqs = exp_mach_zkqs_p7.unstack([0,2,3])
+    # exp_mach_k_p7zqs = exp_mach_zkqs_p7.unstack(level=[0,2,3])
+    exp_mach_k_p7zqs = exp_mach_zkqs_p7.unstack(0).unstack(1).unstack(1)
     ##insurance
     mach_insurance_p7z = r_vals['mach']['mach_insurance']
 
