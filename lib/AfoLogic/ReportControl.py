@@ -47,6 +47,7 @@ import os
 
 from . import ReportFunctions as rfun
 from . import Functions as fun
+from . import relativeFile
 
 
 
@@ -54,7 +55,7 @@ from . import Functions as fun
 #todo Reports to add:
 # 1. todo add a second mortality report that the weighted average mortality for the animals selected (to complement the current report that is mortality for each w axis)
 
-def f_run_report(lp_vars,r_vals, report_run, trial_name):
+def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
     '''Function to wrap ReportControl.py so that multiprocessing can be used.'''
     # print('Start processor: {0}'.format(processor))
     # print('Start trials: {0}'.format(trials))
@@ -65,7 +66,13 @@ def f_run_report(lp_vars,r_vals, report_run, trial_name):
 
     reports ={}
     ##handle infeasible trials
-    if os.path.isfile('Output/infeasible/{0}.txt'.format(trial_name)):
+    if infeasible is None:
+        infeasible_path = relativeFile.find(__file__, "../../Output/infeasible", f"{trial_name}.txt")
+        if os.path.isfile(infeasible_path):
+            infeasible = True
+        else:
+            infeasible = False
+    if infeasible == True:
         reports["infeasible"] = pd.DataFrame([trial_name]).rename_axis('Trial')
         lp_vars = fun.f_clean_dict(lp_vars)  # if a trial is infeasible or doesn't solve all the lp values are None. This function converts them to 0 so the report can still run.
     else:
