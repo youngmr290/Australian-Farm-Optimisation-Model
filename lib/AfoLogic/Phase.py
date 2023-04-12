@@ -278,6 +278,8 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
         season_group_yz = f1_sim_inputs(sheet='SeasonGroup', index=0, header=0).stack()
         ###Convert y to z
         base_yields_rk_z = base_yields_rk_y.mul(season_group_yz, axis=1, level=0).replace(0, np.nan).groupby(axis=1, level=1).mean().replace(np.nan, 0)
+    ###rename index
+    base_yields_rk_z.index.rename(['rot','landuse'],inplace=True)
 
     ##Mask z & r axis
     base_yields_rk_z = zfun.f_seasonal_inp(base_yields_rk_z, axis=1)
@@ -1056,7 +1058,7 @@ def f_insurance(r_vals):
     ##calc phase product for each s2 option then select the s2 slice with maximum insurance cost (maximum because that would most likely be the expected s2 option)
     biomass_rklz = f_rot_biomass(for_insurance=True)
     biomass2product_kls2 = f_biomass2product()
-    yields_rz_kls2 = biomass_rklz.unstack(1).unstack(1).reindex(biomass2product_kls2.index, axis=1).mul(biomass2product_kls2, axis=1)
+    yields_rz_kls2 = biomass_rklz.unstack([1,2]).reindex(biomass2product_kls2.index, axis=1).mul(biomass2product_kls2, axis=1)
     yields_rl_ks2z = yields_rz_kls2.unstack(1).stack(1)
     yields_rl_ks2z = yields_rl_ks2z.reindex(insurance_ks2z.index, axis=1).mul(insurance_ks2z, axis=1)/1000 #divide by 1000 to convert yield to tonnes
     yields_rl_kz = yields_rl_ks2z.groupby(axis=1, level=[0,2]).max()
