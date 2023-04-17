@@ -18,6 +18,7 @@ start_time = time.time()
 ##controls #
 ############
 force_run = True #set to True if you want to force all trials to run even if they are up to date.
+solver_method = 'CPLEX'
 
 ########################################
 ##load excel data and experiment data  #
@@ -60,7 +61,7 @@ def run_afo(row):
 
     ##run AFO
     global d_rot_info
-    model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info = afo.exp(user_sa, property, trial_name, trial_description, sinp_defaults, uinp_defaults, pinp_defaults, d_rot_info, cat_propn_s1_ks2)
+    model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info = afo.exp(solver_method, user_sa, property, trial_name, trial_description, sinp_defaults, uinp_defaults, pinp_defaults, d_rot_info, cat_propn_s1_ks2)
 
     ##save AFO outputs
     out.f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info)
