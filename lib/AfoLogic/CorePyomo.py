@@ -132,9 +132,12 @@ def coremodel_all(trial_name,model,nv):
         solver = pe.SolverFactory('ipopt')
         solver_result = solver.solve(model, tee=True)
     else:
-        ##solve with glpk
+        ##solve with glpk to see options enter glpsol --help into command prompt.
         solver = pe.SolverFactory('glpk')
         solver.options['tmlim'] = 100  # limit solving time to 100sec in case solver stalls.
+        # solver.options['norelax'] = ""
+        # solver.options['dual'] = ""
+        # solver.options['nopresol'] = ""
         solver_result = solver.solve(model, tee=True)  # tee=True for solver output - may be useful for troubleshooting
 
     ##calc profit - profit = terminal wealth (this is the objective without risk) + minroe + asset_cost
