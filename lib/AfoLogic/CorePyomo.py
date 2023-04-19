@@ -33,7 +33,7 @@ from . import CropGrazingPyomo as cgzpy
 from . import SaltbushPyomo as slppy
 from . import relativeFile
 
-def coremodel_all(trial_name,model,nv):
+def coremodel_all(trial_name, model, method, nv):
     '''
     Wraps all of the core model into a function so it can be run multiple times in a loop
 
@@ -115,26 +115,28 @@ def coremodel_all(trial_name,model,nv):
     model.dual = pe.Suffix(direction=pe.Suffix.IMPORT)
     model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
     # model.slack = pe.Suffix(direction=pe.Suffix.IMPORT)
-    ##solve - uses cplex if it exists else glpk - tee=True will print out solver information.
-    method="glpk"
+    ##solve - solver choice is passed in as an argument so the user can change it. -
     if method=="CPLEX" and not shutil.which("cplex") == None:
         ##solve with cplex if it exists
         solver = pe.SolverFactory('cplex')
         solver_result = solver.solve(model, warmstart=True, tee=True)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
-    elif method=="HiGHS":
+    elif method=="HiGHS": #todo this doesnt work yet.
         # solver = appsi.solvers.Highs()
         solver = pe.SolverFactory('appsi_highs')
         solver_result = solver.solve(model)
     elif method=="cbc":
         solver = pe.SolverFactory('cbc')
-        solver_result = solver.solve(model)
+        solver_result = solver.solve(model, tee=True) #tee=True will print out solver information
     elif method=="ipopt":
         solver = pe.SolverFactory('ipopt')
-        solver_result = solver.solve(model, tee=True)
+        solver_result = solver.solve(model, tee=True) #tee=True will print out solver information.
     else:
-        ##solve with glpk
+        ##solve with glpk to see options enter glpsol --help into command prompt.
         solver = pe.SolverFactory('glpk')
         solver.options['tmlim'] = 100  # limit solving time to 100sec in case solver stalls.
+        # solver.options['norelax'] = ""
+        # solver.options['dual'] = ""
+        # solver.options['nopresol'] = ""
         solver_result = solver.solve(model, tee=True)  # tee=True for solver output - may be useful for troubleshooting
 
     ##calc profit - profit = terminal wealth (this is the objective without risk) + minroe + asset_cost

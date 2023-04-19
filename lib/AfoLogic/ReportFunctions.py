@@ -666,6 +666,7 @@ def f_rotation(lp_vars, r_vals):
     phases_df = r_vals['rot']['phases']
     mask_season_p7z = r_vals['zgen']['mask_season_p7z']
     phases_rk = phases_df.set_index(phases_df.columns[-1], append=True)  # add landuse as index level
+    phases_rk.index.rename(['rot','landuse'],inplace=True) #rename index
     v_phase_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_area', mask_season_p7z[:,:,na,na], z_pos=-3)
     v_phase_change_increase_area_qsp7zrl = f_vars2df(lp_vars, 'v_phase_change_increase', mask_season_p7z[:,:,na,na], z_pos=-3)
     ##add landuse to the axis & remove level names
