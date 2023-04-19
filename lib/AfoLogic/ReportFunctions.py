@@ -1596,7 +1596,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
         pnl.loc[idx['Weighted obj - PNL', ''], 'Full year'] = np.sum(season_obj_qsz * r_vals['zgen']['z_prob_qsz'].ravel())
 
     ##round numbers in df
-    pnl = pnl.astype(float).round(1)  # have to go to float so rounding works
+    pnl = pnl.astype(float).round(1).fillna(0)  # have to go to float so rounding works
 
     return pnl
 
