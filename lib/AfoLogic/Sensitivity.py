@@ -375,6 +375,7 @@ def create_sa():
     saa['wean_wt'] = 0.0            #weaning weight adjustment of yatf. Note: WWt changes without any change in MEI
     ##SAA
     ##SAT
+    sat['cb0_c2'] = np.zeros(uinp.parameters['i_cb0_c2'].shape, dtype=np.float64)  #BTRT params for genotypes
     ##SAR
 
     ##########

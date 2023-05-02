@@ -637,7 +637,8 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
         except TypeError:
             value = value + sa
 
-    ##Type 3 is sat (sensitivity target, sa=1 returns the target, sa=-1 returns value that is same distance but opposite direction to target)
+    ##Type 3 is sat (sensitivity target)
+    ### sa=0 returns existing value, sa=1 returns the target, sa=-1 returns value that is same distance but opposite direction to target)
     elif sa_type == 3:
         if pandas:
             value = np.maximum(value_min, value + (target - value).mul(sa, axis=axis))

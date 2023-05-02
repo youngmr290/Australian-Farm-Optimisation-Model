@@ -199,6 +199,8 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_sfd_c2'] = fun.f_sa(parameters['i_sfd_c2'].astype(float),sen.saa['sfd_c2'], 2)
     parameters['i_cl0_c2'] = fun.f_sa(parameters['i_cl0_c2'].astype(float), sen.saa['cl0_c2'], 2) #genotype litter size params
     parameters['i_scan_std_c2'] = fun.f_sa(parameters['i_scan_std_c2'].astype(float), sen.saa['scan_std_c2'], 2) #genotype scanning percent params
+    ###SAT
+    parameters['i_cb0_c2'] = fun.f_sa(parameters['i_cb0_c2'].astype(float), sen.sat['cb0_c2'], 3, 1) #genotype BTRT params (sat -ve values allowed)
 
     ##parameters (overall sensitivity - carried out after the c2 genotype sa)
     ###SAM - these have to be converted to float so that the blank column becomes nan rather that None

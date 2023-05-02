@@ -288,7 +288,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     index_i9 = index_i
     index_k3k5tva1e1b1nwzida0e0b0xyg3 = fun.f_expand(np.arange(len_k3),k3_pos)
     index_p1 = np.arange(len_p1)
-    index_m0 = np.arange(12)*2  #2hourly steps for chill calculations
+    index_m0 = np.arange(12)*2  #2hourly steps for chill calculations with actual time
     index_z = np.arange(len_z)
     index_w0 = np.arange(len_w0)
     index_wzida0e0b0xyg0 = fun.f_expand(index_w0, w_pos)
@@ -682,9 +682,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     cb1_yatf = cl0_yatf[:,sinp.stock['a_nfoet_b1']] + cl1_yatf[:,sinp.stock['a_nyatf_b1']]
     ###Alter select slices only for yatf (yatf don't have cb0 axis - instead they use cb1 so it aligns with dams)
     ###The b1 parameters that are relevant to the dams relate to either number of foetus (entered as cl0) or number of yatf (entered as cl1).
-    ### However, because the yatf also use the b1 axis some parameters that change based on the combination of
-    ### birth type and rear type (BTRT - b0) are needed in the b1 axis for the yatf.
-    ###The only role for these parameters is for estimating values for the yatf
+    ### For the yatf the b1 axis also represents their BTRT, therefore some parameters that change due to
+    ### birth type and rear type (BTRT - b0) are needed in the b1 axis for the yatf to estimate values for the yatf
+    ### This can be done because the slices of b0 & b1 (b1 is l0 & l1) do not over lap.
     cb1_yatf[11, ...] = np.expand_dims(cb0_yatf[11, sinp.stock['ia_b0_b1']], axis = tuple(range(uinp.parameters['i_cl1_pos']+1,-3))) #add singleton axis between b0 and x so that b0 array aligns with b1
     cb1_yatf[12, ...] = np.expand_dims(cb0_yatf[12, sinp.stock['ia_b0_b1']], axis = tuple(range(uinp.parameters['i_cl1_pos']+1,-3))) #add singleton axis between b0 and x so that b0 array aligns with b1
     cb1_yatf[13, ...] = np.expand_dims(cb0_yatf[13, sinp.stock['ia_b0_b1']], axis = tuple(range(uinp.parameters['i_cl1_pos']+1,-3))) #add singleton axis between b0 and x so that b0 array aligns with b1
@@ -1523,9 +1523,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     srw_b1xyg2 = srw_xyg2 * cb1_yatf[11, ...]
     srw_b0xyg3 = srw_xyg3 * cb0_offs[11, ...]
 
-    ##Standard birth weight. Does not include the gender scalar on SRW because std BW is related to the female SRW
-    ###Std BW doesn't include the BTRT scalar. This is not clear, does a triplet born dam gives birth to a smaller single lamb? Maybe but this calculation assumes not.
-    #todo 20Mar23 I now think that this calculaltion should include srw_b0 - reconsider and implement if still agreeing
+    ##Standard birth weight.
+    ### Does not include the gender scalar on SRW because std BW is related to the female SRW of the genotype
+    ### Does not include the BTRT scalar of the dam i.e. assuming that the BTRT adjustment of dam SRW doesn't affect her progeny
     w_b_std_b0xyg0 = srw_female_yg0 * np.sum(cb0_sire[15, ...] * btrt_propn_b0xyg0, axis = b0_pos, keepdims=True) * cx_sire[15, 0:1, ...]
     w_b_std_b0xyg1 = srw_female_yg1 * np.sum(cb0_dams[15, ...] * btrt_propn_b0xyg1, axis = b0_pos, keepdims=True) * cx_dams[15, 1:2, ...]
     w_b_std_b0xyg3 = srw_female_yg3 * cb0_offs[15, ...] * cx_offs[15, mask_x,...]
@@ -1932,6 +1932,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                         , weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
     ##Pattern of conception efficiency (doy). Three versions of the equation
     ### crg_doy_cs is for the GrazPlan equations to predict the seasonal effect on proportion greater than conception rate - active b1 axis
+    #### Also used for the LMAT equations after predicted crl is converted to crg with allowance for average day of joining
     crg_doy_cs_pa1e1b1nwzida0e0b0xyg1 = np.average(np.maximum(0,1 - cb1_dams[1, ..., na]
                                                 * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364))
                                                 * np.sin(lat_rad) / -0.57), axis = -1)
@@ -1944,7 +1945,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                     * (1 - np.sin(2 * np.pi * (scan_std_doy_yg1[...] + 10) / 364))
                                                     * np.sin(lat_rad) / -0.57))
     # ### crl_doy_lmat is for the LMAT equations to predict the seasonal effect on proportion less than conception rate - active b1 axis
-    # ### value is scaled so at the doy of scan_std the value is 1  and doesn't alter the proportions if mating on that day.
+    # #### value is scaled so at the doy of scan_std the value is 1  and doesn't alter the proportions if mating on that day.
+    # #### crl_doy is no longer used. Replaced by using crg_doy in sfun.f_conception_lmat() after conversion of crl to crg.
     # crl_doy_lmat_pa1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.average(np.maximum(0,1 - cb1_dams[1, ..., na]
     #                                                 * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364)
     #                                                 * np.sin(lat_rad) / -0.57)), axis = -1)
