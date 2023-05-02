@@ -577,7 +577,7 @@ def f1_history(history, new_value, days_in_period):
     return lagged, history
 
 
-def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, temp_ave, temp_max, temp_min, rain_intake
+def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc, temp_ave, temp_max, temp_min, rain_intake
                           , rc_birth_start=1, pi_age_y=0, lb_start=0, mp2=0, piyf=1, period_between_birthwean=1, sam_pi=1):
     '''
 
@@ -607,9 +607,9 @@ def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, te
     ##Lactation factor on PI - dam only
     pilf = 1 + pi_age_y * la * lb_start
     ##Temperature function
-    piax = np.arccos(np.clip((temp_ave - temp_lc_dams) / (0.5 * (temp_max - temp_min)),-1,1))
+    piax = np.arccos(np.clip((temp_ave - temp_lc) / (0.5 * (temp_max - temp_min)),-1,1))
     ##Temperature below the lower critical temp
-    tlow = piax * (temp_lc_dams - temp_ave) + 0.5 * np.sin(piax) * (temp_max - temp_min) / np.pi
+    tlow = piax * (temp_lc - temp_ave) + 0.5 * np.sin(piax) * (temp_max - temp_min) / np.pi
     ##Temperature factor on PI - high temperatures
     pitf_high = 1 - ci[5, ...] * (temp_ave - ci[6, ...])
     ##Temperature factor on PI - low temperatures
@@ -947,8 +947,8 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     belowmaint = mei < (meme + mec + mel + mew)
     ##Efficiency for growth (before ECold)
     kge = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
-    ##Sinusoidal variation in temp & wind
-    sin_var_m0 = np.sin(2 * np.pi / 12 *(index_m0 - 3))
+    ##Sinusoidal variation in temp & wind (minimum temp at midnight (0:00 hrs) max temp at midday (12:00 hrs)
+    sin_var_m0 = np.sin(2 * np.pi * (index_m0 - 6) / 24)
     ##Ambient temp (2 hourly)
     temperature_a1e1b1nwzida0e0b0xygm0 = temp_ave_a1e1b1nwzida0e0b0xyg[..., na] + (temp_max_a1e1b1nwzida0e0b0xyg[..., na] - temp_min_a1e1b1nwzida0e0b0xyg[..., na]) / 2 * sin_var_m0
     ##Wind velocity (2 hourly)
@@ -969,8 +969,12 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     in_tissue = cc[3, ...] * (rc_start - cc[4, ...] * (rc_start - 1))
     ##Insulation of  air + coat (2 hourly)
     in_ext_a1e1b1nwzida0e0b0xygm0p1 = wetflc_a1e1b1nwzida0e0b0xygp1[..., na, :] * (in_air_a1e1b1nwzida0e0b0xygm0[..., na] + in_coat_a1e1b1nwzida0e0b0xygm0[..., na])
-    ##Impact of clear night skies on ME loss
-    sky_temp_a1e1b1nwzida0e0b0xygm0p1 = sky_clear_a1e1b1nwzida0e0b0xygp1[..., na, :] * cc[13,..., na, na] * np.exp(-cc[14, ..., na, na] * np.minimum(0, cc[15, ..., na, na] - temperature_a1e1b1nwzida0e0b0xygm0[..., na]) ** 2)
+    ##Impact of clear night skies on ME loss only during the nighttime hours of the m axis (5 slices)
+    ###Note: the nighttime slices are different to Freer etal 2012 due to discrepancy in timing of the sinusoidal temperature
+    night_mask_m0p1 = np.logical_or(index_m0 <= 4, index_m0 >= 20)[..., na]
+    sky_temp_a1e1b1nwzida0e0b0xygm0p1 = night_mask_m0p1 * (sky_clear_a1e1b1nwzida0e0b0xygp1[..., na, :] * cc[13,..., na, na]
+                                        * np.exp(-cc[14, ..., na, na]
+                                                 * np.minimum(0, cc[15, ..., na, na] - temperature_a1e1b1nwzida0e0b0xygm0[..., na]) ** 2))
     ##Heat production per m2
     heat = (mei - nec * gest_propn - nel * lact_propn - new - kge * (mei
             - (meme + mec * gest_propn + mel * lact_propn + mew))
@@ -1332,6 +1336,7 @@ def f_conception_lmat(cf, cb1, cu2, maternallw_mating, lwc, age, nlb, crg_doy, n
                                                            + cu2_sliced[6, ...] * nlb
                                                            + cu2_sliced[7, ...] * nlb ** 2)
         ##back transform to probability of having a maximum of a given number of foetuses (opposite to GrazPlan)
+        ### Note: LMAT equations predict 'less than or equal', and GrazPlan predict 'greater than or equal'
         crl = fun.f_back_transform(t_boundaries)
 
         ## Incorporate the impact of doy on the prediction of RR. Use crg_doy from CSIRO
@@ -1620,7 +1625,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     mortalityd_yatf = mortalityd_yatf * (1- cd[21,...])
     ##Exposure index
     xo_p1p2 = (cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_p1p2 + cd[10, ..., na,na] * chill_index_p1[..., na]
-               + cb1[10, ..., na,na])
+               + cb1[10, ..., na,na])  #Note: in CSIRO equations cb1 is slice [11] but the coefficient has been changed
     ##Progeny mortality at birth from exposure
     mortalityx = np.average(fun.f_back_transform(xo_p1p2), axis=(-1, -2)) * period_is_birth  #axis -1 & -2 are p1 & p2
     ##Apply SA to progeny mortality due to exposure
