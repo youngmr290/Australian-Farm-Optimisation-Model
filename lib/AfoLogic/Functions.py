@@ -110,6 +110,7 @@ def f_expand(array, left_pos=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2
         position of axis to the left of where the new axis will be added.
     swap : boolean, optional
         do you want to swap the first two axis?. The default is False.
+    ax1, ax2 : axes to swap. Position in the input array because this is carried out prior to expanding
     right_pos : int, optional
         the position of the axis to the right of the singleton axis being added. The default is -1, for when the axis to the right is g?.
     left_pos2 : int

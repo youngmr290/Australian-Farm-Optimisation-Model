@@ -130,7 +130,7 @@ def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=0, condition=None, axis=0, d
     ###if y is not numpy ie was read in as an int because it was a single cell, it needs to be converted
     if type(y) == int:
         y = np.asarray([y])
-    ###y is a 2d array however currently it only has one slice so it is read in as a 1d array. so i need to add second array
+    ###y is a 2d array however currently it only has one slice so it is read in as a 1d array. So need to add second slice
     if y.ndim == 1 and params_c0.ndim != 1:
         y=y[...,na]
     ###apply y mask
@@ -142,10 +142,10 @@ def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=0, condition=None, axis=0, d
     else: extra_axes = ()
     allaxis_params_c0 = np.expand_dims(params_c0, axis = extra_axes)
     ##create mask g?c0
-    mask_sire_inc_g0 = np.any(i_mask_g0g3 * i_g3_inc, axis =1)
-    mask_dams_inc_g1 = np.any(i_mask_g1g3 * i_g3_inc, axis =1)
-    mask_yatf_inc_g2 = np.any(i_mask_g2g3 * i_g3_inc, axis =1)
-    mask_offs_inc_g3 = np.any(i_mask_g3g3 * i_g3_inc, axis =1)
+    mask_sire_inc_g0 = np.any(i_mask_g0g3 * i_g3_inc, axis = 1)
+    mask_dams_inc_g1 = np.any(i_mask_g1g3 * i_g3_inc, axis = 1)
+    mask_yatf_inc_g2 = np.any(i_mask_g2g3 * i_g3_inc, axis = 1)
+    mask_offs_inc_g3 = np.any(i_mask_g3g3 * i_g3_inc, axis = 1)
     ##create array with the proportion of each pure genotype required to have each actual genotype included in the analysis
     mul_sire_genotypes_g0c0 = i_mul_g0_c0[mask_sire_inc_g0]
     mul_dams_genotypes_g0c0 = i_mul_g1_c0[mask_dams_inc_g1]
@@ -250,7 +250,7 @@ def f1_DSTw(scan_g, cycles=1):
     # t_dstwtr_gl0[..., 0:1] = t_dry_propn_gl0
     # t_dstwtr_gl0[..., 1:] = dstwtr_cal_gl0[..., 1:] * (1 - t_dry_propn_gl0) / (1 - t_dry_propn_cal_gl0)
 
-    ##set values between 0 & 1 and adjust singles so that total is 1
+    ##set values between 0 & 1 and adjust proportion of singles so that total is 1 i.e. not using the predicted singles proportion.
     dstwtr_gl0 = np.clip(dstwtr_gl0, 0, 1)
     t_mask = [True, False, True, True]
     dstwtr_gl0[..., 1] = 1 - np.sum(dstwtr_gl0 * t_mask, axis = -1) # mask out the Singles value in the sum of the array across the l0 axis
@@ -268,7 +268,7 @@ def f1_btrt0(dstwtr_propn,pss,pstw,pstr): #^this function is inflexible ie if yo
 
     Returns
     -------
-    btrt_b0xyg : np array, proportion of lambs in each btrt category (e.g. 11, 22, 21 ...).
+    btrt_b0xyg : np array, proportion of progeny in each btrt category (e.g. 11, 22, 21 ...).
     progeny_total_xyg: np array, total number of progeny alive after birth per ewe mated
 
     '''
