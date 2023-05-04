@@ -1467,9 +1467,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##calc proportion of dry, singles, twin and triplets based on the genotype as born.
     ###e.g. BBM dams are based on BBB scanning and BBB survival. BBM offspring are based on BBB scanning and BBM survival
     ###calculated without saa['rr_age']. These calculations do not include a 'p' axis because it is one value for all the initial animals
-    dstwtr_l0yg0 = np.moveaxis(sfun.f1_DSTw(scan_std_yg0), -1, 0) #todo add crg_doy_ltw scalar to alter scan_std by TOL
-    dstwtr_l0yg1 = np.moveaxis(sfun.f1_DSTw(scan_std_yg1), -1, 0)
-    dstwtr_l0yg3 = np.moveaxis(sfun.f1_DSTw(scan_dams_std_yg3), -1, 0)
+    dstwtr_l0yg0 = np.moveaxis(sfun.f1_DSTw(scan_std_yg0, cycles=2), -1, 0) #todo add crg_doy_ltw scalar to alter scan_std by TOL
+    dstwtr_l0yg1 = np.moveaxis(sfun.f1_DSTw(scan_std_yg1, cycles=2), -1, 0)
+    dstwtr_l0yg3 = np.moveaxis(sfun.f1_DSTw(scan_dams_std_yg3, cycles=2), -1, 0)
 
     ##Std scanning & survival: propn of progeny in each BTRT b0 category - 11, 22, 33, 21, 32, 31 and lambs surviving birth per ewe joined (standard weaning percentage)
     btrt_propn_b0xyg0, npw_std_xyg0 = sfun.f1_btrt0(dstwtr_l0yg0,pss_std_yg0,pstw_std_yg0,pstr_std_yg0)
