@@ -295,9 +295,10 @@ def f1_btrt0(dstwtr_propn,pss,pstw,pstr): #^this function is inflexible ie if yo
     return btrt_propn_b0xyg, progeny_total_xyg
 
 
-def f_btrt1(dstwtr_l0yg,pss,pstw,pstr): #^this function is inflexible ie if you want to add quadruplets
+def f1_btrt1(dstwtr_l0yg,pss,pstw,pstr): #^this function is inflexible ie if you want to add quadruplets
     '''
-    Return proportion of dams with each BTRT based on the BT proportion and lamb survival
+    Return proportion of progeny reared with each BTRT based on the BT proportion and lamb survival
+    Used to scale the lifetime production of offspring that are the flock replacements.
     Parameters
     ----------
     dstwtr_l0yg : np array - proportion of dry, singles, twin and triplets.
@@ -314,17 +315,51 @@ def f_btrt1(dstwtr_l0yg,pss,pstw,pstr): #^this function is inflexible ie if you 
 
     ##progeny numbers is the number of progeny in each b1 category per animal born, based on peri-natal survival of s, tw and tr.
     progeny_numbers_b1yg = np.zeros((len(sinp.stock['a_nfoet_b1']), pss.shape[-2], pss.shape[-1]))
-    progeny_numbers_b1yg[2,...] = pss
-    progeny_numbers_b1yg[3,...] = pstw**2
-    progeny_numbers_b1yg[4,...] = pstr**3
-    progeny_numbers_b1yg[5,...] = 2 * pstw * (1 - pstw)  #the 2 is because it could be either progeny 1 that dies or progeny 2 that dies
-    progeny_numbers_b1yg[6,...] = 3* pstr**2 * (1 - pstr)  # 3x because it could be either progeny 1, 2 or 3 that dies
-    progeny_numbers_b1yg[7,...] = 3* pstr * (1 - pstr)**2  #the 3x because it could be either progeny 1, 2 or 3 that survives
-    ##mul progeny numbers array with birth type proportion to get overall btrt
-    btrt_b1yg = progeny_numbers_b1yg * dstwtr_l0yg[sinp.stock['a_nfoet_b1'] ]
+    progeny_numbers_b1yg[2,...] = sinp.stock['a_nfoet_b1'][2] * pss
+    progeny_numbers_b1yg[3,...] = sinp.stock['a_nfoet_b1'][3] * pstw**2
+    progeny_numbers_b1yg[4,...] = sinp.stock['a_nfoet_b1'][4] * pstr**3
+    progeny_numbers_b1yg[5,...] = sinp.stock['a_nfoet_b1'][5] * 2 * pstw * (1 - pstw)  #the 2 is because it could be either progeny 1 that dies or progeny 2 that dies
+    progeny_numbers_b1yg[6,...] = sinp.stock['a_nfoet_b1'][6] * 3* pstr**2 * (1 - pstr)  # 3x because it could be either progeny 1, 2 or 3 that dies
+    progeny_numbers_b1yg[7,...] = sinp.stock['a_nfoet_b1'][7] * 3* pstr * (1 - pstr)**2  #the 3x because it could be either progeny 1, 2 or 3 that survives
+    ##adjust numbers to proportion of total progeny reared
+    progeny_propn_b1yg = progeny_numbers_b1yg / np.sum(progeny_numbers_b1yg, axis=0, keepdims=True)
+    ##mul progeny numbers array with birth type proportion to get overall btrt per progeny reared.
+    btrt_b1yg = progeny_propn_b1yg * dstwtr_l0yg[sinp.stock['a_nfoet_b1'] ]
     ##add singleton x axis
     btrt_b1nwzida0e0b0xyg = np.expand_dims(btrt_b1yg, axis = tuple(range((uinp.parameters['i_cl1_pos'] + 1), -2))) #note i_cl1_pos refers to b1 position
     return btrt_b1nwzida0e0b0xyg
+
+def f1_lsln(dstwtr_l0yg,pss,pstw,pstr): #^this function is inflexible ie if you want to add quadruplets
+    '''
+    Return proportion of dams with each LSLN based on the BT proportion and lamb survival
+    Parameters
+    ----------
+    dstwtr_l0yg : np array - proportion of dry, singles, twin and triplets.
+
+    Returns
+    -------
+    btrt_b1nwzida0e0b0xyg : np array
+        probability of ewe with lambs in each btrt category (e.g. 11, 22, 21 ...).
+
+    '''
+
+    ##dam numbers is the number of dams in each b1 category per animal at birth, based on peri-natal survival of s, tw and tr.
+    dam_numbers_b1yg = np.zeros((len(sinp.stock['a_nfoet_b1']), pss.shape[-2], pss.shape[-1]))
+    dam_numbers_b1yg[1,...] = 1
+    dam_numbers_b1yg[2,...] = pss
+    dam_numbers_b1yg[3,...] = pstw**2
+    dam_numbers_b1yg[4,...] = pstr**3
+    dam_numbers_b1yg[5,...] = 2 * pstw * (1 - pstw)  #the 2 is because it could be either progeny 1 that dies or progeny 2 that dies
+    dam_numbers_b1yg[6,...] = 3* pstr**2 * (1 - pstr)  # 3x because it could be either progeny 1, 2 or 3 that dies
+    dam_numbers_b1yg[7,...] = 3* pstr * (1 - pstr)**2  #the 3x because it could be either progeny 1, 2 or 3 that survives
+    dam_numbers_b1yg[8,...] = (1 - pss)
+    dam_numbers_b1yg[9,...] = (1 - pstw)**2
+    dam_numbers_b1yg[10,...] = (1 - pstr)**3
+    ##mul progeny numbers array with birth type proportion to get overall btrt
+    lsln_b1yg = dam_numbers_b1yg * dstwtr_l0yg[sinp.stock['a_nfoet_b1'] ]
+    ##add singleton x axis
+    lsln_b1nwzida0e0b0xyg = np.expand_dims(lsln_b1yg, axis = tuple(range((uinp.parameters['i_cl1_pos'] + 1), -2))) #note i_cl1_pos refers to b1 position
+    return lsln_b1nwzida0e0b0xyg
 
 
 
@@ -1708,33 +1743,36 @@ def f_mortality_pregtox_mu():
     return 0
 
 
-def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill_index_p1, period_is_birth
+def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill_index_p1, mob_size, period_is_birth
                            , rev_trait_value, sap_mortalityp, saa_mortalityx):
     '''
     Calculate the mortality of progeny at birth due to mis-mothering and exposure
-    using the LTW prediction equations (Oldham et al. 2011) with inclusion of chill index.
-    The paddock level scalar is added (Young et al 2011) however, this is not calibrated for high chill environments (>1000)
-    The scalar adjusts the difference in survival if birth weight is different from the standard birthweight
-    this is to reflect the difference in survival observed in the LTW paddock trial compared with the plot scale trials.
+    using the LTW & LMAT prediction equations (Oldham et al. 2011) with inclusion of chill index, FOO and mob size.
+    # Removed - The paddock level scalar is added (Young et al 2011) however, this is not calibrated for high chill environments (>1000)
+    # The scalar adjusts the difference in survival if birth weight is different from the standard birthweight
+    # this is to reflect the difference in survival observed in the LTW paddock trial compared with the plot scale trials.
     '''
     ##transformed survival for actual & standard
     ###distribution on w_b & rc_birth - add distribution to w_b & w_b_std and then average (axis =-1)
     w_b_p1p2 = fun.f_distribution7(w_b, cv=cv_weight)[...,na,:]
-    w_b_std_p1p2 = fun.f_distribution7(w_b_std, cv=cv_weight)[...,na,:]
+    ##removed the capacity to do a paddock level scalar because scalar is incorrect with chill index.
+    ### leave code in case it is needed for backward compatibility to original LTW analysis (will need a diff slice)
+    # w_b_std_p1p2 = fun.f_distribution7(w_b_std, cv=cv_weight)[...,na,:]
 
     t_survival_p1p2 = (cu2[8, 0, ...,na,na] * w_b_p1p2 + cu2[8, 1, ..., na,na] * w_b_p1p2 ** 2
-                      + cu2[8, 2, ..., na,na] * chill_index_p1[...,na] + cu2[8, 4, ..., na,na] * foo[..., na,na]
-                      + cu2[8, 5, ..., na,na] * foo[..., na,na] ** 2 + cu2[8, -1, ..., na,na] + cb1[8, ..., na,na]
-                      + cx[8, ..., na,na] + cx[9, ..., na,na] * chill_index_p1[...,na] + ce[8, ..., na,na])
-    t_survival_std_p1p2 = (cu2[8, 0, ..., na,na] * w_b_std_p1p2 + cu2[8, 1, ..., na,na] * w_b_std_p1p2 ** 2
-                      + cu2[8, 2, ..., na,na] * chill_index_p1[...,na] + cu2[8, 4, ..., na,na] * foo[..., na,na]
-                      + cu2[8, 5, ..., na,na] * foo[..., na,na] ** 2 + cu2[8, -1, ..., na,na] + cb1[8, ..., na,na]
-                      + cx[8, ..., na,na] + cx[9, ..., na,na] * chill_index_p1[...,na] + ce[8, ..., na,na])
+                      + (cu2[8, 2, ..., na,na] + cx[9, ..., na, na]) * chill_index_p1[...,na]
+                      + cu2[8, 4, ..., na,na] * foo[..., na,na] + cu2[8, 5, ..., na,na] * foo[..., na,na] ** 2
+                      + cu2[8, -1, ..., na,na] + cb1[8, ..., na,na] + cb1[9, ..., na, na] * mob_size[..., na, na]
+                      + cx[8, ..., na,na] + ce[8, ..., na,na])
+    # t_survival_std_p1p2 = (cu2[8, 0, ..., na,na] * w_b_std_p1p2 + cu2[8, 1, ..., na,na] * w_b_std_p1p2 ** 2
+    #                   + cu2[8, 2, ..., na,na] * chill_index_p1[...,na] + cu2[8, 4, ..., na,na] * foo[..., na,na]
+    #                   + cu2[8, 5, ..., na,na] * foo[..., na,na] ** 2 + cu2[8, -1, ..., na,na] + cb1[8, ..., na,na]
+    #                   + cx[8, ..., na,na] + cx[9, ..., na,na] * chill_index_p1[...,na] + ce[8, ..., na,na])
     ##back transform survival & convert to mortality
     mortalityx = (1 - np.average(fun.f_back_transform(t_survival_p1p2),axis = (-1,-2))) * period_is_birth #p1 axis averaged
-    mortalityx_std = (1 - np.average(fun.f_back_transform(t_survival_std_p1p2),axis = (-1,-2))) * period_is_birth #p1 axis averaged
-    ##Scale progeny survival using paddock level scalars
-    mortalityx = mortalityx_std + (mortalityx - mortalityx_std) * cb1[9, ...]
+    # mortalityx_std = (1 - np.average(fun.f_back_transform(t_survival_std_p1p2),axis = (-1,-2))) * period_is_birth #p1 axis averaged
+    # ##Scale progeny survival using paddock level scalars
+    # mortalityx = mortalityx_std + (mortalityx - mortalityx_std) * cb1[9, ...]
     ##Apply SA to progeny mortality at birth (LTW)
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
     mortalityx = fun.f_sa(mortalityx, saa_mortalityx, sa_type = 2, value_min = 0)

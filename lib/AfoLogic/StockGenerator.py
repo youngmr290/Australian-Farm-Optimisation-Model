@@ -485,9 +485,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
 
 
-    ################################################
-    #  management, age, date, timing inputs inputs #
-    ################################################
+    #########################################
+    #  management, age, date, timing inputs #
+    #########################################
     ##gender propn yatf
     gender_propn_xyg = fun.f_expand(pinp.sheep['i_gender_propn_x'], x_pos, condition=mask_x, axis=0).astype(dtype)
 
@@ -720,6 +720,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##nutrition adjustment for expected stocking density
     density_nwzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_density_n1'][0:n_fs_dams],n_pos) # cut to the correct length based on number of nutrition options (i_len_n structural input)
     density_nwzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_density_n3'][0:n_fs_offs],n_pos) # cut to the correct length based on number of nutrition options (i_len_n structural input)
+    ##Mob size. mob_size_dams used for lamb survival, all used in husbandry
+    mobsize_p6a1e1b1nwzida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_mobsize_sire_zp6i'], i_pos, swap=True, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos)
+    mobsize_p6a1e1b1nwzida0e0b0xyg0 = zfun.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg0,numpy=True,axis=z_pos)
+    mobsize_p6a1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_mobsize_dams_zp6i'], i_pos, swap=True, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
+    mobsize_p6a1e1b1nwzida0e0b0xyg1 = zfun.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg1,numpy=True,axis=z_pos)
+    mobsize_p6a1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_mobsize_offs_zp6i'], i_pos, swap=True, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
+    mobsize_p6a1e1b1nwzida0e0b0xyg3 = zfun.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg3,numpy=True,axis=z_pos)
     ##Calculation of rainfall distribution across the week - i_rain_distribution_p4p1 = how much rain falls on each day of the week sorted in order of quantity of rain. SO the most rain falls on the day with the highest rainfall.
     rain_p4a1e1b1nwzida0e0b0xygp1 = fun.f_expand(
         pinp.sheep['i_rain_p4'][...,na] * pinp.sheep['i_rain_distribution_p4p1'] * (7 / 30.4),p_pos - 1,
@@ -1375,6 +1382,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##expected stocking density
     density_pa1e1b1nwzida0e0b0xyg = np.take_along_axis(density_p6a1e1b1nwzida0e0b0xyg, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
 
+    ##mob size
+    mobsize_pa1e1b1nwzida0e0b0xyg0 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg0, a_p6_pa1e1b1nwzida0e0b0xyg,0)
+    mobsize_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg1,a_p6_pa1e1b1nwzida0e0b0xyg,0)
+    mobsize_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg3, a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], 0)
+
     ##select which equation is used for the sheep sim functions for each period
     eqn_used_g0_q1p = uinp.sheep['i_eqn_used_g0_q1p7'][:, a_g0_p7_p]
     eqn_used_g1_q1p = uinp.sheep['i_eqn_used_g1_q1p7'][:, a_g1_p7_p]
@@ -1476,11 +1488,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     btrt_propn_b0xyg1, npw_std_xyg1 = sfun.f1_btrt0(dstwtr_l0yg1,pss_std_yg1,pstw_std_yg1,pstr_std_yg1)
     btrt_propn_b0xyg3, npw_std_xyg3 = sfun.f1_btrt0(dstwtr_l0yg3,pss_std_yg3,pstw_std_yg3,pstr_std_yg3)
 
-    ##Std scanning & survival: proportion of dams in each BTRT b1 category - NM, 00, 11, 22, 33, 21, 32, 31, 10, 20, 30
-    # btrt_propn_b1nwzida0e0b0xy0 = sfun.f_btrt1(dstwtr_l0yg0,pss_std_yg0,pstw_std_yg0,pstr_std_yg0)
-    btrt_propn_b1nwzida0e0b0xy1 = sfun.f_btrt1(dstwtr_l0yg1,pss_std_yg1,pstw_std_yg1,pstr_std_yg1)
-    # btrt_propn_b1nwzida0e0b0xy2 = sfun.f_btrt1(dstwtr_l0yg3,pss_std_yg2,pstw_std_yg2,pstr_std_yg2)
-    # btrt_propn_b1nwzida0e0b0xy3 = sfun.f_btrt1(dstwtr_l0yg3,pss_std_yg3,pstw_std_yg3,pstr_std_yg3)
+    ##Std scanning & survival: proportion of progeny reared in each BTRT b1 category - NM, 00, 11, 22, 33, 21, 32, 31, 10, 20, 30
+    # btrt_propn_b1nwzida0e0b0xyg0 = sfun.f1_btrt1(dstwtr_l0yg0,pss_std_yg0,pstw_std_yg0,pstr_std_yg0)
+    btrt_propn_b1nwzida0e0b0xyg1 = sfun.f1_btrt1(dstwtr_l0yg1,pss_std_yg1,pstw_std_yg1,pstr_std_yg1)
+    # btrt_propn_b1nwzida0e0b0xyg2 = sfun.f1_btrt1(dstwtr_l0yg3,pss_std_yg2,pstw_std_yg2,pstr_std_yg2)
+    # btrt_propn_b1nwzida0e0b0xyg3 = sfun.f1_btrt1(dstwtr_l0yg3,pss_std_yg3,pstw_std_yg3,pstr_std_yg3)
+
+    ##Std scanning & survival: proportion of dams in each LSLN b1 category - NM, 00, 11, 22, 33, 21, 32, 31, 10, 20, 30
+    lsln_propn_b1nwzida0e0b0xyg1 = sfun.f1_lsln(dstwtr_l0yg1,pss_std_yg1,pstw_std_yg1,pstr_std_yg1)
+
 
     ###calc adjustments sfw
     adja_sfw_d_a0e0b0xyg0 = np.sum(ce_sire[12, ...] * agedam_propn_da0e0b0xyg0, axis = 0)
@@ -2178,6 +2194,22 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     scan_management_pa1e1b1nwzida0e0b0xyg1 = (scan_option_pa1e1b1nwzida0e0b0xyg1) * (a_mgt_pa1e1b1nwzida0e0b0xyg1 >= 1) * pinp.sheep['i_dam_lsln_diffman_t'][1]
     gbal_management_pa1e1b1nwzida0e0b0xyg1 = (gbal_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_mgt_pa1e1b1nwzida0e0b0xyg1 >= 2) * pinp.sheep['i_dam_lsln_diffman_t'][2] + 1  #minus 1 then plus 1 ensures that the wean option before lactation is 1
     wean_management_pa1e1b1nwzida0e0b0xyg1 = (wean_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_mgt_pa1e1b1nwzida0e0b0xyg1 >= 3) * pinp.sheep['i_dam_lsln_diffman_t'][3] + 1  #minus 1 then plus 1 ensures that the wean option before weaning is 1
+
+    ############################
+    ### ewe mob size calcs     #
+    ############################
+    ### scale the mob size along the b axis with allowance for scanning to identify the litter size
+    ### association between axis for input (based on litter size) and scanning during period from birth to weaning when mob size is adjusted
+    a_l_pa1e1b1nwzida0e0b0xyg1 = np.minimum(nfoet_b1nwzida0e0b0xyg, scan_management_pa1e1b1nwzida0e0b0xyg1) * period_between_birthwean_pa1e1b1nwzida0e0b0xyg1
+    ### select the mob size scalar on the b1 axis
+    mobsize_scalar_b1 = fun.f_expand(uinp.sheep['i_mobsize_scalar_l0'], b1_pos, right_pos=0, left_pos2=p_pos-1, right_pos2=b1_pos)
+    mobsize_scalar_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mobsize_scalar_b1, a_l_pa1e1b1nwzida0e0b0xyg1, b1_pos)
+    ### adjust scalar for the expected proportion of each litter size
+    ####
+    mobsize_scalar_pa1e1b1nwzida0e0b0xyg1 = mobsize_scalar_pa1e1b1nwzida0e0b0xyg1 * np.sum(lsln_propn_b1nwzida0e0b0xyg1
+                                                    / mobsize_scalar_pa1e1b1nwzida0e0b0xyg1, axis=b1_pos, keepdims=True)
+    ### scale the dam mob size
+    mobsize_pa1e1b1nwzida0e0b0xyg1 = mobsize_pa1e1b1nwzida0e0b0xyg1 * mobsize_scalar_pa1e1b1nwzida0e0b0xyg1
 
     ############################
     ### feed supply calcs      #
@@ -3751,7 +3783,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                     , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
                     temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_pyatf[:,p,...]
-                                    , w_b_yatf, w_b_ltw_std_yatf, cv_weight_yatf, foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygp1[p]
+                                    , w_b_yatf, w_b_ltw_std_yatf, cv_weight_yatf, foo_yatf
+                                    , chill_index_pa1e1b1nwzida0e0b0xygp1[p], mobsize_pa1e1b1nwzida0e0b0xyg1[p]
                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
                                     , sen.sap['mortalityp'], saa_mortalityx_pa1e1b1nwzida0e0b0xyg[p])
                     if eqn_used:
@@ -5174,15 +5207,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         ### within an experiment with ltwadj varying between trials due to the optimum dam numbers in the 'creating' trial.
 
         t1_sfw_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(o_cfw_ltwadj_tpdams, o_numbers_start_tpdams
-                                                            * nyatf_b1nwzida0e0b0xyg * season_propn_zida0e0b0xyg
-                                                            * btrt_propn_b1nwzida0e0b0xy1
+                                                            * season_propn_zida0e0b0xyg
+                                                            * btrt_propn_b1nwzida0e0b0xyg1
                                                             * period_is_birth_pa1e1b1nwzida0e0b0xyg1
                                                             , axis=(p_pos, a1_pos, e1_pos, b1_pos, n_pos, w_pos, z_pos)   #presuming all offspring axes are singleton and don't need to be included
                                                             , keepdims=True) / sfw_a0e0b0xyg1
 
         t1_sfd_ltwadj_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(o_fd_ltwadj_tpdams, o_numbers_start_tpdams
-                                                            * nyatf_b1nwzida0e0b0xyg * season_propn_zida0e0b0xyg
-                                                            * btrt_propn_b1nwzida0e0b0xy1
+                                                            * season_propn_zida0e0b0xyg
+                                                            * btrt_propn_b1nwzida0e0b0xyg1
                                                             * period_is_birth_pa1e1b1nwzida0e0b0xyg1
                                                             , axis=(p_pos, a1_pos, e1_pos, b1_pos, n_pos, w_pos, z_pos)   #presuming all offspring axes are singleton and don't need to be included
                                                             , keepdims=True)
@@ -5358,15 +5391,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     dresspercent_adj_yg0, dresspercent_adj_yg1, dresspercent_adj_yg2, dresspercent_adj_yg3 = sfun.f1_c2g(uinp.parameters['i_dressp_adj_c2'],uinp.parameters['i_dressp_adj_y'], a_c2_c0, i_g3_inc, dtype=dtype)
     ##husbandry
     wool_genes_yg0, wool_genes_yg1, wool_genes_yg2, wool_genes_yg3 = sfun.f1_c2g(uinp.parameters['i_wool_genes_c2'],uinp.parameters['i_wool_genes_y'], a_c2_c0, i_g3_inc, dtype=dtype)
-    mobsize_p6a1e1b1nwzida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_mobsize_sire_zp6i'], i_pos, swap=True, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos)
-    mobsize_p6a1e1b1nwzida0e0b0xyg0 = zfun.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg0,numpy=True,axis=z_pos)
-    mobsize_pa1e1b1nwzida0e0b0xyg0 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg0, a_p6_pa1e1b1nwzida0e0b0xyg,0)
-    mobsize_p6a1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_mobsize_dams_zp6i'], i_pos, swap=True, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    mobsize_p6a1e1b1nwzida0e0b0xyg1 = zfun.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg1,numpy=True,axis=z_pos)
-    mobsize_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg1,a_p6_pa1e1b1nwzida0e0b0xyg,0)
-    mobsize_p6a1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_mobsize_offs_zp6i'], i_pos, swap=True, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    mobsize_p6a1e1b1nwzida0e0b0xyg3 = zfun.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg3,numpy=True,axis=z_pos)
-    mobsize_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg3, a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], 0)
     animal_mated_b1g1 = fun.f_expand(sinp.stock['i_mated_b1'], b1_pos)
     operations_triggerlevels_h5h7h2tpg = fun.f_convert_to_inf(fun.f_expand(pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'], p_pos-2,
                                                                                   swap=True, swap2=True)).astype(dtype)  # convert -- and ++ to inf
