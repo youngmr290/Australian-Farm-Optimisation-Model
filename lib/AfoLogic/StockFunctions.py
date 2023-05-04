@@ -1748,6 +1748,8 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
     '''
     Calculate the mortality of progeny at birth due to mis-mothering and exposure
     using the LTW & LMAT prediction equations (Oldham et al. 2011) with inclusion of chill index, FOO and mob size.
+    Uses BW as a proportion of SRW (which is passed as the w_b argument)
+
     # Removed - The paddock level scalar is added (Young et al 2011) however, this is not calibrated for high chill environments (>1000)
     # The scalar adjusts the difference in survival if birth weight is different from the standard birthweight
     # this is to reflect the difference in survival observed in the LTW paddock trial compared with the plot scale trials.
