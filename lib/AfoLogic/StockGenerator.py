@@ -2204,8 +2204,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ### select the mob size scalar on the b1 axis
     mobsize_scalar_b1 = fun.f_expand(uinp.sheep['i_mobsize_scalar_l0'], b1_pos, right_pos=0, left_pos2=p_pos-1, right_pos2=b1_pos)
     mobsize_scalar_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mobsize_scalar_b1, a_l_pa1e1b1nwzida0e0b0xyg1, b1_pos)
-    ### adjust scalar for the expected proportion of each litter size
-    ####
+    ### adjust scalar for the expected proportion of each litter size so that the resulting average mob size == the input
+    #### This calculation means that this input can't be used to fudge the average mobsize.
+    #### A constant average mob size means that the mob based husbandry cost does not change.
     mobsize_scalar_pa1e1b1nwzida0e0b0xyg1 = mobsize_scalar_pa1e1b1nwzida0e0b0xyg1 * np.sum(lsln_propn_b1nwzida0e0b0xyg1
                                                     / mobsize_scalar_pa1e1b1nwzida0e0b0xyg1, axis=b1_pos, keepdims=True)
     ### scale the dam mob size
