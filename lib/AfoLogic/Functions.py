@@ -682,7 +682,14 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
             elif dic == 'sar':
                 sar[(key1,key2)][indices] = value   # last entry in exp.xlsx is used, could be changed to accumulate
             elif dic == 'sav':
-                if value != "-":
+                try:
+                    if value != "-": #SAV entries with '-' do not update the SAV. This means that if slices of a SAV overlap in Exp.xl the last non '-' is the value used.
+                        update_sav=True
+                    else:
+                        update_sav=False
+                except ValueError:   #try and except required for web app because "value" is an array (so the if statement causes error).
+                    update_sav=True
+                if update_sav:
                     sav[(key1,key2)][indices] = value   # last entry in exp.xlsx that is not "-" is used
 
         ##checks if just slice exists
@@ -698,7 +705,14 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
             elif dic == 'sar':
                 sar[key1][indices] = value
             elif dic == 'sav':
-                if value != "-":
+                try:
+                    if value != "-": #SAV entries with '-' do not update the SAV. This means that if slices of a SAV overlap in Exp.xl the last non '-' is the value used.
+                        update_sav=True
+                    else:
+                        update_sav=False
+                except ValueError:   #try and except required for web app because "value" is an array (so the if statement causes error).
+                    update_sav=True
+                if update_sav:
                     sav[key1][indices] = value
         ##checks if just key2 exists
         elif key2 is not None:
@@ -713,7 +727,14 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
             elif dic == 'sar':
                 sar[(key1, key2)] = value
             elif dic == 'sav':
-                if value != "-":
+                try:
+                    if value != "-": #SAV entries with '-' do not update the SAV. This means that if slices of a SAV overlap in Exp.xl the last non '-' is the value used.
+                        update_sav=True
+                    else:
+                        update_sav=False
+                except ValueError:   #try and except required for web app because "value" is an array (so the if statement causes error).
+                    update_sav=True
+                if update_sav:
                     sav[(key1,key2)] = value
         ##if just key1 exists
         else:
@@ -728,7 +749,14 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
             elif dic == 'sar':
                 sar[key1] = value
             elif dic == 'sav':
-                if value != "-":
+                try:
+                    if value != "-": #SAV entries with '-' do not update the SAV. This means that if slices of a SAV overlap in Exp.xl the last non '-' is the value used.
+                        update_sav=True
+                    else:
+                        update_sav=False
+                except ValueError:   #try and except required for web app because "value" is an array (so the if statement causes error).
+                    update_sav=True
+                if update_sav:
                     sav[key1] = value
 
 def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
