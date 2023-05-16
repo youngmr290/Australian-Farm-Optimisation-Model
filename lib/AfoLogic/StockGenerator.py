@@ -1977,15 +1977,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                 , np.maximum(0, 1 - cf_dams[1, ...]
                                                     * (1 - np.sin(2 * np.pi * (scan_std_doj_yg1[...] + 10) / 364))
                                                     * np.sin(lat_rad) / -0.57))
-    # ### crl_doy_lmat is for the LMAT equations to predict the seasonal effect on proportion less than conception rate - active b1 axis
-    # #### value is scaled so at the doy of scan_std the value is 1  and doesn't alter the proportions if mating on that day.
-    # #### crl_doy is no longer used. Replaced by using crg_doy in sfun.f_conception_lmat() after conversion of crl to crg.
-    # crl_doy_lmat_pa1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.average(np.maximum(0,1 - cb1_dams[1, ..., na]
-    #                                                 * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364)
-    #                                                 * np.sin(lat_rad) / -0.57)), axis = -1)
-    #                                             , np.maximum(0, 1 - cb1_dams[1, ...]
-    #                                                 * (1 - np.sin(2 * np.pi * (scan_std_doy_yg1[...] + 10) / 364)
-    #                                                 * np.sin(lat_rad) / -0.57)))
+    ### crl_doy_lmat is for the LMAT equations to include a seasonal effect on RR
+    #### value is multiplied by a coefficient in the linear equation prior to logit back transformation.
+    #### crl_doy and the coefficient is in place of the crg_doy scalar of proportions used in the CSIRO equation.
+    #### The proportions of empty, single, twin & triplet change in the ratio determined by the cut-off coefficients.
+    crl_doy_lmat_pa1e1b1nwzida0e0b0xyg1 = np.average((1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp0 + 10) / 364))
+                                                    * np.sin(lat_rad) / -0.57, axis = -1)
     ##Rumen development factor on PI - yatf
     piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(fun.f_back_transform(ci_yatf[3, ..., na]
                                         * (age_p0_pa1e1b1nwzida0e0b0xyg2p0 - ci_yatf[4, ..., na]))
@@ -3559,9 +3556,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_conception_lmat(cf_dams, cb1_dams, cu2_dams, maternallw_mating_dams
+                    temp0 = sfun.f_conception_lmat(cf_dams, cb1_dams, cu2_dams, srw_female_yg1, maternallw_mating_dams
                                                    , lwc_mating_dams * 1000, age_pa1e1b1nwzida0e0b0xyg1[p], nlb_yg3 * 100
-                                                   , crg_doy_cs_pa1e1b1nwzida0e0b0xyg1[p:p+1], nfoet_b1nwzida0e0b0xyg
+                                                   , crl_doy_lmat_pa1e1b1nwzida0e0b0xyg1[p:p+1], nfoet_b1nwzida0e0b0xyg
                                                    , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                    , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]
                                                    , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p])
