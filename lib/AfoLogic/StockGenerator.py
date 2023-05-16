@@ -143,8 +143,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     date_born1st_oa1e1b1nwzida0e0b0xyg2 = fun.f_expand(pinp.sheep['i_date_born1st_iog2'], i_pos, right_pos=g_pos, swap=True,
                                                       left_pos2=p_pos,right_pos2=i_pos, condition=mask_yatf_inc_g2, axis=g_pos,
                                                       condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
-    mask_o_dams = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2-uinp.sheep['prejoin_to_lamb_offset_approx']<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp). Offset is so that the o mask is controled based on prejoining which has to happen so that the prejoining dvp exists even if the generator finishes before birth.
-    mask_d_offs = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2-uinp.sheep['prejoin_to_lamb_offset_approx']<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp). Offset is so that the o mask is controled based on prejoining which has to happen so that the prejoining dvp exists even if the generator finishes before birth.
+    mask_o_dams = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2-uinp.sheep['prejoin_to_lamb_offset_approx']<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp). Offset is so that the o mask is controlled based on prejoining which has to happen so that the prejoining dvp exists even if the generator finishes before birth.
+    mask_d_offs = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2-uinp.sheep['prejoin_to_lamb_offset_approx']<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp). Offset is so that the o mask is controlled based on prejoining which has to happen so that the prejoining dvp exists even if the generator finishes before birth.
     mask_x = pinp.sheep['i_gender_propn_x']>0
     bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
     mask_node_is_fvp = pinp.general['i_node_is_fvp'] * (pinp.general['i_inc_node_periods']
@@ -527,9 +527,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     wean_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_wean_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
                                               axis=g_pos, condition2=mask_o_dams, axis2=p_pos) #need axis up to p so that p association can be applied
 
-    ##association between offspring and sire/dam (used to determine the wean age of sire and dams based on the inputted wean age of offs)
+    ##association between offspring and sire/dam (used to determine wean age of sire and dams based on the inputted wean age of offs)
     a_g0_g1 = pinp.sheep['ia_g0_g1'][mask_dams_inc_g1]
-    a_g3_g0 = pinp.sheep['ia_g3_g0'][mask_sire_inc_g0]   # the sire association (pure bred B, M & T) are all based on purebred B because there are no pure bred M & T inputs
+    a_g3_g0 = pinp.sheep['ia_g3_g0'][mask_sire_inc_g0]   # the sire association (purebred B, M & T) are all based on purebred B because there are no purebred M & T inputs
     a_g3_g1 = pinp.sheep['ia_g3_g1'][mask_dams_inc_g1]   # if BMT exist then BBM exist, and they will be in slice 1, therefore the association value doesn't need to be adjusted for "prior exclusions"
 
     ##age weaning- used to calc wean date and also to calc p1 stuff, sire and dams have no active a0 slice therefore just take the first slice
@@ -574,13 +574,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     date_shear_sida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_date_shear_sixg0'], x_pos, right_pos=g_pos, swap=True
                                           ,left_pos2=i_pos,right_pos2=x_pos, condition=mask_sire_inc_g0, axis=g_pos,
                                            condition2=pinp.sheep['i_masksire_i'], axis2=i_pos
-                                          )[...,0:1,:,:] #slice x axis for only male
+                                          )[...,0:1,:,:] #slice x-axis for only male
     mask_shear_g0 = np.max(date_shear_sida0e0b0xyg0<=date_end_p[-1], axis=tuple(range(i_pos, 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg0 = date_shear_sida0e0b0xyg0[mask_shear_g0]
     ###dam
     date_shear_sida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_date_shear_sixg1'], x_pos, right_pos=g_pos, swap=True,left_pos2=i_pos,right_pos2=x_pos,
                                            condition=mask_dams_inc_g1, axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos
-                                          )[...,1:2,:,:] #slice x axis for only female
+                                          )[...,1:2,:,:] #slice x-axis for only female
     mask_shear_g1 = np.max(date_shear_sida0e0b0xyg1<=date_end_p[-1], axis=tuple(range(i_pos, 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg1 = date_shear_sida0e0b0xyg1[mask_shear_g1]
     ###off - the first shearing must occur as offspring because if yatf were shorn then all lambs would have to be shorn (ie no scope to not shear the lambs that are going to be fed up and sold)
@@ -685,7 +685,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###The b1 parameters that are relevant to the dams relate to either number of foetus (entered as cl0) or number of yatf (entered as cl1).
     ### For the yatf the b1 axis also represents their BTRT, therefore some parameters that change due to
     ### birth type and rear type (BTRT - b0) are needed in the b1 axis for the yatf to estimate values for the yatf
-    ### This can be done because the slices of b0 & b1 (b1 is l0 & l1) do not over lap.
+    ### This can be done because the slices of b0 & b1 (b1 is l0 & l1) do not overlap.
     cb1_yatf[11, ...] = np.expand_dims(cb0_yatf[11, sinp.stock['ia_b0_b1']], axis = tuple(range(uinp.parameters['i_cl1_pos']+1,-3))) #add singleton axis between b0 and x so that b0 array aligns with b1
     cb1_yatf[12, ...] = np.expand_dims(cb0_yatf[12, sinp.stock['ia_b0_b1']], axis = tuple(range(uinp.parameters['i_cl1_pos']+1,-3))) #add singleton axis between b0 and x so that b0 array aligns with b1
     cb1_yatf[13, ...] = np.expand_dims(cb0_yatf[13, sinp.stock['ia_b0_b1']], axis = tuple(range(uinp.parameters['i_cl1_pos']+1,-3))) #add singleton axis between b0 and x so that b0 array aligns with b1
@@ -778,22 +778,22 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##calc and adjust date born average of group - convert from date of first lamb born to average date born of lambs in the first cycle
     ###sire
-    date_born_ida0e0b0xyg0 = date_born1st_ida0e0b0xyg0 + (0.5 * cf_sire[4, 0:1,:])	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle
-    date_born_idx_ida0e0b0xyg0=fun.f_next_prev_association(date_start_P, date_born_ida0e0b0xyg0, 0, 'left') #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    date_born_ida0e0b0xyg0 = date_born1st_ida0e0b0xyg0 + (0.5 * cf_sire[4, 0:1,:])	 #times by 0.5 to get the average birthdate for all lambs because ewes can be conceived anytime within joining cycle
+    date_born_idx_ida0e0b0xyg0=fun.f_next_prev_association(date_start_P, date_born_ida0e0b0xyg0, 0, 'left') #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
     date_born_ida0e0b0xyg0 = date_start_P[date_born_idx_ida0e0b0xyg0]
     ###dams
-    date_born_ida0e0b0xyg1 = date_born1st_ida0e0b0xyg1 + (0.5 * cf_dams[4, 0:1,:])	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle
-    date_born_idx_ida0e0b0xyg1 = fun.f_next_prev_association(date_start_P,date_born_ida0e0b0xyg1,0,'left') #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    date_born_ida0e0b0xyg1 = date_born1st_ida0e0b0xyg1 + (0.5 * cf_dams[4, 0:1,:])	 #times by 0.5 to get the average birthdate for all lambs because ewes can be conceived anytime within joining cycle
+    date_born_idx_ida0e0b0xyg1 = fun.f_next_prev_association(date_start_P,date_born_ida0e0b0xyg1,0,'left') #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
     date_born_ida0e0b0xyg1 = date_start_P[date_born_idx_ida0e0b0xyg1]
     ###yatf - needs to be rounded to start of gen period because this controls the start of a dvp
-    date_born_oa1e1b1nwzida0e0b0xyg2 = date_born1st_oa1e1b1nwzida0e0b0xyg2 + ((index_e1b1nwzida0e0b0xyg + 0.5) * cf_yatf[4, 0:1,:])	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle. e_index is to account for ewe cycles.
-    date_born_idx_oa1e1b1nwzida0e0b0xyg2 =fun.f_next_prev_association(date_start_P, date_born_oa1e1b1nwzida0e0b0xyg2, 0, 'left')   #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    date_born_oa1e1b1nwzida0e0b0xyg2 = date_born1st_oa1e1b1nwzida0e0b0xyg2 + ((index_e1b1nwzida0e0b0xyg + 0.5) * cf_yatf[4, 0:1,:])	 #times by 0.5 to get the average birthdate for all lambs because ewes can be conceived anytime within joining cycle. e_index is to account for ewe cycles.
+    date_born_idx_oa1e1b1nwzida0e0b0xyg2 =fun.f_next_prev_association(date_start_P, date_born_oa1e1b1nwzida0e0b0xyg2, 0, 'left')   #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
     date_born_oa1e1b1nwzida0e0b0xyg2 = date_start_P[date_born_idx_oa1e1b1nwzida0e0b0xyg2]
     ###offs
-    date_born_ida0e0b0xyg3 = date_born1st_ida0e0b0xyg3 + ((index_e0b0xyg + 0.5) * cf_offs[4, 0:1,:])	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle
-    date_born_idx_ida0e0b0xyg3=fun.f_next_prev_association(offs_date_start_P, date_born_ida0e0b0xyg3, 0, 'left') #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    date_born_ida0e0b0xyg3 = date_born1st_ida0e0b0xyg3 + ((index_e0b0xyg + 0.5) * cf_offs[4, 0:1,:])	 #times by 0.5 to get the average birthdate for all lambs because ewes can be conceived anytime within joining cycle
+    date_born_idx_ida0e0b0xyg3=fun.f_next_prev_association(offs_date_start_P, date_born_ida0e0b0xyg3, 0, 'left') #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
     date_born_ida0e0b0xyg3 = date_start_P[date_born_idx_ida0e0b0xyg3]
-    ##recalc date_born1st from the adjusted average birth date
+    ##recalc date_born1st from the adjusted average birthdate
     date_born1st_ida0e0b0xyg0 = date_born_ida0e0b0xyg0 - (0.5 * cf_sire[4, 0:1,:]).astype(int)
     date_born1st_ida0e0b0xyg1 = date_born_ida0e0b0xyg1 - (0.5 * cf_dams[4, 0:1,:]).astype(int)
     date_born1st_oa1e1b1nwzida0e0b0xyg2 = date_born_oa1e1b1nwzida0e0b0xyg2[:,:,0:1,...] - (0.5 * cf_yatf[4, 0:1,:]).astype(int) #take slice 0 of e axis
@@ -806,45 +806,45 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     date_weaned_ida0e0b0xyg3 = date_born1st_ida0e0b0xyg3 + age_wean1st_a0e0b0xyg3
     ###adjust weaning to occur at the beginning of generator period and recalc wean age
     ####sire
-    date_weaned_idx_ida0e0b0xyg0=fun.f_next_prev_association(date_start_P, date_weaned_ida0e0b0xyg0, 0, 'left')  #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    date_weaned_idx_ida0e0b0xyg0=fun.f_next_prev_association(date_start_P, date_weaned_ida0e0b0xyg0, 0, 'left')  #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
     date_weaned_ida0e0b0xyg0 = date_start_P[date_weaned_idx_ida0e0b0xyg0]
     age_wean1st_ida0e0b0xyg0 = date_weaned_ida0e0b0xyg0 - date_born1st_ida0e0b0xyg0
     ####dams
-    date_weaned_idx_ida0e0b0xyg1=fun.f_next_prev_association(date_start_P, date_weaned_ida0e0b0xyg1, 0, 'left') #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    date_weaned_idx_ida0e0b0xyg1=fun.f_next_prev_association(date_start_P, date_weaned_ida0e0b0xyg1, 0, 'left') #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
     date_weaned_ida0e0b0xyg1 = date_start_P[date_weaned_idx_ida0e0b0xyg1]
     age_wean1st_ida0e0b0xyg1 = date_weaned_ida0e0b0xyg1 -date_born1st_ida0e0b0xyg1
-    ####yatf - this is the same as offs except without the offs periods (offs potentially have less periods)
-    date_weaned_idx_oa1e1b1nwzida0e0b0xyg2=fun.f_next_prev_association(date_start_P, date_weaned_oa1e1b1nwzida0e0b0xyg2, 0, 'left')  #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    ####yatf - this is the same as offs except without the offs periods (offs potentially have fewer periods)
+    date_weaned_idx_oa1e1b1nwzida0e0b0xyg2=fun.f_next_prev_association(date_start_P, date_weaned_oa1e1b1nwzida0e0b0xyg2, 0, 'left')  #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
     date_weaned_oa1e1b1nwzida0e0b0xyg2 = date_start_P[date_weaned_idx_oa1e1b1nwzida0e0b0xyg2]
     age_wean1st_oa1e1b1nwzida0e0b0xyg2 = date_weaned_oa1e1b1nwzida0e0b0xyg2 - date_born1st_oa1e1b1nwzida0e0b0xyg2
     ####offs
-    date_weaned_idx_ida0e0b0xyg3=fun.f_next_prev_association(offs_date_start_P, date_weaned_ida0e0b0xyg3, 0, 'left')  #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    date_weaned_idx_ida0e0b0xyg3=fun.f_next_prev_association(offs_date_start_P, date_weaned_ida0e0b0xyg3, 0, 'left')  #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
     date_weaned_ida0e0b0xyg3 = offs_date_start_P[date_weaned_idx_ida0e0b0xyg3]
     age_wean1st_ida0e0b0xyg3 = date_weaned_ida0e0b0xyg3 - date_born1st_ida0e0b0xyg3
 
     ##Shearing date - set to be on the last day of a sim period
     ###sire
     idx_sida0e0b0xyg0 = fun.f_next_prev_association(date_end_P, date_shear_sida0e0b0xyg0,0, 'left')#shearing occurs at the end of the next/current generator period therefore 0 offset
-    date_shear_sa1e1b1nwzida0e0b0xyg0 = fun.f_expand(date_end_P[idx_sida0e0b0xyg0], p_pos, right_pos=i_pos)  #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes)
+    date_shear_sa1e1b1nwzida0e0b0xyg0 = fun.f_expand(date_end_P[idx_sida0e0b0xyg0], p_pos, right_pos=i_pos)  #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes)
     ###dam
     idx_sida0e0b0xyg1 = fun.f_next_prev_association(date_end_P, date_shear_sida0e0b0xyg1,0, 'left')#shearing occurs at the end of the next/current generator period therefore 0 offset
-    date_shear_sa1e1b1nwzida0e0b0xyg1 = fun.f_expand(date_end_P[idx_sida0e0b0xyg1], p_pos, right_pos=i_pos)  #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes)
+    date_shear_sa1e1b1nwzida0e0b0xyg1 = fun.f_expand(date_end_P[idx_sida0e0b0xyg1], p_pos, right_pos=i_pos)  #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes)
     ###off - shearing can't occur as yatf because then need to shear all lambs (ie no scope to not shear the lambs that are going to be fed up and sold) because the offs decision variables for feeding are not linked to the yatf (which are in the dam decision variables)
     date_shear_sida0e0b0xyg3 = np.maximum(date_born1st_ida0e0b0xyg3 + age_wean1st_ida0e0b0xyg3, date_shear_sida0e0b0xyg3) #shearing must be after weaning. This makes the d axis active because weaning has an active d.
     idx_sida0e0b0xyg3 = fun.f_next_prev_association(offs_date_end_P, date_shear_sida0e0b0xyg3,0, 'left')#shearing occurs at the end of the next/current generator period therefore 0 offset
-    date_shear_sa1e1b1nwzida0e0b0xyg3 = fun.f_expand(offs_date_end_P[idx_sida0e0b0xyg3], p_pos, right_pos=i_pos) #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    date_shear_sa1e1b1nwzida0e0b0xyg3 = fun.f_expand(offs_date_end_P[idx_sida0e0b0xyg3], p_pos, right_pos=i_pos) #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
 
 
     ############################
     ## calc for associations   #
     ############################
     ##date joined (when the rams go in)
-    date_joined_oa1e1b1nwzida0e0b0xyg1 = date_born1st_oa1e1b1nwzida0e0b0xyg2 - cp_dams[1,...,0:1,:] #take slice 0 from y axis because cp1 is not affected by genetic merit
+    date_joined_oa1e1b1nwzida0e0b0xyg1 = date_born1st_oa1e1b1nwzida0e0b0xyg2 - cp_dams[1,...,0:1,:] #take slice 0 from y-axis because cp1 is not affected by genetic merit
     ##expand feed periods over all the years of the sim so that an association between sim period can be made.
     ##set fp to start at the next generator period following the node (needs to be next so that clustering works). Lp are adjusted so that they get clustered the same as dvps
     feedperiods_p6z = per.f_feed_periods()[:-1] #remove last date because that is the end date of the last period (not required)
     feedperiods_p6z = feedperiods_p6z - 364 * (date_start_p[0] < feedperiods_p6z[0]) #this is to make sure the first sim period date is greater than the first feed period date.
-    feedperiods_p6z = (feedperiods_p6z  + (np.arange(np.ceil(sim_years +1)) * 364)[...,na,na]).reshape((-1, len_z)) #expand then ravel to return 1d array of the feed period dates expanded the length of the sim. +1 because feed periods start and finish mid yr so add one to ensure they go to the end of the sim.
+    feedperiods_p6z = (feedperiods_p6z  + (np.arange(np.ceil(sim_years +1)) * 364)[...,na,na]).reshape((-1, len_z)) #expand then ravel to return 1d array of the feed period dates expanded the length of the sim. +1 because feed periods start and finish mid-yr so add one to ensure they go to the end of the sim.
     feedperiods_idx_p6z = np.minimum(len(date_start_P) - 1, np.searchsorted(date_start_P,feedperiods_p6z,'left'))  # maximum idx is the number of generator periods
     feedperiods_p6z = date_start_P[feedperiods_idx_p6z]
 
@@ -926,7 +926,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     for u in range(n_user_fvp):
         fvp_other_ya1e1b1nwzida0e0b0xyg = fun.f_expand(fvp_other_yiu[...,u], left_pos=i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
         idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_P, fvp_other_ya1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the period when season breaks (e.g. break of season fvp starts at the beginning of the sim period when season breaks), side=right so that if the date is already the start of a period it remains in that period.
-        fvp_other_start_ya1e1b1nwzida0e0b0xyg = date_start_P[idx_ya1e1b1nwzida0e0b0xyg]  #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+        fvp_other_start_ya1e1b1nwzida0e0b0xyg = date_start_P[idx_ya1e1b1nwzida0e0b0xyg]  #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
         user_fvp_u[u] = fvp_other_start_ya1e1b1nwzida0e0b0xyg
 
     ##season nodes - these get masked out if steady state.
@@ -935,7 +935,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         date_node_zidaebxyg = date_node_zidaebxygm[...,m]
         date_node_ya1e1b1nwzidaebxyg = date_node_zidaebxyg + fun.f_expand(np.arange(np.ceil(sim_years)) * 364, p_pos)
         ###set the node fvp to start at the next generator period following the node (needs to be next so that clustering works).
-        idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_P, date_node_ya1e1b1nwzidaebxyg, 'left') #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+        idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_P, date_node_ya1e1b1nwzidaebxyg, 'left') #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
         date_node_ya1e1b1nwzidaebxyg = date_start_P[idx_ya1e1b1nwzida0e0b0xyg]
         node_fvp_m[m] = date_node_ya1e1b1nwzidaebxyg
     ###store season start date - used to determine period_is_season_start
@@ -1046,27 +1046,27 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fvp_b0_start_ba1e1b1nwzida0e0b0xyg3 = date_start_pa1e1b1nwzida0e0b0xyg3[0:1]
     ###b1
     fvp_b1_start_ba1e1b1nwzida0e0b0xyg3 = date_weaned_ida0e0b0xyg3 + (date_shear_sa1e1b1nwzida0e0b0xyg3[0:1] - date_weaned_ida0e0b0xyg3)/3
-    idx_ba1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_P, fvp_b1_start_ba1e1b1nwzida0e0b0xyg3, side='right')-1 #makes sure fvp starts on the same date as sim period. (-1 get the start date of current period). use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    idx_ba1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_P, fvp_b1_start_ba1e1b1nwzida0e0b0xyg3, side='right')-1 #makes sure fvp starts on the same date as sim period. (-1 get the start date of current period). use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
     fvp_b1_start_ba1e1b1nwzida0e0b0xyg3 = offs_date_start_P[idx_ba1e1b1nwzida0e0b0xyg]
     ###b2
     fvp_b2_start_ba1e1b1nwzida0e0b0xyg3 = date_weaned_ida0e0b0xyg3 + 2 * (date_shear_sa1e1b1nwzida0e0b0xyg3[0:1] - date_weaned_ida0e0b0xyg3)/3
-    idx_ba1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_P, fvp_b2_start_ba1e1b1nwzida0e0b0xyg3,side='right')-1 #makes sure fvp starts on the same date as sim period. (-1 get the start date of current period). use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    idx_ba1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_P, fvp_b2_start_ba1e1b1nwzida0e0b0xyg3,side='right')-1 #makes sure fvp starts on the same date as sim period. (-1 get the start date of current period). use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
     fvp_b2_start_ba1e1b1nwzida0e0b0xyg3 = offs_date_start_P[idx_ba1e1b1nwzida0e0b0xyg]
 
     ##fvp0 - date shearing plus 1 day because shearing is the last day of period
     fvp_0_start_sa1e1b1nwzida0e0b0xyg3 = date_shear_sa1e1b1nwzida0e0b0xyg3 + np.maximum(1, fvp0_offset_ida0e0b0xyg3) #plus 1 at least 1 because shearing is the last day of the period and the fvp should start after shearing
     idx_sa1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_P, fvp_0_start_sa1e1b1nwzida0e0b0xyg3, 'right')-1 #makes sure fvp starts on the same date as sim period. side=right so that if the date is already the start of a period it remains in that period.
-    fvp_0_start_sa1e1b1nwzida0e0b0xyg3 = offs_date_start_P[idx_sa1e1b1nwzida0e0b0xyg] #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    fvp_0_start_sa1e1b1nwzida0e0b0xyg3 = offs_date_start_P[idx_sa1e1b1nwzida0e0b0xyg] #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
 
     ##fvp1 - date shearing plus offset1 (this is the first day of sim period)
     fvp_1_start_sa1e1b1nwzida0e0b0xyg3 = date_shear_sa1e1b1nwzida0e0b0xyg3 + (fvp1_offset_ida0e0b0xyg3 * shear_offset_adj_factor_sa1e1b1nwzida0e0b0xyg3).astype(int)
     idx_sa1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_P, fvp_1_start_sa1e1b1nwzida0e0b0xyg3, 'right')-1 #makes sure fvp starts on the same date as sim period, side=right so that if the date is already the start of a period it remains in that period.
-    fvp_1_start_sa1e1b1nwzida0e0b0xyg3 = offs_date_start_P[idx_sa1e1b1nwzida0e0b0xyg] #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    fvp_1_start_sa1e1b1nwzida0e0b0xyg3 = offs_date_start_P[idx_sa1e1b1nwzida0e0b0xyg] #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
 
     ##fvp2 - date shearing plus offset2 (this is the first day of sim period)
     fvp_2_start_sa1e1b1nwzida0e0b0xyg3 = date_shear_sa1e1b1nwzida0e0b0xyg3 + (fvp2_offset_ida0e0b0xyg3 * shear_offset_adj_factor_sa1e1b1nwzida0e0b0xyg3).astype(int)
     idx_sa1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_P, fvp_2_start_sa1e1b1nwzida0e0b0xyg3, 'right')-1 #makes sure fvp starts on the same date as sim period, side=right so that if the date is already the start of a period it remains in that period.
-    fvp_2_start_sa1e1b1nwzida0e0b0xyg3 = offs_date_start_P[idx_sa1e1b1nwzida0e0b0xyg] #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    fvp_2_start_sa1e1b1nwzida0e0b0xyg3 = offs_date_start_P[idx_sa1e1b1nwzida0e0b0xyg] #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
 
     ##user defined fvp - rounded to the nearest sim period
     fvp_other_iu = sinp.structuralsa['i_offs_user_fvp_date_iu']
@@ -1078,7 +1078,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     for u in range(n_user_fvp):
         fvp_other_ya1e1b1nwzida0e0b0xyg = fun.f_expand(fvp_other_yiu[u], left_pos=i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
         idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_P, fvp_other_ya1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the period when season breaks (e.g. break of season fvp starts at the beginning of the sim period when season breaks), side=right so that if the date is already the start of a period it remains in that period.
-        fvp_other_start_ya1e1b1nwzida0e0b0xyg = date_start_P[idx_ya1e1b1nwzida0e0b0xyg] #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+        fvp_other_start_ya1e1b1nwzida0e0b0xyg = date_start_P[idx_ya1e1b1nwzida0e0b0xyg] #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
         user_fvp_u[u] = fvp_other_start_ya1e1b1nwzida0e0b0xyg
 
 
@@ -1088,7 +1088,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         date_node_zidaebxyg = date_node_zidaebxygm[...,m]
         date_node_ya1e1b1nwzidaebxyg = date_node_zidaebxyg + fun.f_expand(np.arange(np.ceil(sim_years_offs)) * 364, p_pos)
         ###set the node fvp to start at the next generator period following the node (needs to be next so that clustering works).
-        idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_P, date_node_ya1e1b1nwzidaebxyg, 'left') #use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+        idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_P, date_node_ya1e1b1nwzidaebxyg, 'left') #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
         date_node_ya1e1b1nwzidaebxyg = date_start_P[idx_ya1e1b1nwzida0e0b0xyg]
         node_fvp_m[m] = date_node_ya1e1b1nwzidaebxyg
 
@@ -1748,7 +1748,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     initial_a1e1b1nwzida0e0b0xyg = fun.f_expand(initial_a1, a1_pos)
     ###Distribution of initial numbers across the b1 axis
     initial_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['i_initial_b1'], b1_pos)
-    ###Distribution of initial numbers across the y axis
+    ###Distribution of initial numbers across the y-axis
     initial_yg0 = fun.f_expand(uinp.parameters['i_initial_y0'], y_pos, condition = uinp.parameters['i_mask_y0'], axis = y_pos)
     initial_yg1 = fun.f_expand(uinp.parameters['i_initial_y1'], y_pos, condition = uinp.parameters['i_mask_y1'], axis = y_pos)
     initial_yg3 = fun.f_expand(uinp.parameters['i_initial_y3'], y_pos, condition = uinp.parameters['i_mask_y3'], axis = y_pos)
@@ -1991,9 +1991,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #                                     * (age_p0_pa1e1b1nwzida0e0b0xyg2p0 - ci_yatf[4, ..., na])))
     #                                     , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
     piyf_pa1e1b1nwzida0e0b0xyg2 = piyf_pa1e1b1nwzida0e0b0xyg2 * (nyatf_b1nwzida0e0b0xyg > 0) #set pi to 0 if no yatf.
-    ##Foetal normal weight pattern (mid period)
+    ##Foetal normal weight pattern (mid-period)
     nwf_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[2, ..., na] * (1 - np.exp(cp_dams[3, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0)))), weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
-    ##Conceptus weight pattern (mid period)
+    ##Conceptus weight pattern (mid-period)
     guw_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[6, ..., na] * (1 - np.exp(cp_dams[7, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0)))), weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
     ##Conceptus energy pattern (end of period)
     # ce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0)))), weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
@@ -2010,7 +2010,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     mew_min_pa1e1b1nwzida0e0b0xyg2 =cw_yatf[14, ...] * sfw_pa1e1b1nwzida0e0b0xyg2[0, ...] / cw_yatf[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg2 * dlf_wool_pa1e1b1nwzida0e0b0xyg2 * cw_yatf[1, ...] / kw_yg2
     mew_min_pa1e1b1nwzida0e0b0xyg3 =cw_offs[14, ...] * sfw_da0e0b0xyg3[0, ...] / cw_offs[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg3 * dlf_wool_pa1e1b1nwzida0e0b0xyg3 * cw_offs[1, ...] / kw_yg3
 
-    ##plot above x axis is p
+    ##plot above x-axis is p
     # array = srw_age_pa1e1b1nwzida0e0b0xyg2
     # array = dce_age_f_pa1e1b1nwzida0e0b0xyg1
     # array = guw_age_f_pa1e1b1nwzida0e0b0xyg1
@@ -3784,7 +3784,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                     , chill_index_pa1e1b1nwzida0e0b0xygp0[p], nfoet_b1nwzida0e0b0xyg
                                     , rev_trait_values['yatf'][p], sen.sap['mortalityp'], saa_mortalityx_pa1e1b1nwzida0e0b0xyg[p])
                     if eqn_used:
-                        mortality_birth_yatf = temp1 #mortalityd, assign first because it has x axis
+                        mortality_birth_yatf = temp1 #mortalityd, assign first because it has x-axis
                         mortality_birth_yatf += temp0 #mortalityx
                         mortality_dams += temp2 #mortality due to dystocia
                     if eqn_compare:
@@ -4122,16 +4122,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###mask for animals (slices of w) with mortality less than a threshold - True means mort is acceptable (below threshold)
                 numbers_start_condense_dams = np.broadcast_to(numbers_start_condense_dams, numbers_end_dams.shape) #required for the first condensing because condense numbers start doesn't have all the axis.
                 surv_dams = fun.f_divide(np.sum(numbers_end_dams,axis=prejoin_tup + (season_tup,), keepdims=True)
-                                         , np.sum(numbers_start_condense_dams, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
+                                         , np.sum(numbers_start_condense_dams, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axes so need to sum to determine if w has mortality > 10%
                 threshold = np.minimum(0.9, fun.f_divide(surv_dams.sum(w_pos,keepdims=True),(surv_dams!=0).sum(w_pos,keepdims=True)))  # threshold is the lower of average survival and 90% (animals with 0 survival are not included)
                 mort_mask_dams = surv_dams > threshold
 
                 ###print warning if min mort is greater than 10% since the previous condense
                 ###this is to ensure we are condensing to an animal that the lp will select (ie not point having an animal that has more than 10% mort)
-                ### Note 1: if ewe lambs FS is not set up for mating and it is estimated that ewe lambs are mated then a warning is likely to be triggered. No warning will be triggered if estimate mating propn is 0 because only a very small number of animals will be in the mated b slices and therefore because the b axis is summed to build surv_dams mort wont be significantly effected by them.
+                ### Note 1: if ewe lambs FS is not set up for mating and it is estimated that ewe lambs are mated then a warning is likely to be triggered. No warning will be triggered if estimate mating propn is 0 because only a very small number of animals will be in the mated b slices and therefore because the b axis is summed to build surv_dams mort won't be significantly effected by them.
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]):
                     min_mort = 1 - np.max(surv_dams, axis=w_pos)
-                    ####only use the retained t slice (animals that have multiple fvps per dvp and are sold in the first fvp only get medium fs in following fvps due to lw clustering e.g. w9 is high medium medium, so this can trigger unwanted mort warning)
+                    ####only use the retained t slice (animals that have multiple fvps per dvp and are sold in the first fvp only get medium fs in following fvps due to lw clustering e.g. w9 is high-medium-medium, so this can trigger unwanted mort warning)
                     if len_gen_t1 > 1:
                         min_mort = min_mort[a_t_g1]
                     if np.any(min_mort > 0.1):
@@ -4172,7 +4172,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 o_numbers_end_tpdams[:,p] = numbers_end_dams
 
                 ###back date numbers from end of mating to prejoining
-                if np.any(period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]): #need to back date the numbers from conception to prejoining because otherwise in the matrix there is not a dvp between prejoining and mating therefore this is require so that other slices have energy etc requirement
+                if np.any(period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]): #need to back date the numbers from conception to prejoining because otherwise in the matrix there is not a dvp between prejoining and mating therefore this is required so that other slices have energy etc. requirement
                     ###period is between prejoining and the end of current period (testing this for each p slice)
                     between_prejoinnow = sfun.f1_period_is_('period_is_between', date_prejoin_pa1e1b1nwzida0e0b0xyg1[p], date_start_pa1e1b1nwzida0e0b0xyg, date_end_pa1e1b1nwzida0e0b0xyg[p], date_end_pa1e1b1nwzida0e0b0xyg)
 
@@ -4678,7 +4678,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                         , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
                                         , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'fd_min_offs')
 
-            ##condense end numbers - have to condense the numbers before calc start production, but need to condense production using non condensed end numbers
+            ##condense end numbers - have to condense the numbers before calc start production, but need to condense production using non-condensed end numbers
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                 numbers_end_condensed_sire = sfun.f1_condensed(numbers_end_sire, idx_sorted_w_sire, condense_w_mask_sire
                                         , n_fs_sire, len_w0, n_fvp_periods_sire, False)
@@ -4698,7 +4698,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                         , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
                                         , pkl_condensed_values['offs'][p],'numbers_end_offs')
 
-            ##start production - this requires condensed end number
+            ##start production - this requires condensed end numbers
             ###sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                 ###FFCFW (start - fleece free conceptus free)
@@ -5357,14 +5357,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     cash_allocation_p7tpa1e1b1nwzida0e0b0xyg, wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg = fin.f_cashflow_allocation(
         date_start_pa1e1b1nwzida0e0b0xyg[na], enterprise='stk', z_pos=z_pos) #add t axis
     ###season period allocation - required for asset value
-    alloc_p7tpa1e1b1nwzida0e0b0xyg = zfun.f1_z_period_alloc(date_start_pa1e1b1nwzida0e0b0xyg[na,na,...],z_pos=z_pos, mask_z=False) #dont want to mask z at this point, z gets masked when clustered
+    alloc_p7tpa1e1b1nwzida0e0b0xyg = zfun.f1_z_period_alloc(date_start_pa1e1b1nwzida0e0b0xyg[na,na,...],z_pos=z_pos, mask_z=False) #don't want to mask z at this point, z gets masked when clustered
 
     ###labour period
     labour_periods = per.f_p_date2_df().to_numpy() #convert from df to numpy
     labour_periods_yp5z = labour_periods + (np.arange(np.ceil(sim_years)) * 364)[:,na,na] #expand from single yr to all length of generator
     labour_periods_p5z = labour_periods_yp5z.reshape((-1, len_z))
     ####set lp to start at the next generator period following the node (needs to be next so that clustering works). Lp are adjusted so that they get clustered the same as dvps
-    idx_p5z = np.minimum(len(date_start_P) - 1, np.searchsorted(date_start_P,labour_periods_p5z,'left'))  # maximum idx is the number of generator periods. use P so that it handles cases where look-up date is after the end of the generator (only really an issuse for arrays with o, s & d axes but done to all for consistency)
+    idx_p5z = np.minimum(len(date_start_P) - 1, np.searchsorted(date_start_P,labour_periods_p5z,'left'))  # maximum idx is the number of generator periods. use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
     labour_periods_p5z = date_start_P[idx_p5z]
     a_p5_pz = np.apply_along_axis(fun.f_next_prev_association, 0, labour_periods_p5z, date_end_p, 1, 'right') % len(labour_periods)
     a_p5_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_p5_pz,z_pos,left_pos2=p_pos,right_pos2=z_pos).astype(dtype)
@@ -5401,7 +5401,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                                                      p_pos-2)).astype(dtype)  # convert -- and ++ to inf
     sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg = fun.f_expand(uinp.sheep['i_sale_cost_pc_s7'], p_pos-2).astype(dtype)
     sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg = fun.f_expand(uinp.sheep['i_sale_cost_hd_s7'], p_pos-2).astype(dtype)
-    mask_s7x_s7tpa1e1b1nwzida0e0b0xyg = fun.f_expand(uinp.sheep['i_mask_s7x'], x_pos, left_pos2=p_pos-2, right_pos2=x_pos) #don't mask x axis
+    mask_s7x_s7tpa1e1b1nwzida0e0b0xyg = fun.f_expand(uinp.sheep['i_mask_s7x'], x_pos, left_pos2=p_pos-2, right_pos2=x_pos) #don't mask x-axis
     mask_s7x_s7tpa1e1b1nwzida0e0b0xyg3 = fun.f_expand(uinp.sheep['i_mask_s7x'], x_pos, left_pos2=p_pos-2, right_pos2=x_pos, condition=mask_x, axis=x_pos)
     sale_agemax_s7tpa1e1b1nwzida0e0b0xyg0, sale_agemax_s7tpa1e1b1nwzida0e0b0xyg1, sale_agemax_s7tpa1e1b1nwzida0e0b0xyg2  \
         , sale_agemax_s7tpa1e1b1nwzida0e0b0xyg3 = sfun.f1_c2g(uinp.parameters['i_agemax_s7c2'],uinp.parameters['i_agemax_s7y'], a_c2_c0, i_g3_inc,p_pos-2, dtype=dtype)
@@ -5437,7 +5437,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                    condition2=pinp.sheep['i_masksire_i'], axis2=i_pos)
     sire_periods_g0p8y = sire_periods_g0p8[..., na] + (np.arange(np.ceil(sim_years)) * 364)
     period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8y = sfun.f1_period_is_('period_is', sire_periods_g0p8y, date_start_pa1e1b1nwzida0e0b0xyg[...,na,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg[...,na,na])
-    period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8 = np.any(period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8y, axis=-1) #condense the y axis - it is now accounted for by p axis
+    period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8 = np.any(period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8y, axis=-1) #condense the y-axis - it is now accounted for by p axis
     ##dams
     ###mask for nutrition profiles. this doesn't have a full w axis because it only has the nutrition options it is expanded to w further down.
     sav_mask_nut_dams_oWi = sen.sav['nut_mask_dams_oWi'][:,0:len_nut_dams,:] #This controls if a nutrition pattern is included.
@@ -5512,7 +5512,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #### this occurs when (index_g1 == a_g1_tg1) and the transfer exists
     mask_dvp_type_next_tg1 = transfer_exists_tpa1e1b1nwzida0e0b0xyg1 * (index_g1 == a_g1_tpa1e1b1nwzida0e0b0xyg1)
     ####dvp type next is a little more complex for animals transferring.
-    #### However, the destination for transfer is always dvp type next ==0 (either it is going from dvp 2 to 0 or from 0 to 0.
+    #### However, the destination for transfer is always dvp type next ==0 (either it is going from dvp 2 to 0 or from 0 to 0).
     dvp_type_next_tva1e1b1nwzida0e0b0xyg1 = dvp_type_next_va1e1b1nwzida0e0b0xyg1 * mask_dvp_type_next_tg1
     ####association between dvp and lambing opp
     index_v1 = np.arange(index_vpa1e1b1nwzida0e0b0xyg1.shape[0])
@@ -5583,7 +5583,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     occur in the same gen period. This is because including an offset was getting complex and error prone (particularly
     if main shearing falls between shearing due to selling and sale because this meant the animals got double wool income).
     In reality farmers tend to wait a bit after shearing before selling because animals are off water and feed for up to
-    48hrs and because animals tend to gain weight at a faster rate directly after shearing. In AFO we dont represent 
+    48hrs and because animals tend to gain weight at a faster rate directly after shearing. In AFO we don't represent 
     either of these things thus shearing and selling in the same period is not a big limitation (the two factors are 
     likely to cancel each other out so likely not a big error).  
     
@@ -5615,7 +5615,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##sire - purchased and sold on given date and shorn at main shearing - sires are simulated from weaning but for the pp we only look at a subset
     ### shearing - determined by the main shearing date - no t axis so just use the period is shearing from generator
-    ###round purchase and sale date of sire to nearest period
+    ###round purchase and sale date of sire to the nearest period
     date_purch_oa1e1b1nwzida0e0b0xyg0 = fun.f_next_prev_association(date_start_p, date_purch_oa1e1b1nwzida0e0b0xyg0, 0, 'left') #move input date to the beginning of the next generator period
     date_purch_oa1e1b1nwzida0e0b0xyg0 = date_start_p[date_purch_oa1e1b1nwzida0e0b0xyg0]
     date_sale_oa1e1b1nwzida0e0b0xyg0 = fun.f_next_prev_association(date_start_p, date_sale_oa1e1b1nwzida0e0b0xyg0, 0, 'left') #move input date to the beginning of the next generator period
@@ -5638,11 +5638,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ####convert from shearing/dvp to p array. Increments at dvp ie point to previous sale opp until new dvp then point at next dvp.
     target_weight_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(target_weight_tsa1e1b1nwzida0e0b0xyg3, a_sw_pa1e1b1nwzida0e0b0xyg3[na],1) #gets the target weight for each gen period
     ####adjust generator lw to reflect the cumulative max per period
-    #####lw could go above target then drop back below but it is already sold so the on hand bool shouldn't change. therefore need to use accumulative max and reset each dvp
+    #####lw could go above target then drop back below, but it is already sold so the on hand bool shouldn't change. therefore need to use a cumulative max and reset each dvp
     weight_tpa1e1b1nwzida0e0b0xyg3= sfun.f1_cum_dvp(o_ffcfw_tpoffs,a_v_pa1e1b1nwzida0e0b0xyg3, axis=p_pos)
     ###period is sale
     #### t0 slice = True - this is handled by the inputs ie weight and date are high therefore not reached therefore on hand == true
-    #### t1 & t2 slice date_p<sale_date or weight<target weight (these slice are also sold on the last period of a dvp if there is no other sale opp, see code below)
+    #### t1 & t2 slice date_p<sale_date or weight<target weight (these slices are also sold on the last period of a dvp if there is no other sale opp, see code below)
     sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(np.logical_and(age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] <= sale_age_tpa1e1b1nwzida0e0b0xyg3,
                                                                     sale_age_tpa1e1b1nwzida0e0b0xyg3 <= age_end_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p]),
                                                      weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
@@ -5656,7 +5656,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     on_hand_tpa1e1b1nwzida0e0b0xyg3 = np.logical_not(off_hand_tpa1e1b1nwzida0e0b0xyg3)
     ###period is sale - one true per dvp when sale actually occurs - sale occurs in the period where sheep were on hand at the beginning and not on hand at the beginning of the next period
     period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(on_hand_tpa1e1b1nwzida0e0b0xyg3==True, np.roll(on_hand_tpa1e1b1nwzida0e0b0xyg3,-1,axis=1)==False)
-    ###make the last period in a dvp sale if no sale has occurred previously in the dvp (this doesn't effect on_hand because animals are on hand in the period they are sold and the next period is a new dvp)
+    ###make the last period in a dvp sale if no sale has occurred previously in the dvp (this doesn't affect on_hand because animals are on hand in the period they are sold and the next period is a new dvp)
     period_is_enddvp_pa1e1b1nwzida0e0b0xyg3 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg3, shift=-1, axis=0)
     period_is_sale_enddvp_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_enddvp_pa1e1b1nwzida0e0b0xyg3, on_hand_tpa1e1b1nwzida0e0b0xyg3)
     period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, period_is_sale_enddvp_tpa1e1b1nwzida0e0b0xyg3)
@@ -5693,7 +5693,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###t>=2 = retain
     ###determine t0 sale slice - end of dvp part added below
     period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1 = period_is_mainshearing_pa1e1b1nwzida0e0b0xyg1
-    ###determine t1 slice - tactical sale at start of dvp (sals due to new season info and/or info from scanning)
+    ###determine t1 slice - tactical sale at start of dvp (sale due to new season info and/or info from scanning)
     period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1 = period_is_startdvp_pa1e1b1nwzida0e0b0xyg1
     ####if drys are retained set b1[drys] to false
     period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1 = period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1 * \
@@ -5719,7 +5719,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ### note: animals are on hand in the period they are sold ie sale takes place on the last minute of the period.
     off_hand_tpa1e1b1nwzida0e0b0xyg1= sfun.f1_cum_dvp(np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg1,period_is_transfer_tpa1e1b1nwzida0e0b0xyg1),a_v_pa1e1b1nwzida0e0b0xyg1,axis=1, shift=1) #this ensures that once they are sold they remain off hand for the rest of the dvp, shift =1 so that sheep are on-hand in the period they are sold because sale is end of period
     on_hand_tpa1e1b1nwzida0e0b0xyg1 = np.logical_not(off_hand_tpa1e1b1nwzida0e0b0xyg1)
-    ###make the last period in a dvp sale if no sale has occured previously in the dvp (this doesnt affect on_hand because animals are on hand in the period they are sold and the next period is a new dvp)
+    ###make the last period in a dvp sale if no sale has occurred previously in the dvp (this doesn't affect on_hand because animals are on hand in the period they are sold and the next period is a new dvp)
     period_is_enddvp_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1, shift=-1, axis=0)
     period_is_sale_enddvp_tpa1e1b1nwzida0e0b0xyg1 = np.logical_and(np.logical_and(period_is_enddvp_pa1e1b1nwzida0e0b0xyg1, ewe_sale_mask_pa1e1b1nwzida0e0b0xyg1),
                                                                   on_hand_tpa1e1b1nwzida0e0b0xyg1)
@@ -5743,7 +5743,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     min_age_castrate_sale_g2 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_age_wether_g3'][mask_yatf_inc_g2], 5)
     yatf_castrate_sale_mask_pa1e1b1nwzida0e0b0xyg2 = np.logical_or((gender_xyg[mask_x] != 2)
                                             , age_start_pa1e1b1nwzida0e0b0xyg2 > min_age_castrate_sale_g2)
-    ###bound female sale age - this sets the minimum age a female prog can be sold. Default is no min age eg can be sold anytime.
+    ###bound female sale age - this sets the minimum age a female prog can be sold. Default is no min age e.g. can be sold anytime.
     min_age_female_sale_dg2 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_age_female_dg3'], 5)
     min_age_female_sale_oa1e1b1nwzida0e0b0xyg2 = fun.f_expand(min_age_female_sale_dg2, left_pos=p_pos, right_pos=-1
                                            , condition=mask_d_offs, axis=p_pos, condition2=mask_yatf_inc_g2, axis2=-1)
@@ -5816,9 +5816,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     periods_since_shearing_p9a1e1b1nwzida0e0b0xyg0 = a_p_p9a1e1b1nwzida0e0b0xyg0 - np.maximum(period_previous_shearing_p9a1e1b1nwzida0e0b0xyg0, date_born_idx_ida0e0b0xyg0)
     periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg1 = a_p_p9a1e1b1nwzida0e0b0xyg1 - np.maximum(period_previous_shearing_tp9a1e1b1nwzida0e0b0xyg1, date_born_idx_ida0e0b0xyg1)
     periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 = a_p_p9a1e1b1nwzida0e0b0xyg3 - np.maximum(period_previous_shearing_tp9a1e1b1nwzida0e0b0xyg3, date_born_idx_ida0e0b0xyg3)
-    months_since_shearing_p9a1e1b1nwzida0e0b0xyg0 = periods_since_shearing_p9a1e1b1nwzida0e0b0xyg0 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesn't need to be perfect its only an approximation)
-    months_since_shearing_tp9a1e1b1nwzida0e0b0xyg1 = periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg1 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesn't need to be perfect its only an approximation)
-    months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 = periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesn't need to be perfect its only an approximation)
+    months_since_shearing_p9a1e1b1nwzida0e0b0xyg0 = periods_since_shearing_p9a1e1b1nwzida0e0b0xyg0 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesn't need to be perfect it's only an approximation)
+    months_since_shearing_tp9a1e1b1nwzida0e0b0xyg1 = periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg1 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesn't need to be perfect it's only an approximation)
+    months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 = periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesn't need to be perfect it's only an approximation)
     a_months_since_shearing_p9a1e1b1nwzida0e0b0xyg0 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_p9a1e1b1nwzida0e0b0xyg0)#provides the index of the index which is closest to the actual months since shearing
     a_months_since_shearing_tp9a1e1b1nwzida0e0b0xyg1 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_tp9a1e1b1nwzida0e0b0xyg1)#provides the index of the index which is closest to the actual months since shearing
     a_months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3)#provides the index of the index which is closest to the actual months since shearing
@@ -6028,7 +6028,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ####asset value - calc asset value before adjusting by period is sale and shearing. Dam asset value includes yatf
     salevalue_perdam_tpa1e1b1nwzida0e0b0xyg2[:,sale_mask_p2] = salevalue_tp9a1e1b1nwzida0e0b0xyg2 * o_numbers_start_tpyatf[:,sale_mask_p2]
     assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg1 =  ((salevalue_tpa1e1b1nwzida0e0b0xyg1 + woolvalue_tpa1e1b1nwzida0e0b0xyg1
-                                                + np.sum(salevalue_perdam_tpa1e1b1nwzida0e0b0xyg2, axis=x_pos, keepdims=True)) #sum x axis for yatf
+                                                + np.sum(salevalue_perdam_tpa1e1b1nwzida0e0b0xyg2, axis=x_pos, keepdims=True)) #sum x-axis for yatf
                                             * period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,na,na,...] * alloc_p7tpa1e1b1nwzida0e0b0xyg)
     ####adjust for period is sale/shear (needs to be done here rather than p2v so that cashflow can be combined).
     salevalue_tpa1e1b1nwzida0e0b0xyg1 = salevalue_tpa1e1b1nwzida0e0b0xyg1 * period_is_sale_tpa1e1b1nwzida0e0b0xyg1
@@ -6108,7 +6108,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##Calculate the feed pools (f) and allocate each intake period to a feed pool based on mei/volume (E/V). - this is done like this to handle the big arrays easier - also handles situations where offs and dams may have diff length p axis
     ###calculate ‘nv’ for each animal class.
-    ###This needs to be calculated (rather than using feedsupplyw) because feedsupply could be update in the lw target loop.
+    ###This needs to be calculated (rather than using feedsupplyw) because feedsupply could be updated in the lw target loop.
     nv_tpsire = fun.f_divide(o_mei_solid_tpsire, o_pi_tpsire, dtype=dtype)
     nv_tpdams = fun.f_divide(o_mei_solid_tpdams, o_pi_tpdams, dtype=dtype)
     nv_tpoffs = fun.f_divide(o_mei_solid_tpoffs, o_pi_tpoffs, dtype=dtype)
@@ -6129,7 +6129,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     nv['nv_cutoff_ave_p6fz'] = np.squeeze(nv_cutoff_ave_p6ftpzg, axis=tuple(range(p_pos-1,z_pos))+tuple(range(z_pos+1,0)))
 
     ##Determining a std deviation for the distribution. This is an unknown but the value has been selected so that if
-    ### an animal has an nv that is the mid-point of a feed pool then most of the mei & pi for that animal will occur
+    ### an animal has a nv that is the mid-point of a feed pool then most of the mei & pi for that animal will occur
     ### in that feed pool. This is achieved by dividing the range of the feed pool by 6, because plus/minus 3 standard
     ### deviations from the mean is most of the range.
     nv_cutoffs_sd_p6ftpzg = (nv_upper_p6ftpzg - nv_lower_p6ftpzg) / n_non_confinement_pools / 6
@@ -6143,7 +6143,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     nv_cutoff_lower_ftpzg[0, ...] = -np.inf
     nv_cutoff_upper_ftpzg[n_non_confinement_pools - 1, ...] = np.inf
 
-    ##allocate each sheep class to an nv group
+    ##allocate each sheep class to a nv group
     ###Calculate a proportion of the mei & pi that goes in each pool
     nv_propn_ftpsire = fun.f_norm_cdf(nv_cutoff_upper_ftpzg, nv_tpsire, sd=nv_cutoffs_sd_ftpzg).astype(dtype) \
                        - fun.f_norm_cdf(nv_cutoff_lower_ftpzg, nv_tpsire, sd=nv_cutoffs_sd_ftpzg).astype(dtype)
@@ -6451,7 +6451,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     mask_dest_tva1e1b1nwzida0e0b0xyg1 = (np.trunc(
         index_wzida0e0b0xyg1 * dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9[
             ..., 0]) == index_wzida0e0b0xyg1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9[..., 0])
-    ####Add the nut mask so that distribution cant occur to a masked w slice.
+    ####Add the nut mask so that distribution can't occur to a masked w slice.
     mask_dest_tva1e1b1nwzida0e0b0xyg1 = mask_dest_tva1e1b1nwzida0e0b0xyg1 * mask_w8nut_va1e1b1nw8zida0e0b0xyg1
 
     ###This code generate w8 mask for next period with a t axis (t axis is required for dams because of prejoining transfer)
@@ -6544,7 +6544,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     mask_dest_va1e1b1nwzida0e0b0xyg3 = (np.trunc(index_wzida0e0b0xyg3 * dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3
                                                 / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9[...,0])
                                        == index_wzida0e0b0xyg3 / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9[...,0])
-    ####Add the nut mask so that distribution cant occur to a masked w slice.
+    ####Add the nut mask so that distribution can't occur to a masked w slice.
     mask_dest_va1e1b1nwzida0e0b0xyg3 = mask_dest_va1e1b1nwzida0e0b0xyg3 * mask_w8nut_va1e1b1nwzida0e0b0xyg3
 
     ####################################################
@@ -6583,7 +6583,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     mask_numbers_provt_k2tva1e1b1nwzida0e0b0xyg1g9 = mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[...,na] * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]  \
                                                       * (a_g1_tpa1e1b1nwzida0e0b0xyg1[..., na] == index_g1[..., na, :])
 
-    ###numbers are required across the identity array between g1 & g9 in the periods that the transfer decision variable exists exists
+    ###numbers are required across the identity array between g1 & g9 in the periods that the transfer decision variable exists
     mask_numbers_reqt_k2tva1e1b1nwzida0e0b0xyg1g9 = mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[...,na] \
                                                     * (index_g9 == index_g1g)
 
@@ -6858,7 +6858,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ### the seasons), so we can't use the same asset value parameter for the end and the start. We also can't simply calc
     ### the asset value for both periods because even just one generator period has a bit of effect on asset value
     ### due to mortality and LW change and this allowed the model to optimise tradevalue in a way that it shouldn't.
-    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[2,-1,...] = assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[1,0,...] #sires dont get distributed at season start so asset value end = start
+    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[2,-1,...] = assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[1,0,...] #sires don't get distributed at season start so asset value end = start
     assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1[2,-1,...] = np.sum(np.swapaxes(np.roll(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1, shift=-1, axis=p_pos)[1,0,...,na], axis1=w_pos-1, axis2=-1)
            * distribution_season_tva1e1b1nw8zida0e0b0xyg1w9, axis=-1)
     assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3[2,-1,...] = np.sum(np.swapaxes(np.roll(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3, shift=-1, axis=p_pos)[1,0,...,na], axis1=w_pos-1, axis2=-1)
@@ -6920,7 +6920,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     '''
     Similar to benchmarking we have a 'Livestock Trading Profit' concept. This is required because when using the DSP
     stock numbers are averaged at the beginning of the each season. Thus essentially the poor season (with less stock numbers)
-    buys some stock from the good season. This is not reflected as a cash transaction and doesnt effect profit
+    buys some stock from the good season. This is not reflected as a cash transaction and doesn't effect profit
     but when using risk aversion the model opts to sell more sheep in the poor year when the utility is higher. This gives the
     appearance that risk is being lowered but the bit that is not captured is that at the start of the season
     the numbers are averaged across z. Which essentially means the good season is selling more to the poor season.
@@ -6946,11 +6946,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     assetvalue_p7tva1e1b1nwzida0e0b0xyg0 = end_assetvalue_p7tva1e1b1nwzida0e0b0xyg0 - start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0
     ###dams
     start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1[1]
-    end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1[2] * (index_tva1e1b1nw8zida0e0b0xyg1>=2) #only retained animals have an end value (animals that are sold dont have a value)
+    end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1[2] * (index_tva1e1b1nw8zida0e0b0xyg1>=2) #only retained animals have an end value (animals that are sold don't have a value)
     assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 - start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1
     ###offs
     start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[1]
-    end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[2] * (index_tva1e1b1nw8zida0e0b0xyg3==0) #only retained animals have an end value (animals that are sold dont have a value)
+    end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[2] * (index_tva1e1b1nw8zida0e0b0xyg3==0) #only retained animals have an end value (animals that are sold don't have a value)
     assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 - start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3
 
     ##if steady state set everything to 0 - there is no "season start" in SE model so there is no opportunity for trade between seasons
@@ -7313,7 +7313,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     r_woolvalue_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
 
-    ##sale time - no numbers needed because they don't effect sale date. Use date end since sale is end of period.
+    ##sale time - no numbers needed because they don't affect sale date. Use date end since sale is end of period.
     r_saledate_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(date_end_pa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
                                                     period_is_tp=period_is_sale_tpa1e1b1nwzida0e0b0xyg3)
 
@@ -7369,7 +7369,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                 on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_scan_pa1e1b1nwzida0e0b0xyg1)
 
     ##number of mated animals as a proportion of the dams in each slice that has initial numbers == 1
-    ### calculated from the number of ewes mated total (across a1, e1, b1 & y axis) per ewe in the slice.
+    ### calculated from the number of ewes mated total (across a1, e1, b1 & y-axis) per ewe in the slice.
     ### This is designed to be the number mated equivalent of the number of foetuses per ewe
     n_mated_tpg1 = animal_mated_b1g1 * o_numbers_end_tpdams
     r_n_mated_tvg1 = sfun.f1_p2v(n_mated_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, 1,
@@ -7411,8 +7411,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                                               mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3
                                                                                       * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
-    ##sale date - no numbers needed because they don't effect sale date. need to mask the denominator so that only the d, e, b slices where the animal was sold is used in the divide.
-    ###cant use production function because need to mask the denominator.
+    ##sale date - no numbers needed because they don't affect sale date. need to mask the denominator so that only the d, e, b slices where the animal was sold is used in the divide.
+    ###can't use production function because need to mask the denominator.
     r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3 = fun.f_divide(np.sum(r_saledate_tva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
                                                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
                                                                  , axis = (sinp.stock['i_d_pos'], sinp.stock['i_b0_pos'], sinp.stock['i_e0_pos']), keepdims=True),
@@ -7600,13 +7600,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1,
                                                                               a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...],
                                                                               index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],
-                                                                              numbers_start_vg = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...])  #on_hand to handle the periods when e slices are in different dvps (e.g. cant just have default 1 otherwise it will divide by 2 because both e gets summed)
+                                                                              numbers_start_vg = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...])  #on_hand to handle the periods when e slices are in different dvps (e.g. can't just have default 1 otherwise it will divide by 2 because both e gets summed)
         r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs',r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg3,
                                                                                      a_k3cluster_da0e0b0xyg3,
                                                                                      index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],
                                                                                      a_k5cluster_da0e0b0xyg3,
                                                                                      index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...],
-                                                                                     numbers_start_vg=on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...]) #on_hand to handle the periods when e slices are in different dvps (e.g. cant just have default 1 otherwise it will divide by 2 because both e gets summed)
+                                                                                     numbers_start_vg=on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...]) #on_hand to handle the periods when e slices are in different dvps (e.g. can't just have default 1 otherwise it will divide by 2 because both e gets summed)
 
         ###convert to on hand mort (1-mort)
         r_on_hand_mort_k2tvpa1e1b1nwzida0e0b0xyg1 = 1 - r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1
@@ -7614,7 +7614,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         r_on_hand_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3 = 1 - r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3
         r_on_hand_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3[r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3==0] = 0 #if mort is 0 the animal is not on hand
 
-    ###lw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesn't effect lw
+    ###lw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesn't affect lw
     if sinp.rep['i_store_lw_rep']:
         r_lw_sire_tpsire = o_lw_tpsire
         r_lw_dams_k2Tvpdams = (o_lw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
@@ -7623,7 +7623,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
 
-    ##ffcfw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesn't effect ffcfw
+    ##ffcfw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesn't affect ffcfw
     if sinp.rep['i_store_ffcfw_rep']:
         r_ffcfw_sire_tpsire = o_ffcfw_tpsire
         r_ffcfw_dams_k2Tvpdams = (o_ffcfw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
@@ -7637,7 +7637,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3) \
                                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
 
-    ##NV - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't effect NV
+    ##NV - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
     if sinp.rep['i_store_nv_rep']:
         r_nv_sire_pg = nv_tpsire
         r_nv_dams_k2Tvpg = (nv_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
@@ -7669,7 +7669,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     a_dams_dsegroup_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['ia_dams_dsegroup_b1'], b1_pos)
 
     #### DSE bsed on NW - Using nw doesn't account for the extra MEI of the young growing animals
-    #### cumulative total of metabollic nw (unw) over the periods that exist in each p6 (with p6 axis)
+    #### cumulative total of metabolic nw (unw) over the periods that exist in each p6 (with p6 axis)
     unw_cum_p6tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_nw_start_tpsire**0.75, numbers_p=o_numbers_end_tpsire,
                                         on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0,
                                         a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_p6tpa1e1b1nwzida0e0b0xyg)[:,:,na,...]#add singleton v
@@ -7679,7 +7679,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     unw_cum_p6tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_nw_start_tpoffs**0.75, a_v_pa1e1b1nwzida0e0b0xyg3, numbers_p=o_numbers_end_tpoffs,
                                         on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_p=days_period_cut_pa1e1b1nwzida0e0b0xyg3,
                                         a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6tpa1e1b1nwzida0e0b0xyg)
-    ####returns the average nw for each animal for the each feed period (cum nw accounts for if the animal is on hand - if the animal is sold the average nw will be lower in that feed period)
+    ####returns the average nw for each animal for each feed period (cum nw accounts for if the animal is on hand - if the animal is sold the average nw will be lower in that feed period)
     # note: sires have a single long DVP and are on-hand for multiple years of the same p6. Therefore, nw_ave is higher (because the decision variable is representing multiple sires)
     unw_ave_p6tva1e1b1nwzida0e0b0xyg0 = fun.f_divide(unw_cum_p6tva1e1b1nwzida0e0b0xyg0, days_p6_p6tva1e1b1nwzida0e0b0xyg)
     unw_ave_p6tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(unw_cum_p6tva1e1b1nwzida0e0b0xyg1, days_p6_p6tva1e1b1nwzida0e0b0xyg)
@@ -7947,7 +7947,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###number prog require by dams
     params['p_progreq_dams'] = fun.f1_make_pyomo_dict(numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k3k5tw8ziyg1g9w9, loop_axis_pos=0, index_loop_axis_pos=0) #loop on k2 axis
     ###number prog require by offs
-    #todo add a y axis to prog. Requires changing this parameter
+    #todo add a y-axis to prog. Requires changing this parameter
     params['p_progreq_offs'] = fun.f1_make_pyomo_dict(numbers_progreq_k3k5tva1e1b1nw8zida0e0b0xyg3w9, arrays_k3vw8zixg3w9, loop_axis_pos=0, index_loop_axis_pos=0) #loop on k3 axis
     ###number prog provided to dams
     params['p_progprov_dams'] = fun.f1_make_pyomo_dict(numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9, arrays_k3k5tw8zia0xyg2g9w9, loop_axis_pos=0, index_loop_axis_pos=0) #loop on k3 axis
@@ -7956,7 +7956,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##dams
     ###numbers_req_dams
-    params['numbers_req_numpyversion_k2k2tva1nw8ziyg1g9w9'] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:,:,:]  #can't use squeeze here because i need to keep all relevant axis even if singleton. this is used to speed pyomo constraint.
+    params['numbers_req_numpyversion_k2k2tva1nw8ziyg1g9w9'] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:,:,:]  #don't use squeeze here because keeping all relevant axis even if singleton speeds the pyomo constraint.
     params['p_numbers_req_dams'] = fun.f1_make_pyomo_dict(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, arrays_k2k2tva1nw8ziyg1g9w9, loop_axis_pos=p_pos-2, index_loop_axis_pos=-10)
     ###numbers_prov_dams
     ####numbers provided into next period (the norm)
@@ -7966,7 +7966,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##offs related
     ###numbers_req_offs
-    params['numbers_req_numpyversion_k3k5vw8zixg3w9'] = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,0,:,0,0,0,0,:,:,:,0,0,0,0,:,0,:,:]  #can't use squeeze here because i need to keep all relevant axis even if singleton. this is used to speed pyomo constraint.
+    params['numbers_req_numpyversion_k3k5vw8zixg3w9'] = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,0,:,0,0,0,0,:,:,:,0,0,0,0,:,0,:,:]  #don't use squeeze here because keeping all relevant axis even if singleton speeds the pyomo constraint.
     params['p_numbers_req_offs'] = fun.f1_make_pyomo_dict(numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9, arrays_k3k5vw8zixg3w9, loop_axis_pos=p_pos-1, index_loop_axis_pos=-7)
     ###numbers_prov_offs
     params['p_numbers_prov_offs'] = fun.f1_make_pyomo_dict(numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9, arrays_k3k5tvnw8ziaxyg3w9, loop_axis_pos=p_pos-1, index_loop_axis_pos=-10)
@@ -8212,7 +8212,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
     ###adjust 2-tooth twice drys for yearling mating (and other age groups if not 100% mated).
     ### the proportion of yearlings that were mated adjusts the proportion of the dry 2-tooths that are twice dry
-    ### Eg. if no yearlings were mated then no 2-tooths are twice dry.
+    ### E.g. if no yearlings were mated then no 2-tooths are twice dry.
     ####calc propn of dams mated in previous opportunity uses the estimated proportion of dams mated
     prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1 = np.roll(est_prop_dams_mated_oa1e1b1nwzida0e0b0xyg1, shift=1, axis=0)
     prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
@@ -8235,7 +8235,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                           condition=mask_d_offs, axis=d_pos, condition2=mask_x, axis2=x_pos, condition3=mask_offs_inc_g3, axis3=-1)
     bnd_lower_offs_tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(bnd_lower_offs_tsa1e1b1nwzida0e0b0xyg3,
                                                                 a_next_s_va1e1b1nwzida0e0b0xyg3[na,...],
-                                                                axis=p_pos) * future_shearing_exists_tva1e1b1nwzida0e0b0xyg3 #mask is to set the low bnd to 0 after the last shearing (dont want a low bnd if there is not shearing opportunity because the animals cant be sold)
+                                                                axis=p_pos) * future_shearing_exists_tva1e1b1nwzida0e0b0xyg3 #mask is to set the low bnd to 0 after the last shearing (don't want a low bnd if there is not shearing opportunity because the animals can't be sold)
     ##Note: when next_s is beyond the end of the sim a_next_s points to the final shearing occurrence.
     ### this requires a one-off fix so that the bound does not incorrectly operate on the final DVP
     bnd_lower_offs_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(bnd_lower_offs_tva1e1b1nwzida0e0b0xyg3
@@ -8245,7 +8245,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     params['p_offs_lobound'] = fun.f1_make_pyomo_dict(bnd_lower_offs_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3tvzxg3)
 
     ##upper bound offs
-    bnd_upper_offs_tsdxg3 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_offs_tsdxg3'], 5) #999999 just an arbitrary high value (cant use np.inf because it becomes nan in the following calcs)
+    bnd_upper_offs_tsdxg3 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_offs_tsdxg3'], 5) #999999 just an arbitrary high value (can't use np.inf because it becomes nan in the following calcs)
     # bnd_upper_offs_tsdxg3[bnd_upper_offs_tsdxg3==999999] = np.inf
     bnd_upper_offs_tsa1e1b1nwzida0e0b0xyg3 = fun.f_expand(bnd_upper_offs_tsdxg3, left_pos=x_pos, right_pos=-1,
                                                           left_pos2=d_pos, right_pos2=x_pos, left_pos3=p_pos, right_pos3=d_pos,
@@ -8508,7 +8508,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###dvp date
     r_repro_dates_roe1zg1 = np.stack([fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1, fvp_scan_start_oa1e1b1nwzida0e0b0xyg1,
                                      fvp_birth_start_oa1e1b1nwzida0e0b0xyg1, fvp_wean_start_oa1e1b1nwzida0e0b0xyg1], axis=0)
-    r_repro_dates_roe1g1 = fun.f_dynamic_slice(r_repro_dates_roe1zg1, axis=z_pos, start=0, stop=1) #remove z axis since repro dates dont change along z
+    r_repro_dates_roe1g1 = fun.f_dynamic_slice(r_repro_dates_roe1zg1, axis=z_pos, start=0, stop=1) #remove z axis since repro dates don't change along z
     fun.f1_make_r_val(r_vals,dvp_start_va1e1b1nwzida0e0b0xyg1 % 364,'dvp_start_vezg1', shape=ve1zg1_shape) #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
     fun.f1_make_r_val(r_vals,dvp_start_va1e1b1nwzida0e0b0xyg3 % 364,'dvp_start_vzdxg3', shape=vzdxg3_shape) #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
     fun.f1_make_r_val(r_vals,r_repro_dates_roe1g1 % 364,'r_repro_dates_roe1g1', shape=roe1g1_shape) #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
