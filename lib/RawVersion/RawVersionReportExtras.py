@@ -141,7 +141,7 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         stacked_reports["stacked_feed"] = rfun.f_append_dfs(stacked_reports["stacked_feed"], feed)
 
     if report_run.loc['run_feedbudget', 'Run']:
-        feed = pd.concat([reports["feed"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        feed = pd.concat([reports["feed_total"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_feed2"] = rfun.f_append_dfs(stacked_reports["stacked_feed2"], feed)
 
     if report_run.loc['run_feedbudget', 'Run']:
