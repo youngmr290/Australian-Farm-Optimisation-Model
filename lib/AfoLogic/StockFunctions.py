@@ -1581,7 +1581,7 @@ def f_mortality_dam_cs():
     return 0
 
 
-def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_between_birth6wks, gest_propn, sap_mortalitye):
+def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_is_pregtox, gest_propn, sap_mortalitye):
     '''
     (Twin) Dam mortality in last 6 weeks (preg tox). This increments mortality associated with LWL in the base mortality function.
 
@@ -1597,7 +1597,7 @@ def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_b
                                                                         , cb1[4, ..., na], cb1[5, ..., na]) #mul by days period to convert from mort per day to per period
     t_mort = np.mean(t_mort_p1, axis=-1)
     ##If not last 6 weeks then = 0
-    mort = t_mort * period_between_birth6wks
+    mort = t_mort * period_is_pregtox
     ##Adjust by sensitivity on dam mortality
     mort = fun.f_sa(mort, sap_mortalitye, sa_type = 1, value_min = 0)
     return mort
