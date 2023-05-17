@@ -1916,7 +1916,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     cols = [8] #t
     grn_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                          keys=keys, arith=arith, index=index, cols=cols)
-    grn_mei = pd.concat([grn_mei], keys=['Grn'], axis=1)  # add feed type as header
+    grn_mei = pd.concat([grn_mei], keys=['Green Pas'], axis=1)  # add feed type as header
 
     ###poc pasture
     type = 'pas'
@@ -1929,7 +1929,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     cols = []
     poc_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                          keys=keys, arith=arith, index=index, cols=cols)
-    poc_mei.columns = ['POC'] # add feed type as header
+    poc_mei.columns = ['Green Crop Paddock Pas'] # add feed type as header
 
     ###dry pasture
     type = 'pas'
@@ -1955,7 +1955,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     cols = []
     nap_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                          keys=keys, arith=arith, index=index, cols=cols)
-    nap_mei.columns = ['NAP Pas'] # add feed type as header
+    nap_mei.columns = ['Dry Crop Paddock Pas'] # add feed type as header
 
     ###residue
     prod = 'md_zp6fks1'
@@ -1970,7 +1970,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     # axis_slice[0] = [0, 2, 1]
     res_mei = f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                           keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    res_mei.columns = ['Residue'] # add feed type as header
+    res_mei.columns = ['Crop Residue'] # add feed type as header
 
     ###crop graze
     prod = 'crop_md_fkp6p5zl'
@@ -2003,7 +2003,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
     sup_mei_qs_fkp6z = grain_fed_qszkfp6.unstack([4,3,5,2]).sort_index(axis=1).mul(sup_md_tonne_fkp6z, axis=1)
     sup_mei_qszp6f = sup_mei_qs_fkp6z.stack([3,2,0]).sort_index(axis=1).sum(axis=1)
-    sup_mei = pd.DataFrame(sup_mei_qszp6f, columns=['Supp']) # add feed type as header
+    sup_mei = pd.DataFrame(sup_mei_qszp6f, columns=['Supplement']) # add feed type as header
 
     ##stock mei requirement
     if option==0:
