@@ -25,6 +25,18 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
     else:
         os.mkdir(output_infeasible_path)
 
+    infeasible_trial_file_path = relativeFile.find(__file__, "../../Output/infeasible", trial_name + ".txt")
+    if trial_infeasible:
+        ###save infeasible file
+        with open(infeasible_trial_file_path,'w') as f:
+            f.write("Solver error")
+    else:  # Something else is wrong - solver may have stalled.
+        ###trys to delete the infeasible file because the trial is now optimal
+        try:
+            os.remove(infeasible_trial_file_path)
+        except FileNotFoundError:
+            pass
+
 
     ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
     fun.write_variablesummary(model, row, exp_data, profit, 1, property_id=pinp.general['i_property_id'])

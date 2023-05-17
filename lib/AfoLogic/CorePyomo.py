@@ -156,31 +156,18 @@ def coremodel_all(trial_name, model, method, nv):
     print(f'Profit: {profit}   Obj: {utility}')
     print('-' * 60)
 
-    infeasible_trial_file_path = relativeFile.find(__file__, "../../Output/infeasible", trial_name + ".txt")
-
     ##this check if the solver is optimal - if infeasible or error the model will save a file in Output/infeasible/ directory. This will be accessed in reporting to stop you reporting infeasible trials.
     ##the model will keep running the next trials even if one is infeasible.
     if (solver_result.solver.status == pe.SolverStatus.ok) and (
             solver_result.solver.termination_condition == pe.TerminationCondition.optimal):
         print('OPTIMAL LP SOLUTION FOUND')  # Do nothing when the solution in optimal and feasible
         trial_infeasible = False
-        ###trys to delete the infeasible file because the trial is now optimal
-        try:
-            os.remove(infeasible_trial_file_path)
-        except FileNotFoundError:
-            pass
     elif (solver_result.solver.termination_condition == pe.TerminationCondition.infeasible):
         print('***INFEASIBLE LP SOLUTION***')
         trial_infeasible = True
-        ###save infeasible file
-        with open(infeasible_trial_file_path,'w') as f:
-            f.write("Solver Status: {0}".format(solver_result.solver.termination_condition))
     else:  # Something else is wrong - solver may have stalled.
         print('***Solver Status: error (other)***')
         trial_infeasible = True
-        ###save infeasible file
-        with open(infeasible_trial_file_path,'w') as f:
-            f.write("Solver Status: {0}".format(solver_result.solver.termination_condition))
 
     return profit, utility, trial_infeasible
 
