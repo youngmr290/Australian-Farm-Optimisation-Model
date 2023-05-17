@@ -1,5 +1,5 @@
 '''
-Marginal value of feed.
+Marginal value of feed (c/MJ).
 
 Module is built differently to normal (pyomo and precalcs together) to keep it as simple as possible
 This is because this module is an add-on. So it is built as solo as possible.
@@ -14,7 +14,7 @@ from . import FeedsupplyFunctions as fsfun
 def f_vol():
     '''calc volume of 100mj with different digestibility.'''
     dmd_q = pinp.mvf['i_mvf_dmd_q']
-    mvf_me = pinp.mvf['i_mvf_me'] #me used for mvf
+    mvf_me = pinp.mvf['i_mvf_me'] #me used for mvf. Usually 100MJ because $/100MJ is equivalent to c/MJ.
     me_q = fsfun.f1_dmd_to_md(dmd_q)
 
     ##calc ri quality
@@ -42,7 +42,7 @@ def f_vol():
 #######
 def f1_mvf_pyomo(model):
     model.v_mvf = pe.Var(model.s_sequence_year, model.s_sequence, model.s_feed_periods,model.s_feed_pools, model.s_mvf_q,bounds=(0,0),
-                       doc='marginal value of feed. Must be bound to 0. Can be examined in duals to see value of extra ME.')
+                       doc='marginal value of feed (c/MJ). Must be bound to 0. Can be examined in duals to see value of extra ME.')
 
 
 
