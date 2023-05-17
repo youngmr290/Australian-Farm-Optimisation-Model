@@ -26,6 +26,7 @@ import pickle as pkl
 import os.path
 import sys
 import xlsxwriter
+import datetime as dt
 
 from . import Functions as fun
 from . import Exceptions as exc
@@ -2091,6 +2092,21 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
 
     ###add stock mei requirement
     feed_budget = pd.concat([feed_budget_supply, feed_budget_req], axis=1)
+
+    ##add fp date to index
+    keys_p6 = r_vals['pas']['keys_p6']
+    keys_z = r_vals['zgen']['keys_z']
+    fp_dates = r_vals['pas']['fp_date_start_p6z']
+    fp_dates = pd.DataFrame(fp_dates, index=keys_p6, columns=keys_z).T.stack()
+    fp_dates = pd.to_datetime(fp_dates, format='%j').dt.strftime('%d-%b')
+    if nv_option == 0:
+        fp_idx = feed_budget.index.droplevel([0,1,-1]).tolist()
+    else:
+        fp_idx = feed_budget.index.droplevel([0,1]).tolist()
+    new_level_values = fp_dates.loc[fp_idx].values
+    idx = feed_budget.index.to_frame() # Convert index to dataframe
+    idx.insert(4, 'fp_date', new_level_values) # Insert new level at specified location
+    feed_budget.index = pd.MultiIndex.from_frame(idx) # Convert back to MultiIndex
 
     return feed_budget.astype(float).round(2)
 
