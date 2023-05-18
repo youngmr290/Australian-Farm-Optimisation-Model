@@ -1792,7 +1792,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##day90 after mating (for use in the LTW calculations)
     date_d90_pa1e1b1nwzida0e0b0xyg1 = date_mated_pa1e1b1nwzida0e0b0xyg1 + np.array([90])
     ##pre-lambing assessment in MU trials (135 days after mating (for use in the LTW calculations))
-    date_prelamb_pa1e1b1nwzida0e0b0xyg1 = date_mated_pa1e1b1nwzida0e0b0xyg1 + np.array([135])
+    date_prebirth_pa1e1b1nwzida0e0b0xyg1 = date_mated_pa1e1b1nwzida0e0b0xyg1 + np.array([135])
     ##Age of dam when first lamb is born
     agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 = np.swapaxes(date_born1st_oa1e1b1nwzida0e0b0xyg2 - date_born1st_ida0e0b0xyg1,0,d_pos)[0,...] #replace the d axis with the o axis then remove the d axis by taking slice 0 (note the d axis was not active)
     if np.count_nonzero(pinp.sheep['i_mask_i']) > 1: #complicated by the fact that sire tol is not necessarily the same as dams and off
@@ -2133,11 +2133,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_scan_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
     period_between_mated90_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is_between', date_mated_pa1e1b1nwzida0e0b0xyg1
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_d90_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
+    period_between_scanprebirth_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is_between', date_scan_pa1e1b1nwzida0e0b0xyg1
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_prebirth_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg) #use date born that increments at joining
     period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is_between', date_scan_pa1e1b1nwzida0e0b0xyg1
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_born2_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg) #use date born that increments at joining
     period_between_d90birth_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is_between', date_d90_pa1e1b1nwzida0e0b0xyg1
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_born2_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg) #use date born that increments at joining
-    period_between_prelambbirth_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is_between', date_prelamb_pa1e1b1nwzida0e0b0xyg1
+    period_between_prebirthbirth_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is_between', date_prebirth_pa1e1b1nwzida0e0b0xyg1
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_born2_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg) #use date born that increments at joining
     period_between_birthwean_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is_between', date_born_pa1e1b1nwzida0e0b0xyg2
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_weaned_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg)
@@ -2145,6 +2147,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
     period_is_scan_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_scan_pa1e1b1nwzida0e0b0xyg1
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
+    period_is_prebirth_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_prebirth_pa1e1b1nwzida0e0b0xyg1
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     period_is_birth_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_born_pa1e1b1nwzida0e0b0xyg2
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
     period_is_wean_pa1e1b1nwzida0e0b0xyg2 = sfun.f1_period_is_('period_is', date_weaned_pa1e1b1nwzida0e0b0xyg2
@@ -2368,6 +2372,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         cf_w_b_dams = np.zeros(tag1, dtype =dtype) #this is required as default when mu birth weight function is not being called (it is required in the start production function)
         cf_w_w_start_dams = np.array([0.0])
         cf_w_w_dams = np.zeros(tag1, dtype =dtype) #this is required as default when mu wean function is not being called (it is required in the start production function)
+        cf_csc_start_dams = np.array([0.0])
+        cf_csc_dams = np.zeros(tag1, dtype =dtype) #this is required as default when mu2 peri-natal mortality function is not being called (it is required in the start production function)
         # cf_conception_start_dams = np.array([0.0])
         # cf_conception_dams = np.zeros(tag1, dtype =dtype) #not currently used. Will be used if profile prior to joining (i.e. previous year) is included in the repro functions.
         guw_start_dams = np.array([0.0])
@@ -2543,6 +2549,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 cf_w_b_start_dams = fun.f_update(cf_w_b_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
                 ###Weaning weight carryover (running tally of foetal weight diff)
                 cf_w_w_start_dams = fun.f_update(cf_w_w_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
+                ###CS change carryover (running tally of dam CS change in late pregnancy)
+                cf_csc_start_dams = fun.f_update(cf_csc_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
                 # ###Carry forward conception
                 # cf_conception_start_dams = fun.f_update(cf_conception_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
                 ###LTW CFW adjustment carryover (running tally of LTW progeny CFW)
@@ -2585,7 +2593,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###Relative condition (start)
                 rc_start_sire = ffcfw_start_sire / nw_start_sire
                 ##Condition score at  start of p
-                cs_start_sire = sfun.f1_condition_score(rc_start_sire, cu0_sire)
+                cs_start_sire = sfun.f1_condition_score(rc_start_sire, cn_sire)
                 ###staple length
                 sl_start_sire = fl_start_sire * cw_sire[15,...]
                 ###Relative size (start) - dams & sires
@@ -2616,7 +2624,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###Relative condition (start)
                 rc_start_dams = ffcfw_start_dams / nw_start_dams
                 ##Condition score of the dam at  start of p
-                cs_start_dams = sfun.f1_condition_score(rc_start_dams, cu0_dams)
+                cs_start_dams = sfun.f1_condition_score(rc_start_dams, cn_dams)
                 ###Relative condition of dam at parturition - needs to be remembered between loops (milk production) - Loss of potential milk due to consistent under production
                 rc_birth_dams = fun.f_update(rc_birth_start_dams, rc_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
                 ###staple length
@@ -2662,7 +2670,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###Relative condition (start)
                 rc_start_offs = ffcfw_start_offs / nw_start_offs
                 ##Condition score at  start of p
-                cs_start_offs = sfun.f1_condition_score(rc_start_offs, cu0_offs)
+                cs_start_offs = sfun.f1_condition_score(rc_start_offs, cn_offs)
                 ###staple length
                 sl_start_offs = fl_start_offs * cw_offs[15,...]
                 ###Relative size (start) - dams & sires
@@ -3153,7 +3161,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ##Relative condition of the dam at mating - required to determine milk production
                 rc_mating_dams = ffcfw_mating_dams / nw_start_dams_e1b1sliced
                 ##Condition score of the dams at mating
-                cs_mating_dams = sfun.f1_condition_score(rc_mating_dams, cu0_dams)
+                cs_mating_dams = sfun.f1_condition_score(rc_mating_dams, cn_dams)
                 ##Relative size of the dams at mating
                 relsize_mating_dams = relsize_start_dams_e1b1sliced
 
@@ -3275,7 +3283,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 temp_rc_start_yatf = ffcfw_start_yatf / nw_start_yatf
                 rc_start_yatf = fun.f_update(rc_start_yatf, temp_rc_start_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0)
                 ##Condition score of the dam at  start of p
-                cs_start_yatf = sfun.f1_condition_score(rc_start_yatf, cu0_yatf)
+                cs_start_yatf = sfun.f1_condition_score(rc_start_yatf, cn_yatf)
                 ###staple length
                 sl_start_yatf = fl_start_yatf * cw_yatf[15,...]
                 ###Relative size (start) - dams & sires
@@ -3743,10 +3751,26 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_mortality_dam_mu(cu2_dams, ce_pdams[:,p,...], cb1_dams, cs_start_dams, cv_cs_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
+                    temp0 = sfun.f_mortality_dam_mu(cu2_dams, ce_pdams[:,p,...], cb1_dams, cs_start_dams, cv_cs_dams
+                                                    , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , nfoet_b1nwzida0e0b0xyg, sen.sap['mortalitye'])
                     if eqn_used:
                         mortality_dams += temp0 #dam mort at birth due to low CS
+                    if eqn_compare:
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
+            eqn_system = 2 # mu2 = 2
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                    ## calculate CS change of dams (to reduce the arguments required)
+                    csc_dams = ebg_dams * cg_dams[18, ...] / (cn_dams[5, ...] * nw_start_dams)
+                    temp0, temp1 = sfun.f_mortality_dam_mu2(cu2_dams, ce_pdams[:,p,...], cb1_dams, cf_csc_start_dams
+                                        , csc_dams, cs_start_dams, cv_cs_dams, period_between_scanprebirth_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , period_is_prebirth_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
+                                        , days_period_pa1e1b1nwzida0e0b0xyg1[p], sen.sap['mortalitye'])
+                    if eqn_used:
+                        mortality_dams += temp0 #dam mort at birth due to low CS
+                        cf_csc_dams = temp1
                     if eqn_compare:
                         r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
@@ -3770,7 +3794,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_mortality_pregtox_mu(cb1_dams, cg_dams, nw_start_dams, ebg_dams, sd_ebg_dams
                                                     , days_period_pa1e1b1nwzida0e0b0xyg1[p]
-                                                    , period_between_prelambbirth_pa1e1b1nwzida0e0b0xyg1[p]
+                                                    , period_between_prebirthbirth_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], sen.sap['mortalitye'])
                     if eqn_used:
                         mortality_dams += temp0
@@ -4568,6 +4592,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 cf_w_w_condensed_dams = sfun.f1_condensed(cf_w_w_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'cf_w_w_dams')
+                ###Condition score change carryover (running tally of dam CS change in late pregnancy)
+                cf_csc_condensed_dams = sfun.f1_condensed(cf_csc_dams, idx_sorted_w_dams, condense_w_mask_dams
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
+                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'cf_csc_dams')
                 ###Average FOO during lactation (for weaning weight calculation)
                 foo_lact_ave_condensed = sfun.f1_condensed(foo_lact_ave, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
@@ -4999,6 +5027,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 #                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weaning weight carryover (running tally of foetal weight diff)
                 cf_w_w_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, cf_w_w_condensed_dams, prejoin_tup
+                                        , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
+                                        , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
+                                        , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
+                ###CS change carryover (running tally of dam CS change in late pregnancy)
+                cf_csc_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, cf_csc_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
                                         , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
@@ -5904,7 +5942,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ffcfw_tp9a1e1b1nwzida0e0b0xyg3 = o_ffcfw_tpoffs[:,sale_mask_p3]
 
     salevalue_c1tpa1e1b1nwzida0e0b0xyg0[:,:,sale_mask_p0], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg0[:,:,sale_mask_p0] = sfun.f_sale_value(
-        cu0_sire.astype(dtype), cx_sire[:,0:1,...].astype(dtype), rc_start_sire_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg0
+        cn_sire.astype(dtype), cx_sire[:,0:1,...].astype(dtype), rc_start_sire_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg0
         , dresspercent_adj_yg0, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg, dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg0
         , month_discount_s7tp9a1e1b1nwzida0e0b0xyg0, price_type_s7tpa1e1b1nwzida0e0b0xyg, cvlw_s7s5tpa1e1b1nwzida0e0b0xyg
@@ -5913,7 +5951,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg[...,0:1,:,:], sale_agemax_s7tpa1e1b1nwzida0e0b0xyg0, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg0, dtype)
     salevalue_c1tpa1e1b1nwzida0e0b0xyg1[:,:,sale_mask_p1], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg1[:,:,sale_mask_p1] = sfun.f_sale_value(
-        cu0_dams.astype(dtype), cx_dams[:,1:2,...].astype(dtype), rc_start_dams_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg1
+        cn_dams.astype(dtype), cx_dams[:,1:2,...].astype(dtype), rc_start_dams_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg1
         , dresspercent_adj_yg1, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg1
         , month_discount_s7tp9a1e1b1nwzida0e0b0xyg1, price_type_s7tpa1e1b1nwzida0e0b0xyg, cvlw_s7s5tpa1e1b1nwzida0e0b0xyg
@@ -5922,7 +5960,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg[...,1:2,:,:], sale_agemax_s7tpa1e1b1nwzida0e0b0xyg1, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg1, dtype)
     salevalue_c1tp9a1e1b1nwzida0e0b0xyg2, r_salegrid_c1tpa1e1b1nwzida0e0b0xyg2[:,:,sale_mask_p2] = sfun.f_sale_value(                                                #keep it as a condensed p axis
-        cu0_yatf.astype(dtype), cx_yatf[:,mask_x,...].astype(dtype), rc_start_yatf_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg2
+        cn_yatf.astype(dtype), cx_yatf[:,mask_x,...].astype(dtype), rc_start_yatf_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg2
         , dresspercent_adj_yg2, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg2
         , month_discount_s7tp9a1e1b1nwzida0e0b0xyg2, price_type_s7tpa1e1b1nwzida0e0b0xyg, cvlw_s7s5tpa1e1b1nwzida0e0b0xyg
@@ -5931,7 +5969,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemax_s7tpa1e1b1nwzida0e0b0xyg2, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg2, dtype)
     salevalue_c1tpa1e1b1nwzida0e0b0xyg3[:,:,sale_mask_p3], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg3[:,:,sale_mask_p3] = sfun.f_sale_value(
-        cu0_offs, cx_offs[:,mask_x,...].astype(dtype), rc_start_offs_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg3
+        cn_offs, cx_offs[:,mask_x,...].astype(dtype), rc_start_offs_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg3
         , dresspercent_adj_yg3, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg3
         , month_discount_s7tp9a1e1b1nwzida0e0b0xyg3, price_type_s7tpa1e1b1nwzida0e0b0xyg, cvlw_s7s5tpa1e1b1nwzida0e0b0xyg

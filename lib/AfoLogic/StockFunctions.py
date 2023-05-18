@@ -1676,12 +1676,12 @@ def f_mortality_weaner_mu(cu2, ce=0):
     return 0
 
 
-def f_mortality_dam_mu(cu2, ce, cb1, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
+def f_mortality_dam_mu(cu2, ce, cb1, cs, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
     ## transformed Dam mortality at birth due to low CS.
     ###distribution on cs_birth, calculate mort and then average (axis =-1)
-    cs_birth_dams_p1 = fun.f_distribution7(cs_birth_dams, cv=cv_cs)
+    cs_p1 = fun.f_distribution7(cs, cv=cv_cs)
     ###calc mort
-    t_mortalitye_mu_p1 = (cu2[22, 0, ...,na] * cs_birth_dams_p1 + cu2[22, 1, ...,na] * cs_birth_dams_p1 ** 2
+    t_mortalitye_mu_p1 = (cu2[22, 0, ...,na] * cs_p1 + cu2[22, 1, ...,na] * cs_p1 ** 2
                           + ce[22, ...,na] + cu2[22, -1, ...,na])
     ##Back transform the mortality
     mortalitye_mu_p1 = fun.f_back_transform(t_mortalitye_mu_p1)
@@ -1694,22 +1694,31 @@ def f_mortality_dam_mu(cu2, ce, cb1, cs_birth_dams, cv_cs, period_is_birth, nfoe
     return mortalitye_mu
 
 
-def f_mortality_dam_mu2(cu2, ce, cb1, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
-    ## transformed peri natal Dam mortality due to CS at birth & CS change up to pre lambing, BT & age of the dam.
-    ###distribution on cs_birth, calculate mort and then average (axis =-1)
-    cs_birth_dams_p1 = fun.f_distribution7(cs_birth_dams, cv=cv_cs)
-    ###calc mort
-    t_mortalitye_mu_p1 = (cu2[22, 0, ...,na] * cs_birth_dams_p1 + cu2[22, 1, ...,na] * cs_birth_dams_p1 ** 2
-                          + ce[22, ...,na] + cu2[22, -1, ...,na])
-    ##Back transform the mortality
-    mortalitye_mu_p1 = fun.f_back_transform(t_mortalitye_mu_p1)
-    ##Average across the p1 axis (range of CS within the mob)
-    mortalitye_mu = np.mean(mortalitye_mu_p1, axis=-1)
-    ##Vertical shift in mortality based on litter size and only increase mortality if period is birth and reproducing ewes
-    mortalitye_mu = (mortalitye_mu + cb1[22, ...]) * period_is_birth * (nfoet_b1 > 0)
-    ##Adjust by sensitivity on dam mortality
+def f_mortality_dam_mu2(cu2, ce, cb1, cf_csc, csc, cs, cv_cs, period_between_scanprebirth
+                        , period_is_prebirth, nfoet_b1, days_period, sap_mortalitye):
+    ##Peri natal Dam mortality due to CS at birth, CS change scanning to pre lambing, birth type & age of the dam.
+    ## The mortality is incurred at the pre-birth period and can't be incurred each period because of the back transformation.
+    ## The CS change (d_cf) is accumulated during scanning to pre-birth
+    ### CS change is only incremented for multiple bearing ewes because the change in CS effect is associated
+    ### with PregTox which is only applicable to multiple bearing ewes.
+    d_cf = csc * days_period * period_between_scanprebirth * (nfoet_b1>1)
+    ### Calculate the cumulative carried forward CS change
+    cf_csc = cf_csc + d_cf
+    ###The estimate of mortality includes a distribution for both the CS & CS change
+    ### Mortality is calculated each loop and only retained if the period is pre-birth
+    cs_p1p2 = fun.f_distribution7(cs, cv=cv_cs)[...,na]
+    csc_p1p2 = fun.f_distribution7(cf_csc, cv=cv_cs)[...,na,:]
+    ###calculate transformed mortality
+    t_mortalitye_mu_p1p2 = (ce[23, ...,na,na] + cb1[23, ...,na,na] + cu2[23, -1, ...,na,na]
+                                                                   + cu2[23, 0, ...,na,na] * cs_p1p2
+                                                                   + cu2[23, 2, ...,na,na] * csc_p1p2)
+    ##Back transform the mortality (Logit)
+    mortalitye_mu_p1p2 = fun.f_back_transform(t_mortalitye_mu_p1p2)
+    ##Average across the p1 & p2 axes (range of CS & CS change within the mob) if period is birth for reproducing ewes
+    mortalitye_mu = np.mean(mortalitye_mu_p1p2, axis=(-1,-2)) * period_is_prebirth * (nfoet_b1 > 0)
+    ##Adjust by sensitivity on peri-natal dam mortality
     mortalitye_mu = fun.f_sa(mortalitye_mu, sap_mortalitye, sa_type = 1, value_min = 0)
-    return mortalitye_mu
+    return mortalitye_mu, cf_csc
 
 
 def f_mortality_pregtox_mu(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_is_pregtox, gest_propn, sap_mortalitye):
@@ -2245,7 +2254,7 @@ def f_wool_value(stb_mpg_w4, wool_price_scalar_c1w4tpg, cfw_pg, fd_pg, sl_pg, ss
     return wool_value_pg, woolp_stbnib_pg
 
 
-def f1_condition_score(rc_tpg, cu0):
+def f1_condition_score(rc_tpg, cn):
     ''' Estimate CS from LW. Works with scalars or arrays - provided they are broadcastable into ffcfw.
 
        ffcfw: (kg) Fleece free, conceptus free liveweight. normal_weight: (kg). cs_propn: (0.19) change in LW
@@ -2254,15 +2263,15 @@ def f1_condition_score(rc_tpg, cu0):
        long version of the formula (use rc instead of using to following): 3 + (ffcfw - normal_weight) / (cs_propn * normal_weight)
        Returns: condition score - float
        '''
-    return np.maximum(1, 3 + (rc_tpg - 1) / cu0[1, ...]) #a minimum value of CS=1 is used to remove errors caused by low CS. A CS below 1 is unlikely because the animal would be dead
+    return np.maximum(1, 3 + (rc_tpg - 1) / cn[5, ...]) #a minimum value of CS=1 is used to remove errors caused by low CS. A CS below 1 is unlikely because the animal would be dead
 
 
-def f1_fat_score(rc_tpg, cu0):
+def f1_fat_score(rc_tpg, cn):
     ''' Calculate fat score from relative condition using relationship from van Burgel et al. 2011.
     Steps 1. calculate CS
           2. estimate GR tissue depth using relationship from van Burgel CS = 2.5 + 0.06 GR
           3. convert to fat score. FS1 = <5mm, FS2 6-10mm, FS3 11-15mm, FS4 16-20mm, FS5 >21mm'''
-    condition_score = f1_condition_score(rc_tpg, cu0)
+    condition_score = f1_condition_score(rc_tpg, cn)
     gr_depth = np.maximum(0, (condition_score - 2.5) / 0.06)
     fat_score = np.clip((gr_depth + 4)/5, 1, 5) #FS 1 is the lowest possible measurement.
     return fat_score
@@ -2315,15 +2324,15 @@ def f1_salep_mob(weight_s7tpg, scores_s7s6tpg, cvlw_s7s5tpg, cvscore_s7s6tpg,
     return saleprice_mobaverage_s7tpg
 
 
-def f_sale_value(cu0, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj_s6tpg,
+def f_sale_value(cn, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj_s6tpg,
                  dresspercent_adj_s7tpg, grid_price_s7s5s6tpg, price_scalar_c1s7tpg, month_scalar_s7tpg,
                  month_discount_s7tpg, price_type_s7tpg, cvlw_s7s5tpg, cvscore_s7s6tpg,
                  grid_weightrange_s7s5tpg, grid_scorerange_s7s6tpg, age_end_pg1, discount_age_s7tpg,sale_cost_pc_s7tpg,
                  sale_cost_hd_s7tpg, mask_s7x_s7tpg, sale_agemax_s7tpg1, sale_agemin_s7tpg1, dtype=None):
     ##Calculate condition score from relative condition
-    cs_tpg = f1_condition_score(o_rc_tpg, cu0)
+    cs_tpg = f1_condition_score(o_rc_tpg, cn)
     ##Calculate fat score from relative condition
-    fs_tpg = f1_fat_score(o_rc_tpg, cu0)
+    fs_tpg = f1_fat_score(o_rc_tpg, cn)
     ##Combine the scores into single array
     scores_s8tpg = np.stack([fs_tpg, cs_tpg], axis=0)
     ##Select the quality scores (s8) for each price grid (s7)
