@@ -1566,17 +1566,17 @@ def f_mortality_weaner_cs(cd, cg, age, ebg_start, sd_ebg, d_nw_max,days_period):
     ###distribution on ebg - add distribution to ebg_start_p1 and then average (axis =-1)
     ebg_start_p1 = fun.f_distribution7(ebg_start, sd=sd_ebg)
     mort_weaner_p1 = cd[13, ...,na] * fun.f_ramp(age[...,na], cd[15, ...,na], cd[14, ...,na]
-                                             ) * ((cd[16, ...,na] * d_nw_max[...,na]
-                                                   ) > (ebg_start_p1 * cg[18, ...,na]))* days_period[...,na] #mul by days period to convert from mort per day to per period
+                                                ) * ((cd[16, ...,na] * d_nw_max[...,na])
+                                                      > (ebg_start_p1 * cg[18, ...,na])) * days_period[...,na] #mul by days period to convert from mort per day to per period
     return np.mean(mort_weaner_p1, axis=-1)
 
 
 def f_mortality_dam_cs():
     '''
     Peri natal (at birth) Dam mortality.
-    Currently the CSIRO system includes dam mortality due to PregTox (f_mortality_pregtox_cs) and dam mortality due to
+    Currently, the CSIRO system includes dam mortality due to PregTox (f_mortality_pregtox_cs) and dam mortality due to
     dystocia (included in f_mortality_progeny_cs) but there is no calculation of deaths from other causes,
-    such as those that might affect twin bearing dams at birth.
+    such as those that might affect twin & triplet bearing dams at birth.
     '''
     return 0
 
@@ -1678,6 +1678,24 @@ def f_mortality_weaner_mu(cu2, ce=0):
 
 def f_mortality_dam_mu(cu2, ce, cb1, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
     ## transformed Dam mortality at birth due to low CS.
+    ###distribution on cs_birth, calculate mort and then average (axis =-1)
+    cs_birth_dams_p1 = fun.f_distribution7(cs_birth_dams, cv=cv_cs)
+    ###calc mort
+    t_mortalitye_mu_p1 = (cu2[22, 0, ...,na] * cs_birth_dams_p1 + cu2[22, 1, ...,na] * cs_birth_dams_p1 ** 2
+                          + ce[22, ...,na] + cu2[22, -1, ...,na])
+    ##Back transform the mortality
+    mortalitye_mu_p1 = fun.f_back_transform(t_mortalitye_mu_p1)
+    ##Average across the p1 axis (range of CS within the mob)
+    mortalitye_mu = np.mean(mortalitye_mu_p1, axis=-1)
+    ##Vertical shift in mortality based on litter size and only increase mortality if period is birth and reproducing ewes
+    mortalitye_mu = (mortalitye_mu + cb1[22, ...]) * period_is_birth * (nfoet_b1 > 0)
+    ##Adjust by sensitivity on dam mortality
+    mortalitye_mu = fun.f_sa(mortalitye_mu, sap_mortalitye, sa_type = 1, value_min = 0)
+    return mortalitye_mu
+
+
+def f_mortality_dam_mu2(cu2, ce, cb1, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
+    ## transformed peri natal Dam mortality due to CS at birth & CS change up to pre lambing, BT & age of the dam.
     ###distribution on cs_birth, calculate mort and then average (axis =-1)
     cs_birth_dams_p1 = fun.f_distribution7(cs_birth_dams, cv=cv_cs)
     ###calc mort
@@ -2313,7 +2331,7 @@ def f_sale_value(cu0, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj
     ##Dressing percentage to adjust price grid from $/kg DW to $/kg LW
     ### It is easier to convert the price to $/kg LW than it is to convert a distribution of LW and fat score to a distribution of dressed weight and fat score
     ### because dressing percentage changes with fat score.
-    dresspercent_for_price_s7s6tpg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dresspercent_adj_s6tpg + dresspercent_adj_s7tpg[:,na,...]
+    dresspercent_for_price_s7s6tpg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[1, ...] + dresspercent_adj_s6tpg + dresspercent_adj_s7tpg[:,na,...]
     ##Dressing percentage is set to 100% if price type is $/kg LW or $/hd
     dresspercent_for_price_s7s6tpg = fun.f_update(dresspercent_for_price_s7s6tpg, 1, price_type_s7tpg[:,na,...] >= 1)
     ##Create the grid prices in $/kg LW
@@ -2324,7 +2342,7 @@ def f_sale_value(cu0, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj
     ###Interploate DP adjustment based on the average FS of the animals
     dressp_adj_fs_tpg= np.interp(fs_tpg, uinp.sheep['i_salep_score_range_s8s6'][0, ...], uinp.sheep['i_salep_dressp_adj_s6']).astype(dtype)
     ###Average Dressing percentage including effects of genotype, fat score and age (which varies with the grid).
-    dresspercent_for_wt_s7tpg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dressp_adj_fs_tpg + dresspercent_adj_s7tpg
+    dresspercent_for_wt_s7tpg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[1, ...] + dressp_adj_fs_tpg + dresspercent_adj_s7tpg
     ###Dressing percentage is 100% if price type is $/kg LW or $/hd
     dresspercent_wt_s7tpg = fun.f_update(dresspercent_for_wt_s7tpg, 1, price_type_s7tpg >= 1)
     ###Scale ffcfw to the units in the grid
