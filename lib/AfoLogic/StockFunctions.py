@@ -1166,6 +1166,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
     else:
         b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
 
+        ##back transform to probability of having greater than or equal to the number of foetuses in the corresponding b slice
         ## probability of at least a given number of foetuses including scaling for day of year
         crg = crg_doy * fun.f_sig(relsize_mating * rc_mating, cb1[2, ...], cb1[3, ...])
         ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp calculate correctly
@@ -1376,7 +1377,7 @@ def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_d
                                                          + cu2_sliced[10, ...] * crl_doy
                                                          + cu2_sliced[11, ...] * crl_doy ** 2
                                                            )
-        ##back transform to probability of having a maximum of a given number of foetuses (opposite to GrazPlan)
+        ##back transform to probability of having less than or equal to the number of foetuses in the corresponding b slice
         ### Note: LMAT equations predict 'less than or equal', and GrazPlan predict 'greater than or equal'
         crl = fun.f_back_transform(t_boundaries)
 
