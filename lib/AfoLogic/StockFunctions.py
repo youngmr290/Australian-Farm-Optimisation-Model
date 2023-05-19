@@ -209,7 +209,7 @@ def f1_DSTw_adjust(propn_source_b1, cycles_source, cycles_destination, axis_b1, 
     dry_propn_source = t_source[tuple(slc0)]
     dry_propn_destination = dry_propn_source ** (cycles_destination / cycles_source)
     t_destination[tuple(slc0)] = dry_propn_destination
-    t_destination[tuple(slc1)] = t_source[tuple(slc1)] * (1 - dry_propn_destination) / (1 - dry_propn_source)
+    t_destination[tuple(slc1)] = t_source[tuple(slc1)] * fun.f_divide((1 - dry_propn_destination), (1 - dry_propn_source))
     ##roll the b1 axis back to starting position
     propn_destination_b1 = np.roll(t_destination, dry_slice, axis=axis_b1)
     ##If the NM slice exists, reset it to starting value (default is it exists as part of the b1 axis)
@@ -1448,7 +1448,7 @@ def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_d
         mask = nfoet_b1any.squeeze() > 0
         t_cr_masked = np.compress(mask, t_cr, b1_pos)
         ### Calculate the proportion of single-, twin- & triplet-bearing dams
-        litter_propn = t_cr_masked / np.sum(t_cr_masked, b1_pos, keepdims=True)
+        litter_propn = fun.f_divide(t_cr_masked, np.sum(t_cr_masked, b1_pos, keepdims=True))
         litter_propn = f1_rev_update('litter_size', litter_propn, rev_trait_value)
         ###calculate t_cr from the REV adjusted litter size. t_cr will only change from the original value if litter_size REV is active
         t_cr[:,:,:,mask,...] = litter_propn * np.sum(t_cr_masked, b1_pos, keepdims=True)
