@@ -723,11 +723,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##season type probability
     i_season_propn_z = zfun.f_z_prob()
     season_propn_zida0e0b0xyg = fun.f_expand(i_season_propn_z, z_pos)
-    ##wind speed
+
+    ##wind speed (with animal height adjustment)
     #todo add a distribution to the windspeed (after checking the importance for chill_index)
-    #might need to do this with a longer axis length so that it is not the distribution in the week but in the month
-    #enter a number of days above a threshold (along with the threshold values maybe 1) and then average values for the windiest days in the month.
+    # might need to do this with a longer axis length so that it is not the distribution in the week but in the month
+    # enter a number of days above a threshold (along with the threshold values maybe 1) and then average values for the windiest days in the month.
     ws_p4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_ws_p4'],p_pos)
+    ### adjust to windspeed at animal height using Thornley & Johnson equation (as used in Ag360)
+    ###Reference height is 10m as per BOM, canopy height = 0.3 (from Ag360 which seems too high but it was used in stats analysis)
+    canopy = 0.3
+    ref_height = 10
+    animal_height = 0.4
+    roughness = 0.13 * canopy
+    height_adjust = np.log(animal_height / roughness) / np.log(ref_height / roughness)
+    ws_p4a1e1b1nwzida0e0b0xyg = ws_p4a1e1b1nwzida0e0b0xyg * height_adjust
+
     ##expected stocking density
     density_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_density_p6z'], z_pos, move=True, source=0, dest=-1,
                                                   left_pos2=p_pos, right_pos2=z_pos)  # p6 axis converted to p axis later (association section)
