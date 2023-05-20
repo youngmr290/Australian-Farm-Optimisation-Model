@@ -697,11 +697,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #######################################
     ## p0 axis - the individual days of a generator period i.e. days of each step of the simulation
     ### most other p0 variables are created later but these are required early
-    doy_pa1e1b1nwzida0e0b0xygp0= doy_pa1e1b1nwzida0e0b0xyg[...,na] - step / 2 + index_p0  #calculate the p1 axis from the start day rather than mid-point day
-    ## p4 axis - each day of the oestrus cycle for reproduction
-    len_ygp1 = cf_dams[4, ...]
-    index_ygp1 = np.arange(len_ygp1)
-    doy_pa1e1b1nwzida0e0b0xygp1 = doy_pa1e1b1nwzida0e0b0xyg[...,na] - cf_dams[4, ...,na] / 2 + index_ygp1  #calculate the p1 axis from the start day rather than mid-point day
+    doy_pa1e1b1nwzida0e0b0xygp0 = doy_pa1e1b1nwzida0e0b0xyg[...,na] - step / 2 + index_p0  #calculate the p1 axis from the start day rather than mid-point day
+
+    ## p1 axis - each day of the oestrus cycle for reproduction which can vary with g (eg if sheep and cattle in model)
+    ### If beyond the end of oestrus then set to nan (& use nanmean when calculating the average value in later code)
+    len_p1_ygp1 = cf_dams[4, ..., na]  # length of the oestrus cycle
+    index_p1 = np.arange(np.max(len_p1_ygp1))
+    index_ygp1 = np.where(index_p1 < len_p1_ygp1, index_p1, np.nan) - (len_p1_ygp1 - 1) / 2 #index with g axis and nan
+    doy_pa1e1b1nwzida0e0b0xygp1 = doy_pa1e1b1nwzida0e0b0xyg[...,na] - step / 2 + index_ygp1  #calculate the p1 axis from the start day rather than mid-point day
 
 
     ###################################
@@ -1968,13 +1971,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##Pattern of conception efficiency (doy). Three versions of the equation
     ### crg_doy_cs is for the GrazPlan equations to predict the seasonal effect on proportion greater than conception rate - active b1 axis
     #### Also used for the LMAT equations after predicted crl is converted to crg with allowance for average day of joining
-    crg_doy_cs_pa1e1b1nwzida0e0b0xyg1 = np.average(np.maximum(0,1 - cb1_dams[1, ..., na]
-                                                * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp0 + 10) / 364))
+    crg_doy_cs_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.maximum(0,1 - cb1_dams[1, ..., na]
+                                                * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364))
                                                 * np.sin(lat_rad) / -0.57), axis = -1)
     ### rr_doy_ltw scales the LTW equations to predict the seasonal effect on reproductive rate - singleton b1 axis
     ### value is scaled so at the doy of scan_std the value is 1 and doesn't alter scan_std if mating on that day
-    rr_doy_ltw_pa1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.average(np.maximum(0,1 - cf_dams[1, ..., na]
-                                                    * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp0 + 10) / 364))
+    rr_doy_ltw_pa1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.nanmean(np.maximum(0,1 - cf_dams[1, ..., na]
+                                                    * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364))
                                                     * np.sin(lat_rad) / -0.57), axis = -1)
                                                 , np.maximum(0, 1 - cf_dams[1, ...]
                                                     * (1 - np.sin(2 * np.pi * (scan_std_doj_yg1[...] + 10) / 364))
@@ -1983,7 +1986,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #### value is multiplied by a coefficient in the linear equation prior to logit back transformation.
     #### crl_doy and the coefficient is in place of the crg_doy scalar of proportions used in the CSIRO equation.
     #### The proportions of empty, single, twin & triplet change in the ratio determined by the cut-off coefficients.
-    crl_doy_lmat_pa1e1b1nwzida0e0b0xyg1 = np.average((1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp0 + 10) / 364))
+    crl_doy_lmat_pa1e1b1nwzida0e0b0xyg1 = np.nanmean((1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364))
                                                     * np.sin(lat_rad) / -0.57, axis = -1)
     ##Rumen development factor on PI - yatf
     piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(fun.f_back_transform(ci_yatf[3, ..., na]
