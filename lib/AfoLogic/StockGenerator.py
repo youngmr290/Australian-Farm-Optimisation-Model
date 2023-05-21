@@ -7633,8 +7633,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##mortality - at the start of each dvp mortality is 0. it accumulates over the dvp. This is its own report as well as used in on_hand_mort.
     if sinp.rep['i_store_on_hand_mort'] or sinp.rep['i_store_mort']:
         ###get the cumulative mort for periods in each dvp
-        r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg1 = sfun.f1_cum_sum_dvp(o_mortality_dams, a_v_pa1e1b1nwzida0e0b0xyg1)
-        r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg3 = sfun.f1_cum_sum_dvp(o_mortality_offs, a_v_pa1e1b1nwzida0e0b0xyg3)
+        r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg1 = sfun.f1_cum_sum_dvp(o_mortality_dams, a_v_pa1e1b1nwzida0e0b0xyg1, axis=p_pos)
+        r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg3 = sfun.f1_cum_sum_dvp(o_mortality_offs, a_v_pa1e1b1nwzida0e0b0xyg3, axis=p_pos)
         ###mask w & z slices
         mask_w8z8vars_pa1e1b1nw8zida0e0b0xyg1 = np.take_along_axis(mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1
                                                                  , axis=0)
