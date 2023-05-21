@@ -731,6 +731,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ws_p4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_ws_p4'],p_pos)
     ### adjust to windspeed at animal height using Thornley & Johnson equation (as used in Ag360)
     ###Reference height is 10m as per BOM, canopy height = 0.3 (from Ag360 which seems too high but it was used in stats analysis)
+    ###Note: Horton etal 2019 used a scalar of 0.58 for open paddocks and down to 0.05 for sheltered paddocks.
     canopy = 0.3
     ref_height = 10
     animal_height = 0.4
