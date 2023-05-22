@@ -524,7 +524,6 @@ def solve_cubic_for_logistic(a, b, c, d):
     or if this is too slow could be done with a vectorised calculation as done in 'Components combined - latest v2.xlsx'
     '''
     ##loop through axes of a,b,c,d
-    #todo Maths exists that would allow this to be done using calculations that don't rely on numpy.polynomial & looping - if that would be easier
     ###create cubic & solve
     cubic = np.polynomial.Polynomial([d, c, b, a])
     root = np.max(np.polynomial.Polynomial.roots(cubic))
@@ -535,7 +534,7 @@ def solve_cubic_for_logistic(a, b, c, d):
     return cut_off01
 
 
-def solve_cubic_for_logistic_multidim(a, b, c, d):
+def f_solve_cubic_for_logistic_multidim(a, b, c, d):
     ''' Solve a general cubic equation of the form ax3 + bx2 + cx + d = 0
     Select the maximum value to identify a positive root that can be transformed with natural log
 
@@ -551,15 +550,15 @@ def solve_cubic_for_logistic_multidim(a, b, c, d):
     p = (3*a*c - b**2) / (3*a**2)
     q = (2*b**3 - 9*a*c + 27*a**2*d) / (27*a**3)
 
-    ###Trig roots with k axis as [-1] to identify multiple roots
-    ####This method works for the type of cubic equation likely to be encountered but it may cause errors.
+    ###Identify multiple roots with a Trig approach with k axis in pos [-1]
+    ####This method works for the type of cubic equation likely to be encountered but testing has not been exhaustive.
     k = np.array([0,1,2])
     t_roots_k = 2*(-p[...,na] / 3)**0.5 * np.cos(1/3 * np.arccos(3 * q[...,na] / (2 * p[...,na])
                                                                  * (-3 / p[...,na])**0.5) - 2*np.pi() * k /3)
     ###Transform the roots of the depressed cubic to the general cubic
     x_roots_k = t_roots_k - (b / (3 * a))
     ###Select the maximum value across the k axis (which is likely the only +ve root)
-    x_roots = np.nanmax(t_roots_k, axis=-1)
+    x_roots = np.nanmax(x_roots_k, axis=-1)
     ###Back transform the roots from the conversion that created the cubic equation. This is not part of solving the roots
     ####but is done here rather than in the calling function to highlight that the problem is associated with the roots.
     cut_off01 = np.log(x_roots)
