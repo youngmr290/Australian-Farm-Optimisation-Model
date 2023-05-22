@@ -4,15 +4,22 @@ from timeit import default_timer as timer
 time_list = [] ; time_was = []
 time_list.append(timer()) ; time_was.append("start")
 
-import StructuralInputs as sinp
-import PropertyInputs as pinp
-import UniversalInputs as uinp
-import Periods as per
-import Functions as fun
-import SeasonalFunctions as zfun
-import Sensitivity as sen
-import CropGrazing as cgz
+from lib.RawVersion import LoadExcelInputs as dxl
+from lib.RawVersion import LoadExp as exp
+from lib.RawVersion import RawVersionExtras as rve
+from lib.AfoLogic import StructuralInputs as sinp
+from lib.AfoLogic import PropertyInputs as pinp
+from lib.AfoLogic import UniversalInputs as uinp
+from lib.AfoLogic import Periods as per
+from lib.AfoLogic import Functions as fun
+from lib.AfoLogic import SeasonalFunctions as zfun
+from lib.AfoLogic import Sensitivity as sen
 
+time_list.append(timer()) ; time_was.append("import Modules")
+
+from lib.AfoLogic import CropGrazing as cgz
+
+time_list.append(timer()) ; time_was.append("import CropGrazing")
 
 
 params={}
@@ -23,22 +30,42 @@ r_vals={}
 ###############
 trial = 4   #4 is quick test
 
-##sort exp
-exp_data, exp_group_bool, trial_pinp = fun.f_read_exp()
-exp_data = fun.f_group_exp(exp_data, exp_group_bool)
+######
+#Run #
+######
+##load excel data and experiment data
+exp_data, exp_group_bool, trial_pinp = exp.f_read_exp()
+sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs()
+d_rot_info = dxl.f_load_phases()
+cat_propn_s1_ks2 = dxl.f_load_stubble()
+
 ##select property for the current trial
-pinp.f_select_pinp(trial_pinp.iloc[trial])
+property = trial_pinp.iloc[trial]
+
+##process user SA
+user_sa = rve.f_process_user_sa(exp_data, trial)
+
+##select property and reset default inputs for the current trial. Must occur first.
+sinp.f_select_n_reset_sinp(sinp_defaults)
+sinp.f_landuse_sets()
+uinp.f_select_n_reset_uinp(uinp_defaults)
+pinp.f_select_n_reset_pinp(property, pinp_defaults)
 
 ##update sensitivity values
 sen.create_sa()
-fun.f_update_sen(trial,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
+fun.f_update_sen(user_sa,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
+
 ##call sa functions - assigns sa variables to relevant inputs
-sinp.f_structural_inp_sa()
-uinp.f_universal_inp_sa()
-pinp.f_property_inp_sa()
+sinp.f_structural_inp_sa(sinp_defaults)
+uinp.f_universal_inp_sa(uinp_defaults)
+pinp.f_property_inp_sa(pinp_defaults)
+
 ##expand p6 axis to include nodes
 sinp.f1_expand_p6()
 pinp.f1_expand_p6()
+
+##check the rotations and inputs align - this means rotation method can be controlled using a SA
+d_rot_info = pinp.f1_phases(d_rot_info)
 
 ##Populate the nv dict with the input values for the nv cutoffs (normally are from StockGenerator)
 ### create nv dict
@@ -77,3 +104,11 @@ nv['len_nv'] = n_non_confinement_pools+confinement_inc
 cgz.f1_cropgraze_params(params, r_vals, nv)
 
 time_list.append(timer()) ; time_was.append("CropGrazing complete")
+
+#report the timer results
+time_prev=time_list[0]
+for time_step, time in enumerate(time_list):
+    time_elapsed = time-time_prev
+    if time_elapsed > 0: print(time_was[time_step], f"{time_elapsed:0.4f}", "secs")
+    time_prev=time
+print("elapsed total time for pasture module", f"{time_list[-1] - time_list[0]:0.4f}", "secs") # Time in seconds
