@@ -221,9 +221,10 @@ def f1_DSTw_adjust(propn_source_b1, cycles_source, cycles_destination, axis_b1, 
 
 def f1_DSTw(scan_g, cycles=1):
     '''
-    A numpy based calculation that returns the proportion of dry, single, twin & triplet bearing dams
+    A numpy based calculation that returns the proportion of empty, single, twin & triplet bearing dams
     after the requested number of cycles from a scanning percentage of the calibration number of cycles (2).
     Prediction uses a polynomial formula y=intercept+ax+bx^2+cx^3+dx^4, where x is the scanning %
+    The polynomial has been fitted to data measured in the Triplets project.
 
     Parameters
     ----------
@@ -1175,7 +1176,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         ##Temporary array for probability of a given number of foetuses (calculated from the difference in the cumulative probability)
         ##Calculate probability from cumulative probability by the difference between the array and the array
         ### values offset by one slice (difference between '>x' and '>x+1').
-        ### End cases work because GBAL are set to 0 probability
+        ### End cases work because GBAL have been set to 0 probability
         t_cr = np.maximum(0, crg - np.roll(crg, -1, axis=b1_pos))
 
         ##Apply scanning percentage sa to adjust the probability of the number of foetuses.
@@ -1185,7 +1186,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         ### Calculate the repro rate from the probabilities above (t_cr) and convert to an expected proportion of dry,
         ### singles, twins & triplets after 1 cycle
         #### convert the proportion of DST in t_cr to an equivalent scanning % after the calibration number of cycles.
-        repro_rate = f1_convert_scancycles(t_cr, nfoet_b1any, cycles = 1)
+        repro_rate = f1_convert_propn_to_2cycleRR(t_cr, nfoet_b1any, cycles = 1)
         ####remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f1_DSTw
         repro_rate = np.squeeze(repro_rate, axis=b1_pos)
         saa_rr = np.squeeze(saa_rr, axis=b1_pos)
@@ -1381,41 +1382,45 @@ def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_d
         ### Note: LMAT equations predict 'less than or equal', and GrazPlan predict 'greater than or equal'
         crl = fun.f_back_transform(t_boundaries)
 
-        # Incorporate the impact of doy on the prediction of RR. Use crg_doy from CSIRO
-        ### Convert LMAT crl to crg so it is equivalent to CSIRO (probability of at least a given number of foetuses)
-        #### First, set the NM slice to 0 (so that it can be rolled forward (cr less than 0 == 0%) with a probability of 0)
-        slc = [slice(None)] * len(crl.shape)
-        slc[b1_pos] = slice(0, 1)
-        crl[tuple(slc)] = 0
-        #### Calculate crg from crl on the basis that crg[slc] + crl[slc_prev] == 1
-        crg = 1 - np.roll(crl, 1, axis=b1_pos)
-        # ### include scaling for day of year - no longer used because DOJ coefficient is included
-        # crg = crg_doy * crg
-
-        #todo the LMAT function & the CSIRO function are now equivalent from this point on.
-        # a Function could be created that is called by the 2 functions to save duplicating the following code
+        # # Incorporate the impact of doy on the prediction of RR. Use crg_doy from CSIRO
+        # ### Convert LMAT crl to crg so it is equivalent to CSIRO (probability of at least a given number of foetuses)
+        # #### First, set the NM slice to 0 (so that it can be rolled forward (cr less than 0 == 0%) with a probability of 0)
+        # slc = [slice(None)] * len(crl.shape)
+        # slc[b1_pos] = slice(0, 1)
+        # crl[tuple(slc)] = 0
+        # #### Calculate crg from crl on the basis that crg[slc] + crl[slc_prev] == 1
+        # crg = 1 - np.roll(crl, 1, axis=b1_pos)
+        # # ### include scaling for day of year - no longer used because DOJ coefficient is included
+        # # crg = crg_doy * crg
 
         ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp calculate correctly
-        crg *= (nfoet_b1any == nyatf_b1any)
+        crl *= (nfoet_b1any == nyatf_b1any)
 
         ##Temporary array for probability of a given number of foetuses (calculated from the difference in the cumulative probability)
         ##Calculate probability from cumulative probability by the difference between the array and the array
-        ### values offset by one slice (difference between '>x' and '>x+1').
-        ### End cases work because GBAL are set to 0 probability
-        t_cr = np.maximum(0, crg - np.roll(crg, -1, axis=b1_pos))
+        ### values offset by one slice (difference between '<x' and '<x-1').
+        ### To make the end case work requires setting crl[NM] to 0 prior to the calculation (& max(0,calc))
+        ###Define the temp array shape & populate with values from crg (values are required for the proportion of the highest parity dams)
+        t_crl = crl.copy()
+        slc_nm = [slice(None)] * len(t_crl.shape)
+        slc_nm[b1_pos] = slice(0,1)
+        t_crl[tuple(slc_nm)] = 0
+        t_cr = np.maximum(0, t_crl - np.roll(t_crl, 1, axis=b1_pos))
+        # slc = [slice(None)] * len(t_cr.shape)
+        # slc[b1_pos] = slice(2,None)
+        # t_cr[tuple(slc)] = np.maximum(0, fun.f_dynamic_slice(crl, b1_pos, 2, None) - fun.f_dynamic_slice(crl, b1_pos, 1, -1))
 
         ## Adjust the predicted proportions from the calibration number of cycles to 1 cycle (default values for the function)
         ### The prediction equations from the LMAT trial are based on mating for 2 cycles. AFO calculates for each cycle
         t_cr = f1_DSTw_adjust(t_cr, cycles_source=2, cycles_destination=1, axis_b1=sinp.stock['i_b1_pos'])
 
-        ##Apply scanning percentage sa to adjust the probability of the number of foetuses.
+        #todo the LMAT function & the CSIRO function are now equivalent from this point on.
+        # a Function could be created that is called by the 2 functions to save duplicating the following code
+
+        ##Apply scanning percentage sa to adjust the probability of the number of foetuses using logistic function.
         ### Carried out here so that the sa affects the REV and is included in proportion of NM
-        ### Achieved by calculating the impact of the sa on the scanning percentage and the change in the 'standardised'
-        ### proportions of DST. Then adjusting the actual proportions of dry, singles and twins by that amount.
-        ### Calculate the repro rate from the probabilities above (t_cr) and convert to an expected proportion of dry,
-        ### singles, twins & triplets after 1 cycle
-        #### convert the proportion of DST in t_cr to an equivalent scanning % after the calibration number of cycles.
-        repro_rate = f1_convert_scancycles(t_cr, nfoet_b1any, cycles = 1)
+        ### Calculate the RR to allow SA to be applied. Note: SA applied on basis of 2 cycles
+        repro_rate = f1_convert_propn_to_2cycleRR(t_cr, nfoet_b1any, cycles = 1)
         ####remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f1_DSTw
         repro_rate = np.squeeze(repro_rate, axis=b1_pos)
         saa_rr = np.squeeze(saa_rr, axis=b1_pos)
@@ -1483,10 +1488,10 @@ def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_d
     return conception
 
 
-def f1_convert_scancycles(dst_propn, nfoet_b1any, cycles = 1):
+def f1_convert_propn_to_2cycleRR(dst_propn, nfoet_b1any, cycles = 1):
     '''
     Convert from a proportion of dry, singles, twins and triplets from specified number of cycles (usually 1)
-    to an equivalent scanning percentage if mated for the calibration number of cycles (usually 2).
+    to an equivalent scanning percentage (repro rate) if mated for the calibration number of cycles (usually 2).
     Assumes that the litter size is constant and the factor that changes is the proportion of dams that are dry
 
     The data used to calibrate the coefficients used are assumed to have been derived from mating for 2 cycles.
