@@ -258,6 +258,100 @@ def f1_DSTw(scan_g, cycles=1):
     return dstwtr_gl0
 
 
+def f1_RR_propn_logistic(RR_g, cycles=1):
+    '''
+    Returns the proportion of empty, single, twin & triplet bearing dams after the requested number of cycles
+    from a scanning percentage or litter size of the calibration number of cycles (2).
+    The prediction is based on the logistic equation used in the LMAT reproduction function (f_conception_MU2)
+    It requires calculating the roots of a cubic equation which has been fitted to the cut-offs for the
+    transformed logistic equation.
+    Solving the cubic and back transforming (using natural logarithm) is done in f_solve_cubic_for_logistic()
+    See Moment to Moment8:pg 28 for derivation of the coefficients of the cubic equation.
+    Approach is also implemented in Excel 'Components combined - latest v2.xlsx'
+
+    Parameters
+    ----------
+    RR_g : np array - scanning percentage of genotypes if mated for the number of calibration cycles.
+    cycles: int, optional - the number of cycles for which the prediction is required.
+    Returns
+    -------
+    Proportion of dry, single, twins & triplets.
+
+    '''
+    calibration_cycles = 2  #The data used to calibrate the coefficients used are assumed to have been derived from mating for 2 cycles.
+
+    ## calculate the coefficients of the cubic equation ax3 + bx2 + cx + d = 0
+    ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_dams
+    cut1_g = cb1_dams[25,1,...] - cb1_dams[25,0,...]
+    cut2_g = cb1_dams[25,2,...] - cb1_dams[25,1,...]
+    ### calculations are done with the exp of the cut-off values
+    y = np.exp(cut1_g)
+    z = np.exp(cut2_g)
+    ### a,b,c,&d are calculated as derived
+    a = (0 - RR_g) * (y**2 * z)
+    b = (1 - RR_g) * (y**2 * z + y * z + y)
+    c = (2 - RR_g) * (y * z + y + 1)
+    d = (3 - RR_g)
+    ###solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_dams[25])
+    cutoff0 = fun.solve_cubic_for_logistic(a,b,c,d)
+    cutoff1 = cutoff01 + cut1_g
+    cutoff2 = cutoff12 + cut2_g
+    cutoff3 = cb1_dams[25,3,...]  #this is a high number to ensure that all dams are less than or equal to the maximum number of foetuses
+
+    t_boundaries = cb1_dams[25,...] #todo or create a copy so it doesn't affect
+    f_update(t_boundaries, cutoff0, nfoet_b1 == 0)
+    f_update(t_boundaries, cutoff1, nfoet_b1 == 1)
+    f_update(t_boundaries, cutoff2, nfoet_b1 == 2)
+    f_update(t_boundaries, cutoff3, nfoet_b1 == 3)
+
+    ##Subsequent code is same as f_conception_lmat (with comments removed)
+    crl = fun.f_back_transform(t_boundaries)
+    crl *= (nfoet_b1any == nyatf_b1any)
+    t_crl = crl.copy()
+    slc_nm = [slice(None)] * len(t_crl.shape)
+    slc_nm[b1_pos] = slice(0, 1)
+    t_crl[tuple(slc_nm)] = 0
+    t_cr = np.maximum(0, t_crl - np.roll(t_crl, 1, axis=b1_pos))
+    t_cr = f1_DSTw_adjust(t_cr, cycles_source=calibration_cycles, cycles_destination=cycles, axis_b1=-1, dry_slice=0)
+    return t_cr
+
+
+def f1_LS_propn_logistic(LS_g):
+    '''
+    Returns the proportion of empty, single, twin & triplet bearing dams after the requested number of cycles
+    from a litter size.
+    The prediction is based on the logistic equation used in the LMAT reproduction function (f_conception_MU2)
+    It requires calculating the roots of a cubic equation which has been fitted to the cut-offs for the
+    transformed logistic equation.
+    Solving the cubic and back transforming (using natural logarithm) is done in f_solve_cubic_for_logistic()
+    See Moment to Moment8:pg 28 for derivation of the coefficients of the cubic equation.
+    Approach is also implemented in Excel 'Components combined - latest v2.xlsx'
+
+    Parameters
+    ----------
+    LS_g : np array - scanning percentage of genotypes if mated for the number of calibration cycles.
+    Returns
+    -------
+    Proportion of empty, single, twins & triplets.
+
+    '''
+
+    ## calculate the coefficients of the cubic equation ax3 + bx2 + cx + d = 0
+    ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_dams
+    cut1_g = cb1_dams[25,1,...] - cb1_dams[25,0,...]
+    cut2_g = cb1_dams[25,2,...] - cb1_dams[25,1,...]
+    ### calculations are done with the exp of the cut-off values
+    y = np.exp(cut1_g)
+    z = np.exp(cut2_g)
+    ### a,b,c,&d are calculated as derived
+    a =
+    b =
+    c =
+    d =
+    #todo this will be a copy of the RR_logistic but with different a,b,c,d
+    return np.array([0])
+
+
 def f1_btrt0(dstwtr_propn,pss,pstw,pstr): #^this function is inflexible ie if you want to add quadruplets
     '''
     Parameters
@@ -1406,9 +1500,6 @@ def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_d
         slc_nm[b1_pos] = slice(0,1)
         t_crl[tuple(slc_nm)] = 0
         t_cr = np.maximum(0, t_crl - np.roll(t_crl, 1, axis=b1_pos))
-        # slc = [slice(None)] * len(t_cr.shape)
-        # slc[b1_pos] = slice(2,None)
-        # t_cr[tuple(slc)] = np.maximum(0, fun.f_dynamic_slice(crl, b1_pos, 2, None) - fun.f_dynamic_slice(crl, b1_pos, 1, -1))
 
         ## Adjust the predicted proportions from the calibration number of cycles to 1 cycle (default values for the function)
         ### The prediction equations from the LMAT trial are based on mating for 2 cycles. AFO calculates for each cycle
@@ -1421,31 +1512,47 @@ def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_d
         ### Carried out here so that the sa affects the REV and is included in proportion of NM
         ### Calculate the RR to allow SA to be applied. Note: SA applied on basis of 2 cycles
         repro_rate = f1_convert_propn_to_2cycleRR(t_cr, nfoet_b1any, cycles = 1)
-        ####remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f1_DSTw
-        repro_rate = np.squeeze(repro_rate, axis=b1_pos)
-        saa_rr = np.squeeze(saa_rr, axis=b1_pos)
         #### apply the sa to the repro rate
         repro_rate_adj = fun.f_sa(repro_rate, sen.sam['rr'])
         repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr * (repro_rate > 0), 2, value_min=0)     # only adjust if original value was non-zero
-        #### Convert the repro rate and adjusted repro rate to a 'standardised' proportion of DST after 1 cycle
-        #### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
-        propn_dst = np.moveaxis(f1_DSTw(repro_rate, cycles=1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos)
-        propn_dst_adj = np.moveaxis(f1_DSTw(repro_rate_adj, cycles = 1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos)
-        ####calculate the change in the expected proportions due to altering the scanning percentage,
-        #### only apply to the conception slices - don't want to add any conception to the lambed and lost slices.
-        propn_dst_change = (propn_dst_adj - propn_dst) * (nfoet_b1any==nyatf_b1any)
-        ####apply the change to the original calculated proportions
-        t_cr += propn_dst_change
+        #### Back calculate the proportion of empty, single, twins & triplets using the Logistic function
+        t_cr = f1_RR_propn_logistic(repro_rate_adj, cycles=1)
+
+        ##Set up slices and store values for the SA
+        ###define empty slice (LSLN 00) and store proportion empty
+        slc_empty = [slice(None)] * len(t_cr.shape)
+        slc_empty[b1_pos] = slice(1, 2)
+        empty = t_cr[slc_empty]
+        ###define slices for litter size from singles (LSLN 11) to the end
+        slc_preg = [slice(None)] * len(t_cr.shape)
+        slc_preg[b1_pos] = slice(2,None)
+
+        ##Apply litter size sa to adjust the probability of the number of foetuses using logistic function.
+        ### Carried out here prior to conception saa so that the proportions are still consistent with the logistic function
+        ### Calculate the LS to allow SA to be applied. Note: SA applied on basis of 2 cycles
+        litter_size = f1_convert_propn_to_LS(t_cr, nfoet_b1any)
+        #### apply the sa to the repro rate
+        litter_size_adj = fun.f_sa(litter_size, saa_ls * (litter_size > 0), 2, value_min=0)     # only adjust if original value was non-zero
+        #### Back calculate the proportion of empty, single, twins & triplets using the Logistic function for the increased LS
+        t_cr_adj = f1_LS_propn_logistic(litter_size_adj)
+        #### Scale the proportions so that the proportion of empty is same as prior to SA and the total is 1
+        empty_adj = t_cr_adj[slc_empty]
+        t_cr[tuple(slc_preg)] = t_cr_adj[tuple(slc_preg)] * (1 - empty) / (1 - empty_adj)
+        t_cr[tuple(slc_empty)] = empty
+
+        ##Apply conception saa to adjust the proportion of ewes that are dry with constant litter size.
+        ### Carried out here so that the sa affects the REV and is included in proportion of NM
+        ### Apply the saa to the empty slice.
+        t_cr[tuple(slc_empty)] = fun.f_sa(empty + saa_con * (empty > 0), 2, value_min=0)     # only adjust if original value was non-zero
+        #### Adjust the pregnant slices to keep litter size constant and allow for the change in the number pregnant
+        t_cr[tuple(slc_preg)] = t_cr[slc_preg] * (1-t_cr[slc_empty]) / (1-empty)
 
         ##Process the Conception REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         ###Conception is the proportion of dams that are dry and a change in conception is assumed to be converting
-        ### a dry ewe into a single bearing ewe. It is calculated by altering the proportion of single bearing ewes b1[2].
-        ### The proportion of Drys is then calculated (later) as the animals that didn't get pregnant. #todo This doesn't seem to happen
-        #todo Easier to follow logic would be to adjust the proportion of drys then scale the other slices up and down holding litter size constant.
-        # Note: litter size has to be correct here in case it is saved in the next section of code
-        slc = [slice(None)] * len(t_cr.shape)
-        slc[b1_pos] = slice(2,3)   #the singles slice
-        t_cr[tuple(slc)] = f1_rev_update('conception', t_cr[tuple(slc)], rev_trait_value)
+        ### a dry ewe into a pregnant ewe with litter size as per rest of the flock. It is calculated by altering the proportion of empty ewes b1[1].
+        empty_rev = f1_rev_update('conception', t_cr[tuple(slc_empty)], rev_trait_value)
+        t_cr[tuple(slc_preg)] = t_cr_adj[tuple(slc_preg)] * (1 - empty_rev) / (1 - empty)
+        t_cr[tuple(slc_empty)] = empty_rev
 
         ##Process the Litter size REV: either save the trait value to the dictionary or over-write trait value with value from the dictionary
         ##The litter size REV is stored as the proportion of the pregnant dams that are single-, twin- & triplet-bearing
@@ -1459,13 +1566,14 @@ def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_d
         ###calculate t_cr from the REV adjusted litter size. t_cr will only change from the original value if litter_size REV is active
         t_cr[:,:,:,mask,...] = litter_propn * np.sum(t_cr_masked, b1_pos, keepdims=True)
 
-        # Have removed this because the conversion from the prediction of 2 cycles back to one cycle is
-        # not representing this source of dry ewes.
-        # Have to retain the step so that the proportion of empty is set to 0 (which means they remain in NM)
-        # ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester/birth
-        # ## are added to 00 slice (b1[1:2]) so that they are removed from the NM slice.
-        # ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
-        # ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
+        ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester/birth
+        ## are added to 00 slice (b1[1:2]) so that they are removed from the NM slice.
+        ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
+        ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
+        ### This has been disabled because the prediction of 2 cycles back to one cycle is
+        ### not representing this source of dry ewes.
+        ### Disabled by setting the value of propn_pregnant to 0 rather remove the code because the proportion
+        ###of empty needs to be set to 0 anyway (and the problem may be fixable)
         propn_pregnant = np.sum(fun.f_dynamic_slice(t_cr, b1_pos, 2, None), axis=b1_pos, keepdims=True) * 0
         slc[b1_pos] = slice(1,2)
         t_cr[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
@@ -1490,11 +1598,9 @@ def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_d
 
 def f1_convert_propn_to_2cycleRR(dst_propn, nfoet_b1any, cycles = 1):
     '''
-    Convert from a proportion of dry, singles, twins and triplets from specified number of cycles (usually 1)
+    Convert from a proportion of empty, singles, twins and triplets from specified number of cycles (usually 1)
     to an equivalent scanning percentage (repro rate) if mated for the calibration number of cycles (usually 2).
     Assumes that the litter size is constant and the factor that changes is the proportion of dams that are dry
-
-    The data used to calibrate the coefficients used are assumed to have been derived from mating for 2 cycles.
 
     Parameters
     ----------
@@ -1503,7 +1609,7 @@ def f1_convert_propn_to_2cycleRR(dst_propn, nfoet_b1any, cycles = 1):
     cycles: int, optional - the number of cycles from which the dst_propn has resulted (usually 1).
     Returns
     -------
-    Proportion of dry, single, twins & triplets.
+    Reproductive rate (scanning percentage) if joined for 2 cycles
 
     '''
     ##The number of cycles for which the equivalent scanning percentage is required
@@ -1519,6 +1625,28 @@ def f1_convert_propn_to_2cycleRR(dst_propn, nfoet_b1any, cycles = 1):
     repro_rate_cal = litter_size * (1 - dry_propn_cal)
 
     return repro_rate_cal
+
+
+def f1_convert_propn_to_LS(dst_propn, nfoet_b1any):
+    '''
+    Convert from a proportion of singles, twins and triplets to an equivalent litter size
+    Note: Litter size is independent of number of cycles
+
+    Parameters
+    ----------
+    dst_propn : np array - the proportion of dams in each b1 slice (NM, empty, single, twin, triplet ...).
+    nfoet_b1any: np array - the number of foetuses in each b1 slice
+    Returns
+    -------
+    Litter size
+
+    '''
+    ##calculate litter size from repro rate and proportion empty
+    repro_rate = np.sum(dst_propn * nfoet_b1any, axis = sinp.stock['i_b1_pos'], keepdims = True)
+    empty_propn = fun.f_dynamic_slice(dst_propn, sinp.stock['i_b1_pos'], 1, 2)
+    litter_size = fun.f_divide(repro_rate, 1 - empty_propn)
+
+    return litter_size
 
 
 def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_recovery, date_end_p, period_is_prejoin_a1e1b1nwzida0e0b0xyg1):

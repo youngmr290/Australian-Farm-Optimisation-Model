@@ -515,6 +515,26 @@ def f_comb(n,k):
     combinations = factorial[n]/(factorial[k]*factorial[n-k])
     return combinations
 
+
+def solve_cubic_for_logistic(a, b, c, d):
+    ''' Solve a general cubic equation of the form ax3 + bx2 + cx + d = 0
+    Select the maximum value to identify a positive root that can be transformed with natural log
+
+    To solve using the numpy.polynomial package requires looping through all elements of a,b,c,d
+    or if this is too slow could be done with a vectorised calculation as done in 'Components combined - latest v2.xlsx'
+    '''
+    ##loop through axes of a,b,c,d
+    #todo Maths exists that would allow this to be done using calcuations that don't rely on numpy.polynomial & looping - if that would be easier
+    ###create cubic & solve
+    cubic = np.polynomial.Polynomial([d, c, b, a])
+    root = np.max(np.polynomial.Polynomial.roots(cubic))
+    ###save the single identified root in the array structure and repeat loop
+    roots = root
+
+    cut_off01 = np.log(roots)
+    return cut_off01
+
+
 def f_dynamic_slice(arr, axis, start, stop, step=1, axis2=None, start2=None, stop2=None, step2=1):
     ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
     if type(arr)==int:
