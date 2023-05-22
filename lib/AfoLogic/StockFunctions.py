@@ -294,15 +294,15 @@ def f1_RR_propn_logistic(RR_g, cycles=1):
     d = (3 - RR_g)
     ###solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_dams[25])
     cutoff0 = fun.solve_cubic_for_logistic(a,b,c,d)
-    cutoff1 = cutoff01 + cut1_g
-    cutoff2 = cutoff12 + cut2_g
+    cutoff1 = cutoff0 + cut1_g
+    cutoff2 = cutoff1 + cut2_g
     cutoff3 = cb1_dams[25,3,...]  #this is a high number to ensure that all dams are less than or equal to the maximum number of foetuses
 
-    t_boundaries = cb1_dams[25,...] #todo or create a copy so it doesn't affect
-    f_update(t_boundaries, cutoff0, nfoet_b1 == 0)
-    f_update(t_boundaries, cutoff1, nfoet_b1 == 1)
-    f_update(t_boundaries, cutoff2, nfoet_b1 == 2)
-    f_update(t_boundaries, cutoff3, nfoet_b1 == 3)
+    t_boundaries = cb1_dams[25,...] #todo does this need to be a copy so it doesn't affect cb1[]
+    fun.f_update(t_boundaries, cutoff0, nfoet_b1 == 0)
+    fun.f_update(t_boundaries, cutoff1, nfoet_b1 == 1)
+    fun.f_update(t_boundaries, cutoff2, nfoet_b1 == 2)
+    fun.f_update(t_boundaries, cutoff3, nfoet_b1 == 3)
 
     ##Subsequent code is same as f_conception_lmat (with comments removed)
     crl = fun.f_back_transform(t_boundaries)
