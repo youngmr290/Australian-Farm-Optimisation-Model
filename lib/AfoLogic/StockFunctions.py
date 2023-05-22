@@ -1546,13 +1546,13 @@ def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### i.e. increased mortality only for thin animals that are growing slowly (< 20% of normal growth rate)
     ###distribution on ebg & rc_start, calculate mort and then average (axis =-1,-2)
-    ebg_start_p1p2 = fun.f_distribution7(ebg_start, sd=sd_ebg)[...,na]
-    rc_start_p1p2 = fun.f_distribution7(rc_start, cv=cv_weight)[...,na,:]
-    mortalityb_p1p2 = (cd[1, ...,na,na] + cd[2, ...,na,na] *
-                     np.maximum(0, cd[3, ...,na,na] - rc_start_p1p2) *
-                     ((cd[16, ...,na,na] * d_nw_max[...,na,na]) > (ebg_start_p1p2 * cg[18, ...,na,na]))) * days_period[...,na,na] #mul by days period to convert from mort per day to per period
+    ebg_start_p0p0 = fun.f_distribution7(ebg_start, sd=sd_ebg)[...,na]
+    rc_start_p0p0 = fun.f_distribution7(rc_start, cv=cv_weight)[...,na,:]
+    mortalityb_p0p0 = (cd[1, ...,na,na] + cd[2, ...,na,na] *
+                     np.maximum(0, cd[3, ...,na,na] - rc_start_p0p0) *
+                     ((cd[16, ...,na,na] * d_nw_max[...,na,na]) > (ebg_start_p0p0 * cg[18, ...,na,na]))) * days_period[...,na,na] #mul by days period to convert from mort per day to per period
     ###average p1 axis
-    mortalityb = np.mean(mortalityb_p1p2, axis=(-1,-2))
+    mortalityb = np.mean(mortalityb_p0p0, axis=(-1,-2))
     ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
     ##Process the Mortality REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
@@ -1654,6 +1654,7 @@ def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### the mortality rate increases in a quadratic function for lower RC & greater disparity between EBG and normal gain
     ###distribution on ebg & rc_start, calculate mort and then average (axis =-1,-2)
+    ###distribution used to atempt to replicate real life where there is a spread within the mob. This is required because mortality is quadratic therefore it is in accurate to use mob average egb and rc.
     ebg_start_p1p2 = fun.f_distribution7(ebg_start, sd=sd_ebg)[...,na]
     rc_start_p1p2 = fun.f_distribution7(rc_start, cv=cv_weight)[...,na,:]
     ###calc mort scalars for the hybrid mortality function
