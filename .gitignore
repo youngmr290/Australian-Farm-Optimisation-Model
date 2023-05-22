@@ -12,7 +12,7 @@ flowcharts
 /John stuff.py
 /*.txt
 /*.lp
-/*.xls*
+*/*.xls*
 */*.xlsm
 /log
 /.spyproject
