@@ -324,20 +324,26 @@ def create_sa():
     sav['r2_ik5g3'] = np.full(pinp.sheep['ia_r2_ik5g3'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k5 axis (BTRT) for offs
     sav['LTW_loops_increment'] = '-'                  #SA to Increment the number of LTW loops carried out in the code. The base is 2 loops with 0 increment but if using pkl fs or ltw_adj is 0 then base is 0 loops.
     ##SAM
-    sam['kg'] = 1.0                             #energy efficiency of adults (zf2==1)
-    sam['mr'] = 1.0                             #Maintenance requirement of adults (zf2==1)
-    sam['pi'] = 1.0                             #Potential intake of adults (zf2==1)
+    sam['kg_adult'] = 1.0                             #energy efficiency of adults (zf2==1)
+    sam['mr_adult'] = 1.0                             #Maintenance requirement of adults (zf2==1)
+    sam['pi_adult'] = 1.0                             #Potential intake of adults (zf2==1)
+    sam['kg_yatf'] = 1.0                             #energy efficiency of yatf
+    sam['mr_yatf'] = 1.0                             #Maintenance requirement of yatf
+    sam['pi_yatf'] = 1.0                             #Potential intake of yatf
     sam['LTW_dams'] = 1.0                       #adjust impact of life time wool fleece effects
     sam['LTW_offs'] = 1.0                       #adjust impact of life time wool fleece effects
-    sam['pi_post'] = 1.0                        #Post loop potential intake of adults (zf2==1)
+    sam['pi_post_adult'] = 1.0                        #Post loop potential intake of adults (zf2==1)
+    sam['pi_post_yatf'] = 1.0                        #Post loop potential intake of yatf
     sam['chill'] = 1.0                        #intermediate sam on chill.
     ##SAP
-    sap['evg'] = 0.0               #energy content of liveweight gain - this is a high level sa, it impacts within a calculation not on an input and is only implemented on adults
+    sap['evg_adult'] = 0.0               #energy content of liveweight gain - this is a high level sa, it impacts within a calculation not on an input and is only implemented on adults
     sap['mortalityp'] = 0.0        #Scale the calculated progeny mortality at birth relative - this is a high level sa, it impacts within a calculation not on an input
     sap['mortalitye'] = 0.0        #Scale the calculated dam mortality at birth - this is a high level sa, it impacts within a calculation not on an input
     sap['mortalityb'] = 0.0        #Scale the calculated base mortality (for all animals) - this is a high level sa, it impacts within a calculation not on an input
-    sap['kg_post'] = 0.0           #Post loop energy efficiency of adults (zf2==1)
-    sap['mr_post'] = 0.0           #Post loop maintenance requirement of adults (zf2==1)
+    sap['kg_post_adult'] = 0.0           #Post loop energy efficiency of adults (zf2==1)
+    sap['kg_post_yatf'] = 0.0           #Post loop energy efficiency of yatf
+    sap['mr_post_adult'] = 0.0           #Post loop maintenance requirement of adults (zf2==1)
+    sap['mr_post_yatf'] = 0.0           #Post loop maintenance requirement of yatf
     ##SAA
     saa['husb_cost_h2'] = np.zeros(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
     saa['husb_labour_l2h2'] = np.zeros(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour

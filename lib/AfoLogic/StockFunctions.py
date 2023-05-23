@@ -764,7 +764,7 @@ def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc, temp_av
     :param mp2:
     :param piyf:
     :param period_between_birthwean:
-    :param sam_pi:
+    :param sam_pi: sensitivity multiplier on PI. Applied as an intermediate SAM so that it can be differentially applied by age
     :return pi:
     '''
     ##Condition factor on PI
@@ -1052,7 +1052,6 @@ def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start,
     mp1 = cl[7, ...] * mpmax * fun.f_back_transform(-cl[19, ...] + cl[20, ...] * milk_ratio
                                                     + cl[21, ...] * ad * (milk_ratio - cl[22, ...] * ad)
                                                     - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))
-#    mp1 = cl[7, ...] * mpmax / (1 + np.exp(-(-cl[19, ...] + cl[20, ...] * milk_ratio + cl[21, ...] * ad * (milk_ratio - cl[22, ...] * ad) - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))))
     ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
     ### Based on the standard parameter values 'Suckling volume of young' is very rarely limiting milk production.
     mp2 = np.minimum(mp1, np.mean(fun.f_dynamic_slice(ffcfw75_exp_yatf, i_x_pos, 1, None), axis = i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
@@ -1079,7 +1078,7 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g,
     d_cfw_ave_g = d_cfw_ave_g * sfw_ltwadj_g
     mew_min_g = mew_min_g * sfw_ltwadj_g
     sfd_a0e0b0xyg = sfd_a0e0b0xyg + sfd_ltwadj_g
-    ##adjust wge by sam_pi so the intake sensitivity doesn't alter the wool growth outcome for the genotype
+    ##if passed, adjust wge by sam_pi so the intake sensitivity doesn't alter the wool growth outcome for the genotype
     ###this scaling could be applied to sfw but is applied here so that pi can be altered for a single age group
     ###which is required for the GEPEP analysis that is calibrating the adult intake and the fleece weight
     wge_a0e0b0xyg = wge_a0e0b0xyg / sam_pi
@@ -1199,8 +1198,8 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     ##Energy Value of gain as calculated.
     c_evg = cg[8, ...] - zf1 * (cg[9, ...] - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
     # evg = fun.f_update(evg , temporary, zf2 < 1)
-    ## Scale from calculated to input evg based on zf2. If zf2 = 1 then use the value from the GEPEP trial
-    evg = c_evg * (1 + sen.sap['evg'] * zf2)
+    ## Scale from calculated to input evg based on zf2. If zf2 = 1 then scale based on the SAP
+    evg = c_evg * (1 + sen.sap['evg_adult'] * zf2)
     ##Empty bodyweight gain
     ebg = neg / evg
     ##Process the Liveweight REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
