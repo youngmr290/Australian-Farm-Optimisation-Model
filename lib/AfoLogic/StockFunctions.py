@@ -213,7 +213,7 @@ def f1_DSTw_adjust(propn_source_b1, cycles_source, cycles_destination, axis_b1, 
     ##roll the b1 axis back to starting position
     propn_destination_b1 = np.roll(t_destination, dry_slice, axis=axis_b1)
     ##If the NM slice exists, reset it to starting value (default is it exists as part of the b1 axis)
-    #todo check if this code does anything. Perhaps the NM slice is getting overwritten in f_conception_lmat()
+    #todo check if this code does anything. Perhaps the NM slice is getting overwritten in f_conception_mu2()
     if dry_slice != 0:
         propn_destination_b1[tuple(slc0)] = nm_propn
     return propn_destination_b1
@@ -257,8 +257,7 @@ def f1_DSTw(scan_g, cycles=1):
     dstwtr_gl0[..., 1] = 1 - np.sum(dstwtr_gl0 * t_mask, axis = -1) # mask out the Singles value in the sum of the array across the l0 axis
     return dstwtr_gl0
 
-
-def f1_RR_propn_logistic(RR_g, cycles=1):
+def f1_RR_propn_logistic(RR_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     '''
     Returns the proportion of empty, single, twin & triplet bearing dams after the requested number of cycles
     from a scanning percentage or litter size of the calibration number of cycles (2).
@@ -278,12 +277,11 @@ def f1_RR_propn_logistic(RR_g, cycles=1):
     Proportion of dry, single, twins & triplets.
 
     '''
-    calibration_cycles = 2  #The data used to calibrate the coefficients used are assumed to have been derived from mating for 2 cycles.
 
     ## calculate the coefficients of the cubic equation ax3 + bx2 + cx + d = 0
     ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_dams
-    cut1_g = cb1_dams[25,1,...] - cb1_dams[25,0,...]
-    cut2_g = cb1_dams[25,2,...] - cb1_dams[25,1,...]
+    cut1_g = cb1[:,:,2:3,...] - cb1[:,:,1:2,...]
+    cut2_g = cb1[:,:,3:4,...] - cb1[:,:,2:3,...]
     ### calculations are done with the exp of the cut-off values
     y = np.exp(cut1_g)
     z = np.exp(cut2_g)
@@ -292,31 +290,15 @@ def f1_RR_propn_logistic(RR_g, cycles=1):
     b = (1 - RR_g) * (y**2 * z + y * z + y)
     c = (2 - RR_g) * (y * z + y + 1)
     d = (3 - RR_g)
-    ###solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_dams[25])
-    cutoff0 = fun.solve_cubic_for_logistic(a,b,c,d)
-    cutoff1 = cutoff01 + cut1_g
-    cutoff2 = cutoff12 + cut2_g
-    cutoff3 = cb1_dams[25,3,...]  #this is a high number to ensure that all dams are less than or equal to the maximum number of foetuses
 
-    t_boundaries = cb1_dams[25,...] #todo or create a copy so it doesn't affect
-    f_update(t_boundaries, cutoff0, nfoet_b1 == 0)
-    f_update(t_boundaries, cutoff1, nfoet_b1 == 1)
-    f_update(t_boundaries, cutoff2, nfoet_b1 == 2)
-    f_update(t_boundaries, cutoff3, nfoet_b1 == 3)
+    ##solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_dams[25])
+    cutoff0 = fun.f_solve_cubic_for_logistic_multidim(a,b,c,d)
 
-    ##Subsequent code is same as f_conception_lmat (with comments removed)
-    crl = fun.f_back_transform(t_boundaries)
-    crl *= (nfoet_b1any == nyatf_b1any)
-    t_crl = crl.copy()
-    slc_nm = [slice(None)] * len(t_crl.shape)
-    slc_nm[b1_pos] = slice(0, 1)
-    t_crl[tuple(slc_nm)] = 0
-    t_cr = np.maximum(0, t_crl - np.roll(t_crl, 1, axis=b1_pos))
-    t_cr = f1_DSTw_adjust(t_cr, cycles_source=calibration_cycles, cycles_destination=cycles, axis_b1=-1, dry_slice=0)
-    return t_cr
+    ##calc conception propn
+    cp = f1_cp_from_cutoff(cutoff0, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles)
+    return cp
 
-
-def f1_LS_propn_logistic(LS_g):
+def f1_LS_propn_logistic(LS_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     '''
     Returns the proportion of empty, single, twin & triplet bearing dams after the requested number of cycles
     from a litter size.
@@ -338,18 +320,73 @@ def f1_LS_propn_logistic(LS_g):
 
     ## calculate the coefficients of the cubic equation ax3 + bx2 + cx + d = 0
     ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_dams
-    cut1_g = cb1_dams[25,1,...] - cb1_dams[25,0,...]
-    cut2_g = cb1_dams[25,2,...] - cb1_dams[25,1,...]
+    cut1_g = cb1[:,:,2:3,...] - cb1[:,:,1:2,...]
+    cut2_g = cb1[:,:,3:4,...] - cb1[:,:,2:3,...]
     ### calculations are done with the exp of the cut-off values
     y = np.exp(cut1_g)
     z = np.exp(cut2_g)
     ### a,b,c,&d are calculated as derived
-    a =
-    b =
-    c =
-    d =
-    #todo this will be a copy of the RR_logistic but with different a,b,c,d
-    return np.array([0])
+    a = (1-LS_g)*(y**2*z)+(y*z)+y
+    b = (1-LS_g)* (y**2*z + y*z +y) + 2*(y*z + y + 1)
+    c = (2-LS_g)*(y*z + y + 1) +3
+    d = (3-LS_g)
+
+    ##solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_dams[25])
+    cutoff0 = fun.f_solve_cubic_for_logistic_multidim(a, b, c, d)
+
+    ##calc conception propn
+    cp = f1_cp_from_cutoff(cutoff0, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles)
+    return cp
+
+
+def f1_cp_from_cutoff(cutoff0, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
+    '''
+    Calculating the conception proportion (cp) from the transformed cutoffs.
+
+    :param cutoff0: transformed estimates of proportion empty
+    :return:
+    '''
+
+    ## calculate the coefficients of the cubic equation ax3 + bx2 + cx + d = 0
+    ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_dams
+    cut1_g = cb1[:,:,2:3,...] - cb1[:,:,1:2,...]
+    cut2_g = cb1[:,:,3:4,...] - cb1[:,:,2:3,...]
+
+    ###solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_dams[25])
+    cutoff1 = cutoff0 + cut1_g
+    cutoff2 = cutoff1 + cut2_g
+    cutoff3 = cb1[:,:,4:5,...]  #this is a high number to ensure that all dams are less than or equal to the maximum number of foetuses
+
+    boundaries = np.zeros_like(cb1)
+    boundaries = fun.f_update(boundaries, cutoff0, nfoet_b1any == 0)
+    boundaries = fun.f_update(boundaries, cutoff1, nfoet_b1any == 1)
+    boundaries = fun.f_update(boundaries, cutoff2, nfoet_b1any == 2)
+    boundaries = fun.f_update(boundaries, cutoff3, nfoet_b1any == 3)
+
+    ##back transform (get y values (propn) based on x values (cutoffs) - y=e^x/(1+e^x)) to probability of having less than or equal to the number of foetuses in the corresponding b slice
+    ### Note: LMAT equations predict 'less than or equal', and GrazPlan predict 'greater than or equal'
+    cpl = fun.f_back_transform(boundaries)
+
+    ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp calculate correctly
+    cpl *= (nfoet_b1any == nyatf_b1any)
+
+    ##probability of a given number of foetuses (calculated from the difference in the cumulative probability)
+    ##Calculate probability from cumulative probability by the difference between the array and the array
+    ### values offset by one slice (difference between '<x' and '<x-1').
+    ### To make the end case work requires setting cpl[NM] to 0 prior to the calculation (& max(0,calc))
+    ###Define the temp array shape & populate with values from cpg (values are required for the proportion of the highest parity dams)
+    slc_nm = [slice(None)] * len(cpl.shape)
+    slc_nm[b1_pos] = slice(0, 1)
+    cpl[tuple(slc_nm)] = 0
+    cp = np.maximum(0, cpl - np.roll(cpl, 1, axis=b1_pos))
+
+    ## Adjust the predicted proportions from the calibration number of cycles to 1 cycle (default values for the function)
+    ### The prediction equations from the LMAT trial are based on mating for 2 cycles. AFO calculates for each cycle
+    calibration_cycles = 2  #The data used to calibrate the coefficients used are assumed to have been derived from mating for 2 cycles.
+    cp = f1_DSTw_adjust(cp, cycles_source=calibration_cycles, cycles_destination=cycles, axis_b1=b1_pos)
+
+    return cp
+
 
 
 def f1_btrt0(dstwtr_propn,pss,pstw,pstr): #^this function is inflexible ie if you want to add quadruplets
@@ -1222,7 +1259,7 @@ def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
 #     return fs
 
 
-def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1
+def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1
                     , rev_trait_value, saa_rr):
     ''''
     Calculation of dam conception using CSIRO equation system
@@ -1247,7 +1284,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
                            may occur mid period. Note: the e and b axis have been handled before passing in.
     :param rc_mating: Relative condition at mating. This is a separate variable to rc_start because mating
                       may occur mid period. Note: the e and b axis have been handled before passing in.
-    :param crg_doy: A scalar for the proportion of dry, single, twins & triplets based on day of the year.
+    :param cpg_doy: A scalar for the proportion of dry, single, twins & triplets based on day of the year.
     :param nfoet_b1any:
     :param nyatf_b1any:
     :param period_is_mating:
@@ -1260,27 +1297,28 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         conception = np.zeros_like(relsize_mating)
     else:
         b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
+        e1_pos = sinp.stock['i_e1_pos']  #because used in many places in the function
 
         ##back transform to probability of having greater than or equal to the number of foetuses in the corresponding b slice
         ## probability of at least a given number of foetuses including scaling for day of year
-        crg = crg_doy * fun.f_sig(relsize_mating * rc_mating, cb1[2, ...], cb1[3, ...])
+        cpg = cpg_doy * fun.f_sig(relsize_mating * rc_mating, cb1[2, ...], cb1[3, ...])
         ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp calculate correctly
-        crg *= (nfoet_b1any == nyatf_b1any)
+        cpg *= (nfoet_b1any == nyatf_b1any)
 
         ##Temporary array for probability of a given number of foetuses (calculated from the difference in the cumulative probability)
         ##Calculate probability from cumulative probability by the difference between the array and the array
         ### values offset by one slice (difference between '>x' and '>x+1').
         ### End cases work because GBAL have been set to 0 probability
-        t_cr = np.maximum(0, crg - np.roll(crg, -1, axis=b1_pos))
+        cp = np.maximum(0, cpg - np.roll(cpg, -1, axis=b1_pos))
 
         ##Apply scanning percentage sa to adjust the probability of the number of foetuses.
         ### Carried out here so that the sa affects the REV and is included in proportion of NM
         ### Achieved by calculating the impact of the sa on the scanning percentage and the change in the 'standardised'
         ### proportions of DST. Then adjusting the actual proportions of dry, singles and twins by that amount.
-        ### Calculate the repro rate from the probabilities above (t_cr) and convert to an expected proportion of dry,
+        ### Calculate the repro rate from the probabilities above (cp) and convert to an expected proportion of dry,
         ### singles, twins & triplets after 1 cycle
-        #### convert the proportion of DST in t_cr to an equivalent scanning % after the calibration number of cycles.
-        repro_rate = f1_convert_propn_to_2cycleRR(t_cr, nfoet_b1any, cycles = 1)
+        #### convert the proportion of DST in cp to an equivalent scanning % after the calibration number of cycles.
+        repro_rate = f1_convert_propn_to_2cycleRR(cp, nfoet_b1any, cycles = 1)
         ####remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f1_DSTw
         repro_rate = np.squeeze(repro_rate, axis=b1_pos)
         saa_rr = np.squeeze(saa_rr, axis=b1_pos)
@@ -1295,51 +1333,44 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         #### only apply to the conception slices - don't want to add any conception to the lambed and lost slices.
         propn_dst_change = (propn_dst_adj - propn_dst) * (nfoet_b1any==nyatf_b1any)
         ####apply the change to the original calculated proportions
-        t_cr += propn_dst_change
+        cp += propn_dst_change
 
         ##Process the Conception REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         ###Conception is the proportion of dams that are dry and a change in conception is assumed to be converting
         ### a dry ewe into a single bearing ewe. It is calculated by altering the proportion of single bearing ewes b1[2].
         ### The proportion of Drys is then calculated (later) as the animals that didn't get pregnant.
-        slc = [slice(None)] * len(t_cr.shape)
+        slc = [slice(None)] * len(cp.shape)
         slc[b1_pos] = slice(2,3)
-        t_cr[tuple(slc)] = f1_rev_update('conception', t_cr[tuple(slc)], rev_trait_value)
+        cp[tuple(slc)] = f1_rev_update('conception', cp[tuple(slc)], rev_trait_value)
 
         ##Process the Litter size REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         ##The litter size REV is stored as the proportion of the pregnant dams that are single-, twin- & triplet-bearing
-        ###Steps: Calculate litter size from t_cr, adjust litter size (if required) then recalculate t_cr from new litter size
-        ### Calculating litter size (# of foetuses / dam pregnant) requires a mask for the pregnant dams that is the same shape as t_cr
+        ###Steps: Calculate litter size from cp, adjust litter size (if required) then recalculate cp from new litter size
+        ### Calculating litter size (# of foetuses / dam pregnant) requires a mask for the pregnant dams that is the same shape as cp
         mask = nfoet_b1any.squeeze() > 0
-        t_cr_masked = np.compress(mask, t_cr, b1_pos)
+        cp_masked = np.compress(mask, cp, b1_pos)
         ### Calculate the proportion of single-, twin- & triplet-bearing dams
-        litter_propn = t_cr_masked / np.sum(t_cr_masked, b1_pos, keepdims=True)
+        litter_propn = cp_masked / np.sum(cp_masked, b1_pos, keepdims=True)
         litter_propn = f1_rev_update('litter_size', litter_propn, rev_trait_value)
-        ###calculate t_cr from the REV adjusted litter size. t_cr will only change from the original value if litter_size REV is active
-        t_cr[:,:,:,mask,...] = litter_propn * np.sum(t_cr_masked, b1_pos, keepdims=True)
+        ###calculate cp from the REV adjusted litter size. cp will only change from the original value if litter_size REV is active
+        cp[:,:,:,mask,...] = litter_propn * np.sum(cp_masked, b1_pos, keepdims=True)
 
         ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester/birth
         ## are added to 00 slice (b1[1:2]) so that they are removed from the NM slice.
         ###Number is based on a proportion (cf[5]) of the ewes that implant that lose their foetuses/embryos
         ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
-        propn_pregnant = np.sum(fun.f_dynamic_slice(t_cr, b1_pos, 2, None), axis=b1_pos, keepdims=True)
+        propn_pregnant = np.sum(fun.f_dynamic_slice(cp, b1_pos, 2, None), axis=b1_pos, keepdims=True)
         slc[b1_pos] = slice(1,2)
-        t_cr[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
+        cp[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
 
         ##If the period is mating then set conception = temporary probability array
-        conception = t_cr * period_is_mating
+        conception = cp * period_is_mating
 
         ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
-        #todo could this be simplified with the logic conception_e1b1[0,0] = np.sum(conception_e1b1[:, 1:] (as commented below).
         slc = [slice(None)] * len(conception.shape)
-        slc[b1_pos] = slice(0,1)
-        conception[tuple(slc)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos,1, None), axis = b1_pos, keepdims=True)
-        temporary = (index_e1 == 0) * np.sum(conception, axis=sinp.stock['i_e1_pos'], keepdims=True) #sum across e axis into slice e[0]
-        conception = fun.f_update(conception, temporary, (nyatf_b1any == 0)) #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
-
-        # slc = [slice(None)] * len(conception.shape)
-        # slc[e1_pos] = slice(0, 1)
-        # slc[b1_pos] = slice(0, 1)
-        # conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, b1_pos, 1, None), axis=(e1_pos, b1_pos), keepdims=True)
+        slc[e1_pos] = slice(0, 1)
+        slc[b1_pos] = slice(0, 1)
+        conception[tuple(slc)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos, 1, None), axis=(e1_pos, b1_pos), keepdims=True)
     return conception
 
 
@@ -1361,12 +1392,13 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
     :param relsize_mating: Relative size at mating. This is a separate variable to relsize_start because mating
                            may occur mid period. Note: the e and b axis have been handled before passing in.
     :param cs_mating: Condition score at mating. Note: the e and b axis have been handled before passing in.
-    :param rr_doy: A scalar for reproductive rate based on day of the year. Based on GrazPlan crg_doy relationship
+    :param rr_doy: A scalar for reproductive rate based on day of the year. Based on GrazPlan cpg_doy relationship
 '''
     if ~np.any(period_is_mating):
         conception = np.zeros_like(relsize_mating)
     else:
         b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
+        e1_pos = sinp.stock['i_e1_pos']  #because used in many places in the function
 
         ##Adjust standard scanning percentage based on relative size (to reduce scanning percentage of younger animals)
         scan_std = scan_std * relsize_mating * rr_doy
@@ -1381,34 +1413,34 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
         ### Note: repro rate calculated above is based on a calibration with 2 cycles
         ### Require the proportions of dry, singles, twins & triplets for 1 cycle
         ### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
-        t_cr = np.moveaxis(f1_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos)
+        cp = np.moveaxis(f1_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos)
         ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp behave correctly
-        t_cr *= (nfoet_b1any == nyatf_b1any)
+        cp *= (nfoet_b1any == nyatf_b1any)
         ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester are added to 00 slice rather than staying in NM slice
         ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
         ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
-        propn_pregnant = np.sum(fun.f_dynamic_slice(t_cr, b1_pos, 2, None), axis=b1_pos, keepdims=True)
-        slc = [slice(None)] * len(t_cr.shape)
+        propn_pregnant = np.sum(fun.f_dynamic_slice(cp, b1_pos, 2, None), axis=b1_pos, keepdims=True)
+        slc = [slice(None)] * len(cp.shape)
         slc[b1_pos] = slice(1,2)
-        t_cr[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
+        cp[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
         ##If the period is mating then set conception = temporary probability array
-        conception = t_cr * period_is_mating
+        conception = cp * period_is_mating
         ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
         slc = [slice(None)] * len(conception.shape)
-        slc[b1_pos] = slice(0,1)
-        conception[tuple(slc)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos,1, None), axis = b1_pos, keepdims=True)
-        temporary = (index_e1 == 0) * np.sum(conception, axis=sinp.stock['i_e1_pos'], keepdims=True)  # sum across e axis into slice e[0]
-        conception = fun.f_update(conception, temporary, (nyatf_b1any == 0))  #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
+        slc[e1_pos] = slice(0, 1)
+        slc[b1_pos] = slice(0, 1)
+        conception[tuple(slc)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos, 1, None), axis=(e1_pos, b1_pos), keepdims=True)
         ##Process the Conception & Litter size REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         conception[:, :, 1, ...] = f1_rev_update('conception', conception[:, :, 1, ...], rev_trait_value)
         conception[:, :, 2:, ...] = f1_rev_update('litter_size', conception[:, :, 2:, ...], rev_trait_value)
     return conception
 
 
-def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_doy, nfoet_b1any, nyatf_b1any
+def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, cpl_doy, nfoet_b1any, nyatf_b1any
                       , period_is_mating, index_e1, rev_trait_value, saa_rr):
     ''''
-    Calculation of dam conception using CSIRO equation system
+    Calculation of dam conception using a back transformed logistic function. Using coefficients developed in
+    Murdoch University trials.
 
     Conception is the change in the numbers of animals in each slice of e & b as a proportion of the numbers
     in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums()
@@ -1418,7 +1450,7 @@ def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_d
     similar to f_conception_cs() except LMAT is "less than" and probability is calculated from a back transformed
     calculation with linear and quadratic terms.
     The calculation includes terms for LW at joining, Age at joining and LW change during joining.
-    The estimation of cumulative probability as fitted in the LMAT trial is scaled by a dau=y of year factor, this
+    The estimation of cumulative probability as fitted in the LMAT trial is scaled by a day of year factor, this
     is derived from the factor used for the GrazPlan adjustment but requires calculating in this function.
     The probability is an estimate of the number of dams carrying that number of young to birth if mated for the
     number of cycles assessed in the trial. The parameters could be altered to represent a single cycle however
@@ -1426,8 +1458,8 @@ def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_d
     Some dams conceive (and don't return to service) but don't carry to birth (the third trimester)
     due to abortion during pregnancy, this is taken into account.
     #todo The conversion of the prediction from 2 cycles back to one cycle doesn't include this loss
-    #which then increases the proportion of empty ewes and reduces the expected RR.
-    #The correction has been removed for now.
+    # which then increases the proportion of empty ewes and reduces the expected RR.
+    # The correction has been removed for now.
     The values are altered by a sensitivity analysis on scanning percentage
     Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can
     be controlled for relative economic values
@@ -1441,7 +1473,7 @@ def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_d
     :param lwc: Liveweight change of the dam during the generator period in g/hd/d.
     :param age: age of dam mid-period in days. Indexed for p. The i axis can be non-singleton
     :param nlb: Number of lambs born ASBV - mid-parent average (achieved by using nlb_g3).
-    :param crl_doy: The sine of the day of joining. This represents seasonality of reproduction
+    :param cpl_doy: The sine of the day of joining. This represents seasonality of reproduction
     :param nfoet_b1any:
     :param nyatf_b1any:
     :param period_is_mating:
@@ -1454,12 +1486,12 @@ def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_d
         conception = np.zeros_like(maternallw_mating)
     else:
         b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
-        b1_len = len(sinp.stock['i_mask_b0_b1'])
+        e1_pos = sinp.stock['i_e1_pos']
         ##Select slice 24 (Ewe Lamb coefficients) or 25 (mature ewe coefficients) of cb1 & cu2 based on age of the dam
         cb1_sliced = fun.f_update(cb1[25, ...], cb1[24, ...], age < 364)
         cu2_sliced = fun.f_update(cu2[25, ...], cu2[24, ...], age < 364)
-        ##Calculate the transformed estimates of litter size proportions (slice cu2 allowing for active i axis)
-        t_boundaries = cb1_sliced + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating
+        ##Calculate the transformed estimates of proportion empty (slice cu2 allowing for active i axis)
+        cutoff0 = cb1_sliced[:,:,0:1,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating
                                                          + cu2_sliced[1, ...] * maternallw_mating ** 2
                                                          + cu2_sliced[2, ...] * age
                                                          + cu2_sliced[3, ...] * age ** 2
@@ -1469,102 +1501,74 @@ def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_d
                                                          + cu2_sliced[7, ...] * nlb ** 2
                                                          + cu2_sliced[8, ...] * srw
                                                          + cu2_sliced[9, ...] * srw ** 2
-                                                         + cu2_sliced[10, ...] * crl_doy
-                                                         + cu2_sliced[11, ...] * crl_doy ** 2
+                                                         + cu2_sliced[10, ...] * cpl_doy
+                                                         + cu2_sliced[11, ...] * cpl_doy ** 2
                                                            )
-        ##back transform to probability of having less than or equal to the number of foetuses in the corresponding b slice
-        ### Note: LMAT equations predict 'less than or equal', and GrazPlan predict 'greater than or equal'
-        crl = fun.f_back_transform(t_boundaries)
 
-        # # Incorporate the impact of doy on the prediction of RR. Use crg_doy from CSIRO
-        # ### Convert LMAT crl to crg so it is equivalent to CSIRO (probability of at least a given number of foetuses)
-        # #### First, set the NM slice to 0 (so that it can be rolled forward (cr less than 0 == 0%) with a probability of 0)
-        # slc = [slice(None)] * len(crl.shape)
-        # slc[b1_pos] = slice(0, 1)
-        # crl[tuple(slc)] = 0
-        # #### Calculate crg from crl on the basis that crg[slc] + crl[slc_prev] == 1
-        # crg = 1 - np.roll(crl, 1, axis=b1_pos)
-        # # ### include scaling for day of year - no longer used because DOJ coefficient is included
-        # # crg = crg_doy * crg
+        ##calc conception propn
+        cp = f1_cp_from_cutoff(cutoff0, cb1_sliced, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1)
 
-        ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp calculate correctly
-        crl *= (nfoet_b1any == nyatf_b1any)
-
-        ##Temporary array for probability of a given number of foetuses (calculated from the difference in the cumulative probability)
-        ##Calculate probability from cumulative probability by the difference between the array and the array
-        ### values offset by one slice (difference between '<x' and '<x-1').
-        ### To make the end case work requires setting crl[NM] to 0 prior to the calculation (& max(0,calc))
-        ###Define the temp array shape & populate with values from crg (values are required for the proportion of the highest parity dams)
-        t_crl = crl.copy()
-        slc_nm = [slice(None)] * len(t_crl.shape)
-        slc_nm[b1_pos] = slice(0,1)
-        t_crl[tuple(slc_nm)] = 0
-        t_cr = np.maximum(0, t_crl - np.roll(t_crl, 1, axis=b1_pos))
-
-        ## Adjust the predicted proportions from the calibration number of cycles to 1 cycle (default values for the function)
-        ### The prediction equations from the LMAT trial are based on mating for 2 cycles. AFO calculates for each cycle
-        t_cr = f1_DSTw_adjust(t_cr, cycles_source=2, cycles_destination=1, axis_b1=sinp.stock['i_b1_pos'])
-
-        #todo the LMAT function & the CSIRO function are now equivalent from this point on.
-        # a Function could be created that is called by the 2 functions to save duplicating the following code
+        ##The following code is only required to apply SA and REV. A bit complicated because SA are for the entire repro period therefore need to adjust for one cycle
 
         ##Apply scanning percentage sa to adjust the probability of the number of foetuses using logistic function.
         ### Carried out here so that the sa affects the REV and is included in proportion of NM
         ### Calculate the RR to allow SA to be applied. Note: SA applied on basis of 2 cycles
-        repro_rate = f1_convert_propn_to_2cycleRR(t_cr, nfoet_b1any, cycles = 1)
+        repro_rate = f1_convert_propn_to_2cycleRR(cp, nfoet_b1any, cycles = 1)
         #### apply the sa to the repro rate
         repro_rate_adj = fun.f_sa(repro_rate, sen.sam['rr'])
         repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr * (repro_rate > 0), 2, value_min=0)     # only adjust if original value was non-zero
         #### Back calculate the proportion of empty, single, twins & triplets using the Logistic function
-        t_cr = f1_RR_propn_logistic(repro_rate_adj, cycles=1)
+        cp = f1_RR_propn_logistic(repro_rate_adj, cb1_sliced, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1)
 
         ##Set up slices and store values for the SA
         ###define empty slice (LSLN 00) and store proportion empty
-        slc_empty = [slice(None)] * len(t_cr.shape)
+        slc_empty = [slice(None)] * len(cp.shape)
         slc_empty[b1_pos] = slice(1, 2)
-        empty = t_cr[slc_empty]
+        empty = cp[tuple(slc_empty)]
         ###define slices for litter size from singles (LSLN 11) to the end
-        slc_preg = [slice(None)] * len(t_cr.shape)
+        slc_preg = [slice(None)] * len(cp.shape)
         slc_preg[b1_pos] = slice(2,None)
 
         ##Apply litter size sa to adjust the probability of the number of foetuses using logistic function.
         ### Carried out here prior to conception saa so that the proportions are still consistent with the logistic function
         ### Calculate the LS to allow SA to be applied. Note: SA applied on basis of 2 cycles
-        litter_size = f1_convert_propn_to_LS(t_cr, nfoet_b1any)
+        litter_size = f1_convert_propn_to_LS(cp, nfoet_b1any)
         #### apply the sa to the repro rate
+        saa_ls=0 #todo replace with proper sa
         litter_size_adj = fun.f_sa(litter_size, saa_ls * (litter_size > 0), 2, value_min=0)     # only adjust if original value was non-zero
         #### Back calculate the proportion of empty, single, twins & triplets using the Logistic function for the increased LS
-        t_cr_adj = f1_LS_propn_logistic(litter_size_adj)
+        cp = f1_LS_propn_logistic(litter_size_adj, cb1_sliced, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1)
         #### Scale the proportions so that the proportion of empty is same as prior to SA and the total is 1
-        empty_adj = t_cr_adj[slc_empty]
-        t_cr[tuple(slc_preg)] = t_cr_adj[tuple(slc_preg)] * (1 - empty) / (1 - empty_adj)
-        t_cr[tuple(slc_empty)] = empty
+        empty_adj = cp[tuple(slc_empty)]
+        cp[tuple(slc_preg)] = cp[tuple(slc_preg)] * (1 - empty) / (1 - empty_adj)
+        cp[tuple(slc_empty)] = empty
 
         ##Apply conception saa to adjust the proportion of ewes that are dry with constant litter size.
         ### Carried out here so that the sa affects the REV and is included in proportion of NM
         ### Apply the saa to the empty slice.
-        t_cr[tuple(slc_empty)] = fun.f_sa(empty + saa_con * (empty > 0), 2, value_min=0)     # only adjust if original value was non-zero
+        saa_con=0 #todo replace with proper sa
+        cp[tuple(slc_empty)] = fun.f_sa(empty, saa_con * (empty > 0), 2, value_min=0)     # only adjust if original value was non-zero
         #### Adjust the pregnant slices to keep litter size constant and allow for the change in the number pregnant
-        t_cr[tuple(slc_preg)] = t_cr[slc_preg] * (1-t_cr[slc_empty]) / (1-empty)
+        cp[tuple(slc_preg)] = cp[tuple(slc_preg)] * (1-cp[tuple(slc_empty)]) / (1-empty)
 
         ##Process the Conception REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         ###Conception is the proportion of dams that are dry and a change in conception is assumed to be converting
         ### a dry ewe into a pregnant ewe with litter size as per rest of the flock. It is calculated by altering the proportion of empty ewes b1[1].
-        empty_rev = f1_rev_update('conception', t_cr[tuple(slc_empty)], rev_trait_value)
-        t_cr[tuple(slc_preg)] = t_cr_adj[tuple(slc_preg)] * (1 - empty_rev) / (1 - empty)
-        t_cr[tuple(slc_empty)] = empty_rev
+        empty_rev = f1_rev_update('conception', cp[tuple(slc_empty)], rev_trait_value)
+        cp[tuple(slc_preg)] = cp[tuple(slc_preg)] * (1 - empty_rev) / (1 - empty)
+        cp[tuple(slc_empty)] = empty_rev
 
         ##Process the Litter size REV: either save the trait value to the dictionary or over-write trait value with value from the dictionary
         ##The litter size REV is stored as the proportion of the pregnant dams that are single-, twin- & triplet-bearing
-        ###Steps: Calculate litter size from t_cr, adjust litter size (if required) then recalculate t_cr from new litter size
-        ### Calculating litter size (# of foetuses / dam pregnant) requires a mask for the pregnant dams that is the same shape as t_cr
+        ###Steps: Calculate litter size from cp, adjust litter size (if required) then recalculate cp from new litter size
+        ### Calculating litter size (# of foetuses / dam pregnant) requires a mask for the pregnant dams that is the same shape as cp
         mask = nfoet_b1any.squeeze() > 0
-        t_cr_masked = np.compress(mask, t_cr, b1_pos)
+        cp_masked = np.compress(mask, cp, b1_pos)
         ### Calculate the proportion of single-, twin- & triplet-bearing dams
-        litter_propn = fun.f_divide(t_cr_masked, np.sum(t_cr_masked, b1_pos, keepdims=True))
+        litter_propn = fun.f_divide(cp_masked, np.sum(cp_masked, b1_pos, keepdims=True))
         litter_propn = f1_rev_update('litter_size', litter_propn, rev_trait_value)
-        ###calculate t_cr from the REV adjusted litter size. t_cr will only change from the original value if litter_size REV is active
-        t_cr[:,:,:,mask,...] = litter_propn * np.sum(t_cr_masked, b1_pos, keepdims=True)
+        ###calculate cp from the REV adjusted litter size. cp will only change from the original value if litter_size REV is active
+        cp[:,:,:,mask,...] = litter_propn * np.sum(cp_masked, b1_pos, keepdims=True)
 
         ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester/birth
         ## are added to 00 slice (b1[1:2]) so that they are removed from the NM slice.
@@ -1574,25 +1578,19 @@ def f_conception_lmat(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, crl_d
         ### not representing this source of dry ewes.
         ### Disabled by setting the value of propn_pregnant to 0 rather remove the code because the proportion
         ###of empty needs to be set to 0 anyway (and the problem may be fixable)
-        propn_pregnant = np.sum(fun.f_dynamic_slice(t_cr, b1_pos, 2, None), axis=b1_pos, keepdims=True) * 0
+        propn_pregnant = np.sum(fun.f_dynamic_slice(cp, b1_pos, 2, None), axis=b1_pos, keepdims=True) * 0
+        slc = [slice(None)] * len(propn_pregnant.shape)
         slc[b1_pos] = slice(1,2)
-        t_cr[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
+        cp[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
 
         ##If the period is mating then set conception = temporary probability array
-        conception = t_cr * period_is_mating
+        conception = cp * period_is_mating
 
         ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
-        #todo could this be simplified with the logic conception_e1b1[0,0] = np.sum(conception_e1b1[:, 1:] (as commented below).
         slc = [slice(None)] * len(conception.shape)
-        slc[b1_pos] = slice(0,1)
-        conception[tuple(slc)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos,1, None), axis = b1_pos, keepdims=True)
-        temporary = (index_e1 == 0) * np.sum(conception, axis=sinp.stock['i_e1_pos'], keepdims=True) #sum across e axis into slice e[0]
-        conception = fun.f_update(conception, temporary, (nyatf_b1any == 0)) #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
-
-        # slc = [slice(None)] * len(conception.shape)
-        # slc[e1_pos] = slice(0, 1)
-        # slc[b1_pos] = slice(0, 1)
-        # conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, b1_pos, 1, None), axis=(e1_pos, b1_pos), keepdims=True)
+        slc[e1_pos] = slice(0, 1)
+        slc[b1_pos] = slice(0, 1)
+        conception[tuple(slc)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos, 1, None), axis=(e1_pos, b1_pos), keepdims=True)
     return conception
 
 

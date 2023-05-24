@@ -1506,7 +1506,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##calc proportion of dry, singles, twin and triplets based on the genotype as born.
     ###e.g. BBM dams are based on BBB scanning and BBB survival. BBM offspring are based on BBB scanning and BBM survival
     ###calculated without saa['rr_age']. These calculations do not include a 'p' axis because it is one value for all the initial animals
-    dstwtr_l0yg0 = np.moveaxis(sfun.f1_DSTw(scan_std_yg0, cycles=2), -1, 0) #todo add crg_doy_ltw scalar to alter scan_std by TOL
+    dstwtr_l0yg0 = np.moveaxis(sfun.f1_DSTw(scan_std_yg0, cycles=2), -1, 0) #todo add cpg_doy_ltw scalar to alter scan_std by TOL
     dstwtr_l0yg1 = np.moveaxis(sfun.f1_DSTw(scan_std_yg1, cycles=2), -1, 0)
     dstwtr_l0yg3 = np.moveaxis(sfun.f1_DSTw(scan_dams_std_yg3, cycles=2), -1, 0)
 
@@ -1980,9 +1980,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                         * np.exp(-cl_dams[14, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0))
                                         , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
     ##Pattern of conception efficiency (doy). Three versions of the equation
-    ### crg_doy_cs is for the GrazPlan equations to predict the seasonal effect on proportion greater than conception rate - active b1 axis
-    #### Also used for the LMAT equations after predicted crl is converted to crg with allowance for average day of joining
-    crg_doy_cs_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.maximum(0,1 - cb1_dams[1, ..., na]
+    ### cpg_doy_cs is for the GrazPlan equations to predict the seasonal effect on proportion greater than conception rate - active b1 axis
+    #### Also used for the LMAT equations after predicted cpl is converted to cpg with allowance for average day of joining
+    cpg_doy_cs_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.maximum(0,1 - cb1_dams[1, ..., na]
                                                 * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364))
                                                 * np.sin(lat_rad) / -0.57), axis = -1)
     ### rr_doy_ltw scales the LTW equations to predict the seasonal effect on reproductive rate - singleton b1 axis
@@ -1993,11 +1993,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                 , np.maximum(0, 1 - cf_dams[1, ...]
                                                     * (1 - np.sin(2 * np.pi * (scan_std_doj_yg1[...] + 10) / 364))
                                                     * np.sin(lat_rad) / -0.57))
-    ### crl_doy_lmat is for the LMAT equations to include a seasonal effect on RR
+    ### cpl_doy_lmat is for the LMAT equations to include a seasonal effect on RR
     #### value is multiplied by a coefficient in the linear equation prior to logit back transformation.
-    #### crl_doy and the coefficient is in place of the crg_doy scalar of proportions used in the CSIRO equation.
+    #### cpl_doy and the coefficient is in place of the cpg_doy scalar of proportions used in the CSIRO equation.
     #### The proportions of empty, single, twin & triplet change in the ratio determined by the cut-off coefficients.
-    crl_doy_lmat_pa1e1b1nwzida0e0b0xyg1 = np.nanmean((1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364))
+    cpl_doy_lmat_pa1e1b1nwzida0e0b0xyg1 = np.nanmean((1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364))
                                                     * np.sin(lat_rad) / -0.57, axis = -1)
     ##Rumen development factor on PI - yatf
     piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(fun.f_back_transform(ci_yatf[3, ..., na]
@@ -3556,7 +3556,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_conception_cs(cf_dams, cb1_dams, relsize_mating_dams, rc_mating_dams
-                                                 , crg_doy_cs_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
+                                                 , cpg_doy_cs_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
                                                  , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                  , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]
                                                  , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p])
@@ -3578,13 +3578,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     if eqn_compare:
                         r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
-            eqn_system = 2 # MU LMAT = 2
+            eqn_system = 2 # MU 2 = 2
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_conception_lmat(cf_dams, cb1_dams, cu2_dams, srw_female_yg1, maternallw_mating_dams
+                    temp0 = sfun.f_conception_mu2(cf_dams, cb1_dams, cu2_dams, srw_female_yg1, maternallw_mating_dams
                                                    , lwc_mating_dams * 1000, age_pa1e1b1nwzida0e0b0xyg1[p], nlb_yg3 * 100
-                                                   , crl_doy_lmat_pa1e1b1nwzida0e0b0xyg1[p:p+1], nfoet_b1nwzida0e0b0xyg
+                                                   , cpl_doy_lmat_pa1e1b1nwzida0e0b0xyg1[p:p+1], nfoet_b1nwzida0e0b0xyg
                                                    , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                    , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]
                                                    , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p])
