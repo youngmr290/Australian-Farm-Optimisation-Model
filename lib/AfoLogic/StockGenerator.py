@@ -1979,9 +1979,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                         * cl_dams[6, ..., na] * ( cl_dams[12, ..., na] + cl_dams[13, ..., na]
                                         * np.exp(-cl_dams[14, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0))
                                         , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1) * sen.sam['pi_yatf']
-    ##Pattern of conception efficiency (doy). Three versions of the equation
+    ##Pattern of conception efficiency (doy). Different methods are used to represent seasonality in the 3 conception functions
     ### cpg_doy_cs is for the GrazPlan equations to predict the seasonal effect on proportion greater than conception rate - active b1 axis
-    #### Also used for the LMAT equations after predicted cpl is converted to cpg with allowance for average day of joining
     cpg_doy_cs_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.maximum(0,1 - cb1_dams[1, ..., na]
                                                 * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364))
                                                 * np.sin(lat_rad) / -0.57), axis = -1)
