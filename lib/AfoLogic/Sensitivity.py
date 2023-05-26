@@ -334,7 +334,6 @@ def create_sa():
     ##SAP
     sap['evg'] = 0.0               #energy content of liveweight gain - this is a high level sa, it impacts within a calculation not on an input and is only implemented on adults
     sap['mortalityp'] = 0.0        #Scale the calculated progeny mortality at birth relative - this is a high level sa, it impacts within a calculation not on an input
-    sap['mortalitye'] = 0.0        #Scale the calculated dam mortality at birth - this is a high level sa, it impacts within a calculation not on an input
     sap['mortalityb'] = 0.0        #Scale the calculated base mortality (for all animals) - this is a high level sa, it impacts within a calculation not on an input
     sap['kg_post'] = 0.0           #Post loop energy efficiency of adults (zf2==1)
     sap['mr_post'] = 0.0           #Post loop maintenance requirement of adults (zf2==1)
@@ -348,6 +347,11 @@ def create_sa():
     saa['date_born1st_iog'] = np.zeros(pinp.sheep['i_date_born1st_iog2'].shape, dtype=int)  #SA to adjust lambing date (used for ewe lambs).
     saa['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype=np.float64)  #SA value for feedsupply.
     saa['feedsupply_adj_r2p'] = np.zeros(pinp.feedsupply['i_feedsupply_adj_options_r2p'].shape, dtype=np.float64)  #SA value for feedsupply adjustment.
+    saa['littersize_og1'] = np.zeros((len_o, len_g1), dtype=np.float64)   #sa to the litter size this changes the propn of singles/twins and trips whilst keeping propn empty the same.
+    saa['conception_og1'] = np.zeros((len_o, len_g1), dtype=np.float64)   #sa to adjust the proportion of ewes that are empty whilst keepping litter size (number of lambs / pregnant ewes) the same
+    saa['preg_increment_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype=np.float64)   #sa to adjust the conception of an individual b1 slice at conception, so that the value of an extra lamb conceived of a given birth type can be calculated. a value of 1 would transfer all available animals into the target slice
+    saa['mortalityx_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype=np.float64)  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
+    saa['mortalitye_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype=np.float64)  #Scale the calculated dam mortality at birth. 0.1 (10%) would increase the (perinatal) mortality of progeny at birth by 10 percentage points eg if mortality was 20% it would increase to 30%. - this is a high level sa, it impacts within a calculation not on an input
     ##SAT
     ##SAR
 
@@ -365,15 +369,14 @@ def create_sa():
     sam['husb_mustering_h2'] = np.ones(uinp.sheep['i_husb_operations_muster_propn_h2'].shape, dtype=np.float64)  #SA value for mustering required for husbandry operations.
     sam['husb_labour_l2h2'] = np.ones(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
     ##SAP
+    ##SAA
     saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
     saa['cl0_c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype=np.float64)  #SA value for litter size genotype params.
     saa['scan_std_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
     saa['nlb_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
     saa['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
     saa['rr_age_og1'] = np.zeros(pinp.sheep['i_scan_og1'].shape, dtype=np.float64)    # reproductive rate by age. Use shape that has og1
-    saa['mortalityx_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype=np.float64)  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
     saa['wean_wt'] = 0.0            #weaning weight adjustment of yatf. Note: WWt changes without any change in MEI
-    ##SAA
     ##SAT
     sat['cb0_c2'] = np.zeros(uinp.parameters['i_cb0_c2'].shape, dtype=np.float64)  #BTRT params for genotypes
     ##SAR

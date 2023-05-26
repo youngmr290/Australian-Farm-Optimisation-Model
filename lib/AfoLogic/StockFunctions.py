@@ -1437,7 +1437,7 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
 
 
 def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, cpl_doy, nfoet_b1any, nyatf_b1any
-                      , period_is_mating, index_e1, rev_trait_value, saa_rr):
+                      , period_is_mating, index_e1, rev_trait_value, saa_rr, saa_ls, saa_con, saa_preg_increment):
     ''''
     Calculation of dam conception using a back transformed logistic function. Using coefficients developed in
     Murdoch University trials.
@@ -1534,7 +1534,6 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, cpl_do
         ### Calculate the LS to allow SA to be applied. Note: SA applied on basis of 2 cycles
         litter_size = f1_convert_propn_to_LS(cp, nfoet_b1any)
         #### apply the sa to the repro rate
-        saa_ls=0 #todo replace with proper sa
         litter_size_adj = fun.f_sa(litter_size, saa_ls * (litter_size > 0), 2, value_min=0)     # only adjust if original value was non-zero
         #### Back calculate the proportion of empty, single, twins & triplets using the Logistic function for the increased LS
         cp = f1_LS_propn_logistic(litter_size_adj, cb1_sliced, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1)
@@ -1546,10 +1545,20 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, cpl_do
         ##Apply conception saa to adjust the proportion of ewes that are dry with constant litter size.
         ### Carried out here so that the sa affects the REV and is included in proportion of NM
         ### Apply the saa to the empty slice.
-        saa_con=0 #todo replace with proper sa
         cp[tuple(slc_empty)] = fun.f_sa(empty, saa_con * (empty > 0), 2, value_min=0)     # only adjust if original value was non-zero
         #### Adjust the pregnant slices to keep litter size constant and allow for the change in the number pregnant
         cp[tuple(slc_preg)] = cp[tuple(slc_preg)] * (1-cp[tuple(slc_empty)]) / (1-empty)
+
+        ##Apply preg increment saa to increment an individual b1 slice at conception, so that the value of an extra lamb conceived of a given birth type can be calculate.
+        ###Scale the increment by the proportion of dams that got pregnant this cycle
+        ###This means the overall number of dams that are incremented depends on the proportion pregnant after the total number of mating cycles.
+        saa_preg_increment = saa_preg_increment * (1 - cp[tuple(slc_empty)])
+        ###Calculate the number available to increment relative to the saa value
+        ###The dams are being moved from the previous slice to the current slice eg ##preg_increment_b1[4] is moving a dam from slice 3 (twins) to slice 4 (triplets)
+        ###dams can only be moved if they exist in the previous slice.
+        saa_preg_increment = np.minimum(saa_preg_increment, np.roll(cp, 1, axis = b1_pos))
+        ###increment the target slice and reduce the source slice
+        cp = cp + saa_preg_increment - np.roll(saa_preg_increment, -1, axis=b1_pos)
 
         ##Process the Conception REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         ###Conception is the proportion of dams that are dry and a change in conception is assumed to be converting
@@ -1713,7 +1722,7 @@ def f_mortality_dam_cs():
     return 0
 
 
-def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_is_pregtox, gest_propn, sap_mortalitye):
+def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_is_pregtox, gest_propn, saa_mortalitye):
     '''
     (Twin) Dam mortality in last 6 weeks (preg tox). This increments mortality associated with LWL in the base mortality function.
 
@@ -1730,8 +1739,8 @@ def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_i
     t_mort = np.mean(t_mort_p1, axis=-1)
     ##If not last 6 weeks then = 0
     mort = t_mort * period_is_pregtox
-    ##Adjust by sensitivity on dam mortality
-    mort = fun.f_sa(mort, sap_mortalitye, sa_type = 1, value_min = 0)
+    ##Adjust by sensitivity on dam mortality - need to include periods_is so the saa only gets applied in one period.
+    mort = fun.f_sa(mort, saa_mortalitye * period_is_pregtox, sa_type = 1, value_min = 0)
     return mort
 
 
@@ -1808,8 +1817,9 @@ def f_mortality_weaner_mu(cu2, ce=0):
     return 0
 
 
-def f_mortality_dam_mu(cu2, ce, cb1, cs, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
+def f_mortality_dam_mu(cu2, ce, cb1, cs, cv_cs, period_is_birth, nfoet_b1, saa_mortalitye):
     ## transformed Dam mortality at birth due to low CS.
+    ##The dam mortality is predicted as a transformed value (x axis) which is then back transformed to actual mortality (y axis), using the logit transformation
     ###distribution on cs_birth, calculate mort and then average (axis =-1)
     cs_p1 = fun.f_distribution7(cs, cv=cv_cs)
     ###calc mort
@@ -1821,15 +1831,17 @@ def f_mortality_dam_mu(cu2, ce, cb1, cs, cv_cs, period_is_birth, nfoet_b1, sap_m
     mortalitye_mu = np.mean(mortalitye_mu_p1, axis=-1)
     ##Vertical shift in mortality based on litter size and only increase mortality if period is birth and reproducing ewes
     mortalitye_mu = (mortalitye_mu + cb1[22, ...]) * period_is_birth * (nfoet_b1 > 0)
-    ##Adjust by sensitivity on dam mortality
-    mortalitye_mu = fun.f_sa(mortalitye_mu, sap_mortalitye, sa_type = 1, value_min = 0)
+    ##Adjust by sensitivity on dam mortality - need to include periods_is so the saa only gets applied in one period.
+    mortalitye_mu = fun.f_sa(mortalitye_mu, saa_mortalitye * period_is_birth, sa_type = 1, value_min = 0)
     return mortalitye_mu
 
 
 def f_mortality_dam_mu2(cu2, ce, cb1, cf_csc, csc, cs, cv_cs, period_between_scanprebirth
-                        , period_is_prebirth, nfoet_b1, days_period, sap_mortalitye):
-    ##Peri natal Dam mortality due to CS at birth, CS change scanning to pre lambing, birth type & age of the dam.
-    ## The mortality is incurred at the pre-birth period and can't be incurred each period because of the back transformation.
+                        , period_is_prebirth, nfoet_b1, days_period, saa_mortalitye):
+    '''
+    Peri natal Dam mortality due to: CS at birth, CS change scanning to pre lambing, birth type & age of the dam.
+    The mortality is incurred at the pre-birth period and can't be incurred each period because of the back transformation.
+    '''
     ## The CS change (d_cf) is accumulated during scanning to pre-birth
     ### CS change is only incremented for multiple bearing ewes because the change in CS effect is associated
     ### with PregTox which is only applicable to multiple bearing ewes.
@@ -1848,12 +1860,12 @@ def f_mortality_dam_mu2(cu2, ce, cb1, cf_csc, csc, cs, cv_cs, period_between_sca
     mortalitye_mu_p1p2 = fun.f_back_transform(t_mortalitye_mu_p1p2)
     ##Average across the p1 & p2 axes (range of CS & CS change within the mob) if period is birth for reproducing ewes
     mortalitye_mu = np.mean(mortalitye_mu_p1p2, axis=(-1,-2)) * period_is_prebirth * (nfoet_b1 > 0)
-    ##Adjust by sensitivity on peri-natal dam mortality
-    mortalitye_mu = fun.f_sa(mortalitye_mu, sap_mortalitye, sa_type = 1, value_min = 0)
+    ##Adjust by sensitivity on peri-natal dam mortality - need to include periods_is so the saa only gets applied in one period.
+    mortalitye_mu = fun.f_sa(mortalitye_mu, saa_mortalitye * period_is_prebirth, sa_type = 1, value_min = 0)
     return mortalitye_mu, cf_csc
 
 
-def f_mortality_pregtox_mu(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_is_pregtox, gest_propn, sap_mortalitye):
+def f_mortality_pregtox_mu(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_is_pregtox, gest_propn, saa_mortalitye):
     '''
     (Twin) Dam mortality in last 6 weeks (preg tox). This increments mortality associated with LWL in the base mortality function.
 
@@ -1867,16 +1879,16 @@ def f_mortality_pregtox_mu(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_i
     capacity is restricted due to the volume of the conceptus). It is usually also more of a problem for ewes
     that start out in better condition.
     '''
-    ###distribution on ebg - add distribution to ebg_start_p1 and then average (axis =-1)
-    ####the mortality rate per week is estimated as per the CSIRO equation (but applied for a shorter period).
+    ##distribution on ebg - add distribution to ebg_start_p1 and then average (axis =-1)
+    ##the mortality rate per week is estimated as per the CSIRO equation (but applied for a shorter period).
     ebg_p1 = fun.f_distribution7(ebg, sd=sd_ebg)
     t_mort_p1 = days_period[..., na] * gest_propn[..., na] / 42 * fun.f_sig(-42 * ebg_p1 * cg[18, ..., na] / nw_start[..., na]
                                                                         , cb1[4, ..., na], cb1[5, ..., na]) #mul by days period to convert from mort per day to per period
     t_mort = np.mean(t_mort_p1, axis=-1)
     ##If not during the preg tox period then = 0
     mort = t_mort * period_is_pregtox
-    ##Adjust by sensitivity on dam mortality
-    mort = fun.f_sa(mort, sap_mortalitye, sa_type = 1, value_min = 0)
+    ##Adjust by sensitivity on dam mortality - need to include periods_is so the saa only gets applied in one period.
+    mort = fun.f_sa(mort, saa_mortalitye * period_is_pregtox, sa_type = 1, value_min = 0)
     return mort
 
 

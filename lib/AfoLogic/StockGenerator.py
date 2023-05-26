@@ -1482,10 +1482,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     #########################################################
     #adjust sensitivities used in intermediate calculations #
     #########################################################
+    ##mort prog
     saa_mortalityx_oa1e1b1nwzida0e0b0xyg = fun.f_expand(sen.saa['mortalityx_ol0g1'][:,sinp.stock['a_nfoet_b1'],:]
                                                         , b1_pos, right_pos=g_pos, left_pos2=p_pos, right_pos2=b1_pos
                                                         , condition=mask_dams_inc_g1, axis=g_pos)#add axes between g & b1, and b1 & p
     saa_mortalityx_pa1e1b1nwzida0e0b0xyg = np.take_along_axis(saa_mortalityx_oa1e1b1nwzida0e0b0xyg,
+                                                     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    ##mort birth
+    saa_mortalitye_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(sen.saa['mortalitye_ol0g1'][:,sinp.stock['a_nfoet_b1'],:]
+                                                        , b1_pos, right_pos=g_pos, left_pos2=p_pos, right_pos2=b1_pos
+                                                        , condition=mask_dams_inc_g1, axis=g_pos)#add axes between g & b1, and b1 & p
+    saa_mortalitye_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(saa_mortalitye_oa1e1b1nwzida0e0b0xyg1,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     ## sum saa[rr] and saa[rr_age] so there is only one saa to handle in f_conception_cs & f_conception_ltw
     ## Note: the proportions of the BTRT doesn't include rr_age_og1 because those calculations can't vary by age of the dam
@@ -1498,6 +1505,22 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     scan_std_pa1e1b1nwzida0e0b0xyg1 = scan_std_yg1 + saa_rr_age_pa1e1b1nwzida0e0b0xyg1
     ## Combine saa['rr'] and saa['rr_age'] for f_conception_cs
     saa_rr_age_pa1e1b1nwzida0e0b0xyg1 = saa_rr_age_pa1e1b1nwzida0e0b0xyg1 + sen.saa['rr']
+    ##littesize
+    saa_littersize_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(sen.saa['littersize_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
+                                                    axis=g_pos, condition2=mask_o_dams, axis2=p_pos)
+    saa_littersize_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(saa_littersize_oa1e1b1nwzida0e0b0xyg1,
+                                                     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    ##conception
+    saa_conception_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(sen.saa['conception_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
+                                                    axis=g_pos, condition2=mask_o_dams, axis2=p_pos)
+    saa_conception_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(saa_conception_oa1e1b1nwzida0e0b0xyg1,
+                                                     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    ##preg_increment
+    saa_preg_increment_oa1e1b1nwzida0e0b0xyg = fun.f_expand(sen.saa['preg_increment_ol0g1'][:,sinp.stock['a_nfoet_b1'],:]
+                                                        , b1_pos, right_pos=g_pos, left_pos2=p_pos, right_pos2=b1_pos
+                                                        , condition=mask_dams_inc_g1, axis=g_pos)#add axes between g & b1, and b1 & p
+    saa_preg_increment_pa1e1b1nwzida0e0b0xyg = np.take_along_axis(saa_preg_increment_oa1e1b1nwzida0e0b0xyg,
+                                                     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 
 
     ###########################
@@ -3587,7 +3610,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                    , cpl_doy_lmat_pa1e1b1nwzida0e0b0xyg1[p:p+1], nfoet_b1nwzida0e0b0xyg
                                                    , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                    , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]
-                                                   , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p])
+                                                   , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p], saa_littersize_pa1e1b1nwzida0e0b0xyg1[p]
+                                                   , saa_conception_pa1e1b1nwzida0e0b0xyg1[p], saa_preg_increment_pa1e1b1nwzida0e0b0xyg[p])
                     if eqn_used:
                         conception_dams = temp0
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
@@ -3767,7 +3791,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_mortality_dam_mu(cu2_dams, ce_pdams[:,p,...], cb1_dams, cs_start_dams, cv_cs_dams
                                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
-                                                    , nfoet_b1nwzida0e0b0xyg, sen.sap['mortalitye'])
+                                                    , nfoet_b1nwzida0e0b0xyg, saa_mortalitye_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
                         mortality_dams += temp0 #dam mort at birth due to low CS
                     if eqn_compare:
@@ -3781,7 +3805,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     temp0, temp1 = sfun.f_mortality_dam_mu2(cu2_dams, ce_pdams[:,p,...], cb1_dams, cf_csc_start_dams
                                         , csc_dams, cs_start_dams, cv_cs_dams, period_between_scanprebirth_pa1e1b1nwzida0e0b0xyg1[p]
                                         , period_is_prebirth_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
-                                        , days_period_pa1e1b1nwzida0e0b0xyg1[p], sen.sap['mortalitye'])
+                                        , days_period_pa1e1b1nwzida0e0b0xyg1[p], saa_mortalitye_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
                         mortality_dams += temp0 #dam mort at birth due to low CS
                         cf_csc_dams = temp1
@@ -3797,7 +3821,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     temp0 = sfun.f_mortality_pregtox_cs(cb1_dams, cg_dams, nw_start_dams, ebg_dams, sd_ebg_dams
                                                     , days_period_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1[p]
-                                                    , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], sen.sap['mortalitye'])
+                                                    , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], saa_mortalitye_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
                         mortality_dams += temp0
                     if eqn_compare:
@@ -3809,7 +3833,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     temp0 = sfun.f_mortality_pregtox_mu(cb1_dams, cg_dams, nw_start_dams, ebg_dams, sd_ebg_dams
                                                     , days_period_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , period_between_prebirthbirth_pa1e1b1nwzida0e0b0xyg1[p]
-                                                    , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], sen.sap['mortalitye'])
+                                                    , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], saa_mortalitye_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
                         mortality_dams += temp0
                     if eqn_compare:
