@@ -609,8 +609,11 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     dry_dmd_low_p6zt  = i_dry_dmd_ave_p6zt - i_dry_dmd_range_p6zt/2
     dry_dmd_dp6zt     = np.stack((dry_dmd_low_p6zt, dry_dmd_high_p6zt), axis=0)    # create an array with a new axis 0 by stacking the existing arrays
 
-    dry_foo_high_p6zt = i_dry_foo_high_p6zt * 3/4
-    dry_foo_low_p6zt  = i_dry_foo_high_p6zt * 1/4                               # assuming half the foo is high quality and the remainder is low quality
+    ##calc the foo of low and high quality pools
+    ##assuming half the foo is high quality and the remainder is low quality
+    #todo these calcs should include the base level
+    dry_foo_high_p6zt = i_dry_foo_high_p6zt * 3/4 #foo starts at 100% and grazed to 50% therefore average foo is 75%
+    dry_foo_low_p6zt  = i_dry_foo_high_p6zt * 1/4 #foo starts at 50% and grazed to 0% therefore average foo is 25%
     dry_foo_dp6zt     = np.stack((dry_foo_low_p6zt, dry_foo_high_p6zt),axis=0)  # create an array with a new axis 0 by stacking the existing arrays
 
     ## dry, volume of feed consumed per tonne
