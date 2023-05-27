@@ -1997,14 +1997,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                         * lmm_pa1e1b1nwzida0e0b0xyg1p0 ** cl_dams[3, ..., na]
                                         * np.exp(cl_dams[3, ..., na] * (1 - lmm_pa1e1b1nwzida0e0b0xyg1p0))
                                         , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
-    ##Suckling volume pattern. Includes scalar for milk yield (cl[0])
+    ##Suckling volume pattern. Includes scalar for milk yield (cl[0]) and SA for potential intake of the young at foot.
     mp2_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_dams[0, ..., na] * nyatf_b1nwzida0e0b0xyg[...,na]
                                         * cl_dams[6, ..., na] * ( cl_dams[12, ..., na] + cl_dams[13, ..., na]
                                         * np.exp(-cl_dams[14, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0))
-                                        , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
-    ##Pattern of conception efficiency (doy). Three versions of the equation
+                                        , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1) * sen.sam['pi_yatf']
+    ##Pattern of conception efficiency (doy). Different methods are used to represent seasonality in the 3 conception functions
     ### cpg_doy_cs is for the GrazPlan equations to predict the seasonal effect on proportion greater than conception rate - active b1 axis
-    #### Also used for the LMAT equations after predicted cpl is converted to cpg with allowance for average day of joining
     cpg_doy_cs_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.maximum(0,1 - cb1_dams[1, ..., na]
                                                 * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364))
                                                 * np.sin(lat_rad) / -0.57), axis = -1)
@@ -2646,9 +2645,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###EVG Size factor (increases at maturity)
                 zf2_sire = np.clip((relsize1_start_sire - cg_sire[6, ...]) / (cg_sire[7, ...] - cg_sire[6, ...]), 0 ,1)
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
-                sam_kg_sire = fun.f_update(1, sen.sam['kg'], zf2_sire == 1)
-                sam_mr_sire = fun.f_update(1, sen.sam['mr'], zf2_sire == 1)
-                sam_pi_sire = fun.f_update(1, sen.sam['pi'], zf2_sire == 1)
+                sam_kg_sire = fun.f_update(1, sen.sam['kg_adult'], zf2_sire == 1)
+                sam_mr_sire = fun.f_update(1, sen.sam['mr_adult'], zf2_sire == 1)
+                sam_pi_sire = fun.f_update(1, sen.sam['pi_adult'], zf2_sire == 1)
 
             ##dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
@@ -2679,9 +2678,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###EVG Size factor (increases at maturity)
                 zf2_dams = np.clip((relsize1_start_dams - cg_dams[6, ...]) / (cg_dams[7, ...] - cg_dams[6, ...]), 0 ,1)
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
-                sam_kg_dams = fun.f_update(1, sen.sam['kg'], zf2_dams == 1)
-                sam_mr_dams = fun.f_update(1, sen.sam['mr'], zf2_dams == 1)
-                sam_pi_dams = fun.f_update(1, sen.sam['pi'], zf2_dams == 1)
+                sam_kg_dams = fun.f_update(1, sen.sam['kg_adult'], zf2_dams == 1)
+                sam_mr_dams = fun.f_update(1, sen.sam['mr_adult'], zf2_dams == 1)
+                sam_pi_dams = fun.f_update(1, sen.sam['pi_adult'], zf2_dams == 1)
                 ##sires for mating
                 n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_sire_req(sire_propn_pa1e1b1nwzida0e0b0xyg1g0[p], sire_periods_g0p8, pinp.sheep['i_sire_recovery']
                                                                    , date_end_pa1e1b1nwzida0e0b0xyg[p], period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
@@ -2723,9 +2722,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###EVG Size factor (increases at maturity)
                 zf2_offs = np.clip((relsize1_start_offs - cg_offs[6, ...]) / (cg_offs[7, ...] - cg_offs[6, ...]), 0 ,1)
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
-                sam_kg_offs = fun.f_update(1, sen.sam['kg'], zf2_offs == 1)
-                sam_mr_offs = fun.f_update(1, sen.sam['mr'], zf2_offs == 1)
-                sam_pi_offs = fun.f_update(1, sen.sam['pi'], zf2_offs == 1)
+                sam_kg_offs = fun.f_update(1, sen.sam['kg_adult'], zf2_offs == 1)
+                sam_mr_offs = fun.f_update(1, sen.sam['mr_adult'], zf2_offs == 1)
+                sam_pi_offs = fun.f_update(1, sen.sam['pi_adult'], zf2_offs == 1)
 
 
 
@@ -3005,7 +3004,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                        , d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...],  sfd_a0e0b0xyg0, wge_a0e0b0xyg0
                                        , af_wool_pa1e1b1nwzida0e0b0xyg0[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                        , kw_yg0, days_period_pa1e1b1nwzida0e0b0xyg0[p], sfw_ltwadj_g0, sfd_ltwadj_g0
-                                       , rev_trait_values['sire'][p], sam_pi = sam_pi_sire)
+                                       , rev_trait_values['sire'][p])
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     d_cfw_dams, d_fd_dams, d_fl_dams, d_cfw_history_dams_p2, mew_dams, new_dams  \
                         = sfun.f_fibre(cw_dams, cc_dams, ffcfw_start_dams, relsize_start_dams, d_cfw_history_start_p2g1
@@ -3016,7 +3015,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                        , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                        , rev_trait_values['dams'][p]
                                        , mec_dams, mel_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
-                                       , lact_propn_pa1e1b1nwzida0e0b0xyg1[p], sam_pi = sam_pi_dams)
+                                       , lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                     d_cfw_offs, d_fd_offs, d_fl_offs, d_cfw_history_offs_p2, mew_offs, new_offs  \
                         = sfun.f_fibre(cw_offs, cc_offs, ffcfw_start_offs, relsize_start_offs, d_cfw_history_start_p2g3
@@ -3025,7 +3024,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                        , af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                        , kw_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p]
                                        , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
-                                       , rev_trait_values['offs'][p], sam_pi = sam_pi_offs)
+                                       , rev_trait_values['offs'][p])
 
                 ##energy to offset chilling
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
@@ -3335,10 +3334,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 zf1_yatf = fun.f_back_transform(-cg_yatf[4, ...] * (relsize1_start_yatf - cg_yatf[5, ...]))
                 ###EVG Size factor (increases at maturity)
                 zf2_yatf = np.clip((relsize1_start_yatf - cg_yatf[6, ...]) / (cg_yatf[7, ...] - cg_yatf[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults (only included here for consistency)
-                sam_kg_yatf = fun.f_update(1, sen.sam['kg'], zf2_yatf == 1)
-                sam_mr_yatf = fun.f_update(1, sen.sam['mr'], zf2_yatf == 1)
-                sam_pi_yatf = fun.f_update(1, sen.sam['pi'], zf2_yatf == 1)
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) for yatf.
+                ### Creation of a new variable is to be consistent with adults
+                sam_kg_yatf = sen.sam['kg_yatf']    # unlike adults this is not dependent on zf2.
+                sam_mr_yatf = sen.sam['mr_yatf']
+                sam_pi_yatf = sen.sam['pi_yatf']
 
 
             ##potential intake - yatf
@@ -3447,7 +3447,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                    , wge_pa1e1b1nwzida0e0b0xyg2[p], af_wool_pa1e1b1nwzida0e0b0xyg2[p, ...]
                                    , dlf_wool_pa1e1b1nwzida0e0b0xyg2[p, ...], kw_yg2
                                    , days_period_pa1e1b1nwzida0e0b0xyg2[p], sfw_ltwadj_g2, sfd_ltwadj_g2
-                                   , rev_trait_values['yatf'][p], sam_pi = sam_pi_yatf)
+                                   , rev_trait_values['yatf'][p])
 
 
             ##energy to offset chilling - yatf
@@ -3900,17 +3900,20 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             ##These sensitivities alter potential intake and me intake required without altering the liveweight profile.
             ##The aim is to have the same effect as using the within function sa and then altering the feed supply to
             ##  generate the same LW profile, they just require less work to test the effect of not altering LW profile (as per old MIDAS)
-            ##To do this requires altering d_cfw and d_fl. These would both change in f_fibre if using the within function sa
-            ##Adjustments must be made for pi_post because wge is scaled by sam_pi in f_fibre (rather than scaling sfw in the main code)
-            ##Adjustments are required for mr_post and kg_post because these both reduce the mei required in this section. If cfw and fl
-            ## were not scaled it would imply an increased wool growth efficiency (and this would be inconsistent with the in function sa)
+            ##A change to pi_post doesn't alter the total MEI (just the quality of the diet required) therefore there
+            ## is no effect on wool production and no change to wool growth efficiency.
+            ##However, adjustments are required for mr_post and kg_post because these both reduce the mei required in this section.
+            ## To do this requires altering d_cfw and d_fl. These would both change in f_fibre if using the within
+            ## function sa while still achieving the same FFCFW profile.
+            ## If cfw and fl were not scaled it would imply an increased wool growth efficiency (and this would
+            ## be inconsistent with the in function sa)
 
             ###sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
-                sam_pi = fun.f_update(1, sen.sam['pi_post'], zf2_sire == 1)   #potential intake
-                sap_mr = fun.f_update(0, sen.sap['mr_post'], zf2_sire == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
-                sap_kg = fun.f_update(0, sen.sap['kg_post'], zf2_sire == 1)   #efficiency of gain (kg)
+                sam_pi = fun.f_update(1, sen.sam['pi_post_adult'], zf2_sire == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post_adult'], zf2_sire == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post_adult'], zf2_sire == 1)   #efficiency of gain (kg)
                 #### alter potential intake
                 pi_sire = fun.f_sa(pi_sire, sam_pi)
                 #### alter mei
@@ -3919,8 +3922,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ####alter wool production as energy params change
                 scalar_mr = 1 + sap_mr * fun.f_divide(mem_sire, mei_solid_sire)
                 scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_sire, mei_solid_sire)
-                d_cfw_sire = d_cfw_sire / sam_pi
-                d_fl_sire = d_fl_sire / sam_pi
                 d_cfw_sire = d_cfw_sire / scalar_mr
                 d_fl_sire = d_fl_sire / scalar_mr
                 d_cfw_sire = d_cfw_sire / scalar_kg
@@ -3929,9 +3930,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             ###dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
-                sam_pi = fun.f_update(1, sen.sam['pi_post'], zf2_dams == 1)   #potential intake
-                sap_mr = fun.f_update(0, sen.sap['mr_post'], zf2_dams == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
-                sap_kg = fun.f_update(0, sen.sap['kg_post'], zf2_dams == 1)   #efficiency of gain (kg)
+                sam_pi = fun.f_update(1, sen.sam['pi_post_adult'], zf2_dams == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post_adult'], zf2_dams == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post_adult'], zf2_dams == 1)   #efficiency of gain (kg)
                 #### alter potential intake
                 pi_dams = fun.f_sa(pi_dams, sam_pi)
                 #### alter mei
@@ -3940,8 +3941,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ####alter wool production as energy params change
                 scalar_mr = 1 + sap_mr * fun.f_divide(mem_dams, mei_solid_dams)
                 scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_dams, mei_solid_dams)
-                d_cfw_dams = d_cfw_dams / sam_pi
-                d_fl_dams = d_fl_dams / sam_pi
                 d_cfw_dams = d_cfw_dams / scalar_mr
                 d_fl_dams = d_fl_dams / scalar_mr
                 d_cfw_dams = d_cfw_dams / scalar_kg
@@ -3950,9 +3949,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             ###yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
-                sam_pi = fun.f_update(1, sen.sam['pi_post'], zf2_yatf == 1)   #potential intake
-                sap_mr = fun.f_update(0, sen.sap['mr_post'], zf2_yatf == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
-                sap_kg = fun.f_update(0, sen.sap['kg_post'], zf2_yatf == 1)   #efficiency of gain (kg)
+                sam_pi = sen.sam['pi_post_yatf']   #potential intake
+                sap_mr = sen.sap['mr_post_yatf']   #maintenance energy (MEm)
+                sap_kg = sen.sap['kg_post_yatf']   #efficiency of gain (kg)
                 #### alter potential intake
                 pi_yatf = fun.f_sa(pi_yatf, sam_pi)
                 #### alter mei (only calculate impact on mei_solid because that passes to the mei parameter in the matrix)
@@ -3962,8 +3961,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ####alter wool production as energy params change (use mei rather than mei_solid so it is change as a proportion of total mei)
                 scalar_mr = 1 + sap_mr * fun.f_divide(mem_yatf, mei_yatf)
                 scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_yatf, mei_yatf)
-                d_cfw_yatf = d_cfw_yatf / sam_pi
-                d_fl_yatf = d_fl_yatf / sam_pi
                 d_cfw_yatf = d_cfw_yatf / scalar_mr
                 d_fl_yatf = d_fl_yatf / scalar_mr
                 d_cfw_yatf = d_cfw_yatf / scalar_kg
@@ -3972,9 +3969,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             ###offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
-                sam_pi = fun.f_update(1, sen.sam['pi_post'], zf2_offs == 1)   #potential intake
-                sap_mr = fun.f_update(0, sen.sap['mr_post'], zf2_offs == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
-                sap_kg = fun.f_update(0, sen.sap['kg_post'], zf2_offs == 1)   #efficiency of gain (kg)
+                sam_pi = fun.f_update(1, sen.sam['pi_post_adult'], zf2_offs == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post_adult'], zf2_offs == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post_adult'], zf2_offs == 1)   #efficiency of gain (kg)
                 #### alter potential intake
                 pi_offs = fun.f_sa(pi_offs, sam_pi)
                 #### alter mei
@@ -3983,8 +3980,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ####alter wool production as energy params change
                 scalar_mr = 1 + sap_mr * fun.f_divide(mem_offs, mei_solid_offs)
                 scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_offs, mei_solid_offs)
-                d_cfw_offs = d_cfw_offs / sam_pi
-                d_fl_offs = d_fl_offs / sam_pi
                 d_cfw_offs = d_cfw_offs / scalar_mr
                 d_fl_offs = d_fl_offs / scalar_mr
                 d_cfw_offs = d_cfw_offs / scalar_kg

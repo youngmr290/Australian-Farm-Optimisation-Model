@@ -347,12 +347,11 @@ def f1_cp_from_cutoff(cutoff0, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     :return:
     '''
 
-    ## calculate the coefficients of the cubic equation ax3 + bx2 + cx + d = 0
-    ### requires some intermediate values y & z calculated from the cut-off coefficients in cb1_dams
+    ## calculate the difference between the cut-off coefficients from cb1_dams
     cut1_g = cb1[:,:,2:3,...] - cb1[:,:,1:2,...]
     cut2_g = cb1[:,:,3:4,...] - cb1[:,:,2:3,...]
 
-    ###solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_dams[25])
+    ###calculate the cut-off values from the fitted value and the differences
     cutoff1 = cutoff0 + cut1_g
     cutoff2 = cutoff1 + cut2_g
     cutoff3 = cb1[:,:,4:5,...]  #this is a high number to ensure that all dams are less than or equal to the maximum number of foetuses
@@ -363,7 +362,7 @@ def f1_cp_from_cutoff(cutoff0, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     boundaries = fun.f_update(boundaries, cutoff2, nfoet_b1any == 2)
     boundaries = fun.f_update(boundaries, cutoff3, nfoet_b1any == 3)
 
-    ##back transform (get y values (propn) based on x values (cutoffs) - y=e^x/(1+e^x)) to probability of having less than or equal to the number of foetuses in the corresponding b slice
+    ##back transform (get y values (propn) based on x values (boundaries) - y=1/(1+e^-x)) to probability of having less than or equal to the number of foetuses in the corresponding b slice
     ### Note: LMAT equations predict 'less than or equal', and GrazPlan predict 'greater than or equal'
     cpl = fun.f_back_transform(boundaries)
 
@@ -764,7 +763,7 @@ def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc, temp_av
     :param mp2:
     :param piyf:
     :param period_between_birthwean:
-    :param sam_pi:
+    :param sam_pi: sensitivity multiplier on PI. Applied as an intermediate SAM so that it can be differentially applied by age
     :return pi:
     '''
     ##Condition factor on PI
@@ -1052,7 +1051,6 @@ def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start,
     mp1 = cl[7, ...] * mpmax * fun.f_back_transform(-cl[19, ...] + cl[20, ...] * milk_ratio
                                                     + cl[21, ...] * ad * (milk_ratio - cl[22, ...] * ad)
                                                     - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))
-#    mp1 = cl[7, ...] * mpmax / (1 + np.exp(-(-cl[19, ...] + cl[20, ...] * milk_ratio + cl[21, ...] * ad * (milk_ratio - cl[22, ...] * ad) - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))))
     ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
     ### Based on the standard parameter values 'Suckling volume of young' is very rarely limiting milk production.
     mp2 = np.minimum(mp1, np.mean(fun.f_dynamic_slice(ffcfw75_exp_yatf, i_x_pos, 1, None), axis = i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
@@ -1079,7 +1077,7 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g,
     d_cfw_ave_g = d_cfw_ave_g * sfw_ltwadj_g
     mew_min_g = mew_min_g * sfw_ltwadj_g
     sfd_a0e0b0xyg = sfd_a0e0b0xyg + sfd_ltwadj_g
-    ##adjust wge by sam_pi so the intake sensitivity doesn't alter the wool growth outcome for the genotype
+    ##if passed, adjust wge by sam_pi so the intake sensitivity doesn't alter the wool growth outcome for the genotype
     ###this scaling could be applied to sfw but is applied here so that pi can be altered for a single age group
     ###which is required for the GEPEP analysis that is calibrating the adult intake and the fleece weight
     wge_a0e0b0xyg = wge_a0e0b0xyg / sam_pi
@@ -1199,8 +1197,8 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     ##Energy Value of gain as calculated.
     c_evg = cg[8, ...] - zf1 * (cg[9, ...] - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
     # evg = fun.f_update(evg , temporary, zf2 < 1)
-    ## Scale from calculated to input evg based on zf2. If zf2 = 1 then use the value from the GEPEP trial
-    evg = c_evg * (1 + sen.sap['evg'] * zf2)
+    ## Scale from calculated to input evg based on zf2. If zf2 = 1 then scale based on the SAP
+    evg = c_evg * (1 + sen.sap['evg_adult'] * zf2)
     ##Empty bodyweight gain
     ebg = neg / evg
     ##Process the Liveweight REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
@@ -1492,18 +1490,18 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, cpl_do
         cu2_sliced = fun.f_update(cu2[25, ...], cu2[24, ...], age < 364)
         ##Calculate the transformed estimates of proportion empty (slice cu2 allowing for active i axis)
         cutoff0 = cb1_sliced[:,:,0:1,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating
-                                                         + cu2_sliced[1, ...] * maternallw_mating ** 2
-                                                         + cu2_sliced[2, ...] * age
-                                                         + cu2_sliced[3, ...] * age ** 2
-                                                         + cu2_sliced[4, ...] * lwc
-                                                         + cu2_sliced[5, ...] * lwc ** 2
-                                                         + cu2_sliced[6, ...] * nlb
-                                                         + cu2_sliced[7, ...] * nlb ** 2
-                                                         + cu2_sliced[8, ...] * srw
-                                                         + cu2_sliced[9, ...] * srw ** 2
-                                                         + cu2_sliced[10, ...] * cpl_doy
-                                                         + cu2_sliced[11, ...] * cpl_doy ** 2
-                                                           )
+                                                                + cu2_sliced[1, ...] * maternallw_mating ** 2
+                                                                + cu2_sliced[2, ...] * age
+                                                                + cu2_sliced[3, ...] * age ** 2
+                                                                + cu2_sliced[4, ...] * lwc
+                                                                + cu2_sliced[5, ...] * lwc ** 2
+                                                                + cu2_sliced[6, ...] * nlb
+                                                                + cu2_sliced[7, ...] * nlb ** 2
+                                                                + cu2_sliced[8, ...] * srw
+                                                                + cu2_sliced[9, ...] * srw ** 2
+                                                                + cu2_sliced[10, ...] * cpl_doy
+                                                                + cu2_sliced[11, ...] * cpl_doy ** 2
+                                                                  )
 
         ##calc conception propn
         cp = f1_cp_from_cutoff(cutoff0, cb1_sliced, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1)
