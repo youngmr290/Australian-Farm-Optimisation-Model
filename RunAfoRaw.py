@@ -28,7 +28,7 @@ cat_propn_s1_ks2 = dxl.f_load_stubble()
 run = 0  # counter to work out average time per loop
 for row in dataset:
     ##start timer for each loop
-    start_time = time.time()
+    start_trial_time = time.time()
 
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][3]
@@ -56,7 +56,7 @@ for row in dataset:
     remaining = trials_to_go * average_time
     finish_time_expected = time.time() + remaining
     print(
-        f'{trial_description}, total time taken this loop: {time.time() - start_time:.2f}')  # time since start of this loop
+        f'{trial_description}, total time taken this loop: {time.time() - start_trial_time:.2f}')  # time since start of this loop
     print(
         f'{trial_description}, Expected finish time: \033[1m{time.ctime(finish_time_expected)}\033[0m (at {time.ctime()})')
 
