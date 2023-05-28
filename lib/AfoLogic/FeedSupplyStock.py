@@ -402,6 +402,13 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
             t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = np.take_along_axis(t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1, a_t_tpg1[na], axis=p_pos - 1)
             t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 = t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3[:,0:1]
 
+        #todo a_k2_pa1e1b1nwzida0e0b0xyg1 is not right for this purpose. We need to build a new a_b1_p... association.
+        # maybe  ia_ppk2_vlsb1 (although this will need a fair bit of work to get into the right structure)
+        # off might also need something similar to below for their fs using ia_ppk5g3_lsb0
+        ###for dams adjust fs for scanning/gbal management. This handles user error if optimal fs is generated with say scan 3 but then used for a scan 2
+        # t_confinement_stpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(t_confinement_stpa1e1b1nwzida0e0b0xyg1, a_k2_pa1e1b1nwzida0e0b0xyg1[na,na,...], b1_pos)
+        # t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = np.take_along_axis(t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1, a_k2_pa1e1b1nwzida0e0b0xyg1[na,na,...], b1_pos)
+
     ###still need to add singleton s&t axis
     else:
         t_confinement_tpa1e1b1nwzida0e0b0xyg0 = t_confinement_pa1e1b1nwzida0e0b0xyg0[na]
