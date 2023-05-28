@@ -21,10 +21,8 @@ fs_source_number = 0
 fs_dest_number = 0
 fs_new_number = 00
 
-source_axis_slice[-12] = [3, 4, 1] #twin fs b1[3]
-dest_axis_slice[-12] = [4, 5, 1] #tripplets 33
-dest_axis_slice[-12] = [6, 8, 1] #tripplets 32, 31
-dest_axis_slice[-12] = [10,11, 1] #tripplets 30
+source_axis_slice[-12] = [3, 4, 1], [3, 4, 1], [3, 4, 1] #twin fs b1[3]
+dest_axis_slice[-12] = [4, 5, 1], [6, 8, 1], [10,11, 1] #tripplets 33, 32, 31 & 30
 
 
 
@@ -44,23 +42,21 @@ with open(pkl_fs_path,
     fs_dest = pkl.load(f)['fs'][group]
 
 ##manipulate fs to create new fs
-###source
-sl_source = [slice(None)] * fs_source.ndim
-for axis, slc in source_axis_slice.items():
-    start = slc[0]
-    stop = slc[1]
-    step = slc[2]
-    sl_source[axis] = slice(start, stop, step)
-###dest
-sl_dest = [slice(None)] * fs_dest.ndim
-for axis, slc in dest_axis_slice.items():
-    start = slc[0]
-    stop = slc[1]
-    step = slc[2]
-    sl_dest[axis] = slice(start, stop, step)
-###update
-fs_dest[tuple(sl_dest)] = fs_source[tuple(sl_source)]*100
-fs_new = fs_source
+for axis in source_axis_slice:
+    for slc_source, slice_dest in zip(source_axis_slice[axis], dest_axis_slice[axis]):
+        sl_dest = [slice(None)] * fs_dest.ndim
+        sl_source = [slice(None)] * fs_source.ndim
+        start = slc_source[0]
+        stop = slc_source[1]
+        step = slc_source[2]
+        sl_source[axis] = slice(start, stop, step)
+        start = slice_dest[0]
+        stop = slice_dest[1]
+        step = slice_dest[2]
+        sl_dest[axis] = slice(start, stop, step)
+        ###update
+        fs_dest[tuple(sl_dest)] = fs_source[tuple(sl_source)]*100
+fs_new = fs_dest
 
 
 ##save new fs
