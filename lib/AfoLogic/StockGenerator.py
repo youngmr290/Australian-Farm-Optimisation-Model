@@ -4138,7 +4138,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 surv_sire = fun.f_divide(np.sum(numbers_end_sire,axis=prejoin_tup + (season_tup,), keepdims=True)
                                          , np.sum(numbers_start_condense_sire, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
                 threshold = np.minimum(0.9, fun.f_divide(surv_sire.sum(w_pos,keepdims=True),(surv_sire!=0).sum(w_pos,keepdims=True)))  # threshold is the lower of average survival and 90% (animals with 0 survival are not included)
-                mort_mask_sire = surv_sire > threshold
+                mort_mask_sire = surv_sire >= threshold
 
                 ###combine mort and feedlot mask - True means the w slice is included in condensing.
                 condense_w_mask_sire = mort_mask_sire
@@ -4185,7 +4185,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 surv_dams = fun.f_divide(np.sum(numbers_end_dams,axis=prejoin_tup + (season_tup,), keepdims=True)
                                          , np.sum(numbers_start_condense_dams, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axes so need to sum to determine if w has mortality > 10%
                 threshold = np.minimum(0.9, fun.f_divide(surv_dams.sum(w_pos,keepdims=True),(surv_dams!=0).sum(w_pos,keepdims=True)))  # threshold is the lower of average survival and 90% (animals with 0 survival are not included)
-                mort_mask_dams = surv_dams > threshold
+                mort_mask_dams = surv_dams >= threshold
 
                 ###print warning if min mort is greater than 10% since the previous condense
                 ###this is to ensure we are condensing to an animal that the lp will select (ie not point having an animal that has more than 10% mort)
@@ -4304,7 +4304,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 surv_yatf = fun.f_divide(np.sum(numbers_end_yatf,axis=season_tup, keepdims=True)
                                         , np.sum(numbers_start_condense_yatf, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along z axis so need to sum to determine if w has mortality > 10% (don't sum e&b because yatf stay in the same slice)
                 threshold = np.minimum(0.9, fun.f_divide(surv_yatf.sum(w_pos,keepdims=True),(surv_yatf!=0).sum(w_pos,keepdims=True)))  # threshold is the lower of average survival and 90% (animals with 0 survival are not included)
-                mort_mask_yatf = surv_yatf > threshold
+                mort_mask_yatf = surv_yatf >= threshold
 
                 ###combine mort and feedlot mask - True means the w slice is included in condensing.
                 condense_w_mask_yatf = np.logical_and(no_confinement_yatf, mort_mask_yatf)
@@ -4382,7 +4382,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 surv_offs = fun.f_divide(np.sum(numbers_end_offs,axis=season_tup, keepdims=True)
                                          , np.sum(numbers_start_condense_offs, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10% (don't sum e&b because offs don't change slice)
                 threshold = np.minimum(0.9, fun.f_divide(surv_offs.sum(w_pos,keepdims=True),(surv_offs!=0).sum(w_pos,keepdims=True))) #threshold is the lower of average survival and 90% (animals with 0 survival are not included)
-                mort_mask_offs = surv_offs > threshold
+                mort_mask_offs = surv_offs >= threshold
 
                 ###print warning if min mort is greater than 10% since the previous condense
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]):
