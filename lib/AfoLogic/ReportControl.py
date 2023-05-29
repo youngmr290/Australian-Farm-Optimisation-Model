@@ -171,8 +171,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         option = 2
         grid = [0,5,6]
         weight = [22,40,25]
-        fs = [2,3,2]
-        reports["saleprice"] = rfun.f_price_summary(lp_vars, r_vals, option=option, grid=grid, weight=weight, fs=fs)
+        score = [2,3,2]
+        reports["saleprice"] = rfun.f_price_summary(lp_vars, r_vals, option=option, grid=grid, weight=weight, score=score)
     if report_run.loc['run_salegrid_dams', 'Run']:
         type = 'stock'
         prod = 'salegrid_tva1e1b1nwziyg1'
