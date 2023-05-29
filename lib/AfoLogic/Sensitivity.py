@@ -105,8 +105,6 @@ def create_sa():
     sav['lmu_arable_propn_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
     ##SAM
     sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to remove it)
-    sam['grainp'] = 1.0   # SA multiplier for all grain prices
-    sam['grainp_k'] = np.ones(len_k, dtype=np.float64)   # SA multiplier for grain prices for each crop
     ##SAP
     ##SAA
     ##SAT
@@ -134,6 +132,7 @@ def create_sa():
     ########
     ##SAV
     sav['grain_percentile'] = '-'  #grain price percentile
+    sam['grainp_k'] = np.ones(len_k, dtype=np.float64)   # SA multiplier for grain prices for each crop
     sav['woolp_mpg_percentile'] = '-'               #sa value for the wool price percentile
     sav['woolp_mpg'] = '-'                          # sa value for wool price at std micron
     sav['woolp_fdprem_percentile'] = '-'            # sa value for fd premium percentile (premium received by fd compared to std)

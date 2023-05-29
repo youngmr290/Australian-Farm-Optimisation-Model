@@ -148,9 +148,9 @@ def f_farmgate_grain_price(r_vals={}):
     sam_grainp_k = pd.Series(sen.sam['grainp_k'], index=percentile_price_k_s2p.index)
     grain_price_firsts_ks2 = grain_price_firsts_ks2.mul(sam_grainp_k, axis=0, level=0)
     grain_price_seconds_ks2 = grain_price_seconds_ks2.mul(sam_grainp_k, axis=0, level=0)
-    ###apply sam for all grains
-    price_df['firsts'] = grain_price_firsts_ks2.mul(sen.sam['grainp'])
-    price_df['seconds'] = grain_price_seconds_ks2.mul(sen.sam['grainp'])
+    ###populate df
+    price_df['firsts'] = grain_price_firsts_ks2
+    price_df['seconds'] = grain_price_seconds_ks2
 
     ##determine cost of selling
     cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance']
