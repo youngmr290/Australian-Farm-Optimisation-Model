@@ -54,6 +54,7 @@ def create_sa():
     len_o = pinp.sheep['i_o_len']
     len_R = 5000 #just use a big number - it is cut down later (this is because the length of r is not known because it can be affected by SA)
     len_s = pinp.sheep['i_s_len'] #s = shear
+    len_s7 = len(uinp.sheep['i_salep_price_max_s7']) #s7 = sale grid
     len_t1 = pinp.sheep['i_n_dam_sales'] + len_g0
     len_t2 = pinp.sheep['i_t2_len']
     len_t3 = pinp.sheep['i_t3_len']
@@ -134,20 +135,20 @@ def create_sa():
     ########
     ##SAV
     sav['grain_percentile'] = '-'  #grain price percentile
-    sam['grainp_k'] = np.ones(len_k, dtype=np.float64)   # SA multiplier for grain prices for each crop
     sav['woolp_mpg_percentile'] = '-'               #sa value for the wool price percentile
     sav['woolp_mpg'] = '-'                          # sa value for wool price at std micron
     sav['woolp_fdprem_percentile'] = '-'            # sa value for fd premium percentile (premium received by fd compared to std)
     sav['woolp_fdprem'] = '-'                       # sa value for fd premium
     sav['salep_percentile'] = '-'                   #Value for percentile for all sale grids
-    sav['salep_max'] = '-'                          #max sale price in grid
+    sav['salep_max_s7'] = np.full(len_s7, '-', dtype=object)    #max sale price in grid
     sav['fert_cost'] = np.full(len(uinp.price['fert_cost']), '-', dtype=object) #SA value for fert price $/t
     sav['manager_cost'] = '-' #SA value for manager cost per year
     sav['permanent_cost'] = '-' #SA value for permanent cost per year
     sav['casual_cost'] = '-' #SA value for casual cost per hour
     ##SAM
+    sam['grainp_k'] = np.ones(len_k, dtype=np.float64)   # SA multiplier for grain prices for each crop
     sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron
-    sam['salep_max'] = 1.0                      #max sale price in grid
+    sam['salep_max_s7'] = np.ones(len_s7, dtype=np.float64)        #max sale price in grid
     sam['salep_month_adjust_s7s9p4'] = np.ones(uinp.sheep['i_salep_months_priceadj_s7s9p4'].shape, dtype=np.float64)      #monthly sale price
     ##SAP
     ##SAA
