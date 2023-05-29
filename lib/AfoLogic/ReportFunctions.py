@@ -545,7 +545,7 @@ def f_mach_reshape(lp_vars, r_vals):
 #########################################
 # intermediate report building functions#
 #########################################
-def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
+def f_price_summary(lp_vars, r_vals, option, grid, weight, score):
     '''Returns price summaries
 
     :param r_vals:
@@ -557,7 +557,7 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
 
     :param grid: list - sale grids to report. Has to be int between 0 and 7 inclusive.
     :param weight: float/int - stock weight to report price for.
-    :param fs: int - fat score to report price for. Has to be number between 1-5 inclusive.
+    :param score: int - fat score to report price for. Has to be number between 1-5 inclusive.
     :return: price summary df
     '''
 
@@ -581,11 +581,11 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
         grid_price_s7s5s6 = r_vals['stock']['grid_price_s7s5s6']
         weight_range_s7s5 = r_vals['stock']['weight_range_s7s5']
         grid_keys = r_vals['stock']['salegrid_keys']
-        for t_grid, t_weight, t_fs in zip(grid, weight, fs):
+        for t_grid, t_weight, t_score in zip(grid, weight, score):
             ##grid name - used in table index
             grid_name = grid_keys[t_grid]
-            ##index grid and fs
-            price_s5 = grid_price_s7s5s6[t_grid, :, t_fs]
+            ##index grid and score
+            price_s5 = grid_price_s7s5s6[t_grid, :, t_score]
             ##interpolate to get price for specified weight
             lookup_weights = weight_range_s7s5[t_grid, :]
             price = np.interp(t_weight, lookup_weights, price_s5)
@@ -595,7 +595,7 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
                 col = 'Price $/kg'
             else:
                 col = 'Price $/hd'
-            saleprice.loc[(grid_name, t_weight, t_fs), col] = price
+            saleprice.loc[(grid_name, t_weight, t_score), col] = price
         return saleprice
 
 
