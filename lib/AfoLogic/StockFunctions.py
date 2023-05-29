@@ -2427,9 +2427,9 @@ def f1_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None
     grid_max_s7 = (np.array([fun.np_extrap(salep_percentile, uinp.sheep['i_salep_percentile_range_s4'], uinp.sheep['i_salep_percentile_scalar_s7s4'][i])
                             for i in range(uinp.sheep['i_salep_percentile_scalar_s7s4'].shape[0])]) * uinp.sheep['i_salep_price_max_s7']).astype(dtype)
     ##Max price in grids (adj sav - overwrites the previous values)
-    grid_max_s7 = fun.f_sa(grid_max_s7, sen.sav['salep_max'], 5)
+    grid_max_s7 = fun.f_sa(grid_max_s7, sen.sav['salep_max_s7'], 5)
     ##Max price in grids (adj sam - scales the values)
-    grid_max_s7 = fun.f_sa(grid_max_s7, sen.sam['salep_max'])
+    grid_max_s7 = fun.f_sa(grid_max_s7, sen.sam['salep_max_s7'])
     ##Scalar for weight impact across the grid (sat adjusted)
     weight_scalar_s7s5s6 = weight_pricescalar_s7s5s6
     ##Scalar for score impact across the grid (sat adjusted)
