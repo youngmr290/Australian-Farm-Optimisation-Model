@@ -33,6 +33,12 @@ report_run = report_run.droplevel(1, axis=1)
 
 def f_report(processor, trials, non_exist_trials):
 
+    ##get user controls if they exist
+    try:
+        import ReportControlsUser as rcu
+        user_controls = rcu.f_init_user_controls()
+    except ModuleNotFoundError:
+        user_controls = {}
     ##create empty df that are used to stack reports for each trial
     stacked_reps = rve.f_create_report_dfs(non_exist_trials)
 
@@ -40,7 +46,7 @@ def f_report(processor, trials, non_exist_trials):
     for trial_name in trials:
         ###run
         lp_vars, r_vals = rfun.load_pkl(trial_name)
-        reports = rep.f_run_report(lp_vars,r_vals, report_run, trial_name)
+        reports = rep.f_run_report(lp_vars,r_vals, report_run, trial_name, user_controls=user_controls)
         ###stack
         stacked_reps = rve.f_concat_reports(stacked_reps, reports, report_run, trial_name)
 
