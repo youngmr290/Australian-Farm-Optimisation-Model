@@ -1258,7 +1258,7 @@ def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
 
 
 def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1
-                    , rev_trait_value, saa_rr):
+                    , rev_trait_value, saa_rr, sam_rr):
     ''''
     Calculation of dam conception using CSIRO equation system
 
@@ -1320,8 +1320,9 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, ny
         ####remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f1_DSTw
         repro_rate = np.squeeze(repro_rate, axis=b1_pos)
         saa_rr = np.squeeze(saa_rr, axis=b1_pos)
+        sam_rr = np.squeeze(sam_rr, axis=b1_pos)
         ## apply the sa to the repro rate and convert the adjusted value to a proportion of dry, singles, twins & triplets after 1 cycle
-        repro_rate_adj = fun.f_sa(repro_rate, sen.sam['rr'])
+        repro_rate_adj = fun.f_sa(repro_rate, sam_rr)
         repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr, 2, value_min=0) * (repro_rate > 0)     # only non-zero if original value was non-zero
         #### Convert the repro rate and adjusted repro rate to a 'standardised' proportion of DST after 1 cycle
         #### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
@@ -1435,7 +1436,7 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
 
 
 def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, cpl_doy, nfoet_b1any, nyatf_b1any
-                      , period_is_mating, index_e1, rev_trait_value, saa_rr, saa_ls, saa_con, saa_preg_increment):
+                      , period_is_mating, index_e1, rev_trait_value, saa_rr, sam_rr, saa_ls, saa_con, saa_preg_increment):
     ''''
     Calculation of dam conception using a back transformed logistic function. Using coefficients developed in
     Murdoch University trials.
@@ -1462,6 +1463,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, cpl_do
     Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can
     be controlled for relative economic values
 
+    :param saa_ls:
     :param cf: Includes parameter for number of ewes that implant but don't retain to birth (the 3rd trimester).
     :param cb1: GrazPlan parameter stating the probability of conception with different number of foetuses.
     :param cu2: LMAT parameters controlling impact of LWJ, LWC during joining, NLB, Age at joining
@@ -1478,6 +1480,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, cpl_do
     :param index_e1:
     :param rev_trait_value:
     :param saa_rr:
+    :param sam_rr: combine sam on reproductive rate
     :return: Dam conception.
     '''
     if ~np.any(period_is_mating):
@@ -1513,7 +1516,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, cpl_do
         ### Calculate the RR to allow SA to be applied. Note: SA applied on basis of 2 cycles
         repro_rate = f1_convert_propn_to_2cycleRR(cp, nfoet_b1any, cycles = 1)
         #### apply the sa to the repro rate
-        repro_rate_adj = fun.f_sa(repro_rate, sen.sam['rr'])
+        repro_rate_adj = fun.f_sa(repro_rate, sam_rr)
         repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr * (repro_rate > 0), 2, value_min=0)     # only adjust if original value was non-zero
         #### Back calculate the proportion of empty, single, twins & triplets using the Logistic function
         cp = f1_RR_propn_logistic(repro_rate_adj, cb1_sliced, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1)
