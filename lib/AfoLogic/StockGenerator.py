@@ -1494,12 +1494,25 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                         , condition=mask_dams_inc_g1, axis=g_pos)#add axes between g & b1, and b1 & p
     saa_mortalitye_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(saa_mortalitye_oa1e1b1nwzida0e0b0xyg1,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    ##mort of progeny at birth
+    sap_mortalityp_oa1e1b1nwzida0e0b0xyg2 = fun.f_expand(sen.sap['mortalityp_ol0g2'][:,sinp.stock['a_nfoet_b1'],:]
+                                                        , b1_pos, right_pos=g_pos, left_pos2=p_pos, right_pos2=b1_pos
+                                                        , condition=mask_dams_inc_g1, axis=g_pos)#add axes between g & b1, and b1 & p
+    sap_mortalityp_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(sap_mortalityp_oa1e1b1nwzida0e0b0xyg2,
+                                                     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     ## sum saa[rr] and saa[rr_age] so there is only one saa to handle in f_conception_cs & f_conception_ltw
     ## Note: the proportions of the BTRT doesn't include rr_age_og1 because those calculations can't vary by age of the dam
     rr_age_og1 = sen.saa['rr_age_og1']
     saa_rr_age_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(rr_age_og1, p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
                                                     axis=g_pos, condition2=mask_o_dams, axis2=p_pos)
     saa_rr_age_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(saa_rr_age_oa1e1b1nwzida0e0b0xyg1,
+                                                     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    #todo work out the best connection for sam[rr_og1] - currently it is just used for SA associated with extra ewes so don't want linked effects other than numbers
+    ##There has to be sam['rr'] separate from sam['rr_og1'] because 'rr' is used to scale scan_std_c2 which doesn't have an o axis.
+    rr_og1 = sen.sam['rr_og1'] * sen.sam['rr']
+    sam_rr_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(rr_og1, p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
+                                                    axis=g_pos, condition2=mask_o_dams, axis2=p_pos)
+    sam_rr_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(sam_rr_oa1e1b1nwzida0e0b0xyg1,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     ## Alter the standard scanning rate for f_conception_ltw to include saa['rr_age'] (scan_std_yg0 has already been adjusted by saa['rr'] in UniversalInputs.py
     scan_std_pa1e1b1nwzida0e0b0xyg1 = scan_std_yg1 + saa_rr_age_pa1e1b1nwzida0e0b0xyg1
@@ -1520,6 +1533,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                         , b1_pos, right_pos=g_pos, left_pos2=p_pos, right_pos2=b1_pos
                                                         , condition=mask_dams_inc_g1, axis=g_pos)#add axes between g & b1, and b1 & p
     saa_preg_increment_pa1e1b1nwzida0e0b0xyg = np.take_along_axis(saa_preg_increment_oa1e1b1nwzida0e0b0xyg,
+                                                     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    ##wean_redn
+    sam_wean_redn_oa1e1b1nwzida0e0b0xyg2 = fun.f_expand(sen.sam['wean_redn_ol0g2'][:,sinp.stock['a_nfoet_b1'],:]
+                                                        , b1_pos, right_pos=g_pos, left_pos2=p_pos, right_pos2=b1_pos
+                                                        , condition=mask_dams_inc_g1, axis=g_pos)#add axes between g & b1, and b1 & p
+    sam_wean_redn_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(sam_wean_redn_oa1e1b1nwzida0e0b0xyg2,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 
 
@@ -3582,7 +3601,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                  , cpg_doy_cs_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
                                                  , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                  , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]
-                                                 , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p])
+                                                 , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p], sam_rr_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
                         conception_dams =  temp0
                     if eqn_compare:
@@ -3610,8 +3629,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                    , cpl_doy_lmat_pa1e1b1nwzida0e0b0xyg1[p:p+1], nfoet_b1nwzida0e0b0xyg
                                                    , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                    , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]
-                                                   , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p], saa_littersize_pa1e1b1nwzida0e0b0xyg1[p]
-                                                   , saa_conception_pa1e1b1nwzida0e0b0xyg1[p], saa_preg_increment_pa1e1b1nwzida0e0b0xyg[p])
+                                                   , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p], sam_rr_pa1e1b1nwzida0e0b0xyg1[p]
+                                                   , saa_littersize_pa1e1b1nwzida0e0b0xyg1[p], saa_conception_pa1e1b1nwzida0e0b0xyg1[p]
+                                                   , saa_preg_increment_pa1e1b1nwzida0e0b0xyg[p])
                     if eqn_used:
                         conception_dams = temp0
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
@@ -3848,7 +3868,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     temp0, temp1, temp2 = sfun.f_mortality_progeny_cs(cd_yatf, cb1_yatf, w_b_yatf, rc_start_dams, cv_bw_yatf
                                     , w_b_exp_y_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
                                     , chill_index_pa1e1b1nwzida0e0b0xygp0[p], nfoet_b1nwzida0e0b0xyg
-                                    , rev_trait_values['yatf'][p], sen.sap['mortalityp'], saa_mortalityx_pa1e1b1nwzida0e0b0xyg[p])
+                                    , rev_trait_values['yatf'][p], sap_mortalityp_pa1e1b1nwzida0e0b0xyg2[p]
+                                    , saa_mortalityx_pa1e1b1nwzida0e0b0xyg[p])
                     if eqn_used:
                         mortality_birth_yatf = temp1 #mortalityd, assign first because it has x-axis
                         mortality_birth_yatf += temp0 #mortalityx
@@ -3871,7 +3892,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                     , w_b_yatf / srw_female_yg2, w_b_ltw_std_yatf / srw_female_yg2, cv_bw_yatf
                                     , foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygp0[p], mobsize_pa1e1b1nwzida0e0b0xyg1[p]
                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
-                                    , sen.sap['mortalityp'], saa_mortalityx_pa1e1b1nwzida0e0b0xyg[p])
+                                    , sap_mortalityp_pa1e1b1nwzida0e0b0xyg2[p], saa_mortalityx_pa1e1b1nwzida0e0b0xyg[p])
                     if eqn_used:
                         mortality_birth_yatf = temp0 #mortality
                     if eqn_compare:
@@ -5520,6 +5541,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     mask_nut_oa1e1b1nWzida0e0b0xyg1 = fun.f_expand(mask_nut_dams_oWi,i_pos, left_pos2=w_pos, left_pos3=p_pos,
                                                    right_pos2=i_pos, right_pos3=w_pos, condition=pinp.sheep['i_mask_i'],
                                                    axis=i_pos, condition2=mask_o_dams, axis2=p_pos)
+    ##yatf
+    ###apply the sam to weaning numbers of yatf. This is like mortality at weaning
+    ###When used in combination with increased rr the outcome is the cost of extra ewes lactating.
+    o_numbers_start_tpyatf = fun.f_update(o_numbers_start_tpyatf, o_numbers_start_tpyatf
+                                          * sam_wean_redn_pa1e1b1nwzida0e0b0xyg2, period_is_wean_pa1e1b1nwzida0e0b0xyg2)
+
     ##offs
     ###dvp mask - basically the shearing mask plus a true for the first dvp which is weaning
     sale_mask_g3 = np.concatenate([np.array([True]), mask_shear_g3]) #need to add true to the start of the shear mask because the first dvp is weaning
