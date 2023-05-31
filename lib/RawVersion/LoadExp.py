@@ -198,9 +198,12 @@ def f_load_experiment_data(force_run):
                                   * np.logical_or(force_run, np.array(exp_data1['run_req']))))  # gets the ordinal index values for the trials the user wants to run that are not up to date
 
     ##print out number of trials to run
-    total_trials = sum(exp_data.index[row][0] == True for row in range(len(exp_data)))
+    total_trials = len(dataset)
     print(f'Number of trials to run: {total_trials}')
-    print(f'Number of full solutions: {sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data)))}')
+    n_full_sol = sum(np.nan_to_num(np.array(exp_data.index.get_level_values(0))) #check if user wants trial run
+                     * np.nan_to_num(np.array(exp_data.index.get_level_values(1))) #check if full solution required
+                     * np.logical_or(force_run, np.array(exp_data1['run_req']))) #check if run required
+    print(f'Number of full solutions: {n_full_sol}')
     exp_location = relativeFile.findExcel("exp.xlsx")
     print(f'exp.xls last saved: {datetime.fromtimestamp(round(os.path.getmtime(exp_location)))}')
 

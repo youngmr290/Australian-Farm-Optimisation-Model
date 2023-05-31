@@ -17,7 +17,7 @@ start_time = time.time()
 ############
 ##controls #
 ############
-force_run = True #set to True if you want to force all trials to run even if they are up to date.
+force_run = False #set to True if you want to force all trials to run even if they are up to date.
 solver_method = 'CPLEX'
 
 ########################################
@@ -60,7 +60,7 @@ def run_afo(row):
     user_sa = rve.f_process_user_sa(exp_data, row)
 
     ##run AFO
-    global d_rot_info
+    global d_rot_info #has to be defined as global sincie it is defined outside this function above
     model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info = afo.exp(solver_method, user_sa, property, trial_name, trial_description, sinp_defaults, uinp_defaults, pinp_defaults, d_rot_info, cat_propn_s1_ks2)
 
     ##save AFO outputs
