@@ -61,8 +61,8 @@ def create_sa():
     len_P = 500  #Capital P because it is an (over) estimate to initialise the p axes that will be sliced when len_p is known.
     len_p6 = len(pinp.period['i_fp_idx'])
     len_V = 50  #Capital V because it is an (over) estimate to initialise the v axes that will be sliced when len_v is known.
-    len_max_W1 = 3125 #number of nut options (i_nut_spread_n1 ** n_fvp) (this used to be calculated but the max possible was too big. This now assumes max n=5 and max fvp =5) #the max size of w if all n and fvps included.
-    len_max_W3 = 3125 #number of nut options (i_nut_spread_n3 ** n_fvp) (this used to be calculated but the max possible was too big. This now assumes max n=5 and max fvp =5) #the max size of w if all n and fvps included.
+    len_max_W1 = 3125 #number of nut options (i_nut_spread_n1 ** n_fvp) (this used to be calculated but the max possible was too big. This now assumes max n=5 and max fvp =5) #the max number of options for each starting w if all n and fvps included.
+    len_max_W3 = 3125 #number of nut options (i_nut_spread_n3 ** n_fvp) (this used to be calculated but the max possible was too big. This now assumes max n=5 and max fvp =5) #the max number of options for each starting w if all n and fvps included.
     len_x = pinp.sheep['i_x_len']
     len_y = int(np.ceil(sinp.stock['i_age_max']))
     len_z = len(pinp.general['i_mask_z'])
