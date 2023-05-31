@@ -5536,7 +5536,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8 = np.any(period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8y, axis=-1) #condense the y-axis - it is now accounted for by p axis
     ##dams
     ###mask for nutrition profiles. this doesn't have a full w axis because it only has the nutrition options it is expanded to w further down.
-    sav_mask_nut_dams_oWi = sen.sav['nut_mask_dams_oWi'][:,0:len_nut_dams,:] #This controls if a nutrition pattern is included.
+    sav_mask_nut_dams_oWi = sen.sav['nut_mask_dams_oWi'][:,0:len_nut_dams,:] #This controls if a nutrition pattern is included. (if error here adjust len_max_W1 in sen.py)
     mask_nut_dams_oWi = fun.f_sa(np.array(True), sav_mask_nut_dams_oWi,5) #all nut options included unless SAV is false
     mask_nut_oa1e1b1nWzida0e0b0xyg1 = fun.f_expand(mask_nut_dams_oWi,i_pos, left_pos2=w_pos, left_pos3=p_pos,
                                                    right_pos2=i_pos, right_pos3=w_pos, condition=pinp.sheep['i_mask_i'],
@@ -5557,7 +5557,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     target_weight_tsa1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_target_weight_tsg3'], p_pos, right_pos=g_pos,
                                                         condition=mask_offs_inc_g3, axis=g_pos, condition2=sale_mask_g3, axis2=p_pos) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
     ###mask for nutrition profiles. this doesn't have a full w axis because it only has the nutrition options it is expanded to w further down.
-    sav_mask_nut_offs_sWix = sen.sav['nut_mask_offs_sWix'][:,0:len_nut_offs,...] #This controls if a nutrition pattern is included.
+    sav_mask_nut_offs_sWix = sen.sav['nut_mask_offs_sWix'][:,0:len_nut_offs,...] #This controls if a nutrition pattern is included. (if error here adjust len_max_W1 in sen.py)
     mask_nut_offs_sWix = fun.f_sa(np.array(True), sav_mask_nut_offs_sWix,5) #all nut options included unless SAV is false
     mask_nut_sa1e1b1nWzida0e0b0xyg3 = fun.f_expand(mask_nut_offs_sWix, x_pos, left_pos2=i_pos, left_pos3=w_pos,left_pos4=p_pos,
                                                    right_pos2=x_pos,right_pos3=i_pos,right_pos4=w_pos,

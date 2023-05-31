@@ -60,6 +60,8 @@ def create_sa():
     len_P = 500  #Capital P because it is an (over) estimate to initialise the p axes that will be sliced when len_p is known.
     len_p6 = len(pinp.period['i_fp_idx'])
     len_V = 50  #Capital V because it is an (over) estimate to initialise the v axes that will be sliced when len_v is known.
+    len_max_W1 = 3125 #number of nut options (i_nut_spread_n1 ** n_fvp) (this used to be calculated but the max possible was too big. This now assumes max n=5 and max fvp =5) #the max size of w if all n and fvps included.
+    len_max_W3 = 3125 #number of nut options (i_nut_spread_n3 ** n_fvp) (this used to be calculated but the max possible was too big. This now assumes max n=5 and max fvp =5) #the max size of w if all n and fvps included.
     len_x = pinp.sheep['i_x_len']
     len_y = int(np.ceil(sinp.stock['i_age_max']))
     len_z = len(pinp.general['i_mask_z'])
@@ -292,11 +294,8 @@ def create_sa():
     sav['g3_included']      = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)      # SA value for the inclusion of each offspring genotype
     sav['genotype']         = np.full(pinp.sheep['a_c2_c0'].shape, '-', dtype=object)       # this is the selection of the genotypes of the sires for B, M & T
     sav['scan_og1']         = np.full(pinp.sheep['i_scan_og1'].shape, '-', dtype=object)    # SA value for the scanning management option
-    len_max_w1 = sinp.structuralsa['i_w_start_len1'] * len(sinp.structuralsa['i_nut_spread_n1']) ** (
-            len(sinp.stock['i_fixed_fvp_mask_dams'])+len(sinp.structuralsa['i_fvp_mask_dams'])) #the max size of w if all n and fvps included.
-    len_max_w3 = sinp.structuralsa['i_w_start_len3'] * len(sinp.structuralsa['i_nut_spread_n3']) ** len(sinp.structuralsa['i_fvp_mask_offs']) #the max size of w if all n and fvps included.
-    sav['nut_mask_dams_oWi'] = np.full((pinp.sheep['i_o_len'], len_max_w1, pinp.sheep['i_i_len']), '-', dtype=object)    #masks the nutrition options available e.g. high low high - the options selected are available for each starting weight (ie len_W = len_w/n_start_weights). This array is cut down in the code to the correct w len.
-    sav['nut_mask_offs_sWix'] = np.full((pinp.sheep['i_s_len'], len_max_w3, pinp.sheep['i_i_len'], pinp.sheep['i_x_len']), '-', dtype=object)   #masks the nutrition options available e.g. high low high - the options selected are available for each starting weight (ie len_W = len_w/n_start_weights). This array is cut down in the code to the correct w len.
+    sav['nut_mask_dams_oWi'] = np.full((pinp.sheep['i_o_len'], len_max_W1, pinp.sheep['i_i_len']), '-', dtype=object)    #masks the nutrition options available e.g. high low high - the options selected are available for each starting weight (ie len_W = len_w/n_start_weights). This array is cut down in the code to the correct w len.
+    sav['nut_mask_offs_sWix'] = np.full((pinp.sheep['i_s_len'], len_max_W3, pinp.sheep['i_i_len'], pinp.sheep['i_x_len']), '-', dtype=object)   #masks the nutrition options available e.g. high low high - the options selected are available for each starting weight (ie len_W = len_w/n_start_weights). This array is cut down in the code to the correct w len.
     sav['nut_spread_n1'] = np.full(sinp.structuralsa['i_nut_spread_n1'].shape, '-', dtype=object)      #nut spread dams
     sav['confinement_n1'] = np.full(sinp.structuralsa['i_confinement_n1'].shape, '-', dtype=object)    #bool array - This control allows confinement to occur if it is turned on for the given p6 period (controlled in feedsupply in property inputs)
     sav['nut_spread_n3'] = np.full(sinp.structuralsa['i_nut_spread_n3'].shape, '-', dtype=object)      #nut spread offs
