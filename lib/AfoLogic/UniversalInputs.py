@@ -139,6 +139,7 @@ def f_universal_inp_sa(uinp_defaults):
     finance['i_interest'] = fun.f_sa(finance['i_interest'], sen.sav['interest_rate'], 5)  #value for bank interest rate
     finance['opportunity_cost_capital'] = fun.f_sa(finance['opportunity_cost_capital'], sen.sav['opp_cost_capital'], 5)  #value for opportunity cost of capital
     finance['fixed_dep'] = fun.f_sa(finance['fixed_dep'], sen.sav['fixed_dep_rate'], 5)  #value for fixed rate of machinery depreciation per year
+    finance['variable_dep'] = fun.f_sa(finance['fixed_dep'], sen.sav['variable_dep_rate'], 5)  #value for variable rate of machinery depreciation per year if cropping 1000ha
     finance['equip_insurance'] = fun.f_sa(finance['equip_insurance'], sen.sav['equip_insurance_rate'], 5)  #value for machinery insurance (as a propn of total value)
 
     ##price
@@ -148,6 +149,39 @@ def f_universal_inp_sa(uinp_defaults):
     price['manager_cost'] = fun.f_sa(price['manager_cost'], sen.sav['manager_cost'], 5)
     price['permanent_cost'] = fun.f_sa(price['permanent_cost'], sen.sav['permanent_cost'], 5)
     price['casual_cost'] = fun.f_sa(price['casual_cost'], sen.sav['casual_cost'], 5)
+
+    ##Mach
+    for option in mach: #all pasture inputs are adjusted even if a given pasture is not included
+        ###sav
+        mach[option]['clearing_value'].loc[:,'value'] = fun.f_sa(np.array(mach[option]['clearing_value'].loc[:,'value']), sen.sav[('clearing_value',option)], 5) #use np so f_update does the dtype correctly
+        mach[option]['number_of_seeders'] = fun.f_sa(mach[option]['number_of_seeders'], sen.sav[('number_seeders',option)], 5)
+        mach[option]['seeder_width'] = fun.f_sa(mach[option]['seeder_width'], sen.sav[('seeder_width',option)], 5)
+        mach[option]['seeder_speed_base'] = fun.f_sa(mach[option]['seeder_speed_base'], sen.sav[('seeding_speed',option)], 5)
+        mach[option]['seeding_eff'] = fun.f_sa(mach[option]['seeding_eff'], sen.sav[('seeding_paddock_eff',option)], 5)
+        mach[option]['number_of_harvesters'] = fun.f_sa(mach[option]['number_of_harvesters'], sen.sav[('number_harvesters',option)], 5)
+        mach[option]['harvester_width'] = fun.f_sa(mach[option]['harvester_width'], sen.sav[('harvester_width',option)], 5)
+        mach[option]['harvest_speed'].iloc[:,0] = fun.f_sa(np.array(mach[option]['harvest_speed'].iloc[:,0]), sen.sav[('harvesting_speed',option)], 5) #use np so f_update does the dtype correctly
+        mach[option]['harv_eff'] = fun.f_sa(mach[option]['harv_eff'], sen.sav[('harvesting_paddock_eff',option)], 5)
+        mach[option]['sprayer_width'] = fun.f_sa(mach[option]['sprayer_width'], sen.sav[('sprayer_width',option)], 5)
+        mach[option]['sprayer_speed'] = fun.f_sa(mach[option]['sprayer_speed'], sen.sav[('spraying_speed',option)], 5)
+        mach[option]['sprayer_eff'] = fun.f_sa(mach[option]['sprayer_eff'], sen.sav[('sprayer_eff',option)], 5)
+        mach[option]['spreader_cap'] = fun.f_sa(mach[option]['spreader_cap'], sen.sav[('spreader_cap',option)], 5)
+        mach[option]['spreader_width'].iloc[:,0] = fun.f_sa(np.array(mach[option]['spreader_width'].iloc[:,0]), sen.sav[('spreader_width',option)], 5) #use np so f_update does the dtype correctly
+        mach[option]['spreader_speed'] = fun.f_sa(mach[option]['spreader_speed'], sen.sav[('spreading_speed',option)], 5)
+        mach[option]['spreader_eff'] = fun.f_sa(mach[option]['spreader_eff'], sen.sav[('spreading_eff',option)], 5)
+
+        ###SAM
+
+    ###sav
+    supfeed['i_max_sup_selectivity'] = fun.f_sa(supfeed['i_max_sup_selectivity'], sen.sav['max_sup_selectivity'], 5)
+    supfeed['i_sup_selectivity_included'] = fun.f_sa(supfeed['i_sup_selectivity_included'], sen.sav['inc_sup_selectivity'], 5)
+    supfeed['i_confinement_feeding_cost_factor'] = fun.f_sa(supfeed['i_confinement_feeding_cost_factor'], sen.sav['confinement_feeding_cost_factor'], 5)
+    supfeed['i_confinement_feeding_labour_factor'] = fun.f_sa(supfeed['i_confinement_feeding_labour_factor'], sen.sav['confinement_feeding_labour_factor'], 5)
+    ###sam
+    ###sap
+    ###saa
+    ###sat
+    ###sar
 
     ##supfeed
     ###sav
