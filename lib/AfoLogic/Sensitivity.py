@@ -103,7 +103,6 @@ def create_sa():
     sav['cara_risk_coef'] = '-'              #control risk coefficient for CRRA method
     sav['crra_risk_coef'] = '-'              #control risk coefficient for CRRA method
     sav['pinp_rot'] = '-'                       #control if using the pinp rotations or the full rotation list (note full rot requires simulation inputs)
-    sav['mach_option'] = '-'                    #control which machine compliment is used
     sav['lmu_area_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
     sav['lmu_arable_propn_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
     ##SAM
@@ -122,6 +121,7 @@ def create_sa():
     sav['interest_rate']      = '-'           #SA to alter the credit and debit interest from bank
     sav['opp_cost_capital']      = '-'        #SA to alter the opportunity cost of capital
     sav['fixed_dep_rate'] = '-'               #SA to alter the fixed rate of machinery depreciation per year
+    sav['variable_dep_rate'] = '-'               #SA to alter the variable rate of machinery depreciation per year if cropping 1000ha
     sav['equip_insurance_rate'] = '-'         #SA to alter the insurance cost (% of machine value)
     sav['overheads'] = np.full(len(pinp.general['i_overheads']), '-', dtype=object)  #SA to alter the overhead costs
     ##SAM
@@ -170,6 +170,42 @@ def create_sa():
     ##SAA
     ##SAT
     ##SAR
+
+    #########
+    #Mach #
+    #########
+    ##SAV
+    sav['mach_option'] = '-'                    #control which machine compliment is used
+    sav['daily_seed_hours'] = '-'               #number of hours seeder can run for each day.
+    sav['seeding_prep'] = '-'               #number of hours seeder can run for each day.
+    sav['seeding_delays'] = '-'               #number of hours seeder can run for each day.
+    sav['daily_harvest_hours'] = '-'               #number of hours harvester can run for each day.
+    sav['harv_prep'] = '-'               #number of hours seeder can run for each day.
+    sav['harv_delays'] = '-'               #number of hours seeder can run for each day.
+
+    for option in uinp.mach:
+        ##SAV
+        sav['clearing_value', option] = np.full(len(uinp.mach[option]['clearing_value']), '-', dtype=object) #clearing sale value of each item of machinery
+        sav['number_seeders', option] = '-'                                 #number of seeders
+        sav['seeder_width', option] = '-'                                   #width (m) of seeder
+        sav['seeding_speed', option] = '-'                                  #seeding speed of wheat on base LMU (km/hr)
+        sav['seeding_paddock_eff', option] = '-'                            #paddock efficiency of seeding (accounts for overlap)
+        sav['number_harvesters', option] = '-'                              #number of harvesters
+        sav['harvester_width', option] = '-'                                #width (m) of harvester
+        sav['harvesting_speed', option] = np.full(len_k, '-', dtype=object) #harvesting speed of each crop (km/hr)
+        sav['harvesting_paddock_eff', option] = '-'                         #paddock efficiency of harvesting (accounts for overlap)
+        sav['sprayer_width', option] = '-'                         #width (m)
+        sav['spraying_speed', option] = '-'                        #speed (km/hr)
+        sav['sprayer_eff', option] = '-'                           #paddock efficiency of harvesting (accounts for overlap)
+        sav['spreader_cap', option] = '-'                                   #capacity (m3)
+        sav['spreader_width', option] = np.full(len_n, '-', dtype=object)   #width for each fert type (m)
+        sav['spreading_speed', option] = '-'                                #speed (km/hr)
+        sav['spreading_eff', option] = '-'                                  #paddock efficiency of harvesting (accounts for overlap)
+        ##SAM
+        ##SAP
+        ##SAA
+        ##SAT
+        ##SAR
 
     ###########
     #Sup feed #
@@ -232,44 +268,33 @@ def create_sa():
     ##SAR
 
     ############
-    # Pasture  #   these need to have the same name for each pasture type
+    # Pasture  #
     ############
     ##SAV
     sav['poc_inc'] = '-'  #control if poc is included
     sav['pas_inc_t'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA value for pastures included mask
-    ##SAM
-    sam['germ','annual']                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods
-    sam['germ','understory']                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods
-    sam['germ_l','annual']                  = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for germination on each lmus in all periods
-    sam['germ_l','understory']                  = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for germination on each lmus in all periods
-    sam['pgr','annual']                     = 1.0                                                          # SA multiplier for growth on all lmus in all periods
-    sam['pgr','understory']                     = 1.0                                                          # SA multiplier for growth on all lmus in all periods
-    sam['pgr_zp6','annual']                   = np.ones((len_z, len_p6),  dtype=np.float64)  # SA multiplier for growth in each feed period
-    sam['pgr_zp6','understory']                   = np.ones((len_z, len_p6),  dtype=np.float64)  # SA multiplier for growth in each feed period
-    sam['pgr_l','annual']                   = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for growth on each lmus in all periods
-    sam['pgr_l','understory']                   = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for growth on each lmus in all periods
-    sam['dry_dmd_decline','annual']         = 1.0                                                          # SA multiplier for the decline in digestibility of dry feed
-    sam['dry_dmd_decline','understory']         = 1.0                                                          # SA multiplier for the decline in digestibility of dry feed
-    sam['grn_dmd_declinefoo_f','annual']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on decline in digestibility if green feed is not grazed (to increase FOO)
-    sam['grn_dmd_declinefoo_f','understory']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on decline in digestibility if green feed is not grazed (to increase FOO)
-    sam['grn_dmd_range_f','annual']         = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on range in digestibility of green feed
-    sam['grn_dmd_range_f','understory']         = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on range in digestibility of green feed
-    sam['grn_dmd_senesce_f','annual']       = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
-    sam['grn_dmd_senesce_f','understory']       = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
-    sam['conservation_limit_f','annual']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for the conservation limit in each feed period
-    sam['conservation_limit_f','understory']    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for the conservation limit in each feed period
-    ##SAP
-    ##SAA pasture
-    saa['germ','annual']                    = 0.0                                                          # SA addition for germination on all lmus in all periods
-    saa['germ','understory']                    = 0.0                                                          # SA addition for germination on all lmus in all periods
-    saa['pgr','annual']                     = 0.0                                                          # SA addition for growth on all lmus in all periods
-    saa['pgr','understory']                     = 0.0                                                          # SA addition for growth on all lmus in all periods
-    saa['pgr_zp6','annual']                   = np.zeros((len_z, len_p6),  dtype=np.float64)  # SA addition for growth in each feed period
-    saa['pgr_zp6','understory']                   = np.zeros((len_z, len_p6),  dtype=np.float64)  # SA addition for growth in each feed period
-    saa['pgr_l','annual']                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA addition for growth on each lmus in all periods
-    saa['pgr_l','understory']                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA addition for growth on each lmus in all periods
-    ##SAT
-    ##SAR
+    
+    for pasture in sinp.general['pastures'][pinp.general['i_pastures_exist']]:
+        ##SAV
+        ##SAM
+        sam['germ',pasture]                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods
+        sam['germ_l',pasture]                  = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for germination on each lmus in all periods
+        sam['pgr',pasture]                     = 1.0                                                          # SA multiplier for growth on all lmus in all periods
+        sam['pgr_zp6',pasture]                   = np.ones((len_z, len_p6),  dtype=np.float64)  # SA multiplier for growth in each feed period
+        sam['pgr_l',pasture]                   = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for growth on each lmus in all periods
+        sam['dry_dmd_decline',pasture]         = 1.0                                                          # SA multiplier for the decline in digestibility of dry feed
+        sam['grn_dmd_declinefoo_f',pasture]    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on decline in digestibility if green feed is not grazed (to increase FOO)
+        sam['grn_dmd_range_f',pasture]         = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on range in digestibility of green feed
+        sam['grn_dmd_senesce_f',pasture]       = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
+        sam['conservation_limit_f',pasture]    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for the conservation limit in each feed period
+        ##SAP
+        ##SAA pasture
+        saa['germ',pasture]                    = 0.0                                                          # SA addition for germination on all lmus in all periods
+        saa['pgr',pasture]                     = 0.0                                                          # SA addition for growth on all lmus in all periods
+        saa['pgr_zp6',pasture]                   = np.zeros((len_z, len_p6),  dtype=np.float64)  # SA addition for growth in each feed period
+        saa['pgr_l',pasture]                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA addition for growth on each lmus in all periods
+        ##SAT
+        ##SAR
 
     ############
     #livestock #
