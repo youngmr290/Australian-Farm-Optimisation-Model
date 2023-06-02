@@ -1015,15 +1015,13 @@ def chem_app_cost_ha():
 ##harvest machine cost
 def harvest_gear_clearing_value():
     value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'harvest allocation'])
-    total_value = value * pinp.mach['number_harv_gear']
-    return total_value
+    return value
 
 
 ##value of gear used for seed. This is used to calculate the variable depreciation linked to seeding activity
 def f_seeding_gear_clearing_value():
     value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'seeding allocation'])
-    total_value = value * pinp.mach['number_seeding_gear']
-    return total_value
+    return value
 
 ##total machine value - used to calc asset value, fixed dep and insurance
 def f_total_clearing_value():
@@ -1206,8 +1204,8 @@ def f_mach_params(params,r_vals):
     mach_asset_value = f_total_clearing_value()
 
     ##add inputs that are params to dict
-    params['number_seeding_gear'] = pinp.mach['number_seeding_gear']
-    params['number_harv_gear'] = pinp.mach['number_harv_gear']
+    params['number_seeding_gear'] = uinp.mach[pinp.mach['option']]['number_of_seeders']
+    params['number_harv_gear'] = uinp.mach[pinp.mach['option']]['number_of_harvesters']
     params['seeding_occur'] = pinp.mach['seeding_occur']
 
     ##create non seasonal params
