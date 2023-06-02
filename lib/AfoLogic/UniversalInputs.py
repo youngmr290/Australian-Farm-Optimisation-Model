@@ -169,19 +169,11 @@ def f_universal_inp_sa(uinp_defaults):
         mach[option]['spreader_width'].iloc[:,0] = fun.f_sa(np.array(mach[option]['spreader_width'].iloc[:,0]), sen.sav[('spreader_width',option)], 5) #use np so f_update does the dtype correctly
         mach[option]['spreader_speed'] = fun.f_sa(mach[option]['spreader_speed'], sen.sav[('spreading_speed',option)], 5)
         mach[option]['spreader_eff'] = fun.f_sa(mach[option]['spreader_eff'], sen.sav[('spreading_eff',option)], 5)
-
-        ###SAM
-
-    ###sav
-    supfeed['i_max_sup_selectivity'] = fun.f_sa(supfeed['i_max_sup_selectivity'], sen.sav['max_sup_selectivity'], 5)
-    supfeed['i_sup_selectivity_included'] = fun.f_sa(supfeed['i_sup_selectivity_included'], sen.sav['inc_sup_selectivity'], 5)
-    supfeed['i_confinement_feeding_cost_factor'] = fun.f_sa(supfeed['i_confinement_feeding_cost_factor'], sen.sav['confinement_feeding_cost_factor'], 5)
-    supfeed['i_confinement_feeding_labour_factor'] = fun.f_sa(supfeed['i_confinement_feeding_labour_factor'], sen.sav['confinement_feeding_labour_factor'], 5)
-    ###sam
-    ###sap
-    ###saa
-    ###sat
-    ###sar
+        ###sam
+        ###sap
+        ###saa
+        ###sat
+        ###sar
 
     ##supfeed
     ###sav
