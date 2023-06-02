@@ -99,7 +99,9 @@ def f1_machpyomo_local(params, model):
     
     model.p_number_harv_gear = pe.Param(initialize=params['number_harv_gear'], default = 0.0, doc='number of harvest gear')
 
-    model.p_seeding_occur = pe.Param(initialize=params['seeding_occur'], default = 0.0, doc='proportion of time seeding can occur each period')
+    model.p_seeding_delays = pe.Param(initialize=params['seeding_delays'], default = 0.0, doc='proportion of time seeding can not occur each period')
+
+    model.p_harv_delays = pe.Param(initialize=params['harv_delays'], default = 0.0, doc='proportion of time harvest can not occur each period')
 
     ###################################
     #call local constraints           #
@@ -122,7 +124,7 @@ def f_con_seed_period_days(model):
     def seed_period_days(model,q,s,p,z):
         if pe.value(model.p_wyear_inc_qs[q, s]):
             return sum(sum(model.v_seeding_machdays[q,s,z,p,k,l] for k in model.s_crops)for l in model.s_lmus) <= \
-            model.p_seed_days[p,z] * model.p_number_seeding_gear * model.p_seeding_occur
+            model.p_seed_days[p,z] * model.p_number_seeding_gear * (1 - model.p_seeding_delays)
         else:
             return pe.Constraint.Skip
     model.con_seed_period_days = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, rule=seed_period_days, doc='constrain the number of seeding days per seed period')
@@ -133,11 +135,13 @@ def f_con_harv_hours_limit(model):
     in each machinery period.
 
     The number of hours of harvest is limited by the max harvest hours in each harvest period and the number
-    of harvest gear (ie two harvesters allows you to harvest twice as much).
+    of harvest gear (ie two harvesters allows you to harvest twice as much). The constraint includes a factor
+    to account for days that are too wet to harvest.
     '''
     def harv_hours_limit(model,q,s,p,z):
         if pe.value(model.p_wyear_inc_qs[q, s]):
-            return sum(model.v_harv_hours[q,s,z,p,k] for k in model.s_crops) <= model.p_harv_hrs_max[p,z] * model.p_number_harv_gear
+            return sum(model.v_harv_hours[q,s,z,p,k] for k in model.s_crops) <= model.p_harv_hrs_max[p,z] \
+                       * model.p_number_harv_gear * (1 - model.p_harv_delays)
         else:
             return pe.Constraint.Skip
     model.con_harv_hours_limit = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, rule=harv_hours_limit, doc='constrain the number of hours of harvest x crop gear can provide')

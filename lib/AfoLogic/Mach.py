@@ -246,7 +246,10 @@ def f_seed_time_lmus():
     Time taken to direct drill 1ha of the base crop on each lmu.
 
     Seeding rate is calculated from speed travelled, seeder width and seeding efficiency (efficiency is
-    to account for overlap, turning around and filling up time). Seeding rate can vary for each LMU
+    to account for overlap, turning around and filling up time). The caluculation also includes a factor
+    that accounts for the time when seed is not being put in the ground due to moving paddocks or filling up.
+
+    Seeding rate can vary for each LMU
     due to varying speeds associated with more or less force being required to pull the seeding equipment
     through the soil. The rate inputs are set for the base LMU and then adjusted by a
     user defined LMU factor.
@@ -258,6 +261,8 @@ def f_seed_time_lmus():
     speed_lmu_df = seeder_speed_lmu_adj * uinp.mach[pinp.mach['option']]['seeder_speed_base']
     ##convert speed to rate of direct drill for wheat on each lmu type (hr/ha)
     rate_direct_drill = 1 / (speed_lmu_df * uinp.mach[pinp.mach['option']]['seeding_eff'] * uinp.mach[pinp.mach['option']]['seeder_width'] / 10)
+    ##includes a factor that accounts for the time when seed is not being put in the ground due to moving paddocks or filling up.
+    rate_direct_drill = rate_direct_drill / (1 - pinp.mach['seeding_prep'])
     return rate_direct_drill
 
 def f_overall_seed_rate(r_vals):
@@ -266,13 +271,16 @@ def f_overall_seed_rate(r_vals):
 
     Seeding rate per day is a product of the hours seeding can occur per day and the seeding rate
     per hectare. Seeding rate per hectare for each crop on each LMU is calculated by adjusting the
-    LMU seeding rate (see f_seed_time_lmus) by a crop adjustment factor.
+    LMU seeding rate (see f_seed_time_lmus) by a crop adjustment factor. Note, f_seed_time_lmus
+    includes a factor that accounts for the time when seed is not being put in the ground due to
+    moving paddocks or filling up.
+
 
     '''
-    #convert seed time (hr/ha) to rate of direct drill per day (ha/day)
+    ##convert seed time (hr/ha) to rate of direct drill per day (ha/day)
     seed_rate_lmus = 1 / f_seed_time_lmus().squeeze() * pinp.mach['daily_seed_hours']
-    #adjusts the seeding rate (ha/day) for each different crop depending on its seeding speed vs wheat
 
+    ##adjusts the seeding rate (ha/day) for each different crop depending on its seeding speed vs wheat
     seedrate_df = pd.concat([uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj']]*len(seed_rate_lmus),axis=1) #expands df for each lmu
     seedrate_df.columns = seed_rate_lmus.index #rename columns to lmu so i can mul
     seedrate_df=seedrate_df.mul(seed_rate_lmus)
@@ -547,12 +555,16 @@ def harv_time_ha():
     to be the same on all LMUs however, it does vary for different crops because harvest biomass
     impacts harvest speed.
 
+    The calculation includes a factor that accounts for the time when grain is not being
+    harvested due to moving paddocks or waiting for the chaser bin.
+
     Note: Has to be kept as a separate function because it is used in multiple places.
 
     '''
     harv_speed = uinp.mach[pinp.mach['option']]['harvest_speed']
     ##work rate hr/ha, determined from speed, size and eff
-    return 10/ (harv_speed * uinp.mach[pinp.mach['option']]['harv_eff'] * uinp.mach[pinp.mach['option']]['harvester_width'])
+    return 10/ (harv_speed * uinp.mach[pinp.mach['option']]['harv_eff'] * uinp.mach[pinp.mach['option']]['harvester_width']
+                * (1 - pinp.mach['harv_prep']))
 
 
 
@@ -562,7 +574,8 @@ def f_harv_rate_period():
 
     Tonnes harvested per hour in each period for each crop is calculated from the harvest rate per
     hectare (see harv_time_ha) and the average crop yield. The rate is then set to 0 if a crop can not
-    be harvested in a period.
+    be harvested in a period. Note, harv_time_ha includes a factor that accounts for the time when grain is not being
+    harvested due to moving paddocks or waiting for the chaser bin.
 
     Harvesting can begin on different dates depending on the crop. For example, in Western Australia the
     harvest of canola often begins before cereals :cite:p:`RN89`. To represent this AFO represents harvest in
@@ -1206,7 +1219,8 @@ def f_mach_params(params,r_vals):
     ##add inputs that are params to dict
     params['number_seeding_gear'] = uinp.mach[pinp.mach['option']]['number_of_seeders']
     params['number_harv_gear'] = uinp.mach[pinp.mach['option']]['number_of_harvesters']
-    params['seeding_occur'] = pinp.mach['seeding_occur']
+    params['seeding_delays'] = pinp.mach['seeding_delays']
+    params['harv_delays'] = pinp.mach['harv_delays']
 
     ##create non seasonal params
     params['seed_rate'] = seedrate.to_dict()
