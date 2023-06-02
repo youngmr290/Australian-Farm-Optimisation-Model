@@ -294,6 +294,10 @@ def f1_RR_propn_logistic(RR_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     ##solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_dams[25])
     cutoff0 = fun.f_solve_cubic_for_logistic_multidim(a,b,c,d)
 
+    ###If the repro rate was 0 then replace the cutoff in those slices with the value 10 (because they will be nan)
+    ####The choice of 10 ensure that the back transformed value is close to 0 but not 0
+    cutoff0[RR_g == 0] = 10
+
     ##calc conception propn
     cp = f1_cp_from_cutoff(cutoff0, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles)
     return cp
@@ -334,6 +338,10 @@ def f1_LS_propn_logistic(LS_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     ##solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_dams[25])
     cutoff0 = fun.f_solve_cubic_for_logistic_multidim(a, b, c, d)
 
+    ###If the litter size was 0 then replace the cutoff in those slices with the value 10 (because they will be nan)
+    ####The choice of 10 ensure that the back transformed value is close to 0 but not 0
+    cutoff0[LS_g == 0] = 10
+
     ##calc conception propn
     cp = f1_cp_from_cutoff(cutoff0, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles)
     return cp
@@ -347,7 +355,7 @@ def f1_cp_from_cutoff(cutoff0, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     :return:
     '''
 
-    ## calculate the difference between the cut-off coefficients from cb1_dams
+    ## calculate the difference between the cut-off coefficients from cb1_dams (remembering the NM slice in cb1)
     cut1_g = cb1[:,:,2:3,...] - cb1[:,:,1:2,...]
     cut2_g = cb1[:,:,3:4,...] - cb1[:,:,2:3,...]
 
@@ -1492,7 +1500,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, cpl_do
         cb1_sliced = fun.f_update(cb1[25, ...], cb1[24, ...], age < 364)
         cu2_sliced = fun.f_update(cu2[25, ...], cu2[24, ...], age < 364)
         ##Calculate the transformed estimates of proportion empty (slice cu2 allowing for active i axis)
-        cutoff0 = cb1_sliced[:,:,0:1,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating
+        cutoff0 = cb1_sliced[:,:,1:2,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating
                                                                 + cu2_sliced[1, ...] * maternallw_mating ** 2
                                                                 + cu2_sliced[2, ...] * age
                                                                 + cu2_sliced[3, ...] * age ** 2
