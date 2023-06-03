@@ -5,14 +5,15 @@ from datetime import datetime
 import multiprocessing
 import sys
 
+#report the clock time that the experiment was started
+print(f'Experiment commenced at: {time.ctime()}')
+start_time = time.time()
 
 from lib.RawVersion import LoadExcelInputs as dxl
 from lib.RawVersion import LoadExp as exp
 from lib.RawVersion import RawVersionExtras as rve
 from lib.AfoLogic import AfoInit as afo
 from lib.RawVersion import SaveOutputs as out
-
-start_time = time.time()
 
 ############
 ##controls #
@@ -43,10 +44,10 @@ n_processes = min(multiprocessing.cpu_count(),len(dataset),maximum_processes)
 ##run AFO #
 ###########
 ## set the start time at the beginning of the multiprocessing loops
-start_time1 = time.time()
+start_loops_time = time.time()    #This excludes the time for reading the inputs and is used to calculate remaining time
 def run_afo(row):
     ##start timer for each loop
-    start_time = time.time()
+    start_trial_time = time.time()
 
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][3]
@@ -72,13 +73,13 @@ def run_afo(row):
     total_batches = math.ceil(len(dataset) / n_processes)
     current_batch = math.ceil((dataset.index(row)+1) / n_processes) #add 1 because python starts at 0
     remaining_batches = total_batches - current_batch
-    time_taken = time.time() - start_time1   #start of the multiprocessing loops
+    time_taken = time.time() - start_loops_time   #since start of the multiprocessing loops (excludes reading inputs)
     batch_time = time_taken / current_batch
     time_remaining = remaining_batches * batch_time
     finish_time_expected = time.time() + time_remaining
-    loop_time = time.time() - start_time
+    trial_time = time.time() - start_trial_time
 
-    print(f'{trial_description}, total time taken this loop: {loop_time:.2f}')
+    print(f'{trial_description}, total time taken this trial: {trial_time:.2f}')
     message = f'{trial_description}, Expected finish time: \033[1m{time.ctime(finish_time_expected)}\033[0m at {time.ctime()}'
     #replace message if this process is complete
     if remaining_batches == 0:
@@ -93,14 +94,15 @@ def run_afo(row):
 ##the result after the different processes are done is a list of dicts (because each iteration returns a dict and the multiprocess stuff returns a list)
 if __name__ == '__main__':
     #todo could intercept if len(dataset) == 0 which leads to an error message
+    # if there are no trials it would also be good to report whether there are no trials (because of user error in specifying the trial number) or if they exist but don't need running
     ##start multiprocessing
     with multiprocessing.Pool(processes=n_processes) as pool:
         ##size 1 has similar speed even for N11 model and allows better reporting (will be even better on a larger model)
         ##a drawback of chunksize = 1 is that if there is an error in the multiprocessed code then every trial is still processed
         trials_successfully_run = pool.map(run_afo, dataset, chunksize = 1)
     end = time.time()
-    print(f'\n\033[1mExperiment completed at:\033[0m {time.ctime()}, total time taken: {end - start_time1:.2f}')
+    print(f'\n\033[1mExperiment completed at:\033[0m {time.ctime()}, total time taken: {end - start_time:.2f}')
     try:
-        print(f'average time taken for each loop: {(end - start_time1) / len(dataset):.2f}')  #average time since start of experiment
+        print(f'average time taken for each loop: {(end - start_time) / len(dataset):.2f}')  #average time since start of experiment
     except ZeroDivisionError:
         pass
