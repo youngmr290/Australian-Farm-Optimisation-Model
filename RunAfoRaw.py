@@ -1,12 +1,14 @@
 import time
 
+#report the clock time that the experiment was started
+print(f'Experiment commenced at: {time.ctime()}')
+start_time = time.time()
+
 from lib.RawVersion import LoadExcelInputs as dxl
 from lib.RawVersion import LoadExp as exp
 from lib.RawVersion import RawVersionExtras as rve
 from lib.AfoLogic import AfoInit as afo
 from lib.RawVersion import SaveOutputs as out
-
-start_time = time.time()
 
 ############
 ##controls #
@@ -25,6 +27,8 @@ cat_propn_s1_ks2 = dxl.f_load_stubble()
 ###########
 ##run AFO #
 ###########
+start_loops_time = time.time()    #This excludes the time for reading the inputs and is used to calculate remaining time
+
 run = 0  # counter to work out average time per loop
 for row in dataset:
     ##start timer for each loop
@@ -52,11 +56,11 @@ for row in dataset:
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run
-    average_time = (time.time() - start_time) / run  # time since the start of experiment
+    average_time = (time.time() - start_loops_time) / run  # time since the start of the loops (excludes time to read inputs)
     remaining = trials_to_go * average_time
     finish_time_expected = time.time() + remaining
     print(
-        f'{trial_description}, total time taken this loop: {time.time() - start_trial_time:.2f}')  # time since start of this loop
+        f'{trial_description}, time taken this trial: {time.time() - start_trial_time:.2f}')  # time since start of this trial
     print(
         f'{trial_description}, Expected finish time: \033[1m{time.ctime(finish_time_expected)}\033[0m (at {time.ctime()})')
 
@@ -66,7 +70,7 @@ for row in dataset:
 end = time.time()
 print(f'Experiment completed at: {time.ctime()}, total trials completed: {run}')
 try:
-    print(f'average time taken for each loop: {(end - start_time) / run:.2f}')  # average time since start of experiment
+    print(f'average time taken for each loop: {(end - start_time) / run:.2f}')  # average time since start of experiment (including reading inputs)
 except ZeroDivisionError:
     pass
 
