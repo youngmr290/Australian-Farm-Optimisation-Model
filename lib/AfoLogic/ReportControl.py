@@ -434,7 +434,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                     # , den_weights=den_weights, na_denweights=na_denweights
                                     , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_cs_dams', 'Run']:
-        ##Average dam condition score with p, e & b axis. 
+        ##Average dam condition score with p, e & b axis.
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
         type = 'stock'
         prod = 'cs_dams_k2Tvpa1e1b1nw8ziyg1'
@@ -563,7 +563,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_cs_offs', 'Run']:
-        ##Average offs cs with p, e & b axis. 
+        ##Average offs cs with p, e & b axis.
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
         type = 'stock'
         prod = 'cs_offs_k3k5Tvpnw8zida0e0b0xyg3'
@@ -583,7 +583,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_fs_offs', 'Run']:
-        ##Average offs fs with p, e & b axis. 
+        ##Average offs fs with p, e & b axis.
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
         type = 'stock'
         prod = 'fs_offs_k3k5Tvpnw8zida0e0b0xyg3'
