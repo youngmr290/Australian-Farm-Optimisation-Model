@@ -49,6 +49,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_wbe_offs"] = pd.DataFrame()  # whole body energy content offs
     reports["stacked_lw_dams"] = pd.DataFrame()  # live weight dams (large array with p, e and b axis)
     reports["stacked_ffcfw_dams"] = pd.DataFrame()  # fleece free conceptus free weight dams (large array with p, e and b axis)
+    reports["stacked_ffcfw_cut_dams"] = pd.DataFrame()  #todo Just for Triplets analysis fleece free conceptus free weight dams (large array with p, e and b axis)
     reports["stacked_nv_dams"] = pd.DataFrame()  # diet nutritive value for dams (large array with p, e and b axis)
     reports["stacked_ffcfw_yatf"] = pd.DataFrame()  # fleece free conceptus free weight yatf (large array with p, e and b axis)
     reports["stacked_ffcfw_prog"] = pd.DataFrame()  # fleece free conceptus free weight prog (large array with p, e and b axis)
@@ -249,6 +250,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_ffcfw_dams', 'Run']:
         ffcfw_dams = pd.concat([reports["ffcfw_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_ffcfw_dams"] = rfun.f_append_dfs(stacked_reports["stacked_ffcfw_dams"], ffcfw_dams)
+
+    if report_run.loc['run_ffcfw_cut_dams', 'Run']: #todo just for Triplets analysis
+        ffcfw_cut_dams = pd.concat([reports["ffcfw_cut_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_ffcfw_cut_dams"] = rfun.f_append_dfs(stacked_reports["stacked_ffcfw_cut_dams"], ffcfw_cut_dams)
 
     if report_run.loc['run_nv_dams', 'Run']:
         nv_dams = pd.concat([reports["nv_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -533,6 +538,8 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_lw_dams"], 'lw_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_ffcfw_dams', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ffcfw_dams"], 'ffcfw_dams', df_settings, option=xl_display_mode)
+    if report_run.loc['run_ffcfw_cut_dams', 'Run']: #todo just for Triplets analysis
+        df_settings = rfun.f_df2xl(writer, reports["stacked_ffcfw_cut_dams"], 'ffcfw_cut_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_ffcfw_yatf', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ffcfw_yatf"], 'ffcfw_yatf', df_settings, option=xl_display_mode)
     if report_run.loc['run_nv_dams', 'Run']:

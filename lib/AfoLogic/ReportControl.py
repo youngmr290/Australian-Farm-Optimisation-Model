@@ -410,6 +410,24 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                  , na_weights=na_weights, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , den_weights=den_weights, na_denweights=na_denweights, keys=keys, arith=arith
                                  , index=index, cols=cols, axis_slice=axis_slice)
+    #todo remove after Triplets analysis
+    if report_run.loc['run_ffcfw_cut_dams', 'Run']:
+        type = 'stock'
+        prod = 'ffcfw_dams_k2tvPa1nw8ziyg1'
+        na_prod = [0, 1]  #q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        na_weights = [5]  #p
+        keys = 'dams_keys_qsk2tvPanwziy1g1'
+        arith = 1
+        index = [5]  #p
+        cols = [2, 4]  #k2,v
+        axis_slice = {}
+        # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
+        # axis_slice[4] = [0, 7, 1]  #All DVPs for Triplets
+        reports["ffcfw_cut_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod
+                                    ,weights=weights, na_weights=na_weights, prod_weights=prod_weights
+                                    , na_prodweights=na_prodweights, den_weights=den_weights, na_denweights=na_denweights
+                                    , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_nv_dams', 'Run']:
         ##Average dam NV with p, e & b axis. NV is adjusted for animals that are sold but not adjusted by mortality
         ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
