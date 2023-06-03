@@ -8466,8 +8466,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvpanwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvpaebnwziy1g1')
-    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p[period_is_reportffcfw_p], keys_a, keys_n1, keys_lw1
-                                            , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvPanwziy1g1')  #todo remove after Triplets analysis
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p[period_is_reportffcfw_p], keys_a, keys_b, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvPabnwziy1g1')  #todo remove after Triplets analysis
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2p6ftvanwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_p6, keys_f, keys_t1, keys_o, keys_v1, keys_a, keys_n1, keys_lw1
@@ -8524,7 +8524,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     k2tva1e1b1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
 
     ####temp for Triplets todo remove after Triplets
-    k2tvPa1nwziyg1_shape = len_k2, len_gen_t1, len_v1, np.count_nonzero(period_is_reportffcfw_p), len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    k2tvPa1b1nwziyg1_shape = len_k2, len_gen_t1, len_v1, np.count_nonzero(period_is_reportffcfw_p), len_a1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
 
     ####kvpeb
     pzg0_shape = len_p, len_z, len_g0
@@ -8718,8 +8718,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     fun.f1_make_r_val(r_vals,nfoet_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1)),'mask_b1b9_preg_b1nwziygb9')
 
     ###ffcfw with only a few p slices todo remove this after Triplets analysis
-    fun.f1_make_r_val(r_vals, r_ffcfw_dams_k2tvPdams, 'ffcfw_dams_k2tvPa1nw8ziyg1',
-                      mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2tvPa1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals, r_ffcfw_dams_k2tvPdams, 'ffcfw_dams_k2tvPa1b1nw8ziyg1',
+                      mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2tvPa1b1nwziyg1_shape)
 
     ###mort - uses b axis instead of k for extra detail when scan=0
     if sinp.rep['i_store_mort']:
