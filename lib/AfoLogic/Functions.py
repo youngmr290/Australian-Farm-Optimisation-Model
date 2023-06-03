@@ -537,6 +537,7 @@ def solve_cubic_for_logistic(a, b, c, d):
     cut_off01 = np.log(roots)
     return cut_off01
 
+
 def f_solve_cubic_for_logistic_multidim(a, b, c, d):
     ''' Solve a general cubic equation of the form ax3 + bx2 + cx + d = 0
     Select the maximum value to identify a positive root that can be transformed with natural log
@@ -556,8 +557,8 @@ def f_solve_cubic_for_logistic_multidim(a, b, c, d):
     ###Identify multiple roots with a Trig approach with k axis in pos [-1]
     ####This method works for the type of cubic equation likely to be encountered but testing has not been exhaustive.
     k = np.array([0,1,2])
-    t_roots_k = 2*(-p[...,na] / 3)**0.5 * np.cos(1/3 * np.arccos(3 * q[...,na] / (2 * p[...,na])
-                                                                 * (-3 / p[...,na])**0.5) - 2*np.pi * k /3)
+    t_roots_k = 2*np.sqrt(-p[...,na] / 3) * np.cos(1/3 * np.arccos(3 * q[...,na] / (2 * p[...,na])
+                                                                 * np.sqrt(-3 / p[...,na])) - 2*np.pi * k /3)
     ###Transform the roots of the depressed cubic to the general cubic
     x_roots_k = t_roots_k - (b[...,na] / (3 * a[...,na]))
     ###Select the maximum value across the k axis (which is likely the only +ve root)
