@@ -60,7 +60,7 @@ def f_load_phases():
 
     return {"phases_r": phases_r, "rot_req": rot_req, "rot_prov": rot_prov, "s_rotcon1": s_rotcon1}
 
-def f_load_excel_default_inputs(use_pkl=True, load_all_pinp=False):
+def f_load_excel_default_inputs(use_pkl=True, load_all_pinp=False, trial_pinp=None):
     '''Function to load inputs from excel (univeral, structural, property, price variation, rotation and stubble)'''
 
     #########################################################################################################################################################################################################
@@ -123,7 +123,7 @@ def f_load_excel_default_inputs(use_pkl=True, load_all_pinp=False):
 
     ##determine which properties are used in current exp
     if not load_all_pinp:
-        pinp_defaults_req = exp.f_read_exp(pinp_req=True)
+        pinp_defaults_req = trial_pinp.dropna().unique()
     else: #this is required for the web app which needs to load all excel.
         pinp_defaults_req = ['GSM', 'CWM', 'SWV']
 
@@ -345,7 +345,7 @@ def load_excel(filename):
     if filename in excel_cache:
         return excel_cache[filename]
     else:
-        print(f"[excel] loading: {filename}")
+        # print(f"[excel] loading: {filename}")
         sys.stdout.flush()
         excel_cache[filename] = load_workbook(filename, data_only=True, read_only=False)
         return excel_cache[filename]

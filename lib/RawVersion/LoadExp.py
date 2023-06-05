@@ -24,7 +24,7 @@ from ..AfoLogic import Functions as fun
 from ..AfoLogic import Exceptions as exc
 from ..AfoLogic import relativeFile
 
-def f_read_exp(pinp_req=False):
+def f_read_exp():
     '''
 
     1. Read in exp.xl, set index and cols and drop un-required cols.
@@ -52,9 +52,6 @@ def f_read_exp(pinp_req=False):
 
     ##Determine which property are required for the current exp
     trial_pinp = exp_data.loc[exp_group_bool, ('Drop', 'blank', 'blank', 'Pinp')]
-    if pinp_req:
-        print('- finished')
-        return trial_pinp.dropna().unique()
 
     ##drop irrelevant cols and set index
     exp_data = exp_data.iloc[:, exp_data.columns.get_level_values(0)!='Drop']
