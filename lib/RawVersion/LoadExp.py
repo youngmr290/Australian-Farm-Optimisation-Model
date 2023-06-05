@@ -193,7 +193,8 @@ def f_load_experiment_data(force_run):
     ## Define the dataset - trials that require running (user wants it run and it is out of date)
     dataset = list(np.flatnonzero(np.nan_to_num(np.array(exp_data.index.get_level_values(0)))
                                   * np.logical_or(force_run, np.array(exp_data1['run_req']))))  # gets the ordinal index values for the trials the user wants to run that are not up to date
-
+    #todo could intercept experiments with no trials to perform and provide feedback rather than continue and throw an error
+    # Would also be good to report the number of trials in the experiment that are set to True. And then the number of these that are out of date. This can highlight to the user that they have put in the wrong expt number or alternatively they are all up to date.
     ##print out number of trials to run
     total_trials = len(dataset)
     print(f'Number of trials to run: {total_trials}')
