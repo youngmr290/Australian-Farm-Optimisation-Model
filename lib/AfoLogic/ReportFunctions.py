@@ -76,6 +76,9 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
         df = df.loc[row_mask, col_mask]
     
     ## simple write df to xl
+    ###if df is empty just create a simple empty df. Empty df with multiindex causes error.
+    if df.empty:
+        df=pd.DataFrame()
     df.to_excel(writer, sheet, startrow=rowstart, startcol=colstart)
 
     ##set up xlsxwriter stuff needed for advanced options
