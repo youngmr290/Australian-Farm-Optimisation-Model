@@ -25,7 +25,7 @@ solver_method = 'CPLEX'
 ##load excel data and experiment data  #
 ########################################
 exp_data, exp_data1, dataset, trial_pinp, total_trials = exp.f_load_experiment_data(force_run)
-sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs()
+sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp)
 d_rot_info = dxl.f_load_phases()
 cat_propn_s1_ks2 = dxl.f_load_stubble()
 
