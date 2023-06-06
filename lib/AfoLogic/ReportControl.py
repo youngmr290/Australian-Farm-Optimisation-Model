@@ -369,6 +369,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_lw_dams', 'Run']:
         ##Average dam lw with p, e & b axis. Lw is adjusted for animals that are sold but not adjusted by mortality (Ie if the light ones all die then the weighting of ffcfw by p should change)
+        ##Average dam lw with p, e & b axis. Lw is adjusted for animals that are sold but not adjusted by mortality (Ie if the light ones all die during a dvp then the weighting of animals that are averaged should change relatively across p)
         ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
         type = 'stock'
@@ -418,11 +419,13 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         prod_weights = 'Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_prodweights = [0,1] #q,s
         weights = 'dams_numbers_qsk2tvanwziy1g1'
-        na_weights = [5,7]  #p
-        keys = 'dams_keys_qsk2tvPabnwziy1g1'
-        arith = f_update_default_controls(user_controls, 'ffcfw_dams', 'arith', 1)   #average across slices if ffcfw>0
+        na_weights = [5,7,8]  #p,e,b
+        den_weights = 'Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1'  # weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_denweights = [0, 1]  # q,s
+        keys = 'dams_keys_qsk2tvPaebnwziy1g1'
+        arith = f_update_default_controls(user_controls, 'ffcfw_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'ffcfw_dams', 'index', [5])      #p
-        cols = f_update_default_controls(user_controls, 'ffcfw_dams', 'cols', [2,7]) #k2, b1
+        cols = f_update_default_controls(user_controls, 'ffcfw_dams', 'cols', [8]) #b1
         axis_slice = f_update_default_controls(user_controls, 'ffcfw_dams', 'axis_slice', {})
         reports["ffcfw_cut_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type
                                     , prod=prod, na_prod=na_prod
