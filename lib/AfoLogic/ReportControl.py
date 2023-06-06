@@ -82,7 +82,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     if report_run.loc['run_summary', 'Run']:
         reports["summary"] = rfun.f_summary(lp_vars,r_vals,"Summary")
     if report_run.loc['run_areasum', 'Run']:
-        option = f_update_default_controls(user_controls, 'areasum', 'option', 0) #default is all rotations by lmu
+        option = f_update_default_controls(user_controls, 'areasum', 'option', 8) #default is all rotations by lmu in p7[-1] with disagregate landuse index.
         reports["areasum"] = rfun.f_area_summary(lp_vars, r_vals, option=option)
     if report_run.loc['run_profit', 'Run']:
         option = f_update_default_controls(user_controls, 'profit', 'option', 4) #profit by zqs
@@ -381,11 +381,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_denweights = [0,1] #q,s
         keys = 'dams_keys_qsk2tvpaebnwziy1g1'
-        arith = 1
-        index = [5] #p
-        cols = [8] #b
-        axis_slice = {}
-        # axis_slice[0] = [0, 2, 1]
+        arith = f_update_default_controls(user_controls, 'lw_dams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'lw_dams', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'lw_dams', 'cols', [8]) #b1
+        axis_slice = f_update_default_controls(user_controls, 'lw_dams', 'axis_slice', {})
         reports["lw_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
                                  , na_weights=na_weights, prod_weights=prod_weights, na_prodweights=na_prodweights, den_weights=den_weights, na_denweights=na_denweights
                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
@@ -411,29 +410,25 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                  , na_weights=na_weights, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , den_weights=den_weights, na_denweights=na_denweights, keys=keys, arith=arith
                                  , index=index, cols=cols, axis_slice=axis_slice)
-    #todo remove after Triplets analysis
     if report_run.loc['run_ffcfw_cut_dams', 'Run']:
+        ##ffcfw for a select number of p periods
         type = 'stock'
         prod = 'ffcfw_dams_k2tvPa1e1b1nw8ziyg1'
         na_prod = [0, 1]  #q,s
         prod_weights = 'Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_prodweights = [0,1] #q,s
         weights = 'dams_numbers_qsk2tvanwziy1g1'
-        na_weights = [5,7,8]  #p,e,b
-        den_weights = 'Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
-        na_denweights = [0,1] #q,s
-        keys = 'dams_keys_qsk2tvPaebnwziy1g1'
-        arith = 1
-        index = [5]  #p
-        cols = [14,8]  #g,b1
-        axis_slice = {}
-        # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
-        # axis_slice[4] = [0, 7, 1]  #All DVPs for Triplets
+        na_weights = [5,7]  #p
+        keys = 'dams_keys_qsk2tvPabnwziy1g1'
+        arith = f_update_default_controls(user_controls, 'ffcfw_dams', 'arith', 1)   #average across slices if ffcfw>0
+        index = f_update_default_controls(user_controls, 'ffcfw_dams', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'ffcfw_dams', 'cols', [2,7]) #k2, b1
+        axis_slice = f_update_default_controls(user_controls, 'ffcfw_dams', 'axis_slice', {})
         reports["ffcfw_cut_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type
                                     , prod=prod, na_prod=na_prod
                                     , weights=weights, na_weights=na_weights
-                                    , prod_weights=prod_weights, na_prodweights=na_prodweights
-                                    , den_weights=den_weights, na_denweights=na_denweights
+                                    # , prod_weights=prod_weights, na_prodweights=na_prodweights
+                                    # , den_weights=den_weights, na_denweights=na_denweights
                                     , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_nv_dams', 'Run']:
         ##Average dam NV with p, e & b axis. NV is adjusted for animals that are sold but not adjusted by mortality (Ie if the light ones all die then the weighting by p should change)
