@@ -539,7 +539,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         keys = 'prog_keys_qsk3k5twzida0e0b0xyg2'
         arith = 1
         index = [5]             #w9
-        cols = [3,6,12,14]  #k2, z, gender, g2
+        cols = [14,12,6,11]  #g2, gender, z, b
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         reports["ffcfw_prog"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod
