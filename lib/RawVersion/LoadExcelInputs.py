@@ -60,7 +60,7 @@ def f_load_phases():
 
     return {"phases_r": phases_r, "rot_req": rot_req, "rot_prov": rot_prov, "s_rotcon1": s_rotcon1}
 
-def f_load_excel_default_inputs(use_pkl=True, load_all_pinp=False, trial_pinp=None):
+def f_load_excel_default_inputs(load_all_pinp=False, trial_pinp=None):
     '''Function to load inputs from excel (univeral, structural, property, price variation, rotation and stubble)'''
 
     #########################################################################################################################################################################################################
@@ -73,44 +73,19 @@ def f_load_excel_default_inputs(use_pkl=True, load_all_pinp=False, trial_pinp=No
     sinp_defaults={}
 
     structural_xl_path = relativeFile.findExcel("Structural.xlsx")
-    structural_pkl_path = relativeFile.findExcel("pkl_structural.pkl")
 
-    try:
-        if os.path.getmtime(structural_xl_path) > os.path.getmtime(structural_pkl_path):
-            inputs_from_pickle = False
-        else:
-            inputs_from_pickle = True and use_pkl
-            print('Reading structural inputs from pickle',end=' ',flush=True)
-    except FileNotFoundError:
-        inputs_from_pickle = False
+    ##read from excel
+    print('Reading structural inputs from Excel',end=' ',flush=True)
+    ##general
+    sinp_defaults['general_inp'] = xl_all_named_ranges(structural_xl_path,"General")
 
-    ##if inputs are not read from pickle then they are read from excel and written to pickle
-    if inputs_from_pickle == False:
-        print('Reading structural inputs from Excel',end=' ',flush=True)
-        with open(structural_pkl_path,"wb") as f:
-            ##general
-            sinp_defaults['general_inp'] = xl_all_named_ranges(structural_xl_path,"General")
-            pkl.dump(sinp_defaults['general_inp'],f,protocol=pkl.HIGHEST_PROTOCOL)
+    ##sheep inputs
+    sinp_defaults['stock_inp'] = xl_all_named_ranges(structural_xl_path,'Stock',numpy=True)
 
-            ##sheep inputs
-            sinp_defaults['stock_inp'] = xl_all_named_ranges(structural_xl_path,'Stock',numpy=True)
-            pkl.dump(sinp_defaults['stock_inp'],f,protocol=pkl.HIGHEST_PROTOCOL)
+    ##sa inputs (these variables can have sensitivity applied from exp.xl
+    sinp_defaults['structuralsa_inp'] = xl_all_named_ranges(structural_xl_path,'StructuralSA',numpy=True)
 
-            ##sa inputs (these variables can have sensitivity applied from exp.xl
-            sinp_defaults['structuralsa_inp'] = xl_all_named_ranges(structural_xl_path,'StructuralSA',numpy=True)
-            pkl.dump(sinp_defaults['structuralsa_inp'],f,protocol=pkl.HIGHEST_PROTOCOL)
-
-            sinp_defaults['rep_inp'] = xl_all_named_ranges(structural_xl_path,"Report Settings")
-            pkl.dump(sinp_defaults['rep_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
-
-    ##else the inputs are read in from the pickle file
-    ##note this must be in the same order as above
-    else:
-        with open(structural_pkl_path,"rb") as f:
-            sinp_defaults['general_inp'] = pkl.load(f)
-            sinp_defaults['stock_inp'] = pkl.load(f)
-            sinp_defaults['structuralsa_inp'] = pkl.load(f)
-            sinp_defaults['rep_inp'] = pkl.load(f)
+    sinp_defaults['rep_inp'] = xl_all_named_ranges(structural_xl_path,"Report Settings")
 
     print('- finished')
 
@@ -133,96 +108,38 @@ def f_load_excel_default_inputs(use_pkl=True, load_all_pinp=False, trial_pinp=No
         pinp_defaults[property] = {}
         ##build path.
         property_xl_path = relativeFile.findExcel("Property_{0}.xlsx".format(property))
-        property_pkl_path = relativeFile.findExcel("pkl_property_{0}.pkl".format(property))
 
-        try:
-            if os.path.getmtime(property_xl_path) > os.path.getmtime(property_pkl_path):
-                inputs_from_pickle = False
-            else:
-                inputs_from_pickle = True and use_pkl
-                print('Reading property {0} inputs from pickle'.format(property), end=' ', flush=True)
-        except FileNotFoundError:
-            inputs_from_pickle = False
+        ##read from excel
+        print('Reading property {0} inputs from Excel'.format(property), end=' ', flush=True)
+        pinp_defaults[property]['general_inp'] = xl_all_named_ranges(property_xl_path,"General", numpy=True)
 
-        ##if inputs are not read from pickle then they are read from excel and written to pickle
-        if inputs_from_pickle == False:
-            print('Reading property {0} inputs from Excel'.format(property), end=' ', flush=True)
-            with open(property_pkl_path, "wb") as f:
-                pinp_defaults[property]['general_inp'] = xl_all_named_ranges(property_xl_path,"General", numpy=True)
-                pkl.dump(pinp_defaults[property]['general_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+        pinp_defaults[property]['labour_inp'] = xl_all_named_ranges(property_xl_path,"Labour")
 
-                pinp_defaults[property]['labour_inp'] = xl_all_named_ranges(property_xl_path,"Labour")
-                pkl.dump(pinp_defaults[property]['labour_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+        pinp_defaults[property]['crop_inp'] = xl_all_named_ranges(property_xl_path,"Crop")
 
-                pinp_defaults[property]['crop_inp'] = xl_all_named_ranges(property_xl_path,"Crop")
-                pkl.dump(pinp_defaults[property]['crop_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+        pinp_defaults[property]['cropgraze_inp'] = xl_all_named_ranges(property_xl_path,"CropGrazing", numpy=True)
 
-                pinp_defaults[property]['cropgraze_inp'] = xl_all_named_ranges(property_xl_path,"CropGrazing", numpy=True)
-                pkl.dump(pinp_defaults[property]['cropgraze_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+        pinp_defaults[property]['saltbush_inp'] = xl_all_named_ranges(property_xl_path,"Saltbush", numpy=True)
 
-                pinp_defaults[property]['saltbush_inp'] = xl_all_named_ranges(property_xl_path,"Saltbush", numpy=True)
-                pkl.dump(pinp_defaults[property]['saltbush_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+        pinp_defaults[property]['mach_inp'] = xl_all_named_ranges(property_xl_path,"Mach")
 
-                pinp_defaults[property]['mach_inp'] = xl_all_named_ranges(property_xl_path,"Mach")
-                pkl.dump(pinp_defaults[property]['mach_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+        pinp_defaults[property]['stubble_inp'] = xl_all_named_ranges(property_xl_path,"CropResidue", numpy=True)
 
-                pinp_defaults[property]['stubble_inp'] = xl_all_named_ranges(property_xl_path,"CropResidue", numpy=True)
-                pkl.dump(pinp_defaults[property]['stubble_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+        pinp_defaults[property]['finance_inp'] = xl_all_named_ranges(property_xl_path,"Finance")
 
-                pinp_defaults[property]['finance_inp'] = xl_all_named_ranges(property_xl_path,"Finance")
-                pkl.dump(pinp_defaults[property]['finance_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+        pinp_defaults[property]['period_inp'] = xl_all_named_ranges(property_xl_path,"Periods", numpy=True) #automatically read in the periods as dates
 
-                pinp_defaults[property]['period_inp'] = xl_all_named_ranges(property_xl_path,"Periods", numpy=True) #automatically read in the periods as dates
-                pkl.dump(pinp_defaults[property]['period_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+        pinp_defaults[property]['sup_inp'] = xl_all_named_ranges(property_xl_path,"Sup Feed")
 
-                pinp_defaults[property]['sup_inp'] = xl_all_named_ranges(property_xl_path,"Sup Feed")
-                pkl.dump(pinp_defaults[property]['sup_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+        pinp_defaults[property]['sheep_inp']  = xl_all_named_ranges(property_xl_path, 'Sheep', numpy=True)
 
-                pinp_defaults[property]['sheep_inp']  = xl_all_named_ranges(property_xl_path, 'Sheep', numpy=True)
-                pkl.dump(pinp_defaults[property]['sheep_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+        pinp_defaults[property]['feedsupply_inp']  = xl_all_named_ranges(property_xl_path, 'FeedSupply', numpy=True)
 
-                pinp_defaults[property]['feedsupply_inp']  = xl_all_named_ranges(property_xl_path, 'FeedSupply', numpy=True)
-                pkl.dump(pinp_defaults[property]['feedsupply_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+        pinp_defaults[property]['mvf_inp']  = xl_all_named_ranges(property_xl_path, 'MVEnergy', numpy=True)
 
-                pinp_defaults[property]['mvf_inp']  = xl_all_named_ranges(property_xl_path, 'MVEnergy', numpy=True)
-                pkl.dump(pinp_defaults[property]['mvf_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
-
-                pinp_defaults[property]['pasture_inp']=dict()
-                for pasture in sinp_defaults["general_inp"]['pastures'][pinp_defaults[property]['general_inp']['i_pastures_exist']]:
-                    pinp_defaults[property]['pasture_inp'][pasture] = xl_all_named_ranges(property_xl_path, pasture, numpy=True)
-                pkl.dump(pinp_defaults[property]['pasture_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
-
-        ##else the inputs are read in from the pickle file
-        ##note this must be in the same order as above
-        else:
-            with open(property_pkl_path, "rb") as f:
-                pinp_defaults[property]['general_inp'] = pkl.load(f)
-
-                pinp_defaults[property]['labour_inp'] = pkl.load(f)
-
-                pinp_defaults[property]['crop_inp'] = pkl.load(f)
-
-                pinp_defaults[property]['cropgraze_inp'] = pkl.load(f)
-
-                pinp_defaults[property]['saltbush_inp'] = pkl.load(f)
-
-                pinp_defaults[property]['mach_inp'] = pkl.load(f)
-
-                pinp_defaults[property]['stubble_inp'] = pkl.load(f)
-
-                pinp_defaults[property]['finance_inp'] = pkl.load(f)
-
-                pinp_defaults[property]['period_inp'] = pkl.load(f)
-
-                pinp_defaults[property]['sup_inp'] = pkl.load(f)
-
-                pinp_defaults[property]['sheep_inp'] = pkl.load(f)
-
-                pinp_defaults[property]['feedsupply_inp'] = pkl.load(f)
-
-                pinp_defaults[property]['mvf_inp'] = pkl.load(f)
-
-                pinp_defaults[property]['pasture_inp'] = pkl.load(f)
+        pinp_defaults[property]['pasture_inp']=dict()
+        for pasture in sinp_defaults["general_inp"]['pastures'][pinp_defaults[property]['general_inp']['i_pastures_exist']]:
+            pinp_defaults[property]['pasture_inp'][pasture] = xl_all_named_ranges(property_xl_path, pasture, numpy=True)
 
         print('- finished')
 
@@ -238,83 +155,38 @@ def f_load_excel_default_inputs(use_pkl=True, load_all_pinp=False, trial_pinp=No
 
     ##build path
     universal_xl_path = relativeFile.findExcel("Universal.xlsx")
-    universal_pkl_path = relativeFile.findExcel("pkl_universal.pkl")
 
-    try:
-        if os.path.getmtime(universal_xl_path) > os.path.getmtime(universal_pkl_path):
-            inputs_from_pickle = False
-        else:
-            inputs_from_pickle = True and use_pkl
-            print('Reading universal inputs from pickle', end=' ', flush=True)
-    except FileNotFoundError:
-        inputs_from_pickle = False
+    ##read from excel
+    print('Reading universal inputs from Excel', end=' ', flush=True)
+    ##general
+    uinp_defaults['general_inp'] = xl_all_named_ranges(universal_xl_path,"General")
 
-    ##if inputs are not read from pickle then they are read from excel and written to pickle
-    if inputs_from_pickle == False:
-        print('Reading universal inputs from Excel', end=' ', flush=True)
-        with open(universal_pkl_path, "wb") as f:
-            ##general
-            uinp_defaults['general_inp'] = xl_all_named_ranges(universal_xl_path,"General")
-            pkl.dump(uinp_defaults['general_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+    ##prices
+    uinp_defaults['price_inp'] = xl_all_named_ranges(universal_xl_path,"Price")
 
-            ##prices
-            uinp_defaults['price_inp'] = xl_all_named_ranges(universal_xl_path,"Price")
-            pkl.dump(uinp_defaults['price_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+    ##Finance inputs
+    uinp_defaults['finance_inp'] = xl_all_named_ranges(universal_xl_path,"Finance")
 
-            ##Finance inputs
-            uinp_defaults['finance_inp'] = xl_all_named_ranges(universal_xl_path,"Finance")
-            pkl.dump(uinp_defaults['finance_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+    ##mach inputs - general
+    uinp_defaults['mach_general_inp'] = xl_all_named_ranges(universal_xl_path,"Mach General")
 
-            ##mach inputs - general
-            uinp_defaults['mach_general_inp'] = xl_all_named_ranges(universal_xl_path,"Mach General")
-            pkl.dump(uinp_defaults['mach_general_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+    ##sup inputs
+    uinp_defaults['sup_inp'] = xl_all_named_ranges(universal_xl_path,"Sup Feed")
 
-            ##sup inputs
-            uinp_defaults['sup_inp'] = xl_all_named_ranges(universal_xl_path,"Sup Feed")
-            pkl.dump(uinp_defaults['sup_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+    ##crop inputs
+    uinp_defaults['crop_inp'] = xl_all_named_ranges(universal_xl_path,"Crop Sim")
 
-            ##crop inputs
-            uinp_defaults['crop_inp'] = xl_all_named_ranges(universal_xl_path,"Crop Sim")
-            pkl.dump(uinp_defaults['crop_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+    ##sheep inputs
+    uinp_defaults['sheep_inp'] = xl_all_named_ranges(universal_xl_path, 'Sheep', numpy=True)
+    uinp_defaults['parameters_inp'] = xl_all_named_ranges(universal_xl_path, 'Parameters', numpy=True)
+    uinp_defaults['pastparameters_inp'] = xl_all_named_ranges(universal_xl_path, 'PastParameters', numpy=True)
 
-            ##sheep inputs
-            uinp_defaults['sheep_inp'] = xl_all_named_ranges(universal_xl_path, 'Sheep', numpy=True)
-            pkl.dump(uinp_defaults['sheep_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
-            uinp_defaults['parameters_inp'] = xl_all_named_ranges(universal_xl_path, 'Parameters', numpy=True)
-            pkl.dump(uinp_defaults['parameters_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
-            uinp_defaults['pastparameters_inp'] = xl_all_named_ranges(universal_xl_path, 'PastParameters', numpy=True)
-            pkl.dump(uinp_defaults['pastparameters_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
+    ##mach options
+    ###create a dict to store all options - this allows the user to select an option
+    uinp_defaults['machine_options_dict_inp']={}
+    uinp_defaults['machine_options_dict_inp'][1] = xl_all_named_ranges(universal_xl_path,"Mach 1")
+    uinp_defaults['machine_options_dict_inp'][2] = xl_all_named_ranges(universal_xl_path,"Mach 2")
 
-            ##mach options
-            ###create a dict to store all options - this allows the user to select an option
-            uinp_defaults['machine_options_dict_inp']={}
-            uinp_defaults['machine_options_dict_inp'][1] = xl_all_named_ranges(universal_xl_path,"Mach 1")
-            uinp_defaults['machine_options_dict_inp'][2] = xl_all_named_ranges(universal_xl_path,"Mach 2")
-            pkl.dump(uinp_defaults['machine_options_dict_inp'], f, protocol=pkl.HIGHEST_PROTOCOL)
-
-    ##else the inputs are read in from the pickle file
-    ##note this must be in the same order as above
-    else:
-        with open(universal_pkl_path, "rb") as f:
-            uinp_defaults['general_inp'] = pkl.load(f)
-
-            uinp_defaults['price_inp'] = pkl.load(f)
-
-            uinp_defaults['finance_inp'] = pkl.load(f)
-
-            uinp_defaults['mach_general_inp'] = pkl.load(f)
-
-            uinp_defaults['sup_inp'] = pkl.load(f)
-
-            uinp_defaults['crop_inp'] = pkl.load(f)
-
-            uinp_defaults['sheep_inp'] = pkl.load(f)
-
-            uinp_defaults['parameters_inp'] = pkl.load(f)
-
-            uinp_defaults['pastparameters_inp'] = pkl.load(f)
-
-            uinp_defaults['machine_options_dict_inp'] = pkl.load(f)
 
     ##read in price variation inputs from xl - this might change
     price_variation_inp = {}
