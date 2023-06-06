@@ -491,7 +491,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         keys = 'prog_keys_qsk3k5twzida0e0b0xyg2'
         arith = f_update_default_controls(user_controls, 'ffcfw_prog', 'arith', 1)
         index = f_update_default_controls(user_controls, 'ffcfw_prog', 'index', [5])      #w
-        cols = f_update_default_controls(user_controls, 'ffcfw_prog', 'cols', [3,6,12,14])  #k2, z, gender, g2
+        cols = f_update_default_controls(user_controls, 'ffcfw_prog', 'cols', [14,12,6,11])  #g2, gender, z, b0
         axis_slice = f_update_default_controls(user_controls, 'ffcfw_prog', 'axis_slice', {})
         reports["ffcfw_prog"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod
                                                  , prod_weights=prod_weights, na_prodweights=na_prodweights, weights=weights
