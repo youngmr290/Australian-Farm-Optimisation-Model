@@ -540,7 +540,9 @@ def solve_cubic_for_logistic(a, b, c, d):
 
 def f_solve_cubic_for_logistic_multidim(a, b, c, d):
     ''' Solve a general cubic equation of the form ax3 + bx2 + cx + d = 0
-    Select the maximum value to identify a positive root that can be transformed with natural log
+    The maximum value of the roots is selected to identify a positive root that can be transformed with natural log
+    With correct specification of the b1[24 & 25] parameters in Universal.xlsx there should always be
+    at least one positive real root
 
     Solved using a vectorised calculation as done in 'Components combined - latest v2.xlsx'
     Steps are:
@@ -565,7 +567,7 @@ def f_solve_cubic_for_logistic_multidim(a, b, c, d):
     x_roots = np.nanmax(x_roots_k, axis=-1)
     ###Back transform the roots from the conversion that created the cubic equation. This is not part of solving the roots
     ####but is done here rather than in the calling function to highlight that the problem is associated with the roots.
-    cut_off01 = np.log(x_roots)
+    cut_off01 = np.log(x_roots)   #todo an error here is most likely due to incorrect specification of the b1[24 or 25] parameters in Universal.xlsx
     return cut_off01
 
 
