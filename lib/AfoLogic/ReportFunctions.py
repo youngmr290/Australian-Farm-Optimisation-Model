@@ -700,17 +700,29 @@ def f_area_summary(lp_vars, r_vals, option):
         #. float pasture %, max, min & stdev in p7[-1]
         #. float cereal %, max, min & stdev in p7[-1]
         #. float canola %, max, min & stdev in p7[-1]
+        #. table all rotations by lmu with disagregated land uses as index
 
     '''
 
     ##read from other functions
-    rot_area_qszrl_p7, rot_area_qszlrk_p7 = f_rotation(lp_vars, r_vals)[2:4]
+    phases_rk, v_phase_change_increase_area_qszrl_p7, rot_area_qszrl_p7, rot_area_qszlrk_p7 = f_rotation(lp_vars, r_vals)
     landuse_area_k_p7qszl = rot_area_qszlrk_p7.groupby(axis=0, level=(0,1,2,3,5)).sum().unstack([0,1,2,3])  # area of each landuse (sum lmu and rotation)
 
     ##all rotations by lmu and p7
     rot_area_qszr_lp7 = rot_area_qszrl_p7.stack().unstack([-2,-1])
     if option == 0:
         return rot_area_qszr_lp7.round(2)
+
+    ##all rotations by lmu - with expanded landuse as index
+    if option == 8:
+        ### slice p7[-1] and unstack lmu
+        rot_area_qszr_l = rot_area_qszrl_p7.iloc[:,-1].unstack(-1)
+        ###remove current land use from index and add to df
+        phases_r = phases_rk.droplevel(1)
+        phases_r.insert(loc=len(phases_r.columns), column=len(phases_r.columns), value=phases_rk.index.get_level_values(1))
+        ###add disagregated landuse as index.
+        rot_area_qszr_l = rot_area_qszr_l.reset_index([0,1,2]).join(phases_r).set_index(['level_0','level_1','level_2']+list(range(len(phases_r.columns))))
+        return rot_area_qszr_l.round(2)
 
     ###pasture area
     all_pas = r_vals['rot']['all_pastures']  # landuse sets
