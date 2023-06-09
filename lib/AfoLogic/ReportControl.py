@@ -720,7 +720,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         arith = 2
         if lp_vars_inc:
             index =[4]      #v
-            cols =[0,1,8, 3, 2] #q, s, z, t, k2 (k2 last so that numbers can be SUMIF using k2)
+            cols =[0,1,8, 3, 7, 2] #q, s, z, t, w, k2 (k2 last so that numbers can be SUMIF using k2)
         else:
             index =[4] #v
             cols =[0,1,8, 2, 3, 7] #q, s, z, k2, t, w
