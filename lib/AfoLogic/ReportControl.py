@@ -62,7 +62,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
 
     ## A control to switch between reporting the optimised production level (True) and the production assumptions (False)
     ### Note this is only active for some reports. It also changes the axes that are reported, often adding a w axis
-    lp_vars_inc = False
+    lp_vars_inc = True
 
     reports ={}
     ##handle infeasible trials
@@ -219,7 +219,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
             na_weights = [3]  #p7
             arith = 1
             index =[5]      #v
-            cols =[2,3,4]    #k2, p7, t
+            cols =[12,3,4,2]    #g, p7, t, k2
         else:
             weights = None
             na_weights = []
@@ -240,7 +240,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
             na_weights = [4]  #p7
             arith = 1
             index =[6, 12]      #v, x
-            cols =[4, 14, 5]    #cashflow period, g3, t
+            cols =[4, 14, 5, 3]    #cashflow period, g3, t, k5 (birth type)
         else:
             weights = None
             na_weights = []
@@ -282,7 +282,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
             na_weights = [3]  #p7
             arith = 1
             index =[5]      #v
-            cols =[2,3,4]    #k2, p7, t
+            cols =[12,4,3,2]    #g, t, p7, k2 (BTRT)
         else:
             weights = None
             na_weights = []
@@ -302,7 +302,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         keys = 'offs_keys_qsk3k5p7tvnwziaxyg3'
         arith = 1
         index = [6, 12]     #DVP, gender
-        cols = [4, 14, 5]   #cashflow period, g3, t
+        cols = [4, 14, 5, 3]   #cashflow period, g3, t, k5(BTRT)
         # axis_slice = {}
         # axis_slice[4] = [0, 1, 1]   #c0: stk
         reports["woolvalue_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -315,7 +315,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         keys = 'offs_keys_qsk3k5tvnwziaxyg3'
         arith = 1
         index = [5, 7]              #DVP, w
-        cols = [13, 2, 3, 4, 11]     #g3, dam age, BTRT, t, gender
+        cols = [13, 11, 2, 3, 4]     #g3, gender, dam age, BTRT, t
         reports["saledate_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols)
     if report_run.loc['run_cfw_dams', 'Run']:
@@ -328,7 +328,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
             na_weights = []
             arith = 1
             index =[4]      #v
-            cols =[2,3]    #k2, t
+            cols =[11,3,2]    #g, t, k2
         else:
             weights = None
             na_weights = []
@@ -347,7 +347,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         keys = 'dams_keys_qsk2tvanwziy1g1'
         arith = 1
         index =[4] #v
-        cols =[11,3,2,8] #g,t,k2,w
+        cols =[11,3,2] #g,t,k2
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         reports["fd_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -359,8 +359,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
         keys = 'offs_keys_qsk3k5tvnwziaxyg3'
         arith = 1
-        index = [5]          #DVP
-        cols = [13, 2, 3, 4, 11]  #g3, dam age, BTRT, t, gender
+        index = [5,11]          #DVP, gender
+        cols = [13, 2, 4, 3]  #g3, dam age, t, BTRT
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         reports["cfw_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -372,8 +372,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
         keys = 'offs_keys_qsk3k5tvnwziaxyg3'
         arith = 1
-        index = [5]                 #DVP
-        cols = [13, 2, 3, 4, 11]     #g3, dam age, BTRT, t, gender
+        index = [5, 11]                 #DVP, gender
+        cols = [13, 2, 4, 3]     #g3, dam age, t, BTRT
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         reports["fd_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -419,7 +419,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         keys = 'dams_keys_qsk2tvpaebnwziy1g1'
         arith = 1
         index = [5] #p
-        cols = [8] #b
+        cols = [3,8] #t, b
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         reports["lw_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
@@ -442,10 +442,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         arith = 1
         if lp_vars_inc:
             index = [5] #p
-            cols = [8] #b
+            cols = [3,8] #t, b
         else:    #adding the w axis while still reporting with lp_vars weighting
             index = [5] #p
-            cols = [2,3,10] #b,w
+            cols = [3,8,10] #t,b,w
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         reports["ffcfw_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
@@ -466,7 +466,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         keys = 'dams_keys_qsk2tvPaebnwziy1g1'
         arith = 1
         index = [5]  #p
-        cols = [8]  #b1
+        cols = [14,8]  #g,b1
         axis_slice = {}
         # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
         # axis_slice[4] = [0, 7, 1]  #All DVPs for Triplets
@@ -493,10 +493,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         arith = 1
         if lp_vars_inc:
             index = [5]  #p
-            cols = [14, 7, 3, 8]  #g1, e, t & b1
+            cols = [14, 3, 7, 8]  #g1, t, e & b1
         else:
             index =[5] #p
-            cols =[14,7,3,8,10] #g,e,t,b1,w
+            cols =[14,3,7,8,10] #g,t,e,b1,w
         axis_slice = {}
         # axis_slice[5] = [0, 1, 1]   #only the first cycle of e1
         reports["nv_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod,
@@ -521,7 +521,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         keys = 'yatf_keys_qsk2tvpaebnwzixy1g1'
         arith = 1
         index = [5]     #p
-        cols = [15, 10]  #g2, w8
+        cols = [15, 8, 10]  #g2, b1, w8
         axis_slice = {}
         reports["ffcfw_yatf"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys
@@ -562,7 +562,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         keys = 'offs_keys_qsk3k5tvpnwzidaebxyg3'
         arith = 1
         index = [3, 6]      #k5, p. k5 here to save columns when many w
-        cols = [17, 15, 4, 8]   #g3, x, t, w
+        cols = [17, 15, 4, 14]   #g3, x, t, b
         axis_slice = {}
         axis_slice[13] = [0,1,1] #e: first cycle
         axis_slice[11] = [2,-1,1] #dam age: Adult
@@ -599,10 +599,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         option = 0
         if lp_vars_inc:
             index =[4]      #v
-            cols =[13,11,0,1,10,7]    #g,i,q,s,z & b9 #report must include the b axis otherwise an error is caused because the axis added after the arith.
+            cols =[13,0,1,10,7]    #g,q,s,z & b9 #report must include the b axis otherwise an error is caused because the axis added after the arith.
         else:
             index = [4]     #v
-            cols =[13,11,0,1,10,7,9]  #g,i,q,s,z,b & w
+            cols =[13,0,1,10,7,9]  #g,q,s,z,b & w
         axis_slice = {}
         reports["lamb_survival"] = rfun.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                              , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -614,10 +614,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         option = 1
         if lp_vars_inc:
             index =[4]      #v
-            cols =[11,9,0,1,8]   #g,i,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
+            cols =[11,0,1,8]   #g,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
         else:
             index = [4]     #v
-            cols = [11,9,0,1,8,7]    #g,i,q,s,z & w  Makes most sense to report all the axes that are individual animals (k2 optional here)
+            cols = [11,0,1,8,7]    #g,q,s,z & w  Makes most sense to report all the axes that are individual animals (k2 optional here)
         axis_slice = {}
         reports["weanper"] = rfun.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                        , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -626,10 +626,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         option = 2
         if lp_vars_inc:
             index =[4]      #v
-            cols =[11,9,0,1,8]   #g,i,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
+            cols =[11,0,1,8]   #g,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
         else:
             index = [4]     #v
-            cols = [11,9,0,1,8,7]    #g,i,q,s,z & w  Makes most sense to report all the axes that are individual animals
+            cols = [11,0,1,8,7]    #g,q,s,z & w  Makes most sense to report all the axes that are individual animals
         axis_slice = {}
         reports["scanper"] = rfun.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                        , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -638,10 +638,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         option = 3
         if lp_vars_inc:
             index =[4]      #v
-            cols =[11,9,0,1,8]   #g,i,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
+            cols =[11,0,1,8]   #g,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
         else:
             index = [4]     #v
-            cols = [11,9,0,1,8,7]    #g,i,q,s,z & w  Makes most sense to report all the axes that are individual animals
+            cols = [11,0,1,8,7]    #g,q,s,z & w  Makes most sense to report all the axes that are individual animals
         axis_slice = {}
         reports["dry_propn"] = rfun.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                          , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -720,7 +720,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         arith = 2
         if lp_vars_inc:
             index =[4]      #v
-            cols =[0,1,8, 2, 3] #q, s, z, k2, t
+            cols =[0,1,8, 3, 2] #q, s, z, t, k2 (k2 last so that numbers can be SUMIF using k2)
         else:
             index =[4] #v
             cols =[0,1,8, 2, 3, 7] #q, s, z, k2, t, w
@@ -737,7 +737,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         keys = 'dams_keys_qsk2tvpanwziy1g1'
         arith = 2
         index =[4, 5]
-        cols =[2, 3, 8]
+        cols =[0,1,8,3,2]    #q, s, z, t, k2 (k2 last so that numbers can be SUMIF using k2)
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         reports["numbers_dams_p"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
@@ -758,8 +758,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
         keys = 'offs_keys_qsk3k5tvnwziaxyg3'
         arith = 2
-        index =[5]                  #DVP
-        cols =[8, 13, 11, 2, 3, 4, 7]   #z, g3, Gender, dam age, BTRT, t, w
+        index =[5,11]                  #DVP, gender
+        cols =[8, 13, 2, 3, 4, 7]   #z, g3, Gender, dam age, BTRT, t, w
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         reports["numbers_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -788,7 +788,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None):
         keys = 'dams_keys_Tpaebnwziy1g1'
         arith = 4
         index =[1]          #period
-        cols =[10, 4, 6]     #genotype, LSLN, w
+        cols =[10, 0, 4, 6]     #genotype, T, LSLN, w
         axis_slice = {}
         # axis_slice[0] = [2, 3, 1]
         # axis_slice[1] = [2, 4, 1]
