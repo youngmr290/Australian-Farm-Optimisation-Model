@@ -46,7 +46,7 @@ def f_pasture(params, r_vals, nv):
     # phase_len       = sinp.general['phase_len']
     phases_rotn_df  = pinp.phases_r
     pasture_sets    = sinp.landuse['pasture_sets']
-    pastures        = sinp.general['pastures'][pinp.general['pas_inc']]
+    pastures        = sinp.general['pastures'][pinp.general['pas_inc_t']]
 
     ########################
     ##masks                #

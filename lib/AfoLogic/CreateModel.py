@@ -164,7 +164,7 @@ def sets(model, nv):
     #pasture             #
     #######################
     ##pasture types
-    model.s_pastures = Set(initialize=sinp.general['pastures'][pinp.general['pas_inc']],doc='feed periods')
+    model.s_pastures = Set(initialize=sinp.general['pastures'][pinp.general['pas_inc_t']],doc='feed periods')
 
     ##feed periods
     model.s_feed_periods = Set(ordered=True, initialize=pinp.period['i_fp_idx'], doc='feed periods') #must be ordered so it can be sliced in pasture pyomo to allow feed to be transferred between periods.

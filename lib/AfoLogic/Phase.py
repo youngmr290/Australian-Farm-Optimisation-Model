@@ -1221,7 +1221,7 @@ def f_sow_prov():
     period_is_dryseeding_p5zk = period_is_dryseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(dry_sown_landuses), axis=-1)
 
     ##pasture seeding
-    pastures = sinp.general['pastures'][pinp.general['pas_inc']]
+    pastures = sinp.general['pastures'][pinp.general['pas_inc_t']]
     zt = (len(keys_z),len(pastures))
     i_reseeding_date_start_zt = np.zeros(zt, dtype = 'float64')
     i_reseeding_date_end_zt = np.zeros(zt, dtype = 'float64')
@@ -1303,7 +1303,7 @@ def f1_crop_params(params,r_vals):
 #     ##read phases
 #     phases_df = pinp.f1_phases()
 #
-#     pastures = sinp.general['pastures'][pinp.general['pas_inc']]
+#     pastures = sinp.general['pastures'][pinp.general['pas_inc_t']]
 #     ##if cont tedera is in rotation list and tedera is included in the pasture modules then generate the inputs for it
 #     if any(phases_df.iloc[:,-1].isin(['tc'])) and 'tedera' in pastures:
 #         germ_df = pinp.pasture_inputs['tedera']['GermPhases']

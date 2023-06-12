@@ -560,7 +560,7 @@ def f_con_link_understory_saltbush_consumption(model):
     salt land pasture. Saltbush info comes from saltbushpyomo and understory comes from pasturepyomo.
     '''
     def link_us_sb(model,q,s,z,p6,f,l):
-        if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p6z[p6,z]) and pinp.saltbush['i_saltbush_inc']:
+        if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p6z[p6,z]) and pinp.general['pas_inc_t'][3]:
             return - slppy.f_saltbush_selection(model,q,s,z,p6,f,l) \
                    + sum(model.v_greenpas_ha[q, s, f, g, o, p6, l, z, 'understory'] * model.p_volume_grnha[f, g, o, p6, l, z, 'understory'] * model.p_sb_selectivity_zp6[z,p6]
                         for g in model.s_grazing_int for o in model.s_foo_levels) \

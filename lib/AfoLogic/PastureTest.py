@@ -84,7 +84,7 @@ d_rot_info = pinp.f1_phases(d_rot_info)
 ### create nv dict
 nv={}
 ### read values from the pasture_inputs dictionary
-pas_inc = np.array(pinp.general['pas_inc'])
+pas_inc = np.array(pinp.general['pas_inc_t'])
 pastures = sinp.general['pastures'][pas_inc]
 exceldata = pinp.pasture_inputs[pastures[0]]           # assign to exceldata the pasture data for the first pasture type (annuals)
 i_me_maintenance_vf = exceldata['MaintenanceEff'][:, 1:].T

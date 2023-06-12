@@ -579,7 +579,7 @@ def f1_boundarypyomo_local(params, model):
             ###initilise
             pasture_dse_carry = {} #populate straight into dict
             ### set bound - carry cap of each ha of each pasture
-            for t, pasture in enumerate(sinp.general['pastures'][pinp.general['pas_inc']]):
+            for t, pasture in enumerate(sinp.general['pastures'][pinp.general['pas_inc_t']]):
                 pasture_dse_carry[pasture] = pinp.sheep['i_sr_constraint_t'][t]
             ###param - propn of each fp used in the SR
             ###constraint
