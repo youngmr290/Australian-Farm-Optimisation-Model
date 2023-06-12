@@ -272,7 +272,7 @@ def create_sa():
     ############
     ##SAV
     sav['poc_inc'] = '-'  #control if poc is included
-    sav['pas_inc_t'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA value for pastures included mask
+    sav['pas_inc_t'] = np.full_like(pinp.general['pas_inc_t'], '-', dtype=object) #SA value for pastures included mask
     
     for pasture in sinp.general['pastures'][pinp.general['i_pastures_exist']]:
         ##SAV

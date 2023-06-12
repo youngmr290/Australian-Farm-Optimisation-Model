@@ -270,7 +270,6 @@ def f_property_inp_sa(pinp_defaults):
 
     ##salt land pasture
     ###sav
-    saltbush['i_saltbush_inc'] = fun.f_sa(saltbush['i_saltbush_inc'], sen.sav['slp_inc'], 5)
     ###sam
     saltbush['i_sb_expected_growth_zp6'] = fun.f_sa(saltbush['i_sb_expected_growth_zp6'], sen.sam['sb_growth'])
     ###sap
@@ -281,9 +280,9 @@ def f_property_inp_sa(pinp_defaults):
     ##pasture
     ###sav
     crop['i_poc_inc'] = fun.f_sa(crop['i_poc_inc'], sen.sav['poc_inc'], 5)
-    general['pas_inc'] = fun.f_sa(general['pas_inc'], sen.sav['pas_inc_t'], 5)
+    general['pas_inc_t'] = fun.f_sa(general['pas_inc_t'], sen.sav['pas_inc_t'], 5)
 
-    for pasture in sinp.general['pastures'][general['pas_inc']]: #all pasture inputs are adjusted even if a given pasture is not included
+    for pasture in sinp.general['pastures'][general['pas_inc_t']]: #all pasture inputs are adjusted even if a given pasture is not included
         ###sav
         ###SAM
         pasture_inputs[pasture]['GermStd'] = fun.f_sa(pasture_inputs[pasture]['GermStd'], sen.sam[('germ',pasture)])
@@ -422,7 +421,7 @@ def f1_expand_p6():
     saltbush['i_slp_diet_propn_zp6'] = np.take_along_axis(saltbush['i_slp_diet_propn_zp6'], a_p6std_zp6, axis=1)
 
     ####pasture
-    for pasture in sinp.general['pastures'][general['pas_inc']]:
+    for pasture in sinp.general['pastures'][general['pas_inc_t']]:
         pasture_inputs[pasture]['POCCons'] = np.take_along_axis(pasture_inputs[pasture]['POCCons'][:,:,na], a_p6std_p6z[:,na,:], axis=0)
         pasture_inputs[pasture]['i_pasture_stage_p6z'] = np.take_along_axis(pasture_inputs[pasture]['i_pasture_stage_p6z'], a_p6std_p6z, axis=0)
         pasture_inputs[pasture]['DigRednSenesce'] = np.take_along_axis(pasture_inputs[pasture]['DigRednSenesce'], a_p6std_zp6, axis=1)

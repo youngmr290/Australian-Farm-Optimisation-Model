@@ -795,7 +795,7 @@ def f1_update_reseeding_foo(foo_grn_reseeding_p6lrzt, foo_dry_reseeding_p6lrzt,
 
     ##base inputs
     n_feed_periods = len(per.f_feed_periods()) - 1
-    len_t = np.count_nonzero(pinp.general['pas_inc'])
+    len_t = np.count_nonzero(pinp.general['pas_inc_t'])
     n_lmu = np.count_nonzero(pinp.general['i_lmu_area'])
     len_z = period_zt.shape[0]
     len_r = resown_rt.shape[0]
