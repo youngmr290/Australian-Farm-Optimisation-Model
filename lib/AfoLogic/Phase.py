@@ -271,19 +271,20 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_yields = pinp.crop['yields']
+        base_yields = base_yields.loc[mask_r,:]
         base_yields_rk_z = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
     else:
         ###Sim version
         base_yields_rk_y = f1_sim_inputs(sheet='Yield', index=[0,1], header=0)
-        season_group_yz = f1_sim_inputs(sheet='SeasonGroup', index=0, header=0).stack()
+        base_yields_rk_y = base_yields_rk_y.loc[mask_r,:]
         ###Convert y to z
+        season_group_yz = f1_sim_inputs(sheet='SeasonGroup', index=0, header=0).stack()
         base_yields_rk_z = base_yields_rk_y.mul(season_group_yz, axis=1, level=0).replace(0, np.nan).groupby(axis=1, level=1).mean().replace(np.nan, 0)
     ###rename index
     base_yields_rk_z.index.rename(['rot','landuse'],inplace=True)
 
-    ##Mask z & r axis
+    ##Mask z axis
     base_yields_rk_z = zfun.f_seasonal_inp(base_yields_rk_z, axis=1)
-    base_yields_rk_z = base_yields_rk_z.loc[mask_r,:]
 
     ##apply sam with k axis
     crop_yield_k = pd.Series(sen.sam['crop_yield_k'], index=keys_k)
@@ -450,15 +451,19 @@ def f_fert_req():
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_fert = pinp.crop['fert']
-        ###set index and headers
+        ###set headers
         base_fert = base_fert.T.set_index(['fert'], append=True).T.astype(float)
+        ###mask r - need to do this now so that phases_df line up because phases_df has already been masked
+        base_fert = base_fert.loc[mask_r,:]
+        ###set index
         base_fert_rk_zn = base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
     else:
         ###Sim version
         base_fert_rk_zn = f1_sim_inputs(sheet='Fert Applied', index=[0,1], header=[0,1])
-    ###Mask z & r axis
+        ###mask r
+        base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
+    ###Mask z axis
     base_fert_rk_zn = zfun.f_seasonal_inp(base_fert_rk_zn, axis=1, level=0)
-    base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
     ###rename index
     base_fert_rk_zn.index.rename(['rot','landuse'],inplace=True)
 
@@ -522,13 +527,16 @@ def f_fert_passes():
         ### User defined
         fert_passes = pinp.crop['fert_passes']
         fert_passes = fert_passes.T.set_index(['passes'], append=True).T.astype(float)
+        ###mask r - need to do this now so that phases_df line up because phases_df has already been masked
+        fert_passes = fert_passes.loc[mask_r,:]
         fert_passes_rk_zn = fert_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
+
     else:
         ###Sim version
         fert_passes_rk_zn = f1_sim_inputs(sheet='No Fert Applications', index=[0,1], header=[0,1])
-    ###Mask z & r axis
+        fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
+    ###Mask z axis
     fert_passes_rk_zn = zfun.f_seasonal_inp(fert_passes_rk_zn, axis=1, level=0)
-    fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
     ###rename index
     fert_passes_rk_zn.index.rename(['rot','landuse'],inplace=True)
 
@@ -810,20 +818,22 @@ def f_chem_application():
     '''
     ##read phases
     phases_df = pinp.phases_r
+    mask_r = pinp.rot_mask_r
 
     ##read in chem passes
     if pinp.crop['user_crop_rot']:
         ### User defined
         chem_passes = pinp.crop['chem']
         chem_passes = chem_passes.T.set_index(['chem'], append=True).T.astype(float)
+        ###mask r - need to do this now so that phases_df line up because phases_df has already been masked
+        chem_passes = chem_passes.loc[mask_r,:]
         chem_passes_rk_zn = chem_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
     else:
         ###Sim version
         chem_passes_rk_zn = f1_sim_inputs(sheet='No Chem Applications', index=[0,1], header=[0,1])
-    ###Mask r & z axis
+        chem_passes_rk_zn = chem_passes_rk_zn.loc[mask_r,:]
+    ###Mask z axis
     chem_passes_rk_zn = zfun.f_seasonal_inp(chem_passes_rk_zn, axis=1, level=0)
-    mask_r = pinp.rot_mask_r
-    chem_passes_rk_zn = chem_passes_rk_zn.loc[mask_r,:]
     ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
     keys_n = uinp.general['i_chem_idx']
     keys_k = sinp.landuse['C']
@@ -867,6 +877,7 @@ def f_chem_cost(r_vals):
     '''
     ##read phases
     phases_df = pinp.phases_r
+    mask_r = pinp.rot_mask_r
 
     ##read in necessary bits and adjust indexed
     # i_chem_cost = pinp.crop['chem_cost'].sort_index() #cost of fungicide per application
@@ -884,16 +895,16 @@ def f_chem_cost(r_vals):
         ### User defined
         chem_cost = pinp.crop['chem_cost']
         chem_cost = chem_cost.T.set_index(['chem'], append=True).T.astype(float)
+        chem_cost = chem_cost.loc[mask_r, :]
         chem_cost_rk_zn = chem_cost.set_index(
             [phases_df.index, phases_df.iloc[:, -1]])  # make the rotation and current landuse the index
         chem_cost_r_zn = zfun.f_seasonal_inp(chem_cost, axis=1)
     else:
         ###Sim version
         chem_cost_rk_zn = f1_sim_inputs(sheet='Total Chem Cost', index=[0,1], header=[0,1])
-    ###Mask r & z axis
+        chem_cost_rk_zn = chem_cost_rk_zn.loc[mask_r,:]
+    ###Mask z axis
     chem_cost_rk_zn = zfun.f_seasonal_inp(chem_cost_rk_zn, axis=1, level=0)
-    mask_r = pinp.rot_mask_r
-    chem_cost_rk_zn = chem_cost_rk_zn.loc[mask_r,:]
     ###apply SAM
     keys_k = sinp.landuse['C']
     keys_k2 = sinp.landuse['All_pas']
