@@ -103,6 +103,8 @@ def create_sa():
     sav['cara_risk_coef'] = '-'              #control risk coefficient for CRRA method
     sav['crra_risk_coef'] = '-'              #control risk coefficient for CRRA method
     sav['pinp_rot'] = '-'                       #control if using the pinp rotations or the full rotation list (note full rot requires simulation inputs)
+    sav['crop_landuse_inc_k1'] = np.full(len(pinp.general['i_crop_landuse_inc_k1']), '-', dtype=object)    #control which crop landuses are included
+    sav['pas_landuse_inc_k2'] = np.full(len(pinp.general['i_pas_landuse_inc_k2']), '-', dtype=object)     #control which pasture landuses are included
     sav['lmu_area_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
     sav['lmu_arable_propn_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
     ##SAM

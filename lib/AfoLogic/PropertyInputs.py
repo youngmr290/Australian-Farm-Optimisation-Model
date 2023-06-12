@@ -214,6 +214,8 @@ def f_property_inp_sa(pinp_defaults):
     labour['max_casual_seedharv'] = fun.f_sa(labour['max_casual_seedharv'], sen.sav['seedharv_casual_ub'], 5)
     general['i_lmu_area'] = fun.f_sa(general['i_lmu_area'], sen.sav['lmu_area_l'], 5)
     crop['i_lmu_area'] = fun.f_sa(crop['arable'], sen.sav['lmu_arable_propn_l'], 5)
+    general['i_crop_landuse_inc_k1'] = fun.f_sa(general['i_crop_landuse_inc_k1'], sen.sav['crop_landuse_inc_k1'], 5)
+    general['i_pas_landuse_inc_k2'] = fun.f_sa(general['i_pas_landuse_inc_k2'], sen.sav['pas_landuse_inc_k2'], 5)
     ###sam
     ###sap
     ###saa
@@ -528,6 +530,14 @@ def f1_phases(d_rot_info):
         property = general['i_property_id']
         xl_path = relativeFile.findExcel("SimInputs_{0}.xlsx".format(property))
         rot_mask_r = pd.read_excel(xl_path, sheet_name='RotMask', index_col=0, header=0, engine='openpyxl').squeeze().values
+
+    ##add user landuse mask to rot mask (allows users to remove all phases with a given landuse)
+    crop_landuse_mask_k1 = np.logical_and(general['i_crop_landuse_exists_k1'], general['i_crop_landuse_inc_k1'])
+    pas_landuse_mask_k2 = np.logical_and(general['i_pas_landuse_exists_k2'], general['i_pas_landuse_inc_k2'])
+    crop_landuse_mask_r = np.sum((phases_r.iloc[:,-1].values[:,na]==sinp.general['i_idx_k1']) * crop_landuse_mask_k1, axis=1)
+    pas_landuse_mask_r = np.sum((phases_r.iloc[:,-1].values[:,na]==sinp.general['i_idx_k2']) * pas_landuse_mask_k2, axis=1)
+    landuse_mask_r = np.logical_or(crop_landuse_mask_r, pas_landuse_mask_r)
+    rot_mask_r = np.logical_and(rot_mask_r, landuse_mask_r)
 
     ##apply mask
     phases_r = phases_r.loc[rot_mask_r,:]
