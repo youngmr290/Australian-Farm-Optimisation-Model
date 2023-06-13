@@ -149,6 +149,7 @@ def f_universal_inp_sa(uinp_defaults):
     price['manager_cost'] = fun.f_sa(price['manager_cost'], sen.sav['manager_cost'], 5)
     price['permanent_cost'] = fun.f_sa(price['permanent_cost'], sen.sav['permanent_cost'], 5)
     price['casual_cost'] = fun.f_sa(price['casual_cost'], sen.sav['casual_cost'], 5)
+    sheep['i_mask_s7x'] = fun.f_sa(sheep['i_mask_s7x'], sen.sav['mask_s7x'], 5)
 
     ##Mach
     for option in mach: #all pasture inputs are adjusted even if a given pasture is not included
