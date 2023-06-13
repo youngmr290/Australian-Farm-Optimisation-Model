@@ -1248,7 +1248,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         ##offs
         ###mask which dvps are included
         dvp_mask_f3 = np.concatenate([mask_node_is_dvp[0:1], sinp.structuralsa['i_dvp_mask_f3'], mask_node_is_dvp[1:]]) #season start is first
-        dvp3_inc = np.concatenate([dvp_mask_f3[0:1], np.array([True, False, False]), dvp_mask_f3[1:]]) #True at start is to count for the period from the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesn't occur each year)
+        dvp3_inc = np.concatenate([dvp_mask_f3[0:1], np.array([True, False, False]), dvp_mask_f3[1:]]) #True in middle is to count for the period from the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesn't occur each year)
         ###build dvps from fvps
         dvp_date_inc_v3 = fvp_date_all_f3[dvp3_inc]
         dvp_type_inc_v3 = fvp_type_all_f3[dvp3_inc]
