@@ -6158,10 +6158,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ###offs
     ####asset value - calc asset value before adjusting by period is sale and shearing
-    assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg3 =  ((salevalue_tpa1e1b1nwzida0e0b0xyg3 + woolvalue_tpa1e1b1nwzida0e0b0xyg3)
-                                            * period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,na,na,mask_p_offs_p,...] * alloc_p7tpa1e1b1nwzida0e0b0xyg[:,:,mask_p_offs_p,...])
     #todo temporary for live export analysis - set asset value to a fixed number so that adding/removing sale grids doeesnt have a random effect on asset value.
-    assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg3[...]=100
+    assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg3 =  ((100 + woolvalue_tpa1e1b1nwzida0e0b0xyg3)
+                                            * period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,na,na,mask_p_offs_p,...] * alloc_p7tpa1e1b1nwzida0e0b0xyg[:,:,mask_p_offs_p,...])
     ####adjust for period is sale/shear (needs to be done here rather than p2v so that cashflow can be combined).
     salevalue_tpa1e1b1nwzida0e0b0xyg3 = salevalue_tpa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
     salevalue_c1tpa1e1b1nwzida0e0b0xyg3 = salevalue_c1tpa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
