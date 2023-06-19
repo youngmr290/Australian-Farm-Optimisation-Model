@@ -540,7 +540,8 @@ def f1_phases(d_rot_info):
     rot_mask_r = np.logical_and(rot_mask_r, landuse_mask_r)
 
     ##apply mask
+    phases_r_not_masked = phases_r #save version without mask so that rot generator doesnt get run everytime the landuse mask changes.
     phases_r = phases_r.loc[rot_mask_r,:]
 
-    return {"phases_r": phases_r, "rot_req": rot_req, "rot_prov": rot_prov, "s_rotcon1": s_rotcon1}
+    return {"phases_r": phases_r_not_masked, "rot_req": rot_req, "rot_prov": rot_prov, "s_rotcon1": s_rotcon1}
 

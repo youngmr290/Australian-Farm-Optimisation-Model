@@ -141,200 +141,201 @@ Note a2 (pasture with no cost) doesnt provide anything and it doesnt need to bec
 ##if you want to use a customised list of rotations this can be set to false - populate the array further down the module.
 customised_rotations = False
 def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
-    print('Running rotation generator')
-    yr0 = np.array(['b', 'o', 'w', 'f', 'l', 'z','r','of'#, 'h'- not included in v1 to speed calibration process
-                   , 'bd','wd','rd','zd'
-                   , 'a', 'ar'
-                   , 's', 'sr'])
-                   # , 'm'
-                    # , 'u', 'ur'
-                    # , 'x', 'xr'
-                    # , 'j', 't', 'jr', 'tr'])
-    yr1 = np.array(['AR', 'SR1'
-           ,'B','O1','W', 'N', 'L', 'F', 'OF'
-           , 'A1'
-           , 'S1'])
-           # , 'M'
-            # , 'U'
-            # , 'X'
-            # , 'T', 'J'])
-    yr2 = np.array(['B','O','W', 'N', 'L', 'F'
-           , 'A2'
-           , 'S'])
-           # , 'M'
-            # , 'U'
-            # , 'X'
-            # , 'T', 'J'])
-    yr3 = np.array(['B','O','W', 'N', 'L', 'F'
-           , 'A'])
-            # , 'U'
-            # , 'T'])
-    yr4 = np.array(['A','Y'])
-            # , 'U'
-            # , 'T'])
-    yr5 = np.array(['A','Y'])
-            # , 'U'
-            # , 'T'])
+    print('Running rotation generator', end=' ')
+    if not user_crop_rot:
+        yr0 = np.array(['b', 'o', 'w', 'f', 'l', 'z','r','of'#, 'h'- not included in v1 to speed calibration process
+                       , 'bd','wd','rd','zd'
+                       , 'a', 'ar'
+                       , 's', 'sr'])
+                       # , 'm'
+                        # , 'u', 'ur'
+                        # , 'x', 'xr'
+                        # , 'j', 't', 'jr', 'tr'])
+        yr1 = np.array(['AR', 'SR1'
+               ,'B','O1','W', 'N', 'L', 'F', 'OF'
+               , 'A1'
+               , 'S1'])
+               # , 'M'
+                # , 'U'
+                # , 'X'
+                # , 'T', 'J'])
+        yr2 = np.array(['B','O','W', 'N', 'L', 'F'
+               , 'A2'
+               , 'S'])
+               # , 'M'
+                # , 'U'
+                # , 'X'
+                # , 'T', 'J'])
+        yr3 = np.array(['B','O','W', 'N', 'L', 'F'
+               , 'A'])
+                # , 'U'
+                # , 'T'])
+        yr4 = np.array(['A','Y'])
+                # , 'U'
+                # , 'T'])
+        yr5 = np.array(['A','Y'])
+                # , 'U'
+                # , 'T'])
 
-    # arrays=[yr5,yr4,yr3,yr2,yr1,yr0]
-    arrays=[yr4,yr3,yr2,yr1,yr0]
-    phases=fun.cartesian_product_simple_transpose(arrays)
-
-
-
+        # arrays=[yr5,yr4,yr3,yr2,yr1,yr0]
+        arrays=[yr4,yr3,yr2,yr1,yr0]
+        phases=fun.cartesian_product_simple_transpose(arrays)
 
 
-    ###########################################################
-    #params used to try make the rules more flexible to change#
-    ###########################################################
-
-    ##after how many yrs is annual resown
-    resow_a = 4
-    a_sow_col=np.size(phases,1)-1-resow_a #difference between history len and resow len -the col of the last phase yr that determines resseding (if 0 it means that all the history must be a crop for pasture to be resown)
-
-    '''
-    To understand this you must know the following;
-    true&false = false
-    true+false = true
-    true*true*false = false
-    '''
 
 
-    for i in range(np.size(phases,1)-1):
-    ##drop rules 1; unprofitable
-        ###no cont canola
-        phases = phases[~(np.isin(phases[:,i], ['N'])&np.isin(phases[:,i+1], ['N','r','z','rd','zd']))]
-        ###no cont pulse - need this rule and the one below
-        phases = phases[~(np.isin(phases[:,i], ['L','F'])&np.isin(phases[:,i+1], ['L','F','l','f']))]
-        ###two years between pulses
-        if i<np.size(phases,1)-2:
+
+        ###########################################################
+        #params used to try make the rules more flexible to change#
+        ###########################################################
+
+        ##after how many yrs is annual resown
+        resow_a = 4
+        a_sow_col=np.size(phases,1)-1-resow_a #difference between history len and resow len -the col of the last phase yr that determines resseding (if 0 it means that all the history must be a crop for pasture to be resown)
+
+        '''
+        To understand this you must know the following;
+        true&false = false
+        true+false = true
+        true*true*false = false
+        '''
+
+
+        for i in range(np.size(phases,1)-1):
+        ##drop rules 1; unprofitable
+            ###no cont canola
+            phases = phases[~(np.isin(phases[:,i], ['N'])&np.isin(phases[:,i+1], ['N','r','z','rd','zd']))]
+            ###no cont pulse - need this rule and the one below
             phases = phases[~(np.isin(phases[:,i], ['L','F'])&np.isin(phases[:,i+1], ['L','F','l','f']))]
-            phases = phases[~(np.isin(phases[:,i], ['L','F'])&np.isin(phases[:,i+2], ['L','F','l','f']))]
-        ###no pulse after pasture
-        phases = phases[~(np.isin(phases[:,i], ['AR', 'SR1','A1','A2','A','M','S','S1','U','X','T','J'])&np.isin(phases[:,i+1], ['L','F','l','f']))]
-        ###only spraytopped pasture after manipulated
-        phases = phases[~(np.isin(phases[:,i], ['M'])&np.isin(phases[:,i+1], ['AR', 'A1','A2','A', 'M','a','ar','m']))]
-        ###not going to resown tedera after a tedera (in a cont rotation you resow every 10yrs but that is accounted for with 'tc')
-        phases = phases[~(np.isin(phases[:,i], ['T','J'])&np.isin(phases[:,i+1], ['tr','jr']))]
-        ###not going to resow lucerne after a lucerne (in a cont rotation you resow every 5yrs but that is accounted for with 'uc' & 'xc')
-        phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['xr','ur']))]
-        ###only crop after two spraytopped pastures
-        if i<np.size(phases,1)-2:
-            phases = phases[~(np.isin(phases[:,i], ['S','S1','SR1'])&np.isin(phases[:,i+1], ['S','S1','SR1'])&np.isin(phases[:,i+2], ['AR','A1','A2','A','M','S','S1','SR1','ar','a','m','s','sr']))]
-        ###No resowing of pastures if the previous landuse is pasture and the following landuse is a crop
-        if i<np.size(phases,1)-2:
-            phases = phases[~(np.isin(phases[:,i], ['AR','A1','A2','A','M','S','S1','SR1'])&np.isin(phases[:,i+1], ['AR','SR1'])&np.isin(phases[:,i+2], ['B','O','O1','W','N','L','F','OF','b','h','o','of','w','f','l','z','r','bd','wd','rd','zd']))]
-        ###No non spraytopped pasture between spraytopped pasture and crop
-        if i<np.size(phases,1)-2:
-            phases = phases[~(np.isin(phases[:,i], ['S','S1','SR1'])&np.isin(phases[:,i+1], ['AR','A1','A2','A'])&np.isin(phases[:,i+2], ['B','O','O1','W','N','L','F','OF','b','h','o','of','w','f','l','z','r','bd','wd','rd','zd']))]
-        ###No spraytopped pasture between a crop and a non spraytopped pasture
-        if i<np.size(phases,1)-2:
-            phases = phases[~(np.isin(phases[:,i], ['Y','B','O','O1','W','N','L','F','OF'])&np.isin(phases[:,i+1], ['S','S1','SR1'])&np.isin(phases[:,i+2], ['AR','A1','A2','A','M','ar','a','m']))]
-        ###No resowing between spraytoping
-        phases = phases[~(np.isin(phases[:,i], ['S','S1','SR1'])&np.isin(phases[:,i+1], ['SR1','sr']))]
-        ###only canola after pasture
-        phases = phases[~(np.isin(phases[:,i], ['AR','SR1','A1','A2','A','M','S','S1','U','X','T','J'])&np.isin(phases[:,i+1], ['B','O','O1','W', 'L', 'F', 'OF', 'b', 'h', 'o', 'of', 'w', 'f', 'l', 'bd','wd']))]
-        ###no dry seeding after non spraytopped pasture unless RR canola
-        phases = phases[~(np.isin(phases[:,i], ['A1','A2','A','AR','M','U','X','T','J'])&np.isin(phases[:,i+1], ['bd','wd','zd']))]
-        ###no saleable crop after strategic fodder
-        phases = phases[~(np.isin(phases[:,i], ['OF'])&np.isin(phases[:,i+1], ['b', 'h', 'o', 'w', 'f', 'l', 'z','r','bd','wd','rd','zd']))]
-        ###can't have 1yr of perennial unless it is the earliest yr in the history
-        if i == 0:
-            pass #first yr of rotation can be a perennial because a  perennial could have been before it
-        else:
-            try: #used for conditions that are concerned with more than two yrs
-                phases = phases[~(np.isin(phases[:,i], ['T','J'])&~(np.isin(phases[:,i-1], ['T','J', 'Y']) + np.isin(phases[:,i+1], ['T','J','t','j'])))]
-            except IndexError: pass
-            ###can't have 1yr of perennial
-            try: #used for conditions that are concerned with more than two yrs
-                phases = phases[~(np.isin(phases[:,i], ['U','X'])&~(np.isin(phases[:,i-1], ['U','X', 'Y']) + np.isin(phases[:,i+1], ['U','X','u','x'])))]
-            except IndexError: pass
+            ###two years between pulses
+            if i<np.size(phases,1)-2:
+                phases = phases[~(np.isin(phases[:,i], ['L','F'])&np.isin(phases[:,i+1], ['L','F','l','f']))]
+                phases = phases[~(np.isin(phases[:,i], ['L','F'])&np.isin(phases[:,i+2], ['L','F','l','f']))]
+            ###no pulse after pasture
+            phases = phases[~(np.isin(phases[:,i], ['AR', 'SR1','A1','A2','A','M','S','S1','U','X','T','J'])&np.isin(phases[:,i+1], ['L','F','l','f']))]
+            ###only spraytopped pasture after manipulated
+            phases = phases[~(np.isin(phases[:,i], ['M'])&np.isin(phases[:,i+1], ['AR', 'A1','A2','A', 'M','a','ar','m']))]
+            ###not going to resown tedera after a tedera (in a cont rotation you resow every 10yrs but that is accounted for with 'tc')
+            phases = phases[~(np.isin(phases[:,i], ['T','J'])&np.isin(phases[:,i+1], ['tr','jr']))]
+            ###not going to resow lucerne after a lucerne (in a cont rotation you resow every 5yrs but that is accounted for with 'uc' & 'xc')
+            phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['xr','ur']))]
+            ###only crop after two spraytopped pastures
+            if i<np.size(phases,1)-2:
+                phases = phases[~(np.isin(phases[:,i], ['S','S1','SR1'])&np.isin(phases[:,i+1], ['S','S1','SR1'])&np.isin(phases[:,i+2], ['AR','A1','A2','A','M','S','S1','SR1','ar','a','m','s','sr']))]
+            ###No resowing of pastures if the previous landuse is pasture and the following landuse is a crop
+            if i<np.size(phases,1)-2:
+                phases = phases[~(np.isin(phases[:,i], ['AR','A1','A2','A','M','S','S1','SR1'])&np.isin(phases[:,i+1], ['AR','SR1'])&np.isin(phases[:,i+2], ['B','O','O1','W','N','L','F','OF','b','h','o','of','w','f','l','z','r','bd','wd','rd','zd']))]
+            ###No non spraytopped pasture between spraytopped pasture and crop
+            if i<np.size(phases,1)-2:
+                phases = phases[~(np.isin(phases[:,i], ['S','S1','SR1'])&np.isin(phases[:,i+1], ['AR','A1','A2','A'])&np.isin(phases[:,i+2], ['B','O','O1','W','N','L','F','OF','b','h','o','of','w','f','l','z','r','bd','wd','rd','zd']))]
+            ###No spraytopped pasture between a crop and a non spraytopped pasture
+            if i<np.size(phases,1)-2:
+                phases = phases[~(np.isin(phases[:,i], ['Y','B','O','O1','W','N','L','F','OF'])&np.isin(phases[:,i+1], ['S','S1','SR1'])&np.isin(phases[:,i+2], ['AR','A1','A2','A','M','ar','a','m']))]
+            ###No resowing between spraytoping
+            phases = phases[~(np.isin(phases[:,i], ['S','S1','SR1'])&np.isin(phases[:,i+1], ['SR1','sr']))]
+            ###only canola after pasture
+            phases = phases[~(np.isin(phases[:,i], ['AR','SR1','A1','A2','A','M','S','S1','U','X','T','J'])&np.isin(phases[:,i+1], ['B','O','O1','W', 'L', 'F', 'OF', 'b', 'h', 'o', 'of', 'w', 'f', 'l', 'bd','wd']))]
+            ###no dry seeding after non spraytopped pasture unless RR canola
+            phases = phases[~(np.isin(phases[:,i], ['A1','A2','A','AR','M','U','X','T','J'])&np.isin(phases[:,i+1], ['bd','wd','zd']))]
+            ###no saleable crop after strategic fodder
+            phases = phases[~(np.isin(phases[:,i], ['OF'])&np.isin(phases[:,i+1], ['b', 'h', 'o', 'w', 'f', 'l', 'z','r','bd','wd','rd','zd']))]
+            ###can't have 1yr of perennial unless it is the earliest yr in the history
+            if i == 0:
+                pass #first yr of rotation can be a perennial because a  perennial could have been before it
+            else:
+                try: #used for conditions that are concerned with more than two yrs
+                    phases = phases[~(np.isin(phases[:,i], ['T','J'])&~(np.isin(phases[:,i-1], ['T','J', 'Y']) + np.isin(phases[:,i+1], ['T','J','t','j'])))]
+                except IndexError: pass
+                ###can't have 1yr of perennial
+                try: #used for conditions that are concerned with more than two yrs
+                    phases = phases[~(np.isin(phases[:,i], ['U','X'])&~(np.isin(phases[:,i-1], ['U','X', 'Y']) + np.isin(phases[:,i+1], ['U','X','u','x'])))]
+                except IndexError: pass
 
-    ##lucerne and tedera resowing
-    phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['U','X'])&np.isin(phases[:,np.size(phases,1)-1], ['U','X','u','x']))] #lucerne after a non lucern must be resown
-    phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['T','J'])&np.isin(phases[:,np.size(phases,1)-1], ['T','J','t','j']))] #Tedera after a non tedera must be resown
+        ##lucerne and tedera resowing
+        phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['U','X'])&np.isin(phases[:,np.size(phases,1)-1], ['U','X','u','x']))] #lucerne after a non lucern must be resown
+        phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['T','J'])&np.isin(phases[:,np.size(phases,1)-1], ['T','J','t','j']))] #Tedera after a non tedera must be resown
 
-    ##annual resowing
-    resow_cols = np.size(phases,1)-resow_a #the number of cols where resowing can occur ie in yr0 and 1
-    for i in range(resow_cols):
-        i+=1
-        ###if continuous annual it must be spraytopped every 5yrs
-        a_index = np.all(np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR','A1','A2','A','M']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['AR','A1','A2','A','M','ar','a','m'])
-        phases = phases[~a_index]
-        ####add phases with S in yr 3 & 4 so that cont annual pasture can exist (S and A in yr 3 & 4 are the same as
-        #### far as production so it doesnt need to exist for all phases but AAAAa is masked out so we need SAAAa).
-        #### all cont pasture phases that dont have S in yr0-3 need to be added with S in yr 3 & 4.
-        #### posssibly this could be added to generation then use rules to remove unrequired
-        cont_annual = np.array([['S', 'A', 'A2', 'A1', 'a']
-                               , ['S', 'A', 'A2', 'A1', 'ar']
-                               , ['S', 'A', 'A2', 'AR', 'a']
-                               , ['S', 'A', 'A2', 'AR', 'ar']
-                               , ['A', 'S', 'A2', 'A1', 'a']
-                               , ['A', 'S', 'A2', 'A1', 'ar']
-                               , ['A', 'S', 'A2', 'AR', 'a']
-                               , ['A', 'S', 'A2', 'AR', 'ar']
-                               ])
-        phases = np.concatenate((phases, cont_annual))
+        ##annual resowing
+        resow_cols = np.size(phases,1)-resow_a #the number of cols where resowing can occur ie in yr0 and 1
+        for i in range(resow_cols):
+            i+=1
+            ###if continuous annual it must be spraytopped every 5yrs
+            a_index = np.all(np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR','A1','A2','A','M']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['AR','A1','A2','A','M','ar','a','m'])
+            phases = phases[~a_index]
+            ####add phases with S in yr 3 & 4 so that cont annual pasture can exist (S and A in yr 3 & 4 are the same as
+            #### far as production so it doesnt need to exist for all phases but AAAAa is masked out so we need SAAAa).
+            #### all cont pasture phases that dont have S in yr0-3 need to be added with S in yr 3 & 4.
+            #### posssibly this could be added to generation then use rules to remove unrequired
+            cont_annual = np.array([['S', 'A', 'A2', 'A1', 'a']
+                                   , ['S', 'A', 'A2', 'A1', 'ar']
+                                   , ['S', 'A', 'A2', 'AR', 'a']
+                                   , ['S', 'A', 'A2', 'AR', 'ar']
+                                   , ['A', 'S', 'A2', 'A1', 'a']
+                                   , ['A', 'S', 'A2', 'A1', 'ar']
+                                   , ['A', 'S', 'A2', 'AR', 'a']
+                                   , ['A', 'S', 'A2', 'AR', 'ar']
+                                   ])
+            phases = np.concatenate((phases, cont_annual))
 
-        ###if there are no annuals in the history then an annual in yr0 or yr1 must be resown
-        a_index2 = np.all(~np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR','SR1','A1','A2','A','M','S','S1']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['a', 's','m','A1','A2','A','M','S','S1'])
-        phases = phases[~a_index2]
-
-
-    ##X can't be in the same rotation as U, T, J and A
-    a_xutj = np.any(np.isin(phases[:,:], ['AR', 'SR1','ar','a','A1','A2','A','m','M','s','sr','S','S1']), axis=1)&np.any(np.isin(phases[:,:], ['X','x','xr','U','u','ur','T','t','tr','J','j','jr']), axis=1)
-    x_utj = np.any(np.isin(phases[:,:], ['X','x','xr']), axis=1)&np.any(np.isin(phases[:,:], ['U','u','ur','T','t','tr','J','j','jr']), axis=1)
-    u_tj = np.any(np.isin(phases[:,:], ['U','u','ur']), axis=1)&np.any(np.isin(phases[:,:], ['T','t','tr','J','j','jr']), axis=1)
-    t_j = np.any(np.isin(phases[:,:], ['T','t','tr']), axis=1)&np.any(np.isin(phases[:,:], ['J','j','jr']), axis=1)
-    phases = phases[~(a_xutj + x_utj + u_tj + t_j)]
+            ###if there are no annuals in the history then an annual in yr0 or yr1 must be resown
+            a_index2 = np.all(~np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR','SR1','A1','A2','A','M','S','S1']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['a', 's','m','A1','A2','A','M','S','S1'])
+            phases = phases[~a_index2]
 
 
-    ######################################################
-    #delete cont rotations that require special handling#
-    ######################################################
-    '''
-    remove cont rotations before generalisation
-    -remove rotations that can provide themselves
-    -when generalising don't generalise yr1 
-        - this will stop Y X X X3 x4 providing itself ie if you generalised yr1 to X then this rotation would provide itself'
-    '''
-    ##check if every phase in a rotation is either lucerne or Y
-    xindex=np.all(np.isin(phases[:,:], ['X','x','U','u']), axis=1)
-    phases = phases[~xindex]
-    ##check if every phase in a rotation is either T or Y
-    tindex=np.all(np.isin(phases[:,:], ['T','J','t','j']), axis=1)
-    phases = phases[~tindex]
+        ##X can't be in the same rotation as U, T, J and A
+        a_xutj = np.any(np.isin(phases[:,:], ['AR', 'SR1','ar','a','A1','A2','A','m','M','s','sr','S','S1']), axis=1)&np.any(np.isin(phases[:,:], ['X','x','xr','U','u','ur','T','t','tr','J','j','jr']), axis=1)
+        x_utj = np.any(np.isin(phases[:,:], ['X','x','xr']), axis=1)&np.any(np.isin(phases[:,:], ['U','u','ur','T','t','tr','J','j','jr']), axis=1)
+        u_tj = np.any(np.isin(phases[:,:], ['U','u','ur']), axis=1)&np.any(np.isin(phases[:,:], ['T','t','tr','J','j','jr']), axis=1)
+        t_j = np.any(np.isin(phases[:,:], ['T','t','tr']), axis=1)&np.any(np.isin(phases[:,:], ['J','j','jr']), axis=1)
+        phases = phases[~(a_xutj + x_utj + u_tj + t_j)]
 
-    ########################
-    #continuous phase & pnc#
-    ########################
-    sp=np.array(['SP','SP','SP','SP','sp'])
-    phases = np.concatenate((phases, [sp])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
 
-    pnc=np.array([['G','G','G','Ag1','a2']
-                 ,['G','G','G','Sg1','a2']
-                 ,['G','G','Ag2','N','a2']
-                 ,['G','G','Ag2','E','a2']
-                 ,['G','G','Ag2','OF','a2']
-                 ,['G','G','C1','N','a2']
-                 ,['G','G','C1','E','a2']
-                 ,['G','G','C1','P','a2'] #Note APa doesn't exist therefore only necessary option is CPa
-                 ,['G','G','C1','OF','a2']
-                 ])
-    phases = np.concatenate((phases, pnc))
+        ######################################################
+        #delete cont rotations that require special handling#
+        ######################################################
+        '''
+        remove cont rotations before generalisation
+        -remove rotations that can provide themselves
+        -when generalising don't generalise yr1 
+            - this will stop Y X X X3 x4 providing itself ie if you generalised yr1 to X then this rotation would provide itself'
+        '''
+        ##check if every phase in a rotation is either lucerne or Y
+        xindex=np.all(np.isin(phases[:,:], ['X','x','U','u']), axis=1)
+        phases = phases[~xindex]
+        ##check if every phase in a rotation is either T or Y
+        tindex=np.all(np.isin(phases[:,:], ['T','J','t','j']), axis=1)
+        phases = phases[~tindex]
 
-    # todo add back in when required.
-    # tc=np.array(['tc','tc','tc','tc','tc'])
-    # phases = np.concatenate((phases, [tc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
-    #
-    # jc=np.array(['jc','jc','jc','jc','jc'])
-    # phases = np.concatenate((phases, [jc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
-    #
-    # uc=np.array(['uc','uc','uc','uc','uc'])
-    # phases = np.concatenate((phases, [uc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
-    #
-    # xc=np.array(['xc','xc','xc','xc','xc'])
-    # phases = np.concatenate((phases, [xc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+        ########################
+        #continuous phase & pnc#
+        ########################
+        sp=np.array(['SP','SP','SP','SP','sp'])
+        phases = np.concatenate((phases, [sp])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+
+        pnc=np.array([['G','G','G','Ag1','a2']
+                     ,['G','G','G','Sg1','a2']
+                     ,['G','G','Ag2','N','a2']
+                     ,['G','G','Ag2','E','a2']
+                     ,['G','G','Ag2','OF','a2']
+                     ,['G','G','C1','N','a2']
+                     ,['G','G','C1','E','a2']
+                     ,['G','G','C1','P','a2'] #Note APa doesn't exist therefore only necessary option is CPa
+                     ,['G','G','C1','OF','a2']
+                     ])
+        phases = np.concatenate((phases, pnc))
+
+        # todo add back in when required.
+        # tc=np.array(['tc','tc','tc','tc','tc'])
+        # phases = np.concatenate((phases, [tc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+        #
+        # jc=np.array(['jc','jc','jc','jc','jc'])
+        # phases = np.concatenate((phases, [jc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+        #
+        # uc=np.array(['uc','uc','uc','uc','uc'])
+        # phases = np.concatenate((phases, [uc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+        #
+        # xc=np.array(['xc','xc','xc','xc','xc'])
+        # phases = np.concatenate((phases, [xc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
 
     ######################
     #simplified rotations#
@@ -422,11 +423,13 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
         if test2==0: #doesn't require a history
             print('rot does not req a history: ',rot_phase)
 
-    rot_phase_by_constrain = pd.DataFrame(list(itertools.product(l_phases,l_rot_hist) ) ) #had to use this cartesian method as i couldn't get the fast function to work
-    mps_bool_req=pd.Series(mps_bool_req) #convert to series because easier to manipulate
-    mps_bool_prov=pd.Series(mps_bool_prov) #convert to series because easier to manipulate
-    mps_bool_req=pd.concat([rot_phase_by_constrain, mps_bool_req], axis=1) #add two dfs together
-    mps_bool_prov=pd.concat([rot_phase_by_constrain, mps_bool_prov], axis=1) #add two dfs together
+    rot_phase_by_constrain = pd.DataFrame(list(itertools.product(l_phases,l_rot_hist))) #had to use this cartesian method as i couldn't get the fast function to work
+    mps_bool_req = pd.Series(mps_bool_req) #convert to series because easier to manipulate
+    mps_bool_prov = pd.Series(mps_bool_prov) #convert to series because easier to manipulate
+    mps_bool_req = pd.concat([rot_phase_by_constrain, mps_bool_req], axis=1) #add two dfs together
+    mps_bool_req.columns = [0,1,2]
+    mps_bool_prov = pd.concat([rot_phase_by_constrain, mps_bool_prov], axis=1) #add two dfs together
+    mps_bool_prov.columns = [0,1,2]
     mps_bool_req = mps_bool_req[(mps_bool_req.iloc[:,2] != 0)]
     mps_bool_prov = mps_bool_prov[(mps_bool_prov.iloc[:,2] != 0)]
 
@@ -446,7 +449,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
     else:
         ###get a list of the histories that are provided by the rotations
         hist_prov = np.unique(mps_bool_prov.iloc[:,1].values)
-        ###get a list of the any of the rotations that require a not provided history - need to do it this way so that rotation is fully removed even if it requires two histories
+        ###get a list of any of the rotations that require a not provided history - need to do it this way so that rotation is fully removed even if it requires two histories
         phases_to_remove = np.unique(mps_bool_req[np.all(mps_bool_req.iloc[:, 1].values != hist_prov[:,None], axis=0)].iloc[:, 0].values)
         ###remove the rotations from the require param, provide param and the phase list
         mps_bool_req = mps_bool_req[np.all(mps_bool_req.iloc[:, 0].values!=phases_to_remove[:,None], axis=0)]
@@ -456,6 +459,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
         rot_hist = pd.DataFrame(rot_hist, index=l_rot_hist)
         rot_hist = rot_hist[np.any(rot_hist.index.values==hist_prov[:,None], axis=0)]
 
+    print('- finished')
     return {"phases_r": rot_phases, "rot_req": mps_bool_req, "rot_prov": mps_bool_prov, "s_rotcon1": rot_hist}
 
 
