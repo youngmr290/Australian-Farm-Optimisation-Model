@@ -2755,11 +2755,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             ##The loop needs to execute at least once, then repeat if there
             ##is a target and the result is not close enough to the target
 
-            ###initial info ^this will need to be hooked up with correct inputs, if they are the same for each period they don't need to be initialised below
-            target_lwc = None
-            epsilon = 0
-            n_max_itn = sinp.stock['i_feedsupply_itn_max']
-            attempts = 0 #initial
+            ###initial info
+            ####set lw target - None is default which means lw target is not used.
+            if not 'target_lwc_dams' in locals(): #only required once.
+                target_lwc_dams = fun.f_sa(np.full(len_p, 9999.), sen.sav['target_lwc_dams_P'][0:len_p], 5)
+                target_lwc_offs = fun.f_sa(np.full(len_p, 9999.), sen.sav['target_lwc_offs_P'][0:len_p], 5)
+                epsilon = 0.050 #within 50g of target
+                n_max_itn = sinp.stock['i_feedsupply_itn_max']
+            shape = feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, 0].shape + (n_max_itn,) + (2,) #slice 0 to remove the p axis
+            attempts_dams = np.full(shape, np.nan) #initilise
+            shape = feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:, 0].shape + (n_max_itn,) + (2,) #slice 0 to remove the p axis
+            attempts_offs = np.full(shape, np.nan) #initilise
 
             for itn in range(n_max_itn):
                 ##potential intake
@@ -3170,26 +3176,41 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
 
                 ###if there is a target then adjust feedsupply, if not break out of feedsupply loop
-                if target_lwc == None:
+                if target_lwc_dams[p] == 9999 and target_lwc_offs[p] == 9999:
                     break
-                ###calc error
-                error = (ebg_dams * cg_dams[18, ...]) - target_lwc
-                ###store in attempts array - build new array assign old array and then add current itn results - done like this to handle the shape changing and because we don't know what shape feedsupply and error are before this loop starts
-                shape = tuple(np.maximum.reduce([feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p].shape, error.shape]))+(n_max_itn,)+(2,)
-                attempts2= np.zeros(shape)
-                attempts2[...] = attempts
-                attempts2[...,itn,0] = feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p]
-                attempts2[...,itn,1] = error
-                attempts = attempts2
-                ###is error within tolerance
-                if np.all(np.abs(error) <= epsilon):
-                    break
-                ###max attempts reached
-                elif itn == n_max_itn-1: #minus 1 because range() and hence itn starts from 0
-                    ####select best feed supply option
-                    feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p] = attempts[...,attempts[...,1]==np.nanmin(np.abs(attempts[...,1]),axis=-1),0] #create boolean index using error array then index feedsupply array
-                    break
-                feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p:p+1] = sfun.f1_feedsupply_adjust(attempts,feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p],itn)
+                print('fs target itteration: ', itn)
+                if target_lwc_dams[p] != 9999 and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p]>0):
+                    ###calc error
+                    error = (ebg_dams * cg_dams[18, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p]) - target_lwc_dams[p] * (days_period_pa1e1b1nwzida0e0b0xyg1[p]>0) #if 0 days in period then target is 0
+                    ###store in attempts array - build new array assign old array and then add current itn results - done like this to handle the shape changing and because we don't know what shape feedsupply and error are before this loop starts
+                    attempts_dams[...,itn,0] = feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p]
+                    attempts_dams[...,itn,1] = error
+                    ###is error within tolerance
+                    if np.all(np.abs(error) <= epsilon):
+                        break
+                    ###max attempts reached
+                    elif itn == n_max_itn-1: #minus 1 because range() and hence itn starts from 0
+                        ####select best feed supply option
+                        best_idx = np.argmin(np.abs(attempts_dams[...,1]),axis=-1)
+                        feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p] = np.take_along_axis(attempts_dams[...,0], best_idx[...,na], axis=-1)[...,0] #get rid of singleton itn axis
+                        break
+                    feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p:p+1] = sfun.f1_feedsupply_adjust(attempts_dams,feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p],itn)
+                if target_lwc_offs[p] != 9999 and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p]>0):
+                    ###calc error
+                    error = (ebg_offs * cg_offs[18, ...] * days_period_pa1e1b1nwzida0e0b0xyg3[p]) - target_lwc_offs[p] * (days_period_pa1e1b1nwzida0e0b0xyg3[p]>0) #if 0 days in period then target is 0
+                    ###store in attempts array - build new array assign old array and then add current itn results - done like this to handle the shape changing and because we don't know what shape feedsupply and error are before this loop starts
+                    attempts_offs[...,itn,0] = feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p]
+                    attempts_offs[...,itn,1] = error
+                    ###is error within tolerance
+                    if np.all(np.abs(error) <= epsilon):
+                        break
+                    ###max attempts reached
+                    elif itn == n_max_itn-1: #minus 1 because range() and hence itn starts from 0
+                        ####select best feed supply option
+                        best_idx = np.argmin(np.abs(attempts_offs[...,1]),axis=-1)
+                        feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p] = np.take_along_axis(attempts_offs[...,0], best_idx[...,na], axis=-1)[...,0] #get rid of singleton itn axis
+                        break
+                    feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p] = sfun.f1_feedsupply_adjust(attempts_offs,feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p],itn)
                 itn+=1
 
             ##dam weight at a given time during period - used for special events like birth.
