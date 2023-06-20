@@ -460,6 +460,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
         ##For yatf the denom weight also includes a weighting for nyatf. The numerator also gets weighted by this.
         ##v_dam must be used because v_prog has a different w axis than yatf.
+        ##note prog weight will be a bit higher than yatf weight because yatf weight is start of period and prog weight is end
         type = 'stock'
         prod = 'ffcfw_yatf_k2Tvpa1e1b1nw8zixyg1'
         na_prod = [0,1] #q,s
@@ -472,12 +473,13 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         keys = 'yatf_keys_qsk2tvpaebnwzixy1g1'
         arith = f_update_default_controls(user_controls, 'ffcfw_yatf', 'arith', 1)
         index = f_update_default_controls(user_controls, 'ffcfw_yatf', 'index', [5])      #p
-        cols = f_update_default_controls(user_controls, 'ffcfw_yatf', 'cols', [15, 10])  #g2, w8
-        axis_slice = f_update_default_controls(user_controls, 'ffcfw_yatf', 'axis_slice', {})
+        cols = f_update_default_controls(user_controls, 'ffcfw_yatf', 'cols', [2,15, 10, 13])  #k2, g2, w8, x
+        axis_slice = f_update_default_controls(user_controls, 'ffcfw_yatf', 'axis_slice', {8: [2,None,1]}) #b with yatf
         reports["ffcfw_yatf"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys
                                  , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_ffcfw_prog', 'Run']:
+        ##note prog weight will be a bit higher than yatf weight because yatf weight is start of period and prog weight is end
         type = 'stock'
         prod = 'ffcfw_prog_k3k5wzida0e0b0xyg2'
         na_prod = [0,1,4] #q,s,t
