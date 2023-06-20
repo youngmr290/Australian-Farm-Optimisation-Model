@@ -146,6 +146,8 @@ def create_sa():
     sav['manager_cost'] = '-' #SA value for manager cost per year
     sav['permanent_cost'] = '-' #SA value for permanent cost per year
     sav['casual_cost'] = '-' #SA value for casual cost per hour
+    sav['sale_ffcfw_min'] = np.full(len_s7, '-', dtype=object)        #min weight for sale in grid
+    sav['sale_ffcfw_max'] = np.full(len_s7, '-', dtype=object)        #max weight for sale in grid
     ##SAM
     sam['grainp_k'] = np.ones(len_k, dtype=np.float64)   # SA multiplier for grain prices for each crop
     sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron

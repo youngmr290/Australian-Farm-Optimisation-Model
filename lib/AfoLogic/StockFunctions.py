@@ -2488,7 +2488,8 @@ def f_sale_value(cn, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj_
                  dresspercent_adj_s7tpg, grid_price_s7s5s6tpg, price_scalar_c1s7tpg, month_scalar_s7tpg,
                  month_discount_s7tpg, price_type_s7tpg, cvlw_s7s5tpg, cvscore_s7s6tpg,
                  grid_weightrange_s7s5tpg, grid_scorerange_s7s6tpg, age_end_pg1, discount_age_s7tpg,sale_cost_pc_s7tpg,
-                 sale_cost_hd_s7tpg, mask_s7x_s7tpg, sale_agemax_s7tpg1, sale_agemin_s7tpg1, dtype=None):
+                 sale_cost_hd_s7tpg, mask_s7x_s7tpg, sale_agemax_s7tpg1, sale_agemin_s7tpg1, sale_ffcfw_min_s7tpg,
+                 sale_ffcfw_max_s7tpg, dtype=None):
     ##Calculate condition score from relative condition
     cs_tpg = f1_condition_score(o_rc_tpg, cn)
     ##Calculate fat score from relative condition
@@ -2537,7 +2538,7 @@ def f_sale_value(cn, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj_
     ## Calculate the net value per head from the gross value minus the selling costs
     ### Calculate gross value per head
     sale_value_s7tpg = price_mobaverage_s7tpg * weight_for_value_s7tpg
-    ###add price variation
+    ###add price variation - add before removing s7 axis incase scalar gets an active s7 axis.
     sale_value_c1s7tpg = sale_value_s7tpg * price_scalar_c1s7tpg
     ###Subtract the selling costs (some are percentage costs some are $/hd)
     sale_value_c1s7tpg = sale_value_c1s7tpg * (1 - sale_cost_pc_s7tpg) - sale_cost_hd_s7tpg
@@ -2545,6 +2546,9 @@ def f_sale_value(cn, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj_
     ## Select the best net sale price from the relevant grids
     ###Mask the grids based on the maximum age, minimum age and the gender for each grid
     sale_value_c1s7tpg = sale_value_c1s7tpg * mask_s7x_s7tpg * (age_end_pg1/30.4 <= sale_agemax_s7tpg1) * (age_end_pg1/30.4 >= sale_agemin_s7tpg1) #divide 30 to convert to months
+    ###mask grids based on maimum and minimum ffcfw
+    mask_ffcfw_s7tpg = np.logical_and(o_ffcfw_tpg>sale_ffcfw_min_s7tpg, o_ffcfw_tpg<sale_ffcfw_max_s7tpg)
+    sale_value_c1s7tpg = sale_value_c1s7tpg * mask_ffcfw_s7tpg
     ###Select the maximum value across the grids
     sale_value = np.max(sale_value_c1s7tpg, axis=1)
     sale_grid = np.argmax(sale_value_c1s7tpg, axis=1)
