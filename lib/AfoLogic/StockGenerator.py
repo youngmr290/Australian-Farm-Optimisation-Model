@@ -5524,6 +5524,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         , sale_agemax_s7tpa1e1b1nwzida0e0b0xyg3 = sfun.f1_c2g(uinp.parameters['i_agemax_s7c2'],uinp.parameters['i_agemax_s7y'], a_c2_c0, i_g3_inc,p_pos-2, dtype=dtype)
     sale_agemin_s7tpa1e1b1nwzida0e0b0xyg0, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg1, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg2  \
         , sale_agemin_s7tpa1e1b1nwzida0e0b0xyg3 = sfun.f1_c2g(uinp.parameters['i_agemin_s7c2'],uinp.parameters['i_agemin_s7y'], a_c2_c0, i_g3_inc,p_pos-2, dtype=dtype)
+    sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg = fun.f_expand(uinp.sheep['i_sale_ffcfw_max'], p_pos-2)
+    sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg = fun.f_expand(uinp.sheep['i_sale_ffcfw_min'], p_pos-2)
     dresspercent_adj_yg0, dresspercent_adj_yg1, dresspercent_adj_yg2, dresspercent_adj_yg3 = sfun.f1_c2g(uinp.parameters['i_dressp_adj_c2'],uinp.parameters['i_dressp_adj_y'], a_c2_c0, i_g3_inc, dtype=dtype)
     ##husbandry
     wool_genes_yg0, wool_genes_yg1, wool_genes_yg2, wool_genes_yg3 = sfun.f1_c2g(uinp.parameters['i_wool_genes_c2'],uinp.parameters['i_wool_genes_y'], a_c2_c0, i_g3_inc, dtype=dtype)
@@ -6030,7 +6032,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         , cvscore_s7s6tpa1e1b1nwzida0e0b0xyg, grid_weightrange_s7s5tpa1e1b1nwzida0e0b0xyg, grid_scorerange_s7s6tpa1e1b1nwzida0e0b0xyg
         , age_end_p9a1e1b1nwzida0e0b0xyg0, discount_age_s7tpa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
-        , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg[...,0:1,:,:], sale_agemax_s7tpa1e1b1nwzida0e0b0xyg0, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg0, dtype)
+        , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg[...,0:1,:,:], sale_agemax_s7tpa1e1b1nwzida0e0b0xyg0, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg0
+        ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, dtype)
     salevalue_c1tpa1e1b1nwzida0e0b0xyg1[:,:,sale_mask_p1], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg1[:,:,sale_mask_p1] = sfun.f_sale_value(
         cn_dams.astype(dtype), cx_dams[:,1:2,...].astype(dtype), rc_start_dams_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg1
         , dresspercent_adj_yg1, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
@@ -6039,7 +6042,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         , cvscore_s7s6tpa1e1b1nwzida0e0b0xyg, grid_weightrange_s7s5tpa1e1b1nwzida0e0b0xyg, grid_scorerange_s7s6tpa1e1b1nwzida0e0b0xyg
         , age_end_p9a1e1b1nwzida0e0b0xyg1, discount_age_s7tpa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
-        , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg[...,1:2,:,:], sale_agemax_s7tpa1e1b1nwzida0e0b0xyg1, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg1, dtype)
+        , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg[...,1:2,:,:], sale_agemax_s7tpa1e1b1nwzida0e0b0xyg1, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg1
+        ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, dtype)
     salevalue_c1tp9a1e1b1nwzida0e0b0xyg2, r_salegrid_c1tpa1e1b1nwzida0e0b0xyg2[:,:,sale_mask_p2] = sfun.f_sale_value(                                                #keep it as a condensed p axis
         cn_yatf.astype(dtype), cx_yatf[:,mask_x,...].astype(dtype), rc_start_yatf_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg2
         , dresspercent_adj_yg2, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
@@ -6048,7 +6052,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         , cvscore_s7s6tpa1e1b1nwzida0e0b0xyg, grid_weightrange_s7s5tpa1e1b1nwzida0e0b0xyg, grid_scorerange_s7s6tpa1e1b1nwzida0e0b0xyg
         , age_end_p9a1e1b1nwzida0e0b0xyg2, discount_age_s7tpa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
-        , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemax_s7tpa1e1b1nwzida0e0b0xyg2, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg2, dtype)
+        , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemax_s7tpa1e1b1nwzida0e0b0xyg2, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg2
+        ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, dtype)
     salevalue_c1tpa1e1b1nwzida0e0b0xyg3[:,:,sale_mask_p3], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg3[:,:,sale_mask_p3] = sfun.f_sale_value(
         cn_offs, cx_offs[:,mask_x,...].astype(dtype), rc_start_offs_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg3
         , dresspercent_adj_yg3, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
@@ -6057,7 +6062,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         , cvscore_s7s6tpa1e1b1nwzida0e0b0xyg, grid_weightrange_s7s5tpa1e1b1nwzida0e0b0xyg, grid_scorerange_s7s6tpa1e1b1nwzida0e0b0xyg
         , age_end_p9a1e1b1nwzida0e0b0xyg3, discount_age_s7tpa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
-        , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemax_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg3, dtype)
+        , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemax_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg3
+        ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, dtype)
 
     ###create salevalue with average c1 - this is used for wc/minroe and reporting because we don't think c1 is needed for them
     salevalue_tpa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(salevalue_c1tpa1e1b1nwzida0e0b0xyg0, prob_c1tpg, axis=0)
