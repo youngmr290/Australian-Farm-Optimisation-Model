@@ -50,10 +50,14 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_lw_dams"] = pd.DataFrame()  # live weight dams (large array with p, e and b axis)
     reports["stacked_ffcfw_dams"] = pd.DataFrame()  # fleece free conceptus free weight dams (large array with p, e and b axis)
     reports["stacked_ffcfw_cut_dams"] = pd.DataFrame()  #fleece free conceptus free weight dams for select p period
+    reports["stacked_cs_dams"] = pd.DataFrame()  # condition score dams (large array with p, e and b axis)
+    reports["stacked_fs_dams"] = pd.DataFrame()  # fat score dams (large array with p, e and b axis)
     reports["stacked_nv_dams"] = pd.DataFrame()  # diet nutritive value for dams (large array with p, e and b axis)
     reports["stacked_ffcfw_yatf"] = pd.DataFrame()  # fleece free conceptus free weight yatf (large array with p, e and b axis)
     reports["stacked_ffcfw_prog"] = pd.DataFrame()  # fleece free conceptus free weight prog (large array with p, e and b axis)
     reports["stacked_ffcfw_offs"] = pd.DataFrame()  # fleece free conceptus free weight offs (large array with p, e and b axis)
+    reports["stacked_cs_offs"] = pd.DataFrame()  # condition score offs (large array with p, e and b axis)
+    reports["stacked_fs_offs"] = pd.DataFrame()  # fat score offs (large array with p, e and b axis)
     reports["stacked_nv_offs"] = pd.DataFrame()  # diet nutritive value for offs (large array with p, e and b axis)
     reports["stacked_weanper"] = pd.DataFrame()  # weaning percent
     reports["stacked_scanper"] = pd.DataFrame()  # scan percent
@@ -255,6 +259,14 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         ffcfw_cut_dams = pd.concat([reports["ffcfw_cut_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_ffcfw_cut_dams"] = rfun.f_append_dfs(stacked_reports["stacked_ffcfw_cut_dams"], ffcfw_cut_dams)
 
+    if report_run.loc['run_cs_dams', 'Run']:
+        cs_dams = pd.concat([reports["cs_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_cs_dams"] = rfun.f_append_dfs(stacked_reports["stacked_cs_dams"], cs_dams)
+
+    if report_run.loc['run_fs_dams', 'Run']:
+        fs_dams = pd.concat([reports["fs_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_fs_dams"] = rfun.f_append_dfs(stacked_reports["stacked_fs_dams"], fs_dams)
+
     if report_run.loc['run_nv_dams', 'Run']:
         nv_dams = pd.concat([reports["nv_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_nv_dams"] = rfun.f_append_dfs(stacked_reports["stacked_nv_dams"], nv_dams)
@@ -270,6 +282,14 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_ffcfw_offs', 'Run']:
         ffcfw_offs = pd.concat([reports["ffcfw_offs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_ffcfw_offs"] = rfun.f_append_dfs(stacked_reports["stacked_ffcfw_offs"], ffcfw_offs)
+
+    if report_run.loc['run_cs_offs', 'Run']:
+        cs_offs = pd.concat([reports["cs_offs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_cs_offs"] = rfun.f_append_dfs(stacked_reports["stacked_cs_offs"], cs_offs)
+
+    if report_run.loc['run_fs_offs', 'Run']:
+        fs_offs = pd.concat([reports["fs_offs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_fs_offs"] = rfun.f_append_dfs(stacked_reports["stacked_fs_offs"], fs_offs)
 
     if report_run.loc['run_nv_offs', 'Run']:
         nv_offs = pd.concat([reports["nv_offs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -542,12 +562,20 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_ffcfw_cut_dams"], 'ffcfw_cut_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_ffcfw_yatf', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ffcfw_yatf"], 'ffcfw_yatf', df_settings, option=xl_display_mode)
+    if report_run.loc['run_cs_dams', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_cs_dams"], 'cs_dams', df_settings, option=xl_display_mode)
+    if report_run.loc['run_fs_dams', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_fs_dams"], 'fs_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_nv_dams', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_nv_dams"], 'nv_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_ffcfw_prog', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ffcfw_prog"], 'ffcfw_prog', df_settings, option=xl_display_mode)
     if report_run.loc['run_ffcfw_offs', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ffcfw_offs"], 'ffcfw_offs', df_settings, option=xl_display_mode)
+    if report_run.loc['run_cs_offs', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_cs_offs"], 'cs_offs', df_settings, option=xl_display_mode)
+    if report_run.loc['run_fs_offs', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_fs_offs"], 'fs_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_nv_offs', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_nv_offs"], 'nv_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_lamb_survival', 'Run']:
