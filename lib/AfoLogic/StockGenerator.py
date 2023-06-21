@@ -7787,6 +7787,30 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                                * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
 
+    ##cs - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
+    if sinp.rep['i_store_cs_rep']:
+        cs_tpg0 = sfun.f1_condition_score(o_rc_start_tpsire, cn_sire.astype(dtype))
+        cs_tpg1 = sfun.f1_condition_score(o_rc_start_tpdams, cn_dams.astype(dtype))
+        cs_tpg3 = sfun.f1_condition_score(o_rc_start_tpoffs, cn_offs.astype(dtype))
+        r_cs_sire_pg = cs_tpg0
+        r_cs_dams_k2Tvpg = (cs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_cs_offs_k3k5Tvpg = (cs_tpg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                               * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                               * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
+
+    ##fs - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
+    if sinp.rep['i_store_fs_rep']:
+        fs_tpg0 = sfun.f1_fat_score(o_rc_start_tpsire, cn_sire.astype(dtype))
+        fs_tpg1 = sfun.f1_fat_score(o_rc_start_tpdams, cn_dams.astype(dtype))
+        fs_tpg3 = sfun.f1_fat_score(o_rc_start_tpoffs, cn_offs.astype(dtype))
+        r_fs_sire_pg = fs_tpg0
+        r_fs_dams_k2Tvpg = (fs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_fs_offs_k3k5Tvpg = (fs_tpg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                               * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                               * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
+
     ###############
     ## report dse #
     ###############
@@ -8826,6 +8850,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         fun.f1_make_r_val(r_vals,r_nv_sire_pg,'nv_sire_pzg0',shape=pzg0_shape) #no v axis to mask
         fun.f1_make_r_val(r_vals,r_nv_dams_k2Tvpg,'nv_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
         fun.f1_make_r_val(r_vals,r_nv_offs_k3k5Tvpg,'nv_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
+
+    ###condition score - with p, e, b
+    if sinp.rep['i_store_cs_rep']:
+        fun.f1_make_r_val(r_vals,r_cs_sire_pg,'cs_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_cs_dams_k2Tvpg,'cs_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_cs_offs_k3k5Tvpg,'cs_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
+
+    ###fat score - with p, e, b
+    if sinp.rep['i_store_fs_rep']:
+        fun.f1_make_r_val(r_vals,r_fs_sire_pg,'fs_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_fs_dams_k2Tvpg,'fs_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_fs_offs_k3k5Tvpg,'fs_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
 
 
 
