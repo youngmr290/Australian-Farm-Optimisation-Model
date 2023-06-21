@@ -263,6 +263,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0) #have to use this rather than season periods because season periods get cut down in SE model, but we still might want all the season nodes as dvp/fvp.
     date_node_zidaebxygm = fun.f_expand(date_node_zm, z_pos-1, right_pos=-1)
     len_m = date_node_zidaebxygm.shape[-1]
+    ###calc node date for each yr in generator
+    date_node_ya1e1b1nwzidaebxygm = date_node_zidaebxygm + fun.f_expand(np.arange(np.ceil(sim_years)) * 364, p_pos - 1)
+    ###set the node fvp to start at the next generator period following the node (needs to be next so that clustering works).
+    idx_ya1e1b1nwzida0e0b0xygm = np.searchsorted(date_start_P, date_node_ya1e1b1nwzidaebxygm,
+                                                 'left')  # use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
+    date_node_ya1e1b1nwzidaebxygm = date_start_P[idx_ya1e1b1nwzida0e0b0xygm]
 
     ###################################
     ### index arrays                  #
@@ -946,12 +952,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##season nodes - these get masked out if steady state.
     node_fvp_m = np.zeros(len_m, dtype=object)
     for m in range(len_m):
-        date_node_zidaebxyg = date_node_zidaebxygm[...,m]
-        date_node_ya1e1b1nwzidaebxyg = date_node_zidaebxyg + fun.f_expand(np.arange(np.ceil(sim_years)) * 364, p_pos)
-        ###set the node fvp to start at the next generator period following the node (needs to be next so that clustering works).
-        idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_P, date_node_ya1e1b1nwzidaebxyg, 'left') #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
-        date_node_ya1e1b1nwzidaebxyg = date_start_P[idx_ya1e1b1nwzida0e0b0xyg]
-        node_fvp_m[m] = date_node_ya1e1b1nwzidaebxyg
+        node_fvp_m[m] = date_node_ya1e1b1nwzidaebxygm[...,m]
     ###store season start date - used to determine period_is_season_start
     seasonstart_ya1e1b1nwzida0e0b0xyg = node_fvp_m[0]
 
@@ -959,7 +960,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     shape = np.maximum.reduce([fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1.shape[1:], fvp_scan_start_oa1e1b1nwzida0e0b0xyg1.shape[1:],
                                fvp_birth_start_oa1e1b1nwzida0e0b0xyg1.shape[1:], fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape[1:],
                                fvp_wean_start_oa1e1b1nwzida0e0b0xyg1.shape[1:], fvp_other_start_ya1e1b1nwzida0e0b0xyg.shape[1:],
-                               date_node_ya1e1b1nwzidaebxyg.shape[1:]]) #create shape which has the max size, this is used for o array
+                               seasonstart_ya1e1b1nwzida0e0b0xyg.shape[1:]]) #create shape which has the max size, this is used for o array
 
     ##broadcast the start arrays so that they are all the same size (except axis 0 can be different size)
     fvp_begin_start_ba1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1,(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
@@ -1099,18 +1100,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##season nodes - these get masked out if steady state.
     node_fvp_m = np.zeros(len_m, dtype=object)
     for m in range(len_m):
-        date_node_zidaebxyg = date_node_zidaebxygm[...,m]
-        date_node_ya1e1b1nwzidaebxyg = date_node_zidaebxyg + fun.f_expand(np.arange(np.ceil(sim_years_offs)) * 364, p_pos)
-        ###set the node fvp to start at the next generator period following the node (needs to be next so that clustering works).
-        idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_P, date_node_ya1e1b1nwzidaebxyg, 'left') #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
-        date_node_ya1e1b1nwzidaebxyg = date_start_P[idx_ya1e1b1nwzida0e0b0xyg]
-        node_fvp_m[m] = date_node_ya1e1b1nwzidaebxyg
+        node_fvp_m[m] = date_node_ya1e1b1nwzidaebxygm[...,m]
 
     ##create shape which has max size of each fvp array. Exclude the first dimension because that can be different sizes because only the other dimensions need to be the same for stacking
     shape = np.maximum.reduce([fvp_b0_start_ba1e1b1nwzida0e0b0xyg3.shape[1:], fvp_b1_start_ba1e1b1nwzida0e0b0xyg3.shape[1:],
                                fvp_b2_start_ba1e1b1nwzida0e0b0xyg3.shape[1:], fvp_0_start_sa1e1b1nwzida0e0b0xyg3.shape[1:],
                                fvp_1_start_sa1e1b1nwzida0e0b0xyg3.shape[1:], fvp_2_start_sa1e1b1nwzida0e0b0xyg3.shape[1:],
-                               fvp_other_start_ya1e1b1nwzida0e0b0xyg.shape[1:], date_node_ya1e1b1nwzidaebxyg.shape[1:]]) #create shape which has the max size, this is used for o array
+                               fvp_other_start_ya1e1b1nwzida0e0b0xyg.shape[1:], seasonstart_ya1e1b1nwzida0e0b0xyg.shape[1:]]) #create shape which has the max size, this is used for o array
     ##broadcast the start arrays so that they are all the same size (except axis 0 can be different size)
     fvp_b0_start_ba1e1b1nwzida0e0b0xyg3 = np.broadcast_to(fvp_b0_start_ba1e1b1nwzida0e0b0xyg3,(fvp_b0_start_ba1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape))
     fvp_b1_start_ba1e1b1nwzida0e0b0xyg3 = np.broadcast_to(fvp_b1_start_ba1e1b1nwzida0e0b0xyg3,(fvp_b1_start_ba1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape))
@@ -5753,7 +5749,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ##offs
     ###t0 - retained
-    ###t1 - For dsp (and when nodes are included) sold first period of dvp for SE sold target age or target weight or sold on the last day of dvp (not much value selling at start of dvp for SE model because there is only 1 dvp)
+    ###t1 - For dsp (and when nodes are included) sold when seasons first identified (if dvp is not a node then sale is as per SE). For SE sold target age or target weight or sold on the last day of dvp (not much value selling at start of dvp for SE model because there is only 1 dvp)
     ###t2 - sold target age or target weight or sold on the last day of dvp
 
     ###calc sale date then determine shearing date
@@ -5771,9 +5767,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(np.logical_and(age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] <= sale_age_tpa1e1b1nwzida0e0b0xyg3,
                                                                     sale_age_tpa1e1b1nwzida0e0b0xyg3 <= age_end_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p]),
                                                      weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
-    ###if dsp then t1 is sell at start of dvp
+    ###if dsp then t1 gets a sale opportunity at the start of dvp when seasons are identified (this will be first period of dvp so any other sale opportunities in that dvp will be disregarded).
     if not bool_steady_state or pinp.general['i_inc_node_periods']:
-        sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...] = period_is_startdvp_pa1e1b1nwzida0e0b0xyg3
+        period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m = sfun.f1_period_is_('period_is', date_node_ya1e1b1nwzidaebxygm[:,na,...], date_start_pa1e1b1nwzida0e0b0xyg3[...,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3[...,na])
+        period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.any(period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m, axis=(0,-1))
+        period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3>0) #only have sale opp if animal exists.
+        sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...] = np.logical_or(sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...], period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3)
     ###on hand - combine period_is_sale & period_is_transfer then use cumulative max to convert to on_hand
     ### note: animals are on hand in the period they are sold ie sale takes place on the last minute of the period.
     off_hand_tpa1e1b1nwzida0e0b0xyg3 = sfun.f1_cum_dvp(sale_opp_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, axis=1,
