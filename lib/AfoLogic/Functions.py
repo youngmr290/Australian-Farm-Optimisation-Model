@@ -838,7 +838,6 @@ def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
     Note 1: Arrays must broadcast.
     Note 2: if no z axis then param is simply stored in r_vals no need to pass in the mask arg.
     '''
-    return
     if maskz8 is not None:
         df=False
         series=False
