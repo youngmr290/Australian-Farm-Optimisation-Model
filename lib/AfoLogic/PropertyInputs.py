@@ -76,6 +76,13 @@ def f_reshape_pinp_defaults(pinp_defaults, sinp_defaults):
         r1j2P = (len_r1, len_j2, -1) #capital p to indicate this is just the remaining length of input, it is p axis but input is longer
         r1p6z = (len_r1, len_p6, len_z)
 
+        ##crop
+        crop_inp = pinp_defaults[property]['crop_inp']
+        crop_inp['fert'] = crop_inp['fert'].T.set_index(['fert'], append=True).T.astype(float) #set headers
+        crop_inp['fert_passes'] = crop_inp['fert_passes'].T.set_index(['passes'], append=True).T.astype(float) #set headers
+        crop_inp['chem_cost'] = crop_inp['chem_cost'].T.set_index(['chem'], append=True).T.astype(float) #set headers
+        crop_inp['chem'] = crop_inp['chem'].T.set_index(['chem'], append=True).T.astype(float) #set headers
+
         ###pasture
         for t,pasture in enumerate(sinp_defaults["general_inp"]['pastures'][pinp_defaults[property]['general_inp']['i_pastures_exist']]):
             inp = pinp_defaults[property]['pasture_inp'][pasture]
@@ -236,6 +243,11 @@ def f_property_inp_sa(pinp_defaults):
     ##crop
     ###sav
     crop['user_crop_rot'] = fun.f_sa(crop['user_crop_rot'], sen.sav['pinp_rot'], 5)
+    crop['yields'] = fun.f_sa(crop['yields'], sen.sav['yield_rz'], 5)
+    crop['fert'] = fun.f_sa(crop['fert'], sen.sav['fert_r_nz'], 5)
+    crop['fert_passes'] = fun.f_sa(crop['fert_passes'], sen.sav['fert_passes_r_nz'], 5)
+    crop['chem_cost'] = fun.f_sa(crop['chem_cost'], sen.sav['chem_r_nz'], 5)
+    crop['chem'] = fun.f_sa(crop['chem'], sen.sav['chem_passes_r_nz'], 5)
     crop['yield_by_lmu'] = fun.f_sa(crop['yield_by_lmu'], sen.sav['lmu_yield_adj_kl'], 5)
     crop['fert_by_lmu'] = fun.f_sa(crop['fert_by_lmu'], sen.sav['lmu_fert_adj_nl'], 5)
     crop['chem_by_lmu'] = fun.f_sa(crop['chem_by_lmu'], sen.sav['lmu_chem_adj_l'], 5)
