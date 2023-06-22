@@ -52,6 +52,7 @@ def create_sa():
     len_n = len(uinp.general['i_fert_idx'])
     len_n1 = len(uinp.general['i_chem_idx'])
     len_o = pinp.sheep['i_o_len']
+    len_r = len(pinp.crop['yields'])#length of rotations in pinp
     len_R = 5000 #just use a big number - it is cut down later (this is because the length of r is not known because it can be affected by SA)
     len_s = pinp.sheep['i_s_len'] #s = shear
     len_s7 = len(uinp.sheep['i_salep_price_max_s7']) #s7 = sale grid
@@ -252,6 +253,11 @@ def create_sa():
     #crop #
     #######
     ##SAV
+    sav['yield_rz'] = np.full((len_r, len_z), '-', dtype=object)    # SA value for pinp grain/hay yield - web app
+    sav['fert_r_nz'] = np.full((len_r, 4*len_z), '-', dtype=object)    # SA value for pinp fert - web app - 4 because there are currently 4 ferts by r
+    sav['fert_passes_r_nz'] = np.full((len_r, 4*len_z), '-', dtype=object)    # SA value for pinp fert passses - web app - 4 because there are currently 4 ferts by r
+    sav['chem_r_nz'] = np.full((len_r, 2*len_z), '-', dtype=object)    # SA value for pinp chem - web app - 2 chem categorys in pinp (herb and fungicide).
+    sav['chem_passes_r_nz'] = np.full((len_r, len_n1*len_z), '-', dtype=object)    # SA value for pinp chem passes - web app
     sav['lmu_yield_adj_kl'] = np.full((len_k, len_l), '-', dtype=object)    # SA value for yield adjustment by LMU
     sav['lmu_fert_adj_nl'] = np.full((len_n, len_l), '-', dtype=object)    # SA value for fert adjustment by LMU
     sav['lmu_chem_adj_l'] = np.full(len_l, '-', dtype=object)    # SA value for chem adjustment by LMU

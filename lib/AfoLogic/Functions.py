@@ -198,6 +198,8 @@ def f_update(existing_value, new_value, mask_for_new):
         returns a combination of the two input arrays determined by the mask. Note: multiplying by true return the original number and multiplying by false results in 0.
 
     '''
+    if isinstance(existing_value, pd.DataFrame) or isinstance(new_value, pd.DataFrame):
+        print('using pandas in f_update. This should be changed. use .values to temporarily convert to numpy.')
     ##dtype for output (primarily needed for pp when int32 and float32 create float64 which we don't want)
     ##if the new value is an object (e.g. contains '-') then we want to return the original dtype otherwise return the biggest dtype
 
@@ -674,7 +676,8 @@ def f_split_axis(a, len_a, axis):
 #######################
 def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0):
     '''applies SA. Function can handle numpy or pandas'''
-
+    if pandas:
+        print('l')
     ##Type 0 is sam (sensitivity multiplier) - default
     if sa_type == 0:
         if pandas:
@@ -710,7 +713,11 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
             sa=sa.copy()#have to copy the np arrays so that the original sa is not changed
         except:
             pass
-        value = f_update(value, sa, sa != '-') #sa has to be object or this give FutureWarning
+        ###conver to numpy if pandas so f_update works corrrectly (so dtype is handled correctly)
+        if isinstance(value, pd.DataFrame):
+            value.iloc[:,:] = f_update(value.values, sa, sa != '-') #sa has to be object or this give FutureWarning
+        else:
+            value = f_update(value, sa, sa != '-') #sa has to be object or this give FutureWarning
 
     return value
 

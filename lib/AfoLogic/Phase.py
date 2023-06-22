@@ -451,11 +451,9 @@ def f_fert_req():
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_fert = pinp.crop['fert']
-        ###set headers
-        base_fert = base_fert.T.set_index(['fert'], append=True).T.astype(float)
         ###mask r - need to do this now so that phases_df line up because phases_df has already been masked
         base_fert = base_fert.loc[mask_r,:]
-        ###set index
+        ###add landuse to index
         base_fert_rk_zn = base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
     else:
         ###Sim version
@@ -526,7 +524,6 @@ def f_fert_passes():
     if pinp.crop['user_crop_rot']:
         ### User defined
         fert_passes = pinp.crop['fert_passes']
-        fert_passes = fert_passes.T.set_index(['passes'], append=True).T.astype(float)
         ###mask r - need to do this now so that phases_df line up because phases_df has already been masked
         fert_passes = fert_passes.loc[mask_r,:]
         fert_passes_rk_zn = fert_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
@@ -824,7 +821,6 @@ def f_chem_application():
     if pinp.crop['user_crop_rot']:
         ### User defined
         chem_passes = pinp.crop['chem']
-        chem_passes = chem_passes.T.set_index(['chem'], append=True).T.astype(float)
         ###mask r - need to do this now so that phases_df line up because phases_df has already been masked
         chem_passes = chem_passes.loc[mask_r,:]
         chem_passes_rk_zn = chem_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
@@ -894,11 +890,9 @@ def f_chem_cost(r_vals):
     if pinp.crop['user_crop_rot']:
         ### User defined
         chem_cost = pinp.crop['chem_cost']
-        chem_cost = chem_cost.T.set_index(['chem'], append=True).T.astype(float)
         chem_cost = chem_cost.loc[mask_r, :]
         chem_cost_rk_zn = chem_cost.set_index(
             [phases_df.index, phases_df.iloc[:, -1]])  # make the rotation and current landuse the index
-        chem_cost_r_zn = zfun.f_seasonal_inp(chem_cost, axis=1)
     else:
         ###Sim version
         chem_cost_rk_zn = f1_sim_inputs(sheet='Total Chem Cost', index=[0,1], header=[0,1])
