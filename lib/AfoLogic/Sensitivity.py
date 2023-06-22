@@ -256,7 +256,6 @@ def create_sa():
     sav['lmu_fert_adj_nl'] = np.full((len_n, len_l), '-', dtype=object)    # SA value for fert adjustment by LMU
     sav['lmu_chem_adj_l'] = np.full(len_l, '-', dtype=object)    # SA value for chem adjustment by LMU
     ##SAM
-    sam['all_rot_yield'] = 1.0   # SA multiplier for all rotation yield
     sam['crop_yield_k'] = np.ones(len_k, dtype=np.float64)    # SA multiplier for all rotation yield
     sam['crop_fert_kn'] = np.ones((len_k, len_n), dtype=np.float64) #SA multipler on crop fertiliser
     sam['pas_fert_kn'] = np.ones((len_pas_k, len_n), dtype=np.float64) #SA multipler on pas fertiliser
