@@ -90,9 +90,9 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
 
     ##pickle report values - every time a trial is run (even if pyomo not run)
     ## This has to be last because it controls if the trial needs to be run next time the exp is run (f_run_required)
-    # pkl_r_vals_path = relativeFile.find(__file__, "../../pkl", "pkl_r_vals_{0}.pkl".format(trial_name))
-    # with open(pkl_r_vals_path, "wb") as f:
-    #     pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
+    pkl_r_vals_path = relativeFile.find(__file__, "../../pkl", "pkl_r_vals_{0}.pkl".format(trial_name))
+    with open(pkl_r_vals_path, "wb") as f:
+        pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
 
 
     ############################################################################################################################################################################################
