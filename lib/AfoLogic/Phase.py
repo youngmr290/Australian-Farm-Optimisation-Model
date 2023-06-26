@@ -296,9 +296,18 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
     harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield is inputted as the harvestable grain
     harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
+    propn_baled_k = pd.Series(pinp.stubble['i_propn_baled_k'], index=sinp.landuse['C']) #Proportion of biomass at baling that is baled (at point of baling - not including respiration losses).
+    growth_scalar_k = pd.Series(pinp.stubble['i_growth_scalar_k'], index=sinp.landuse['C']) #Biomass at baling relative to biomass at harvest (if not baled). To account for growth from date of baling to harvest.
+    propn_conserved_k = pd.Series(pinp.stubble['i_propn_conserved_k'], index=sinp.landuse['C']) #Proportion of baled biomass available to feed out. To allow for losses due to respiration during drying.
+    is_baled_k = sinp.general['i_is_baled_k'] #is the land use baled normally
 
-    ##convert to biomass
-    base_biomass_rkz = base_yields_rkz.div(harvest_index_k, level=1)
+    ##convert to biomass at grain harvest time
+    ###convert yield from hay baled at baling time to grain at harvest time
+    baled_factor_k = 1/propn_baled_k/growth_scalar_k/propn_conserved_k * harvest_index_k
+    baled_factor_k.iloc[:] = fun.f_update(baled_factor_k.values, 1, np.logical_not(is_baled_k)) #if landuse is not baled then set factor to 1 (mean that the yield inputted is grain at harvest time).
+    grain_yields_rkz = base_yields_rkz.div(baled_factor_k, level=1)
+    ###calc biomass frrom grain harvested
+    base_biomass_rkz = grain_yields_rkz.div(harvest_index_k, level=1)
 
     ##calculate biomass - base biomass * arable area * harv_propn * frost * lmu factor - seeding rate
     biomass_arable_by_soil_k_l = biomass_lmus.mul(arable) #mul arable area to the the lmu factor (easy because dfs have the same axis's).
