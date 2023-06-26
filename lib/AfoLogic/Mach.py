@@ -808,7 +808,7 @@ def f_hay_making_cost():
 
     Typically, hay making is completed by contract workers and generally hay is not a large component of a
     farming system. Therefore, currently contract hay making is the only option represented in AFO. There
-    is a cost for mowing ($/ha), bailing ($/t) and carting ($/t).
+    is a cost for mowing ($/ha), baling ($/t) and carting ($/t).
 
     Note: Currently it is assumed that hay is allocated into the same cashflow periods in all seasons.
     '''
