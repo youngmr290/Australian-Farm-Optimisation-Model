@@ -676,8 +676,6 @@ def f_split_axis(a, len_a, axis):
 #######################
 def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0):
     '''applies SA. Function can handle numpy or pandas'''
-    if pandas:
-        print('l')
     ##Type 0 is sam (sensitivity multiplier) - default
     if sa_type == 0:
         if pandas:
