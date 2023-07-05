@@ -438,6 +438,7 @@ def create_sa():
     ##SAV
     sav['bnd_slp_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of slp on each lmu
     sav['bnd_sb_consumption_p6'] = np.full(len(pinp.period['i_fp_idx']), '-', dtype=object)  #upper bnd on the amount of sb consumed
+    sav['bnd_crop_area'] = np.full(len_k, '-', dtype=object)  #crop area by lmu for bound. if all values are '-' the bnd wont be used (there is not bnd_inc control for this one)
     sav['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
     sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
     sav['bnd_pas_area_l'] = np.full(len_l, '-', dtype=object)  #pasture area by lmu for bound. if all values are '-' the bnd wont be used (there is not bnd_inc control for this one)

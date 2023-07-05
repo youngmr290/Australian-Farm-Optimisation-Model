@@ -55,6 +55,7 @@ def f1_boundarypyomo_local(params, model):
     total_pasture_bound_inc = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
     pasture_lmu_bound_inc = np.any(sen.sav['bnd_pas_area_l'] != '-')
     landuse_bound_inc = False #bound on area of each landuse (which is the sum of all the phases for that landuse)
+    crop_area_bound_inc = np.any(sen.sav['bnd_crop_area'] != '-')  # controls if crop area bnd is included.(which is the sum of all the phases for that crop)
 
 
     if bounds_inc:
@@ -632,6 +633,23 @@ def f1_boundarypyomo_local(params, model):
                     return pe.Constraint.Skip
             model.con_landuse_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_landuses, model.s_season_types, rule=k_bound, doc='bound on total pasture area')
 
+        ##crop bound
+        ###build bound if turned on
+        if crop_area_bound_inc:
+            ###setbound
+            crop_area_bound_k1 = fun.f_sa(np.array([999]), sen.sav['bnd_crop_area'], 5)  # 999 is arbitrary default value which mean skip constraint
+            crop_area_bound_k1 = dict(zip(model.s_crops, crop_area_bound_k1))
+            ###constraint
+            l_p7 = list(model.s_season_periods)
+            def k1_bound(model, q, s, p7, k1, z):
+                if p7 == l_p7[-1] and crop_area_bound_k1[k1]!=999 and pe.value(model.p_wyear_inc_qs[q, s]):  #bound will not be built if param == 999
+                    return(
+                           sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_landuse_area[r, k1] for r in model.s_phases for l in model.s_lmus)
+                           == crop_area_bound_k1[k1])
+                else:
+                    return pe.Constraint.Skip
+            model.con_crop_area_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, rule=k1_bound, doc='bound on total pasture area')
+
         ##total pasture area - hence also total crop area
         ###build bound if turned on
         if total_pasture_bound_inc:
@@ -653,6 +671,7 @@ def f1_boundarypyomo_local(params, model):
         if pasture_lmu_bound_inc:
             ###setbound
             pas_area_l = fun.f_sa(np.array([999]), sen.sav['bnd_pas_area_l'], 5)  # 999 is arbitrary default value which mean skip constraint
+            pas_area_l = dict(zip(model.s_lmus, pas_area_l))
             ###constraint
             l_p7 = list(model.s_season_periods)
             def pas_bound(model, q, s, p7, z, l):
