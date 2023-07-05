@@ -53,6 +53,7 @@ def f1_boundarypyomo_local(params, model):
     bnd_dry_retained_inc = fun.f_sa(False, np.any(pinp.sheep['i_dry_retained_forced_o']), 5) #force the retention of drys in t[0] (t[1] is handled in the generator.
     sr_bound_inc = fun.f_sa(False, sen.sav['bnd_sr_inc'], 5) #controls sr bound
     total_pasture_bound_inc = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
+    pasture_lmu_bound_inc = np.any(sen.sav['bnd_pas_area_l'] != '-')
     landuse_bound_inc = False #bound on area of each landuse (which is the sum of all the phases for that landuse)
 
 
@@ -644,6 +645,22 @@ def f1_boundarypyomo_local(params, model):
                 else:
                     return pe.Constraint.Skip
             model.con_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, rule=pas_bound,doc='bound on total pasture area')
+
+        ##pasture area by lmu
+        ###build bound if turned on
+        if pasture_lmu_bound_inc:
+            ###setbound
+            pas_area_l = fun.f_sa(np.array([999]), sen.sav['bnd_pas_area_l'], 5)  # 999 is arbitrary default value which mean skip constraint
+            ###constraint
+            l_p7 = list(model.s_season_periods)
+            def pas_bound(model, q, s, p7, z, l):
+                if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]) and pas_area_l[l] != 999:
+                    return (sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_pasture_area[r,t]
+                                for r in model.s_phases for t in model.s_pastures)
+                            == pas_area_l[l])
+                else:
+                    return pe.Constraint.Skip
+            model.con_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_lmus, rule=pas_bound,doc='bound pasture area by lmu')
 
 
 
