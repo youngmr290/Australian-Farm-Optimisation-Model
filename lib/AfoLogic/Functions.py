@@ -208,11 +208,20 @@ def f_update(existing_value, new_value, mask_for_new):
             is_float = np.any(np.mod(new_value, 1)!=0)
             ###incase int array is existing but sav has floats
             if is_float:
-                dtype = max(existing_value.dtype, new_value.astype('float32').dtype) #keeps it as float64 if existing value is float64
+                if existing_value.dtype==int: #need this because max(int,float) returns int.
+                    dtype = new_value.astype('float32').dtype #if existing value is int but new value has floats returns float dtype.
+                else:
+                    dtype = max(existing_value.dtype, new_value.astype('float32').dtype) #keeps it as float64 if existing value is float64
             else:
                 dtype = existing_value.dtype
         else:
-            dtype = max(existing_value.dtype, new_value.dtype)
+            #few steps required because int>float
+            if (existing_value.dtype==int and new_value.dtype==int) or (existing_value.dtype==float and new_value.dtype==float):
+                dtype = max(existing_value.dtype, new_value.dtype)
+            elif existing_value.dtype==float:
+                dtype = existing_value.dtype
+            elif new_value.dtype==float:
+                dtype = new_value.dtype
     elif isinstance(new_value,np.ndarray):
         dtype = new_value.dtype
     elif isinstance(existing_value,np.ndarray):
