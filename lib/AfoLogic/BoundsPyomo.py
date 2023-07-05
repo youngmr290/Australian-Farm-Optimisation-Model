@@ -587,9 +587,11 @@ def f1_boundarypyomo_local(params, model):
             l_p7 = list(model.s_season_periods)
             p7_end_gs0 = l_p7[pinp.general['i_gs_p7_end'][0]]  # p7 period from growing season 0.
             def SR_bound(model, q, s):
-                if pe.value(model.p_wyear_inc_qs[q, s]):
+                if pe.value(model.p_wyear_inc_qs[q, s]) and (sum(model.p_wg_propn_p6z[p6,z] * model.p_a_p6_p7[p7,p6,z] * model.p_season_seq_prob_qszp7[q,s,z,p7]
+                                    for p6 in model.s_feed_periods for p7 in model.s_season_periods for z in model.s_season_types)>0):
                     rhs_dse = sum(model.v_phase_area[q, s, p7_end_gs0, z, r, l] * model.p_pasture_area[r, t] * pasture_dse_carry[t]
-                                  * model.p_season_seq_prob_qszp7[q,s,z,p7_end_gs0]
+                                  * model.p_wg_propn_p6z[p6, z] * model.p_a_p6_p7[p7, p6, z] * model.p_season_seq_prob_qszp7[q, s, z, p7]
+                                  for p6 in model.s_feed_periods for p7 in model.s_season_periods
                                   for r in model.s_phases for l in model.s_lmus for t in model.s_pastures for z in model.s_season_types)
                     dse = sum((sum(model.v_sire[q,s,g0] * model.p_dse_sire[p6,z,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,z,g0])!=0)
                              + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]
