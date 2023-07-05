@@ -168,8 +168,13 @@ def create_sa():
     #########
     ##SAV
     sav['manager_ub'] = '-'  #manager upper bound
+    sav['manager_lo'] = '-'  #manager lower bound
+    sav['perm_ub'] = '-'  #perm upper bound
+    sav['perm_lo'] = '-'  #perm lower bound
     sav['casual_ub'] = '-'  #casual upper bound all year except seeding and harv
+    sav['casual_lo'] = '-'  #casual lower bound all year except seeding and harv
     sav['seedharv_casual_ub'] = '-'  #casual upper bound at seeding and harv
+    sav['seedharv_casual_lo'] = '-'  #casual lower bound at seeding and harv
     ##SAM
     ##SAP
     ##SAA
