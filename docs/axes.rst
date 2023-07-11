@@ -11,19 +11,19 @@ Axes definitions
    * - a0
      - Weaning time of the animal itself
    * - a1
-     - Weaning time of the progeny
+     - Weaning time of the progeny of the dam (this year)
    * - b0
      - Birth type rear type (BTRT) of the animal itself
    * - b1
-     - Litter size lactation number (LSLN) of the dams
+     - Litter size lactation number (LSLN) of the dam (this year)
    * - c0
      - Enterprise (stock or crop). Used for interest calculation.
    * - d
-     - Dam age (i.e. age group of the animals mother at the time of birth)
+     - Dam age (the age group of the animals mother at the time of birth)
    * - e0
      - Estrus cycle the animal itself was conceived in
    * - e1
-     - Estrus cycle the dam was conceived this year
+     - Estrus cycle in which the dam conceived this year
    * - f
      - Nutritive value pool
    * - g0
@@ -55,7 +55,7 @@ Axes definitions
    * - m
      -
    * - n
-     - nutrient option
+     - nutrition option for the stock
    * - o
      - FOO level
    * - p
@@ -80,19 +80,25 @@ Axes definitions
      - Ram joining period
    * - p9
      - Shearing & sale periods
+   * - q
+     - Year of the season sequence
    * - r
      - Rotations
    * - s
-     - Crop usage (harvest, bale or graze) or season sequence
+     - Crop usage (harvest, bale or graze) or
+   * - s
+     - landuse history of the season sequence
    * - t
-     - Stock sale options
+     - Stock sale options (within a DVP)
    * - v
      - Stock decision variable periods
    * - w
-     - Stock nutrition profile
+     - Stock nutrition profile (starting weight and 'n')
    * - x
      - Gender
    * - y
-     - Phenotypic merit or year
+     - Phenotypic merit
+   * - y
+     - year
    * - z
      - season type
