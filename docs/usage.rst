@@ -9,6 +9,7 @@ Usage
    installing
    running
    tips
+   axes
    inputs
    apsim_integration
    sensitivity_index
