@@ -15,7 +15,7 @@ Axes definitions
    * - b0
      - Birth type rear type (BTRT) of the animal itself
    * - b1
-     - LSLN of the dams
+     - Litter size lactation number (LSLN) of the dams
    * - c0
      - Enterprise (stock or crop). Used for interest calculation.
    * - d
