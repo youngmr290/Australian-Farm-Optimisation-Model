@@ -46,8 +46,7 @@ The prediction equations included in the data generator can be selected from a r
         b.	NGGI for emissions including methane and nitrous oxide (DISER, 2021).
         c.	Hutton Oddy's group (NSW DPI) for alternative equations for heat production associated with maintenance and liveweight gain (Oddy et al., 2019).
 
-.. note:: The livestock component of AFO currently only represents sheep, however, the option of
-          representing cattle exists with little code alteration, simply addition of management inputs for the cattle.
+.. note:: The livestock component of AFO currently only represents sheep, however, with some work cattle could be added.
 
 In the full model the livestock management decisions that are optimised can include:
 
