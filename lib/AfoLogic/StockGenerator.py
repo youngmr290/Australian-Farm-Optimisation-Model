@@ -3844,7 +3844,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                         , period_is_prebirth_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
                                         , days_period_pa1e1b1nwzida0e0b0xyg1[p], saa_mortalitye_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
-                        mortality_dams += temp0 #dam mort at birth due to low CS
+                        mortality_dams += temp0 #dam mort pre-birth due to low CS and loss of condition to pre-birth.
                         cf_csc_dams = temp1
                     if eqn_compare:
                         r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
@@ -3870,7 +3870,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     temp0 = sfun.f_mortality_pregtox_mu(cb1_dams, cg_dams, nw_start_dams, ebg_dams, sd_ebg_dams
                                                     , days_period_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , period_between_prebirthbirth_pa1e1b1nwzida0e0b0xyg1[p]
-                                                    , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], saa_mortalitye_pa1e1b1nwzida0e0b0xyg1[p])
+                                                    , gest_propn_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
                         mortality_dams += temp0
                     if eqn_compare:
