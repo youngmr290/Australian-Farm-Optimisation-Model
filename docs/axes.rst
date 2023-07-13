@@ -87,7 +87,7 @@ Axes definitions
    * - s
      - Crop usage (harvest, bale or graze) or
    * - s
-     - landuse history of the season sequence
+     - history of the season sequence
    * - t
      - Stock sale options (within a DVP)
    * - v
