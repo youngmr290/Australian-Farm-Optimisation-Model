@@ -1881,13 +1881,14 @@ def f_mortality_dam_mu2(cu2, ce, cb1, cf_csc, csc, cs, cv_cs, period_between_sca
     return mortalitye_mu, cf_csc
 
 
-def f_mortality_pregtox_mu(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_is_pregtox, gest_propn, saa_mortalitye):
+def f_mortality_pregtox_mu(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_is_pregtox, gest_propn):
     '''
-    (Twin) Dam mortality in last 6 weeks (preg tox). This increments mortality associated with LWL in the base mortality function.
+    Mortality of multiple bearing dams in late pregnancy. This increments mortality associated with LWL in the base mortality function.
 
     This is a copy of the CSIRO function except that the period has been reduced because the MU relationships include
-    ewe mortality associated with loss of CS from scanning to pre-lambing (about day 135). So the CSIRO Preg Tox
-    relationship is only active after that point.
+    ewe mortality associated with loss of CS from scanning to pre-lambing (about day 135). The CSIRO Preg Tox
+    relationship is only active after that point instead of for the full 6 week period in f_mortality_pregtox_cs().
+    The saa on ewe mortality has been removed because it has been applied in the pre-lambing calculation.
 
     Preg tox is short for pregnancy toxaemia. It is associated with ketosis where the ewe switches into burning fat
     (rather than carbohydrates) because they are losing weight. It is predominantly a problem for multiple bearing ewes
@@ -1898,13 +1899,11 @@ def f_mortality_pregtox_mu(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_i
     ##distribution on ebg - add distribution to ebg_start_p1 and then average (axis =-1)
     ##the mortality rate per week is estimated as per the CSIRO equation (but applied for a shorter period).
     ebg_p1 = fun.f_distribution7(ebg, sd=sd_ebg)
-    t_mort_p1 = days_period[..., na] * gest_propn[..., na] / 42 * fun.f_sig(-42 * ebg_p1 * cg[18, ..., na] / nw_start[..., na]
-                                                                        , cb1[4, ..., na], cb1[5, ..., na]) #mul by days period to convert from mort per day to per period
+    t_mort_p1 = (days_period[..., na] * gest_propn[..., na] / 42  #mul by days period to convert from mort per day to per period
+                 * fun.f_sig(-42 * ebg_p1 * cg[18, ..., na] / nw_start[..., na], cb1[4, ..., na], cb1[5, ..., na]))
     t_mort = np.mean(t_mort_p1, axis=-1)
     ##If not during the preg tox period then = 0
     mort = t_mort * period_is_pregtox
-    ##Adjust by sensitivity on dam mortality - need to include periods_is so the saa only gets applied in one period.
-    mort = fun.f_sa(mort, saa_mortalitye * period_is_pregtox, sa_type = 1, value_min = 0)
     return mort
 
 
