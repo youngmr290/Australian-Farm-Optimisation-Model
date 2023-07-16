@@ -78,6 +78,9 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     else:
         reports["infeasible"] = pd.DataFrame()
 
+    ##initilise lp vars
+    rfun.f_var_reshape(lp_vars,r_vals)
+
     ##run report functions
     if report_run.loc['run_summary', 'Run']:
         reports["summary"] = rfun.f_summary(lp_vars,r_vals,"Summary")
@@ -130,7 +133,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'season_nodes', 'index', [0]) #p7
         cols = f_update_default_controls(user_controls, 'season_nodes', 'cols', [1]) #z
         axis_slice = f_update_default_controls(user_controls, 'season_nodes', 'axis_slice', {})
-        reports["season_nodes"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, keys=keys,
+        reports["season_nodes"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, keys=keys,
                                                    arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         ###feed periods (p6)
         type = 'pas'
@@ -140,7 +143,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'feed_periods', 'index', [0]) #p7
         cols = f_update_default_controls(user_controls, 'feed_periods', 'cols', [1]) #z
         axis_slice = f_update_default_controls(user_controls, 'feed_periods', 'axis_slice', {})
-        reports["feed_periods"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
+        reports["feed_periods"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod,
                                                    keys=keys, arith=arith, index=index, cols=cols)
         ###dams dvp
         type = 'stock'
@@ -150,7 +153,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'dam_dvp_dates', 'index', [0]) #v
         cols = f_update_default_controls(user_controls, 'dam_dvp_dates', 'cols', [1,3,2]) #e, g, z
         axis_slice = f_update_default_controls(user_controls, 'dam_dvp_dates', 'axis_slice', {})
-        reports["dam_dvp_dates"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
+        reports["dam_dvp_dates"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod,
                                                    keys=keys, arith=arith, index=index, cols=cols)
         ###dams repro dates
         type = 'stock'
@@ -160,7 +163,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'repro_dates', 'index', [1]) #e
         cols = f_update_default_controls(user_controls, 'repro_dates', 'cols', [0,2,3]) #r, e, g
         axis_slice = f_update_default_controls(user_controls, 'repro_dates', 'axis_slice', {})
-        reports["repro_dates"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
+        reports["repro_dates"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod,
                                                    keys=keys, arith=arith, index=index, cols=cols)
         ###offs dvp
         type = 'stock'
@@ -170,7 +173,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'offs_dvp_dates', 'index', [0]) #v
         cols = f_update_default_controls(user_controls, 'offs_dvp_dates', 'cols', [4,3,2,1]) #g, x, d, z
         axis_slice = f_update_default_controls(user_controls, 'offs_dvp_dates', 'axis_slice', {})
-        reports["offs_dvp_dates"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
+        reports["offs_dvp_dates"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod,
                                                    keys=keys, arith=arith, index=index, cols=cols)
     if report_run.loc['run_saleprice', 'Run']:
         option = f_update_default_controls(user_controls, 'saleprice', 'option', 2)
@@ -186,7 +189,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'salegrid_dams', 'index', [1])
         cols = f_update_default_controls(user_controls, 'salegrid_dams', 'cols', [10,0,4,6]) #g,t,b,w
         axis_slice = f_update_default_controls(user_controls, 'salegrid_dams', 'axis_slice', {})
-        reports["salegrid_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
+        reports["salegrid_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_salegrid_yatf', 'Run']:
         type = 'stock'
@@ -196,7 +199,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'salegrid_yatf', 'index', [1])
         cols = f_update_default_controls(user_controls, 'salegrid_yatf', 'cols', [11,9,0,4,6]) #g,x,t,b,w
         axis_slice = f_update_default_controls(user_controls, 'salegrid_yatf', 'axis_slice', {})
-        reports["salegrid_yatf"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
+        reports["salegrid_yatf"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_salegrid_offs', 'Run']:
         type = 'stock'
@@ -206,7 +209,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'salegrid_offs', 'index', [1])
         cols = f_update_default_controls(user_controls, 'salegrid_offs', 'cols', [0,3,8,9,10,12]) #t,w,e,b,x,g
         axis_slice = f_update_default_controls(user_controls, 'salegrid_offs', 'axis_slice', {})
-        reports["salegrid_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
+        reports["salegrid_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_saleage_offs', 'Run']:
         type = 'stock'
@@ -216,7 +219,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'saleage_offs', 'index', [1])
         cols = f_update_default_controls(user_controls, 'saleage_offs', 'cols', [0,6,9,10,12]) #t,d,b,x,g
         axis_slice = f_update_default_controls(user_controls, 'saleage_offs', 'axis_slice', {})
-        reports["saleage_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod,
+        reports["saleage_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_salevalue_dams', 'Run']:
         type = 'stock'
@@ -229,7 +232,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'salevalue_dams', 'index', [5])
         cols = f_update_default_controls(user_controls, 'salevalue_dams', 'cols', [2, 3, 4])  # k2, p7, t
         axis_slice = f_update_default_controls(user_controls, 'salevalue_dams', 'axis_slice', {})
-        reports["salevalue_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["salevalue_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_salevalue_offs', 'Run']:
         type = 'stock'
@@ -242,7 +245,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'salevalue_offs', 'index', [5])
         cols = f_update_default_controls(user_controls, 'salevalue_offs', 'cols', [2, 3, 4])  # k2, p7, t
         axis_slice = f_update_default_controls(user_controls, 'salevalue_offs', 'axis_slice', {})
-        reports["salevalue_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["salevalue_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_salevalue_prog', 'Run']:
         type = 'stock'
@@ -255,7 +258,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'salevalue_prog', 'index', [6]) #w
         cols = f_update_default_controls(user_controls, 'salevalue_prog', 'cols', [4, 11, 5])    #cashflow period, g2, t
         axis_slice = f_update_default_controls(user_controls, 'salevalue_prog', 'axis_slice', {})
-        reports["salevalue_prog"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["salevalue_prog"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_woolvalue_dams', 'Run']:
         type = 'stock'
@@ -268,7 +271,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'woolvalue_dams', 'index', [5])
         cols = f_update_default_controls(user_controls, 'woolvalue_dams', 'cols', [2, 3, 4])  # k2, p7, t
         axis_slice = f_update_default_controls(user_controls, 'woolvalue_dams', 'axis_slice', {})
-        reports["woolvalue_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["woolvalue_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_woolvalue_offs', 'Run']:
         type = 'stock'
@@ -281,7 +284,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'woolvalue_offs', 'index', [6, 12])     #DVP, gender
         cols = f_update_default_controls(user_controls, 'woolvalue_offs', 'cols', [4, 14, 5])   #cashflow period, g3, t
         axis_slice = f_update_default_controls(user_controls, 'woolvalue_offs', 'axis_slice', {})
-        reports["woolvalue_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["woolvalue_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_saledate_offs', 'Run']:
         type = 'stock'
@@ -293,7 +296,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'saledate_offs', 'index', [5, 7])              #DVP, w
         cols = f_update_default_controls(user_controls, 'saledate_offs', 'cols', [13, 2, 3, 4, 11])     #g3, dam age, BTRT, t, gender
         axis_slice = f_update_default_controls(user_controls, 'saledate_offs', 'axis_slice', {})
-        reports["saledate_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["saledate_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_cfw_dams', 'Run']:
         type = 'stock'
@@ -305,7 +308,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'cfw_dams', 'index', [4])      #DVP
         cols = f_update_default_controls(user_controls, 'cfw_dams', 'cols', [2, 3])     #k2, t
         axis_slice = f_update_default_controls(user_controls, 'cfw_dams', 'axis_slice', {})
-        reports["cfw_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["cfw_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_fd_dams', 'Run']:
         type = 'stock'
@@ -317,7 +320,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'fd_dams', 'index', [4])      #DVP
         cols = f_update_default_controls(user_controls, 'fd_dams', 'cols', [11,3,2,8]) #g,t,k2,w
         axis_slice = f_update_default_controls(user_controls, 'fd_dams', 'axis_slice', {})
-        reports["fd_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["fd_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_cfw_offs', 'Run']:
         type = 'stock'
@@ -329,7 +332,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'cfw_offs', 'index', [5])      #DVP
         cols = f_update_default_controls(user_controls, 'cfw_offs', 'cols', [13, 2, 3, 4, 11])  #g3, dam age, BTRT, t, gender
         axis_slice = f_update_default_controls(user_controls, 'cfw_offs', 'axis_slice', {})
-        reports["cfw_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["cfw_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_fd_offs', 'Run']:
         type = 'stock'
@@ -341,7 +344,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'fd_offs', 'index', [5])      #DVP
         cols = f_update_default_controls(user_controls, 'fd_offs', 'cols', [13, 2, 3, 4, 11])  #g3, dam age, BTRT, t, gender
         axis_slice = f_update_default_controls(user_controls, 'fd_offs', 'axis_slice', {})
-        reports["fd_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["fd_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_wbe_dams', 'Run']:
         type = 'stock'
@@ -353,7 +356,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'wbe_dams', 'index', [4])      #DVP
         cols = f_update_default_controls(user_controls, 'wbe_dams', 'cols', [2]) #k2
         axis_slice = f_update_default_controls(user_controls, 'wbe_dams', 'axis_slice', {})
-        reports["wbe_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["wbe_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_wbe_offs', 'Run']:
         type = 'stock'
@@ -365,7 +368,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'wbe_offs', 'index', [5])      #DVP
         cols = f_update_default_controls(user_controls, 'wbe_offs', 'cols', [13, 2, 3, 4])  #g3, dam age, BTRT, t
         axis_slice = f_update_default_controls(user_controls, 'wbe_offs', 'axis_slice', {})
-        reports["wbe_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["wbe_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_lw_dams', 'Run']:
         ##Average dam lw with p, e & b axis. Lw is adjusted for animals that are sold but not adjusted by mortality (Ie if the light ones all die during a dvp then the weighting of animals that are averaged should change relatively across p)
@@ -385,7 +388,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'lw_dams', 'index', [5])      #p
         cols = f_update_default_controls(user_controls, 'lw_dams', 'cols', [8]) #b1
         axis_slice = f_update_default_controls(user_controls, 'lw_dams', 'axis_slice', {})
-        reports["lw_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
+        reports["lw_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
                                  , na_weights=na_weights, prod_weights=prod_weights, na_prodweights=na_prodweights, den_weights=den_weights, na_denweights=na_denweights
                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_ffcfw_dams', 'Run']:
@@ -406,7 +409,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'ffcfw_dams', 'index', [5])      #p
         cols = f_update_default_controls(user_controls, 'ffcfw_dams', 'cols', [8]) #b1
         axis_slice = f_update_default_controls(user_controls, 'ffcfw_dams', 'axis_slice', {})
-        reports['ffcfw_dams'] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
+        reports['ffcfw_dams'] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
                                  , na_weights=na_weights, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , den_weights=den_weights, na_denweights=na_denweights, keys=keys, arith=arith
                                  , index=index, cols=cols, axis_slice=axis_slice)
@@ -426,7 +429,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'ffcfw_dams', 'index', [5])      #p
         cols = f_update_default_controls(user_controls, 'ffcfw_dams', 'cols', [8]) #b1
         axis_slice = f_update_default_controls(user_controls, 'ffcfw_dams', 'axis_slice', {})
-        reports["ffcfw_cut_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type
+        reports["ffcfw_cut_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type
                                     , prod=prod, na_prod=na_prod
                                     , weights=weights, na_weights=na_weights
                                     , prod_weights=prod_weights, na_prodweights=na_prodweights
@@ -449,7 +452,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'cs_dams', 'index', [5])      #p
         cols = f_update_default_controls(user_controls, 'cs_dams', 'cols', [14, 3, 8])  #g1, t & b1
         axis_slice = f_update_default_controls(user_controls, 'cs_dams', 'axis_slice', {})
-        reports["cs_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod,
+        reports["cs_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod,
                                prod_weights=prod_weights, na_prodweights=na_prodweights, weights=weights, na_weights=na_weights,
                                den_weights=den_weights, na_denweights=na_denweights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
@@ -470,7 +473,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'fs_dams', 'index', [5])      #p
         cols = f_update_default_controls(user_controls, 'fs_dams', 'cols', [14, 3, 8])  #g1, t & b1
         axis_slice = f_update_default_controls(user_controls, 'fs_dams', 'axis_slice', {})
-        reports["fs_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod,
+        reports["fs_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod,
                                prod_weights=prod_weights, na_prodweights=na_prodweights, weights=weights, na_weights=na_weights,
                                den_weights=den_weights, na_denweights=na_denweights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
@@ -492,7 +495,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'nv_dams', 'index', [5])      #p
         cols = f_update_default_controls(user_controls, 'nv_dams', 'cols', [14, 7, 3, 8])  #g1, e, t & b1
         axis_slice = f_update_default_controls(user_controls, 'nv_dams', 'axis_slice', {})
-        reports["nv_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod,
+        reports["nv_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod,
                                prod_weights=prod_weights, na_prodweights=na_prodweights, weights=weights, na_weights=na_weights,
                                den_weights=den_weights, na_denweights=na_denweights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
@@ -517,7 +520,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'ffcfw_yatf', 'index', [5])      #p
         cols = f_update_default_controls(user_controls, 'ffcfw_yatf', 'cols', [2,15, 10, 13])  #k2, g2, w8, x
         axis_slice = f_update_default_controls(user_controls, 'ffcfw_yatf', 'axis_slice', {8: [2,None,1]}) #b with yatf
-        reports["ffcfw_yatf"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+        reports["ffcfw_yatf"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys
                                  , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_ffcfw_prog', 'Run']:
@@ -536,7 +539,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'ffcfw_prog', 'index', [5])      #w
         cols = f_update_default_controls(user_controls, 'ffcfw_prog', 'cols', [14,12,6,11])  #g2, gender, z, b0
         axis_slice = f_update_default_controls(user_controls, 'ffcfw_prog', 'axis_slice', {})
-        reports["ffcfw_prog"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod
+        reports["ffcfw_prog"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod
                                                  , prod_weights=prod_weights, na_prodweights=na_prodweights, weights=weights
                                                  , na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
@@ -558,7 +561,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'ffcfw_offs', 'index', [6])  #p
         cols = f_update_default_controls(user_controls, 'ffcfw_offs', 'cols', [17, 3, 15, 4])   #k5, g3, x, t
         axis_slice = f_update_default_controls(user_controls, 'ffcfw_offs', 'axis_slice', {})
-        reports["ffcfw_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+        reports["ffcfw_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_cs_offs', 'Run']:
@@ -578,7 +581,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'cs_offs', 'index', [6])  #p
         cols = f_update_default_controls(user_controls, 'cs_offs', 'cols', [17, 3, 15, 4])   #k5, g3, x, t
         axis_slice = f_update_default_controls(user_controls, 'cs_offs', 'axis_slice', {})
-        reports["cs_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+        reports["cs_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_fs_offs', 'Run']:
@@ -598,7 +601,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'fs_offs', 'index', [6])  #p
         cols = f_update_default_controls(user_controls, 'fs_offs', 'cols', [17, 3, 15, 4])   #k5, g3, x, t
         axis_slice = f_update_default_controls(user_controls, 'fs_offs', 'axis_slice', {})
-        reports["fs_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+        reports["fs_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_nv_offs', 'Run']:
@@ -619,7 +622,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'nv_offs', 'index', [6])  #p
         cols = f_update_default_controls(user_controls, 'nv_offs', 'cols', [2,15,3,4,8])  #k3,x,k5,t,w
         axis_slice = f_update_default_controls(user_controls, 'nv_offs', 'axis_slice', {})
-        reports["nv_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+        reports["nv_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_lamb_survival', 'Run']:
@@ -670,7 +673,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'daily_mei_dams', 'index', [6, 3])  #v, p6
         cols = f_update_default_controls(user_controls, 'daily_mei_dams', 'cols', [2,4])  #k2,nv
         axis_slice = f_update_default_controls(user_controls, 'daily_mei_dams', 'axis_slice', {})
-        reports["daily_mei_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["daily_mei_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys, arith=arith,
                                index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_daily_pi_dams', 'Run']:
@@ -686,7 +689,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'daily_pi_dams', 'index', [6, 3])  #v, p6
         cols = f_update_default_controls(user_controls, 'daily_pi_dams', 'cols', [2,4])  #k2,nv
         axis_slice = f_update_default_controls(user_controls, 'daily_pi_dams', 'axis_slice', {})
-        reports["daily_pi_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["daily_pi_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                    na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys, arith=arith,
                                    index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_daily_mei_offs', 'Run']:
@@ -702,7 +705,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'daily_mei_offs', 'index', [7, 4])       #DVP, fp
         cols = f_update_default_controls(user_controls, 'daily_mei_offs', 'cols', [15, 3, 5])    #g3, BTRT, nv
         axis_slice = f_update_default_controls(user_controls, 'daily_mei_offs', 'axis_slice', {})
-        reports["daily_mei_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["daily_mei_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys, arith=arith,
                                index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_daily_pi_offs', 'Run']:
@@ -718,7 +721,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'daily_pi_offs', 'index', [7, 4])       #DVP, fp
         cols = f_update_default_controls(user_controls, 'daily_pi_offs', 'cols', [15, 3, 5])    #g3, BTRT, nv
         axis_slice = f_update_default_controls(user_controls, 'daily_pi_offs', 'axis_slice', {})
-        reports["daily_pi_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["daily_pi_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                    na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys, arith=arith,
                                    index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_numbers_dams', 'Run']:
@@ -729,7 +732,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'numbers_dams', 'index', [4])       #DVP
         cols = f_update_default_controls(user_controls, 'numbers_dams', 'cols', [0,1,8, 2, 3]) #q, s, z, k2, t
         axis_slice = f_update_default_controls(user_controls, 'numbers_dams', 'axis_slice', {})
-        reports["numbers_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
+        reports["numbers_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_numbers_dams_p', 'Run']:
         type = 'stock'
@@ -742,7 +745,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'numbers_dams_p', 'index', [4,5])       #DVP, p
         cols = f_update_default_controls(user_controls, 'numbers_dams_p', 'cols', [2, 3, 8]) #k2, t, w
         axis_slice = f_update_default_controls(user_controls, 'numbers_dams_p', 'axis_slice', {})
-        reports["numbers_dams_p"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["numbers_dams_p"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_numbers_prog', 'Run']:
         type = 'stock'
@@ -752,7 +755,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'numbers_prog', 'index', [0,1,5])   #q, s, w
         cols = f_update_default_controls(user_controls, 'numbers_prog', 'cols', [6, 2, 3, 4, 9]) #z, dam age, birth type, t slice, gender
         axis_slice = f_update_default_controls(user_controls, 'numbers_prog', 'axis_slice', {})
-        reports["numbers_prog"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
+        reports["numbers_prog"] = rfun.f_stock_pasture_summary(r_vals, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_numbers_offs', 'Run']:
         type = 'stock'
@@ -762,7 +765,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'numbers_offs', 'index', [5])   #v
         cols = f_update_default_controls(user_controls, 'numbers_offs', 'cols', [8, 13, 11, 2, 3, 4, 7])   #z, g3, Gender, dam age, BTRT, t, w
         axis_slice = f_update_default_controls(user_controls, 'numbers_offs', 'axis_slice', {})
-        reports["numbers_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
+        reports["numbers_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_numbers_offs_p', 'Run']:
         type = 'stock'
@@ -775,7 +778,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'numbers_offs_p', 'index', [6])   #p
         cols = f_update_default_controls(user_controls, 'numbers_offs_p', 'cols', [14, 2,12,3,4,8])  #genotype, dam age, gender, BTRT, t, w
         axis_slice = f_update_default_controls(user_controls, 'numbers_offs_p', 'axis_slice', {})
-        reports["numbers_offs_p"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        reports["numbers_offs_p"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
                                axis_slice=axis_slice)
     if report_run.loc['run_mort_dams', 'Run']:
@@ -789,7 +792,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'mort_dams', 'index', [1])   #p
         cols = f_update_default_controls(user_controls, 'mort_dams', 'cols', [10, 4, 6])     #genotype, LSLN, w
         axis_slice = f_update_default_controls(user_controls, 'mort_dams', 'axis_slice', {})
-        reports["mort_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+        reports["mort_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
                                axis_slice=axis_slice)
     if report_run.loc['run_mort_offs', 'Run']:
@@ -803,7 +806,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'mort_offs', 'index', [1])   #p
         cols = f_update_default_controls(user_controls, 'mort_offs', 'cols', [12, 9, 3, 10])     #g3, BTRT, w, gender
         axis_slice = f_update_default_controls(user_controls, 'mort_offs', 'axis_slice', {})
-        reports["mort_offs"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+        reports["mort_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
                                axis_slice=axis_slice)
     if report_run.loc['run_dse', 'Run']:
@@ -824,7 +827,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'grnfoo', 'index', [7,5])   #p6 z
         cols = f_update_default_controls(user_controls, 'grnfoo', 'cols', [6])     #lmu
         axis_slice = f_update_default_controls(user_controls, 'grnfoo', 'axis_slice', {})
-        reports["grnfoo"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+        reports["grnfoo"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_pgr', 'Run']:
         #returns average pgr per day per ha.
@@ -840,7 +843,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'pgr', 'index', [7,5])   #p6 z
         cols = f_update_default_controls(user_controls, 'pgr', 'cols', [6])     #lmu
         axis_slice = f_update_default_controls(user_controls, 'pgr', 'axis_slice', {})
-        reports["pgr"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights, den_weights=den_weights,
+        reports["pgr"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights, den_weights=den_weights,
                                na_denweights=na_denweights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_dryfoo', 'Run']:
         #returns foo at end of each FP
@@ -852,7 +855,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'dryfoo', 'index', [4,3])   #p6 z
         cols = f_update_default_controls(user_controls, 'dryfoo', 'cols', [2])     #dry pools
         axis_slice = f_update_default_controls(user_controls, 'dryfoo', 'axis_slice', {})
-        reports["dryfoo"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+        reports["dryfoo"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_napfoo', 'Run']:
         #returns foo at end of each FP
@@ -864,7 +867,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'napfoo', 'index', [4,3])   #p6 z
         cols = f_update_default_controls(user_controls, 'napfoo', 'cols', [])
         axis_slice = f_update_default_controls(user_controls, 'napfoo', 'axis_slice', {})
-        reports["napfoo"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+        reports["napfoo"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_grncon', 'Run']:
         #returns consumption per ha per day
@@ -881,7 +884,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'grncon', 'index', [7,5])   #p6 z
         cols = f_update_default_controls(user_controls, 'grncon', 'cols', [8])     #t
         axis_slice = f_update_default_controls(user_controls, 'grncon', 'axis_slice', {})
-        reports["grncon"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, prod_weights=prod_weights,
+        reports["grncon"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, prod_weights=prod_weights,
                                 type=type, weights=weights, den_weights=den_weights, na_denweights=na_denweights,
                                 keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_drycon', 'Run']:
@@ -895,7 +898,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'drycon', 'index', [5,4])   #z,p6
         cols = f_update_default_controls(user_controls, 'drycon', 'cols', [3,7])     #d,t
         axis_slice = f_update_default_controls(user_controls, 'drycon', 'axis_slice', {})
-        reports["drycon"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+        reports["drycon"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_grnnv', 'Run']:
         #returns NV during each FP regardless of whether selected or not
@@ -907,7 +910,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'grnnv', 'index', [5,3])   #p6 z
         cols = f_update_default_controls(user_controls, 'grnnv', 'cols', [2,1])     #lmu
         axis_slice = f_update_default_controls(user_controls, 'grnnv', 'axis_slice', {})
-        reports["grnnv"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+        reports["grnnv"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_grndmd', 'Run']:
         #returns DMD during each FP (regardless of whether selected or not)
@@ -919,7 +922,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'grndmd', 'index', [4,2])   #z,p6
         cols = f_update_default_controls(user_controls, 'grndmd', 'cols', [1,0])     #g, o
         axis_slice = f_update_default_controls(user_controls, 'grndmd', 'axis_slice', {})
-        reports["grndmd"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+        reports["grndmd"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_avegrnfoo', 'Run']:
         #returns average FOO during each FP (regardless of whether selected or not)
@@ -931,7 +934,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'grnfoo', 'index', [4,2])   #z,p6
         cols = f_update_default_controls(user_controls, 'grnfoo', 'cols', [1,0])     #g, o
         axis_slice = f_update_default_controls(user_controls, 'grnfoo', 'axis_slice', {})
-        reports["grnfoo"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+        reports["grnfoo"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_drynv', 'Run']:
         #returns NV during each FP (regardless of whether selected or not)
@@ -943,7 +946,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'drynv', 'index', [3,2])   #z,p6
         cols = f_update_default_controls(user_controls, 'drynv', 'cols', [1])     #d
         axis_slice = f_update_default_controls(user_controls, 'drynv', 'axis_slice', {})
-        reports["drynv"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+        reports["drynv"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_drydmd', 'Run']:
         #returns DMD during each FP (regardless of whether selected or not)
@@ -955,7 +958,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'drydmd', 'index', [2,1])   #z,p6
         cols = f_update_default_controls(user_controls, 'drydmd', 'cols', [0])     #d
         axis_slice = f_update_default_controls(user_controls, 'drydmd', 'axis_slice', {})
-        reports["drydmd"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+        reports["drydmd"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_avedryfoo', 'Run']:
         #returns average FOO during each FP (regardless of whether selected or not)
@@ -967,7 +970,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'dryfoo', 'index', [2,1])   #z,p6
         cols = f_update_default_controls(user_controls, 'dryfoo', 'cols', [0])     #d
         axis_slice = f_update_default_controls(user_controls, 'dryfoo', 'axis_slice', {})
-        reports["dryfoo"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+        reports["dryfoo"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_napcon', 'Run']:
         #returns consumption in each FP
@@ -979,7 +982,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'napcon', 'index', [5,4])   #p6 z
         cols = f_update_default_controls(user_controls, 'napcon', 'cols', [])
         axis_slice = f_update_default_controls(user_controls, 'napcon', 'axis_slice', {})
-        reports["napcon"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+        reports["napcon"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_poccon', 'Run']:
         #returns consumption in each FP
@@ -991,7 +994,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'poccon', 'index', [3])   #p6
         cols = f_update_default_controls(user_controls, 'poccon', 'cols', [5])     #z
         axis_slice = f_update_default_controls(user_controls, 'poccon', 'axis_slice', {})
-        reports["poccon"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+        reports["poccon"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_supcon', 'Run']:
         #returns consumption in each FP
@@ -1007,7 +1010,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'stubcon', 'index', [0,1,2,3]) #q,s,z,p6
         cols = f_update_default_controls(user_controls, 'stubcon', 'cols', [6])     #s1 (stub cat)
         axis_slice = f_update_default_controls(user_controls, 'stubcon', 'axis_slice', {})
-        reports["stubcon"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+        reports["stubcon"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_cropcon', 'Run']:
         ##crop grazing
@@ -1019,11 +1022,11 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         index = f_update_default_controls(user_controls, 'cropcon', 'index', [0, 1, 6])  # q,s,z
         cols = f_update_default_controls(user_controls, 'cropcon', 'cols', [4,3]) #p6, k
         axis_slice = f_update_default_controls(user_controls, 'cropcon', 'axis_slice', {})
-        reports["cropcon"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+        reports["cropcon"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                                             keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_cropcon', 'Run']:
         #returns consumption in each FP
-        reports["cropcon_available"] = rfun.f_available_cropgrazing(lp_vars, r_vals)
+        reports["cropcon_available"] = rfun.f_available_cropgrazing(r_vals)
     if report_run.loc['run_mvf', 'Run']:
         #returns consumption in each FP
         reports["mvf"] = rfun.f_mvf_summary(lp_vars)

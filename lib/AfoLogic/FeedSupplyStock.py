@@ -567,8 +567,9 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         z_pos = sinp.stock['i_z_pos']
 
         ##access stock variables from lp output
-        stock_vars = rfun.f_stock_reshape(lp_vars,r_vals)
-        sire_numbers_qsg0 = stock_vars['sire_numbers_qsg0'].astype('float32')
+        rfun.f_var_reshape(lp_vars,r_vals) #this func defines a global variable called d_vars
+        stock_vars = rfun.d_vars['base']
+        sire_numbers_qszg0 = stock_vars['sire_numbers_qszg0'].astype('float32')
         dams_numbers_qsk2tvanwziy1g1 = stock_vars['dams_numbers_qsk2tvanwziy1g1'].astype('float32')
         offs_numbers_qsk3k5tvnwziaxyg3 = stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'].astype('float32')
         ###add singleton axis to line up with generator
