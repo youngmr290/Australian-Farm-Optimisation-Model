@@ -1758,7 +1758,7 @@ def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_i
     ##If not last 6 weeks then = 0
     mort = t_mort * period_is_pregtox
     ##Adjust by sensitivity on dam mortality - need to include periods_is so the saa only gets applied in one period.
-    mort = fun.f_sa(mort, saa_mortalitye * period_is_pregtox, sa_type = 1, value_min = 0)
+    mort = fun.f_sa(mort, saa_mortalitye * period_is_pregtox, sa_type = 2, value_min = 0)
     return mort
 
 
@@ -1851,7 +1851,7 @@ def f_mortality_dam_mu(cu2, ce, cb1, cs, cv_cs, period_is_birth, nfoet_b1, saa_m
     ##Vertical shift in mortality based on litter size and only increase mortality if period is birth and reproducing ewes
     mortalitye_mu = (mortalitye_mu + cb1[22, ...]) * period_is_birth * (nfoet_b1 > 0)
     ##Adjust by sensitivity on dam mortality - need to include periods_is so the saa only gets applied in one period.
-    mortalitye_mu = fun.f_sa(mortalitye_mu, saa_mortalitye * period_is_birth, sa_type = 1, value_min = 0)
+    mortalitye_mu = fun.f_sa(mortalitye_mu, saa_mortalitye * period_is_birth, sa_type = 2, value_min = 0)
     return mortalitye_mu
 
 
@@ -1880,7 +1880,7 @@ def f_mortality_dam_mu2(cu2, ce, cb1, cf_csc, csc, cs, cv_cs, period_between_sca
     ##Average across the p1 & p2 axes (range of CS & CS change within the mob) if period is birth for reproducing ewes
     mortalitye_mu = np.mean(mortalitye_mu_p1p2, axis=(-1,-2)) * period_is_prebirth * (nfoet_b1 > 0)
     ##Adjust by sensitivity on peri-natal dam mortality - need to include periods_is so the saa only gets applied in one period.
-    mortalitye_mu = fun.f_sa(mortalitye_mu, saa_mortalitye * period_is_prebirth, sa_type = 1, value_min = 0)
+    mortalitye_mu = fun.f_sa(mortalitye_mu, saa_mortalitye * period_is_prebirth, sa_type = 2, value_min = 0)
     return mortalitye_mu, cf_csc
 
 
