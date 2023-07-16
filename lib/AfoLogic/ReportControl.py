@@ -728,7 +728,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         keys = 'dams_keys_qsk2tvanwziy1g1'
         arith = f_update_default_controls(user_controls, 'numbers_dams', 'arith', 2)
         index = f_update_default_controls(user_controls, 'numbers_dams', 'index', [4])       #DVP
-        cols = f_update_default_controls(user_controls, 'numbers_dams', 'cols', [0,1,8, 2, 3]) #q, s, z, k2, t
+        cols = f_update_default_controls(user_controls, 'numbers_dams', 'cols', [0,1,8,3,7,2]) #q, s, z, t, w, k2 (k2 last so it is easy to SUMIF using k2 in the report)
         axis_slice = f_update_default_controls(user_controls, 'numbers_dams', 'axis_slice', {})
         reports["numbers_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
