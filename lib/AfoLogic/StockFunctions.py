@@ -1449,8 +1449,8 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
     return conception
 
 
-def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, cpl_doy, nfoet_b1any, nyatf_b1any
-                      , period_is_mating, index_e1, rev_trait_value, saa_rr, sam_rr, saa_ls, saa_con, saa_preg_increment):
+def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, doj2, lat, nfoet_b1any, nyatf_b1any
+                      , period_is_mating, rev_trait_value, saa_rr, sam_rr, saa_ls, saa_con, saa_preg_increment):
     ''''
     Calculation of dam conception using a back transformed logistic function. Using coefficients developed in
     Murdoch University trials.
@@ -1477,7 +1477,6 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, cpl_do
     Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can
     be controlled for relative economic values
 
-    :param saa_ls:
     :param cf: Includes parameter for number of ewes that implant but don't retain to birth (the 3rd trimester).
     :param cb1: GrazPlan parameter stating the probability of conception with different number of foetuses.
     :param cu2: LMAT parameters controlling impact of LWJ, LWC during joining, NLB, Age at joining
@@ -1487,15 +1486,19 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, cpl_do
     :param lwc: Liveweight change of the dam during the generator period in g/hd/d.
     :param age: age of dam mid-period in days. Indexed for p. The i axis can be non-singleton
     :param nlb: Number of lambs born ASBV - mid-parent average (achieved by using nlb_g3).
-    :param cpl_doy: The sine of the day of joining. This represents seasonality of reproduction
-    :param nfoet_b1any:
-    :param nyatf_b1any:
-    :param period_is_mating:
-    :param index_e1:
+    :param doj: The average day of joining for the dams mated in this oestrus cycle. This represents seasonality of reproduction
+    :param doj2: The average of the square of the day of joining for the dams mated in this oestrus cycle. This represents seasonality of reproduction
+    :param lat: Latitude of the location (in degrees). Which affects reproduction. Calibrated for range -28.5 to -34.6 (although it should work down to -37.6 for Hamilton)
+    :param nfoet_b1any: Number of foetuses = number of lambs born
+    :param nyatf_b1any: Number of lambs surviving the peri-natal period.
+    :param period_is_mating: Dams are mated in this generator period
     :param rev_trait_value:
     :param saa_rr:
     :param sam_rr: combine sam on reproductive rate
-    :return: Dam conception.
+    :param saa_con:
+    :param saa_ls:
+    :param saa_preg_increment:
+    :return: Dam conception. Proportion of dams that conceive 0,1,2 or 3 for this aoestrus cycle. Conceiving 0 means falls pregnant but loses the embryo after the joining period has ended (so can't be remated)
     '''
     if ~np.any(period_is_mating):
         conception = np.zeros_like(maternallw_mating)
@@ -1507,17 +1510,17 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, cpl_do
         cu2_sliced = fun.f_update(cu2[25, ...], cu2[24, ...], age < 364)
         ##Calculate the transformed estimates of proportion empty (slice cu2 allowing for active i axis)
         cutoff0 = cb1_sliced[:,:,1:2,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating
-                                                                + cu2_sliced[1, ...] * maternallw_mating ** 2
-                                                                + cu2_sliced[2, ...] * age
-                                                                + cu2_sliced[3, ...] * age ** 2
-                                                                + cu2_sliced[4, ...] * lwc
-                                                                + cu2_sliced[5, ...] * lwc ** 2
-                                                                + cu2_sliced[6, ...] * nlb
-                                                                + cu2_sliced[7, ...] * nlb ** 2
-                                                                + cu2_sliced[8, ...] * srw
-                                                                + cu2_sliced[9, ...] * srw ** 2
-                                                                + cu2_sliced[10, ...] * cpl_doy
-                                                                + cu2_sliced[11, ...] * cpl_doy ** 2
+                                                                 + cu2_sliced[1, ...] * maternallw_mating ** 2
+                                                                 + cu2_sliced[2, ...] * age
+                                                                 + cu2_sliced[3, ...] * age ** 2
+                                                                 + cu2_sliced[4, ...] * lwc
+                                                                 + cu2_sliced[5, ...] * lwc ** 2
+                                                                 + cu2_sliced[6, ...] * nlb
+                                                                 + cu2_sliced[7, ...] * nlb ** 2
+                                                                 + cu2_sliced[8, ...] * srw
+                                                                 + cu2_sliced[9, ...] * lat
+                                                                 + cu2_sliced[10, ...] * doj
+                                                                 + cu2_sliced[11, ...] * doj2
                                                                   )
 
         ##calc conception propn

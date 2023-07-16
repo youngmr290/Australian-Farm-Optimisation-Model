@@ -706,6 +706,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     doy_pa1e1b1nwzida0e0b0xygp0 = doy_pa1e1b1nwzida0e0b0xyg[...,na] - step / 2 + index_p0  #calculate the p1 axis from the start day rather than mid-point day
 
     ## p1 axis - each day of the oestrus cycle for reproduction which can vary with g (eg if sheep and cattle in model)
+    ### The average day of oestrus is day 0 of the generator period with a spread in the mob on either side.
     ### If beyond the end of oestrus then set to nan (& use nanmean when calculating the average value in later code)
     len_p1_ygp1 = cf_dams[4, ..., na]  # length of the oestrus cycle
     index_p1 = np.arange(np.max(len_p1_ygp1))
@@ -2030,12 +2031,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                 , np.maximum(0, 1 - cf_dams[1, ...]
                                                     * (1 - np.sin(2 * np.pi * (scan_std_doj_yg1[...] + 10) / 364))
                                                     * np.sin(lat_rad) / -0.57))
-    ### cpl_doy_lmat is for the LMAT equations to include a seasonal effect on RR
-    #### value is multiplied by a coefficient in the linear equation prior to logit back transformation.
-    #### cpl_doy and the coefficient is in place of the cpg_doy scalar of proportions used in the CSIRO equation.
+    # cpl no longer used. Replaced by DOY, DOY**2 & Latitude in the transformed equation
+    ### doy & doy2 (doy squared) are for the LMAT equations to include a seasonal effect on RR
+    #### values are multiplied by a coefficient in the linear equation prior to logit back transformation.
     #### The proportions of empty, single, twin & triplet change in the ratio determined by the cut-off coefficients.
-    cpl_doy_lmat_pa1e1b1nwzida0e0b0xyg1 = np.nanmean((1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 364))
-                                                    * np.sin(lat_rad) / -0.57, axis = -1)
+    doy_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(doy_pa1e1b1nwzida0e0b0xygp1, axis = -1)
+    doy2_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(doy_pa1e1b1nwzida0e0b0xygp1 ** 2, axis=-1)
+
     ##Rumen development factor on PI - yatf
     piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(fun.f_back_transform(ci_yatf[3, ..., na]
                                         * (age_p0_pa1e1b1nwzida0e0b0xyg2p0 - ci_yatf[4, ..., na]))
@@ -3643,9 +3645,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_conception_mu2(cf_dams, cb1_dams, cu2_dams, srw_female_yg1, maternallw_mating_dams
                                                    , lwc_mating_dams * 1000, age_pa1e1b1nwzida0e0b0xyg1[p], nlb_yg3 * 100
-                                                   , cpl_doy_lmat_pa1e1b1nwzida0e0b0xyg1[p:p+1], nfoet_b1nwzida0e0b0xyg
+                                                   , doy_pa1e1b1nwzida0e0b0xyg1[p:p+1], doy2_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                                                   , lat_deg, nfoet_b1nwzida0e0b0xyg
                                                    , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
-                                                   , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]
+                                                   , rev_trait_values['dams'][p]
                                                    , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p], sam_rr_pa1e1b1nwzida0e0b0xyg1[p]
                                                    , saa_littersize_pa1e1b1nwzida0e0b0xyg1[p], saa_conception_pa1e1b1nwzida0e0b0xyg1[p]
                                                    , saa_preg_increment_pa1e1b1nwzida0e0b0xyg[p])
