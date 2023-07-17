@@ -1874,6 +1874,7 @@ def f_mortality_dam_mu2(cu2, ce, cb1, cf_csc, csc, cs, cv_cs, period_between_sca
     ###calculate transformed mortality
     t_mortalitye_mu_p1p2 = (ce[23, ...,na,na] + cb1[23, ...,na,na] + cu2[23, -1, ...,na,na]
                                                                    + cu2[23, 0, ...,na,na] * cs_p1p2
+                                                                   + cu2[23, 1, ..., na, na] * cs_p1p2 ** 2
                                                                    + cu2[23, 2, ...,na,na] * csc_p1p2)
     ##Back transform the mortality (Logit)
     mortalitye_mu_p1p2 = fun.f_back_transform(t_mortalitye_mu_p1p2)
