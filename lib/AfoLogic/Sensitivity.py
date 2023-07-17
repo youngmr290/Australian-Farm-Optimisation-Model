@@ -138,12 +138,14 @@ def create_sa():
     ########
     ##SAV
     sav['grain_percentile'] = '-'  #grain price percentile
+    sav['grainp_k'] = np.full(len_k, '-', dtype=object)   # SA value for grain prices for each crop for selected percentile (i.e. overwrites calculated price)
+    sav['hayp_k'] = np.full(len_k, '-', dtype=object)   # SA value for baled prices for each crop for selected percentile (i.e. overwrites calculated price)
     sav['woolp_mpg_percentile'] = '-'               #sa value for the wool price percentile
-    sav['woolp_mpg'] = '-'                          # sa value for wool price at std micron
+    sav['woolp_mpg'] = '-'                          # sa value for wool price at std micron for selected percentile (i.e. overwrites calculated price)
     sav['woolp_fdprem_percentile'] = '-'            # sa value for fd premium percentile (premium received by fd compared to std)
     sav['woolp_fdprem'] = '-'                       # sa value for fd premium
     sav['salep_percentile'] = '-'                   #Value for percentile for all sale grids
-    sav['salep_max_s7'] = np.full(len_s7, '-', dtype=object)    #max sale price in grid
+    sav['salep_max_s7'] = np.full(len_s7, '-', dtype=object)    #max sale price in grid for selected percentile (i.e. overwrites calculated price)
     sav['fert_cost'] = np.full(len(uinp.price['fert_cost']), '-', dtype=object) #SA value for fert price $/t
     sav['manager_cost'] = '-' #SA value for manager cost per year
     sav['permanent_cost'] = '-' #SA value for permanent cost per year

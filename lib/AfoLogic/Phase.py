@@ -139,15 +139,19 @@ def f_farmgate_grain_price(r_vals={}):
         grain_price_firsts_ks2[ks2] = fun.np_extrap(np.array([grain_price_percentile]), percentile_price_ks2_p.columns,
                                                     percentile_price_ks2_p.loc[ks2].values)[0] #returns as one value in an array thus take [0]
 
+    ##apply price SAV and SAM (SAV first)
+    grain_price_firsts_k_s2 = grain_price_firsts_ks2.unstack()
+    grain_price_firsts_k_s2.loc[:,'Harv'] = fun.f_sa(grain_price_firsts_k_s2.loc[:,'Harv'], sen.sav['grainp_k'], 5)
+    grain_price_firsts_k_s2.loc[:,'Bale'] = fun.f_sa(grain_price_firsts_k_s2.loc[:,'Bale'], sen.sav['hayp_k'], 5)
+    ###apply sam with k axis
+    grain_price_firsts_k_s2 = fun.f_sa(grain_price_firsts_k_s2, sen.sam['grainp_k'][:,na], 0)
+    grain_price_firsts_ks2 = grain_price_firsts_k_s2.stack()
+
     ##seconds price
     grain_price_seconds_ks2 = grain_price_firsts_ks2.mul(1-grain_price_info_df['seconds_discount'], level=0)
 
-    ##gets the price of firsts and seconds for each grain
+    ##get the price of firsts and seconds for each grain
     price_df = pd.DataFrame(columns=['firsts','seconds'])
-    ###apply sam with k axis
-    sam_grainp_k = pd.Series(sen.sam['grainp_k'], index=percentile_price_k_s2p.index)
-    grain_price_firsts_ks2 = grain_price_firsts_ks2.mul(sam_grainp_k, axis=0, level=0)
-    grain_price_seconds_ks2 = grain_price_seconds_ks2.mul(sam_grainp_k, axis=0, level=0)
     ###populate df
     price_df['firsts'] = grain_price_firsts_ks2
     price_df['seconds'] = grain_price_seconds_ks2
