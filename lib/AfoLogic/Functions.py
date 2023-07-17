@@ -224,6 +224,8 @@ def f_update(existing_value, new_value, mask_for_new):
                 dtype = existing_value.dtype
             elif new_value.dtype==float:
                 dtype = new_value.dtype
+            else:
+                dtype = existing_value.dtype #to handle bool
     elif isinstance(new_value,np.ndarray):
         dtype = new_value.dtype
     elif isinstance(existing_value,np.ndarray):
@@ -252,17 +254,14 @@ def f_update(existing_value, new_value, mask_for_new):
     ##convert back to original dtype because adding float32 and int32 returns float64. And sometimes we don't want this e.g. postprocessing
     ###use try except because sometimes a single int is update e.g. in the first iteration on generator. this causes error because only numpy arrays have .dtype.
     try:
-        updated = updated.astype(dtype)
-    except AttributeError:
-        pass
-    except UnboundLocalError:
-        pass
-    ###used for core python dtype e.g. floats/int/str
-    try:
-        updated = dtype(updated)
+        if isinstance(updated, np.ndarray):
+            updated = updated.astype(dtype)
+        else:
+            ###used for core python dtype e.g. floats/int/str
+            updated = dtype(updated)
     except TypeError:
         pass
-    except UnboundLocalError:
+    except UnboundLocalError: #dtype not defined (i.e. if both values are int/float and mask is numpy then just ignore dtype)
         pass
     ###error check
     try:
