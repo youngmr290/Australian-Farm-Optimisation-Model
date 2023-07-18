@@ -1478,7 +1478,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
     be controlled for relative economic values
 
     :param cf: Includes parameter for number of ewes that implant but don't retain to birth (the 3rd trimester).
-    :param cb1: GrazPlan parameter stating the probability of conception with different number of foetuses.
+    :param cb1: Cut-off parameter for the probability of conception with different number of foetuses (remember the NM slice in b1)
     :param cu2: LMAT parameters controlling impact of LWJ, LWC during joining, NLB, Age at joining
     :param srw: Standard reference weight of the dam genotype, not including the adjustment assoicated with BTRT
     :param maternallw_mating: Maternal LW at mating. Allows that mating may occur mid-period.
