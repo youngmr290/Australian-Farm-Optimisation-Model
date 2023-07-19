@@ -1871,6 +1871,9 @@ def f_mortality_dam_mu2(cu2, ce, cb1, cf_csc, csc, cs, cv_cs, period_between_sca
     ### Mortality is calculated each loop and only retained if the period is pre-birth
     cs_p1p2 = fun.f_distribution7(cs, cv=cv_cs)[...,na]
     csc_p1p2 = fun.f_distribution7(cf_csc, cv=cv_cs)[...,na,:]
+    ### If selected, cap the CS for the ewe mortality calculation to remove the upper end of the quadratic effect that was added
+    cap = cu2[23, -2, ...,na,na]
+    cs_p1p2 = fun.f_update(cs_p1p2, np.minimum(cs_p1p2, cap), cap != 0)
     ###calculate transformed mortality
     t_mortalitye_mu_p1p2 = (ce[23, ...,na,na] + cb1[23, ...,na,na] + cu2[23, -1, ...,na,na]
                                                                    + cu2[23, 0, ...,na,na] * cs_p1p2
