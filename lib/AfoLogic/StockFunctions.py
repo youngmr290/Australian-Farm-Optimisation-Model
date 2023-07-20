@@ -1478,7 +1478,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
     be controlled for relative economic values
 
     :param cf: Includes parameter for number of ewes that implant but don't retain to birth (the 3rd trimester).
-    :param cb1: GrazPlan parameter stating the probability of conception with different number of foetuses.
+    :param cb1: Cut-off parameter for the probability of conception with different number of foetuses (remember the NM slice in b1)
     :param cu2: LMAT parameters controlling impact of LWJ, LWC during joining, NLB, Age at joining
     :param srw: Standard reference weight of the dam genotype, not including the adjustment assoicated with BTRT
     :param maternallw_mating: Maternal LW at mating. Allows that mating may occur mid-period.
@@ -1871,9 +1871,13 @@ def f_mortality_dam_mu2(cu2, ce, cb1, cf_csc, csc, cs, cv_cs, period_between_sca
     ### Mortality is calculated each loop and only retained if the period is pre-birth
     cs_p1p2 = fun.f_distribution7(cs, cv=cv_cs)[...,na]
     csc_p1p2 = fun.f_distribution7(cf_csc, cv=cv_cs)[...,na,:]
+    ### If selected, cap the CS for the ewe mortality calculation to remove the upper end of the quadratic effect that was added
+    cap = cu2[23, -2, ...,na,na]
+    cs_p1p2 = fun.f_update(cs_p1p2, np.minimum(cs_p1p2, cap), cap != 0)
     ###calculate transformed mortality
     t_mortalitye_mu_p1p2 = (ce[23, ...,na,na] + cb1[23, ...,na,na] + cu2[23, -1, ...,na,na]
                                                                    + cu2[23, 0, ...,na,na] * cs_p1p2
+                                                                   + cu2[23, 1, ..., na, na] * cs_p1p2 ** 2
                                                                    + cu2[23, 2, ...,na,na] * csc_p1p2)
     ##Back transform the mortality (Logit)
     mortalitye_mu_p1p2 = fun.f_back_transform(t_mortalitye_mu_p1p2)
