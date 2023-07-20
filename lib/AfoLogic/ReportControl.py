@@ -62,7 +62,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     # print('Start processor: {0}'.format(processor))
     # print('Start trials: {0}'.format(trials))
 
-
+    if user_controls=={}:
+        lp_vars_inc = True #default (if user controls module doesn't exist) is to include lp vars weighting
+    else:
+        lp_vars_inc = user_controls['lp_vars_inc']
 
     reports ={}
     ##handle infeasible trials
@@ -632,7 +635,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         cols = f_update_default_controls(user_controls, 'lamb_survival', 'cols', [13,11,0,1,10,7])    #g,i,q,s,z & b9 #report must include the b axis otherwise an error is caused because the axis added after the arith.
         axis_slice = f_update_default_controls(user_controls, 'lamb_survival', 'axis_slice', {})
         reports["lamb_survival"] = rfun.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
-                                             , axis_slice=axis_slice, lp_vars_inc=user_controls['lp_vars_inc'])
+                                             , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
     if report_run.loc['run_weanper', 'Run']:
         #todo there is an error here if drys are sold at scanning. We can't think of an easy way to fix it. (note if scan=4 then birth dvp may be different across e axis)
         #with the current structure w CANNOT be reported. 23Apr22 - seems to be working when not using lp_vars
@@ -643,7 +646,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         cols = f_update_default_controls(user_controls, 'weanper', 'cols', [11,9,0,1,8])   #g,i,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
         axis_slice = f_update_default_controls(user_controls, 'weanper', 'axis_slice', {})
         reports["weanper"] = rfun.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
-                                       , axis_slice=axis_slice, lp_vars_inc=user_controls['lp_vars_inc'])
+                                       , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
     if report_run.loc['run_scanper', 'Run']:
         #axes are qsk2tvanwziy1g1
         option = f_update_default_controls(user_controls, 'scanper', 'option', 2)
@@ -651,7 +654,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         cols = f_update_default_controls(user_controls, 'scanper', 'cols', [11,9,0,1,8])   #g,i,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
         axis_slice = f_update_default_controls(user_controls, 'scanper', 'axis_slice', {})
         reports["scanper"] = rfun.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
-                                       , axis_slice=axis_slice, lp_vars_inc=user_controls['lp_vars_inc'])
+                                       , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
     if report_run.loc['run_dry_propn', 'Run']:
         #axes are qsk2tvanwziy1g1
         option = f_update_default_controls(user_controls, 'dry_propn', 'option', 3)
@@ -659,7 +662,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         cols = f_update_default_controls(user_controls, 'dry_propn', 'cols', [11,9,0,1,8])   #g,i,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
         axis_slice = f_update_default_controls(user_controls, 'dry_propn', 'axis_slice', {})
         reports["dry_propn"] = rfun.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
-                                         , axis_slice=axis_slice, lp_vars_inc=user_controls['lp_vars_inc'])
+                                         , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
     if report_run.loc['run_daily_mei_dams', 'Run']:
         type = 'stock'
         prod = 'mei_dams_k2p6ftva1nw8ziyg1'
