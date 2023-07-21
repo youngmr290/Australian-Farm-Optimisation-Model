@@ -315,7 +315,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
 
     ##calculate biomass - base biomass * arable area * harv_propn * frost * lmu factor - seeding rate
     biomass_arable_by_soil_k_l = biomass_lmus.mul(arable) #mul arable area to the the lmu factor (easy because dfs have the same axis's).
-    biomass_rkz_l=biomass_arable_by_soil_k_l.reindex(base_biomass_rkz.index, axis=0, level=1).mul(base_biomass_rkz,axis=0) #reindes and mul with base biomass
+    biomass_rkz_l=biomass_arable_by_soil_k_l.reindex(base_biomass_rkz.index, axis=0, level=1).mul(base_biomass_rkz,axis=0).fillna(0) #reindes and mul with base biomass
     biomass_rkl_z = biomass_rkz_l.stack().unstack(2)
 
     ##add rotation period axis - if a rotation exists at the beginning of harvest it provides grain and requires harvesting.
