@@ -14,7 +14,7 @@ The user inputs the desired machinery option in property input section. If the u
 to test the impact of different machine options they can alter the input using a saa sensitivity variable.
 
 All machine option inputs (located in Universal.xlsx) are calibrated to represent cropping on a standard LMU.
-In GSM it is the loamy sand, with granite outcropping where Wandoo (white gum) is a common tree.
+In GSW it is the loamy sand, with granite outcropping where Wandoo (white gum) is a common tree.
 To allow for the differences between the calibration and the actual LMUs there are LMU adjustment
 factors in Property.xlsx.
 

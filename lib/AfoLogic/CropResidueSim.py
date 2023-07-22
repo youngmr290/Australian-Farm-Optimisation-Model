@@ -22,7 +22,7 @@ if you make changes to stub inputs or if you change the inputs/formulas that cal
 made so that the stubble generator is run for every trial but this will slow AFO and potentially confuse the interpretation
 of results).
 
-27/2/2022: currently there is only liveweight data for GSM region. Thus cwm uses the same stubble. This would be improved
+27/2/2022: currently there is only liveweight data for GSW region. Thus CWW uses the same stubble. This would be improved
 by running a stubble trial in the wheatbelt and recording liveweight every week.
 
 @author: young
