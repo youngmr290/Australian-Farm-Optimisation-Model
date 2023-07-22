@@ -100,7 +100,7 @@ def f_load_excel_default_inputs(load_all_pinp=False, trial_pinp=None):
     if not load_all_pinp:
         pinp_defaults_req = trial_pinp.dropna().unique()
     else: #this is required for the web app which needs to load all excel.
-        pinp_defaults_req = ['GSM', 'CWM', 'SWV']
+        pinp_defaults_req = ['GSW', 'CWW', 'SWV']
 
     ##read in inputs
     pinp_defaults={}
