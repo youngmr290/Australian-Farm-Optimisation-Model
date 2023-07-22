@@ -1296,7 +1296,7 @@ def f1_crop_params(params,r_vals):
     params['increment_rot_cost'] = increment_cost.to_dict()
     params['rot_wc'] = wc.to_dict()
     params['increment_rot_wc'] = increment_wc.to_dict()
-    params['rot_biomass'] = biomass.to_dict()
+    params['rot_biomass'] = biomass[biomass!=0].to_dict() #only save non-zero params to save space.
     params['biomass2product_kls2'] = biomass2product_kls2.to_dict()
 
 
