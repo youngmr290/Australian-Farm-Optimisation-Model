@@ -1,9 +1,27 @@
 '''
 Combines two feed supplies to create a new fs. 
 Takes a slice/s from the source fs and overrides a slice/s in the destination fs. Then saves the resulting fs with a new fs_number.
-For example if you wanted to examine the importance of feeding multiples (twins and tripplets) more because you know there are some tripplets
-vs feeding them based soley on twins you could run scan 3 which generates a different fs for singles, twins and tripplets
+For example if you wanted to examine the importance of feeding multiples (twins and triplets) more because you know there are some triplets
+vs feeding them based solely on twins you could run scan 3 which generates a different fs for singles, twins and triplets
 and then update the twin scan 2 fs with the twin fs from scan 3.
+The convention for naming the feed supply is that 5 digits are used to describe the scanning and feed supply for dams with different litter size
+  digit 1 - scan number
+        2 - empty feed supply
+        3 - singles feed supply
+        4 - twins feed supply
+        5 - triplets feed supply
+The value used to describe the feed supply for each class of sheep is determined from the scanning level that
+generated the feed supply and the class of sheep that was copied.
+   Scan 0 - All sheep 1
+   Scan 1 - Empty 2
+            Pregnant 3
+   Scan 2 - Empty 4
+            Single 5
+            Multiples 6
+   Scan 3 - Empty 7
+            Singles 8
+            Twins 9
+            Triplets A
 '''
 import pickle as pkl
 import sys
@@ -19,10 +37,16 @@ dest_axis_slice = {}
 ## User inputs  #
 #################
 #reads in as string so need to convert to int, the script path is the first value hence take the second
-region = sys.argv[1]  # 1 - swv (nimbus instances) 2 - gsm (google instances)
+region = sys.argv[1]  # 1 - swv (nimbus instances) 2 - gsw (google instances)
 genotype = sys.argv[2] # 2 - medium wool merino (nimbus and google instance 1)  4 - maternal (nimbus and google instance 2)
 
-tol = [1,3]
+## the code below uses a scan3 run and overwrites the triplet fs with the twin feedsupply and calls it a scan 2 feedsupply
+###the new feed supply is the management if scanned for multiples and no allowance was made for the triplets in the mob.
+
+if region == 1: #SWV
+    tol = [2,3]   #SWV is winter and spring lambing
+else:
+    tol = [1,3]   #GSW is autumn and spring lambing
 scan = [3] #scan 3 for all cases
 meat_price = [1,2,3,4]
 group='dams'
@@ -36,10 +60,11 @@ for n_tol in tol:
         for n_mp in meat_price:
 
             # fs_pkl number is defined by region, genotype, TOL, Scan & meat price
-            fs_source_number = str(region) + str(genotype) + str(n_tol) + str(n_scan) + str(n_mp)
-            fs_dest_number = str(region) + str(genotype) + str(n_tol) + str(n_scan) + str(n_mp)
-            #change scan number to scan 4 in new fs.
-            fs_new_number = str(region) + str(genotype) + str(n_tol) + str(4) + str(n_mp)
+            fs_source_number = str(region) + str(genotype) + str(n_tol) + str(n_mp) + str(n_scan) + '0000'
+            fs_dest_number = str(region) + str(genotype) + str(n_tol) + str(n_mp) + str(n_scan) + '0000'
+            #Naming is based on changing scan number to scan 2 in new fs. Code for the empty, single & twins are their
+            ## respective values from a scan 3 trial (7, 8 & 9). Triplets are based on the scan3 twin feed supply (9).
+            fs_new_number = str(region) + str(genotype) + str(n_tol) + str(n_mp) + str(27899)
 
             #################
             ## calcs        #
