@@ -43,7 +43,7 @@ genotype = sys.argv[2] # 2 - medium wool merino (nimbus and google instance 1)  
 ## the code below uses a scan3 run and overwrites the triplet fs with the twin feedsupply and calls it a scan 2 feedsupply
 ###the new feed supply is the management if scanned for multiples and no allowance was made for the triplets in the mob.
 
-if region == 1: #SWV
+if region == str(1): #SWV
     tol = [2,3]   #SWV is winter and spring lambing
 else:
     tol = [1,3]   #GSW is autumn and spring lambing
