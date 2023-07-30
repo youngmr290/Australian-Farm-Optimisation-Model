@@ -662,6 +662,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ###sim params
     ca_sire, ca_dams, ca_yatf, ca_offs = sfun.f1_c2g(uinp.parameters['i_ca_c2'], uinp.parameters['i_ca_y'], a_c2_c0, i_g3_inc, uinp.parameters['i_ca_pos'])
     cb0_sire, cb0_dams, cb0_yatf, cb0_offs = sfun.f1_c2g(uinp.parameters['i_cb0_c2'], uinp.parameters['i_cb0_y'], a_c2_c0, i_g3_inc, uinp.parameters['i_cb0_pos'])
+    #### cc_yatf needs an active p axis to represent parameter change when age < 30 days.
     cc_sire, cc_dams, cc_yatf, cc_offs = sfun.f1_c2g(uinp.parameters['i_cc_c2'], uinp.parameters['i_cc_y'], a_c2_c0, i_g3_inc, uinp.parameters['i_cc_pos'])
     cd_sire, cd_dams, cd_yatf, cd_offs = sfun.f1_c2g(uinp.parameters['i_cd_c2'], uinp.parameters['i_cd_y'], a_c2_c0, i_g3_inc, uinp.parameters['i_cd_pos'])
     ce_sire, ce_dams, ce_yatf, ce_offs = sfun.f1_c2g(uinp.parameters['i_ce_c2'], uinp.parameters['i_ce_y'], a_c2_c0, i_g3_inc, uinp.parameters['i_ce_pos'], condition=mask_o_dams, axis=d_pos)
@@ -2121,21 +2122,28 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     relsize_exp_a1e1b1nwzida0e0b0xyg1  = (srw_b0xyg1 - (srw_b0xyg1 - w_b_std_b0xyg1) * np.exp(-cn_dams[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg1) / (srw_b0xyg1**cn_dams[2, ...]))) / srw_b0xyg1
     relsize_exp_a1e1b1nwzida0e0b0xyg3  = (srw_b0xyg3 - (srw_b0xyg3 - w_b_std_b0xyg3) * np.exp(-cn_offs[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg3) / (srw_b0xyg3**cn_offs[2, ...]))) / srw_b0xyg3
 
-    ##adjust ce sim param (^ ce12 &13 should be scaled by relsize (similar to ce15)) -  (^instead of setting ce with relsize adjustment then adjusting birth weight could just adjust birthweight directly with relsize factor - to avoid doing this code below)
+    ##Adjust the tissue insulation parameter (cc[3]) for yatf 30 days or younger.
+    shape = (cc_yatf.shape[0],) + age_pa1e1b1nwzida0e0b0xyg2.shape
+    cc_cpa1e1b1nwzida0e0b0xyg2 = np.zeros(shape)  #make a new array - similar to age_yatf but with c axis
+    cc_cpa1e1b1nwzida0e0b0xyg2[...] = fun.f_expand(cc_yatf, p_pos-1, right_pos=uinp.parameters['i_y_pos'])
+    cc_cpa1e1b1nwzida0e0b0xyg2[3:4, ...] *= np.minimum(1, 0.4 + 0.02 * age_pa1e1b1nwzida0e0b0xyg2)
+    cc_pyatf = cc_cpa1e1b1nwzida0e0b0xyg2 #rename to keep consistent
+
+    ##adjust ce sim param (^ ce12 &13 should be scaled by relsize (similar to ce15)) -  (#todo instead of setting ce with relsize adjustment then adjusting birth weight could just adjust birthweight directly with relsize factor - to avoid doing this code below)
     shape = (ce_sire.shape[0],) + relsize_exp_a1e1b1nwzida0e0b0xyg0.shape #get shape of the new ce array
-    ce_ca1e1b1nwzida0e0b0xyg0 = np.zeros(shape) #make a new array - same a ce with an active i axis
+    ce_ca1e1b1nwzida0e0b0xyg0 = np.zeros(shape) #make a new array - same as ce with an active i axis
     ce_ca1e1b1nwzida0e0b0xyg0[...] = fun.f_expand(ce_sire, p_pos, right_pos=uinp.parameters['i_ce_pos'])
     ce_ca1e1b1nwzida0e0b0xyg0[15, ...] = 1 - cp_sire[4, ...] * (1 - relsize_exp_a1e1b1nwzida0e0b0xyg0) #alter ce15 param, relsize has active i axis hence this is not a  simple assignment.
     ce_sire = ce_ca1e1b1nwzida0e0b0xyg0 #rename to keep consistent
 
     shape = (ce_dams.shape[0],) + relsize_exp_a1e1b1nwzida0e0b0xyg1.shape #get shape of the new ce array - required because assigning relsize which is diff size
-    ce_ca1e1b1nwzida0e0b0xyg1 = np.zeros(shape) #make a new array - same a ce with an active i axis
+    ce_ca1e1b1nwzida0e0b0xyg1 = np.zeros(shape) #make a new array - same as ce with an active i axis
     ce_ca1e1b1nwzida0e0b0xyg1[...] = fun.f_expand(ce_dams, p_pos, right_pos=uinp.parameters['i_ce_pos'])
     ce_ca1e1b1nwzida0e0b0xyg1[15, ...] = 1 - cp_dams[4, ...] * (1 - relsize_exp_a1e1b1nwzida0e0b0xyg1) #alter ce15 param, relsize has active i axis hence this is not a  simple assignment.
     ce_dams = ce_ca1e1b1nwzida0e0b0xyg1 #rename to keep consistent
 
     shape = (ce_offs.shape[0],) + relsize_exp_a1e1b1nwzida0e0b0xyg3.shape #get shape of the new ce array - required because assigning relsize which is diff size
-    ce_ca1e1b1nwzida0e0b0xyg3 = np.zeros(shape) #make a new array - same a ce with an active i axis
+    ce_ca1e1b1nwzida0e0b0xyg3 = np.zeros(shape) #make a new array - same as ce with an active i axis
     ce_ca1e1b1nwzida0e0b0xyg3[...] = fun.f_expand(ce_offs, p_pos, right_pos=uinp.parameters['i_ce_pos'])
     ce_ca1e1b1nwzida0e0b0xyg3[15, ...] = 1 - cp_offs[4, ...] * (1 - relsize_exp_a1e1b1nwzida0e0b0xyg3) #alter ce15 param, relsize has active i axis hence this is not a  simple assignment.
     ce_offs = ce_ca1e1b1nwzida0e0b0xyg3 #rename to keep consistent
@@ -3490,7 +3498,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
             ##energy to offset chilling - yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                mem_yatf, temp_lc_yatf, kg_yatf = sfun.f_chill_cs(cc_yatf, ck_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, mei_yatf,
+                mem_yatf, temp_lc_yatf, kg_yatf = sfun.f_chill_cs(cc_pyatf[:,p,...], ck_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, mei_yatf,
                                                                   meme_yatf, mew_yatf, new_yatf, km_yatf, kg_supp_yatf, kg_fodd_yatf, mei_propn_supp_yatf,
                                                                   mei_propn_herb_yatf, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p],
                                                                   temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p],
