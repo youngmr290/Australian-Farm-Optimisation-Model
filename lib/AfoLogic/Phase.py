@@ -315,7 +315,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
 
     ##calculate biomass - base biomass * arable area * harv_propn * frost * lmu factor - seeding rate
     biomass_arable_by_soil_k_l = biomass_lmus.mul(arable) #mul arable area to the the lmu factor (easy because dfs have the same axis's).
-    biomass_rkz_l=biomass_arable_by_soil_k_l.reindex(base_biomass_rkz.index, axis=0, level=1).mul(base_biomass_rkz,axis=0) #reindes and mul with base biomass
+    biomass_rkz_l=biomass_arable_by_soil_k_l.reindex(base_biomass_rkz.index, axis=0, level=1).mul(base_biomass_rkz,axis=0).fillna(0) #reindes and mul with base biomass
     biomass_rkl_z = biomass_rkz_l.stack().unstack(2)
 
     ##add rotation period axis - if a rotation exists at the beginning of harvest it provides grain and requires harvesting.
@@ -574,6 +574,8 @@ def f_fert_passes():
     fert_passes_saa_krz_n = fert_passes_saa_k_n.reindex(fert_passes_rkz_n.index, index=0, level=1)
     fert_passes_rkz_n = fert_passes_rkz_n.add(fert_passes_saa_krz_n)
     nap_fert_passes_rkz_n = nap_fert_passes_rkz_n.add(fert_passes_saa_krz_n)
+    fert_passes_rkz_n[fert_passes_rkz_n < 0] = 0  # stop passes going negitive (incase saa is not correct)
+    nap_fert_passes_rkz_n[nap_fert_passes_rkz_n < 0] = 0  # stop passes going negitive (incase saa is not correct)
 
     ##drop landuse from index
     fert_passes_rz_n = fert_passes_rkz_n.droplevel(1,axis=0)
@@ -853,6 +855,7 @@ def f_chem_application():
     chem_passes_rkz_n = chem_passes_rk_zn.stack(0)
     chem_passes_saa_krz_n = chem_passes_saa_k_n.reindex(chem_passes_rkz_n.index, index=0, level=1)
     chem_passes_rkz_n = chem_passes_rkz_n.add(chem_passes_saa_krz_n)
+    chem_passes_rkz_n[chem_passes_rkz_n<0] = 0 #stop passes going negitive (incase saa is not correct)
     ###drop landuse from index
     chem_passes_rz_n = chem_passes_rkz_n.droplevel(1, axis=0)
     ##adjust chem passes by arable area
@@ -1296,7 +1299,7 @@ def f1_crop_params(params,r_vals):
     params['increment_rot_cost'] = increment_cost.to_dict()
     params['rot_wc'] = wc.to_dict()
     params['increment_rot_wc'] = increment_wc.to_dict()
-    params['rot_biomass'] = biomass.to_dict()
+    params['rot_biomass'] = biomass[biomass!=0].to_dict() #only save non-zero params to save space.
     params['biomass2product_kls2'] = biomass2product_kls2.to_dict()
 
 
