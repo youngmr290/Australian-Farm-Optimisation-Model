@@ -574,6 +574,8 @@ def f_fert_passes():
     fert_passes_saa_krz_n = fert_passes_saa_k_n.reindex(fert_passes_rkz_n.index, index=0, level=1)
     fert_passes_rkz_n = fert_passes_rkz_n.add(fert_passes_saa_krz_n)
     nap_fert_passes_rkz_n = nap_fert_passes_rkz_n.add(fert_passes_saa_krz_n)
+    fert_passes_rkz_n[fert_passes_rkz_n < 0] = 0  # stop passes going negitive (incase saa is not correct)
+    nap_fert_passes_rkz_n[nap_fert_passes_rkz_n < 0] = 0  # stop passes going negitive (incase saa is not correct)
 
     ##drop landuse from index
     fert_passes_rz_n = fert_passes_rkz_n.droplevel(1,axis=0)
@@ -853,6 +855,7 @@ def f_chem_application():
     chem_passes_rkz_n = chem_passes_rk_zn.stack(0)
     chem_passes_saa_krz_n = chem_passes_saa_k_n.reindex(chem_passes_rkz_n.index, index=0, level=1)
     chem_passes_rkz_n = chem_passes_rkz_n.add(chem_passes_saa_krz_n)
+    chem_passes_rkz_n[chem_passes_rkz_n<0] = 0 #stop passes going negitive (incase saa is not correct)
     ###drop landuse from index
     chem_passes_rz_n = chem_passes_rkz_n.droplevel(1, axis=0)
     ##adjust chem passes by arable area
