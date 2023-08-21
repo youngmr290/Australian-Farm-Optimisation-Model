@@ -342,7 +342,7 @@ def f_erosion(i_lmu_conservation_p6lzt, arable_l, pasture_rt):
     return erosion_p6lrzt
 
 
-def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_gp6zt, grn_foo_start_ungrazed_p6lzt
+def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_gp6zt, grn_foo_start_ungrazed_p6lzt, foo_grn_reseeding_p6lrzt
                   , i_foo_graze_propn_gt, grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, i_grn_senesce_eos_p6zt
                   , i_base_p6zt, i_grn_trampling_ft, i_grn_dig_p6lzt, i_grn_dmd_range_p6zt, i_pasture_stage_p6zt
                   , i_legume_zt, i_hr_scalar_zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_greenfeed_exists_p6zt
@@ -432,7 +432,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     foo_start_grnha_op6lzt = i_fxg_foo_op6lzt
     #    foo_start_grnha_op6lzt = np.maximum(i_fxg_foo_op6lzt, i_base_ft[:, na, na, :])  # to ensure that final foo can not be below the base level
     #FOO of the high FOO slice is the maximum of ungrazed foo and foo from the medium foo level
-    max_foo_p6lzt = np.maximum(i_fxg_foo_op6lzt[1, ...], grn_foo_start_ungrazed_p6lzt)
+    max_foo_p6lzt = np.maximum(np.maximum(i_fxg_foo_op6lzt[1, ...], grn_foo_start_ungrazed_p6lzt), np.max(foo_grn_reseeding_p6lrzt, axis=2))
     #maximum accumulated along the feed periods axis, i.e. max to date
     foo_start_grnha_op6lzt[2, ...] = np.maximum.accumulate(max_foo_p6lzt, axis=0)
     #masks out any green foo at the end of periods in which green pasture doesn't exist.
