@@ -424,7 +424,7 @@ def f_pasture(params, r_vals, nv):
     me_threshold_fp6zt = fun.f_update(me_threshold_fp6zt, i_nv_maintenance_t, me_threshold_fp6zt < i_nv_maintenance_t)
 
     ## FOO on the non-arable areas in crop paddocks is ungrazed FOO of pasture type 0 (annual), therefore calculate the profile based on the pasture type 0 values
-    #todo if these are for nap they should have nap in their name
+    #todo if these are for nap they should have nap in their name e.g. dry_foo_start_ungrazed_p6lzt
     grn_foo_start_ungrazed_p6lzt, dry_foo_start_ungrazed_p6lzt = pfun.f1_calc_foo_profile(
         max_germination_flzt, dry_decay_period_p6zt, length_p6z[...,na], i_fxg_foo_op6lzt
         , c_fxg_a_op6lzt, c_fxg_b_op6lzt, i_grn_senesce_eos_p6zt, grn_senesce_startfoo_p6zt
