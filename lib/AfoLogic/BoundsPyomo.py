@@ -38,6 +38,7 @@ def f1_boundarypyomo_local(params, model):
     sb_upbound_inc = np.any(sen.sav['bnd_sb_consumption_p6'] != '-') #upper bound on the quantity of saltbush consumed
     sup_lobound_inc = False #controls sup feed bound
     sup_per_dse_bnd_inc = sen.sav['bnd_sup_per_dse'] != '-' #lower bound dams #controls sup per dse bound
+    total_dams_eqbound_inc = sen.sav['bnd_total_dams'] != '-' #bound the total number of dams at prejoining
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_dam_inc'], 5) #lower bound dams
     dams_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_dam_inc'], 5) #upper bound on dams
     offs_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_off_inc'], 5) #lower bound offs
@@ -184,6 +185,28 @@ def f1_boundarypyomo_local(params, model):
                     return pe.Constraint.Skip
             model.con_sup_per_dse_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, rule=sup_per_dse_bound,
                                                 doc='total supplement fed per dse for the whole year')
+
+        ##bnd numbers of dams at prejoining
+        if total_dams_eqbound_inc:
+            '''
+            Equals to bound on total dams numbers at prejoining.
+            
+            '''
+            prejoin_v = list(params['stock']['p_prejoin_v_dams'])[1:]  # remove the start dvp which is not a real prejoin dvp (it just has type condense).
+
+            ##set bound using SAV
+            bnd_total_dams = sen.sav['bnd_total_dams']
+
+            ###constraint
+            def f_total_dams_eqbound(model):
+                return sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1] * model.p_season_prob_qsz[q,s,z]
+                           for q in model.s_sequence_year for s in model.s_sequence for k2 in model.s_k2_birth_dams
+                           for t in model.s_sale_dams for v in model.s_dvp_dams for a in model.s_wean_times
+                           for n in model.s_nut_dams for w8 in model.s_lw_dams for z in model.s_season_types
+                           for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                           if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1 and v in prejoin_v #only sum the numbers once per year (at prejoining)
+                           ) == bnd_total_dams
+            model.con_total_dams_eqbound = pe.Constraint(rule=f_total_dams_eqbound, doc='total number of dams')
 
         ##dam lo bound. (the sheep in a given yr equal total for all dvp divided by the number of dvps in 1 yr)
         if dams_lobound_inc:

@@ -424,7 +424,7 @@ def f_pasture(params, r_vals, nv):
     me_threshold_fp6zt = fun.f_update(me_threshold_fp6zt, i_nv_maintenance_t, me_threshold_fp6zt < i_nv_maintenance_t)
 
     ## FOO on the non-arable areas in crop paddocks is ungrazed FOO of pasture type 0 (annual), therefore calculate the profile based on the pasture type 0 values
-    #todo if these are for nap they should have nap in their name
+    #todo if these are for nap they should have nap in their name e.g. dry_foo_start_ungrazed_p6lzt
     grn_foo_start_ungrazed_p6lzt, dry_foo_start_ungrazed_p6lzt = pfun.f1_calc_foo_profile(
         max_germination_flzt, dry_decay_period_p6zt, length_p6z[...,na], i_fxg_foo_op6lzt
         , c_fxg_a_op6lzt, c_fxg_b_op6lzt, i_grn_senesce_eos_p6zt, grn_senesce_startfoo_p6zt
@@ -447,7 +447,7 @@ def f_pasture(params, r_vals, nv):
     me_cons_grnha_fgop6lzt, volume_grnha_fgop6lzt, foo_start_grnha_op6lzt, foo_end_grnha_gop6lzt, senesce_period_grnha_gop6lzt \
     , senesce_eos_grnha_gop6lzt, dmd_sward_grnha_gop6lzt, pgr_grnha_gop6lzt, foo_endprior_grnha_gop6lzt, cons_grnha_t_gop6lzt \
     , foo_ave_grnha_gop6lzt, dmd_diet_grnha_gop6lzt = pfun.f_grn_pasture(
-        cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_gp6zt, grn_foo_start_ungrazed_p6lzt
+        cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_gp6zt, grn_foo_start_ungrazed_p6lzt, foo_grn_reseeding_p6lrzt
         , i_foo_graze_propn_gt, grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, i_grn_senesce_eos_p6zt
         , i_base_p6zt, i_grn_trampling_p6t, i_grn_dig_p6lzt, i_grn_dmd_range_p6zt, i_pasture_stage_p6zt
         , i_legume_zt, i_hr_scalar_zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_greenfeed_exists_p6zt
