@@ -745,8 +745,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         na_weights = [5]
         keys = 'dams_keys_qsk2tvpanwziy1g1'
         arith = f_update_default_controls(user_controls, 'numbers_dams_p', 'arith', 2)
-        index = f_update_default_controls(user_controls, 'numbers_dams_p', 'index', [4,5])       #DVP, p
-        cols = f_update_default_controls(user_controls, 'numbers_dams_p', 'cols', [2, 3, 8]) #k2, t, w
+        index = f_update_default_controls(user_controls, 'numbers_dams_p', 'index', [5])       #DVP, p
+        cols = f_update_default_controls(user_controls, 'numbers_dams_p', 'cols', [9]) #k2, t, w
         axis_slice = f_update_default_controls(user_controls, 'numbers_dams_p', 'axis_slice', {})
         reports["numbers_dams_p"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
@@ -779,7 +779,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         keys = 'offs_keys_qsk3k5tvpnwziaxyg3'
         arith = f_update_default_controls(user_controls, 'numbers_offs_p', 'arith', 2)
         index = f_update_default_controls(user_controls, 'numbers_offs_p', 'index', [6])   #p
-        cols = f_update_default_controls(user_controls, 'numbers_offs_p', 'cols', [14, 2,12,3,4,8])  #genotype, dam age, gender, BTRT, t, w
+        cols = f_update_default_controls(user_controls, 'numbers_offs_p', 'cols', [9])  #genotype, dam age, gender, BTRT, t, w
         axis_slice = f_update_default_controls(user_controls, 'numbers_offs_p', 'axis_slice', {})
         reports["numbers_offs_p"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
