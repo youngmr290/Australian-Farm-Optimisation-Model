@@ -410,7 +410,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         keys = 'dams_keys_qsk2tvpaebnwziy1g1'
         arith = f_update_default_controls(user_controls, 'ffcfw_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'ffcfw_dams', 'index', [5])      #p
-        cols = f_update_default_controls(user_controls, 'ffcfw_dams', 'cols', [8]) #b1
+        cols = f_update_default_controls(user_controls, 'ffcfw_dams', 'cols', [11,8]) #b1
         axis_slice = f_update_default_controls(user_controls, 'ffcfw_dams', 'axis_slice', {})
         reports['ffcfw_dams'] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
                                  , na_weights=na_weights, prod_weights=prod_weights, na_prodweights=na_prodweights
