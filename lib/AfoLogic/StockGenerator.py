@@ -2032,12 +2032,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                 , np.maximum(0, 1 - cf_dams[1, ...]
                                                     * (1 - np.sin(2 * np.pi * (scan_std_doj_yg1[...] + 10) / 364))
                                                     * np.sin(lat_rad) / -0.57))
-    # cpl no longer used. Replaced by DOY, DOY**2 & Latitude in the transformed equation
-    ### doy & doy2 (doy squared) are for the LMAT equations to include a seasonal effect on RR
-    #### values are multiplied by a coefficient in the linear equation prior to logit back transformation.
+    # cpl no longer used in the LMAT equations. Replaced by DOJ, DOJ**2 & Latitude in the transformed equation
+    #### doj & doj2 are multiplied by a coefficient in the linear equation prior to logit back transformation.
     #### The proportions of empty, single, twin & triplet change in the ratio determined by the cut-off coefficients.
-    doy_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(doy_pa1e1b1nwzida0e0b0xygp1, axis = -1)
-    doy2_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(doy_pa1e1b1nwzida0e0b0xygp1 ** 2, axis=-1)
+    ### doj as fitted by Gav was days from 1 Sep (day 244 of the year) and counting up until the following Sep
+    ### The coefficients were converted to day of the year see Calibration1 pg14 with 1 Jan as D0 and negative if earlier.
+    doj_pa1e1b1nwzida0e0b0xygp1 = doy_pa1e1b1nwzida0e0b0xygp1
+    doj_pa1e1b1nwzida0e0b0xygp1[doj_pa1e1b1nwzida0e0b0xygp1 >= 244] -= 364
+    doj_pa1e1b1nwzida0e0b0xygp1 = np.clip(doj_pa1e1b1nwzida0e0b0xygp1, -52, 98)
+    doj_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(doy_pa1e1b1nwzida0e0b0xygp1, axis = -1)
+    doj2_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(doy_pa1e1b1nwzida0e0b0xygp1 ** 2, axis=-1)
 
     ##Rumen development factor on PI - yatf
     piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(fun.f_back_transform(ci_yatf[3, ..., na]
@@ -2220,7 +2224,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     period_is_mating_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_mated_pa1e1b1nwzida0e0b0xyg1
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is_between', date_born2_pa1e1b1nwzida0e0b0xyg2-np.array([(6*7)])
-                        , date_start_pa1e1b1nwzida0e0b0xyg, date_born2_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg) #This is within 6 weeks prior to Birth period (use datborn2 because it increments at prejoining)
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_born2_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg) #This is within 6 weeks prior to Birth period (use dateborn2 because it increments at prejoining)
     ###shearing
     period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg0
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
@@ -3653,7 +3657,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_conception_mu2(cf_dams, cb1_dams, cu2_dams, srw_female_yg1, maternallw_mating_dams
                                                    , lwc_mating_dams * 1000, age_pa1e1b1nwzida0e0b0xyg1[p], nlb_yg3 * 100
-                                                   , doy_pa1e1b1nwzida0e0b0xyg1[p:p+1], doy2_pa1e1b1nwzida0e0b0xyg1[p:p+1]
+                                                   , doj_pa1e1b1nwzida0e0b0xyg1[p:p+1], doj2_pa1e1b1nwzida0e0b0xyg1[p:p+1]
                                                    , lat_deg, nfoet_b1nwzida0e0b0xyg
                                                    , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                    , rev_trait_values['dams'][p]
