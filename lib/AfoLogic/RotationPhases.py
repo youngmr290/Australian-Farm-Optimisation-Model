@@ -226,12 +226,20 @@ def f_phase_link_params(params):
     keys_p7 = per.f_season_periods(keys=True)
     keys_r = np.array(phases_rotn_df.index).astype('str')
     keys_z = zfun.f_keys_z()
+    i_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
+
+    ##if pasture sowing can occur beore season break then need to add sown pasture landuses to dry sown list
+    for pasture in sinp.general['pastures'][pinp.general['pas_inc_t']]:
+        resown_pas = sinp.landuse['resown_pasture_sets'][pasture]
+        start_pas_seeding = zfun.f_seasonal_inp(pinp.pasture_inputs[pasture]['Date_Seeding'],numpy=True)
+        if any(start_pas_seeding<i_break_z):
+            dry_sown_landuses = dry_sown_landuses | resown_pas
+
 
     ##p_phase_area_transfers is a True/False and is False in the p7 period immediately preceding the break of season
     ## for each weather-year (z). To force a v_phase_change (to current season land-use or to PNC) at the break.
     ## Dry sown phases can't transfer between seasons but they can at break of the medium and late seasons.
     ###first calculate which p7 is break for each season
-    i_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
     start_date_p7z = per.f_season_periods()[:-1, :]  # remove end date of last period
     end_date_p7z = per.f_season_periods()[1:, :]
     next_period_is_break_p7z = np.roll(np.logical_and(start_date_p7z<=i_break_z, i_break_z<end_date_p7z), shift=-1, axis=0) #have to do it this way because for 'typ' break of season may not be a node.
