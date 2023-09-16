@@ -152,6 +152,13 @@ def f_landuse_sets():
                             ,'understory':{'sp'}
                            }
 
+    ##next set is used in rotation.py to identify which sown pasture landuses can be dry sown. Used in the handling of rotations (dry sown landuses can be incremented before the brk of season).
+    landuse['resown_pasture_sets']={'annual': {'ar', 'sr'}
+                            ,'lucerne':{'ur', 'xr'}
+                            ,'tedera':{'jr', 'tr'}
+                            ,'understory':{}
+                           }
+
     ##A1, E, P, G and C1 are just used in pas.py for germination ^can be removed when/if germination is calculated from sim
     ## these are also used for PNC landuses. & E is used in reporting
     landuse['G']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'
