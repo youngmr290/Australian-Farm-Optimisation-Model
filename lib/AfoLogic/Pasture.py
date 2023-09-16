@@ -387,8 +387,8 @@ def f_pasture(params, r_vals, nv):
 
 
     phase_germresow_df = phases_rotn_df.copy() #copy needed so subsequent changes don't alter initial df
-    #todo max_germination_flz is just nap and therefore should have nap in its name.
-    germination_p6lrzt, max_germination_flzt = pfun.f_germination(i_germination_std_zt, i_germ_scalar_lzt
+    #todo max_germination_p6lz is being used later as an arg for f1_calc_foo_profile() to calculate dry pasture on non-arable area that should only have germination_p6lrzt.
+    germination_p6lrzt, max_germination_p6lzt = pfun.f_germination(i_germination_std_zt, i_germ_scalar_lzt
                                                                 , i_germ_scalar_p6zt, pasture_rt, arable_l
                                                                 , pastures, phase_germresow_df, i_phase_germ_dict, rt)
 
@@ -403,7 +403,7 @@ def f_pasture(params, r_vals, nv):
     foo_grn_reseeding_p6lrzt, foo_dry_reseeding_dp6lrzt, periods_destocked_p6zt = pfun.f_reseeding(
         i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restock_grn_propn_t, resown_rt, feed_period_dates_p6z
         , i_restock_fooscalar_lt, i_restock_foo_arable_t, dry_decay_period_p6zt, i_fxg_foo_op6lzt, c_fxg_a_op6lzt
-        , c_fxg_b_op6lzt, i_grn_senesce_eos_p6zt, grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, max_germination_flzt
+        , c_fxg_b_op6lzt, i_grn_senesce_eos_p6zt, grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, max_germination_p6lzt
         , length_p6z, n_feed_periods, p6lrzt, p6zt, t_idx, z_idx, l_idx)
 
     ## area of green pasture being grazed and growing
@@ -423,21 +423,22 @@ def f_pasture(params, r_vals, nv):
     ### maintenance feed to another that is further below maintenance doesn't affect average efficiency.
     me_threshold_fp6zt = fun.f_update(me_threshold_fp6zt, i_nv_maintenance_t, me_threshold_fp6zt < i_nv_maintenance_t)
 
-    ## FOO on the non-arable areas in crop paddocks is ungrazed FOO of pasture type 0 (annual), therefore calculate the profile based on the pasture type 0 values
-    #todo if these are for nap they should have nap in their name e.g. dry_foo_start_ungrazed_p6lzt
+    ##  Calculate the FOO profile for ungrazed green & dry pastures at the start of each period
+    ### Variable is used elsewhere with the assumption that ungrazed is the maximum foo that can be achieved.
     grn_foo_start_ungrazed_p6lzt, dry_foo_start_ungrazed_p6lzt = pfun.f1_calc_foo_profile(
-        max_germination_flzt, dry_decay_period_p6zt, length_p6z[...,na], i_fxg_foo_op6lzt
+        max_germination_p6lzt, dry_decay_period_p6zt, length_p6z[...,na], i_fxg_foo_op6lzt
         , c_fxg_a_op6lzt, c_fxg_b_op6lzt, i_grn_senesce_eos_p6zt, grn_senesce_startfoo_p6zt
         , grn_senesce_pgrcons_p6zt)
 
-    ### non arable pasture becomes available to graze at the beginning of the first harvest period
+    ### non-arable pasture becomes available to graze at the beginning of the first harvest period
     # harvest_period  = fun.period_allocation(pinp.period['feed_periods']['date'], range(len(pinp.period['feed_periods'])), pinp.period['harv_date']) #use range(len()) to get the row number that harvest occurs has to be row number not index name because it is used to index numpy below
     harv_period_z, harv_proportion_z = fun.period_proportion_np(feed_period_dates_p6z, harv_date_z)
     index = pd.MultiIndex.from_arrays([keys_p6[harv_period_z], keys_z])
     harvest_period_prop = pd.Series(harv_proportion_z, index=index).unstack()
     # params['p_harvest_period_prop']  = dict([(pinp.period['feed_periods'].index[harv_period_z], harv_proportion_z)])
 
-    ### all pasture from na area (on crop paddocks) goes into the Low pool (#1) because it is rank & low quality
+    ## FOO on the non-arable areas in crop paddocks is ungrazed FOO of pasture type 0 (annual) because other pasture types are difficult to establish on a non-arable area.
+    ### all senescing pasture from na area on crop paddocks goes into the Low pool (slice 0) because it is rank & low quality
     nap_dp6lrzt[0, harv_period_z, l_idx[:,na,na], r_idx[:,na], z_idx, 0] = (
                                              dry_foo_start_ungrazed_p6lzt[harv_period_z, l_idx[:,na], z_idx, 0][:,na,:]
                                            * (1-arable_l[:, na,na])
