@@ -338,17 +338,17 @@ def f_property_inp_sa(pinp_defaults):
     sheep['i_scan_og1'] = fun.f_sa(sheep['i_scan_og1'], sen.sav['scan_og1'],5)
     sheep['i_dry_sales_forced_o'] = fun.f_sa(sheep['i_dry_sales_forced_o'], sen.sav['bnd_drys_sold_o'],5)
     sheep['i_dry_retained_forced_o'] = fun.f_sa(sheep['i_dry_retained_forced_o'], sen.sav['bnd_drys_retained_o'],5)
-    ### The expected proportion retained at scanning or birth is a 3-step calc. Update with own SAV and then override if either of the dry management options is forced
+    #### The expected proportion retained at scanning or birth is a 2-step calc.
+    #### 1. Update with own SAV and then 2. override if either of the dry management options is forced
     sheep['i_drys_retained_scan_est_o'] = fun.f_sa(sheep['i_drys_retained_scan_est_o'], sen.sav['est_drys_retained_scan_o'], 5)
-    ### If sale of drys is forced then proportion of drys retained is 0, so need to convert a True in the SAV to False (which converts to 0).
-    bnd_drys_sold_o = sen.sav['bnd_drys_sold_o'].copy()
-    bnd_drys_sold_o[bnd_drys_sold_o == True] = False  # '0'
-    sheep['i_drys_retained_scan_est_o'] = fun.f_sa(sheep['i_drys_retained_scan_est_o'], bnd_drys_sold_o,5)
-    ### If retain drys is forced (True) then proportion of drys retained is 1 so can use the SAV[] (True == 1)
-    sheep['i_drys_retained_scan_est_o'] = fun.f_sa(sheep['i_drys_retained_scan_est_o'], sen.sav['bnd_drys_retained_o'],5)
     sheep['i_drys_retained_birth_est_o'] = fun.f_sa(sheep['i_drys_retained_birth_est_o'], sen.sav['est_drys_retained_birth_o'], 5)
-    sheep['i_drys_retained_birth_est_o'] = fun.f_sa(sheep['i_drys_retained_birth_est_o'], bnd_drys_sold_o,5)
-    sheep['i_drys_retained_birth_est_o'] = fun.f_sa(sheep['i_drys_retained_birth_est_o'], sen.sav['bnd_drys_retained_o'],5)
+    ##### If sale of drys is forced then estimated proportion of drys retained is 0 otherwise the proportion remains as per the input.
+    sheep['i_drys_retained_scan_est_o'] = fun.f_update(sheep['i_drys_retained_scan_est_o'], 0, sheep['i_dry_sales_forced_o'])
+    sheep['i_drys_retained_birth_est_o'] = fun.f_update(sheep['i_drys_retained_birth_est_o'], 0, sheep['i_dry_sales_forced_o'])
+    #### If retain drys is forced (True) then estimated proportion of drys retained is 1 otherwise the proportion remains as per the input.
+    sheep['i_drys_retained_scan_est_o'] = fun.f_update(sheep['i_drys_retained_scan_est_o'], 1, sheep['i_dry_retained_forced_o'])
+    sheep['i_drys_retained_birth_est_o'] = fun.f_update(sheep['i_drys_retained_birth_est_o'], 1, sheep['i_dry_retained_forced_o'])
+
     sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.sav['r1_izg1'],5)
     sheep['ia_r2_ik0g1'] = fun.f_sa(sheep['ia_r2_ik0g1'], sen.sav['r2_ik0g1'],5)
     sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.sav['r2_isk2g1'],5)
