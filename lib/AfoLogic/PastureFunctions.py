@@ -342,7 +342,7 @@ def f_erosion(i_lmu_conservation_p6lzt, arable_l, pasture_rt):
     return erosion_p6lrzt
 
 
-def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_gp6zt, grn_foo_start_ungrazed_p6lzt
+def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_gp6zt, grn_foo_start_ungrazed_p6lzt, foo_grn_reseeding_p6lrzt
                   , i_foo_graze_propn_gt, grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, i_grn_senesce_eos_p6zt
                   , i_base_p6zt, i_grn_trampling_ft, i_grn_dig_p6lzt, i_grn_dmd_range_p6zt, i_pasture_stage_p6zt
                   , i_legume_zt, i_hr_scalar_zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_greenfeed_exists_p6zt
@@ -432,7 +432,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     foo_start_grnha_op6lzt = i_fxg_foo_op6lzt
     #    foo_start_grnha_op6lzt = np.maximum(i_fxg_foo_op6lzt, i_base_ft[:, na, na, :])  # to ensure that final foo can not be below the base level
     #FOO of the high FOO slice is the maximum of ungrazed foo and foo from the medium foo level
-    max_foo_p6lzt = np.maximum(i_fxg_foo_op6lzt[1, ...], grn_foo_start_ungrazed_p6lzt)
+    max_foo_p6lzt = np.maximum(np.maximum(i_fxg_foo_op6lzt[1, ...], grn_foo_start_ungrazed_p6lzt), np.max(foo_grn_reseeding_p6lrzt, axis=2))
     #maximum accumulated along the feed periods axis, i.e. max to date
     foo_start_grnha_op6lzt[2, ...] = np.maximum.accumulate(max_foo_p6lzt, axis=0)
     #masks out any green foo at the end of periods in which green pasture doesn't exist.
@@ -718,7 +718,7 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_
     return poc_con_p6lz * pinp.crop['i_poc_inc'], poc_md_fp6z * pinp.crop['i_poc_inc'], poc_vol_fp6z * pinp.crop['i_poc_inc']
 
 
-def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_fzt
+def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_p6zt
                         , i_fxg_foo_op6lzt, c_fxg_a_op6lzt, c_fxg_b_op6lzt, i_grn_senesce_eos_p6zt
                         , grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt):
     '''
@@ -736,7 +736,7 @@ def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_fzt
     n_feed_periods = len(per.f_feed_periods()) - 1
     n_lmu = np.count_nonzero(pinp.general['i_lmu_area'])
     n_pasture_types = germination_p6lzt.shape[-1]
-    n_season = length_of_periods_fzt.shape[-2]
+    n_season = length_of_periods_p6zt.shape[-2]
     p6lzt = (n_feed_periods, n_lmu, n_season, n_pasture_types)
     ### reshape the inputs passed and set some initial variables that are required
     grn_foo_start_p6lzt   = np.zeros(p6lzt, dtype = 'float64')
@@ -757,21 +757,21 @@ def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_fzt
             for l in [*range(n_lmu)]: #loop through lmu
                 ###find where foo_start fits into the input data
                 o_idx_t = fun.searchsort_multiple_dim(i_fxg_foo_op6lzt[:,f,l,z,:], grn_foo_start_p6lzt[f,l,z,:], axis_a0=1, axis_v0=0, side='left')
-                pgr_daily_lt[l] = (       c_fxg_a_op6lzt[o_idx_t,f,l,z,index_t] #advanced indexing
+                pgr_daily_lt[l] = (      c_fxg_a_op6lzt[o_idx_t,f,l,z,index_t] #advanced indexing
                                   +      c_fxg_b_op6lzt[o_idx_t,f,l,z,index_t] #advanced indexing
                                   * grn_foo_start_p6lzt[f,l,z,:])
-            grn_foo_end_p6lzt[f,:,z,:] = (              grn_foo_start_p6lzt[f,:,z,:]
-                                         * (1 - grn_senesce_startfoo_p6zt[f,z,:])
-                                         +                 pgr_daily_lt
-                                         *         length_of_periods_fzt[f,z,:]
-                                         * (1 -  grn_senesce_pgrcons_p6zt[f,z,:])) \
-                                        * (1 -     i_grn_senesce_eos_p6zt[f,z,:])
-            senescence_l = grn_foo_start_p6lzt[f,:,z,:]  \
-                          +    pgr_daily_lt * length_of_periods_fzt[f,z,:]  \
+            grn_foo_end_p6lzt[f,:,z,:] = (            grn_foo_start_p6lzt[f,:,z,:]
+                                         * (1 - grn_senesce_startfoo_p6zt[f,na,z,:])
+                                         +                   pgr_daily_lt[:,:]  #z axis is indexed, so don't want a newaxis
+                                         *          length_of_periods_p6zt[f,na,z,:]
+                                         * (1 -  grn_senesce_pgrcons_p6zt[f,na,z,:])) \
+                                        * (1 -     i_grn_senesce_eos_p6zt[f,na,z,:])
+            senescence_lt = grn_foo_start_p6lzt[f,:,z,:]  \
+                          +    pgr_daily_lt * length_of_periods_p6zt[f,na,z,:]  \
                           -  grn_foo_end_p6lzt[f,:,z,:]
             dry_foo_end_p6lzt[f,:,z,:] = dry_foo_start_p6lzt[f,:,z,:] \
-                                    * (1 - dry_decay_p6zt[f,z,:]) \
-                                    + senescence_l
+                                    * (1 - dry_decay_p6zt[f,na,z,:]) \
+                                    + senescence_lt    #p6 & z axes are indexed, so don't want a newaxis
     return grn_foo_start_p6lzt, dry_foo_start_p6lzt
 
 def f1_update_reseeding_foo(foo_grn_reseeding_p6lrzt, foo_dry_reseeding_p6lrzt,

@@ -577,7 +577,7 @@ def f_solve_cubic_for_logistic_multidim(a, b, c, d):
     x_roots = np.nanmax(x_roots_k, axis=-1)
     ###Back transform the roots from the conversion that created the cubic equation. This is not part of solving the roots
     ####but is done here rather than in the calling function to highlight that the problem is associated with the roots.
-    cut_off01 = np.log(x_roots)   #todo an error here is most likely due to incorrect specification of the b1[24 or 25] parameters in Universal.xlsx
+    cut_off01 = np.log(x_roots)   #todo an error here is most likely due to incorrect specification of the b1[24 or 25] parameters in Universal.xlsx or RR == 0 or LS == 1.0
     return cut_off01
 
 

@@ -151,7 +151,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
                         # , 'u', 'ur'
                         # , 'x', 'xr'
                         # , 'j', 't', 'jr', 'tr'])
-        yr1 = np.array(['AR', 'SR1'
+        yr1 = np.array(['AR', 'SR1' #todo not sure that we need to track resowing in yr1? what does it impact (germ, yield, chem & fert are not changed)?
                ,'B','O1','W', 'N', 'L', 'F', 'OF'
                , 'A1'
                , 'S1'])

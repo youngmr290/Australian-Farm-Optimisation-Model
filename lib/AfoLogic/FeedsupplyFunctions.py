@@ -170,8 +170,9 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, hr_scalar = 1, cr=None
     height = height1 * proportion_1 + height2 * (1 - proportion_1)
     ##Height density (height per unit FOO)
     hd = fun.f_divide(height, foo_grazplan) #handles div0 (e.g. if in feedlot with no pasture or adjusted foo is less than 0)
-    ##height ratio
+    ##height ratio - height of this feed per unit foo vs standard pasture (value great than 1 means increased availability (more up right), value less than 1 is less available (prostrate))
     hr = hr_scalar * hd / uinp.pastparameters['i_hd_std']
+    hr = np.clip(hr, 0.333, 3) #clip availability of current pasture within a factor of 3 relative to the grazplan standard pasture.
     ##calc hf
     hf = f_hf(hr, cr)
     ##apply z treatment
@@ -210,7 +211,7 @@ def f_ra_cs(foo, hf, cr=None, zf=1):
         cr13 = cr[13, ...]
     ##Adjust the FOO level to allow for the ungrazable limit measured in the units of FOO defined by GrazPlan.
     ### This is so RI=0 when foo == i_min_grazing_limit and just above 0 is foo is just above the limit.
-    foo = foo - uinp.pastparameters['i_min_grazing_limit']
+    foo = np.maximum(0, foo - uinp.pastparameters['i_min_grazing_limit'])
     ##Relative rate of eating (rr) & Relative time spent grazing (rt)
     try:
         ###Scalar version
@@ -285,7 +286,7 @@ def f_ra_mu(foo, hf, zf=1, cu0=None):
     ##Adjust the FOO level to allow for the ungrazable limit measured in the units of FOO defined by GrazPlan.
     ### This is so RI=0 when foo == i_min_grazing_limit and just above 0 is foo is just above the limit.
     ### The same minimum limit is used for this equation system as for the GrazPlan equations
-    foo = foo - uinp.pastparameters['i_min_grazing_limit']
+    foo = np.maximum(0, foo - uinp.pastparameters['i_min_grazing_limit'])
     ##Relative availability
     try:
         ###Scalar version

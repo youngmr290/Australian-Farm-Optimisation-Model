@@ -260,12 +260,12 @@ def f1_DSTw(scan_g, cycles=1):
 def f1_RR_propn_logistic(RR_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     '''
     Returns the proportion of empty, single, twin & triplet bearing dams after the requested number of cycles
-    from a scanning percentage or litter size of the calibration number of cycles (2).
+    from a scanning percentage of the calibration number of cycles (2).
     The prediction is based on the logistic equation used in the LMAT reproduction function (f_conception_MU2)
     It requires calculating the roots of a cubic equation which has been fitted to the cut-offs for the
     transformed logistic equation.
     Solving the cubic and back transforming (using natural logarithm) is done in f_solve_cubic_for_logistic()
-    See Moment to Moment8:pg 28 for derivation of the coefficients of the cubic equation.
+    See Working8:pg 28 for derivation of the coefficients of the cubic equation.
     Approach is also implemented in Excel 'Components combined - latest v2.xlsx'
 
     Parameters
@@ -292,6 +292,7 @@ def f1_RR_propn_logistic(RR_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     d = (3 - RR_g)
 
     ##solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_dams[25])
+    ##Note: If RR_g is 0 then the equation is quadratic and will generate RuntimeWarnings in f_solvecubic().
     cutoff0 = fun.f_solve_cubic_for_logistic_multidim(a,b,c,d)
 
     ###If the repro rate was 0 then replace the cutoff in those slices with the value 10 (because they will be nan)
@@ -304,13 +305,13 @@ def f1_RR_propn_logistic(RR_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
 
 def f1_LS_propn_logistic(LS_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     '''
-    Returns the proportion of empty, single, twin & triplet bearing dams after the requested number of cycles
-    from a litter size.
+    Returns the proportion of empty, single, twin & triplet bearing dams from a litter size.
+    Note: The number of cycles doesn't affect litter (unlike RR which is affected by the number of cycles)
     The prediction is based on the logistic equation used in the LMAT reproduction function (f_conception_MU2)
     It requires calculating the roots of a cubic equation which has been fitted to the cut-offs for the
     transformed logistic equation.
     Solving the cubic and back transforming (using natural logarithm) is done in f_solve_cubic_for_logistic()
-    See Moment to Moment8:pg 28 for derivation of the coefficients of the cubic equation.
+    See Working8:pg 37 for derivation of the coefficients of the cubic equation.
     Approach is also implemented in Excel 'Components combined - latest v2.xlsx'
 
     Parameters
@@ -330,12 +331,13 @@ def f1_LS_propn_logistic(LS_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     y = np.exp(cut1_g)
     z = np.exp(cut2_g)
     ### a,b,c,&d are calculated as derived
-    a = (1-LS_g)*(y**2*z)+(y*z)+y
-    b = (1-LS_g)* (y**2*z + y*z +y) + 2*(y*z + y + 1)
-    c = (2-LS_g)*(y*z + y + 1) +3
+    a = (1-LS_g)*(y**2*z) + (y*z) + y
+    b = (1-LS_g)*(y**2*z + y*z +y) + 2*(y*z + y + 1)
+    c = (2-LS_g)*(y*z + y + 1) + 3
     d = (3-LS_g)
 
     ##solve the cubic and calculate values that are the fitted values for the cutoffs (equivalent of cb1_dams[25])
+    ##Note: If LS_g is 1.0 then the equation is quadratic and will generate RuntimeWarnings in f_solvecubic().
     cutoff0 = fun.f_solve_cubic_for_logistic_multidim(a, b, c, d)
 
     ###If the litter size was 0 then replace the cutoff in those slices with the value 10 (because they will be nan)
@@ -1337,7 +1339,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, ny
         sam_rr = np.squeeze(sam_rr, axis=b1_pos)
         ## apply the sa to the repro rate and convert the adjusted value to a proportion of dry, singles, twins & triplets after 1 cycle
         repro_rate_adj = fun.f_sa(repro_rate, sam_rr)
-        repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr, 2, value_min=0) * (repro_rate > 0)     # only non-zero if original value was non-zero
+        repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr, 2, value_min=0.01) * (repro_rate > 0)     # only non-zero if original value was non-zero
         #### Convert the repro rate and adjusted repro rate to a 'standardised' proportion of DST after 1 cycle
         #### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
         propn_dst = np.moveaxis(f1_DSTw(repro_rate, cycles=1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos)
@@ -1453,7 +1455,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
                       , period_is_mating, rev_trait_value, saa_rr, sam_rr, saa_ls, saa_con, saa_preg_increment):
     ''''
     Calculation of dam conception using a back transformed logistic function. Using coefficients developed in
-    Murdoch University trials.
+    Murdoch University trials that mated for 2 cycles.
 
     Conception is the change in the numbers of animals in each slice of e & b as a proportion of the numbers
     in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums()
@@ -1473,7 +1475,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
     #todo The conversion of the prediction from 2 cycles back to one cycle doesn't include this loss
     # which then increases the proportion of empty ewes and reduces the expected RR.
     # The correction has been removed for now.
-    The values are altered by a sensitivity analysis on scanning percentage
+    The values are altered by a sensitivity analysis on scanning percentage, litter size and conception
     Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can
     be controlled for relative economic values
 
@@ -1498,7 +1500,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
     :param saa_con:
     :param saa_ls:
     :param saa_preg_increment:
-    :return: Dam conception. Proportion of dams that conceive 0,1,2 or 3 for this aoestrus cycle. Conceiving 0 means falls pregnant but loses the embryo after the joining period has ended (so can't be remated)
+    :return: Dam conception. Proportion of dams that conceive 0,1,2 or 3 for this oestrus cycle. Conceiving 0 means falls pregnant but loses the embryo after the joining period has ended (so can't be remated)
     '''
     if ~np.any(period_is_mating):
         conception = np.zeros_like(maternallw_mating)
@@ -1534,8 +1536,9 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         repro_rate = f1_convert_propn_to_2cycleRR(cp, nfoet_b1any, cycles = 1)
         #### apply the sa to the repro rate
         repro_rate_adj = fun.f_sa(repro_rate, sam_rr)
-        repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr * (repro_rate > 0), 2, value_min=0)     # only adjust if original value was non-zero
-        #### Back calculate the proportion of empty, single, twins & triplets using the Logistic function
+        #### Minimum value is 0.01 so that the proportions can be calculated in f1_RR_propn_logistic()
+        repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr * (repro_rate > 0), 2, value_min=0.01 * (repro_rate > 0))    # only adjust if original RR was non-zero
+        #### Back calculate the proportion of empty, single, twins & triplets for 1 cycle using the Logistic function
         cp = f1_RR_propn_logistic(repro_rate_adj, cb1_sliced, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1)
 
         ##Set up slices and store values for the SA
@@ -1552,25 +1555,29 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         ### Calculate the LS to allow SA to be applied. Note: SA applied on basis of 2 cycles
         litter_size = f1_convert_propn_to_LS(cp, nfoet_b1any)
         #### apply the sa to the repro rate
-        litter_size_adj = fun.f_sa(litter_size, saa_ls * (litter_size > 0), 2, value_min=0)     # only adjust if original value was non-zero
+        #### The minimum value is 1.05 because with the logistic function with cut-offs a flock with a litter size of 1 (all singles) is not possible
+        litter_size_adj = fun.f_sa(litter_size, saa_ls * (repro_rate > 0), 2, value_min=1.05 * (repro_rate > 0))      # only adjust if original RR was non-zero.
         #### Back calculate the proportion of empty, single, twins & triplets using the Logistic function for the increased LS
         cp = f1_LS_propn_logistic(litter_size_adj, cb1_sliced, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1)
         #### Scale the proportions so that the proportion of empty is same as prior to SA and the total is 1
-        empty_adj = cp[tuple(slc_empty)]
-        cp[tuple(slc_preg)] = cp[tuple(slc_preg)] * (1 - empty) / (1 - empty_adj)
+        t_empty = cp[tuple(slc_empty)]
+        cp[tuple(slc_preg)] = cp[tuple(slc_preg)] * (1 - empty) / (1 - t_empty)
         cp[tuple(slc_empty)] = empty
 
-        ##Apply conception saa to adjust the proportion of ewes that are dry with constant litter size.
+        ##Apply conception saa to adjust the proportion of ewes that are empty with constant litter size.
         ### Carried out here so that the sa affects the REV and is included in proportion of NM
-        ### Apply the saa to the empty slice.
-        cp[tuple(slc_empty)] = fun.f_sa(empty, saa_con * (empty > 0), 2, value_min=0)     # only adjust if original value was non-zero
+        ### Apply the saa to the square of the empty slice (based on the saa applying to the outcome after 2 cycles)
+        empty_adj = np.sqrt(fun.f_sa(empty ** 2, saa_con * (repro_rate > 0), 2, value_min=0))     # only adjust if original RR was non-zero
+        cp[tuple(slc_empty)] = empty_adj
         #### Adjust the pregnant slices to keep litter size constant and allow for the change in the number pregnant
-        cp[tuple(slc_preg)] = cp[tuple(slc_preg)] * (1-cp[tuple(slc_empty)]) / (1-empty)
+        cp[tuple(slc_preg)] = cp[tuple(slc_preg)] * (1-empty_adj) / (1-empty)
 
-        ##Apply preg increment saa to increment an individual b1 slice at conception, so that the value of an extra lamb conceived of a given birth type can be calculate.
+        ##Apply preg increment saa to increment an individual b1 slice at conception, so that the value of an extra lamb conceived of a given birth type can be calculated.
         ###Scale the increment by the proportion of dams that got pregnant this cycle
         ###This means the overall number of dams that are incremented depends on the proportion pregnant after the total number of mating cycles.
-        saa_preg_increment = saa_preg_increment * (1 - cp[tuple(slc_empty)])
+        #todo if the number of cycles was an arg then this calculation could be improved to allow for expected number pregnant after n_cycles.
+        # * (1 - empty_adj) / ((1 - empty_adj) ** n_cycles)  #where (1-empty)**n_cycles is the proportion pregnant at the end of mating.
+        saa_preg_increment = saa_preg_increment * (1 - empty_adj)
         ###Calculate the number available to increment relative to the saa value
         ###The dams are being moved from the previous slice to the current slice eg ##preg_increment_b1[4] is moving a dam from slice 3 (twins) to slice 4 (triplets)
         ###dams can only be moved if they exist in the previous slice.
@@ -1581,8 +1588,8 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         ##Process the Conception REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
         ###Conception is the proportion of dams that are dry and a change in conception is assumed to be converting
         ### a dry ewe into a pregnant ewe with litter size as per rest of the flock. It is calculated by altering the proportion of empty ewes b1[1].
-        empty_rev = f1_rev_update('conception', cp[tuple(slc_empty)], rev_trait_value)
-        cp[tuple(slc_preg)] = cp[tuple(slc_preg)] * (1 - empty_rev) / (1 - empty)
+        empty_rev = f1_rev_update('conception', empty_adj, rev_trait_value)
+        cp[tuple(slc_preg)] = cp[tuple(slc_preg)] * (1 - empty_rev) / (1 - empty_adj)
         cp[tuple(slc_empty)] = empty_rev
 
         ##Process the Litter size REV: either save the trait value to the dictionary or over-write trait value with value from the dictionary
@@ -1606,18 +1613,18 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         ### Disabled by setting the value of propn_pregnant to 0 rather remove the code because the proportion
         ###of empty needs to be set to 0 anyway (and the problem may be fixable)
         propn_pregnant = np.sum(fun.f_dynamic_slice(cp, b1_pos, 2, None), axis=b1_pos, keepdims=True) * 0
-        slc = [slice(None)] * len(propn_pregnant.shape)
-        slc[b1_pos] = slice(1,2)
-        cp[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
+        # slc_empty = [slice(None)] * len(propn_pregnant.shape)
+        # slc_empty[b1_pos] = slice(1,2)
+        cp[tuple(slc_empty)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
 
         ##If the period is mating then set conception = temporary probability array
         conception = cp * period_is_mating
 
         ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
-        slc = [slice(None)] * len(conception.shape)
-        slc[e1_pos] = slice(0, 1)
-        slc[b1_pos] = slice(0, 1)
-        conception[tuple(slc)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos, 1, None), axis=(e1_pos, b1_pos), keepdims=True)
+        slc_nm = [slice(None)] * len(conception.shape)
+        slc_nm[e1_pos] = slice(0, 1)
+        slc_nm[b1_pos] = slice(0, 1)
+        conception[tuple(slc_nm)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos, 1, None), axis=(e1_pos, b1_pos), keepdims=True)
     return conception
 
 
@@ -1758,7 +1765,7 @@ def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_i
     ##If not last 6 weeks then = 0
     mort = t_mort * period_is_pregtox
     ##Adjust by sensitivity on dam mortality - need to include periods_is so the saa only gets applied in one period.
-    mort = fun.f_sa(mort, saa_mortalitye * period_is_pregtox, sa_type = 2, value_min = 0)
+    mort = fun.f_sa(mort, saa_mortalitye * period_is_pregtox, sa_type = 2, value_min = 0) * (mort > 0)
     return mort
 
 
@@ -1789,7 +1796,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     mortalityx = np.average(fun.f_back_transform(xo_p1p2), axis=(-1, -2)) * period_is_birth  #axis -1 & -2 are p1 & p2
     ##Apply SA to progeny mortality due to exposure
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
-    mortalityx = fun.f_sa(mortalityx, saa_mortalityx, sa_type = 2, value_min = 0)
+    mortalityx = fun.f_sa(mortalityx, saa_mortalityx * (mortalityx > 0), sa_type = 2, value_min = 0)
     ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     mortalityx = f1_rev_update('era', mortalityx, rev_trait_value)
     return mortalityx, mortalityd_yatf, mortalityd_dams
@@ -1851,7 +1858,7 @@ def f_mortality_dam_mu(cu2, ce, cb1, cs, cv_cs, period_is_birth, nfoet_b1, saa_m
     ##Vertical shift in mortality based on litter size and only increase mortality if period is birth and reproducing ewes
     mortalitye_mu = (mortalitye_mu + cb1[22, ...]) * period_is_birth * (nfoet_b1 > 0)
     ##Adjust by sensitivity on dam mortality - need to include periods_is so the saa only gets applied in one period.
-    mortalitye_mu = fun.f_sa(mortalitye_mu, saa_mortalitye * period_is_birth, sa_type = 2, value_min = 0)
+    mortalitye_mu = fun.f_sa(mortalitye_mu, saa_mortalitye * period_is_birth, sa_type = 2, value_min = 0) * (mortalitye_mu > 0)
     return mortalitye_mu
 
 
@@ -1884,7 +1891,7 @@ def f_mortality_dam_mu2(cu2, ce, cb1, cf_csc, csc, cs, cv_cs, period_between_sca
     ##Average across the p1 & p2 axes (range of CS & CS change within the mob) if period is birth for reproducing ewes
     mortalitye_mu = np.mean(mortalitye_mu_p1p2, axis=(-1,-2)) * period_is_prebirth * (nfoet_b1 > 0)
     ##Adjust by sensitivity on peri-natal dam mortality - need to include periods_is so the saa only gets applied in one period.
-    mortalitye_mu = fun.f_sa(mortalitye_mu, saa_mortalitye * period_is_prebirth, sa_type = 2, value_min = 0)
+    mortalitye_mu = fun.f_sa(mortalitye_mu, saa_mortalitye * period_is_prebirth, sa_type = 2, value_min = 0) * (mortalitye_mu > 0)
     return mortalitye_mu, cf_csc
 
 
@@ -1948,7 +1955,7 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
     # mortalityx = mortalityx_std + (mortalityx - mortalityx_std) * cb1[9, ...]
     ##Apply SA to progeny mortality at birth (LTW)
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
-    mortalityx = fun.f_sa(mortalityx, saa_mortalityx, sa_type = 2, value_min = 0)
+    mortalityx = fun.f_sa(mortalityx, saa_mortalityx * (mortalityx > 0), sa_type = 2, value_min = 0)
     ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     mortalityx = f1_rev_update('era', mortalityx, rev_trait_value)
     return mortalityx
