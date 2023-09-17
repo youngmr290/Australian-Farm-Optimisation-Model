@@ -111,12 +111,12 @@ def f_germination(i_germination_std_zt, i_germ_scalar_lzt, i_germ_scalar_p6zt, p
     #todo currently all germination occurs in period 0, however, other code handles germination in other periods if the inputs & this code are changed
     germ_scalar_rzt = np.zeros(rzt,dtype = 'float64')
     for t, pasture in enumerate(pastures):
-        pasture_germ_scalar = i_phase_germ_dict[pasture].iloc[:, :-1] #remove the resown bool col
+        pasture_germ_scalar = i_phase_germ_dict[pasture].iloc[:, :-1].copy() #remove the resown bool col
         pasture_is_resown = i_phase_germ_dict[pasture].iloc[:,-1].astype(int)
         for z in range(germ_scalar_rzt.shape[1]):
             ##check if destocking occurs before the break of season. If so the resown pastures dont get any germination.
             if i_destock_date_zt[z,t] <= i_break_z[z]:
-                i_phase_germ_dict[pasture].iloc[pasture_is_resown,-2] = 0
+                pasture_germ_scalar.iloc[pasture_is_resown,-1] = 0
             ##expand to r axis
             phase_germresow_df['germ_scalar']=0 #set default to 0
             ###loop through each combo of landuses and pastures (i_phase_germ), then check which rotations fall into each germ category. Then populate the rot phase df with the necessary germination param.
