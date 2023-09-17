@@ -41,14 +41,14 @@ r_vals={}
 ###############
 #User control #
 ###############
-trial = 4   #4 is quick test
+trial = 50   #4 is quick test
 
 ######
 #Run #
 ######
 ##load excel data and experiment data
 exp_data, exp_group_bool, trial_pinp = exp.f_read_exp()
-sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs()
+sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp)
 d_rot_info = dxl.f_load_phases()
 cat_propn_s1_ks2 = dxl.f_load_stubble()
 
