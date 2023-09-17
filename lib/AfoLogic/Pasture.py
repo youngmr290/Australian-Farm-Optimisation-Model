@@ -104,6 +104,7 @@ def f_pasture(params, r_vals, nv):
     p6lrzt   = (n_feed_periods, n_lmu, n_phases_rotn, n_season_types, n_pasture_types)
     # p6rt     = (n_feed_periods, n_phases_rotn, n_pasture_types)
     rt      = (n_phases_rotn, n_pasture_types)
+    rzt      = (n_phases_rotn, n_season_types, n_pasture_types)
     p6lt     = (n_feed_periods, n_lmu, n_pasture_types)
     p6lzt    = (n_feed_periods, n_lmu, n_season_types, n_pasture_types)
     lt      = (n_lmu, n_pasture_types)
@@ -308,10 +309,10 @@ def f_pasture(params, r_vals, nv):
         i_grn_dig_p6lzt[...,t]           = zfun.f_seasonal_inp(np.moveaxis(exceldata['DigGrn'],0,-1), numpy=True, axis=-1)[:,lmu_mask_l,...]  # numpy array of inputs for green pasture digestibility on each LMU.
 
         ###to handle different length rotation phases (ie simulation is shorter than pinp) the germ df needs to be sliced.
-        offset = exceldata['GermPhases'].shape[-1] - len(phases_rotn_df.columns) - 1 #minus 1 because germ inputs has extra col
+        offset = exceldata['GermPhases'].shape[-1] - len(phases_rotn_df.columns) - 2 #minus 2 because germ inputs has extra col
         ###to handle if there is only one rotation
         exceldata['GermPhases'] = exceldata['GermPhases'][na,:] if exceldata['GermPhases'].ndim==1 else exceldata['GermPhases']
-        i_phase_germ_dict[pasture]      = pd.DataFrame(exceldata['GermPhases'][:,offset:])  #DataFrame with germ scalar and resown
+        i_phase_germ_dict[pasture]      = pd.DataFrame(exceldata['GermPhases'][:,offset:])  #DataFrame with germ scalar and resown bool
         # i_phase_germ_dict[pasture].reset_index(inplace=True)                                # replace index read from Excel with numbers to match later merging
         # i_phase_germ_dict[pasture].columns.values[range(phase_len)] = [*range(phase_len)]   # replace the pasture columns read from Excel with numbers to match later merging
 
@@ -320,6 +321,7 @@ def f_pasture(params, r_vals, nv):
 
     ##season inputs not required in t loop above
     harv_date_z         = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
+    i_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
     ### pasture params used to convert foo for rel availability
     cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
     cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
@@ -390,7 +392,8 @@ def f_pasture(params, r_vals, nv):
     #todo max_germination_p6lz is being used later as an arg for f1_calc_foo_profile() to calculate dry pasture on non-arable area that should only have germination_p6lrzt.
     germination_p6lrzt, max_germination_p6lzt = pfun.f_germination(i_germination_std_zt, i_germ_scalar_lzt
                                                                 , i_germ_scalar_p6zt, pasture_rt, arable_l
-                                                                , pastures, phase_germresow_df, i_phase_germ_dict, rt)
+                                                                , pastures, phase_germresow_df, i_phase_germ_dict
+                                                                ,  i_destock_date_zt, i_break_z, rzt)
 
     resown_rt = np.zeros(rt)
     seeding_freq_k = pinp.crop['i_seeding_frequency']
