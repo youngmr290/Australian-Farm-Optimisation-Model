@@ -784,6 +784,7 @@ def f_con_asset(model):
 
 def f_con_minroe(model):
     '''Tallies the total expenditure to ensure that there is a minimum ROI on cash expenditure.'''
+    #todo Does/should minroe include 1. the pasture costs, 2. the stock purchases & 3. fixed costs. Because minroe is not tallying with the total expenses in the pnl report
     def minroe(model,q,s,p7,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last period
