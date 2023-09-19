@@ -233,7 +233,7 @@ def f_phase_link_params(params):
         resown_pas = sinp.landuse['resown_pasture_sets'][pasture]
         start_pas_seeding = zfun.f_seasonal_inp(pinp.pasture_inputs[pasture]['Date_Seeding'],numpy=True)
         if any(start_pas_seeding<i_break_z):
-            dry_sown_landuses = dry_sown_landuses+resown_pas
+            dry_sown_landuses = dry_sown_landuses | resown_pas
 
 
     ##p_phase_area_transfers is a True/False and is False in the p7 period immediately preceding the break of season
