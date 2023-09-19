@@ -440,8 +440,8 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     ## green initial FOO for the 'grnha' decision variables
     foo_start_grnha_op6lzt = i_fxg_foo_op6lzt
     #    foo_start_grnha_op6lzt = np.maximum(i_fxg_foo_op6lzt, i_base_ft[:, na, na, :])  # to ensure that final foo can not be below the base level
-    #FOO of the high FOO slice is the maximum of ungrazed foo and foo from the medium foo level
-    max_foo_p6lzt = np.maximum(np.maximum(i_fxg_foo_op6lzt[1, ...], grn_foo_start_ungrazed_p6lzt), np.max(foo_grn_reseeding_p6lrzt, axis=2))
+    #FOO of the high FOO slice is the maximum of ungrazed foo and foo from the medium foo level #todo in the new pasture we probs won't want to sum p6 in the resown foo (it is only required now because v_phase provides less than a hectare so FooH=reson foo/area (which is the same as summing the p6 axis). When foo and area are the same variable this shouldnt be required.)
+    max_foo_p6lzt = np.maximum(np.maximum(i_fxg_foo_op6lzt[1, ...], grn_foo_start_ungrazed_p6lzt), np.max(np.sum(foo_grn_reseeding_p6lrzt, axis=0,keepdims=True), axis=2)) #sum p6 axis reseeding on germination because it needs to represent total reseeding foo even if grazing occurs halfway through a period because ogf the area constraint which says that the resown phase only provide half a hectare therefore the max foo still needs to be the full resown amount. i.e. if resowing foo is 1500 and seeding is 66% through a period the phase will provide 500foo and 0.33 ha and the v_green_ha will require 1 ha therefore needs to be 1500Foo.
     #maximum accumulated along the feed periods axis, i.e. max to date
     foo_start_grnha_op6lzt[2, ...] = np.maximum.accumulate(max_foo_p6lzt, axis=0)
     #masks out any green foo at the end of periods in which green pasture doesn't exist.
