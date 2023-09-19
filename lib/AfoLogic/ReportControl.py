@@ -100,7 +100,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         option = f_update_default_controls(user_controls, 'croparea_qsz', 'option', 2) #total crop area
         reports["croparea_qsz"] = rfun.f_area_summary(lp_vars, r_vals, option)
     if report_run.loc['run_pnl', 'Run']:
-        option = f_update_default_controls(user_controls, 'pnl', 'option', 1) #1 = report q, s, & z. 2 = weighted average of q, s, & z
+        option = f_update_default_controls(user_controls, 'pnl', 'option', 2) #1 = report q, s, & z. 2 = weighted average of q, s, & z
         reports["pnl"] = rfun.f_profitloss_table(lp_vars, r_vals, option=option)
     if report_run.loc['run_wc', 'Run']:
         reports["wc"] = rfun.f_wc_summary(lp_vars, r_vals)
