@@ -172,8 +172,8 @@ def f_p_dates_df():
         # index = ['P%02d' % i for i in range(len(periods))]
         # periods.index = index
 
-    ##if dsp, check the nodes have been included
-    if not pinp.general['steady_state'] and np.count_nonzero(pinp.general['i_mask_z']) != 1:
+    ##if node periods included, check the nodes have been included
+    if pinp.general['i_inc_node_periods'] or (not pinp.general['steady_state'] and np.count_nonzero(pinp.general['i_mask_z']) != 1):
         ##error check: node dates must be included in the lab periods
         date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'], numpy=True, axis=0)
         if np.all(np.any(periods.values[:,:,na]==date_node_zm, axis=0)):
@@ -239,8 +239,8 @@ def f_feed_periods(option=0):
     ###handle z axis
     fp_p6z = zfun.f_seasonal_inp(fp_p6z, numpy=True, axis=1)
 
-    ##if dsp, check the nodes have been included
-    if not pinp.general['steady_state'] and np.count_nonzero(pinp.general['i_mask_z']) != 1:
+    ##if node periods included, check the nodes have been included
+    if pinp.general['i_inc_node_periods'] or (not pinp.general['steady_state'] and np.count_nonzero(pinp.general['i_mask_z']) != 1):
         ##error check: node dates must be included in the lab periods
         date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'], numpy=True, axis=0)
         if np.all(np.any(fp_p6z[:,:,na]==date_node_zm, axis=0)):
