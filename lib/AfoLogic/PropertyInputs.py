@@ -248,11 +248,16 @@ def f_property_inp_sa(pinp_defaults):
     ##crop
     ###sav
     crop['user_crop_rot'] = fun.f_sa(crop['user_crop_rot'], sen.sav['pinp_rot'], 5)
-    crop['yields'] = fun.f_sa(crop['yields'], sen.sav['yield_rz'], 5)
-    crop['fert'] = fun.f_sa(crop['fert'], sen.sav['fert_r_nz'], 5)
-    crop['fert_passes'] = fun.f_sa(crop['fert_passes'], sen.sav['fert_passes_r_nz'], 5)
-    crop['chem_cost'] = fun.f_sa(crop['chem_cost'], sen.sav['chem_r_nz'], 5)
-    crop['chem'] = fun.f_sa(crop['chem'], sen.sav['chem_passes_r_nz'], 5)
+    ####r axis SAVs need special handling because rotations can be added in the web app therefore len_r needs to be dynamic
+    if sen.sav['user_rotphases'] != '-':
+        crop['fixed_rotphases'] = sen.sav['user_rotphases'] #rotations just get a complete overwrite when coming from web app (this is fine because rotations will never be change using exp.xl)
+    len_r = len(crop['fixed_rotphases'])
+    crop['i_user_rot_inc_r'] = fun.f_sa(crop['i_user_rot_inc_r'], sen.sav['rot_inc_R'][0:len_r], 5)
+    crop['yields'] = fun.f_sa(crop['yields'], sen.sav['yield_Rz'][0:len_r,:], 5)
+    crop['fert'] = fun.f_sa(crop['fert'], sen.sav['fert_R_nz'][0:len_r,:], 5)
+    crop['fert_passes'] = fun.f_sa(crop['fert_passes'], sen.sav['fert_passes_R_nz'][0:len_r,:], 5)
+    crop['chem_cost'] = fun.f_sa(crop['chem_cost'], sen.sav['chem_R_nz'][0:len_r], 5)
+    crop['chem'] = fun.f_sa(crop['chem'], sen.sav['chem_passes_R_nz'][0:len_r,:], 5)
     crop['yield_by_lmu'] = fun.f_sa(crop['yield_by_lmu'], sen.sav['lmu_yield_adj_kl'], 5)
     crop['fert_by_lmu'] = fun.f_sa(crop['fert_by_lmu'], sen.sav['lmu_fert_adj_nl'], 5)
     crop['chem_by_lmu'] = fun.f_sa(crop['chem_by_lmu'], sen.sav['lmu_chem_adj_l'], 5)
