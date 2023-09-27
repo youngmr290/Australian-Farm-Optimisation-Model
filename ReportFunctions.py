@@ -624,28 +624,28 @@ def f_summary(lp_vars, r_vals, trial):
     summary_df.loc[trial, 'SR max'] = SR_max * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'SR min'] = SR_min * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'SR stdev'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[3]
-    ##pasture %
-    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
-    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
-    Pas_max = f_area_summary(lp_vars, r_vals, option=5)[1]
-    Pas_min = f_area_summary(lp_vars, r_vals, option=5)[2]
-    summary_df.loc[trial, 'Pas % max'] = Pas_max * np.logical_not(Pas_min==Pas_max) #sets min/max to 0 if range is 0 so the cols get hidden
-    summary_df.loc[trial, 'Pas % min'] = Pas_min * np.logical_not(Pas_min==Pas_max) #sets min/max to 0 if range is 0 so the cols get hidden
-    summary_df.loc[trial, 'Pas % stdev'] = f_area_summary(lp_vars, r_vals, option=5)[3]
-    ##cereal %
-    summary_df.loc[trial, 'Cereal %'] = f_area_summary(lp_vars, r_vals, option=6)[0]
-    Cereal_max = f_area_summary(lp_vars, r_vals, option=6)[1]
-    Cereal_min = f_area_summary(lp_vars, r_vals, option=6)[2]
-    summary_df.loc[trial, 'Cereal % max'] = Cereal_max * np.logical_not(Cereal_min==Cereal_max) #sets min/max to 0 if range is 0 so the cols get hidden
-    summary_df.loc[trial, 'Cereal % min'] = Cereal_min * np.logical_not(Cereal_min==Cereal_max) #sets min/max to 0 if range is 0 so the cols get hidden
-    summary_df.loc[trial, 'Cereal % stdev'] = f_area_summary(lp_vars, r_vals, option=6)[3]
-    ##canola %
-    summary_df.loc[trial, 'Canola %'] = f_area_summary(lp_vars, r_vals, option=7)[0]
-    Canola_max = f_area_summary(lp_vars, r_vals, option=7)[1]
-    Canola_min = f_area_summary(lp_vars, r_vals, option=7)[2]
-    summary_df.loc[trial, 'Canola % max'] = Canola_max * np.logical_not(Canola_min==Canola_max) #sets min/max to 0 if range is 0 so the cols get hidden
-    summary_df.loc[trial, 'Canola % min'] = Canola_min * np.logical_not(Canola_min==Canola_max) #sets min/max to 0 if range is 0 so the cols get hidden
-    summary_df.loc[trial, 'Canola % stdev'] = f_area_summary(lp_vars, r_vals, option=7)[3]
+    # ##pasture %
+    # summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+    # summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+    # Pas_max = f_area_summary(lp_vars, r_vals, option=5)[1]
+    # Pas_min = f_area_summary(lp_vars, r_vals, option=5)[2]
+    # summary_df.loc[trial, 'Pas % max'] = Pas_max * np.logical_not(Pas_min==Pas_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    # summary_df.loc[trial, 'Pas % min'] = Pas_min * np.logical_not(Pas_min==Pas_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    # summary_df.loc[trial, 'Pas % stdev'] = f_area_summary(lp_vars, r_vals, option=5)[3]
+    # ##cereal %
+    # summary_df.loc[trial, 'Cereal %'] = f_area_summary(lp_vars, r_vals, option=6)[0]
+    # Cereal_max = f_area_summary(lp_vars, r_vals, option=6)[1]
+    # Cereal_min = f_area_summary(lp_vars, r_vals, option=6)[2]
+    # summary_df.loc[trial, 'Cereal % max'] = Cereal_max * np.logical_not(Cereal_min==Cereal_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    # summary_df.loc[trial, 'Cereal % min'] = Cereal_min * np.logical_not(Cereal_min==Cereal_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    # summary_df.loc[trial, 'Cereal % stdev'] = f_area_summary(lp_vars, r_vals, option=6)[3]
+    # ##canola %
+    # summary_df.loc[trial, 'Canola %'] = f_area_summary(lp_vars, r_vals, option=7)[0]
+    # Canola_max = f_area_summary(lp_vars, r_vals, option=7)[1]
+    # Canola_min = f_area_summary(lp_vars, r_vals, option=7)[2]
+    # summary_df.loc[trial, 'Canola % max'] = Canola_max * np.logical_not(Canola_min==Canola_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    # summary_df.loc[trial, 'Canola % min'] = Canola_min * np.logical_not(Canola_min==Canola_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    # summary_df.loc[trial, 'Canola % stdev'] = f_area_summary(lp_vars, r_vals, option=7)[3]
     ##supplement
     summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
     Sup_max = f_grain_sup_summary(lp_vars, r_vals, option=4)[1]
@@ -711,7 +711,7 @@ def f_area_summary(lp_vars, r_vals, option):
     pasture_area_p7qszl = landuse_area_k_p7qszl[landuse_area_k_p7qszl.index.isin(all_pas)].sum()  # sum landuse
     if option == 1:
         pasture_area_qszl = pasture_area_p7qszl.loc[pasture_area_p7qszl.index.levels[0][-1].tolist()] #slice for p7[-1]
-        return pasture_area_qszl.groupby(level=(0,1,2)).sum().round(0) #sum lmu
+        return pasture_area_qszl.groupby(level=(0,1,2)).sum().sum().round(0) #sum lmu
 
     ###crop area
     crop_area_p7qszl = landuse_area_k_p7qszl[~landuse_area_k_p7qszl.index.isin(all_pas)].sum()  # sum landuse
@@ -1406,7 +1406,7 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False, summa
     ##dse per ha if user opts for this level of detail
     if per_ha:
         df_pasture_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
-        pasture_area_qsp6z = df_pasture_area_qsz.values.reshape(shape_qsz)[:,:,na,:]
+        pasture_area_qsp6z = df_pasture_area_qsz#.values.reshape(shape_qsz)[:,:,na,:]
         dse_sire = fun.f_divide(dse_sire, pasture_area_qsp6z) #this only works if z is the last axis
         dse_dams = fun.f_divide(dse_dams, pasture_area_qsp6z)
         dse_offs = fun.f_divide(dse_offs, pasture_area_qsp6z)
