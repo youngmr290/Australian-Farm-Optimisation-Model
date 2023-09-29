@@ -250,14 +250,24 @@ def f_property_inp_sa(pinp_defaults):
     crop['user_crop_rot'] = fun.f_sa(crop['user_crop_rot'], sen.sav['pinp_rot'], 5)
     ####r axis SAVs need special handling because rotations can be added in the web app therefore len_r needs to be dynamic
     if (sen.sav['user_rotphases'] != '-').all():
-        crop['fixed_rotphases'].iloc[:,:] = sen.sav['user_rotphases'] #rotations just get a complete overwrite when coming from web app (this is fine because rotations will never be change using exp.xl)
-    len_r = len(crop['fixed_rotphases'])
-    crop['i_user_rot_inc_r'] = fun.f_sa(crop['i_user_rot_inc_r'][0:len_r], sen.sav['rot_inc_R'][0:len_r], 5, pandas=True)
-    crop['yields'] = fun.f_sa(crop['yields'][0:len_r], sen.sav['yield_Rz'][0:len_r,:], 5, pandas=True)
-    crop['fert'] = fun.f_sa(crop['fert'][0:len_r], sen.sav['fert_R_nz'][0:len_r,:], 5, pandas=True)
-    crop['fert_passes'] = fun.f_sa(crop['fert_passes'][0:len_r], sen.sav['fert_passes_R_nz'][0:len_r,:], 5, pandas=True)
-    crop['chem_cost'] = fun.f_sa(crop['chem_cost'][0:len_r], sen.sav['chem_R_nz'][0:len_r], 5, pandas=True)
-    crop['chem'] = fun.f_sa(crop['chem'][0:len_r], sen.sav['chem_passes_R_nz'][0:len_r,:], 5, pandas=True)
+#rotation info gets complete overwrite when coming from web app
+        index = [''.join(x) for x in sen.sav['user_rotphases'][1:].astype(str)]
+        web_app_rots = pd.DataFrame(sen.sav['user_rotphases'][1:,1:], index=sen.sav['user_rotphases'][1:,0], columns=sen.sav['user_rotphases'][0,1:])
+        crop['fixed_rotphases'] = web_app_rots
+        crop['i_user_rot_inc_r'] = sen.sav['rot_inc_R']
+        crop['yields'] = pd.DataFrame(sen.sav['yield_Rz'], index=index, columns=crop['yields'].columns)
+        crop['fert'] = pd.DataFrame(sen.sav['fert_R_nz'], index=index, columns=crop['fert'].columns)
+        crop['fert_passes'] = pd.DataFrame(sen.sav['fert_passes_R_nz'], index=index, columns=crop['fert_passes'].columns)
+        crop['chem_cost'] = pd.DataFrame(sen.sav['chem_R_nz'], index=index, columns=crop['chem_cost'].columns)
+        crop['chem'] = pd.DataFrame(sen.sav['chem_passes_R_nz'], index=index, columns=crop['chem'].columns)
+    else:
+        len_r = len(crop['fixed_rotphases'])
+        crop['i_user_rot_inc_r'] = fun.f_sa(crop['i_user_rot_inc_r'][0:len_r], sen.sav['rot_inc_R'][0:len_r], 5)
+        crop['yields'] = fun.f_sa(crop['yields'][0:len_r], sen.sav['yield_Rz'][0:len_r,:], 5, pandas=True)
+        crop['fert'] = fun.f_sa(crop['fert'][0:len_r], sen.sav['fert_R_nz'][0:len_r,:], 5, pandas=True)
+        crop['fert_passes'] = fun.f_sa(crop['fert_passes'][0:len_r], sen.sav['fert_passes_R_nz'][0:len_r,:], 5, pandas=True)
+        crop['chem_cost'] = fun.f_sa(crop['chem_cost'][0:len_r], sen.sav['chem_R_nz'][0:len_r], 5, pandas=True)
+        crop['chem'] = fun.f_sa(crop['chem'][0:len_r], sen.sav['chem_passes_R_nz'][0:len_r,:],5, pandas=True)
     crop['yield_by_lmu'] = fun.f_sa(crop['yield_by_lmu'], sen.sav['lmu_yield_adj_kl'], 5)
     crop['fert_by_lmu'] = fun.f_sa(crop['fert_by_lmu'], sen.sav['lmu_fert_adj_nl'], 5)
     crop['chem_by_lmu'] = fun.f_sa(crop['chem_by_lmu'], sen.sav['lmu_chem_adj_l'], 5)
