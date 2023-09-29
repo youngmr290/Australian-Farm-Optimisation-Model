@@ -259,7 +259,7 @@ def create_sa():
     #crop and rotation #
     ####################
     ##SAV
-    sav['user_rotphases'] = '-'   # SA value for the actual rotations - only used in web app - use capital R because rotation len from the web app can be different
+    sav['user_rotphases'] = np.full(len_R, '-', dtype=object)  # SA value for the actual rotations - only used in web app - use capital R because rotation len from the web app can be different
     sav['rot_inc_R'] = np.full(len_R, '-', dtype=object)    # SA value for rotations included - web app - use capital R because rotation len from the web app can be different
     sav['yield_Rz'] = np.full((len_R, len_z), '-', dtype=object)    # SA value for pinp grain/hay yield - use capital R because rotation len from the web app can be different
     sav['fert_R_nz'] = np.full((len_R, 4*len_z), '-', dtype=object)    # SA value for pinp fert - 4 because there are currently 4 ferts by r - use capital R because rotation len from the web app can be different
