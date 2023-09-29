@@ -788,16 +788,22 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
         ##checks if just key2 exists
         elif key2 is not None:
             if dic == 'sam':
+                sam[(key1, key2)] #checks the keys exist. Not required for SA that have indicies.
                 sam[(key1,key2)] = sam[(key1,key2)] * value
             elif dic == 'sap':
+                sap[(key1, key2)]  # checks the keys exist. Not required for SA that have indicies.
                 sap[(key1,key2)] = (1 + sap[(key1,key2)]) * ( 1+ value) -1
             elif dic == 'saa':
+                saa[(key1, key2)]  # checks the keys exist. Not required for SA that have indicies.
                 saa[(key1,key2)] = saa[(key1,key2)] + value
             elif dic == 'sat':
+                sat[(key1, key2)]  # checks the keys exist. Not required for SA that have indicies.
                 sat[(key1,key2)] = value
             elif dic == 'sar':
+                sar[(key1, key2)]  # checks the keys exist. Not required for SA that have indicies.
                 sar[(key1, key2)] = value
             elif dic == 'sav':
+                sav[(key1, key2)]  # checks the keys exist. Not required for SA that have indicies.
                 try:
                     if value != "-": #SAV entries with '-' do not update the SAV. This means that if slices of a SAV overlap in Exp.xl the last non '-' is the value used.
                         update_sav=True
@@ -810,16 +816,22 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
         ##if just key1 exists
         else:
             if dic == 'sam':
+                sam[key1]  # checks the keys exist. Not required for SA that have indicies.
                 sam[key1] = sam[key1] * value
             elif dic == 'sap':
+                sap[key1]  # checks the keys exist. Not required for SA that have indicies.
                 sap[key1] = (1 + sap[key1]) * (1 + value) - 1
             elif dic == 'saa':
+                saa[key1]  # checks the keys exist. Not required for SA that have indicies.
                 saa[key1] = saa[key1] + value
             elif dic == 'sat':
+                sat[key1]  # checks the keys exist. Not required for SA that have indicies.
                 sat[key1] = value
             elif dic == 'sar':
+                sar[key1]  # checks the keys exist. Not required for SA that have indicies.
                 sar[key1] = value
             elif dic == 'sav':
+                sav[key1]  # checks the keys exist. Not required for SA that have indicies.
                 try:
                     if value != "-": #SAV entries with '-' do not update the SAV. This means that if slices of a SAV overlap in Exp.xl the last non '-' is the value used.
                         update_sav=True
