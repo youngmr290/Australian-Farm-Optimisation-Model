@@ -923,17 +923,42 @@ def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_sta
     return meme, omer_history, km, kg_fodd, kg_supp, kl
 
 
+def f_energy_nfs(ck, cm, lw_start, v_start, m_start, mr_age, mei, days_period, md_solid, i_md_supp,
+                md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_kg=1, sam_mr=1):
+    ##Efficiency for maintenance
+    km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
+    ##Efficiency for lactation - dam only
+    kl =  ck[5, ...] + ck[6, ...] * md_solid
+    ##Efficiency for growth (supplement) including the sensitivity scalar
+    kg_supp = ck[16, ...] * i_md_supp * sam_kg
+    ##Efficiency for growth (fodder) including the sensitivity scalar
+    kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb * sam_kg
+    ##Heat production from maintaining protein
+    hp_fasting = (cm[x, ...] * v_start + cm[y, ...] * m_start) * (1 + cm[5, ...] * mei_propn_milk)
+    ##Distance walked (horizontal equivalent)
+    distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
+    ##Set Distance walked to 0 if in confinement
+    distance = distance * np.logical_not(confinement)
+    ##Energy required for movement
+    emove = cm[16, ...] * distance * lw_start
+    ##Energy required for grazing (chewing and walking around)
+    egraze = cm[6, ...] * ffcfw_start * intake_f * (cm[7, ...] - dmd) + emove
+    ##Heat produced by maintenance (before ECold)
+    hp_maint = (hp_fasting + egraze / km) * sam_mr
+    return hp_maint, km, kg_fodd, kg_supp, kl
+
+
 def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f):
     #calculates the energy requirement for gestation for the days gestating. The result is scaled by gest_propn when used
     ##expected normal birth weight with dam age adj.
     w_b_exp_y = (1 - cp[4, ...] * (1 - relsize_start)) * w_b_std_y
-    ##Normal weight of foetus (mid period - dam calcs)	
+    ##Normal weight of foetus (mid-period - dam calcs)
     nw_f = w_b_exp_y * nwf_age_f
     ##change in normal weight of foetus	
     d_nw_f = nw_f - nw_f_start
     ##Proportion of normal foetal and birth weights	
     nwf_nwb = fun.f_divide(nw_f, w_b_std_y)
-    ##Normal weight of individual conceptus (mid period)	
+    ##Normal weight of individual conceptus (mid-period)
     nw_gu = cp[5, ...] * w_b_exp_y * guw_age_f
     ##Normal energy of individual conceptus (end of period)	
     normale_dgu = cp[8, ...] * cp[5, ...] * w_b_exp_y * dce_age_f
@@ -944,7 +969,7 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
     d_w_f = d_nw_f *(1 + np.minimum(cfpreg, cfpreg * cb1[14, ...]))
     ##foetus weight (end of period)	
     w_f = w_f_start + d_w_f
-    ##Weight of the gravid uterus (conceptus - mid period)	
+    ##Weight of the gravid uterus (conceptus - mid-period)
     guw = nfoet * (nw_gu + (w_f - nw_f))
     ##Body condition of the foetus	
     rc_f = fun.f_divide(w_f, nw_f) #func to handle div0 error
@@ -955,7 +980,7 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
     # nec = np.maximum(0,fun.f_divide(nec_cum - nec_cum_start, days_period_f))
     ##ME required for conceptus	
     mec = nec / kc
-    # return w_f, nec_cum, mec, nec, w_b_exp_y, nw_f, guw
+    # return w_f, mec, nec, w_b_exp_y, nw_f, guw
     return w_f, mec, nec, w_b_exp_y, nw_f, guw
 
 
@@ -1056,7 +1081,7 @@ def f_progenyfd_mu(cu1, cg, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_st
     return fd_adj, cf_fd_dams
 
 
-def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start
+def f_milk_cs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start
            , age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect):
     #calculates the energy requirement for lactation for the days lactating. The result is scaled by lact_propn when used
     ##Max milk prodn based on dam rc birth
@@ -1122,6 +1147,19 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g,
     ##Daily fibre length growth
     d_fl_g = 100 * fun.f_divide(d_cfw_g, cw_g[10, ...] * cw_g[11, ...] * area * np.pi * (0.5 * d_fd_g / 10**6) ** 2) #func to stop div/0 error, when d_fd==0 so does d_cfw
     return d_cfw_g, d_fd_g, d_fl_g, d_cfw_history_p2g, mew_g, new_g
+
+
+def f_heat_cs(cc, ck, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, mei_propn_herb, guw = 0, kl = 0
+              , mei_propn_milk = 0, mec = 0, mel = 0, nec = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
+    ##Animal is below maintenance
+    belowmaint = mei < (meme + mec * gest_propn + mel * lact_propn + mew)
+    ##Efficiency for growth (before ECold)
+    kg = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
+    ##Heat production per animal
+    hp_total = (mei - nec * gest_propn - nel * lact_propn - new - kg * (mei
+            - (meme + mec * gest_propn + mel * lact_propn + mew))
+            + cc[16, ...] * guw)
+    return hp_total
 
 
 def f_insulation(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0):
@@ -1206,10 +1244,10 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     ebg = neg / evg
     ##Process the Liveweight REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
-    ##Protein gain
+    ##Protein gain (protein DM)
     pg = pcg * ebg
-    ##fat gain
-    fg = (neg - pg * cg[21, ...]) / cg[22, ...]
+    ##fat gain (fat DM)
+    fg = (neg - pg * cg[21, ...]) /(cg[20, ...]
     return ebg, evg, pg, fg, level, surplus_energy
 
 
@@ -1231,20 +1269,20 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     ebg = neg / evg
     ##Process the Liveweight REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
-    # ##Protein gain
-    # pg = pcg * ebg
-    # ##fat gain
-    # fg = (neg - pg * cg[21, ...]) / cg[22, ...]
+    ##fat gain (kg of fat DM)
+    # fg = (neg - pg * cg[21, ...] * cg[27, ...]) / (cg[20, ...] * cg[26, ...]))
     ## proportion of fat and lean is determined from the EVG based on energy and DM content of muscle and adipose
-    adipose_propn = (evg - (cg[21, ...] * cg[19, ...])) / ((cg[22, ...] * cg[20, ...]) - (cg[21, ...] * cg[19, ...]))
-    fg = ebg * adipose_propn * cg[20, ...]
-    pg = (neg - fg * cg[22, ...]) / cg[21, ...]
+    adipose_propn = (evg - (cg[21, ...] * cg[27, ...])) / ((cg[20, ...] * cg[26, ...]) - (cg[21, ...] * cg[27, ...]))
+    fg = ebg * adipose_propn * cg[26, ...]
+    ##Protein gain (kg of protein dm)
+    # pg = pcg * ebg
+    pg = (neg - fg * cg[20, ...]) / cg[21, ...]
     return ebg, evg, pg, fg, level, surplus_energy
 
 
 def f_wbe(aw, mw, cg):
     ## calculate whole body energy content from weight of adipose tissue (aw) and muscle (mw), and the dry matter content and energy density.
-    wbe = aw * cg[20, ...] * cg[22, ...] + mw * cg[19, ...] * cg[21, ...]
+    wbe = aw * cg[20, ...] * cg[26, ...] + mw * cg[21, ...] * cg[27, ...]
     return wbe
 
 
@@ -1307,9 +1345,9 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, ny
     :param cf:
     :param cb1: GrazPlan parameter stating the probability of conception with different number of foetuses.
     :param relsize_mating: Relative size at mating. This is a separate variable to relsize_start because mating
-                           may occur mid period. Note: the e and b axis have been handled before passing in.
+                           may occur mid-period. Note: the e and b axis have been handled before passing in.
     :param rc_mating: Relative condition at mating. This is a separate variable to rc_start because mating
-                      may occur mid period. Note: the e and b axis have been handled before passing in.
+                      may occur mid-period. Note: the e and b axis have been handled before passing in.
     :param cpg_doy: A scalar for the proportion of dry, single, twins & triplets based on day of the year.
     :param nfoet_b1any:
     :param nyatf_b1any:
@@ -1417,7 +1455,7 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
     used to determine the BTRT effect on fleece)
 
     :param relsize_mating: Relative size at mating. This is a separate variable to relsize_start because mating
-                           may occur mid period. Note: the e and b axis have been handled before passing in.
+                           may occur mid-period. Note: the e and b axis have been handled before passing in.
     :param cs_mating: Condition score at mating. Note: the e and b axis have been handled before passing in.
     :param rr_doy: A scalar for reproductive rate based on day of the year. Based on GrazPlan cpg_doy relationship
 '''
