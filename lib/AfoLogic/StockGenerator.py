@@ -706,7 +706,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ### most other p0 variables are created later but these are required early
     doy_pa1e1b1nwzida0e0b0xygp0 = doy_pa1e1b1nwzida0e0b0xyg[...,na] - step / 2 + index_p0  #calculate the p1 axis from the start day rather than mid-point day
 
-    ## p1 axis - each day of the oestrus cycle for reproduction which can vary with g (eg if sheep and cattle in model)
+    ## p1 axis - each day of the oestrus cycle for reproduction which can vary with g (e.g. if sheep and cattle in model)
     ### The average day of oestrus is day 0 of the generator period with a spread in the mob on either side.
     ### If beyond the end of oestrus then set to nan (& use nanmean when calculating the average value in later code)
     len_p1_ygp1 = cf_dams[4, ..., na]  # length of the oestrus cycle
@@ -738,7 +738,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     # enter a number of days above a threshold (along with the threshold values maybe 1) and then average values for the windiest days in the month.
     ws_p4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_ws_p4'],p_pos)
     ### adjust to windspeed at animal height using Thornley & Johnson equation (as used in Ag360)
-    ###Reference height is 10m as per BOM, canopy height = 0.3 (from Ag360 which seems too high but it was used in stats analysis)
+    ###Reference height is 10m as per BOM, canopy height = 0.3 (from Ag360 which seems too high, but it was used in stats analysis so used here)
     ###Note: Horton etal 2019 used a scalar of 0.58 for open paddocks and down to 0.05 for sheltered paddocks.
     canopy = 0.3
     ref_height = 10
@@ -902,7 +902,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##fvp/dvp types
     core_dvp_types_f1 = sinp.stock['i_core_dvp_types_f1'] #core dvps/fvps need a certain type because repro dvps are linked to them
     prejoin_vtype1 = core_dvp_types_f1[0]
-    condense_vtype1 = prejoin_vtype1 #currently for dams condensing must occur at prejoining, most of the code is flexible to handle different timing except the lw_distribution section.
+    condense_vtype1 = prejoin_vtype1 #currently for dams, condensing must occur at prejoining, most of the code is flexible to handle different timing except the lw_distribution section.
     scan_vtype1 = core_dvp_types_f1[1]
     birth_vtype1 = core_dvp_types_f1[2]
     season_vtype1 = max(core_dvp_types_f1) + 1
@@ -1046,7 +1046,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     # dvp/fvps are set to be the same within a cluster.
 
     ##fvp/dvp types
-    condense_vtype3 = 0 #for offs condensing can occur at any dvp. Currently it occurs at shearing.
+    condense_vtype3 = 0 #for offs, condensing can occur at any dvp. Currently it occurs at shearing.
     other_vtype3 = condense_vtype3 + 1
     season_vtype3 = other_vtype3 + 1
 
@@ -1704,7 +1704,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     adjp_fl_initial_a_a0e0b0xyg0 = adjp_fl_initial_a0e0b0xyg[0:1,...]
     adjp_fl_initial_a_a0e0b0xyg1 = adjp_fl_initial_a0e0b0xyg[0:1,...]
     adjp_fl_initial_a_a0e0b0xyg3 = adjp_fl_initial_a0e0b0xyg
-    ##adjustment for gender. Note cfw changes throughout the year therefore the adjustment factor will not be the same all yr hence divide by std_fw (same for fl) e.g. the impact of gender on cfw will be much less after only a small time (the parameter is a yearly factor e.g. male sheep have 0.02 kg more wool each yr)
+    ##adjustment for gender. Note cfw changes throughout the year therefore the adjustment factor will not be the same all yr hence divide by std_fw (same for fl)
+    ### e.g. the impact of gender on cfw will be much less if only a short growth period (the parameter is a yearly factor e.g. male sheep have 0.02 kg more wool each yr)
     adja_lw_initial_x_xyg0 = cx_sire[17, 0:1, ...] #17 is the weaning wt parameter, 0:1 is the sire gender slice (retaining the axis).
     adja_lw_initial_x_xyg1 = cx_dams[17, 1:2, ...]
     adja_lw_initial_x_xyg3 = cx_offs[17, mask_x, ...]
@@ -1890,7 +1891,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                           ) * (p_index_pa1e1b1nwzida0e0b0xyg<np.count_nonzero(mask_p_offs_p)-1) #make days per period zero if period is not required for offs. -1 because we want days per period to be 0 in the period before the mask turns to false because there are some spots where p+1 is used as the index
     days_period_cut_pa1e1b1nwzida0e0b0xyg3 = days_period_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] #masked version of p axis
 
-    ##Age of foetus (start of period, end of period and mid period - days)
+    ##Age of foetus (start of period, end of period and mid-period - days)
     age_f_start_open_pa1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg - date_mated_pa1e1b1nwzida0e0b0xyg1
     age_f_start_pa1e1b1nwzida0e0b0xyg1 = np.maximum(np.array([0])
                                             , np.minimum(cp_dams[1, 0:1, :]
@@ -2122,9 +2123,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     d_cfw_ave_pa1e1b1nwzida0e0b0xyg3 = sfw_da0e0b0xyg3 * af_wool_pa1e1b1nwzida0e0b0xyg3 / 364
 
     ##Expected relative size
-    relsize_exp_a1e1b1nwzida0e0b0xyg0  = (srw_b0xyg0 - (srw_b0xyg0 - w_b_std_b0xyg0) * np.exp(-cn_sire[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg0) / (srw_b0xyg0**cn_sire[2, ...]))) / srw_b0xyg0
-    relsize_exp_a1e1b1nwzida0e0b0xyg1  = (srw_b0xyg1 - (srw_b0xyg1 - w_b_std_b0xyg1) * np.exp(-cn_dams[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg1) / (srw_b0xyg1**cn_dams[2, ...]))) / srw_b0xyg1
-    relsize_exp_a1e1b1nwzida0e0b0xyg3  = (srw_b0xyg3 - (srw_b0xyg3 - w_b_std_b0xyg3) * np.exp(-cn_offs[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg3) / (srw_b0xyg3**cn_offs[2, ...]))) / srw_b0xyg3
+    relsize_exp_a1e1b1nwzida0e0b0xyg0  = (srw_b0xyg0 - (srw_b0xyg0 - w_b_std_b0xyg0) * np.exp(-cn_sire[1, ...] * agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 / (srw_b0xyg0**cn_sire[2, ...]))) / srw_b0xyg0
+    relsize_exp_a1e1b1nwzida0e0b0xyg1  = (srw_b0xyg1 - (srw_b0xyg1 - w_b_std_b0xyg1) * np.exp(-cn_dams[1, ...] * agedam_lamb1st_a1e1b1nwzida0e0b0xyg1 / (srw_b0xyg1**cn_dams[2, ...]))) / srw_b0xyg1
+    relsize_exp_a1e1b1nwzida0e0b0xyg3  = (srw_b0xyg3 - (srw_b0xyg3 - w_b_std_b0xyg3) * np.exp(-cn_offs[1, ...] * agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 / (srw_b0xyg3**cn_offs[2, ...]))) / srw_b0xyg3
 
     ##Adjust the tissue insulation parameter (cc[3]) for yatf 30 days or younger.
     shape = (cc_yatf.shape[0],) + age_pa1e1b1nwzida0e0b0xyg2.shape
@@ -2157,7 +2158,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     w_b_exp_a1e1b1nwzida0e0b0xyg1 = w_b_std_b0xyg1 * np.sum(ce_dams[15, ...] * agedam_propn_da0e0b0xyg1, axis = d_pos, keepdims = True)
     w_b_exp_a1e1b1nwzida0e0b0xyg3 = w_b_std_b0xyg3 * ce_offs[15, ...]
 
-    ##Normal weight max (if animal is well fed)
+    ##Normal weight max (if animal is well-fed)
     nw_max_pa1e1b1nwzida0e0b0xyg0 = srw_b0xyg0 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg0) + w_b_exp_a1e1b1nwzida0e0b0xyg0 * srw_age_pa1e1b1nwzida0e0b0xyg0
     nw_max_pa1e1b1nwzida0e0b0xyg1 = srw_b0xyg1 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg1) + w_b_exp_a1e1b1nwzida0e0b0xyg1 * srw_age_pa1e1b1nwzida0e0b0xyg1
     nw_max_pa1e1b1nwzida0e0b0xyg3 = srw_b0xyg3 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg3) + w_b_exp_a1e1b1nwzida0e0b0xyg3 * srw_age_pa1e1b1nwzida0e0b0xyg3
@@ -2283,8 +2284,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
     ###dams management in each period based on scanning detail, time of the year (even if you are scanning you can't manage sheep differently before scanning) and management (you can scan and then not differentially manage)
     scan_management_pa1e1b1nwzida0e0b0xyg1 = (scan_option_pa1e1b1nwzida0e0b0xyg1) * (a_mgt_pa1e1b1nwzida0e0b0xyg1 >= 1) * pinp.sheep['i_dam_lsln_diffman_t'][1]
-    gbal_management_pa1e1b1nwzida0e0b0xyg1 = (gbal_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_mgt_pa1e1b1nwzida0e0b0xyg1 >= 2) * pinp.sheep['i_dam_lsln_diffman_t'][2] + 1  #minus 1 then plus 1 ensures that the wean option before lactation is 1
-    wean_management_pa1e1b1nwzida0e0b0xyg1 = (wean_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_mgt_pa1e1b1nwzida0e0b0xyg1 >= 3) * pinp.sheep['i_dam_lsln_diffman_t'][3] + 1  #minus 1 then plus 1 ensures that the wean option before weaning is 1
+    gbal_management_pa1e1b1nwzida0e0b0xyg1 = (gbal_pa1e1b1nwzida0e0b0xyg1 -1) * (a_mgt_pa1e1b1nwzida0e0b0xyg1 >= 2) * pinp.sheep['i_dam_lsln_diffman_t'][2] + 1  #minus 1 then plus 1 ensures that the wean option before lactation is 1
+    wean_management_pa1e1b1nwzida0e0b0xyg1 = (wean_pa1e1b1nwzida0e0b0xyg1 -1) * (a_mgt_pa1e1b1nwzida0e0b0xyg1 >= 3) * pinp.sheep['i_dam_lsln_diffman_t'][3] + 1  #minus 1 then plus 1 ensures that the wean option before weaning is 1
 
     ############################
     ### ewe mob size calcs     #
@@ -2415,7 +2416,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         mw_start_sire = mw_initial_wzida0e0b0xyg0
         bw_start_sire = bw_initial_wzida0e0b0xyg0
         nw_start_sire = 0 #no dimensions to start
-        temp_lc_sire = np.array([0]) #this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
+        temp_lc_sire = np.array([0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_sire = numbers_initial_zida0e0b0xyg0
         numbers_start_condense_sire = numbers_initial_zida0e0b0xyg0 #just need a default because this is processed using update function.
         # ebg_start_sire=0
@@ -2457,7 +2458,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         mw_start_dams = mw_initial_wzida0e0b0xyg1
         bw_start_dams = bw_initial_wzida0e0b0xyg1
         nw_start_dams = np.array([0.0])
-        temp_lc_dams = np.array([0.0]) #this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
+        temp_lc_dams = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1
         numbers_start_condense_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1 #just need a default because this is processed using update function.
         scanning = 0 #variable is used only for reporting
@@ -2469,11 +2470,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         d_cfw_history_start_p2g2[...] = np.nan
         nw_start_yatf = 0.0
         rc_start_yatf = 0.0
-        ffcfw_start_yatf = w_b_std_y_b1nwzida0e0b0xyg1 #this is just an estimate, it is updated with the real weight at birth - needed to calc milk production in birth period because milk prod is calculated before yatf weight is updated)
+        ffcfw_start_yatf = w_b_std_y_b1nwzida0e0b0xyg1 #this is just an estimate, it is updated with the real weight at birth - needed to calc milk production in birth period because milk prod is calculated before yatf weight is updated
         ffcfw_max_start_yatf = ffcfw_start_yatf
         mortality_birth_yatf=0.0 #required for dam numbers before progeny born
         cfw_start_yatf = 0.0
-        temp_lc_yatf = np.array([0.0]) #this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
+        temp_lc_yatf = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_yatf = nyatf_b1nwzida0e0b0xyg * gender_propn_xyg   # nyatf is accounting for peri-natal mortality. But doesn't include the differential mortality of female and male offspring at birth
         numbers_start_condense_yatf = numbers_start_yatf #just need a default because this is processed using update function.
         numbers_end_yatf = 0.0 #need a default because this is required in f_start[p+1] prior to being assigned.
@@ -2504,7 +2505,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
         mw_start_offs = mw_initial_wzida0e0b0xyg3
         bw_start_offs = bw_initial_wzida0e0b0xyg3
         nw_start_offs = 0.0
-        temp_lc_offs = np.array([0.0]) #this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
+        temp_lc_offs = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_offs = numbers_initial_ida0e0b0xyg3
         numbers_start_condense_offs = numbers_initial_ida0e0b0xyg3 #just need a default because this is processed using update function.
 
@@ -2530,7 +2531,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
 
             ##offs
             nw_start_offs = 0.0
-            temp_lc_offs = np.array([0.0])  # this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
+            temp_lc_offs = np.array([0.0])  # this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
 
         ######################
         ### sim engine       #
@@ -2549,7 +2550,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             with open('pkl/pkl_rev_trait{0}.pkl'.format(rev_number),"rb") as f:
                 rev_trait_values = pkl.load(f)
 
-        ##load in and create condensed start dict - used to standadise the starting animal at condensing time.
+        ##load in and create condensed start dict - used to standardise the starting animal at condensing time.
         ###load condensed start info from previous trial if being used in this trial.
         if sinp.structuralsa['i_use_pkl_condensed_start_condition']:
             pkl_condensed_values = pkl_fs['pkl_condensed_values']
@@ -2773,9 +2774,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 epsilon = 0.050 #within 50g of target
                 n_max_itn = sinp.stock['i_feedsupply_itn_max']
             shape = feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, 0].shape + (n_max_itn,) + (2,) #slice 0 to remove the p axis
-            attempts_dams = np.full(shape, np.nan) #initilise
+            attempts_dams = np.full(shape, np.nan) #initialise
             shape = feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:, 0].shape + (n_max_itn,) + (2,) #slice 0 to remove the p axis
-            attempts_offs = np.full(shape, np.nan) #initilise
+            attempts_offs = np.full(shape, np.nan) #initialise
 
             for itn in range(n_max_itn):
                 ##potential intake
@@ -3188,7 +3189,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 ###if there is a target then adjust feedsupply, if not break out of feedsupply loop
                 if target_lwc_dams[p] == 9999 and target_lwc_offs[p] == 9999:
                     break
-                print('fs target itteration: ', itn)
+                print('fs target iteration: ', itn)
                 if target_lwc_dams[p] != 9999 and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p]>0):
                     ###calc error
                     error = (ebg_dams * cg_dams[18, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p]) - target_lwc_dams[p] * (days_period_pa1e1b1nwzida0e0b0xyg1[p]>0) #if 0 days in period then target is 0
@@ -3223,7 +3224,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                     feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p] = sfun.f1_feedsupply_adjust(attempts_offs,feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p],itn)
                 itn+=1
 
-            ##dam weight at a given time during period - used for special events like birth.
+            ##dam weight at a given time during period - used for special events like mating, birth & weaning.
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 ##Dam weight at mating - to estimate the weight at mating we are wanting to use the growth rate of the dams that are not yet pregnant
                 ## because mating doesn't happen at the start of the period.
@@ -3353,7 +3354,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 fd_min_start_yatf	= fun.f_update(fd_min_start_yatf, 1000, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
 
                 ##Yatf dependent start values
-                ###Normal weight max (if animal is well fed) - yatf
+                ###Normal weight max (if animal is well-fed) - yatf
                 nw_max_yatf	= srw_b1xyg2 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg2[p]) + w_b_yatf * srw_age_pa1e1b1nwzida0e0b0xyg2[p]
                 ##Dependent start: Change in normal weight max - yatf
                 ###nw_max = srw - (srw - bw) * srw_age[p] so d_nw_max = (srw - (srw-bw) * srw_age[p]) - (srw - (srw - bw) * srw_age[p-1]) and that simplifies to d_nw_max = (srw_age[p-1] - srw_age[p]) * (srw-bw)
@@ -3956,15 +3957,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
             #post calculation sensitivity for intake & energy#
             ##################################################
             ##These sensitivities alter potential intake and me intake required without altering the liveweight profile.
-            ##The aim is to have the same effect as using the within function sa and then altering the feed supply to
+            ##The aim is to have the same effect as using the within function SA and then altering the feed supply to
             ##  generate the same LW profile, they just require less work to test the effect of not altering LW profile (as per old MIDAS)
             ##A change to pi_post doesn't alter the total MEI (just the quality of the diet required) therefore there
             ## is no effect on wool production and no change to wool growth efficiency.
-            ##However, adjustments are required for mr_post and kg_post because these both reduce the mei required in this section.
+            ##However, adjustments are required for mr_post and kg_post because these both reduce the MEI required in this section.
             ## To do this requires altering d_cfw and d_fl. These would both change in f_fibre if using the within
             ## function sa while still achieving the same FFCFW profile.
             ## If cfw and fl were not scaled it would imply an increased wool growth efficiency (and this would
-            ## be inconsistent with the in function sa)
+            ## be inconsistent with the in function SA)
+
+            #todo these SA will need equation groups to be implemented with the new feeding standards
 
             ###sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
@@ -4013,7 +4016,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 #### alter potential intake
                 pi_yatf = fun.f_sa(pi_yatf, sam_pi)
                 #### alter mei (only calculate impact on mei_solid because that passes to the mei parameter in the matrix)
-                #### this is an error in this application because all the change in energy is related to pasture and none to milk)
+                #### this is an error in this application because all the change in energy is related to pasture and none to milk
                 mei_solid_yatf = mei_solid_yatf + (mem_yatf * sap_mr
                                                    - surplus_energy_yatf * sap_kg / (1 + sap_kg))
                 ####alter wool production as energy params change (use mei rather than mei_solid so it is change as a proportion of total mei)
@@ -4216,7 +4219,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 t_ffcfw_sire = fun.f_weighted_average(ffcfw_sire, numbers_end_sire, season_tup, keepdims=True, non_zero=True)
                 mask_max_wa_lw_w_sire = np.isclose(t_ffcfw_sire, np.max(t_ffcfw_sire, axis=w_pos, keepdims=True)) #use isclose in case small rounding error in lw
 
-                ###store output variables for the post processing
+                ###store output variables for the post-processing
                 o_numbers_start_tpsire[:,p] = numbers_start_sire
                 o_numbers_end_tpsire[:,p] = numbers_end_sire
                 o_ffcfw_tpsire[:,p] = ffcfw_sire
@@ -4285,7 +4288,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 t_ffcfw_dams = fun.f_weighted_average(ffcfw_dams, numbers_end_dams, season_tup, keepdims=True, non_zero=True)
                 mask_max_wa_lw_w_dams = np.isclose(t_ffcfw_dams, np.max(t_ffcfw_dams, axis=w_pos, keepdims=True)) #use isclose in case small rounding error in lw
 
-                ###store output variables for the post processing
+                ###store output variables for the post-processing
                 o_mortality_dams[:,p] = mortality_dams #has to be stored before back dating numbers
                 o_numbers_start_tpdams[:,p] = numbers_start_dams
                 o_numbers_end_tpdams[:,p] = numbers_end_dams
@@ -4393,7 +4396,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 mask_max_wa_lw_w_yatf = np.isclose(t_ffcfw_yatf, np.max(t_ffcfw_yatf, axis=w_pos, keepdims=True)) #use isclose in case small rounding error in lw
 
 
-                ###store output variables for the post processing
+                ###store output variables for the post-processing
                 o_pi_tpyatf[:,p] = pi_yatf
                 o_mei_solid_tpyatf[:,p] = mei_solid_yatf
                 # o_ch4_total_tpyatf[:,p] = ch4_total_yatf
@@ -4446,7 +4449,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]):
                     min_mort = 1 - np.max(surv_offs, axis=w_pos)
                     ####only use the retained t slice because if there is a dvp that spans two fvp and the animal is sold in
-                    #### the first fvp then the fs may not be good in the second fvp (because the w are clustered e.g w9 is hig fs in the first fvp followed by medium)
+                    #### the first fvp then the fs may not be good in the second fvp (because the w are clustered e.g. w9 is high fs in the first fvp followed by medium)
                     if len_gen_t3 > 1:
                         min_mort = min_mort[0]
                     if np.any(min_mort > 0.1):
@@ -4482,7 +4485,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                 mask_max_wa_lw_w_offs = np.isclose(t_ffcfw_offs, np.max(t_ffcfw_offs, axis=w_pos, keepdims=True)) #use isclose in case small rounding error in lw
 
 
-                ###store output variables for the post processing
+                ###store output variables for the post-processing
                 o_numbers_start_tpoffs[:,p] = numbers_start_offs
                 o_numbers_end_tpoffs[:,p] = numbers_end_offs
                 o_ffcfw_tpoffs[:,p] = ffcfw_offs
@@ -5456,7 +5459,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     print(f'completed generator loops: {postp_start - generator_start}')
 
 
-    ## Call Steve graphing routine here if Generator is throwing an error in the post processing.
+    ## Call Steve graphing routine here if Generator is throwing an error in the post-processing.
     ### Change scan-spreadsheet to True to activate
     scan_spreadsheet = False
     while scan_spreadsheet:
@@ -5793,7 +5796,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                      weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
     ###if dsp then t1 gets a sale opportunity at the start of dvp when seasons are identified (this will be first period of dvp so any other sale opportunities in that dvp will be disregarded).
     if not bool_steady_state or pinp.general['i_inc_node_periods']:
-        period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m = sfun.f1_period_is_('period_is', date_node_ya1e1b1nwzidaebxygm[:,na,...], date_start_pa1e1b1nwzida0e0b0xyg3[...,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3[...,na])
+        period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m: object = sfun.f1_period_is_('period_is', date_node_ya1e1b1nwzidaebxygm[:,na,...], date_start_pa1e1b1nwzida0e0b0xyg3[...,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3[...,na])
         period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.any(period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m, axis=(0,-1))
         period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3>0) #only have sale opp if animal exists.
         sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...] = np.logical_or(sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...], period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3)
@@ -7723,7 +7726,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
                                                             , np.sum(numbers_start_tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1),
                                                                      axis = (e1_pos, b1_pos), keepdims=True))
 
-    ##ffcfw for select p - to keep the report small it doesnt have full p axis
+    ##ffcfw for select p - to keep the report small it doesn't have full p axis
     period_is_reportffcfw_p = fun.f_sa(np.array([False]), sen.sav['period_is_reportffcfw_p'], 5)
     period_is_reportffcfw_p = period_is_reportffcfw_p[0:len_p]
 
