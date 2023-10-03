@@ -33,15 +33,18 @@ import numpy as np
 from scipy.optimize import minimize
 
 #AFO modules
-import UniversalInputs as uinp
-import PropertyInputs as pinp
-import StructuralInputs as sinp
-import StockFunctions as sfun
-import Functions as fun
-import Sensitivity as sen
-import StockGenerator as sgen
-import CropResidue as stub
-from . import relativeFile
+from lib.RawVersion import LoadExcelInputs as dxl
+from lib.RawVersion import LoadExp as exp
+from lib.RawVersion import RawVersionExtras as rve
+from lib.AfoLogic import UniversalInputs as uinp
+from lib.AfoLogic import PropertyInputs as pinp
+from lib.AfoLogic import StructuralInputs as sinp
+from lib.AfoLogic import StockFunctions as sfun
+from lib.AfoLogic import Functions as fun
+from lib.AfoLogic import Sensitivity as sen
+from lib.AfoLogic import StockGenerator as sgen
+from lib.AfoLogic import CropResidue as stub
+from lib.AfoLogic import relativeFile
 
 na = np.newaxis
 
@@ -49,21 +52,38 @@ na = np.newaxis
 ###############
 #User control #
 ###############
-trial = 4   #4 is quick test
+trial = 20   #20 is quick test
 
-##sort exp
-exp_data, exp_group_bool, trial_pinp = fun.f_read_exp()
-exp_data = fun.f_group_exp(exp_data, exp_group_bool)
+######
+#Run #
+######
+##load excel data and experiment data
+exp_data, exp_group_bool, trial_pinp = exp.f_read_exp()
+sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp)
+d_rot_info = dxl.f_load_phases()
+cat_propn_s1_ks2 = dxl.f_load_stubble()
+
 ##select property for the current trial
-pinp.f_select_pinp(trial_pinp.iloc[trial])
+property = trial_pinp.iloc[trial]
+
+##process user SA
+user_sa = rve.f_process_user_sa(exp_data, trial)
+
+##select property and reset default inputs for the current trial. Must occur first.
+sinp.f_select_n_reset_sinp(sinp_defaults)
+sinp.f_landuse_sets()
+uinp.f_select_n_reset_uinp(uinp_defaults)
+pinp.f_select_n_reset_pinp(property, pinp_defaults)
 
 ##update sensitivity values
 sen.create_sa()
-fun.f_update_sen(trial,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
+fun.f_update_sen(user_sa,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
+
 ##call sa functions - assigns sa variables to relevant inputs
-sinp.f_structural_inp_sa()
-uinp.f_universal_inp_sa()
-pinp.f_property_inp_sa()
+sinp.f_structural_inp_sa(sinp_defaults)
+uinp.f_universal_inp_sa(uinp_defaults)
+pinp.f_property_inp_sa(pinp_defaults)
+
 ##expand p6 axis to include nodes
 sinp.f1_expand_p6()
 pinp.f1_expand_p6()
@@ -77,8 +97,8 @@ stubble_inp = {}
 
 ##sim run periods - start and end p
 trial_commencement_date = pinp.stubble['start_trial']
-n_sim_periods, date_start_p, date_end_p, p_index_p, step \
-    = sfun.f1_sim_periods(sinp.stock['i_sim_periods_year'], sinp.stock['i_age_max'])
+n_sim_periods, date_start_p, date_start_P, date_end_p, date_end_P, p_index_p, step \
+    = sfun.f1_sim_periods(sinp.stock['i_sim_periods_year'], sinp.stock['i_age_max'], pinp.sheep['i_o_len'])
 
 ###scale trial start to the correct yr in the sim based on animal age
 add_yrs = np.ceil((date_start_p[0] - trial_commencement_date) / 364)
