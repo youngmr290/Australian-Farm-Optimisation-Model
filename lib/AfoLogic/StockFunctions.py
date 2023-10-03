@@ -1161,16 +1161,19 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
             - (meme + mec * gest_propn + mel * lact_propn + mew))
             + cc[16, ...] * guw) / area
     ##Lower critical temperature (2 hourly)
-    temp_lc_a1e1b1nwzida0e0b0xygm0p1 = cc[11, ..., na, na]+ cc[12, ..., na, na] - heat[..., na, na] * (in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0p1) + sky_temp_a1e1b1nwzida0e0b0xygm0p1
+    temp_lc_a1e1b1nwzida0e0b0xygm0p1 = (cc[11, ..., na, na]+ cc[12, ..., na, na]
+                                        - heat[..., na, na] * (in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0p1)
+                                        + sky_temp_a1e1b1nwzida0e0b0xygm0p1)
     ##Lower critical temperature (period)
     temp_lc_a1e1b1nwzida0e0b0xyg = np.average(temp_lc_a1e1b1nwzida0e0b0xygm0p1, axis = (-1,-2))
     ##Extra ME required to keep warm
-    mecold_a1e1b1nwzida0e0b0xyg = area * np.average(fun.f_dim(temp_lc_a1e1b1nwzida0e0b0xygm0p1, temperature_a1e1b1nwzida0e0b0xygm0[..., na]) /(in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0p1), axis = (-1,-2))
+    mecold_a1e1b1nwzida0e0b0xyg = area * np.average(fun.f_dim(temp_lc_a1e1b1nwzida0e0b0xygm0p1, temperature_a1e1b1nwzida0e0b0xygm0[..., na])
+                                                    /(in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0p1), axis = (-1,-2))
     ##ME requirement for maintenance (inc ECold)
     mem = meme + mecold_a1e1b1nwzida0e0b0xyg
     ##Animal is below maintenance (incl ecold)
     belowmaint = mei < (mem + mec + mel + mew)
-    ##Efficiency for growth (inc ECold) -different to the second line because belowmaint includes ecold
+    ##Efficiency for growth (inc ECold) - different to 'kge' because belowmaint now includes ecold
     kg = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
     return mem, temp_lc_a1e1b1nwzida0e0b0xyg, kg
 
