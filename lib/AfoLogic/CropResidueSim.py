@@ -99,6 +99,9 @@ stubble_inp = {}
 trial_commencement_date = pinp.stubble['start_trial']
 n_sim_periods, date_start_p, date_start_P, date_end_p, date_end_P, p_index_p, step \
     = sfun.f1_sim_periods(sinp.stock['i_sim_periods_year'], sinp.stock['i_age_max'], pinp.sheep['i_o_len'])
+n_sim_periods_offs, offs_date_start_p, offs_date_start_P, offs_date_end_p, offs_date_end_P, p_index_offs_p, step \
+    = sfun.f1_sim_periods(sinp.stock['i_sim_periods_year'], sinp.stock['i_age_max_offs'], pinp.sheep['i_o_len'])
+mask_p_offs_p = p_index_p<=(n_sim_periods_offs-1)
 
 ###scale trial start to the correct yr in the sim based on animal age
 add_yrs = np.ceil((date_start_p[0] - trial_commencement_date) / 364)
@@ -167,15 +170,15 @@ for k in range(len_k):
         else:
             ###select across g axis - weighted
             mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis=1)
-            o_ebg_tpoffs = np.compress(o_ebg_tpoffs, mask_offs_inc_g3, axis=-1)
-            o_pi_tpoffs = np.compress(o_pi_tpoffs, mask_offs_inc_g3, axis=-1)
+            o_ebg_tpoffs = np.compress(mask_offs_inc_g3, o_ebg_tpoffs, axis=-1)
+            o_pi_tpoffs = np.compress(mask_offs_inc_g3, o_pi_tpoffs, axis=-1)
             ###select across b axis - weighted
             i_b0_propn_b0g = fun.f_expand(pinp.stubble['i_b0_propn'], b0_pos)
             lwc_ps1g = np.sum(o_ebg_tpoffs * i_b0_propn_b0g, b0_pos, keepdims=True)
             intake_ps1g = np.sum(o_pi_tpoffs * i_b0_propn_b0g, b0_pos, keepdims=True)
             ###average remaining axes
-            lwc_p1s1ks2[:,:,k,s2] = fun.f_reduce_skipfew(np.average, lwc_ps1g, preserveAxis=(p_pos, s1_pos))
-            intake_p1s1ks2[:,:,k,s2] = fun.f_reduce_skipfew(np.average, intake_ps1g, preserveAxis=(p_pos, s1_pos))
+            lwc_p1s1ks2[mask_p_offs_p,:,k,s2] = fun.f_reduce_skipfew(np.average, lwc_ps1g, preserveAxis=(p_pos, s1_pos))
+            intake_p1s1ks2[mask_p_offs_p,:,k,s2] = fun.f_reduce_skipfew(np.average, intake_ps1g, preserveAxis=(p_pos, s1_pos))
 
 ##post process the lwc
 ###calc trial lw with p1p2 axis (p2 axis is days)
@@ -183,9 +186,9 @@ len_p2 = int(step)
 index_p2 = np.arange(len_p2)
 date_start_p1p2 = date_start_p[..., na] + index_p2
 days_since_trialstart_p1p2 = (date_start_p1p2 - date_start_p[p_start_trial,na]).astype(int)  # days since trial start
-lw_p1p2ks2 = a_ks2 * days_since_trialstart_p1p2[:,:,na,na] + b_ks2 * days_since_trialstart_p1p2[:,:,na,na] ** 2 + c_ks2
-lw_pks2 = lw_p1p2ks2.reshape(-1,len_k,len_s2)
-trial_lwc_pks2 = np.roll(lw_pks2, shift=-1, axis=0) - lw_pks2
+trial_lw_p1p2ks2 = a_ks2 * days_since_trialstart_p1p2[:,:,na,na] + b_ks2 * days_since_trialstart_p1p2[:,:,na,na] ** 2 + c_ks2
+trial_lw_pks2 = trial_lw_p1p2ks2.reshape(-1,len_k,len_s2)
+trial_lwc_pks2 = np.roll(trial_lw_pks2, shift=-1, axis=0) - trial_lw_pks2
 trial_lwc_p1p2ks2 = trial_lwc_pks2.reshape(-1,len_p2, len_k, len_s2)
 ###calc grazing days in generator period for each dmd - allocate trial lwc to the simulated lwc and sum the p2
 lwc_diff_p1p2s1ks2 = np.abs(lwc_p1s1ks2[:,na,:,:,:] - trial_lwc_p1p2ks2[:,:,na,:,:])
