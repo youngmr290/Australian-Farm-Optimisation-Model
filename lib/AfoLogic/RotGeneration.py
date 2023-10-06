@@ -124,9 +124,14 @@ import itertools
 from openpyxl import load_workbook
 
 #AFO modules
-from . import Functions as fun
-from . import StructuralInputs as sinp
-from . import PropertyInputs as pinp
+if __name__ == '__main__':
+    from lib.AfoLogic import Functions as fun
+    from lib.AfoLogic import StructuralInputs as sinp
+    from lib.AfoLogic import PropertyInputs as pinp
+else:
+    from . import Functions as fun
+    from . import StructuralInputs as sinp
+    from . import PropertyInputs as pinp
 
 '''
 Version 1:
@@ -465,7 +470,37 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
 
 
 if __name__ == '__main__': #use this so that sphinx doesn't run all the code when generating the docs
-    f_rot_gen()
+    import warnings
+    from lib.RawVersion import LoadExcelInputs as dxl
+    from lib.RawVersion import LoadExp as exp
+    from lib.AfoLogic import relativeFile
+
+    exp_data, exp_group_bool, trial_pinp = exp.f_read_exp()
+    sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp)
+    sinp.f_select_n_reset_sinp(sinp_defaults)
+    sinp.f_landuse_sets()
+    d_rot_info = f_rot_gen()
+    rot_phases = d_rot_info["phases_r"]
+    mps_bool_req = d_rot_info["rot_req"]
+    mps_bool_prov = d_rot_info["rot_prov"]
+    rot_hist = d_rot_info["s_rotcon1"]
+
+    ##start writing
+    try:
+        rotation_path = relativeFile.findExcel("Rotation.xlsx")
+        writer = pd.ExcelWriter(rotation_path, engine='xlsxwriter')
+        ##list of rotations - index: tuple, values: expanded version of rotation
+        rot_phases.to_excel(writer, sheet_name='rotation list', index=True, header=False)
+        ##con1 - the paramater for which history each rotation provides and requires
+        mps_bool_req.to_excel(writer, sheet_name='rotation_req', index=False, header=False)
+        mps_bool_prov.to_excel(writer, sheet_name='rotation_prov', index=False, header=False)
+        ##con1 set - passed into the pyomo constraint
+        rot_hist.to_excel(writer, sheet_name='rotation con1 set', index=True, header=False)
+        ##finish writing and save
+        writer.save()
+    except PermissionError:
+        warnings.warn("Warning: Rotation.xlsx open therefore can't save new copy")
+
 
 
 
