@@ -923,7 +923,7 @@ def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_sta
     return meme, omer_history, km, kg_fodd, kg_supp, kl
 
 
-def f_energy_nfs(ck, cm, lw_start, v_start, m_start, mr_age, mei, days_period, md_solid, i_md_supp,
+def f_energy_nfs(ck, cm, lw_start, ffcfw_start, f_start, v_start, m_start, md_solid, i_md_supp,
                 md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_kg=1, sam_mr=1):
     ##Efficiency for maintenance
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
@@ -934,7 +934,7 @@ def f_energy_nfs(ck, cm, lw_start, v_start, m_start, mr_age, mei, days_period, m
     ##Efficiency for growth (fodder) including the sensitivity scalar
     kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb * sam_kg
     ##Heat production from maintaining protein
-    hp_fasting = (cm[x, ...] * v_start + cm[y, ...] * m_start) * (1 + cm[5, ...] * mei_propn_milk)
+    hp_fasting = (cm[20, ...] * f_start + cm[21, ...] * m_start + cm[22, ...] * v_start) * (1 + cm[5, ...] * mei_propn_milk)
     ##Distance walked (horizontal equivalent)
     distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
     ##Set Distance walked to 0 if in confinement
@@ -944,7 +944,7 @@ def f_energy_nfs(ck, cm, lw_start, v_start, m_start, mr_age, mei, days_period, m
     ##Energy required for grazing (chewing and walking around)
     egraze = cm[6, ...] * ffcfw_start * intake_f * (cm[7, ...] - dmd) + emove
     ##Heat produced by maintenance (before ECold)
-    hp_maint = (hp_fasting + egraze / km) * sam_mr
+    hp_maint = (hp_fasting + egraze) * sam_mr
     return hp_maint, km, kg_fodd, kg_supp, kl
 
 
@@ -975,13 +975,46 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
     rc_f = fun.f_divide(w_f, nw_f) #func to handle div0 error
     ##Cumulative ME required for conceptus	
     # nec_cum = nfoet * rc_f * normale_dgu
-    nec = nfoet * rc_f * normale_dgu
     ##NE required for conceptus
+    nec = nfoet * rc_f * normale_dgu
     # nec = np.maximum(0,fun.f_divide(nec_cum - nec_cum_start, days_period_f))
     ##ME required for conceptus	
     mec = nec / kc
     # return w_f, mec, nec, w_b_exp_y, nw_f, guw
     return w_f, mec, nec, w_b_exp_y, nw_f, guw
+
+
+def f_foetus_nfs(cp, cb1, cg, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f):
+    ## currently just a copy of the CSIRO function except it returns variables for the new feeding standards format
+    #todo convert this function to line up with Hutton's calculations
+    ##expected normal birth weight with dam age adj.
+    w_b_exp_y = (1 - cp[4, ...] * (1 - relsize_start)) * w_b_std_y
+    ##Normal weight of foetus (mid-period - dam calcs)
+    nw_f = w_b_exp_y * nwf_age_f
+    ##change in normal weight of foetus
+    d_nw_f = nw_f - nw_f_start
+    ##Proportion of normal foetal and birth weights
+    nwf_nwb = fun.f_divide(nw_f, w_b_std_y)
+    ##Normal weight of individual conceptus (mid-period)
+    nw_gu = cp[5, ...] * w_b_exp_y * guw_age_f
+    ##Normal energy of individual conceptus (end of period)
+    normale_dgu = cp[8, ...] * cp[5, ...] * w_b_exp_y * dce_age_f
+    ##Condition factor on BW
+    cfpreg = (rc_start - 1) * nwf_nwb
+    ##change in foetus weight
+    d_w_f = d_nw_f *(1 + np.minimum(cfpreg, cfpreg * cb1[14, ...]))
+    ##foetus weight (end of period)
+    w_f = w_f_start + d_w_f
+    ##Weight of the gravid uterus (conceptus - mid-period)
+    guw = nfoet * (nw_gu + (w_f - nw_f))
+    ##Body condition of the foetus
+    rc_f = fun.f_divide(w_f, nw_f) #func to handle div0 error
+    ##NE required for conceptus
+    dc = nfoet * rc_f * normale_dgu
+    ##HP associated with conceptus growth
+    hp_c = ck[24, ...] * dc
+    # return w_f, mec, nec, w_b_exp_y, nw_f, guw
+    return w_f, hp_c, dc, w_b_exp_y, nw_f, guw
 
 
 def f1_carryforward_u1(cu1, cg, ebg, period_between_joinstartend, period_between_mated90, period_between_d90birth
@@ -1112,6 +1145,39 @@ def f_milk_cs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_sta
     ##If early in lactation = 1	
     lb = lb * lact_nut_effect + ~lact_nut_effect
     return mp2, mel, nel, ldr, lb
+
+
+def f_milk_nfs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start
+           , age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect):
+    ##Max milk prodn based on dam rc birth
+    mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
+    ##Excess ME available for milk
+    mel_xs = np.maximum(0, (mei - (meme + mew_min * relsize_start))) * cl[5, ...] * kl
+    ##Excess ME as a ratio of mpmax
+    milk_ratio = fun.f_divide(mel_xs, mpmax) #func stops div0 error - and milk ratio is later discarded because days period f = 0
+    ##Age or energy factor
+    ad = np.maximum(age_yatf, milk_ratio / (2 * cl[22, ...]))
+    ##Milk production based on energy available
+    mp1 = cl[7, ...] * mpmax * fun.f_back_transform(-cl[19, ...] + cl[20, ...] * milk_ratio
+                                                    + cl[21, ...] * ad * (milk_ratio - cl[22, ...] * ad)
+                                                    - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))
+    ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
+    ### Based on the standard parameter values 'Suckling volume of young' is very rarely limiting milk production.
+    mp2 = np.minimum(mp1, np.mean(fun.f_dynamic_slice(ffcfw75_exp_yatf, i_x_pos, 1, None), axis = i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
+    ##ME for lactation (per day lactating)
+    #todo What is the role of cl[5] (milk metabolisability) in reducing the amount of energy available for milk production
+    hp_l = mp2 * (1 - (cl[5, ...] * kl))
+    ##NE for lactation
+    dl = mp2 / cl[5, ...]
+    ##ratio of actual to potential milk
+    dr = fun.f_divide(mp2, mpmax) #div func stops div0 error - and milk ratio is later discarded because days period f = 0
+    ##Lagged DR (lactation deficit)
+    ldr = (ldr_start - dr) * (1 - cl[18, ...]) ** days_period_yatf + dr
+    ##Loss of potential milk due to consistent under production
+    lb = lb_start - cl[17, ...] / cl[18, ...] * (1 - cl[18, ...]) * (1 - (1 - cl[18, ...]) ** days_period_yatf) * (ldr_start - dr)
+    ##If early in lactation = 1
+    lb = lb * lact_nut_effect + ~lact_nut_effect
+    return mp2, hp_l, dl, ldr, lb
 
 
 def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, mew_min_g, d_cfw_ave_g
@@ -1247,7 +1313,7 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     ##Protein gain (protein DM)
     pg = pcg * ebg
     ##fat gain (fat DM)
-    fg = (neg - pg * cg[21, ...]) /(cg[20, ...]
+    fg = (neg - pg * cg[21, ...]) /cg[20, ...]
     return ebg, evg, pg, fg, level, surplus_energy
 
 
@@ -1278,6 +1344,74 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     # pg = pcg * ebg
     pg = (neg - fg * cg[20, ...]) / cg[21, ...]
     return ebg, evg, pg, fg, level, surplus_energy
+
+
+def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, rev_trait_value, dc=0, hp_dc=0, dl=0, hp_dl=0, gest_propn=0, lact_propn=0):
+    ##fat gain (MJ/d) is calculated using a formula derived from the Oddy etal 2023 paper (see Generator9:p16-17)
+    ###The calculation is multi-step because parameter values (bpm & bf) depend on the sign of dm and df
+    ###Steps
+    ###1. calculate the known values that are required for dv, HpE (hp_dv, hp_dw)
+    ###2. calculate sign of dm and allocate value for bpm.
+    ####It is known that if dm=0 then NEG = -e0/pm and df is -ve (hence lf is appropriate)
+    ####Calculate mei_dm0 that is the mei that would result in dm=0
+    ####Assign value to bpm
+    ###3. calculate the sign of df based on the numerator so that the denominator and then df can be calculated
+    ###4. Calculate NEG
+    ###5. Calculate dm
+    ###6. Calculate ebg
+    ## First to retain the flavour of the derivation substitute some coefficient names
+    M = (1 - m / alpha_m)
+    pm = cg[32, ...]
+    e0 = cg[34, ...]
+    lf = ck[26, ...]
+    pv = cg[33, ...]
+    ## Step 1a: calculate dv from alpha_v for day 0
+    alpha_v = cg[35, ...] * mei + cg[36, ...] * m**0.41 + cg[37, ...] * md
+    dv0 = pv * (alpha_v - v)
+    ## Step 1b: estimate average dv across the duration of the step, required because dv is reducing each day as it approaches alpha_v
+    ###derivation Generator9:p15 based on dv(i) = dv(0) * (1 - pv)**i and then sum the geometric series.
+    ###assumptions are that alpha_v doesn't change during the step, however m may change
+    dv = dv0 * (1 - (1 - pv) ** step) / pv / step
+    ## Step 1c: heat production from change in viscera & wool growth (MJ/d)
+    hp_dv = dv * np.where(dv >= 0, ck[22, ...], ck[28, ...])  #select value for bpv based on sign of dp
+    hp_dw = dw * ck[23, ...]
+    ##Step 2: Calculate mei_dm0 using derived equation and set bpm to required value
+    mei_dm0 = hp_maint + hp_dv + hp_dw + hp_dc + hp_dl - e0 / pm - lf * (dv + dw + dc + dl + e0 / pm)
+    bpm = np.where(mei > mei_dm0, ck[21, ...], ck[27, ...])
+    ##Step 3a: Calculate the numerator of df and substitute the value for bf
+    df_numerator = ((1 - pm * M) * (mei - (hp_maint + hp_dv + hp_dw + hp_dc + hp_dl + bpm * e0 * M))
+                    - (1 + bpm * pm * M) * (dv + dw + dc + dl + e0 * M))
+    bf = np.where(df_numerator > 0, ck[20, ...], ck[26, ...])
+    ##Step 3b: Calculate the denominator of df
+    df_denominator = (1 + bpm * pm * M + bf * (1 - pm * M))
+    ##Step 3c: Calculate fat change (MJ/d & kg/d)
+    df = df_numerator / df_denominator
+    hp_df = bf * df
+    fg = df / (cg[20, ...] * cg[26, ...])
+    ##Step 4: Net energy gain (MJ/d)
+    neg = (df + dv + dw + dc + dl + e0 * M) / (1 - pm * M)   #formula for NEG as the source of energy
+    neg_check = (mei - (hp_maint + hp_dv + hp_dw + hp_dc + hp_dl + bf * df + bpm * e0 * M)) / (1 + bpm * pm * M) #formula for NEG as the sink for energy
+    ##Step 5: Protein change (MJ/d & kg/d)
+    dm = (pm * neg + e0) * M
+    hp_dm = bpm * dm
+    mg = dm / (cg[21, ...] * cg[27, ...])
+    vg = dv / (cg[22, ...] * cg[28, ...])
+    ##Step 6: Empty bodyweight change and energy value of gain
+    ebg = fg + mg + vg
+    evg = (df + dm + dv) / ebg
+
+    ##Process the Liveweight REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
+    ebg = f1_rev_update('lwc', ebg, rev_trait_value)
+
+    ##Level of feeding (at maint level = 0)
+    #todo what is the definition of 'level'. Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
+    ## requirement for maintenance
+    maintenance = hp_maint + hp_dw + hp_dc * gest_propn + hp_dl * lact_propn    #might also include dc, dl, dw
+    level = (mei / maintenance) - 1
+
+    surplus_energy = df + dm + dv + hp_df + hp_dm + hp_dv
+
+    return ebg, evg, df, dm, dv, level, surplus_energy
 
 
 def f_wbe(aw, mw, cg):
