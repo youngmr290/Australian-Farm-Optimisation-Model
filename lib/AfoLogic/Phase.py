@@ -238,10 +238,12 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     as a function of yield and harvest index. Yield is the input rather than biomass because that is easier to
     relate to and thus determine inputs. However, it is converted to biomass so that the optimisation has
     the option to tactically deviate from the overall strategy. For example, the model may select a barley phase at the
-    beginning of the year with the expectation of harvesting it for saleable grain. However, if a
-    big frost event is occurred the model may choose to either cut the crop for hay or use it as fodder. To
+    beginning of the year with the expectation of harvesting it for saleable grain. However, based on spring conditions
+    the model may choose to either cut the crop for hay or use it as standing fodder. To
     allow these tactics to be represented requires a common starting point which has been defined as phase biomass.
-    Biomass can either be harvested for grain, cut for hay or grazed as fodder.
+    Biomass can either be harvested for grain, cut for hay or grazed as standing fodder. The biomass is estimated at
+    harvest time and is adjusted downwards for 'baling' because a crop is baled prior to harvest. Grazing of standing
+    fodder is assumed to occur at or after harvest.
 
     To extrapolate the inputs from the base LMU to the other LMUs an LMU adjustment factor is
     applied which determines the yield on each other LMU as a proportion of the base LMU. The LMU adjustment
