@@ -64,7 +64,7 @@ from . import Exceptions as exc
 
 # from memory_profiler import profile
 # @profile
-def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = False):
+def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None, plots = False):
     """
     A function to wrap the generator and post-processing that can be called by SheepPyomo.
 
@@ -2316,7 +2316,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
       = fsstk.f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1nwzida0e0b0xyg
                           , period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1, scan_management_pa1e1b1nwzida0e0b0xyg1
                           , gbal_management_pa1e1b1nwzida0e0b0xyg1, wean_management_pa1e1b1nwzida0e0b0xyg1
-                          , a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, a_t_tpg1, mask_p_offs_p, len_p, pkl_fs_info)
+                          , a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, a_t_tpg1, mask_p_offs_p, len_p, pkl_fs_info, pkl_fs)
 
     '''if running the gen for stubble generation then the feed supply info above gets overwritten with
     the stubble feed from the trial.'''
@@ -2357,8 +2357,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, stubble=None, plots = Fa
     ##If using feedsupply from pkl, read in LTW adjustment from pkl.
     fs_use_number = sinp.structuralsa['i_fs_use_number']
     if sinp.structuralsa['i_fs_use_pkl']:
-        with open('pkl/pkl_fs{0}.pkl'.format(fs_use_number),"rb") as f:
-            pkl_fs = pkl.load(f)
         ###update ltwadj with ltwadj from pkl
         pkl_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1']
         pkl_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1']

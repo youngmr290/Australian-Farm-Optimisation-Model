@@ -27,6 +27,15 @@ from ..AfoLogic import PropertyInputs as pinp
 from ..AfoLogic import relativeFile
 
 
+def f_load_fs(fs_use_pkl, fs_use_number):
+    pkl_fs = {}
+    if fs_use_pkl:
+        print(f'pkl_fs{fs_use_number} being used.')
+        pkl_fs_path = relativeFile.find(__file__, "../../pkl", f"pkl_fs{fs_use_number}.pkl")
+        with open(pkl_fs_path,"rb") as f:
+            pkl_fs = pkl.load(f)
+    return pkl_fs
+
 def f_load_stubble():
     ##read in category info frpm xl
     ###build path

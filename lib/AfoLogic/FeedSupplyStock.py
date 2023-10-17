@@ -118,7 +118,7 @@ na=np.newaxis
 def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1nwzida0e0b0xyg,
                  period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1,
                  scan_management_pa1e1b1nwzida0e0b0xyg1, gbal_management_pa1e1b1nwzida0e0b0xyg1, wean_management_pa1e1b1nwzida0e0b0xyg1,
-                 a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, a_t_tpg1, mask_p_offs_p, len_p, pkl_fs_info):
+                 a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, a_t_tpg1, mask_p_offs_p, len_p, pkl_fs_info, pkl_fs):
 
     #########
     #inputs #
@@ -377,13 +377,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ##4a) update fs and confinement info with pkl if desired
     ### It should be possible to use a BBB pkl_fs with a BBT flock if the BBT flock is generating without the t axis.
     ###Generating without t means that the t axis of pkl_fs is reduced to a singleton, then t & g will broadcast.
-    fs_use_number = sinp.structuralsa['i_fs_use_number']
     if sinp.structuralsa['i_fs_use_pkl']:
-        print(f'pkl_fs{fs_use_number} being used.')
-        pkl_fs_path = relativeFile.find(__file__, "../../pkl", f"pkl_fs{fs_use_number}.pkl")
-        with open(pkl_fs_path,"rb") as f: #todo should move this to LoadInputs section. Because in the web app this will come from database.
-            pkl_fs = pkl.load(f)
-
         ###update the feedsupply with the pkl fs
         t_feedsupply_tpa1e1b1j2wzida0e0b0xyg0 = pkl_fs['fs']['sire']
         t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = pkl_fs['fs']['dams']
@@ -695,10 +689,4 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         pkl_fs['ltw_adj']['sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3'] = sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
         pkl_fs['pkl_condensed_values'] = pkl_fs_info['pkl_condensed_values']
 
-        ##store rev if trial is rev_create
-        fs_create_number = sinp.structuralsa['i_fs_create_number']
-        # directory_path = os.path.dirname(os.path.abspath(__file__))  # path of directory - required when exp is run from a different location (e.g. in the web app)
-        # with open(os.path.join(directory_path, 'pkl/pkl_fs{0}.pkl'.format(fs_create_number)),"wb") as f:
-        pkl_fs_path = relativeFile.find(__file__, "../../pkl", 'pkl_fs{0}.pkl'.format(fs_create_number))
-        with open(pkl_fs_path, "wb") as f:
-            pkl.dump(pkl_fs, f)
+        return pkl_fs

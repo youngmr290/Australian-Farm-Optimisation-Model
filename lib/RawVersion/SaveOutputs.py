@@ -8,6 +8,7 @@ import warnings
 
 from ..AfoLogic import Functions as fun
 from ..AfoLogic import PropertyInputs as pinp
+from ..AfoLogic import StructuralInputs as sinp
 from ..AfoLogic import FeedSupplyStock as fsstk
 from ..AfoLogic import relativeFile
 from lib.RawVersion import LoadExcelInputs as dxl
@@ -86,7 +87,15 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
 
     ##call function to store optimal feedsupply - do this before r_vals since completion of r_vals trigger successful completion.
     ###Note: A feed supply optimisation can not be carried out with Exp1.py because the trials aren't carried out sequentially
-    fsstk.f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info)
+    pkl_fs = fsstk.f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info)
+    ##store fs if trial is fs_create
+    if sinp.structuralsa['i_fs_create_pkl']:
+        fs_create_number = sinp.structuralsa['i_fs_create_number']
+        # directory_path = os.path.dirname(os.path.abspath(__file__))  # path of directory - required when exp is run from a different location (e.g. in the web app)
+        # with open(os.path.join(directory_path, 'pkl/pkl_fs{0}.pkl'.format(fs_create_number)),"wb") as f:
+        pkl_fs_path = relativeFile.find(__file__, "../../pkl", 'pkl_fs{0}.pkl'.format(fs_create_number))
+        with open(pkl_fs_path, "wb") as f:
+            pkl.dump(pkl_fs, f)
 
     ##pickle report values - every time a trial is run (even if pyomo not run)
     ## This has to be last because it controls if the trial needs to be run next time the exp is run (f_run_required)
