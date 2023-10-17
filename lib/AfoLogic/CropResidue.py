@@ -91,7 +91,7 @@ na = np.newaxis
 
 def f_biomass2residue(residuesim=False):
     '''
-    Residue produced per kg of biomass .
+    Residue produced (Stubble or standing fodder) per kg of biomass .
 
     This is a separate function because it is used in residue simulator.
     '''

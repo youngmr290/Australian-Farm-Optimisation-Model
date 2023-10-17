@@ -1499,7 +1499,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     sap_mortalityp_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(sap_mortalityp_oa1e1b1nwzida0e0b0xyg2,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     ## sum saa[rr] and saa[rr_age] so there is only one saa to handle in f_conception_cs & f_conception_ltw
-    ## Note: the proportions of the BTRT doesn't include rr_age_og1 because those calculations can't vary by age of the dam
+    ## Note: the proportions of the BTRT doesn't include rr_age_og1 because the BTRT calculations can't vary by age of the dam
     rr_age_og1 = sen.saa['rr_age_og1']
     saa_rr_age_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(rr_age_og1, p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
                                                     axis=g_pos, condition2=mask_o_dams, axis2=p_pos)
