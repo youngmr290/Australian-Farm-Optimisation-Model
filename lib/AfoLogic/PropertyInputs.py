@@ -347,6 +347,9 @@ def f_property_inp_sa(pinp_defaults):
 
     ##sheep
     ###SAV
+    sheep['i_date_shear_sixg0'] = fun.f_sa(sheep['i_date_shear_sixg0'], sen.sav['date_shear_isxg0'], 5)
+    sheep['i_date_shear_sixg1'] = fun.f_sa(sheep['i_date_shear_sixg1'], sen.sav['date_shear_isxg1'], 5)
+    sheep['i_date_shear_sixg3'] = fun.f_sa(sheep['i_date_shear_sixg3'], sen.sav['date_shear_isxg3'], 5)
     sheep['i_mask_i'] = fun.f_sa(sheep['i_mask_i'], sen.sav['TOL_inc'], 5)
     sheep['i_g3_inc'] = fun.f_sa(sheep['i_g3_inc'], sen.sav['g3_included'],5)
     sheep['a_c2_c0'] = fun.f_sa(sheep['a_c2_c0'], sen.sav['genotype'],5)

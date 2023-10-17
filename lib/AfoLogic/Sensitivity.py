@@ -337,6 +337,9 @@ def create_sa():
     sav['eqn_used_g2_q1p7'] = np.full(uinp.sheep['i_eqn_used_g2_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
     sav['eqn_used_g3_q1p7'] = np.full(uinp.sheep['i_eqn_used_g3_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
     sav['TOL_inc']          = np.full(pinp.sheep['i_mask_i'].shape, '-', dtype=object)      # SA value for the inclusion of each TOL
+    sav['date_shear_isxg0'] = np.full((len_i, len_s, len_x, len_g0), '-', dtype=object)      # SA value for the shearing sires
+    sav['date_shear_isxg1'] = np.full((len_i, len_s, len_x, len_g1), '-', dtype=object)      # SA value for the shearing dams
+    sav['date_shear_isxg3'] = np.full((len_i, len_s, len_x, len_g3), '-', dtype=object)      # SA value for the shearing offs
     sav['g3_included']      = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)      # SA value for the inclusion of each offspring genotype
     sav['genotype']         = np.full(pinp.sheep['a_c2_c0'].shape, '-', dtype=object)       # this is the selection of the genotypes of the sires for B, M & T
     sav['scan_og1']         = np.full(pinp.sheep['i_scan_og1'].shape, '-', dtype=object)    # SA value for the scanning management option
