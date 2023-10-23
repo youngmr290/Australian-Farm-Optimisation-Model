@@ -3310,7 +3310,7 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     # distribution_error = np.any(np.sum(distribution_w8gw9, axis=-1)>1)
 
     ##Set defaults for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
-    distribution_w8gw9 = fun.f_update(distribution_w8gw9, np.array([1],dtype=np.float32), dvp_type_next_tvgw!=vtype) #make 1 an numpy array so it can be float32 to make f_update more data effcient.
+    distribution_w8gw9 = fun.f_update(distribution_w8gw9, np.array([1],dtype='float32'), dvp_type_next_tvgw!=vtype) #make 1 an numpy array so it can be float32 to make f_update more data effcient.
     return distribution_w8gw9
 
 

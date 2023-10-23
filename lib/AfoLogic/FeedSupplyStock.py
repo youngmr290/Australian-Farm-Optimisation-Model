@@ -266,14 +266,14 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
                                      condition=mask_offs_inc_g3, axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos)  #add axis between g and b0 and b0 and i
 
     ##std feed options
-    feedsupply_options_r1j2p = pinp.feedsupply['i_feedsupply_options_r1j2p'][...,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
+    feedsupply_options_r1j2p = pinp.feedsupply['i_feedsupply_options_r1j2p'][...,0:len_p].astype(float) #slice off extra p periods so it is the same length as the sim periods
     ##confinement - True/False on confinement feeding. This controls which generator periods confinement feeding occurs.
     ## this input is required so that confinement can be included in n1 model, without forcing the animal into confinement for the whole year.
     ## This means you can have a given level of NV and it can be either in the paddock or in confinement.
     ## This input works in conjunction with i_confinement_n (see in the feed supply section)
-    confinement_options_r1p6z = pinp.feedsupply['i_confinement_options_r1p6z'].astype(np.float)
+    confinement_options_r1p6z = pinp.feedsupply['i_confinement_options_r1p6z'].astype(float)
     ##feed supply adjustment
-    feedsupply_adj_options_r2p = pinp.feedsupply['i_feedsupply_adj_options_r2p'][:,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
+    feedsupply_adj_options_r2p = pinp.feedsupply['i_feedsupply_adj_options_r2p'][:,0:len_p].astype(float) #slice off extra p periods so it is the same length as the sim periods
     ##an association between the k2 cluster (feed adjustment) and reproductive management (scanning, gbal & weaning).
     a_k2_mlsb1 = sinp.stock['ia_k2_mlsb1']
 

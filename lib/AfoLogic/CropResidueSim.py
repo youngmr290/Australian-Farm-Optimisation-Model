@@ -215,7 +215,7 @@ stubble_sim_path = relativeFile.findExcel('stubble sim.xlsx')
 writer = pd.ExcelWriter(stubble_sim_path, engine='xlsxwriter')
 cat_propn_s1_ks2 = pd.DataFrame(cat_propn_s1ks2.reshape(len_s1,len_k*len_s2))
 cat_propn_s1_ks2.to_excel(writer,index=False,header=False)
-writer.save()
+writer.close()
 
 
 

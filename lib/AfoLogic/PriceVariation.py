@@ -262,6 +262,6 @@ if __name__=="__main__":
     prob_c1.to_excel(writer, sheet_name='prob')
 
     ##finish writing and save
-    writer.save()
+    writer.close()
 
 

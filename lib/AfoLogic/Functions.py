@@ -1083,9 +1083,9 @@ def f_range_allocation_np(period_dates, item_start, length=np.array([1]), method
 
     #start empty array to assign to
     if shape==None:
-        allocation_period=np.zeros((period_dates.shape[:-1] + item_start.shape),dtype=np.float64)
+        allocation_period=np.zeros((period_dates.shape[:-1] + item_start.shape),dtype='float64')
     else:
-        allocation_period=np.zeros(shape,dtype=np.float64)
+        allocation_period=np.zeros(shape,dtype='float64')
 
     ## adjust dates.
     if method==1:

@@ -132,7 +132,7 @@ def f_contractseeding_occurs():
     end_pz = mach_periods.values[1:]
     contractseeding_occur_pz = np.logical_and(start_pz <= contract_start_z, contract_start_z < end_pz)
     contractseeding_occur_pz = pd.DataFrame(contractseeding_occur_pz,index=mach_periods.index[:-1],columns=mach_periods.columns)
-    return contractseeding_occur_pz
+    return contractseeding_occur_pz * 1
     # params['contractseeding_occur'] = (mach_periods==contract_start).squeeze().to_dict()
 
 

@@ -131,6 +131,6 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
             ##con1 set - passed into the pyomo constraint
             rot_hist.to_excel(writer, sheet_name='rotation con1 set',index=True,header=False)
             ##finish writing and save
-            writer.save()
+            writer.close()
         except PermissionError:
             warnings.warn("Warning: Rotation.xlsx open therefore can't save new copy")

@@ -501,7 +501,7 @@ def f_fert_req():
     crop_fert_k_n = pd.DataFrame(sen.sam['crop_fert_kn'], index=keys_k, columns=keys_n)
     pas_fert_k_n = pd.DataFrame(sen.sam['pas_fert_kn'], index=keys_k2, columns=keys_n)
     fert_sam_k_n = pd.concat([crop_fert_k_n, pas_fert_k_n])
-    fert_sam_krz_n = fert_sam_k_n.reindex(base_fert_rkz_n.index, index=0, level=1)
+    fert_sam_krz_n = fert_sam_k_n.reindex(base_fert_rkz_n.index, axis=0, level=1)
     base_fert_rkz_n = base_fert_rkz_n.mul(fert_sam_krz_n)
     nap_fert_rkz_n = nap_fert_rkz_n.mul(fert_sam_krz_n)
 
@@ -573,7 +573,7 @@ def f_fert_passes():
     crop_fert_passes_k_n = pd.DataFrame(sen.saa['crop_fert_passes_kn'], index=keys_k, columns=keys_n)
     pas_fert_passes_k_n = pd.DataFrame(sen.saa['pas_fert_passes_kn'], index=keys_k2, columns=keys_n)
     fert_passes_saa_k_n = pd.concat([crop_fert_passes_k_n, pas_fert_passes_k_n])
-    fert_passes_saa_krz_n = fert_passes_saa_k_n.reindex(fert_passes_rkz_n.index, index=0, level=1)
+    fert_passes_saa_krz_n = fert_passes_saa_k_n.reindex(fert_passes_rkz_n.index, axis=0, level=1)
     fert_passes_rkz_n = fert_passes_rkz_n.add(fert_passes_saa_krz_n)
     nap_fert_passes_rkz_n = nap_fert_passes_rkz_n.add(fert_passes_saa_krz_n)
     fert_passes_rkz_n[fert_passes_rkz_n < 0] = 0  # stop passes going negitive (incase saa is not correct)
@@ -855,7 +855,7 @@ def f_chem_application():
     pas_chem_passes_k_n = pd.DataFrame(sen.saa['pas_chem_passes_kn1'], index=keys_k2, columns=keys_n)
     chem_passes_saa_k_n = pd.concat([crop_chem_passes_k_n, pas_chem_passes_k_n])
     chem_passes_rkz_n = chem_passes_rk_zn.stack(0)
-    chem_passes_saa_krz_n = chem_passes_saa_k_n.reindex(chem_passes_rkz_n.index, index=0, level=1)
+    chem_passes_saa_krz_n = chem_passes_saa_k_n.reindex(chem_passes_rkz_n.index, axis=0, level=1)
     chem_passes_rkz_n = chem_passes_rkz_n.add(chem_passes_saa_krz_n)
     chem_passes_rkz_n[chem_passes_rkz_n<0] = 0 #stop passes going negitive (incase saa is not correct)
     ###drop landuse from index

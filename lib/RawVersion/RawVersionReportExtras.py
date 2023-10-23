@@ -658,6 +658,6 @@ def f_save_reports(report_run, reports, processor):
 
 
     df_settings.to_excel(writer, 'df_settings')
-    writer.save()
+    writer.close()
 
     print("Report complete. Processor: {0}".format(processor))

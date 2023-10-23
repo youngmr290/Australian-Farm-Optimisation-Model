@@ -152,10 +152,10 @@ def create_sa():
     sav['sale_ffcfw_min'] = np.full(len_s7, '-', dtype=object)        #min weight for sale in grid
     sav['sale_ffcfw_max'] = np.full(len_s7, '-', dtype=object)        #max weight for sale in grid
     ##SAM
-    sam['grainp_k'] = np.ones(len_k, dtype=np.float64)   # SA multiplier for grain prices for each crop
+    sam['grainp_k'] = np.ones(len_k, dtype='float64')   # SA multiplier for grain prices for each crop
     sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron
-    sam['salep_max_s7'] = np.ones(len_s7, dtype=np.float64)        #max sale price in grid
-    sam['salep_month_adjust_s7s9p4'] = np.ones(uinp.sheep['i_salep_months_priceadj_s7s9p4'].shape, dtype=np.float64)      #monthly sale price
+    sam['salep_max_s7'] = np.ones(len_s7, dtype='float64')        #max sale price in grid
+    sam['salep_month_adjust_s7s9p4'] = np.ones(uinp.sheep['i_salep_months_priceadj_s7s9p4'].shape, dtype='float64')      #monthly sale price
     ##SAP
     ##SAA
     ##SAT
@@ -270,17 +270,17 @@ def create_sa():
     sav['lmu_fert_adj_nl'] = np.full((len_n, len_l), '-', dtype=object)    # SA value for fert adjustment by LMU
     sav['lmu_chem_adj_l'] = np.full(len_l, '-', dtype=object)    # SA value for chem adjustment by LMU
     ##SAM
-    sam['crop_yield_k'] = np.ones(len_k, dtype=np.float64)    # SA multiplier for all rotation yield
-    sam['crop_fert_kn'] = np.ones((len_k, len_n), dtype=np.float64) #SA multipler on crop fertiliser
-    sam['pas_fert_kn'] = np.ones((len_pas_k, len_n), dtype=np.float64) #SA multipler on pas fertiliser
-    sam['crop_chem_k'] = np.ones(len_k, dtype=np.float64) #SA multipler on crop chem package cost (ie all chem timing are scalled the same)
-    sam['pas_chem_k'] = np.ones(len_pas_k, dtype=np.float64) #SA multipler on pas chem package cost (ie all chem timing are scalled the same)
+    sam['crop_yield_k'] = np.ones(len_k, dtype='float64')    # SA multiplier for all rotation yield
+    sam['crop_fert_kn'] = np.ones((len_k, len_n), dtype='float64') #SA multipler on crop fertiliser
+    sam['pas_fert_kn'] = np.ones((len_pas_k, len_n), dtype='float64') #SA multipler on pas fertiliser
+    sam['crop_chem_k'] = np.ones(len_k, dtype='float64') #SA multipler on crop chem package cost (ie all chem timing are scalled the same)
+    sam['pas_chem_k'] = np.ones(len_pas_k, dtype='float64') #SA multipler on pas chem package cost (ie all chem timing are scalled the same)
     ##SAP
     ##SAA
-    saa['crop_fert_passes_kn'] = np.zeros((len_k, len_n), dtype=np.float64) #SA adder on crop fertiliser passes
-    saa['pas_fert_passes_kn'] = np.zeros((len_pas_k, len_n), dtype=np.float64) #SA adder on pas fertiliser passes
-    saa['crop_chem_passes_kn1'] = np.zeros((len_k, len_n1), dtype=np.float64) #SA adder on crop chem passes
-    saa['pas_chem_passes_kn1'] = np.zeros((len_pas_k, len_n1), dtype=np.float64) #SA adder on pas chem passes
+    saa['crop_fert_passes_kn'] = np.zeros((len_k, len_n), dtype='float64') #SA adder on crop fertiliser passes
+    saa['pas_fert_passes_kn'] = np.zeros((len_pas_k, len_n), dtype='float64') #SA adder on pas fertiliser passes
+    saa['crop_chem_passes_kn1'] = np.zeros((len_k, len_n1), dtype='float64') #SA adder on crop chem passes
+    saa['pas_chem_passes_kn1'] = np.zeros((len_pas_k, len_n1), dtype='float64') #SA adder on pas chem passes
     ##SAT
     ##SAR
 
@@ -295,21 +295,21 @@ def create_sa():
         ##SAV
         ##SAM
         sam['germ',pasture]                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods
-        sam['germ_l',pasture]                  = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for germination on each lmus in all periods
+        sam['germ_l',pasture]                  = np.ones((len(pinp.general['i_lmu_area'])),  dtype='float64')  # SA multiplier for germination on each lmus in all periods
         sam['pgr',pasture]                     = 1.0                                                          # SA multiplier for growth on all lmus in all periods
-        sam['pgr_zp6',pasture]                   = np.ones((len_z, len_p6),  dtype=np.float64)  # SA multiplier for growth in each feed period
-        sam['pgr_l',pasture]                   = np.ones((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA multiplier for growth on each lmus in all periods
+        sam['pgr_zp6',pasture]                   = np.ones((len_z, len_p6),  dtype='float64')  # SA multiplier for growth in each feed period
+        sam['pgr_l',pasture]                   = np.ones((len(pinp.general['i_lmu_area'])),  dtype='float64')  # SA multiplier for growth on each lmus in all periods
         sam['dry_dmd_decline',pasture]         = 1.0                                                          # SA multiplier for the decline in digestibility of dry feed
-        sam['grn_dmd_declinefoo_f',pasture]    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on decline in digestibility if green feed is not grazed (to increase FOO)
-        sam['grn_dmd_range_f',pasture]         = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on range in digestibility of green feed
-        sam['grn_dmd_senesce_f',pasture]       = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
-        sam['conservation_limit_f',pasture]    = np.ones(len(pinp.period['i_fp_idx']),  dtype=np.float64)  # SA multiplier for the conservation limit in each feed period
+        sam['grn_dmd_declinefoo_f',pasture]    = np.ones(len(pinp.period['i_fp_idx']),  dtype='float64')  # SA multiplier on decline in digestibility if green feed is not grazed (to increase FOO)
+        sam['grn_dmd_range_f',pasture]         = np.ones(len(pinp.period['i_fp_idx']),  dtype='float64')  # SA multiplier on range in digestibility of green feed
+        sam['grn_dmd_senesce_f',pasture]       = np.ones(len(pinp.period['i_fp_idx']),  dtype='float64')  # SA multiplier on reduction in digestibility when senescing
+        sam['conservation_limit_f',pasture]    = np.ones(len(pinp.period['i_fp_idx']),  dtype='float64')  # SA multiplier for the conservation limit in each feed period
         ##SAP
         ##SAA pasture
         saa['germ',pasture]                    = 0.0                                                          # SA addition for germination on all lmus in all periods
         saa['pgr',pasture]                     = 0.0                                                          # SA addition for growth on all lmus in all periods
-        saa['pgr_zp6',pasture]                   = np.zeros((len_z, len_p6),  dtype=np.float64)  # SA addition for growth in each feed period
-        saa['pgr_l',pasture]                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype=np.float64)  # SA addition for growth on each lmus in all periods
+        saa['pgr_zp6',pasture]                   = np.zeros((len_z, len_p6),  dtype='float64')  # SA addition for growth in each feed period
+        saa['pgr_l',pasture]                   = np.zeros((len(pinp.general['i_lmu_area'])),  dtype='float64')  # SA addition for growth on each lmus in all periods
         ##SAT
         ##SAR
 
@@ -384,8 +384,8 @@ def create_sa():
     sam['pi_post_adult'] = 1.0                        #Post loop potential intake of adults (zf2==1)
     sam['pi_post_yatf'] = 1.0                        #Post loop potential intake of yatf
     sam['chill'] = 1.0                        #intermediate sam on chill.
-    sam['rr_og1'] = np.ones(pinp.sheep['i_scan_og1'].shape, dtype=np.float64)    # reproductive rate by age. Use shape that has og1
-    sam['wean_redn_ol0g2'] = np.ones((len_o, len_l0, len_g2), dtype=np.float64)  #Adjust the number of yatf transferred at weaning - this is a high level sa, it impacts within a calculation not on an input
+    sam['rr_og1'] = np.ones(pinp.sheep['i_scan_og1'].shape, dtype='float64')    # reproductive rate by age. Use shape that has og1
+    sam['wean_redn_ol0g2'] = np.ones((len_o, len_l0, len_g2), dtype='float64')  #Adjust the number of yatf transferred at weaning - this is a high level sa, it impacts within a calculation not on an input
     ##SAP
     sap['evg_adult'] = 0.0               #energy content of liveweight gain - this is a high level sa, it impacts within a calculation not on an input and is only implemented on adults
     sap['mortalityb'] = 0.0        #Scale the calculated base mortality (for all animals) - this is a high level sa, it impacts within a calculation not on an input
@@ -393,23 +393,23 @@ def create_sa():
     sap['kg_post_yatf'] = 0.0           #Post loop energy efficiency of yatf
     sap['mr_post_adult'] = 0.0           #Post loop maintenance requirement of adults (zf2==1)
     sap['mr_post_yatf'] = 0.0           #Post loop maintenance requirement of yatf
-    sap['mortalityp_ol0g2'] = np.zeros((len_o, len_l0, len_g2), dtype=np.float64)  #Scale the calculated progeny mortality at birth relative - this is a high level sa, it impacts within a calculation not on an input
+    sap['mortalityp_ol0g2'] = np.zeros((len_o, len_l0, len_g2), dtype='float64')  #Scale the calculated progeny mortality at birth relative - this is a high level sa, it impacts within a calculation not on an input
     ##SAA
-    saa['husb_cost_h2'] = np.zeros(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
-    saa['husb_labour_l2h2'] = np.zeros(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
+    saa['husb_cost_h2'] = np.zeros(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype='float64')  #SA value for contract cost of husbandry operations.
+    saa['husb_labour_l2h2'] = np.zeros(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype='float64')  #units of the job carried out per husbandry labour hour
     saa['r1_izg1'] = np.zeros(pinp.sheep['ia_r1_zig1'].shape, dtype=int)   #SA to change the base feed option selected for dams
     saa['r1_izg3'] = np.zeros(pinp.sheep['ia_r1_zig3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
     saa['r2_isk2g1'] = np.zeros(pinp.sheep['ia_r2_isk2g1'].shape, dtype=int)   #SA to change the base feed option selected for dams
     saa['r2_ik5g3'] = np.zeros(pinp.sheep['ia_r2_ik5g3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
     saa['date_born1st_iog'] = np.zeros(pinp.sheep['i_date_born1st_iog2'].shape, dtype=int)  #SA to adjust lambing date (used for ewe lambs).
-    saa['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype=np.float64)  #SA value for feedsupply.
-    saa['feedsupply_adj_r2p'] = np.zeros(pinp.feedsupply['i_feedsupply_adj_options_r2p'].shape, dtype=np.float64)  #SA value for feedsupply adjustment.
-    saa['littersize_og1'] = np.zeros((len_o, len_g1), dtype=np.float64)   #sa to the litter size this changes the propn of singles/twins and trips whilst keeping propn empty the same.
-    saa['conception_og1'] = np.zeros((len_o, len_g1), dtype=np.float64)   #sa to adjust the proportion of ewes that are empty whilst keepping litter size (number of lambs / pregnant ewes) the same
-    saa['preg_increment_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype=np.float64)   #sa to adjust the conception of an individual b1 slice at conception, so that the value of an extra lamb conceived of a given birth type can be calculated. a value of 1 would transfer all available animals into the target slice
-    saa['mortalityx_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype=np.float64)  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
-    saa['mortalitye_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype=np.float64)  #Scale the calculated dam mortality at birth. 0.1 (10%) would increase the (perinatal) mortality of progeny at birth by 10 percentage points eg if mortality was 20% it would increase to 30%. - this is a high level sa, it impacts within a calculation not on an input
-    saa['rr_age_og1'] = np.zeros(pinp.sheep['i_scan_og1'].shape, dtype=np.float64)    # reproductive rate by age. Use shape that has og1
+    saa['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype='float64')  #SA value for feedsupply.
+    saa['feedsupply_adj_r2p'] = np.zeros(pinp.feedsupply['i_feedsupply_adj_options_r2p'].shape, dtype='float64')  #SA value for feedsupply adjustment.
+    saa['littersize_og1'] = np.zeros((len_o, len_g1), dtype='float64')   #sa to the litter size this changes the propn of singles/twins and trips whilst keeping propn empty the same.
+    saa['conception_og1'] = np.zeros((len_o, len_g1), dtype='float64')   #sa to adjust the proportion of ewes that are empty whilst keepping litter size (number of lambs / pregnant ewes) the same
+    saa['preg_increment_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype='float64')   #sa to adjust the conception of an individual b1 slice at conception, so that the value of an extra lamb conceived of a given birth type can be calculated. a value of 1 would transfer all available animals into the target slice
+    saa['mortalityx_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype='float64')  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
+    saa['mortalitye_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype='float64')  #Scale the calculated dam mortality at birth. 0.1 (10%) would increase the (perinatal) mortality of progeny at birth by 10 percentage points eg if mortality was 20% it would increase to 30%. - this is a high level sa, it impacts within a calculation not on an input
+    saa['rr_age_og1'] = np.zeros(pinp.sheep['i_scan_og1'].shape, dtype='float64')    # reproductive rate by age. Use shape that has og1
     saa['wean_wt'] = 0.0            #weaning weight adjustment of yatf. Note: WWt changes without any change in MEI
     ##SAT
     ##SAR
@@ -421,21 +421,21 @@ def create_sa():
     sav['srw_c2'] = np.full(uinp.parameters['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
     sav['cl0_c2'] = np.full(uinp.parameters['i_cl0_c2'].shape, '-', dtype=object)  #SA value for litter size genotype params.
     ##SAM
-    sam['ci_c2'] = np.ones(uinp.parameters['i_ci_c2'].shape, dtype=np.float64)  #intake params for genotypes
+    sam['ci_c2'] = np.ones(uinp.parameters['i_ci_c2'].shape, dtype='float64')  #intake params for genotypes
     sam['sfw_c2'] = 1.0                         #std fleece weight genotype params
     sam['rr'] = 1.0                        #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
-    sam['husb_cost_h2'] = np.ones(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
-    sam['husb_mustering_h2'] = np.ones(uinp.sheep['i_husb_operations_muster_propn_h2'].shape, dtype=np.float64)  #SA value for mustering required for husbandry operations.
-    sam['husb_labour_l2h2'] = np.ones(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
+    sam['husb_cost_h2'] = np.ones(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype='float64')  #SA value for contract cost of husbandry operations.
+    sam['husb_mustering_h2'] = np.ones(uinp.sheep['i_husb_operations_muster_propn_h2'].shape, dtype='float64')  #SA value for mustering required for husbandry operations.
+    sam['husb_labour_l2h2'] = np.ones(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype='float64')  #units of the job carried out per husbandry labour hour
     ##SAP
     ##SAA
     saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
-    saa['cl0_c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype=np.float64)  #SA value for litter size genotype params.
+    saa['cl0_c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype='float64')  #SA value for litter size genotype params.
     saa['scan_std_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
     saa['nlb_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
     saa['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
     ##SAT
-    sat['cb0_c2'] = np.zeros(uinp.parameters['i_cb0_c2'].shape, dtype=np.float64)  #BTRT params for genotypes
+    sat['cb0_c2'] = np.zeros(uinp.parameters['i_cb0_c2'].shape, dtype='float64')  #BTRT params for genotypes
     ##SAR
 
     ##########

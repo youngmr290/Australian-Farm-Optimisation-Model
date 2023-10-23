@@ -147,8 +147,8 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, hr_scalar = 1, cr=None
     ##pasture conversion scenario (convert the region and pasture stage to an index
     ### because the second axis of cu3 is a combination of region & stage)
     ### To allow entry of a decimal for the stage the calculations are carried out for 2 stage and then weighted
-    pasture_stage1 = np.trunc(pasture_stage).astype(np.int)
-    pasture_stage2 = np.minimum(pasture_stage1 + 1, uinp.pastparameters['i_n_pasture_stage'] - 1).astype(np.int)
+    pasture_stage1 = np.trunc(pasture_stage).astype(int)
+    pasture_stage2 = np.minimum(pasture_stage1 + 1, uinp.pastparameters['i_n_pasture_stage'] - 1).astype(int)
     proportion_1 = 1 - pasture_stage % 1
     conversion_scenario1 = pinp.sheep['i_region'] * uinp.pastparameters['i_n_pasture_stage'] + pasture_stage1
     conversion_scenario2 = pinp.sheep['i_region'] * uinp.pastparameters['i_n_pasture_stage'] + pasture_stage2

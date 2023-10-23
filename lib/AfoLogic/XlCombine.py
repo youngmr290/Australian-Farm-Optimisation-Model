@@ -38,4 +38,4 @@ for sheet in sheets:
             df_total = df_total.append(df)
         ###write to new excel file using custom function in ReportFunctions.py
         rep.f_df2xl(writer, df_total, sheet, option=1)
-writer.save()
+writer.close()

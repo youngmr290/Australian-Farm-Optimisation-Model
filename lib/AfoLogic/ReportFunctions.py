@@ -94,11 +94,11 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
                     offset += 1 #for some reason if the cols are multiindex the an extra row gets added when writing to excel
                 worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to collapse the level initially
 
-        for col in range(len(df.columns)):
-            if (df.iloc[:,col]==0).all():
-                offset = df.index.nlevels
-                col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #convert col number to excel col reference e.g. 'A:B'
-                worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
+        # for col in range(len(df.columns)):
+        #     if (df.iloc[:,col]==0).all():
+        #         offset = df.index.nlevels
+        #         col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #convert col number to excel col reference e.g. 'A:B'
+        #         worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
 
     ##apply filter
     if option==3:
