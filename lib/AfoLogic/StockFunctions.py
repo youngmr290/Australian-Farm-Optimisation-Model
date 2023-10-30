@@ -923,7 +923,7 @@ def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_sta
     return meme, omer_history, km, kg_fodd, kg_supp, kl
 
 
-def f_energy_nfs(ck, cm, lw_start, ffcfw_start, f_start, v_start, m_start, md_solid, i_md_supp,
+def f_energy_nfs(ck, cm, lw_start, ffcfw_start, f_start, v_start, m_start, mei, md_solid, i_md_supp,
                 md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_kg=1, sam_mr=1):
     ##Efficiency for maintenance
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
@@ -935,6 +935,8 @@ def f_energy_nfs(ck, cm, lw_start, ffcfw_start, f_start, v_start, m_start, md_so
     kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb * sam_kg
     ##Heat production from maintaining protein
     hp_fasting = (cm[20, ...] * f_start + cm[21, ...] * m_start + cm[22, ...] * v_start) * (1 + cm[5, ...] * mei_propn_milk)
+    ##Heat associated with feeding - rumination & digestion (Note: rumination might change with fibre length but this is not accounted for, only M/D).
+    hp_mei = (1 - km) * mei
     ##Distance walked (horizontal equivalent)
     distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
     ##Set Distance walked to 0 if in confinement
@@ -942,9 +944,9 @@ def f_energy_nfs(ck, cm, lw_start, ffcfw_start, f_start, v_start, m_start, md_so
     ##Energy required for movement
     emove = cm[16, ...] * distance * lw_start
     ##Energy required for grazing (chewing and walking around)
-    egraze = cm[6, ...] * ffcfw_start * intake_f * (cm[7, ...] - dmd) + emove
+    hp_graze = cm[6, ...] * ffcfw_start * intake_f * (cm[7, ...] - dmd) + emove
     ##Heat produced by maintenance (before ECold)
-    hp_maint = (hp_fasting + egraze) * sam_mr
+    hp_maint = (hp_fasting + hp_mei + hp_graze) * sam_mr
     return hp_maint, km, kg_fodd, kg_supp, kl
 
 
@@ -1222,9 +1224,23 @@ def f_heat_cs(cc, ck, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp,
     ##Efficiency for growth (before ECold)
     kg = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
     ##Heat production per animal
-    hp_total = (mei - nec * gest_propn - nel * lact_propn - new - kg * (mei
-            - (meme + mec * gest_propn + mel * lact_propn + mew))
-            + cc[16, ...] * guw)
+    hp_total = (mei - nec * gest_propn - nel * lact_propn - new
+                - kg * (mei - (meme + mec * gest_propn + mel * lact_propn + mew))
+                + cc[16, ...] * guw)
+    return hp_total
+
+
+def f_heat_nfs(cc, ck, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, mei_propn_herb, guw = 0, kl = 0
+              , mei_propn_milk = 0, mec = 0, mel = 0, nec = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
+    #This is just a copy of CSIRO atm
+    ##Animal is below maintenance
+    belowmaint = mei < (meme + mec + mel + mew)
+    ##Efficiency for growth (before ECold)
+    kg = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
+    ##Heat production per animal
+    hp_total = (mei - nec * gest_propn - nel * lact_propn - new
+                - kg * (mei - (meme + mec * gest_propn + mel * lact_propn + mew))
+                + cc[16, ...] * guw)
     return hp_total
 
 
@@ -1359,8 +1375,8 @@ def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, rev_trait_value,
     ###4. Calculate NEG
     ###5. Calculate dm
     ###6. Calculate ebg
-    ## First to retain the flavour of the derivation substitute some coefficient names
-    M = (1 - m / alpha_m)
+    ## First to retain the flavour of the derivation, substitute some coefficient names
+    M = 1 - m / alpha_m
     pm = cg[32, ...]
     e0 = cg[34, ...]
     lf = ck[26, ...]
@@ -1370,7 +1386,8 @@ def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, rev_trait_value,
     dv0 = pv * (alpha_v - v)
     ## Step 1b: estimate average dv across the duration of the step, required because dv is reducing each day as it approaches alpha_v
     ###derivation Generator9:p15 based on dv(i) = dv(0) * (1 - pv)**i and then sum the geometric series.
-    ###assumptions are that alpha_v doesn't change during the step, however m may change
+    ###assumptions are that alpha_v doesn't change during the step.
+    ### Imperfect assumption because m may change during the timestep. Could change HP by 0.2 MJ/d (see '[Sheep Calc.xlsx]v error!')
     dv = dv0 * (1 - (1 - pv) ** step) / pv / step
     ## Step 1c: heat production from change in viscera & wool growth (MJ/d)
     hp_dv = dv * np.where(dv >= 0, ck[22, ...], ck[28, ...])  #select value for bpv based on sign of dp

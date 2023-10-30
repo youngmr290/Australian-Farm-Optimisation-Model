@@ -3004,7 +3004,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_energy_nfs(ck_sire, cx_sire[:,0:1,...], cm_sire, lw_start_sire, ffcfw_start_sire
+                        temp0, temp2, temp3, temp4, temp5 = sfun.f_energy_nfs(ck_sire, cx_sire[:,0:1,...], cm_sire, lw_start_sire, ffcfw_start_sire
                                                                     , mr_age_pa1e1b1nwzida0e0b0xyg0[p], mei_sire, omer_history_start_p3g0
                                                                     , days_period_pa1e1b1nwzida0e0b0xyg0[p], md_solid_sire, pinp.sheep['i_md_supp']
                                                                     , md_herb_sire, lgf_eff_pa1e1b1nwzida0e0b0xyg0[p, ...]
@@ -3012,18 +3012,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                     , densityw_pa1e1b1nwzida0e0b0xyg0[p], foo_sire, confinementw_tpa1e1b1nwzida0e0b0xyg0[:,p]
                                                                     , intake_f_sire, dmd_sire, sam_kg = sam_kg_sire, sam_mr = sam_mr_sire)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
-                        omer_history_sire = temp1
                         if eqn_used:
-                            meme_sire = temp0
+                            hp_maint_sire = temp0
                             km_sire = temp2
                             kg_fodd_sire = temp3
                             kg_supp_sire = temp4  # temp5 is not used for sires
+                            meme_sire - hp_maint_sire
                         if eqn_compare:
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_energy_nfs(ck_dams, cx_dams[:,1:2,...], cm_dams, lw_start_dams, ffcfw_start_dams
+                        temp0, temp2, temp3, temp4, temp5 = sfun.f_energy_nfs(ck_dams, cx_dams[:,1:2,...], cm_dams, lw_start_dams, ffcfw_start_dams
                                                                     , mr_age_pa1e1b1nwzida0e0b0xyg1[p], mei_dams, omer_history_start_p3g1
                                                                     , days_period_pa1e1b1nwzida0e0b0xyg1[p], md_solid_dams, pinp.sheep['i_md_supp']
                                                                     , md_herb_dams, lgf_eff_pa1e1b1nwzida0e0b0xyg1[p, ...]
@@ -3031,19 +3031,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                     , densityw_pa1e1b1nwzida0e0b0xyg1[p], foo_dams, confinementw_tpa1e1b1nwzida0e0b0xyg1[:,p]
                                                                     , intake_f_dams, dmd_dams, sam_kg = sam_kg_dams, sam_mr = sam_mr_dams)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
-                        omer_history_dams = temp1
                         if eqn_used:
-                            meme_dams = temp0
+                            hp_maint_dams = temp0
                             km_dams = temp2
                             kg_fodd_dams = temp3
                             kg_supp_dams = temp4
                             kl_dams = temp5
+                            meme_dams = hp_maint_dams
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_energy_nfs(ck_offs, cx_offs[:,mask_x,...], cm_offs, lw_start_offs, ffcfw_start_offs
+                        temp0, temp2, temp3, temp4, temp5 = sfun.f_energy_nfs(ck_offs, cx_offs[:,mask_x,...], cm_offs, lw_start_offs, ffcfw_start_offs
                                                                     , mr_age_pa1e1b1nwzida0e0b0xyg3[p], mei_offs, omer_history_start_p3g3
                                                                     , days_period_pa1e1b1nwzida0e0b0xyg3[p], md_solid_offs, pinp.sheep['i_md_supp']
                                                                     , md_herb_offs, lgf_eff_pa1e1b1nwzida0e0b0xyg3[p, ...]
@@ -3051,12 +3051,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                     , densityw_pa1e1b1nwzida0e0b0xyg3[p], foo_offs, confinementw_tpa1e1b1nwzida0e0b0xyg3[:,p]
                                                                     , intake_f_offs, dmd_offs, sam_kg = sam_kg_offs, sam_mr = sam_mr_offs)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
-                        omer_history_offs = temp1
                         if eqn_used:
-                            meme_offs = temp0
+                            hp_maint_offs = temp0
                             km_offs = temp2
                             kg_fodd_offs = temp3
                             kg_supp_offs = temp4 # temp5 is not used for offspring
+                            meme_offs = hp_maint_offs
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
 
@@ -3362,8 +3362,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4, temp5, temp6 = sfun.f_lwc_nfs(cm_sire, cg_sire, rc_start_sire, mei_sire
-                                                , mem_sire, mew_sire, zf1_sire, zf2_sire, kg_sire, step, rev_trait_values['sire'][p])
+                        temp0, temp1, temp2, temp3, temp4, temp5, temp6 = sfun.f_lwc_nfs(cm_sire, cg_sire, rc_start_sire
+                                                , mei_sire , md_solid_sire, mew_sire, zf1_sire, zf2_sire, kg_sire, step
+                                                , rev_trait_values['sire'][p])
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
@@ -3378,8 +3379,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4, temp5, temp6 = sfun.f_lwc_nfs(cm_dams, cg_dams, rc_start_dams, mei_dams
-                                                , mem_dams, mew_dams, zf1_dams, zf2_dams, kg_dams, step, rev_trait_values['dams'][p], mec_dams, mel_dams
+                        temp0, temp1, temp2, temp3, temp4, temp5, temp6 = sfun.f_lwc_nfs(cm_dams, cg_dams, rc_start_dams
+                                                , mei_dams , md_solid_dams, mew_dams, zf1_dams, zf2_dams, kg_dams, step
+                                                , rev_trait_values['dams'][p], mec_dams, mel_dams
                                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             ebg_dams = temp0
@@ -3395,8 +3397,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4, temp5, temp6 = sfun.f_lwc_nfs(cm_offs, cg_offs, rc_start_offs, mei_offs
-                                                , mem_offs, mew_offs, zf1_offs, zf2_offs, kg_offs, step, rev_trait_values['offs'][p])
+                        temp0, temp1, temp2, temp3, temp4, temp5, temp6 = sfun.f_lwc_nfs(cm_offs, cg_offs, rc_start_offs
+                                                , mei_offs , md_solid_offs, mew_offs, zf1_offs, zf2_offs, kg_offs, step
+                                                , rev_trait_values['offs'][p])
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
@@ -3694,7 +3697,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_energy_cs(ck_yatf, cx_yatf[:,mask_x,...], cm_yatf, lw_start_yatf
+                    temp0, temp2, temp3, temp4, temp5 = sfun.f_energy_cs(ck_yatf, cx_yatf[:,mask_x,...], cm_yatf, lw_start_yatf
                                                                 , ffcfw_start_yatf, mr_age_pa1e1b1nwzida0e0b0xyg2[p], mei_yatf
                                                                 , omer_history_start_p3g2, days_period_pa1e1b1nwzida0e0b0xyg2[p]
                                                                 , md_solid_yatf, pinp.sheep['i_md_supp'], md_herb_yatf
@@ -3705,10 +3708,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     omer_history_yatf = temp1
                     if eqn_used:
-                        meme_yatf = temp0
+                        hp_maint_yatf = temp0
                         km_yatf = temp2
                         kg_fodd_yatf = temp3
                         kg_supp_yatf = temp4  # temp5 is not used for yatf
+                        meme_yatf = hp_maint_yatf
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
 
@@ -3803,8 +3807,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0, temp1, temp2, temp3, temp4, temp5, temp6 = sfun.f_lwc_nfs(cm_yatf, cg_yatf, rc_start_yatf, mei_yatf
-                                            , mem_yatf, mew_yatf, zf1_yatf, zf2_yatf, kg_yatf, step, rev_trait_values['yatf'][p])
+                    temp0, temp1, temp2, temp3, temp4, temp5, temp6 = sfun.f_lwc_nfs(cm_yatf, cg_yatf, rc_start_yatf
+                                            , mei_yatf , md_solid_yatf, mew_yatf, zf1_yatf, zf2_yatf, kg_yatf, step
+                                            , rev_trait_values['yatf'][p])
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
