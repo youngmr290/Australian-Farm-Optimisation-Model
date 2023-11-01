@@ -1892,6 +1892,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     days_period_cut_pa1e1b1nwzida0e0b0xyg3 = days_period_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] #masked version of p axis
 
     ##Age of foetus (start of period, end of period and mid-period - days)
+    #todo will need fixing when adding cattle
     age_f_start_open_pa1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg - date_mated_pa1e1b1nwzida0e0b0xyg1
     age_f_start_pa1e1b1nwzida0e0b0xyg1 = np.maximum(np.array([0])
                                             , np.minimum(cp_dams[1, 0:1, :]
@@ -1924,6 +1925,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##Age of foetus with minor axis (days)
     age_f_p0_pa1e1b1nwzida0e0b0xyg1p0 = (age_f_start_open_pa1e1b1nwzida0e0b0xyg1[...,na] + index_p0)
     ##calc foetus p1 weighting - if age is greater than birth or less than 0 it will have 0 weighting in the p1 means calculated below else it will have weighting 1
+    #todo will need fixing when adding cattle
     age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0 = np.logical_and(age_f_p0_pa1e1b1nwzida0e0b0xyg1p0>=0, age_f_p0_pa1e1b1nwzida0e0b0xyg1p0<cp_dams[1, 0, :, na])
     #age_f_p0_pa1e1b1nwzida0e0b0xyg1p0[age_f_p0_pa1e1b1nwzida0e0b0xyg1p0 <= 0] = np.nan
     #age_f_p0_pa1e1b1nwzida0e0b0xyg1p0[age_f_p0_pa1e1b1nwzida0e0b0xyg1p0 > cp_dams[1, 0, :, na]] = np.nan
@@ -1931,7 +1933,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     age_y_adj_pa1e1b1nwzida0e0b0xyg1p0 = age_p0_pa1e1b1nwzida0e0b0xyg2p0 + np.maximum(0, (date_start_pa1e1b1nwzida0e0b0xygp0 - date_weaned_pa1e1b1nwzida0e0b0xyg2[..., na])) * (ci_dams[21, ..., na] - 1) #minus 1 because the ci factor is applied to the age post weaning but using the open date means it has already been included once ie we want x + y *ci but using date open gives  x  + y + y*ci, x = age to weaning, y = age between period and weaning, therefore minus 1 x  + y + y*(ci-1)
     ##calc young p1 weighting - if age is less than 0 it will have 0 weighting in the p1 means calculated below else it will have weighting 1
     age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1p0 = age_y_adj_pa1e1b1nwzida0e0b0xyg1p0 > 0  #no max cap (ie represents age young would be if never weaned off mum)
-    ##Foetal age relative to parturition with minor axis
+    ##Foetal age relative to parturition (based on gestation length of the first genotype) with p0 axis
+    #todo this will need fixing when cattle added that have different gestation length
     relage_f_pa1e1b1nwzida0e0b0xyg1p0 = np.maximum(0,age_f_p0_pa1e1b1nwzida0e0b0xyg1p0 / cp_dams[1, 0, :, na])
     ##Age of lamb relative to peak intake-with minor function
     pimi_pa1e1b1nwzida0e0b0xyg1p0 = age_y_adj_pa1e1b1nwzida0e0b0xyg1p0 / ci_dams[8, ..., na]
@@ -2010,16 +2013,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     rain_intake_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp0[mask_p_offs_p] / ci_yatf[18, ..., na]),  weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
     ##Proportion of peak intake due to time from birth
     pi_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cb1_dams[19, ..., na] * np.maximum(0,pimi_pa1e1b1nwzida0e0b0xyg1p0) ** ci_dams[9, ..., na] * np.exp(ci_dams[9, ..., na] * (1 - pimi_pa1e1b1nwzida0e0b0xyg1p0)), weights=age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1) #maximum to stop error in power (not sure why the negatives were causing a problem)
-    ##Peak milk production pattern (time from birth). Includes scalar for milk yield (cl[0])
+    ##Peak milk production pattern (time from birth). Includes scalar for milk yield (cl[0]). Average for the days that the dam is lactating
     mp_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_dams[0, ..., na] * cb1_dams[0, ..., na]
                                         * lmm_pa1e1b1nwzida0e0b0xyg1p0 ** cl_dams[3, ..., na]
                                         * np.exp(cl_dams[3, ..., na] * (1 - lmm_pa1e1b1nwzida0e0b0xyg1p0))
-                                        , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
+                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
     ##Suckling volume pattern. Includes scalar for milk yield (cl[0]) and SA for potential intake of the young at foot.
+    ## Average for the days that the dam is lactating
     mp2_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_dams[0, ..., na] * nyatf_b1nwzida0e0b0xyg[...,na]
                                         * cl_dams[6, ..., na] * ( cl_dams[12, ..., na] + cl_dams[13, ..., na]
                                         * np.exp(-cl_dams[14, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0))
-                                        , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1) * sen.sam['pi_yatf']
+                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1) * sen.sam['pi_yatf']
     ##Pattern of conception efficiency (doy). Different methods are used to represent seasonality in the 3 conception functions
     ### cpg_doy_cs is for the GrazPlan equations to predict the seasonal effect on proportion greater than conception rate - active b1 axis
     cpg_doy_cs_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.maximum(0,1 - cb1_dams[1, ..., na]
@@ -2047,17 +2051,23 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##Rumen development factor on PI - yatf
     piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(fun.f_back_transform(ci_yatf[3, ..., na]
                                         * (age_p0_pa1e1b1nwzida0e0b0xyg2p0 - ci_yatf[4, ..., na]))
-                                        , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
+                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
     # piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(1/(1 + np.exp(-ci_yatf[3, ..., na]
     #                                     * (age_p0_pa1e1b1nwzida0e0b0xyg2p0 - ci_yatf[4, ..., na])))
-    #                                     , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
+    #                                           , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
     piyf_pa1e1b1nwzida0e0b0xyg2 = piyf_pa1e1b1nwzida0e0b0xyg2 * (nyatf_b1nwzida0e0b0xyg > 0) #set pi to 0 if no yatf.
     ##Foetal normal weight pattern (mid-period)
-    nwf_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[2, ..., na] * (1 - np.exp(cp_dams[3, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0)))), weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
+    nwf_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[2, ..., na] * (1 - np.exp(cp_dams[3, ..., na]
+                                            * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0))))
+                                                    , weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
     ##Conceptus weight pattern (mid-period)
-    guw_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[6, ..., na] * (1 - np.exp(cp_dams[7, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0)))), weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
+    guw_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[6, ..., na] * (1 - np.exp(cp_dams[7, ..., na]
+                                            * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0))))
+                                                    , weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
     ##Conceptus energy pattern (end of period)
-    # ce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0)))), weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
+    # ce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na]
+    #                                       * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0))))
+    #                                               , weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
     ##Conceptus energy pattern (d_nec)
     dce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average((cp_dams[9, ..., na] * cp_dams[10, ..., na]) / cp_dams[1, 0, ..., na]
                                             * np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0)

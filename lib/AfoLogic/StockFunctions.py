@@ -924,6 +924,7 @@ def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_sta
 
 
 def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f):
+    #calculates the energy requirement for gestation for the days gestating. The result is scaled by gest_propn when used
     ##expected normal birth weight with dam age adj.
     w_b_exp_y = (1 - cp[4, ...] * (1 - relsize_start)) * w_b_std_y
     ##Normal weight of foetus (mid period - dam calcs)	
@@ -1057,6 +1058,7 @@ def f_progenyfd_mu(cu1, cg, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_st
 
 def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start
            , age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect):
+    #calculates the energy requirement for lactation for the days lactating. The result is scaled by lact_propn when used
     ##Max milk prodn based on dam rc birth
     mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
     ##Excess ME available for milk	
@@ -1127,7 +1129,7 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
                , ws_a1e1b1nwzida0e0b0xyg, rain_a1e1b1nwzida0e0b0xygp1, index_m0, guw = 0, kl = 0, mei_propn_milk = 0
                , mec = 0, mel = 0, nec = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
     ##Animal is below maintenance
-    belowmaint = mei < (meme + mec + mel + mew)
+    belowmaint = mei < (meme + mec * gest_propn + mel * lact_propn + mew)
     ##Efficiency for growth (before ECold)
     kge = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
     ##Sinusoidal variation in temp & wind (minimum temp at midnight (0:00 hrs) max temp at midday (12:00 hrs)
@@ -1174,7 +1176,7 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     ##ME requirement for maintenance (inc ECold)
     mem = meme + mecold_a1e1b1nwzida0e0b0xyg
     ##Animal is below maintenance (incl ecold)
-    belowmaint = mei < (mem + mec + mel + mew)
+    belowmaint = mei < (mem + mec * gest_propn + mel * lact_propn + mew)
     ##Efficiency for growth (inc ECold) - different to 'kge' because belowmaint now includes ecold
     kg = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
     return mem, temp_lc_a1e1b1nwzida0e0b0xyg, kg
