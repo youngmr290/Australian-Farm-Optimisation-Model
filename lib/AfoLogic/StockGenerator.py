@@ -2059,7 +2059,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##Conceptus energy pattern (end of period)
     # ce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0)))), weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
     ##Conceptus energy pattern (d_nec)
-    dce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average((cp_dams[9, ..., na] - cp_dams[10, ..., na]) / cp_dams[1, 0, ..., na]
+    dce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average((cp_dams[9, ..., na] * cp_dams[10, ..., na]) / cp_dams[1, 0, ..., na]
                                             * np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0)
                                             + cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na]
                                             * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0))))
