@@ -52,8 +52,8 @@ def f1_boundarypyomo_local(params, model):
     bnd_propn_dams_mated_w_inc = propn_mated_inc and w_set_inc #include bnd_propn_mated with a w set.
     bnd_sale_twice_drys_inc = fun.f_sa(False, sen.sav['bnd_sale_twice_dry_inc'], 5) #proportion of drys sold (can be sold at either sale opp)
     bnd_dry_retained_inc = fun.f_sa(False, np.any(pinp.sheep['i_dry_retained_forced_o']), 5) #force the retention of drys in t[0] (t[1] is handled in the generator.
-    sr_bound_inc = fun.f_sa(False, sen.sav['bnd_sr_inc'], 5) #controls sr bound
-    total_pasture_bound_inc = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
+    sr_bound_inc = np.any(sen.sav['bnd_sr_t'] != '-') #controls sr bound
+    total_pasture_bound_inc = sen.sav['bnd_total_pas_area_percent'] != '-'  #bound on total pasture (hence also total crop)
     pasture_lmu_bound_inc = np.any(sen.sav['bnd_pas_area_l'] != '-')
     landuse_bound_inc = False #bound on area of each landuse (which is the sum of all the phases for that landuse)
     crop_area_bound_inc = np.any(sen.sav['bnd_crop_area'] != '-')  # controls if crop area bnd is included.(which is the sum of all the phases for that crop)
@@ -677,14 +677,14 @@ def f1_boundarypyomo_local(params, model):
         ###build bound if turned on
         if total_pasture_bound_inc:
             ###setbound
-            total_pas_area = sen.sav['bnd_total_pas_area']
+            total_pas_area_percent = sen.sav['bnd_total_pas_area_percent']
             ###constraint
             l_p7 = list(model.s_season_periods)
             def pas_bound(model, q, s, p7, z):
                 if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]):
                     return (sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_pasture_area[r,t]
                                 for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
-                            == total_pas_area)
+                            == sum(model.p_area[l] for l in model.s_lmus) * total_pas_area_percent)
                 else:
                     return pe.Constraint.Skip
             model.con_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, rule=pas_bound,doc='bound on total pasture area')
