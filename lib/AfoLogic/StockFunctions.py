@@ -663,6 +663,8 @@ def f1_feedsupply(feedsupplyw_ta1e1b1nwzida0e0b0xyg, confinementw_ta1e1b1nwzida0
     dmd = fun.f_update(dmd,0,confinementw_ta1e1b1nwzida0e0b0xyg)
     ##if confinement then all diet is made up from supp therefore scale supp accordingly
     supp = fun.f_update(supp, feedsupplyw_ta1e1b1nwzida0e0b0xyg / pinp.sheep['i_md_supp'], confinementw_ta1e1b1nwzida0e0b0xyg)
+    ##Ensure that supp can't be less than 0 or greater than potential intake
+    supp = np.clip(supp, 0, 1)
 
     ##supplement intake
     intake_s = pi_a1e1b1nwzida0e0b0xyg * supp
