@@ -1016,7 +1016,7 @@ def f_foetus_nfs(cp, cb1, cg, nfoet, relsize_start, rc_start, w_b_std_y, w_f_sta
     ##HP associated with conceptus growth
     hp_c = ck[24, ...] * dc
     # return w_f, mec, nec, w_b_exp_y, nw_f, guw
-    return w_f, hp_c, dc, w_b_exp_y, nw_f, guw
+    return w_f, dc, hp_c, w_b_exp_y, nw_f, guw
 
 
 def f1_carryforward_u1(cu1, cg, ebg, period_between_joinstartend, period_between_mated90, period_between_d90birth
@@ -1166,11 +1166,11 @@ def f_milk_nfs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_st
     ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
     ### Based on the standard parameter values 'Suckling volume of young' is very rarely limiting milk production.
     mp2 = np.minimum(mp1, np.mean(fun.f_dynamic_slice(ffcfw75_exp_yatf, i_x_pos, 1, None), axis = i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
-    ##ME for lactation (per day lactating)
-    #todo What is the role of cl[5] (milk metabolisability) in reducing the amount of energy available for milk production
-    hp_l = mp2 * (1 - (cl[5, ...] * kl))
     ##NE for lactation
+    #todo What is the role of cl[5] (milk metabolisability) in reducing the amount of energy available for milk production
     dl = mp2 / cl[5, ...]
+    ##ME for lactation (per day lactating)
+    hp_l = mp2 * (1 - kl) / kl
     ##ratio of actual to potential milk
     dr = fun.f_divide(mp2, mpmax) #div func stops div0 error - and milk ratio is later discarded because days period f = 0
     ##Lagged DR (lactation deficit)
@@ -1179,7 +1179,7 @@ def f_milk_nfs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_st
     lb = lb_start - cl[17, ...] / cl[18, ...] * (1 - cl[18, ...]) * (1 - (1 - cl[18, ...]) ** days_period_yatf) * (ldr_start - dr)
     ##If early in lactation = 1
     lb = lb * lact_nut_effect + ~lact_nut_effect
-    return mp2, hp_l, dl, ldr, lb
+    return mp2, dl, hp_l, ldr, lb
 
 
 def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, mew_min_g, d_cfw_ave_g
@@ -1270,7 +1270,7 @@ def f_heat_cs(cc, ck, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp,
     return hp_total
 
 
-def f_heat_nfs(cc, ck, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, mei_propn_herb, guw = 0, kl = 0
+def f_heat_nfs(hp_maint, cc, ck, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, mei_propn_herb, guw = 0, kl = 0
               , mei_propn_milk = 0, mec = 0, mel = 0, nec = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
     #This is just a copy of CSIRO atm
     ##Animal is below maintenance

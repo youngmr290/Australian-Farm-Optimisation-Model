@@ -2957,6 +2957,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             km_sire = temp2
                             kg_fodd_sire = temp3
                             kg_supp_sire = temp4  # temp5 is not used for sires
+                            hp_maint_sire = meme_sire
                         if eqn_compare:
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
                     ###dams
@@ -2977,6 +2978,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             kg_fodd_dams = temp3
                             kg_supp_dams = temp4
                             kl_dams = temp5
+                            hp_maint_dams = meme_dams
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
                     ###offs
@@ -2996,6 +2998,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             km_offs = temp2
                             kg_fodd_offs = temp3
                             kg_supp_offs = temp4 # temp5 is not used for offspring
+                            hp_maint_offs = meme_offs
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
 
@@ -3101,8 +3104,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         w_f_dams = temp0
                         nw_f_dams = temp4
                         if eqn_used:
-                            hp_c_dams = temp1
-                            dc_dams = temp2
+                            dc_dams = temp1
+                            hp_c_dams = temp2
                             w_b_exp_y_dams = temp3
                             guw_dams = temp5
                             nec_dams = dc_dams
@@ -3126,6 +3129,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             , mp_age_y_pa1e1b1nwzida0e0b0xyg1[p], mp2_age_y_pa1e1b1nwzida0e0b0xyg1[p], x_pos
                             , days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_dams, lact_nut_effect_pa1e1b1nwzida0e0b0xyg1[p])
                     mp2_yatf = fun.f_divide(mp2_dams, nyatf_b1nwzida0e0b0xyg) # 0 if given slice of b1 axis has no yatf
+                    dl_dams = nel_dams
+                    hp_l_dams = mel_dams - nel_dams
 
                 ##wool production
                 eqn_group = 16
@@ -3266,6 +3271,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             mew_offs = dw_offs + hp_w_offs
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
+
                 ##total heat production (excluding chill)
                 eqn_group = 7
                 eqn_system = 0 # CSIRO = 0
@@ -3296,6 +3302,41 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         temp0 = sfun.f_heat_cs(cc_offs, ck_offs, mei_offs, meme_offs, mew_offs, new_offs, km_offs
+                                               , kg_supp_offs, kg_fodd_offs, mei_propn_supp_offs, mei_propn_herb_offs)
+                        if eqn_used:
+                            hp_total_offs = temp0
+                        if eqn_compare:
+                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp0  # storing as the second variable
+
+                eqn_system = 2 # New Feeding Standards = 2
+                if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                    ###sire
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
+                        temp0 = sfun.f_heat_nfs(cc_sire, ck_sire, mei_sire, meme_sire, mew_sire, new_sire, km_sire
+                                               , kg_supp_sire, kg_fodd_sire, mei_propn_supp_sire, mei_propn_herb_sire)
+                        if eqn_used:
+                            hp_total_sire = temp0
+                        if eqn_compare:
+                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp0  # storing as the second variable
+                    ###dams
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                        temp0 = sfun.f_heat_nfs(hp_maint_dams, hp_w_dams, hp_m_dams, hp_v_dams, hp_f_dams
+                                               , ck_dams, mei_dams, km_dams
+                                               , kg_supp_dams, kg_fodd_dams, mei_propn_supp_dams, mei_propn_herb_dams
+                                               , guw = guw_dams, kl = kl_dams, mei_propn_milk = mei_propn_milk_dams
+                                               , hp_c = hp_c_dams, hp_l = hp_l_dams
+                                               , gest_propn = gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
+                                               , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
+                        if eqn_used:
+                            hp_total_dams = temp0
+                        if eqn_compare:
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp0  # storing as the second variable
+                    ###offs
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
+                        temp0 = sfun.f_heat_nfs(cc_offs, ck_offs, mei_offs, meme_offs, mew_offs, new_offs, km_offs
                                                , kg_supp_offs, kg_fodd_offs, mei_propn_supp_offs, mei_propn_herb_offs)
                         if eqn_used:
                             hp_total_offs = temp0
@@ -3853,6 +3894,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
                     temp0 = sfun.f_heat_cs(cc_yatf, ck_yatf, mei_yatf, meme_yatf, mew_yatf, new_yatf, km_yatf
+                                           , kg_supp_yatf, kg_fodd_yatf, mei_propn_supp_yatf, mei_propn_herb_yatf
+                                           ,  mei_propn_milk=mei_propn_milk_yatf)
+                    if eqn_used:
+                        hp_total_yatf = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp0  # storing as the second variable
+
+            eqn_system = 2  # New Feeding Standards = 2
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
+                    temp0 = sfun.f_heat_nfs(hp_maint_yatf, hp_w_yatf, mei_yatf, meme_yatf, mew_yatf, new_yatf, km_yatf
                                            , kg_supp_yatf, kg_fodd_yatf, mei_propn_supp_yatf, mei_propn_herb_yatf
                                            ,  mei_propn_milk=mei_propn_milk_yatf)
                     if eqn_used:
