@@ -986,36 +986,36 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
     return w_f, mec, nec, w_b_exp_y, nw_f, guw
 
 
-def f_foetus_nfs(cp, cb1, cg, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f):
-    ## currently just a copy of the CSIRO function except it returns variables for the new feeding standards format
-    #todo convert this function to line up with Hutton's calculations
+def f_foetus_nfs(cp, ck, step, c_start, m_start, dm, nfoet, relsize_start, w_b_std_y, w_f_start
+                 , nwf_age_f, guw_age_f, ce_day1_f, dcdt_age_f, gest_propn):
+    #calculates the energy requirement for gestation for the days gestating. The result is scaled by gest_propn when used
     ##expected normal birth weight with dam age adj.
     w_b_exp_y = (1 - cp[4, ...] * (1 - relsize_start)) * w_b_std_y
-    ##Normal weight of foetus (mid-period - dam calcs)
-    nw_f = w_b_exp_y * nwf_age_f
-    ##change in normal weight of foetus
-    d_nw_f = nw_f - nw_f_start
-    ##Proportion of normal foetal and birth weights
-    nwf_nwb = fun.f_divide(nw_f, w_b_std_y)
+    ##c_start. If this is the first period of lactation then c_start needs to be initialised.
+    if c_start == 0: #could be beginning of gestation so calculate c_start for day 1 of gestation
+        c_start = w_b_exp_y * ce_day1_f
+    ## Conceptus growth scalar based on muscle growth in the previous period
+    dm_scalar = 1 + cp[19, ...] * dm / m_start
+    ##Proportional change in conceptus energy for the first day of the generator period (Proportion of c_start)
+    dce_propn = dm_scalar * dcdt_age_f
+    ##Adjust the average change per day for the generator timestep. Formula assumes that dm_scalar is constant
+    step = step * gest_propn
+    dce_propn = ((1 + dce_propn) ** step - 1) / step
+    ##Change in conceptus energy (average MJ/d across the timestep)
+    dc = c_start * dce_propn
     ##Normal weight of individual conceptus (mid-period)
     nw_gu = cp[5, ...] * w_b_exp_y * guw_age_f
-    ##Normal energy of individual conceptus (end of period)
-    normale_dgu = cp[8, ...] * cp[5, ...] * w_b_exp_y * dce_age_f
-    ##Condition factor on BW
-    cfpreg = (rc_start - 1) * nwf_nwb
     ##change in foetus weight
-    d_w_f = d_nw_f *(1 + np.minimum(cfpreg, cfpreg * cb1[14, ...]))
+    #d_w_f = d_nw_f *(1 + np.minimum(cfpreg, cfpreg * cb1[14, ...]))
+    d_w_f = dc / (cp[8, ...] * cp[5, ...])
     ##foetus weight (end of period)
     w_f = w_f_start + d_w_f
+    ##Normal weight of foetus (mid-period - dam calcs)
+    nw_f = w_b_exp_y * nwf_age_f
     ##Weight of the gravid uterus (conceptus - mid-period)
     guw = nfoet * (nw_gu + (w_f - nw_f))
-    ##Body condition of the foetus
-    rc_f = fun.f_divide(w_f, nw_f) #func to handle div0 error
-    ##NE required for conceptus
-    dc = nfoet * rc_f * normale_dgu
     ##HP associated with conceptus growth
     hp_c = ck[24, ...] * dc
-    # return w_f, mec, nec, w_b_exp_y, nw_f, guw
     return w_f, dc, hp_c, w_b_exp_y, nw_f, guw
 
 
@@ -1151,6 +1151,7 @@ def f_milk_cs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_sta
 
 def f_milk_nfs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start
            , age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect):
+    #calculates the energy requirement for lactation for the days lactating. The result is scaled by lact_propn when used
     ##Max milk prodn based on dam rc birth
     mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
     ##Excess ME available for milk

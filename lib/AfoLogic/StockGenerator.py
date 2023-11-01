@@ -2074,6 +2074,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                             + cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na]
                                             * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0))))
                                                     , weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
+    ##Conceptus energy pattern (dcdt) for New Feeding Standards. Average for the days that the dam is gestating
+    dcdt_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cp_dams[17, ..., na] * cp_dams[18, ..., na]
+                                            * np.exp(-cp_dams[18, ..., na] * age_f_p0_pa1e1b1nwzida0e0b0xyg1p0)
+                                                    , weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
+    ##Conceptus energy pattern (c_start) on day 1
+    ce_day1_f_dams = np.exp(cp_dams[16, ..., na] - cp_dams[17, ..., na] * np.exp(-cp_dams[18, 0, ..., na] * 1)) / 4
 
     ##genotype calc that requires af_wool. ME for minimum wool growth (with no intake, relsize = 1)
     mew_min_pa1e1b1nwzida0e0b0xyg0 =cw_sire[14, ...] * sfw_a0e0b0xyg0[0, ...] / cw_sire[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg0 * dlf_wool_pa1e1b1nwzida0e0b0xyg0 * cw_sire[1, ...] / kw_yg0
@@ -2472,6 +2478,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         scanning = 0 #variable is used only for reporting
         # ebg_start_dams=0
         o_mortality_dams[...] = 0 #have to reset when doing the ltw loop because it is used to back date numbers
+        dm_dams = np.array[0.0] #passed as an argument to f_foetus_nfs() so needs to be defined prior to first assignment
+        m_start_dams = mw_start_dams * cg_dams[27, ...] * cg_dams[21, ...]
+        c_start_dams = np.array[0.0] #passed as an argument to f_foetus_nfs() so needs to be defined prior to first assignment
 
         ##yatf
         omer_history_start_p3g2[...] = np.nan
@@ -3086,7 +3095,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             hp_c_dams = mec_dams - nec_dams
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
-                            # r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
                 eqn_system = 2  # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][
@@ -3095,11 +3104,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                     eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
                         ##first method is using the nec_cum method
-                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_foetus_nfs(cp_dams, cb1_dams, cg_dams
-                                        , nfoet_b1nwzida0e0b0xyg, relsize_start_dams, rc_start_dams
-                                        , w_b_std_y_b1nwzida0e0b0xyg1, w_f_start_dams, nw_f_start_dams
+                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_foetus_nfs(cp_dams, ck_dams, step
+                                        , c_start_dams, m_start_dams, dm_dams, nfoet_b1nwzida0e0b0xyg, relsize_start_dams
+                                        , w_b_std_y_b1nwzida0e0b0xyg1, w_f_start_dams
                                         , nwf_age_f_pa1e1b1nwzida0e0b0xyg1[p], guw_age_f_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , dce_age_f_pa1e1b1nwzida0e0b0xyg1[p])
+                                        , ce_day1_f_dams, dcdt_age_f_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gest_propn = gest_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                         w_f_dams = temp0
                         nw_f_dams = temp4
@@ -3112,7 +3122,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             mec_dams = dc_dams + hp_c_dams
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
-                            # r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
                 ##milk production
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
