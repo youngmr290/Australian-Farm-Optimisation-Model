@@ -1124,62 +1124,67 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g,
     return d_cfw_g, d_fd_g, d_fl_g, d_cfw_history_p2g, mew_g, new_g
 
 
+def f_insulation(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0):
+    ##Insulation of  tissue
+    in_tissue = cc[3, ...] * (rc_start - cc[4, ...] * (rc_start - 1))
+    ##Sinusoidal variation in temp & wind (minimum temp at midnight (0:00 hrs) max temp at midday (12:00 hrs)
+    sin_var_m0 = np.sin(2 * np.pi * (index_m0 - 6) / 24)
+    ##Ambient temp (2 hourly)
+    temperature_m0 = temp_ave[..., na] + (temp_max[..., na] - temp_min[..., na]) / 2 * sin_var_m0
+    ##Wind velocity (2 hourly)
+    wind_m0 = ws[..., na] * (1 + 0.35 * sin_var_m0)
+    ##Proportion of sky that is clear
+    sky_clear_p1 = 0.7 * np.exp(-0.25 * rain_p1)
+    ##radius of animal
+    radius = np.maximum(0.001,cc[2, ...] * ffcfw_start ** (1/3)) #max because realistic values of radius can be small for lambs - stops div0 error
+    ##Impact of wet fleece on insulation
+    wetflc_p1 = cc[5, ..., na] + (1 - cc[5, ..., na]) * np.exp(-cc[6, ..., na] * rain_p1 / sl_start[..., na])
+    ##Insulation of air (2 hourly)
+    in_air_m0 = radius[..., na] / (radius[..., na] + sl_start[..., na]) / (cc[7, ..., na] + cc[8, ..., na] * np.sqrt(wind_m0))
+    ##Insulation of coat (2 hourly)
+    in_coat_m0 = radius[..., na] * np.log((radius[..., na] + sl_start[..., na]) / radius[..., na]) / (cc[9, ..., na] - cc[10, ..., na] * np.sqrt(wind_m0))
+    ##Insulation of  air + coat (2 hourly)
+    in_ext_m0p1 = wetflc_p1[..., na, :] * (in_air_m0[..., na] + in_coat_m0[..., na])
+    ##Impact of clear night skies on ME loss only during the nighttime hours of the m axis (5 slices)
+    ###Note: the nighttime slices are different to Freer etal 2012 due to discrepancy in timing of the sinusoidal temperature
+    night_mask_m0p1 = np.logical_or(index_m0 <= 4, index_m0 >= 20)[..., na]
+    sky_temp_m0p1 = night_mask_m0p1 * (sky_clear_p1[..., na, :] * cc[13,..., na, na]
+                                        * np.exp(-cc[14, ..., na, na]
+                                                 * np.minimum(0, cc[15, ..., na, na] - temperature_m0[..., na]) ** 2))
+    return in_tissue, in_ext_m0p1, temperature_m0, sky_temp_m0p1
+
+
 def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp
-               , mei_propn_herb, temp_ave_a1e1b1nwzida0e0b0xyg, temp_max_a1e1b1nwzida0e0b0xyg, temp_min_a1e1b1nwzida0e0b0xyg
-               , ws_a1e1b1nwzida0e0b0xyg, rain_a1e1b1nwzida0e0b0xygp1, index_m0, guw = 0, kl = 0, mei_propn_milk = 0
+               , mei_propn_herb, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0, guw = 0, kl = 0, mei_propn_milk = 0
                , mec = 0, mel = 0, nec = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
+    ##Calculate insulation
+    in_tissue, in_ext_m0p1, temperature_m0, sky_temp_m0p1 = f_insulation(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0)
     ##Animal is below maintenance
     belowmaint = mei < (meme + mec * gest_propn + mel * lact_propn + mew)
     ##Efficiency for growth (before ECold)
     kge = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
-    ##Sinusoidal variation in temp & wind (minimum temp at midnight (0:00 hrs) max temp at midday (12:00 hrs)
-    sin_var_m0 = np.sin(2 * np.pi * (index_m0 - 6) / 24)
-    ##Ambient temp (2 hourly)
-    temperature_a1e1b1nwzida0e0b0xygm0 = temp_ave_a1e1b1nwzida0e0b0xyg[..., na] + (temp_max_a1e1b1nwzida0e0b0xyg[..., na] - temp_min_a1e1b1nwzida0e0b0xyg[..., na]) / 2 * sin_var_m0
-    ##Wind velocity (2 hourly)
-    wind_a1e1b1nwzida0e0b0xygm0 = ws_a1e1b1nwzida0e0b0xyg[..., na] * (1 + 0.35 * sin_var_m0)
-    ##Proportion of sky that is clear
-    sky_clear_a1e1b1nwzida0e0b0xygp1 = 0.7 * np.exp(-0.25 * rain_a1e1b1nwzida0e0b0xygp1)
-    ##radius of animal
-    radius = np.maximum(0.001,cc[2, ...] * ffcfw_start ** (1/3)) #max because realistic values of radius can be small for lambs - stops div0 error
     ##surface area of animal
     area = np.maximum(0.001,cc[1, ...] * ffcfw_start ** (2/3)) #max because area is in m2 so realistic values of area can be small for lambs
-    ##Impact of wet fleece on insulation
-    wetflc_a1e1b1nwzida0e0b0xygp1 = cc[5, ..., na] + (1 - cc[5, ..., na]) * np.exp(-cc[6, ..., na] * rain_a1e1b1nwzida0e0b0xygp1 / sl_start[..., na])
-    ##Insulation of air (2 hourly)
-    in_air_a1e1b1nwzida0e0b0xygm0 = radius[..., na] / (radius[..., na] + sl_start[..., na]) / (cc[7, ..., na] + cc[8, ..., na] * np.sqrt(wind_a1e1b1nwzida0e0b0xygm0))
-    ##Insulation of coat (2 hourly)
-    in_coat_a1e1b1nwzida0e0b0xygm0 = radius[..., na] * np.log((radius[..., na] + sl_start[..., na]) / radius[..., na]) / (cc[9, ..., na] - cc[10, ..., na] * np.sqrt(wind_a1e1b1nwzida0e0b0xygm0))
-    ##Insulation of  tissue
-    in_tissue = cc[3, ...] * (rc_start - cc[4, ...] * (rc_start - 1))
-    ##Insulation of  air + coat (2 hourly)
-    in_ext_a1e1b1nwzida0e0b0xygm0p1 = wetflc_a1e1b1nwzida0e0b0xygp1[..., na, :] * (in_air_a1e1b1nwzida0e0b0xygm0[..., na] + in_coat_a1e1b1nwzida0e0b0xygm0[..., na])
-    ##Impact of clear night skies on ME loss only during the nighttime hours of the m axis (5 slices)
-    ###Note: the nighttime slices are different to Freer etal 2012 due to discrepancy in timing of the sinusoidal temperature
-    night_mask_m0p1 = np.logical_or(index_m0 <= 4, index_m0 >= 20)[..., na]
-    sky_temp_a1e1b1nwzida0e0b0xygm0p1 = night_mask_m0p1 * (sky_clear_a1e1b1nwzida0e0b0xygp1[..., na, :] * cc[13,..., na, na]
-                                        * np.exp(-cc[14, ..., na, na]
-                                                 * np.minimum(0, cc[15, ..., na, na] - temperature_a1e1b1nwzida0e0b0xygm0[..., na]) ** 2))
     ##Heat production per m2
     heat = (mei - nec * gest_propn - nel * lact_propn - new - kge * (mei
             - (meme + mec * gest_propn + mel * lact_propn + mew))
             + cc[16, ...] * guw) / area
     ##Lower critical temperature (2 hourly)
-    temp_lc_a1e1b1nwzida0e0b0xygm0p1 = (cc[11, ..., na, na]+ cc[12, ..., na, na]
-                                        - heat[..., na, na] * (in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0p1)
-                                        + sky_temp_a1e1b1nwzida0e0b0xygm0p1)
+    temp_lc_m0p1 = (cc[11, ..., na, na]+ cc[12, ..., na, na]
+                                        - heat[..., na, na] * (in_tissue[..., na, na] + in_ext_m0p1)
+                                        + sky_temp_m0p1)
     ##Lower critical temperature (period)
-    temp_lc_a1e1b1nwzida0e0b0xyg = np.average(temp_lc_a1e1b1nwzida0e0b0xygm0p1, axis = (-1,-2))
+    temp_lc = np.average(temp_lc_m0p1, axis = (-1,-2))
     ##Extra ME required to keep warm
-    mecold_a1e1b1nwzida0e0b0xyg = area * np.average(fun.f_dim(temp_lc_a1e1b1nwzida0e0b0xygm0p1, temperature_a1e1b1nwzida0e0b0xygm0[..., na])
-                                                    /(in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0p1), axis = (-1,-2))
+    mecold = area * np.average(fun.f_dim(temp_lc_m0p1, temperature_m0[..., na])
+                                                    /(in_tissue[..., na, na] + in_ext_m0p1), axis = (-1,-2))
     ##ME requirement for maintenance (inc ECold)
-    mem = meme + mecold_a1e1b1nwzida0e0b0xyg
+    mem = meme + mecold
     ##Animal is below maintenance (incl ecold)
     belowmaint = mei < (mem + mec * gest_propn + mel * lact_propn + mew)
     ##Efficiency for growth (inc ECold) - different to 'kge' because belowmaint now includes ecold
     kg = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
-    return mem, temp_lc_a1e1b1nwzida0e0b0xyg, kg
+    return mem, temp_lc, kg
 
 
 def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):

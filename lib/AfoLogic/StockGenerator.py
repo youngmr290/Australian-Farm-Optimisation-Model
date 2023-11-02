@@ -1963,7 +1963,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     #srw_age_pa1e1b1nwzida0e0b0xyg2 = np.nanmean(np.exp(-cn_yatf[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0 / srw_b1xyg2[..., na] ** cn_yatf[2, ..., na]), axis = -1)
     #srw_age_pa1e1b1nwzida0e0b0xyg3 = np.nanmean(np.exp(-cn_offs[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg3p0 / srw_b0xyg3[..., na] ** cn_offs[2, ..., na]), axis = -1)
 
-    ##age factor wool part 1- reduces fleece growth early in life
+    ##age factor wool part 1- reduces fleece growth early in life based on Lyne 1961 & follicle maturation
     af1_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(cw_sire[5, ..., na] + (1 - cw_sire[5, ..., na])
                                                 * (1-np.exp(-cw_sire[12, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
@@ -2069,7 +2069,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     #                                       * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0))))
     #                                               , weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
     ##Conceptus energy pattern (d_nec)
-    dce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average((cp_dams[9, ..., na] * cp_dams[10, ..., na]) / cp_dams[1, 0, ..., na]
+    dce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cp_dams[9, ..., na] * cp_dams[10, ..., na] / cp_dams[1, 0, ..., na]
                                             * np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0)
                                             + cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na]
                                             * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0))))
@@ -3071,26 +3071,32 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                        , rev_trait_values['offs'][p])
 
                 ##energy to offset chilling
-                if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                    mem_sire, temp_lc_sire, kg_sire = sfun.f_chill_cs(cc_sire, ck_sire, ffcfw_start_sire, rc_start_sire, sl_start_sire, mei_sire
-                                                            , meme_sire, mew_sire, new_sire, km_sire, kg_supp_sire, kg_fodd_sire, mei_propn_supp_sire
-                                                            , mei_propn_herb_sire, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
-                                                            , index_m0)
-                if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    mem_dams, temp_lc_dams, kg_dams = sfun.f_chill_cs(cc_dams, ck_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams, mei_dams
-                                                            , meme_dams, mew_dams, new_dams, km_dams, kg_supp_dams, kg_fodd_dams, mei_propn_supp_dams
-                                                            , mei_propn_herb_dams, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
-                                                            , index_m0, guw = guw_dams, kl = kl_dams, mei_propn_milk = mei_propn_milk_dams, mec = mec_dams
-                                                            , mel = mel_dams, nec = nec_dams, nel = nel_dams, gest_propn = gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
-                                                            , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
-                if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                    mem_offs, temp_lc_offs, kg_offs = sfun.f_chill_cs(cc_offs, ck_offs, ffcfw_start_offs, rc_start_offs, sl_start_offs, mei_offs
-                                                            , meme_offs, mew_offs, new_offs, km_offs, kg_supp_offs, kg_fodd_offs, mei_propn_supp_offs
-                                                            , mei_propn_herb_offs, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
-                                                            , index_m0)
+                eqn_group = 7
+                eqn_system = 0  # CSIRO = 0
+                if uinp.sheep['i_eqn_exists_q0q1'][
+                    eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                    ###sire
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
+                        mem_sire, temp_lc_sire, kg_sire = sfun.f_chill_cs(cc_sire, ck_sire, ffcfw_start_sire, rc_start_sire, sl_start_sire, mei_sire
+                                                                , meme_sire, mew_sire, new_sire, km_sire, kg_supp_sire, kg_fodd_sire, mei_propn_supp_sire
+                                                                , mei_propn_herb_sire, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                                                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
+                                                                , index_m0)
+                    if (eqn_used or eqn_compare) and  np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                        mem_dams, temp_lc_dams, kg_dams = sfun.f_chill_cs(cc_dams, ck_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams, mei_dams
+                                                                , meme_dams, mew_dams, new_dams, km_dams, kg_supp_dams, kg_fodd_dams, mei_propn_supp_dams
+                                                                , mei_propn_herb_dams, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                                                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
+                                                                , index_m0, guw = guw_dams, kl = kl_dams, mei_propn_milk = mei_propn_milk_dams, mec = mec_dams
+                                                                , mel = mel_dams, nec = nec_dams, nel = nel_dams, gest_propn = gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
+                                                                , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
+                    if (eqn_used or eqn_compare) and  np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
+                        mem_offs, temp_lc_offs, kg_offs = sfun.f_chill_cs(cc_offs, ck_offs, ffcfw_start_offs, rc_start_offs, sl_start_offs, mei_offs
+                                                                , meme_offs, mew_offs, new_offs, km_offs, kg_supp_offs, kg_fodd_offs, mei_propn_supp_offs
+                                                                , mei_propn_herb_offs, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                                                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
+                                                                , index_m0)
 
                 ##calc lwc
                 eqn_group = 8

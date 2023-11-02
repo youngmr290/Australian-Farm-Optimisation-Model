@@ -509,7 +509,7 @@ def f_ramp(x,a,b):
     return  np.minimum(1,np.maximum(0,(a-x)/(a-b)))
 
 def f_dim(x,y):
-    '''a function that minimum value of zero otherwise difference between the 2 inputs '''
+    '''a function that returns the difference between the 2 inputs with a minimum value of zero'''
     return np.maximum(0,x-y)
 
 def f_comb(n,k):
