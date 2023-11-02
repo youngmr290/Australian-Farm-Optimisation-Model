@@ -3323,8 +3323,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0 = sfun.f_heat_nfs(cc_sire, ck_sire, mei_sire, meme_sire, mew_sire, new_sire, km_sire
-                                               , kg_supp_sire, kg_fodd_sire, mei_propn_supp_sire, mei_propn_herb_sire)
+                        temp0 = sfun.f_heat_nfs(cc_sire, hp_maint_sire, hp_v_sire, hp_w_sire) #hp_m & hp_f not available at this point in the code
                         if eqn_used:
                             hp_total_sire = temp0
                         if eqn_compare:
@@ -3332,11 +3331,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0 = sfun.f_heat_nfs(hp_maint_dams, hp_w_dams, hp_m_dams, hp_v_dams, hp_f_dams
-                                               , ck_dams, mei_dams, km_dams
-                                               , kg_supp_dams, kg_fodd_dams, mei_propn_supp_dams, mei_propn_herb_dams
-                                               , guw = guw_dams, kl = kl_dams, mei_propn_milk = mei_propn_milk_dams
-                                               , hp_c = hp_c_dams, hp_l = hp_l_dams
+                        temp0 = sfun.f_heat_nfs(cc_dams, hp_maint_dams, hp_v_dams, hp_w_dams #hp_m & hp_f not available at this point in the code
+                                               , hp_c = hp_c_dams, hp_l = hp_l_dams, guw = guw_dams
                                                , gest_propn = gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                                , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
@@ -3346,8 +3342,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0 = sfun.f_heat_nfs(cc_offs, ck_offs, mei_offs, meme_offs, mew_offs, new_offs, km_offs
-                                               , kg_supp_offs, kg_fodd_offs, mei_propn_supp_offs, mei_propn_herb_offs)
+                        temp0 = sfun.f_heat_nfs(cc_offs, hp_maint_offs, hp_v_offs, hp_w_offs) #hp_m & hp_f not available at this point in the code
                         if eqn_used:
                             hp_total_offs = temp0
                         if eqn_compare:

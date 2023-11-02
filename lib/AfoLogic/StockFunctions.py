@@ -1246,7 +1246,7 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
     ###to be consistent with CSIRO the formula would be cw_g[1, ...] * d_cfw_g / cw_g[3, ...]
     dw_g = cg_g[23, ...] * cw_g[20, ...] * d_cfw_g
     ##Heat production associated with wool growth
-    hp_w_g = dw_g * ck_g[23, ...] #can be negative because mem assumes 4g of wool is grown. If less is grown then mew 'returns' the energy.
+    hp_w_g = dw_g * ck_g[23, ...]
     ##Fibre diameter for the days growth
     d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
     ##Process the FD REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
@@ -1271,17 +1271,9 @@ def f_heat_cs(cc, ck, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp,
     return hp_total
 
 
-def f_heat_nfs(hp_maint, cc, ck, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, mei_propn_herb, guw = 0, kl = 0
-              , mei_propn_milk = 0, mec = 0, mel = 0, nec = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
-    #This is just a copy of CSIRO atm
-    ##Animal is below maintenance
-    belowmaint = mei < (meme + mec + mel + mew)
-    ##Efficiency for growth (before ECold)
-    kg = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
-    ##Heat production per animal
-    hp_total = (mei - nec * gest_propn - nel * lact_propn - new
-                - kg * (mei - (meme + mec * gest_propn + mel * lact_propn + mew))
-                + cc[16, ...] * guw)
+def f_heat_nfs(cc, hp_maint, hp_v, hp_w, hp_m = 0, hp_f = 0, hp_c = 0, hp_l = 0, guw = 0, gest_propn = 0, lact_propn = 0):
+    ##Heat production per animal (including heat production from the gravid uterus)
+    hp_total = hp_maint + hp_m + hp_v + hp_f + hp_w + hp_c * gest_propn + hp_l * lact_propn + cc[16, ...] * guw
     return hp_total
 
 
@@ -1346,6 +1338,48 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     ##Efficiency for growth (inc ECold) - different to 'kge' because belowmaint now includes ecold
     kg = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
     return mem, temp_lc, kg
+
+
+def f_chill_nfs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, km, kg_supp, kg_fodd, mei_propn_supp
+               , mei_propn_herb, temp_ave, temp_max, temp_min
+               , ws, rain_p1, index_m0, kl = 0, mei_propn_milk = 0
+               , mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
+    #The New Feeding Standards version of Chill calculates the amount of heat lost to the environment if the animals is at normal body temperature
+    #This level of heat loss is the minimum heap production for an animal, and extra heat will be generated if HP from other sources is insufficient
+    ##Sinusoidal variation in temp & wind (minimum temp at midnight (0:00 hrs) max temp at midday (12:00 hrs)
+    sin_var_m0 = np.sin(2 * np.pi * (index_m0 - 6) / 24)
+    ##Ambient temp (2 hourly)
+    temperature_m0 = temp_ave[..., na] + (temp_max[..., na] - temp_min[..., na]) / 2 * sin_var_m0
+    ##Wind velocity (2 hourly)
+    wind_m0 = ws[..., na] * (1 + 0.35 * sin_var_m0)
+    ##Proportion of sky that is clear
+    sky_clear_p1 = 0.7 * np.exp(-0.25 * rain_p1)
+    ##radius of animal
+    radius = np.maximum(0.001,cc[2, ...] * ffcfw_start ** (1/3)) #max because realistic values of radius can be small for lambs - stops div0 error
+    ##surface area of animal
+    area = np.maximum(0.001,cc[1, ...] * ffcfw_start ** (2/3)) #max because area is in m2 so realistic values of area can be small for lambs
+    ##Impact of wet fleece on insulation
+    wetflc_p1 = cc[5, ..., na] + (1 - cc[5, ..., na]) * np.exp(-cc[6, ..., na] * rain_p1 / sl_start[..., na])
+    ##Insulation of air (2 hourly)
+    in_air_m0 = radius[..., na] / (radius[..., na] + sl_start[..., na]) / (cc[7, ..., na] + cc[8, ..., na] * np.sqrt(wind_m0))
+    ##Insulation of coat (2 hourly)
+    in_coat_m0 = radius[..., na] * np.log((radius[..., na] + sl_start[..., na]) / radius[..., na]) / (cc[9, ..., na] - cc[10, ..., na] * np.sqrt(wind_m0))
+    ##Insulation of  tissue
+    in_tissue = cc[3, ...] * (rc_start - cc[4, ...] * (rc_start - 1))
+    ##Insulation of  air + coat (2 hourly)
+    in_ext_m0p1 = wetflc_p1[..., na, :] * (in_air_m0[..., na] + in_coat_m0[..., na])
+    ##Impact of clear night skies on ME loss only during the nighttime hours of the m axis (5 slices)
+    ###Note: the nighttime slices are different to Freer etal 2012 due to discrepancy in timing of the sinusoidal temperature
+    night_mask_m0p1 = np.logical_or(index_m0 <= 4, index_m0 >= 20)[..., na]
+    sky_temp_m0p1 = night_mask_m0p1 * (sky_clear_p1[..., na, :] * cc[13,..., na, na]
+                                        * np.exp(-cc[14, ..., na, na]
+                                                 * np.minimum(0, cc[15, ..., na, na] - temperature_m0[..., na]) ** 2))
+    ##Heat loss to the environment (MJ/m2) for the specified ambient temperature during the day
+    heat_loss_m0p1 = fun.f_divide(cc[11, ..., na, na] - (temperature_m0[..., na] - sky_temp_m0p1) + cc[12, ..., na, na] * in_ext_m0p1
+                                        ,in_tissue[..., na, na] + in_ext_m0p1)
+    ##Heat loss to the environment
+    heatloss = np.average(heat_loss_m0p1, axis = (-1,-2))
+    return heat_loss
 
 
 def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
