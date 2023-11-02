@@ -1340,45 +1340,19 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     return mem, temp_lc, kg
 
 
-def f_chill_nfs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, km, kg_supp, kg_fodd, mei_propn_supp
-               , mei_propn_herb, temp_ave, temp_max, temp_min
-               , ws, rain_p1, index_m0, kl = 0, mei_propn_milk = 0
-               , mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
+def f_chill_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0):
     #The New Feeding Standards version of Chill calculates the amount of heat lost to the environment if the animals is at normal body temperature
     #This level of heat loss is the minimum heap production for an animal, and extra heat will be generated if HP from other sources is insufficient
-    ##Sinusoidal variation in temp & wind (minimum temp at midnight (0:00 hrs) max temp at midday (12:00 hrs)
-    sin_var_m0 = np.sin(2 * np.pi * (index_m0 - 6) / 24)
-    ##Ambient temp (2 hourly)
-    temperature_m0 = temp_ave[..., na] + (temp_max[..., na] - temp_min[..., na]) / 2 * sin_var_m0
-    ##Wind velocity (2 hourly)
-    wind_m0 = ws[..., na] * (1 + 0.35 * sin_var_m0)
-    ##Proportion of sky that is clear
-    sky_clear_p1 = 0.7 * np.exp(-0.25 * rain_p1)
-    ##radius of animal
-    radius = np.maximum(0.001,cc[2, ...] * ffcfw_start ** (1/3)) #max because realistic values of radius can be small for lambs - stops div0 error
+    ##Calculate insulation
+    in_tissue, in_ext_m0p1, temperature_m0, sky_temp_m0p1 = f_insulation(cc, ffcfw_start, rc_start, sl_start
+                                                                , temp_ave, temp_max, temp_min, ws, rain_p1, index_m0)
     ##surface area of animal
     area = np.maximum(0.001,cc[1, ...] * ffcfw_start ** (2/3)) #max because area is in m2 so realistic values of area can be small for lambs
-    ##Impact of wet fleece on insulation
-    wetflc_p1 = cc[5, ..., na] + (1 - cc[5, ..., na]) * np.exp(-cc[6, ..., na] * rain_p1 / sl_start[..., na])
-    ##Insulation of air (2 hourly)
-    in_air_m0 = radius[..., na] / (radius[..., na] + sl_start[..., na]) / (cc[7, ..., na] + cc[8, ..., na] * np.sqrt(wind_m0))
-    ##Insulation of coat (2 hourly)
-    in_coat_m0 = radius[..., na] * np.log((radius[..., na] + sl_start[..., na]) / radius[..., na]) / (cc[9, ..., na] - cc[10, ..., na] * np.sqrt(wind_m0))
-    ##Insulation of  tissue
-    in_tissue = cc[3, ...] * (rc_start - cc[4, ...] * (rc_start - 1))
-    ##Insulation of  air + coat (2 hourly)
-    in_ext_m0p1 = wetflc_p1[..., na, :] * (in_air_m0[..., na] + in_coat_m0[..., na])
-    ##Impact of clear night skies on ME loss only during the nighttime hours of the m axis (5 slices)
-    ###Note: the nighttime slices are different to Freer etal 2012 due to discrepancy in timing of the sinusoidal temperature
-    night_mask_m0p1 = np.logical_or(index_m0 <= 4, index_m0 >= 20)[..., na]
-    sky_temp_m0p1 = night_mask_m0p1 * (sky_clear_p1[..., na, :] * cc[13,..., na, na]
-                                        * np.exp(-cc[14, ..., na, na]
-                                                 * np.minimum(0, cc[15, ..., na, na] - temperature_m0[..., na]) ** 2))
     ##Heat loss to the environment (MJ/m2) for the specified ambient temperature during the day
     heat_loss_m0p1 = fun.f_divide(cc[11, ..., na, na] - (temperature_m0[..., na] - sky_temp_m0p1) + cc[12, ..., na, na] * in_ext_m0p1
                                         ,in_tissue[..., na, na] + in_ext_m0p1)
     ##Heat loss to the environment
-    heatloss = np.average(heat_loss_m0p1, axis = (-1,-2))
+    heat_loss = np.average(heat_loss_m0p1, axis = (-1,-2)) * area
     return heat_loss
 
 
@@ -1437,7 +1411,7 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     return ebg, evg, pg, fg, level, surplus_energy
 
 
-def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, rev_trait_value, dc=0, hp_dc=0, dl=0, hp_dl=0, gest_propn=0, lact_propn=0):
+def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, step, rev_trait_value, dc=0, hp_dc=0, dl=0, hp_dl=0, gest_propn=0, lact_propn=0):
     ##fat gain (MJ/d) is calculated using a formula derived from the Oddy etal 2023 paper (see Generator9:p16-17)
     ###The calculation is multi-step because parameter values (bpm & bf) depend on the sign of dm and df
     ###Steps
@@ -1467,10 +1441,10 @@ def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, rev_trait_value,
     ## Step 1c: heat production from change in viscera & wool growth (MJ/d)
     hp_dv = dv * np.where(dv >= 0, ck[22, ...], ck[28, ...])  #select value for bpv based on sign of dp
     hp_dw = dw * ck[23, ...]
-    ##Step 2: Calculate mei_dm0 using derived equation and set bpm to required value
+    ##Step 2: Calculate MEI when dm==0 (mei_dm0) using derived equation and set bpm to required value
     mei_dm0 = hp_maint + hp_dv + hp_dw + hp_dc + hp_dl - e0 / pm - lf * (dv + dw + dc + dl + e0 / pm)
     bpm = np.where(mei > mei_dm0, ck[21, ...], ck[27, ...])
-    ##Step 3a: Calculate the numerator of df and substitute the value for bf
+    ##Step 3a: Calculate the numerator of df and set bf to required value
     df_numerator = ((1 - pm * M) * (mei - (hp_maint + hp_dv + hp_dw + hp_dc + hp_dl + bpm * e0 * M))
                     - (1 + bpm * pm * M) * (dv + dw + dc + dl + e0 * M))
     bf = np.where(df_numerator > 0, ck[20, ...], ck[26, ...])
