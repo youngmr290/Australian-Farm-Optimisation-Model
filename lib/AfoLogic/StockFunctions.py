@@ -898,7 +898,8 @@ def f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
 
 def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_start, days_period, md_solid, i_md_supp,
                 md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_kg=1, sam_mr=1):
-    ##Efficiency for maintenance	
+    #Energy required for maintenance and efficiency of energy use for maintenance & growth
+    ##Efficiency for maintenance
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
     ##Efficiency for lactation - dam only	
     kl =  ck[5, ...] + ck[6, ...] * md_solid
@@ -925,18 +926,20 @@ def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_sta
 
 def f_energy_nfs(ck, cm, lw_start, ffcfw_start, f_start, v_start, m_start, mei, md_solid, i_md_supp,
                 md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_kg=1, sam_mr=1):
+    #Heat production associated with maintenance (fasting heat production and heat associated with feeding) & efficiency
     ##Efficiency for maintenance
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
-    ##Efficiency for lactation - dam only
-    kl =  ck[5, ...] + ck[6, ...] * md_solid
-    ##Efficiency for growth (supplement) including the sensitivity scalar
-    kg_supp = ck[16, ...] * i_md_supp * sam_kg
-    ##Efficiency for growth (fodder) including the sensitivity scalar
-    kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb * sam_kg
+    bmei = 1 - km
+    # ##Efficiency for lactation - dam only
+    # kl =  ck[5, ...] + ck[6, ...] * md_solid
+    # ##Efficiency for growth (supplement) including the sensitivity scalar
+    # kg_supp = ck[16, ...] * i_md_supp * sam_kg
+    # ##Efficiency for growth (fodder) including the sensitivity scalar
+    # kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb * sam_kg
     ##Heat production from maintaining protein
     hp_fasting = (cm[20, ...] * f_start + cm[21, ...] * m_start + cm[22, ...] * v_start) * (1 + cm[5, ...] * mei_propn_milk)
     ##Heat associated with feeding - rumination & digestion (Note: rumination might change with fibre length but this is not accounted for, only M/D).
-    hp_mei = (1 - km) * mei
+    hp_mei = bmei * mei
     ##Distance walked (horizontal equivalent)
     distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
     ##Set Distance walked to 0 if in confinement
@@ -947,7 +950,7 @@ def f_energy_nfs(ck, cm, lw_start, ffcfw_start, f_start, v_start, m_start, mei, 
     hp_graze = cm[6, ...] * ffcfw_start * intake_f * (cm[7, ...] - dmd) + hp_move
     ##Heat produced by maintenance (before ECold)
     hp_maint = (hp_fasting + hp_mei + hp_graze) * sam_mr
-    return hp_maint, km, kg_fodd, kg_supp, kl
+    return hp_maint,    #km, kg_fodd, kg_supp, kl
 
 
 def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f):
@@ -1450,7 +1453,7 @@ def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, step, rev_trait_
     bf = np.where(df_numerator > 0, ck[20, ...], ck[26, ...])
     ##Step 3b: Calculate the denominator of df
     df_denominator = (1 + bpm * pm * M + bf * (1 - pm * M))
-    ##Step 3c: Calculate fat change (MJ/d & kg/d)
+    ##Step 3c: Calculate fat change (MJ/d & kg/d) & heat production from fat change
     df = df_numerator / df_denominator
     hp_df = bf * df
     fg = df / (cg[20, ...] * cg[26, ...])
