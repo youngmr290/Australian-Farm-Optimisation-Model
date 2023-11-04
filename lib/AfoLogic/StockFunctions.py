@@ -1018,8 +1018,8 @@ def f_foetus_nfs(cp, ck, step, c_start, m_start, dm, nfoet, relsize_start, w_b_s
     ##Weight of the gravid uterus (conceptus - mid-period)
     guw = nfoet * (nw_gu + (w_f - nw_f))
     ##HP associated with conceptus growth
-    hp_c = ck[24, ...] * dc
-    return w_f, dc, hp_c, w_b_exp_y, nw_f, guw
+    hp_dc = ck[24, ...] * dc
+    return w_f, dc, hp_dc, w_b_exp_y, nw_f, guw
 
 
 def f1_carryforward_u1(cu1, cg, ebg, period_between_joinstartend, period_between_mated90, period_between_d90birth
@@ -1179,7 +1179,7 @@ def f_milk_nfs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_st
     #todo What is the role of cl[5] (milk metabolisability) in reducing the amount of energy available for milk production
     dl = mp2 / cl[5, ...]
     ##ME for lactation (per day lactating)
-    hp_l = mp2 * (1 - kl) / kl
+    hp_dl = mp2 * (1 - kl) / kl
     ##ratio of actual to potential milk
     dr = fun.f_divide(mp2, mpmax) #div func stops div0 error - and milk ratio is later discarded because days period f = 0
     ##Lagged DR (lactation deficit)
@@ -1188,7 +1188,7 @@ def f_milk_nfs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_st
     lb = lb_start - cl[17, ...] / cl[18, ...] * (1 - cl[18, ...]) * (1 - (1 - cl[18, ...]) ** days_period_yatf) * (ldr_start - dr)
     ##If early in lactation = 1
     lb = lb * lact_nut_effect + ~lact_nut_effect
-    return mp2, dl, hp_l, ldr, lb
+    return mp2, dl, hp_dl, ldr, lb
 
 
 def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, mew_min_g, d_cfw_ave_g
@@ -1254,7 +1254,7 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
     ###to be consistent with CSIRO the formula would be cw_g[1, ...] * d_cfw_g / cw_g[3, ...]
     dw_g = cg_g[23, ...] * cw_g[20, ...] * d_cfw_g
     ##Heat production associated with wool growth
-    hp_w_g = dw_g * ck_g[23, ...]
+    hp_dw_g = dw_g * ck_g[23, ...]
     ##Fibre diameter for the days growth
     d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
     ##Process the FD REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
@@ -1263,7 +1263,7 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
     area = cc_g[1, ...] * ffcfw_start_g ** (2/3)
     ##Daily fibre length growth
     d_fl_g = 100 * fun.f_divide(d_cfw_g, cw_g[10, ...] * cw_g[11, ...] * area * np.pi * (0.5 * d_fd_g / 10**6) ** 2) #func to stop div/0 error, when d_fd==0 so does d_cfw
-    return d_cfw_g, dw_g, hp_w_g, d_fd_g, d_fl_g, d_cfw_history_p2g
+    return d_cfw_g, dw_g, hp_dw_g, d_fd_g, d_fl_g, d_cfw_history_p2g
 
 
 def f_heat_cs(cc, ck, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, mei_propn_herb, guw = 0, kl = 0
@@ -1283,9 +1283,9 @@ def f_heat_cs(cc, ck, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp,
     return hp_total, level
 
 
-def f_heat_nfs(cc, hp_maint, hp_v, hp_w, hp_m = 0, hp_f = 0, hp_c = 0, hp_l = 0, guw = 0, gest_propn = 0, lact_propn = 0):
+def f_heat_nfs(cc, hp_maint, hp_dv, hp_dw, hp_dm = 0, hp_df = 0, hp_dc = 0, hp_dl = 0, guw = 0, gest_propn = 0, lact_propn = 0):
     ##Total heat production per animal (including heat production from the gravid uterus)
-    hp_total = hp_maint + hp_m + hp_v + hp_f + hp_w + hp_c * gest_propn + hp_l * lact_propn + cc[16, ...] * guw
+    hp_total = hp_maint + hp_dm + hp_dv + hp_df + hp_dw + hp_dc * gest_propn + hp_dl * lact_propn + cc[16, ...] * guw
     ##Level of feeding (at maint level = 0)
     #todo what is the definition of 'level' - it is used in Blaxter & Clapperton emissions calculation.
     #Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
