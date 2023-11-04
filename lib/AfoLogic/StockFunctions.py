@@ -1036,7 +1036,9 @@ def f1_carryforward_u1(cu1, cg, ebg, period_between_joinstartend, period_between
 
 
 def f_birthweight_cs(cx, w_b_yatf, w_f_dams, period_is_birth):
-    ##set BW = foetal weight at end of period (if born)	
+    #Calculate the birthweight from the weight of the foetus that has been calculated in the feed budget
+    #Animals are born on the first day of a generator period.
+    ##set BW = foetal weight at end of previous period (if born this period)
     t_w_b = w_f_dams * cx[15, ...] * period_is_birth
     ##update birth weight if it is birth period
     w_b_yatf = fun.f_update(w_b_yatf, t_w_b, period_is_birth)
@@ -1045,7 +1047,10 @@ def f_birthweight_cs(cx, w_b_yatf, w_f_dams, period_is_birth):
 
 def f_birthweight_mu(cu1, cb1, cg, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, ebg_dams, days_period, gest_propn
                      , period_between_joinscan, period_between_scanbirth, period_is_birth):
-    ##Carry forward BW increment	
+    #Calculate the birth weight based on the LW profile of the dam.
+    #Animals are born on the first day of a generator period.
+    #Note: there can be a disconnect between the calculated BW and the energy associated with foetal growth during gestation.
+    ##Carry forward BW increment
     d_cf_w_b = f1_carryforward_u1(cu1[16, ...], cg, ebg_dams, False, period_between_joinscan, period_between_scanbirth
                                  , False, days_period, gest_propn)
     ##Increment the total carry forward BW
