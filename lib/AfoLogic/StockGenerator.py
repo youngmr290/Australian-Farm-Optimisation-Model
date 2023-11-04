@@ -3226,11 +3226,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                            , rev_trait_values['sire'][p])
                         if eqn_used:
                             d_cfw_sire = temp0
-                            dw_sire = temp1
-                            hp_dw_sire = temp2
-                            d_fd_sire = temp3
-                            d_fl_sire = temp4
-                            d_cfw_history_sire_p2 = temp5
+                            d_fd_sire = temp1
+                            d_fl_sire = temp2
+                            d_cfw_history_sire_p2 = temp3
+                            dw_sire = temp4
+                            hp_dw_sire = temp5
                             new_sire = dw_sire
                             mew_sire = dw_sire + hp_dw_sire
                         if eqn_compare:
@@ -3250,11 +3250,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                            , lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             d_cfw_dams = temp0
-                            dw_dams = temp1
-                            hp_dw_dams = temp2
-                            d_fd_dams = temp3
-                            d_fl_dams = temp4
-                            d_cfw_history_dams_p2 = temp5
+                            d_fd_dams = temp1
+                            d_fl_dams = temp2
+                            d_cfw_history_dams_p2 = temp3
+                            dw_dams = temp4
+                            hp_dw_dams = temp5
                             new_dams = dw_dams
                             mew_dams = dw_dams + hp_dw_dams
                         if eqn_compare:
@@ -3272,11 +3272,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                            , rev_trait_values['offs'][p])
                         if eqn_used:
                             d_cfw_offs = temp0
-                            dw_offs = temp1
-                            hp_dw_offs = temp2
-                            d_fd_offs = temp3
-                            d_fl_offs = temp4
-                            d_cfw_history_offs_p2 = temp5
+                            d_fd_offs = temp1
+                            d_fl_offs = temp2
+                            d_cfw_history_offs_p2 = temp3
+                            dw_offs = temp4
+                            hp_dw_offs = temp5
                             new_offs = dw_offs
                             mew_offs = dw_offs + hp_dw_offs
                         if eqn_compare:
@@ -3930,11 +3930,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
                     if eqn_used:
                         d_cfw_yatf = temp0
-                        dw_yatf = temp1
-                        hp_dw_yatfd = temp2
-                        d_fd_yatf = temp3
-                        d_fl_yatf = temp4
-                        d_cfw_history_yatf_p2 = temp5
+                        d_fd_yatf = temp1
+                        d_fl_yatf = temp2
+                        d_cfw_history_yatf_p2 = temp3
+                        dw_yatf = temp4
+                        hp_dw_yatfd = temp5
                         new_yatf = dw_yatf
                         mew_yatf = dw_yatf + hp_dw_yatf
                     if eqn_compare:
@@ -4042,7 +4042,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                 ##based on days_period_dams because weaning occurs at start of period so days_period_yatf==0
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_weanweight_cs(w_w_start_yatf, ffcfw_start_yatf, ebg_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p]
+                    temp0 = sfun.f_weanweight_cs(cg_yatf, w_w_start_yatf, ffcfw_start_yatf, ebg_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p]
                                                  , period_is_wean_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
                         w_w_yatf = temp0
@@ -4551,7 +4551,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 aw_sire = aw_start_sire + fg_sire / cg_sire[20, ...] * days_period_pa1e1b1nwzida0e0b0xyg0[p]
                 ##Weight of muscle (end)
                 mw_sire = mw_start_sire + pg_sire / cg_sire[19, ...] * days_period_pa1e1b1nwzida0e0b0xyg0[p]
-                ##Weight of bone (end)	bw ^formula needs finishing
+                ##Weight of bone (end)	bw #todo formula needs finishing
                 bw_sire = bw_start_sire
                 ##Weight of water (end)
                 ww_sire = mw_sire * (1 - cg_sire[19, ...]) + aw_sire * (1 - cg_sire[20, ...])
@@ -4588,7 +4588,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 aw_dams = aw_start_dams + fg_dams / cg_dams[20, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p]
                 ##Weight of muscle (end)
                 mw_dams = mw_start_dams + pg_dams / cg_dams[19, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p]
-                ##Weight of bone (end)	bw ^formula needs finishing
+                ##Weight of bone (end)	bw #todo formula needs finishing
                 bw_dams = bw_start_dams
                 ##Weight of water (end)
                 ww_dams = mw_dams * (1 - cg_dams[19, ...]) + aw_dams * (1 - cg_dams[20, ...])
@@ -4626,7 +4626,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 aw_yatf = aw_start_yatf + fg_yatf / cg_yatf[20, ...] * days_period_pa1e1b1nwzida0e0b0xyg2[p]
                 ##Weight of muscle (end)
                 mw_yatf = mw_start_yatf + pg_yatf / cg_yatf[19, ...] * days_period_pa1e1b1nwzida0e0b0xyg2[p]
-                ##Weight of bone (end)	bw ^formula needs finishing
+                ##Weight of bone (end)	bw #todo formula needs finishing
                 bw_yatf = bw_start_yatf
                 ##Weight of water (end)
                 ww_yatf = mw_yatf * (1 - cg_yatf[19, ...]) + aw_yatf * (1 - cg_yatf[20, ...])
@@ -4661,7 +4661,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 aw_offs = aw_start_offs + fg_offs / cg_offs[20, ...] * days_period_pa1e1b1nwzida0e0b0xyg3[p]
                 ##Weight of muscle (end)
                 mw_offs = mw_start_offs + pg_offs / cg_offs[19, ...] * days_period_pa1e1b1nwzida0e0b0xyg3[p]
-                ##Weight of bone (end)	bw ^formula needs finishing
+                ##Weight of bone (end)	bw #todo formula needs finishing
                 bw_offs = bw_start_offs
                 ##Weight of water (end)
                 ww_offs = mw_offs * (1 - cg_offs[19, ...]) + aw_offs * (1 - cg_offs[20, ...])
@@ -7679,7 +7679,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###combine nm and 00 cluster (so matrix can optimise choice of joining or not). DVP type of destination is always 0 for the "provide this period" so don't need to test
     numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = np.sum(numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
     ###combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
-    #^can't just sum across the 'a' slice (decision variable), to allow a0 to provide a1 we will need another 'a' axis (see google doc) - fix this in version 2
+    #todo can't just sum across the 'a' slice (decision variable), to allow a0 to provide a1 we will need another 'a' axis (see google doc) - fix this in version 2
     # temporary = np.sum(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=a1_pos-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
     # numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...,na] == 0) #take slice 0 of e (for prejoining all e slices are the same
 
@@ -7712,7 +7712,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary,
                                                                         dvp_type_va1e1b1nwzida0e0b0xyg1[:, :, 0:1, ..., na,na] == prejoin_vtype1)  #take slice 0 of e (for prejoining all e slices are the same)
     ####combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
-    #^can't just sum across the 'a' slice (decision variable), to allow a0 to provide a1 we will need another 'a' axis (see google doc)
+    #todo can't just sum across the 'a' slice (decision variable), to allow a0 to provide a1 we will need another 'a' axis (see google doc)
     # temporary = np.sum(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=a1_pos-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
     # numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary, dvp_type_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na] == 0) #take slice 0 of e (for prejoining all e slices are the same
 

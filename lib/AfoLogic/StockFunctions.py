@@ -1063,10 +1063,9 @@ def f_birthweight_mu(cu1, cb1, cg, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, e
     return w_b, cf_w_b_dams
 
 
-def f_weanweight_cs(w_w_yatf, ffcfw_start_yatf, ebg_yatf, days_period, period_is_wean):
+def f_weanweight_cs(cg, w_w_yatf, ffcfw_start_yatf, ebg_yatf, days_period, period_is_wean):
     ##set WWt = yatf weight at weaning
-    #todo ebg needs to be multiplied by cg[18] to allow for gut fill. cg needs to be passed as an arg (or ebg converted to lwg)
-    t_w_w = (ffcfw_start_yatf + ebg_yatf * days_period) + sen.saa['wean_wt']  #Note:saa[wean_wt] doesn't have an associated MEI impact.
+    t_w_w = (ffcfw_start_yatf + ebg_yatf * cg[18, ...] * days_period) + sen.saa['wean_wt']  #Note:saa[wean_wt] doesn't have an associated MEI impact.
     ##update weaning weight if it is weaning period
     w_w_yatf = fun.f_update(w_w_yatf, t_w_w, period_is_wean)
     return w_w_yatf
@@ -1263,7 +1262,7 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
     area = cc_g[1, ...] * ffcfw_start_g ** (2/3)
     ##Daily fibre length growth
     d_fl_g = 100 * fun.f_divide(d_cfw_g, cw_g[10, ...] * cw_g[11, ...] * area * np.pi * (0.5 * d_fd_g / 10**6) ** 2) #func to stop div/0 error, when d_fd==0 so does d_cfw
-    return d_cfw_g, dw_g, hp_dw_g, d_fd_g, d_fl_g, d_cfw_history_p2g
+    return d_cfw_g, d_fd_g, d_fl_g, d_cfw_history_p2g, dw_g, hp_dw_g
 
 
 def f_heat_cs(cc, ck, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, mei_propn_herb, guw = 0, kl = 0
@@ -1506,7 +1505,7 @@ def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, step, rev_trait_
     return ebg, evg, df, dm, dv, surplus_energy
 
 
-def f_wbe(aw, mw, cg):
+def f_wbe_mu(aw, mw, cg):
     ## calculate whole body energy content from weight of adipose tissue (aw) and muscle (mw), and the dry matter content and energy density.
     wbe = aw * cg[20, ...] * cg[26, ...] + mw * cg[21, ...] * cg[27, ...]
     return wbe
