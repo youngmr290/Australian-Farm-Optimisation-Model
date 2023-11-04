@@ -1271,13 +1271,21 @@ def f_heat_cs(cc, ck, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp,
     hp_total = (mei - nec * gest_propn - nel * lact_propn - new
                 - kg * (mei - (meme + mec * gest_propn + mel * lact_propn + mew))
                 + cc[16, ...] * guw)
-    return hp_total
+    ##Level of feeding (at maint level = 0)
+    #todo what is the definition of 'level' - it is used in Blaxter & Clapperton emissions calculation.
+    #Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
+    level = (mei / hp_total) - 1
+    return hp_total, level
 
 
 def f_heat_nfs(cc, hp_maint, hp_v, hp_w, hp_m = 0, hp_f = 0, hp_c = 0, hp_l = 0, guw = 0, gest_propn = 0, lact_propn = 0):
-    ##Heat production per animal (including heat production from the gravid uterus)
+    ##Total heat production per animal (including heat production from the gravid uterus)
     hp_total = hp_maint + hp_m + hp_v + hp_f + hp_w + hp_c * gest_propn + hp_l * lact_propn + cc[16, ...] * guw
-    return hp_total
+    ##Level of feeding (at maint level = 0)
+    #todo what is the definition of 'level' - it is used in Blaxter & Clapperton emissions calculation.
+    #Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
+    level = (mei / hp_total) - 1
+    return hp_total, level
 
 
 def f_insulation(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0):
@@ -1377,15 +1385,23 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     ##Empty bodyweight gain
     ebg = neg / evg
     ##Process the Liveweight REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
+    ###Note: In the CSIRO feeding standards, holding the LW trait constant is also holding the energy content of the
+    ### body constant because body composition is a function of weight. If the trait being changed is changing energy
+    ### transactions (eg increasing CFW) then the energy cost will be lost and the 'cost' of energy will only be represented
+    ### by correlations with weight &/or intake and their REVs.
+    ###The correlation with intake appears to be low so little cost there. The REV of weight includes the mechanism used to
+    ### cause the weight change (probably increased intake), so a correlation between CFW & lower weight will be valuing
+    ### that correlation as if the animal was eating less.
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
     ##Protein gain (protein DM)
     pg = pcg * ebg
     ##fat gain (fat DM)
     fg = (neg - pg * cg[21, ...]) /cg[20, ...]
-    return ebg, evg, pg, fg, level, surplus_energy
+    return ebg, evg, pg, fg, surplus_energy
 
 
 def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
+    #same energy & efficiency calculation as CSIRO but different method for calculating the proportion of fat and lean in the gain
     ## requirement for maintenance
     maintenance = mem + mec * gest_propn + mel * lact_propn + mew
     ##Level of feeding (maint = 0)
@@ -1396,22 +1412,18 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     neg = kg * surplus_energy
     ##Energy Value of gain as calculated.
     c_evg = cg[8, ...] - zf1 * (cg[9, ...] - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
-    # evg = fun.f_update(evg , temporary, zf2 < 1)
     ## Scale from calculated to input evg based on zf2. If zf2 = 1 then scale based on the SAP
     evg = c_evg * (1 + sen.sap['evg_adult'] * zf2)
     ##Empty bodyweight gain
     ebg = neg / evg
     ##Process the Liveweight REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
-    ##fat gain (kg of fat DM)
-    # fg = (neg - pg * cg[21, ...] * cg[27, ...]) / (cg[20, ...] * cg[26, ...]))
     ## proportion of fat and lean is determined from the EVG based on energy and DM content of muscle and adipose
     adipose_propn = (evg - (cg[21, ...] * cg[27, ...])) / ((cg[20, ...] * cg[26, ...]) - (cg[21, ...] * cg[27, ...]))
     fg = ebg * adipose_propn * cg[26, ...]
     ##Protein gain (kg of protein dm)
-    # pg = pcg * ebg
     pg = (neg - fg * cg[20, ...]) / cg[21, ...]
-    return ebg, evg, pg, fg, level, surplus_energy
+    return ebg, evg, pg, fg, surplus_energy
 
 
 def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, step, rev_trait_value, dc=0, hp_dc=0, dl=0, hp_dl=0, gest_propn=0, lact_propn=0):
@@ -1431,7 +1443,7 @@ def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, step, rev_trait_
     M = 1 - m / alpha_m
     pm = cg[32, ...]
     e0 = cg[34, ...]
-    lf = ck[26, ...]
+    blf = ck[26, ...]
     pv = cg[33, ...]
     ## Step 1a: calculate dv from alpha_v for day 0
     alpha_v = cg[35, ...] * mei + cg[36, ...] * m**0.41 + cg[37, ...] * md
@@ -1445,7 +1457,7 @@ def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, step, rev_trait_
     hp_dv = dv * np.where(dv >= 0, ck[22, ...], ck[28, ...])  #select value for bpv based on sign of dp
     hp_dw = dw * ck[23, ...]
     ##Step 2: Calculate MEI when dm==0 (mei_dm0) using derived equation and set bpm to required value
-    mei_dm0 = hp_maint + hp_dv + hp_dw + hp_dc + hp_dl - e0 / pm - lf * (dv + dw + dc + dl + e0 / pm)
+    mei_dm0 = hp_maint + hp_dv + hp_dw + hp_dc + hp_dl - e0 / pm - blf * (dv + dw + dc + dl + e0 / pm)
     bpm = np.where(mei > mei_dm0, ck[21, ...], ck[27, ...])
     ##Step 3a: Calculate the numerator of df and set bf to required value
     df_numerator = ((1 - pm * M) * (mei - (hp_maint + hp_dv + hp_dw + hp_dc + hp_dl + bpm * e0 * M))
@@ -1470,17 +1482,23 @@ def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, step, rev_trait_
     evg = (df + dm + dv) / ebg
 
     ##Process the Liveweight REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
+    ###The LW trait is different in the new feeding standards compared with CSIRO standards.
+    ###Note: In the new feeding standards, holding LW constant does not result in energy content being held constant.
+    ### If the trait being changed is changing energy transactions (eg increasing CFW) then the energy cost will be
+    ### represented unless body composition is also being held constant (i.e. WBE is a trait in the BO).
+    ###This is a better outcome for reflecting the energy cost of traits than occurs with the CSIRO feeding standards.
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
 
-    ##Level of feeding (at maint level = 0)
-    #todo what is the definition of 'level'. Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
-    ## requirement for maintenance
-    maintenance = hp_maint + hp_dw + hp_dc * gest_propn + hp_dl * lact_propn    #might also include dc, dl, dw
-    level = (mei / maintenance) - 1
+    # ##Level of feeding (at maint level = 0)
+    # #todo what is the definition of 'level'. Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
+    # ## Total heat production
+    # hp_total = hp_maint + hp_dw + hp_dc * gest_propn + hp_dl * lact_propn    #might also include dc, dl, dw
+    # level = (mei / hp_total) - 1
 
+    ##energy above maintenance. As a comparison with old feeding standards
     surplus_energy = df + dm + dv + hp_df + hp_dm + hp_dv
 
-    return ebg, evg, df, dm, dv, level, surplus_energy
+    return ebg, evg, df, dm, dv, surplus_energy
 
 
 def f_wbe(aw, mw, cg):
@@ -1494,7 +1512,8 @@ def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
     # Compare with original Blaxter & Clapperton to check if error in the sign in Tech 2012 paper.
     # Compare the original MIDAS derivation of animal and feed components
     ##Methane production total
-    ch4_total = ch[1, ...] * (intake_f + intake_s)*((ch[2, ...] + ch[3, ...] * md_solid) + (level + 1) * (ch[4, ...] - ch[5, ...] * md_solid))
+    ch4_total = ch[1, ...] * (intake_f + intake_s) * ((ch[2, ...] + ch[3, ...] * md_solid)
+                                                      + (level + 1) * (ch[4, ...] - ch[5, ...] * md_solid))
     ##Methane production animal component
     ch4_animal = ch[1, ...] * (intake_f + intake_s) * (level + 1) * (ch[4, ...] - ch[5, ...] * md_solid)
     return ch4_total, ch4_animal
