@@ -770,7 +770,7 @@ def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc, temp_av
     :param srw:
     :param relsize_start:
     :param rc_start:
-    :param temp_lc_dams:
+    :param temp_lc:
     :param temp_ave:
     :param temp_max:
     :param temp_min:
@@ -845,6 +845,20 @@ def f_intake(pi, ri, md_herb, confinement, intake_s, i_md_supp, mp2=0):
     return mei, mei_solid, intake_f, md_solid, mei_propn_milk, mei_propn_herb, mei_propn_supp
 
 
+def f1_efficiency(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, mei_propn_milk=0, sam_kg=1):
+    #Energy required for maintenance and efficiency of energy use for maintenance & growth
+    ##Efficiency for maintenance
+    km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
+    ##Efficiency for lactation - dam only
+    kl =  ck[5, ...] + ck[6, ...] * md_solid
+    ##Efficiency for growth (supplement) including the sensitivity scalar
+    kg_supp = ck[16, ...] * i_md_supp * sam_kg
+    ##Efficiency for growth (fodder) including the sensitivity scalar
+    kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb * sam_kg
+    ##Energy required at maint for metabolism
+    return km, kg_fodd, kg_supp, kl
+
+
 def f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
          , kl = 0, mei_propn_milk = 0, lact_propn = 0):
     '''
@@ -896,18 +910,10 @@ def f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
     return kg
 
 
-def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_start, days_period, md_solid, i_md_supp,
-                md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_kg=1, sam_mr=1):
+def f_energy_cs(cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_start, days_period, km
+                , i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_mr=1):
     #Energy required for maintenance and efficiency of energy use for maintenance & growth
-    ##Efficiency for maintenance
-    km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
-    ##Efficiency for lactation - dam only	
-    kl =  ck[5, ...] + ck[6, ...] * md_solid
-    ##Efficiency for growth (supplement) including the sensitivity scalar
-    kg_supp = ck[16, ...] * i_md_supp * sam_kg
-    ##Efficiency for growth (fodder) including the sensitivity scalar
-    kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb * sam_kg
-    ##Energy required at maint for metabolism	
+    ##Energy required at maint for metabolism
     emetab = cx[10, ...] * cm[2, ...] * ffcfw_start ** 0.75 * mr_age * (1 + cm[5, ...] * mei_propn_milk)
     ##Distance walked (horizontal equivalent)	
     distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
@@ -921,7 +927,7 @@ def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_sta
     omer, omer_history = f1_history(omer_history_start, cm[1, ...] * mei, days_period)
     ##ME requirement for maintenance (before ECold)
     meme = ((emetab + egraze) / km + omer) * sam_mr
-    return meme, omer_history, km, kg_fodd, kg_supp, kl
+    return meme, omer_history
 
 
 def f_energy_nfs(ck, cm, lw_start, ffcfw_start, f_start, v_start, m_start, mei, md_solid, i_md_supp,
@@ -1265,44 +1271,75 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
     return d_cfw_g, d_fd_g, d_fl_g, d_cfw_history_p2g, dw_g, hp_dw_g
 
 
-def f_heat_cs(cc, ck, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, mei_propn_herb, guw = 0, kl = 0
+def f_heat_cs(cc, ck, mei, mem, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, mei_propn_herb, guw = 0, kl = 0
               , mei_propn_milk = 0, mec = 0, mel = 0, nec = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
     ##Animal is below maintenance
-    belowmaint = mei < (meme + mec * gest_propn + mel * lact_propn + mew)
+    belowmaint = mei < (mem + mec * gest_propn + mel * lact_propn + mew)
     ##Efficiency for growth (before ECold)
     kg = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
     ##Heat production per animal
     hp_total = (mei - nec * gest_propn - nel * lact_propn - new
-                - kg * (mei - (meme + mec * gest_propn + mel * lact_propn + mew))
+                - kg * (mei - (mem + mec * gest_propn + mel * lact_propn + mew))
                 + cc[16, ...] * guw)
     ##Level of feeding (at maint level = 0)
     #todo what is the definition of 'level' - it is used in Blaxter & Clapperton emissions calculation.
-    #Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
-    level = (mei / hp_total) - 1
+    # Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
+    # Does it include me_cold
+    # Current assumption that it is level of feeding relative to maintenance requirement excluding conceptus, milk, extra wool & cold
+    level = (mei / mem) - 1
     return hp_total, level
 
 
-def f_heat_nfs(cc, hp_maint, hp_dv, hp_dw, hp_dm = 0, hp_df = 0, hp_dc = 0, hp_dl = 0, guw = 0, gest_propn = 0, lact_propn = 0):
-    ##Total heat production per animal (including heat production from the gravid uterus)
-    hp_total = hp_maint + hp_dm + hp_dv + hp_df + hp_dw + hp_dc * gest_propn + hp_dl * lact_propn + cc[16, ...] * guw
+def f_level_nfs(mei, hp_maint):
     ##Level of feeding (at maint level = 0)
     #todo what is the definition of 'level' - it is used in Blaxter & Clapperton emissions calculation.
-    #Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
-    level = (mei / hp_total) - 1
-    return hp_total, level
+    # Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
+    # Does it include me_cold
+    # Current assumption that it is level of feeding relative to FHP + HAF
+    level = (mei / hp_maint) - 1
+    return level
 
 
-def f_insulation(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0):
-    ##Insulation of  tissue
-    in_tissue = cc[3, ...] * (rc_start - cc[4, ...] * (rc_start - 1))
+def f1_sin_m0(index_m0):
     ##Sinusoidal variation in temp & wind (minimum temp at midnight (0:00 hrs) max temp at midday (12:00 hrs)
     sin_var_m0 = np.sin(2 * np.pi * (index_m0 - 6) / 24)
+    return sin_var_m0
+
+
+def f1_surface_area(cc, ffcfw):
+    ##surface area of animal
+    area = np.maximum(0.001,cc[1, ...] * ffcfw ** (2/3)) #max because area is in m2 so realistic values of area can be small for lambs
+    return area
+
+
+def f1_temp_m0(temp_ave, temp_max, temp_min, index_m0):
+    #Ambient temp & temperature reduction due to clear skies (2 hourly)
     ##Ambient temp (2 hourly)
-    temperature_m0 = temp_ave[..., na] + (temp_max[..., na] - temp_min[..., na]) / 2 * sin_var_m0
-    ##Wind velocity (2 hourly)
-    wind_m0 = ws[..., na] * (1 + 0.35 * sin_var_m0)
+    temperature_m0 = temp_ave[..., na] + (temp_max[..., na] - temp_min[..., na]) / 2 * f1_sin_m0(index_m0)
+    return temperature_m0
+
+
+def f1_skytemp(cc, temp_ave, temp_max, temp_min, rain_p1, index_m0):
+    #Reduction in ambient temperature that is equivalent to the heat loss due to clear night skies.
+    ##Ambient temp (2 hourly)
+    temperature_m0 = f1_temp_m0(temp_ave, temp_max, temp_min, index_m0)
+    ##Impact of clear night skies on ME loss only during the nighttime hours of the m0 axis (5 slices)
+    ###Note: the nighttime slices are different to Freer etal 2012 due to discrepancy in timing of the sinusoidal temperature
+    night_mask_m0p1 = np.logical_or(index_m0 <= 4, index_m0 >= 20)[..., na]
     ##Proportion of sky that is clear
     sky_clear_p1 = 0.7 * np.exp(-0.25 * rain_p1)
+    ##Reduction in ambient temperature that is equivalent to the heat loss due to clear night skies.
+    sky_temp_m0p1 = night_mask_m0p1 * (sky_clear_p1[..., na, :] * cc[13,..., na, na]
+                                        * np.exp(-cc[14, ..., na, na]
+                                                 * np.minimum(0, cc[15, ..., na, na] - temperature_m0[..., na]) ** 2))
+    return sky_temp_m0p1
+
+
+def f_insulation(cc, ffcfw_start, rc_start, sl_start, ws, rain_p1, index_m0):
+    ##Insulation of  tissue
+    in_tissue = cc[3, ...] * (rc_start - cc[4, ...] * (rc_start - 1))
+    ##Wind velocity (2 hourly)
+    wind_m0 = ws[..., na] * (1 + 0.35 * f1_sin_m0(index_m0))
     ##radius of animal
     radius = np.maximum(0.001,cc[2, ...] * ffcfw_start ** (1/3)) #max because realistic values of radius can be small for lambs - stops div0 error
     ##Impact of wet fleece on insulation
@@ -1313,39 +1350,40 @@ def f_insulation(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp_m
     in_coat_m0 = radius[..., na] * np.log((radius[..., na] + sl_start[..., na]) / radius[..., na]) / (cc[9, ..., na] - cc[10, ..., na] * np.sqrt(wind_m0))
     ##Insulation of  air + coat (2 hourly)
     in_ext_m0p1 = wetflc_p1[..., na, :] * (in_air_m0[..., na] + in_coat_m0[..., na])
-    ##Impact of clear night skies on ME loss only during the nighttime hours of the m axis (5 slices)
-    ###Note: the nighttime slices are different to Freer etal 2012 due to discrepancy in timing of the sinusoidal temperature
-    night_mask_m0p1 = np.logical_or(index_m0 <= 4, index_m0 >= 20)[..., na]
-    sky_temp_m0p1 = night_mask_m0p1 * (sky_clear_p1[..., na, :] * cc[13,..., na, na]
-                                        * np.exp(-cc[14, ..., na, na]
-                                                 * np.minimum(0, cc[15, ..., na, na] - temperature_m0[..., na]) ** 2))
-    return in_tissue, in_ext_m0p1, temperature_m0, sky_temp_m0p1
+    return in_tissue, in_ext_m0p1
 
 
-def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp
-               , mei_propn_herb, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0, guw = 0, kl = 0, mei_propn_milk = 0
-               , mec = 0, mel = 0, nec = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
-    ##Calculate insulation
-    in_tissue, in_ext_m0p1, temperature_m0, sky_temp_m0p1 = f_insulation(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0)
-    ##Animal is below maintenance
-    belowmaint = mei < (meme + mec * gest_propn + mel * lact_propn + mew)
-    ##Efficiency for growth (before ECold)
-    kge = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
-    ##surface area of animal
-    area = np.maximum(0.001,cc[1, ...] * ffcfw_start ** (2/3)) #max because area is in m2 so realistic values of area can be small for lambs
+def f_templc(cc, ffcfw_start, rc_start, sl_start, hp_total, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0):
     ##Heat production per m2
-    heat = (mei - nec * gest_propn - nel * lact_propn - new - kge * (mei
-            - (meme + mec * gest_propn + mel * lact_propn + mew))
-            + cc[16, ...] * guw) / area
+    area = f1_surface_area(cc, ffcfw_start)
+    hp_area = hp_total / area
+    ##Calculate insulation
+    in_tissue, in_ext_m0p1 = f_insulation(cc, ffcfw_start, rc_start, sl_start, ws, rain_p1, index_m0)
+    ##Calculate reduction in lower critical temp due to clear skis
+    sky_temp_m0p1 = f1_skytemp(cc, temp_ave, temp_max, temp_min, rain_p1, index_m0)
     ##Lower critical temperature (2 hourly)
     temp_lc_m0p1 = (cc[11, ..., na, na]+ cc[12, ..., na, na]
-                                        - heat[..., na, na] * (in_tissue[..., na, na] + in_ext_m0p1)
+                                        - hp_area[..., na, na] * (in_tissue[..., na, na] + in_ext_m0p1)
                                         + sky_temp_m0p1)
     ##Lower critical temperature (period)
     temp_lc = np.average(temp_lc_m0p1, axis = (-1,-2))
+    return temp_lc, temp_lc_m0p1
+
+
+def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, hp_total, meme, mew, km, kg_supp, kg_fodd, mei_propn_supp
+               , mei_propn_herb, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0, kl = 0, mei_propn_milk = 0
+               , mec = 0, mel = 0, gest_propn	= 0, lact_propn = 0):
+    ##Body area m2
+    area = f1_surface_area(cc, ffcfw_start)
+    ##Calculate insulation
+    in_tissue, in_ext_m0p1 = f_insulation(cc, ffcfw_start, rc_start, sl_start, ws, rain_p1, index_m0)
+    ##Ambient temp & temperature reduction due to clear skies (2 hourly)
+    temperature_m0 = f1_temp_m0(temp_ave, temp_max, temp_min, index_m0)
+    ##Lower critical temperature (period)
+    temp_lc, temp_lc_m0p1 = f_templc(cc, ffcfw_start, rc_start, sl_start, hp_total, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0)
     ##Extra ME required to keep warm
     mecold = area * np.average(fun.f_dim(temp_lc_m0p1, temperature_m0[..., na])
-                                                    /(in_tissue[..., na, na] + in_ext_m0p1), axis = (-1,-2))
+                               / (in_tissue[..., na, na] + in_ext_m0p1), axis = (-1,-2))
     ##ME requirement for maintenance (inc ECold)
     mem = meme + mecold
     ##Animal is below maintenance (incl ecold)
@@ -1355,19 +1393,21 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     return mem, temp_lc, kg
 
 
-def f_chill_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0):
+def f_heatloss_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0):
     #The New Feeding Standards version of Chill calculates the amount of heat lost to the environment if the animals is at normal body temperature
     #This level of heat loss is the minimum heap production for an animal, and extra heat will be generated if HP from other sources is insufficient
-    ##Calculate insulation
-    in_tissue, in_ext_m0p1, temperature_m0, sky_temp_m0p1 = f_insulation(cc, ffcfw_start, rc_start, sl_start
-                                                                , temp_ave, temp_max, temp_min, ws, rain_p1, index_m0)
     ##surface area of animal
-    area = np.maximum(0.001,cc[1, ...] * ffcfw_start ** (2/3)) #max because area is in m2 so realistic values of area can be small for lambs
+    area = f1_surface_area(cc, ffcfw_start)
+    ##Calculate insulation
+    in_tissue, in_ext_m0p1 = f_insulation(cc, ffcfw_start, rc_start, sl_start, ws, rain_p1, index_m0)
+    ##Ambient temp & temperature reduction due to clear skies (2 hourly)
+    temperature_m0 = f1_temp_m0(temp_ave, temp_max, temp_min, index_m0)
+    sky_temp_m0p1 = f1_skytemp(cc, temp_ave, temp_max, temp_min, rain_p1, index_m0)
     ##Heat loss to the environment (MJ/m2) for the specified ambient temperature during the day
     heat_loss_m0p1 = fun.f_divide(cc[11, ..., na, na] - (temperature_m0[..., na] - sky_temp_m0p1) + cc[12, ..., na, na] * in_ext_m0p1
-                                        ,in_tissue[..., na, na] + in_ext_m0p1)
+                                        ,in_tissue[..., na, na] + in_ext_m0p1) * area[..., na, na]
     ##Heat loss to the environment
-    heat_loss = np.average(heat_loss_m0p1, axis = (-1,-2)) * area
+    heat_loss = np.average(heat_loss_m0p1, axis = (-1,-2))
     return heat_loss
 
 
@@ -1430,9 +1470,9 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     return ebg, evg, pg, fg, surplus_energy
 
 
-def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, step, rev_trait_value, dc=0, hp_dc=0, dl=0, hp_dl=0, gest_propn=0, lact_propn=0):
+def f_lwc_nfs(cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, heat_loss, step, rev_trait_value, dc=0, hp_dc=0, dl=0, hp_dl=0):
     ##fat gain (MJ/d) is calculated using a formula derived from the Oddy etal 2023 paper (see Generator9:p16-17)
-    ###The calculation is multi-step because parameter values (bpm & bf) depend on the sign of dm and df
+    ###The calculation is multistep because parameter values (bcm & bcf) depend on the sign of dm and df
     ###Steps
     ###1. calculate the known values that are required for dv, HpE (hp_dv, hp_dw)
     ###2. calculate sign of dm and allocate value for bpm.
@@ -1462,23 +1502,29 @@ def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, step, rev_trait_
     hp_dw = dw * ck[23, ...]
     ##Step 2: Calculate MEI when dm==0 (mei_dm0) using derived equation and set bpm to required value
     mei_dm0 = hp_maint + hp_dv + hp_dw + hp_dc + hp_dl - e0 / pm - blf * (dv + dw + dc + dl + e0 / pm)
-    bpm = np.where(mei > mei_dm0, ck[21, ...], ck[27, ...])
+    bcm = np.where(mei > mei_dm0, ck[21, ...], ck[27, ...])
     ##Step 3a: Calculate the numerator of df and set bf to required value
-    df_numerator = ((1 - pm * M) * (mei - (hp_maint + hp_dv + hp_dw + hp_dc + hp_dl + bpm * e0 * M))
-                    - (1 + bpm * pm * M) * (dv + dw + dc + dl + e0 * M))
-    bf = np.where(df_numerator > 0, ck[20, ...], ck[26, ...])
+    df_numerator = ((1 - pm * M) * (mei - (hp_maint + hp_dv + hp_dw + hp_dc + hp_dl + bcm * e0 * M))
+                    - (1 + bcm * pm * M) * (dv + dw + dc + dl + e0 * M))
+    bcf = np.where(df_numerator > 0, ck[20, ...], ck[26, ...])
     ##Step 3b: Calculate the denominator of df
-    df_denominator = (1 + bpm * pm * M + bf * (1 - pm * M))
-    ##Step 3c: Calculate fat change (MJ/d & kg/d) & heat production from fat change
-    df = df_numerator / df_denominator
-    hp_df = bf * df
-    fg = df / (cg[20, ...] * cg[26, ...])
+    df_denominator = (1 + bcm * pm * M + bcf * (1 - pm * M))
+    ##Step 3c: Calculate fat change (MJ/d & kg/d) & heat production from fat change (without heat loss included)
+    dfwo = df_numerator / df_denominator
+    hp_dfwo = bcf * dfwo
     ##Step 4: Net energy gain (MJ/d)
-    neg = (df + dv + dw + dc + dl + e0 * M) / (1 - pm * M)   #formula for NEG as the source of energy
-    neg_check = (mei - (hp_maint + hp_dv + hp_dw + hp_dc + hp_dl + bf * df + bpm * e0 * M)) / (1 + bpm * pm * M) #formula for NEG as the sink for energy
-    ##Step 5: Protein change (MJ/d & kg/d)
+    neg_wo = (dfwo + dv + dw + dc + dl + e0 * M) / (1 - pm * M)   #formula for NEG as the source of energy, excluding dm
+    neg_wo_check = (mei - (hp_maint + hp_dv + hp_dw + hp_dc + hp_dl + hp_dfwo + bcm * e0 * M)) / (1 + bcm * pm * M) #formula for NEG as the sink for energy, excluding dm
+    ##Step 5: Check if heat loss is greater than heat production and recalculate df
+    neg = np.minimum(neg_wo, mei - heat_loss)
+    ##Step 6: Protein change (MJ/d)
     dm = (pm * neg + e0) * M
-    hp_dm = bpm * dm
+    hp_dm = bcm * dm
+    ##Step 7: Calculate df including heat loss
+    df = neg - (dm + dv + dw + dc + dl)
+    hp_df = bcf * df
+    ##Step 8: Calculate weight change
+    fg = df / (cg[20, ...] * cg[26, ...])
     mg = dm / (cg[21, ...] * cg[27, ...])
     vg = dv / (cg[22, ...] * cg[28, ...])
     ##Step 6: Empty bodyweight change and energy value of gain
@@ -1492,12 +1538,6 @@ def f_lwc_nfs(cm, cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, step, rev_trait_
     ### represented unless body composition is also being held constant (i.e. WBE is a trait in the BO).
     ###This is a better outcome for reflecting the energy cost of traits than occurs with the CSIRO feeding standards.
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
-
-    # ##Level of feeding (at maint level = 0)
-    # #todo what is the definition of 'level'. Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
-    # ## Total heat production
-    # hp_total = hp_maint + hp_dw + hp_dc * gest_propn + hp_dl * lact_propn    #might also include dc, dl, dw
-    # level = (mei / hp_total) - 1
 
     ##energy above maintenance. As a comparison with old feeding standards
     surplus_energy = df + dm + dv + hp_df + hp_dm + hp_dv
