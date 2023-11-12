@@ -94,11 +94,11 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
                     offset += 1 #for some reason if the cols are multiindex the an extra row gets added when writing to excel
                 worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to collapse the level initially
 
-        # for col in range(len(df.columns)):
-        #     if (df.iloc[:,col]==0).all():
-        #         offset = df.index.nlevels
-        #         col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #convert col number to excel col reference e.g. 'A:B'
-        #         worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
+        for col in range(len(df.columns)):
+            if (df.iloc[:,col]==0).all():
+                offset = df.index.nlevels
+                col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #convert col number to excel col reference e.g. 'A:B'
+                worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
 
     ##apply filter
     if option==3:
@@ -1886,7 +1886,7 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
 
     return percentage
 
-def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_cols=[]):
+def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_cols=[], residue_cols=[]):
     '''
     Feed budget: stock mei requirement and feed mei supply.
 
@@ -1902,6 +1902,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
             option 1: NV pool summed (not active)
     :param dams_cols: (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
     :param offs_cols: (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
+    :param residue_cols: (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
     :return: pandas df
     '''
     ##mei supply
@@ -1965,12 +1966,12 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     keys = 'keys_qszp6fks1s2'
     arith = 2
     index = [0, 1, 2, 3, 4]  # q,s,z,p6,nv
-    cols = []
+    cols = residue_cols
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
     res_mei = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                           keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    res_mei.columns = ['Crop Residue'] # add feed type as header
+    res_mei = pd.concat([res_mei], keys=['Crop Residue'], axis=1)  # add feed type as header
 
     ###crop graze
     prod = 'crop_md_fkp6p5zl'
@@ -2072,8 +2073,9 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     for array in range(len(arrays)):
         extra_levels = max_levels - arrays[array].columns.nlevels
         for extra_lev in range(extra_levels):
-            arrays[array].columns = pd.MultiIndex.from_product([arrays[array].columns, ['']])
-            # arrays[array] = pd.concat([arrays[array]], keys=[''], axis=1)
+            old_idx = arrays[array].columns.to_frame() # Convert index to dataframe
+            old_idx.insert(len(old_idx.columns), len(old_idx.columns), '') # Insert new level at the end
+            arrays[array].columns = pd.MultiIndex.from_frame(old_idx) # Convert back to MultiIndex
     feed_budget_supply = pd.concat(arrays[0:8], axis=1).round(1) #round so that little numbers don't cause issues
     feed_budget_req = pd.concat(arrays[8:], axis=1).round(1) #round so that little numbers don't cause issues
 
