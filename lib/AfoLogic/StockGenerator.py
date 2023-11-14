@@ -4622,15 +4622,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 # w_xxxx = w_start_xxxx + dw_xxxx
                 # c_xxxx = c_start_xxxx + dc_xxxx
                 ##Weight of fat adipose (end)
-                aw_sire = aw_start_sire + fg_sire / cg_sire[20, ...] * days_period_pa1e1b1nwzida0e0b0xyg0[p]
+                aw_sire = aw_start_sire + fg_sire / cg_sire[26, ...] * days_period_pa1e1b1nwzida0e0b0xyg0[p]
                 ##Weight of muscle (end)
-                mw_sire = mw_start_sire + pg_sire / cg_sire[19, ...] * days_period_pa1e1b1nwzida0e0b0xyg0[p]
+                mw_sire = mw_start_sire + pg_sire / cg_sire[27, ...] * days_period_pa1e1b1nwzida0e0b0xyg0[p]
                 ##Weight of bone (end)	bw #todo formula needs finishing
                 bw_sire = bw_start_sire
                 ##Weight of water (end)
-                ww_sire = mw_sire * (1 - cg_sire[19, ...]) + aw_sire * (1 - cg_sire[20, ...])
+                ww_sire = mw_sire * (1 - cg_sire[27, ...]) + aw_sire * (1 - cg_sire[26, ...])
                 ##Weight of gutfill (end)
-                gw_sire = ffcfw_sire* (1 - 1 / cg_sire[18, ...])
+                gw_sire = ffcfw_sire * (1 - 1 / cg_sire[18, ...])
                 ##Clean fleece weight (end)
                 cfw_sire = cfw_start_sire + d_cfw_sire * days_period_pa1e1b1nwzida0e0b0xyg0[p] * cfw_propn_yg0
                 ##Greasy fleece weight (end)
@@ -4663,17 +4663,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 # w_xxxx = w_start_xxxx + dw_xxxx
                 # c_xxxx = c_start_xxxx + dc_xxxx
                 ##Weight of fat adipose (end)
-                aw_dams = aw_start_dams + fg_dams / cg_dams[20, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p]
+                aw_dams = aw_start_dams + fg_dams / cg_dams[26, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p]
                 ##Weight of muscle (end)
-                mw_dams = mw_start_dams + pg_dams / cg_dams[19, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p]
+                mw_dams = mw_start_dams + pg_dams / cg_dams[27, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p]
                 ##Weight of bone (end)	bw #todo formula needs finishing
                 bw_dams = bw_start_dams
                 ##Weight of water (end)
-                ww_dams = mw_dams * (1 - cg_dams[19, ...]) + aw_dams * (1 - cg_dams[20, ...])
+                ww_dams = mw_dams * (1 - cg_dams[27, ...]) + aw_dams * (1 - cg_dams[26, ...])
                 ##Weight of gutfill (end)
                 gw_dams = ffcfw_dams* (1 - 1 / cg_dams[18, ...])
                 ##Whole body energy (calculated from muscle and adipose weight)
-                wbe_dams = sfun.f_wbe_mu(aw_dams, mw_dams, cg_dams)
+                wbe_dams = sfun.f_wbe_mu(cg_dams, aw_dams, mw_dams)
                 ##Clean fleece weight (end)
                 cfw_dams = cfw_start_dams + d_cfw_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p] * cfw_propn_yg1
                 ##Greasy fleece weight (end)
@@ -4705,13 +4705,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 # w_xxxx = w_start_xxxx + dw_xxxx
                 # c_xxxx = c_start_xxxx + dc_xxxx
                 ##Weight of fat adipose (end)
-                aw_yatf = aw_start_yatf + fg_yatf / cg_yatf[20, ...] * days_period_pa1e1b1nwzida0e0b0xyg2[p]
+                aw_yatf = aw_start_yatf + fg_yatf / cg_yatf[26, ...] * days_period_pa1e1b1nwzida0e0b0xyg2[p]
                 ##Weight of muscle (end)
-                mw_yatf = mw_start_yatf + pg_yatf / cg_yatf[19, ...] * days_period_pa1e1b1nwzida0e0b0xyg2[p]
+                mw_yatf = mw_start_yatf + pg_yatf / cg_yatf[27, ...] * days_period_pa1e1b1nwzida0e0b0xyg2[p]
                 ##Weight of bone (end)	bw #todo formula needs finishing
                 bw_yatf = bw_start_yatf
                 ##Weight of water (end)
-                ww_yatf = mw_yatf * (1 - cg_yatf[19, ...]) + aw_yatf * (1 - cg_yatf[20, ...])
+                ww_yatf = mw_yatf * (1 - cg_yatf[27, ...]) + aw_yatf * (1 - cg_yatf[26, ...])
                 ##Weight of gutfill (end)
                 gw_yatf = ffcfw_yatf * (1 - 1 / cg_yatf[18, ...])
                 ##Clean fleece weight (end)
@@ -4744,17 +4744,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 # w_xxxx = w_start_xxxx + dw_xxxx
                 # c_xxxx = c_start_xxxx + dc_xxxx
                 ##Weight of fat adipose (end)
-                aw_offs = aw_start_offs + fg_offs / cg_offs[20, ...] * days_period_pa1e1b1nwzida0e0b0xyg3[p]
+                aw_offs = aw_start_offs + fg_offs / cg_offs[26, ...] * days_period_pa1e1b1nwzida0e0b0xyg3[p]
                 ##Weight of muscle (end)
-                mw_offs = mw_start_offs + pg_offs / cg_offs[19, ...] * days_period_pa1e1b1nwzida0e0b0xyg3[p]
+                mw_offs = mw_start_offs + pg_offs / cg_offs[27, ...] * days_period_pa1e1b1nwzida0e0b0xyg3[p]
                 ##Weight of bone (end)	bw #todo formula needs finishing
                 bw_offs = bw_start_offs
                 ##Weight of water (end)
-                ww_offs = mw_offs * (1 - cg_offs[19, ...]) + aw_offs * (1 - cg_offs[20, ...])
+                ww_offs = mw_offs * (1 - cg_offs[27, ...]) + aw_offs * (1 - cg_offs[26, ...])
                 ##Weight of gutfill (end)
                 gw_offs = ffcfw_offs* (1 - 1 / cg_offs[18, ...])
                 ##Whole body energy (end - calculated from muscle and adipose weight)
-                wbe_offs = sfun.f_wbe_mu(aw_offs, mw_offs, cg_offs)
+                wbe_offs = sfun.f_wbe_mu(cg_offs, aw_offs, mw_offs)
                 ##Clean fleece weight (end)
                 cfw_offs = cfw_start_offs + d_cfw_offs * days_period_pa1e1b1nwzida0e0b0xyg3[p] * cfw_propn_yg3
                 ##Greasy fleece weight (end)

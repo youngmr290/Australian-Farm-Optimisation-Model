@@ -1286,7 +1286,7 @@ def f_heat_cs(cc, ck, mei, mem, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, 
     # Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
     # Does it include me_cold
     # Current assumption that it is level of feeding relative to maintenance requirement excluding conceptus, milk, extra wool & cold
-    level = (mei / mem) - 1
+    level = fun.f_divide(mei, mem) - 1
     return hp_total, level
 
 
@@ -1296,7 +1296,7 @@ def f_level_nfs(mei, hp_maint):
     # Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
     # Does it include me_cold
     # Current assumption that it is level of feeding relative to FHP + HAF
-    level = (mei / hp_maint) - 1
+    level = fun.f_divide(mei, hp_maint) - 1
     return level
 
 
@@ -1420,9 +1420,9 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     surplus_energy = mei - maintenance
     ##Net energy gain (based on ME)
     neg = kg * surplus_energy
-    ##Energy Value of gain
+    ##Energy Value of gain (MJ/kg EBW)
     evg = cg[8, ...] - zf1 * (cg[9, ...] - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
-    ##Protein content of gain (some uncertainty for sign associated with zf2.
+    ##Protein content of gain (kg/kg EBW) (some uncertainty for sign associated with zf2.
     ### GrazFeed documentation had +ve however, this implies that PCG increases when BC > 1. So changed to -ve
     #todo check this equation when converting to a heat production based model.
     pcg = cg[12, ...] + zf1 * (cg[13, ...] - cg[14, ...] * (level - 1)) - zf2 * cg[15, ...] * (rc_start - 1)
@@ -1545,15 +1545,16 @@ def f_lwc_nfs(cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, heat_loss, step, rev
     return ebg, evg, df, dm, dv, surplus_energy
 
 
-def f_wbe_mu(aw, mw, cg):
+def f_wbe_mu(cg, aw, mw, vw=0):
     ## calculate whole body energy content from weight of adipose tissue (aw) and muscle (mw), and the dry matter content and energy density.
-    wbe = aw * cg[20, ...] * cg[26, ...] + mw * cg[21, ...] * cg[27, ...]
+    wbe = aw * cg[20, ...] * cg[26, ...] + mw * cg[21, ...] * cg[27, ...] + vw * cg[22, ...] * cg[28, ...]
     return wbe
 
 
 def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
     #todo these formulas need to be reviewed, then connected to emissions in Pyomo.
     # Compare with original Blaxter & Clapperton to check if error in the sign in Tech 2012 paper.
+    # Note comment made in Wilkerson etal 1995
     # Compare the original MIDAS derivation of animal and feed components
     ##Methane production total
     ch4_total = ch[1, ...] * (intake_f + intake_s) * ((ch[2, ...] + ch[3, ...] * md_solid)
