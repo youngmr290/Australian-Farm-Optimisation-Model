@@ -3337,7 +3337,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                               , mei_propn_herb_dams, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                               , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
                                                               , index_m0, kl=kl_dams, mei_propn_milk=mei_propn_milk_dams, mec=mec_dams
-                                                              , mel=mel_dams, lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
+                                                              , mel=mel_dams, gest_propn=gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
+                                                              , lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             mem_dams = temp0
                             temp_lc_dams = temp1
