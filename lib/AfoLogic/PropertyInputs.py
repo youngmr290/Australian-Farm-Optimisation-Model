@@ -110,6 +110,7 @@ def f_reshape_pinp_defaults(pinp_defaults, sinp_defaults):
         saltbush_inp['i_sb_ash_content_zp6'] = np.reshape(saltbush_inp['i_sb_ash_content_zp6'], zp6)
         saltbush_inp['i_sb_selectivity_zp6'] = np.reshape(saltbush_inp['i_sb_selectivity_zp6'], zp6)
         saltbush_inp['i_slp_diet_propn_zp6'] = np.reshape(saltbush_inp['i_slp_diet_propn_zp6'], zp6)
+        saltbush_inp['i_sb_cp_zp6'] = np.reshape(saltbush_inp['i_sb_cp_zp6'], zp6)
 
         ###stock
         sheep_inp = pinp_defaults[property]['sheep_inp']
@@ -455,6 +456,7 @@ def f1_expand_p6():
     saltbush['i_sb_ash_content_zp6'] = np.take_along_axis(saltbush['i_sb_ash_content_zp6'], a_p6std_zp6, axis=1)
     saltbush['i_sb_selectivity_zp6'] = np.take_along_axis(saltbush['i_sb_selectivity_zp6'], a_p6std_zp6, axis=1)
     saltbush['i_slp_diet_propn_zp6'] = np.take_along_axis(saltbush['i_slp_diet_propn_zp6'], a_p6std_zp6, axis=1)
+    saltbush['i_sb_cp_zp6'] = np.take_along_axis(saltbush['i_sb_cp_zp6'], a_p6std_zp6, axis=1)
 
     ####pasture
     for pasture in sinp.general['pastures'][general['pas_inc_t']]:
