@@ -1116,7 +1116,7 @@ def f_harvest_dep():
 
     Variable depreciation is use depreciation and is dependent on the number of hours the equipment is used.
     The harvest activity is represented in hours so the variable depreciation is simply the rate of depreciation
-    per hour of seeding.
+    per hour of harvest.
 
     The rate of depreciation per hour is calculated based 'typical' scenario, which simplifies the
     calibration process. The user enters the percentage of depreciation incurred for harvesting `x` hectares
