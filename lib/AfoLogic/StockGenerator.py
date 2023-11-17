@@ -45,6 +45,7 @@ from . import PropertyInputs as pinp
 from . import UniversalInputs as uinp
 from . import StructuralInputs as sinp
 from . import StockFunctions as sfun
+from . import EmissionFunctions as efun
 from . import Periods as per
 from . import PlotViewer as pv
 from . import Exceptions as exc
@@ -366,7 +367,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_lw_tpsire = np.zeros(tpg0, dtype =dtype)
     o_pi_tpsire = np.zeros(tpg0, dtype =dtype)
     o_mei_solid_tpsire = np.zeros(tpg0, dtype =dtype)
-    o_ch4_total_tpsire = np.zeros(tpg0, dtype =dtype)
+    o_ch4_animal_tpsire = np.zeros(tpg0, dtype =dtype)
+    o_n2o_animal_tpsire = np.zeros(tpg0, dtype =dtype)
     o_cfw_tpsire = np.zeros(tpg0, dtype =dtype)
     o_sl_tpsire = np.zeros(tpg0, dtype =dtype)
     o_ss_tpsire = np.zeros(tpg0, dtype =dtype)
@@ -396,7 +398,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_lw_tpdams = np.zeros(tpg1, dtype =dtype)
     o_pi_tpdams = np.zeros(tpg1, dtype =dtype)
     o_mei_solid_tpdams = np.zeros(tpg1, dtype =dtype)
-    o_ch4_total_tpdams = np.zeros(tpg1, dtype =dtype)
+    o_ch4_animal_tpdams = np.zeros(tpg1, dtype =dtype)
+    o_n2o_animal_tpdams = np.zeros(tpg1, dtype =dtype)
     o_cfw_tpdams = np.zeros(tpg1, dtype =dtype)
     # o_gfw_tpdams = np.zeros(tpg1, dtype =dtype)
     o_sl_tpdams = np.zeros(tpg1, dtype =dtype)
@@ -432,7 +435,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     # o_ffcfw_condensed_tpyatf = np.zeros(tpg2, dtype =dtype)
     o_pi_tpyatf = np.zeros(tpg2, dtype =dtype)
     o_mei_solid_tpyatf = np.zeros(tpg2, dtype =dtype)
-    # o_ch4_total_tpyatf = np.zeros(tpg2, dtype =dtype)
+    o_ch4_animal_tpyatf = np.zeros(tpg2, dtype =dtype)
+    o_n2o_animal_tpyatf = np.zeros(tpg2, dtype =dtype)
     # o_cfw_tpyatf = np.zeros(tpg2, dtype =dtype)
     # o_gfw_tpyatf = np.zeros(tpg2, dtype =dtype)
     # o_sl_tpyatf = np.zeros(tpg2, dtype =dtype)
@@ -475,7 +479,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_lw_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_pi_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_mei_solid_tpoffs = np.zeros(tpg3, dtype =dtype)
-    o_ch4_total_tpoffs = np.zeros(tpg3, dtype =dtype)
+    o_ch4_animal_tpoffs = np.zeros(tpg3, dtype =dtype)
+    o_n2o_animal_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_cfw_tpoffs = np.zeros(tpg3, dtype =dtype)
     # o_gfw_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_sl_tpoffs = np.zeros(tpg3, dtype =dtype)
@@ -3156,7 +3161,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     hp_dl_dams = mel_dams - nel_dams
 
                 ##wool production
-                eqn_group = 16
+                eqn_group = 17
                 eqn_system = 0 # CSIRO = 0
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
@@ -3712,7 +3717,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
             ##progeny fleece prodn adjustment due to dam profile (LTW adjustment)
-            eqn_group = 13
+            eqn_group = 14
             eqn_system = 0 # CSIRO = 0 - doesn't exist for LTW impacts on progeny
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
@@ -3942,7 +3947,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         ...] = temp0  # more of the return variable could be retained
 
             ##wool production - yatf
-            eqn_group = 16
+            eqn_group = 17
             eqn_system = 0  # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][
                 eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -4142,46 +4147,115 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
 
 
-            ##emissions
+            ##methane emissions
             eqn_group = 12
-            eqn_system = 0 # Baxter and Clapperton = 0
+            eqn_system = 0 # National Greenhouse Gas Inventory Report
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 ###sire
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                    temp0, temp1 = sfun.f_emissions_bc(ch_sire, intake_f_sire, intake_s_sire, md_solid_sire, level_sire)
+                    temp0 = efun.f_ch4_animal_nir()
                     if eqn_used:
-                        ch4_total_sire = temp0
-                        ch4_animal_sire = temp1
+                        ch4_animal_sire = temp0
                     if eqn_compare:
                         r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
                 ###dams
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0, temp1 = sfun.f_emissions_bc(ch_dams, intake_f_dams, intake_s_dams, md_solid_dams, level_dams)
+                    temp0 = efun.f_ch4_animal_nir()
                     if eqn_used:
-                        ch4_total_dams = temp0
-                        ch4_animal_dams = temp1
+                        ch4_animal_dams = temp0
                     if eqn_compare:
                         r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
                 ###yatf
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0, temp1 = sfun.f_emissions_bc(ch_yatf, intake_f_yatf, intake_s_yatf, md_solid_yatf, level_yatf)
+                    temp0 = efun.f_ch4_animal_nir(mp2_yatf)
                     if eqn_used:
-                        ch4_total_yatf = temp0
-                        ch4_animal_yatf = temp1
+                        ch4_animal_yatf = temp0
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
                 ###offs
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                    temp0, temp1 = sfun.f_emissions_bc(ch_offs, intake_f_offs, intake_s_offs, md_solid_offs, level_offs)
+                    temp0 = efun.f_ch4_animal_nir()
                     if eqn_used:
-                        ch4_total_offs = temp0
-                        ch4_animal_offs = temp1
+                        ch4_animal_offs = temp0
                     if eqn_compare:
                         r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
+
+            eqn_system = 1 # Baxter and Clapperton
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                ###sire
+                eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
+                    temp0 = efun.f_ch4_animal_bc(ch_sire, intake_f_sire, intake_s_sire, md_solid_sire, level_sire)
+                    if eqn_used:
+                        ch4_animal_sire = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                ###dams
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                    temp0 = efun.f_ch4_animal_bc(ch_dams, intake_f_dams, intake_s_dams, md_solid_dams, level_dams)
+                    if eqn_used:
+                        ch4_animal_dams = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                ###yatf
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
+                    temp0 = efun.f_ch4_animal_bc(ch_yatf, intake_f_yatf, intake_s_yatf, md_solid_yatf, level_yatf)
+                    if eqn_used:
+                        ch4_animal_yatf = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                ###offs
+                eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
+                    temp0 = efun.f_ch4_animal_bc(ch_offs, intake_f_offs, intake_s_offs, md_solid_offs, level_offs)
+                    if eqn_used:
+                        ch4_animal_offs = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
+
+            ##Nitrous oxide emissions
+            eqn_group = 13 #Nitrous oxide
+            eqn_system = 0 #National Greenhouse Gas Inventory Report
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                ###sire
+                eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
+                    temp0 = efun.f_n2o_animal_nir(cl_sire, d_cfw_sire, relsize_start_sire, srw_b0xyg0, ebg_sire, mp=0, mc=0)
+                    if eqn_used:
+                        n2o_animal_sire = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                ###dams
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                    temp0 = efun.f_n2o_animal_nir(cl_dams, d_cfw_dams, relsize_start_dams, srw_b0xyg1, ebg_dams, mp=mp2_dams)
+                    if eqn_used:
+                        n2o_animal_dams = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                ###yatf
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
+                    temp0 = efun.f_n2o_animal_nir(cl_yatf, d_cfw_yatf, relsize_start_yatf, srw_b1xyg2, ebg_yatf, mc=mp2_yatf)
+                    if eqn_used:
+                        n2o_animal_yatf = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                ###offs
+                eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
+                    temp0 = efun.f_n2o_animal_nir(cl_offs, d_cfw_offs, relsize_start_offs, srw_b0xyg3, ebg_offs)
+                    if eqn_used:
+                        n2o_animal_offs = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
+
 
             ##conception Dams
             eqn_group = 0
@@ -4239,7 +4313,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
 
             ## base mortality - comments about mortality functions can be found in sfun.
-            eqn_group = 14
+            eqn_group = 15
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 ####sire
@@ -4426,7 +4500,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
             ##preg tox Dam mortality - comments about mortality functions can be found in sfun.
-            eqn_group = 15
+            eqn_group = 16
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
@@ -4811,7 +4885,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 o_lw_tpsire[:,p] = lw_sire
                 o_pi_tpsire[:,p] = pi_sire
                 o_mei_solid_tpsire[:,p] = mei_solid_sire
-                o_ch4_total_tpsire[:,p] = ch4_total_sire
+                o_ch4_animal_tpsire[:,p] = ch4_animal_sire
+                o_n2o_animal_tpsire[:,p] = n2o_animal_sire
                 o_cfw_tpsire[:,p] = cfw_sire
                 o_sl_tpsire[:,p] = sl_sire
                 o_fd_tpsire[:,p] = fd_sire
@@ -4906,7 +4981,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 o_lw_tpdams[:,p] = lw_dams
                 o_pi_tpdams[:,p] = pi_dams
                 o_mei_solid_tpdams[:,p] = mei_solid_dams
-                o_ch4_total_tpdams[:,p] = ch4_total_dams
+                o_ch4_animal_tpdams[:,p] = ch4_animal_dams
+                o_n2o_animal_tpdams[:,p] = n2o_animal_dams
                 o_cfw_tpdams[:,p] = cfw_dams
                 # o_gfw_tpdams[:,p] = gfw_dams
                 o_sl_tpdams[:,p] = sl_dams
@@ -4984,7 +5060,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###store output variables for the post-processing
                 o_pi_tpyatf[:,p] = pi_yatf
                 o_mei_solid_tpyatf[:,p] = mei_solid_yatf
-                # o_ch4_total_tpyatf[:,p] = ch4_total_yatf
+                o_ch4_animal_tpyatf[:,p] = ch4_animal_yatf
+                o_n2o_animal_tpyatf[:,p] = n2o_animal_yatf
                 # o_cfw_tpyatf[:,p] = cfw_yatf
                 # o_gfw_tpyatf[:,p] = gfw_yatf
                 # o_sl_tpyatf[:,p] = sl_yatf
@@ -5085,7 +5162,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 o_lw_tpoffs[:,p] = lw_offs
                 o_pi_tpoffs[:,p] = pi_offs
                 o_mei_solid_tpoffs[:,p] = mei_solid_offs
-                o_ch4_total_tpoffs[:,p] = ch4_total_offs
+                o_ch4_animal_tpoffs[:,p] = ch4_animal_offs
+                o_n2o_animal_tpoffs[:,p] = n2o_animal_offs
                 o_cfw_tpoffs[:,p] = cfw_offs
                 # o_gfw_tpoffs[:,p] = gfw_offs
                 o_sl_tpoffs[:,p] = sl_offs
@@ -6822,9 +6900,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ######################
     # add yatf to dams   #
     ######################
+    ##me and pi
     o_pi_tpdams *= fun.f_divide(o_mei_solid_tpdams + np.sum(o_mei_solid_tpyatf * gender_propn_xyg, axis=x_pos, keepdims=True),
                               o_mei_solid_tpdams, dtype=dtype)  # done before adding yatf mei. This is instead of adding pi yatf with pi dams because some of the potential intake of the yatf is 'used' consuming milk. Doing it via mei keeps the ratio mei_dams/pi_dams the same before and after adding the yatf. This is what we want because it is saying that there is a given energy intake and it needs to be of a certain quality.
     o_mei_solid_tpdams = o_mei_solid_tpdams + np.sum(o_mei_solid_tpyatf * gender_propn_xyg, axis=x_pos, keepdims=True)
+    ##emissions
+    o_ch4_animal_tpdams = o_ch4_animal_tpdams + np.sum(o_ch4_animal_tpyatf * gender_propn_xyg, axis=x_pos, keepdims=True)
+    o_n2o_animal_tpdams = o_n2o_animal_tpdams + np.sum(o_n2o_animal_tpyatf * gender_propn_xyg, axis=x_pos, keepdims=True)
 
 
     ############
@@ -6905,6 +6987,24 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     #convert variables from p to v #
     ################################
     p2v_start = time.time()
+    ##every period - with base axes
+    ###sire
+    ch4_animal_tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_ch4_animal_tpsire, numbers_p=o_numbers_end_tpsire
+                                        , on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
+    n2o_animal_tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_n2o_animal_tpsire, numbers_p=o_numbers_end_tpsire
+                                        , on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
+    ###dams
+    ch4_animal_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ch4_animal_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
+                                        , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1)
+    n2o_animal_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_n2o_animal_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
+                                        , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1)
+    ###offs
+    ch4_animal_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ch4_animal_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
+                                        , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3)
+    n2o_animal_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_n2o_animal_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
+                                        , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3)
+
+
     ##every period - with f & p6 axis
     ###sire - use p2v_std because there is not dvp so this version of the function may as well be used.
     mei_p6ftva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_mei_solid_tpsire * nv_propn_ftpsire, numbers_p=o_numbers_end_tpsire
@@ -7526,6 +7626,43 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###########################
     '''some sire params don't go through here because no associations are required'''
     production_param_start = time.time()
+
+    ##emissions
+    ch4_animal_tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', ch4_animal_tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0)
+    n2o_animal_tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', n2o_animal_tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0)
+    ch4_animal_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', ch4_animal_tva1e1b1nwzida0e0b0xyg1
+                                                                      , a_k2cluster_va1e1b1nwzida0e0b0xyg1
+                                                                      , index_k2tva1e1b1nwzida0e0b0xyg1
+                                                                      , numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1
+                                                                      , mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1
+                                                                                 *mask_z8var_va1e1b1nwzida0e0b0xyg1
+                                                                                 *mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
+    n2o_animal_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', n2o_animal_tva1e1b1nwzida0e0b0xyg1
+                                                                      , a_k2cluster_va1e1b1nwzida0e0b0xyg1
+                                                                      , index_k2tva1e1b1nwzida0e0b0xyg1
+                                                                      , numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1
+                                                                      , mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1
+                                                                                 *mask_z8var_va1e1b1nwzida0e0b0xyg1
+                                                                                 *mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
+    ch4_animal_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', ch4_animal_tva1e1b1nwzida0e0b0xyg3
+                                                                        , a_k3cluster_da0e0b0xyg3
+                                                                        , index_k3k5tva1e1b1nwzida0e0b0xyg3
+                                                                        , a_k5cluster_da0e0b0xyg3
+                                                                        , index_k5tva1e1b1nwzida0e0b0xyg3
+                                                                        , numbers_start_tva1e1b1nwzida0e0b0xyg3
+                                                                        , mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
+    n2o_animal_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', n2o_animal_tva1e1b1nwzida0e0b0xyg3
+                                                                        , a_k3cluster_da0e0b0xyg3
+                                                                        , index_k3k5tva1e1b1nwzida0e0b0xyg3
+                                                                        , a_k5cluster_da0e0b0xyg3
+                                                                        , index_k5tva1e1b1nwzida0e0b0xyg3
+                                                                        , numbers_start_tva1e1b1nwzida0e0b0xyg3
+                                                                        , mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
+
+    co2e_animal_tva1e1b1nwzida0e0b0xyg0 = ch4_animal_tva1e1b1nwzida0e0b0xyg0 * uinp.emissions['i_ch4_gwp_factor'] + n2o_animal_tva1e1b1nwzida0e0b0xyg0 * uinp.emissions['i_n2o_gwp_factor']
+    co2e_animal_k2tva1e1b1nwzida0e0b0xyg1 = ch4_animal_k2tva1e1b1nwzida0e0b0xyg1 * uinp.emissions['i_ch4_gwp_factor'] + n2o_animal_k2tva1e1b1nwzida0e0b0xyg1 * uinp.emissions['i_n2o_gwp_factor']
+    co2e_animal_k3k5tva1e1b1nwzida0e0b0xyg3 = ch4_animal_k3k5tva1e1b1nwzida0e0b0xyg3 * uinp.emissions['i_ch4_gwp_factor'] + n2o_animal_k3k5tva1e1b1nwzida0e0b0xyg3 * uinp.emissions['i_n2o_gwp_factor']
+
 
     ##mei
     mei_p6ftva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', mei_p6ftva1e1b1nwzida0e0b0xyg0,
@@ -8594,6 +8731,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     arrays_h1c0p7z = [keys_h1, keys_c0, keys_p7, keys_z]
 
     ##sire related
+    ###base sire
+    arrays_zg0 = [keys_z, keys_g0]
     ###nsire prov
     arrays_zg0p8 = [keys_z, keys_g0, keys_p8]
     ###nsire req
@@ -8615,6 +8754,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     arrays_k3vw8zixg3w9 = [keys_k3, keys_v3, keys_lw3, keys_z, keys_i, keys_x, keys_g3, keys_lw3]
 
     ##dams numbers related
+    ###base dams
+    arrays_k2tva1nwziyg1 = [keys_k2,keys_t1,keys_v1,keys_a,keys_n1,keys_lw1,keys_z,keys_i,keys_y1, keys_g1]
     ###numbers req dams
     arrays_k2k2tva1nw8ziyg1g9w9 = [keys_k2,keys_k2,keys_t1,keys_v1,keys_a,keys_n1,keys_lw1,keys_z,keys_i,keys_y1,
                                    keys_g1,keys_g1,keys_lw1]
@@ -8623,6 +8764,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                 keys_g1,keys_lw1]
 
     ##offs related
+    ###base offs
+    arrays_k3k5tvnwziaxyg3 = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
     ###numbers prov offs
     arrays_k3k5tvnw8ziaxyg3w9 = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3, keys_lw3]
     ###k3k5wixg3w9 - numbers req offs (doesn't have many active axis)
@@ -8744,6 +8887,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     params['p_numbers_req_offs'] = fun.f1_make_pyomo_dict(numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9, arrays_k3k5vw8zixg3w9, loop_axis_pos=p_pos-1, index_loop_axis_pos=-7)
     ###numbers_prov_offs
     params['p_numbers_prov_offs'] = fun.f1_make_pyomo_dict(numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9, arrays_k3k5tvnw8ziaxyg3w9, loop_axis_pos=p_pos-1, index_loop_axis_pos=-10)
+
+    ##emissions
+    params['p_co2e_zg0'] = fun.f1_make_pyomo_dict(co2e_animal_tva1e1b1nwzida0e0b0xyg0, arrays_zg0)
+    params['p_co2e_k2tva1nwziyg1'] = fun.f1_make_pyomo_dict(co2e_animal_k2tva1e1b1nwzida0e0b0xyg1, arrays_k2tva1nwziyg1)
+    params['p_co2e_k3k5tvnwziaxyg3'] = fun.f1_make_pyomo_dict(co2e_animal_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3k5tvnwziaxyg3)
+
 
     ##mei
     ###mei - sire
@@ -9314,6 +9463,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fun.f1_make_r_val(r_vals,r_fd_hd_tva1e1b1nwzida0e0b0xyg0,'fd_hd_zg0', shape=zg0_shape) #no mask needed since no active period axis
     fun.f1_make_r_val(r_vals,r_fd_hd_k2tva1e1b1nwzida0e0b0xyg1,'fd_hd_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals,r_fd_hd_k3k5tva1e1b1nwzida0e0b0xyg3,'fd_hd_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
+
+    ###emissions
+    fun.f1_make_r_val(r_vals, uinp.emissions['i_ch4_gwp_factor'], 'ch4_gwp_factor')
+    fun.f1_make_r_val(r_vals, uinp.emissions['i_n2o_gwp_factor'], 'n2o_gwp_factor')
+    fun.f1_make_r_val(r_vals, ch4_animal_tva1e1b1nwzida0e0b0xyg0, 'ch4_animal_zg0', shape=zg0_shape) #no mask needed since no active period axis
+    fun.f1_make_r_val(r_vals, n2o_animal_tva1e1b1nwzida0e0b0xyg0, 'n2o_animal_zg0', shape=zg0_shape) #no mask needed since no active period axis
+    fun.f1_make_r_val(r_vals, ch4_animal_k2tva1e1b1nwzida0e0b0xyg1, 'ch4_animal_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals, n2o_animal_k2tva1e1b1nwzida0e0b0xyg1, 'n2o_animal_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals, ch4_animal_k3k5tva1e1b1nwzida0e0b0xyg3, 'ch4_animal_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals, n2o_animal_k3k5tva1e1b1nwzida0e0b0xyg3, 'n2o_animal_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
 
     ###mei and pi
     fun.f1_make_r_val(r_vals,mei_p6ftva1e1b1nwzida0e0b0xyg0,'mei_sire_p6fzg0',mask_fp_z8var_p6tva1e1b1nwzida0e0b0xyg[:,na,...],z_pos, p6fzg0_shape)

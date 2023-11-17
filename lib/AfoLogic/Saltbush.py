@@ -22,6 +22,7 @@ The saltbush module includes the:
     •	feed value of saltbush during the year.
     •	diet selectivity of salt bush versus understory.
     •	impact of salt consumption on animal intake.
+    •	livestock emissions linked to the consumption of saltbush.
 
 
 """
@@ -35,6 +36,7 @@ from . import Periods as per
 from . import Functions as fun
 from . import FeedsupplyFunctions as fsfun
 from . import SeasonalFunctions as zfun
+from . import EmissionFunctions as efun
 from . import Finance as fin
 
 na = np.newaxis
@@ -175,10 +177,28 @@ def f_saltbush_precalcs(params, r_vals, nv):
 
 
     ###########################
+    # emissions               #
+    ###########################
+    ##inputs
+    sb_cp_zp6 = zfun.f_seasonal_inp(pinp.saltbush['i_sb_cp_zp6'], numpy=True, axis=0)
+
+    ##livestock methane emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
+    if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
+        ch4_sb_zp6 = efun.f_ch4_feed_nir(1000, sb_dmd_zp6)
+    elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
+        ch4_sb_zp6 = efun.f_ch4_feed_bc()
+
+    ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
+    if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
+        n2o_sb_zp6 = efun.f_n2o_feed_nir(1000, sb_dmd_zp6, sb_cp_zp6)
+
+    co2e_sb_zp6 = ch4_sb_zp6 * uinp.emissions['i_ch4_gwp_factor'] + n2o_sb_zp6 * uinp.emissions['i_n2o_gwp_factor']
+
+    ###########################
     # create params           #
     ###########################
 
-    ##apply season mask
+    ##make season mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
     mask_fp_z8var_zp6 = mask_fp_z8var_p6z.T
     date_season_node_p7z = per.f_season_periods()[:-1, ...]
@@ -192,6 +212,7 @@ def f_saltbush_precalcs(params, r_vals, nv):
     sb_selectivity_zp6 = sb_selectivity_zp6 * mask_fp_z8var_zp6
     sb_me_zp6f = sb_me_zp6f * mask_fp_z8var_zp6[:,:,na]
     sb_vol_zp6f = sb_vol_zp6f * mask_fp_z8var_zp6[:,:,na]
+    co2e_sb_zp6 = co2e_sb_zp6 * mask_fp_z8var_zp6
 
     ##make key arrays
     ###keys
@@ -219,10 +240,14 @@ def f_saltbush_precalcs(params, r_vals, nv):
     params['sb_me_zp6f'] = fun.f1_make_pyomo_dict(sb_me_zp6f, arrays_zp6f)
     params['sb_vol_zp6f'] = fun.f1_make_pyomo_dict(sb_vol_zp6f, arrays_zp6f)
     params['sb_selectivity_zp6'] = fun.f1_make_pyomo_dict(sb_selectivity_zp6, arrays_zp6)
+    params['co2e_sb_zp6'] = fun.f1_make_pyomo_dict(co2e_sb_zp6, arrays_zp6)
 
     ##make r_vals
     fun.f1_make_r_val(r_vals,sb_me_zp6f,'sb_me_zp6f',mask_fp_z8var_zp6[...,na],z_pos=-2)
     fun.f1_make_r_val(r_vals,slp_estab_cost_p7z,'slp_estab_cost_p7z',mask_season_p7z,z_pos=-1)
+    ###emissions
+    fun.f1_make_r_val(r_vals,ch4_sb_zp6,'ch4_sb_zp6',mask_fp_z8var_zp6,z_pos=-2)
+    fun.f1_make_r_val(r_vals,n2o_sb_zp6,'n2o_sb_zp6',mask_fp_z8var_zp6,z_pos=-2)
 
 
 

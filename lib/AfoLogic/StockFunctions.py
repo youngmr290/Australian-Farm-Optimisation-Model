@@ -782,7 +782,7 @@ def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc, temp_av
     :param piyf:
     :param period_between_birthwean:
     :param sam_pi: sensitivity multiplier on PI. Applied as an intermediate SAM so that it can be differentially applied by age
-    :return pi:
+    :return pi: daily potential intake
     '''
     ##Condition factor on PI
     picf= np.minimum(1, rc_start * (ci[20, ...] - rc_start) / (ci[20, ...] - 1))
@@ -1549,19 +1549,6 @@ def f_wbe_mu(cg, aw, mw, vw=0):
     ## calculate whole body energy content from weight of adipose tissue (aw) and muscle (mw), and the dry matter content and energy density.
     wbe = aw * cg[20, ...] * cg[26, ...] + mw * cg[21, ...] * cg[27, ...] + vw * cg[22, ...] * cg[28, ...]
     return wbe
-
-
-def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
-    #todo these formulas need to be reviewed, then connected to emissions in Pyomo.
-    # Compare with original Blaxter & Clapperton to check if error in the sign in Tech 2012 paper.
-    # Note comment made in Wilkerson etal 1995
-    # Compare the original MIDAS derivation of animal and feed components
-    ##Methane production total
-    ch4_total = ch[1, ...] * (intake_f + intake_s) * ((ch[2, ...] + ch[3, ...] * md_solid)
-                                                      + (level + 1) * (ch[4, ...] - ch[5, ...] * md_solid))
-    ##Methane production animal component
-    ch4_animal = ch[1, ...] * (intake_f + intake_s) * (level + 1) * (ch[4, ...] - ch[5, ...] * md_solid)
-    return ch4_total, ch4_animal
 
 
 # def f1_convert_fs2nv(fs_input, nv_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg):

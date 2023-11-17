@@ -71,6 +71,7 @@ pd.set_option('mode.chained_assignment', 'raise')
 from . import Functions as fun
 from . import SeasonalFunctions as zfun
 from . import FeedsupplyFunctions as fsfun
+from . import EmissionFunctions as efun
 from . import PropertyInputs as pinp
 from . import UniversalInputs as uinp
 from . import StructuralInputs as sinp
@@ -196,9 +197,14 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
 
 
     ##quality of each category in each period
-    ###scale dmd at the trial date to each period.
+    ###scale dmd at harvest to each period.
     stub_cat_qual_s1 = pinp.stubble['i_stub_cat_dmd_s1']
     dmd_cat_p6zks1 = stub_cat_qual_s1 * qual_declined_p6zk[...,na]
+
+    ##crude protein of each category in each period
+    ###scale cp at harvest to each period. Reduces at the same rate as DMD as per MIDAS.
+    stub_cat_cp_s1 = pinp.stubble['i_stub_cat_cp_s1']
+    cp_cat_p6zks1 = stub_cat_cp_s1 * qual_declined_p6zk[...,na]
 
     ##calc relative quality before converting dmd to md - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
@@ -245,6 +251,21 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
                                        , nv['confinement_inc'], ri_p6zks1, stub_me_eff_gainlose)
 
     md_fp6zks1 = md_fp6zks1 * nv_is_not_confinement_f[:,na,na,na,na] #me from stubble is 0 in the confinement pool
+
+    ###########################
+    # emissions               #
+    ###########################
+    ##livestock methane emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
+    if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
+        ch4_stub_p6zks1 = efun.f_ch4_feed_nir(1000, dmd_cat_p6zks1)
+    elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
+        ch4_stub_p6zks1 = efun.f_ch4_feed_bc()
+
+    ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
+    if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
+        n2o_stub_p6zks1 = efun.f_n2o_feed_nir(1000, dmd_cat_p6zks1, cp_cat_p6zks1)
+
+    co2e_stub_p6zks1 = ch4_stub_p6zks1 * uinp.emissions['i_ch4_gwp_factor'] + n2o_stub_p6zks1 * uinp.emissions['i_n2o_gwp_factor']
 
     ###########
     #trampling#
@@ -303,6 +324,9 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     cat_a_prov_p6zks1s2 = cat_a_prov_p6zks1s2 * mask_fp_z8var_p6z[...,na,na,na]
     md_fp6zks1 = md_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
     vol_fp6zks1 = vol_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
+    ch4_stub_p6zks1 = ch4_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
+    n2o_stub_p6zks1 = n2o_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
+    co2e_stub_p6zks1 = co2e_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
 
     #########
     ##keys  #
@@ -324,6 +348,8 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     arrays_p6zks1s2 = [keys_p6, keys_z, keys_k, keys_s1, keys_s2]
     ###md & vol
     arrays_fp6zks1 = [keys_f, keys_p6, keys_z, keys_k, keys_s1]
+    ###emissions
+    arrays_p6zks1 = [keys_p6, keys_z, keys_k, keys_s1]
     ###harv con & feed period transfer
     arrays_p6zk = [keys_p6, keys_z, keys_k]
     ###biomass to residue
@@ -362,6 +388,9 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     ##vol
     params['vol'] = fun.f1_make_pyomo_dict(vol_fp6zks1, arrays_fp6zks1)
 
+    ##emissions
+    params['co2e_stub_p6zks1'] = fun.f1_make_pyomo_dict(co2e_stub_p6zks1, arrays_p6zks1)
+
     ###########
     #report   #
     ###########
@@ -372,5 +401,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
 
     ##store report vals
     fun.f1_make_r_val(r_vals,np.moveaxis(np.moveaxis(md_fp6zks1, 0, 2), 0, 1),'md_zp6fks1',mask_fp_z8var_zp6[:,:,na,na,na],z_pos=-5)
+    fun.f1_make_r_val(r_vals,np.moveaxis(ch4_stub_p6zks1, 0, 1),'ch4_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
+    fun.f1_make_r_val(r_vals,np.moveaxis(n2o_stub_p6zks1, 0, 1),'n2o_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
 
 

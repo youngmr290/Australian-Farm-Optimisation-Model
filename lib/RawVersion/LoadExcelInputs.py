@@ -182,6 +182,9 @@ def f_load_excel_default_inputs(load_all_pinp=False, trial_pinp=None):
     ##sup inputs
     uinp_defaults['sup_inp'] = xl_all_named_ranges(universal_xl_path,"Sup Feed")
 
+    ##emissions inputs
+    uinp_defaults['emissions_inp'] = xl_all_named_ranges(universal_xl_path,"Emissions")
+
     ##crop inputs
     uinp_defaults['crop_inp'] = xl_all_named_ranges(universal_xl_path,"Crop Sim")
 

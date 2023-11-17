@@ -2113,6 +2113,162 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     return feed_budget.astype(float).round(2)
 
 
+def f_emission_summary(lp_vars, r_vals):
+    '''
+    Summary of whole farm emissions. The report summarises the methane, nitrous oxide, carbon dioxide and
+    carbon dioxide equivalents.
+
+    :param lp_vars:
+    :param r_vals:
+    :return:
+    '''
+    ##inputs
+    n2o = {}
+    ch4 = {}
+    co2 = {}
+    arith = 2
+
+    ##calculate n2o and ch4 emissions from livestock (emissions are linked to animal and feed activities)
+    for e in ['ch4', 'n2o']:
+        d = eval(e)
+        ###sires
+        type = 'stock'
+        prod = '{0}_animal_zg0'.format(e)
+        na_prod = [0, 1]  # q,s
+        weights = 'sire_numbers_qszg0'
+        keys = 'sire_keys_qszg0'
+        index = [0,1,2] #q,s,z
+        cols = []
+        d['sire'] = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                                     keys=keys, arith=arith, index=index, cols=cols)
+
+        ###dams
+        type = 'stock'
+        prod = '{0}_animal_k2tva1nwziyg1'.format(e)
+        na_prod = [0, 1]  # q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        keys = 'dams_keys_qsk2tvanwziy1g1'
+        index = [0,1,8] #q,s,z
+        cols = []
+        d['dams'] = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                                     keys=keys, arith=arith, index=index, cols=cols)
+
+        ###offs
+        type = 'stock'
+        prod = '{0}_animal_k3k5tvnwziaxyg3'.format(e)
+        na_prod = [0, 1]  # q,s
+        weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+        keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+        index = [0,1,8] #q,s,z
+        cols = []
+        d['offs'] = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                                     keys=keys, arith=arith, index=index, cols=cols)
+
+        ###grn pasture
+        type = 'pas'
+        prod = '{0}_grnpas_gop6lzt'.format(e)
+        na_prod = [0,1,2]  # q,s,f
+        weights = 'greenpas_ha_qsfgop6lzt'
+        keys = 'keys_qsfgop6lzt'
+        index = [0,1,7] #q,s,z
+        cols = []
+        d['grnpas'] = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                             keys=keys, arith=arith, index=index, cols=cols)
+
+        ###poc pasture
+        type = 'pas'
+        prod = '{0}_poc_p6z'.format(e)
+        na_prod = [0, 1, 2, 4]  # q,s,f,l
+        weights = 'poc_consumed_qsfp6lz'
+        keys = 'keys_qsfp6lz'
+        index = [0,1,5] #[q,s,z]
+        cols = []
+        d['poc'] = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                             keys=keys, arith=arith, index=index, cols=cols)
+
+        ###dry pasture
+        type = 'pas'
+        prod = '{0}_drypas_dp6zt'.format(e)
+        na_prod = [0, 1, 2, 6]  # q,s,f,l
+        weights = 'drypas_consumed_qsfdp6zlt'
+        keys = 'keys_qsfdp6zlt'
+        index = [0,1,5] #[q,s,z]
+        cols = []
+        d['drypas'] = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                             keys=keys, arith=arith, index=index, cols=cols)
+
+        ###nap pasture
+        type = 'pas'
+        prod = '{0}_drypas_dp6zt'.format(e) #nap is same emissions as dry pasture
+        na_prod = [0, 1, 2]  # q,s,f
+        weights = 'nap_consumed_qsfdp6zt'
+        keys = 'keys_qsfdp6zt'
+        index = [0,1,5] #[q,s,z]
+        cols = []
+        d['nappas'] = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                             keys=keys, arith=arith, index=index, cols=cols)
+
+        ###residue
+        type = 'stub'
+        prod = '{0}_stub_zp6ks1'.format(e)
+        na_prod = [0, 1, 4, 7]  # q,s,p6,f,s2
+        weights = 'stub_qszp6fks1s2'
+        keys = 'keys_qszp6fks1s2'
+        index = [0, 1, 2]  # q,s,z
+        cols = []
+        d['res'] = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                              keys=keys, arith=arith, index=index, cols=cols)
+
+        ###crop graze
+        type = 'crpgrz'
+        prod = '{0}_cropgraze_kp6z'.format(e)
+        na_prod = [0, 1,2,5,7]  # q,s,f,p5,l
+        weights = 'crop_consumed_qsfkp6p5zl'
+        keys = 'keys_qsfkp6p5zl'
+        index = [0, 1, 6]  # q,s,z
+        cols = []
+        d['grncrop'] = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                              keys=keys, arith=arith, index=index, cols=cols)
+
+        ###saltbush (just the saltbush not the understory)
+        type = 'slp'
+        prod = 'n2o_sb_zp6'.format(e)
+        na_prod = [0, 1, 4, 5]  # q,s,f,l
+        weights = 'v_tonnes_sb_consumed_qszp6fl'
+        keys = 'keys_qszp6fl'
+        index = [0, 1, 2]  # q,s,z
+        cols = []
+        d['sb'] = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                              keys=keys, arith=arith, index=index, cols=cols)
+
+        ###sup
+        sup_emissions_kp6z = r_vals['sup']['{0}_sup_kp6z'.format(e)]
+        grain_fed_qszkp6 = f_grain_sup_summary(lp_vars, r_vals, option=2)
+        sup_emissions_qs_kp6z = grain_fed_qszkp6.unstack([3,4,2]).sort_index(axis=1).mul(sup_emissions_kp6z, axis=1)
+        d['sup_emissions_qsz'] = pd.DataFrame(sup_emissions_qs_kp6z.stack([2]).sum(axis=1))
+
+    ##total livestock emissions
+    for i, emission_cat in enumerate(ch4):
+        if i==0:
+            livestock_ch4_qsz = ch4[emission_cat]
+            livestock_n2o_qsz = n2o[emission_cat]
+        else:
+            livestock_ch4_qsz = livestock_ch4_qsz.add(ch4[emission_cat])
+            livestock_n2o_qsz = livestock_n2o_qsz.add(n2o[emission_cat])
+
+    ##co2e
+    ch4_gwp_factor = r_vals['stock']['ch4_gwp_factor']
+    n2o_gwp_factor = r_vals['stock']['n2o_gwp_factor']
+    ch4_livestock_co2e_qsz = livestock_ch4_qsz * ch4_gwp_factor / 1000 #convert to tonnes
+    n2o_livestock_co2e_qsz = livestock_n2o_qsz * n2o_gwp_factor / 1000 #convert to tonnes
+    total_livestock_co2e_qsz = ch4_livestock_co2e_qsz + n2o_livestock_co2e_qsz
+
+    ##make final df
+    emissions_qsz = pd.concat([total_livestock_co2e_qsz, ch4_livestock_co2e_qsz, n2o_livestock_co2e_qsz], axis=1)
+    emissions_qsz.columns = ['Total Livestock co2e (t)', 'Livestock Methane co2e (t)', 'Livestock Nitrous Oxide co2e (t)']
+    return emissions_qsz
+
+
 def f_grazing_summary(lp_vars, r_vals):
     '''
     Green pasture grazing summary

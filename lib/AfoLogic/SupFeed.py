@@ -19,7 +19,7 @@ density and amounts fed. Supplementary feeding also incurs a labour requirement 
 to and from the silo, filling the sheep feeder, emptying the feeder, and transporting between paddocks.
 
 .. note:: Other grains can be added as supplements. Just remember to add their inputs in the mach
-    sheet in universal.xlsx for each machine option and  the sup sheet in both universal.xlsx and property.xlsx.
+    sheet in universal.xlsx for each machine option and the sup sheet in both universal.xlsx and property.xlsx.
 
 
 
@@ -34,6 +34,7 @@ from dateutil import relativedelta as rdelta
 from . import Functions as fun
 from . import SeasonalFunctions as zfun
 from . import FeedsupplyFunctions as fsfun
+from . import EmissionFunctions as efun
 from . import Periods as per
 from . import PropertyInputs as pinp
 from . import UniversalInputs as uinp
@@ -314,7 +315,60 @@ def f_sup_md_vol(r_vals, nv):
 
     return vol_tonne_fkp6z, md_tonne_fkp6z
     
-    
+ 
+def f_sup_emissions(r_vals):
+    '''
+    Livestock emissions liked to consuming 1t of supplement.
+
+    Note the supplement activity is 1t of grain with moisture therefore adjust intake for dry matter content
+    because emission equations are based on dry matter.
+
+    '''
+
+    ##inputs
+    sup_md_vol = uinp.supfeed['sup_md_vol']
+    md_k = sup_md_vol.loc['energy'].values #MJ/kg DM
+    dry_matter_content_k = sup_md_vol.loc['dry matter content'].values
+    cp_k = sup_md_vol.loc['cp'].values
+
+    dmd_k = fsfun.f1_md_to_dmd(md_k / 1000)
+
+    ##livestock methane emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
+    if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
+        ch4_sup_k = efun.f_ch4_feed_nir(1000 * dry_matter_content_k, dmd_k)
+    elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
+        ch4_sup_k = efun.f_ch4_feed_bc()
+
+    ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
+    if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
+        n2o_sup_k = efun.f_n2o_feed_nir(1000 * dry_matter_content_k, dmd_k, cp_k)
+
+    co2e_sup_k = ch4_sup_k * uinp.emissions['i_ch4_gwp_factor'] + n2o_sup_k * uinp.emissions['i_n2o_gwp_factor']
+
+    ##apply season mask and grazing exists mask
+    ###calc season mask
+    date_start_p6z = per.f_feed_periods()[:-1]
+    mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
+    ###apply masks
+    n2o_sup_kp6z = n2o_sup_k[:,na,na] * mask_fp_z8var_p6z
+    ch4_sup_kp6z = ch4_sup_k[:,na,na] * mask_fp_z8var_p6z
+    co2e_sup_kp6z = co2e_sup_k[:,na,na] * mask_fp_z8var_p6z
+
+    ##build df
+    keys_z = zfun.f_keys_z()
+    keys_p6 = pinp.period['i_fp_idx']
+    index_kp6z = pd.MultiIndex.from_product([sup_md_vol.columns, keys_p6, keys_z])
+    co2e_sup_kp6z = pd.Series(co2e_sup_kp6z.ravel(), index=index_kp6z)
+    n2o_sup_kp6z = pd.Series(n2o_sup_kp6z.ravel(), index=index_kp6z)
+    ch4_sup_kp6z = pd.Series(ch4_sup_kp6z.ravel(), index=index_kp6z)
+
+
+    ##store report vals
+    fun.f1_make_r_val(r_vals,n2o_sup_kp6z,'n2o_sup_kp6z',mask_fp_z8var_p6z,z_pos=-1)
+    fun.f1_make_r_val(r_vals,ch4_sup_kp6z,'ch4_sup_kp6z',mask_fp_z8var_p6z,z_pos=-1)
+
+    return co2e_sup_kp6z
+
 def f_sup_labour(nv):
     '''
     The labour required to feed sheep one tonne of supplement is calculated as the time spent
@@ -502,6 +556,7 @@ def f1_sup_selectivity():
 def f_sup_params(params,r_vals, nv):
     total_sup_cost, total_sup_wc, storage_dep, storage_asset, confinement_dep = f_sup_cost(r_vals, nv)
     vol_tonne, md_tonne = f_sup_md_vol(r_vals, nv)
+    co2e_sup_kp6z = f_sup_emissions(r_vals)
     sup_labour = f_sup_labour(nv)
     buy_grain_price, buy_grain_wc, buy_grain_prov_p7z = f_buy_grain_price(r_vals)
     a_p6_p7 = f1_a_p6_p7()
@@ -520,6 +575,7 @@ def f_sup_params(params,r_vals, nv):
     params['buy_grain_prov_p7z'] = buy_grain_prov_p7z.to_dict()
 
     ##create season params
+    params['co2e_sup_kp6z'] = co2e_sup_kp6z.to_dict()
     params['total_sup_cost'] = total_sup_cost.to_dict()
     params['total_sup_wc'] = total_sup_wc.to_dict()
     params['sup_labour'] = sup_labour.to_dict()
