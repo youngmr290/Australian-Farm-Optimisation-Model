@@ -44,7 +44,7 @@ na = np.newaxis
 #     landuse_grazing_kl = pinp.cropgraze['i_cropgrazing_inc_landuse'][:, lmu_mask]
 #
 #     ##graze = arable area
-#     arable_l = pinp.crop['arable'].squeeze().values[lmu_mask]
+#     arable_l = pinp.general['arable'][lmu_mask]
 #
 #     ##area of crop grazing that 1ha of each landuse provides
 #     graze_area_kl = landuse_grazing_kl * arable_l

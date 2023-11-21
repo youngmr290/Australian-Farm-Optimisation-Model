@@ -45,6 +45,7 @@ def f1_rotationpyomo(params, model):
     #define parameters #
     ####################
     model.p_area = pe.Param(model.s_lmus, initialize=params['lmu_area'], doc='available area on farm for each soil')
+    model.p_not_cropable_area_l = pe.Param(model.s_lmus, initialize=params['p_not_cropable_area_l'], doc='area of paddocks that are never cropped on each LMU.')
     model.p_landuse_area = pe.Param(model.s_phases, model.s_landuses, initialize=params['phases_rk'], default=0, doc='landuse in each phase')
     model.p_inc_hist_gs0_con = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['p_inc_hist_gs0_con_p7z']
                                         , default=0, doc='does the history constraint exist in current p7 - used to skip the hist constraint when season has started but hasnt broken')
@@ -88,6 +89,7 @@ def f1_rotationpyomo(params, model):
     f_phase_link_within(model)
     f_phase_link_between(model)
     f_con_area(model)
+    f_con_max_crop_area(model)
     # f_con_dry_link(model)
 
 
@@ -297,6 +299,23 @@ def f_con_area(model):
         else:
             return pe.Constraint.Skip
     model.con_area = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_season_types, rule=area_rule, doc='rotation area constraint')
-    
+
+
+##Area on each LMU that can't be cropped
+def f_con_max_crop_area(model):
+    '''
+    Some farms have paddocks that are never cropped due to landscape factors or managerial preferences.
+    To accommodate, this constraint bounds the maximum area that can be cropped on each LMU.
+    '''
+
+    def max_crop_area_bound(model, q, s, p7, z, l):
+        if model.p_not_cropable_area_l[l] != 0 and pe.value(model.p_wyear_inc_qs[q, s]):
+            return (sum(model.v_phase_area[q, s, p7, z, r, l] * model.p_landuse_area[r, k1] for r in model.s_phases for
+                        k1 in model.s_crops) <= (model.p_area[l] - model.p_not_cropable_area_l[l]))
+        else:
+            return pe.Constraint.Skip
+    model.con_crop_area_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
+                                              model.s_season_types, model.s_lmus, rule=max_crop_area_bound,
+                                              doc='bound on total pasture area')
 
 

@@ -299,7 +299,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
 
     ##colate other info
     biomass_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
-    arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
+    arable = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0) #read in arable area df
     harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield is inputted as the harvestable grain
     harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
     propn_baled_k = pd.Series(pinp.stubble['i_propn_baled_k'], index=sinp.landuse['C']) #Proportion of biomass at baling that is baled (at point of baling - not including respiration losses).
@@ -515,7 +515,7 @@ def f_fert_req():
     nap_fert_rz_nl = nap_fert_rz_n.mul(fert_by_soil_nl,axis=1,level=0)
 
     ##account for arable area
-    arable_l = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
+    arable_l = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0) #read in arable area df
     fert_rz_nl = fert_rz_nl.mul(arable_l, axis=1, level=1) #add arable to df
     nap_fert_rz_nl = nap_fert_rz_nl.mul(1-arable_l, axis=1, level=1) #add arable to df
     return fert_rz_nl.fillna(0).stack(1) + nap_fert_rz_nl.fillna(0).stack(1)
@@ -594,7 +594,7 @@ def f_fert_passes():
     # fert_passes_r_zn = fert_passes_rk_zn.droplevel(1, axis=0)
 
     ##adjust fert passes by arable area
-    arable_l = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
+    arable_l = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
     # fert_passes_rz_n = fert_passes_r_zn.stack(0)
     col_nl = pd.MultiIndex.from_product([fert_passes_rz_n.columns, arable_l.index])
     fert_passes_rz_nl = fert_passes_rz_n.reindex(col_nl, axis=1,level=0)
@@ -861,7 +861,7 @@ def f_chem_application():
     ###drop landuse from index
     chem_passes_rz_n = chem_passes_rkz_n.droplevel(1, axis=0)
     ##adjust chem passes by arable area
-    arable_l = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
+    arable_l = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
     col_nl = pd.MultiIndex.from_product([chem_passes_rz_n.columns, arable_l.index])
     chem_passes_rz_nl = chem_passes_rz_n.reindex(col_nl, axis=1,level=0)
     chem_passes_rz_nl=chem_passes_rz_nl.mul(arable_l,axis=1,level=1)
@@ -929,7 +929,7 @@ def f_chem_cost(r_vals):
     ### sum herbicide and fungicide cost
     chem_cost_r_z = chem_cost_r_zn.groupby(axis=1, level=0).sum()
     ###arable area.
-    arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
+    arable = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
     ###adjust by arable area and allocate to category (category allocation only affects cashflow timing hence interest)
     index_zln = pd.MultiIndex.from_product([chem_cost_r_z.columns, arable.index, n_alloc.index])
     chem_cost_r_zln = chem_cost_r_z.reindex(index_zln, axis=1,level=0)
@@ -1006,7 +1006,7 @@ def f_seedcost(r_vals):
     rate1 = pinp.crop['seed_info']['Rate1'] #rate (ml/100g) for dressing 1
     rate2 = pinp.crop['seed_info']['Rate2'] #rate (ml/100g) for dressing 2
     percent_dressed = pinp.crop['seed_info']['percent dressed'] #rate (ml/100g) for dressing 2
-    arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
+    arable = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
     ##adjust for arable area.
     seeding_rate = seeding_rate.mul(arable, axis=1)
     ##overall seed grading cost per tonne
@@ -1170,7 +1170,7 @@ def f_phase_sow_req():
     ##read phases
     phases_df = pinp.phases_r
     ##adjust arable area
-    arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
+    arable = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
     ##sow = arable area * frequency
     keys_k = sinp.landuse['All']
     keys_l = arable.index

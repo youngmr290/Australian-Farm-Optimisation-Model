@@ -809,7 +809,7 @@ def f1_update_reseeding_foo(foo_grn_reseeding_p6lrzt, foo_dry_reseeding_p6lrzt,
     len_z = period_zt.shape[0]
     len_r = resown_rt.shape[0]
     lzt = (n_lmu,len_z,len_t)
-    arable_l = pinp.crop['arable'].squeeze().values[lmu_mask_l]
+    arable_l = pinp.general['arable'][lmu_mask_l]
     ##create arrays
     foo_arable_lzt      = np.zeros(lzt, dtype = 'float64')             # create the array foo_arable_lt with the required shape - needed because different sized arrays are passed in
     foo_arable_lzt[...] = foo_arable_zt                                # broadcast foo_arable into foo_arable_lt (to handle foo_arable not having an lmu axis)

@@ -226,7 +226,7 @@ def f_property_inp_sa(pinp_defaults):
     labour['max_casual_seedharv'] = fun.f_sa(labour['max_casual_seedharv'], sen.sav['seedharv_casual_ub'], 5)
     labour['min_casual_seedharv'] = fun.f_sa(labour['min_casual_seedharv'], sen.sav['seedharv_casual_lo'], 5)
     general['i_lmu_area'] = fun.f_sa(general['i_lmu_area'], sen.sav['lmu_area_l'], 5)
-    crop['i_lmu_area'] = fun.f_sa(crop['arable'], sen.sav['lmu_arable_propn_l'], 5)
+    general['arable'] = fun.f_sa(general['arable'], sen.sav['lmu_arable_propn_l'], 5)
     general['i_crop_landuse_inc_k1'] = fun.f_sa(general['i_crop_landuse_inc_k1'], sen.sav['crop_landuse_inc_k1'], 5)
     general['i_pas_landuse_inc_k2'] = fun.f_sa(general['i_pas_landuse_inc_k2'], sen.sav['pas_landuse_inc_k2'], 5)
     ###sam

@@ -722,7 +722,7 @@ def f_harvest_cost(r_vals):
 
 def f_contract_harv_rate():
     '''
-    Grain harvested per hr by contractor (t/hr).
+    Grain harvested per hr by contractor (t/rotor hr).
     '''
     ##season inputs through function
     harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0) #when the first crop begins to be harvested (e.g. when harv periods start)
@@ -768,7 +768,7 @@ def f_contract_harv_rate():
 
 def f_contract_harvest_cost(r_vals):
     '''
-    Cost of contract harvest in each cashflow period ($/hr).
+    Cost of contract harvest in each cashflow period ($/rotor hr).
     '''
     ##allocation
     harv_cost_allocation_p7zp5, harv_wc_allocation_c0p7zp5 = f1_harv_cost_alloc()
