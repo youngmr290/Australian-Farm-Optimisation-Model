@@ -188,11 +188,11 @@ def create_sa():
     ##SAV
     sav['mach_option'] = '-'                    #control which machine compliment is used
     sav['daily_seed_hours'] = '-'               #number of hours seeder can run for each day.
-    sav['seeding_prep'] = '-'               #number of hours seeder can run for each day.
-    sav['seeding_delays'] = '-'               #number of hours seeder can run for each day.
+    sav['seeding_prep'] = '-'               #propn of seeding time when the seeder is not moving i.e. due to refilling.
+    sav['seeding_delays'] = '-'               #propn of the seeding period when seeding cannot occur due to bad weather
     sav['daily_harvest_hours'] = '-'               #number of hours harvester can run for each day.
-    sav['harv_prep'] = '-'               #number of hours seeder can run for each day.
-    sav['harv_delays'] = '-'               #number of hours seeder can run for each day.
+    sav['harv_prep'] = '-'               #propn of seeding time when the harv is not moving i.e. due to refilling.
+    sav['harv_delays'] = '-'               #propn of the harv period when harv cannot occur due to bad weather
 
     for option in uinp.mach:
         ##SAV
