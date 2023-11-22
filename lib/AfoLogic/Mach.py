@@ -895,25 +895,31 @@ def time_ha():
 
 #time taken to driving to and from paddock and filling up
 # hr/cubic m = ((ave distance to paddock *2)/speed + fill up time)/ spreader capacity  # *2 because to and from paddock
-def time_cubic():
-    '''Time taken to fill up spreader and drive to and from paddock.
+def time_tonne():
+    '''Time taken to fill up spreader and drive to and from paddock (hr/t).
 
-    This represents the time driving to and from the paddock and filling up. This is dependent on the
+    This represents the time driving to and from the paddock and filling up. This is dependent on
     the density of the fertiliser (e.g. more time would be required filling and traveling to
     spread 1 tonne of a lower density fertiliser).
 
     '''
-    return (((pinp.mach['ave_pad_distance'] *2)
-              /uinp.mach[pinp.mach['option']]['spreader_speed'] + uinp.mach[pinp.mach['option']]['time_fill_spreader'])
-              /uinp.mach[pinp.mach['option']]['spreader_cap'])
-     
+    ##calc time taken to fill up spreader and drive to and from paddock
+    time_cubic = (((pinp.mach['ave_pad_distance'] *2) /uinp.mach[pinp.mach['option']]['spreader_speed']
+                   + uinp.mach[pinp.mach['option']]['time_fill_spreader'])
+                  /uinp.mach[pinp.mach['option']]['spreader_cap'])
+
+    ##convert from meters cubed to tonne - divide by conversion (density) because lighter ferts require more filling up time per tonne
+    conversion = pd.DataFrame([pinp.crop['fert_info']['fert_density']]).squeeze()
+    time_n = time_cubic / conversion
+
+    ##mulitiplied by a factor (spreader_proportion) 0 or 1 if the fert is applied at seeding (or a fraction if applied at both seeding and another time)
+    spreader_proportion = pd.DataFrame([pinp.crop['fert_info']['spreader_proportion']]).squeeze()
+    time_n = time_n.mul(spreader_proportion)
+    return time_n
 
 ###################
 #application cost # *remember that lime application only happens every 4 yrs - accounted for in the passes inputs
 ################### *used in crop pyomo
-#this is split into two sections - new feature of AFO
-# 1- cost to drive around 1ha
-# 2- cost per cubic metre ie to represent filling up and driving to and from paddock
 
 def spreader_cost_hr():
     '''
@@ -932,36 +938,6 @@ def spreader_cost_hr():
     cost = tractor_fuel + tractor_rm + tractor_oilgrease + uinp.mach[pinp.mach['option']]['spreader_maint']
     return cost
 
-def fert_app_cost_ha():
-    '''
-
-    Fertiliser application cost part 1: Application cost per hectare.
-
-    The cost of applying fertilising is calculated in two parts. Part 1 is the cost per hectare
-    for each fertiliser which represents the time taken spreading fertiliser in the paddock (see time_ha)
-    and the cost of fertilising per hour (see spreader_cost_hr)
-
-    '''
-    return spreader_cost_hr() * time_ha().stack().droplevel(1)
-
-def fert_app_cost_t():
-    '''
-    Fertiliser application cost part 2: time required per tonne.
-
-    The cost of applying fertilising is calculated in two parts. Part 2 is the cost per tonne
-    for each fertiliser which represents the time taken driving to and from the paddock and filling
-    up (see time_cubic) and the cost of fertilising per hour (see spreader_cost_hr)
-
-    '''
-    spreader_proportion = pinp.crop['fert_info']['spreader_proportion']
-    conversion = pinp.crop['fert_info']['fert_density']
-    ##spreader cost per hr is multiplied by the full time required to drive to and from paddock and fill up even though during filling up the tractor is just sitting, but this accounts for the loader time/cost
-    cost_cubic = spreader_cost_hr() * time_cubic()
-    ##mulitiplied by a factor (spreader_proportion) 0 or 1 if the fert is applied at seeding (or a fraction if applied at both seeding and another time)
-    cost_t = cost_cubic / conversion * spreader_proportion #convert from meters cubed to tonne - divide by conversion (density) because lighter ferts require more filling up time per tonne
-    return cost_t
-#e=fert_app_t()
-    
 #######################################################################################################################################################
 #######################################################################################################################################################
 #chem
@@ -992,7 +968,7 @@ def spray_time_ha():
 #application cost # 
 ################### *used in crop pyomo
 
-def chem_app_cost_ha():
+def spraying_cost_ha():
     '''
     Chemical application cost per hectare.
 

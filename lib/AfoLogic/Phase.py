@@ -396,18 +396,6 @@ def f_grain_pool_proportions():
 #######
 #fert #    
 #######    
-'''
-1) determines fert cost allocation 
-2) fert requirement for each rot phase
-3) cost of fert for each rotation 
-4) application cost per kg and application cost per ha 
-    -per tonne; represents the difference in application time based on fert density - represents the filling up and traveling to the paddock time, ie it would require more filling and traveling time to spread 1t of a lighter (less dense) fert.
-    -per ha; represents the time to spread 1ha - this depends how far each fert is chucked out of the spreader
-5) sum together to get overall fert cost
-'''
-
-
-
 
 def f1_fert_cost_allocation():
     '''
@@ -604,6 +592,39 @@ def f_fert_passes():
     return fert_passes_rz_nl.fillna(0).stack(1) + nap_fert_passes_rz_nl.fillna(0).stack(1)
 
 
+def f1_fertilising_time():
+    '''
+    Determines the time (hr/ha) spent fertilising for each rotation.
+
+    Based on:
+
+    1. per tonne; represents the difference in application time based on fert density - represents the filling up and
+       traveling to the paddock time, ie it would require more filling and traveling time to spread 1t of a lighter (less dense) fert.
+    2. per ha; represents the time to spread 1ha - this depends on how far each fert is chucked out of the spreader
+
+    This is used to calculate machinery application cost, labour requirement and
+    variable machinery depreciation associated with fertilising.
+    '''
+
+    ##time linked to tonnage
+    ###fert used in each rotation phase
+    fert_total_rzln = f_fert_req().stack().sort_index()/1000 #convert to tonnes
+    ###time per tonne
+    time_n = mac.time_tonne()
+    ###total time
+    time_t_rzln = fert_total_rzln.mul(time_n, level=-1)
+
+    ##time linked to spreading a hectare in paddock
+    ###fert passes - arable (arable area accounted for in passes function)
+    total_passes_rzln = f_fert_passes().stack()
+    ###time taken to cover 1ha while spreading
+    time_ha_n = mac.time_ha().squeeze()
+    ###total time
+    time_ha_rzln = total_passes_rzln.mul(time_ha_n, level=-1)
+
+    return time_t_rzln + time_ha_rzln
+
+
 def f_fert_cost(r_vals):
     '''
     Cost of fertilising the arable areas. Includes the fertiliser cost and the application cost.
@@ -640,34 +661,21 @@ def f_fert_cost(r_vals):
     phase_fert_wc_rl_c0p7nz = phase_fert_wc_rzl_c0p7n.unstack(1)
     phase_fert_wc_rl_c0p7z = phase_fert_wc_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
 
-    ##aplication cost per tonne
-    application_cost_tonne = mac.fert_app_cost_t()
-    fert_app_cost_tonne_rzl_n = fertreq.mul(application_cost_tonne/1000,axis=1) #div by 1000 to convert to $/kg
-    fert_app_cost_tonne_rzl_p7n = fert_app_cost_tonne_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
-    fert_app_cost_tonne_rl_p7nz = fert_app_cost_tonne_rzl_p7n.unstack(1)
-    fert_app_cost_tonne_rl_p7z = fert_app_cost_tonne_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
-    fert_app_wc_tonne_rzl_c0p7n = fert_app_cost_tonne_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
-    fert_app_wc_tonne_rl_c0p7nz = fert_app_wc_tonne_rzl_c0p7n.unstack(1)
-    fert_app_wc_tonne_rl_c0p7z = fert_app_wc_tonne_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
-
-    ##app cost per ha
-    ###call passes function (it has to be a separate function because it is used in crplabour.py as well
-    fert_passes = f_fert_passes()
-    ###add the cost for each pass
-    fert_cost_ha = mac.fert_app_cost_ha() #cost for 1 pass for each fert.
-    fert_app_cost_ha_rzl_n = fert_passes.mul(fert_cost_ha,axis=1)
-    fert_app_cost_ha_rzl_p7n = fert_app_cost_ha_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
-    fert_app_cost_ha_rl_p7nz = fert_app_cost_ha_rzl_p7n.unstack(1)
-    fert_app_cost_ha_rl_p7z = fert_app_cost_ha_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
-    fert_app_wc_ha_rzl_c0p7n = fert_app_cost_ha_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
-    fert_app_wc_ha_rl_c0p7nz = fert_app_wc_ha_rzl_c0p7n.unstack(1)
-    fert_app_wc_ha_rl_c0p7z = fert_app_wc_ha_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
+    ##aplication cost
+    fert_time_rzl_n = f1_fertilising_time().unstack()
+    fert_app_cost_rzl_n = fert_time_rzl_n * mac.spreader_cost_hr()
+    fert_app_cost_rzl_p7n = fert_app_cost_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
+    fert_app_cost_rl_p7nz = fert_app_cost_rzl_p7n.unstack(1)
+    fert_app_cost_rl_p7z = fert_app_cost_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
+    fert_app_wc_rzl_c0p7n = fert_app_cost_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
+    fert_app_wc_rl_c0p7nz = fert_app_wc_rzl_c0p7n.unstack(1)
+    fert_app_wc_rl_c0p7z = fert_app_wc_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
 
     ##combine all costs - fert, app per ha and app per tonne
-    fert_cost_total = phase_fert_cost_rl_p7z + fert_app_cost_ha_rl_p7z + fert_app_cost_tonne_rl_p7z
+    fert_cost_total = phase_fert_cost_rl_p7z + fert_app_cost_rl_p7z
 
     ##combine all wc - fert, app per ha and app per tonne
-    fert_wc_total = phase_fert_wc_rl_c0p7z + fert_app_wc_ha_rl_c0p7z + fert_app_wc_tonne_rl_c0p7z
+    fert_wc_total = phase_fert_wc_rl_c0p7z + fert_app_wc_rl_c0p7z
 
     ##store r_vals
     ###make z8 mask - used to uncluster
@@ -677,8 +685,8 @@ def f_fert_cost(r_vals):
     fun.f1_make_r_val(r_vals, phase_fert_cost_rl_p7z, 'phase_fert_cost', mask_season_p7z, z_pos=-1)
     fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(phase_fert_cost_rl_p7z.stack([0,1]).sort_index()
                                                           ,p7_pos=-2,z_pos=-1), 'phase_fert_cost_increment', mask_season_p7z, z_pos=-1)
-    fun.f1_make_r_val(r_vals, fert_app_cost_ha_rl_p7z + fert_app_cost_tonne_rl_p7z, 'fert_app_cost', mask_season_p7z, z_pos=-1)
-    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(fert_app_cost_tonne_rl_p7z.stack([0,1]).sort_index()
+    fun.f1_make_r_val(r_vals, fert_app_cost_rl_p7z, 'fert_app_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(fert_app_cost_rl_p7z.stack([0,1]).sort_index()
                                                           ,p7_pos=-2,z_pos=-1), 'fert_app_cost_increment', mask_season_p7z, z_pos=-1)
     return fert_cost_total, fert_wc_total
 
@@ -867,6 +875,24 @@ def f_chem_application():
     chem_passes_rz_nl=chem_passes_rz_nl.mul(arable_l,axis=1,level=1)
     return chem_passes_rz_nl.stack(1).sort_index()
 
+def f1_spraying_time():
+    '''
+    Determines the time (hr/ha) spent spraying for each rotation.
+
+    This is used to calculate machinery application cost, labour requirement and
+    variable machinery depreciation associated with fertilising.
+    '''
+
+    ##passes - arable (arable area accounted for in passes function)
+    total_passes_rzln = f_chem_application().stack()
+    ##time taken to cover 1ha while spraying
+    time_ha = mac.spray_time_ha()
+    ##total time accounting for number of applications.
+    time_ha_rzln = total_passes_rzln * time_ha
+
+    return time_ha_rzln
+
+
 def f_chem_cost(r_vals):
     '''
 
@@ -946,7 +972,7 @@ def f_chem_cost(r_vals):
     phase_chem_wc_rl_c0p7z = phase_chem_wc_rl_c0p7nz.mul(chem_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the chem
 
     ##application cost - only a per ha component
-    chem_app_cost_rzl_n = chem_applications * mac.chem_app_cost_ha()
+    chem_app_cost_rzl_n = chem_applications * mac.spraying_cost_ha()
     ###adjust of interest and p7 period
     chem_app_cost_rzl_p7n = chem_app_cost_rzl_n.reindex(chem_cost_allocation_z_p7n.columns, axis=1, level=1)
     chem_app_cost_rl_p7nz = chem_app_cost_rzl_p7n.unstack(1)

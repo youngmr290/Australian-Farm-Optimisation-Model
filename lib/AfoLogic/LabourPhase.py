@@ -122,13 +122,9 @@ def f_prep_labour():
 ###########################
 #fert application time   #  this is similar to app cost done in mach sheet
 ###########################
-#this is split into two sections - new feature of AFO
-# 1- time to drive around 1ha
-# 2- time per cubic metre ie to represent filling up and driving to and from paddock
 
-#allocation of fert costs into each lab period for each fert ie depending on the date diff ferts are in diff lab periods
 def f_fert_lab_allocation():
-    '''Allocation of fertiliser applications into each labour period'''
+    '''Allocation of fertiliser applications into each labour period and season period'''
 
     fert_info = pinp.crop['fert_info']
     fert_date_n = fert_info['app_date'].values
@@ -150,77 +146,36 @@ def f_fert_lab_allocation():
     alloc_p7p5zn = pd.Series(alloc_p7p5zn.ravel(), index=index_p7p5zn)
     return alloc_p7p5zn
 
-#time/per ha - needs to be multiplied by the number of phases and then added to phases df because the previous phases can effect number of passes and hence time
-#also need to account for arable area
-def f_fert_app_time_ha():
+
+def f_fert_app_time():
     '''
-    Fertilising labour part 1: time required per hectare.
+    Fertilising labour (hr/ha).
 
     The labour required for fertilising is calculated in two parts. Part 1 is the time required per hectare
     for each rotation phase which represents the time taken spreading fertiliser in the paddock (calculated in Mach.py).
-    This is adjusted for the number of fertiliser applications and allocated into a labour period/s.
-    '''
-
-    ##fert passes - arable (arable area accounted for in passes function)
-    total_passes_rzln = phs.f_fert_passes().stack()
-    ##time taken to cover 1ha while spreading
-    time_ha_n = mac.time_ha().squeeze()
-    ##adjust fert labour across each labour period
-    alloc_p7p5zn = f_fert_lab_allocation()
-    time_p7p5z_n = alloc_p7p5zn.mul(time_ha_n, level=-1).unstack() #time for 1 pass for each chem.
-    ##adjust for passes
-    time_p7p5z_rln = time_p7p5z_n.reindex(total_passes_rzln.unstack(1).index, axis=1, level=2)
-    time_p7p5_rzln = time_p7p5z_rln.unstack().reorder_levels([0,3,1,2], axis=1).sort_index(axis=1)
-    fert_app_time_ha_p7p5_rzln = time_p7p5_rzln.mul(total_passes_rzln.sort_index(), axis=1)
-    fert_app_time_ha_p7p5_rzl = fert_app_time_ha_p7p5_rzln.groupby(axis=1, level=(0,1,2)).sum() #sum fert type
-    fert_app_time_ha_rzlp5p7 = fert_app_time_ha_p7p5_rzl.unstack([1,0]).sort_index()
-
-    ##create params for v_phase_change_increase
-    increment_fert_app_time_ha_rzlp5p7 = rps.f_v_phase_increment_adj(fert_app_time_ha_rzlp5p7,p7_pos=-1,z_pos=-4,p5_pos=-2)
-
-    return fert_app_time_ha_rzlp5p7, increment_fert_app_time_ha_rzlp5p7
-
-#f=fert_app_time_ha()
-#print(timeit.timeit(fert_app_time_ha,number=20)/20)
-
-#time/t - need to convert m3 to tone and allocate into lab periods
-def f_fert_app_time_t():
-    '''
-    Fertilising labour part 2: time required per tonne.
-
-    The labour required for fertilising is calculated in two parts. Part 2 is the time required per tonne
+    Part 2 is the time required per tonne
     which represents the time taken driving to and from the paddock and filling up (calculated in Mach.py).
     This is adjusted for the number of fertiliser applications and allocated into a labour period/s.
 
-
     '''
-    ##fert used in each rotation phase
-    fert_total_rzln = phs.f_fert_req().stack().sort_index()/1000 #convert to tonnes
 
-    ##time per tonne
-    spreader_proportion = pd.DataFrame([pinp.crop['fert_info']['spreader_proportion']])
-    conversion = pd.DataFrame([pinp.crop['fert_info']['fert_density']])
-    time_n = ((mac.time_cubic() / conversion).mul(spreader_proportion.squeeze(),axis=1)).squeeze()
+    ##total time spent fertilising per ha
+    fert_time_rzln = phs.f1_fertilising_time()
 
     ##p5 and p7 allocation
-    alloc_p7p5zn = f_fert_lab_allocation()
-    time_p7p5z_n = alloc_p7p5zn.mul(time_n, level=-1).unstack() #time for 1 tonne for each fert.
+    alloc_p7p5z_n = f_fert_lab_allocation().unstack()
 
     ##combine with total phase fert
-    time_p7p5z_rln = time_p7p5z_n.reindex(fert_total_rzln.unstack(1).index, axis=1, level=2)
-    time_p7p5_rzln = time_p7p5z_rln.unstack().reorder_levels([0,3,1,2], axis=1).sort_index(axis=1)
-    fert_app_time_tonne_p7p5_rzln = time_p7p5_rzln.mul(fert_total_rzln.sort_index(), axis=1)
-    fert_app_time_tonne_p7p5_rzl = fert_app_time_tonne_p7p5_rzln.groupby(axis=1, level=(0,1,2)).sum() #sum fert type
-    fert_app_time_tonne_rzlp5p7 = fert_app_time_tonne_p7p5_rzl.unstack([1,0]).sort_index()
+    alloc_p7p5z_rln = alloc_p7p5z_n.reindex(fert_time_rzln.unstack(1).index, axis=1, level=2)
+    alloc_p7p5_rzln = alloc_p7p5z_rln.unstack().reorder_levels([0,3,1,2], axis=1).sort_index(axis=1)
+    fert_app_time_p7p5_rzln = alloc_p7p5_rzln.mul(fert_time_rzln.sort_index(), axis=1)
+    fert_app_time_p7p5_rzl = fert_app_time_p7p5_rzln.groupby(axis=1, level=(0,1,2)).sum() #sum fert type
+    fert_app_time_rzlp5p7 = fert_app_time_p7p5_rzl.unstack([1,0]).sort_index()
 
     ##create params for v_phase_change_increase
-    increment_fert_app_time_tonne_rzlp5p7 = rps.f_v_phase_increment_adj(fert_app_time_tonne_rzlp5p7,p7_pos=-1,z_pos=-4,p5_pos=-2)
+    increment_fert_app_time_rzlp5p7 = rps.f_v_phase_increment_adj(fert_app_time_rzlp5p7,p7_pos=-1,z_pos=-4,p5_pos=-2)
 
-    return fert_app_time_tonne_rzlp5p7, increment_fert_app_time_tonne_rzlp5p7
-
-
-#print(fert_app_time_t())
-    
+    return fert_app_time_rzlp5p7, increment_fert_app_time_rzlp5p7
 
 
 ###########################
@@ -264,17 +219,16 @@ def f_chem_app_time_ha():
 
     ##note arable area accounted for in crop.py
 
-    ##passes
-    total_passes_rzln = phs.f_chem_application().stack()
-    ##time for 1 pass for each chem
-    time = mac.spray_time_ha()
-    ##adjust fert labour across each labour period
-    alloc_p7p5zn = f_chem_lab_allocation()
-    time_p7p5z_n = alloc_p7p5zn.mul(time, level=-1).unstack() #time for 1 pass for each chem.
+    ##time spent spraying each rotation phase
+    spray_time_rzln = phs.f1_spraying_time()
+
+    ##p5 and p7 allocation
+    alloc_p7p5z_n = f_chem_lab_allocation().unstack()
+
     ##adjust for passes
-    time_p7p5z_rln = time_p7p5z_n.reindex(total_passes_rzln.unstack(1).index, axis=1, level=2)
-    time_p7p5_rzln = time_p7p5z_rln.unstack().reorder_levels([0,3,1,2], axis=1).sort_index(axis=1)
-    chem_app_time_p7p5_rzln = time_p7p5_rzln.mul(total_passes_rzln.sort_index(), axis=1)
+    alloc_p7p5z_rln = alloc_p7p5z_n.reindex(spray_time_rzln.unstack(1).index, axis=1, level=2)
+    alloc_p7p5_rzln = alloc_p7p5z_rln.unstack().reorder_levels([0,3,1,2], axis=1).sort_index(axis=1)
+    chem_app_time_p7p5_rzln = alloc_p7p5_rzln.mul(spray_time_rzln.sort_index(), axis=1)
     chem_app_time_p7p5_rzl = chem_app_time_p7p5_rzln.groupby(axis=1, level=(0,1,2)).sum() #sum chem type
     chem_app_time_rzlp5p7 = chem_app_time_p7p5_rzl.unstack([1,0]).sort_index()
 
@@ -362,9 +316,10 @@ def f_crop_monitoring():
 ##collates all the params
 def f1_labcrop_params(params,r_vals):
     prep_labour = f_prep_labour().stack()
-    fert_app_time_t, increment_fert_app_time_t = f_fert_app_time_t()
-    fert_app_time_ha, increment_fert_app_time_ha = f_fert_app_time_ha()
+    fert_app_time, increment_fert_app_time = f_fert_app_time()
     chem_app_time_ha, increment_chem_app_time_ha = f_chem_app_time_ha()
+    fert_chem_app_time = fert_app_time + chem_app_time_ha
+    increment_fert_chem_app_time = increment_fert_app_time + increment_chem_app_time_ha
     variable_crop_monitor, increment_variable_crop_monitor, fixed_crop_monitor = f_crop_monitoring()
 
     ##add params which are inputs
@@ -372,16 +327,11 @@ def f1_labcrop_params(params,r_vals):
     params['daily_seed_hours'] = pinp.mach['daily_seed_hours']
     params['seeding_helper'] = pinp.labour['seeding_helper']
     params['prep_labour'] = prep_labour.to_dict()
-    params['fert_app_time_t'] = fert_app_time_t.to_dict()
-    params['increment_fert_app_time_t'] = increment_fert_app_time_t.to_dict()
-    params['fert_app_time_ha'] = fert_app_time_ha.to_dict()
-    params['increment_fert_app_time_ha'] = increment_fert_app_time_ha.to_dict()
-    params['chem_app_time_ha'] = chem_app_time_ha.to_dict()
-    params['increment_chem_app_time_ha'] = increment_chem_app_time_ha.to_dict()
+    params['fert_chem_app_time'] = fert_chem_app_time.to_dict()
+    params['increment_fert_chem_app_time'] = increment_fert_chem_app_time.to_dict()
     params['variable_crop_monitor'] = variable_crop_monitor.to_dict()
     params['increment_variable_crop_monitor'] = increment_variable_crop_monitor.to_dict()
     params['fixed_crop_monitor'] = fixed_crop_monitor.to_dict()
-    # params['fert_req'] = fert_total.to_dict()
 
 
 
