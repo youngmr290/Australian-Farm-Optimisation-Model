@@ -2965,7 +2965,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             kg_fodd_sire = temp1
                             kg_supp_sire = temp2  #temp3 is not used for sires
                         # if eqn_compare:
-                        #     r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
+                        #     r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
                         temp0, temp1 = sfun.f_energy_cs(cx_sire[:,0:1,...], cm_sire, lw_start_sire, ffcfw_start_sire
                                                         , mr_age_pa1e1b1nwzida0e0b0xyg0[p], mei_sire, omer_history_start_p3g0
                                                         , days_period_pa1e1b1nwzida0e0b0xyg0[p], km_sire, pinp.sheep['i_steepness']
@@ -2977,7 +2977,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             meme_sire = temp0
                             hp_maint_sire = meme_sire
                         if eqn_compare:
-                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
+                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
+
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -2990,8 +2991,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             kg_supp_dams = temp2
                             kl_dams = temp3
                         # if eqn_compare:
-                        #     r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
-
+                        #     r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
                         temp0, temp1 = sfun.f_energy_cs(cx_dams[:,1:2,...], cm_dams, lw_start_dams, ffcfw_start_dams
                                                         , mr_age_pa1e1b1nwzida0e0b0xyg1[p], mei_dams, omer_history_start_p3g1
                                                         , days_period_pa1e1b1nwzida0e0b0xyg1[p], km_dams, pinp.sheep['i_steepness']
@@ -3003,7 +3003,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             meme_dams = temp0
                             hp_maint_dams = meme_dams
                         if eqn_compare:
-                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
+
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -3015,7 +3016,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             kg_fodd_offs = temp1
                             kg_supp_offs = temp2  # temp3 is not used for offspring
                         # if eqn_compare:
-                        #     r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
+                        #     r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
                         temp0, temp1 = sfun.f_energy_cs(cx_offs[:,mask_x,...], cm_offs, lw_start_offs, ffcfw_start_offs
                                                         , mr_age_pa1e1b1nwzida0e0b0xyg3[p], mei_offs, omer_history_start_p3g3
                                                         , days_period_pa1e1b1nwzida0e0b0xyg3[p], km_offs, pinp.sheep['i_steepness']
@@ -3027,68 +3028,50 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             meme_offs = temp0
                             hp_maint_offs = meme_offs
                         if eqn_compare:
-                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
+                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
                 eqn_system = 2 # New feeding standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0, temp2, temp3, temp4, temp5 = sfun.f_energy_nfs(ck_sire, cx_sire[:,0:1,...], cm_sire, lw_start_sire, ffcfw_start_sire
-                                                                    , mr_age_pa1e1b1nwzida0e0b0xyg0[p], mei_sire, omer_history_start_p3g0
-                                                                    , days_period_pa1e1b1nwzida0e0b0xyg0[p], md_solid_sire, pinp.sheep['i_md_supp']
-                                                                    , md_herb_sire, lgf_eff_pa1e1b1nwzida0e0b0xyg0[p, ...]
-                                                                    , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
-                                                                    , densityw_pa1e1b1nwzida0e0b0xyg0[p], foo_sire, confinementw_tpa1e1b1nwzida0e0b0xyg0[:,p]
-                                                                    , intake_f_sire, dmd_sire, sam_kg = sam_kg_sire, sam_mr = sam_mr_sire)
-                        ## these variables need to be stored even if the equation system is not used so that the equations can be compared
+                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] >0):
+                        temp0, temp1 = sfun.f_energy_nfs(ck_sire, cm_sire, lw_start_sire, ffcfw_start_sire, f_start_sire
+                                                         , v_start_sire, m_start_sire, mei_sire, md_solid_sire
+                                                         , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg0[p]
+                                                         , foo_sire, confinementw_tpa1e1b1nwzida0e0b0xyg0[:, p]
+                                                         , intake_f_sire, dmd_sire, sam_mr = sam_mr_sire)
                         if eqn_used:
                             hp_maint_sire = temp0
-                            km_sire = temp2
-                            kg_fodd_sire = temp3
-                            kg_supp_sire = temp4  # temp5 is not used for sires
                             meme_sire - hp_maint_sire
                         if eqn_compare:
-                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
+                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0, temp2, temp3, temp4, temp5 = sfun.f_energy_nfs(ck_dams, cx_dams[:,1:2,...], cm_dams, lw_start_dams, ffcfw_start_dams
-                                                                    , mr_age_pa1e1b1nwzida0e0b0xyg1[p], mei_dams, omer_history_start_p3g1
-                                                                    , days_period_pa1e1b1nwzida0e0b0xyg1[p], md_solid_dams, pinp.sheep['i_md_supp']
-                                                                    , md_herb_dams, lgf_eff_pa1e1b1nwzida0e0b0xyg1[p, ...]
-                                                                    , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
-                                                                    , densityw_pa1e1b1nwzida0e0b0xyg1[p], foo_dams, confinementw_tpa1e1b1nwzida0e0b0xyg1[:,p]
-                                                                    , intake_f_dams, dmd_dams, sam_kg = sam_kg_dams, sam_mr = sam_mr_dams)
-                        ## these variables need to be stored even if the equation system is not used so that the equations can be compared
+                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] >0):
+                        temp0, temp1 = sfun.f_energy_nfs(ck_dams, cm_dams, lw_start_dams, ffcfw_start_dams, f_start_dams
+                                                         , v_start_dams, m_start_dams, mei_dams, md_solid_dams
+                                                         , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg1[p]
+                                                         , foo_dams, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p]
+                                                         , intake_f_dams, dmd_dams, sam_mr = sam_mr_dams)
                         if eqn_used:
                             hp_maint_dams = temp0
-                            km_dams = temp2
-                            kg_fodd_dams = temp3
-                            kg_supp_dams = temp4
-                            kl_dams = temp5
+                            kl_dams = temp1
                             meme_dams = hp_maint_dams
                         if eqn_compare:
-                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0  # kl could be retained
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
-                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0, temp2, temp3, temp4, temp5 = sfun.f_energy_nfs(ck_offs, cx_offs[:,mask_x,...], cm_offs, lw_start_offs, ffcfw_start_offs
-                                                                    , mr_age_pa1e1b1nwzida0e0b0xyg3[p], mei_offs, omer_history_start_p3g3
-                                                                    , days_period_pa1e1b1nwzida0e0b0xyg3[p], md_solid_offs, pinp.sheep['i_md_supp']
-                                                                    , md_herb_offs, lgf_eff_pa1e1b1nwzida0e0b0xyg3[p, ...]
-                                                                    , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
-                                                                    , densityw_pa1e1b1nwzida0e0b0xyg3[p], foo_offs, confinementw_tpa1e1b1nwzida0e0b0xyg3[:,p]
-                                                                    , intake_f_offs, dmd_offs, sam_kg = sam_kg_offs, sam_mr = sam_mr_offs)
-                        ## these variables need to be stored even if the equation system is not used so that the equations can be compared
+                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] >0):
+                        temp0, temp1 = sfun.f_energy_nfs(ck_offs, cm_offs, lw_start_offs, ffcfw_start_offs, f_start_offs
+                                                         , v_start_offs, m_start_offs, mei_offs, md_solid_offs
+                                                         , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg3[p]
+                                                         , foo_offs, confinementw_tpa1e1b1nwzida0e0b0xyg3[:, p]
+                                                         , intake_f_offs, dmd_offs, sam_mr = sam_mr_offs)
                         if eqn_used:
                             hp_maint_offs = temp0
-                            km_offs = temp2
-                            kg_fodd_offs = temp3
-                            kg_supp_offs = temp4 # temp5 is not used for offspring
                             meme_offs = hp_maint_offs
                         if eqn_compare:
-                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
+                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
 
                 ##foetal growth - dams
@@ -3923,28 +3906,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
-                    temp0, temp1 = sfun.f_energy_nfs(ck_yatf, cx_yatf[:, mask_x, ...], cm_yatf, lw_start_yatf
-                                                    , ffcfw_start_yatf, mr_age_pa1e1b1nwzida0e0b0xyg2[p], mei_yatf
-                                                    , omer_history_start_p3g2, days_period_pa1e1b1nwzida0e0b0xyg2[p]
-                                                    , md_solid_yatf, pinp.sheep['i_md_supp'], md_herb_yatf
-                                                    , lgf_eff_pa1e1b1nwzida0e0b0xyg2[p],
-                                                    dlf_eff_pa1e1b1nwzida0e0b0xyg[p]
-                                                    , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p]
-                                                    , foo_yatf, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p],
-                                                    intake_f_yatf
-                                                    , dmd_yatf, mei_propn_milk_yatf, sam_kg_yatf,
-                                                    sam_mr=sam_mr_yatf)  #same feedsupply as dams
-                    ## these variables need to be stored even if the equation system is not used so that the equations can be compared
-                    omer_history_yatf = temp1
+                    temp0, temp1 = sfun.f_energy_nfs(ck_yatf, cm_yatf, lw_start_yatf, ffcfw_start_yatf, f_start_yatf
+                                                     , v_start_yatf, m_start_yatf, mei_yatf, md_solid_yatf
+                                                     , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p]
+                                                     , foo_yatf, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p]
+                                                     , intake_f_yatf, dmd_yatf, sam_mr = sam_mr_yatf)  #same feedsupply as dams
                     if eqn_used:
                         hp_maint_yatf = temp0
-                        km_yatf = temp2
-                        kg_fodd_yatf = temp3
-                        kg_supp_yatf = temp4  # temp5 is not used for yatf
                         meme_yatf = hp_maint_yatf
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p,
-                        ...] = temp0  # more of the return variable could be retained
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p,...] = temp0
 
             ##wool production - yatf
             eqn_group = 17

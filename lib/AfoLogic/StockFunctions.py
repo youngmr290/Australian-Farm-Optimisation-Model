@@ -930,18 +930,15 @@ def f_energy_cs(cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_start, 
     return meme, omer_history
 
 
-def f_energy_nfs(ck, cm, lw_start, ffcfw_start, f_start, v_start, m_start, mei, md_solid, i_md_supp,
-                md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_kg=1, sam_mr=1):
+def f_energy_nfs(ck, cm, lw_start, ffcfw_start, f_start, v_start, m_start, mei, md_solid
+                 , i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_mr=1):
     #Heat production associated with maintenance (fasting heat production and heat associated with feeding) & efficiency
+    #todo km & kl could be calculated using f_efficiency() & then pass them in as args (and not return kl from this function)
     ##Efficiency for maintenance
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
     bmei = 1 - km
-    # ##Efficiency for lactation - dam only
-    # kl =  ck[5, ...] + ck[6, ...] * md_solid
-    # ##Efficiency for growth (supplement) including the sensitivity scalar
-    # kg_supp = ck[16, ...] * i_md_supp * sam_kg
-    # ##Efficiency for growth (fodder) including the sensitivity scalar
-    # kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb * sam_kg
+    ##Efficiency for lactation - dam only
+    kl =  ck[5, ...] + ck[6, ...] * md_solid
     ##Heat production from maintaining protein
     hp_fasting = (cm[20, ...] * f_start + cm[21, ...] * m_start + cm[22, ...] * v_start) * (1 + cm[5, ...] * mei_propn_milk)
     ##Heat associated with feeding - rumination & digestion (Note: rumination might change with fibre length but this is not accounted for, only M/D).
@@ -956,7 +953,7 @@ def f_energy_nfs(ck, cm, lw_start, ffcfw_start, f_start, v_start, m_start, mei, 
     hp_graze = cm[6, ...] * ffcfw_start * intake_f * (cm[7, ...] - dmd) + hp_move
     ##Heat produced by maintenance (before ECold)
     hp_maint = (hp_fasting + hp_mei + hp_graze) * sam_mr
-    return hp_maint,    #km, kg_fodd, kg_supp, kl
+    return hp_maint, kl
 
 
 def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f):
