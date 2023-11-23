@@ -2050,8 +2050,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     doj_pa1e1b1nwzida0e0b0xygp1 = doy_pa1e1b1nwzida0e0b0xygp1
     doj_pa1e1b1nwzida0e0b0xygp1[doj_pa1e1b1nwzida0e0b0xygp1 >= 244] -= 364
     doj_pa1e1b1nwzida0e0b0xygp1 = np.clip(doj_pa1e1b1nwzida0e0b0xygp1, -52, 98)
-    doj_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(doy_pa1e1b1nwzida0e0b0xygp1, axis = -1)
-    doj2_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(doy_pa1e1b1nwzida0e0b0xygp1 ** 2, axis=-1)
+    doj_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(doj_pa1e1b1nwzida0e0b0xygp1, axis = -1)
+    doj2_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(doj_pa1e1b1nwzida0e0b0xygp1 ** 2, axis=-1)
 
     ##Rumen development factor on PI - yatf
     piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(fun.f_back_transform(ci_yatf[3, ..., na]
@@ -2073,7 +2073,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     # ce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na]
     #                                       * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0))))
     #                                               , weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
-    ##Conceptus energy pattern (d_nec)
+    ##Conceptus energy pattern (d_nec). Average for the days that the dam is gestating
     dce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cp_dams[9, ..., na] * cp_dams[10, ..., na] / cp_dams[1, 0, ..., na]
                                             * np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0)
                                             + cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na]
