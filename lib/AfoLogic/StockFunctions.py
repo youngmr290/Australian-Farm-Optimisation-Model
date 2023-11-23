@@ -2747,8 +2747,39 @@ def f1_fat_score(rc_tpg, cn):
           3. convert to fat score. FS1 = <5mm, FS2 6-10mm, FS3 11-15mm, FS4 16-20mm, FS5 >21mm'''
     condition_score = f1_condition_score(rc_tpg, cn)
     gr_depth = np.maximum(0, (condition_score - 2.5) / 0.06)
+    #todo make the coefficients inputs in Universal (use cn) - See Universal Master 23Nov23
+    # gr_depth = np.maximum(0, (condition_score - cn[8, ...]) / cn[9, ...])
     fat_score = np.clip((gr_depth + 4)/5, 1, 5) #FS 1 is the lowest possible measurement.
     return fat_score
+
+
+def f1_ebw(cn, relsize, md):
+    ''' Calculate empty body weight. Uses equations from Sheep Calc.xlsx from Hutton Oddy pers. comm. Oct 2023
+    The equations were rearranged to only require relsize and return a scalar of EBW as a proportion of FFCFW'''
+    ##Step 1. Estimate gut contents as a proportion of ffcfw based on stage of maturity (relsize)
+    gut_contents = (cn[10, ...] + cn[11, ...] * relsize ** 2 + cn[12, ...] / relsize) * cn[13, ...]
+    ##Step 2. Calculate empty body weight scalar
+    ebw_scalar = (1 - gut_contents)
+    ##Step 3. Adjust the weight scalar by a factor related to diet quality
+    ebw_scalar = ebw_scalar * (cn[14, ...] * md + cn[15, ...] * md ** 2 + cn[16, ...])
+    return ebw_scalar
+
+
+def f1_body_composition(cn, cx, ffcfw, srw, md=12):
+    ''' Calculate body composition (weight of muscle, viscera and fat).
+     Uses equations from Sheep Calc.xlsx from Hutton Oddy pers. comm. Oct 2023
+     Default M/D is 12 MJ/kg because mostly the function will be being used at weaning'''
+    ##Step 1. Calculate empty body weight
+    relsize = ffcfw / srw
+    ebw = f1_ebw(cn, relsize, md) * ffcfw
+    ##Step 2. Calculate viscera mass
+    v_mass = (cn[17, ...] * relsize + cn[18, ...] * relsize ** 2 + cn[19, ...]) * cx[19, ...] * srw
+    ##Step 3. Calculate fat mass
+    f_mass = (cn[20, ...] * relsize + cn[21, ...] * relsize ** 2 + cn[22, ...]) * ffcfw
+    ##Step 4. Calculate muscle mass as the remaining empty body weight
+    m_mass = ebw - v_mass - f_mass
+    return m_mass, v_mass, f_mass
+
 
 
 def f1_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None):
