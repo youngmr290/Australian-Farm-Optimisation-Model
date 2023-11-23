@@ -1056,7 +1056,9 @@ def period_allocation(period_dates,periods,start_d,length=None):
         return allocation_p
 
 
-def f_range_allocation_np(period_dates, item_start, length=np.array([1]), method=1, shape=None):
+
+def f_range_allocation_np(period_dates, item_start, length=np.array([1]), method=1, shape=None, is_phase_param=False,
+                          break_z=None, season_start=None, z_pos=None):
     ''' Numpy version - The proportion of a date range that falls within each period or proportion of each period that falls in the tested date range.
 
     Where possible use the default option (method=1). When using method 2 the date range (item start to
@@ -1066,13 +1068,19 @@ def f_range_allocation_np(period_dates, item_start, length=np.array([1]), method
           This is because we cant have allocation that crosses the season junction. In some cases this may result in over
           allocation to the last period.
 
+    Note 2: For params linked to v_phase activity the timing of an item is adjusted so that no cost/labour/depn is incurred
+    between season start and break of season. This stops the model getting double costs in medium/late breaks where
+    phases are carried over past the start of the season to provide dry pas and stubble area (because it is also
+    accounted for by v_phase_increment).
+
     :param period_dates: the start of the periods (including end date of last period). This array must be broadcastable with start
                   (therefore may need to add new axis if start has a dimension). Period axis must be in pos=0.
     :param item_start: the date of the beginning of the date range to test - a numpy array of dates
-    :param length: the length of the date range to test - an array of timedelta. Must be broadcastable to start.
+    :param length: the length of the date range to test (days). Must be broadcastable to start.
     :param method: Controls the proportion calculated. Method 1 returns the proportion of date range in each period.
                      Method 2 returns the proportion of the period in the date range.
     :param shape: this is the shape of returned array, required if both period_dates & start have more than 1 dim
+    :param is_phase_param: boolean to flag if the item being allocated will be liked to v_phase activity. If True the timing gets adjusted so that no cost/labour/depn is incurred between season start and break of season. Otherwise double counting can occur with v_phase and v_phase_increment.
 
     :return: Numpy array with shape(period_dates, start array). Containing the proportion of the
              respective period for that test date.
@@ -1086,6 +1094,14 @@ def f_range_allocation_np(period_dates, item_start, length=np.array([1]), method
         allocation_period=np.zeros((period_dates.shape[:-1] + item_start.shape),dtype='float64')
     else:
         allocation_period=np.zeros(shape,dtype='float64')
+
+    ###adjust the timing of items linked to phases so that no cost/labour/depn is incurred between season start and break of season.
+    ### this stops the model getting double costs in medium/late breaks where phases are carried over past the
+    ### start of the season to provide dry pas and stubble area (because it is also accounted for by v_phase_increment).
+    if is_phase_param:
+        date_break_z = f_expand(break_z, z_pos) #adjust to get z axis in the correct position.
+        between_seasonstart_brkseason = np.logical_and(item_start%364>=season_start, item_start%364<date_break_z)
+        item_start = f_update(item_start%364, date_break_z, between_seasonstart_brkseason)
 
     ## adjust dates.
     if method==1:
@@ -1107,7 +1123,7 @@ def f_range_allocation_np(period_dates, item_start, length=np.array([1]), method
         period_start_dates = period_start_dates + add_yrs * 364 - sub_yrs * 364
         period_end_dates = period_end_dates + add_yrs * 364 - sub_yrs * 364
 
-    ##end of period
+    ##calc end of period
     item_end = np.minimum(item_start + length, period_dates[-1]) #minimum ensures that the assigned date range is within the period date range.
 
     ##checks if user wants the proportion of each period that falls in the tested date range or proportion of date range in each period

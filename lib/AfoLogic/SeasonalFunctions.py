@@ -206,7 +206,7 @@ def f_season_transfer_mask(period_dates_pz, z_pos, period_is_seasonstart_pz=Fals
 
 
 
-def f1_z_period_alloc(item_start=0, item_length=1, z_pos=-1, mask_z=True):
+def f1_z_period_alloc(item_start=0, item_length=1, z_pos=-1, mask_z=True, is_phase_param=False):
     '''
     Allocation of item into season periods (p7).
 
@@ -222,6 +222,12 @@ def f1_z_period_alloc(item_start=0, item_length=1, z_pos=-1, mask_z=True):
     If this is a problem the solution is to make the preseeding inputs a desicion variable that allows landuses (you
     could select another landuse but the cost would be wasted). And season start would need to be prior to decision.
 
+    Note: For params linked to v_phase activity the timing of an item is adjusted (in fun.f_range_allocation)
+    so that no cost/labour/depn is incurred between season start and break of season.
+    This stops the model getting double costs in medium/late breaks where
+    phases are carried over past the start of the season to provide dry pas and stubble area (because it is also
+    accounted for by v_phase_increment).
+
     Note: cashflow goes through a slightly different function that also calculates interest (it then calls this function).
 
     - Arrays must be numpy and broadcastable.
@@ -229,8 +235,9 @@ def f1_z_period_alloc(item_start=0, item_length=1, z_pos=-1, mask_z=True):
     - item start must contain all axes (including z and p7)
 
     :param item_start: item dates which are allocated into season periods. MUST contain all axis of the final array (singleton is fine)
-    :param item_length: length (weeks) of item being allocated
+    :param item_length: length (days) of item being allocated
     :param z_pos:
+    :param is_phase_param: boolean to flag if the item being allocated will be liked to v_phase activity. If True the timing gets adjusted so that no cost/labour/depn is incurred between season start and break of season. Otherwise double counting can occur with v_phase and v_phase_increment.
     :return:
     '''
 
@@ -243,7 +250,11 @@ def f1_z_period_alloc(item_start=0, item_length=1, z_pos=-1, mask_z=True):
     p7_pos = -item_start.ndim
     date_node_p7etc = fun.f_expand(date_season_node_p7z, left_pos=z_pos, right_pos2=z_pos, left_pos2=p7_pos)
     shape = (len_p7,) + tuple(np.maximum.reduce([date_node_p7etc.shape[1:], item_start.shape[1:]]))  # create shape which has the max size, this is used for o array
-    alloc_metc = fun.f_range_allocation_np(date_node_p7etc, item_start, item_length, shape=shape)
+
+    break_z = f_seasonal_inp(pinp.general['i_break'], numpy=True)
+    season_start = date_season_node_p7z[0, 0]  # slice season node to get season start
+    alloc_metc = fun.f_range_allocation_np(date_node_p7etc, item_start, item_length, shape=shape, is_phase_param=is_phase_param,
+                                           break_z=break_z, season_start=season_start, z_pos=z_pos)
 
     if mask_z:
         ##mask z8

@@ -36,8 +36,50 @@ from . import RotationPhases as rps
 na = np.newaxis
 
 ##general
+def f1_p5_alloc(item_start=0, item_length=1, z_pos=-1, is_phase_param=False):
+    '''
+    Allocation of item into labour periods (p5).
+
+    Cant be allocated across the season start (length is automatically adjusted in f_range_allocation to stop allocation
+    going from the end of the periods to the start of the periods. This is because gets complicated if it crosses junction)
+    e.g. post harvest jobs must be completed before the next season start.
+    An item can be allocated in to multiple season periods as long as the dv exists in the same multiple season periods
+    e.g. v_phase exists in all children therefore labour requirement can cross nodes.
+
+    Note: For params linked to v_phase activity the timing of an item is adjusted (in fun.f_range_allocation)
+    so that no cost/labour/depn is incurred
+    between season start and break of season. This stops the model getting double costs in medium/late breaks where
+    phases are carried over past the start of the season to provide dry pas and stubble area (because it is also
+    accounted for by v_phase_increment).
+
+    - Arrays must be numpy and broadcastable.
+    - p5 axis must be in pos 0
+    - item start must contain all axes (including p5)
+
+    :param item_start: item dates which are allocated into season periods. MUST contain all axis of the final array (singleton is fine)
+    :param item_length: length (days) of item being allocated
+    :param z_pos:
+    :return:
+    '''
+    labour_period = per.f_p_dates_df()
+    lp_p5z = labour_period.values
+    len_p5 = lp_p5z.shape[0] - 1
+
+    ##align axes
+    p5_pos = -item_start.ndim
+    date_node_p5etc = fun.f_expand(lp_p5z, left_pos=z_pos, right_pos2=z_pos, left_pos2=p5_pos)
+    shape = (len_p5,) + tuple(np.maximum.reduce([date_node_p5etc.shape[1:], item_start.shape[1:]]))  # create shape which has the max size, this is used for o array
+
+    break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
+    season_start = per.f_season_periods()[0, 0]  # slice season node to get season start
+    alloc_p5etc = fun.f_range_allocation_np(lp_p5z, item_start, item_length, shape=shape, is_phase_param=is_phase_param,
+                                           break_z=break_z, season_start=season_start, z_pos=z_pos)
+
+    return alloc_p5etc
+
+
 def f_p5_p7_allocation():
-    '''Allocation of labour in each p5 to each p7 period.'''
+    '''Allocation of labour periods (p5) to each p7 period.'''
     labour_period_p5z = per.f_p_dates_df()
     labour_period_start_p5z = labour_period_p5z.values[:-1]
     labour_period_end_p5z = labour_period_p5z.values[1:]
@@ -46,15 +88,6 @@ def f_p5_p7_allocation():
     alloc_p7p5z = zfun.f1_z_period_alloc(labour_period_start_p5z[na,:,:],length_p5z[na,:,:],z_pos=-1)
     return alloc_p7p5z
 
-def f1_adjust_start_dates(start_date_n):
-    ###adjust the timing of phases labour so that no cost is incurred between season start and break of season.
-    ### this stops the model getting double costs in medium/late breaks where phases are carried over past the
-    ### start of the season to provide dry pas and stubble area (because it is also accounted for by v_phase_increment).
-    i_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
-    season_start = per.f_season_periods()[0, 0]  # slice season node to get season start
-    between_seasonstart_brkseason_zn = np.logical_and(start_date_n%364>=season_start, start_date_n%364<i_break_z[:,na])
-    start_date_zn = fun.f_update(start_date_n%364, i_break_z[:,na], between_seasonstart_brkseason_zn)
-    return start_date_zn
 
 #########################
 #pack and prep time     #
@@ -73,38 +106,30 @@ def f_prep_labour():
 
     ##harvest_prep
     harvest_prep_dates_p8 = pinp.labour['harvest_prep'].index.values
-    harvest_prep_dates_zp8 = f1_adjust_start_dates(harvest_prep_dates_p8)
     harvest_prep_length_p8 = pinp.labour['harvest_prep']['days'].values
     harvest_prep_labour_p8 = pinp.labour['harvest_prep']['hours'].values
-    shape_p5zp8 =  lp_p5z.shape + harvest_prep_dates_p8.shape
-    alloc_p5zp8 = fun.f_range_allocation_np(lp_p5z[...,na], harvest_prep_dates_zp8, harvest_prep_length_p8, shape=shape_p5zp8)[:-1,:,:]
+    alloc_p5zp8 = f1_p5_alloc(harvest_prep_dates_p8[na,na,:], harvest_prep_length_p8, z_pos=-2, is_phase_param=False)
     harvest_prep_p5z = np.sum(alloc_p5zp8 * harvest_prep_labour_p8, axis=-1) #get rid of p8 axis
 
     ##fert_prep
     fert_prep_dates_p8 = pinp.labour['fert_prep'].index.values
-    fert_prep_dates_zp8 = f1_adjust_start_dates(fert_prep_dates_p8)
     fert_prep_length_p8 = pinp.labour['fert_prep']['days'].values
     fert_prep_labour_p8 = pinp.labour['fert_prep']['hours'].values
-    shape_p5zp8 =  lp_p5z.shape + fert_prep_dates_p8.shape
-    alloc_p5zp8 = fun.f_range_allocation_np(lp_p5z[...,na], fert_prep_dates_zp8, fert_prep_length_p8, shape=shape_p5zp8)[:-1,:,:]
+    alloc_p5zp8 = f1_p5_alloc(fert_prep_dates_p8[na,na,:], fert_prep_length_p8, z_pos=-2, is_phase_param=False)
     fert_prep_p5z = np.sum(alloc_p5zp8 * fert_prep_labour_p8, axis=-1) #get rid of p8 axis
 
     ##spray_prep
     spray_prep_dates_p8 = pinp.labour['spray_prep'].index.values
-    spray_prep_dates_zp8 = f1_adjust_start_dates(spray_prep_dates_p8)
     spray_prep_length_p8 = pinp.labour['spray_prep']['days'].values
     spray_prep_labour_p8 = pinp.labour['spray_prep']['hours'].values
-    shape_p5zp8 = lp_p5z.shape + spray_prep_dates_p8.shape
-    alloc_p5zp8 = fun.f_range_allocation_np(lp_p5z[...,na], spray_prep_dates_zp8, spray_prep_length_p8, shape=shape_p5zp8)[:-1,:,:]
+    alloc_p5zp8 = f1_p5_alloc(spray_prep_dates_p8[na,na,:], spray_prep_length_p8, z_pos=-2, is_phase_param=False)
     spray_prep_p5z = np.sum(alloc_p5zp8 * spray_prep_labour_p8, axis=-1) #get rid of p8 axis
 
     ##seed_prep
     seed_prep_dates_p8 = pinp.labour['seed_prep'].index.values
-    seed_prep_dates_zp8 = f1_adjust_start_dates(seed_prep_dates_p8)
     seed_prep_length_p8 = pinp.labour['seed_prep']['days'].values
     seed_prep_labour_p8 = pinp.labour['seed_prep']['hours'].values
-    shape_p5zp8 = lp_p5z.shape + seed_prep_dates_p8.shape
-    alloc_p5zp8 = fun.f_range_allocation_np(lp_p5z[...,na], seed_prep_dates_zp8, seed_prep_length_p8, shape=shape_p5zp8)[:-1,:,:]
+    alloc_p5zp8 = f1_p5_alloc(seed_prep_dates_p8[na,na,:], seed_prep_length_p8, z_pos=-2, is_phase_param=False)
     seed_prep_p5z = np.sum(alloc_p5zp8 * seed_prep_labour_p8, axis=-1) #get rid of p8 axis
 
     ##sum all and make df
@@ -126,14 +151,11 @@ def f_prep_labour():
 def f_fert_lab_allocation():
     '''Allocation of fertiliser applications into each labour period and season period'''
 
+    ##calc p5 allocation
     fert_info = pinp.crop['fert_info']
     fert_date_n = fert_info['app_date'].values
-    fert_date_zn = f1_adjust_start_dates(fert_date_n)
     fert_length_n = fert_info['app_len'].values
-    p_dates_p5z = per.f_p_dates_df()
-    shape_p5zn = p_dates_p5z.shape+fert_date_n.shape
-    ###calc p5 allocation
-    alloc_p5zn = fun.f_range_allocation_np(p_dates_p5z.values[...,na], fert_date_zn, fert_length_n, shape=shape_p5zn)[:-1,...]
+    alloc_p5zn = f1_p5_alloc(fert_date_n[na,na,:], fert_length_n, z_pos=-2, is_phase_param=True)
 
     ##allocate to p7
     alloc_p7p5z = f_p5_p7_allocation()
@@ -184,14 +206,11 @@ def f_fert_app_time():
 
 def f_chem_lab_allocation():
     '''Allocation of chemical applications into each labour period'''
+    ##calc p5 allocation
     chem_info = pinp.crop['chem_info']
     chem_date_n = chem_info['app_date'].values
-    chem_date_zn = f1_adjust_start_dates(chem_date_n)
     chem_length_n = chem_info['app_len'].values
-    p_dates_p5z = per.f_p_dates_df()
-    shape_p5zn = p_dates_p5z.shape+chem_date_n.shape
-    ###calc p5 allocation
-    alloc_p5zn = fun.f_range_allocation_np(p_dates_p5z.values[...,na], chem_date_zn, chem_length_n, shape=shape_p5zn)[:-1,...]
+    alloc_p5zn = f1_p5_alloc(chem_date_n[na, na, :], chem_length_n, z_pos=-2, is_phase_param=True)
     
     ##allocate to p7
     alloc_p7p5z = f_p5_p7_allocation()
@@ -262,16 +281,10 @@ def f_crop_monitoring():
     variable_crop_monitor = pinp.labour['variable_crop_monitoring']
     labour_periods_pz = per.f_p_dates_df().values
     date_start_d = fixed_crop_monitor.columns.values.astype(float)
-    date_start_zd = f1_adjust_start_dates(date_start_d)
     date_end_d = np.roll(date_start_d, -1)
     date_end_d[-1] = date_end_d[-1] + 364 #increment the first date by 1yr so it becomes the end date for the last period
     length_d = date_end_d - date_start_d
-    shape_pzd = labour_periods_pz.shape + date_start_d.shape
-    monitoring_allocation_p5zd = fun.f_range_allocation_np(labour_periods_pz[...,na]
-                                                    , date_start_zd, length_d, shape=shape_pzd)
-
-    ## drop last row, because it has na because it only contains the end date, therefore not a period
-    monitoring_allocation_p5zd = monitoring_allocation_p5zd[:-1]
+    monitoring_allocation_p5zd = f1_p5_alloc(date_start_d[na, na, :], length_d, z_pos=-2, is_phase_param=True)
 
     ##adjust for p7 (season period) axis
     alloc_p7p5z = f_p5_p7_allocation()
