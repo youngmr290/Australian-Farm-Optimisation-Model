@@ -877,7 +877,7 @@ def f_chem_application():
 
 def f1_spraying_time():
     '''
-    Determines the time (hr/ha) spent spraying for each rotation.
+    Determines the time (hr/ha) spent spraying for each rotation (including filling up).
 
     This is used to calculate machinery application cost, labour requirement and
     variable machinery depreciation associated with fertilising.
@@ -885,7 +885,7 @@ def f1_spraying_time():
 
     ##passes - arable (arable area accounted for in passes function)
     total_passes_rzln = f_chem_application().stack()
-    ##time taken to cover 1ha while spraying
+    ##time taken to cover 1ha while spraying include a factor for filling up.
     time_ha = mac.spray_time_ha()
     ##total time accounting for number of applications.
     time_ha_rzln = total_passes_rzln * time_ha
@@ -926,9 +926,6 @@ def f_chem_cost(r_vals):
     chem_cost_allocation_p7zn, chem_wc_allocation_c0p7zn = f1_chem_cost_allocation()
     chem_cost_allocation_z_p7n = chem_cost_allocation_p7zn.unstack(1).T
     chem_wc_allocation_z_c0p7n = chem_wc_allocation_c0p7zn.unstack(2).T
-
-    ##number of applications for each rotation
-    chem_applications = f_chem_application()
 
     ##total chem cost
     if pinp.crop['user_crop_rot']:
@@ -972,7 +969,7 @@ def f_chem_cost(r_vals):
     phase_chem_wc_rl_c0p7z = phase_chem_wc_rl_c0p7nz.mul(chem_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the chem
 
     ##application cost - only a per ha component
-    chem_app_cost_rzl_n = chem_applications * mac.spraying_cost_ha()
+    chem_app_cost_rzl_n = f1_spraying_time().unstack() * mac.spraying_cost_hr()
     ###adjust of interest and p7 period
     chem_app_cost_rzl_p7n = chem_app_cost_rzl_n.reindex(chem_cost_allocation_z_p7n.columns, axis=1, level=1)
     chem_app_cost_rl_p7nz = chem_app_cost_rzl_p7n.unstack(1)
@@ -1156,7 +1153,7 @@ def f_spraying_spreading_dep():
     ###variable depn rate is input as a percent depn in all spray gear per machine hour (%/machine hr).
     spray_dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_spraying']
     ####convert from rotor hours to harvest activity hours
-    # spray_dep_rate_per_hr = spray_dep_rate_per_hr / (1 + pinp.mach['spray_prep']) #todo add this later
+    spray_dep_rate_per_hr = spray_dep_rate_per_hr / (1 + pinp.mach['spray_eff'])
     ###determine dep per hour - equal to crop gear value x depn %
     spray_gear_clearing_value = mac.f_spray_gear_clearing_value()
     spray_dep_hourly = spray_gear_clearing_value * spray_dep_rate_per_hr

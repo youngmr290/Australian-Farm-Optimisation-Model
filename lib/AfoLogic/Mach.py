@@ -272,7 +272,7 @@ def f_seed_time_lmus():
     rate_direct_drill_k_l = 1 / rate_direct_drill_k_l
 
     ##adjust for the time when seed is not being put in the ground due to moving paddocks or filling up.
-    rate_direct_drill_k_l = rate_direct_drill_k_l / (1 - pinp.mach['seeding_prep'])
+    rate_direct_drill_k_l = rate_direct_drill_k_l / (1 - pinp.mach['seeding_eff'])
 
     return rate_direct_drill_k_l
 
@@ -592,7 +592,7 @@ def f_harv_rate_period():
     harv_occur = pd.Series(harv_occur_p7pkz.ravel(), index=index_p7pkz)
 
     ##Grain harvested per harvest activity hr (t/hr) for each crop. The efficiency adjustment factor converts from harvest rate per rotor hour to harvest rate per activity hour.
-    harv_rate = uinp.mach[pinp.mach['option']]['harvest_rate'].squeeze() * (1 - pinp.mach['harv_prep'])
+    harv_rate = uinp.mach[pinp.mach['option']]['harvest_rate'].squeeze() * (1 - pinp.mach['harv_eff'])
 
     ##combine harv rate and harv_occur
     harv_rate_period = harv_occur.mul(harv_rate, level=2)
@@ -927,19 +927,21 @@ def spreader_cost_hr():
 #chem application time   # used in labour crop, defined here because it uses inputs from the different mach options which are consolidated at the top of this sheet
 ###########################
 
-##time taken to spray 1ha (use efficiency input to allow for driving to and from paddock and filling up)
-## hr/ha= 10/(width*speed*efficiency)
 def spray_time_ha():
     '''
-    Time taken to spray 1ha.
+    Time taken to spray 1ha (including filling up etc).
 
     This is dependent on the sprayer width, speed and field efficiency (accounts for overlap,
     filling up time and turing).
 
     '''
-
-    width_df = uinp.mach[pinp.mach['option']]['sprayer_width']
-    return 10/(width_df*uinp.mach[pinp.mach['option']]['sprayer_speed']*uinp.mach[pinp.mach['option']]['sprayer_eff'])
+    ##rate per machine hour (ha/hr)
+    spraying_rate = uinp.mach[pinp.mach['option']]['spraying_rate']
+    ##convert to hr/ha
+    spraying_rate = 1 / spraying_rate
+    ##adjust for time spent filling up
+    spraying_rate = spraying_rate * (1+pinp.mach['spray_eff'])
+    return spraying_rate
 
    
 
@@ -947,9 +949,9 @@ def spray_time_ha():
 #application cost # 
 ################### *used in crop pyomo
 
-def spraying_cost_ha():
+def spraying_cost_hr():
     '''
-    Chemical application cost per hectare.
+    Chemical application cost per hour of spraying activity (includes filling up).
 
     The cost of spraying per hectare is calculated based on the time to spray a hectare (see spray_time_ha)
     and the cost to spray per hour. Spraying cost per hour includes tractor costs and sprayer costs.
@@ -964,8 +966,10 @@ def spraying_cost_ha():
     tractor_fuel = uinp.mach[pinp.mach['option']]['sprayer_fuel_consumption']*fuel_price()
     tractor_rm = uinp.mach[pinp.mach['option']]['sprayer_fuel_consumption']*fuel_price() * uinp.mach[pinp.mach['option']]['repair_maint_factor_tractor']
     tractor_oilgrease = uinp.mach[pinp.mach['option']]['sprayer_fuel_consumption']*fuel_price() * uinp.mach[pinp.mach['option']]['oil_grease_factor_tractor']
-    ##cost/hr= tractor costs + sprayer(r&m) 
+    ##cost/machine hr= tractor costs + sprayer(r&m)
     cost = tractor_fuel + tractor_rm + tractor_oilgrease + uinp.mach[pinp.mach['option']]['sprayer_maint']
+    ##convert to cost per spraying activity hr
+    cost = cost / (1+pinp.mach['spray_eff'])
     return cost
 
 
@@ -1043,7 +1047,7 @@ def f_seeding_dep():
     ##variable depn rate is input as a percent depn in all harvest gear per machine hour (%/machine hr).
     dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_seeding']
     ###convert from rotor hours to harvest activity hours
-    dep_rate_per_hr = dep_rate_per_hr / (1 + pinp.mach['seeding_prep'])
+    dep_rate_per_hr = dep_rate_per_hr / (1 + pinp.mach['seeding_eff'])
 
     ##determine dep per hour - equal to crop gear value x depn %
     seeding_gear_clearing_value = f_seeding_gear_clearing_value()
@@ -1089,7 +1093,7 @@ def f_harvest_dep():
     ##variable depn rate is input as a percent depn in all harvest gear per rotor hour (%/rotor hr).
     dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_harv']
     ###convert from rotor hours to harvest activity hours
-    dep_rate_per_hr = dep_rate_per_hr / (1 + pinp.mach['harv_prep'])
+    dep_rate_per_hr = dep_rate_per_hr / (1 + pinp.mach['harv_eff'])
 
     ##determine dep per hour - equal to harv gear value x dep %
     dep_hourly = harvest_gear_clearing_value() * dep_rate_per_hr

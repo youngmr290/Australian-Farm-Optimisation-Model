@@ -282,11 +282,12 @@ def f_property_inp_sa(pinp_defaults):
     ###sav
     mach['option'] = fun.f_sa(mach['option'], sen.sav['mach_option'], 5)
     mach['daily_seed_hours'] = fun.f_sa(mach['daily_seed_hours'], sen.sav['daily_seed_hours'], 5)
-    mach['seeding_prep'] = fun.f_sa(mach['seeding_prep'], sen.sav['seeding_prep'], 5)
+    mach['seeding_eff'] = fun.f_sa(mach['seeding_eff'], sen.sav['seeding_eff'], 5)
     mach['seeding_delays'] = fun.f_sa(mach['seeding_delays'], sen.sav['seeding_delays'], 5)
     mach['daily_harvest_hours'] = fun.f_sa(mach['daily_harvest_hours'], sen.sav['daily_harvest_hours'], 5)
-    mach['harv_prep'] = fun.f_sa(mach['harv_prep'], sen.sav['harv_prep'], 5)
+    mach['harv_eff'] = fun.f_sa(mach['harv_eff'], sen.sav['harv_eff'], 5)
     mach['harv_delays'] = fun.f_sa(mach['harv_delays'], sen.sav['harv_delays'], 5)
+    mach['spray_eff'] = fun.f_sa(mach['spray_eff'], sen.sav['spray_eff'], 5)
     ###sam
     ###sap
     ###saa
