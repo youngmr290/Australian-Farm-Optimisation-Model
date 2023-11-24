@@ -258,17 +258,23 @@ def f_seed_time_lmus():
     ##mask lmu input
     lmu_mask = pinp.general['i_lmu_area'] > 0
     base_seeding_rate = uinp.mach[pinp.mach['option']]['seeding_rate_base']
-    seeding_rate_lmu_adj = pinp.mach['seeding_rate_lmu_adj'][lmu_mask]
+    seeding_rate_lmu_adj = pinp.mach['seeding_rate_lmu_adj'][lmu_mask].squeeze()
 
     ##adjust for lmu
     rate_l = base_seeding_rate * seeding_rate_lmu_adj
 
+    ##adjust for crop
+    seeding_rate_crop_adj_k_l = pd.concat([uinp.mach[pinp.mach['option']]['seeding_rate_crop_adj']]*len(rate_l),axis=1) #expands df for each lmu
+    seeding_rate_crop_adj_k_l.columns = rate_l.index #rename columns to lmu so i can mul
+    rate_direct_drill_k_l=seeding_rate_crop_adj_k_l.mul(rate_l)
+
     ##convert from ha/hr to hr/ha
-    rate_direct_drill_l = 1 / rate_l
+    rate_direct_drill_k_l = 1 / rate_direct_drill_k_l
 
     ##adjust for the time when seed is not being put in the ground due to moving paddocks or filling up.
-    rate_direct_drill_l = rate_direct_drill_l / (1 - pinp.mach['seeding_prep'])
-    return rate_direct_drill_l
+    rate_direct_drill_k_l = rate_direct_drill_k_l / (1 - pinp.mach['seeding_prep'])
+
+    return rate_direct_drill_k_l
 
 def f_overall_seed_rate(r_vals):
     '''
@@ -279,16 +285,12 @@ def f_overall_seed_rate(r_vals):
 
     '''
     ##convert seed time (hr/ha) to rate of direct drill per day (ha/day)
-    seed_rate_lmus = 1 / f_seed_time_lmus().squeeze() * pinp.mach['daily_seed_hours']
-
-    ##adjusts the seeding rate (ha/day) for each different crop depending on its seeding speed vs wheat
-    seedrate_df = pd.concat([uinp.mach[pinp.mach['option']]['seeding_rate_crop_adj']]*len(seed_rate_lmus),axis=1) #expands df for each lmu
-    seedrate_df.columns = seed_rate_lmus.index #rename columns to lmu so i can mul
-    seedrate_df=seedrate_df.mul(seed_rate_lmus)
+    rate_direct_drill_k_l = f_seed_time_lmus()
+    daily_rate_direct_drill_k_l = 1 / rate_direct_drill_k_l * pinp.mach['daily_seed_hours']
 
     ##store r_vals
-    fun.f1_make_r_val(r_vals,seedrate_df,'seeding_rate')
-    return seedrate_df.stack()
+    fun.f1_make_r_val(r_vals,daily_rate_direct_drill_k_l,'seeding_rate')
+    return daily_rate_direct_drill_k_l.stack()
 
     
   
@@ -1048,23 +1050,27 @@ def f_seeding_dep():
     dep_hourly = seeding_gear_clearing_value * dep_rate_per_hr
 
     ##convert to dep per ha for each soil type - equals cost per hr x seeding rate per hr
-    seed_rate = f_seed_time_lmus().squeeze()
-    dep_ha = dep_hourly * seed_rate
+    rate_direct_drill_k_l = f_seed_time_lmus()
+    dep_ha_kl = dep_hourly * rate_direct_drill_k_l.stack()
 
     ##allocate season period based on mach/labour period - so that depreciation can be linked to seeding activity and transferred as seasons uncluster
     mach_periods = per.f_p_dates_df()
     date_start_p5z = mach_periods.values[:-1]
     alloc_p7p5z = zfun.f1_z_period_alloc(date_start_p5z[na,...], z_pos=-1)
-
-    ##make df
+    ###make df
     keys_p5 = mach_periods.index[:-1]
     keys_z = zfun.f_keys_z()
     keys_p7 = per.f_season_periods(keys=True)
+    keys_k = sinp.landuse['All']
+    keys_l = rate_direct_drill_k_l.columns
     index_p7p5z = pd.MultiIndex.from_product([keys_p7,keys_p5,keys_z])
     alloc_p7p5z = pd.Series(alloc_p7p5z.ravel(), index=index_p7p5z)
-    index_p7p5zl = pd.MultiIndex.from_product([keys_p7,keys_p5,keys_z,dep_ha.index])
-    alloc_p7p5zl = alloc_p7p5z.reindex(index_p7p5zl)
-    return alloc_p7p5zl.mul(dep_ha, level=-1)
+    index_p7p5zkl = pd.MultiIndex.from_product([keys_p7,keys_p5,keys_z,keys_k,keys_l])
+    alloc_p7p5zkl = alloc_p7p5z.reindex(index_p7p5zkl)
+
+    ##allocate dep to p7
+    rate_direct_drill_p7p5zkl = alloc_p7p5zkl.unstack([-2, -1]).mul(dep_ha_kl, axis=1).stack([0,1])
+    return rate_direct_drill_p7p5zkl
 
 
 ####################################
