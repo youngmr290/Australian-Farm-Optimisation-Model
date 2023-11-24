@@ -630,6 +630,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     a_t_tpg3 = fun.f_expand(a_t_g3, p_pos - 2, right_pos=-1)
 
     ##convert input params from c to g
+    #todo consider moving all the f1_c2g() calls to this section. There are some interspersed through the code
     ###production params
     agedam_propn_da0e0b0xyg0, agedam_propn_da0e0b0xyg1, agedam_propn_da0e0b0xyg2, agedam_propn_da0e0b0xyg3 = \
         sfun.f1_c2g(uinp.parameters['i_agedam_propn_std_dc2'], uinp.parameters['i_agedam_propn_y'], a_c2_c0, i_g3_inc,
@@ -1675,7 +1676,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     adjp_fl_initial_wzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_adjp_fl_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
 
 
-    ##convert variable from c2 to g (yatf is not used, only here because it is return from the function) then adjust by initial lw pattern
+    ##convert variable from c2 to g then adjust by initial lw pattern
+    ### yatf is not used, only here because it is returned from the function
     lw_initial_yg0, lw_initial_yg1, lw_initial_yatf, lw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_lw_initial_c2'], uinp.parameters['i_lw_initial_y'], a_c2_c0, i_g3_inc)
     ###the initial lw input is a proportion of srw
     ### Uses srw_female to remove the randomness that would occur with srw_b0 when changing RR.
@@ -1838,10 +1840,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ####initial offs numbers
     numbers_initial_ida0e0b0xyg3 = initial_yg3 * numbers_initial_cluster_ida0e0b0xyg3
 
-    ##set default numbers to initial numbers. So that p0 (dvp0 has numbers_start)
-    o_numbers_start_tpsire[...] =  numbers_initial_zida0e0b0xyg0  # default 1 so that dvp0 (p0) has start numbers
-    o_numbers_start_tpdams[...] =  numbers_initial_a1e1b1nwzida0e0b0xyg1  # default 1 so that dvp0 (p0) has start numbers
-    o_numbers_start_tpoffs[...] = numbers_initial_ida0e0b0xyg3 # ones so that dvp0 (p0) has start numbers.
+    ##set default numbers to initial numbers. So that p0 (dvp0) has numbers_start
+    o_numbers_start_tpsire[...] =  numbers_initial_zida0e0b0xyg0
+    o_numbers_start_tpdams[...] =  numbers_initial_a1e1b1nwzida0e0b0xyg1
+    o_numbers_start_tpoffs[...] = numbers_initial_ida0e0b0xyg3
 
     #######################
     ##Age, date, timing 1 #
@@ -2144,9 +2146,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     d_cfw_ave_pa1e1b1nwzida0e0b0xyg3 = sfw_da0e0b0xyg3 * af_wool_pa1e1b1nwzida0e0b0xyg3 / 364
 
     ##Expected relative size
-    relsize_exp_a1e1b1nwzida0e0b0xyg0  = (srw_b0xyg0 - (srw_b0xyg0 - w_b_std_b0xyg0) * np.exp(-cn_sire[1, ...] * agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 / (srw_b0xyg0**cn_sire[2, ...]))) / srw_b0xyg0
-    relsize_exp_a1e1b1nwzida0e0b0xyg1  = (srw_b0xyg1 - (srw_b0xyg1 - w_b_std_b0xyg1) * np.exp(-cn_dams[1, ...] * agedam_lamb1st_a1e1b1nwzida0e0b0xyg1 / (srw_b0xyg1**cn_dams[2, ...]))) / srw_b0xyg1
-    relsize_exp_a1e1b1nwzida0e0b0xyg3  = (srw_b0xyg3 - (srw_b0xyg3 - w_b_std_b0xyg3) * np.exp(-cn_offs[1, ...] * agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 / (srw_b0xyg3**cn_offs[2, ...]))) / srw_b0xyg3
+    relsize_exp_a1e1b1nwzida0e0b0xyg0  = 1 - (1 - w_b_std_b0xyg0 / srw_b0xyg0) * np.exp(-cn_sire[1, ...]
+                                                * agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 / (srw_b0xyg0**cn_sire[2, ...]))
+    relsize_exp_a1e1b1nwzida0e0b0xyg1  = 1 - (1 - w_b_std_b0xyg1 / srw_b0xyg1) * np.exp(-cn_dams[1, ...]
+                                                * agedam_lamb1st_a1e1b1nwzida0e0b0xyg1 / (srw_b0xyg1**cn_dams[2, ...]))
+    relsize_exp_a1e1b1nwzida0e0b0xyg3  = 1 - (1 - w_b_std_b0xyg3 / srw_b0xyg3) * np.exp(-cn_offs[1, ...]
+                                                * agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 / (srw_b0xyg3**cn_offs[2, ...]))
 
     ##Adjust the tissue insulation parameter (cc[3]) for yatf 30 days or younger.
     shape = (cc_yatf.shape[0],) + age_pa1e1b1nwzida0e0b0xyg2.shape
