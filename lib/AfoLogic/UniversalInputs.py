@@ -147,7 +147,6 @@ def f_universal_inp_sa(uinp_defaults):
     ##price
     ###sav
     price['grain_price_percentile'] = fun.f_sa(price['grain_price_percentile'],sen.sav['grain_percentile'], 5)
-    price['fert_cost'] = fun.f_sa(price['fert_cost'], sen.sav['fert_cost'][:,None], 5)
     price['manager_cost'] = fun.f_sa(price['manager_cost'], sen.sav['manager_cost'], 5)
     price['permanent_cost'] = fun.f_sa(price['permanent_cost'], sen.sav['permanent_cost'], 5)
     price['casual_cost'] = fun.f_sa(price['casual_cost'], sen.sav['casual_cost'], 5)

@@ -101,7 +101,7 @@ def sets(model, nv):
     model.s_landuses = Set(initialize=sinp.landuse['All'], doc='landuses')
 
     ##different fert options - used in labourcroppyomo
-    model.s_fert_type = Set(initialize=uinp.price['fert_cost'].index, doc='fertiliser options')
+    model.s_fert_type = Set(initialize=uinp.general['i_fert_idx'], doc='fertiliser options')
 
     ###########
     #rotation #
