@@ -243,11 +243,12 @@ def f_poc_grazing_days():
 
 def f_seed_time_lmus():
     '''
-    Time taken to direct drill 1ha of the base crop on each lmu.
+    Rate of direct drill for each crop on each lmu (hr/ha).
 
-    Seeding rate is calculated from speed travelled, seeder width and seeding efficiency (efficiency is
-    to account for overlap, turning around and filling up time). The caluculation also includes a factor
-    that accounts for the time when seed is not being put in the ground due to moving paddocks or filling up.
+    The base seeding rate per machine hour (ha/machine hr) is an input which accounts for machine size, speed,
+    overlap and turning around. Seeding rate is converted from a rate per machine hour
+    to a rate per seeding activity hour by adjusting by an efficiency factor that accounts for the proportion of seeding
+    when seed is not going into the ground (e.g. moving paddocks or filling up)
 
     Seeding rate can vary for each LMU
     due to varying speeds associated with more or less force being required to pull the seeding equipment
@@ -256,32 +257,32 @@ def f_seed_time_lmus():
     '''
     ##mask lmu input
     lmu_mask = pinp.general['i_lmu_area'] > 0
-    seeder_speed_lmu_adj = pinp.mach['seeder_speed_lmu_adj'][lmu_mask]
-    ##first turn seeding speed on each lmu to df so it can be manipulated (it was entered as a dict in machinputs)
-    speed_lmu_df = seeder_speed_lmu_adj * uinp.mach[pinp.mach['option']]['seeder_speed_base']
-    ##convert speed to rate of direct drill for wheat on each lmu type (hr/ha)
-    rate_direct_drill = 1 / (speed_lmu_df * uinp.mach[pinp.mach['option']]['seeding_eff'] * uinp.mach[pinp.mach['option']]['seeder_width'] / 10)
-    ##includes a factor that accounts for the time when seed is not being put in the ground due to moving paddocks or filling up.
-    rate_direct_drill = rate_direct_drill / (1 - pinp.mach['seeding_prep'])
-    return rate_direct_drill
+    base_seeding_rate = uinp.mach[pinp.mach['option']]['seeding_rate_base']
+    seeding_rate_lmu_adj = pinp.mach['seeding_rate_lmu_adj'][lmu_mask]
+
+    ##adjust for lmu
+    rate_l = base_seeding_rate * seeding_rate_lmu_adj
+
+    ##convert from ha/hr to hr/ha
+    rate_direct_drill_l = 1 / rate_l
+
+    ##adjust for the time when seed is not being put in the ground due to moving paddocks or filling up.
+    rate_direct_drill_l = rate_direct_drill_l / (1 - pinp.mach['seeding_prep'])
+    return rate_direct_drill_l
 
 def f_overall_seed_rate(r_vals):
     '''
     Hectares of each crop that can be sown per day on each LMU.
 
     Seeding rate per day is a product of the hours seeding can occur per day and the seeding rate
-    per hectare. Seeding rate per hectare for each crop on each LMU is calculated by adjusting the
-    LMU seeding rate (see f_seed_time_lmus) by a crop adjustment factor. Note, f_seed_time_lmus
-    includes a factor that accounts for the time when seed is not being put in the ground due to
-    moving paddocks or filling up.
-
+    per hectare (see f_seed_time_lmus).
 
     '''
     ##convert seed time (hr/ha) to rate of direct drill per day (ha/day)
     seed_rate_lmus = 1 / f_seed_time_lmus().squeeze() * pinp.mach['daily_seed_hours']
 
     ##adjusts the seeding rate (ha/day) for each different crop depending on its seeding speed vs wheat
-    seedrate_df = pd.concat([uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj']]*len(seed_rate_lmus),axis=1) #expands df for each lmu
+    seedrate_df = pd.concat([uinp.mach[pinp.mach['option']]['seeding_rate_crop_adj']]*len(seed_rate_lmus),axis=1) #expands df for each lmu
     seedrate_df.columns = seed_rate_lmus.index #rename columns to lmu so i can mul
     seedrate_df=seedrate_df.mul(seed_rate_lmus)
 

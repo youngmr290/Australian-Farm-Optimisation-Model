@@ -157,9 +157,7 @@ def f_universal_inp_sa(uinp_defaults):
         ###sav
         mach[option]['clearing_value'].loc[:,'value'] = fun.f_sa(np.array(mach[option]['clearing_value'].loc[:,'value']), sen.sav[('clearing_value',option)], 5) #use np so f_update does the dtype correctly
         mach[option]['number_of_seeders'] = fun.f_sa(mach[option]['number_of_seeders'], sen.sav[('number_seeders',option)], 5)
-        mach[option]['seeder_width'] = fun.f_sa(mach[option]['seeder_width'], sen.sav[('seeder_width',option)], 5)
-        mach[option]['seeder_speed_base'] = fun.f_sa(mach[option]['seeder_speed_base'], sen.sav[('seeding_speed',option)], 5)
-        mach[option]['seeding_eff'] = fun.f_sa(mach[option]['seeding_eff'], sen.sav[('seeding_paddock_eff',option)], 5)
+        mach[option]['seeding_rate_base'] = fun.f_sa(mach[option]['seeding_rate_base'], sen.sav[('seeding_rate_base',option)], 5)
         mach[option]['number_of_harvesters'] = fun.f_sa(mach[option]['number_of_harvesters'], sen.sav[('number_harvesters',option)], 5)
         mach[option]['harvest_rate'].iloc[:,0] = fun.f_sa(np.array(mach[option]['harvest_rate'].iloc[:,0]), sen.sav[('harvest_rate',option)], 5) #use np so f_update does the dtype correctly
         mach[option]['sprayer_width'] = fun.f_sa(mach[option]['sprayer_width'], sen.sav[('sprayer_width',option)], 5)

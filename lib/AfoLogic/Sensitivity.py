@@ -198,9 +198,7 @@ def create_sa():
         ##SAV
         sav['clearing_value', option] = np.full(len(uinp.mach[option]['clearing_value']), '-', dtype=object) #clearing sale value of each item of machinery
         sav['number_seeders', option] = '-'                                 #number of seeders
-        sav['seeder_width', option] = '-'                                   #width (m) of seeder
-        sav['seeding_speed', option] = '-'                                  #seeding speed of wheat on base LMU (km/hr)
-        sav['seeding_paddock_eff', option] = '-'                            #paddock efficiency of seeding (accounts for overlap)
+        sav['seeding_rate_base', option] = '-'                                  #seeding speed of wheat on base LMU (km/hr)
         sav['number_harvesters', option] = '-'                              #number of harvesters
         sav['harvest_rate', option] = np.full(len_k, '-', dtype=object) #harvesting rate of each crop (t/hr)
         sav['sprayer_width', option] = '-'                         #width (m)
