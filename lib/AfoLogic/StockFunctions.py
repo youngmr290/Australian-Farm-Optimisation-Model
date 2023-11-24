@@ -306,7 +306,7 @@ def f1_RR_propn_logistic(RR_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
 def f1_LS_propn_logistic(LS_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     '''
     Returns the proportion of empty, single, twin & triplet bearing dams from a litter size.
-    Note: The number of cycles doesn't affect litter (unlike RR which is affected by the number of cycles)
+    Note: The number of cycles doesn't affect litter size (unlike RR which is affected by the number of cycles)
     The prediction is based on the logistic equation used in the LMAT reproduction function (f_conception_MU2)
     It requires calculating the roots of a cubic equation which has been fitted to the cut-offs for the
     transformed logistic equation.
@@ -563,7 +563,7 @@ def f1_nv_components(paststd_foo_p6a1e1b1j0wzida0e0b0xyg, paststd_dmd_p6a1e1b1j0
     The range from lowest NV to highest NV is associated with increasing FOO & DMD inputs across the j0 axis and then
     increasing supplementary feeding from the input level up to ad-lib.
 
-    The mei returned from this function is nv for a potential intake of 1 (nv = mei * PI). The nv is scaled
+    NV returned from this function is MEI for a potential intake of 1 (mei = nv * PI). The mei is scaled
     for the actual PI outside this function.
     '''
     from scipy.interpolate import interp1d
@@ -604,11 +604,11 @@ def f1_nv_components(paststd_foo_p6a1e1b1j0wzida0e0b0xyg, paststd_dmd_p6a1e1b1j0
     ##relative intake
     ri_p6a1e1b1j1wzida0e0b0xyg = fsfun.f_rel_intake(ra_p6a1e1b1j1wzida0e0b0xyg, rq_p6a1e1b1j1wzida0e0b0xyg, legume_p6a1e1b1nwzida0e0b0xyg, cr)
 
-    ##mei which is nv for a PI of 1.
-    mei_p6zj1 = f_intake(1, ri_p6a1e1b1j1wzida0e0b0xyg, past_md_p6a1e1b1j1wzida0e0b0xyg, False
+    ##nv which is mei for a PI of 1.
+    nv_p6zj1 = f_intake(1, ri_p6a1e1b1j1wzida0e0b0xyg, past_md_p6a1e1b1j1wzida0e0b0xyg, False
                          , supp_p6a1e1b1j1wzida0e0b0xyg, pinp.sheep['i_md_supp'])[0] #slice the first return arg
 
-    return mei_p6zj1, foo_p6a1e1b1j1wzida0e0b0xyg, dmd_p6a1e1b1j1wzida0e0b0xyg, supp_p6a1e1b1j1wzida0e0b0xyg
+    return nv_p6zj1, foo_p6a1e1b1j1wzida0e0b0xyg, dmd_p6a1e1b1j1wzida0e0b0xyg, supp_p6a1e1b1j1wzida0e0b0xyg
 
 
 def f1_feedsupply(feedsupplyw_ta1e1b1nwzida0e0b0xyg, confinementw_ta1e1b1nwzida0e0b0xyg, nv_a1e1b1j1wzida0e0b0xyg,
@@ -1372,7 +1372,7 @@ def f_templc(cc, ffcfw_start, rc_start, sl_start, hp_total, temp_ave, temp_max, 
 
 def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, hp_total, meme, mew, km, kg_supp, kg_fodd, mei_propn_supp
                , mei_propn_herb, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0, kl = 0, mei_propn_milk = 0
-               , mec = 0, mel = 0, gest_propn	= 0, lact_propn = 0):
+               , mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
     ##Body area m2
     area = f1_surface_area(cc, ffcfw_start)
     ##Calculate insulation

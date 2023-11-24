@@ -630,6 +630,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     a_t_tpg3 = fun.f_expand(a_t_g3, p_pos - 2, right_pos=-1)
 
     ##convert input params from c to g
+    #todo consider moving all the f1_c2g() calls to this section. There are some interspersed through the code
     ###production params
     agedam_propn_da0e0b0xyg0, agedam_propn_da0e0b0xyg1, agedam_propn_da0e0b0xyg2, agedam_propn_da0e0b0xyg3 = \
         sfun.f1_c2g(uinp.parameters['i_agedam_propn_std_dc2'], uinp.parameters['i_agedam_propn_y'], a_c2_c0, i_g3_inc,
@@ -1675,7 +1676,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     adjp_fl_initial_wzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_adjp_fl_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
 
 
-    ##convert variable from c2 to g (yatf is not used, only here because it is return from the function) then adjust by initial lw pattern
+    ##convert variable from c2 to g then adjust by initial lw pattern
+    ### yatf is not used, only here because it is returned from the function
     lw_initial_yg0, lw_initial_yg1, lw_initial_yatf, lw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_lw_initial_c2'], uinp.parameters['i_lw_initial_y'], a_c2_c0, i_g3_inc)
     ###the initial lw input is a proportion of srw
     ### Uses srw_female to remove the randomness that would occur with srw_b0 when changing RR.
@@ -1838,10 +1840,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ####initial offs numbers
     numbers_initial_ida0e0b0xyg3 = initial_yg3 * numbers_initial_cluster_ida0e0b0xyg3
 
-    ##set default numbers to initial numbers. So that p0 (dvp0 has numbers_start)
-    o_numbers_start_tpsire[...] =  numbers_initial_zida0e0b0xyg0  # default 1 so that dvp0 (p0) has start numbers
-    o_numbers_start_tpdams[...] =  numbers_initial_a1e1b1nwzida0e0b0xyg1  # default 1 so that dvp0 (p0) has start numbers
-    o_numbers_start_tpoffs[...] = numbers_initial_ida0e0b0xyg3 # ones so that dvp0 (p0) has start numbers.
+    ##set default numbers to initial numbers. So that p0 (dvp0) has numbers_start
+    o_numbers_start_tpsire[...] =  numbers_initial_zida0e0b0xyg0
+    o_numbers_start_tpdams[...] =  numbers_initial_a1e1b1nwzida0e0b0xyg1
+    o_numbers_start_tpoffs[...] = numbers_initial_ida0e0b0xyg3
 
     #######################
     ##Age, date, timing 1 #
@@ -2050,8 +2052,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     doj_pa1e1b1nwzida0e0b0xygp1 = doy_pa1e1b1nwzida0e0b0xygp1
     doj_pa1e1b1nwzida0e0b0xygp1[doj_pa1e1b1nwzida0e0b0xygp1 >= 244] -= 364
     doj_pa1e1b1nwzida0e0b0xygp1 = np.clip(doj_pa1e1b1nwzida0e0b0xygp1, -52, 98)
-    doj_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(doy_pa1e1b1nwzida0e0b0xygp1, axis = -1)
-    doj2_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(doy_pa1e1b1nwzida0e0b0xygp1 ** 2, axis=-1)
+    doj_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(doj_pa1e1b1nwzida0e0b0xygp1, axis = -1)
+    doj2_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(doj_pa1e1b1nwzida0e0b0xygp1 ** 2, axis=-1)
 
     ##Rumen development factor on PI - yatf
     piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(fun.f_back_transform(ci_yatf[3, ..., na]
@@ -2073,7 +2075,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     # ce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na]
     #                                       * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0))))
     #                                               , weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
-    ##Conceptus energy pattern (d_nec)
+    ##Conceptus energy pattern (d_nec). Average for the days that the dam is gestating
     dce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cp_dams[9, ..., na] * cp_dams[10, ..., na] / cp_dams[1, 0, ..., na]
                                             * np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p0)
                                             + cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na]
@@ -2144,9 +2146,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     d_cfw_ave_pa1e1b1nwzida0e0b0xyg3 = sfw_da0e0b0xyg3 * af_wool_pa1e1b1nwzida0e0b0xyg3 / 364
 
     ##Expected relative size
-    relsize_exp_a1e1b1nwzida0e0b0xyg0  = (srw_b0xyg0 - (srw_b0xyg0 - w_b_std_b0xyg0) * np.exp(-cn_sire[1, ...] * agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 / (srw_b0xyg0**cn_sire[2, ...]))) / srw_b0xyg0
-    relsize_exp_a1e1b1nwzida0e0b0xyg1  = (srw_b0xyg1 - (srw_b0xyg1 - w_b_std_b0xyg1) * np.exp(-cn_dams[1, ...] * agedam_lamb1st_a1e1b1nwzida0e0b0xyg1 / (srw_b0xyg1**cn_dams[2, ...]))) / srw_b0xyg1
-    relsize_exp_a1e1b1nwzida0e0b0xyg3  = (srw_b0xyg3 - (srw_b0xyg3 - w_b_std_b0xyg3) * np.exp(-cn_offs[1, ...] * agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 / (srw_b0xyg3**cn_offs[2, ...]))) / srw_b0xyg3
+    relsize_exp_a1e1b1nwzida0e0b0xyg0  = 1 - (1 - w_b_std_b0xyg0 / srw_b0xyg0) * np.exp(-cn_sire[1, ...]
+                                                * agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 / (srw_b0xyg0**cn_sire[2, ...]))
+    relsize_exp_a1e1b1nwzida0e0b0xyg1  = 1 - (1 - w_b_std_b0xyg1 / srw_b0xyg1) * np.exp(-cn_dams[1, ...]
+                                                * agedam_lamb1st_a1e1b1nwzida0e0b0xyg1 / (srw_b0xyg1**cn_dams[2, ...]))
+    relsize_exp_a1e1b1nwzida0e0b0xyg3  = 1 - (1 - w_b_std_b0xyg3 / srw_b0xyg3) * np.exp(-cn_offs[1, ...]
+                                                * agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 / (srw_b0xyg3**cn_offs[2, ...]))
 
     ##Adjust the tissue insulation parameter (cc[3]) for yatf 30 days or younger.
     shape = (cc_yatf.shape[0],) + age_pa1e1b1nwzida0e0b0xyg2.shape
@@ -4602,7 +4607,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ## be inconsistent with the in function SA)
 
             #todo these SA will need equation groups to be implemented with the new feeding standards
-            #the new feeding standards are not conducive to doing a SA on efficiency of gain. Therefore retain the kg approach
+            # the new feeding standards are not conducive to doing a SA on efficiency of gain.
+            # Therefore retain the approach for the post-calc SA for both feeding systems.
 
             ###sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
@@ -4612,16 +4618,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 sap_kg = fun.f_update(0, sen.sap['kg_post_adult'], zf2_sire == 1)   #efficiency of gain (kg)
                 #### alter potential intake
                 pi_sire = fun.f_sa(pi_sire, sam_pi)
-                #### alter mei
-                mei_solid_sire = mei_solid_sire + (mem_sire * sap_mr
-                                                   - surplus_energy_sire * sap_kg / (1 + sap_kg))
+                #### alter mei and corresponding change in wool production. Includes adjustment for maintenance and growth.
+                #### Wool growth is scaled by the amount that mei is reduced
+                t_mei_solid_sire = mei_solid_sire  #temporary store of the mei prior to scaling
+                mei_solid_sire = np.maximum(0, mei_solid_sire + (mem_sire * sap_mr
+                                                   - surplus_energy_sire * sap_kg / (1 + sap_kg)))
                 ####alter wool production as energy params change
-                scalar_mr = 1 + sap_mr * fun.f_divide(mem_sire, mei_solid_sire)
-                scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_sire, mei_solid_sire)
-                d_cfw_sire = d_cfw_sire / scalar_mr
-                d_fl_sire = d_fl_sire / scalar_mr
-                d_cfw_sire = d_cfw_sire / scalar_kg
-                d_fl_sire = d_fl_sire / scalar_kg
+                # scalar_mr = 1 + sap_mr * fun.f_divide(mem_sire, mei_solid_sire)
+                # scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_sire, mei_solid_sire)
+                # d_cfw_sire = d_cfw_sire / scalar_mr
+                # d_fl_sire = d_fl_sire / scalar_mr
+                # d_cfw_sire = d_cfw_sire / scalar_kg
+                # d_fl_sire = d_fl_sire / scalar_kg
+                scalar = fun.f_divide(t_mei_solid_sire, mei_solid_sire, option=1)
+                d_cfw_sire = d_cfw_sire * scalar
+                d_fl_sire = d_fl_sire * scalar
 
             ###dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -4631,16 +4642,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 sap_kg = fun.f_update(0, sen.sap['kg_post_adult'], zf2_dams == 1)   #efficiency of gain (kg)
                 #### alter potential intake
                 pi_dams = fun.f_sa(pi_dams, sam_pi)
-                #### alter mei
-                mei_solid_dams = mei_solid_dams + (mem_dams * sap_mr
-                                                   - surplus_energy_dams * sap_kg / (1 + sap_kg))
+                #### alter mei and corresponding change in wool production. Includes adjustment for maintenance and growth.
+                #### Wool growth is scaled by the amount that mei is reduced
+                t_mei_solid_dams = mei_solid_dams  #temporary store of the mei prior to scaling
+                mei_solid_dams = np.maximum(0, mei_solid_dams + (mem_dams * sap_mr
+                                                   - surplus_energy_dams * sap_kg / (1 + sap_kg)))
                 ####alter wool production as energy params change
-                scalar_mr = 1 + sap_mr * fun.f_divide(mem_dams, mei_solid_dams)
-                scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_dams, mei_solid_dams)
-                d_cfw_dams = d_cfw_dams / scalar_mr
-                d_fl_dams = d_fl_dams / scalar_mr
-                d_cfw_dams = d_cfw_dams / scalar_kg
-                d_fl_dams = d_fl_dams / scalar_kg
+                # scalar_mr = 1 + sap_mr * fun.f_divide(mem_dams, mei_solid_dams)
+                # scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_dams, mei_solid_dams)
+                # d_cfw_dams = d_cfw_dams / scalar_mr
+                # d_fl_dams = d_fl_dams / scalar_mr
+                # d_cfw_dams = d_cfw_dams / scalar_kg
+                # d_fl_dams = d_fl_dams / scalar_kg
+                scalar = fun.f_divide(t_mei_solid_dams, mei_solid_dams, option=1)
+                d_cfw_dams = d_cfw_dams * scalar
+                d_fl_dams = d_fl_dams * scalar
 
             ###yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
@@ -4652,15 +4668,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 pi_yatf = fun.f_sa(pi_yatf, sam_pi)
                 #### alter mei (only calculate impact on mei_solid because that passes to the mei parameter in the matrix)
                 #### this is an error in this application because all the change in energy is related to pasture and none to milk
-                mei_solid_yatf = mei_solid_yatf + (mem_yatf * sap_mr
-                                                   - surplus_energy_yatf * sap_kg / (1 + sap_kg))
+                #### alter mei and corresponding change in wool production. Includes adjustment for maintenance and growth.
+                #### Wool growth is scaled by the amount that mei is reduced
+                t_mei_solid_yatf = mei_solid_yatf #temporary store of the mei prior to scaling
+                mei_solid_yatf = np.maximum(0, mei_solid_yatf + (mem_yatf * sap_mr
+                                                   - surplus_energy_yatf * sap_kg / (1 + sap_kg)))
                 ####alter wool production as energy params change (use mei rather than mei_solid so it is change as a proportion of total mei)
-                scalar_mr = 1 + sap_mr * fun.f_divide(mem_yatf, mei_yatf)
-                scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_yatf, mei_yatf)
-                d_cfw_yatf = d_cfw_yatf / scalar_mr
-                d_fl_yatf = d_fl_yatf / scalar_mr
-                d_cfw_yatf = d_cfw_yatf / scalar_kg
-                d_fl_yatf = d_fl_yatf / scalar_kg
+                # scalar_mr = 1 + sap_mr * fun.f_divide(mem_yatf, mei_yatf)
+                # scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_yatf, mei_yatf)
+                # d_cfw_yatf = d_cfw_yatf / scalar_mr
+                # d_fl_yatf = d_fl_yatf / scalar_mr
+                # d_cfw_yatf = d_cfw_yatf / scalar_kg
+                # d_fl_yatf = d_fl_yatf / scalar_kg
+                scalar = fun.f_divide(t_mei_solid_yatf,  mei_solid_yatf, option=1)
+                d_cfw_yatf = d_cfw_yatf * scalar
+                d_fl_yatf = d_fl_yatf * scalar
 
             ###offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -4670,16 +4692,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 sap_kg = fun.f_update(0, sen.sap['kg_post_adult'], zf2_offs == 1)   #efficiency of gain (kg)
                 #### alter potential intake
                 pi_offs = fun.f_sa(pi_offs, sam_pi)
-                #### alter mei
-                mei_solid_offs = mei_solid_offs + (mem_offs * sap_mr
-                                                   - surplus_energy_offs * sap_kg / (1 + sap_kg))
+                #### alter mei and corresponding change in wool production. Includes adjustment for maintenance and growth.
+                #### Wool growth is scaled by the amount that mei is reduced
+                t_mei_solid_offs = mei_solid_offs  #temporary store of the mei prior to scaling
+                mei_solid_offs = np.maximum(0, mei_solid_offs + (mem_offs * sap_mr
+                                                   - surplus_energy_offs * sap_kg / (1 + sap_kg)))
                 ####alter wool production as energy params change
-                scalar_mr = 1 + sap_mr * fun.f_divide(mem_offs, mei_solid_offs)
-                scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_offs, mei_solid_offs)
-                d_cfw_offs = d_cfw_offs / scalar_mr
-                d_fl_offs = d_fl_offs / scalar_mr
-                d_cfw_offs = d_cfw_offs / scalar_kg
-                d_fl_offs = d_fl_offs / scalar_kg
+                # scalar_mr = 1 + sap_mr * fun.f_divide(mem_offs, mei_solid_offs)
+                # scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_offs, mei_solid_offs)
+                # d_cfw_offs = d_cfw_offs / scalar_mr
+                # d_fl_offs = d_fl_offs / scalar_mr
+                # d_cfw_offs = d_cfw_offs / scalar_kg
+                # d_fl_offs = d_fl_offs / scalar_kg
+                scalar = fun.f_divide(t_mei_solid_offs, mei_solid_offs, option=1)
+                d_cfw_offs = d_cfw_offs * scalar
+                d_fl_offs = d_fl_offs * scalar
 
             ##############
             ##end values #
