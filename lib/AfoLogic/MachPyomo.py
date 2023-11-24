@@ -290,7 +290,7 @@ def f_mach_wc(model,q,s,c0,p7,z):
 
 #function to determine derpriciation cost, this will be passed to core model
 #equals seeding dep plus harv dep plus fixed dep
-def f_total_dep(model,q,s,p7,z):
+def f_seeding_harv_dep(model,q,s,p7,z):
     '''
     Calculate the total depreciation of farm machinery.
 

@@ -1012,12 +1012,17 @@ def f_seeding_gear_clearing_value():
     value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'seeding allocation'])
     return value
 
+def f_spray_gear_clearing_value():
+    value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'spraying allocation'])
+    return value
+
+def f_spread_gear_clearing_value():
+    value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'spreading allocation'])
+    return value
+
 ##total machine value - used to calc asset value, fixed dep and insurance
 def f_total_clearing_value():
-    harv_value = harvest_gear_clearing_value()
-    seed_value = f_seeding_gear_clearing_value()
-    other_value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'remaining allocation'])
-    total_clearing_value = harv_value + seed_value + other_value
+    total_clearing_value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'])
     ##all is incurred in the last p7 period (although it could occur in any period it doesn't make a difference)
     keys_p7 = per.f_season_periods(keys=True)
     total_clearing_value = pd.Series(total_clearing_value,index=keys_p7[-1:])
@@ -1056,22 +1061,25 @@ def f_seeding_dep():
     of crop. This is converted to a dollar cost per hour based on the seeding rate and the machinery value.
 
     '''
-    ##inputs
-    seed_rate = f_seed_time_lmus().squeeze()
-    ##first determine the approx time to seed all the crop - which is equal to dep area x average seeding rate (hr/ha)
-    average_seed_rate = seed_rate.mean()
-    seeding_time = uinp.mach[pinp.mach['option']]['dep_area'] * average_seed_rate
-    ##second, determine dep per hour - equal to crop gear value x dep % / seeding time
-    dep_rate = uinp.mach[pinp.mach['option']]['variable_dep'] - uinp.finance['fixed_dep']
+    ##variable depn rate is input as a percent depn in all harvest gear per machine hour (%/machine hr).
+    dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_seeding']
+    ###convert from rotor hours to harvest activity hours
+    dep_rate_per_hr = dep_rate_per_hr / (1 + pinp.mach['seeding_prep'])
+
+    ##determine dep per hour - equal to crop gear value x depn %
     seeding_gear_clearing_value = f_seeding_gear_clearing_value()
-    dep_hourly = seeding_gear_clearing_value * dep_rate / seeding_time
-    ##third, convert to dep per ha for each soil type - equals cost per hr x seeding rate per hr
+    dep_hourly = seeding_gear_clearing_value * dep_rate_per_hr
+
+    ##convert to dep per ha for each soil type - equals cost per hr x seeding rate per hr
+    seed_rate = f_seed_time_lmus().squeeze()
     dep_ha = dep_hourly * seed_rate
+
     ##allocate season period based on mach/labour period - so that depreciation can be linked to seeding activity and transferred as seasons uncluster
     mach_periods = per.f_p_dates_df()
     date_start_p5z = mach_periods.values[:-1]
     alloc_p7p5z = zfun.f1_z_period_alloc(date_start_p5z[na,...], z_pos=-1)
-    ###make df
+
+    ##make df
     keys_p5 = mach_periods.index[:-1]
     keys_z = zfun.f_keys_z()
     keys_p7 = per.f_season_periods(keys=True)
@@ -1094,22 +1102,21 @@ def f_harvest_dep():
     The harvest activity is represented in hours so the variable depreciation is simply the rate of depreciation
     per hour of harvest.
 
-    The rate of depreciation per hour is calculated based 'typical' scenario, which simplifies the
-    calibration process. The user enters the percentage of depreciation incurred for harvesting `x` hectares
-    of crop. This is converted to a dollar cost per hour based on the harvest rate and the machinery value.
-
     '''
-    ##first determine the approx time to harvest all the crop - which is equal to dep area x average harvest rate (hr/ha)
-    average_harv_rate = harv_time_ha().squeeze().mean()
-    average_harv_time = uinp.mach[pinp.mach['option']]['dep_area'] * average_harv_rate 
-    ##second, determine dep per hour - equal to harv gear value x dep % / seeding time
-    dep_rate = uinp.mach[pinp.mach['option']]['variable_dep'] - uinp.finance['fixed_dep']
-    dep_hourly = harvest_gear_clearing_value() * dep_rate / average_harv_time
+    ##variable depn rate is input as a percent depn in all harvest gear per rotor hour (%/rotor hr).
+    dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_harv']
+    ###convert from rotor hours to harvest activity hours
+    dep_rate_per_hr = dep_rate_per_hr / (1 + pinp.mach['harv_prep'])
+
+    ##determine dep per hour - equal to harv gear value x dep %
+    dep_hourly = harvest_gear_clearing_value() * dep_rate_per_hr
+
     ##allocate season period based on mach/labour period - so that depreciation can be linked to seeding activity and transferred as seasons uncluster
     mach_periods = per.f_p_dates_df()
     date_start_p5z = mach_periods.values[:-1]
     alloc_p7p5z = zfun.f1_z_period_alloc(date_start_p5z[na,...], z_pos=-1)
-    ###make df
+
+    ##make df
     keys_p5 = mach_periods.index[:-1]
     keys_z = zfun.f_keys_z()
     keys_p7 = per.f_season_periods(keys=True)

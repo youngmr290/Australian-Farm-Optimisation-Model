@@ -61,6 +61,13 @@ def f1_croppyomo_local(params, model):
                                                model.s_phases, initialize=params['increment_rot_cost'],
                                                default=0, mutable=False, doc='total cost for 1 unit of rotation')
 
+    model.p_spreader_sprayer_dep_p7zlr = pe.Param(model.s_season_periods, model.s_season_types, model.s_lmus, model.s_phases,
+                                     initialize=params['spreader_sprayer_dep_p7zlr'], default=0, mutable=False, doc='variable depn from spraying and spreading of 1 unit of rotation')
+
+    model.p_increment_spreader_sprayer_dep_p7zlr = pe.Param(model.s_season_periods, model.s_season_types, model.s_lmus,
+                                               model.s_phases, initialize=params['increment_spreader_sprayer_dep_p7zlr'],
+                                               default=0, mutable=False, doc='variable depn from spraying and spreading of 1 unit of rotation')
+
     model.p_rotation_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types,
                                    model.s_lmus, model.s_phases, initialize=params['rot_wc'], default=0, mutable=False,
                                    doc='total wc for 1 unit of rotation')
@@ -171,24 +178,23 @@ def f_rotation_wc(model,q,s,c0,p7,z):
                    if pe.value(model.p_rotation_wc[c0,p7,z,l,r]) != 0 or pe.value(model.p_increment_rotation_wc[c0,p7,z,l,r]) != 0)
 
 
+#####################################
+# functions used to define depn     #
+#####################################
 
+def f_rotation_depn(model, q, s, p7, z):
+    '''
+    Calculate the total variable depn from spraying and spreading of the selected rotation phases.
 
+    Used in f_con_dep. See CorePyomo
+    '''
+    return sum(model.p_spreader_sprayer_dep_p7zlr[p7, z, l, r] * model.v_phase_area[q, s, p7, z, r, l]
+               + model.p_increment_spreader_sprayer_dep_p7zlr[p7, z, l, r] * model.v_phase_change_increase[q, s, p7, z, r, l]
+               for r in model.s_phases for l in model.s_lmus
+               if pe.value(model.p_spreader_sprayer_dep_p7zlr[p7, z, l, r]) != 0 or pe.value(
+        model.p_increment_spreader_sprayer_dep_p7zlr[p7, z, l, r]) != 0)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ######
+    ######
     # # Area #
     # ########
     # #area of rotation on a given soil can't be more than the amount on that soil available on farm

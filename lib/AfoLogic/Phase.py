@@ -1141,6 +1141,81 @@ def f_insurance(r_vals):
     return rot_insurance_cost_rl_p7z, rot_insurance_wc_rl_c0p7z
 
 
+###################################################
+# variable spraying and spreading depreciation     #
+###################################################
+
+def f_spraying_spreading_dep():
+    '''
+    Average variable dep for seeding $/ha.
+
+    Variable depreciation is use depreciation and is dependent on the number of hours the equipment is used.
+
+    '''
+    ##spraying
+    ###variable depn rate is input as a percent depn in all spray gear per machine hour (%/machine hr).
+    spray_dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_spraying']
+    ####convert from rotor hours to harvest activity hours
+    # spray_dep_rate_per_hr = spray_dep_rate_per_hr / (1 + pinp.mach['spray_prep']) #todo add this later
+    ###determine dep per hour - equal to crop gear value x depn %
+    spray_gear_clearing_value = mac.f_spray_gear_clearing_value()
+    spray_dep_hourly = spray_gear_clearing_value * spray_dep_rate_per_hr
+    ###convert to dep per ha
+    spray_time_rzln = f1_spraying_time()
+    spray_dep_ha_rzln = spray_dep_hourly * spray_time_rzln
+    ###allocate to season period based on application date - so that depreciation can be linked to seeding activity and transferred as seasons uncluster
+    chem_info = pinp.crop['chem_info']
+    chem_date_n = chem_info['app_date'].values
+    chem_length_n = chem_info['app_len'].values
+    alloc_p7zn = zfun.f1_z_period_alloc(chem_date_n[na,na,:], chem_length_n, z_pos=-2, is_phase_param=True) 
+    ###make df
+    keys_n = uinp.general['i_chem_idx']
+    keys_z = zfun.f_keys_z()
+    keys_p7 = per.f_season_periods(keys=True)
+    index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, keys_n])
+    alloc_p7zn = pd.Series(alloc_p7zn.ravel(), index=index_p7zn)
+    alloc_p7n_z = alloc_p7zn.unstack(1)
+    spray_dep_ha_rzl_p7n = spray_dep_ha_rzln.unstack().reindex(alloc_p7zn.unstack(1).index, axis=1, level=1)
+    spray_dep_ha_rl_p7nz = spray_dep_ha_rzl_p7n.unstack(1).mul(alloc_p7n_z.stack(),axis=1)
+    spray_dep_ha_rl_p7z = spray_dep_ha_rl_p7nz.groupby(axis=1, level=(0,2)).sum() #sum n axis. not needed after alllocation to p7 has been made.
+    
+    
+    ##spreading
+    ###variable depn rate is input as a percent depn in all spreading gear per machine hour (%/machine hr).
+    spread_dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_spreading']
+    ####convert from rotor hours to harvest activity hours
+    ###determine dep per hour - equal to crop gear value x depn %
+    spread_gear_clearing_value = mac.f_spread_gear_clearing_value()
+    spread_dep_hourly = spread_gear_clearing_value * spread_dep_rate_per_hr
+    ###convert to dep per ha
+    spread_time_rzln = f1_fertilising_time()
+    spread_dep_ha_rzln = spread_dep_hourly * spread_time_rzln
+    ###allocate to season period based on application date - so that depreciation can be linked to seeding activity and transferred as seasons uncluster
+    fert_info = pinp.crop['fert_info']
+    fert_date_n = fert_info['app_date'].values
+    fert_length_n = fert_info['app_len'].values
+    alloc_p7zn = zfun.f1_z_period_alloc(fert_date_n[na,na,:], fert_length_n, z_pos=-2, is_phase_param=True) 
+    ###make df
+    keys_n = uinp.general['i_fert_idx']
+    keys_z = zfun.f_keys_z()
+    keys_p7 = per.f_season_periods(keys=True)
+    index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, keys_n])
+    alloc_p7zn = pd.Series(alloc_p7zn.ravel(), index=index_p7zn)
+    alloc_p7n_z = alloc_p7zn.unstack(1)
+    spread_dep_ha_rzl_p7n = spread_dep_ha_rzln.unstack().reindex(alloc_p7zn.unstack(1).index, axis=1, level=1)
+    spread_dep_ha_rl_p7nz = spread_dep_ha_rzl_p7n.unstack(1).mul(alloc_p7n_z.stack(),axis=1)
+    spread_dep_ha_rl_p7z = spread_dep_ha_rl_p7nz.groupby(axis=1, level=(0,2)).sum() #sum n axis. not needed after alllocation to p7 has been made.
+
+    ##combine spray and spread
+    spreader_sprayer_dep_p7zlr = spread_dep_ha_rl_p7z.add(spray_dep_ha_rl_p7z).unstack([1,0])
+
+    ##create params for v_phase_change_increase
+    ## costs for v_phase_change_increase activities are incurred in the season period when the activity is selected
+    ## however the interest is calculated as if the cost was incurred at the normal time (this is because interest
+    ## is calculated for each separate cost in the functions above).
+    increment_spreader_sprayer_dep_p7zlr = rps.f_v_phase_increment_adj(spreader_sprayer_dep_p7zlr,p7_pos=-4,z_pos=-3)
+
+    return spreader_sprayer_dep_p7zlr, increment_spreader_sprayer_dep_p7zlr
 
 
 #########################
@@ -1309,6 +1384,7 @@ def f_sow_prov():
 ##collates all the params
 def f1_crop_params(params,r_vals):
     cost, increment_cost, wc, increment_wc = f1_rot_cost(r_vals)
+    spreader_sprayer_dep_p7zlr, increment_spreader_sprayer_dep_p7zlr = f_spraying_spreading_dep()
     biomass = f_rot_biomass()
     biomass2product_kls2 = f_biomass2product()
     propn = f_grain_pool_proportions()
@@ -1329,6 +1405,8 @@ def f1_crop_params(params,r_vals):
     params['increment_rot_wc'] = increment_wc.to_dict()
     params['rot_biomass'] = biomass[biomass!=0].to_dict() #only save non-zero params to save space.
     params['biomass2product_kls2'] = biomass2product_kls2.to_dict()
+    params['spreader_sprayer_dep_p7zlr'] = spreader_sprayer_dep_p7zlr.to_dict()
+    params['increment_spreader_sprayer_dep_p7zlr'] = increment_spreader_sprayer_dep_p7zlr.to_dict()
 
 
 
