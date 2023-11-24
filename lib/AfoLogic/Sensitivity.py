@@ -191,7 +191,7 @@ def create_sa():
     sav['seeding_prep'] = '-'               #propn of seeding time when the seeder is not moving i.e. due to refilling.
     sav['seeding_delays'] = '-'               #propn of the seeding period when seeding cannot occur due to bad weather
     sav['daily_harvest_hours'] = '-'               #number of hours harvester can run for each day.
-    sav['harv_prep'] = '-'               #propn of seeding time when the harv is not moving i.e. due to refilling.
+    sav['harv_prep'] = '-'               #propn of seeding time when the harv is not moving (e.g prep/greaseing harvester, moving paddocks, testing grain moisture, etc)
     sav['harv_delays'] = '-'               #propn of the harv period when harv cannot occur due to bad weather
 
     for option in uinp.mach:
@@ -202,9 +202,7 @@ def create_sa():
         sav['seeding_speed', option] = '-'                                  #seeding speed of wheat on base LMU (km/hr)
         sav['seeding_paddock_eff', option] = '-'                            #paddock efficiency of seeding (accounts for overlap)
         sav['number_harvesters', option] = '-'                              #number of harvesters
-        sav['harvester_width', option] = '-'                                #width (m) of harvester
-        sav['harvesting_speed', option] = np.full(len_k, '-', dtype=object) #harvesting speed of each crop (km/hr)
-        sav['harvesting_paddock_eff', option] = '-'                         #paddock efficiency of harvesting (accounts for overlap)
+        sav['harvest_rate', option] = np.full(len_k, '-', dtype=object) #harvesting rate of each crop (t/hr)
         sav['sprayer_width', option] = '-'                         #width (m)
         sav['spraying_speed', option] = '-'                        #speed (km/hr)
         sav['sprayer_eff', option] = '-'                           #paddock efficiency of harvesting (accounts for overlap)

@@ -26,10 +26,10 @@ def f1_machpyomo_local(params, model):
     #number of ha seeded using contractor
     model.v_contractseeding_ha = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_labperiods,
                                         model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha contract seeding for each crop')
-    #number of hours harvesting for each crop - there is a constraint to limit this to the hours available in the harvest period
+    #number of hours harvesting for each crop (this is hours doing the haarvest activity and includes time when rotor is not running i.e. moving paddocks) - there is a constraint to limit this to the hours available in the harvest period
     model.v_harv_hours = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_labperiods,
                                 model.s_crops, bounds=(0,None), doc='number of hours of harvesting')
-    #number of contract hours harvesting for each crop
+    #number of contract hours harvesting for each crop - this is rotor hours
     model.v_contractharv_hours = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_labperiods, model.s_crops, bounds=(0,None), doc='number of contract hours of harvesting')
     #tonnes of crop yield that is unharvested (used to transfer between phase periods)
     model.v_unharvested_yield = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, bounds=(0,None), doc='tonnes of crop yield that is unharvested (used to transfer between phase periods)')

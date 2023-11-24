@@ -546,28 +546,6 @@ def f_sowing_timeliness_penalty(r_vals):
 #harvesting                                     #
 #################################################
 
-def harv_time_ha():
-    '''
-    Harvest rate for each crop (hr/ha).
-
-    Harvest rate is calculated as a product of harvesting speed (for the base crop), header width and
-    field efficiency (overlap, turning and reduced speed when unloading). Harvest rate is assumed
-    to be the same on all LMUs however, it does vary for different crops because harvest biomass
-    impacts harvest speed.
-
-    The calculation includes a factor that accounts for the time when grain is not being
-    harvested due to moving paddocks or waiting for the chaser bin.
-
-    Note: Has to be kept as a separate function because it is used in multiple places.
-
-    '''
-    harv_speed = uinp.mach[pinp.mach['option']]['harvest_speed']
-    ##work rate hr/ha, determined from speed, size and eff
-    return 10/ (harv_speed * uinp.mach[pinp.mach['option']]['harv_eff'] * uinp.mach[pinp.mach['option']]['harvester_width']
-                * (1 - pinp.mach['harv_prep']))
-
-
-
 def f_harv_rate_period():
     '''
     Harv rate (t/hr) in each harvest period for each crop.
@@ -607,12 +585,11 @@ def f_harv_rate_period():
     keys_p5 = mach_periods.index[:-1]
     keys_k = start_harvest_crops.index
     keys_p7 = per.f_season_periods(keys=True)
-
     index_p7pkz = pd.MultiIndex.from_product([keys_p7, keys_p5, keys_k, keys_z])
     harv_occur = pd.Series(harv_occur_p7pkz.ravel(), index=index_p7pkz)
 
-    ##Grain harvested per hr (t/hr) for each crop.
-    harv_rate = (uinp.mach_general['harvest_yield'] * (1 / harv_time_ha())).squeeze()
+    ##Grain harvested per harvest activity hr (t/hr) for each crop. The efficiency adjustment factor converts from harvest rate per rotor hour to harvest rate per activity hour.
+    harv_rate = uinp.mach[pinp.mach['option']]['harvest_rate'].squeeze() * (1 - pinp.mach['harv_prep'])
 
     ##combine harv rate and harv_occur
     harv_rate_period = harv_occur.mul(harv_rate, level=2)
@@ -723,6 +700,10 @@ def f_harvest_cost(r_vals):
 def f_contract_harv_rate():
     '''
     Grain harvested per hr by contractor (t/rotor hr).
+
+    Contract harvest hours activity is rotor hours (i.e. it doesn’t include a factor for filling up/moving)
+    because the cost is input in $/rotor hr.
+
     '''
     ##season inputs through function
     harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0) #when the first crop begins to be harvested (e.g. when harv periods start)
@@ -751,13 +732,8 @@ def f_contract_harv_rate():
     index_p7pkz = pd.MultiIndex.from_product([keys_p7, keys_p5, keys_k, keys_z])
     harv_occur = pd.Series(harv_occur_p7pkz.ravel(), index=index_p7pkz)
 
-    ##Grain harvested per hr (t/hr) for each crop.
-    yield_approx = uinp.mach_general['harvest_yield'] #these are the yields the contract harvester is calibrated to - they are used to convert time/ha to t/hr
-    harv_speed = uinp.mach_general['contract_harvest_speed']
-    ###work rate hr/ha, determined from speed, size and eff
-    contract_harv_time_ha = 10 / (harv_speed * uinp.mach_general['contract_harvester_width'] * uinp.mach_general['contract_harv_eff'])
-    ###overall t/hr
-    harv_rate = (yield_approx * (1 / contract_harv_time_ha)).squeeze()
+    ##Grain harvested per rotor hr (t/hr) for each crop.
+    harv_rate = uinp.mach_general['contract_harvest_rate'].squeeze()
 
     ##combine harv rate and harv_occur
     harv_rate = harv_occur.mul(harv_rate, level=2)
