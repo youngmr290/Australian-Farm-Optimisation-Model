@@ -641,8 +641,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     agedam_propn_da0e0b0xyg3 = agedam_propn_da0e0b0xyg3 / np.sum(agedam_propn_da0e0b0xyg3, axis=d_pos) #scale unmasked slices to a total of 1
     aw_propn_wean_yg0, aw_propn_wean_yg1, aw_propn_wean_yg2, aw_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_aw_propn_wean_c2'], uinp.parameters['i_aw_wean_y'], a_c2_c0, i_g3_inc)
     aw_propn_birth_yg0, aw_propn_birth_yg1, aw_propn_birth_yg2, aw_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_aw_propn_birth_c2'], uinp.parameters['i_aw_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
-    bw_propn_wean_yg0, bw_propn_wean_yg1, bw_propn_wean_yg2, bw_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_bw_propn_wean_c2'], uinp.parameters['i_bw_wean_y'], a_c2_c0, i_g3_inc)
-    bw_propn_birth_yg0, bw_propn_birth_yg1, bw_propn_birth_yg2, bw_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_bw_propn_birth_c2'], uinp.parameters['i_bw_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
+    vw_propn_wean_yg0, vw_propn_wean_yg1, vw_propn_wean_yg2, vw_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_vw_propn_wean_c2'], uinp.parameters['i_vw_wean_y'], a_c2_c0, i_g3_inc)
+    vw_propn_birth_yg0, vw_propn_birth_yg1, vw_propn_birth_yg2, vw_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_vw_propn_birth_c2'], uinp.parameters['i_vw_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
     cfw_propn_yg0, cfw_propn_yg1, cfw_propn_yg2, cfw_propn_yg3 = sfun.f1_c2g(uinp.parameters['i_cfw_propn_c2'], uinp.parameters['i_cfw_propn_y'], a_c2_c0, i_g3_inc)
     fl_birth_yg0, fl_birth_yg1, fl_birth_yg2, fl_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_fl_birth_c2'], uinp.parameters['i_fl_birth_y'], a_c2_c0, i_g3_inc)
     fl_shear_yg0, fl_shear_yg1, fl_shear_yg2, fl_shear_yg3 = sfun.f1_c2g(uinp.parameters['i_fl_shear_c2'], uinp.parameters['i_fl_shear_y'], a_c2_c0, i_g3_inc)
@@ -1781,28 +1781,28 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ffcfw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...]
     ffcfw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3 / cw_offs[3, ...]
 
-    ##calc aw, bw and mw (adipose, bone and muscle weight)
+    ##calc aw, mw and vw (adipose, muscle and viscera weight)
     aw_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * aw_propn_wean_yg0
     aw_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * aw_propn_wean_yg1
     aw_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * aw_propn_wean_yg3
-    bw_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * bw_propn_wean_yg0
-    bw_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * bw_propn_wean_yg1
-    bw_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * bw_propn_wean_yg3
     mw_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * mw_propn_wean_yg0
     mw_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * mw_propn_wean_yg1
     mw_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * mw_propn_wean_yg3
+    vw_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * vw_propn_wean_yg0
+    vw_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * vw_propn_wean_yg1
+    vw_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * vw_propn_wean_yg3
 
-    ##if stubble update aw, bw & mw.
+    ##if stubble update aw, mw & vw.
     if stubble:
         aw_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * pinp.stubble['i_aw']
         aw_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * pinp.stubble['i_aw']
         aw_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * pinp.stubble['i_aw']
-        bw_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * pinp.stubble['i_bw']
-        bw_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * pinp.stubble['i_bw']
-        bw_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * pinp.stubble['i_bw']
         mw_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * pinp.stubble['i_mw']
         mw_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * pinp.stubble['i_mw']
         mw_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * pinp.stubble['i_mw']
+        vw_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * pinp.stubble['i_vw']
+        vw_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * pinp.stubble['i_vw']
+        vw_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * pinp.stubble['i_vw']
 
     ##numbers
     ###Distribution of initial numbers across the a1 axis
@@ -2438,7 +2438,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         fd_min_start_sire = fd_initial_wzida0e0b0xyg0
         aw_start_sire = aw_initial_wzida0e0b0xyg0
         mw_start_sire = mw_initial_wzida0e0b0xyg0
-        bw_start_sire = bw_initial_wzida0e0b0xyg0
+        vw_start_sire = vw_initial_wzida0e0b0xyg0
         nw_start_sire = 0 #no dimensions to start
         temp_lc_sire = np.array([0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_sire = numbers_initial_zida0e0b0xyg0
@@ -2480,7 +2480,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         fd_min_start_dams = fd_initial_wzida0e0b0xyg1
         aw_start_dams = aw_initial_wzida0e0b0xyg1
         mw_start_dams = mw_initial_wzida0e0b0xyg1
-        bw_start_dams = bw_initial_wzida0e0b0xyg1
+        vw_start_dams = vw_initial_wzida0e0b0xyg1
         nw_start_dams = np.array([0.0])
         temp_lc_dams = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1
@@ -2516,8 +2516,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         foo_lact_ave_start = 0.0
         foo_lact_ave = np.zeros(tag1, dtype =dtype) #required because only calculated if using mu function
         aw_start_yatf = 0.0
-        bw_start_yatf = 0.0
         mw_start_yatf = 0.0
+        vw_start_yatf = 0.0
 
         ##offs
         ffcfw_start_offs = ffcfw_initial_wzida0e0b0xyg3
@@ -2530,7 +2530,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         fd_min_start_offs = fd_initial_wzida0e0b0xyg3
         aw_start_offs = aw_initial_wzida0e0b0xyg3
         mw_start_offs = mw_initial_wzida0e0b0xyg3
-        bw_start_offs = bw_initial_wzida0e0b0xyg3
+        vw_start_offs = vw_initial_wzida0e0b0xyg3
         nw_start_offs = 0.0
         temp_lc_offs = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_offs = numbers_initial_ida0e0b0xyg3
@@ -2553,8 +2553,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             fd_start_yatf = pinp.stubble['i_fd_yatf'] #not used for anything so just use the same one as adult
             foo_lact_ave_start = pinp.stubble['i_foo']
             aw_start_yatf = ffcfw_start_yatf * pinp.stubble['i_aw_yatf']
-            bw_start_yatf = ffcfw_start_yatf * pinp.stubble['i_bw_yatf']
             mw_start_yatf = ffcfw_start_yatf * pinp.stubble['i_mw_yatf']
+            vw_start_yatf = ffcfw_start_yatf * pinp.stubble['i_vw_yatf']
 
             ##offs
             nw_start_offs = 0.0
@@ -3753,17 +3753,22 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ##reset start variables if period is birth
                 ###ffcf weight of yatf
                 ffcfw_start_yatf = fun.f_update(ffcfw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
-                mw_start_yatf, vw_start_yatf, aw_stat_yatf = sfun.f1_body_composition(cn_yatf, cx_yatf[:,mask_x,...]
-                                                , ffcfw_start_yatf, srw_b1xyg2, md_solid_yatf)
                 ffcfw_max_start_yatf = fun.f_update(ffcfw_max_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###normal weight of yatf
                 nw_start_yatf	= fun.f_update(nw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
-                ###adipose weight of yatf
-                aw_start_yatf	= fun.f_update(aw_start_yatf, w_b_yatf * aw_propn_birth_yg2, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
-                ###muscle weight of yatf
-                mw_start_yatf	= fun.f_update(mw_start_yatf, w_b_yatf * mw_propn_birth_yg2, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
-                ###bone weight of the yatf
-                bw_start_yatf	= fun.f_update(bw_start_yatf, w_b_yatf * bw_propn_birth_yg2, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                ### convert ffcfw to component weights and energy
+                t_aw_start_yatf, t_mw_start_yatf, t_vw_start_yatf = sfun.f1_body_composition(cn_yatf, cx_yatf[:,mask_x,...]
+                                                , ffcfw_start_yatf, srw_b1xyg2, md_solid_yatf)
+                t_f_start_yatf, t_m_start_yatf, t_v_start_yatf = sfun.f1_weight2energy(cg_yatf, t_aw_start_yatf, t_mw_start_yatf, t_vw_start_yatf)
+                ###adipose weight & energy of yatf
+                aw_start_yatf	= fun.f_update(aw_start_yatf, t_aw_start_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                f_start_yatf	= fun.f_update(f_start_yatf, t_f_start_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                ###muscle weight & energy of yatf
+                mw_start_yatf	= fun.f_update(mw_start_yatf, t_mw_start_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                m_start_yatf	= fun.f_update(m_start_yatf, t_m_start_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                ###viscera weight & energy of the yatf
+                vw_start_yatf	= fun.f_update(vw_start_yatf, t_vw_start_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                v_start_yatf	= fun.f_update(v_start_yatf, t_v_start_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###clean fleece weight of yatf
                 cfw_start_yatf	= fun.f_update(cfw_start_yatf, 0, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###fibre diameter of yatf
@@ -4706,10 +4711,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 aw_sire = aw_start_sire + fg_sire / cg_sire[26, ...] * days_period_pa1e1b1nwzida0e0b0xyg0[p]
                 ##Weight of muscle (end)
                 mw_sire = mw_start_sire + pg_sire / cg_sire[27, ...] * days_period_pa1e1b1nwzida0e0b0xyg0[p]
-                ##Weight of bone (end)	bw #todo formula needs finishing
-                bw_sire = bw_start_sire
+                ##Weight of viscera (end)	bw #todo formula needs finishing
+                vw_sire = vw_start_sire
                 ##Weight of water (end)
-                ww_sire = mw_sire * (1 - cg_sire[27, ...]) + aw_sire * (1 - cg_sire[26, ...])
+                ww_sire = aw_sire * (1 - cg_sire[26, ...]) + mw_sire * (1 - cg_sire[27, ...]) + vw_sire * (1 - cg_sire[28, ...])
                 ##Weight of gutfill (end)
                 gw_sire = ffcfw_sire * (1 - 1 / cg_sire[18, ...])
                 ##Clean fleece weight (end)
@@ -4747,10 +4752,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 aw_dams = aw_start_dams + fg_dams / cg_dams[26, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p]
                 ##Weight of muscle (end)
                 mw_dams = mw_start_dams + pg_dams / cg_dams[27, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p]
-                ##Weight of bone (end)	bw #todo formula needs finishing
-                bw_dams = bw_start_dams
+                ##Weight of viscera (end)	bw #todo formula needs finishing
+                vw_dams = vw_start_dams
                 ##Weight of water (end)
-                ww_dams = mw_dams * (1 - cg_dams[27, ...]) + aw_dams * (1 - cg_dams[26, ...])
+                ww_dams = aw_dams * (1 - cg_dams[26, ...]) + mw_dams * (1 - cg_dams[27, ...]) + vw_dams * (1 - cg_dams[28, ...])
                 ##Weight of gutfill (end)
                 gw_dams = ffcfw_dams* (1 - 1 / cg_dams[18, ...])
                 ##Whole body energy (calculated from muscle and adipose weight)
@@ -4789,10 +4794,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 aw_yatf = aw_start_yatf + fg_yatf / cg_yatf[26, ...] * days_period_pa1e1b1nwzida0e0b0xyg2[p]
                 ##Weight of muscle (end)
                 mw_yatf = mw_start_yatf + pg_yatf / cg_yatf[27, ...] * days_period_pa1e1b1nwzida0e0b0xyg2[p]
-                ##Weight of bone (end)	bw #todo formula needs finishing
-                bw_yatf = bw_start_yatf
+                ##Weight of viscera (end)	bw #todo formula needs finishing
+                vw_yatf = vw_start_yatf
                 ##Weight of water (end)
-                ww_yatf = mw_yatf * (1 - cg_yatf[27, ...]) + aw_yatf * (1 - cg_yatf[26, ...])
+                ww_yatf = aw_yatf * (1 - cg_yatf[26, ...]) + mw_yatf * (1 - cg_yatf[27, ...]) + vw_yatf * (1 - cg_yatf[28, ...])
                 ##Weight of gutfill (end)
                 gw_yatf = ffcfw_yatf * (1 - 1 / cg_yatf[18, ...])
                 ##Clean fleece weight (end)
@@ -4828,10 +4833,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 aw_offs = aw_start_offs + fg_offs / cg_offs[26, ...] * days_period_pa1e1b1nwzida0e0b0xyg3[p]
                 ##Weight of muscle (end)
                 mw_offs = mw_start_offs + pg_offs / cg_offs[27, ...] * days_period_pa1e1b1nwzida0e0b0xyg3[p]
-                ##Weight of bone (end)	bw #todo formula needs finishing
-                bw_offs = bw_start_offs
+                ##Weight of viscera (end)	bw #todo formula needs finishing
+                vw_offs = vw_start_offs
                 ##Weight of water (end)
-                ww_offs = mw_offs * (1 - cg_offs[27, ...]) + aw_offs * (1 - cg_offs[26, ...])
+                ww_offs = aw_offs * (1 - cg_offs[26, ...])  + mw_offs * (1 - cg_offs[27, ...]) + vw_offs * (1 - cg_offs[28, ...])
                 ##Weight of gutfill (end)
                 gw_offs = ffcfw_offs* (1 - 1 / cg_offs[18, ...])
                 ##Whole body energy (end - calculated from muscle and adipose weight)
@@ -5230,8 +5235,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###Weight of muscle (condense)
                 mw_condensed_sire = sfun.f1_condensed(mw_sire, idx_sorted_w_sire, condense_w_mask_sire
                                         , n_fs_sire, len_w0, n_fvp_periods_sire, False)
-                ###Weight of bone (condense)
-                bw_condensed_sire = sfun.f1_condensed(bw_sire, idx_sorted_w_sire, condense_w_mask_sire
+                ###Weight of viscera (condense)
+                vw_condensed_sire = sfun.f1_condensed(vw_sire, idx_sorted_w_sire, condense_w_mask_sire
                                         , n_fs_sire, len_w0, n_fvp_periods_sire, False)
                 ###Organ energy requirement (condense)
                 omer_history_condensed_p3g0 = sfun.f1_condensed(omer_history_sire, idx_sorted_w_sire[na,...], condense_w_mask_sire[na,...]
@@ -5274,10 +5279,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 mw_condensed_dams = sfun.f1_condensed(mw_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'mw_dams')
-                ###Weight of bone (condense)
-                bw_condensed_dams = sfun.f1_condensed(bw_dams, idx_sorted_w_dams, condense_w_mask_dams
+                ###Weight of viscera (condense)
+                vw_condensed_dams = sfun.f1_condensed(vw_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'bw_dams')
+                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'vw_dams')
                 ###Organ energy requirement (condense)
                 omer_history_condensed_p3g1 = sfun.f1_condensed(omer_history_dams, idx_sorted_w_dams[na,...]
                                         , condense_w_mask_dams[na,...], n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
@@ -5386,10 +5391,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 mw_condensed_yatf = sfun.f1_condensed(mw_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'mw_yatf')
-                ###Weight of bone (condense)
-                bw_condensed_yatf = sfun.f1_condensed(bw_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
+                ###Weight of viscera (condense)
+                vw_condensed_yatf = sfun.f1_condensed(vw_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'bw_yatf')
+                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'vw_yatf')
                 ###Organ energy requirement (condense)
                 omer_history_condensed_p3g2 = sfun.f1_condensed(omer_history_yatf, idx_sorted_w_yatf[na,...], condense_w_mask_yatf[na,...]
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
@@ -5444,10 +5449,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 mw_condensed_offs = sfun.f1_condensed(mw_offs, idx_sorted_w_offs, condense_w_mask_offs
                                         , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
                                         , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'mw_offs')
-                ###Weight of bone (condense)
-                bw_condensed_offs = sfun.f1_condensed(bw_offs, idx_sorted_w_offs, condense_w_mask_offs
+                ###Weight of viscera (condense)
+                vw_condensed_offs = sfun.f1_condensed(vw_offs, idx_sorted_w_offs, condense_w_mask_offs
                                         , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'bw_offs')
+                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'vw_offs')
                 ###Organ energy requirement (condense)
                 omer_history_condensed_p3g3 = sfun.f1_condensed(omer_history_offs, idx_sorted_w_offs[na,...], condense_w_mask_offs[na,...]
                                         , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
@@ -5516,8 +5521,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 mw_start_sire = sfun.f1_period_start_prod(numbers_end_condensed_sire, mw_condensed_sire, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_sire
                                         , mask_min_wa_lw_w_sire, mask_max_lw_wz_sire, mask_max_wa_lw_w_sire)
-                ###Weight of bone (start)
-                bw_start_sire = sfun.f1_period_start_prod(numbers_end_condensed_sire, bw_condensed_sire, prejoin_tup
+                ###Weight of viscera (start)
+                vw_start_sire = sfun.f1_period_start_prod(numbers_end_condensed_sire, vw_condensed_sire, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_sire
                                         , mask_min_wa_lw_w_sire, mask_max_lw_wz_sire, mask_max_wa_lw_w_sire)
                 ###Organ energy requirement (start)
@@ -5594,8 +5599,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
-                ###Weight of bone (start)
-                bw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, bw_condensed_dams, prejoin_tup
+                ###Weight of viscera (start)
+                vw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, vw_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
                                         , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
@@ -5846,8 +5851,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_yatf
                                         , mask_min_wa_lw_w_yatf, mask_max_lw_wz_yatf, mask_max_wa_lw_w_yatf
                                         , len_gen_t=len_gen_t1, a_t_g=a_t_g1 , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
-                ###Weight of bone (start)
-                bw_start_yatf = sfun.f1_period_start_prod(numbers_end_condensed_yatf, bw_condensed_yatf, prejoin_tup
+                ###Weight of viscera (start)
+                vw_start_yatf = sfun.f1_period_start_prod(numbers_end_condensed_yatf, vw_condensed_yatf, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_yatf
                                         , mask_min_wa_lw_w_yatf, mask_max_lw_wz_yatf, mask_max_wa_lw_w_yatf
                                         , len_gen_t=len_gen_t1, a_t_g=a_t_g1 , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
@@ -5919,8 +5924,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
                                         , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
-                ###Weight of bone (start)
-                bw_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, bw_condensed_offs, prejoin_tup
+                ###Weight of viscera (start)
+                vw_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, vw_condensed_offs, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
                                         , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])

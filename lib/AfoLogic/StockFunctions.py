@@ -859,37 +859,44 @@ def f1_efficiency(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, mei_propn_
     return km, kg_fodd, kg_supp, kl
 
 
+def f1_weight2energy(cg, aw, mw, vw=0):
+    '''Parameters
+    ----------
+    ck : Numpy array, sim parameters - weight change.
+    aw : Numpy array of float, weight of adipose tissue (fresh weight).
+    mw : Numpy array of float, weight of muscle (fresh weight).
+    vw : Numpy array of float, optional, weight of viscera (fresh weight).
+
+    Returns
+    -------
+    f - Energy content of fat.
+    m - Energy content of muscle
+    v - Energy content of viscera
+    '''
+    ## Energy content is fresh weight * DM content * energy content (MJ/kg DM)
+    f = aw * cg[26, ...] * cg[20, ...]
+    m = mw * cg[27, ...] * cg[21, ...]
+    v = vw * cg[28, ...] * cg[22, ...]
+    return f, m, v
+
 def f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
          , kl = 0, mei_propn_milk = 0, lact_propn = 0):
-    '''
-
-    Parameters
+    '''Parameters
     ----------
-    ck : Numpy array
-        sim parameters - efficiency of energy use.
-    belowmaint : Numpy array of Boolean
-        Is the animal class in energy deficit.
-    km : Numpy array of float
-        Efficiency of energy use for maintenance.
-    kg_supp : Numpy array
-        efficiency of supplement energy consumed used for LWG.
-    kg_fodd : Numpy array
-        efficiency of herbage energy consumed used for LWG.
-    mei_propn_supp : Numpy array
-        Proportion of energy consumed that was from supplement.
-    mei_propn_herb : Numpy array
-        Proportion of energy consumed that was from herbage.
-    mei_propn_milk : Numpy array
-        Proportion of energy consumed that was from milk.
-    kl : Numpy array of float, Optional
-        Efficiency of energy use for lactation. The default is 0.
-    lact_propn : Numpy array, optional
-        Proportion of the period that the dam is lactating. The default is 0.
+    ck : Numpy array, sim parameters - efficiency of energy use.
+    belowmaint : Numpy array of Boolean, Is the animal class in energy deficit.
+    km : Numpy array of float, Efficiency of energy use for maintenance.
+    kg_supp : Numpy array, efficiency of supplement energy consumed used for LWG.
+    kg_fodd : Numpy array, efficiency of herbage energy consumed used for LWG.
+    mei_propn_supp : Numpy array, Proportion of energy consumed that was from supplement.
+    mei_propn_herb : Numpy array, Proportion of energy consumed that was from herbage.
+    mei_propn_milk : Numpy array, Proportion of energy consumed that was from milk.
+    kl : Numpy array of float, Optional, Efficiency of energy use for lactation. The default is 0.
+    lact_propn : Numpy array, optional, Proportion of the period that the dam is lactating. The default is 0.
 
     Returns
     -------
     kg - Efficiency of energy used for growth.
-
     '''
     # ##Set days_lact to numpy array if arg value is 0
     # lact_propn = np.asarray(lact_propn)
@@ -2777,19 +2784,19 @@ def f1_ebw(cn, relsize, md):
 
 
 def f1_body_composition(cn, cx, ffcfw, srw, md=12.0):
-    ''' Calculate body composition (weight of muscle, viscera and fat).
+    ''' Calculate body composition (wet weight of adipose (fat), muscle and viscera).
      Uses equations from Sheep Calc.xlsx from Hutton Oddy pers. comm. Oct 2023
      Default M/D is 12 MJ/kg because mostly the function will be being used at weaning'''
     ##Step 1. Calculate empty body weight
     relsize = ffcfw / srw
     ebw = f1_ebw(cn, relsize, md) * ffcfw
-    ##Step 2. Calculate viscera mass
-    v_mass = (cn[17, ...] * relsize + cn[18, ...] * relsize ** 2 + cn[19, ...]) * cx[19, ...] * srw
-    ##Step 3. Calculate fat mass
-    f_mass = (cn[20, ...] * relsize + cn[21, ...] * relsize ** 2 + cn[22, ...]) * ffcfw
-    ##Step 4. Calculate muscle mass as the remaining empty body weight
-    m_mass = ebw - v_mass - f_mass
-    return m_mass, v_mass, f_mass
+    ##Step 2. Calculate adipose weight
+    aw = (cn[17, ...] * relsize + cn[18, ...] * relsize ** 2 + cn[19, ...]) * ffcfw
+    ##Step 3. Calculate viscera weight
+    vw = (cn[20, ...] * relsize + cn[21, ...] * relsize ** 2 + cn[22, ...]) * cx[22, ...] * srw
+    ##Step 4. Calculate muscle weight as the remaining empty body weight
+    mw = ebw - (aw + vw)
+    return aw, mw, vw
 
 
 
