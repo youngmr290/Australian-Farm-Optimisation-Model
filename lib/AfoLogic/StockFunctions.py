@@ -1287,7 +1287,7 @@ def f_heat_cs(cc, ck, mei, mem, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, 
     return hp_total, level
 
 
-def f_level_nfs(mei, hp_maint):
+def f1_level_nfs(mei, hp_maint):
     ##Level of feeding (at maint level = 0)
     #todo what is the definition of 'level' - it is used in Blaxter & Clapperton emissions calculation.
     # Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
@@ -1392,7 +1392,9 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, hp_total, meme, mew
 
 def f_heatloss_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0):
     #The New Feeding Standards version of Chill calculates the amount of heat lost to the environment if the animals is at normal body temperature
-    #This level of heat loss is the minimum heap production for an animal, and extra heat will be generated if HP from other sources is insufficient
+    #This is a minimum level of heat production for the animal.
+    #Extra energy will be expended if HP from maintenance and production is insufficient (see f_lwc_nfs())
+
     ##surface area of animal
     area = f1_surface_area(cc, ffcfw_start)
     ##Calculate insulation
@@ -1467,19 +1469,21 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     return ebg, evg, pg, fg, surplus_energy
 
 
-def f_lwc_nfs(cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, heat_loss, step, rev_trait_value, dc=0, hp_dc=0, dl=0, hp_dl=0):
+def f_lwc_nfs(cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, heat_loss, step, rev_trait_value
+              , dc=0, hp_dc=0, dl=0, hp_dl=0, gest_propn = 0, lact_propn = 0):
     ##fat gain (MJ/d) is calculated using a formula derived from the Oddy etal 2023 paper (see Generator9:p16-17)
     ###The calculation is multistep because parameter values (bcm & bcf) depend on the sign of dm and df
     ###Steps
     ###1. calculate the known values that are required for dv, HpE (hp_dv, hp_dw)
     ###2. calculate sign of dm and allocate value for bpm.
     ####It is known that if dm=0 then NEG = -e0/pm and df is -ve (hence lf is appropriate)
-    ####Calculate mei_dm0 that is the mei that would result in dm=0
-    ####Assign value to bpm
+    ####Calculate mei_dm0 that is the mei that equates with dm=0
+    ####Assign value to bpm based on whether mei is greater or less than mei_dm0
     ###3. calculate the sign of df based on the numerator so that the denominator and then df can be calculated
     ###4. Calculate NEG
-    ###5. Calculate dm
+    ###5. Calculate dm & df
     ###6. Calculate ebg
+
     ## First to retain the flavour of the derivation, substitute some coefficient names
     M = 1 - m / alpha_m
     pm = cg[32, ...]
@@ -1498,11 +1502,12 @@ def f_lwc_nfs(cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, heat_loss, step, rev
     hp_dv = dv * np.where(dv >= 0, ck[22, ...], ck[28, ...])  #select value for bpv based on sign of dp
     hp_dw = dw * ck[23, ...]
     ##Step 2: Calculate MEI when dm==0 (mei_dm0) using derived equation and set bpm to required value
-    mei_dm0 = hp_maint + hp_dv + hp_dw + hp_dc + hp_dl - e0 / pm - blf * (dv + dw + dc + dl + e0 / pm)
+    mei_dm0 = (hp_maint + hp_dv + hp_dw + gest_propn * hp_dc + lact_propn * hp_dl - e0
+               / pm - blf * (dv + dw + gest_propn * dc + lact_propn * dl + e0 / pm))
     bcm = np.where(mei > mei_dm0, ck[21, ...], ck[27, ...])
     ##Step 3a: Calculate the numerator of df and set bf to required value
-    df_numerator = ((1 - pm * M) * (mei - (hp_maint + hp_dv + hp_dw + hp_dc + hp_dl + bcm * e0 * M))
-                    - (1 + bcm * pm * M) * (dv + dw + dc + dl + e0 * M))
+    df_numerator = ((1 - pm * M) * (mei - (hp_maint + hp_dv + hp_dw + gest_propn * hp_dc + lact_propn * hp_dl + bcm * e0 * M))
+                    - (1 + bcm * pm * M) * (dv + dw + gest_propn * dc + lact_propn * dl + e0 * M))
     bcf = np.where(df_numerator > 0, ck[20, ...], ck[26, ...])
     ##Step 3b: Calculate the denominator of df
     df_denominator = (1 + bcm * pm * M + bcf * (1 - pm * M))
@@ -1510,23 +1515,25 @@ def f_lwc_nfs(cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, heat_loss, step, rev
     dfwo = df_numerator / df_denominator
     hp_dfwo = bcf * dfwo
     ##Step 4: Net energy gain (MJ/d)
-    neg_wo = (dfwo + dv + dw + dc + dl + e0 * M) / (1 - pm * M)   #formula for NEG as the source of energy, excluding dm
-    neg_wo_check = (mei - (hp_maint + hp_dv + hp_dw + hp_dc + hp_dl + hp_dfwo + bcm * e0 * M)) / (1 + bcm * pm * M) #formula for NEG as the sink for energy, excluding dm
-    ##Step 5: Check if heat loss is greater than heat production and recalculate df
+    neg_wo = (dfwo + dv + dw + gest_propn * dc + lact_propn * dl + e0 * M) / (1 - pm * M)   #formula for NEG as the source of energy, excluding dm
+    neg_wo_check = ((mei - (hp_maint + hp_dv + hp_dw + gest_propn * hp_dc + lact_propn * hp_dl + hp_dfwo + bcm * e0 * M))
+                    / (1 + bcm * pm * M)) #formula for NEG as the sink for energy, excluding dm
+    ##Step 5: Total heat production (excluding the increase in HP to cover any extra required for chilling)
+    hp_total = mei - neg_wo
+    ##Step 6: Check if heat loss is greater than heat production. Replace neg if HP needs to increase
     neg = np.minimum(neg_wo, mei - heat_loss)
-    ##Step 6: Protein change (MJ/d)
+    ##Step 7: Protein change (MJ/d)
     dm = (pm * neg + e0) * M
     hp_dm = bcm * dm
-    ##Step 7: Calculate df including heat loss
-    df = neg - (dm + dv + dw + dc + dl)
+    ##Step 8: Calculate df including heat loss from chill
+    df = neg - (dm + dv + dw + gest_propn * dc + lact_propn * dl)
     hp_df = bcf * df
-    ##Step 8: Calculate weight change
+    ##Step 9: Calculate weight change
     fg = df / (cg[20, ...] * cg[26, ...])
     mg = dm / (cg[21, ...] * cg[27, ...])
     vg = dv / (cg[22, ...] * cg[28, ...])
-    ##Step 6: Empty bodyweight change and energy value of gain
+    ##Step 10: Empty bodyweight change
     ebg = fg + mg + vg
-    evg = (df + dm + dv) / ebg
 
     ##Process the Liveweight REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     ###The LW trait is different in the new feeding standards compared with CSIRO standards.
@@ -1536,10 +1543,14 @@ def f_lwc_nfs(cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, heat_loss, step, rev
     ###This is a better outcome for reflecting the energy cost of traits than occurs with the CSIRO feeding standards.
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
 
+    ##Step 7: Energy value of gain (reflects if ebg is held constant due to REV calculation).
+    evg = (df + dm + dv) / ebg
+
     ##energy above maintenance. As a comparison with old feeding standards
     surplus_energy = df + dm + dv + hp_df + hp_dm + hp_dv
+    kg = (df + dm + dv) / surplus_energy # a comparison with the old feeding standards
 
-    return ebg, evg, df, dm, dv, surplus_energy
+    return ebg, evg, df, dm, dv, hp_total, surplus_energy
 
 
 def f_wbe_mu(cg, aw, mw, vw=0):
@@ -2765,7 +2776,7 @@ def f1_ebw(cn, relsize, md):
     return ebw_scalar
 
 
-def f1_body_composition(cn, cx, ffcfw, srw, md=12):
+def f1_body_composition(cn, cx, ffcfw, srw, md=12.0):
     ''' Calculate body composition (weight of muscle, viscera and fat).
      Uses equations from Sheep Calc.xlsx from Hutton Oddy pers. comm. Oct 2023
      Default M/D is 12 MJ/kg because mostly the function will be being used at weaning'''

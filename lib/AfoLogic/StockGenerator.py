@@ -3524,23 +3524,24 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_nfs(cm_sire, cg_sire, rc_start_sire
-                                                , mei_sire , md_solid_sire, mew_sire, zf1_sire, zf2_sire, kg_sire, step
-                                                , rev_trait_values['sire'][p])
+                        temp0, temp1, temp2, temp3, temp4, temp5, temp6 = sfun.f_lwc_nfs(cg_sire, ck_sire, m_start_sire
+                                                , v_start_sire, alpha_m_sire, dw_sire, mei_sire , md_solid_sire
+                                                , hp_maint_sire, heat_loss_sire, step, rev_trait_values['sire'][p])
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
                             df_sire = temp2
                             dm_sire = temp3
                             dv_sire = temp4
-                            surplus_energy_sire = temp5
+                            hp_total_sire = temp5
+                            surplus_energy_sire = temp6
                         if eqn_compare:
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp1
-                        temp0 = sfun.level_nfs(mei_sire, hp_maint_sire)
+                        temp0 = sfun.f1_level_nfs(mei_sire, hp_maint_sire)
                         if eqn_used:
                             level_sire = temp0
-                        temp0, temp1 = sfun.templc(cc_sire, ffcfw_start_sire, rc_start_sire, sl_start_sire, hp_total_sire
+                        temp0, temp1 = sfun.f_templc(cc_sire, ffcfw_start_sire, rc_start_sire, sl_start_sire, hp_total_sire
                                                    , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                    , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
                                                    , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
@@ -3549,9 +3550,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_nfs(cm_dams, cg_dams, rc_start_dams
-                                                , mei_dams , md_solid_dams, mew_dams, zf1_dams, zf2_dams, kg_dams, step
-                                                , rev_trait_values['dams'][p], mec_dams, mel_dams
+                        temp0, temp1, temp2, temp3, temp4, temp5, temp6 = sfun.f_lwc_nfs(cg_dams, ck_dams, m_start_dams
+                                                , v_start_dams, alpha_m_dams, dw_dams, mei_dams , md_solid_dams
+                                                , hp_maint_dams, heat_loss_dams, step, rev_trait_values['dams'][p]
+                                                , dc_dams, hp_dc_dams, dl_dams, hp_dl_dams
                                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             ebg_dams = temp0
@@ -3559,14 +3561,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             df_dams = temp2
                             dm_dams = temp3
                             dv_dams = temp4
-                            surplus_energy_dams = temp5
+                            hp_total_dams = temp5
+                            surplus_energy_dams = temp6
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
-                        temp0 = sfun.level_nfs(mei_dams, hp_maint_dams)
+                        temp0 = sfun.f1_level_nfs(mei_dams, hp_maint_dams)
                         if eqn_used:
                             level_dams = temp0
-                        temp0, temp1 = sfun.templc(cc_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams, hp_total_dams
+                        temp0, temp1 = sfun.f_templc(cc_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams, hp_total_dams
                                                    , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                    , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
                                                    , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
@@ -3575,8 +3578,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_nfs(cm_offs, cg_offs, rc_start_offs
-                                                , mei_offs , md_solid_offs, mew_offs, zf1_offs, zf2_offs, kg_offs, step
+                        temp0, temp1, temp2, temp3, temp4, temp5, temp6 = sfun.f_lwc_nfs(cg_offs, ck_offs, m_start_offs
+                                                , v_start_offs, alpha_m_offs, dw_offs, mei_offs , md_solid_offs
+                                                , hp_maint_offs, heat_loss_offs, step
                                                 , rev_trait_values['offs'][p])
                         if eqn_used:
                             ebg_offs = temp0
@@ -3584,14 +3588,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             df_offs = temp2
                             dm_offs = temp3
                             dv_offs = temp4
-                            surplus_energy_offs = temp5
+                            hp_total_offs = temp5
+                            surplus_energy_offs = temp6
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp1
-                        temp0 = sfun.level_nfs(mei_offs, hp_maint_offs)
+                        temp0 = sfun.f1_level_nfs(mei_offs, hp_maint_offs)
                         if eqn_used:
                             level_offs = temp0
-                        temp0, temp1 = sfun.templc(cc_offs, ffcfw_start_offs, rc_start_offs, sl_start_offs, hp_total_offs
+                        temp0, temp1 = sfun.f_templc(cc_offs, ffcfw_start_offs, rc_start_offs, sl_start_offs, hp_total_offs
                                                    , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                    , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
                                                    , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
@@ -3611,13 +3616,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     attempts_dams[...,itn,1] = error
                     ###is error within tolerance
                     if np.all(np.abs(error) <= epsilon):
-                        break
+                        break   #todo does this break out of the offspring loop if the dams are within the limits of epsilon?
                     ###max attempts reached
                     elif itn == n_max_itn-1: #minus 1 because range() and hence itn starts from 0
                         ####select best feed supply option
                         best_idx = np.argmin(np.abs(attempts_dams[...,1]),axis=-1)
                         feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p] = np.take_along_axis(attempts_dams[...,0], best_idx[...,na], axis=-1)[...,0] #get rid of singleton itn axis
-                        break
+                        break  #todo does this break out of the loop so the best offspring feedsupply isn't selected from the options calculated
                     feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p:p+1] = sfun.f1_feedsupply_adjust(attempts_dams,feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p],itn)
                 if target_lwc_offs[p] != 9999 and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p]>0):
                     ###calc error
@@ -3748,6 +3753,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ##reset start variables if period is birth
                 ###ffcf weight of yatf
                 ffcfw_start_yatf = fun.f_update(ffcfw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                mw_start_yatf, vw_start_yatf, aw_stat_yatf = sfun.f1_body_composition(cn_yatf, cx_yatf[:,mask_x,...]
+                                                , ffcfw_start_yatf, srw_b1xyg2, md_solid_yatf)
                 ffcfw_max_start_yatf = fun.f_update(ffcfw_max_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###normal weight of yatf
                 nw_start_yatf	= fun.f_update(nw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
@@ -4063,23 +4070,24 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_nfs(cm_yatf, cg_yatf, rc_start_yatf
-                                            , mei_yatf , md_solid_yatf, mew_yatf, zf1_yatf, zf2_yatf, kg_yatf, step
-                                            , rev_trait_values['yatf'][p])
+                    temp0, temp1, temp2, temp3, temp4, temp5, temp6 = sfun.f_lwc_nfs(cg_yatf, ck_yatf, m_start_yatf
+                                                , v_start_yatf, alpha_m_yatf, dw_yatf, mei_yatf , md_solid_yatf
+                                                , hp_maint_yatf, heat_loss_yatf, step, rev_trait_values['yatf'][p])
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
                         df_yatf = temp2
                         dm_yatf = temp3
                         dv_yatf = temp4
-                        surplus_energy_yatf = temp5
+                        hp_total_yatf = temp5
+                        surplus_energy_yatf = temp6
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp1
-                    temp0 = sfun.level_nfs(mei_yatf, hp_maint_yatf)
+                    temp0 = sfun.f1_level_nfs(mei_yatf, hp_maint_yatf)
                     if eqn_used:
                         level_yatf = temp0
-                    temp0, temp1 = sfun.templc(cc_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, hp_total_yatf
+                    temp0, temp1 = sfun.f_templc(cc_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, hp_total_yatf
                                                , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
                                                , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
