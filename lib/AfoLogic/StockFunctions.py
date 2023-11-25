@@ -2771,16 +2771,39 @@ def f1_fat_score(rc_tpg, cn):
     return fat_score
 
 
-def f1_ebw(cn, relsize, md):
-    ''' Calculate empty body weight. Uses equations from Sheep Calc.xlsx from Hutton Oddy pers. comm. Oct 2023
-    The equations were rearranged to only require relsize and return a scalar of EBW as a proportion of FFCFW'''
-    ##Step 1. Estimate gut contents as a proportion of ffcfw based on stage of maturity (relsize)
-    gut_contents = (cn[10, ...] + cn[11, ...] * relsize ** 2 + cn[12, ...] / relsize) * cn[13, ...]
-    ##Step 2. Calculate empty body weight scalar
-    ebw_scalar = (1 - gut_contents)
-    ##Step 3. Adjust the weight scalar by a factor related to diet quality
-    ebw_scalar = ebw_scalar * (cn[14, ...] * md + cn[15, ...] * md ** 2 + cn[16, ...])
-    return ebw_scalar
+def f1_ffcfw2ebw(cn, ffcfw, srw, md):
+    ''' Calculate empty body weight from fffw.
+    Uses equations from Sheep Calc.xlsx from Hutton Oddy pers. comm. Oct 2023
+    The equations were rearranged to generate 2 scalars that are multiplied to return EBW as a proportion of FFCFW'''
+
+    ##Scalar 0. Estimate EBW as a proportion of ffcfw based on stage of maturity (relsize)
+    scalar0 = 1 - (cn[10, ...] + cn[11, ...] * ffcfw / srw + cn[12, ...] * srw / ffcfw) * cn[13, ...]
+    ##Scalar 1. Adjust the weight scalar by a factor related to diet quality
+    scalar1 = cn[14, ...] * md + cn[15, ...] * md**2 + cn[16, ...]
+    ##Step 3. Empty body weight is the product of both scalars
+    ebw = ffcfw * scalar0 * scalar1
+    return ebw
+
+
+def f1_ebw2ffcfw2(cn, ebw, srw, md):
+    ''' Calculate ffcfw from empty body weight.
+    Uses same equations and coefficients as f1_ffcfw2ebw() from Sheep Calc.xlsx from Hutton Oddy pers. comm. Oct 2023
+    Gut contents are derived from solving a quadratic equation see Working11: pg12
+    The derivation is based on solving a quadratic function of gut fill (g) where
+    a.g**2 + b.g + c = 0.
+    a, b & c are calculated from the coefficients, ebw & srw'''
+
+    ##Scalar1. Adjust the weight scalar by a factor related to diet quality
+    scalar1 = cn[14, ...] * md + cn[15, ...] * md**2 + cn[16, ...]
+    ##Step 2. Derive the coefficients for the quadratic
+    a = cn[11, ...] * cn[13, ...] * scalar1 / srw)
+    b = cn[10, ...] * cn[13, ...] * scalar1 + 2 * cn[11, ...] * cn[13, ...] * scalar1 * ebw / srw - scalar1
+    c = cn[10, ...] * cn[13, ...] * scalar1 * ebw + cn[11, ...] * cn[13, ...] * scalar1 * ebw**2 / srw + cn[12, ...] * cn[13, ...] * scalar1 * srw + ebw - scalar1 * ebw
+    ##Step 3. Solve the quadratic
+    gutfill = (-b + np.sign(a) * np.sqrt(b**2 - 4 * a * c))/(2 * a)
+    ##Step4. Calculate ffcfw from ebw and gutfill
+    ffcfw = ebw + gutfill
+    return ffcfw
 
 
 def f1_body_composition(cn, cx, ffcfw, srw, md=12.0):
