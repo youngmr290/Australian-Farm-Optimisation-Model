@@ -64,10 +64,6 @@ def f1_stockpyomo_local(params, model):
     model.v_purchase_dams = pe.Var(model.s_sequence_year, model.s_sequence, model.s_dvp_dams, model.s_lw_dams, model.s_season_types, model.s_tol, model.s_groups_dams, bounds = (0,None) , doc='number of purchased dam animals')
     model.v_purchase_offs = pe.Var(model.s_sequence_year, model.s_sequence, model.s_dvp_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_groups_offs, bounds = (0,None) , doc='number of purchased offs animals')
 
-    ##infrastructure
-    model.v_infrastructure = pe.Var(model.s_sequence_year, model.s_sequence, model.s_infrastructure, model.s_season_types, bounds=(0,None),
-                                    doc='amount of infrastructure required for given animal enterprise (based on number of sheep through infra)')
-
     ######################
     ### setup parameters #
     ######################
@@ -243,23 +239,10 @@ def f1_stockpyomo_local(params, model):
                              initialize=params['p_labour_manager_offs'], default=0.0, mutable=False, doc='labour requirement offs - manager')
 
     ##infrastructure
-    model.p_infra_sire = pe.Param(model.s_infrastructure, model.s_season_types, model.s_groups_sire, initialize=params['p_infrastructure_sire'],
-                                  default=0.0, mutable=False, doc='sire requirement for infrastructure (based on number of times yarded and shearing activity)')
-    model.p_infra_dams = pe.Param(model.s_k2_birth_dams, model.s_infrastructure, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
-                                  model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
-                                  initialize=params['p_infrastructure_dams'], default=0.0, mutable=False, doc='Dams requirement for infrastructure (based on number of times yarded and shearing activity)')
-    model.p_infra_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_infrastructure, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
-                             model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
-                             initialize=params['p_infrastructure_offs'], default=0.0, mutable=False, doc='offs requirement for infrastructure (based on number of times yarded and shearing activity)')
-    model.p_rm_stockinfra_fix = pe.Param(model.s_infrastructure, model.s_season_periods, model.s_season_types,
+    model.p_rm_stockinfra_fix = pe.Param(model.s_season_periods, model.s_season_types,
                                          initialize=params['p_rm_stockinfra_fix'], default=0.0, doc='Fixed cost of R&M of the infrastructure')
-    model.p_rm_stockinfra_var = pe.Param(model.s_infrastructure, model.s_season_periods, model.s_season_types,
-                                         initialize=params['p_rm_stockinfra_var'], default=0.0, doc='Variable cost of R&M of the infrastructure (per animal mustered/shorn)')
-    model.p_rm_stockinfra_fix_wc = pe.Param(model.s_infrastructure, model.s_enterprises, model.s_season_periods, model.s_season_types,
+    model.p_rm_stockinfra_fix_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types,
                                          initialize=params['p_rm_stockinfra_fix_wc'], default=0.0, doc='Fixed cost of R&M of the infrastructure')
-    model.p_rm_stockinfra_var_wc = pe.Param(model.s_infrastructure, model.s_enterprises, model.s_season_periods, model.s_season_types,
-                                         initialize=params['p_rm_stockinfra_var_wc'], default=0.0, doc='Variable cost of R&M of the infrastructure (per animal mustered/shorn)')
-    # model.p_lab_stockinfra = Param(model.s_infrastructure, model.s_labperiods, initialize=, default=0.0, doc='Labour required for R&M of the infrastructure (per animal mustered/shorn)')
 
     ##dse
     model.p_dse_sire = pe.Param(model.s_feed_periods, model.s_season_types, model.s_groups_sire, initialize=params['p_dse_sire'],
@@ -370,7 +353,6 @@ def f1_stockpyomo_local(params, model):
     f_con_prog2damsR(model,l_v1)
     f_con_prog2offsR(model,l_v3)
     f_con_matingR(model)
-    f_con_stockinfra(model)
     f_con_stock_trade_profit(model)
 
 ########################
@@ -688,26 +670,6 @@ def f_con_matingR(model):
             return pe.Constraint.Skip
     model.con_matingR = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_groups_sire, model.s_sire_periods, rule=mating, doc='sire requirement for mating')
 
-def f_con_stockinfra(model):
-    '''
-    Ensures enough infrastructure exists for all the animals and the associated events (e.g. mustering, shearing, etc).
-    '''
-    def stockinfra(model,q,s,h1,z):
-        if pe.value(model.p_wyear_inc_qs[q, s]):
-            return -model.v_infrastructure[q,s,h1,z] + sum(model.v_sire[q,s,g0] * model.p_infra_sire[h1,z,g0] for g0 in model.s_groups_sire if model.p_infra_sire[h1,z,g0]!=0)  \
-                   + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_infra_dams[k2,h1,t1,v1,a,n1,w1,z,i,y1,g1]
-                             for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
-                             for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                             if pe.value(model.p_infra_dams[k2,h1,t1,v1,a,n1,w1,z,i,y1,g1])!=0)
-                        + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_infra_offs[k3,k5,h1,t3,v3,n3,w3,z,i,a,x,y3,g3]
-                              for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
-                              for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                              if pe.value(model.p_infra_offs[k3,k5,h1,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0)
-                   for a in model.s_wean_times for i in model.s_tol) <=0
-        else:
-            return pe.Constraint.Skip
-    model.con_stockinfra = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_infrastructure, model.s_season_types, rule=stockinfra, doc='Requirement for infrastructure (based on number of times yarded and shearing activity)')
-
 def f_con_stock_trade_profit(model):
     '''
     Calculate the difference in the total livestock value at the end of the year vs the start of the year.
@@ -807,8 +769,7 @@ def f_stock_cashflow(model,q,s,p7,z,c1):
     Used in global constraint (con_profit). See CorePyomo
     '''
 
-    infrastructure = sum(model.p_rm_stockinfra_fix[h1,p7,z] + model.p_rm_stockinfra_var[h1,p7,z] * model.v_infrastructure[q,s,h1,z]
-                         for h1 in model.s_infrastructure)
+    infrastructure = model.p_rm_stockinfra_fix[p7,z]
     #todo v_prog requires a y axis
     stock = sum(model.v_sire[q,s,g0] * model.p_cashflow_sire[c1,p7,z,g0] for g0 in model.s_groups_sire) \
            + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cashflow_dams[k2,c1,p7,t1,v1,a,n1,w1,z,i,y1,g1]
@@ -839,8 +800,7 @@ def f_stock_wc(model,q,s,c0,p7,z):
     Used in global constraint (con_wc). See CorePyomo
     '''
 
-    infrastructure = sum(model.p_rm_stockinfra_fix_wc[h1,c0,p7,z] + model.p_rm_stockinfra_var_wc[h1,c0,p7,z] * model.v_infrastructure[q,s,h1,z]
-                         for h1 in model.s_infrastructure)
+    infrastructure = model.p_rm_stockinfra_fix_wc[c0,p7,z]
     stock = sum(model.v_sire[q,s,g0] * model.p_wc_sire[c0,p7,z,g0] for g0 in model.s_groups_sire) \
            + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_wc_dams[k2,c0,p7,t1,v1,a,n1,w1,z,i,y1,g1]
                       for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -871,8 +831,7 @@ def f_stock_cost(model,q,s,p7,z):
     Used in global constraint (con_minroe). See CorePyomo
     '''
 
-    infrastructure = sum(model.p_rm_stockinfra_fix[h1,p7,z] + model.p_rm_stockinfra_var[h1,p7,z] * model.v_infrastructure[q,s,h1,z]
-                         for h1 in model.s_infrastructure)
+    infrastructure = model.p_rm_stockinfra_fix[p7,z]
     stock = sum(model.v_sire[q,s,g0] * model.p_cost_sire[p7,z,g0] for g0 in model.s_groups_sire) \
             + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cost_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
