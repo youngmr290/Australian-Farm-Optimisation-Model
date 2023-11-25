@@ -859,25 +859,41 @@ def f1_efficiency(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, mei_propn_
     return km, kg_fodd, kg_supp, kl
 
 
-def f1_weight2energy(cg, aw, mw, vw=0):
+def f1_weight2energy(cg, weight, option):
     '''Parameters
     ----------
-    ck : Numpy array, sim parameters - weight change.
-    aw : Numpy array of float, weight of adipose tissue (fresh weight).
-    mw : Numpy array of float, weight of muscle (fresh weight).
-    vw : Numpy array of float, optional, weight of viscera (fresh weight).
+    cg : Numpy array, sim parameters - weight change.
+    weight : Numpy array of float, weight of component (fresh weight).
+    option : 0 = fat, 1 = muscle, 2 = viscera, 3 = wool, 4 = conceptus, 5 = milk.
 
     Returns
     -------
-    f - Energy content of fat.
-    m - Energy content of muscle
-    v - Energy content of viscera
+    energy - Energy content of the component.
     '''
-    ## Energy content is fresh weight * DM content * energy content (MJ/kg DM)
-    f = aw * cg[26, ...] * cg[20, ...]
-    m = mw * cg[27, ...] * cg[21, ...]
-    v = vw * cg[28, ...] * cg[22, ...]
-    return f, m, v
+    ## select the relevant coefficients for the component
+    if option == 0:
+        drymatter = cg[26, ...]
+        energydensity = cg[20, ...]
+    elif option == 1:
+        drymatter = cg[27, ...]
+        energydensity = cg[21, ...]
+    elif option == 2:
+        drymatter = cg[28, ...]
+        energydensity = cg[22, ...]
+    elif option == 3:
+        drymatter = cg[29, ...]
+        energydensity = cg[23, ...]
+    elif option == 4:
+        drymatter = cg[30, ...]
+        energydensity = cg[24, ...]
+    else:
+        drymatter = cg[31, ...]
+        energydensity = cg[25, ...]
+
+    ## Energy content is fresh weight * DM content * energy density (MJ/kg DM)
+    energy = weight * drymatter * energydensity
+    return energy
+
 
 def f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
          , kl = 0, mei_propn_milk = 0, lact_propn = 0):
@@ -917,19 +933,19 @@ def f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
     return kg
 
 
-def f_energy_cs(cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_start, days_period, km
+def f_energy_cs(cx, cm, lw, ffcfw, mr_age, mei, omer_history_start, days_period, km
                 , i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_mr=1):
     #Energy required for maintenance and efficiency of energy use for maintenance & growth
     ##Energy required at maint for metabolism
-    emetab = cx[10, ...] * cm[2, ...] * ffcfw_start ** 0.75 * mr_age * (1 + cm[5, ...] * mei_propn_milk)
+    emetab = cx[10, ...] * cm[2, ...] * ffcfw ** 0.75 * mr_age * (1 + cm[5, ...] * mei_propn_milk)
     ##Distance walked (horizontal equivalent)	
     distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
     ##Set Distance walked to 0 if in confinement	
     distance = distance * np.logical_not(confinement)
     ##Energy required for movement	
-    emove = cm[16, ...] * distance * lw_start
+    emove = cm[16, ...] * distance * lw
     ##Energy required for grazing (chewing and walking around)
-    egraze = cm[6, ...] * ffcfw_start * intake_f * (cm[7, ...] - dmd) + emove
+    egraze = cm[6, ...] * ffcfw * intake_f * (cm[7, ...] - dmd) + emove
     ##Energy associated with organ activity
     omer, omer_history = f1_history(omer_history_start, cm[1, ...] * mei, days_period)
     ##ME requirement for maintenance (before ECold)
@@ -937,8 +953,8 @@ def f_energy_cs(cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_start, 
     return meme, omer_history
 
 
-def f_energy_nfs(ck, cm, lw_start, ffcfw_start, f_start, v_start, m_start, mei, md_solid
-                 , i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_mr=1):
+def f_energy_nfs(ck, cm, cg, lw, ffcfw, fat, muscle, viscera, mei, md_solid, i_steepness, density, foo
+                 , confinement, intake_f, dmd, mei_propn_milk=0, sam_mr=1):
     #Heat production associated with maintenance (fasting heat production and heat associated with feeding) & efficiency
     #todo km & kl could be calculated using f_efficiency() & then pass them in as args (and not return kl from this function)
     ##Efficiency for maintenance
@@ -946,8 +962,12 @@ def f_energy_nfs(ck, cm, lw_start, ffcfw_start, f_start, v_start, m_start, mei, 
     bmei = 1 - km
     ##Efficiency for lactation - dam only
     kl =  ck[5, ...] + ck[6, ...] * md_solid
+    ##Calculate the energy content of fat, muscle and viscera from the weight
+    f = f1_weight2energy(cg, fat, 0)
+    m = f1_weight2energy(cg, muscle, 1)
+    v = f1_weight2energy(cg, viscera, 2)
     ##Heat production from maintaining protein
-    hp_fasting = (cm[20, ...] * f_start + cm[21, ...] * m_start + cm[22, ...] * v_start) * (1 + cm[5, ...] * mei_propn_milk)
+    hp_fasting = (cm[20, ...] * f + cm[21, ...] * m + cm[22, ...] * v) * (1 + cm[5, ...] * mei_propn_milk)
     ##Heat associated with feeding - rumination & digestion (Note: rumination might change with fibre length but this is not accounted for, only M/D).
     hp_mei = bmei * mei
     ##Distance walked (horizontal equivalent)
@@ -955,9 +975,9 @@ def f_energy_nfs(ck, cm, lw_start, ffcfw_start, f_start, v_start, m_start, mei, 
     ##Set Distance walked to 0 if in confinement
     distance = distance * np.logical_not(confinement)
     ##Energy required for movement
-    hp_move = cm[16, ...] * distance * lw_start
+    hp_move = cm[16, ...] * distance * lw
     ##Energy required for grazing (chewing and walking around)
-    hp_graze = cm[6, ...] * ffcfw_start * intake_f * (cm[7, ...] - dmd) + hp_move
+    hp_graze = cm[6, ...] * ffcfw * intake_f * (cm[7, ...] - dmd) + hp_move
     ##Heat produced by maintenance (before ECold)
     hp_maint = (hp_fasting + hp_mei + hp_graze) * sam_mr
     return hp_maint, kl
@@ -1476,7 +1496,7 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     return ebg, evg, pg, fg, surplus_energy
 
 
-def f_lwc_nfs(cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, heat_loss, step, rev_trait_value
+def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, dw, mei, md, hp_maint, heat_loss, step, rev_trait_value
               , dc=0, hp_dc=0, dl=0, hp_dl=0, gest_propn = 0, lact_propn = 0):
     ##fat gain (MJ/d) is calculated using a formula derived from the Oddy etal 2023 paper (see Generator9:p16-17)
     ###The calculation is multistep because parameter values (bcm & bcf) depend on the sign of dm and df
@@ -1491,7 +1511,12 @@ def f_lwc_nfs(cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, heat_loss, step, rev
     ###5. Calculate dm & df
     ###6. Calculate ebg
 
-    ## First to retain the flavour of the derivation, substitute some coefficient names
+    ##Convert weight of muscle and viscera to energy content
+    m = f1_weight2energy(cg, muscle, 1)
+    v = f1_weight2energy(cg, viscera, 2)
+    alpha_m = f1_weight2energy(cg, muscle_target, 1)
+
+    ## To retain the flavour of the derivation, substitute some coefficient names
     M = 1 - m / alpha_m
     pm = cg[32, ...]
     e0 = cg[34, ...]
@@ -1536,11 +1561,11 @@ def f_lwc_nfs(cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, heat_loss, step, rev
     df = neg - (dm + dv + dw + gest_propn * dc + lact_propn * dl)
     hp_df = bcf * df
     ##Step 9: Calculate weight change
-    fg = df / (cg[20, ...] * cg[26, ...])
-    mg = dm / (cg[21, ...] * cg[27, ...])
-    vg = dv / (cg[22, ...] * cg[28, ...])
+    d_fat = df / (cg[20, ...] * cg[26, ...])
+    d_muscle = dm / (cg[21, ...] * cg[27, ...])
+    d_viscera = dv / (cg[22, ...] * cg[28, ...])
     ##Step 10: Empty bodyweight change
-    ebg = fg + mg + vg
+    ebg = d_fat + d_muscle + d_viscera
 
     ##Process the Liveweight REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     ###The LW trait is different in the new feeding standards compared with CSIRO standards.
@@ -1557,12 +1582,12 @@ def f_lwc_nfs(cg, ck, m, v, alpha_m, dw, mei, md, hp_maint, heat_loss, step, rev
     surplus_energy = df + dm + dv + hp_df + hp_dm + hp_dv
     kg = (df + dm + dv) / surplus_energy # a comparison with the old feeding standards
 
-    return ebg, evg, df, dm, dv, hp_total, surplus_energy
+    return ebg, evg, d_fat, d_muscle, d_viscera, hp_total, surplus_energy
 
 
-def f_wbe_mu(cg, aw, mw, vw=0):
-    ## calculate whole body energy content from weight of adipose tissue (aw) and muscle (mw), and the dry matter content and energy density.
-    wbe = aw * cg[20, ...] * cg[26, ...] + mw * cg[21, ...] * cg[27, ...] + vw * cg[22, ...] * cg[28, ...]
+def f_wbe_mu(cg, fat, muscle, viscera=0):
+    ## calculate whole body energy content from weight, dry matter and energy density of fat, muscle and viscera.
+    wbe = fat * cg[26, ...] * cg[20, ...] + muscle * cg[27, ...] * cg[21, ...] + viscera * cg[28, ...] * cg[22, ...]
     return wbe
 
 
@@ -2807,19 +2832,19 @@ def f1_ebw2ffcfw2(cn, ebw, srw, md):
 
 
 def f1_body_composition(cn, cx, ffcfw, srw, md=12.0):
-    ''' Calculate body composition (wet weight of adipose (fat), muscle and viscera).
+    ''' Calculate body composition (wet weight of fat, muscle and viscera).
      Uses equations from Sheep Calc.xlsx from Hutton Oddy pers. comm. Oct 2023
      Default M/D is 12 MJ/kg because mostly the function will be being used at weaning'''
     ##Step 1. Calculate empty body weight
+    ebw = f1_ffcfw2ebw(cn, ffcfw, srw, md)
+    ##Step 2. Calculate fat weight
     relsize = ffcfw / srw
-    ebw = f1_ebw(cn, relsize, md) * ffcfw
-    ##Step 2. Calculate adipose weight
-    aw = (cn[17, ...] * relsize + cn[18, ...] * relsize ** 2 + cn[19, ...]) * ffcfw
+    fat = (cn[17, ...] * relsize + cn[18, ...] * relsize ** 2 + cn[19, ...]) * ffcfw
     ##Step 3. Calculate viscera weight
-    vw = (cn[20, ...] * relsize + cn[21, ...] * relsize ** 2 + cn[22, ...]) * cx[22, ...] * srw
+    viscera = (cn[20, ...] * relsize + cn[21, ...] * relsize ** 2 + cn[22, ...]) * cx[22, ...] * srw
     ##Step 4. Calculate muscle weight as the remaining empty body weight
-    mw = ebw - (aw + vw)
-    return aw, mw, vw
+    muscle = ebw - (fat + viscera)
+    return fat, muscle, viscera
 
 
 
