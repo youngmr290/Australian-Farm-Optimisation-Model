@@ -983,80 +983,8 @@ def write_variablesummary(model, row, exp_data, obj, option=0, property_id=''):
 # period calculators     #
 ##########################
 
-def period_allocation(period_dates,periods,start_d,length=None):
-    '''
-    Parameters
-    ----------
-    period_dates : List
-        Dates of the periods you are matching within e.g. labour periods or cashflow periods
-        *note the start date of the period must added to the end of the period if length is passed in
-    periods : List
-        Name of each period.
-    start_d : Date
-        Date of interest.
-    length : Dt, optional
-        Length of the period of interest. The default is ''.
-
-    Returns
-    -------
-    Proportion of a given date range in each period:
-    Either take a date and returns the period it is in
-    or take a date and a length and return a dataframe with a proportion in each period
-
-    '''
-    #gets the dates
-    # period_dates = p_dates   # don't need this step if the variables passed in are changed to period_dates from p_dates and periods from p_name
-    #gets the period name
-    # periods = p_name
-    if length is not None:
-    #start empty list to append to
-        allocation_period = []
-        end = start_d + length
-        #check how much of the range falls into each cash period
-        for i in range(len(periods)-1):
-            ## ^might be simpler to do this with allocation_period.append  \
-            ## # (min(per_end,end)-max(per_start,start)/(end-start)) clipped(0,1)
-            ## # would also be quicker if the loop started with i = bisect(period_dates,start)-1
-            ## # and finished when per_end > end
-            ## # perhaps this is a while loop
-            per_start = period_dates[i]
-            per_end = period_dates[i + 1]
-
-            ##had to add this if statement to handle feed periods - when using fp convert all dates to 2019 but sometimes the start date plus the length = 2020. there for sometimes the end date need to be adjusted back to 2019, when this happens the start date also needs to go back one yr to 2018
-            if end -  rdelta.relativedelta(years=1) >= per_start:
-                end = (start_d + length) -  rdelta.relativedelta(years=1)
-                start = start_d -  rdelta.relativedelta(years=1)
-            else:
-                end = start_d + length
-                start = start_d
-
-            #if the range lasts longer than one cashflow period then that cashflow period gets allocated a proportion
-            if start <=  per_start and end >= per_end:
-                 allocation_period.append((per_end - per_start) / (end - start))
-            #start of the range is before period and the end of the range is after the start of the period but before the end
-            elif start <=  per_start <= end and end <= per_end:
-                allocation_period.append((end - per_start) / (end - start))
-            #is the start of the range after the start of the period and before the finish of the period
-            #and the end of the range is after the end of the period
-            elif start >=  per_start and start <= per_end <= end :
-                allocation_period.append((per_end - start) / (end - start))
-            #if all of the range occurs within one the period
-            elif start >=  per_start and end <= per_end:
-                allocation_period.append(1)
-            #if the range doesn't occur in a period.
-            else:
-                allocation_period.append(np.nan)
-        return pd.DataFrame(list(zip(periods,allocation_period)), columns= ('period', 'allocation'))
-    #returns the period name a given date falls into
-    else:    #^ could use the python function allocation_p = bisect.bisect(period_dates,start)-1
-        for date, period_name in zip(period_dates, periods):
-            while date <= start_d:
-                allocation_p = period_name
-                break
-        return allocation_p
-
-
-def f_range_allocation_np(period_dates, item_start, length=np.array([1]), method=1, shape=None):
+def f_range_allocation_np(period_dates, item_start, length=np.array([1]), method=1, shape=None, is_phase_param=False,
+                          break_z=None, season_start=None, z_pos=None):
     ''' Numpy version - The proportion of a date range that falls within each period or proportion of each period that falls in the tested date range.
 
     Where possible use the default option (method=1). When using method 2 the date range (item start to
@@ -1066,13 +994,19 @@ def f_range_allocation_np(period_dates, item_start, length=np.array([1]), method
           This is because we cant have allocation that crosses the season junction. In some cases this may result in over
           allocation to the last period.
 
+    Note 2: For params linked to v_phase activity the timing of an item is adjusted so that no cost/labour/depn is incurred
+    between season start and break of season. This stops the model getting double costs in medium/late breaks where
+    phases are carried over past the start of the season to provide dry pas and stubble area (because it is also
+    accounted for by v_phase_increment).
+
     :param period_dates: the start of the periods (including end date of last period). This array must be broadcastable with start
                   (therefore may need to add new axis if start has a dimension). Period axis must be in pos=0.
     :param item_start: the date of the beginning of the date range to test - a numpy array of dates
-    :param length: the length of the date range to test - an array of timedelta. Must be broadcastable to start.
+    :param length: the length of the date range to test (days). Must be broadcastable to start.
     :param method: Controls the proportion calculated. Method 1 returns the proportion of date range in each period.
                      Method 2 returns the proportion of the period in the date range.
     :param shape: this is the shape of returned array, required if both period_dates & start have more than 1 dim
+    :param is_phase_param: boolean to flag if the item being allocated will be liked to v_phase activity. If True the timing gets adjusted so that no cost/labour/depn is incurred between season start and break of season. Otherwise double counting can occur with v_phase and v_phase_increment.
 
     :return: Numpy array with shape(period_dates, start array). Containing the proportion of the
              respective period for that test date.
@@ -1086,6 +1020,14 @@ def f_range_allocation_np(period_dates, item_start, length=np.array([1]), method
         allocation_period=np.zeros((period_dates.shape[:-1] + item_start.shape),dtype='float64')
     else:
         allocation_period=np.zeros(shape,dtype='float64')
+
+    ###adjust the timing of items linked to phases so that no cost/labour/depn is incurred between season start and break of season.
+    ### this stops the model getting double costs in medium/late breaks where phases are carried over past the
+    ### start of the season to provide dry pas and stubble area (because it is also accounted for by v_phase_increment).
+    if is_phase_param:
+        date_break_z = f_expand(break_z, z_pos) #adjust to get z axis in the correct position.
+        between_seasonstart_brkseason = np.logical_and(item_start%364>=season_start, item_start%364<date_break_z)
+        item_start = f_update(item_start%364, date_break_z, between_seasonstart_brkseason)
 
     ## adjust dates.
     if method==1:
@@ -1107,7 +1049,7 @@ def f_range_allocation_np(period_dates, item_start, length=np.array([1]), method
         period_start_dates = period_start_dates + add_yrs * 364 - sub_yrs * 364
         period_end_dates = period_end_dates + add_yrs * 364 - sub_yrs * 364
 
-    ##end of period
+    ##calc end of period
     item_end = np.minimum(item_start + length, period_dates[-1]) #minimum ensures that the assigned date range is within the period date range.
 
     ##checks if user wants the proportion of each period that falls in the tested date range or proportion of date range in each period

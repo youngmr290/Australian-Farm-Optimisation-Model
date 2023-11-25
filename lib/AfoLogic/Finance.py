@@ -111,12 +111,17 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False, 
     Cashflow allocation always has a length of 1. Meaning that cost is allocated based on the start date when it is
     incurred. Interest is calculated from this date until the end of the cashflow periods. The reason for not
     including a length is that cashflow for a give decision variable can not cross a node
-    otherwise the child weather years do not incur the cashflow.
+    otherwise the child weather years do not incur the cashflow (because the variable might not exist).
 
     Working capital is tallied for each 'main' enterprise (controlled by user inputs).
     The working capital is accumulated from the most recent main income (across all enterprises) until the peak debt
     date for the given enterprise. E.g. in a typical mix farm system the stock working constraint tallys up
     the cashflow from just after harvest (most recent main income) until just before shearing (stock peak debt).
+
+    Note: For params linked to v_phase activity the timing of an item is adjusted (in fun.f_range_allocation)
+    so that no cost is incurred between season start and break of season. This stops the model getting double costs in medium/late breaks where
+    phases are carried over past the start of the season to provide dry pas and stubble area (because it is also
+    accounted for by v_phase_increment).
 
     :param date_incurred: week of year when cashflow is incurred (must include z axis)
     :param enterprise: enterprise. If no enterprise is passed in the cashflow is averaged across the c0 axis.
@@ -136,7 +141,7 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False, 
     cashflow_date_c0 = fun.f_expand(cashflow_date_c0, left_pos=ndims-1)
     peakdebt_date_c0 = fun.f_expand(peakdebt_date_c0, left_pos=ndims-1)
 
-    ##adjust yr of cashflow occurrence so it occurs within the cashflow periods
+    ##adjust yr of cashflow occurrence so it occurs within the cashflow periods for the interest calc below
     start_of_cash_c0 = cashflow_date_c0
     end_of_cash_c0 = start_of_cash_c0 + 363 #use 363 (364 is 1 yr in AFO) because end date is the day before the start of following yr otherwise can get item that starts on the last day of periods.
     add_yrs_c0 = np.ceil(np.maximum(0,(start_of_cash_c0 - date_incurred) / 364))
@@ -150,17 +155,7 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False, 
     wc_interest_c0 = (1 + rate / 364) ** wc_incur_days_c0 * (wc_incur_days_c0>=0) #bool to make wc 0 if the cashflow item occurs between peak debt and cashflow date (this stops an enterprises main income being included in wc constraint).
 
     ##allocate to cashflow period
-    ###adjust the timing of phases costs so that no cost is incurred between season start and break of season.
-    ### this stops the model getting double costs in medium/late breaks where phases are carried over past the
-    ### start of the season to provide dry pas and stubble area (because it is also accounted for by v_phase_increment).
-    ### note - this is done after calculating interest because want to calc interest using the inputted timing date
-    if is_phase_cost:
-        i_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
-        date_break = fun.f_expand(i_break_z, z_pos) #adjust to get z axis in the correct position.
-        season_start = per.f_season_periods()[0, 0]  # slice season node to get season start
-        between_seasonstart_brkseason = np.logical_and(date_incurred_c0%364>=season_start, date_incurred_c0%364<date_break)
-        date_incurred_c0 = fun.f_update(date_incurred_c0%364, date_break, between_seasonstart_brkseason)
-    p7_alloc_p7c0 = zfun.f1_z_period_alloc(date_incurred_c0[na,...], z_pos=z_pos)
+    p7_alloc_p7c0 = zfun.f1_z_period_alloc(date_incurred_c0[na,...], z_pos=z_pos, is_phase_param=is_phase_cost)
 
     ##add interest adjustment
     final_cashflow_p7c0 = cashflow_interest_c0 * p7_alloc_p7c0

@@ -82,7 +82,7 @@ def f_pasture(params, r_vals, nv):
     r_idx = np.arange(n_phases_rotn)
 
 
-    arable_l = pinp.crop['arable'].squeeze().values[lmu_mask_l]
+    arable_l = pinp.general['arable'][lmu_mask_l]
     length_p6z  = per.f_feed_periods(option=1)
     feed_period_dates_p6z = per.f_feed_periods()
     date_start_p6z = feed_period_dates_p6z[:-1]

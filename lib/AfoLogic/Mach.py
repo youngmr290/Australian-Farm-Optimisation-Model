@@ -243,11 +243,12 @@ def f_poc_grazing_days():
 
 def f_seed_time_lmus():
     '''
-    Time taken to direct drill 1ha of the base crop on each lmu.
+    Rate of direct drill for each crop on each lmu (hr/ha).
 
-    Seeding rate is calculated from speed travelled, seeder width and seeding efficiency (efficiency is
-    to account for overlap, turning around and filling up time). The caluculation also includes a factor
-    that accounts for the time when seed is not being put in the ground due to moving paddocks or filling up.
+    The base seeding rate per machine hour (ha/machine hr) is an input which accounts for machine size, speed,
+    overlap and turning around. Seeding rate is converted from a rate per machine hour
+    to a rate per seeding activity hour by adjusting by an efficiency factor that accounts for the proportion of seeding
+    when seed is not going into the ground (e.g. moving paddocks or filling up)
 
     Seeding rate can vary for each LMU
     due to varying speeds associated with more or less force being required to pull the seeding equipment
@@ -256,38 +257,40 @@ def f_seed_time_lmus():
     '''
     ##mask lmu input
     lmu_mask = pinp.general['i_lmu_area'] > 0
-    seeder_speed_lmu_adj = pinp.mach['seeder_speed_lmu_adj'][lmu_mask]
-    ##first turn seeding speed on each lmu to df so it can be manipulated (it was entered as a dict in machinputs)
-    speed_lmu_df = seeder_speed_lmu_adj * uinp.mach[pinp.mach['option']]['seeder_speed_base']
-    ##convert speed to rate of direct drill for wheat on each lmu type (hr/ha)
-    rate_direct_drill = 1 / (speed_lmu_df * uinp.mach[pinp.mach['option']]['seeding_eff'] * uinp.mach[pinp.mach['option']]['seeder_width'] / 10)
-    ##includes a factor that accounts for the time when seed is not being put in the ground due to moving paddocks or filling up.
-    rate_direct_drill = rate_direct_drill / (1 - pinp.mach['seeding_prep'])
-    return rate_direct_drill
+    base_seeding_rate = uinp.mach[pinp.mach['option']]['seeding_rate_base']
+    seeding_rate_lmu_adj = pinp.mach['seeding_rate_lmu_adj'][lmu_mask].squeeze()
+
+    ##adjust for lmu
+    rate_l = base_seeding_rate * seeding_rate_lmu_adj
+
+    ##adjust for crop
+    seeding_rate_crop_adj_k_l = pd.concat([uinp.mach[pinp.mach['option']]['seeding_rate_crop_adj']]*len(rate_l),axis=1) #expands df for each lmu
+    seeding_rate_crop_adj_k_l.columns = rate_l.index #rename columns to lmu so i can mul
+    rate_direct_drill_k_l=seeding_rate_crop_adj_k_l.mul(rate_l)
+
+    ##convert from ha/hr to hr/ha
+    rate_direct_drill_k_l = 1 / rate_direct_drill_k_l
+
+    ##adjust for the time when seed is not being put in the ground due to moving paddocks or filling up.
+    rate_direct_drill_k_l = rate_direct_drill_k_l / (1 - pinp.mach['seeding_eff'])
+
+    return rate_direct_drill_k_l
 
 def f_overall_seed_rate(r_vals):
     '''
     Hectares of each crop that can be sown per day on each LMU.
 
     Seeding rate per day is a product of the hours seeding can occur per day and the seeding rate
-    per hectare. Seeding rate per hectare for each crop on each LMU is calculated by adjusting the
-    LMU seeding rate (see f_seed_time_lmus) by a crop adjustment factor. Note, f_seed_time_lmus
-    includes a factor that accounts for the time when seed is not being put in the ground due to
-    moving paddocks or filling up.
-
+    per hectare (see f_seed_time_lmus).
 
     '''
     ##convert seed time (hr/ha) to rate of direct drill per day (ha/day)
-    seed_rate_lmus = 1 / f_seed_time_lmus().squeeze() * pinp.mach['daily_seed_hours']
-
-    ##adjusts the seeding rate (ha/day) for each different crop depending on its seeding speed vs wheat
-    seedrate_df = pd.concat([uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj']]*len(seed_rate_lmus),axis=1) #expands df for each lmu
-    seedrate_df.columns = seed_rate_lmus.index #rename columns to lmu so i can mul
-    seedrate_df=seedrate_df.mul(seed_rate_lmus)
+    rate_direct_drill_k_l = f_seed_time_lmus()
+    daily_rate_direct_drill_k_l = 1 / rate_direct_drill_k_l * pinp.mach['daily_seed_hours']
 
     ##store r_vals
-    fun.f1_make_r_val(r_vals,seedrate_df,'seeding_rate')
-    return seedrate_df.stack()
+    fun.f1_make_r_val(r_vals,daily_rate_direct_drill_k_l,'seeding_rate')
+    return daily_rate_direct_drill_k_l.stack()
 
     
   
@@ -546,28 +549,6 @@ def f_sowing_timeliness_penalty(r_vals):
 #harvesting                                     #
 #################################################
 
-def harv_time_ha():
-    '''
-    Harvest rate for each crop (hr/ha).
-
-    Harvest rate is calculated as a product of harvesting speed (for the base crop), header width and
-    field efficiency (overlap, turning and reduced speed when unloading). Harvest rate is assumed
-    to be the same on all LMUs however, it does vary for different crops because harvest biomass
-    impacts harvest speed.
-
-    The calculation includes a factor that accounts for the time when grain is not being
-    harvested due to moving paddocks or waiting for the chaser bin.
-
-    Note: Has to be kept as a separate function because it is used in multiple places.
-
-    '''
-    harv_speed = uinp.mach[pinp.mach['option']]['harvest_speed']
-    ##work rate hr/ha, determined from speed, size and eff
-    return 10/ (harv_speed * uinp.mach[pinp.mach['option']]['harv_eff'] * uinp.mach[pinp.mach['option']]['harvester_width']
-                * (1 - pinp.mach['harv_prep']))
-
-
-
 def f_harv_rate_period():
     '''
     Harv rate (t/hr) in each harvest period for each crop.
@@ -607,12 +588,11 @@ def f_harv_rate_period():
     keys_p5 = mach_periods.index[:-1]
     keys_k = start_harvest_crops.index
     keys_p7 = per.f_season_periods(keys=True)
-
     index_p7pkz = pd.MultiIndex.from_product([keys_p7, keys_p5, keys_k, keys_z])
     harv_occur = pd.Series(harv_occur_p7pkz.ravel(), index=index_p7pkz)
 
-    ##Grain harvested per hr (t/hr) for each crop.
-    harv_rate = (uinp.mach_general['harvest_yield'] * (1 / harv_time_ha())).squeeze()
+    ##Grain harvested per harvest activity hr (t/hr) for each crop. The efficiency adjustment factor converts from harvest rate per rotor hour to harvest rate per activity hour.
+    harv_rate = uinp.mach[pinp.mach['option']]['harvest_rate'].squeeze() * (1 - pinp.mach['harv_eff'])
 
     ##combine harv rate and harv_occur
     harv_rate_period = harv_occur.mul(harv_rate, level=2)
@@ -722,7 +702,11 @@ def f_harvest_cost(r_vals):
 
 def f_contract_harv_rate():
     '''
-    Grain harvested per hr by contractor (t/hr).
+    Grain harvested per hr by contractor (t/rotor hr).
+
+    Contract harvest hours activity is rotor hours (i.e. it doesn’t include a factor for filling up/moving)
+    because the cost is input in $/rotor hr.
+
     '''
     ##season inputs through function
     harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0) #when the first crop begins to be harvested (e.g. when harv periods start)
@@ -751,13 +735,8 @@ def f_contract_harv_rate():
     index_p7pkz = pd.MultiIndex.from_product([keys_p7, keys_p5, keys_k, keys_z])
     harv_occur = pd.Series(harv_occur_p7pkz.ravel(), index=index_p7pkz)
 
-    ##Grain harvested per hr (t/hr) for each crop.
-    yield_approx = uinp.mach_general['harvest_yield'] #these are the yields the contract harvester is calibrated to - they are used to convert time/ha to t/hr
-    harv_speed = uinp.mach_general['contract_harvest_speed']
-    ###work rate hr/ha, determined from speed, size and eff
-    contract_harv_time_ha = 10 / (harv_speed * uinp.mach_general['contract_harvester_width'] * uinp.mach_general['contract_harv_eff'])
-    ###overall t/hr
-    harv_rate = (yield_approx * (1 / contract_harv_time_ha)).squeeze()
+    ##Grain harvested per rotor hr (t/hr) for each crop.
+    harv_rate = uinp.mach_general['contract_harvest_rate'].squeeze()
 
     ##combine harv rate and harv_occur
     harv_rate = harv_occur.mul(harv_rate, level=2)
@@ -768,7 +747,7 @@ def f_contract_harv_rate():
 
 def f_contract_harvest_cost(r_vals):
     '''
-    Cost of contract harvest in each cashflow period ($/hr).
+    Cost of contract harvest in each cashflow period ($/rotor hr).
     '''
     ##allocation
     harv_cost_allocation_p7zp5, harv_wc_allocation_c0p7zp5 = f1_harv_cost_alloc()
@@ -895,25 +874,31 @@ def time_ha():
 
 #time taken to driving to and from paddock and filling up
 # hr/cubic m = ((ave distance to paddock *2)/speed + fill up time)/ spreader capacity  # *2 because to and from paddock
-def time_cubic():
-    '''Time taken to fill up spreader and drive to and from paddock.
+def time_tonne():
+    '''Time taken to fill up spreader and drive to and from paddock (hr/t).
 
-    This represents the time driving to and from the paddock and filling up. This is dependent on the
+    This represents the time driving to and from the paddock and filling up. This is dependent on
     the density of the fertiliser (e.g. more time would be required filling and traveling to
     spread 1 tonne of a lower density fertiliser).
 
     '''
-    return (((pinp.mach['ave_pad_distance'] *2)
-              /uinp.mach[pinp.mach['option']]['spreader_speed'] + uinp.mach[pinp.mach['option']]['time_fill_spreader'])
-              /uinp.mach[pinp.mach['option']]['spreader_cap'])
-     
+    ##calc time taken to fill up spreader and drive to and from paddock
+    time_cubic = (((pinp.mach['ave_pad_distance'] *2) /uinp.mach[pinp.mach['option']]['spreader_speed']
+                   + uinp.mach[pinp.mach['option']]['time_fill_spreader'])
+                  /uinp.mach[pinp.mach['option']]['spreader_cap'])
+
+    ##convert from meters cubed to tonne - divide by conversion (density) because lighter ferts require more filling up time per tonne
+    conversion = pd.DataFrame([pinp.crop['fert_info']['fert_density']]).squeeze()
+    time_n = time_cubic / conversion
+
+    ##mulitiplied by a factor (spreader_proportion) 0 or 1 if the fert is applied at seeding (or a fraction if applied at both seeding and another time)
+    spreader_proportion = pd.DataFrame([pinp.crop['fert_info']['spreader_proportion']]).squeeze()
+    time_n = time_n.mul(spreader_proportion)
+    return time_n
 
 ###################
 #application cost # *remember that lime application only happens every 4 yrs - accounted for in the passes inputs
 ################### *used in crop pyomo
-#this is split into two sections - new feature of AFO
-# 1- cost to drive around 1ha
-# 2- cost per cubic metre ie to represent filling up and driving to and from paddock
 
 def spreader_cost_hr():
     '''
@@ -932,36 +917,6 @@ def spreader_cost_hr():
     cost = tractor_fuel + tractor_rm + tractor_oilgrease + uinp.mach[pinp.mach['option']]['spreader_maint']
     return cost
 
-def fert_app_cost_ha():
-    '''
-
-    Fertiliser application cost part 1: Application cost per hectare.
-
-    The cost of applying fertilising is calculated in two parts. Part 1 is the cost per hectare
-    for each fertiliser which represents the time taken spreading fertiliser in the paddock (see time_ha)
-    and the cost of fertilising per hour (see spreader_cost_hr)
-
-    '''
-    return spreader_cost_hr() * time_ha().stack().droplevel(1)
-
-def fert_app_cost_t():
-    '''
-    Fertiliser application cost part 2: time required per tonne.
-
-    The cost of applying fertilising is calculated in two parts. Part 2 is the cost per tonne
-    for each fertiliser which represents the time taken driving to and from the paddock and filling
-    up (see time_cubic) and the cost of fertilising per hour (see spreader_cost_hr)
-
-    '''
-    spreader_proportion = pinp.crop['fert_info']['spreader_proportion']
-    conversion = pinp.crop['fert_info']['fert_density']
-    ##spreader cost per hr is multiplied by the full time required to drive to and from paddock and fill up even though during filling up the tractor is just sitting, but this accounts for the loader time/cost
-    cost_cubic = spreader_cost_hr() * time_cubic()
-    ##mulitiplied by a factor (spreader_proportion) 0 or 1 if the fert is applied at seeding (or a fraction if applied at both seeding and another time)
-    cost_t = cost_cubic / conversion * spreader_proportion #convert from meters cubed to tonne - divide by conversion (density) because lighter ferts require more filling up time per tonne
-    return cost_t
-#e=fert_app_t()
-    
 #######################################################################################################################################################
 #######################################################################################################################################################
 #chem
@@ -972,19 +927,21 @@ def fert_app_cost_t():
 #chem application time   # used in labour crop, defined here because it uses inputs from the different mach options which are consolidated at the top of this sheet
 ###########################
 
-##time taken to spray 1ha (use efficiency input to allow for driving to and from paddock and filling up)
-## hr/ha= 10/(width*speed*efficiency)
 def spray_time_ha():
     '''
-    Time taken to spray 1ha.
+    Time taken to spray 1ha (including filling up etc).
 
     This is dependent on the sprayer width, speed and field efficiency (accounts for overlap,
     filling up time and turing).
 
     '''
-
-    width_df = uinp.mach[pinp.mach['option']]['sprayer_width']
-    return 10/(width_df*uinp.mach[pinp.mach['option']]['sprayer_speed']*uinp.mach[pinp.mach['option']]['sprayer_eff'])
+    ##rate per machine hour (ha/hr)
+    spraying_rate = uinp.mach[pinp.mach['option']]['spraying_rate']
+    ##convert to hr/ha
+    spraying_rate = 1 / spraying_rate
+    ##adjust for time spent filling up
+    spraying_rate = spraying_rate * (1+pinp.mach['spray_eff'])
+    return spraying_rate
 
    
 
@@ -992,9 +949,9 @@ def spray_time_ha():
 #application cost # 
 ################### *used in crop pyomo
 
-def chem_app_cost_ha():
+def spraying_cost_hr():
     '''
-    Chemical application cost per hectare.
+    Chemical application cost per hour of spraying activity (includes filling up).
 
     The cost of spraying per hectare is calculated based on the time to spray a hectare (see spray_time_ha)
     and the cost to spray per hour. Spraying cost per hour includes tractor costs and sprayer costs.
@@ -1009,8 +966,10 @@ def chem_app_cost_ha():
     tractor_fuel = uinp.mach[pinp.mach['option']]['sprayer_fuel_consumption']*fuel_price()
     tractor_rm = uinp.mach[pinp.mach['option']]['sprayer_fuel_consumption']*fuel_price() * uinp.mach[pinp.mach['option']]['repair_maint_factor_tractor']
     tractor_oilgrease = uinp.mach[pinp.mach['option']]['sprayer_fuel_consumption']*fuel_price() * uinp.mach[pinp.mach['option']]['oil_grease_factor_tractor']
-    ##cost/hr= tractor costs + sprayer(r&m) 
+    ##cost/machine hr= tractor costs + sprayer(r&m)
     cost = tractor_fuel + tractor_rm + tractor_oilgrease + uinp.mach[pinp.mach['option']]['sprayer_maint']
+    ##convert to cost per spraying activity hr
+    cost = cost / (1+pinp.mach['spray_eff'])
     return cost
 
 
@@ -1036,12 +995,17 @@ def f_seeding_gear_clearing_value():
     value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'seeding allocation'])
     return value
 
+def f_spray_gear_clearing_value():
+    value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'spraying allocation'])
+    return value
+
+def f_spread_gear_clearing_value():
+    value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'spreading allocation'])
+    return value
+
 ##total machine value - used to calc asset value, fixed dep and insurance
 def f_total_clearing_value():
-    harv_value = harvest_gear_clearing_value()
-    seed_value = f_seeding_gear_clearing_value()
-    other_value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'remaining allocation'])
-    total_clearing_value = harv_value + seed_value + other_value
+    total_clearing_value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'])
     ##all is incurred in the last p7 period (although it could occur in any period it doesn't make a difference)
     keys_p7 = per.f_season_periods(keys=True)
     total_clearing_value = pd.Series(total_clearing_value,index=keys_p7[-1:])
@@ -1080,17 +1044,19 @@ def f_seeding_dep():
     of crop. This is converted to a dollar cost per hour based on the seeding rate and the machinery value.
 
     '''
-    ##inputs
-    seed_rate = f_seed_time_lmus().squeeze()
-    ##first determine the approx time to seed all the crop - which is equal to dep area x average seeding rate (hr/ha)
-    average_seed_rate = seed_rate.mean()
-    seeding_time = uinp.mach[pinp.mach['option']]['dep_area'] * average_seed_rate
-    ##second, determine dep per hour - equal to crop gear value x dep % / seeding time
-    dep_rate = uinp.mach[pinp.mach['option']]['variable_dep'] - uinp.finance['fixed_dep']
+    ##variable depn rate is input as a percent depn in all harvest gear per machine hour (%/machine hr).
+    dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_seeding']
+    ###convert from rotor hours to harvest activity hours
+    dep_rate_per_hr = dep_rate_per_hr / (1 + pinp.mach['seeding_eff'])
+
+    ##determine dep per hour - equal to crop gear value x depn %
     seeding_gear_clearing_value = f_seeding_gear_clearing_value()
-    dep_hourly = seeding_gear_clearing_value * dep_rate / seeding_time
-    ##third, convert to dep per ha for each soil type - equals cost per hr x seeding rate per hr
-    dep_ha = dep_hourly * seed_rate
+    dep_hourly = seeding_gear_clearing_value * dep_rate_per_hr
+
+    ##convert to dep per ha for each soil type - equals cost per hr x seeding rate per hr
+    rate_direct_drill_k_l = f_seed_time_lmus()
+    dep_ha_kl = dep_hourly * rate_direct_drill_k_l.stack()
+
     ##allocate season period based on mach/labour period - so that depreciation can be linked to seeding activity and transferred as seasons uncluster
     mach_periods = per.f_p_dates_df()
     date_start_p5z = mach_periods.values[:-1]
@@ -1099,11 +1065,16 @@ def f_seeding_dep():
     keys_p5 = mach_periods.index[:-1]
     keys_z = zfun.f_keys_z()
     keys_p7 = per.f_season_periods(keys=True)
+    keys_k = sinp.landuse['All']
+    keys_l = rate_direct_drill_k_l.columns
     index_p7p5z = pd.MultiIndex.from_product([keys_p7,keys_p5,keys_z])
     alloc_p7p5z = pd.Series(alloc_p7p5z.ravel(), index=index_p7p5z)
-    index_p7p5zl = pd.MultiIndex.from_product([keys_p7,keys_p5,keys_z,dep_ha.index])
-    alloc_p7p5zl = alloc_p7p5z.reindex(index_p7p5zl)
-    return alloc_p7p5zl.mul(dep_ha, level=-1)
+    index_p7p5zkl = pd.MultiIndex.from_product([keys_p7,keys_p5,keys_z,keys_k,keys_l])
+    alloc_p7p5zkl = alloc_p7p5z.reindex(index_p7p5zkl)
+
+    ##allocate dep to p7
+    rate_direct_drill_p7p5zkl = alloc_p7p5zkl.unstack([-2, -1]).mul(dep_ha_kl, axis=1).stack([0,1])
+    return rate_direct_drill_p7p5zkl
 
 
 ####################################
@@ -1118,22 +1089,21 @@ def f_harvest_dep():
     The harvest activity is represented in hours so the variable depreciation is simply the rate of depreciation
     per hour of harvest.
 
-    The rate of depreciation per hour is calculated based 'typical' scenario, which simplifies the
-    calibration process. The user enters the percentage of depreciation incurred for harvesting `x` hectares
-    of crop. This is converted to a dollar cost per hour based on the harvest rate and the machinery value.
-
     '''
-    ##first determine the approx time to harvest all the crop - which is equal to dep area x average harvest rate (hr/ha)
-    average_harv_rate = harv_time_ha().squeeze().mean()
-    average_harv_time = uinp.mach[pinp.mach['option']]['dep_area'] * average_harv_rate 
-    ##second, determine dep per hour - equal to harv gear value x dep % / seeding time
-    dep_rate = uinp.mach[pinp.mach['option']]['variable_dep'] - uinp.finance['fixed_dep']
-    dep_hourly = harvest_gear_clearing_value() * dep_rate / average_harv_time
+    ##variable depn rate is input as a percent depn in all harvest gear per rotor hour (%/rotor hr).
+    dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_harv']
+    ###convert from rotor hours to harvest activity hours
+    dep_rate_per_hr = dep_rate_per_hr / (1 + pinp.mach['harv_eff'])
+
+    ##determine dep per hour - equal to harv gear value x dep %
+    dep_hourly = harvest_gear_clearing_value() * dep_rate_per_hr
+
     ##allocate season period based on mach/labour period - so that depreciation can be linked to seeding activity and transferred as seasons uncluster
     mach_periods = per.f_p_dates_df()
     date_start_p5z = mach_periods.values[:-1]
     alloc_p7p5z = zfun.f1_z_period_alloc(date_start_p5z[na,...], z_pos=-1)
-    ###make df
+
+    ##make df
     keys_p5 = mach_periods.index[:-1]
     keys_z = zfun.f_keys_z()
     keys_p7 = per.f_season_periods(keys=True)

@@ -299,7 +299,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
 
     ##colate other info
     biomass_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
-    arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
+    arable = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0) #read in arable area df
     harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield is inputted as the harvestable grain
     harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
     propn_baled_k = pd.Series(pinp.stubble['i_propn_baled_k'], index=sinp.landuse['C']) #Proportion of biomass at baling that is baled (at point of baling - not including respiration losses).
@@ -396,18 +396,6 @@ def f_grain_pool_proportions():
 #######
 #fert #    
 #######    
-'''
-1) determines fert cost allocation 
-2) fert requirement for each rot phase
-3) cost of fert for each rotation 
-4) application cost per kg and application cost per ha 
-    -per tonne; represents the difference in application time based on fert density - represents the filling up and traveling to the paddock time, ie it would require more filling and traveling time to spread 1t of a lighter (less dense) fert.
-    -per ha; represents the time to spread 1ha - this depends how far each fert is chucked out of the spreader
-5) sum together to get overall fert cost
-'''
-
-
-
 
 def f1_fert_cost_allocation():
     '''
@@ -428,97 +416,6 @@ def f1_fert_cost_allocation():
     fert_wc_allocation_c0p7zn = pd.Series(fert_wc_allocation_c0p7zn.ravel(), index=new_index_c0p7zn)
     return fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn
 # t_allocation=f1_fert_cost_allocation()
-
-
-def f_fert_req():
-    '''
-    Fert required by 1ha of each rotation phase (kg/ha) after accounting for arable area.
-
-    Different land uses have varying nutrient requirements,
-    varying methods of obtaining nutrients from the soil and leave the soil in varying states (e.g.
-    pulse crop fix nitrogen which typically reduces their requirement for external
-    nitrogen and leaves the soil with a higher nitrogen content for the following year/s).
-    To accommodate these factors the fertiliser requirement section is broken into three sections. Firstly,
-    fixed fertiliser, which is the fertiliser that is applied to all rotation phases (e.g. lime
-    which is typically applied routinely, irrelevant of the land use history). Secondly, land use specific fertiliser,
-    which is applied based on the current land use independent of the phase history. Lastly, rotation phase specific
-    fertiliser, which is applied based on both the current land use and the
-    history.
-
-    Fertiliser is applied to non-arable area in pasture phases, it is not applied to
-    non-arable pasture in a crop phase because the non-arable pasture in a crop phase is not able to
-    be grazed until the end of the year, by which time it is rank and therefore a waste of
-    money to fertilise. Fertiliser rate for non-arable areas can be adjusted separately to the arable area.
-
-    The fertiliser requirement is input by the user for the base LMU.
-    The fertiliser requirement is then adjusted by an LMU factor and an arable area factor.
-
-    Note: this function is also used in the LabourCropPyomo
-    '''
-    ##read phases
-    phases_df = pinp.phases_r
-    mask_r = pinp.rot_mask_r
-
-    ##read in fert by soil
-    fert_by_soil = f1_mask_lmu(pinp.crop['fert_by_lmu'], axis=1)
-
-    ##read in rotation phase specific fert - fert that can vary by phase
-    if pinp.crop['user_crop_rot']:
-        ### User defined
-        base_fert = pinp.crop['fert']
-        ###mask r - need to do this now so that phases_df line up because phases_df has already been masked
-        base_fert = base_fert.loc[mask_r,:]
-        ###add landuse to index
-        base_fert_rk_zn = base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
-    else:
-        ###Sim version
-        base_fert_rk_zn = f1_sim_inputs(sheet='Fert Applied', index=[0,1], header=[0,1])
-        ###mask r
-        base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
-    ###Mask z axis
-    base_fert_rk_zn = zfun.f_seasonal_inp(base_fert_rk_zn, axis=1, level=0)
-    ###rename index
-    base_fert_rk_zn.index.rename(['rot','landuse'],inplace=True)
-
-    ##fixed fert (fert that is applied to every phase) - currently this does not have season axis so need to reindex to add season axis
-    base_fert_rkz_n = base_fert_rk_zn.stack(level=0)
-    fixed_fert_rkz_n = pd.DataFrame(pinp.crop['i_fixed_fert'][1], index=base_fert_rkz_n.index, columns=pinp.crop['i_fixed_fert'][0:1], dtype=float)
-    base_fert_rkz_n = pd.concat([base_fert_rkz_n, fixed_fert_rkz_n], axis=1).groupby(axis=1, level=0).sum()
-
-    ##landuse specific fert (currently this is just pasture fert ie pas fert is irrelevant of rotation history) - currently this does not have season axis so need to reindex to add season axis
-    landuse_fert_k_n = pinp.crop['i_pas_fert']
-    landuse_fert_rkz_n = landuse_fert_k_n.reindex(base_fert_rkz_n.index, axis=0, level=1)
-    base_fert_rkz_n = pd.concat([base_fert_rkz_n, landuse_fert_rkz_n], axis=1).groupby(axis=1, level=0).sum()
-
-    ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
-    nap_fert_scalar_k = pinp.crop['i_nap_fert_scalar_k'].squeeze()
-    nap_fert_rkz_n = base_fert_rkz_n.mul(nap_fert_scalar_k, axis=0, level=1)
-
-    ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
-    keys_n = uinp.general['i_fert_idx']
-    keys_k = sinp.landuse['C']
-    keys_k2 = sinp.landuse['All_pas']
-    crop_fert_k_n = pd.DataFrame(sen.sam['crop_fert_kn'], index=keys_k, columns=keys_n)
-    pas_fert_k_n = pd.DataFrame(sen.sam['pas_fert_kn'], index=keys_k2, columns=keys_n)
-    fert_sam_k_n = pd.concat([crop_fert_k_n, pas_fert_k_n])
-    fert_sam_krz_n = fert_sam_k_n.reindex(base_fert_rkz_n.index, axis=0, level=1)
-    base_fert_rkz_n = base_fert_rkz_n.mul(fert_sam_krz_n)
-    nap_fert_rkz_n = nap_fert_rkz_n.mul(fert_sam_krz_n)
-
-    ##drop landuse from index
-    base_fert_rz_n = base_fert_rkz_n.droplevel(1,axis=0)
-    nap_fert_rz_n = nap_fert_rkz_n.droplevel(1,axis=0)
-
-    ## adjust the fert req for each rotation by lmu
-    fert_by_soil_nl = fert_by_soil.stack() #read in fert by soil
-    fert_rz_nl = base_fert_rz_n.mul(fert_by_soil_nl,axis=1,level=0)
-    nap_fert_rz_nl = nap_fert_rz_n.mul(fert_by_soil_nl,axis=1,level=0)
-
-    ##account for arable area
-    arable_l = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
-    fert_rz_nl = fert_rz_nl.mul(arable_l, axis=1, level=1) #add arable to df
-    nap_fert_rz_nl = nap_fert_rz_nl.mul(1-arable_l, axis=1, level=1) #add arable to df
-    return fert_rz_nl.fillna(0).stack(1) + nap_fert_rz_nl.fillna(0).stack(1)
 
 
 def f_fert_passes():
@@ -594,7 +491,7 @@ def f_fert_passes():
     # fert_passes_r_zn = fert_passes_rk_zn.droplevel(1, axis=0)
 
     ##adjust fert passes by arable area
-    arable_l = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
+    arable_l = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
     # fert_passes_rz_n = fert_passes_r_zn.stack(0)
     col_nl = pd.MultiIndex.from_product([fert_passes_rz_n.columns, arable_l.index])
     fert_passes_rz_nl = fert_passes_rz_n.reindex(col_nl, axis=1,level=0)
@@ -604,9 +501,59 @@ def f_fert_passes():
     return fert_passes_rz_nl.fillna(0).stack(1) + nap_fert_passes_rz_nl.fillna(0).stack(1)
 
 
+def f1_fertilising_time():
+    '''
+    Determines the time (hr/ha) spent fertilising for each rotation.
+
+    Based on:
+
+    1. per tonne; represents the difference in application time based on fert density - represents the filling up and
+       traveling to the paddock time, ie it would require more filling and traveling time to spread 1t of a lighter (less dense) fert.
+    2. per ha; represents the time to spread 1ha - this depends on how far each fert is chucked out of the spreader
+
+    This is used to calculate machinery application cost, labour requirement and
+    variable machinery depreciation associated with fertilising.
+    '''
+    ##fert passes - arable (arable area accounted for in passes function)
+    total_passes_rzln = f_fert_passes().stack()
+
+    ##time linked to tonnage
+    ###fert used on each rotation phase - calculated based on inputted estimate of kgs of fert applied per pass
+    fert_req_n = pinp.crop['fert_info']['expected_rate']/1000 #convert to tonnes
+    fert_total_rzln = total_passes_rzln.mul(fert_req_n, level=-1)
+    ###time per tonne
+    time_n = mac.time_tonne()
+    ###total time
+    time_t_rzln = fert_total_rzln.mul(time_n, level=-1)
+
+    ##time linked to spreading a hectare in paddock
+    ###time taken to cover 1ha while spreading
+    time_ha_n = mac.time_ha().squeeze()
+    ###total time
+    time_ha_rzln = total_passes_rzln.mul(time_ha_n, level=-1)
+
+    return time_t_rzln + time_ha_rzln
+
+
 def f_fert_cost(r_vals):
     '''
-    Cost of fertilising the arable areas. Includes the fertiliser cost and the application cost.
+    Cost of fertilising. Includes the fertiliser cost and the application cost.
+
+    Different land uses have varying nutrient requirements,
+    varying methods of obtaining nutrients from the soil and leave the soil in varying states (e.g.
+    pulse crop fix nitrogen which typically reduces their requirement for external
+    nitrogen and leaves the soil with a higher nitrogen content for the following year/s).
+    To accommodate these factors the fertiliser requirement section is broken into three sections. Firstly,
+    fixed fertiliser, which is the fertiliser that is applied to all rotation phases (e.g. lime
+    which is typically applied routinely, irrelevant of the land use history). Secondly, land use specific fertiliser,
+    which is applied based on the current land use independent of the phase history. Lastly, rotation phase specific
+    fertiliser, which is applied based on both the current land use and the
+    history.
+
+    Fertiliser is applied to non-arable area in pasture phases, it is not applied to
+    non-arable pasture in a crop phase because the non-arable pasture in a crop phase is not able to
+    be grazed until the end of the year, by which time it is rank and therefore a waste of
+    money to fertilise. Fertiliser rate for non-arable areas can be adjusted separately to the arable area.
 
     The cost of fertilising is made up from the cost of the fertilisers, the cost getting
     the fertiliser delivered to the farm and the machinery cost of application (detailed in the machinery section).
@@ -614,25 +561,75 @@ def f_fert_cost(r_vals):
     purchased shortly before application because farmers wait to see how the year unfolds before locking
     in a fertiliser plan.
 
-    Fertiliser application cost is broken into two components (detailed in the machinery section).
-
-        #. Application cost per tonne ($/rotation)
-        #. Application cost per ha ($/rotation)
-
     :return: Dataframe of fertiliser costs. Summed with other cashflow items at the end of the module
 
     '''
-    ##call functions and read inputs used within this function
-    fertreq = f_fert_req()
-    cost=uinp.price['fert_cost'].squeeze()
-    transport=uinp.price['fert_cartage_cost']  #transport cost
+    ##read in necessary stuff
+    phases_df = pinp.phases_r
+    mask_r = pinp.rot_mask_r
+    fert_by_soil = f1_mask_lmu(pinp.crop['fert_by_lmu'], axis=1)
     fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn = f1_fert_cost_allocation()
     fert_cost_allocation_z_p7n = fert_cost_allocation_p7zn.unstack(1).T
     fert_wc_allocation_z_c0p7n = fert_wc_allocation_c0p7zn.unstack(2).T
 
-    ##calc cost of actual fertiliser
-    total_cost = cost + transport #total cost = fert cost and transport.
-    phase_fert_cost_rzl_n = fertreq.mul(total_cost/1000,axis=1) #div by 1000 to convert to $/kg,
+    ##read in rotation phase specific fert - fert that can vary by phase
+    if pinp.crop['user_crop_rot']:
+        ### User defined
+        base_fert = pinp.crop['fert']
+        ###mask r - need to do this now so that phases_df line up because phases_df has already been masked
+        base_fert = base_fert.loc[mask_r,:]
+        ###add landuse to index
+        base_fert_rk_zn = base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
+    else:
+        ###Sim version
+        base_fert_rk_zn = f1_sim_inputs(sheet='Fert Applied', index=[0,1], header=[0,1])
+        ###mask r
+        base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
+    ###Mask z axis
+    base_fert_rk_zn = zfun.f_seasonal_inp(base_fert_rk_zn, axis=1, level=0)
+    ###rename index
+    base_fert_rk_zn.index.rename(['rot','landuse'],inplace=True)
+
+    ##fixed fert (fert that is applied to every phase) - currently this does not have season axis so need to reindex to add season axis
+    base_fert_rkz_n = base_fert_rk_zn.stack(level=0)
+    fixed_fert_rkz_n = pd.DataFrame(pinp.crop['i_fixed_fert'][1], index=base_fert_rkz_n.index, columns=pinp.crop['i_fixed_fert'][0:1], dtype=float)
+    base_fert_rkz_n = pd.concat([base_fert_rkz_n, fixed_fert_rkz_n], axis=1).groupby(axis=1, level=0).sum()
+
+    ##landuse specific fert (currently this is just pasture fert ie pas fert is irrelevant of rotation history) - currently this does not have season axis so need to reindex to add season axis
+    landuse_fert_k_n = pinp.crop['i_pas_fert']
+    landuse_fert_rkz_n = landuse_fert_k_n.reindex(base_fert_rkz_n.index, axis=0, level=1)
+    base_fert_rkz_n = pd.concat([base_fert_rkz_n, landuse_fert_rkz_n], axis=1).groupby(axis=1, level=0).sum()
+
+    ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
+    nap_fert_scalar_k = pinp.crop['i_nap_fert_scalar_k'].squeeze()
+    nap_fert_rkz_n = base_fert_rkz_n.mul(nap_fert_scalar_k, axis=0, level=1)
+
+    ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
+    keys_n = uinp.general['i_fert_idx']
+    keys_k = sinp.landuse['C']
+    keys_k2 = sinp.landuse['All_pas']
+    crop_fert_k_n = pd.DataFrame(sen.sam['crop_fert_kn'], index=keys_k, columns=keys_n)
+    pas_fert_k_n = pd.DataFrame(sen.sam['pas_fert_kn'], index=keys_k2, columns=keys_n)
+    fert_sam_k_n = pd.concat([crop_fert_k_n, pas_fert_k_n])
+    fert_sam_krz_n = fert_sam_k_n.reindex(base_fert_rkz_n.index, axis=0, level=1)
+    base_fert_rkz_n = base_fert_rkz_n.mul(fert_sam_krz_n)
+    nap_fert_rkz_n = nap_fert_rkz_n.mul(fert_sam_krz_n)
+    ###drop landuse from index
+    base_fert_rz_n = base_fert_rkz_n.droplevel(1,axis=0)
+    nap_fert_rz_n = nap_fert_rkz_n.droplevel(1,axis=0)
+
+    ## adjust the fert cost for each rotation by lmu
+    fert_by_soil_nl = fert_by_soil.stack() #read in fert by soil
+    fert_rz_nl = base_fert_rz_n.mul(fert_by_soil_nl,axis=1,level=0)
+    nap_fert_rz_nl = nap_fert_rz_n.mul(fert_by_soil_nl,axis=1,level=0)
+
+    ##account for arable area
+    arable_l = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0) #read in arable area df
+    fert_rz_nl = fert_rz_nl.mul(arable_l, axis=1, level=1) #add arable to df
+    nap_fert_rz_nl = nap_fert_rz_nl.mul(1-arable_l, axis=1, level=1) #add arable to df
+    phase_fert_cost_rzl_n = fert_rz_nl.fillna(0).stack(1) + nap_fert_rz_nl.fillna(0).stack(1)
+
+    ##adjust for interest and p7 period
     phase_fert_cost_rzl_p7n = phase_fert_cost_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
     phase_fert_cost_rl_p7nz = phase_fert_cost_rzl_p7n.unstack(1)
     phase_fert_cost_rl_p7z = phase_fert_cost_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
@@ -640,34 +637,21 @@ def f_fert_cost(r_vals):
     phase_fert_wc_rl_c0p7nz = phase_fert_wc_rzl_c0p7n.unstack(1)
     phase_fert_wc_rl_c0p7z = phase_fert_wc_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
 
-    ##aplication cost per tonne
-    application_cost_tonne = mac.fert_app_cost_t()
-    fert_app_cost_tonne_rzl_n = fertreq.mul(application_cost_tonne/1000,axis=1) #div by 1000 to convert to $/kg
-    fert_app_cost_tonne_rzl_p7n = fert_app_cost_tonne_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
-    fert_app_cost_tonne_rl_p7nz = fert_app_cost_tonne_rzl_p7n.unstack(1)
-    fert_app_cost_tonne_rl_p7z = fert_app_cost_tonne_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
-    fert_app_wc_tonne_rzl_c0p7n = fert_app_cost_tonne_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
-    fert_app_wc_tonne_rl_c0p7nz = fert_app_wc_tonne_rzl_c0p7n.unstack(1)
-    fert_app_wc_tonne_rl_c0p7z = fert_app_wc_tonne_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
-
-    ##app cost per ha
-    ###call passes function (it has to be a separate function because it is used in crplabour.py as well
-    fert_passes = f_fert_passes()
-    ###add the cost for each pass
-    fert_cost_ha = mac.fert_app_cost_ha() #cost for 1 pass for each fert.
-    fert_app_cost_ha_rzl_n = fert_passes.mul(fert_cost_ha,axis=1)
-    fert_app_cost_ha_rzl_p7n = fert_app_cost_ha_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
-    fert_app_cost_ha_rl_p7nz = fert_app_cost_ha_rzl_p7n.unstack(1)
-    fert_app_cost_ha_rl_p7z = fert_app_cost_ha_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
-    fert_app_wc_ha_rzl_c0p7n = fert_app_cost_ha_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
-    fert_app_wc_ha_rl_c0p7nz = fert_app_wc_ha_rzl_c0p7n.unstack(1)
-    fert_app_wc_ha_rl_c0p7z = fert_app_wc_ha_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
+    ##aplication cost
+    fert_time_rzl_n = f1_fertilising_time().unstack()
+    fert_app_cost_rzl_n = fert_time_rzl_n * mac.spreader_cost_hr()
+    fert_app_cost_rzl_p7n = fert_app_cost_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
+    fert_app_cost_rl_p7nz = fert_app_cost_rzl_p7n.unstack(1)
+    fert_app_cost_rl_p7z = fert_app_cost_rl_p7nz.mul(fert_cost_allocation_z_p7n.unstack(), axis=1).groupby(axis=1, level=(0,2)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
+    fert_app_wc_rzl_c0p7n = fert_app_cost_rzl_n.reindex(fert_wc_allocation_z_c0p7n.columns, axis=1, level=2)
+    fert_app_wc_rl_c0p7nz = fert_app_wc_rzl_c0p7n.unstack(1)
+    fert_app_wc_rl_c0p7z = fert_app_wc_rl_c0p7nz.mul(fert_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the ferts (have to do that after allocation and interest because ferts are applied at different times)
 
     ##combine all costs - fert, app per ha and app per tonne
-    fert_cost_total = phase_fert_cost_rl_p7z + fert_app_cost_ha_rl_p7z + fert_app_cost_tonne_rl_p7z
+    fert_cost_total = phase_fert_cost_rl_p7z + fert_app_cost_rl_p7z
 
     ##combine all wc - fert, app per ha and app per tonne
-    fert_wc_total = phase_fert_wc_rl_c0p7z + fert_app_wc_ha_rl_c0p7z + fert_app_wc_tonne_rl_c0p7z
+    fert_wc_total = phase_fert_wc_rl_c0p7z + fert_app_wc_rl_c0p7z
 
     ##store r_vals
     ###make z8 mask - used to uncluster
@@ -677,8 +661,8 @@ def f_fert_cost(r_vals):
     fun.f1_make_r_val(r_vals, phase_fert_cost_rl_p7z, 'phase_fert_cost', mask_season_p7z, z_pos=-1)
     fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(phase_fert_cost_rl_p7z.stack([0,1]).sort_index()
                                                           ,p7_pos=-2,z_pos=-1), 'phase_fert_cost_increment', mask_season_p7z, z_pos=-1)
-    fun.f1_make_r_val(r_vals, fert_app_cost_ha_rl_p7z + fert_app_cost_tonne_rl_p7z, 'fert_app_cost', mask_season_p7z, z_pos=-1)
-    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(fert_app_cost_tonne_rl_p7z.stack([0,1]).sort_index()
+    fun.f1_make_r_val(r_vals, fert_app_cost_rl_p7z, 'fert_app_cost', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(fert_app_cost_rl_p7z.stack([0,1]).sort_index()
                                                           ,p7_pos=-2,z_pos=-1), 'fert_app_cost_increment', mask_season_p7z, z_pos=-1)
     return fert_cost_total, fert_wc_total
 
@@ -861,11 +845,29 @@ def f_chem_application():
     ###drop landuse from index
     chem_passes_rz_n = chem_passes_rkz_n.droplevel(1, axis=0)
     ##adjust chem passes by arable area
-    arable_l = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
+    arable_l = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
     col_nl = pd.MultiIndex.from_product([chem_passes_rz_n.columns, arable_l.index])
     chem_passes_rz_nl = chem_passes_rz_n.reindex(col_nl, axis=1,level=0)
     chem_passes_rz_nl=chem_passes_rz_nl.mul(arable_l,axis=1,level=1)
     return chem_passes_rz_nl.stack(1).sort_index()
+
+def f1_spraying_time():
+    '''
+    Determines the time (hr/ha) spent spraying for each rotation (including filling up).
+
+    This is used to calculate machinery application cost, labour requirement and
+    variable machinery depreciation associated with fertilising.
+    '''
+
+    ##passes - arable (arable area accounted for in passes function)
+    total_passes_rzln = f_chem_application().stack()
+    ##time taken to cover 1ha while spraying include a factor for filling up.
+    time_ha = mac.spray_time_ha()
+    ##total time accounting for number of applications.
+    time_ha_rzln = total_passes_rzln * time_ha
+
+    return time_ha_rzln
+
 
 def f_chem_cost(r_vals):
     '''
@@ -901,9 +903,6 @@ def f_chem_cost(r_vals):
     chem_cost_allocation_z_p7n = chem_cost_allocation_p7zn.unstack(1).T
     chem_wc_allocation_z_c0p7n = chem_wc_allocation_c0p7zn.unstack(2).T
 
-    ##number of applications for each rotation
-    chem_applications = f_chem_application()
-
     ##total chem cost
     if pinp.crop['user_crop_rot']:
         ### User defined
@@ -929,7 +928,7 @@ def f_chem_cost(r_vals):
     ### sum herbicide and fungicide cost
     chem_cost_r_z = chem_cost_r_zn.groupby(axis=1, level=0).sum()
     ###arable area.
-    arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
+    arable = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
     ###adjust by arable area and allocate to category (category allocation only affects cashflow timing hence interest)
     index_zln = pd.MultiIndex.from_product([chem_cost_r_z.columns, arable.index, n_alloc.index])
     chem_cost_r_zln = chem_cost_r_z.reindex(index_zln, axis=1,level=0)
@@ -946,7 +945,7 @@ def f_chem_cost(r_vals):
     phase_chem_wc_rl_c0p7z = phase_chem_wc_rl_c0p7nz.mul(chem_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the chem
 
     ##application cost - only a per ha component
-    chem_app_cost_rzl_n = chem_applications * mac.chem_app_cost_ha()
+    chem_app_cost_rzl_n = f1_spraying_time().unstack() * mac.spraying_cost_hr()
     ###adjust of interest and p7 period
     chem_app_cost_rzl_p7n = chem_app_cost_rzl_n.reindex(chem_cost_allocation_z_p7n.columns, axis=1, level=1)
     chem_app_cost_rl_p7nz = chem_app_cost_rzl_p7n.unstack(1)
@@ -1006,7 +1005,7 @@ def f_seedcost(r_vals):
     rate1 = pinp.crop['seed_info']['Rate1'] #rate (ml/100g) for dressing 1
     rate2 = pinp.crop['seed_info']['Rate2'] #rate (ml/100g) for dressing 2
     percent_dressed = pinp.crop['seed_info']['percent dressed'] #rate (ml/100g) for dressing 2
-    arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
+    arable = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
     ##adjust for arable area.
     seeding_rate = seeding_rate.mul(arable, axis=1)
     ##overall seed grading cost per tonne
@@ -1115,6 +1114,81 @@ def f_insurance(r_vals):
     return rot_insurance_cost_rl_p7z, rot_insurance_wc_rl_c0p7z
 
 
+###################################################
+# variable spraying and spreading depreciation     #
+###################################################
+
+def f_spraying_spreading_dep():
+    '''
+    Average variable dep for seeding $/ha.
+
+    Variable depreciation is use depreciation and is dependent on the number of hours the equipment is used.
+
+    '''
+    ##spraying
+    ###variable depn rate is input as a percent depn in all spray gear per machine hour (%/machine hr).
+    spray_dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_spraying']
+    ####convert from rotor hours to harvest activity hours
+    spray_dep_rate_per_hr = spray_dep_rate_per_hr / (1 + pinp.mach['spray_eff'])
+    ###determine dep per hour - equal to crop gear value x depn %
+    spray_gear_clearing_value = mac.f_spray_gear_clearing_value()
+    spray_dep_hourly = spray_gear_clearing_value * spray_dep_rate_per_hr
+    ###convert to dep per ha
+    spray_time_rzln = f1_spraying_time()
+    spray_dep_ha_rzln = spray_dep_hourly * spray_time_rzln
+    ###allocate to season period based on application date - so that depreciation can be linked to seeding activity and transferred as seasons uncluster
+    chem_info = pinp.crop['chem_info']
+    chem_date_n = chem_info['app_date'].values
+    chem_length_n = chem_info['app_len'].values
+    alloc_p7zn = zfun.f1_z_period_alloc(chem_date_n[na,na,:], chem_length_n, z_pos=-2, is_phase_param=True) 
+    ###make df
+    keys_n = uinp.general['i_chem_idx']
+    keys_z = zfun.f_keys_z()
+    keys_p7 = per.f_season_periods(keys=True)
+    index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, keys_n])
+    alloc_p7zn = pd.Series(alloc_p7zn.ravel(), index=index_p7zn)
+    alloc_p7n_z = alloc_p7zn.unstack(1)
+    spray_dep_ha_rzl_p7n = spray_dep_ha_rzln.unstack().reindex(alloc_p7zn.unstack(1).index, axis=1, level=1)
+    spray_dep_ha_rl_p7nz = spray_dep_ha_rzl_p7n.unstack(1).mul(alloc_p7n_z.stack(),axis=1)
+    spray_dep_ha_rl_p7z = spray_dep_ha_rl_p7nz.groupby(axis=1, level=(0,2)).sum() #sum n axis. not needed after alllocation to p7 has been made.
+    
+    
+    ##spreading
+    ###variable depn rate is input as a percent depn in all spreading gear per machine hour (%/machine hr).
+    spread_dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_spreading']
+    ####convert from rotor hours to harvest activity hours
+    ###determine dep per hour - equal to crop gear value x depn %
+    spread_gear_clearing_value = mac.f_spread_gear_clearing_value()
+    spread_dep_hourly = spread_gear_clearing_value * spread_dep_rate_per_hr
+    ###convert to dep per ha
+    spread_time_rzln = f1_fertilising_time()
+    spread_dep_ha_rzln = spread_dep_hourly * spread_time_rzln
+    ###allocate to season period based on application date - so that depreciation can be linked to seeding activity and transferred as seasons uncluster
+    fert_info = pinp.crop['fert_info']
+    fert_date_n = fert_info['app_date'].values
+    fert_length_n = fert_info['app_len'].values
+    alloc_p7zn = zfun.f1_z_period_alloc(fert_date_n[na,na,:], fert_length_n, z_pos=-2, is_phase_param=True) 
+    ###make df
+    keys_n = uinp.general['i_fert_idx']
+    keys_z = zfun.f_keys_z()
+    keys_p7 = per.f_season_periods(keys=True)
+    index_p7zn = pd.MultiIndex.from_product([keys_p7, keys_z, keys_n])
+    alloc_p7zn = pd.Series(alloc_p7zn.ravel(), index=index_p7zn)
+    alloc_p7n_z = alloc_p7zn.unstack(1)
+    spread_dep_ha_rzl_p7n = spread_dep_ha_rzln.unstack().reindex(alloc_p7zn.unstack(1).index, axis=1, level=1)
+    spread_dep_ha_rl_p7nz = spread_dep_ha_rzl_p7n.unstack(1).mul(alloc_p7n_z.stack(),axis=1)
+    spread_dep_ha_rl_p7z = spread_dep_ha_rl_p7nz.groupby(axis=1, level=(0,2)).sum() #sum n axis. not needed after alllocation to p7 has been made.
+
+    ##combine spray and spread
+    spreader_sprayer_dep_p7zlr = spread_dep_ha_rl_p7z.add(spray_dep_ha_rl_p7z).unstack([1,0])
+
+    ##create params for v_phase_change_increase
+    ## costs for v_phase_change_increase activities are incurred in the season period when the activity is selected
+    ## however the interest is calculated as if the cost was incurred at the normal time (this is because interest
+    ## is calculated for each separate cost in the functions above).
+    increment_spreader_sprayer_dep_p7zlr = rps.f_v_phase_increment_adj(spreader_sprayer_dep_p7zlr,p7_pos=-4,z_pos=-3)
+
+    return spreader_sprayer_dep_p7zlr, increment_spreader_sprayer_dep_p7zlr
 
 
 #########################
@@ -1170,7 +1244,7 @@ def f_phase_sow_req():
     ##read phases
     phases_df = pinp.phases_r
     ##adjust arable area
-    arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
+    arable = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
     ##sow = arable area * frequency
     keys_k = sinp.landuse['All']
     keys_l = arable.index
@@ -1283,6 +1357,7 @@ def f_sow_prov():
 ##collates all the params
 def f1_crop_params(params,r_vals):
     cost, increment_cost, wc, increment_wc = f1_rot_cost(r_vals)
+    spreader_sprayer_dep_p7zlr, increment_spreader_sprayer_dep_p7zlr = f_spraying_spreading_dep()
     biomass = f_rot_biomass()
     biomass2product_kls2 = f_biomass2product()
     propn = f_grain_pool_proportions()
@@ -1303,6 +1378,8 @@ def f1_crop_params(params,r_vals):
     params['increment_rot_wc'] = increment_wc.to_dict()
     params['rot_biomass'] = biomass[biomass!=0].to_dict() #only save non-zero params to save space.
     params['biomass2product_kls2'] = biomass2product_kls2.to_dict()
+    params['spreader_sprayer_dep_p7zlr'] = spreader_sprayer_dep_p7zlr.to_dict()
+    params['increment_spreader_sprayer_dep_p7zlr'] = increment_spreader_sprayer_dep_p7zlr.to_dict()
 
 
 

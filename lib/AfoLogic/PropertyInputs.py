@@ -226,7 +226,7 @@ def f_property_inp_sa(pinp_defaults):
     labour['max_casual_seedharv'] = fun.f_sa(labour['max_casual_seedharv'], sen.sav['seedharv_casual_ub'], 5)
     labour['min_casual_seedharv'] = fun.f_sa(labour['min_casual_seedharv'], sen.sav['seedharv_casual_lo'], 5)
     general['i_lmu_area'] = fun.f_sa(general['i_lmu_area'], sen.sav['lmu_area_l'], 5)
-    crop['i_lmu_area'] = fun.f_sa(crop['arable'], sen.sav['lmu_arable_propn_l'], 5)
+    general['arable'] = fun.f_sa(general['arable'], sen.sav['lmu_arable_propn_l'], 5)
     general['i_crop_landuse_inc_k1'] = fun.f_sa(general['i_crop_landuse_inc_k1'], sen.sav['crop_landuse_inc_k1'], 5)
     general['i_pas_landuse_inc_k2'] = fun.f_sa(general['i_pas_landuse_inc_k2'], sen.sav['pas_landuse_inc_k2'], 5)
     ###sam
@@ -282,11 +282,12 @@ def f_property_inp_sa(pinp_defaults):
     ###sav
     mach['option'] = fun.f_sa(mach['option'], sen.sav['mach_option'], 5)
     mach['daily_seed_hours'] = fun.f_sa(mach['daily_seed_hours'], sen.sav['daily_seed_hours'], 5)
-    mach['seeding_prep'] = fun.f_sa(mach['seeding_prep'], sen.sav['seeding_prep'], 5)
+    mach['seeding_eff'] = fun.f_sa(mach['seeding_eff'], sen.sav['seeding_eff'], 5)
     mach['seeding_delays'] = fun.f_sa(mach['seeding_delays'], sen.sav['seeding_delays'], 5)
     mach['daily_harvest_hours'] = fun.f_sa(mach['daily_harvest_hours'], sen.sav['daily_harvest_hours'], 5)
-    mach['harv_prep'] = fun.f_sa(mach['harv_prep'], sen.sav['harv_prep'], 5)
+    mach['harv_eff'] = fun.f_sa(mach['harv_eff'], sen.sav['harv_eff'], 5)
     mach['harv_delays'] = fun.f_sa(mach['harv_delays'], sen.sav['harv_delays'], 5)
+    mach['spray_eff'] = fun.f_sa(mach['spray_eff'], sen.sav['spray_eff'], 5)
     ###sam
     ###sap
     ###saa

@@ -26,10 +26,10 @@ def f1_machpyomo_local(params, model):
     #number of ha seeded using contractor
     model.v_contractseeding_ha = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_labperiods,
                                         model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha contract seeding for each crop')
-    #number of hours harvesting for each crop - there is a constraint to limit this to the hours available in the harvest period
+    #number of hours harvesting for each crop (this is hours doing the haarvest activity and includes time when rotor is not running i.e. moving paddocks) - there is a constraint to limit this to the hours available in the harvest period
     model.v_harv_hours = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_labperiods,
                                 model.s_crops, bounds=(0,None), doc='number of hours of harvesting')
-    #number of contract hours harvesting for each crop
+    #number of contract hours harvesting for each crop - this is rotor hours
     model.v_contractharv_hours = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_labperiods, model.s_crops, bounds=(0,None), doc='number of contract hours of harvesting')
     #tonnes of crop yield that is unharvested (used to transfer between phase periods)
     model.v_unharvested_yield = pe.Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, bounds=(0,None), doc='tonnes of crop yield that is unharvested (used to transfer between phase periods)')
@@ -84,7 +84,7 @@ def f1_machpyomo_local(params, model):
 
     model.p_fixed_dep = pe.Param(model.s_season_periods, initialize=params['fixed_dep'],default=0.0, doc='fixed depreciation of all machinery for 1 yr')
 
-    model.p_seeding_dep = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_lmus,initialize=params['seeding_dep'],default=0.0,
+    model.p_seeding_dep = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_landuses, model.s_lmus,initialize=params['seeding_dep'],default=0.0,
                                 doc='depreciation cost of seeding 1ha')
 
     model.p_harv_dep = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, initialize=params['harv_dep'],default=0.0, doc='depreciation cost of harvesting 1hr')
@@ -290,7 +290,7 @@ def f_mach_wc(model,q,s,c0,p7,z):
 
 #function to determine derpriciation cost, this will be passed to core model
 #equals seeding dep plus harv dep plus fixed dep
-def f_total_dep(model,q,s,p7,z):
+def f_seeding_harv_dep(model,q,s,p7,z):
     '''
     Calculate the total depreciation of farm machinery.
 
@@ -300,8 +300,8 @@ def f_total_dep(model,q,s,p7,z):
     #fixed dep = total sale value of equipment x fixed rate of dep, number of crop fear accounted for before this step
     fixed_dep = model.p_fixed_dep[p7]
     #cost per ha seeding dep x (number of days seeding / number seeders) x ha per day. Need to divide by the number of headers because v_seeding_machdays is the total seeding time but if there is two seeders each seeder only does half the hours and therefore has less dep.
-    seeding_depreciation = sum(model.p_seeding_dep[p7,p5,z,l] * (model.v_seeding_machdays[q,s,z,p5,k,l] / model.p_number_seeding_gear) * model.p_seeding_rate[k,l]
-                               for l in model.s_lmus for p5 in  model.s_labperiods for k in model.s_crops)
+    seeding_depreciation = sum(model.p_seeding_dep[p7,p5,z,k,l] * (model.v_seeding_machdays[q,s,z,p5,k,l] / model.p_number_seeding_gear) * model.p_seeding_rate[k,l]
+                               for l in model.s_lmus for p5 in  model.s_labperiods for k in model.s_landuses)
     #cost of harv dep = hourly dep x (early and late harv hours / number headers). Need to divide by the number of headers because v_harv_hours is the total harvest hours but if there is two headers each header only does half the hours and therefore has less dep.
     harv_dep = sum(model.p_harv_dep[p7,p5,z] * (model.v_harv_hours[q,s,z,p5,k] / model.p_number_harv_gear)
                    for k in model.s_crops for p5 in model.s_labperiods)

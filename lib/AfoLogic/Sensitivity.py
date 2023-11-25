@@ -145,7 +145,6 @@ def create_sa():
     sav['woolp_fdprem'] = '-'                       # sa value for fd premium
     sav['salep_percentile'] = '-'                   #Value for percentile for all sale grids
     sav['salep_max_s7'] = np.full(len_s7, '-', dtype=object)    #max sale price in grid for selected percentile (i.e. overwrites calculated price)
-    sav['fert_cost'] = np.full(len(uinp.price['fert_cost']), '-', dtype=object) #SA value for fert price $/t
     sav['manager_cost'] = '-' #SA value for manager cost per year
     sav['permanent_cost'] = '-' #SA value for permanent cost per year
     sav['casual_cost'] = '-' #SA value for casual cost per hour
@@ -188,26 +187,21 @@ def create_sa():
     ##SAV
     sav['mach_option'] = '-'                    #control which machine compliment is used
     sav['daily_seed_hours'] = '-'               #number of hours seeder can run for each day.
-    sav['seeding_prep'] = '-'               #number of hours seeder can run for each day.
-    sav['seeding_delays'] = '-'               #number of hours seeder can run for each day.
+    sav['seeding_eff'] = '-'               #propn of seeding time when the seeder is not moving i.e. due to refilling.
+    sav['seeding_delays'] = '-'               #propn of the seeding period when seeding cannot occur due to bad weather
     sav['daily_harvest_hours'] = '-'               #number of hours harvester can run for each day.
-    sav['harv_prep'] = '-'               #number of hours seeder can run for each day.
-    sav['harv_delays'] = '-'               #number of hours seeder can run for each day.
+    sav['harv_eff'] = '-'               #propn of seeding time when the harv is not moving (e.g prep/greaseing harvester, moving paddocks, testing grain moisture, etc)
+    sav['harv_delays'] = '-'               #propn of the harv period when harv cannot occur due to bad weather
+    sav['spray_eff'] = '-'               #propn of spraying time when sprayer is not working e.g. filling up.
 
     for option in uinp.mach:
         ##SAV
         sav['clearing_value', option] = np.full(len(uinp.mach[option]['clearing_value']), '-', dtype=object) #clearing sale value of each item of machinery
         sav['number_seeders', option] = '-'                                 #number of seeders
-        sav['seeder_width', option] = '-'                                   #width (m) of seeder
-        sav['seeding_speed', option] = '-'                                  #seeding speed of wheat on base LMU (km/hr)
-        sav['seeding_paddock_eff', option] = '-'                            #paddock efficiency of seeding (accounts for overlap)
+        sav['seeding_rate_base', option] = '-'                                  #seeding speed of wheat on base LMU (km/hr)
         sav['number_harvesters', option] = '-'                              #number of harvesters
-        sav['harvester_width', option] = '-'                                #width (m) of harvester
-        sav['harvesting_speed', option] = np.full(len_k, '-', dtype=object) #harvesting speed of each crop (km/hr)
-        sav['harvesting_paddock_eff', option] = '-'                         #paddock efficiency of harvesting (accounts for overlap)
-        sav['sprayer_width', option] = '-'                         #width (m)
-        sav['spraying_speed', option] = '-'                        #speed (km/hr)
-        sav['sprayer_eff', option] = '-'                           #paddock efficiency of harvesting (accounts for overlap)
+        sav['harvest_rate', option] = np.full(len_k, '-', dtype=object) #harvesting rate of each crop (t/hr)
+        sav['spraying_rate', option] = '-'                        #speed (km/hr)
         sav['spreader_cap', option] = '-'                                   #capacity (m3)
         sav['spreader_width', option] = np.full(len_n, '-', dtype=object)   #width for each fert type (m)
         sav['spreading_speed', option] = '-'                                #speed (km/hr)

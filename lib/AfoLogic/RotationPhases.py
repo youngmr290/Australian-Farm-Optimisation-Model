@@ -196,12 +196,14 @@ def f_landuses_phases(params,r_vals):
 
 def f_rot_lmu_params(params):
     '''
-    Create parameters for lmu area.
+    Create parameters for the total area available on each LMU and the total area that is never cropped on each lmu due
+    to topography, paddock location or farmer preference.
 
     '''
     ##area
     lmu_mask = pinp.general['i_lmu_area'] > 0
     params['lmu_area'] = dict(zip(pinp.general['i_lmu_idx'][lmu_mask], pinp.general['i_lmu_area'][lmu_mask]))
+    params['p_not_cropable_area_l'] = dict(zip(pinp.general['i_lmu_idx'][lmu_mask], pinp.general['i_non_cropable_area_l'][lmu_mask]))
 
 
 def f_phase_link_params(params):
