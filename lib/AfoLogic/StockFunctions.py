@@ -2804,7 +2804,9 @@ def f1_ffcfw2ebw(cn, ffcfw, srw, md):
     The equations were rearranged to generate 2 scalars that are multiplied to return EBW as a proportion of FFCFW'''
 
     ##Scalar 0. Estimate EBW as a proportion of ffcfw based on stage of maturity (relsize)
-    scalar0 = 1 - (cn[10, ...] + cn[11, ...] * ffcfw / srw + cn[12, ...] * srw / ffcfw) * cn[13, ...]
+    z = fun.f_divide(ffcfw, srw)
+    gut_weight = (cn[10, ...] * z + cn[11, ...] * z**2 + cn[12, ...]) * cn[13, ...] * srw
+    scalar0 = 1 - fun.f_divide(gut_weight, ffcfw)   #Using f_divide because ffcfw can be 0
     ##Scalar 1. Adjust the weight scalar by a factor related to diet quality
     scalar1 = cn[14, ...] * md + cn[15, ...] * md**2 + cn[16, ...]
     ##Step 3. Empty body weight is the product of both scalars
