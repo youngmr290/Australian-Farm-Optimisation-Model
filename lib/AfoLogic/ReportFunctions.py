@@ -415,7 +415,6 @@ def f_var_reshape(lp_vars, r_vals):
     dams_shape = len_q, len_s, len_k2, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1
     prog_shape = len_q, len_s, len_k3, len_k5, len_t2, len_lw_prog, len_z, len_i, len_a, len_x, len_g2
     offs_shape = len_q, len_s, len_k3, len_k5, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3
-    infra_shape = len_q, len_s, len_h1, len_z
     ##pasture
     qsfgop6lzt = len_q, len_s, len_f, len_g, len_o, len_p6, len_l, len_z, len_t
     qsfdp6zt = len_q, len_s, len_f, len_dry, len_p6, len_z, len_t
@@ -457,10 +456,6 @@ def f_var_reshape(lp_vars, r_vals):
     offs_numbers_qsk3k5tvnwziaxyg3 = f_vars2np(lp_vars, 'v_offs', offs_shape, maskz8_k3k5tvnwziaxyg3, z_pos=-6).astype(float)
     d_vars['base']['offs_numbers_qsk3k5tvnwziaxyg3'] = offs_numbers_qsk3k5tvnwziaxyg3
     d_vars['qsz_weighted']['offs_numbers_qsk3k5tvnwziaxyg3'] = offs_numbers_qsk3k5tvnwziaxyg3 * prob_qsz[...,na,na,na,na,na,na,:,na,na,na,na,na]
-    ###infrastructure
-    infrastructure_qsh1z = f_vars2np(lp_vars, 'v_infrastructure', infra_shape).astype(float)
-    d_vars['base']['infrastructure_qsh1z'] = infrastructure_qsh1z
-    d_vars['qsz_weighted']['infrastructure_qsh1z'] = infrastructure_qsh1z * prob_qsz[...,na, :]
 
     ##feedsupply
     ###reshape z8 mask to uncluster
@@ -1177,12 +1172,10 @@ def f_stock_cash_summary(lp_vars, r_vals):
     supp_feedstorage_cost_p7zqs = supp_feedstorage_cost_p7_zkfp6qs.groupby(axis=1, level=(0,4,5)).sum().stack([0,1,2]) #sum k & p6 & f
 
     ##infrastructure
-    fixed_infra_cost_qsp7z = np.sum(r_vals['stock']['rm_stockinfra_fix_h1p7z'], axis=0) * r_vals['zgen']['mask_qs'][:,:,na,na]
-    var_infra_cost_qsp7z = np.sum(r_vals['stock']['rm_stockinfra_var_h1p7z'] * stock_vars['infrastructure_qsh1z'][:,:,:,na,:], axis=2)
-    total_infra_cost_qsp7z = fixed_infra_cost_qsp7z + var_infra_cost_qsp7z
+    fixed_infra_cost_qsp7z = r_vals['stock']['rm_stockinfra_fix_p7z'] * r_vals['zgen']['mask_qs'][:,:,na,na]
 
     ##total costs
-    husbcost_qsp7z = sirecost_qsp7z + damscost_qsp7z + offscost_qsp7z + total_infra_cost_qsp7z
+    husbcost_qsp7z = sirecost_qsp7z + damscost_qsp7z + offscost_qsp7z + fixed_infra_cost_qsp7z
     supcost_p7zqs = sup_grain_cost_p7zqs + supp_feedstorage_cost_p7zqs
     purchasecost_qsp7z = sire_purchcost_qsp7z
 
@@ -1515,7 +1508,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     ##create p/l dataframe
     idx = pd.IndexSlice
     subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue']
-    subtype_exp = ['crop', 'pasture', 'slp', 'stock husb', 'stock sup', 'stock purchase', 'machinery', 'labour', 'fixed', 'Total expenses']
+    subtype_exp = ['crop', 'pasture', 'slp', 'stock husb and infra', 'stock sup', 'stock purchase', 'machinery', 'labour', 'fixed', 'Total expenses']
     subtype_tot = ['1 EBITDA', '2 depreciation', '3 asset value change', '4 profit', '5 opportunity_cost', '6 minRoe', '7 obj'] #numbered to keep them in the correct order
     pnl_rev_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Revenue'], subtype_rev], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
     pnl_exp_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Expense'], subtype_exp], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
@@ -1539,7 +1532,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl.loc[idx[:, :, :, 'Expense', 'crop'], :] = crop_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'pasture'], :] = pas_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'slp'], :] = slp_estab_cost_qsz_p7.values
-    pnl.loc[idx[:, :, :, 'Expense', 'stock husb'], :] = husbcost_qszp7.reshape(-1, len_p7)
+    pnl.loc[idx[:, :, :, 'Expense', 'stock husb and infra'], :] = husbcost_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Expense', 'stock sup'], :] = supcost_qsz_p7.values
     pnl.loc[idx[:, :, :, 'Expense', 'stock purchase'], :] = purchasecost_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Expense', 'machinery'], :] = mach_p7_qsz.T.values

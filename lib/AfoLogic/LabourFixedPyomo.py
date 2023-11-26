@@ -28,8 +28,8 @@ def f1_labfxpyomo_local(params, model):
     ############
     # variables #
     ############
-    model.v_learn_allocation = pe.Var(model.s_sequence_year, model.s_sequence, model.s_labperiods,
-                                   bounds=(0,1), doc='proportion of learning done each labour period')
+    model.v_flex_labour_allocation = pe.Var(model.s_sequence_year, model.s_sequence, model.s_labperiods,
+                                   bounds=(0,1), doc='proportion of flexible labour done each labour period')
 
     #########
     #param  #
@@ -47,15 +47,17 @@ def f1_labfxpyomo_local(params, model):
     ###################################
     #local constraints                #
     ###################################
-    ##constraint makes sure the model allocate the labour learn to labour periods, because labour learn timing is optimised (others are fixed timing determined in input sheet)
-    ##Has to be the same across the z axis so that learn labour cant be done before the season is identified and after that season is identified for the parent.
-    def labour_learn_period(model,q,s):
+    ##constraint makes sure the model allocates the flexible labour (labour that can be done at any time e.g. labour learn)
+    ## to labour periods.
+    ## Has to be the same across the z axis so that learn labour cant be done before the season is identified and
+    ## after that season is identified for the parent.
+    def labour_flex_period(model,q,s):
         if pe.value(model.p_wyear_inc_qs[q, s]):
-            return -sum(model.v_learn_allocation[q,s,p] for p in model.s_labperiods) <= -1
+            return -sum(model.v_flex_labour_allocation[q,s,p] for p in model.s_labperiods) <= -1
         else:
             return pe.Constraint.Skip
 
-    model.con_labour_learn_period = pe.Constraint(model.s_sequence_year, model.s_sequence, rule = labour_learn_period, doc='constrains the allocation of labour learn to a total of 1')
+    model.con_labour_flex_period = pe.Constraint(model.s_sequence_year, model.s_sequence, rule = labour_flex_period, doc='constrains the allocation of flexible labour to a total of 1')
 
 
 
