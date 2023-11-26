@@ -354,6 +354,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##sire
     ###array for generator
     omer_history_start_p3g0 = np.zeros(p3g0, dtype = 'float64')
+    omer_history_sire = np.zeros(p3g0, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
     d_cfw_history_start_p2g0 = np.zeros(p2g0, dtype = 'float64')
     woolvalue_c1tpa1e1b1nwzida0e0b0xyg0 = np.zeros(c1tpg0, dtype =dtype)
     salevalue_c1tpa1e1b1nwzida0e0b0xyg0 = np.zeros(c1tpg0, dtype =dtype)
@@ -383,6 +384,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##dams
     ###array for generator
     omer_history_start_p3g1 = np.zeros(p3g1, dtype = 'float64')
+    omer_history_dams = np.zeros(p3g1, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
     d_cfw_history_start_p2g1 = np.zeros(p2g1, dtype = 'float64')
     woolvalue_c1tpa1e1b1nwzida0e0b0xyg1 = np.zeros((len_c1,)+(len_t1,)+tpg1[1:], dtype =dtype)
     salevalue_c1tpa1e1b1nwzida0e0b0xyg1 = np.zeros(c1tpg1, dtype =dtype)
@@ -426,6 +428,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##yatf
     ###array for generator
     omer_history_start_p3g2 = np.zeros(p3g2, dtype = 'float64')
+    omer_history_yatf = np.zeros(p3g2, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
     d_cfw_history_start_p2g2 = np.zeros(p2g2, dtype = 'float64')
     ###array for postprocessing
     o_numbers_start_tpyatf = np.zeros(tpg2, dtype =dtype)
@@ -465,6 +468,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##offs
     ###array for generator
     omer_history_start_p3g3 = np.zeros(p3g3, dtype = 'float64')
+    omer_history_offs = np.zeros(p3g3, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
     d_cfw_history_start_p2g3 = np.zeros(p2g3, dtype = 'float64')
     woolvalue_c1tpa1e1b1nwzida0e0b0xyg3 = np.zeros((len_c1,)+(len_t3,)+tpg3[1:], dtype =dtype)
     salevalue_c1tpa1e1b1nwzida0e0b0xyg3 = np.zeros(c1tpg3, dtype =dtype)
@@ -633,7 +637,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###genotype & production params
     ####Weight
     srw_female_yg0, srw_female_yg1, srw_female_yg2, srw_female_yg3 = sfun.f1_c2g(uinp.parameters['i_srw_c2'], uinp.parameters['i_srw_y'], a_c2_c0, i_g3_inc) #srw of a female of the given genotype (this is the definition of the inputs)
-    muscle_target_female_ygo, muscle_target_female_yg1, muscle_target_female_yg2, muscle_target_female_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_target_c2'], uinp.parameters['i_muscle_target_y'], a_c2_c0, i_g3_inc)
+    muscle_target_female_yg0, muscle_target_female_yg1, muscle_target_female_yg2, muscle_target_female_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_target_c2'], uinp.parameters['i_muscle_target_y'], a_c2_c0, i_g3_inc)
     lw_initial_yg0, lw_initial_yg1, lw_initial_yatf, lw_initial_yg3 = sfun.f1_c2g(uinp.parameters['i_lw_initial_c2'], uinp.parameters['i_lw_initial_y'], a_c2_c0, i_g3_inc)
     ####Fleece
     sfd_yg0, sfd_yg1, sfd_yg2, sfd_yg3 = sfun.f1_c2g(uinp.parameters['i_sfd_c2'], uinp.parameters['i_sfd_y'], a_c2_c0, i_g3_inc)
@@ -1772,7 +1776,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         lw_initial_wzida0e0b0xyg1[...] = stubble['lw'][stubble['p_start']]
         lw_initial_wzida0e0b0xyg3[...] = stubble['lw'][stubble['p_start']]
         cfw_initial_wzida0e0b0xyg1[...] = pinp.stubble['i_gfw'] * cw_dams[3, ...]
-        cfw_initial_wzida0e0b0xyg3[...] = pinp.stubble['i_gfw'] * cw_dams[3, ...]
+        cfw_initial_wzida0e0b0xyg3[...] = pinp.stubble['i_gfw'] * cw_offs[3, ...]
         fd_initial_wzida0e0b0xyg1[...] = pinp.stubble['i_fd']
         fd_initial_wzida0e0b0xyg3[...] = pinp.stubble['i_fd']
         fl_initial_wzida0e0b0xyg1[...] = pinp.stubble['i_fl']
@@ -1783,28 +1787,22 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ffcfw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...]
     ffcfw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3 / cw_offs[3, ...]
 
-    ##calc fat, muscle and viscera weight
-    fat_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * fat_propn_wean_yg0
-    fat_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * fat_propn_wean_yg1
-    fat_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * fat_propn_wean_yg3
-    muscle_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * muscle_propn_wean_yg0
-    muscle_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * muscle_propn_wean_yg1
-    muscle_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * muscle_propn_wean_yg3
-    viscera_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * viscera_propn_wean_yg0
-    viscera_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * viscera_propn_wean_yg1
-    viscera_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * viscera_propn_wean_yg3
+    ##calc fat, muscle and viscera weight. No b axis on srw so that initial doesn't have a random effect from RR SA.
+    fat_initial_wzida0e0b0xyg0, muscle_initial_wzida0e0b0xyg0, viscera_initial_wzida0e0b0xyg0 \
+        = sfun.f1_body_composition(cn_sire, cx_sire[:,0:1,...], ffcfw_initial_wzida0e0b0xyg0, srw_xyg0)
+    fat_initial_wzida0e0b0xyg1, muscle_initial_wzida0e0b0xyg1, viscera_initial_wzida0e0b0xyg1 \
+        = sfun.f1_body_composition(cn_dams, cx_dams[:,1:2,...], ffcfw_initial_wzida0e0b0xyg1, srw_xyg1)
+    fat_initial_wzida0e0b0xyg3, muscle_initial_wzida0e0b0xyg3, viscera_initial_wzida0e0b0xyg3 \
+        = sfun.f1_body_composition(cn_offs, cx_offs[:,mask_x,...], ffcfw_initial_wzida0e0b0xyg3, srw_xyg3)
 
-    ##if stubble update fat, muscle and viscera weight
+    ##if stubble update fat, muscle and viscera weight   Stubble is using the same functions but with a custom m/d and b axis on srw
     if stubble:
-        fat_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * pinp.stubble['i_fat']
-        fat_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * pinp.stubble['i_fat']
-        fat_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * pinp.stubble['i_fat']
-        muscle_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * pinp.stubble['i_muscle']
-        muscle_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * pinp.stubble['i_muscle']
-        muscle_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * pinp.stubble['i_muscle']
-        viscera_initial_wzida0e0b0xyg0 = ffcfw_initial_wzida0e0b0xyg0 * pinp.stubble['i_viscera']
-        viscera_initial_wzida0e0b0xyg1 = ffcfw_initial_wzida0e0b0xyg1 * pinp.stubble['i_viscera']
-        viscera_initial_wzida0e0b0xyg3 = ffcfw_initial_wzida0e0b0xyg3 * pinp.stubble['i_viscera']
+        fat_initial_wzida0e0b0xyg0, muscle_initial_wzida0e0b0xyg0, viscera_initial_wzida0e0b0xyg0 \
+            = sfun.f1_body_composition(cn_sire, cx_sire[:,0:1,...], ffcfw_initial_wzida0e0b0xyg0, srw_b0xyg0, pinp.stubble['i_md'])
+        fat_initial_wzida0e0b0xyg1, muscle_initial_wzida0e0b0xyg1, viscera_initial_wzida0e0b0xyg1 \
+            = sfun.f1_body_composition(cn_dams, cx_dams[:,1:2,...], ffcfw_initial_wzida0e0b0xyg1, srw_b0xyg1, pinp.stubble['i_md'])
+        fat_initial_wzida0e0b0xyg3, muscle_initial_wzida0e0b0xyg3, viscera_initial_wzida0e0b0xyg3 \
+            = sfun.f1_body_composition(cn_offs, cx_offs[:,mask_x,...], ffcfw_initial_wzida0e0b0xyg3, srw_b0xyg3, pinp.stubble['i_md'])
 
     ##numbers
     ###Distribution of initial numbers across the a1 axis
@@ -3050,7 +3048,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                          , intake_f_sire, dmd_sire, sam_mr = sam_mr_sire)
                         if eqn_used:
                             hp_maint_sire = temp0
-                            meme_sire - hp_maint_sire
+                            meme_sire = hp_maint_sire
                         if eqn_compare:
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
                     ###dams
@@ -3418,7 +3416,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         # if eqn_compare:
                         #     r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp0  # storing as the second variable
 
-                        temp0 = sfun.f_heatloss_nfs(cc_offs, ck_offs, ffcfw_start_offs, rc_start_offs, sl_start_offs
+                        temp0 = sfun.f_heatloss_nfs(cc_offs, ffcfw_start_offs, rc_start_offs, sl_start_offs
                                                  , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                  , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
                                                  , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
@@ -3439,8 +3437,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
-                            pg_sire = temp2
-                            fg_sire = temp3
+                            d_fat_sire = temp2
+                            d_muscle_sire = temp3
+                            d_viscera_sire = 0
                             surplus_energy_sire = temp4
                         if eqn_compare:
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
@@ -3454,8 +3453,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         if eqn_used:
                             ebg_dams = temp0
                             evg_dams = temp1
-                            pg_dams = temp2
-                            fg_dams = temp3
+                            d_fat_dams = temp2
+                            d_muscle_dams = temp3
+                            d_viscera_dams = 0
                             surplus_energy_dams = temp4
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
@@ -3468,8 +3468,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
-                            pg_offs = temp2
-                            fg_offs = temp3
+                            d_fat_offs = temp2
+                            d_muscle_offs = temp3
+                            d_viscera_offs = 0
                             surplus_energy_offs = temp4
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
@@ -3485,8 +3486,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
-                            pg_sire = temp2
-                            fg_sire = temp3
+                            d_fat_sire = temp2
+                            d_muscle_sire = temp3
+                            d_viscera_sire = 0
                             surplus_energy_sire = temp4
                         if eqn_compare:
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
@@ -3500,8 +3502,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         if eqn_used:
                             ebg_dams = temp0
                             evg_dams = temp1
-                            pg_dams = temp2
-                            fg_dams = temp3
+                            d_fat_dams = temp2
+                            d_muscle_dams = temp3
+                            d_viscera_dams = 0
                             surplus_energy_dams = temp4
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
@@ -3514,8 +3517,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
-                            pg_offs = temp2
-                            fg_offs = temp3
+                            d_fat_offs = temp2
+                            d_muscle_offs = temp3
+                            d_viscera_offs = 0
                             surplus_energy_offs = temp4
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
@@ -3538,6 +3542,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_viscera_sire = temp4
                             hp_total_sire = temp5
                             surplus_energy_sire = temp6
+                            mem_sire = hp_maint_sire + np.maximum(0, heat_loss_sire - hp_total_sire)
                         if eqn_compare:
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp1
@@ -3566,6 +3571,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_viscera_dams = temp4
                             hp_total_dams = temp5
                             surplus_energy_dams = temp6
+                            mem_dams = hp_maint_dams + np.maximum(0, heat_loss_dams - hp_total_dams)
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
@@ -3593,6 +3599,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_viscera_offs = temp4
                             hp_total_offs = temp5
                             surplus_energy_offs = temp6
+                            mem_offs = hp_maint_offs + np.maximum(0, heat_loss_offs - hp_total_offs)
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp1
@@ -3761,7 +3768,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 nw_start_yatf	= fun.f_update(nw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ### convert ffcfw to component weights and energy
                 t_fat_start_yatf, t_muscle_start_yatf, t_viscera_start_yatf = sfun.f1_body_composition(cn_yatf
-                                                , cx_yatf[:,mask_x,...], ffcfw_start_yatf, srw_b1xyg2, md_solid_yatf)
+                                                , cx_yatf[:,mask_x,...], ffcfw_start_yatf, srw_b1xyg2)  #md_yatf not calculated yet so have to use default
                 # t_f_start_yatf= sfun.f1_weight2energy(cg_yatf, t_fat_start_yatf, 0)
                 # t_m_start_yatf = sfun.f1_weight2energy(cg_yatf, t_muscle_start_yatf, 1)
                 # t_v_start_yatf = sfun.f1_weight2energy(cg_yatf, t_viscera_start_yatf, 2)
@@ -4053,8 +4060,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
-                        pg_yatf = temp2
-                        fg_yatf = temp3
+                        d_fat_yatf = temp2
+                        d_muscle_yatf = temp3
+                        d_viscera_yatf = 0
                         surplus_energy_yatf = temp4
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
@@ -4069,8 +4077,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
-                        pg_yatf = temp2
-                        fg_yatf = temp3
+                        d_fat_yatf = temp2
+                        d_muscle_yatf = temp3
+                        d_viscera_yatf = 0
                         surplus_energy_yatf = temp4
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
@@ -4091,6 +4100,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         d_viscera_yatf = temp4
                         hp_total_yatf = temp5
                         surplus_energy_yatf = temp6
+                        mem_yatf = hp_maint_yatf + np.maximum(0, heat_loss_yatf - hp_total_yatf)
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp1
@@ -4713,10 +4723,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 # w_xxxx = w_start_xxxx + dw_xxxx
                 # c_xxxx = c_start_xxxx + dc_xxxx
                 ##Weight of fat (end)
-                fat_sire = fat_start_sire + fg_sire / cg_sire[26, ...] * days_period_pa1e1b1nwzida0e0b0xyg0[p]
+                fat_sire = fat_start_sire + d_fat_sire * days_period_pa1e1b1nwzida0e0b0xyg0[p]
                 ##Weight of muscle (end)
-                muscle_sire = muscle_start_sire + pg_sire / cg_sire[27, ...] * days_period_pa1e1b1nwzida0e0b0xyg0[p]
-                ##Weight of viscera (end)	bw #todo formula needs finishing
+                muscle_sire = muscle_start_sire + d_muscle_sire * days_period_pa1e1b1nwzida0e0b0xyg0[p]
+                ##Weight of viscera (end)
                 viscera_sire = viscera_start_sire + d_viscera_sire * days_period_pa1e1b1nwzida0e0b0xyg0[p]
                 ##Weight of water (end)
                 ww_sire = fat_sire * (1 - cg_sire[26, ...]) + muscle_sire * (1 - cg_sire[27, ...]) + viscera_sire * (1 - cg_sire[28, ...])
@@ -4754,10 +4764,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 # w_xxxx = w_start_xxxx + dw_xxxx
                 # c_xxxx = c_start_xxxx + dc_xxxx
                 ##Weight of fat (end)
-                fat_dams = fat_start_dams + fg_dams / cg_dams[26, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p]
+                fat_dams = fat_start_dams + d_fat_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p]
                 ##Weight of muscle (end)
-                muscle_dams = muscle_start_dams + pg_dams / cg_dams[27, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p]
-                ##Weight of viscera (end)	bw #todo formula needs finishing
+                muscle_dams = muscle_start_dams + d_muscle_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p]
+                ##Weight of viscera (end)
                 viscera_dams = viscera_start_dams + d_viscera_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p]
                 ##Weight of water (end)
                 ww_dams = fat_dams * (1 - cg_dams[26, ...]) + muscle_dams * (1 - cg_dams[27, ...]) + viscera_dams * (1 - cg_dams[28, ...])
@@ -4796,9 +4806,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 # w_xxxx = w_start_xxxx + dw_xxxx
                 # c_xxxx = c_start_xxxx + dc_xxxx
                 ##Weight of fat (end)
-                fat_yatf = fat_start_yatf + fg_yatf / cg_yatf[26, ...] * days_period_pa1e1b1nwzida0e0b0xyg2[p]
+                fat_yatf = fat_start_yatf + d_fat_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p]
                 ##Weight of muscle (end)
-                muscle_yatf = muscle_start_yatf + pg_yatf / cg_yatf[27, ...] * days_period_pa1e1b1nwzida0e0b0xyg2[p]
+                muscle_yatf = muscle_start_yatf + d_muscle_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p]
                 ##Weight of viscera (end)
                 viscera_yatf = viscera_start_yatf + d_viscera_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p]
                 ##Weight of water (end)
@@ -4835,9 +4845,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 # w_xxxx = w_start_xxxx + dw_xxxx
                 # c_xxxx = c_start_xxxx + dc_xxxx
                 ##Weight of fat (end)
-                fat_offs = fat_start_offs + fg_offs / cg_offs[26, ...] * days_period_pa1e1b1nwzida0e0b0xyg3[p]
+                fat_offs = fat_start_offs + d_fat_offs * days_period_pa1e1b1nwzida0e0b0xyg3[p]
                 ##Weight of muscle (end)
-                muscle_offs = muscle_start_offs + pg_offs / cg_offs[27, ...] * days_period_pa1e1b1nwzida0e0b0xyg3[p]
+                muscle_offs = muscle_start_offs + d_muscle_offs * days_period_pa1e1b1nwzida0e0b0xyg3[p]
                 ##Weight of viscera (end)
                 viscera_offs = viscera_start_offs + d_viscera_offs * days_period_pa1e1b1nwzida0e0b0xyg3[p]
                 ##Weight of water (end)

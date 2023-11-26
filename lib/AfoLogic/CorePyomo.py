@@ -515,7 +515,7 @@ def f_con_product_transfer(model):
                    + model.v_product_credit[q,s,p7,z9,k,s2,g] * 1000 \
                    + sum((model.v_product_debit[q,s,p7_prev,z8,k,s2,g] * 1000 - model.v_product_credit[q,s,p7_prev,z8,k,s2,g]
                           * 1000 * ((p7 != p7_start)*1)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
-                         ]   # p7!=p7[0] to stop grain tranfer from last yr to current yr else unbounded solution.
+                         ]   # p7!=p7[0] to stop grain transfer from last yr to current yr else unbounded solution.
                          for z8 in model.s_season_types) \
                    - model.v_buy_product[q,s,p7,z9,k,s2,g] * model.p_buy_product_prov[p7,z9] * 1000 + model.v_sell_product[q,s,p7,z9,k,s2,g] * 1000 <= 0
         else:

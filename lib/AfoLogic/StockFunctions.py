@@ -956,7 +956,7 @@ def f_energy_cs(cx, cm, lw, ffcfw, mr_age, mei, omer_history_start, days_period,
 def f_energy_nfs(ck, cm, cg, lw, ffcfw, fat, muscle, viscera, mei, md_solid, i_steepness, density, foo
                  , confinement, intake_f, dmd, mei_propn_milk=0, sam_mr=1):
     #Heat production associated with maintenance (fasting heat production and heat associated with feeding) & efficiency
-    #todo km & kl could be calculated using f_efficiency() & then pass them in as args (and not return kl from this function)
+    #todo km & kl could be calculated using f1_efficiency() & then pass them in as args (and not return kl from this function)
     ##Efficiency for maintenance
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
     bmei = 1 - km
@@ -1463,11 +1463,13 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     ### cause the weight change (probably increased intake), so a correlation between CFW & lower weight will be valuing
     ### that correlation as if the animal was eating less.
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
-    ##Protein gain (protein DM)
+    ##Protein gain (protein DM & muscle wet weight)
     pg = pcg * ebg
-    ##fat gain (fat DM)
+    d_muscle = pg / cg[27, ...]
+    ##fat gain (fat DM & wet weight)
     fg = (neg - pg * cg[21, ...]) /cg[20, ...]
-    return ebg, evg, pg, fg, surplus_energy
+    d_fat = fg / cg[26, ...]
+    return ebg, evg, d_fat, d_muscle, surplus_energy
 
 
 def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
@@ -2821,7 +2823,7 @@ def f1_ebw2ffcfw2(cn, ebw, srw, md):
     ##Scalar1. Adjust the weight scalar by a factor related to diet quality
     scalar1 = cn[14, ...] * md + cn[15, ...] * md**2 + cn[16, ...]
     ##Step 2. Derive the coefficients for the quadratic
-    a = cn[11, ...] * cn[13, ...] * scalar1 / srw)
+    a = cn[11, ...] * cn[13, ...] * scalar1 / srw
     b = cn[10, ...] * cn[13, ...] * scalar1 + 2 * cn[11, ...] * cn[13, ...] * scalar1 * ebw / srw - scalar1
     c = cn[10, ...] * cn[13, ...] * scalar1 * ebw + cn[11, ...] * cn[13, ...] * scalar1 * ebw**2 / srw + cn[12, ...] * cn[13, ...] * scalar1 * srw + ebw - scalar1 * ebw
     ##Step 3. Solve the quadratic
