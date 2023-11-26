@@ -2957,21 +2957,28 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             = sfun.f_intake(pi_offs, ri_offs, md_herb_offs, False, intake_s_offs, pinp.sheep['i_md_supp'])
 
                 ##energy
+                ###Calculate efficiency factors for all equation groups because they are used for SA.
+                if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] > 0):
+                    km_sire, kg_fodd_sire, kg_supp_sire, temp3 = sfun.f1_efficiency(ck_sire, md_solid_sire, pinp.sheep['i_md_supp']
+                                                                    , md_herb_sire, lgf_eff_pa1e1b1nwzida0e0b0xyg0[p, ...]
+                                                                    , dlf_eff_pa1e1b1nwzida0e0b0xyg[p, ...], sam_kg=sam_kg_sire)
+                    #temp3 is not used for sires
+                if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
+                    km_dams, kg_fodd_dams, kg_supp_dams, kl_dams = sfun.f1_efficiency(ck_dams, md_solid_dams, pinp.sheep['i_md_supp']
+                                                                    , md_herb_dams, lgf_eff_pa1e1b1nwzida0e0b0xyg1[p, ...]
+                                                                    , dlf_eff_pa1e1b1nwzida0e0b0xyg[p, ...], sam_kg=sam_kg_dams)
+                if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
+                    km_offs, kg_fodd_offs, kg_supp_offs, temp3 = sfun.f1_efficiency(ck_offs, md_solid_offs, pinp.sheep['i_md_supp']
+                                                                    , md_herb_offs, lgf_eff_pa1e1b1nwzida0e0b0xyg3[p, ...]
+                                                                    , dlf_eff_pa1e1b1nwzida0e0b0xyg[p, ...], sam_kg=sam_kg_offs)
+                    # temp3 is not used for offspring
+
                 eqn_group = 7
                 eqn_system = 0 # CSIRO = 0
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0, temp1, temp2, temp3 = sfun.f1_efficiency(ck_sire, md_solid_sire, pinp.sheep['i_md_supp']
-                                                                    , md_herb_sire, lgf_eff_pa1e1b1nwzida0e0b0xyg0[p, ...]
-                                                                    , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], sam_kg = sam_kg_sire)
-                        if eqn_used:
-                            km_sire = temp0
-                            kg_fodd_sire = temp1
-                            kg_supp_sire = temp2  #temp3 is not used for sires
-                        # if eqn_compare:
-                        #     r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
                         temp0, temp1 = sfun.f_energy_cs(cx_sire[:,0:1,...], cm_sire, lw_start_sire, ffcfw_start_sire
                                                         , mr_age_pa1e1b1nwzida0e0b0xyg0[p], mei_sire, omer_history_start_p3g0
                                                         , days_period_pa1e1b1nwzida0e0b0xyg0[p], km_sire, pinp.sheep['i_steepness']
@@ -2988,16 +2995,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0, temp1, temp2, temp3 = sfun.f1_efficiency(ck_dams, md_solid_dams, pinp.sheep['i_md_supp']
-                                                                      , md_herb_dams, lgf_eff_pa1e1b1nwzida0e0b0xyg1[p, ...]
-                                                                      , dlf_eff_pa1e1b1nwzida0e0b0xyg[p, ...], sam_kg=sam_kg_dams)
-                        if eqn_used:
-                            km_dams = temp0
-                            kg_fodd_dams = temp1
-                            kg_supp_dams = temp2
-                            kl_dams = temp3
-                        # if eqn_compare:
-                        #     r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
                         temp0, temp1 = sfun.f_energy_cs(cx_dams[:,1:2,...], cm_dams, lw_start_dams, ffcfw_start_dams
                                                         , mr_age_pa1e1b1nwzida0e0b0xyg1[p], mei_dams, omer_history_start_p3g1
                                                         , days_period_pa1e1b1nwzida0e0b0xyg1[p], km_dams, pinp.sheep['i_steepness']
@@ -3014,15 +3011,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0, temp1, temp2, temp3 = sfun.f1_efficiency(ck_offs, md_solid_offs, pinp.sheep['i_md_supp']
-                                                                        , md_herb_offs, lgf_eff_pa1e1b1nwzida0e0b0xyg3[p, ...]
-                                                                        , dlf_eff_pa1e1b1nwzida0e0b0xyg[p, ...], sam_kg=sam_kg_offs)
-                        if eqn_used:
-                            km_offs = temp0
-                            kg_fodd_offs = temp1
-                            kg_supp_offs = temp2  # temp3 is not used for offspring
-                        # if eqn_compare:
-                        #     r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
                         temp0, temp1 = sfun.f_energy_cs(cx_offs[:,mask_x,...], cm_offs, lw_start_offs, ffcfw_start_offs
                                                         , mr_age_pa1e1b1nwzida0e0b0xyg3[p], mei_offs, omer_history_start_p3g3
                                                         , days_period_pa1e1b1nwzida0e0b0xyg3[p], km_offs, pinp.sheep['i_steepness']
@@ -3555,6 +3543,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                    , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                         if eqn_used:
                             temp_lc_sire = temp0  #temp1 not required here
+                        temp0 = sfun.f1_kg(ck_sire, surplus_energy_sire < 0, km_sire, kg_supp_sire, mei_propn_supp_sire
+                                                 , kg_fodd_sire, mei_propn_herb_sire)
+                        if eqn_used:
+                            kg_sire = temp0
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -3584,6 +3576,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                    , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                         if eqn_used:
                             temp_lc_dams = temp0  #temp1 not required here
+                        temp0 = sfun.f1_kg(ck_dams, surplus_energy_dams < 0, km_dams, kg_supp_dams, mei_propn_supp_dams
+                                , kg_fodd_dams, mei_propn_herb_dams, kl = kl_dams, mei_propn_milk = mei_propn_milk_dams
+                                , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
+                        if eqn_used:
+                            kg_dams = temp0
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -3612,7 +3609,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                    , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                         if eqn_used:
                             temp_lc_offs = temp0  #temp1 not required here
-
+                        temp0 = sfun.f1_kg(ck_offs, surplus_energy_offs<0, km_offs, kg_supp_offs, mei_propn_supp_offs
+                                                 , kg_fodd_offs, mei_propn_herb_offs)
+                        if eqn_used:
+                            kg_offs = temp0
 
                 ###if there is a target then adjust feedsupply, if not break out of feedsupply loop
                 if target_lwc_dams[p] == 9999 and target_lwc_offs[p] == 9999:
@@ -3902,21 +3902,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                 , intake_s_yatf, pinp.sheep['i_md_supp'], mp2_yatf)   #same feedsupply as dams
 
             ##energy - yatf
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
+                km_yatf, kg_fodd_yatf, kg_supp_yatf, temp3 = sfun.f1_efficiency(ck_yatf, md_solid_yatf, pinp.sheep['i_md_supp']
+                                                                , md_herb_yatf, lgf_eff_pa1e1b1nwzida0e0b0xyg2[p]
+                                                                , dlf_eff_pa1e1b1nwzida0e0b0xyg[p], mei_propn_milk_yatf
+                                                                , sam_kg=sam_kg_yatf)  #same feedsupply as dams
+                # temp3 is not used for yatf
+
             eqn_group = 7
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0, temp1, temp2, temp3 = sfun.f1_efficiency(ck_yatf, md_solid_yatf, pinp.sheep['i_md_supp']
-                                                                    , md_herb_yatf, lgf_eff_pa1e1b1nwzida0e0b0xyg2[p]
-                                                                    , dlf_eff_pa1e1b1nwzida0e0b0xyg[p], mei_propn_milk_yatf
-                                                                    , sam_kg=sam_kg_yatf)  #same feedsupply as dams
-                    if eqn_used:
-                        km_yatf = temp0
-                        kg_fodd_yatf = temp1
-                        kg_supp_yatf = temp2  # temp3 is not used for yatf
-                    # if eqn_compare:
-                    #     r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0  # more of the return variable could be retained
                     temp0, temp1 = sfun.f_energy_cs(cx_yatf[:,mask_x,...], cm_yatf, lw_start_yatf, ffcfw_start_yatf
                                                     , mr_age_pa1e1b1nwzida0e0b0xyg2[p], mei_yatf, omer_history_start_p3g2
                                                     , days_period_pa1e1b1nwzida0e0b0xyg2[p], km_yatf, pinp.sheep['i_steepness']
@@ -4113,7 +4110,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                     if eqn_used:
                         temp_lc_yatf = temp0  #temp1 not required here
-
+                    temp0 = sfun.f1_kg(ck_yatf, surplus_energy_yatf < 0, km_yatf, kg_supp_yatf, mei_propn_supp_yatf
+                                       , kg_fodd_yatf, mei_propn_herb_yatf)
+                    if eqn_used:
+                        kg_yatf = temp0
 
             ##weaning weight yatf - called when dams days per period greater than 0 - calculates the weight at the start of the period
             eqn_group = 11
