@@ -6848,6 +6848,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     rm_stockinfra_fix_p7z = rm_stockinfra_fix * rm_cash_allocation_p7z
     rm_stockinfra_fix_wc_c0p7z = rm_stockinfra_fix * rm_wc_allocation_c0p7z
 
+    ##labour requirement to fix infrastructure based on variable use (hr/hd)
+    lab_infra_rm_var_h1tpg = fun.f_expand(uinp.sheep['i_infrastructure_labourvariable_h1'], p_pos-2)
+    lab_infra_rm_var_tpg0 = np.sum(husbandry_infrastructure_h1tpg0 * lab_infra_rm_var_h1tpg, axis=0)
+    lab_infra_rm_var_tpg1 = np.sum(husbandry_infrastructure_h1tpg1 * lab_infra_rm_var_h1tpg, axis=0)
+    lab_infra_rm_var_tpg3 = np.sum(husbandry_infrastructure_h1tpg3 * lab_infra_rm_var_h1tpg, axis=0)
+
+    ##combine infra labour with husb labour. Infra labour (e.g. fencing can be done by anyone).
+    ## Note variable infra labour could be separated into a new param then its timing could be optimised like fix infra labour.
+    husbandry_labour_l2tpg0[2] = husbandry_labour_l2tpg0[2] + lab_infra_rm_var_tpg0
+    husbandry_labour_l2tpg1[2] = husbandry_labour_l2tpg1[2] + lab_infra_rm_var_tpg1
+    husbandry_labour_l2tpg3[2] = husbandry_labour_l2tpg3[2] + lab_infra_rm_var_tpg3
+
+    ##fixed infra r&m cost - #the model optimises the p5 period that fixed infra labour gets done.
+    lab_infra_rm_fixed = np.sum(uinp.sheep['i_infrastructure_labourfixed_h1'], axis=0)
+
     ##asset value infra
     assetvalue_infra_h1 = uinp.sheep['i_infrastructure_asset_h1']
 
@@ -8853,7 +8868,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     #create params #
     ################
 
-    ##fixed infra r&m cost
+    ##fixed infra r&m cost and labour
+    params['lab_infra_rm_fixed'] = lab_infra_rm_fixed
     params['p_rm_stockinfra_fix'] = fun.f1_make_pyomo_dict(rm_stockinfra_fix_p7z, arrays_p7z)
     params['p_rm_stockinfra_fix_wc'] = fun.f1_make_pyomo_dict(rm_stockinfra_fix_wc_c0p7z, arrays_c0p7z)
 

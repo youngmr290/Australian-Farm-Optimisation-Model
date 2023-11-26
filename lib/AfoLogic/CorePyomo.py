@@ -199,7 +199,7 @@ def f_con_labour_fixed_manager(model):
     def labour_fixed_manager(model,q,s,p,w,z):
         if pe.value(model.p_wyear_inc_qs[q, s]):
             return -model.v_fixed_labour_manager[q,s,p,w,z] + model.p_planning_labour[p,z] + (
-                        model.p_learn_labour * model.v_learn_allocation[q,s,p]) <= 0
+                        model.p_learn_labour * model.v_flex_labour_allocation[q,s,p]) <= 0
         else:
             return pe.Constraint.Skip
     model.con_labour_fixed_manager = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods,['mngr'],model.s_season_types,
@@ -242,11 +242,19 @@ def f_con_labour_sheep_anyone(model):
     '''
     Tallies labour used in the sheep enterprise that can be completed by anyone (casual/permanent/manager) and
     ensures that there is sufficient labour available to carry out the jobs.
+
+    Labour required for fixed R&M (each year irrelevant of stock numbers) of infrastructure get optimised into a
+    labour period.
+
+    Labour for variable R&M (depends on stock numbers) gets incurred in the labour period when the stock use the
+    infrastructure. If this is limiting then it could be separated into its own parameter and optimised into a
+    labour period like fixed R&M labour.
     '''
     def labour_sheep_cas(model,q,s,p,w,z):
         if pe.value(model.p_wyear_inc_qs[q, s]):
-            return -model.v_sheep_labour_casual[q,s,p,w,z] - model.v_sheep_labour_permanent[q,s,p,w,z] - \
-                   model.v_sheep_labour_manager[q,s,p,w,z] + suppy.f_sup_labour(model,q,s,p,z) + stkpy.f_stock_labour_anyone(model,q,s,p,z) <= 0
+            return (-model.v_sheep_labour_casual[q,s,p,w,z] - model.v_sheep_labour_permanent[q,s,p,w,z]
+                    - model.v_sheep_labour_manager[q,s,p,w,z] + suppy.f_sup_labour(model,q,s,p,z) + stkpy.f_stock_labour_anyone(model,q,s,p,z)
+                    +model.p_lab_infra_rm_fixed * model.v_flex_labour_allocation[q,s,p]<= 0)
         else:
             return pe.Constraint.Skip
     model.con_labour_sheep_anyone = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods,['any'],model.s_season_types,rule=labour_sheep_cas,
@@ -537,6 +545,12 @@ def f1_grain_wc(model,q,s,c0,p7,z):
         model.v_sell_product[q,s,p7,z,k,s2,g] * model.p_grain_wc[c0,p7,z,g,k,s2] - model.v_buy_product[q,s,p7,z,k,s2,g] * model.p_buy_grain_wc[
             c0,p7,z,g,k,s2] for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
 
+def f1_sup_minroe(model,q,s,p7,z):
+    ##cost of grain for livestock enterprise. Note grain purchased cost more because of transport fees than grain transferred from crop enterprise.
+    return sum((sum(model.v_sup_con[q,s,z,k,g,f,p6] for f in model.s_feed_pools for p6 in model.s_feed_periods)
+                - model.v_buy_product[q,s,p7,z,k,s2,g]) * sum(model.p_grain_price[p7,z,g,k,s2,c1] * model.p_prob_c1[c1] for c1 in model.s_c1)
+               + model.v_buy_product[q,s,p7,z,k,s2,g] * sum(model.p_buy_grain_price[p7,z,g,k,s2,c1]  * model.p_prob_c1[c1] for c1 in model.s_c1)
+               for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
 
 def f_con_poc_available(model):
     '''
@@ -785,14 +799,15 @@ def f_con_asset(model):
 
 def f_con_minroe(model):
     '''Tallies the total expenditure to ensure that there is a minimum ROI on cash expenditure.'''
-    #todo Does/should minroe include 1. the pasture costs, 2. the stock purchases & 3. fixed costs. Because minroe is not tallying with the total expenses in the pnl report
+    #todo Does/should minroe include 1. fixed costs. Because minroe is not tallying with the total expenses in the pnl report
     def minroe(model,q,s,p7,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last period
         p7_start = l_p7[0]
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return ((phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9) + macpy.f_mach_cost(model,q,s,p7,z9)
-                    + suppy.f_sup_cost(model,q,s,p7,z9) + stkpy.f_stock_cost(model,q,s,p7,z9) + slppy.f_saltbush_cost(model,q,s,z9,p7))
+                     + suppy.f_sup_cost(model,q,s,p7,z9) + stkpy.f_stock_cost(model,q,s,p7,z9) + slppy.f_saltbush_cost(model,q,s,z9,p7)
+                     + f1_sup_minroe(model,q,s,p7,z9))
                     * fin.f1_min_roe()
                     - model.v_minroe[q,s,p7,z9]
                     + sum(model.v_minroe[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]

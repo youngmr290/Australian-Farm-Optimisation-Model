@@ -239,6 +239,7 @@ def f1_stockpyomo_local(params, model):
                              initialize=params['p_labour_manager_offs'], default=0.0, mutable=False, doc='labour requirement offs - manager')
 
     ##infrastructure
+    model.p_lab_infra_rm_fixed = pe.Param(initialize=params['lab_infra_rm_fixed'], default=0.0, doc='Fixed labour required for R&M of stock infrastructure')
     model.p_rm_stockinfra_fix = pe.Param(model.s_season_periods, model.s_season_types,
                                          initialize=params['p_rm_stockinfra_fix'], default=0.0, doc='Fixed cost of R&M of the infrastructure')
     model.p_rm_stockinfra_fix_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types,
@@ -877,7 +878,6 @@ def f_stock_labour_anyone(model,q,s,p5,z):
     Used in global constraint (con_labour_any). See CorePyomo
     '''
 
-    # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[q,s,g0] * model.p_lab_anyone_sire[p5,z,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_anyone_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -897,7 +897,6 @@ def f_stock_labour_perm(model,q,s,p5,z):
     Used in global constraint (con_labour_any). See CorePyomo
     '''
 
-    # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[q,s,g0] * model.p_lab_perm_sire[p5,z,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_perm_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -917,7 +916,6 @@ def f_stock_labour_manager(model,q,s,p5,z):
     Used in global constraint (con_labour_any). See CorePyomo
     '''
 
-    # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[q,s,g0] * model.p_lab_manager_sire[p5,z,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_manager_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
