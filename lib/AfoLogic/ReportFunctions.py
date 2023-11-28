@@ -2256,9 +2256,84 @@ def f_emission_summary(lp_vars, r_vals):
     n2o_livestock_co2e_qsz = livestock_n2o_qsz * n2o_gwp_factor / 1000 #convert to tonnes
     total_livestock_co2e_qsz = ch4_livestock_co2e_qsz + n2o_livestock_co2e_qsz
 
+    ##calc info for intensity calcs
+    ###wool production
+    ####sires
+    type = 'stock'
+    prod = 'cfw_hdmob_zg0'
+    na_prod = [0, 1]  # q,s
+    weights = 'sire_numbers_qszg0'
+    keys = 'sire_keys_qszg0'
+    index = [0, 1, 2]  # q,s,z
+    cols = []
+    cfw_sire = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                        keys=keys, arith=arith, index=index, cols=cols)
+    ####dams
+    type = 'stock'
+    prod = 'cfw_hdmob_k2tva1nwziyg1'
+    na_prod = [0, 1]  # q,s
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    keys = 'dams_keys_qsk2tvanwziy1g1'
+    index = [0, 1, 8]  # q,s,z
+    cols = []
+    cfw_dams = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                        keys=keys, arith=arith, index=index, cols=cols)
+    ####offs
+    type = 'stock'
+    prod = 'cfw_hd_k3k5tvnwziaxyg3'
+    na_prod = [0, 1]  # q,s
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+    index = [0, 1, 8]  # q,s,z
+    cols = []
+    cfw_offs = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                        keys=keys, arith=arith, index=index, cols=cols)
+    ###total wool
+    total_clean_wool_qsz = cfw_sire + cfw_dams + cfw_offs
+
+    ##animal production
+    ####dams
+    type = 'stock'
+    prod = 'sale_ffcfw_s7k2tva1nwziyg1'
+    na_prod = [0, 1]  # q,s
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    na_weights = [2] #s7
+    keys = 'dams_keys_qss7k2tvanwziy1g1'
+    index = [0, 1, 9]  # q,s,z
+    cols = [2] #s7
+    ffcfw_sold_dams = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                        na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+    ####prog
+    type = 'stock'
+    prod = 'sale_ffcfw_s7k3k5twziaxyg2'
+    na_prod = [0, 1]  # q,s
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    na_weights = [2] #s7
+    keys = 'prog_keys_qss7k3k5twzia0xg2'
+    index = [0, 1, 7]  # q,s,z
+    cols = [2] #s7
+    ffcfw_sold_prog = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                        na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+    ####offs
+    type = 'stock'
+    prod = 'sale_ffcfw_s7k3k5tvnwziaxyg3'
+    na_prod = [0, 1]  # q,s
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = [2] #s7
+    keys = 'offs_keys_qss7k3k5tvnwziaxyg3'
+    index = [0, 1, 9]  # q,s,z
+    cols = [2] #s7
+    ffcfw_sold_offs = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                       na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+
+    ###total meat sold
+    total_meat_qsz_s7 = ffcfw_sold_prog + ffcfw_sold_dams + ffcfw_sold_offs
+    meat_cols = [str("FFCFW Sold ")+i[:-3]+str("(kg)") for i in total_meat_qsz_s7.columns]
+
     ##make final df
-    emissions_qsz = pd.concat([total_livestock_co2e_qsz, ch4_livestock_co2e_qsz, n2o_livestock_co2e_qsz], axis=1)
-    emissions_qsz.columns = ['Total Livestock co2e (t)', 'Livestock Methane co2e (t)', 'Livestock Nitrous Oxide co2e (t)']
+    emissions_qsz = pd.concat([total_livestock_co2e_qsz, ch4_livestock_co2e_qsz, n2o_livestock_co2e_qsz,
+                               total_clean_wool_qsz, total_meat_qsz_s7], axis=1)
+    emissions_qsz.columns = ['Total Livestock co2e (t)', 'Livestock Methane co2e (t)', 'Livestock Nitrous Oxide co2e (t)', 'Clean Wool Sold (kg)']+meat_cols
     return emissions_qsz
 
 

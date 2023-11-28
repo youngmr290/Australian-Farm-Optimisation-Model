@@ -207,6 +207,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         len_z = np.count_nonzero(pinp.general['i_mask_z'])
     len_q = pinp.general['i_len_q'] #length of season sequence
     len_s = np.power(len_z,len_q - 1)
+    len_s7 = len(uinp.sheep['i_salegrid_keys'])
 
     ###length t used in generator due to pkl feedsupply (user can specify to generate with t axis - default is active t axis)
     ### t is always singleton for sires
@@ -7184,6 +7185,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###########################
     #  report P2V             #
     ###########################
+    ###sale weight - used to report emission intensity - note prog dont have p axis so prog weight is added in the next step
+    ### this could become a param so that a constraint can be made on emission intensity
+    ####dams
+    sale_ffcfw_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_start_tpdams,
+                                        on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_sale_tpa1e1b1nwzida0e0b0xyg1)
+    ####offs
+    sale_ffcfw_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_start_tpoffs,
+                                        on_hand_tpa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_sale_tpa1e1b1nwzida0e0b0xyg3)
+
     ##cashflow stuff
     r_salevalue_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(r_salevalue_p7tpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,:,na,...]#add singleton v
@@ -8293,10 +8303,34 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                        axis=(d_pos-1),keepdims=True) > 0)
 
 
-
     ###########################
     # create report params    #
     ###########################
+    ###sale weight - used to report emission intensity
+    ### this could become a param so that a constraint can be made on emission intensity
+    ####add s7 axis to sale weight so that emission intensity can be looked at for different meat sales ie emission intensity for lamb
+    index_s7tpg = fun.f_expand(np.arange(len(uinp.sheep['i_salegrid_keys'])), p_pos-2)
+    sale_ffcfw_s7tva1e1b1nwzida0e0b0xyg1 = sale_ffcfw_tva1e1b1nwzida0e0b0xyg1 * (index_s7tpg == r_salegrid_tva1e1b1nwzida0e0b0xyg1)
+    ffcfw_prog_a0e0b0_s7tva1e1b1nwzida0e0b0xyg2 = ffcfw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 * (index_s7tpg == 0) #saying that all prog are sold in lamb grid (save trying to put the salegrid_yatf variable through the prog transformation)
+    sale_ffcfw_s7tva1e1b1nwzida0e0b0xyg3 = sale_ffcfw_tva1e1b1nwzida0e0b0xyg3 * (index_s7tpg == r_salegrid_tva1e1b1nwzida0e0b0xyg3)
+    ####dams
+    sale_ffcfw_s7k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',sale_ffcfw_s7tva1e1b1nwzida0e0b0xyg1[:,na,...],
+                                                                            a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                            index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                            numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
+                                                                            mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
+    ####prog - t[0] is sale t so set t[1&2] to 0.
+    sale_ffcfw_prog_s7k3k5tva1e1b1nwzida0e0b0xyg2 = sfun.f1_create_production_param('offs',
+                                                                ffcfw_prog_a0e0b0_s7tva1e1b1nwzida0e0b0xyg2 * (index_tpa1e1b1nwzida0e0b0xyg2==0),
+                                                                a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3,
+                                                                a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3) #can use off cluster function because same for prog.
+    ####offs
+    sale_ffcfw_s7k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs',
+                                            sale_ffcfw_s7tva1e1b1nwzida0e0b0xyg3[:,na,na,...], a_k3cluster_da0e0b0xyg3,
+                                            index_k3k5tva1e1b1nwzida0e0b0xyg3, a_k5cluster_da0e0b0xyg3,
+                                            index_k5tva1e1b1nwzida0e0b0xyg3, numbers_start_tva1e1b1nwzida0e0b0xyg3,
+                                            mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
+
     ##sale value - needed for reporting
     r_salevalue_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire',r_salevalue_p7tva1e1b1nwzida0e0b0xyg0,
                                                                           numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0)
@@ -8720,6 +8754,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     keys_p8 = np.array(['g0p%s'%i for i in range(len_p8)])
     keys_q = np.array(['q%s' % i for i in range(len_q)])
     keys_s = np.array(['s%s' % i for i in range(len_s)])
+    keys_s7 = uinp.sheep['i_salegrid_keys']
     keys_t1 = np.array(['t%s'%i for i in range(len_t1)])
     keys_T1 = np.array(['t%s'%i for i in range(len_gen_t1)]) #generator t keys
     keys_t2 = np.array(['t%s'%i for i in range(len_t2)])
@@ -9286,6 +9321,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                              , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvanwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2p7tvanwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_s7, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
+                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qss7k2tvanwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b9, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvaeb9nwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
@@ -9314,10 +9351,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                             , keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g2],'prog_keys_qsk3k5twzida0e0b0xyg2')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p7, keys_t2, keys_lw_prog, keys_z, keys_i
                                             , keys_a, keys_x, keys_g2],'prog_keys_qsk3k5p7twzia0xg2')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_s7, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i
+                                            , keys_a, keys_x, keys_g2],'prog_keys_qss7k3k5twzia0xg2')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
                                             , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tvnwziaxyg3')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
                                             , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5p7tvnwziaxyg3')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_s7, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
+                                            , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qss7k3k5tvnwziaxyg3')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
                                             , keys_i, keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tvpnwziaxyg3')
     fun.f1_make_r_val(r_vals,[keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0
@@ -9393,6 +9434,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     k2p7tva1nwziyg1_shape = len_k2, len_p7, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5p7twziaxyg2_shape = len_k3, len_k5, len_p7, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
     k3k5p7tvnwziaxyg3_shape = len_k3, len_k5, len_p7, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
+
+    ####s7
+    s7k2tva1nwziyg1_shape = len_s7, len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    s7k3k5twziaxyg2_shape = len_s7, len_k3, len_k5, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
+    s7k3k5tvnwziaxyg3_shape = len_s7, len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####period dates
     roe1g1_shape = 4, len_o, len_e1, len_g1 #4 is the number of repro dates stored
@@ -9492,6 +9538,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fun.f1_make_r_val(r_vals, n2o_animal_k2tva1e1b1nwzida0e0b0xyg1, 'n2o_animal_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals, ch4_animal_k3k5tva1e1b1nwzida0e0b0xyg3, 'ch4_animal_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
     fun.f1_make_r_val(r_vals, n2o_animal_k3k5tva1e1b1nwzida0e0b0xyg3, 'n2o_animal_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
+
+    ###sale weight for emission intensity report
+    fun.f1_make_r_val(r_vals,sale_ffcfw_s7k2tva1e1b1nwzida0e0b0xyg1,'sale_ffcfw_s7k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, s7k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,sale_ffcfw_prog_s7k3k5tva1e1b1nwzida0e0b0xyg2,'sale_ffcfw_s7k3k5twziaxyg2',None,z_pos, s7k3k5twziaxyg2_shape) #no v axis so dont need to uncluster z
+    fun.f1_make_r_val(r_vals,sale_ffcfw_s7k3k5tva1e1b1nwzida0e0b0xyg3,'sale_ffcfw_s7k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, s7k3k5tvnwziaxyg3_shape)
 
     ###mei and pi
     fun.f1_make_r_val(r_vals,mei_p6ftva1e1b1nwzida0e0b0xyg0,'mei_sire_p6fzg0',mask_fp_z8var_p6tva1e1b1nwzida0e0b0xyg[:,na,...],z_pos, p6fzg0_shape)
