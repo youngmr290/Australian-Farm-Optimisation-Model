@@ -7181,6 +7181,107 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_wean_pa1e1b1nwzida0e0b0xyg2) #use numbers start because weaning is beginning of period
 
 
+    ###########################
+    #  report P2V             #
+    ###########################
+    ##cashflow stuff
+    r_salevalue_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(r_salevalue_p7tpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
+                                              on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,:,na,...]#add singleton v
+    r_salegrid_tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(r_salegrid_tpa1e1b1nwzida0e0b0xyg0, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
+    r_woolvalue_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
+                                              on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,:,na,...]#add singleton v
+    r_salevalue_p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(r_salevalue_p7tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+                                              on_hand_tpa1e1b1nwzida0e0b0xyg1)
+    r_salegrid_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(r_salegrid_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1,
+                                                    on_hand_tpa1e1b1nwzida0e0b0xyg1)
+    r_salegrid_tva1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v(r_salegrid_tpa1e1b1nwzida0e0b0xyg2, a_v_pa1e1b1nwzida0e0b0xyg1)
+    r_woolvalue_p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+                                              on_hand_tpa1e1b1nwzida0e0b0xyg1)
+    r_salevalue_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_salevalue_p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
+                                              on_hand_tpa1e1b1nwzida0e0b0xyg3)
+    r_saleage_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_saleage_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
+                                                     on_hand_tpa1e1b1nwzida0e0b0xyg3)
+    r_salegrid_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_salegrid_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
+                                                     on_hand_tpa1e1b1nwzida0e0b0xyg3)
+    r_woolvalue_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
+                                              on_hand_tpa1e1b1nwzida0e0b0xyg3)
+
+    ##sale time - no numbers needed because they don't affect sale date. Use date end since sale is end of period.
+    r_saledate_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(date_end_pa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
+                                                    period_is_tp=period_is_sale_tpa1e1b1nwzida0e0b0xyg3)
+
+    ##cfw per head average for the mob - includes the mortality factor
+    r_cfw_hdmob_tvg0 = sfun.f1_p2v_std(o_cfw_tpsire, numbers_p=o_numbers_end_tpsire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
+                                                  period_is_tvp=period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
+    r_cfw_hdmob_tvg1 = sfun.f1_p2v(o_cfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+                                             on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg1)
+    r_cfw_hdmob_tvg3 = sfun.f1_p2v(o_cfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
+                                             on_hand_tpa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
+    ##cfw per head - wool cut for 1 whole animal, no account for mortality
+    r_cfw_hd_tvg0 = sfun.f1_p2v_std(o_cfw_tpsire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
+                                                  period_is_tvp=period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
+    r_cfw_hd_tvg1 = sfun.f1_p2v(o_cfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
+                               period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg1)
+    r_cfw_hd_tvg3 = sfun.f1_p2v(o_cfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
+                               period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
+
+    ##fd per head average for the mob - includes the mortality factor
+    r_fd_hdmob_tvg0 = sfun.f1_p2v_std(o_fd_tpsire, numbers_p=o_numbers_end_tpsire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
+                                                  period_is_tvp=period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
+    r_fd_hdmob_tvg1 = sfun.f1_p2v(o_fd_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+                                             on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg1)
+    r_fd_hdmob_tvg3 = sfun.f1_p2v(o_fd_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
+                                             on_hand_tpa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
+    ##fd per head - wool cut for 1 whole animal, no account for mortality
+    r_fd_hd_tvg0 = sfun.f1_p2v_std(o_fd_tpsire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
+                                                  period_is_tvp=period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
+    r_fd_hd_tvg1 = sfun.f1_p2v(o_fd_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
+                               period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg1)
+    r_fd_hd_tvg3 = sfun.f1_p2v(o_fd_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
+                               period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
+
+    ##wbe at start of the DVP - not accounting for mortality
+    r_wbe_tvg1 = sfun.f1_p2v(r_wbe_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_wbe_tvg3 = sfun.f1_p2v(r_wbe_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
+
+    ##nfoet scanning
+    r_nfoet_scan_tvg1 = sfun.f1_p2v(nfoet_b1nwzida0e0b0xyg, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+                                on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_scan_pa1e1b1nwzida0e0b0xyg1)
+
+    ##nfoet birth
+    r_nfoet_birth_tvg1 = sfun.f1_p2v(nfoet_b1nwzida0e0b0xyg, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+                                   on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_birth_pa1e1b1nwzida0e0b0xyg1)
+
+    ##nyatf birth
+    r_nyatf_birth_tvg1 = sfun.f1_p2v(nyatf_b1nwzida0e0b0xyg, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+                                   on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_birth_pa1e1b1nwzida0e0b0xyg1)
+
+    ##numbers dry
+    n_drys_b1g1 = fun.f_expand(sinp.stock['i_is_dry_b1'],b1_pos)
+    r_n_drys_tvg1 = sfun.f1_p2v(n_drys_b1g1*1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+                                on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_scan_pa1e1b1nwzida0e0b0xyg1)
+
+    ##number of mated animals as a proportion of the dams in each slice that has initial numbers == 1
+    ### calculated from the number of ewes mated total (across a1, e1, b1 & y-axis) per ewe in the slice.
+    ### This is designed to be the number mated equivalent of the number of foetuses per ewe
+    n_mated_tpg1 = animal_mated_b1g1 * o_numbers_end_tpdams
+    r_n_mated_tvg1 = sfun.f1_p2v(n_mated_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, 1,
+                                on_hand_tp=True, period_is_tp=period_is_matingend_pa1e1b1nwzida0e0b0xyg1)
+    r_n_mated_tvg1 = np.sum(r_n_mated_tvg1, axis=(a1_pos, e1_pos, b1_pos, y_pos), keepdims=True)
+    ###update periods that are not mating with mating numbers
+    a_matingv_tvg1 =  np.maximum.accumulate(np.any(r_n_mated_tvg1 != 0, axis=b1_pos, keepdims=True)
+                                            * index_va1e1b1nwzida0e0b0xyg1, axis=p_pos) #create association pointing at previous/current mating dvp.
+    r_n_mated_tvg1= np.take_along_axis(r_n_mated_tvg1, a_matingv_tvg1, axis=p_pos)
+    # n_mated_tpg1 = fun.f_divide(np.sum(animal_mated_b1g1 * o_numbers_end_tpdams, axis=(a1_pos, e1_pos, b1_pos, y_pos), keepdims=True)
+    #                             , o_numbers_end_tpdams) * (animal_mated_b1g1>0)
+    # r_n_mated_tvg1 = sfun.f1_p2v(n_mated_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+    #                             on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_matingend_pa1e1b1nwzida0e0b0xyg1)
+    # ###update periods that are not mating with mating numbers
+    # a_matingv_tvg1 =  np.maximum.accumulate(np.any(r_n_mated_tvg1 != 0, axis=b1_pos, keepdims=True)
+    #                                         * index_va1e1b1nwzida0e0b0xyg1, axis=p_pos) #create association pointing at previous/current mating dvp.
+    # r_n_mated_tvg1= np.take_along_axis(r_n_mated_tvg1, a_matingv_tvg1, axis=p_pos)
+
+
     # ##################################
     # #animal shifting between classes #
     # ##################################
@@ -8191,109 +8292,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                        * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na],
                                                        axis=(d_pos-1),keepdims=True) > 0)
 
-
-
-
-
-    ###########################
-    #  report P2V             #
-    ###########################
-    ##cashflow stuff
-    r_salevalue_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(r_salevalue_p7tpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
-                                              on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,:,na,...]#add singleton v
-    r_salegrid_tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(r_salegrid_tpa1e1b1nwzida0e0b0xyg0, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
-    r_woolvalue_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
-                                              on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,:,na,...]#add singleton v
-    r_salevalue_p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(r_salevalue_p7tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
-                                              on_hand_tpa1e1b1nwzida0e0b0xyg1)
-    r_salegrid_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(r_salegrid_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1,
-                                                    on_hand_tpa1e1b1nwzida0e0b0xyg1)
-    r_salegrid_tva1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v(r_salegrid_tpa1e1b1nwzida0e0b0xyg2, a_v_pa1e1b1nwzida0e0b0xyg1)
-    r_woolvalue_p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
-                                              on_hand_tpa1e1b1nwzida0e0b0xyg1)
-    r_salevalue_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_salevalue_p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
-                                              on_hand_tpa1e1b1nwzida0e0b0xyg3)
-    r_saleage_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_saleage_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
-                                                     on_hand_tpa1e1b1nwzida0e0b0xyg3)
-    r_salegrid_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_salegrid_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
-                                                     on_hand_tpa1e1b1nwzida0e0b0xyg3)
-    r_woolvalue_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
-                                              on_hand_tpa1e1b1nwzida0e0b0xyg3)
-
-    ##sale time - no numbers needed because they don't affect sale date. Use date end since sale is end of period.
-    r_saledate_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(date_end_pa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
-                                                    period_is_tp=period_is_sale_tpa1e1b1nwzida0e0b0xyg3)
-
-    ##cfw per head average for the mob - includes the mortality factor
-    r_cfw_hdmob_tvg0 = sfun.f1_p2v_std(o_cfw_tpsire, numbers_p=o_numbers_end_tpsire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
-                                                  period_is_tvp=period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
-    r_cfw_hdmob_tvg1 = sfun.f1_p2v(o_cfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
-                                             on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg1)
-    r_cfw_hdmob_tvg3 = sfun.f1_p2v(o_cfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
-                                             on_hand_tpa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
-    ##cfw per head - wool cut for 1 whole animal, no account for mortality
-    r_cfw_hd_tvg0 = sfun.f1_p2v_std(o_cfw_tpsire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
-                                                  period_is_tvp=period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
-    r_cfw_hd_tvg1 = sfun.f1_p2v(o_cfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
-                               period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg1)
-    r_cfw_hd_tvg3 = sfun.f1_p2v(o_cfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
-                               period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
-
-    ##fd per head average for the mob - includes the mortality factor
-    r_fd_hdmob_tvg0 = sfun.f1_p2v_std(o_fd_tpsire, numbers_p=o_numbers_end_tpsire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
-                                                  period_is_tvp=period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
-    r_fd_hdmob_tvg1 = sfun.f1_p2v(o_fd_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
-                                             on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg1)
-    r_fd_hdmob_tvg3 = sfun.f1_p2v(o_fd_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
-                                             on_hand_tpa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
-    ##fd per head - wool cut for 1 whole animal, no account for mortality
-    r_fd_hd_tvg0 = sfun.f1_p2v_std(o_fd_tpsire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
-                                                  period_is_tvp=period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
-    r_fd_hd_tvg1 = sfun.f1_p2v(o_fd_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
-                               period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg1)
-    r_fd_hd_tvg3 = sfun.f1_p2v(o_fd_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
-                               period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
-
-    ##wbe at start of the DVP - not accounting for mortality
-    r_wbe_tvg1 = sfun.f1_p2v(r_wbe_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
-    r_wbe_tvg3 = sfun.f1_p2v(r_wbe_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
-
-    ##nfoet scanning
-    r_nfoet_scan_tvg1 = sfun.f1_p2v(nfoet_b1nwzida0e0b0xyg, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
-                                on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_scan_pa1e1b1nwzida0e0b0xyg1)
-
-    ##nfoet birth
-    r_nfoet_birth_tvg1 = sfun.f1_p2v(nfoet_b1nwzida0e0b0xyg, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
-                                   on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_birth_pa1e1b1nwzida0e0b0xyg1)
-
-    ##nyatf birth
-    r_nyatf_birth_tvg1 = sfun.f1_p2v(nyatf_b1nwzida0e0b0xyg, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
-                                   on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_birth_pa1e1b1nwzida0e0b0xyg1)
-
-    ##numbers dry
-    n_drys_b1g1 = fun.f_expand(sinp.stock['i_is_dry_b1'],b1_pos)
-    r_n_drys_tvg1 = sfun.f1_p2v(n_drys_b1g1*1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
-                                on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_scan_pa1e1b1nwzida0e0b0xyg1)
-
-    ##number of mated animals as a proportion of the dams in each slice that has initial numbers == 1
-    ### calculated from the number of ewes mated total (across a1, e1, b1 & y-axis) per ewe in the slice.
-    ### This is designed to be the number mated equivalent of the number of foetuses per ewe
-    n_mated_tpg1 = animal_mated_b1g1 * o_numbers_end_tpdams
-    r_n_mated_tvg1 = sfun.f1_p2v(n_mated_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, 1,
-                                on_hand_tp=True, period_is_tp=period_is_matingend_pa1e1b1nwzida0e0b0xyg1)
-    r_n_mated_tvg1 = np.sum(r_n_mated_tvg1, axis=(a1_pos, e1_pos, b1_pos, y_pos), keepdims=True)
-    ###update periods that are not mating with mating numbers
-    a_matingv_tvg1 =  np.maximum.accumulate(np.any(r_n_mated_tvg1 != 0, axis=b1_pos, keepdims=True)
-                                            * index_va1e1b1nwzida0e0b0xyg1, axis=p_pos) #create association pointing at previous/current mating dvp.
-    r_n_mated_tvg1= np.take_along_axis(r_n_mated_tvg1, a_matingv_tvg1, axis=p_pos)
-    # n_mated_tpg1 = fun.f_divide(np.sum(animal_mated_b1g1 * o_numbers_end_tpdams, axis=(a1_pos, e1_pos, b1_pos, y_pos), keepdims=True)
-    #                             , o_numbers_end_tpdams) * (animal_mated_b1g1>0)
-    # r_n_mated_tvg1 = sfun.f1_p2v(n_mated_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
-    #                             on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_matingend_pa1e1b1nwzida0e0b0xyg1)
-    # ###update periods that are not mating with mating numbers
-    # a_matingv_tvg1 =  np.maximum.accumulate(np.any(r_n_mated_tvg1 != 0, axis=b1_pos, keepdims=True)
-    #                                         * index_va1e1b1nwzida0e0b0xyg1, axis=p_pos) #create association pointing at previous/current mating dvp.
-    # r_n_mated_tvg1= np.take_along_axis(r_n_mated_tvg1, a_matingv_tvg1, axis=p_pos)
 
 
     ###########################
