@@ -13,20 +13,59 @@ from . import UniversalInputs as uinp
 from . import FeedsupplyFunctions as fsfun
 
 def f_ch4_animal_bc(ch, intake_f, intake_s, md_solid, level):
-    #todo these formulas need to be reviewed, then connected to emissions in Pyomo.
-    # Compare with original Blaxter & Clapperton to check if error in the sign in Tech 2012 paper.
-    # Note comment made in Wilkerson etal 1995
-    # Compare the original MIDAS derivation of animal and feed components
+    '''
+    Animal component of the Blaxter and Clapperton method for CH4 production.
+
+    Note, in Blaxter and Clapperton 1965 there is an error in table 5 (it should be b=2.37-0.05D (required to make figure 3 work))
+    and there is an error CH4 equation derived from table 4 and 5. It should be CH4 (kcal/100kcal feed) = 1.30 + 0.112D + L (2.37 -0.05D).
+    In the 2012 tech paper these error were fixed. This is the equation used below.
+
+    Note 2: When they are lactating the ewes intake doubles or more so should the extra intake be counted as higher L
+    and therefore reduced emissions per unit of intake. Or are they still considered to be at maintenance (or usually
+    below) and hence very high emissions per unit of intake? This is not mention in B&C.
+
+
+    :param ch: methane parameters
+    :param intake_f: herb intake (kg)
+    :param intake_s: supplement intake (kg)
+    :param md_solid:
+    :param level: the amount of feed consumed divided by the amount required when energy retention is zero, that
+                  is the amount required at maintenance (level=0 at maint).
+    :return: kg of methane produced per day - animal component
+    '''
+
     ##Methane production total - this includes a feed component that is calculated elsewhere and hooked to feed activities
-    ch4_total = ch[1, ...] * (intake_f + intake_s)*((ch[2, ...] + ch[3, ...] * md_solid) + (level + 1) * (ch[4, ...] - ch[5, ...] * md_solid))
+    ## not used just here to show the full equation
+    ch4_total_mj = ch[1, ...] * (intake_f + intake_s)*((ch[2, ...] + ch[3, ...] * md_solid) + (level + 1) * (ch[4, ...] - ch[5, ...] * md_solid))
+
     ##Methane production animal component
-    ch4_animal = ch[1, ...] * (intake_f + intake_s) * (level + 1) * (ch[4, ...] - ch[5, ...] * md_solid)
-    return ch4_animal
+    ch4_animal_mj = ch[1, ...] * (intake_f + intake_s) * (level + 1) * (ch[4, ...] - ch[5, ...] * md_solid)
+
+    ##convert from mj of methane to kg
+    ch4_energy_density = 52.5 #energy density of methane is 50–55.5 MJ/kg
+    ch4_animal_kg = ch4_animal_mj / ch4_energy_density
+    return ch4_animal_kg
 
 
-def f_ch4_feed_bc():
-    #todo needs to be built
-    return
+def f_ch4_feed_bc(intake, md):
+    '''
+    Feed component of the Blaxter and Clapperton method for CH4 production.
+
+    Note, in Blaxter and Clapperton 1965 there is an error in table 5 (it should be b=2.37-0.05D (required to make figure 3 work))
+    and there is an error CH4 equation derived from table 4 and 5. It should be CH4 (kcal/100kcal feed) = 1.30 + 0.112D + L (2.37 -0.05D).
+    In the 2012 tech paper these error were fixed. This is the equation used below.
+
+    :param intake: dry matter intake of feed activity (kg)
+    :param md:
+    :return: kg of methane produced per x intake - feed component
+    '''
+    ch = uinp.parameters['i_ch_c2'][:,0] #slice c2 use the first genotype (note the methane params are currently the same for all genotypes)
+    ch4_feed_mj = ch[1] * (intake) * (ch[2] + ch[3] * md)
+
+    ##convert from mj of methane to kg
+    ch4_energy_density = 52.5 #energy density of methane is 50–55.5 MJ/kg
+    ch4_feed_kg = ch4_feed_mj / ch4_energy_density
+    return ch4_feed_kg
 
 
 def f_ch4_feed_nir(intake, dmd):
@@ -44,7 +83,7 @@ def f_ch4_feed_nir(intake, dmd):
     - Methane production from enteric fermentation (M): M = I x 0.0188 + 0.00158
     - Methane production from manure (M): M = I x (1 - DMD) x EFT
     
-    :param intake:
+    :param intake: dry matter intake
     :param dmd:
     :return:
     '''
@@ -57,7 +96,7 @@ def f_ch4_feed_nir(intake, dmd):
     ch4_entric = intake * 0.0188
     ###Methane production from manure per kg of feed eaten (M): M = I x (1 - DMD) x EFT
     ch4_manure = intake * (1 - dmd) * temperate_emission_factor
-    ###total methan
+    ###total methane
     ch4 = ch4_manure + ch4_entric
 
    ##return methane emissions. These are converted to co2 equivalents at a later stage.
@@ -80,7 +119,7 @@ def f_ch4_animal_nir(mc=0):
     - Methane production from manure (M): M = I x (1 - DMD) x EFT
 
     :param mc: milk consumption i.e mp2_yatf
-    :return:
+    :return: methane production kg/d
     '''
     ##inputs
     dm_milk = 20.6 #milk dry matter content (MJ/kg) source:Stankov etal 2022. Dry matter was 21.36% in April and 19.85% in August at the end of lactation.
@@ -93,7 +132,7 @@ def f_ch4_animal_nir(mc=0):
     ##Fixed daily methane production. This part of the equation is not linked to feed intake. Essentially the methane emitted by an animal each day irrelevant of feed intake.
     ch4_fixed = 0.00158
 
-    ##return methane emissions per day. This is converted to co2 equivalents at a later stage.
+    ##return kg of methane emissions per day. This is converted to co2 equivalents at a later stage.
     ch4 = ch4_milk + ch4_fixed
     return ch4
 
@@ -120,7 +159,7 @@ def f_n2o_feed_nir(intake, dmd, cp):
     :param intake:
     :param dmd:
     :param cp:
-    :return:
+    :return: kilograms of n2o emissions linked to the consumption of x amount of feed - feed component of equation
     '''
     ##inputs
     EFf = uinp.emissions['i_eff']  # emision factor faeces - Emission factors are used to convert a unit of activity into its emissions equivalent.
@@ -168,7 +207,7 @@ def f_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
     :param relsize: relative size of animal
     :param srw: standard reference weight of animal
     :param ebg: daily empty body gain
-    :return:
+    :return: kilograms of n2o emissions per day linked to the animal activity
     '''
 
 

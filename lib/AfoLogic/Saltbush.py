@@ -186,7 +186,7 @@ def f_saltbush_precalcs(params, r_vals, nv):
     if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
         ch4_sb_zp6 = efun.f_ch4_feed_nir(1000, sb_dmd_zp6)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
-        ch4_sb_zp6 = efun.f_ch4_feed_bc()
+        ch4_sb_zp6 = efun.f_ch4_feed_bc(1000, sb_me_zp6/1000) #have to divide by 1000 because it was ME/t
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report

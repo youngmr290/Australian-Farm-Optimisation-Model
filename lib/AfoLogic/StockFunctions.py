@@ -666,7 +666,7 @@ def f1_feedsupply(feedsupplyw_ta1e1b1nwzida0e0b0xyg, confinementw_ta1e1b1nwzida0
     ##Ensure that supp can't be less than 0 or greater than potential intake
     supp = np.clip(supp, 0, 1)
 
-    ##supplement intake
+    ##supplement intake (kg)
     intake_s = pi_a1e1b1nwzida0e0b0xyg * supp
     ##ME intake from supplement
     mei_supp = intake_s * pinp.sheep['i_md_supp']
@@ -676,7 +676,7 @@ def f1_feedsupply(feedsupplyw_ta1e1b1nwzida0e0b0xyg, confinementw_ta1e1b1nwzida0
     mei_herb = mei_solid - mei_supp
     ##M/D of herbage
     md_herb = fsfun.f1_dmd_to_md(dmd)  # will be 0 if in confinement
-    ##herb intake
+    ##herb intake (kg)
     intake_f = fun.f_divide(mei_herb, md_herb) #func to stop div/0 error if confinement
     ##M/D of the diet (solids)
     md_solid = fun.f_divide(mei_solid, intake_f + intake_s) #yatf have 0 solid intake at start of life.

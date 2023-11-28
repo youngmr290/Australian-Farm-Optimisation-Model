@@ -337,7 +337,7 @@ def f_sup_emissions(r_vals):
     if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
         ch4_sup_k = efun.f_ch4_feed_nir(1000 * dry_matter_content_k, dmd_k)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
-        ch4_sup_k = efun.f_ch4_feed_bc()
+        ch4_sup_k = efun.f_ch4_feed_bc(1000 * dry_matter_content_k, md_k / 1000) #div 1000 to convert to kg
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report

@@ -466,7 +466,8 @@ def f_pasture(params, r_vals, nv):
     if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
         ch4_grnpas_gop6lzt = efun.f_ch4_feed_nir(cons_grnha_t_gop6lzt*1000, dmd_diet_grnha_gop6lzt)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
-        ch4_grnpas_gop6lzt = efun.f_ch4_feed_bc()
+        grn_md_grnha_gop6lzt = fsfun.f1_dmd_to_md(dmd_diet_grnha_gop6lzt)
+        ch4_grnpas_gop6lzt = efun.f_ch4_feed_bc(cons_grnha_t_gop6lzt*1000, grn_md_grnha_gop6lzt)
 
     ##livestock nitrous oxide emissions linked to the consumption of green pasture - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
@@ -506,7 +507,8 @@ def f_pasture(params, r_vals, nv):
     if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
         ch4_drypas_dp6zt = efun.f_ch4_feed_nir(1000, dry_dmd_dp6zt)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
-        ch4_drypas_dp6zt = efun.f_ch4_feed_bc()
+        dry_md_dp6zt = fsfun.f1_dmd_to_md(dry_dmd_dp6zt)
+        ch4_drypas_dp6zt = efun.f_ch4_feed_bc(1000, dry_md_dp6zt)
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of dry pasture - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
@@ -526,7 +528,8 @@ def f_pasture(params, r_vals, nv):
     if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
         ch4_poc_p6z = efun.f_ch4_feed_nir(1000, i_poc_dmd_p6zt[:, :, 0]) #slice t for annual
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
-        ch4_poc_p6z = efun.f_ch4_feed_bc()
+        poc_md_p6z = fsfun.f1_dmd_to_md(i_poc_dmd_p6zt[..., 0])
+        ch4_poc_p6z = efun.f_ch4_feed_bc(1000, poc_md_p6z)
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of poc - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
