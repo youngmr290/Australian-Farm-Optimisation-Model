@@ -141,7 +141,6 @@ def f_universal_inp_sa(uinp_defaults):
     finance['i_interest'] = fun.f_sa(finance['i_interest'], sen.sav['interest_rate'], 5)  #value for bank interest rate
     finance['opportunity_cost_capital'] = fun.f_sa(finance['opportunity_cost_capital'], sen.sav['opp_cost_capital'], 5)  #value for opportunity cost of capital
     finance['fixed_dep'] = fun.f_sa(finance['fixed_dep'], sen.sav['fixed_dep_rate'], 5)  #value for fixed rate of machinery depreciation per year
-    finance['variable_dep'] = fun.f_sa(finance['fixed_dep'], sen.sav['variable_dep_rate'], 5)  #value for variable rate of machinery depreciation per year if cropping 1000ha
     finance['equip_insurance'] = fun.f_sa(finance['equip_insurance'], sen.sav['equip_insurance_rate'], 5)  #value for machinery insurance (as a propn of total value)
 
     ##price
@@ -150,6 +149,12 @@ def f_universal_inp_sa(uinp_defaults):
     price['manager_cost'] = fun.f_sa(price['manager_cost'], sen.sav['manager_cost'], 5)
     price['permanent_cost'] = fun.f_sa(price['permanent_cost'], sen.sav['permanent_cost'], 5)
     price['casual_cost'] = fun.f_sa(price['casual_cost'], sen.sav['casual_cost'], 5)
+
+    ##Mach general
+    mach_general['i_variable_dep_hr_seeding'] = fun.f_sa(mach_general['i_variable_dep_hr_seeding'], sen.sav['variable_dep_hr_seeding'], 5)  #value for variable rate of machinery depreciation per year if cropping 1000ha
+    mach_general['i_variable_dep_hr_harv'] = fun.f_sa(mach_general['i_variable_dep_hr_harv'], sen.sav['variable_dep_hr_harv'], 5)  #value for variable rate of machinery depreciation per year if cropping 1000ha
+    mach_general['i_variable_dep_hr_spraying'] = fun.f_sa(mach_general['i_variable_dep_hr_spraying'], sen.sav['variable_dep_hr_spraying'], 5)  #value for variable rate of machinery depreciation per year if cropping 1000ha
+    mach_general['i_variable_dep_hr_spreading'] = fun.f_sa(mach_general['i_variable_dep_hr_spreading'], sen.sav['variable_dep_hr_spreading'], 5)  #value for variable rate of machinery depreciation per year if cropping 1000ha
 
     ##Mach
     for option in mach: #all pasture inputs are adjusted even if a given pasture is not included

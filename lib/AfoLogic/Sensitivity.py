@@ -106,6 +106,7 @@ def create_sa():
     sav['crop_landuse_inc_k1'] = np.full(len(pinp.general['i_crop_landuse_inc_k1']), '-', dtype=object)    #control which crop landuses are included
     sav['pas_landuse_inc_k2'] = np.full(len(pinp.general['i_pas_landuse_inc_k2']), '-', dtype=object)     #control which pasture landuses are included
     sav['lmu_area_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
+    sav['non_cropable_area_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
     sav['lmu_arable_propn_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
     ##SAM
     sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to remove it)
@@ -123,7 +124,6 @@ def create_sa():
     sav['interest_rate']      = '-'           #SA to alter the credit and debit interest from bank
     sav['opp_cost_capital']      = '-'        #SA to alter the opportunity cost of capital
     sav['fixed_dep_rate'] = '-'               #SA to alter the fixed rate of machinery depreciation per year
-    sav['variable_dep_rate'] = '-'               #SA to alter the variable rate of machinery depreciation per year if cropping 1000ha
     sav['equip_insurance_rate'] = '-'         #SA to alter the insurance cost (% of machine value)
     sav['overheads'] = np.full(len(pinp.general['i_overheads']), '-', dtype=object)  #SA to alter the overhead costs
     ##SAM
@@ -193,6 +193,10 @@ def create_sa():
     sav['harv_eff'] = '-'               #propn of seeding time when the harv is not moving (e.g prep/greaseing harvester, moving paddocks, testing grain moisture, etc)
     sav['harv_delays'] = '-'               #propn of the harv period when harv cannot occur due to bad weather
     sav['spray_eff'] = '-'               #propn of spraying time when sprayer is not working e.g. filling up.
+    sav['variable_dep_hr_seeding'] = '-'               #variable depn of seeding gear per machine hour of seeding
+    sav['variable_dep_hr_harv'] = '-'               #variable depn of harvest gear per machine hour of harvest
+    sav['variable_dep_hr_spraying'] = '-'               #variable depn of sprayer gear per machine hour of spraying
+    sav['variable_dep_hr_spreading'] = '-'               #variable depn of spreading gear per machine hour of spreading
 
     for option in uinp.mach:
         ##SAV
