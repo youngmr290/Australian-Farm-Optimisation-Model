@@ -67,12 +67,12 @@ def f1_p5_alloc(item_start=0, item_length=1, z_pos=-1, is_phase_param=False):
 
     ##align axes
     p5_pos = -item_start.ndim
-    date_node_p5etc = fun.f_expand(lp_p5z, left_pos=z_pos, right_pos2=z_pos, left_pos2=p5_pos)
-    shape = (len_p5,) + tuple(np.maximum.reduce([date_node_p5etc.shape[1:], item_start.shape[1:]]))  # create shape which has the max size, this is used for o array
+    lp_p5etc = fun.f_expand(lp_p5z, left_pos=z_pos, right_pos2=z_pos, left_pos2=p5_pos)
+    shape = (len_p5,) + tuple(np.maximum.reduce([lp_p5etc.shape[1:], item_start.shape[1:]]))  # create shape which has the max size, this is used for o array
 
     break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
     season_start = per.f_season_periods()[0, 0]  # slice season node to get season start
-    alloc_p5etc = fun.f_range_allocation_np(lp_p5z, item_start, item_length, shape=shape, is_phase_param=is_phase_param,
+    alloc_p5etc = fun.f_range_allocation_np(lp_p5etc, item_start, item_length, shape=shape, is_phase_param=is_phase_param,
                                            break_z=break_z, season_start=season_start, z_pos=z_pos)
 
     return alloc_p5etc
