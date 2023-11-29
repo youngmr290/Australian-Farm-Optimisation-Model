@@ -8183,7 +8183,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     #                                                           period_is_tvp=period_is_wean_d_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], #weaning is same for all e slices
     #                                  a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)).astype(dtype)
 
-    ## cluster sale value - can use offs function because clustering is the same.
+    ## cluster sale value - can use offs function because clustering is the same. Numbers required to weight a,e,b when clustering.
     salevalue_prog_k3k5c1p7tva1e1b1nwzida0e0b0xyg2 = sfun.f1_create_production_param('offs',
                                                                                   salevalue_prog_c1p7tva1e1b1nwzida0e0b0xyg2,
                                                                                   a_k3cluster_da0e0b0xyg3,
