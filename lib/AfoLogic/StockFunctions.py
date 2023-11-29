@@ -2826,6 +2826,7 @@ def f1_ffcfw2ebw(cg, cn, ffcfw, srw, md=12, eqn_system=0):
     else: # eqn_system == 0  # CSIRO = 0 / default
         #Use CSIRO empty body scalar
         ebw = ffcfw / cg[18, ...]
+    ebw = fun.f_update(ebw, 0.0, ffcfw == 0)
     return ebw
 
 
@@ -2847,14 +2848,16 @@ def f1_ebw2ffcfw(cg, cn, ebw, srw, md, eqn_system=0):
         ##Step 2. Derive the coefficients for the quadratic
         a = cn[11, ...] * cn[13, ...] * scalar1 / srw
         b = cn[10, ...] * cn[13, ...] * scalar1 + 2 * cn[11, ...] * cn[13, ...] * scalar1 * ebw / srw - scalar1
-        c = cn[10, ...] * cn[13, ...] * scalar1 * ebw + cn[11, ...] * cn[13, ...] * scalar1 * ebw**2 / srw + cn[12, ...] * cn[13, ...] * scalar1 * srw + ebw - scalar1 * ebw
-        ##Step 3. Solve the quadratic (assuming that one root will be negative and the other positive)
-        gutfill = (-b + np.sign(a) * np.sqrt(b**2 - 4 * a * c))/(2 * a)
+        c = (cn[10, ...] * cn[13, ...] * scalar1 * ebw + cn[11, ...] * cn[13, ...] * scalar1 * ebw**2 / srw
+             + cn[12, ...] * cn[13, ...] * scalar1 * srw + ebw - scalar1 * ebw)
+        ##Step 3. Solve the quadratic (assuming that one root will be negative and the other positive, want the positive root)
+        gutfill = np.maximum(0, (-b + np.sign(a) * np.sqrt(b**2 - 4 * a * c))/(2 * a))
         ##Step4. Calculate ffcfw from ebw and gutfill
         ffcfw = ebw + gutfill
     else: # eqn_system == 0  # CSIRO = 0 / default
         #Use CSIRO empty body scalar
         ffcfw = ebw * cg[18, ...]
+    ffcfw = fun.f_update(ffcfw, 0.0, ebw == 0)
     return ffcfw
 
 
