@@ -677,7 +677,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     cc_sire, cc_dams, cc_yatf, cc_offs = sfun.f1_c2g(uinp.parameters['i_cc_c2'], uinp.parameters['i_cc_y'], a_c2_c0, i_g3_inc, uinp.parameters['i_cc_pos'])
     cd_sire, cd_dams, cd_yatf, cd_offs = sfun.f1_c2g(uinp.parameters['i_cd_c2'], uinp.parameters['i_cd_y'], a_c2_c0, i_g3_inc, uinp.parameters['i_cd_pos'])
     ce_sire, ce_dams, ce_yatf, ce_offs = sfun.f1_c2g(uinp.parameters['i_ce_c2'], uinp.parameters['i_ce_y'], a_c2_c0, i_g3_inc, uinp.parameters['i_ce_pos'], condition=mask_o_dams, axis=d_pos)
-    ce_offs = sfun.f1_c2g(uinp.parameters['i_ce_c2'], uinp.parameters['i_ce_y'], a_c2_c0, i_g3_inc, uinp.parameters['i_ce_pos'], condition=mask_d_offs, axis=d_pos)[3]  #re calc off using off d mask
+    ce_offs = sfun.f1_c2g(uinp.parameters['i_ce_c2'], uinp.parameters['i_ce_y'], a_c2_c0, i_g3_inc, uinp.parameters['i_ce_pos'], condition=mask_d_offs, axis=d_pos)[3]  #re calc offs using off d mask
     cf_sire, cf_dams, cf_yatf, cf_offs = sfun.f1_c2g(uinp.parameters['i_cf_c2'], uinp.parameters['i_cf_y'], a_c2_c0, i_g3_inc, uinp.parameters['i_cf_pos'])
     cg_sire, cg_dams, cg_yatf, cg_offs = sfun.f1_c2g(uinp.parameters['i_cg_c2'], uinp.parameters['i_cg_y'], a_c2_c0, i_g3_inc, uinp.parameters['i_cg_pos'])
     ch_sire, ch_dams, ch_yatf, ch_offs = sfun.f1_c2g(uinp.parameters['i_ch_c2'], uinp.parameters['i_ch_y'], a_c2_c0, i_g3_inc, uinp.parameters['i_ch_pos'])
@@ -1787,22 +1787,37 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ffcfw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...]
     ffcfw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3 / cw_offs[3, ...]
 
+    ##calc initial ebw
+    ebw_initial_wzida0e0b0xyg0 = sfun.f1_ffcfw2ebw(cg_sire, cn_sire, ffcfw_initial_wzida0e0b0xyg0, srw_xyg0
+                                                   , eqn_system = eqn_used_g0_q1p[7,0])
+    ebw_initial_wzida0e0b0xyg1 = sfun.f1_ffcfw2ebw(cg_dams, cn_dams, ffcfw_initial_wzida0e0b0xyg1, srw_xyg1
+                                                   , eqn_system = eqn_used_g1_q1p[7,0])
+    ebw_initial_wzida0e0b0xyg3 = sfun.f1_ffcfw2ebw(cg_offs, cn_offs, ffcfw_initial_wzida0e0b0xyg3, srw_xyg3
+                                                   , eqn_system = eqn_used_g3_q1p[7,0])
+
+
     ##calc fat, muscle and viscera weight. No b axis on srw so that initial doesn't have a random effect from RR SA.
     fat_initial_wzida0e0b0xyg0, muscle_initial_wzida0e0b0xyg0, viscera_initial_wzida0e0b0xyg0 \
-        = sfun.f1_body_composition(cn_sire, cx_sire[:,0:1,...], ffcfw_initial_wzida0e0b0xyg0, srw_xyg0)
+        = sfun.f1_body_composition(cg_sire, cn_sire, cx_sire[:,0:1,...], ebw_initial_wzida0e0b0xyg0, srw_xyg0
+                                   , eqn_system = eqn_used_g0_q1p[7,0])
     fat_initial_wzida0e0b0xyg1, muscle_initial_wzida0e0b0xyg1, viscera_initial_wzida0e0b0xyg1 \
-        = sfun.f1_body_composition(cn_dams, cx_dams[:,1:2,...], ffcfw_initial_wzida0e0b0xyg1, srw_xyg1)
+        = sfun.f1_body_composition(cg_dams, cn_dams, cx_dams[:,1:2,...], ebw_initial_wzida0e0b0xyg1, srw_xyg1
+                                   , eqn_system = eqn_used_g1_q1p[7,0])
     fat_initial_wzida0e0b0xyg3, muscle_initial_wzida0e0b0xyg3, viscera_initial_wzida0e0b0xyg3 \
-        = sfun.f1_body_composition(cn_offs, cx_offs[:,mask_x,...], ffcfw_initial_wzida0e0b0xyg3, srw_xyg3)
+        = sfun.f1_body_composition(cg_offs, cn_offs, cx_offs[:,mask_x,...], ebw_initial_wzida0e0b0xyg3, srw_xyg3
+                                   , eqn_system = eqn_used_g3_q1p[7,0])
 
     ##if stubble update fat, muscle and viscera weight   Stubble is using the same functions but with a custom m/d and b axis on srw
     if stubble:
         fat_initial_wzida0e0b0xyg0, muscle_initial_wzida0e0b0xyg0, viscera_initial_wzida0e0b0xyg0 \
-            = sfun.f1_body_composition(cn_sire, cx_sire[:,0:1,...], ffcfw_initial_wzida0e0b0xyg0, srw_b0xyg0, pinp.stubble['i_md'])
+            = sfun.f1_body_composition(cg_sire, cn_sire, cx_sire[:,0:1,...], ebw_initial_wzida0e0b0xyg0, srw_b0xyg0
+                                       , pinp.stubble['i_md'], eqn_system = eqn_used_g0_q1p[7,0])
         fat_initial_wzida0e0b0xyg1, muscle_initial_wzida0e0b0xyg1, viscera_initial_wzida0e0b0xyg1 \
-            = sfun.f1_body_composition(cn_dams, cx_dams[:,1:2,...], ffcfw_initial_wzida0e0b0xyg1, srw_b0xyg1, pinp.stubble['i_md'])
+            = sfun.f1_body_composition(cg_dams, cn_dams, cx_dams[:,1:2,...], ebw_initial_wzida0e0b0xyg1, srw_b0xyg1
+                                       , pinp.stubble['i_md'], eqn_system = eqn_used_g1_q1p[7,0])
         fat_initial_wzida0e0b0xyg3, muscle_initial_wzida0e0b0xyg3, viscera_initial_wzida0e0b0xyg3 \
-            = sfun.f1_body_composition(cn_offs, cx_offs[:,mask_x,...], ffcfw_initial_wzida0e0b0xyg3, srw_b0xyg3, pinp.stubble['i_md'])
+            = sfun.f1_body_composition(cg_offs, cn_offs, cx_offs[:,mask_x,...], ebw_initial_wzida0e0b0xyg3, srw_b0xyg3
+                                       , pinp.stubble['i_md'], eqn_system = eqn_used_g3_q1p[7,0])
 
     ##numbers
     ###Distribution of initial numbers across the a1 axis
@@ -2428,8 +2443,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         ##all groups
         eqn_compare = uinp.sheep['i_eqn_compare']
         ##sire
-        ffcfw_start_sire = ffcfw_initial_wzida0e0b0xyg0
-        ffcfw_max_start_sire = ffcfw_start_sire
+        ebw_start_sire = ebw_initial_wzida0e0b0xyg0
+        ebw_max_start_sire = ebw_start_sire
         omer_history_start_p3g0[...] = np.nan
         d_cfw_history_start_p2g0[...] = np.nan
         cfw_start_sire = cfw_initial_wzida0e0b0xyg0
@@ -2443,6 +2458,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         temp_lc_sire = np.array([0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_sire = numbers_initial_zida0e0b0xyg0
         numbers_start_condense_sire = numbers_initial_zida0e0b0xyg0 #just need a default because this is processed using update function.
+        md_solid_sire = np.array([12.0])  # need a start value to convert ebw_initial to ffcfw
         # ebg_start_sire=0
 
         ##dams
@@ -2468,8 +2484,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         # cf_conception_dams = np.zeros(tag1, dtype =dtype) #not currently used. Will be used if profile prior to joining (i.e. previous year) is included in the repro functions.
         guw_start_dams = np.array([0.0])
         rc_birth_start_dams = np.array([1.0])
-        ffcfw_start_dams = fun.f_expand(ffcfw_initial_wzida0e0b0xyg1, p_pos, right_pos=w_pos) #add axis w to a1 because e and b axis are sliced before they are added via calculation
-        ffcfw_max_start_dams = ffcfw_start_dams
+        ebw_start_dams = fun.f_expand(ebw_initial_wzida0e0b0xyg1, p_pos, right_pos=w_pos) #add axis w to a1 because e and b axis are sliced before they are added via calculation
+        ebw_max_start_dams = ebw_start_dams
         ffcfw_mating_dams = 0.0
         lwc_mating_dams = 0.0
         omer_history_start_p3g1[...] = np.nan
@@ -2486,11 +2502,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         numbers_start_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1
         numbers_start_condense_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1 #just need a default because this is processed using update function.
         scanning = 0 #variable is used only for reporting
+        md_solid_dams = np.array([12.0])  # need a start value to convert ebw_initial to ffcfw
         # ebg_start_dams=0
         o_mortality_dams[...] = 0 #have to reset when doing the ltw loop because it is used to back date numbers
         dm_dams = np.array([0.0]) #passed as an argument to f_foetus_nfs() so needs to be defined prior to first assignment
-        #todo not needed
-        m_start_dams = muscle_start_dams * cg_dams[27, ...] * cg_dams[21, ...]
         c_start_dams = np.array([0.0]) #passed as an argument to f_foetus_nfs() so needs to be defined prior to first assignment
 
         ##yatf
@@ -2506,14 +2521,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         numbers_start_yatf = nyatf_b1nwzida0e0b0xyg * gender_propn_xyg   # nyatf is accounting for peri-natal mortality. But doesn't include the differential mortality of female and male offspring at birth
         numbers_start_condense_yatf = numbers_start_yatf #just need a default because this is processed using update function.
         numbers_end_yatf = 0.0 #need a default because this is required in f_start[p+1] prior to being assigned.
-        # ebg_start_yatf=0
-        ebg_yatf = 0.0 #need a default because used in call to WWt of yatf
-        fl_start_yatf=fl_birth_yg2 #can't use fl_initial because that is at weaning
-        fd_start_yatf=0.0
+        #todo md_solid_yatf specified here is the value used for converting ffcfw_yatf to ebw at weaning, not just a dummy value.
+        # Is there a way to make it the real M/D value?
+        md_solid_yatf = np.array([12.0])  # need a value for f_weanweight() call.
+        fl_start_yatf = fl_birth_yg2 #can't use fl_initial because that is at weaning
+        fd_start_yatf = 0.0
         fd_min_start_yatf = 1000.0
         w_b_start_yatf = 0.0
         w_b_ltw_std_yatf = 0.0
-        w_w_start_yatf = 0.0
+        ebw_w_start_yatf = 0.0  #required to be initialised for first call to f_weanweight()
         foo_lact_ave_start = 0.0
         foo_lact_ave = np.zeros(tag1, dtype =dtype) #required because only calculated if using mu function
         fat_start_yatf = 0.0
@@ -2521,8 +2537,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         viscera_start_yatf = 0.0
 
         ##offs
-        ffcfw_start_offs = ffcfw_initial_wzida0e0b0xyg3
-        ffcfw_max_start_offs = ffcfw_start_offs
+        ebw_start_offs = ebw_initial_wzida0e0b0xyg3
+        ebw_max_start_offs = ebw_start_offs
         omer_history_start_p3g3[...] = np.nan
         d_cfw_history_start_p2g3[...] = np.nan
         cfw_start_offs = cfw_initial_wzida0e0b0xyg3
@@ -2536,6 +2552,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         temp_lc_offs = np.array([0.0]) #this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
         numbers_start_offs = numbers_initial_ida0e0b0xyg3
         numbers_start_condense_offs = numbers_initial_ida0e0b0xyg3 #just need a default because this is processed using update function.
+        md_solid_offs = np.array([12.0])  # need a start value to convert ebw_initial to ffcfw
 
         '''if generating for stubble then overwrite some initial params to align with paddock trial.
            Ffcfw and other initial values are overwritten above'''
@@ -2553,6 +2570,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             fl_start_yatf = pinp.stubble['i_fl_yatf']
             fd_start_yatf = pinp.stubble['i_fd_yatf'] #not used for anything so just use the same one as adult
             foo_lact_ave_start = pinp.stubble['i_foo']
+            ###using input proportions for body composition rather than the function because estimate of gutfill for yatf is poor
+            # #todo improve the gut fill calculation for yatf and then calc using f_body_weight().
             fat_start_yatf = ffcfw_start_yatf * pinp.stubble['i_fat_yatf']
             muscle_start_yatf = ffcfw_start_yatf * pinp.stubble['i_muscle_yatf']
             viscera_start_yatf = ffcfw_start_yatf * pinp.stubble['i_viscera_yatf']
@@ -2678,6 +2697,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ###################
             ##sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] > 0):
+                ###FFCFW (start)
+                ffcfw_start_sire = sfun.f1_ebw2ffcfw(cg_sire, cn_sire, ebw_start_sire, srw_b0xyg0, md_solid_sire, eqn_used_g0_q1p[7,0])
+                ffcfw_max_start_sire = sfun.f1_ebw2ffcfw(cg_sire, cn_sire, ebw_max_start_sire, srw_b0xyg0, md_solid_sire, eqn_used_g0_q1p[7, 0])
                 ###GFW (start)
                 gfw_start_sire = cfw_start_sire / cw_sire[3, ...]
                 ###LW (start -with fleece & conceptus)
@@ -2709,6 +2731,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
             ##dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
+                ###FFCFW (start)
+                ffcfw_start_dams = sfun.f1_ebw2ffcfw(cg_dams, cn_dams, ebw_start_dams, srw_b0xyg1, md_solid_dams, eqn_used_g1_q1p[7,0])
+                ffcfw_max_start_dams = sfun.f1_ebw2ffcfw(cg_dams, cn_dams, ebw_max_start_dams, srw_b0xyg1, md_solid_dams, eqn_used_g1_q1p[7,0])
                 ###GFW (start)
                 gfw_start_dams = cfw_start_dams / cw_dams[3, ...]
                 ###LW (start -with fleece & conceptus)
@@ -2744,7 +2769,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                    , date_end_pa1e1b1nwzida0e0b0xyg[p], period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
 
             ##yatf
-            ##note: most yatf calculated later in the code (except for ffcfw from bw)
+            ##note1: most yatf calculated later in the code (except for ffcfw from bw)
+            ##note2: not using ebw for yatf because the gutfill calculation doesn't appear to work for very young animals
             ###Set FFCFW to the expected birth weight if period is birth
             ### Required because bw is not calculated until after milk production is calculated
             if np.any(period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
@@ -2755,6 +2781,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
             ##offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
+                ###FFCFW (start)
+                ffcfw_start_offs = sfun.f1_ebw2ffcfw(cg_offs, cn_offs, ebw_start_offs, srw_b0xyg3, md_solid_offs, eqn_used_g3_q1p[7,0])
+                ffcfw_max_start_offs = sfun.f1_ebw2ffcfw(cg_offs, cn_offs, ebw_max_start_offs, srw_b0xyg3, md_solid_offs, eqn_used_g3_q1p[7, 0])
                 ###GFW (start)
                 gfw_start_offs = cfw_start_offs / cw_offs[3, ...]
                 ###LW (start -with fleece & conceptus)
@@ -2814,7 +2843,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0 = sfun.f_potential_intake_cs(ci_sire, cl_sire, srw_b0xyg0, relsize_start_sire, rc_start_sire, temp_lc_sire
+                        temp0 = sfun.f_potential_intake_cs(ci_sire, srw_b0xyg0, relsize_start_sire, rc_start_sire, temp_lc_sire
                                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg0[p]
                                                            , sam_pi = sam_pi_sire)
@@ -2825,7 +2854,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0 = sfun.f_potential_intake_cs(ci_dams, cl_dams, srw_b0xyg1, relsize_start_dams, rc_start_dams, temp_lc_dams
+                        temp0 = sfun.f_potential_intake_cs(ci_dams, srw_b0xyg1, relsize_start_dams, rc_start_dams, temp_lc_dams
                                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg1[p]
                                                            , rc_birth_start = rc_birth_dams, pi_age_y = pi_age_y_pa1e1b1nwzida0e0b0xyg1[p]
@@ -2837,7 +2866,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0 = sfun.f_potential_intake_cs(ci_offs, cl_offs, srw_b0xyg3, relsize_start_offs, rc_start_offs, temp_lc_offs
+                        temp0 = sfun.f_potential_intake_cs(ci_offs, srw_b0xyg3, relsize_start_offs, rc_start_offs, temp_lc_offs
                                                            , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg3[p]
                                                            , sam_pi = sam_pi_offs)
@@ -3099,9 +3128,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                     eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
                         ##first method is using the nec_cum method
-                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_foetus_nfs(cp_dams, ck_dams, step
-                                        , c_start_dams, m_start_dams, dm_dams, nfoet_b1nwzida0e0b0xyg, relsize_start_dams
-                                        , w_b_std_y_b1nwzida0e0b0xyg1, w_f_start_dams
+                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_foetus_nfs(cg_dams, ck_dams, cp_dams, step
+                                        , c_start_dams, muscle_start_dams, dm_dams, nfoet_b1nwzida0e0b0xyg
+                                        , relsize_start_dams, w_b_std_y_b1nwzida0e0b0xyg1, w_f_start_dams
                                         , nwf_age_f_pa1e1b1nwzida0e0b0xyg1[p], guw_age_f_pa1e1b1nwzida0e0b0xyg1[p]
                                         , ce_day1_f_dams, dcdt_age_f_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gest_propn = gest_propn_pa1e1b1nwzida0e0b0xyg1[p])
@@ -3298,7 +3327,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             temp_lc_sire = temp1
                             kg_sire = temp2
                         # if eqn_compare:
-                        #     r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp0
+                        #     r_compare_q0q1q2tpsire[eqn_system, eqn_group, 2, :, p, ...] = temp0
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -3326,7 +3355,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             temp_lc_dams = temp1
                             kg_dams = temp2
                         # if eqn_compare:
-                        #     r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp0
+                        #     r_compare_q0q1q2tpsire[eqn_system, eqn_group, 2, :, p, ...] = temp0
 
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
@@ -3349,20 +3378,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             temp_lc_offs = temp1
                             kg_offs = temp2
                         # if eqn_compare:
-                        #     r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp0
+                        #     r_compare_q0q1q2tpsire[eqn_system, eqn_group, 2, :, p, ...] = temp0
 
                 eqn_system = 2 # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        # temp0, temp1 = sfun.f_heat_nfs(cc_sire, hp_maint_sire, hp_dw_sire) #hp_dv, hp_dm & hp_df not available at this point in the code
-                        # if eqn_used:
-                        #     hp_total_sire = temp0
-                        #     level_sire = temp1
-                        # if eqn_compare:
-                        #     r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp0  # storing as the second variable
-
                         temp0 = sfun.f_heatloss_nfs(cc_sire, ffcfw_start_sire, rc_start_sire, sl_start_sire
                                                  , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                  , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
@@ -3375,16 +3397,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        # temp0, temp1 = sfun.f_heat_nfs(cc_dams, hp_maint_dams, hp_dw_dams    #hp_dv, hp_dm & hp_df not available at this point in the code
-                        #                         , hp_dc = hp_dc_dams, hp_dl = hp_dl_dams, guw = guw_dams
-                        #                         , gest_propn = gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
-                        #                         , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
-                        # if eqn_used:
-                        #     hp_total_dams = temp0
-                        #     level_dams = temp1
-                        # if eqn_compare:
-                        #     r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp0  # storing as the second variable
-
                         temp0 = sfun.f_heatloss_nfs(cc_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams
                                                  , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                  , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
@@ -3397,13 +3409,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        # temp0, temp1 = sfun.f_heat_nfs(cc_offs, hp_maint_offs, hp_dw_offs) #hp_dv, hp_dm & hp_df not available at this point in the code
-                        # if eqn_used:
-                        #     hp_total_offs = temp0
-                        #     level_offs = temp1
-                        # if eqn_compare:
-                        #     r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp0  # storing as the second variable
-
                         temp0 = sfun.f_heatloss_nfs(cc_offs, ffcfw_start_offs, rc_start_offs, sl_start_offs
                                                  , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                  , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
@@ -3620,6 +3625,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 print('fs target iteration: ', itn)
                 if target_lwc_dams[p] != 9999 and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p]>0):
                     ###calc error
+                    #todo lwc_dams = sfun.f1_ebg2lwc(cg_dams, cn_dams, ebg_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p], ebw_start_dams, srw_b0xyg1, md_solid_dams, eqn_used_g1_q1p[7,0])
                     error = (ebg_dams * cg_dams[18, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p]) - target_lwc_dams[p] * (days_period_pa1e1b1nwzida0e0b0xyg1[p]>0) #if 0 days in period then target is 0
                     ###store in attempts array - build new array assign old array and then add current itn results - done like this to handle the shape changing and because we don't know what shape feedsupply and error are before this loop starts
                     attempts_dams[...,itn,0] = feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p]
@@ -3765,22 +3771,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ffcfw_start_yatf = fun.f_update(ffcfw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ffcfw_max_start_yatf = fun.f_update(ffcfw_max_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###normal weight of yatf
-                nw_start_yatf	= fun.f_update(nw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                nw_start_yatf = fun.f_update(nw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ### convert ffcfw to component weights and energy
-                t_fat_start_yatf, t_muscle_start_yatf, t_viscera_start_yatf = sfun.f1_body_composition(cn_yatf
-                                                , cx_yatf[:,mask_x,...], ffcfw_start_yatf, srw_b1xyg2)  #md_yatf not calculated yet so have to use default
-                # t_f_start_yatf= sfun.f1_weight2energy(cg_yatf, t_fat_start_yatf, 0)
-                # t_m_start_yatf = sfun.f1_weight2energy(cg_yatf, t_muscle_start_yatf, 1)
-                # t_v_start_yatf = sfun.f1_weight2energy(cg_yatf, t_viscera_start_yatf, 2)
+                #todo this isn't correct for the NFS because ffcfw is being based but ebw is being expected
+                # yatf need to be converted to ebw
+                t_fat_start_yatf, t_muscle_start_yatf, t_viscera_start_yatf = sfun.f1_body_composition(cg_yatf, cn_yatf
+                                                , cx_yatf[:,mask_x,...], ffcfw_start_yatf, srw_b1xyg2
+                                                , eqn_system = eqn_used_g2_q1p[7,0])  #md_yatf not calculated yet so have to use default
                 ###fat weight & energy of yatf
                 fat_start_yatf	= fun.f_update(fat_start_yatf, t_fat_start_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
-                # f_start_yatf	= fun.f_update(f_start_yatf, t_f_start_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###muscle weight & energy of yatf
                 muscle_start_yatf	= fun.f_update(muscle_start_yatf, t_muscle_start_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
-                # m_start_yatf	= fun.f_update(m_start_yatf, t_m_start_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###viscera weight & energy of the yatf
                 viscera_start_yatf	= fun.f_update(viscera_start_yatf, t_viscera_start_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
-                # v_start_yatf	= fun.f_update(v_start_yatf, t_v_start_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###clean fleece weight of yatf
                 cfw_start_yatf	= fun.f_update(cfw_start_yatf, 0, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###fibre diameter of yatf
@@ -3835,12 +3838,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0 = sfun.f_potential_intake_cs(ci_yatf, cl_yatf, srw_b1xyg2, relsize_start_yatf, rc_start_yatf, temp_lc_yatf
-                                                       , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                       , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg2[p]
-                                                       , mp2 = mp2_yatf, piyf = piyf_pa1e1b1nwzida0e0b0xyg2[p]
-                                                       , period_between_birthwean = period_between_birthwean_pa1e1b1nwzida0e0b0xyg1[p]
-                                                       , sam_pi = sam_pi_yatf)
+                    temp0 = sfun.f_potential_intake_cs(ci_yatf, srw_b1xyg2, relsize_start_yatf, rc_start_yatf, temp_lc_yatf
+                                        , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                                        , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg2[p]
+                                        , piyf = piyf_pa1e1b1nwzida0e0b0xyg2[p]
+                                        , period_between_birthwean = period_between_birthwean_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , sam_pi = sam_pi_yatf)
                     if eqn_used:
                         pi_yatf = temp0
                     if eqn_compare:
@@ -3990,7 +3993,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         d_fl_yatf = temp2
                         d_cfw_history_yatf_p2 = temp3
                         dw_yatf = temp4
-                        hp_dw_yatfd = temp5
+                        hp_dw_yatf = temp5
                         new_yatf = dw_yatf
                         mew_yatf = dw_yatf + hp_dw_yatf
                     if eqn_compare:
@@ -4122,10 +4125,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                 ##based on days_period_dams because weaning occurs at start of period so days_period_yatf==0
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_weanweight_cs(cg_yatf, w_w_start_yatf, ffcfw_start_yatf, ebg_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p]
-                                                 , period_is_wean_pa1e1b1nwzida0e0b0xyg1[p])
+                    temp0 = sfun.f_weanweight_cs(cg_yatf, cn_yatf, ebw_w_start_yatf, ffcfw_start_yatf, nyatf_b1nwzida0e0b0xyg
+                                                 , srw_b1xyg2, md_solid_yatf, period_is_wean_pa1e1b1nwzida0e0b0xyg1[p]
+                                                 , eqn_system = eqn_used_g2_q1p[7,0])
                     if eqn_used:
-                        w_w_yatf = temp0
+                        ebw_w_yatf = temp0
+                        w_w_yatf = sfun.f1_ebw2ffcfw(cg_yatf, cn_yatf, ebw_w_yatf, srw_b1xyg2, md_solid_yatf
+                                                  , eqn_used_g2_q1p[7,0])
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
             eqn_system = 1 # Mu = 1   #it is okay to use ebg of current period because it is mul by lact propn
@@ -4133,19 +4139,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                 ##based on days_period_dams because weaning occurs at start of period so days_period_yatf==0
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0, temp1, temp2 = sfun.f_weanweight_mu(cu1_yatf, cb1_yatf, cg_yatf, cx_yatf[:,mask_x,...]
-                                            , ce_pyatf[:,p,...], nyatf_b1nwzida0e0b0xyg, w_w_start_yatf, cf_w_w_start_dams
-                                            , ffcfw_start_dams, ebg_dams, foo_dams, foo_lact_ave_start
-                                            , days_period_pa1e1b1nwzida0e0b0xyg2[p], age_start_pa1e1b1nwzida0e0b0xyg2[p]
-                                            , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p]
-                                            , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p]
-                                            , period_between_birthwean_pa1e1b1nwzida0e0b0xyg1[p]
-                                            , period_is_wean_pa1e1b1nwzida0e0b0xyg1[p]) #have to use yatf days per period if using prejoining to scanning
-                    ## these variables need to be available if being compared (but not used) so they can be condensed
+                    temp0, temp1, temp2 = sfun.f_weanweight_mu(cb1_yatf, ce_pyatf[:,p,...], cg_yatf, cn_yatf, cu1_yatf
+                                , cx_yatf[:,mask_x,...], nyatf_b1nwzida0e0b0xyg, ebw_w_start_yatf, cf_w_w_start_dams
+                                , ffcfw_start_dams, ebg_dams, srw_b1xyg2, md_solid_yatf, foo_dams, foo_lact_ave_start
+                                , days_period_pa1e1b1nwzida0e0b0xyg2[p]  #have to use yatf days per period if using prejoining to scanning
+                                , age_start_pa1e1b1nwzida0e0b0xyg2[p] , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p]
+                                , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p]
+                                , period_between_birthwean_pa1e1b1nwzida0e0b0xyg1[p]
+                                , period_is_wean_pa1e1b1nwzida0e0b0xyg1[p], eqn_system = eqn_used_g2_q1p[7,0])
+                    ## these variables need to be available even if not being used so they can be condensed
                     cf_w_w_dams = temp1
                     foo_lact_ave = temp2
                     if eqn_used:
-                        w_w_yatf = temp0
+                        ebw_w_yatf = temp0
+                        w_w_yatf = sfun.f1_ebw2ffcfw(cg_yatf, cn_yatf, ebw_w_yatf, srw_b1xyg2, md_solid_yatf
+                                                  , eqn_used_g2_q1p[7,0])
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
@@ -4270,8 +4278,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0 = sfun.f_conception_cs(cf_dams, cb1_dams, relsize_mating_dams, rc_mating_dams
                                                  , cpg_doy_cs_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
                                                  , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
-                                                 , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]
-                                                 , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p], sam_rr_pa1e1b1nwzida0e0b0xyg1[p])
+                                                 ,rev_trait_values['dams'][p] , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p]
+                                                 , sam_rr_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
                         conception_dams =  temp0
                     if eqn_compare:
@@ -4284,7 +4292,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                   , scan_std_pa1e1b1nwzida0e0b0xyg1[p], doy_pa1e1b1nwzida0e0b0xyg[p]
                                                   , rr_doy_ltw_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
                                                   , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
-                                                  , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p])
+                                                  , rev_trait_values['dams'][p])
                     if eqn_used:
                         conception_dams = temp0
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
@@ -4712,10 +4720,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ##############
             ###sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                ##FFCFW (end - fleece free conceptus free)
-                ffcfw_sire = np.maximum(0,ffcfw_start_sire + cg_sire[18, ...] * ebg_sire * days_period_pa1e1b1nwzida0e0b0xyg0[p])
-                ##FFCFW maximum to date
-                ffcfw_max_sire = np.maximum(ffcfw_sire, ffcfw_max_start_sire)
+                ##EBW (end - fleece free conceptus free)
+                ebw_sire = np.maximum(0,ebw_start_sire + ebg_sire * days_period_pa1e1b1nwzida0e0b0xyg0[p])
+                ##EBW maximum to date
+                ebw_max_sire = np.maximum(ebw_sire, ebw_max_start_sire)
+                ##FFCFW (end)
+                ffcfw_sire = sfun.f1_ebw2ffcfw(cg_sire, cn_sire, ebw_sire, srw_b0xyg0, md_solid_sire, eqn_used_g0_q1p[7,0])
                 ##Energy in fat, muscle, viscera, wool & conceptus
                 # f_xxxx = f_start_xxxx + df_xxxx
                 # m_xxxx = m_start_xxxx + dm_xxxx
@@ -4731,7 +4741,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ##Weight of water (end)
                 ww_sire = fat_sire * (1 - cg_sire[26, ...]) + muscle_sire * (1 - cg_sire[27, ...]) + viscera_sire * (1 - cg_sire[28, ...])
                 ##Weight of gutfill (end)
-                gw_sire = ffcfw_sire * (1 - 1 / cg_sire[18, ...])
+                gw_sire = ffcfw_sire - ebw_sire
                 ##Clean fleece weight (end)
                 cfw_sire = cfw_start_sire + d_cfw_sire * days_period_pa1e1b1nwzida0e0b0xyg0[p] * cfw_propn_yg0
                 ##Greasy fleece weight (end)
@@ -4753,10 +4763,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
             ###dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                ##FFCFW (end - fleece free conceptus free)
-                ffcfw_dams = np.maximum(0,ffcfw_start_dams + cg_dams[18, ...] * ebg_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p])
-                ##FFCFW maximum to date
-                ffcfw_max_dams = np.maximum(ffcfw_dams, ffcfw_max_start_dams)
+                ##EBW (end - fleece free conceptus free)
+                ebw_dams = np.maximum(0,ebw_start_dams + ebg_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p])
+                ##EBW maximum to date
+                ebw_max_dams = np.maximum(ebw_dams, ebw_max_start_dams)
+                ##FFCFW (end)
+                ffcfw_dams = sfun.f1_ebw2ffcfw(cg_dams, cn_dams, ebw_dams, srw_b0xyg1, md_solid_dams, eqn_used_g1_q1p[7, 0])
                 ##Energy in fat, muscle, viscera, wool & conceptus
                 # f_xxxx = f_start_xxxx + df_xxxx
                 # m_xxxx = m_start_xxxx + dm_xxxx
@@ -4772,8 +4784,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ##Weight of water (end)
                 ww_dams = fat_dams * (1 - cg_dams[26, ...]) + muscle_dams * (1 - cg_dams[27, ...]) + viscera_dams * (1 - cg_dams[28, ...])
                 ##Weight of gutfill (end)
-                gw_dams = ffcfw_dams* (1 - 1 / cg_dams[18, ...])
-                ##Whole body energy (calculated from fat, muscle and viscera weight)
+                gw_dams = ffcfw_dams - ebw_dams
+                ##Whole body energy (calculated from fat, muscle and viscera weight, not including conceptus and wool)
                 wbe_dams = sfun.f_wbe_mu(cg_dams, fat_dams, muscle_dams, viscera_dams)
                 ##Clean fleece weight (end)
                 cfw_dams = cfw_start_dams + d_cfw_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p] * cfw_propn_yg1
@@ -4791,11 +4803,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 sl_dams = (fl_dams - fl_shear_yg1) * cw_dams[15, ...]
                 ##Staple strength if shorn(end)
                 ss_dams = fd_min_dams ** 2 / fd_dams ** 2 * cw_dams[16, ...]
+                ##Energy in the foetus
+                c_dams = c_start_dams + dc_dams
 
 
             ###yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                ##FFCFW (end - fleece free conceptus free)
+                ##FFCFW (end - fleece free conceptus free). Note yatf use FFCFW rather than EBW because the gutfill conversion doesn't seem to work
                 ffcfw_yatf = np.maximum(0, ffcfw_start_yatf + cg_yatf[18, ...] * ebg_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p])
                 ##FFCFW maximum to date
                 ffcfw_max_yatf = np.maximum(ffcfw_yatf, ffcfw_max_start_yatf)
@@ -4813,8 +4827,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 viscera_yatf = viscera_start_yatf + d_viscera_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p]
                 ##Weight of water (end)
                 ww_yatf = fat_yatf * (1 - cg_yatf[26, ...]) + muscle_yatf * (1 - cg_yatf[27, ...]) + viscera_yatf * (1 - cg_yatf[28, ...])
-                ##Weight of gutfill (end)
-                gw_yatf = ffcfw_yatf * (1 - 1 / cg_yatf[18, ...])
+                # ##Weight of gutfill (end) #todo this needs to be connected to ebw if going to be used
+                # gw_yatf = ffcfw_yatf * (1 - 1 / cg_yatf[18, ...])
                 ##Clean fleece weight (end)
                 cfw_yatf = cfw_start_yatf + d_cfw_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p] * cfw_propn_yg2
                 ##Greasy fleece weight (end)
@@ -4834,10 +4848,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
             ###offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                ##FFCFW (end - fleece free conceptus free)
-                ffcfw_offs = np.maximum(0,ffcfw_start_offs + cg_offs[18, ...] * ebg_offs * days_period_pa1e1b1nwzida0e0b0xyg3[p])
-                ##FFCFW maximum to date
-                ffcfw_max_offs = np.maximum(ffcfw_offs, ffcfw_max_start_offs)
+                ##EBW (end - fleece free conceptus free)
+                ebw_offs = np.maximum(0, ebw_start_offs + ebg_offs * days_period_pa1e1b1nwzida0e0b0xyg3[p])
+                ##EBW maximum to date
+                ebw_max_offs = np.maximum(ebw_offs, ebw_max_start_offs)
+                ##FFCFW (end)
+                ffcfw_offs = sfun.f1_ebw2ffcfw(cg_offs, cn_offs, ebw_offs, srw_b0xyg3, md_solid_offs, eqn_used_g3_q1p[7, 0])
                 ##Energy in fat, muscle, viscera, wool & conceptus
                 # f_xxxx = f_start_xxxx + df_xxxx
                 # m_xxxx = m_start_xxxx + dm_xxxx
@@ -4853,8 +4869,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ##Weight of water (end)
                 ww_offs = fat_offs * (1 - cg_offs[26, ...])  + muscle_offs * (1 - cg_offs[27, ...]) + viscera_offs * (1 - cg_offs[28, ...])
                 ##Weight of gutfill (end)
-                gw_offs = ffcfw_offs* (1 - 1 / cg_offs[18, ...])
-                ##Whole body energy (end - calculated from fat, muscle and viscera weight)
+                gw_offs = ffcfw_offs - ebw_offs
+                ##Whole body energy (end - calculated from fat, muscle and viscera weight, not including  wool)
                 wbe_offs = sfun.f_wbe_mu(cg_offs, fat_offs, muscle_offs, viscera_offs)
                 ##Clean fleece weight (end)
                 cfw_offs = cfw_start_offs + d_cfw_offs * days_period_pa1e1b1nwzida0e0b0xyg3[p] * cfw_propn_yg3
@@ -5033,9 +5049,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
 
             ###yatf
-            o_ffcfw_start_tpyatf[:,p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period, has to be outside of the 'if' because days per period = 0 when weaning occurs (because once they are weaned they are not yatf therefore 0 days per period) because weaning is first day of period. But we need to know the start ffcfw.
-            o_numbers_start_tpyatf[:,p] = numbers_start_yatf #used for prog calculations - use numbers start because weaning is start of period - has to be out of the 'if' because there is 0 days in the period when weaning occurs but we still want to store the start numbers (because once they are weaned they are not yatf therefore 0 days per period)
-            o_rc_start_tpyatf[:,p] = rc_start_yatf #outside because used for sale value which is weaning which has 0 days per period because weaning is first day (this means the rc at weaning is actually the rc at the start of the previous period because it doesn't recalculate once days per period goes to 0) (because once they are weaned they are not yatf therefore 0 days per period)
+            #### Calculation of yatf for prog and sale of animals are done prior to the IF because once they are weaned they are not yatf therefore 0 days per period
+            o_ffcfw_start_tpyatf[:,p] = ffcfw_start_yatf #use ffcfw_start because weaning is at the start of period. Not inside the 'if' because days per period = 0 when weaning occurs (because once they are weaned they are not yatf). But we need to know the start ffcfw.
+            o_numbers_start_tpyatf[:,p] = numbers_start_yatf #used for prog calculations - use numbers start because weaning is start of period. Not inside the 'if' because there is 0 days in the period when weaning occurs but we still want to store the start numbers
+            o_rc_start_tpyatf[:,p] = rc_start_yatf #used for sale value which is weaning which has 0 yatf days per period because weaning is first day (this means the rc at weaning is actually the rc at the start of the previous period because it doesn't recalculate once days per period goes to 0)
             o_wean_w_tpyatf[:, p] = w_w_yatf #outside the if statement because the days_period_yatf are 0 in the weaning period because weaning is at the start of the period
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort or have been in the feedlot.
@@ -5235,14 +5252,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ##condensing - this requires end number (that have NOT been condensed)
             ###sire - currently not condensed because only one dvp but code exists in case we add the detail later.
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                ###FFCFW (condense - fleece free conceptus free)
-                ffcfw_condensed_sire = sfun.f1_condensed(ffcfw_sire, idx_sorted_w_sire, condense_w_mask_sire
+                ###EBW (condense - empty body weight)
+                ebw_condensed_sire = sfun.f1_condensed(ebw_sire, idx_sorted_w_sire, condense_w_mask_sire
                                         , n_fs_sire, len_w0, n_fvp_periods_sire, False)
                 ###nw (condense - normal weight)	- yes this is meant to be updated from nw_start
                 nw_start_condensed_sire = sfun.f1_condensed(nw_start_sire, idx_sorted_w_sire, condense_w_mask_sire
                                         , n_fs_sire, len_w0, n_fvp_periods_sire, False)
-                ###FFCFW maximum to date
-                ffcfw_max_condensed_sire = sfun.f1_condensed(ffcfw_max_sire, idx_sorted_w_sire, condense_w_mask_sire
+                ###EBW maximum to date
+                ebw_max_condensed_sire = sfun.f1_condensed(ebw_max_sire, idx_sorted_w_sire, condense_w_mask_sire
                                         , n_fs_sire, len_w0, n_fvp_periods_sire, False)
                 ###Weight of fat (condense)
                 fat_condensed_sire = sfun.f1_condensed(fat_sire, idx_sorted_w_sire, condense_w_mask_sire
@@ -5274,18 +5291,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
             ###dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                ###FFCFW (condense - fleece free conceptus free)
-                ffcfw_condensed_dams = sfun.f1_condensed(ffcfw_dams, idx_sorted_w_dams, condense_w_mask_dams
+                ###EBW (condense - empty body weight)
+                ebw_condensed_dams = sfun.f1_condensed(ebw_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'ffcfw_dams')
+                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'ebw_dams')
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_condensed_dams = sfun.f1_condensed(nw_start_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'nw_start_dams')
-                ###FFCFW maximum to date
-                ffcfw_max_condensed_dams = sfun.f1_condensed(ffcfw_max_dams, idx_sorted_w_dams, condense_w_mask_dams
+                ###EBW maximum to date
+                ebw_max_condensed_dams = sfun.f1_condensed(ebw_max_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'ffcfw_max_dams')
+                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'ebw_max_dams')
                 ###Weight of fat (condense)
                 fat_condensed_dams = sfun.f1_condensed(fat_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
@@ -5298,6 +5315,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 viscera_condensed_dams = sfun.f1_condensed(viscera_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'viscera_dams')
+                ###Energy in the foetus (condense)
+                c_condensed_dams = sfun.f1_condensed(c_dams, idx_sorted_w_dams, condense_w_mask_dams
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
+                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'c_dams')
                 ###Organ energy requirement (condense)
                 omer_history_condensed_p3g1 = sfun.f1_condensed(omer_history_dams, idx_sorted_w_dams[na,...]
                                         , condense_w_mask_dams[na,...], n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
@@ -5439,23 +5460,23 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'w_b_yatf')
                 ##yatf wean weight
-                w_w_condensed_yatf = sfun.f1_condensed(w_w_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
+                ebw_w_condensed_yatf = sfun.f1_condensed(ebw_w_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'w_w_yatf')
+                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'ebw_w_yatf')
             ###offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                ###FFCFW (condense - fleece free conceptus free)
-                ffcfw_condensed_offs = sfun.f1_condensed(ffcfw_offs, idx_sorted_w_offs, condense_w_mask_offs
+                ###EBW (condense - empty body weight)
+                ebw_condensed_offs = sfun.f1_condensed(ebw_offs, idx_sorted_w_offs, condense_w_mask_offs
                                         , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'ffcfw_offs')
+                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'ebw_offs')
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_condensed_offs = sfun.f1_condensed(nw_start_offs, idx_sorted_w_offs, condense_w_mask_offs
                                         , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
                                         , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'nw_start_offs')
                 ###FFCFW maximum to date
-                ffcfw_max_condensed_offs = sfun.f1_condensed(ffcfw_max_offs, idx_sorted_w_offs, condense_w_mask_offs
+                ebw_max_condensed_offs = sfun.f1_condensed(ebw_max_offs, idx_sorted_w_offs, condense_w_mask_offs
                                         , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'ffcfw_max_offs')
+                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'ebw_max_offs')
                 ###Weight of fat (condense)
                 fat_condensed_offs = sfun.f1_condensed(fat_offs, idx_sorted_w_offs, condense_w_mask_offs
                                         , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
@@ -5516,16 +5537,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ##start production - this requires condensed end numbers
             ###sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                ###FFCFW (start - fleece free conceptus free)
-                ffcfw_start_sire = sfun.f1_period_start_prod(numbers_end_condensed_sire, ffcfw_condensed_sire, prejoin_tup
+                ###EBW (start - empty body weight)
+                ebw_start_sire = sfun.f1_period_start_prod(numbers_end_condensed_sire, ebw_condensed_sire, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_sire
                                         , mask_min_wa_lw_w_sire, mask_max_lw_wz_sire, mask_max_wa_lw_w_sire)
                 ###nw (start - normal weight)	- yes this is meant to be updated from nw_start
                 nw_start_sire = sfun.f1_period_start_prod(numbers_end_condensed_sire, nw_start_condensed_sire, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_sire
                                         , mask_min_wa_lw_w_sire, mask_max_lw_wz_sire, mask_max_wa_lw_w_sire)
-                ###FFCFW maximum to date
-                ffcfw_max_start_sire = sfun.f1_period_start_prod(numbers_end_condensed_sire, ffcfw_max_condensed_sire, prejoin_tup
+                ###EBW maximum to date
+                ebw_max_start_sire = sfun.f1_period_start_prod(numbers_end_condensed_sire, ebw_max_condensed_sire, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_sire
                                         , mask_min_wa_lw_w_sire, mask_max_lw_wz_sire, mask_max_wa_lw_w_sire)
                 ###Weight of fat (start)
@@ -5567,8 +5588,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
             ###dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                ###FFCFW (start - fleece free conceptus free)
-                ffcfw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, ffcfw_condensed_dams, prejoin_tup
+                ###FFCFW (start - empty body weight)
+                ebw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, ebw_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
                                         , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
@@ -5584,8 +5605,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
-                ###FFCFW maximum to date
-                ffcfw_max_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, ffcfw_max_condensed_dams, prejoin_tup
+                ###EBWW maximum to date
+                ebw_max_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, ebw_max_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
                                         , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
@@ -5616,6 +5637,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of viscera (start)
                 viscera_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, viscera_condensed_dams, prejoin_tup
+                                        , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
+                                        , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
+                                        , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
+                ###Energy in the foetus (start)
+                c_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, c_condensed_dams, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
                                         , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
@@ -5908,14 +5939,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , mask_min_wa_lw_w_yatf, mask_max_lw_wz_yatf, mask_max_wa_lw_w_yatf
                                         , len_gen_t=len_gen_t1, a_t_g=a_t_g1 , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ##yatf wean weight
-                w_w_start_yatf = sfun.f1_period_start_prod(numbers_end_condensed_yatf, w_w_condensed_yatf, prejoin_tup
+                ebw_w_start_yatf = sfun.f1_period_start_prod(numbers_end_condensed_yatf, ebw_w_condensed_yatf, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_yatf
                                         , mask_min_wa_lw_w_yatf, mask_max_lw_wz_yatf, mask_max_wa_lw_w_yatf
                                         , len_gen_t=len_gen_t1, a_t_g=a_t_g1 , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
             ###offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                ###FFCFW (start - fleece free conceptus free)
-                ffcfw_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, ffcfw_condensed_offs, prejoin_tup
+                ###EBW (start - empty body weight)
+                ebw_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, ebw_condensed_offs, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
                                         , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
@@ -5924,8 +5955,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
                                         , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
-                ###FFCFW maximum to date
-                ffcfw_max_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, ffcfw_max_condensed_offs, prejoin_tup
+                ###EBW maximum to date
+                ebw_max_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, ebw_max_condensed_offs, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
                                         , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])

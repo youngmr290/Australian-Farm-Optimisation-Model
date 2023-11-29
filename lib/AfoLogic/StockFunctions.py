@@ -761,12 +761,10 @@ def f1_history(history, new_value, days_in_period):
     return lagged, history
 
 
-def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc, temp_ave, temp_max, temp_min, rain_intake
-                          , rc_birth_start=1, pi_age_y=0, lb_start=0, mp2=0, piyf=1, period_between_birthwean=1, sam_pi=1):
+def f_potential_intake_cs(ci, srw, relsize_start, rc_start, temp_lc, temp_ave, temp_max, temp_min, rain_intake
+                          , rc_birth_start=1, pi_age_y=0, lb_start=0, piyf=1, period_between_birthwean=1, sam_pi=1):
     '''
-
     :param ci:
-    :param cl:
     :param srw:
     :param relsize_start:
     :param rc_start:
@@ -778,7 +776,6 @@ def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc, temp_av
     :param rc_birth_start:
     :param pi_age_y:
     :param lb_start:
-    :param mp2:
     :param piyf:
     :param period_between_birthwean:
     :param sam_pi: sensitivity multiplier on PI. Applied as an intermediate SAM so that it can be differentially applied by age
@@ -871,22 +868,22 @@ def f1_weight2energy(cg, weight, option):
     energy - Energy content of the component.
     '''
     ## select the relevant coefficients for the component
-    if option == 0:
+    if option == 0:  #Fat
         drymatter = cg[26, ...]
         energydensity = cg[20, ...]
-    elif option == 1:
+    elif option == 1:  #Muscle
         drymatter = cg[27, ...]
         energydensity = cg[21, ...]
-    elif option == 2:
+    elif option == 2:  #Viscera
         drymatter = cg[28, ...]
         energydensity = cg[22, ...]
-    elif option == 3:
+    elif option == 3:  #Wool
         drymatter = cg[29, ...]
         energydensity = cg[23, ...]
-    elif option == 4:
+    elif option == 4:  #Conceptus #todo currently not parameterised
         drymatter = cg[30, ...]
         energydensity = cg[24, ...]
-    else:
+    else:   #Milk  #todo currently not parameterised
         drymatter = cg[31, ...]
         energydensity = cg[25, ...]
 
@@ -1019,7 +1016,7 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
     return w_f, mec, nec, w_b_exp_y, nw_f, guw
 
 
-def f_foetus_nfs(cp, ck, step, c_start, m_start, dm, nfoet, relsize_start, w_b_std_y, w_f_start
+def f_foetus_nfs(cg, ck, cp, step, c_start, muscle_start, dm, nfoet, relsize_start, w_b_std_y, w_f_start
                  , nwf_age_f, guw_age_f, ce_day1_f, dcdt_age_f, gest_propn):
     #calculates the energy requirement for gestation for the days gestating. The result is scaled by gest_propn when used
     ##expected normal birth weight with dam age adj.
@@ -1028,6 +1025,7 @@ def f_foetus_nfs(cp, ck, step, c_start, m_start, dm, nfoet, relsize_start, w_b_s
     if c_start == 0: #could be beginning of gestation so calculate c_start for day 1 of gestation
         c_start = w_b_exp_y * ce_day1_f
     ## Conceptus growth scalar based on muscle growth in the previous period
+    m_start = f1_weight2energy(cg, muscle_start, 2)
     dm_scalar = 1 + cp[19, ...] * dm / m_start
     ##Proportional change in conceptus energy for the first day of the generator period (Proportion of c_start)
     dce_propn = dm_scalar * dcdt_age_f
@@ -1093,31 +1091,40 @@ def f_birthweight_mu(cu1, cb1, cg, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, e
     return w_b, cf_w_b_dams
 
 
-def f_weanweight_cs(cg, w_w_yatf, ffcfw_start_yatf, ebg_yatf, days_period, period_is_wean):
+def f_weanweight_cs(cg, cn, ebw_w_yatf, ffcfw_start_yatf, nyatf, srw, md, period_is_wean, eqn_system):
+    '''Calculates the weight at weaning from the ffcfw_yatf at the start of the period plus any growth during the period.
+     Weaning occurs at the start of the period so there is no growth during the period when period_is_wean.
+     Returns empty body weight of the weaner using the conversion function
+     Note: ebw has not been calculated for yatf prior to weaning because the conversion isn't accurate'''
+
     ##set WWt = yatf weight at weaning
-    t_w_w = (ffcfw_start_yatf + ebg_yatf * cg[18, ...] * days_period) + sen.saa['wean_wt']  #Note:saa[wean_wt] doesn't have an associated MEI impact.
+    t_w_w = ffcfw_start_yatf + sen.saa['wean_wt'] * (nyatf > 0)  #Note:saa[wean_wt] doesn't have an associated MEI impact so it is weight for free.
+    ##Empty body weight of the weaner
+    t_ebw_w = f1_ffcfw2ebw(cg, cn, t_w_w, srw, md, eqn_system)
     ##update weaning weight if it is weaning period
-    w_w_yatf = fun.f_update(w_w_yatf, t_w_w, period_is_wean)
-    return w_w_yatf
+    ebw_w_yatf = fun.f_update(ebw_w_yatf, t_ebw_w, period_is_wean)
+    return ebw_w_yatf
 
 
-def f_weanweight_mu(cu1, cb1, cg, cx, ce, nyatf, w_w, cf_w_w_dams, ffcfw_wean_dams, ebg_dams, foo, foo_ave_start
-                    , days_period, day_of_lactation, period_between_joinscan, period_between_scanbirth
-                    , period_between_birthwean, period_is_wean):
+def f_weanweight_mu(cb1, ce, cg, cn, cu1, cx, nyatf, ebw_w, cf_w_w_dams, ffcfw_wean_dams, ebg_dams, srw, md, foo
+                    , foo_ave_start, days_period, day_of_lactation, period_between_joinscan, period_between_scanbirth
+                    , period_between_birthwean, period_is_wean, eqn_system):
     ##Calculate average FOO to end of this period (increment the running average to date)
     foo_ave_end = fun.f_divide(foo_ave_start * day_of_lactation + foo * days_period, day_of_lactation + days_period)
-    ##Carry forward WWt increment
+    ##Carry forward WWt increment (the units of d_cf_w_w is kg of ffcfw)
     d_cf_w_w = f1_carryforward_u1(cu1[17, ...], cg, ebg_dams, False, period_between_joinscan, period_between_scanbirth
                                  , period_between_birthwean, days_period)
-    ##Increment the total Carry forward WWt
+    ##Increment the total Carry forward WWt (the units of cf_w_w is kg of ffcfw)
     cf_w_w_dams = cf_w_w_dams + d_cf_w_w
     ##add intercept, impact of dam LW at weaning, FOO, BTRT, gender and dam age effects to the carry forward value
     t_w_w = (cf_w_w_dams + cu1[17, -1, ...] + cu1[17, 0, ...] * ffcfw_wean_dams + cu1[17, 5, ...] * foo_ave_end
              + cu1[17, 6, ...] * foo_ave_end ** 2 + cb1[17, ...] + cx[17, ...] + ce[17, ...]
-             + sen.saa['wean_wt']) * (nyatf > 0)  #Note:saa[wean_wt] doesn't have an associated MEI impact.
-    ##Update w_w if it is weaning	
-    w_w = fun.f_update(w_w, t_w_w, period_is_wean)
-    return w_w, cf_w_w_dams, foo_ave_end
+             + sen.saa['wean_wt']) * (nyatf > 0)  #Note:saa[wean_wt] doesn't have an associated MEI impact so it is weight for free.
+    ##Empty body weight of the weaner
+    t_ebw_w = f1_ffcfw2ebw(cn, t_w_w, srw, md, eqn_system)
+    ##Update w_w if it is weaning
+    ebw_w = fun.f_update(ebw_w, t_ebw_w, period_is_wean)
+    return ebw_w, cf_w_w_dams, foo_ave_end
 
 
 #todo Consider combining into 1 function f_progenyflc_mu
@@ -1619,7 +1626,7 @@ def f_wbe_mu(cg, fat, muscle, viscera=0):
 #     return fs
 
 
-def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1
+def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, nyatf_b1any, period_is_mating
                     , rev_trait_value, saa_rr, sam_rr):
     ''''
     Calculation of dam conception using CSIRO equation system
@@ -1648,9 +1655,9 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, ny
     :param nfoet_b1any:
     :param nyatf_b1any:
     :param period_is_mating:
-    :param index_e1:
     :param rev_trait_value:
     :param saa_rr:
+    :param sam_rr:
     :return: Dam conception.
     '''
     if ~np.any(period_is_mating):
@@ -1735,8 +1742,8 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, cpg_doy, nfoet_b1any, ny
     return conception
 
 
-def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy, nfoet_b1any, nyatf_b1any, period_is_mating
-                     , index_e1, rev_trait_value):
+def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy, nfoet_b1any, nyatf_b1any
+                     , period_is_mating, rev_trait_value):
     '''
     Conception is the change in the numbers of animals in each slice of e & b as a proportion of the numbers
     in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums()
@@ -1769,7 +1776,7 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
         repro_rate = scan_std + (cs_mating - 3) * slope
 
         ##Calculate the propn dry/single/twin for given repro rate.
-        ###remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f1_DSTw)
+        ###remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f1_DSTw
         repro_rate = np.squeeze(repro_rate, axis=b1_pos)
         ### Note: repro rate calculated above is based on a calibration with 2 cycles
         ### Require the proportions of dry, singles, twins & triplets for 1 cycle
@@ -1828,7 +1835,7 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
     :param cf: Includes parameter for number of ewes that implant but don't retain to birth (the 3rd trimester).
     :param cb1: Cut-off parameter for the probability of conception with different number of foetuses (remember the NM slice in b1)
     :param cu2: LMAT parameters controlling impact of LWJ, LWC during joining, NLB, Age at joining
-    :param srw: Standard reference weight of the dam genotype, not including the adjustment assoicated with BTRT
+    :param srw: Standard reference weight of the dam genotype, not including the adjustment associated with BTRT
     :param maternallw_mating: Maternal LW at mating. Allows that mating may occur mid-period.
                            Note: the e and b axis have been handled before passing in.
     :param lwc: Liveweight change of the dam during the generator period in g/hd/d.
@@ -2165,7 +2172,7 @@ def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### the mortality rate increases in a quadratic function for lower RC & greater disparity between EBG and normal gain
     ###distribution on ebg & rc_start, calculate mort and then average (axis =-1,-2)
-    ###distribution used to atempt to replicate real life where there is a spread within the mob. This is required because mortality is quadratic therefore it is in accurate to use mob average egb and rc.
+    ###distribution used to attempt to replicate real life where there is a spread within the mob. This is required because mortality is quadratic therefore it is in accurate to use mob average egb and rc.
     ebg_start_p1p2 = fun.f_distribution7(ebg_start, sd=sd_ebg)[...,na]
     rc_start_p1p2 = fun.f_distribution7(rc_start, cv=cv_weight)[...,na,:]
     ###calc mort scalars for the hybrid mortality function
@@ -2533,7 +2540,7 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
 
         ###update and use pkl condensed var
         ###Every trial creates a new pkl that is identified using the fs pkl number. Some trials use stored values and then essentially just create a copy. This is done so that the same fs numbers can be used.
-        ###Note: can't create with w_start_len==2 and use for w_start_len==3 or visa versa (dont think this can happen with fs anyway so shouldnt be a problem).
+        ###Note: can't create with w_start_len==2 and use for w_start_len==3 or visa versa (don't think this can happen with fs anyway so shouldn't be a problem).
         ###see google doc (randomness section) for more info.
         if param_name is not None:
             if sinp.structuralsa['i_use_pkl_condensed_start_condition']:
@@ -2545,7 +2552,7 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
                 ####handle when the current trial has a different number of w slices or t slices than the create trial
                 temporary_pkl = f1_adjust_pkl_condensed_axis_len(temporary_pkl, i_w_len, i_t_len)
                 ###update temporary_pkl with temporary for desired w slices - high w and low w are not updated by pkl if
-                ### the condensed animal calculated above has lower or higher weight (because we dont want to weight to vanish. this also handle cases when the fs is altered)
+                ### the condensed animal calculated above has lower or higher weight (because we don't want weight to vanish. this also handles cases when the fs is altered)
                 temporary = fun.f_update(temporary_pkl, temporary, mask_gen_condensed_used)
             pkl_condensed_value[param_name] = temporary.copy()  # have to copy so that traits (e.g. mort) that are added to using += do not also update the value (not sure the copy is required here but have left it in since it was required for the rev)
 
@@ -2562,10 +2569,10 @@ def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
         a_s_w = (np.arange(i_w_len)/(i_w_len/sinp.structuralsa['i_w_start_len1'])).astype(int)
         a_s_twg = fun.f_expand(a_s_w, left_pos=sinp.stock['i_w_pos'], right_pos2=sinp.stock['i_w_pos'], left_pos2=-len(temporary.shape)-1)
         temporary = np.take_along_axis(temporary, a_s_twg, axis=sinp.stock['i_w_pos'])
-    ####handle when the pkl condensed values dont have a t axis but the t axis is active - this can occur if the condensed params were saved in a trial where t was not active. The t axis still gets stored on the fs even if the generator didnt have an active t therefore it needs to be activated here.
+    ####handle when the pkl condensed values don't have a t axis but the t axis is active - this can occur if the condensed params were saved in a trial where t was not active. The t axis still gets stored on the fs even if the generator didn't have an active t therefore it needs to be activated here.
     t_pos = sinp.stock['i_p_pos']  # t is in p pos because p has been sliced
     if i_t_len>temporary.shape[t_pos]:
-        temporary = np.concatenate([temporary]*i_t_len, axis=t_pos) #wont work if pkl trial had t axis but current trial doesnt - to handle this would require passing in the a_t_g association.
+        temporary = np.concatenate([temporary]*i_t_len, axis=t_pos) #won't work if pkl trial had t axis but current trial doesn't - to handle this would require passing in the a_t_g association.
     return temporary
 
 def f1_gen_condensed_used(ffcfw, idx_sorted_w, condense_w_mask, n_fs, len_w, len_t, n_fvps_percondense
@@ -2798,49 +2805,78 @@ def f1_fat_score(rc_tpg, cn):
     return fat_score
 
 
-def f1_ffcfw2ebw(cn, ffcfw, srw, md):
+def f1_ffcfw2ebw(cg, cn, ffcfw, srw, md=12, eqn_system=0):
     ''' Calculate empty body weight from fffw.
-    Uses equations from Sheep Calc.xlsx from Hutton Oddy pers. comm. Oct 2023
-    The equations were rearranged to generate 2 scalars that are multiplied to return EBW as a proportion of FFCFW'''
+    Different equation system used depending on equation group 7'''
 
-    ##Scalar 0. Estimate EBW as a proportion of ffcfw based on stage of maturity (relsize)
-    z = fun.f_divide(ffcfw, srw)
-    gut_weight = (cn[10, ...] * z + cn[11, ...] * z**2 + cn[12, ...]) * cn[13, ...] * srw
-    scalar0 = 1 - fun.f_divide(gut_weight, ffcfw)   #Using f_divide because ffcfw can be 0
-    ##Scalar 1. Adjust the weight scalar by a factor related to diet quality
-    scalar1 = cn[14, ...] * md + cn[15, ...] * md**2 + cn[16, ...]
-    ##Step 3. Empty body weight is the product of both scalars
-    ebw = ffcfw * scalar0 * scalar1
+    if eqn_system == 2:  # New Feeding Standards = 2
+        ## Uses equations from Sheep Calc.xlsx from Hutton Oddy pers. comm. Oct 2023
+        ## The equations were rearranged to generate 2 scalars that are multiplied to return EBW as a proportion of FFCFW
+        ## The equations include components for relative size and diet quality
+        ## The effect of relative size (z) is scalar0
+        ## The diet quality effect is scalar1'''
+        ##Scalar 0. Estimate EBW as a proportion of ffcfw based on stage of maturity (relsize)
+        z = fun.f_divide(ffcfw, srw)
+        gut_weight = (cn[10, ...] * z + cn[11, ...] * z**2 + cn[12, ...]) * cn[13, ...] * srw
+        scalar0 = 1 - fun.f_divide(gut_weight, ffcfw)   #Using f_divide because ffcfw can be 0
+        ##Scalar 1. Adjust the weight scalar by a factor related to diet quality
+        scalar1 = cn[14, ...] * md + cn[15, ...] * md**2 + cn[16, ...]
+        ##Step 3. Empty body weight is the product of both scalars
+        ebw = ffcfw * scalar0 * scalar1
+    else: # eqn_system == 0  # CSIRO = 0 / default
+        #Use CSIRO empty body scalar
+        ebw = ffcfw / cg[18, ...]
     return ebw
 
 
-def f1_ebw2ffcfw2(cn, ebw, srw, md):
+def f1_ebw2ffcfw(cg, cn, ebw, srw, md, eqn_system=0):
     ''' Calculate ffcfw from empty body weight.
-    Uses same equations and coefficients as f1_ffcfw2ebw() from Sheep Calc.xlsx from Hutton Oddy pers. comm. Oct 2023
-    Gut contents are derived from solving a quadratic equation see Working11: pg12
-    The derivation is based on solving a quadratic function of gut fill (g) where
-    a.g**2 + b.g + c = 0.
-    a, b & c are calculated from the coefficients, ebw & srw'''
+    Different equation system used depending on equation group 7'''
 
-    ##Scalar1. Adjust the weight scalar by a factor related to diet quality
-    scalar1 = cn[14, ...] * md + cn[15, ...] * md**2 + cn[16, ...]
-    ##Step 2. Derive the coefficients for the quadratic
-    a = cn[11, ...] * cn[13, ...] * scalar1 / srw
-    b = cn[10, ...] * cn[13, ...] * scalar1 + 2 * cn[11, ...] * cn[13, ...] * scalar1 * ebw / srw - scalar1
-    c = cn[10, ...] * cn[13, ...] * scalar1 * ebw + cn[11, ...] * cn[13, ...] * scalar1 * ebw**2 / srw + cn[12, ...] * cn[13, ...] * scalar1 * srw + ebw - scalar1 * ebw
-    ##Step 3. Solve the quadratic
-    gutfill = (-b + np.sign(a) * np.sqrt(b**2 - 4 * a * c))/(2 * a)
-    ##Step4. Calculate ffcfw from ebw and gutfill
-    ffcfw = ebw + gutfill
+    if eqn_system == 2:  # New Feeding Standards = 2
+        ## Uses same equations and coefficients as f1_ffcfw2ebw() from Sheep Calc.xlsx from Hutton Oddy pers. comm. Oct 2023
+        ## The equations include components for relative size and diet quality
+        ## The diet quality effect is scalar1
+        ## More detail and the source equations are represented in f_ffcfw2ebw()
+        ## Gut contents are derived from solving a quadratic equation see Working11: pg12
+        ## The derivation is based on solving a quadratic function of gut fill (g) where
+        ## a.g**2 + b.g + c = 0.
+        ## a, b & c are calculated from the coefficients, ebw & srw
+        ##Scalar1. Adjust the weight scalar by a factor related to diet quality
+        scalar1 = cn[14, ...] * md + cn[15, ...] * md**2 + cn[16, ...]
+        ##Step 2. Derive the coefficients for the quadratic
+        a = cn[11, ...] * cn[13, ...] * scalar1 / srw
+        b = cn[10, ...] * cn[13, ...] * scalar1 + 2 * cn[11, ...] * cn[13, ...] * scalar1 * ebw / srw - scalar1
+        c = cn[10, ...] * cn[13, ...] * scalar1 * ebw + cn[11, ...] * cn[13, ...] * scalar1 * ebw**2 / srw + cn[12, ...] * cn[13, ...] * scalar1 * srw + ebw - scalar1 * ebw
+        ##Step 3. Solve the quadratic (assuming that one root will be negative and the other positive)
+        gutfill = (-b + np.sign(a) * np.sqrt(b**2 - 4 * a * c))/(2 * a)
+        ##Step4. Calculate ffcfw from ebw and gutfill
+        ffcfw = ebw + gutfill
+    else: # eqn_system == 0  # CSIRO = 0 / default
+        #Use CSIRO empty body scalar
+        ffcfw = ebw * cg[18, ...]
     return ffcfw
 
 
-def f1_body_composition(cn, cx, ffcfw, srw, md=12.0):
+def f1_ebg2lwc(cg, cn, ebg, ebw, srw, md, eqn_system=0):
+    ''' Calculate liveweight change from empty body gain.
+    Doesn't include the gain in fleece weight (so it is actually gain in ffcfw)'''
+
+    ##Step 1. Calculate ffcfw prior to gain
+    ffcfw1 = f1_ebw2ffcfw(cg, cn, ebw, srw, md, eqn_system)
+    ##Step 2. ffcfw after gain
+    ffcfw2 = f1_ebw2ffcfw(cg, cn, ebw + ebg, srw, md, eqn_system)
+    ##Step 3. Calculate lwc
+    lwc = ffcfw2 - ffcfw1
+    return lwc
+
+
+def f1_body_composition(cg, cn, cx, ebw, srw, md=12.0, eqn_system = 0):
     ''' Calculate body composition (wet weight of fat, muscle and viscera).
      Uses equations from Sheep Calc.xlsx from Hutton Oddy pers. comm. Oct 2023
      Default M/D is 12 MJ/kg because mostly the function will be being used at weaning'''
-    ##Step 1. Calculate empty body weight
-    ebw = f1_ffcfw2ebw(cn, ffcfw, srw, md)
+    ##Step 1. Calculate ffcfw
+    ffcfw = f1_ebw2ffcfw(cg, cn, ebw, srw, md, eqn_system)
     ##Step 2. Calculate fat weight
     relsize = ffcfw / srw
     fat = (cn[17, ...] * relsize + cn[18, ...] * relsize ** 2 + cn[19, ...]) * ffcfw
@@ -2961,7 +2997,7 @@ def f_sale_value(cn, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj_
     ## Select the best net sale price from the relevant grids
     ###Mask the grids based on the maximum age, minimum age, the gender for each grid and genotype
     sale_value_c1s7tpg = sale_value_c1s7tpg * mask_s7x_s7tpg * mask_s7g_s7tpg * (age_end_pg1/30.4 <= sale_agemax_s7tpg1) * (age_end_pg1/30.4 >= sale_agemin_s7tpg1) #divide 30 to convert to months
-    ###mask grids based on maimum and minimum ffcfw
+    ###mask grids based on maximum and minimum ffcfw
     mask_ffcfw_s7tpg = np.logical_and(o_ffcfw_tpg>sale_ffcfw_min_s7tpg, o_ffcfw_tpg<sale_ffcfw_max_s7tpg)
     sale_value_c1s7tpg = sale_value_c1s7tpg * mask_ffcfw_s7tpg
     ###Select the maximum value across the grids
@@ -3709,7 +3745,7 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     # distribution_error = np.any(np.sum(distribution_w8gw9, axis=-1)>1)
 
     ##Set defaults for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
-    distribution_w8gw9 = fun.f_update(distribution_w8gw9, np.array([1],dtype='float32'), dvp_type_next_tvgw!=vtype) #make 1 an numpy array so it can be float32 to make f_update more data effcient.
+    distribution_w8gw9 = fun.f_update(distribution_w8gw9, np.array([1],dtype='float32'), dvp_type_next_tvgw!=vtype) #make '1' a numpy array so it can be float32 to make f_update more data efficient.
     return distribution_w8gw9
 
 
