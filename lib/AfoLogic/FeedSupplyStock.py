@@ -571,7 +571,7 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
         offs_numbers_qsk3k5tva1e1b1nwzida0e0b0xyg3 = offs_numbers_qsk3k5tvnwziaxyg3[...,na,na,na,:,:,:,:,na,:,na,na,:,:,:]
         ###weight by q,s&z. then remove the q&s axis (they can be removed here since the feedsupply doesn't have those axis)
         z_prob_qsk2tva1e1b1nwzida0e0b0xyg = fun.f_expand(r_vals['zgen']['z_prob_qsz'], z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
-        z_prob_qsk3k5tva1e1b1nwzida0e0b0xyg = fun.f_expand(r_vals['zgen']['z_prob_qsz'], z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
+        z_prob_qsk3k5tva1e1b1nwzida0e0b0xyg = fun.f_expand(r_vals['zgen']['z_prob_qsz'], z_pos, left_pos2=p_pos-3, right_pos2=z_pos)
         dams_numbers_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(dams_numbers_qsk2tva1e1b1nwzida0e0b0xyg1, z_prob_qsk2tva1e1b1nwzida0e0b0xyg, axis=(0,1))
         offs_numbers_k3k5tva1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(offs_numbers_qsk3k5tva1e1b1nwzida0e0b0xyg3, z_prob_qsk3k5tva1e1b1nwzida0e0b0xyg, axis=(0,1))
 
