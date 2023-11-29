@@ -7887,10 +7887,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ### the asset value for both periods because even just one generator period has a bit of effect on asset value
     ### due to mortality and LW change and this allowed the model to optimise tradevalue in a way that it shouldn't.
     assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[2,-1,...] = assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[1,0,...] #sires don't get distributed at season start so asset value end = start
-    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1[2,-1,...] = np.sum(np.swapaxes(np.roll(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1, shift=-1, axis=p_pos)[1,0,...,na], axis1=w_pos-1, axis2=-1)
-           * distribution_season_tva1e1b1nw8zida0e0b0xyg1w9, axis=-1)
-    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3[2,-1,...] = np.sum(np.swapaxes(np.roll(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3, shift=-1, axis=p_pos)[1,0,...,na], axis1=w_pos-1, axis2=-1)
-           * distribution_season_tva1e1b1nw8zida0e0b0xyg3w9, axis=-1)
+    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1[2,-1,...] = fun.f_weighted_average(np.swapaxes(np.roll(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1, shift=-1, axis=p_pos)[1,0,...,na], axis1=w_pos-1, axis2=-1)
+           , distribution_season_tva1e1b1nw8zida0e0b0xyg1w9, axis=-1)
+    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3[2,-1,...] = fun.f_weighted_average(np.swapaxes(np.roll(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3, shift=-1, axis=p_pos)[1,0,...,na], axis1=w_pos-1, axis2=-1)
+           , distribution_season_tva1e1b1nw8zida0e0b0xyg3w9, axis=-1)
     ###cluster
     assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
                                                                           mask_vg=mask_z8var_p7tva1e1b1nwzida0e0b0xyg)
@@ -7974,16 +7974,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##if steady state set everything to 0 - there is no "season start" in SE model so there is no opportunity for trade between seasons
     if bool_steady_state:
         ###sire
-        start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0[...] = 0
-        end_assetvalue_p7tva1e1b1nwzida0e0b0xyg0[...] = 0
+        end_assetvalue_p7tva1e1b1nwzida0e0b0xyg0 = start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0 # sires don't get distributed at season start so asset value end = start
         assetvalue_p7tva1e1b1nwzida0e0b0xyg0 = end_assetvalue_p7tva1e1b1nwzida0e0b0xyg0 - start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0
         ###dams
-        start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1[...] = 0
-        end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1[...] = 0
+        end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 # sires don't get distributed at season start so asset value end = start
         assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 - start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1
         ###offs
-        start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3[...] = 0
-        end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3[...] = 0
+        end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 # sires don't get distributed at season start so asset value end = start
         assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 - start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3
 
     ##if risk is not included then tradevalue is not included in objective. For standard dsp the tradevalue is only required in the pnl report.
