@@ -1121,7 +1121,7 @@ def f_weanweight_mu(cb1, ce, cg, cn, cu1, cx, nyatf, ebw_w, cf_w_w_dams, ffcfw_w
              + cu1[17, 6, ...] * foo_ave_end ** 2 + cb1[17, ...] + cx[17, ...] + ce[17, ...]
              + sen.saa['wean_wt']) * (nyatf > 0)  #Note:saa[wean_wt] doesn't have an associated MEI impact so it is weight for free.
     ##Empty body weight of the weaner
-    t_ebw_w = f1_ffcfw2ebw(cn, t_w_w, srw, md, eqn_system)
+    t_ebw_w = f1_ffcfw2ebw(cg, cn, t_w_w, srw, md, eqn_system)
     ##Update w_w if it is weaning
     ebw_w = fun.f_update(ebw_w, t_ebw_w, period_is_wean)
     return ebw_w, cf_w_w_dams, foo_ave_end
@@ -2823,7 +2823,7 @@ def f1_ffcfw2ebw(cg, cn, ffcfw, srw, md=12, eqn_system=0):
         scalar1 = cn[14, ...] * md + cn[15, ...] * md**2 + cn[16, ...]
         ##Step 3. Empty body weight is the product of both scalars
         ebw = ffcfw * scalar0 * scalar1
-    else: # eqn_system == 0  # CSIRO = 0 / default
+    else: # eqn_system == 0 or 1  # CSIRO = 0, MU = 1
         #Use CSIRO empty body scalar
         ebw = ffcfw / cg[18, ...]
     ebw = fun.f_update(ebw, 0.0, ffcfw == 0)
@@ -2854,7 +2854,7 @@ def f1_ebw2ffcfw(cg, cn, ebw, srw, md, eqn_system=0):
         gutfill = np.maximum(0, (-b + np.sign(a) * np.sqrt(b**2 - 4 * a * c))/(2 * a))
         ##Step4. Calculate ffcfw from ebw and gutfill
         ffcfw = ebw + gutfill
-    else: # eqn_system == 0  # CSIRO = 0 / default
+    else: # eqn_system == 0 or 1  # CSIRO = 0, MU = 1
         #Use CSIRO empty body scalar
         ffcfw = ebw * cg[18, ...]
     ffcfw = fun.f_update(ffcfw, 0.0, ebw == 0)

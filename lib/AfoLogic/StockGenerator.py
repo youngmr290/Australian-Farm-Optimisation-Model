@@ -2581,8 +2581,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             temp_lc_offs = np.array([0.0])  # this is calculated in the chill function, but it is required for the intake function so it is set to 0 for the first period.
 
         ##Calculate the beginning ebw for yatf for either main model or stubble
-        ebw_start_yatf = sfun.f1_ffcfw2ebw(cg_yatf, cn_yatf, ffcfw_start_yatf, srw_b1xyg2, eqn_system=eqn_used_g2_q1p[7,0])
-        ebw_max_start_yatf = sfun.f1_ffcfw2ebw(cg_yatf, cn_yatf, ffcfw_max_start_yatf, srw_b1xyg2, eqn_system=eqn_used_g2_q1p[7,0])
+        ebw_start_yatf = sfun.f1_ffcfw2ebw(cg_yatf, cn_yatf, ffcfw_start_yatf, srw_b1xyg2, md_solid_yatf
+                                           , eqn_used_g2_q1p[7,0])
+        ebw_max_start_yatf = sfun.f1_ffcfw2ebw(cg_yatf, cn_yatf, ffcfw_max_start_yatf, srw_b1xyg2, md_solid_yatf
+                                               , eqn_used_g2_q1p[7,0])
 
 
         ######################
@@ -4145,8 +4147,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                  , eqn_system = eqn_used_g2_q1p[7,0])
                     if eqn_used:
                         ebw_w_yatf = temp0
-                        w_w_yatf = sfun.f1_ebw2ffcfw(cg_yatf, cn_yatf, ebw_w_yatf, srw_b1xyg2, md_solid_yatf
-                                                     , eqn_used_g2_q1p[7,0])
+                        w_w_yatf = sfun.f1_ebw2ffcfw(cg_yatf, cn_yatf, ebw_w_yatf, srw_b1xyg2, md_solid_yatf, eqn_system)
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
             eqn_system = 1 # Mu = 1   #it is okay to use ebg of current period because it is mul by lact propn
@@ -4167,8 +4168,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     foo_lact_ave = temp2
                     if eqn_used:
                         ebw_w_yatf = temp0
-                        w_w_yatf = sfun.f1_ebw2ffcfw(cg_yatf, cn_yatf, ebw_w_yatf, srw_b1xyg2, md_solid_yatf
-                                                     , eqn_used_g2_q1p[7,0])
+                        w_w_yatf = sfun.f1_ebw2ffcfw(cg_yatf, cn_yatf, ebw_w_yatf, srw_b1xyg2, md_solid_yatf, eqn_system)
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
 
