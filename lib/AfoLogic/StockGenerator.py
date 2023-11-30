@@ -2779,7 +2779,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ##yatf
             ##note1: most yatf dependent variables are calculated later in the code
             ### ffcfw_yatf is done here because it is used in the dam calculations for milk production
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p-1, ...] > 0): #needs to be p-1 because we only want to update ffcfw_start if yatf existed last period (this also is required to update ffcfw in the period when they are weaned because there is 0 days in the period they are weaned).
                 ###FFCFW (start)
                 ffcfw_start_yatf = sfun.f1_ebw2ffcfw(cg_yatf, cn_yatf, ebw_start_yatf, srw_b1xyg2, md_solid_yatf
                                                      , eqn_used_g2_q1p[7,0])
