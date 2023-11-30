@@ -76,6 +76,10 @@ def f1_cropgrazepyomo_local(params,model):
                                      initialize=params['crop_vol_kp6p5zl'], default=0, mutable=False,
                                      doc='Volume required to consume 1t of crop grazing for each time of sowing (p5 period)')
 
+    model.co2e_cropgraze_kp6z = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types,
+                                     initialize=params['co2e_cropgraze_kp6z'], default=0, mutable=False,
+                                     doc='kgs of co2e produced per tonne of crop grazing')
+
     ###################################
     #call local constraints           #
     ###################################
@@ -151,10 +155,10 @@ def f_grazecrop_biomass_penalty(model,q,s,p7,k,l,z):
 
 
 
-##stubble md
+##md
 def f_grazecrop_me(model,q,s,p6,f,z):
     '''
-    Calculate the total energy provided to each nv pool from the selected amount of stubble.
+    Calculate the total energy provided to each nv pool from the selected amount of green crop.
 
     Used in global constraint (con_me). See CorePyomo
     '''
@@ -163,12 +167,22 @@ def f_grazecrop_me(model,q,s,p6,f,z):
 
 
 
-##stubble vol
+##vol
 def f_grazecrop_vol(model,q,s,p6,f,z):
     '''
-    Calculate the total volume required by each nv pool to consume the selected level of stubble.
+    Calculate the total volume required by each nv pool to consume the selected level of green crop.
 
     Used in global constraint (con_vol). See CorePyomo
     '''
     return sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,p5,z,l] * model.p_crop_vol[f,k,p6,p5,z,l]
                for k in model.s_crops for l in model.s_lmus for p5 in model.s_labperiods)
+
+
+def f_grazecrop_emissions(model,q,s,p6,z):
+    '''
+    Calculate the total emissions linked to consumption of green crop.
+
+    Used in global constraint (con_emissions). See BoundPyomo
+    '''
+    return sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,p5,z,l] * model.co2e_cropgraze_kp6z[k,p6,z]
+               for f in model.s_feed_pools for k in model.s_crops for l in model.s_lmus for p5 in model.s_labperiods)

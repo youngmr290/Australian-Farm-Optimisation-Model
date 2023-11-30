@@ -77,6 +77,10 @@ def f1_saltbushpyomo_local(params,model):
                                      initialize=params['sb_selectivity_zp6'], default=0, mutable=False,
                                      doc='The ratio of the volume of saltbush consumed to the total volume of feed consumed by stock grazing slp (saltbush and understory)')
 
+    model.co2e_sb_zp6 = pe.Param(model.s_season_types, model.s_feed_periods,
+                                     initialize=params['co2e_sb_zp6'], default=0, mutable=False,
+                                     doc='Emissions from consuming 1t of saltbush (just the saltbush not the understory).')
+
     ###################################
     #call local constraints           #
     ###################################
@@ -192,6 +196,15 @@ def f_saltbush_vol(model,q,s,z,p6,f):
         return sum(model.v_tonnes_sb_consumed[q,s,z,p6,f,l] * model.p_sb_vol[z,p6,f] for l in model.s_lmus)
     else:
         return 0
+
+def f_saltbush_emissions(model,q,s,z,p6):
+    '''
+    Calculate the total emissions produced from consumption of saltbush.
+
+    Used in global constraint (con_emissions). See BoundPyomo
+    '''
+    return sum(model.v_tonnes_sb_consumed[q,s,z,p6,f,l] * model.co2e_sb_zp6[z,p6,f]
+               for f in model.s_feed_pools for l in model.s_lmus)
 
 def f_saltbush_selection(model,q,s,z,p6,f,l):
     '''

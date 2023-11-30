@@ -93,6 +93,10 @@ def f1_paspyomo_local(params, model):
                                     model.s_lmus, model.s_season_types, model.s_pastures, initialize=params['p_volume_grnha_fgop6lzt'],
                                     default=0, mutable=False, doc='Total Vol from grazing a hectare')
     
+    model.p_co2e_grnpas_gop6lzt = pe.Param(model.s_grazing_int, model.s_foo_levels, model.s_feed_periods,
+                                    model.s_lmus, model.s_season_types, model.s_pastures, initialize=params['p_co2e_grnpas_gop6lzt'],
+                                    default=0, mutable=False, doc='Emissions from grazing a hectare')
+
     model.p_dry_mecons_t = pe.Param(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_season_types,
                                     model.s_pastures, initialize=params['p_dry_mecons_t_fdp6zt'], default=0,
                                     mutable=False, doc='Total ME from grazing a tonne of dry feed')
@@ -101,6 +105,10 @@ def f1_paspyomo_local(params, model):
                                     model.s_pastures, initialize=params['p_dry_volume_t_fdp6zt'], default=0,
                                     mutable=False, doc='Total Vol from grazing a tonne of dry feed')
     
+    model.p_co2e_drypas_dp6zt = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_season_types,
+                                    model.s_pastures, initialize=params['p_co2e_drypas_dp6zt'], default=0,
+                                    mutable=False, doc='Total emissions from grazing a tonne of dry feed')
+
     model.p_dry_transfer_prov_t = pe.Param(model.s_feed_periods, model.s_season_types, model.s_pastures,
                                            initialize=params['p_dry_transfer_prov_t_p6zt'], default=0, mutable=False,
                                            doc='quantity of dry feed transferred out of the previous period to the current (allows for decay)')
@@ -134,6 +142,9 @@ def f1_paspyomo_local(params, model):
     model.p_poc_vol = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_season_types, initialize=params['p_poc_vol_fp6z'],
                                default=0, mutable=False, doc='vol (ri intake) of pasture on crop paddocks for each feed period')
     
+    model.p_co2e_poc_p6z = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['p_co2e_poc_p6z'],
+                               default=0, mutable=False, doc='emissions from grazing pasture on crop paddocks')
+
     model.p_parentz_provwithin_fp = pe.Param(model.s_feed_periods, model.s_season_types, model.s_season_types,
                                                   initialize=params['p_parentz_provwithin_fp'], default=0.0,
                                                   mutable=False, doc='Transfer of z8 dv in the previous fp to z9 constraint in the current fp within years')
@@ -397,3 +408,19 @@ def f_pas_me2(model,q,s,p6,f,z):
     return sum(sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z,t] * model.p_me_cons_grnha[f,g,o,p6,l,z,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
                + sum(sum(model.v_drypas_consumed[q,s,f,d,p6,z,l,t] * model.p_dry_mecons_t[f,d,p6,z,t] for l in model.s_lmus) \
                +         model.v_nap_consumed[q,s,f,d,p6,z,t] * model.p_dry_mecons_t[f,d,p6,z,t] for d in model.s_dry_groups) for t in model.s_pastures)
+
+
+def f_pas_emissions(model,q,s,p6,z):
+    '''
+    Calculate the total emissions from consumption of pasture.
+
+    Not dry pasture and nap have the same parameter because they are both dry pasture.
+
+    Used in global constraint (con_emissions). See BoundPyomo
+    '''
+    return sum(sum(sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z,t] * model.p_co2e_grnpas_gop6lzt[f,g,o,p6,l,z,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
+                    + sum(sum(model.v_drypas_consumed[q,s,f,d,p6,z,l,t] * model.p_co2e_drypas_dp6zt[f,d,p6,z,t] for l in model.s_lmus) \
+                          + model.v_nap_consumed[q,s,f,d,p6,z,t] * model.p_co2e_drypas_dp6zt[f,d,p6,z,t] for d in model.s_dry_groups) for t in model.s_pastures)\
+                + sum(model.v_poc[q,s,f,p6,l,z] * model.p_co2e_poc_p6z[f,p6,z] for l in model.s_lmus) for f in model.s_feed_pools) #have to sum lmu here again, otherwise other axis will broadcast
+
+

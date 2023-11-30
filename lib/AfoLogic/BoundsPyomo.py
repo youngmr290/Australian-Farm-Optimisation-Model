@@ -15,6 +15,16 @@ from . import Sensitivity as sen
 from . import UniversalInputs as uinp
 from . import StructuralInputs as sinp
 from . import PropertyInputs as pinp
+from . import PhasePyomo as phspy
+from . import MachPyomo as macpy
+from . import LabourPyomo as labpy
+from . import LabourPhasePyomo as lphspy
+from . import PasturePyomo as paspy
+from . import SupFeedPyomo as suppy
+from . import CropResiduePyomo as stubpy
+from . import StockPyomo as stkpy
+from . import CropGrazingPyomo as cgzpy
+from . import SaltbushPyomo as slppy
 
 
 '''
@@ -57,6 +67,8 @@ def f1_boundarypyomo_local(params, model):
     pasture_lmu_bound_inc = np.any(sen.sav['bnd_pas_area_l'] != '-')
     landuse_bound_inc = False #bound on area of each landuse (which is the sum of all the phases for that landuse)
     crop_area_bound_inc = np.any(sen.sav['bnd_crop_area'] != '-')  # controls if crop area bnd is included.(which is the sum of all the phases for that crop)
+    #todo need to make this input below in uinp. Then test the constraint works as expected.
+    emissions_bnd_inc = False#uinp.emissions['co2e_limit']>0  # controls if total farm emissions are constrained.
 
 
     if bounds_inc:
@@ -707,7 +719,22 @@ def f1_boundarypyomo_local(params, model):
             model.con_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_lmus, rule=pas_bound,doc='bound pasture area by lmu')
 
 
+        if emissions_bnd_inc:
+            def emissions(model,q,s):
+                '''
+                Constrains total farm co2e emissions.
 
- 
+                Note this constraint could be modified to constrain emission intensity or to constrain emissions from each enterprise.
+                '''
+                if pe.value(model.p_wyear_inc_qs[q, s]) and model.p_co2e_limit>0:
+                    return sum((sum((suppy.f_sup_emissions(model,q,s,p6,z) + cgzpy.f_grazecrop_emissions(model,q,s,p6,z)
+                                     + stubpy.f_cropresidue_emissions(model,q,s,p6,z) + slppy.f_saltbush_emissions(model,q,s,z,p6)
+                                     + paspy.f_pas_emissions(model,q,s,p6,z))*model.p_a_p6_p7[p7,p6,z] for p6 in model.s_feed_periods)
+                                + stkpy.f_stock_emissions(model,q,s,p7,z)) * model.p_season_seq_prob_qszp7[q,s,z,p7]
+                                for z in model.s_season_types for p7 in model.s_season_periods) <= uinp.emissions['co2e_limit']
+                else:
+                    return pe.Constraint.Skip
+            model.con_emissions = pe.Constraint(model.s_sequence_year, model.s_sequence,rule=emissions,doc='co2e emissions')
+
 
 

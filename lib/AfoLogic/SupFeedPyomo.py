@@ -61,7 +61,7 @@ def f1_suppyomo_local(params, model):
     
     ##sup md
     model.p_sup_md = pe.Param(model.s_feed_pools, model.s_crops, model.s_feed_periods, model.s_season_types, initialize=params['md_tonne'] , default = 0.0, doc='md per tonne of grain fed')
-    
+
     ##price buy grain
     model.p_buy_grain_price = pe.Param(model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, model.s_biomass_uses,
                                        model.s_c1, initialize=params['buy_grain_price'], default = 0.0, doc='price to buy grain from neighbour')
@@ -78,6 +78,9 @@ def f1_suppyomo_local(params, model):
 
     ##sup s2 link - link sup to s2 categories (required because v_sup does not have s2 axis)
     model.p_sup_s2 = pe.Param(model.s_crops, model.s_biomass_uses, initialize=params['sup_s2_ks2'], default = 0.0, doc='link between sup k and s2')
+
+    ##sup emissions
+    model.co2e_sup_kp6z = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types, initialize=params['co2e_sup_kp6z'] , default = 0.0, doc='emissions per tonne of grain consumed')
 
     ##a_p6_p7
     model.p_a_p6_p7 = pe.Param(model.s_season_periods, model.s_feed_periods, model.s_season_types, initialize=params['a_p6_p7'], default = 0.0, doc='link between p6 and m')
@@ -152,7 +155,7 @@ def f_sup_asset(model,q,s,p7,z):
     return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_asset[p7,p6,z,k]
                for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods
                if pe.value(model.p_sup_asset[p7,p6,z,k])!=0)
-    
+
 def f_sup_labour(model,q,s,p5,z):
     '''
     Calculate the total labour required for supplementary feeding.
@@ -163,8 +166,19 @@ def f_sup_labour(model,q,s,p5,z):
     return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_labour[p5,p6,z,k,f]
                for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods
                if pe.value(model.p_sup_labour[p5,p6,z,k,f])!=0)
-    
-    
+
+def f_sup_emissions(model,q,s,p6,z):
+    '''
+    Calculate the total emissions from consuming the selected level of supplement.
+
+    Used in global constraint (con_emissions). See BoundPyomo
+    '''
+
+    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.co2e_sup_kp6z[k,p6,z] for f in model.s_feed_pools
+               for g in model.s_grain_pools for k in model.s_crops
+               if pe.value(model.co2e_sup_kp6z[k,p6,z])!=0)
+
+
     
     
     

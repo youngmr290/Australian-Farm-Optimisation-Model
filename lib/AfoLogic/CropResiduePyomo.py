@@ -64,21 +64,24 @@ def f1_stubpyomo_local(params, model):
     
     model.p_a_prov = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, model.s_biomass_uses, initialize=params['cat_a_prov'],
                              default = 0.0, mutable=False, doc='cat A stubble provided at harvest from 1t of stubble')
-    
+
     model.p_biomass2residue = pe.Param(model.s_crops, model.s_lmus, model.s_biomass_uses, initialize=params['biomass2residue_kls2'],
                              default = 0.0, mutable=False, doc='conversion of biomass to crop residue for each biomass use (harvesting as normal, baling for hay and grazing as fodder)')
 
     model.p_bc_prov = pe.Param(model.s_crops, model.s_stub_cat, model.s_biomass_uses, initialize=params['transfer_prov'], default = 0.0,
                                doc='stubble B provided from 1t of cat A and stubble C provided from 1t of cat B')
-    
+
     model.p_bc_req = pe.Param(model.s_crops, model.s_stub_cat, model.s_biomass_uses, initialize=params['transfer_req'], default = 0.0,
                               doc='stubble required from the row inorder to consume cat B or cat C')
-    
+
     model.p_stub_transfer_prov = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['stub_transfer_prov'],
                                    default = 0.0, mutable=False, doc='stubble available for consumption. Transferred in from last period or harvest.')
-    
+
     model.p_stub_transfer_req = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['stub_transfer_req'],
                                    default = 0.0, mutable=False, doc='stubble required for transfer to the next period')
+
+    model.co2e_stub_p6zks1 = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['co2e_stub_p6zks1'],
+                                default = 0.0, mutable=False, doc='kgs of co2e produced by consuming 1t of each stubble category for each crop')
 
 
     ########################
@@ -180,4 +183,14 @@ def f_cropresidue_vol(model,q,s,p6,f,z):
     Used in global constraint (con_vol). See CorePyomo
     '''
     return sum(model.v_stub_con[q,s,z,p6,f,k,sc,s2] * model.p_stub_vol[f,p6,z,k,sc]
-               for k in model.s_crops for sc in model.s_stub_cat for s2 in model.s_biomass_uses)
+               for k in model.s_crops for sc in model.s_stub_cat for s2 in model.s_biomass_uses)##stubble vol
+
+
+def f_cropresidue_emissions(model,q,s,p6,z):
+    '''
+    Calculate the total emissions linked to consumption of stubble
+
+    Used in global constraint (con_emissions). See BoundPyomo
+    '''
+    return sum(model.v_stub_con[q,s,z,p6,f,k,sc,s2] * model.co2e_stub_p6zks1[p6,z,k,sc]
+               for f in model.s_feed_pools for k in model.s_crops for sc in model.s_stub_cat for s2 in model.s_biomass_uses)
