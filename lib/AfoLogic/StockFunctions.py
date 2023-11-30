@@ -2882,9 +2882,9 @@ def f1_body_composition(cg, cn, cx, ebw, srw, md=12.0, eqn_system = 0):
     ffcfw = f1_ebw2ffcfw(cg, cn, ebw, srw, md, eqn_system)
     ##Step 2. Calculate fat weight
     relsize = ffcfw / srw
-    fat = (cn[17, ...] * relsize + cn[18, ...] * relsize ** 2 + cn[19, ...]) * ffcfw
+    fat = np.maximum(0, (cn[17, ...] * relsize + cn[18, ...] * relsize ** 2 + cn[19, ...]) * ffcfw)
     ##Step 3. Calculate viscera weight
-    viscera = (cn[20, ...] * relsize + cn[21, ...] * relsize ** 2 + cn[22, ...]) * cx[22, ...] * srw
+    viscera = np.maximum(0, (cn[20, ...] * relsize + cn[21, ...] * relsize ** 2 + cn[22, ...]) * cx[22, ...] * srw)
     ##Step 4. Calculate muscle weight as the remaining empty body weight
     muscle = ebw - (fat + viscera)
     return fat, muscle, viscera

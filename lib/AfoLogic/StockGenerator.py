@@ -2779,7 +2779,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ##yatf
             ##note1: most yatf dependent variables are calculated later in the code
             ### ffcfw_yatf is done here because it is used in the dam calculations for milk production
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p-1, ...] > 0): #needs to be p-1 because we only want to update ffcfw_start if yatf existed last period (this also is required to update ffcfw in the period when they are weaned because there is 0 days in the period they are weaned).
+            ### Includes [p-1] because we also want to update ffcfw_start if yatf existed last period (which is required because there are 0 days in the period they are weaned).
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0) or np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p-1, ...] > 0):
                 ###FFCFW (start)
                 ffcfw_start_yatf = sfun.f1_ebw2ffcfw(cg_yatf, cn_yatf, ebw_start_yatf, srw_b1xyg2, md_solid_yatf
                                                      , eqn_used_g2_q1p[7,0])
@@ -3793,7 +3794,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 nw_start_yatf = fun.f_update(nw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ### convert ebw to component weights and energy
                 t_fat_start_yatf, t_muscle_start_yatf, t_viscera_start_yatf = sfun.f1_body_composition(cg_yatf, cn_yatf
-                                                , cx_yatf[:,mask_x,...], ebw_start_yatf, srw_b1xyg2
+                                                , cx_yatf[:,mask_x,...], ebw_start_yatf, srw_b1xyg2, md_solid_yatf
                                                 , eqn_system = eqn_used_g2_q1p[7,0])  #md_yatf not calculated yet so have to use default
                 ###fat weight & energy of yatf
                 fat_start_yatf	= fun.f_update(fat_start_yatf, t_fat_start_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
