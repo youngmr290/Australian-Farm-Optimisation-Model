@@ -378,7 +378,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_rc_start_tpsire = np.zeros(tpg0, dtype =dtype)
     o_ebg_tpsire = np.zeros(tpg0, dtype =dtype)
     ###arrays for report variables
-    r_compare_q0q1q2tpsire = np.zeros(qg0, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
     r_salegrid_c1tpa1e1b1nwzida0e0b0xyg0 = np.zeros(c1tpg0, dtype =dtype)
 
     ##dams
@@ -414,7 +413,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_fd_ltwadj_tpdams = np.zeros(tpg1, dtype =dtype)
     o_n_sire_tpa1e1b1nwzida0e0b0xyg1g0p8 = np.zeros((len_gen_t1, len_p, 1, 1, 1, 1, 1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1,len_g0,len_p8), dtype =dtype)
     ###arrays for report variables
-    r_compare_q0q1q2tpdams = np.zeros(qg1, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
     r_foo_tpdams = np.zeros(tpg1, dtype = dtype)
     r_dmd_tpdams = np.zeros(tpg1, dtype = dtype)
     r_evg_tpdams = np.zeros(tpg1, dtype = dtype)
@@ -448,7 +446,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     # o_fd_min_tpyatf = np.zeros(tpg2, dtype =dtype)
     o_rc_start_tpyatf = np.zeros(tpg2, dtype =dtype)
     ###arrays for report variables
-    r_compare_q0q1q2tpyatf = np.zeros(qg2, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
     r_ffcfw_start_tpyatf = np.zeros(tpg2, dtype =dtype)   # requires a variable separate from o_ffcfw_start_tpyatf so that it is only stored when days_period > 0
     r_ebg_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_evg_tpyatf = np.zeros(tpg2, dtype = dtype)
@@ -494,7 +491,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_rc_start_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_ebg_tpoffs = np.zeros(tpg3, dtype =dtype)
     ###arrays for report variables
-    r_compare_q0q1q2tpoffs = np.zeros(qg3, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
     r_wbe_tpoffs = np.zeros(tpg3, dtype =dtype)
     r_salegrid_c1tpa1e1b1nwzida0e0b0xyg3 = np.zeros(c1tpg3, dtype =dtype)
 
@@ -2448,6 +2444,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
         ##all groups
         eqn_compare = uinp.sheep['i_eqn_compare']
+        if eqn_compare:  #only define the r_compare report variables if they are used (to save memory)
+            #empty arrays to store different return values from the equation systems in the p loop.
+            r_compare_q0q1q2tpsire = np.zeros(qg0, dtype=dtype)
+            r_compare_q0q1q2tpdams = np.zeros(qg1, dtype=dtype)
+            r_compare_q0q1q2tpyatf = np.zeros(qg2, dtype=dtype)
+            r_compare_q0q1q2tpoffs = np.zeros(qg3, dtype=dtype)
+
         ##sire
         ebw_start_sire = ebw_initial_wzida0e0b0xyg0
         ebw_max_start_sire = ebw_start_sire
@@ -3150,7 +3153,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     eqn_used = (eqn_used_g2_q1p[
                                     eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
-                        ##first method is using the nec_cum method
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_foetus_nfs(cg_dams, ck_dams, cp_dams, step
                                         , c_start_dams, muscle_start_dams, dm_dams, nfoet_b1nwzida0e0b0xyg
                                         , relsize_start_dams, w_b_std_y_b1nwzida0e0b0xyg1, w_f_start_dams
@@ -3414,8 +3416,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                  , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                  , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
                                                  , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
-                        if eqn_used:
-                            heat_loss_sire = temp0
+                        ## these variables need to be stored even if the equation system is not used so that the equations can be compared
+                        heat_loss_sire = temp0
+                        # if eqn_used:
                         # if eqn_compare:
                         #     r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp0
 
@@ -3426,8 +3429,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                  , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                  , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
                                                  , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
-                        if eqn_used:
-                            heat_loss_dams = temp0
+                        ## these variables need to be stored even if the equation system is not used so that the equations can be compared
+                        heat_loss_dams = temp0
+                        # if eqn_used:
                         # if eqn_compare:
                         #     r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp0
 
@@ -3438,8 +3442,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                  , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                  , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
                                                  , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
-                        if eqn_used:
-                            heat_loss_offs = temp0
+                        ## these variables need to be stored even if the equation system is not used so that the equations can be compared
+                        heat_loss_offs = temp0
+                        # if eqn_used:
                         # if eqn_compare:
                         #     r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp0
 
@@ -3560,7 +3565,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_viscera_sire = temp4
                             hp_total_sire = temp5
                             surplus_energy_sire = temp6
-                            kg_sire = temp7
+                            kg_sire = temp7  #efficiency resulting from the NFS equations (for comparison)
                             mem_sire = hp_maint_sire + np.maximum(0, heat_loss_sire - hp_total_sire)
                         if eqn_compare:
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 2, :, p, ...] = temp0
@@ -3574,10 +3579,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                    , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                         if eqn_used:
                             temp_lc_sire = temp0  #temp1 not required here
+                        #todo consider deleting this code that calculates kg using CSIRO system given kg above
                         temp0 = sfun.f1_kg(ck_sire, surplus_energy_sire < 0, km_sire, kg_supp_sire, mei_propn_supp_sire
                                                  , kg_fodd_sire, mei_propn_herb_sire)
                         if eqn_used:
-                            kg_sire = temp0
+                            kg_sire = temp0  #efficiency from the CSIRO equations (for post calc SA)
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -3594,7 +3600,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_viscera_dams = temp4
                             hp_total_dams = temp5
                             surplus_energy_dams = temp6
-                            kg_dams = temp7
+                            kg_dams = temp7   #efficiency resulting from the NFS equations (for comparison)
                             mem_dams = hp_maint_dams + np.maximum(0, heat_loss_dams - hp_total_dams)
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 2, :, p, ...] = temp0
@@ -3612,7 +3618,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                 , kg_fodd_dams, mei_propn_herb_dams, kl = kl_dams, mei_propn_milk = mei_propn_milk_dams
                                 , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
-                            kg_dams = temp0
+                            kg_dams = temp0  #efficiency from the CSIRO equations (for post calc SA)
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -3628,7 +3634,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_viscera_offs = temp4
                             hp_total_offs = temp5
                             surplus_energy_offs = temp6
-                            kg_offs = temp7
+                            kg_offs = temp7   #efficiency resulting from the NFS equations (for comparison)
                             mem_offs = hp_maint_offs + np.maximum(0, heat_loss_offs - hp_total_offs)
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 2, :, p, ...] = temp0
@@ -3645,7 +3651,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         temp0 = sfun.f1_kg(ck_offs, surplus_energy_offs<0, km_offs, kg_supp_offs, mei_propn_supp_offs
                                                  , kg_fodd_offs, mei_propn_herb_offs)
                         if eqn_used:
-                            kg_offs = temp0
+                            kg_offs = temp0  #efficiency from the CSIRO equations (for post calc SA)
 
                 ###if there is a target then adjust feedsupply, if not break out of feedsupply loop
                 if target_lwc_dams[p] == 9999 and target_lwc_offs[p] == 9999:
@@ -4078,8 +4084,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                              , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                              , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
                                              , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
-                    if eqn_used:
-                        heat_loss_yatf = temp0
+                    ## these variables need to be stored even if the equation system is not used so that the equations can be compared
+                    heat_loss_yatf = temp0
+                    # if eqn_used:
                     # if eqn_compare:
                     #     r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp0
 
@@ -4134,7 +4141,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         d_viscera_yatf = temp4
                         hp_total_yatf = temp5
                         surplus_energy_yatf = temp6
-                        kg_yatf = temp7
+                        kg_yatf = temp7   #efficiency resulting from the NFS equations (for comparison)
                         mem_yatf = hp_maint_yatf + np.maximum(0, heat_loss_yatf - hp_total_yatf)
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 2, :, p, ...] = temp0
@@ -4151,7 +4158,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0 = sfun.f1_kg(ck_yatf, surplus_energy_yatf < 0, km_yatf, kg_supp_yatf, mei_propn_supp_yatf
                                        , kg_fodd_yatf, mei_propn_herb_yatf)
                     if eqn_used:
-                        kg_yatf = temp0
+                        kg_yatf = temp0  #efficiency from the CSIRO equations (for post calc SA)
 
             ##weaning weight yatf - called when dams days per period greater than 0 - calculates the weight at the start of the period
             eqn_group = 11
@@ -6215,8 +6222,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
 
     ## Call Steve graphing routine here if Generator is throwing an error in the post-processing.
-    ### Change scan-spreadsheet to True to activate
-    scan_spreadsheet = False
+    ### scan-spreadsheet will activate if comparing equations
+    scan_spreadsheet = eqn_compare
+    if scan_spreadsheet:
+        print('Interact with the graph generator using the PlotViewer spreadsheet, kill each plot to continue')
     while scan_spreadsheet:
         try:
             yvar1, yvar2, xlabels, wvar, xvar, axes, dimensions, verticals = pv.read_spreadsheet()
@@ -9791,7 +9800,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     if plots:
         print('Interact with the graph generator using the PlotViewer spreadsheet, kill each plot to continue')
     scan_spreadsheet = plots   # argument passed to the StockGen function. True if called from SheepTest
-    #    scan_spreadsheet = True    #make line active to generate plots when called from exp.py
+    # scan_spreadsheet = True    #make line active to generate plots when called from exp.py
     while scan_spreadsheet:
         try:
             yvar1, yvar2, xlabels, wvar, xvar, axes, dimensions, verticals = pv.read_spreadsheet()

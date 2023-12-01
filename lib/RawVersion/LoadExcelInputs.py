@@ -70,7 +70,7 @@ def f_load_phases():
     return {"phases_r": phases_r, "rot_req": rot_req, "rot_prov": rot_prov, "s_rotcon1": s_rotcon1}
 
 def f_load_excel_default_inputs(load_all_pinp=False, trial_pinp=None):
-    '''Function to load inputs from excel (univeral, structural, property, price variation, rotation and stubble)'''
+    '''Function to load inputs from excel (universal, structural, property, price variation, rotation and stubble)'''
 
     #########################################################################################################################################################################################################
     #########################################################################################################################################################################################################
