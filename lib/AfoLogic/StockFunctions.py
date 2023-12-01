@@ -1066,7 +1066,7 @@ def f_foetus_nfs(cg, ck, cp, step, c_start, muscle_start, dm, nfoet, relsize_sta
     dce_propn = dm_scalar * dcdt_age_f
     ##Adjust the average change per day for the generator timestep. Formula assumes that dm_scalar is constant
     step = step * gest_propn
-    dce_propn = ((1 + dce_propn) ** step - 1) / step
+    dce_propn = fun.f_divide((1 + dce_propn) ** step - 1, step) #use f_divide to handle periods that are not gestation
     ##Change in conceptus energy (average MJ/d across the timestep)
     dc = c_start * dce_propn
     ##Normal weight of individual conceptus (mid-period)
@@ -1797,7 +1797,8 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
     :param cs_mating: Condition score at mating. Note: the e and b axis have been handled before passing in.
     :param rr_doy: A scalar for reproductive rate based on day of the year. Based on GrazPlan cpg_doy relationship
 '''
-    if ~np.any(period_is_mating):
+    if True:  #~np.any(period_is_mating):
+        #todo this function is not working because the b1 axis is not singleton prior to trying to squeeze, so bypassed
         conception = np.zeros_like(relsize_mating)
     else:
         b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function

@@ -3119,6 +3119,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
 
                 ##foetal growth - dams
+                #todo perhaps can add days_period * gest_propn >0 to save some time.
+                # need to check if the variables returned from the function call need to be set to 0 if the function is skipped
                 eqn_group = 9
                 eqn_system = 0 # CSIRO = 0
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -3170,6 +3172,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
                 ##milk production
+                #todo perhaps can add days_period * lact_propn >0 to save some time (as per gestation above).
+                # need to check if the variables returned from the function call need to be set to 0 if the function is skipped
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     ###Expected ffcfw of yatf with p1 axis - each period
                     #### The test on index_p is to test for the end of lactation. Start of lactation (birth) is always the start of a period
