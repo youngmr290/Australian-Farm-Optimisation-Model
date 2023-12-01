@@ -980,8 +980,24 @@ def f_energy_nfs(ck, cm, cg, lw, ffcfw, fat, muscle, viscera, mei, md_solid, i_s
     return hp_maint, kl
 
 
-def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f):
-    #calculates the energy requirement for gestation for the days gestating. The result is scaled by gest_propn when used
+def f_foetus_cs(cb1, cp, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f):
+    '''Parameters
+        ----------
+        cb1 : Numpy array, sim parameters - parameters altered by LSLN (b1 axis).
+        cp : Numpy array, sim parameters - pregnancy requirements.
+        kc : Efficiency of use of energy for gain foetal weight (includes the energy required for the whole of conceptus)
+        nfoet : number of foetus (across the b1 axis)
+        relsize_start : current relative size of the dam
+        rc_start : relative condition of the dam at the start of the period
+        w_b_std_y : standard birth weight of lambs for a dam of this age
+        w_f_start : weight of the foetus at the start of the period
+        nw_f_start : normal weight of the foetus at the start of the period
+        nwf_age_f : multiplier of BW to generate the normal weight of the foetus by age
+        guw_age_f : multiplier of BW to generate the normal weight of the conceptus by age (gravid uterus)
+        dce_age_f : multiplier of BW to generate the energy content of the conceptus on day 1 of pregnancy
+        '''
+    #calculates the energy requirement for gestation for the days gestating.
+    # The results are multiplied by gest_propn when used in sgen.
     ##expected normal birth weight with dam age adj.
     w_b_exp_y = (1 - cp[4, ...] * (1 - relsize_start)) * w_b_std_y
     ##Normal weight of foetus (mid-period - dam calcs)
@@ -991,7 +1007,7 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
     ##Proportion of normal foetal and birth weights	
     nwf_nwb = fun.f_divide(nw_f, w_b_std_y)
     ##Normal weight of individual conceptus (mid-period)
-    nw_gu = cp[5, ...] * w_b_exp_y * guw_age_f
+    nw_gu = w_b_exp_y * guw_age_f
     ##Normal energy of individual conceptus (end of period)	
     normale_dgu = cp[8, ...] * cp[5, ...] * w_b_exp_y * dce_age_f
     # normale_dgu = cp[8, ...] * cp[5, ...] * w_b_exp_y * ce_age_f
@@ -1018,12 +1034,31 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
 
 def f_foetus_nfs(cg, ck, cp, step, c_start, muscle_start, dm, nfoet, relsize_start, w_b_std_y, w_f_start
                  , nwf_age_f, guw_age_f, ce_day1_f, dcdt_age_f, gest_propn):
+    '''Parameters
+    ----------
+    cg : Numpy array, sim parameters - weight change.
+    ck : Numpy array, sim parameters - efficiency of energy use.
+    cp : Numpy array, sim parameters - pregnancy requirements.
+    step : number of days in a generator period
+    c_start : energy in the foetus at the start of the period
+    muscle_start : muscle weight at the start of the period
+    dm : change in muscle energy during the previous period (can't use current period because not calculated yet)
+    nfoet : number of foetus (across the b1 axis)
+    relsize_start : current relative size of the dam
+    w_b_std_y : standard birth weight of lambs for a dam of this age
+    w_f_start : weight of the foetus at the start of the period
+    nwf_age_f : multiplier of BW to generate the normal weight of the foetus by age
+    guw_age_f : multiplier of BW to generate the normal weight of the conceptus by age (gravid uterus)
+    ce_day1_f : multiplier of BW to generate the energy content of the conceptus on day 1 of pregnancy
+    dcdt_age_f : multiplier of conceptus energy content to generate the increase in energy content by age
+    gest_propn : Numpy array, optional, Proportion of the period that the dam is gestating. The default is 0.
+    '''
     #calculates the energy requirement for gestation for the days gestating. The result is scaled by gest_propn when used
     ##expected normal birth weight with dam age adj.
     w_b_exp_y = (1 - cp[4, ...] * (1 - relsize_start)) * w_b_std_y
     ##c_start. If this is the first period of lactation then c_start needs to be initialised.
-    if c_start == 0: #could be beginning of gestation so calculate c_start for day 1 of gestation
-        c_start = w_b_exp_y * ce_day1_f
+    ### if the beginning of gestation calculate c_start for day 1 of gestation
+    c_start = fun.f_update(c_start, w_b_exp_y * ce_day1_f, c_start == 0)
     ## Conceptus growth scalar based on muscle growth in the previous period
     m_start = f1_weight2energy(cg, muscle_start, 2)
     dm_scalar = 1 + cp[19, ...] * dm / m_start
@@ -1035,7 +1070,7 @@ def f_foetus_nfs(cg, ck, cp, step, c_start, muscle_start, dm, nfoet, relsize_sta
     ##Change in conceptus energy (average MJ/d across the timestep)
     dc = c_start * dce_propn
     ##Normal weight of individual conceptus (mid-period)
-    nw_gu = cp[5, ...] * w_b_exp_y * guw_age_f
+    nw_gu = w_b_exp_y * guw_age_f
     ##change in foetus weight
     #d_w_f = d_nw_f *(1 + np.minimum(cfpreg, cfpreg * cb1[14, ...]))
     d_w_f = dc / (cp[8, ...] * cp[5, ...])
