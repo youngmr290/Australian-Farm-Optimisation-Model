@@ -1591,7 +1591,7 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, dw, mei, md, hp_maint, hea
     surplus_energy = df + dm + dv + hp_df + hp_dm + hp_dv
     kg = (df + dm + dv) / surplus_energy # a comparison with the old feeding standards
 
-    return ebg, evg, d_fat, d_muscle, d_viscera, hp_total, surplus_energy
+    return ebg, evg, d_fat, d_muscle, d_viscera, hp_total, surplus_energy, kg
 
 
 def f_wbe_mu(cg, fat, muscle, viscera=0):
