@@ -663,6 +663,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     agedam_propn_da0e0b0xyg1 = agedam_propn_da0e0b0xyg1 / np.sum(agedam_propn_da0e0b0xyg1, axis=d_pos) #scale unmasked slices to a total of 1
     agedam_propn_da0e0b0xyg2 = agedam_propn_da0e0b0xyg2 / np.sum(agedam_propn_da0e0b0xyg2, axis=d_pos) #scale unmasked slices to a total of 1
     agedam_propn_da0e0b0xyg3 = agedam_propn_da0e0b0xyg3 / np.sum(agedam_propn_da0e0b0xyg3, axis=d_pos) #scale unmasked slices to a total of 1
+    # fat_propn_wean_yg0, fat_propn_wean_yg1, fat_propn_wean_yg2, fat_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_wean_c2'], uinp.parameters['i_fat_wean_y'], a_c2_c0, i_g3_inc)
+    # muscle_propn_wean_yg0, muscle_propn_wean_yg1, muscle_propn_wean_yg2, muscle_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_wean_c2'], uinp.parameters['i_muscle_wean_y'], a_c2_c0, i_g3_inc)
+    # viscera_propn_wean_yg0, viscera_propn_wean_yg1, viscera_propn_wean_yg2, viscera_propn_wean_yg3 = sfun.f1_c2g(uinp.parameters['i_viscera_propn_wean_c2'], uinp.parameters['i_viscera_wean_y'], a_c2_c0, i_g3_inc)
+    fat_propn_birth_yg0, fat_propn_birth_yg1, fat_propn_birth_yg2, fat_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_fat_propn_birth_c2'], uinp.parameters['i_fat_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
+    muscle_propn_birth_yg0, muscle_propn_birth_yg1, muscle_propn_birth_yg2, muscle_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_muscle_propn_birth_c2'], uinp.parameters['i_muscle_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
+    viscera_propn_birth_yg0, viscera_propn_birth_yg1, viscera_propn_birth_yg2, viscera_propn_birth_yg3 = sfun.f1_c2g(uinp.parameters['i_viscera_propn_birth_c2'], uinp.parameters['i_viscera_birth_y'], a_c2_c0, i_g3_inc) #only for yatf
 
     ###p1 variation params (used for mort)
     cv_weight_sire, cv_weight_dams, cv_weight_yatf, cv_weight_offs = sfun.f1_c2g(uinp.parameters['i_cv_weight_c2'], uinp.parameters['i_cv_weight_y'], a_c2_c0, i_g3_inc)
@@ -3793,9 +3799,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###normal weight of yatf
                 nw_start_yatf = fun.f_update(nw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ### convert ebw to component weights and energy
-                t_fat_start_yatf, t_muscle_start_yatf, t_viscera_start_yatf = sfun.f1_body_composition(cg_yatf, cn_yatf
-                                                , cx_yatf[:,mask_x,...], ebw_start_yatf, srw_b1xyg2, md_solid_yatf
-                                                , eqn_system = eqn_used_g2_q1p[7,0])  #md_yatf not calculated yet so have to use default
+                # t_fat_start_yatf, t_muscle_start_yatf, t_viscera_start_yatf = sfun.f1_body_composition(cg_yatf, cn_yatf
+                #                                 , cx_yatf[:,mask_x,...], ebw_start_yatf, srw_b1xyg2, md_solid_yatf
+                #                                 , eqn_system = eqn_used_g2_q1p[7,0])  #md_yatf not calculated yet so have to use default
+                t_fat_start_yatf = ebw_start_yatf * fat_propn_birth_yg2
+                t_muscle_start_yatf = ebw_start_yatf * muscle_propn_birth_yg2
+                t_viscera_start_yatf = ebw_start_yatf * viscera_propn_birth_yg2
                 ###fat weight & energy of yatf
                 fat_start_yatf	= fun.f_update(fat_start_yatf, t_fat_start_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###muscle weight & energy of yatf
@@ -4825,8 +4834,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
             ###yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                ##EBW (end - empty body weight).
-                ebw_yatf = np.maximum(0, ebw_start_yatf + ebg_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p])
+                ##EBW (end - empty body weight) - only increment the ebw in b1 slices that include yatf.
+                ebw_yatf = np.maximum(0, ebw_start_yatf + ebg_yatf * (nyatf_b1nwzida0e0b0xyg > 0) * days_period_pa1e1b1nwzida0e0b0xyg2[p])
                 ##EBW maximum to date
                 ebw_max_yatf = np.maximum(ebw_yatf, ebw_max_start_yatf)
                 ##FFCFW (end)

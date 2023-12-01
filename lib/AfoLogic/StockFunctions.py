@@ -1532,7 +1532,7 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, dw, mei, md, hp_maint, hea
     blf = ck[26, ...]
     pv = cg[33, ...]
     ## Step 1a: calculate dv from alpha_v for day 0
-    alpha_v = cg[35, ...] * mei + cg[36, ...] * m**0.41 + cg[37, ...] * md
+    alpha_v = np.minimum(0, cg[35, ...] * mei + cg[36, ...] * m**0.41 + cg[37, ...] * md)
     dv0 = pv * (alpha_v - v)
     ## Step 1b: estimate average dv across the duration of the step, required because dv is reducing each day as it approaches alpha_v
     ###derivation Generator9:p15 based on dv(i) = dv(0) * (1 - pv)**i and then sum the geometric series.
@@ -2826,7 +2826,7 @@ def f1_ffcfw2ebw(cg, cn, ffcfw, srw, md=12, eqn_system=0):
     else: # eqn_system == 0 or 1  # CSIRO = 0, MU = 1
         #Use CSIRO empty body scalar
         ebw = ffcfw / cg[18, ...]
-    ebw = fun.f_update(ebw, 0.0, ffcfw == 0)
+    ebw = fun.f_update(ebw, 0.0, ffcfw <= 0)
     return ebw
 
 
@@ -2857,7 +2857,7 @@ def f1_ebw2ffcfw(cg, cn, ebw, srw, md, eqn_system=0):
     else: # eqn_system == 0 or 1  # CSIRO = 0, MU = 1
         #Use CSIRO empty body scalar
         ffcfw = ebw * cg[18, ...]
-    ffcfw = fun.f_update(ffcfw, 0.0, ebw == 0)
+    ffcfw = fun.f_update(ffcfw, 0.0, ebw <= 0)
     return ffcfw
 
 
@@ -2886,7 +2886,7 @@ def f1_body_composition(cg, cn, cx, ebw, srw, md=12.0, eqn_system = 0):
     ##Step 3. Calculate viscera weight
     viscera = np.maximum(0, (cn[20, ...] * relsize + cn[21, ...] * relsize ** 2 + cn[22, ...]) * cx[22, ...] * srw)
     ##Step 4. Calculate muscle weight as the remaining empty body weight
-    muscle = ebw - (fat + viscera)
+    muscle = np.maximum(0, ebw - (fat + viscera))
     return fat, muscle, viscera
 
 
