@@ -3105,7 +3105,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             kl_dams = temp1
                             meme_dams = hp_maint_dams
                         if eqn_compare:
-                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0  # kl could be retained
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] >0):
@@ -3171,7 +3171,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             mec_dams = dc_dams + hp_dc_dams
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
-                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1 + temp2  #mec = dc + hp_dc
 
                 ##milk production
                 #todo perhaps can add days_period * lact_propn >0 to save some time (as per gestation above).
@@ -3217,6 +3217,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             hp_dw_sire = mew_sire - new_sire
                         if eqn_compare:
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
@@ -3241,6 +3242,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             hp_dw_dams = mew_dams - new_dams
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
@@ -3263,6 +3265,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             hp_dw_offs = mew_offs - new_offs
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
                 eqn_system = 2 # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -3285,6 +3288,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             mew_sire = dw_sire + hp_dw_sire
                         if eqn_compare:
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
@@ -3307,6 +3311,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             mew_dams = dw_dams + hp_dw_dams
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
@@ -3328,6 +3333,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             mew_offs = dw_offs + hp_dw_offs
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
                 ##total heat production (excluding chill) & energy to offset chilling
                 eqn_group = 7
@@ -3466,7 +3472,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             surplus_energy_sire = temp4
                         if eqn_compare:
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 2, :, p, ...] = temp0
-                            # r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp1
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -3482,7 +3487,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             surplus_energy_dams = temp4
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 2, :, p, ...] = temp0
-                            # r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -3497,7 +3501,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             surplus_energy_offs = temp4
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 2, :, p, ...] = temp0
-                            # r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
                 eqn_system = 1 # Murdoch = 1
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -3515,7 +3518,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             surplus_energy_sire = temp4
                         if eqn_compare:
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 2, :, p, ...] = temp0
-                            # r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp1
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -3531,7 +3533,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             surplus_energy_dams = temp4
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 2, :, p, ...] = temp0
-                            # r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp1
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -3546,8 +3547,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             surplus_energy_offs = temp4
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 2, :, p, ...] = temp0
-                            # r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp1
-
 
                 eqn_system = 2 # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -3568,8 +3567,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             kg_sire = temp7  #efficiency resulting from the NFS equations (for comparison)
                             mem_sire = hp_maint_sire + np.maximum(0, heat_loss_sire - hp_total_sire)
                         if eqn_compare:
-                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 2, :, p, ...] = temp0
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp7
+                            r_compare_q0q1q2tpsire[eqn_system, eqn_group, 2, :, p, ...] = temp0
+
                         temp0 = sfun.f1_level_nfs(mei_sire, hp_maint_sire)
                         if eqn_used:
                             level_sire = temp0
@@ -3603,8 +3603,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             kg_dams = temp7   #efficiency resulting from the NFS equations (for comparison)
                             mem_dams = hp_maint_dams + np.maximum(0, heat_loss_dams - hp_total_dams)
                         if eqn_compare:
-                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 2, :, p, ...] = temp0
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp7
+                            r_compare_q0q1q2tpdams[eqn_system, eqn_group, 2, :, p, ...] = temp0
                         temp0 = sfun.f1_level_nfs(mei_dams, hp_maint_dams)
                         if eqn_used:
                             level_dams = temp0
@@ -3637,8 +3637,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             kg_offs = temp7   #efficiency resulting from the NFS equations (for comparison)
                             mem_offs = hp_maint_offs + np.maximum(0, heat_loss_offs - hp_total_offs)
                         if eqn_compare:
-                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 2, :, p, ...] = temp0
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp7
+                            r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 2, :, p, ...] = temp0
                         temp0 = sfun.f1_level_nfs(mei_offs, hp_maint_offs)
                         if eqn_used:
                             level_offs = temp0
@@ -3768,7 +3768,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 #     temp0 = sfun.f_progenycfw_cs(cx_yatf[:,mask_x,...], w_b_start_yatf, w_f_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]) #pass in wf_start because animal is born on first day of period
                 #     if eqn_used:
                 #         cfw_ltwadj_dams = temp0
-                #         fdltw = temp1
+                #         fd_ltwadj_dams = temp1
                 #     if eqn_compare:
                 #         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
                 #         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp1
@@ -4013,6 +4013,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         hp_dw_yatf = mew_yatf - new_yatf
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
             eqn_system = 2  # New Feeding Standards = 2
             if uinp.sheep['i_eqn_exists_q0q1'][
@@ -4038,7 +4039,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         mew_yatf = dw_yatf + hp_dw_yatf
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 0, :, p, ...] = temp0
-
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
             ##total heat production (excluding chill) & energy to offset chilling - yatf
             eqn_group = 7
@@ -4107,7 +4108,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         surplus_energy_yatf = temp4
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 2, :, p, ...] = temp0
-                        # r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
             eqn_system = 1 # Mu = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -4124,7 +4124,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         surplus_energy_yatf = temp4
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 2, :, p, ...] = temp0
-                        # r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp1
 
             eqn_system = 2 # New Feeding Standards = 2
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -4144,8 +4143,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         kg_yatf = temp7   #efficiency resulting from the NFS equations (for comparison)
                         mem_yatf = hp_maint_yatf + np.maximum(0, heat_loss_yatf - hp_total_yatf)
                     if eqn_compare:
-                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 2, :, p, ...] = temp0
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp7
+                        r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 2, :, p, ...] = temp0
                     temp0 = sfun.f1_level_nfs(mei_yatf, hp_maint_yatf)
                     if eqn_used:
                         level_yatf = temp0
