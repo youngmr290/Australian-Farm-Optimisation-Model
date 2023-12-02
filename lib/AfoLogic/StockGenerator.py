@@ -3349,8 +3349,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1 = sfun.f_heat_cs(cc_sire, ck_sire, mei_sire, meme_sire, mew_sire, new_sire, km_sire
                                                , kg_supp_sire, kg_fodd_sire, mei_propn_supp_sire, mei_propn_herb_sire)
+                        #use CSIRO version of hp_total in f_chill_cs() even if only comparing the CSIRO equation system
+                        hp_total_sire = temp0
                         if eqn_used:
-                            hp_total_sire = temp0
                             level_sire = temp1
                         # if eqn_compare:
                         #     r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp0  # storing as the second variable
@@ -3360,10 +3361,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                           , mei_propn_herb_sire, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                           , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
                                                           , index_m0)
+                        #Use CSIRO version of mem & kg to calculate LWC for CSIRO & MU if comparing equations
+                        mem_sire = temp0
+                        kg_sire = temp2
                         if eqn_used:
-                            mem_sire = temp0
                             temp_lc_sire = temp1
-                            kg_sire = temp2
                         if eqn_compare:
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp2
                     ###dams
@@ -3375,8 +3377,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                , mec = mec_dams, mel = mel_dams, nec = nec_dams, nel = nel_dams
                                                , gest_propn = gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                                , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
+                        #use CSIRO version of hp_total in f_chill_cs() even if only comparing the CSIRO equation system
+                        hp_total_dams = temp0
                         if eqn_used:
-                            hp_total_dams = temp0
                             level_dams = temp1
                         # if eqn_compare:
                         #     r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp0  # storing as the second variable
@@ -3388,10 +3391,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                               , index_m0, kl=kl_dams, mei_propn_milk=mei_propn_milk_dams, mec=mec_dams
                                                               , mel=mel_dams, gest_propn=gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                                               , lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
+                        #Use CSIRO version of kg & mem to calculate LWC for CSIRO & MU if comparing equations
+                        mem_dams = temp0
+                        kg_dams = temp2
                         if eqn_used:
-                            mem_dams = temp0
                             temp_lc_dams = temp1
-                            kg_dams = temp2
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp2
 
@@ -3400,8 +3404,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         temp0, temp1 = sfun.f_heat_cs(cc_offs, ck_offs, mei_offs, meme_offs, mew_offs, new_offs, km_offs
                                                , kg_supp_offs, kg_fodd_offs, mei_propn_supp_offs, mei_propn_herb_offs)
+                        #use CSIRO version of hp_total in f_chill_cs() even if only comparing the CSIRO equation system
+                        hp_total_offs = temp0
                         if eqn_used:
-                            hp_total_offs = temp0
                             level_offs = temp1
                         # if eqn_compare:
                         #     r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp0  # storing as the second variable
@@ -3411,10 +3416,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                               , mei_propn_herb_offs, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                               , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
                                                               , index_m0)
+                        #Use CSIRO version of kg & mem to calculate LWC for CSIRO & MU if comparing equations
+                        mem_offs = temp0
+                        kg_offs = temp2
                         if eqn_used:
-                            mem_offs = temp0
                             temp_lc_offs = temp1
-                            kg_offs = temp2
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp2
 
@@ -3562,16 +3568,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7 = sfun.f_lwc_nfs(cg_sire, ck_sire, muscle_start_sire
                                                 , viscera_start_sire, muscle_target_b0xyg0, dw_sire, mei_sire , md_solid_sire
                                                 , hp_maint_sire, heat_loss_sire, step, rev_trait_values['sire'][p])
+                        #use NFS version of hp_total in f_templc_nfs() even if only comparing the NFS equation system
+                        hp_total_sire = temp5
+                        kg_sire = temp7  #efficiency resulting from the NFS equations (for r_compare)
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
                             d_fat_sire = temp2
                             d_muscle_sire = temp3
                             d_viscera_sire = temp4
-                            hp_total_sire = temp5
                             surplus_energy_sire = temp6
-                            kg_sire = temp7  #efficiency resulting from the NFS equations (for comparison)
-                            mem_sire = hp_maint_sire + np.maximum(0, heat_loss_sire - hp_total_sire)
+                            mem_sire = hp_maint_sire + np.maximum(0, heat_loss_sire - hp_total_sire) #will overwrite the CSIRO version if NFS system is being used.
                         if eqn_compare:
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 1, :, p, ...] = temp7
                             r_compare_q0q1q2tpsire[eqn_system, eqn_group, 2, :, p, ...] = temp0
@@ -3598,16 +3605,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                 , hp_maint_dams, heat_loss_dams, step, rev_trait_values['dams'][p]
                                                 , dc_dams, hp_dc_dams, dl_dams, hp_dl_dams
                                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
+                        #use NFS version of hp_total in f_templc_nfs() even if only comparing the NFS equation system
+                        hp_total_dams = temp5
+                        kg_dams = temp7   #efficiency resulting from the NFS equations (for r_compare)
                         if eqn_used:
                             ebg_dams = temp0
                             evg_dams = temp1
                             d_fat_dams = temp2
                             d_muscle_dams = temp3
                             d_viscera_dams = temp4
-                            hp_total_dams = temp5
                             surplus_energy_dams = temp6
-                            kg_dams = temp7   #efficiency resulting from the NFS equations (for comparison)
-                            mem_dams = hp_maint_dams + np.maximum(0, heat_loss_dams - hp_total_dams)
+                            mem_dams = hp_maint_dams + np.maximum(0, heat_loss_dams - hp_total_dams) #will overwrite the CSIRO version if NFS system is being used.
                         if eqn_compare:
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 1, :, p, ...] = temp7
                             r_compare_q0q1q2tpdams[eqn_system, eqn_group, 2, :, p, ...] = temp0
@@ -3632,16 +3640,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                 , viscera_start_offs, muscle_target_b0xyg3, dw_offs, mei_offs , md_solid_offs
                                                 , hp_maint_offs, heat_loss_offs, step
                                                 , rev_trait_values['offs'][p])
+                        #use NFS version of hp_total in f_templc_nfs() even if only comparing the NFS equation system
+                        hp_total_offs = temp5
+                        kg_offs = temp7   #efficiency resulting from the NFS equations (for r_compare)
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
                             d_fat_offs = temp2
                             d_muscle_offs = temp3
                             d_viscera_offs = temp4
-                            hp_total_offs = temp5
                             surplus_energy_offs = temp6
-                            kg_offs = temp7   #efficiency resulting from the NFS equations (for comparison)
-                            mem_offs = hp_maint_offs + np.maximum(0, heat_loss_offs - hp_total_offs)
+                            mem_offs = hp_maint_offs + np.maximum(0, heat_loss_offs - hp_total_offs) #will overwrite the CSIRO version if NFS system is being used.
                         if eqn_compare:
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 1, :, p, ...] = temp7
                             r_compare_q0q1q2tpoffs[eqn_system, eqn_group, 2, :, p, ...] = temp0
@@ -4062,8 +4071,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0, temp1 = sfun.f_heat_cs(cc_yatf, ck_yatf, mei_yatf, meme_yatf, mew_yatf, new_yatf, km_yatf
                                            , kg_supp_yatf, kg_fodd_yatf, mei_propn_supp_yatf, mei_propn_herb_yatf
                                            ,  mei_propn_milk=mei_propn_milk_yatf)
+                    #use CSIRO version of hp_total in f_chill_cs() even if only comparing the CSIRO equation system
+                    hp_total_yatf = temp0
                     if eqn_used:
-                        hp_total_yatf = temp0
                         level_yatf = temp1
                     # if eqn_compare:
                     #     r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp0  # storing as the second variable
@@ -4073,10 +4083,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                           , mei_propn_herb_yatf, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                           , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
                                                           , index_m0, mei_propn_milk=mei_propn_milk_yatf)
+                    #Use CSIRO version of kg & mem to calculate LWC for CSIRO & MU if comparing equations
+                    mem_yatf = temp0
+                    kg_yatf = temp2
                     if eqn_used:
-                        mem_yatf = temp0
                         temp_lc_yatf = temp1
-                        kg_yatf = temp2
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp2  # storing as the second variable
 
@@ -4084,15 +4095,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
-                    # temp0, temp1 = sfun.f_heat_nfs(hp_maint_yatf, hp_dw_yatf, mei_yatf, meme_yatf, mew_yatf, new_yatf, km_yatf
-                    #                        , kg_supp_yatf, kg_fodd_yatf, mei_propn_supp_yatf, mei_propn_herb_yatf
-                    #                        , mei_propn_milk=mei_propn_milk_yatf)
-                    # if eqn_used:
-                    #     hp_total_yatf = temp0
-                    #     level_yatf = temp1
-                    # if eqn_compare:
-                    #     r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp0  # storing as the second variable
-
                     temp0 = sfun.f_heatloss_nfs(cc_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf
                                              , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                              , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
@@ -4145,16 +4147,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7 = sfun.f_lwc_nfs(cg_yatf, ck_yatf, muscle_start_yatf
                                                 , viscera_start_yatf, muscle_target_b1xyg2, dw_yatf, mei_yatf , md_solid_yatf
                                                 , hp_maint_yatf, heat_loss_yatf, step, rev_trait_values['yatf'][p])
+                    #use NFS version of hp_total in f_templc_nfs() even if only comparing the NFS equation system
+                    hp_total_yatf = temp5
+                    kg_yatf = temp7   #efficiency resulting from the NFS equations (for r_compare)
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
                         d_fat_yatf = temp2
                         d_muscle_yatf = temp3
                         d_viscera_yatf = temp4
-                        hp_total_yatf = temp5
                         surplus_energy_yatf = temp6
-                        kg_yatf = temp7   #efficiency resulting from the NFS equations (for comparison)
-                        mem_yatf = hp_maint_yatf + np.maximum(0, heat_loss_yatf - hp_total_yatf)
+                        mem_yatf = hp_maint_yatf + np.maximum(0, heat_loss_yatf - hp_total_yatf) #will overwrite the CSIRO version if NFS system is being used.
                     if eqn_compare:
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 1, :, p, ...] = temp7
                         r_compare_q0q1q2tpyatf[eqn_system, eqn_group, 2, :, p, ...] = temp0
