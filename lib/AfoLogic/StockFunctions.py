@@ -1622,9 +1622,10 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, dw, mei, md, hp_maint, hea
     ##Step 7: Energy value of gain (reflects if ebg is held constant due to REV calculation).
     evg = (df + dm + dv) / ebg
 
-    ##energy above maintenance. As a comparison with old feeding standards
+    ##Surplus energy and kg, as a comparison with old feeding standards
+    ##surplus energy id energy above (maintenance + conceptus growth + milk production) so different to neg.
     surplus_energy = df + dm + dv + hp_df + hp_dm + hp_dv
-    kg = (df + dm + dv) / surplus_energy # a comparison with the old feeding standards
+    kg = np.where(surplus_energy > 0, (df + dm + dv) / surplus_energy, 0) # a comparison with the old feeding standards
 
     return ebg, evg, d_fat, d_muscle, d_viscera, hp_total, surplus_energy, kg
 
