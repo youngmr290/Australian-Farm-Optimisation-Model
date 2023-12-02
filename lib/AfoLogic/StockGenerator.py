@@ -6240,7 +6240,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ## Call Steve graphing routine here if Generator is throwing an error in the post-processing.
     ### scan-spreadsheet will activate if comparing equations
-    scan_spreadsheet = eqn_compare
+    scan_spreadsheet = False
     if scan_spreadsheet:
         print('Interact with the graph generator using the PlotViewer spreadsheet, kill each plot to continue')
     while scan_spreadsheet:

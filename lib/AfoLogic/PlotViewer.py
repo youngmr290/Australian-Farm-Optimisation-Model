@@ -1,13 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import pickle as pl
+# import pickle as pl
 from . import Functions as fun
 from . import relativeFile
-
+from ..RawVersion import LoadExcelInputs as dxl
 
 def read_spreadsheet():
     pv_xl_path = relativeFile.findExcel("PlotViewer.xlsm")
-    plot_inp = fun.xl_all_named_ranges(pv_xl_path, "Parameters")
+    plot_inp = dxl.xl_all_named_ranges(pv_xl_path, "Parameters")
     plot_axes = plot_inp["Axes"]
     dimensions = plot_inp["Dimensions"]
     verticals = plot_inp["Verticals"]
