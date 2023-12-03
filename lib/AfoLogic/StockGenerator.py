@@ -3567,7 +3567,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7 = sfun.f_lwc_nfs(cg_sire, ck_sire, muscle_start_sire
                                                 , viscera_start_sire, muscle_target_b0xyg0, dw_sire, mei_sire , md_solid_sire
-                                                , hp_maint_sire, heat_loss_sire, step, rev_trait_values['sire'][p])
+                                                , hp_maint_sire, hp_dw_sire, heat_loss_sire, step, rev_trait_values['sire'][p])
                         #use NFS version of hp_total in f_templc_nfs() even if only comparing the NFS equation system
                         hp_total_sire = temp5
                         kg_sire = temp7  #efficiency resulting from the NFS equations (for r_compare)
@@ -3602,7 +3602,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7 = sfun.f_lwc_nfs(cg_dams, ck_dams, muscle_start_dams
                                                 , viscera_start_dams, muscle_target_b0xyg1, dw_dams, mei_dams , md_solid_dams
-                                                , hp_maint_dams, heat_loss_dams, step, rev_trait_values['dams'][p]
+                                                , hp_maint_dams, hp_dw_dams, heat_loss_dams, step, rev_trait_values['dams'][p]
                                                 , dc_dams, hp_dc_dams, dl_dams, hp_dl_dams
                                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         #use NFS version of hp_total in f_templc_nfs() even if only comparing the NFS equation system
@@ -3638,8 +3638,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7 = sfun.f_lwc_nfs(cg_offs, ck_offs, muscle_start_offs
                                                 , viscera_start_offs, muscle_target_b0xyg3, dw_offs, mei_offs , md_solid_offs
-                                                , hp_maint_offs, heat_loss_offs, step
-                                                , rev_trait_values['offs'][p])
+                                                , hp_maint_offs, hp_dw_offs, heat_loss_offs, step, rev_trait_values['offs'][p])
                         #use NFS version of hp_total in f_templc_nfs() even if only comparing the NFS equation system
                         hp_total_offs = temp5
                         kg_offs = temp7   #efficiency resulting from the NFS equations (for r_compare)
@@ -4146,7 +4145,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7 = sfun.f_lwc_nfs(cg_yatf, ck_yatf, muscle_start_yatf
                                                 , viscera_start_yatf, muscle_target_b1xyg2, dw_yatf, mei_yatf , md_solid_yatf
-                                                , hp_maint_yatf, heat_loss_yatf, step, rev_trait_values['yatf'][p])
+                                                , hp_maint_yatf, hp_dw_yatf, heat_loss_yatf, step, rev_trait_values['yatf'][p])
                     #use NFS version of hp_total in f_templc_nfs() even if only comparing the NFS equation system
                     hp_total_yatf = temp5
                     kg_yatf = temp7   #efficiency resulting from the NFS equations (for r_compare)

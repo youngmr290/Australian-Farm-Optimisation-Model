@@ -1541,8 +1541,8 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     return ebg, evg, pg, fg, surplus_energy
 
 
-def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, dw, mei, md, hp_maint, heat_loss, step, rev_trait_value
-              , dc=0, hp_dc=0, dl=0, hp_dl=0, gest_propn = 0, lact_propn = 0):
+def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, dw, mei, md, hp_maint, hp_dw, heat_loss, step
+              , rev_trait_value, dc=0, hp_dc=0, dl=0, hp_dl=0, gest_propn = 0, lact_propn = 0):
     ##fat gain (MJ/d) is calculated using a formula derived from the Oddy etal 2023 paper (see Generator9:p16-17)
     ###The calculation is multistep because parameter values (bcm & bcf) depend on the sign of dm and df
     ###Steps
@@ -1575,9 +1575,8 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, dw, mei, md, hp_maint, hea
     ###assumptions are that alpha_v doesn't change during the step.
     ### Imperfect assumption because m may change during the timestep. Could change HP by 0.2 MJ/d (see '[Sheep Calc.xlsx]v error!')
     dv = dv0 * (1 - (1 - pv) ** step) / pv / step
-    ## Step 1c: heat production from change in viscera & wool growth (MJ/d)
+    ## Step 1c: heat production from change in viscera (MJ/d)
     hp_dv = dv * np.where(dv >= 0, ck[22, ...], ck[28, ...])  #select value for bpv based on sign of dp
-    hp_dw = dw * ck[23, ...]
     ##Step 2: Calculate MEI when dm==0 (mei_dm0) using derived equation and set bpm to required value
     mei_dm0 = (hp_maint + hp_dv + hp_dw + gest_propn * hp_dc + lact_propn * hp_dl - e0
                / pm - blf * (dv + dw + gest_propn * dc + lact_propn * dl + e0 / pm))
