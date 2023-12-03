@@ -1518,9 +1518,9 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     t_d_muscle = mg / cg[27, ...]
     t_d_viscera = vg / cg[28, ...]
     ##scale fat, muscle & viscera weight gain to match ebg (required because energy might not tally & because of the REV adjustment)
-    d_fat = t_d_fat * ebg / (t_d_fat + t_d_muscle + t_d_viscera)
-    d_muscle = t_d_muscle * ebg / (t_d_fat + t_d_muscle + t_d_viscera)
-    d_viscera = t_d_viscera * ebg / (t_d_fat + t_d_muscle + t_d_viscera)
+    d_fat = fun.f_divide(t_d_fat * ebg, (t_d_fat + t_d_muscle + t_d_viscera))
+    d_muscle = fun.f_divide(t_d_muscle * ebg, (t_d_fat + t_d_muscle + t_d_viscera))
+    d_viscera = fun.f_divide(t_d_viscera * ebg, (t_d_fat + t_d_muscle + t_d_viscera))
     return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
 
@@ -1555,9 +1555,9 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     t_d_muscle = mg / cg[27, ...]
     t_d_viscera = vg / cg[28, ...]
     ##scale fat, muscle & viscera weight gain to match ebg (required because energy might not tally & because of the REV adjustment)
-    d_fat = t_d_fat * ebg / (t_d_fat + t_d_muscle + t_d_viscera)
-    d_muscle = t_d_muscle * ebg / (t_d_fat + t_d_muscle + t_d_viscera)
-    d_viscera = t_d_viscera * ebg / (t_d_fat + t_d_muscle + t_d_viscera)
+    d_fat = fun.f_divide(t_d_fat * ebg, (t_d_fat + t_d_muscle + t_d_viscera))
+    d_muscle = fun.f_divide(t_d_muscle * ebg, (t_d_fat + t_d_muscle + t_d_viscera))
+    d_viscera = fun.f_divide(t_d_viscera * ebg, (t_d_fat + t_d_muscle + t_d_viscera))
     return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
 

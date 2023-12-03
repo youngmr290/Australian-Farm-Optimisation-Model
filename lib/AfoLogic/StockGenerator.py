@@ -3154,8 +3154,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 eqn_system = 2  # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][
                     eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    eqn_used = (eqn_used_g2_q1p[
-                                    eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                    eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_foetus_nfs(cg_dams, ck_dams, cp_dams, step
                                         , c_start_dams, muscle_start_dams, dm_dams, nfoet_b1nwzida0e0b0xyg
