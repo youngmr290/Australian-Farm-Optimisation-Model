@@ -2037,12 +2037,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     rain_intake_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp0[mask_p_offs_p] / ci_yatf[18, ..., na]),  weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
     ##Proportion of peak intake due to time from birth
     pi_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cb1_dams[19, ..., na] * np.maximum(0,pimi_pa1e1b1nwzida0e0b0xyg1p0) ** ci_dams[9, ..., na] * np.exp(ci_dams[9, ..., na] * (1 - pimi_pa1e1b1nwzida0e0b0xyg1p0)), weights=age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1) #maximum to stop error in power (not sure why the negatives were causing a problem)
-    ##Peak milk production pattern (time from birth). Includes scalar for milk yield (cl[0]). Average for the days that the dam is lactating
+    ##Peak milk production pattern (time from birth). Average for the days that the dam is lactating
+    ## Includes genotype scalar for milk yield (cl[0]).
     mp_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_dams[0, ..., na] * cb1_dams[0, ..., na]
                                         * lmm_pa1e1b1nwzida0e0b0xyg1p0 ** cl_dams[3, ..., na]
                                         * np.exp(cl_dams[3, ..., na] * (1 - lmm_pa1e1b1nwzida0e0b0xyg1p0))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
-    ##Suckling volume pattern. Includes scalar for milk yield (cl[0]) and SA for potential intake of the young at foot.
+    ##Suckling volume pattern. Includes genotype scalar for milk yield (cl[0]) and SA for potential intake of the young at foot.
     ## Average for the days that the dam is lactating
     mp2_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cl_dams[0, ..., na] * nyatf_b1nwzida0e0b0xyg[...,na]
                                         * cl_dams[6, ..., na] * ( cl_dams[12, ..., na] + cl_dams[13, ..., na]
@@ -4868,7 +4869,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ###yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 ##EBW (end - empty body weight) - only increment the ebw in b1 slices that include yatf.
-                ebw_yatf = np.maximum(0, ebw_start_yatf + ebg_yatf * (nyatf_b1nwzida0e0b0xyg > 0) * days_period_pa1e1b1nwzida0e0b0xyg2[p])
+                ebw_yatf = np.maximum(0, ebw_start_yatf + ebg_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p]) * (nyatf_b1nwzida0e0b0xyg > 0)
                 ##EBW maximum to date
                 ebw_max_yatf = np.maximum(ebw_yatf, ebw_max_start_yatf)
                 ##FFCFW (end)
