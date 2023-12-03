@@ -1506,13 +1506,22 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     ### cause the weight change (probably increased intake), so a correlation between CFW & lower weight will be valuing
     ### that correlation as if the animal was eating less.
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
-    ##Protein gain (protein DM & muscle wet weight)
+    ##Protein gain (protein DM)
     pg = pcg * ebg
-    d_muscle = pg / cg[27, ...]
-    ##fat gain (fat DM & wet weight)
+    ##Allocate total protein gain to muscle and viscera using rule of thumb that 10% of total protein is viscera
+    mg = 0.9 * pg
+    vg = 0.1 * pg
+    ##fat gain (fat DM)
     fg = (neg - pg * cg[21, ...]) /cg[20, ...]
-    d_fat = fg / cg[26, ...]
-    return ebg, evg, d_fat, d_muscle, surplus_energy
+    ## Fat, Muscle & Viscera wet weight
+    t_d_fat = fg / cg[26, ...]
+    t_d_muscle = mg / cg[27, ...]
+    t_d_viscera = vg / cg[28, ...]
+    ##scale fat, muscle & viscera weight gain to match ebg (required because energy might not tally & because of the REV adjustment)
+    d_fat = t_d_fat * ebg / (t_d_fat + t_d_muscle + t_d_viscera)
+    d_muscle = t_d_muscle * ebg / (t_d_fat + t_d_muscle + t_d_viscera)
+    d_viscera = t_d_viscera * ebg / (t_d_fat + t_d_muscle + t_d_viscera)
+    return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
 
 def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
@@ -1538,7 +1547,18 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     fg = ebg * adipose_propn * cg[26, ...]
     ##Protein gain (kg of protein dm)
     pg = (neg - fg * cg[20, ...]) / cg[21, ...]
-    return ebg, evg, pg, fg, surplus_energy
+    ##Allocate total protein gain to muscle and viscera using rule of thumb that 10% of total protein is viscera
+    mg = 0.9 * pg
+    vg = 0.1 * pg
+    ## Fat, Muscle & Viscera wet weight
+    t_d_fat = fg / cg[26, ...]
+    t_d_muscle = mg / cg[27, ...]
+    t_d_viscera = vg / cg[28, ...]
+    ##scale fat, muscle & viscera weight gain to match ebg (required because energy might not tally & because of the REV adjustment)
+    d_fat = t_d_fat * ebg / (t_d_fat + t_d_muscle + t_d_viscera)
+    d_muscle = t_d_muscle * ebg / (t_d_fat + t_d_muscle + t_d_viscera)
+    d_viscera = t_d_viscera * ebg / (t_d_fat + t_d_muscle + t_d_viscera)
+    return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
 
 def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, dw, mei, md, hp_maint, hp_dw, heat_loss, step
@@ -1578,8 +1598,8 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, dw, mei, md, hp_maint, hp_
     ## Step 1c: heat production from change in viscera (MJ/d)
     hp_dv = dv * np.where(dv >= 0, ck[22, ...], ck[28, ...])  #select value for bpv based on sign of dp
     ##Step 2: Calculate MEI when dm==0 (mei_dm0) using derived equation and set bpm to required value
-    mei_dm0 = (hp_maint + hp_dv + hp_dw + gest_propn * hp_dc + lact_propn * hp_dl - e0
-               / pm - blf * (dv + dw + gest_propn * dc + lact_propn * dl + e0 / pm))
+    mei_dm0 = (hp_maint + hp_dv + hp_dw + gest_propn * hp_dc + lact_propn * hp_dl - e0 / pm
+               - blf * (dv + dw + gest_propn * dc + lact_propn * dl + e0 / pm))
     bcm = np.where(mei > mei_dm0, ck[21, ...], ck[27, ...])
     ##Step 3a: Calculate the numerator of df and set bf to required value
     df_numerator = ((1 - pm * M) * (mei - (hp_maint + hp_dv + hp_dw + gest_propn * hp_dc + lact_propn * hp_dl + bcm * e0 * M))
