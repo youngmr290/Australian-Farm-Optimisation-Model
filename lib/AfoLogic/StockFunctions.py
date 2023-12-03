@@ -1568,7 +1568,7 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, dw, mei, md, hp_maint, hea
     blf = ck[26, ...]
     pv = cg[33, ...]
     ## Step 1a: calculate dv from alpha_v for day 0
-    alpha_v = np.minimum(0, cg[35, ...] * mei + cg[36, ...] * m**0.41 + cg[37, ...] * md)
+    alpha_v = np.maximum(0, cg[35, ...] * mei + cg[36, ...] * m**0.41 + cg[37, ...] * md)
     dv0 = pv * (alpha_v - v)
     ## Step 1b: estimate average dv across the duration of the step, required because dv is reducing each day as it approaches alpha_v
     ###derivation Generator9:p15 based on dv(i) = dv(0) * (1 - pv)**i and then sum the geometric series.
