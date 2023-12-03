@@ -973,7 +973,7 @@ def f_energy_nfs(ck, cm, cg, lw, ffcfw, fat, muscle, viscera, mei, md_solid, i_s
     distance = distance * np.logical_not(confinement)
     ##Energy required for movement
     hp_move = cm[16, ...] * distance * lw
-    ##Energy required for grazing (chewing and walking around)
+    ##Energy required for eating (chewing and ruminating)
     hp_graze = cm[6, ...] * ffcfw * intake_f * (cm[7, ...] - dmd) + hp_move
     ##Heat produced by maintenance (before ECold)
     hp_maint = (hp_fasting + hp_mei + hp_graze) * sam_mr
@@ -1284,7 +1284,7 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     d_cfw_nolag_g = f1_rev_update('cfw', d_cfw_nolag_g, rev_trait_value)
     ##Wool growth (protein weight as shorn) with lag and updated history
     d_cfw_g, d_cfw_history_p2g = f1_history(d_cfw_history_start_p2g, d_cfw_nolag_g, days_period_g)
-    ##Net energy required for wool
+    ##Net energy required for wool (above basal growth rate)
     new_g = cw_g[1, ...] * (d_cfw_g - cw_g[2, ...] * relsize_start_g) / cw_g[3, ...]
     ##ME required for wool (above basal growth rate)
     mew_g = new_g / kw_yg #can be negative because mem assumes 4g of wool is grown. If less is grown then mew 'returns' the energy.
@@ -1305,6 +1305,7 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
     ##Wool growth is a copy of CSIRO but with different calculation of energy stored and heat production
     ##There is some discrepancy in Hutton's equations because the energy content is for protein DM (not as shorn)
     ##adjust wge, cfw_ave, mew_min & sfd for the LTW adjustments (CFW is a scalar and FD is an addition)
+    ## In these calculations the weight of wool is 'as shorn' and the DM content is included in the energy calculations
     wge_a0e0b0xyg = wge_a0e0b0xyg * sfw_ltwadj_g
     d_cfw_ave_g = d_cfw_ave_g * sfw_ltwadj_g
     mew_min_g = mew_min_g * sfw_ltwadj_g
