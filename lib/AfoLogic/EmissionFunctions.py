@@ -14,15 +14,21 @@ from . import FeedsupplyFunctions as fsfun
 
 def f_ch4_animal_bc(ch, intake_f, intake_s, md_solid, level):
     '''
-    Animal component of the Blaxter and Clapperton method for CH4 production.
+    Animal component of the Blaxter and Clapperton method for CH4 production - linked to the animal DVs.
+    This is best linked to the animal DVs because the value varies with the level of feeding which is not known
+    if it were connected to the feed-stuff. However, it does require an estimate of the M/D of the feed being consumed
+    which is an optimised variable. However, a reasonable approximation is available from the M/D of the feed that
+    generated the animal profile.
 
     Note, in Blaxter and Clapperton 1965 there is an error in table 5 (it should be b=2.37-0.05D (required to make figure 3 work))
     and there is an error CH4 equation derived from table 4 and 5. It should be CH4 (kcal/100kcal feed) = 1.30 + 0.112D + L (2.37 -0.05D).
     In the 2012 tech paper these error were fixed. This is the equation used below.
 
-    Note 2: When they are lactating the ewes intake doubles or more so should the extra intake be counted as higher L
-    and therefore reduced emissions per unit of intake. Or are they still considered to be at maintenance (or usually
-    below) and hence very high emissions per unit of intake? This is not mention in B&C.
+    Note 2: When they are lactating the ewes intake doubles (or more) and there is a corresponding increase in the
+    energy expended on producing milk. So should the extra intake be counted as higher L and therefore reduce
+    emissions per unit of intake. Or if there is no change in weight are they still considered to be at maintenance
+    and hence high emissions per unit of intake? This is not mentioned in B&C. Currently assuming that level of feeding
+    is relative to energy used for maintenance functions and doesn't include the energy used for milk production.
 
 
     :param ch: methane parameters
@@ -36,7 +42,7 @@ def f_ch4_animal_bc(ch, intake_f, intake_s, md_solid, level):
 
     ##Methane production total - this includes a feed component that is calculated elsewhere and hooked to feed activities
     ## not used just here to show the full equation
-    ch4_total_mj = ch[1, ...] * (intake_f + intake_s)*((ch[2, ...] + ch[3, ...] * md_solid) + (level + 1) * (ch[4, ...] - ch[5, ...] * md_solid))
+    # ch4_total_mj = ch[1, ...] * (intake_f + intake_s) * ((ch[2, ...] + ch[3, ...] * md_solid) + (level + 1) * (ch[4, ...] - ch[5, ...] * md_solid))
 
     ##Methane production animal component
     ch4_animal_mj = ch[1, ...] * (intake_f + intake_s) * (level + 1) * (ch[4, ...] - ch[5, ...] * md_solid)
@@ -49,13 +55,15 @@ def f_ch4_animal_bc(ch, intake_f, intake_s, md_solid, level):
 
 def f_ch4_feed_bc(intake, md):
     '''
-    Feed component of the Blaxter and Clapperton method for CH4 production.
+    Feed component of the Blaxter and Clapperton method for CH4 production - linked to the feed-stuff DVs.
+    This is best linked to the feed-stuff DVs because the value varies with M/D and this is only an estimate when
+    emissions are calculated for the animal component of the emissions.
 
     Note, in Blaxter and Clapperton 1965 there is an error in table 5 (it should be b=2.37-0.05D (required to make figure 3 work))
     and there is an error CH4 equation derived from table 4 and 5. It should be CH4 (kcal/100kcal feed) = 1.30 + 0.112D + L (2.37 -0.05D).
     In the 2012 tech paper these error were fixed. This is the equation used below.
 
-    :param intake: dry matter intake of feed activity (kg)
+    :param intake: dry matter intake of the feed-stuff decision variable (kg).
     :param md:
     :return: kg of methane produced per x intake - feed component
     '''
