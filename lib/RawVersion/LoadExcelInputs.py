@@ -37,20 +37,20 @@ def f_load_fs(fs_use_pkl, fs_use_number):
     return pkl_fs
 
 def f_load_stubble():
-    ##read in category info frpm xl
+    ##read in category info from xl
     ###build path
     cat_propn_s1_ks2 = pd.read_excel(relativeFile.findExcel("stubble sim.xlsx"),header=None, engine='openpyxl')
     return cat_propn_s1_ks2
 
 def f_load_phases():
     '''
-    Load existing rotation info. If it doesnt exist then pass.
+    Load existing rotation info. If it doesn't exist then pass.
 
     The rotations are checked later to see if they match the users needs for the given trial (ie full vs pinp).
     The rotations are also masked later. See pinp.f1_phases()
 
     '''
-    ##rotation phases - read in from excel
+    ##rotation phases - read in from Excel
     rot_xl_path = relativeFile.findExcel("Rotation.xlsx")
     try:
         phases_r = pd.read_excel(rot_xl_path, sheet_name='rotation list', header=None, index_col=0,
@@ -70,7 +70,7 @@ def f_load_phases():
     return {"phases_r": phases_r, "rot_req": rot_req, "rot_prov": rot_prov, "s_rotcon1": s_rotcon1}
 
 def f_load_excel_default_inputs(load_all_pinp=False, trial_pinp=None):
-    '''Function to load inputs from excel (univeral, structural, property, price variation, rotation and stubble)'''
+    '''Function to load inputs from Excel (universal, structural, property, price variation, rotation and stubble)'''
 
     #########################################################################################################################################################################################################
     #########################################################################################################################################################################################################
@@ -83,7 +83,7 @@ def f_load_excel_default_inputs(load_all_pinp=False, trial_pinp=None):
 
     structural_xl_path = relativeFile.findExcel("Structural.xlsx")
 
-    ##read from excel
+    ##read from Excel
     print('Reading structural inputs from Excel',end=' ',flush=True)
     ##general
     sinp_defaults['general_inp'] = xl_all_named_ranges(structural_xl_path,"General")
@@ -240,7 +240,7 @@ def load_excel(filename):
 # If the range is 2D the function converts the first row to the dataframe column names and the first col to index names
 # if you don't want this you can reset index using index.reset or something and probs the similar for cols
 # Testing showed readonly = False was quicker than true. But still not as fast as pandas
-# (may not exist anymore) now it causes problems sometimes locking you out of excel because it is readonly - closing doesn't fix issue (wb._archive.close())
+# (may not exist anymore) now it causes problems sometimes locking you out of Excel because it is readonly - closing doesn't fix issue (wb._archive.close())
 
 def xl_all_named_ranges(filename, targetsheets, rangename=None, numpy=False,
                         datatype=None):  # read all range names defined in the list targetsheets and return a dictionary of lists or dataframes
