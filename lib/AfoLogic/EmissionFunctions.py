@@ -111,7 +111,7 @@ def f_stock_ch4_feed_nir(intake, dmd):
     return ch4
 
 
-def f_stock_ch4_animal_nir(mc=0):
+def f_stock_ch4_animal_nir():
     '''
     Calculates the component of livestock methane emissions linked to stock activities, using the methods documented
     in the National Greenhouse Gas Inventory Report.
@@ -126,23 +126,17 @@ def f_stock_ch4_animal_nir(mc=0):
     - Methane production from enteric fermentation (M): M = I x 0.0188 + 0.00158
     - Methane production from manure (M): M = I x (1 - DMD) x EFT
 
-    :param mc: milk consumption i.e mp2_yatf
-    :return: methane production kg/d
+    At the moment milk consumption does not contribute to methane from either enteric fermentation or
+    manure decomposition (likely not a big issue since it would be of a small magnitude).
+
+    :return: methane production kg/d that is linked to the livestock decision variable.
     '''
-    ##inputs
-    dm_milk = 20.6 #milk dry matter content (MJ/kg) source:Stankov etal 2022. Dry matter was 21.36% in April and 19.85% in August at the end of lactation.
-
-    MC = mc/dm_milk#milk intake kg DM
-
-    ##Methane production due to milk intake (methane from other feed intake e.g. pasture is accounted for in the feed emission function)
-    ch4_milk = MC * 0.0188
 
     ##Fixed daily methane production. This part of the equation is not linked to feed intake. Essentially the methane emitted by an animal each day irrelevant of feed intake.
+    ##Methane production from feed intake e.g. pasture is accounted for in the feed emission function.
     ch4_fixed = 0.00158
 
-    ##return kg of methane emissions per day. This is converted to co2 equivalents at a later stage.
-    ch4 = ch4_milk + ch4_fixed
-    return ch4
+    return ch4_fixed
 
 
 def f_stock_n2o_feed_nir(intake, dmd, cp):

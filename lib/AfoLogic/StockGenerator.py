@@ -4237,7 +4237,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###yatf
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0 = efun.f_stock_ch4_animal_nir(mp2_yatf)
+                    temp0 = efun.f_stock_ch4_animal_nir()
                     if eqn_used:
                         ch4_animal_yatf = temp0
                     if eqn_compare:
