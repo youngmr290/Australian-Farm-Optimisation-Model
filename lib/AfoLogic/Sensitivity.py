@@ -323,7 +323,7 @@ def create_sa():
     ###stock others
     sav['nv_inc'] = '-'    #SA to store NV report values
     sav['lw_inc'] = '-'     #SA to store LW report values
-    sav['ffcfw_inc'] = '-'  #SA to store FFCFW report values
+    sav['ebw_inc'] = '-'  #SA to store EBW report values
     sav['cs_inc'] = '-'  #SA to store condition score report values
     sav['fs_inc'] = '-'  #SA to store fat score report values
     sav['onhand_mort_p_inc'] = '-'  #SA to store onhand report values
@@ -368,7 +368,7 @@ def create_sa():
     sav['r2_ik0g3'] = np.full(pinp.sheep['ia_r2_ik0g3'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k0 axis (wean age) for offs
     sav['r2_isk2g1'] = np.full(pinp.sheep['ia_r2_isk2g1'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k2 axis (LSLN) for dams
     sav['r2_ik5g3'] = np.full(pinp.sheep['ia_r2_ik5g3'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k5 axis (BTRT) for offs
-    sav['period_is_reportffcfw_p'] = np.full(500, '-', dtype=object)  #SA to adjust the periods reported in ffcfw_cut report
+    sav['period_is_reportebw_p'] = np.full(500, '-', dtype=object)  #SA to adjust the periods reported in ebw_cut report
     sav['LTW_loops_increment'] = '-'                  #SA to Increment the number of LTW loops carried out in the code. The base is 2 loops with 0 increment but if using pkl fs or ltw_adj is 0 then base is 0 loops.
     ##SAM
     sam['kg_adult'] = 1.0                             #energy efficiency of adults (zf2==1)
