@@ -4221,7 +4221,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###sire
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                    temp0 = efun.f_ch4_animal_nir()
+                    temp0 = efun.f_stock_ch4_animal_nir()
                     if eqn_used:
                         ch4_animal_sire = temp0
                     if eqn_compare:
@@ -4229,7 +4229,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###dams
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = efun.f_ch4_animal_nir()
+                    temp0 = efun.f_stock_ch4_animal_nir()
                     if eqn_used:
                         ch4_animal_dams = temp0
                     if eqn_compare:
@@ -4237,7 +4237,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###yatf
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0 = efun.f_ch4_animal_nir(mp2_yatf)
+                    temp0 = efun.f_stock_ch4_animal_nir(mp2_yatf)
                     if eqn_used:
                         ch4_animal_yatf = temp0
                     if eqn_compare:
@@ -4245,7 +4245,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###offs
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                    temp0 = efun.f_ch4_animal_nir()
+                    temp0 = efun.f_stock_ch4_animal_nir()
                     if eqn_used:
                         ch4_animal_offs = temp0
                     if eqn_compare:
@@ -4256,7 +4256,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###sire
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                    temp0 = efun.f_ch4_animal_bc(ch_sire, intake_f_sire, intake_s_sire, md_solid_sire, level_sire)
+                    temp0 = efun.f_stock_ch4_animal_bc(ch_sire, intake_f_sire, intake_s_sire, md_solid_sire, level_sire)
                     if eqn_used:
                         ch4_animal_sire = temp0
                     if eqn_compare:
@@ -4264,7 +4264,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###dams
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = efun.f_ch4_animal_bc(ch_dams, intake_f_dams, intake_s_dams, md_solid_dams, level_dams)
+                    temp0 = efun.f_stock_ch4_animal_bc(ch_dams, intake_f_dams, intake_s_dams, md_solid_dams, level_dams)
                     if eqn_used:
                         ch4_animal_dams = temp0
                     if eqn_compare:
@@ -4272,7 +4272,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###yatf
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0 = efun.f_ch4_animal_bc(ch_yatf, intake_f_yatf, intake_s_yatf, md_solid_yatf, level_yatf)
+                    temp0 = efun.f_stock_ch4_animal_bc(ch_yatf, intake_f_yatf, intake_s_yatf, md_solid_yatf, level_yatf)
                     if eqn_used:
                         ch4_animal_yatf = temp0
                     if eqn_compare:
@@ -4280,7 +4280,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###offs
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                    temp0 = efun.f_ch4_animal_bc(ch_offs, intake_f_offs, intake_s_offs, md_solid_offs, level_offs)
+                    temp0 = efun.f_stock_ch4_animal_bc(ch_offs, intake_f_offs, intake_s_offs, md_solid_offs, level_offs)
                     if eqn_used:
                         ch4_animal_offs = temp0
                     if eqn_compare:
@@ -4294,7 +4294,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###sire
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                    temp0 = efun.f_n2o_animal_nir(cl_sire, d_cfw_sire, relsize_start_sire, srw_b0xyg0, ebg_sire, mp=0, mc=0)
+                    temp0 = efun.f_stock_n2o_animal_nir(cl_sire, d_cfw_sire, relsize_start_sire, srw_b0xyg0, ebg_sire, mp=0, mc=0)
                     if eqn_used:
                         n2o_animal_sire = temp0
                     if eqn_compare:
@@ -4302,7 +4302,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###dams
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = efun.f_n2o_animal_nir(cl_dams, d_cfw_dams, relsize_start_dams, srw_b0xyg1, ebg_dams, mp=mp2_dams)
+                    temp0 = efun.f_stock_n2o_animal_nir(cl_dams, d_cfw_dams, relsize_start_dams, srw_b0xyg1, ebg_dams, mp=mp2_dams)
                     if eqn_used:
                         n2o_animal_dams = temp0
                     if eqn_compare:
@@ -4310,7 +4310,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###yatf
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0 = efun.f_n2o_animal_nir(cl_yatf, d_cfw_yatf, relsize_start_yatf, srw_b1xyg2, ebg_yatf, mc=mp2_yatf)
+                    temp0 = efun.f_stock_n2o_animal_nir(cl_yatf, d_cfw_yatf, relsize_start_yatf, srw_b1xyg2, ebg_yatf, mc=mp2_yatf)
                     if eqn_used:
                         n2o_animal_yatf = temp0
                     if eqn_compare:
@@ -4318,7 +4318,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###offs
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                    temp0 = efun.f_n2o_animal_nir(cl_offs, d_cfw_offs, relsize_start_offs, srw_b0xyg3, ebg_offs)
+                    temp0 = efun.f_stock_n2o_animal_nir(cl_offs, d_cfw_offs, relsize_start_offs, srw_b0xyg3, ebg_offs)
                     if eqn_used:
                         n2o_animal_offs = temp0
                     if eqn_compare:

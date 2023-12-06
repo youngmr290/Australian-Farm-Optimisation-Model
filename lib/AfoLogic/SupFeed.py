@@ -342,13 +342,13 @@ def f_sup_emissions(r_vals, nv):
 
     ##livestock methane emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
-        ch4_sup_fk = efun.f_ch4_feed_nir(1000 * dry_matter_content_k * prop_consumed_fk, dmd_k)
+        ch4_sup_fk = efun.f_stock_ch4_feed_nir(1000 * dry_matter_content_k * prop_consumed_fk, dmd_k)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
-        ch4_sup_fk = efun.f_ch4_feed_bc(1000 * dry_matter_content_k * prop_consumed_fk, md_k / 1000) #div 1000 to convert to kg
+        ch4_sup_fk = efun.f_stock_ch4_feed_bc(1000 * dry_matter_content_k * prop_consumed_fk, md_k / 1000) #div 1000 to convert to kg
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
-        n2o_sup_fk = efun.f_n2o_feed_nir(1000 * dry_matter_content_k * prop_consumed_fk, dmd_k, cp_k)
+        n2o_sup_fk = efun.f_stock_n2o_feed_nir(1000 * dry_matter_content_k * prop_consumed_fk, dmd_k, cp_k)
 
     co2e_sup_fk = ch4_sup_fk * uinp.emissions['i_ch4_gwp_factor'] + n2o_sup_fk * uinp.emissions['i_n2o_gwp_factor']
 

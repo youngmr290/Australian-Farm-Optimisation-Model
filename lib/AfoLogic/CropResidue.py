@@ -257,13 +257,13 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     ###########################
     ##livestock methane emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
-        ch4_stub_p6zks1 = efun.f_ch4_feed_nir(1000, dmd_cat_p6zks1)
+        ch4_stub_p6zks1 = efun.f_stock_ch4_feed_nir(1000, dmd_cat_p6zks1)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
-        ch4_stub_p6zks1 = efun.f_ch4_feed_bc(1000, md_p6zks1)
+        ch4_stub_p6zks1 = efun.f_stock_ch4_feed_bc(1000, md_p6zks1)
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
-        n2o_stub_p6zks1 = efun.f_n2o_feed_nir(1000, dmd_cat_p6zks1, cp_cat_p6zks1)
+        n2o_stub_p6zks1 = efun.f_stock_n2o_feed_nir(1000, dmd_cat_p6zks1, cp_cat_p6zks1)
 
     co2e_stub_p6zks1 = ch4_stub_p6zks1 * uinp.emissions['i_ch4_gwp_factor'] + n2o_stub_p6zks1 * uinp.emissions['i_n2o_gwp_factor']
 

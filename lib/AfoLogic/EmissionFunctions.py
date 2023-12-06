@@ -12,7 +12,7 @@ import numpy as np
 from . import UniversalInputs as uinp
 from . import FeedsupplyFunctions as fsfun
 
-def f_ch4_animal_bc(ch, intake_f, intake_s, md_solid, level):
+def f_stock_ch4_animal_bc(ch, intake_f, intake_s, md_solid, level):
     '''
     Animal component of the Blaxter and Clapperton method for CH4 production - linked to the animal DVs.
     This is best linked to the animal DVs because the value varies with the level of feeding which is not known
@@ -53,7 +53,7 @@ def f_ch4_animal_bc(ch, intake_f, intake_s, md_solid, level):
     return ch4_animal_kg
 
 
-def f_ch4_feed_bc(intake, md):
+def f_stock_ch4_feed_bc(intake, md):
     '''
     Feed component of the Blaxter and Clapperton method for CH4 production - linked to the feed-stuff DVs.
     This is best linked to the feed-stuff DVs because the value varies with M/D and this is only an estimate when
@@ -76,7 +76,7 @@ def f_ch4_feed_bc(intake, md):
     return ch4_feed_kg
 
 
-def f_ch4_feed_nir(intake, dmd):
+def f_stock_ch4_feed_nir(intake, dmd):
     '''
     Calculates the component of livestock methane emissions linked to feed activities, using the methods documented
     in the National Greenhouse Gas Inventory Report.
@@ -111,7 +111,7 @@ def f_ch4_feed_nir(intake, dmd):
     return ch4
 
 
-def f_ch4_animal_nir(mc=0):
+def f_stock_ch4_animal_nir(mc=0):
     '''
     Calculates the component of livestock methane emissions linked to stock activities, using the methods documented
     in the National Greenhouse Gas Inventory Report.
@@ -145,7 +145,7 @@ def f_ch4_animal_nir(mc=0):
     return ch4
 
 
-def f_n2o_feed_nir(intake, dmd, cp):
+def f_stock_n2o_feed_nir(intake, dmd, cp):
     '''
     Calculates the component of livestock nitrous oxide emissions linked to feed activities, using the methods documented
     in the National Greenhouse Gas Inventory Report.
@@ -190,7 +190,7 @@ def f_n2o_feed_nir(intake, dmd, cp):
     return n2o
 
 
-def f_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
+def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
     '''
     Calculates the component of livestock nitrous oxide emissions linked to animal activities, using the methods documented
     in the National Greenhouse Gas Inventory Report.
