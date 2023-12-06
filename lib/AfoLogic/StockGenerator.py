@@ -8461,7 +8461,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                             mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
     ####prog - t[0] is sale t so set t[1&2] to 0.
     sale_ffcfw_prog_s7k3k5tva1e1b1nwzida0e0b0xyg2 = sfun.f1_create_production_param('offs',
-                                                                ffcfw_prog_a0e0b0_s7tva1e1b1nwzida0e0b0xyg2 * (index_tpa1e1b1nwzida0e0b0xyg2==0),
+                                                                ffcfw_prog_a0e0b0_s7tva1e1b1nwzida0e0b0xyg2[:,na,na,...] * (index_tpa1e1b1nwzida0e0b0xyg2==0),
                                                                 a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3,
                                                                 a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3) #can use off cluster function because same for prog.
     ####offs
