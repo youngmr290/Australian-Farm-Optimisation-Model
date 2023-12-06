@@ -2235,10 +2235,10 @@ def f_emission_summary(lp_vars, r_vals):
                                               keys=keys, arith=arith, index=index, cols=cols)
 
         ###sup
-        sup_emissions_kp6z = r_vals['sup']['{0}_sup_kp6z'.format(e)]
-        grain_fed_qszkp6 = f_grain_sup_summary(lp_vars, r_vals, option=2)
-        sup_emissions_qs_kp6z = grain_fed_qszkp6.unstack([3,4,2]).sort_index(axis=1).mul(sup_emissions_kp6z, axis=1)
-        d['sup_emissions_qsz'] = pd.DataFrame(sup_emissions_qs_kp6z.stack([2]).sum(axis=1))
+        sup_emissions_fkp6z = r_vals['sup']['{0}_sup_fkp6z'.format(e)]
+        grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
+        sup_emissions_qs_fkp6z = grain_fed_qszkfp6.unstack([4,3,5,2]).sort_index(axis=1).mul(sup_emissions_fkp6z, axis=1)
+        d['sup_emissions_qsz'] = pd.DataFrame(sup_emissions_qs_fkp6z.stack([3]).sum(axis=1))
 
     ##total livestock emissions
     for i, emission_cat in enumerate(ch4):
