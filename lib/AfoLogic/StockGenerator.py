@@ -9910,7 +9910,45 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     # print('number params: ', keys_start - number_param_start)
     # print('convert numpy to pyomo dict and reporting: ',finish - keys_start)
 
-    ## Call Steve's graph generator.
+    ## Print a numpy variable to Excel. Must be sliced to a 2D array that can be converted to a Pandas dataframe
+    ## Writes to Excel using Pandas capabilities
+    ## To use the functionality set to True below
+    if True:
+        import pandas as pd
+        from . import ReportFunctions as rfun
+        from . import relativeFile
+        keys_q0 = ['CSIRO', 'MU', 'NFS']
+        keys_q0p = [keys_q0, keys_p]
+
+        ##Slice the r_compare array and return the equation systems and p axes. q1q2[7,0] is the Energy equations, mem.
+        try:  #Catch error when the variable doesn't exist, which for r_compare occurs if eqn_compare is flase for some trials
+            array = r_compare_q0q1q2tpdams[:,7,0,2,:,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
+        except:
+            pass
+        else:  #Carry out this code if array was successfully created
+            df = rfun.f_numpy2df(array, keys_q0p, [1], [0])
+            print("Writing to Excel")
+            ##first check that Excel is not open (Microsoft puts a lock on files, so they can't be updated from elsewhere while open)
+            report_file_path = relativeFile.find(__file__, "../../Output", "RCompare.xlsx")
+            if os.path.isfile(report_file_path):  #to check if report.xl exists
+                while True:  # repeat until the try statement succeeds
+                    try:
+                        myfile = open(report_file_path, "w")  # chucks an error if Excel file is open
+                        break  # exit the loop
+                    except IOError:
+                        input("Could not open file! Please close Excel. Press Enter to retry.")
+                        # restart the loop
+            ## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in Excel
+            writer = pd.ExcelWriter(report_file_path, engine='xlsxwriter')
+            ## simple write df to xl
+            df.to_excel(writer, 'Compare', index=True)
+            ##finish writing and save
+            writer.close
+
+
+
+
+## Call Steve's graph generator.
     ## Will be bypassed unless called from SheepTest.py or line below is uncommented
     if plots:
         print('Interact with the graph generator using the PlotViewer spreadsheet, kill each plot to continue')
