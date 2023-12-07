@@ -10192,11 +10192,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         sheetname6 = 'ebg'
         sheetname7 = 'mei'
         sheetname8 = 'md'
-        sheetname9 = 'mew'
-        sheetname10 = 'mec'
-        sheetname11 = 'mel'
+        sheetname9 = 'nv'
+        sheetname10 = 'mew'
+        sheetname11 = 'mec'
+        sheetname12 = 'ebw'
         keys_q0 = ['CSIRO', 'MU', 'NFS'] #description of the equation systems
+        keys_b_cut = ['Dry', 'Single', 'Twin']
         keys_q0p = [keys_q0, keys_p]
+        keys_bp = [keys_b_cut, keys_p]
 
         ##Slice the r_compare array and return the equation systems and p axes.
         try:  #Catch error when the variable doesn't exist, which for r_compare occurs if eqn_compare is false for a trial
@@ -10207,13 +10210,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             array4 = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             array5 = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             array6 = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7 = o_mei_solid_tpdams[0:3, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]   # have used the t axis in place of q0
-            array8 = r_md_solid_tpdams[0:3, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]   # have used the t axis in place of q0
-            array9 = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array10 = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array11 = o_mel_dams[:, 6, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]    #don't have mel stored
+            array7 = o_mei_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
+            array8 = r_md_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
+            array9 = nv_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
+            array10 = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array11 = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array12 = r_ebw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
         except: #do not write the trial if any of the variables doesn't exist
-            pass
+            print('Error when setting up the variables for saving in Excel - check the variables exist and are sliced appropriately')
         else:  #Carry out this code if array was successfully created
             df0 = rfun.f_numpy2df(array0, keys_q0p, [1], [0])
             df1 = rfun.f_numpy2df(array1, keys_q0p, [1], [0])
@@ -10222,11 +10226,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             df4 = rfun.f_numpy2df(array4, keys_q0p, [1], [0])
             df5 = rfun.f_numpy2df(array5, keys_q0p, [1], [0])
             df6 = rfun.f_numpy2df(array6, keys_q0p, [1], [0])
-            df7 = rfun.f_numpy2df(array7, keys_q0p, [1], [0])
-            df8 = rfun.f_numpy2df(array8, keys_q0p, [1], [0])
-            df9 = rfun.f_numpy2df(array9, keys_q0p, [1], [0])
+            df7 = rfun.f_numpy2df(array7, keys_bp, [1], [0])
+            df8 = rfun.f_numpy2df(array8, keys_bp, [1], [0])
+            df9 = rfun.f_numpy2df(array9, keys_bp, [1], [0])
             df10 = rfun.f_numpy2df(array10, keys_q0p, [1], [0])
-            # df11 = rfun.f_numpy2df(array11, keys_q0p, [1], [0])
+            df11 = rfun.f_numpy2df(array11, keys_q0p, [1], [0])
+            df12 = rfun.f_numpy2df(array12, keys_bp, [1], [0])
             print("Writing to Excel")
             ##first check that Excel is not open (Microsoft puts a lock on files, so they can't be updated from elsewhere while open)
             report_file_path = relativeFile.find(__file__, "../../Output", excel_filename)
@@ -10252,7 +10257,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             df8.to_excel(writer, sheetname8, index=True)
             df9.to_excel(writer, sheetname9, index=True)
             df10.to_excel(writer, sheetname10, index=True)
-            # df11.to_excel(writer, sheetname11, index=True)
+            df11.to_excel(writer, sheetname11, index=True)
+            df12.to_excel(writer, sheetname11, index=True)
             ##finish writing and save
             writer.close()
 
