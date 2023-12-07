@@ -10,6 +10,7 @@ author: Young
 import numpy as np
 
 from . import UniversalInputs as uinp
+from . import PropertyInputs as pinp
 from . import FeedsupplyFunctions as fsfun
 
 def f_stock_ch4_animal_bc(ch, intake_f, intake_s, md_solid, level):
@@ -144,10 +145,17 @@ def f_stock_n2o_feed_nir(intake, dmd, cp):
     Calculates the component of livestock nitrous oxide emissions linked to feed activities, using the methods documented
     in the National Greenhouse Gas Inventory Report.
 
-    livestock produce nitrous oxide emissions from the combined nitrification-denitrification process that
-    occurs on the nitrogen in manure. The amount of emissions are effected by both
-    livestock factors (e.g. age, relative size, EBG) and feed factors (e.g. quality, protein content, intake).
-    Thus, in AFO the NIR equations are split between livestock and feed activities for improve accuracy.
+    livestock produce nitrous oxide emissions from several exchanges:
+
+        1. the combined nitrification-denitrification process that
+           occurs on the nitrogen in manure.
+        2. atmospheric deposition due to ammonia released from the volatilization of dung/urine which increases
+           nitrogen in the nitrogen cycle and therefore increase nitrogen deposition which produces some n2o when interacts with the earth.
+        3. runoff and leaching of nitrogen in dung and urine.
+
+    The amount of emissions are effected by both livestock factors (e.g. age, relative size, EBG) and
+    feed factors (e.g. quality, protein content, intake). Thus, in AFO the NIR equations are split
+    between livestock and feed activities for improve accuracy.
 
     The NIR equations for livestock nitrous oxide emissions are as follows:
 
@@ -155,6 +163,8 @@ def f_stock_n2o_feed_nir(intake, dmd, cp):
     - Nitrogen excreted in faeces (F): F = {0.3 x (CPI x (1 - [(DMD + 10) / 100])) + 0.105 x (ME x I x 0.008) + 0.08 x (0.045 x MC) + 0.0152 x I} / 6.25
     - Nitrogen excreted in urine (U): U = (CPI / 6.25) - NR - F
     - Nitrous oxide production from animal waste (N): N = ((F x EFf x Cg) + (U x EFu x Cg))
+    - Nitrous oxide production from atmospheric deposition (N): N = (F + U) x FracGASM x EF x Cg
+    - Nitrous oxide production from runoff and leaching (N): N = (F + U) x FracWET x FracLEACH x EF x Cg
 
     Note: Freer 2007: Crude protein, being total N × 6.25
 
@@ -167,21 +177,35 @@ def f_stock_n2o_feed_nir(intake, dmd, cp):
     EFf = uinp.emissions['i_eff']  # emision factor faeces - Emission factors are used to convert a unit of activity into its emissions equivalent.
     EFu = uinp.emissions['i_efu']  # emision factor urine - Emission factors are used to convert a unit of activity into its emissions equivalent.
     Cg = uinp.emissions['i_cf_n2o']  # 44/28 - weight conversion factor of Nitrogen (molecular weight 28) to Nitrous oxide (molecular weight 44)
+    EF_atmos_deposition = uinp.emissions['i_ef_atmos_deposition_manure'] #emision factor for atmospheric deposition of animal waste on non-irrigated pastures.
+
+    FracGASM = uinp.emissions['i_FracGASM_manure'] #fraction of animal waste N volatilised
+    FracWET = uinp.emissions['i_FracWET_manure'] #fraction of N available for leaching and runoff
+    FracLEACH = uinp.emissions['i_FracLEACH_manure'] #fraction of N lost through leaching and runoff
+    property_leach_factor = pinp.emissions['i_leach_factor'] #factor based on rainfall to scale leaching. Typically zones under 600mm annual rainfall dont leach.
     me = fsfun.f1_dmd_to_md(dmd) #Metabolisable energy MJ/kg DM
-    ##Nitrous oxide production - feed component of equation
     ###crude protein intake
     cpi_solids = intake * cp
+
+    ##nitrogen from animal waste
     ###Nitrogen excreted in faeces (F): F = {0.3 x (CPI x (1 - [(DMD + 10) / 100])) + 0.105 x (ME x I x 0.008) + 0.08 x (0.045 x MC) + 0.0152 x I} / 6.25
-    ###milk component is accounted for in the animal emission function because milk consumed is calculated in sgen.
+    ## milk component is accounted for in the animal emission function because milk consumed is calculated in sgen.
     NF_solids = (0.3 * (cpi_solids * (1 - ((dmd + 10) / 100))) + 0.105 * (me * intake * 0.008) + 0.0152 * intake) / 6.25
     ###N excreted in urine (U): U = (CPI / 6.25) - NR - F
     ### NR is accounted for in the animal emission function.
     NU_solids = (cpi_solids / 6.25) - NF_solids  # feed component
-    ###convert to nitrous oxide
-    n2o = (NF_solids * EFf * Cg) + (NU_solids * EFu * Cg)
 
-    ##return nitrous oxide emissions. These are converted to co2 equivalents at a later stage.
-    return n2o
+    ##Nitrous oxide production from nitrification-denitrification of N in dung and urine - feed component of equation
+    n2o_manure = (NF_solids * EFf * Cg) + (NU_solids * EFu * Cg)
+
+    ##Nitrous oxide production from atmospheric deposition due to dung and urine - feed component of equation
+    n2o_atmospheric_deposition = f_n2o_atmospheric_deposition(NF_solids + NU_solids, EF_atmos_deposition, FracGASM)
+
+    ##Nitrous oxide production from atmospheric deposition due to dung and urine - feed component of equation
+    n2o_leach = f_n2o_leach_runoff(NF_solids + NU_solids, FracWET, FracLEACH * property_leach_factor)
+
+    ##return nitrous oxide emissions linked to the feed decision variables. These are converted to co2 equivalents at a later stage.
+    return n2o_manure + n2o_atmospheric_deposition + n2o_leach
 
 
 def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
@@ -189,10 +213,17 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
     Calculates the component of livestock nitrous oxide emissions linked to animal activities, using the methods documented
     in the National Greenhouse Gas Inventory Report.
 
-    livestock produce nitrous oxide emissions from the combined nitrification-denitrification process that
-    occurs on the nitrogen in manure. The amount of emissions are effected by both
-    livestock factors (e.g. age, relative size, EBG) and feed factors (e.g. quality, protein content, intake).
-    Thus, in AFO the NIR equations are split between livestock and feed activities for improve accuracy.
+    livestock produce nitrous oxide emissions from several exchanges:
+
+        1. the combined nitrification-denitrification process that
+           occurs on the nitrogen in manure.
+        2. atmospheric deposition due to ammonia released from the volatilization of dung/urine which increases
+           nitrogen in the nitrogen cycle and therefore increase nitrogen deposition which produces some n2o when interacts with the earth.
+        3. runoff and leaching of nitrogen in dung and urine.
+
+    The amount of emissions are effected by both livestock factors (e.g. age, relative size, EBG) and
+    feed factors (e.g. quality, protein content, intake). Thus, in AFO the NIR equations are split
+    between livestock and feed activities for improve accuracy.
 
     The NIR equations for livestock nitrous oxide emissions are as follows:
 
@@ -200,6 +231,8 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
     - Nitrogen excreted in faeces (F): F = {0.3 x (CPI x (1 - [(DMD + 10) / 100])) + 0.105 x (ME x I x 0.008) + 0.08 x (0.045 x MC) + 0.0152 x I} / 6.25
     - Nitrogen excreted in urine (U): U = (CPI / 6.25) - NR - F
     - Nitrous oxide production from animal waste (N): N = ((F x EFf x Cg) + (U x EFu x Cg))
+    - Nitrous oxide production from atmospheric deposition (N): N = (F + U) x FracGASM x EF x Cg
+    - Nitrous oxide production from runoff and leaching (N): N = (F + U) x FracWET x FracLEACH x EF x Cg
 
     Note: Freer 2007: Crude protein, being total N × 6.25
 
@@ -211,13 +244,16 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
     :param ebg: daily empty body gain
     :return: kilograms of n2o emissions per day linked to the animal activity
     '''
-
-
     ##inputs
     ##inputs
     EFf = uinp.emissions['i_eff']  # emision factor faeces - Emission factors are used to convert a unit of activity into its emissions equivalent.
     EFu = uinp.emissions['i_efu']  # emision factor urine - Emission factors are used to convert a unit of activity into its emissions equivalent.
     Cg = uinp.emissions['i_cf_n2o']  # 44/28 - weight conversion factor of Nitrogen (molecular weight 28) to Nitrous oxide (molecular weight 44)
+    EF_atmos_deposition = uinp.emissions['i_ef_atmos_deposition_manure'] #emision factor for atmospheric deposition of animal waste on non-irrigated pastures.
+    FracGASM = uinp.emissions['i_FracGASM_manure'] #fraction of animal waste N volatilised
+    FracWET = uinp.emissions['i_FracWET_manure'] #fraction of N available for leaching and runoff
+    FracLEACH = uinp.emissions['i_FracLEACH_manure'] #fraction of N lost through leaching and runoff
+    property_leach_factor = pinp.emissions['i_leach_factor'] #factor based on rainfall to scale leaching. Typically zones under 600mm annual rainfall dont leach.
     me_milk = cl[6] #ME / kg used to convert mp2 to kg of wet milk
     milk_dmd = 85 #dmd of milk
 
@@ -228,18 +264,65 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
     SRW = srw
     EBG = ebg
 
-    ##Nitrous oxide production - feed component of equation based on milk consumed and nitrogen retained in the body
+    ##nitrogen from animal waste
     ###crude protein of milk intake
     cpi_milk = 0.045 * MC
     ###Nitrogen excreted in faeces (F): F = {0.3 x (CPI x (1 - [(DMD + 10) / 100])) + 0.105 x (ME x I x 0.008) + 0.08 x (0.045 x MC) + 0.0152 x I} / 6.25
     ###milk component - solids component is accounted for in the animal emission function because milk consumed is calculated in sgen.
-    NF_milk = (0.3 * (cpi_milk * (1 - ((milk_dmd + 10) / 100))) + 0.08 * cpi_milk) / 6.25
+    NF = (0.3 * (cpi_milk * (1 - ((milk_dmd + 10) / 100))) + 0.08 * cpi_milk) / 6.25
     ###Nitrogen retained in the body(NR): NR = {(0.045 x MP) + (WP x 0.84) + {[(212 - 4 x {[(EBG x 1000) / (4 x SRW ^ 0.75)] - 1}) - (140 - 4 x {[(EBG x 1000) / (4 x SRW ^ 0.75)] - 1}) / {1 + exp(-6 x(Z - 0.4))}] x EBG} / 1000 / 6.25
     NR = ((0.045 * MP) + (WP * 0.84) + (((212 - 4 * (((EBG * 1000) / (4 * SRW ** 0.75)) - 1)) - (140 - 4 * (((EBG * 1000) / (4 * SRW ** 0.75)) - 1)) / (1 + np.exp(-6 * (Z - 0.4)))) * EBG) / 1000) / 6.25
     ###N excreted in urine (U): U = (CPI / 6.25) - NR - F
-    NU_milk = (cpi_milk / 6.25) - NR - NF_milk #animal component
-    ###convert to nitrous oxide
-    n2o = (NF_milk * EFf * Cg) + (NU_milk * EFu * Cg)
+    NU = (cpi_milk / 6.25) - NR - NF #animal component
+
+    ##Nitrous oxide production from nitrification-denitrification of N in dung and urine - animal component of equation based on milk consumed and nitrogen retained in the body
+    n2o_manure = (NF * EFf * Cg) + (NU * EFu * Cg)
+
+    ##Nitrous oxide production from atmospheric deposition due to dung and urine - feed component of equation
+    n2o_atmospheric_deposition = f_n2o_atmospheric_deposition(NF + NU, EF_atmos_deposition, FracGASM)
+
+    ##Nitrous oxide production from atmospheric deposition due to dung and urine - feed component of equation
+    n2o_leach = f_n2o_leach_runoff(NF + NU, FracWET, FracLEACH * property_leach_factor)
 
     ##return nitrous oxide emissions per day. These are converted to co2 equivalents at a later stage.
+    return n2o_manure + n2o_atmospheric_deposition + n2o_leach
+
+
+
+def f_n2o_atmospheric_deposition(N, ef, FracGASM):
+    '''
+    Calculate the nitrous oxide production from atmospheric deposition due to ammonia released from volatilization
+    which increases nitrogen in the nitrogen cycle and therefore increase nitrogen deposition which
+    produces some n2o when interacts with the earth.
+
+    Nitrous oxide production from atmospheric deposition: N x FracGASM x EF x Cg
+
+    :param N: Nitrogen
+    :param ef: Emission factor (EF) (Gg N2O-N/GgN)
+    :param FracGasm: fraction of N volatilised
+    :return:
+    '''
+    Cg = uinp.emissions['i_cf_n2o']  # 44/28 - weight conversion factor of Nitrogen (molecular weight 28) to Nitrous oxide (molecular weight 44)
+
+    n2o = N * FracGASM * ef * Cg
+
+    return n2o
+
+def f_n2o_leach_runoff(N, FracWET, FracLEACH):
+    '''
+    Calculate the nitrous oxide production from leaching and runoff of nitrogen in dung and urine.
+
+    Nitrous oxide production from runoff and leaching (N): N = (F + U) x FracWET x FracLEACH x EF x Cg
+
+    :param N: Nitrogen
+    :param ef: Emission factor (EF) (Gg N2O-N/GgN)
+    :param FracWET: fraction of N available for leaching and runoff
+    :param FracLEACH: fraction of N lost through leaching and runoff
+    :return:
+    '''
+    Cg = uinp.emissions['i_cf_n2o']  # 44/28 - weight conversion factor of Nitrogen (molecular weight 28) to Nitrous oxide (molecular weight 44)
+    ef = uinp.emissions['i_ef_leach_runoff']  # emission factor for leaching and runoff of N.
+
+    n2o = N * FracWET * FracLEACH * ef * Cg
+
     return n2o

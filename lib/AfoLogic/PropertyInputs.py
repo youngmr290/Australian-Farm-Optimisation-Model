@@ -164,6 +164,7 @@ def f_select_n_reset_pinp(property, pinp_defaults):
     global general
     global labour
     global crop
+    global emissions
     global cropgraze
     global saltbush
     global mach
@@ -178,6 +179,7 @@ def f_select_n_reset_pinp(property, pinp_defaults):
     general = copy.deepcopy(pinp_defaults[property]['general_inp'])
     labour = copy.deepcopy(pinp_defaults[property]['labour_inp'])
     crop = copy.deepcopy(pinp_defaults[property]['crop_inp'])
+    emissions = copy.deepcopy(pinp_defaults[property]['emissions_inp'])
     cropgraze = copy.deepcopy(pinp_defaults[property]['cropgraze_inp'])
     saltbush = copy.deepcopy(pinp_defaults[property]['saltbush_inp'])
     mach = copy.deepcopy(pinp_defaults[property]['mach_inp'])

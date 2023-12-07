@@ -126,6 +126,8 @@ def f_load_excel_default_inputs(load_all_pinp=False, trial_pinp=None):
 
         pinp_defaults[property]['crop_inp'] = xl_all_named_ranges(property_xl_path,"Crop")
 
+        pinp_defaults[property]['emissions_inp'] = xl_all_named_ranges(property_xl_path,"Emissions")
+
         pinp_defaults[property]['cropgraze_inp'] = xl_all_named_ranges(property_xl_path,"CropGrazing", numpy=True)
 
         pinp_defaults[property]['saltbush_inp'] = xl_all_named_ranges(property_xl_path,"Saltbush", numpy=True)
