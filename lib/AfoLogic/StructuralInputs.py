@@ -107,7 +107,7 @@ def f_structural_inp_sa(sinp_defaults):
     rep['i_store_cs_rep'] = fun.f_sa(rep['i_store_cs_rep'], sen.sav['cs_inc'], 5)
     rep['i_store_fs_rep'] = fun.f_sa(rep['i_store_fs_rep'], sen.sav['fs_inc'], 5)
     rep['i_store_lw_rep'] = fun.f_sa(rep['i_store_lw_rep'], sen.sav['lw_inc'], 5)
-    rep['i_store_ffcfw_rep'] = fun.f_sa(rep['i_store_ffcfw_rep'], sen.sav['ffcfw_inc'], 5)
+    rep['i_store_ebw_rep'] = fun.f_sa(rep['i_store_ebw_rep'], sen.sav['ebw_inc'], 5)
     rep['i_store_on_hand_mort'] = fun.f_sa(rep['i_store_on_hand_mort'], sen.sav['onhand_mort_p_inc'], 5)
     rep['i_store_mort'] = fun.f_sa(rep['i_store_mort'], sen.sav['mort_inc'], 5)
     rep['i_store_feedbud'] = fun.f_sa(rep['i_store_feedbud'], sen.sav['feedbud_inc'], 5)
