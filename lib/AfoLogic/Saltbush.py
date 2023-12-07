@@ -184,15 +184,15 @@ def f_saltbush_precalcs(params, r_vals, nv):
 
     ##livestock methane emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
-        ch4_sb_zp6 = efun.f_stock_ch4_feed_nir(1000, sb_dmd_zp6)
+        stock_ch4_sb_zp6 = efun.f_stock_ch4_feed_nir(1000, sb_dmd_zp6)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
-        ch4_sb_zp6 = efun.f_stock_ch4_feed_bc(1000, sb_me_zp6/1000) #have to divide by 1000 because it was ME/t
+        stock_ch4_sb_zp6 = efun.f_stock_ch4_feed_bc(1000, sb_me_zp6/1000) #have to divide by 1000 because it was ME/t
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
-        n2o_sb_zp6 = efun.f_stock_n2o_feed_nir(1000, sb_dmd_zp6, sb_cp_zp6)
+        stock_n2o_sb_zp6 = efun.f_stock_n2o_feed_nir(1000, sb_dmd_zp6, sb_cp_zp6)
 
-    co2e_sb_zp6 = ch4_sb_zp6 * uinp.emissions['i_ch4_gwp_factor'] + n2o_sb_zp6 * uinp.emissions['i_n2o_gwp_factor']
+    co2e_sb_zp6 = stock_ch4_sb_zp6 * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_sb_zp6 * uinp.emissions['i_n2o_gwp_factor']
 
     ###########################
     # create params           #
@@ -246,8 +246,8 @@ def f_saltbush_precalcs(params, r_vals, nv):
     fun.f1_make_r_val(r_vals,sb_me_zp6f,'sb_me_zp6f',mask_fp_z8var_zp6[...,na],z_pos=-2)
     fun.f1_make_r_val(r_vals,slp_estab_cost_p7z,'slp_estab_cost_p7z',mask_season_p7z,z_pos=-1)
     ###emissions
-    fun.f1_make_r_val(r_vals,ch4_sb_zp6,'ch4_sb_zp6',mask_fp_z8var_zp6,z_pos=-2)
-    fun.f1_make_r_val(r_vals,n2o_sb_zp6,'n2o_sb_zp6',mask_fp_z8var_zp6,z_pos=-2)
+    fun.f1_make_r_val(r_vals,stock_ch4_sb_zp6,'stock_ch4_sb_zp6',mask_fp_z8var_zp6,z_pos=-2)
+    fun.f1_make_r_val(r_vals,stock_n2o_sb_zp6,'stock_n2o_sb_zp6',mask_fp_z8var_zp6,z_pos=-2)
 
 
 

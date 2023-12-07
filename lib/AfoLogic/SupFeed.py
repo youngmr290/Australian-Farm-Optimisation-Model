@@ -342,23 +342,23 @@ def f_sup_emissions(r_vals, nv):
 
     ##livestock methane emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
-        ch4_sup_fk = efun.f_stock_ch4_feed_nir(1000 * dry_matter_content_k * prop_consumed_fk, dmd_k)
+        stock_ch4_sup_fk = efun.f_stock_ch4_feed_nir(1000 * dry_matter_content_k * prop_consumed_fk, dmd_k)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
-        ch4_sup_fk = efun.f_stock_ch4_feed_bc(1000 * dry_matter_content_k * prop_consumed_fk, md_k / 1000) #div 1000 to convert to kg
+        stock_ch4_sup_fk = efun.f_stock_ch4_feed_bc(1000 * dry_matter_content_k * prop_consumed_fk, md_k / 1000) #div 1000 to convert to kg
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
-        n2o_sup_fk = efun.f_stock_n2o_feed_nir(1000 * dry_matter_content_k * prop_consumed_fk, dmd_k, cp_k)
+        stock_n2o_sup_fk = efun.f_stock_n2o_feed_nir(1000 * dry_matter_content_k * prop_consumed_fk, dmd_k, cp_k)
 
-    co2e_sup_fk = ch4_sup_fk * uinp.emissions['i_ch4_gwp_factor'] + n2o_sup_fk * uinp.emissions['i_n2o_gwp_factor']
+    co2e_sup_fk = stock_ch4_sup_fk * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_sup_fk * uinp.emissions['i_n2o_gwp_factor']
 
     ##apply season mask and grazing exists mask
     ###calc season mask
     date_start_p6z = per.f_feed_periods()[:-1]
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
     ###apply masks
-    n2o_sup_fkp6z = n2o_sup_fk[:,na,na] * mask_fp_z8var_p6z
-    ch4_sup_fkp6z = ch4_sup_fk[:,na,na] * mask_fp_z8var_p6z
+    stock_n2o_sup_fkp6z = stock_n2o_sup_fk[:,na,na] * mask_fp_z8var_p6z
+    stock_ch4_sup_fkp6z = stock_ch4_sup_fk[:,na,na] * mask_fp_z8var_p6z
     co2e_sup_fkp6z = co2e_sup_fk[:,na,na] * mask_fp_z8var_p6z
 
     ##build df
@@ -367,13 +367,13 @@ def f_sup_emissions(r_vals, nv):
     keys_f = np.array(['nv{0}'.format(i) for i in range(nv['len_nv'])])
     index_fkp6z = pd.MultiIndex.from_product([keys_f, sup_md_vol.columns, keys_p6, keys_z])
     co2e_sup_fkp6z = pd.Series(co2e_sup_fkp6z.ravel(), index=index_fkp6z)
-    n2o_sup_fkp6z = pd.Series(n2o_sup_fkp6z.ravel(), index=index_fkp6z)
-    ch4_sup_fkp6z = pd.Series(ch4_sup_fkp6z.ravel(), index=index_fkp6z)
+    stock_n2o_sup_fkp6z = pd.Series(stock_n2o_sup_fkp6z.ravel(), index=index_fkp6z)
+    stock_ch4_sup_fkp6z = pd.Series(stock_ch4_sup_fkp6z.ravel(), index=index_fkp6z)
 
 
     ##store report vals
-    fun.f1_make_r_val(r_vals,n2o_sup_fkp6z,'n2o_sup_fkp6z',mask_fp_z8var_p6z,z_pos=-1)
-    fun.f1_make_r_val(r_vals,ch4_sup_fkp6z,'ch4_sup_fkp6z',mask_fp_z8var_p6z,z_pos=-1)
+    fun.f1_make_r_val(r_vals,stock_n2o_sup_fkp6z,'stock_n2o_sup_fkp6z',mask_fp_z8var_p6z,z_pos=-1)
+    fun.f1_make_r_val(r_vals,stock_ch4_sup_fkp6z,'stock_ch4_sup_fkp6z',mask_fp_z8var_p6z,z_pos=-1)
 
     return co2e_sup_fkp6z
 

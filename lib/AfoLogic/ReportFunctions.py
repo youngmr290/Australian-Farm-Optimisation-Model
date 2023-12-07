@@ -2159,7 +2159,7 @@ def f_emission_summary(lp_vars, r_vals):
 
         ###grn pasture
         type = 'pas'
-        prod = '{0}_grnpas_gop6lzt'.format(e)
+        prod = 'stock_{0}_grnpas_gop6lzt'.format(e)
         na_prod = [0,1,2]  # q,s,f
         weights = 'greenpas_ha_qsfgop6lzt'
         keys = 'keys_qsfgop6lzt'
@@ -2170,7 +2170,7 @@ def f_emission_summary(lp_vars, r_vals):
 
         ###poc pasture
         type = 'pas'
-        prod = '{0}_poc_p6z'.format(e)
+        prod = 'stock_{0}_poc_p6z'.format(e)
         na_prod = [0, 1, 2, 4]  # q,s,f,l
         weights = 'poc_consumed_qsfp6lz'
         keys = 'keys_qsfp6lz'
@@ -2181,7 +2181,7 @@ def f_emission_summary(lp_vars, r_vals):
 
         ###dry pasture
         type = 'pas'
-        prod = '{0}_drypas_dp6zt'.format(e)
+        prod = 'stock_{0}_drypas_dp6zt'.format(e)
         na_prod = [0, 1, 2, 6]  # q,s,f,l
         weights = 'drypas_consumed_qsfdp6zlt'
         keys = 'keys_qsfdp6zlt'
@@ -2192,7 +2192,7 @@ def f_emission_summary(lp_vars, r_vals):
 
         ###nap pasture
         type = 'pas'
-        prod = '{0}_drypas_dp6zt'.format(e) #nap is same emissions as dry pasture
+        prod = 'stock_{0}_drypas_dp6zt'.format(e) #nap is same emissions as dry pasture
         na_prod = [0, 1, 2]  # q,s,f
         weights = 'nap_consumed_qsfdp6zt'
         keys = 'keys_qsfdp6zt'
@@ -2203,7 +2203,7 @@ def f_emission_summary(lp_vars, r_vals):
 
         ###residue
         type = 'stub'
-        prod = '{0}_stub_zp6ks1'.format(e)
+        prod = 'stock_{0}_stub_zp6ks1'.format(e)
         na_prod = [0, 1, 4, 7]  # q,s,p6,f,s2
         weights = 'stub_qszp6fks1s2'
         keys = 'keys_qszp6fks1s2'
@@ -2214,7 +2214,7 @@ def f_emission_summary(lp_vars, r_vals):
 
         ###crop graze
         type = 'crpgrz'
-        prod = '{0}_cropgraze_kp6z'.format(e)
+        prod = 'stock_{0}_cropgraze_kp6z'.format(e)
         na_prod = [0, 1,2,5,7]  # q,s,f,p5,l
         weights = 'crop_consumed_qsfkp6p5zl'
         keys = 'keys_qsfkp6p5zl'
@@ -2225,7 +2225,7 @@ def f_emission_summary(lp_vars, r_vals):
 
         ###saltbush (just the saltbush not the understory)
         type = 'slp'
-        prod = 'n2o_sb_zp6'.format(e)
+        prod = 'stock_{0}_sb_zp6'.format(e)
         na_prod = [0, 1, 4, 5]  # q,s,f,l
         weights = 'v_tonnes_sb_consumed_qszp6fl'
         keys = 'keys_qszp6fl'
@@ -2235,7 +2235,7 @@ def f_emission_summary(lp_vars, r_vals):
                                               keys=keys, arith=arith, index=index, cols=cols)
 
         ###sup
-        sup_emissions_fkp6z = r_vals['sup']['{0}_sup_fkp6z'.format(e)]
+        sup_emissions_fkp6z = r_vals['sup']['stock_{0}_sup_fkp6z'.format(e)]
         grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
         sup_emissions_qs_fkp6z = grain_fed_qszkfp6.unstack([4,3,5,2]).sort_index(axis=1).mul(sup_emissions_fkp6z, axis=1)
         d['sup_emissions_qsz'] = pd.DataFrame(sup_emissions_qs_fkp6z.stack([3]).sum(axis=1))
@@ -2252,9 +2252,9 @@ def f_emission_summary(lp_vars, r_vals):
     ##co2e
     ch4_gwp_factor = r_vals['stock']['ch4_gwp_factor']
     n2o_gwp_factor = r_vals['stock']['n2o_gwp_factor']
-    ch4_livestock_co2e_qsz = livestock_ch4_qsz * ch4_gwp_factor / 1000 #convert to tonnes
-    n2o_livestock_co2e_qsz = livestock_n2o_qsz * n2o_gwp_factor / 1000 #convert to tonnes
-    total_livestock_co2e_qsz = ch4_livestock_co2e_qsz + n2o_livestock_co2e_qsz
+    ch4_liveco2e_qsz = livestock_ch4_qsz * ch4_gwp_factor / 1000 #convert to tonnes
+    n2o_liveco2e_qsz = livestock_n2o_qsz * n2o_gwp_factor / 1000 #convert to tonnes
+    total_liveco2e_qsz = ch4_liveco2e_qsz + n2o_liveco2e_qsz
 
     ##calc info for intensity calcs
     ###wool production
@@ -2331,7 +2331,7 @@ def f_emission_summary(lp_vars, r_vals):
     meat_cols = [str("FFCFW Sold ")+i[:-3]+str("(kg)") for i in total_meat_qsz_s7.columns]
 
     ##make final df
-    emissions_qsz = pd.concat([total_livestock_co2e_qsz, ch4_livestock_co2e_qsz, n2o_livestock_co2e_qsz,
+    emissions_qsz = pd.concat([total_liveco2e_qsz, ch4_liveco2e_qsz, n2o_liveco2e_qsz,
                                total_clean_wool_qsz, total_meat_qsz_s7], axis=1)
     emissions_qsz.columns = ['Total Livestock co2e (t)', 'Livestock Methane co2e (t)', 'Livestock Nitrous Oxide co2e (t)', 'Clean Wool Sold (kg)']+meat_cols
     return emissions_qsz

@@ -330,16 +330,16 @@ def f_cropgraze_emissions(r_vals):
 
     ##livestock methane emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
-        ch4_cropgraze_kp6z = efun.f_stock_ch4_feed_nir(1000, crop_dmd_kp6z)
+        stock_ch4_cropgraze_kp6z = efun.f_stock_ch4_feed_nir(1000, crop_dmd_kp6z)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
         crop_md_kp6z = fsfun.f1_dmd_to_md(crop_dmd_kp6z)
-        ch4_cropgraze_kp6z = efun.f_stock_ch4_feed_bc(1000, crop_md_kp6z)
+        stock_ch4_cropgraze_kp6z = efun.f_stock_ch4_feed_bc(1000, crop_md_kp6z)
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
-        n2o_cropgraze_kp6z = efun.f_stock_n2o_feed_nir(1000, crop_dmd_kp6z, i_grn_cp_p6z) #assuming that protien of green crop is the same as annual pastures
+        stock_n2o_cropgraze_kp6z = efun.f_stock_n2o_feed_nir(1000, crop_dmd_kp6z, i_grn_cp_p6z) #assuming that protien of green crop is the same as annual pastures
 
-    co2e_cropgraze_kp6z = ch4_cropgraze_kp6z * uinp.emissions['i_ch4_gwp_factor'] + n2o_cropgraze_kp6z * uinp.emissions['i_n2o_gwp_factor']
+    co2e_cropgraze_kp6z = stock_ch4_cropgraze_kp6z * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_cropgraze_kp6z * uinp.emissions['i_n2o_gwp_factor']
 
     ##apply season mask and grazing exists mask
     ###calc mask if crop can be grazed
@@ -348,13 +348,13 @@ def f_cropgraze_emissions(r_vals):
     date_start_p6z = per.f_feed_periods()[:-1]
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
     ###apply masks
-    n2o_cropgraze_kp6z = n2o_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
-    ch4_cropgraze_kp6z = ch4_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
+    stock_n2o_cropgraze_kp6z = stock_n2o_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
+    stock_ch4_cropgraze_kp6z = stock_ch4_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
     co2e_cropgraze_kp6z = co2e_cropgraze_kp6z * mask_fp_z8var_p6z * grazing_exists_p6z
 
     ##store report vals
-    fun.f1_make_r_val(r_vals,n2o_cropgraze_kp6z,'n2o_cropgraze_kp6z',mask_fp_z8var_p6z,z_pos=-1)
-    fun.f1_make_r_val(r_vals,ch4_cropgraze_kp6z,'ch4_cropgraze_kp6z',mask_fp_z8var_p6z,z_pos=-1)
+    fun.f1_make_r_val(r_vals,stock_n2o_cropgraze_kp6z,'stock_n2o_cropgraze_kp6z',mask_fp_z8var_p6z,z_pos=-1)
+    fun.f1_make_r_val(r_vals,stock_ch4_cropgraze_kp6z,'stock_ch4_cropgraze_kp6z',mask_fp_z8var_p6z,z_pos=-1)
 
     return co2e_cropgraze_kp6z
 

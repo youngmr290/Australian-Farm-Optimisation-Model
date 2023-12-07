@@ -257,15 +257,15 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     ###########################
     ##livestock methane emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
-        ch4_stub_p6zks1 = efun.f_stock_ch4_feed_nir(1000, dmd_cat_p6zks1)
+        stock_ch4_stub_p6zks1 = efun.f_stock_ch4_feed_nir(1000, dmd_cat_p6zks1)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
-        ch4_stub_p6zks1 = efun.f_stock_ch4_feed_bc(1000, md_p6zks1)
+        stock_ch4_stub_p6zks1 = efun.f_stock_ch4_feed_bc(1000, md_p6zks1)
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
-        n2o_stub_p6zks1 = efun.f_stock_n2o_feed_nir(1000, dmd_cat_p6zks1, cp_cat_p6zks1)
+        stock_n2o_stub_p6zks1 = efun.f_stock_n2o_feed_nir(1000, dmd_cat_p6zks1, cp_cat_p6zks1)
 
-    co2e_stub_p6zks1 = ch4_stub_p6zks1 * uinp.emissions['i_ch4_gwp_factor'] + n2o_stub_p6zks1 * uinp.emissions['i_n2o_gwp_factor']
+    co2e_stub_p6zks1 = stock_ch4_stub_p6zks1 * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_stub_p6zks1 * uinp.emissions['i_n2o_gwp_factor']
 
     ###########
     #trampling#
@@ -324,8 +324,8 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     cat_a_prov_p6zks1s2 = cat_a_prov_p6zks1s2 * mask_fp_z8var_p6z[...,na,na,na]
     md_fp6zks1 = md_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
     vol_fp6zks1 = vol_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
-    ch4_stub_p6zks1 = ch4_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
-    n2o_stub_p6zks1 = n2o_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
+    stock_ch4_stub_p6zks1 = stock_ch4_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
+    stock_n2o_stub_p6zks1 = stock_n2o_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
     co2e_stub_p6zks1 = co2e_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
 
     #########
@@ -401,7 +401,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
 
     ##store report vals
     fun.f1_make_r_val(r_vals,np.moveaxis(np.moveaxis(md_fp6zks1, 0, 2), 0, 1),'md_zp6fks1',mask_fp_z8var_zp6[:,:,na,na,na],z_pos=-5)
-    fun.f1_make_r_val(r_vals,np.moveaxis(ch4_stub_p6zks1, 0, 1),'ch4_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
-    fun.f1_make_r_val(r_vals,np.moveaxis(n2o_stub_p6zks1, 0, 1),'n2o_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
+    fun.f1_make_r_val(r_vals,np.moveaxis(stock_ch4_stub_p6zks1, 0, 1),'stock_ch4_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
+    fun.f1_make_r_val(r_vals,np.moveaxis(stock_n2o_stub_p6zks1, 0, 1),'stock_n2o_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
 
 
