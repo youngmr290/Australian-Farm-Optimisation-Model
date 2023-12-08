@@ -351,7 +351,7 @@ def f_crop_residue_n2o_nir(residue_dm, F, decay_before_burning):
 
     ##The mass of N in above and below ground crop residues returned to soils (M).
     ## note, it is correct to multiply fraction burnt with both the production and consumption dv's because the input is fraction of stubble burnt after grazing
-    M = ((residue_dm - M_burn) * NCa) + (residue_dm * Rbg_k * NCb)
+    M = ((residue_dm - M_burn) * NCa) + (residue_dm * Rbg_k * NCb) * (residue_dm>0) #last bit is to make it so that below ground residue is not included in the consumption call
 
     ##Nitrous oxide production from nitrification-denitrification process
     n2o_residues = M * EF * Cg_n2o
