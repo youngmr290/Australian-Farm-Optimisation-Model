@@ -419,7 +419,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     r_d_cfw_tpdams =  np.zeros(tpg1, dtype = dtype)
     r_ebw_tpdams = np.zeros(tpg1, dtype =dtype)
     r_wbe_tpdams = np.zeros(tpg1, dtype = dtype)
-    r_fat_tpdams = np.zeros(tpg0, dtype =dtype)
+    r_fat_tpdams = np.zeros(tpg1, dtype =dtype)
     r_muscle_tpdams = np.zeros(tpg1, dtype =dtype)
     r_viscera_tpdams = np.zeros(tpg1, dtype =dtype)
     r_salegrid_c1tpa1e1b1nwzida0e0b0xyg1 = np.zeros(c1tpg1, dtype =dtype)
