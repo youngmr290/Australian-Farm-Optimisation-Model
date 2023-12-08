@@ -1582,7 +1582,7 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, dw, mei, md, hp_maint, hp_
     alpha_m = f1_weight2energy(cg, muscle_target, 1)
 
     ## To retain the flavour of the derivation, substitute some coefficient names
-    M = 1 - m / alpha_m
+    M = 1 - m / alpha_m   #this factor in the calculation means that once m reaches alpha_m it will never change - needs considering so that m can reduce with under nutrition.
     pm = cg[32, ...]
     e0 = cg[34, ...]
     blf = ck[26, ...]
@@ -1590,11 +1590,10 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, dw, mei, md, hp_maint, hp_
     ## Step 1a: calculate dv from alpha_v for day 0
     alpha_v = np.maximum(0, cg[35, ...] * mei + cg[36, ...] * m**0.41 + cg[37, ...] * md)
     dv0 = pv * (alpha_v - v)
-    ## Step 1b: estimate average dv across the duration of the step, required because dv is reducing each day as it approaches alpha_v
-    ###derivation Generator9:p15 based on dv(i) = dv(0) * (1 - pv)**i and then sum the geometric series.
-    ###assumptions are that alpha_v doesn't change during the step.
-    ### Imperfect assumption because m may change during the timestep. Could change HP by 0.2 MJ/d (see '[Sheep Calc.xlsx]v error!')
-    dv = dv0 * (1 - (1 - pv) ** step) / pv / step
+    ## Step 1b: estimate average dv across the duration of the step (because approaching an asymptote).
+    ###Assumption is that alpha_v doesn't change during the step. Which is an imperfect assumption because
+    ### m may change during the timestep. Could change HP by 0.2 MJ/d (see '[Sheep Calc.xlsx]v error!')
+    dv = fun.f_approach_asymptote(dv0, pv, step)
     ## Step 1c: heat production from change in viscera (MJ/d)
     hp_dv = dv * np.where(dv >= 0, ck[22, ...], ck[28, ...])  #select value for bpv based on sign of dp
     ##Step 2: Calculate MEI when dm==0 (mei_dm0) using derived equation and set bpm to required value
@@ -1618,8 +1617,14 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, dw, mei, md, hp_maint, hp_
     hp_total = mei - neg_wo
     ##Step 6: Check if heat loss is greater than heat production. Replace neg if HP needs to increase
     neg = np.minimum(neg_wo, mei - heat_loss)
-    ##Step 7: Protein change (MJ/d)
-    dm = (pm * neg + e0) * M
+    ##Step 7a: Change in muscle protein (MJ/d) for day 0
+    dm0 = (pm * neg + e0) * M   # which can also be written  (pm * neg + e0) / alpha_m * (alpha_m - m)
+    ## Step 7b: estimate average dm across the duration of the step. Assumptions is that NEG doesn't change during
+    ### the step. Which is an imperfect assumption because NEG will change as m changes during the timestep.
+    t_dm = fun.f_approach_asymptote(dm0, (pm * neg + e0) / alpha_m, step)
+    ## Step 7c: m can not exceed alpha_m so limit the magnitude of dm
+    dm = np.minimum(t_dm, (alpha_m - m) / step)
+    ## Step 7d: Heat production associated with the change in protein
     hp_dm = bcm * dm
     ##Step 8: Calculate df including heat loss from chill
     df = neg - (dm + dv + dw + gest_propn * dc + lact_propn * dl)
