@@ -3832,7 +3832,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             mem_dams = hp_maint_dams + np.maximum(0, heat_loss_dams - hp_total_dams) #will overwrite the CSIRO version if NFS system is being used.
                         if eqn_compare:
                             r_compare7_q0q2tpdams[eqn_system, 1, :, p, ...] = temp6
-                            r_compare7_q0q2tpdams[eqn_system, 2, :, p, ...] = temp0
+                            r_compare7_q0q2tpdams[eqn_system, 2, :, p, ...] = temp7
                             r_compare7_q0q2tpdams[eqn_system, 3, :, p, ...] = temp2
                             r_compare7_q0q2tpdams[eqn_system, 4, :, p, ...] = temp3
                             r_compare7_q0q2tpdams[eqn_system, 5, :, p, ...] = temp4
@@ -3851,7 +3851,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                 , kg_fodd_dams, mei_propn_herb_dams, kl = kl_dams, mei_propn_milk = mei_propn_milk_dams
                                 , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
-                            kg_dams = temp0  #efficiency from the CSIRO equations (for post calc SA)
+                            kg_dams = temp0  #efficiency from the CSIRO equations (for post calc SA)  #todo doesn't seem to go anywhere
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):

@@ -1645,7 +1645,7 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, dw, mei, md, hp_maint, hp_
     ##Surplus energy and kg, as a comparison with old feeding standards
     ##surplus energy id energy above (maintenance + conceptus growth + milk production) so different to neg.
     surplus_energy = df + dm + dv + hp_df + hp_dm + hp_dv
-    kg = np.where(surplus_energy > 0, (df + dm + dv) / surplus_energy, 0) # a comparison with the old feeding standards
+    kg = np.where((df + dm + dv) > 0, (df + dm + dv) / surplus_energy, 0) # a comparison with the old feeding standards
 
     return ebg, evg, d_fat, d_muscle, d_viscera, hp_total, surplus_energy, kg
 
