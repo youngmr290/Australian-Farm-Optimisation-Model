@@ -372,6 +372,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_ebg_tpsire = np.zeros(tpg0, dtype =dtype)
     ###arrays for report variables
     r_ebw_tpsire = np.zeros(tpg0, dtype =dtype)
+    r_fat_tpsire = np.zeros(tpg0, dtype =dtype)
+    r_muscle_tpsire = np.zeros(tpg0, dtype =dtype)
+    r_viscera_tpsire = np.zeros(tpg0, dtype =dtype)
     r_salegrid_c1tpa1e1b1nwzida0e0b0xyg0 = np.zeros(c1tpg0, dtype =dtype)
 
     ##dams
@@ -416,6 +419,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     r_d_cfw_tpdams =  np.zeros(tpg1, dtype = dtype)
     r_ebw_tpdams = np.zeros(tpg1, dtype =dtype)
     r_wbe_tpdams = np.zeros(tpg1, dtype = dtype)
+    r_fat_tpdams = np.zeros(tpg0, dtype =dtype)
+    r_muscle_tpdams = np.zeros(tpg1, dtype =dtype)
+    r_viscera_tpdams = np.zeros(tpg1, dtype =dtype)
     r_salegrid_c1tpa1e1b1nwzida0e0b0xyg1 = np.zeros(c1tpg1, dtype =dtype)
 
     ##yatf
@@ -448,6 +454,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     r_wean_ebw_tpyatf = np.zeros(tpg2, dtype =dtype)
     r_ebg_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_evg_tpyatf = np.zeros(tpg2, dtype = dtype)
+    r_fat_tpyatf = np.zeros(tpg2, dtype =dtype)
+    r_muscle_tpyatf = np.zeros(tpg2, dtype =dtype)
+    r_viscera_tpyatf = np.zeros(tpg2, dtype =dtype)
     r_mem_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_mei_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_mei_solid_tpyatf = np.zeros(tpg2, dtype = dtype)
@@ -492,6 +501,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###arrays for report variables
     r_ebw_tpoffs = np.zeros(tpg3, dtype=dtype)
     r_wbe_tpoffs = np.zeros(tpg3, dtype =dtype)
+    r_fat_tpoffs = np.zeros(tpg3, dtype =dtype)
+    r_muscle_tpoffs = np.zeros(tpg3, dtype =dtype)
+    r_viscera_tpoffs = np.zeros(tpg3, dtype =dtype)
     r_salegrid_c1tpa1e1b1nwzida0e0b0xyg3 = np.zeros(c1tpg3, dtype =dtype)
 
 
@@ -5239,6 +5251,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
                 ###store report variables for dams - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
                 r_ebw_tpsire[:,p] = ebw_sire
+                r_fat_tpsire[:, p] = fat_sire
+                r_muscle_tpsire[:, p] = muscle_sire
+                r_viscera_tpsire[:, p] = viscera_sire
                 o_nw_start_tpsire[:,p] = nw_start_sire
 
             ###dams
@@ -5348,6 +5363,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 r_d_cfw_tpdams[:,p] = d_cfw_dams
                 r_ebw_tpdams[:,p] = ebw_dams
                 r_wbe_tpdams[:,p] = wbe_dams
+                r_fat_tpdams[:, p] = fat_dams
+                r_muscle_tpdams[:, p] = muscle_dams
+                r_viscera_tpdams[:, p] = viscera_dams
 
 
             ###yatf
@@ -5424,6 +5442,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 r_ebw_start_tpyatf[:,p] = ebw_start_yatf * (days_period_pa1e1b1nwzida0e0b0xyg2[p,...] > 0)
                 r_ebg_tpyatf[:,p] = ebg_yatf
                 r_evg_tpyatf[:,p] = evg_yatf
+                r_fat_tpyatf[:, p] = fat_yatf
+                r_muscle_tpyatf[:, p] = muscle_yatf
+                r_viscera_tpyatf[:, p] = viscera_yatf
                 r_mp2_tpyatf[:,p] = mp2_yatf
                 r_mem_tpyatf[:,p] = mem_yatf
                 r_mei_tpyatf[:,p] = mei_yatf
@@ -5523,6 +5544,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###store report variables - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
                 r_ebw_tpoffs[:, p] = ebw_offs
                 r_wbe_tpoffs[:,p] = wbe_offs
+                r_fat_tpoffs[:, p] = fat_offs
+                r_muscle_tpoffs[:, p] = muscle_offs
+                r_viscera_tpoffs[:, p] = viscera_offs
 
             ################
             #stubble resets#
@@ -8907,6 +8931,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     period_is_reportebw_p = period_is_reportebw_p[0:len_p]
 
     ##ffcfw in select p slices to reduce size.
+    #todo Add variables to allow reporting of the component weights (fat, muscle & viscera) with a 'cut' p axis
     r_ebw_dams_k2tvPdams = (r_ebw_tpdams[:, na, period_is_reportebw_p, ...]
                               * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_reportebw_p] == index_vpa1e1b1nwzida0e0b0xyg1)
                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
@@ -8963,7 +8988,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
 
-    ##ffcfw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesn't affect ebw
+    ##ebw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesn't affect ebw
+    #todo Add variables similar to ebw to allow reporting of the component weights (fat, muscle & viscera) with a 'cut' p axis
     if sinp.rep['i_store_ebw_rep']:
         r_ebw_sire_tpsire = r_ebw_tpsire
         r_ebw_dams_k2Tvpdams = (r_ebw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
@@ -10009,6 +10035,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fun.f1_make_r_val(r_vals,nfoet_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1)),'mask_b1b9_preg_b1nwziygb9')
 
     ###ffcfw with only a few p slices
+    #todo add the component weights here
     fun.f1_make_r_val(r_vals, r_ebw_dams_k2tvPdams, 'ebw_dams_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
 
@@ -10074,6 +10101,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         fun.f1_make_r_val(r_vals,r_lw_offs_k3k5Tvpoffs,'lw_offs_k3k5vpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
 
     ###ebw - with p, e, b
+    #todo add the component weights here too
     if sinp.rep['i_store_ebw_rep']:
         fun.f1_make_r_val(r_vals,r_ebw_sire_tpsire,'ebw_sire_pzg0',shape=pzg0_shape) #no v axis to mask
         fun.f1_make_r_val(r_vals,r_ebw_dams_k2Tvpdams,'ebw_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
@@ -10170,10 +10198,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     # print('number params: ', keys_start - number_param_start)
     # print('convert numpy to pyomo dict and reporting: ',finish - keys_start)
 
-    ## Print a numpy variable to Excel. Must be sliced to a 2D array that can be converted to a Pandas dataframe
+    ## Print numpy variables to Excel. Each must be sliced to a 2D array that can be converted to a Pandas dataframe
     ### Writes to Excel using Pandas capabilities
-    ### To use the functionality set to True below
-    ### Note: Only the last trial of the experiment for which the variable exists will be stored
+    ### To use the functionality set to True below or enable eqn_compare
+    ### Note: Only the last trial of the experiment for which the variable exists will be stored (earlier trials will be overwritten)
     if eqn_compare:
         import pandas as pd
         from . import ReportFunctions as rfun
@@ -10196,6 +10224,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         sheetname10 = 'mew'
         sheetname11 = 'mec'
         sheetname12 = 'ebw'
+        sheetname13 = 'fat'
+        sheetname14 = 'muscle'
+        sheetname15 = 'viscera'
         keys_q0 = ['CSIRO', 'MU', 'NFS'] #description of the equation systems
         keys_b_cut = ['Dry', 'Single', 'Twin']
         keys_q0p = [keys_q0, keys_p]
@@ -10216,6 +10247,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             array10 = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             array11 = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             array12 = r_ebw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            array13 = r_fat_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            array14 = r_muscle_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            array15 = r_viscera_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
         except: #do not write the trial if any of the variables doesn't exist
             print('Error when setting up the variables for saving in Excel - check the variables exist and are sliced appropriately')
         else:  #Carry out this code if array was successfully created
@@ -10232,6 +10266,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             df10 = rfun.f_numpy2df(array10, keys_q0p, [1], [0])
             df11 = rfun.f_numpy2df(array11, keys_q0p, [1], [0])
             df12 = rfun.f_numpy2df(array12, keys_bp, [1], [0])
+            df13 = rfun.f_numpy2df(array13, keys_bp, [1], [0])
+            df14 = rfun.f_numpy2df(array14, keys_bp, [1], [0])
+            df15 = rfun.f_numpy2df(array15, keys_bp, [1], [0])
             print("Writing to Excel")
             ##first check that Excel is not open (Microsoft puts a lock on files, so they can't be updated from elsewhere while open)
             report_file_path = relativeFile.find(__file__, "../../Output", excel_filename)
@@ -10259,6 +10296,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             df10.to_excel(writer, sheetname10, index=True)
             df11.to_excel(writer, sheetname11, index=True)
             df12.to_excel(writer, sheetname12, index=True)
+            df13.to_excel(writer, sheetname13, index=True)
+            df14.to_excel(writer, sheetname14, index=True)
+            df15.to_excel(writer, sheetname15, index=True)
             ##finish writing and save
             writer.close()
 
