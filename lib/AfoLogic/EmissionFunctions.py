@@ -182,7 +182,6 @@ def f_stock_n2o_feed_nir(intake, dmd, cp):
     FracGASM = uinp.emissions['i_FracGASM_manure'] #fraction of animal waste N volatilised
     FracWET = uinp.emissions['i_FracWET_manure'] #fraction of N available for leaching and runoff
     FracLEACH = uinp.emissions['i_FracLEACH_manure'] #fraction of N lost through leaching and runoff
-    property_leach_factor = pinp.emissions['i_leach_factor'] #factor based on rainfall to scale leaching. Typically zones under 600mm annual rainfall dont leach.
     me = fsfun.f1_dmd_to_md(dmd) #Metabolisable energy MJ/kg DM
     ###crude protein intake
     cpi_solids = intake * cp
@@ -202,7 +201,7 @@ def f_stock_n2o_feed_nir(intake, dmd, cp):
     n2o_atmospheric_deposition = f_n2o_atmospheric_deposition(NF_solids + NU_solids, EF_atmos_deposition, FracGASM)
 
     ##Nitrous oxide production from atmospheric deposition due to dung and urine - feed component of equation
-    n2o_leach = f_n2o_leach_runoff(NF_solids + NU_solids, FracWET, FracLEACH * property_leach_factor)
+    n2o_leach = f_n2o_leach_runoff(NF_solids + NU_solids, FracWET, FracLEACH)
 
     ##return nitrous oxide emissions linked to the feed decision variables. These are converted to co2 equivalents at a later stage.
     return n2o_manure + n2o_atmospheric_deposition + n2o_leach
@@ -253,7 +252,6 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
     FracGASM = uinp.emissions['i_FracGASM_manure'] #fraction of animal waste N volatilised
     FracWET = uinp.emissions['i_FracWET_manure'] #fraction of N available for leaching and runoff
     FracLEACH = uinp.emissions['i_FracLEACH_manure'] #fraction of N lost through leaching and runoff
-    property_leach_factor = pinp.emissions['i_leach_factor'] #factor based on rainfall to scale leaching. Typically zones under 600mm annual rainfall dont leach.
     me_milk = cl[6] #ME / kg used to convert mp2 to kg of wet milk
     milk_dmd = 85 #dmd of milk
 
@@ -282,11 +280,92 @@ def f_stock_n2o_animal_nir(cl, d_cfw, relsize, srw, ebg, mp=0, mc=0):
     n2o_atmospheric_deposition = f_n2o_atmospheric_deposition(NF + NU, EF_atmos_deposition, FracGASM)
 
     ##Nitrous oxide production from atmospheric deposition due to dung and urine - feed component of equation
-    n2o_leach = f_n2o_leach_runoff(NF + NU, FracWET, FracLEACH * property_leach_factor)
+    n2o_leach = f_n2o_leach_runoff(NF + NU, FracWET, FracLEACH)
 
     ##return nitrous oxide emissions per day. These are converted to co2 equivalents at a later stage.
     return n2o_manure + n2o_atmospheric_deposition + n2o_leach
 
+
+def f_crop_residue_n2o_nir(residue_dm, F, decay_before_burning):
+    '''
+    Nitrous oxide and methane emissions from crop residues:
+
+        1. the combined nitrification-denitrification process that
+           occurs on the nitrogen returned to soil from residues.
+        2. Burning of crop residues.
+        3. runoff and leaching of nitrogen returned to soil from residues.
+
+    These parameters are hooked up to both the residue production at harvest (+ve) and consumption (-ve) decision variables.
+    The AFO equation is a simplified version of the NIR formula below
+    because the decision variables are already represented in dry matter and account for removal.
+
+    Mass of N in crop residues returned to soil: M = (P x Rag x (1- F - FFOD) x DM x NCag) +(P x Rag x Rbg x DM x NCbg)
+
+        - P = annual production of crop
+        - Rag = residue to crop ratio
+        - Rbg = below ground-residue to above ground residue ratio
+        - DM = dry matter content
+        - NCa = nitrogen content of above-ground crop residue
+        - NCb = nitrogen content of below-ground crop residue
+        - F= fraction of crop residue that is burnt
+        - FFOD = fraction of the crop residue that is removed
+
+    The mass of fuel burnt (M): M = P x R x S x DM x Z x F
+
+        - P = annual production of crop
+        - R = residue to crop ratio
+        - S = fraction of crop residue remaining at burning
+        - DM = dry matter content
+        - Z = burning efficiency for residue from crop
+        - F = fraction of the annual production of crop that is burnt
+
+
+    Nitrous oxide production from nitrification-denitrification process (E)	E = M x EF x Cg
+
+    Nitrous oxide production from leaching and runoff (E)	E = M x FracWET x FracLEACH x EF x Cg
+
+
+    :param residue_dm: dry matter mass of residue decision variable.
+    :param F: fraction of crop residue that is burnt (ha burnt/ha harvested).
+    :param decay_before_burning: fraction of crop residue that is decayed before burning time.
+    :return: Nitrous oxide production from nitrification-denitrification process and nitrous oxide production from leaching and runoff.
+    '''
+    ##inputs
+    Rbg_k = uinp.emissions['i_Rbg'] #below ground-residue to above ground residue ratio
+    CCa = uinp.emissions['i_CCa'] #carbon mass fraction in crop residue
+    NCa = uinp.emissions['i_NCa'] #nitrogen content of above-ground crop residue
+    NCb = uinp.emissions['i_NCb'] #nitrogen content of below-ground crop residue
+    Cg_n2o = uinp.emissions['i_cf_n2o']  # 44/28 - weight conversion factor of Nitrogen (molecular weight 28) to Nitrous oxide (molecular weight 44)
+    Cg_ch4 = uinp.emissions['i_cf_ch4']  # 16/12 - weight conversion factor of Carbon to Methane
+    EF = uinp.emissions['i_ef_residue'] #emision factor for break down of N from residue.
+    EF_n2o_burning = uinp.emissions['i_ef_n2o_burning'] #emision factor for n2o for burning residue.
+    EF_ch4_burning = uinp.emissions['i_ef_ch4_burning'] #emision factor for ch4 for burning residue.
+    FracWET = uinp.emissions['i_FracWET_residue'] #fraction of N available for leaching and runoff
+    FracLEACH = uinp.emissions['i_FracLEACH_residue'] #fraction of N lost through leaching and runoff
+    Z = uinp.emissions['i_Z'] #burning efficiency for residue from crop (fuel burnt/fuel load)
+
+    ##the formulas used here are slightly different to NIR because we are accounting for decay between harvest and burning
+
+    ##The mass of fuel burnt per tonne of residue at the time of the dv (ie harvest or grazing)
+    M_burn = F * Z * residue_dm * decay_before_burning
+
+    ##The mass of N in above and below ground crop residues returned to soils (M).
+    ## note, it is correct to multiply fraction burnt with both the production and consumption dv's because the input is fraction of stubble burnt after grazing
+    M = ((residue_dm - M_burn) * NCa) + (residue_dm * Rbg_k * NCb)
+
+    ##Nitrous oxide production from nitrification-denitrification process
+    n2o_residues = M * EF * Cg_n2o
+
+    ##Nitrous oxide production from leaching and runoff
+    n2o_leach = f_n2o_leach_runoff(M, FracWET, FracLEACH)
+
+    ##Nitrous oxide production from burning
+    n2o_burning = M_burn * NCa * EF_n2o_burning * Cg_n2o
+
+    ##Methane production from burning
+    ch4_burning = M_burn * CCa * EF_ch4_burning * Cg_ch4
+
+    return n2o_residues, n2o_leach, n2o_burning, ch4_burning
 
 
 def f_n2o_atmospheric_deposition(N, ef, FracGASM):
@@ -322,7 +401,8 @@ def f_n2o_leach_runoff(N, FracWET, FracLEACH):
     '''
     Cg = uinp.emissions['i_cf_n2o']  # 44/28 - weight conversion factor of Nitrogen (molecular weight 28) to Nitrous oxide (molecular weight 44)
     ef = uinp.emissions['i_ef_leach_runoff']  # emission factor for leaching and runoff of N.
+    property_leach_factor = pinp.emissions['i_leach_factor']  # factor based on rainfall to scale leaching. Typically zones under 600mm annual rainfall dont leach.
 
-    n2o = N * FracWET * FracLEACH * ef * Cg
+    n2o = N * FracWET * FracLEACH * property_leach_factor * ef * Cg
 
     return n2o

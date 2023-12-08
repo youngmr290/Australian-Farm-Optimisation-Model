@@ -171,7 +171,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     average_days_since_harv_p6zk = average_days_since_harv_p6zk.astype(float)
 
     ##calc the quantity decline % for each period - used in transfer constraints, need to average the number of days in the period of interest
-    quant_declined_p6zk = (1 - pinp.stubble['quantity_decay']) ** average_days_since_harv_p6zk.astype(float)
+    quant_declined_since_harv_p6zk = (1 - pinp.stubble['quantity_decay']) ** average_days_since_harv_p6zk.astype(float)
 
     ##calc the quality decline % for each period
     ###quality of each category is inputted at harvest.
@@ -227,7 +227,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     # cat_cum_propn_ks1 = np.cumsum(cat_propn_rolled_ks1, axis=1) #cumulative sum of the component sizes.
     # stubble_foo_zks1 = stub_foo_harv_zk[..., na] *  (1 - cat_cum_propn_ks1)
     ###adjust for quantity delcine due to deterioration
-    # stubble_foo_p6zks1 = stubble_foo_zks1 * quant_declined_p6zk[..., na]
+    # stubble_foo_p6zks1 = stubble_foo_zks1 * quant_declined_since_harv_p6zk[..., na]
     ###ri availability
     # hf = fsfun.f_hf(pinp.stubble['i_hr'])  # height factor
     # if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used - note that the equation system used is the one selected for dams in p1
@@ -265,7 +265,30 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
         stock_n2o_stub_p6zks1 = efun.f_stock_n2o_feed_nir(1000, dmd_cat_p6zks1, cp_cat_p6zks1)
 
-    co2e_stub_p6zks1 = stock_ch4_stub_p6zks1 * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_stub_p6zks1 * uinp.emissions['i_n2o_gwp_factor']
+    ##nitrous oxide emissions from crop residue breakdown, leaching nad burning - linked to both production (+ve) and consumption (-ve) of 1t of stubble
+    burn_date = pinp.emissions['i_burn_date'] + 364 * (pinp.emissions['i_burn_date'] < harv_date_zk)
+    decay_harv_to_burn_zk = (1 - pinp.stubble['quantity_decay'])**(burn_date - harv_date_zk)
+    decay_consumption_to_burn_p6zk = decay_harv_to_burn_zk / quant_declined_since_harv_p6zk
+
+    ##emissions from 1t of stubble at harvest that is not grazed
+    residue_n2o_stub_zk, leach_n2o_stub_zk, n2o_burning_zk, ch4_burning_zk = efun.f_crop_residue_n2o_nir(1000, pinp.emissions['i_burn_propn_k'], decay_harv_to_burn_zk)
+    ##emissions reduction from grazing 1t of stubble at grazing time - use -1000 because consumption reduces emissions from burning, decay and leaching.
+    residue_n2o_stub_cons_p6zk, leach_n2o_stub_cons_p6zk, n2o_burning_cons_p6zk, ch4_burning_cons_p6zk = efun.f_crop_residue_n2o_nir(-1000, pinp.emissions['i_burn_propn_k'], decay_consumption_to_burn_p6zk)
+
+    ##co2e
+    ###linked to stubble at harvest activity
+    co2e_stub_production_zk = (ch4_burning_zk * uinp.emissions['i_ch4_gwp_factor']
+                              + (residue_n2o_stub_zk + leach_n2o_stub_zk + n2o_burning_zk) * uinp.emissions['i_n2o_gwp_factor'])
+
+    ###linked to consumption activity
+    co2e_stub_cons_p6zks1 = ((stock_ch4_stub_p6zks1 + ch4_burning_cons_p6zk[...,na]) * uinp.emissions['i_ch4_gwp_factor']
+                             + (stock_n2o_stub_p6zks1 + residue_n2o_stub_cons_p6zk[...,na] + leach_n2o_stub_cons_p6zk[...,na]
+                             + n2o_burning_cons_p6zk[...,na]) * uinp.emissions['i_n2o_gwp_factor'])
+    ##combine for r_val - maybe later these can be split and reported separately
+    residue_harv_n2o_zk = residue_n2o_stub_zk + leach_n2o_stub_zk + n2o_burning_zk
+    residue_cons_n2o_p6zk = residue_n2o_stub_cons_p6zk + leach_n2o_stub_cons_p6zk + n2o_burning_cons_p6zk
+    residue_harv_ch4_zk = ch4_burning_zk
+    residue_cons_ch4_p6zk = ch4_burning_cons_p6zk
 
     ###########
     #trampling#
@@ -295,7 +318,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     #transfers between periods   #
     ##############################
     ##transfer a given cat to the next period. Only cat A is available at harvest - it comes from the rotation phase.
-    stub_transfer_prov_p6zk = 1000 * np.roll(quant_declined_p6zk, shift=-1, axis=0)/quant_declined_p6zk #divide to capture only the decay during the curent period (quant_decline is the decay since harv)
+    stub_transfer_prov_p6zk = 1000 * np.roll(quant_declined_since_harv_p6zk, shift=-1, axis=0)/quant_declined_since_harv_p6zk #divide to capture only the decay during the curent period (quant_decline is the decay since harv)
     stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * mask_stubble_exists_p6zk  #no transfer can occur when stubble doesn't exist
     stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * np.roll(np.logical_not(period_is_harvest_p6zk), -1, 0) #last yrs stubble doesn't transfer past the following harv.
 
@@ -326,7 +349,9 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     vol_fp6zks1 = vol_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
     stock_ch4_stub_p6zks1 = stock_ch4_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
     stock_n2o_stub_p6zks1 = stock_n2o_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
-    co2e_stub_p6zks1 = co2e_stub_p6zks1 * mask_fp_z8var_p6z[...,na,na]
+    residue_cons_n2o_p6zk = residue_cons_n2o_p6zk * mask_fp_z8var_p6z[...,na]
+    residue_cons_ch4_p6zk = residue_cons_ch4_p6zk * mask_fp_z8var_p6z[...,na]
+    co2e_stub_cons_p6zks1 = co2e_stub_cons_p6zks1 * mask_fp_z8var_p6z[...,na,na]
 
     #########
     ##keys  #
@@ -350,6 +375,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     arrays_fp6zks1 = [keys_f, keys_p6, keys_z, keys_k, keys_s1]
     ###emissions
     arrays_p6zks1 = [keys_p6, keys_z, keys_k, keys_s1]
+    arrays_zk = [keys_z, keys_k]
     ###harv con & feed period transfer
     arrays_p6zk = [keys_p6, keys_z, keys_k]
     ###biomass to residue
@@ -389,7 +415,8 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     params['vol'] = fun.f1_make_pyomo_dict(vol_fp6zks1, arrays_fp6zks1)
 
     ##emissions
-    params['co2e_stub_p6zks1'] = fun.f1_make_pyomo_dict(co2e_stub_p6zks1, arrays_p6zks1)
+    params['co2e_stub_cons_p6zks1'] = fun.f1_make_pyomo_dict(co2e_stub_cons_p6zks1, arrays_p6zks1)
+    params['co2e_stub_production_zk'] = fun.f1_make_pyomo_dict(co2e_stub_production_zk, arrays_zk)
 
     ###########
     #report   #
@@ -403,5 +430,10 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     fun.f1_make_r_val(r_vals,np.moveaxis(np.moveaxis(md_fp6zks1, 0, 2), 0, 1),'md_zp6fks1',mask_fp_z8var_zp6[:,:,na,na,na],z_pos=-5)
     fun.f1_make_r_val(r_vals,np.moveaxis(stock_ch4_stub_p6zks1, 0, 1),'stock_ch4_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
     fun.f1_make_r_val(r_vals,np.moveaxis(stock_n2o_stub_p6zks1, 0, 1),'stock_n2o_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
+    fun.f1_make_r_val(r_vals,biomass2residue_kls2,'biomass2residue_kls2')
+    fun.f1_make_r_val(r_vals,residue_harv_n2o_zk,'residue_harv_n2o_zk')
+    fun.f1_make_r_val(r_vals,residue_harv_ch4_zk,'residue_harv_ch4_zk')
+    fun.f1_make_r_val(r_vals,np.moveaxis(residue_cons_n2o_p6zk, 0, 1),'residue_cons_n2o_zp6k',mask_fp_z8var_zp6[:,:,na],z_pos=-3)
+    fun.f1_make_r_val(r_vals,np.moveaxis(residue_cons_ch4_p6zk, 0, 1),'residue_cons_ch4_zp6k',mask_fp_z8var_zp6[:,:,na],z_pos=-3)
 
 

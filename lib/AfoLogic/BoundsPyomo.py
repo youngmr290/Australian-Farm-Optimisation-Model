@@ -728,9 +728,9 @@ def f1_boundarypyomo_local(params, model):
                 '''
                 if pe.value(model.p_wyear_inc_qs[q, s]) and model.p_co2e_limit>0:
                     return sum((sum((suppy.f_sup_emissions(model,q,s,p6,z) + cgzpy.f_grazecrop_emissions(model,q,s,p6,z)
-                                     + stubpy.f_cropresidue_emissions(model,q,s,p6,z) + slppy.f_saltbush_emissions(model,q,s,z,p6)
+                                     + stubpy.f_cropresidue_consumption_emissions(model,q,s,p6,z) + slppy.f_saltbush_emissions(model,q,s,z,p6)
                                      + paspy.f_pas_emissions(model,q,s,p6,z))*model.p_a_p6_p7[p7,p6,z] for p6 in model.s_feed_periods)
-                                + stkpy.f_stock_emissions(model,q,s,p7,z)) * model.p_season_seq_prob_qszp7[q,s,z,p7]
+                                + stkpy.f_stock_emissions(model,q,s,p7,z) + stubpy.f_cropresidue_production_emissions(model,q,s,p7,z)) * model.p_season_seq_prob_qszp7[q,s,z,p7]
                                 for z in model.s_season_types for p7 in model.s_season_periods) <= uinp.emissions['co2e_limit']
                 else:
                     return pe.Constraint.Skip

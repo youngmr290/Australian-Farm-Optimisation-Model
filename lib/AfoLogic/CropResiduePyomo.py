@@ -80,8 +80,11 @@ def f1_stubpyomo_local(params, model):
     model.p_stub_transfer_req = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['stub_transfer_req'],
                                    default = 0.0, mutable=False, doc='stubble required for transfer to the next period')
 
-    model.co2e_stub_p6zks1 = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['co2e_stub_p6zks1'],
-                                default = 0.0, mutable=False, doc='kgs of co2e produced by consuming 1t of each stubble category for each crop')
+    model.co2e_stub_cons_p6zks1 = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['co2e_stub_cons_p6zks1'],
+                                default = 0.0, mutable=False, doc='kgs of co2e saved by the consumption of 1t stubble for each crop')
+
+    model.co2e_stub_production_zk = pe.Param(model.s_season_types, model.s_crops, initialize=params['co2e_stub_production_zk'],
+                                default = 0.0, mutable=False, doc='kgs of co2e produced from a 1t of crop residue at harvest')
 
 
     ########################
@@ -186,11 +189,22 @@ def f_cropresidue_vol(model,q,s,p6,f,z):
                for k in model.s_crops for sc in model.s_stub_cat for s2 in model.s_biomass_uses)##stubble vol
 
 
-def f_cropresidue_emissions(model,q,s,p6,z):
+def f_cropresidue_consumption_emissions(model,q,s,p6,z):
     '''
-    Calculate the total emissions linked to consumption of stubble
+    Calculate the emissions linked to consumption of stubble
 
     Used in global constraint (con_emissions). See BoundPyomo
     '''
-    return sum(model.v_stub_con[q,s,z,p6,f,k,sc,s2] * model.co2e_stub_p6zks1[p6,z,k,sc]
+    return sum(model.v_stub_con[q,s,z,p6,f,k,sc,s2] * model.co2e_stub_cons_p6zks1[p6,z,k,sc]
                for f in model.s_feed_pools for k in model.s_crops for sc in model.s_stub_cat for s2 in model.s_biomass_uses)
+
+def f_cropresidue_production_emissions(model,q,s,p7,z):
+    '''
+    Calculate the emissions linked to the residue at harvest activity.
+    
+    This is separate function to above because it has p7 axis not p6.
+
+    Used in global constraint (con_emissions). See BoundPyomo
+    '''
+    return sum(model.v_use_biomass[q,s,p7,z,k,l,s2] * model.p_biomass2residue[k,l,s2] * model.co2e_stub_production_zk[z,k]
+               for l in model.s_lmus for k in model.s_crops for s2 in model.s_biomass_uses)
