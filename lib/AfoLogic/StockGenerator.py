@@ -4795,7 +4795,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    ## calculate CS change of dams (to reduce the arguments required)
+                    ## calculate CS change of dams (to reduce the arguments required)  #todo this needs to be different formula depending on eqn_group[7] or it should be based on EBW
                     csc_dams = ebg_dams * cg_dams[18, ...] / (cn_dams[5, ...] * nw_start_dams)
                     temp0, temp1 = sfun.f_mortality_dam_mu2(cu2_dams, ce_pdams[:,p,...], cb1_dams, cf_csc_start_dams
                                         , csc_dams, cs_start_dams, cv_cs_dams, period_between_scanprebirth_pa1e1b1nwzida0e0b0xyg1[p]
@@ -10258,7 +10258,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             df9.to_excel(writer, sheetname9, index=True)
             df10.to_excel(writer, sheetname10, index=True)
             df11.to_excel(writer, sheetname11, index=True)
-            df12.to_excel(writer, sheetname11, index=True)
+            df12.to_excel(writer, sheetname12, index=True)
             ##finish writing and save
             writer.close()
 
