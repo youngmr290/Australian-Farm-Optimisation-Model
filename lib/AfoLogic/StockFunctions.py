@@ -947,6 +947,7 @@ def f_energy_cs(cx, cm, lw, ffcfw, mr_age, mei, omer_history_start, days_period,
     omer, omer_history = f1_history(omer_history_start, cm[1, ...] * mei, days_period)
     ##ME requirement for maintenance (before ECold)
     meme = ((emetab + egraze) / km + omer) * sam_mr
+    #todo Could add a return variable for hp_maint as a direct comparison with the new feeding standards.
     return meme, omer_history
 
 
@@ -975,9 +976,11 @@ def f_energy_nfs(ck, cm, cg, lw, ffcfw, fat, muscle, viscera, mei, md_solid, i_s
     hp_move = cm[16, ...] * distance * lw
     ##Energy required for eating (chewing and ruminating)
     hp_graze = cm[6, ...] * ffcfw * intake_f * (cm[7, ...] - dmd) + hp_move
-    ##Heat produced by maintenance (before ECold)
+    ##Heat produced by maintenance type functions (before ECold)
     hp_maint = (hp_fasting + hp_mei + hp_graze) * sam_mr
-    return hp_maint, kl
+    ##Equivalent of MR from CSIRO feeding standards. Estimate of MEI for RE==0
+    meme = (hp_fasting + hp_graze) / km * sam_mr
+    return hp_maint, meme, kl
 
 
 def f_foetus_cs(cb1, cp, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f):
