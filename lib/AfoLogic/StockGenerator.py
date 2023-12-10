@@ -10211,18 +10211,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         ###The array name and the slices to report are defined inside the try: except (in case they don't exist)
         ###One worksheet is created for each variable reported. To add more variables (or slices) include extra arrays, f_numpy2df() and .to_excel()
         excel_filename = 'RCompare7.xlsx'
-        sheetname0 = 'hp_maint'
+        sheetname0 = 'mem'
         sheetname1 = 'surplus'
         sheetname2 = 'kg'
         sheetname3 = 'dfat'
         sheetname4 = 'dmuscle'
         sheetname5 = 'dviscera'
         sheetname6 = 'ebg'
-        sheetname7 = 'mei'
-        sheetname8 = 'md'
-        sheetname9 = 'nv'
-        sheetname10 = 'mew'
-        sheetname11 = 'mec'
+        sheetname7 = 'mec'
+        sheetname8 = 'mew'
+        sheetname9 = 'mei'
+        sheetname10 = 'md'
+        sheetname11 = 'nv'
         sheetname12 = 'ebw'
         sheetname13 = 'fat'
         sheetname14 = 'muscle'
@@ -10234,18 +10234,36 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
         ##Slice the r_compare array and return the equation systems and p axes.
         try:  #Catch error when the variable doesn't exist, which for r_compare occurs if eqn_compare is false for a trial
-            array0 = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array1 = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array2 = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array3 = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array4 = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array5 = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array6 = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array7 = o_mei_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            array8 = r_md_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            array9 = nv_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            array10 = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array11 = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array0a = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array0b = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array0c = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array1a = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array1b = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array1c = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array2a = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array2b = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array2c = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array3a = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array3b = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array3c = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array4a = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array4b = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array4c = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array5a = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array5b = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array5c = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array6a = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array6b = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array6c = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7a = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7b = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7c = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array8a = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array8b = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array8c = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array9 = o_mei_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
+            array10 = r_md_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
+            array11 = nv_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
             array12 = r_ebw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
             array13 = r_fat_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
             array14 = r_muscle_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
@@ -10253,18 +10271,36 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         except: #do not write the trial if any of the variables doesn't exist
             print('Error when setting up the variables for saving in Excel - check the variables exist and are sliced appropriately')
         else:  #Carry out this code if array was successfully created
-            df0 = rfun.f_numpy2df(array0, keys_q0p, [1], [0])
-            df1 = rfun.f_numpy2df(array1, keys_q0p, [1], [0])
-            df2 = rfun.f_numpy2df(array2, keys_q0p, [1], [0])
-            df3 = rfun.f_numpy2df(array3, keys_q0p, [1], [0])
-            df4 = rfun.f_numpy2df(array4, keys_q0p, [1], [0])
-            df5 = rfun.f_numpy2df(array5, keys_q0p, [1], [0])
-            df6 = rfun.f_numpy2df(array6, keys_q0p, [1], [0])
-            df7 = rfun.f_numpy2df(array7, keys_bp, [1], [0])
-            df8 = rfun.f_numpy2df(array8, keys_bp, [1], [0])
+            df0a = rfun.f_numpy2df(array0a, keys_q0p, [1], [0])
+            df0b = rfun.f_numpy2df(array0b, keys_q0p, [1], [0])
+            df0c = rfun.f_numpy2df(array0c, keys_q0p, [1], [0])
+            df1a = rfun.f_numpy2df(array1a, keys_q0p, [1], [0])
+            df1b = rfun.f_numpy2df(array1b, keys_q0p, [1], [0])
+            df1c = rfun.f_numpy2df(array1c, keys_q0p, [1], [0])
+            df2a = rfun.f_numpy2df(array2a, keys_q0p, [1], [0])
+            df2b = rfun.f_numpy2df(array2b, keys_q0p, [1], [0])
+            df2c = rfun.f_numpy2df(array2c, keys_q0p, [1], [0])
+            df3a = rfun.f_numpy2df(array3a, keys_q0p, [1], [0])
+            df3b = rfun.f_numpy2df(array3b, keys_q0p, [1], [0])
+            df3c = rfun.f_numpy2df(array3c, keys_q0p, [1], [0])
+            df4a = rfun.f_numpy2df(array4a, keys_q0p, [1], [0])
+            df4b = rfun.f_numpy2df(array4b, keys_q0p, [1], [0])
+            df4c = rfun.f_numpy2df(array4c, keys_q0p, [1], [0])
+            df5a = rfun.f_numpy2df(array5a, keys_q0p, [1], [0])
+            df5b = rfun.f_numpy2df(array5b, keys_q0p, [1], [0])
+            df5c = rfun.f_numpy2df(array5c, keys_q0p, [1], [0])
+            df6a = rfun.f_numpy2df(array6a, keys_q0p, [1], [0])
+            df6b = rfun.f_numpy2df(array6b, keys_q0p, [1], [0])
+            df6c = rfun.f_numpy2df(array6c, keys_q0p, [1], [0])
+            df7a = rfun.f_numpy2df(array7a, keys_q0p, [1], [0])
+            df7b = rfun.f_numpy2df(array7b, keys_q0p, [1], [0])
+            df7c = rfun.f_numpy2df(array7c, keys_q0p, [1], [0])
+            df8a = rfun.f_numpy2df(array8a, keys_q0p, [1], [0])
+            df8b = rfun.f_numpy2df(array8b, keys_q0p, [1], [0])
+            df8c = rfun.f_numpy2df(array8c, keys_q0p, [1], [0])
             df9 = rfun.f_numpy2df(array9, keys_bp, [1], [0])
-            df10 = rfun.f_numpy2df(array10, keys_q0p, [1], [0])
-            df11 = rfun.f_numpy2df(array11, keys_q0p, [1], [0])
+            df10 = rfun.f_numpy2df(array10, keys_bp, [1], [0])
+            df11 = rfun.f_numpy2df(array11, keys_bp, [1], [0])
             df12 = rfun.f_numpy2df(array12, keys_bp, [1], [0])
             df13 = rfun.f_numpy2df(array13, keys_bp, [1], [0])
             df14 = rfun.f_numpy2df(array14, keys_bp, [1], [0])
@@ -10283,15 +10319,36 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in Excel
             writer = pd.ExcelWriter(report_file_path, engine='xlsxwriter')
             ## simple write df to xl
-            df0.to_excel(writer, sheetname0, index=True)
-            df1.to_excel(writer, sheetname1, index=True)
-            df2.to_excel(writer, sheetname2, index=True)
-            df3.to_excel(writer, sheetname3, index=True)
-            df4.to_excel(writer, sheetname4, index=True)
-            df5.to_excel(writer, sheetname5, index=True)
-            df6.to_excel(writer, sheetname6, index=True)
-            df7.to_excel(writer, sheetname7, index=True)
-            df8.to_excel(writer, sheetname8, index=True)
+            col_a = 0  #column for df_a
+            col_b = 5  #column for df_b with blank column in between
+            col_c = 9  #column for df_b with blank column in between & no index on df_b
+            df0a.to_excel(writer, sheetname0, index=True,startcol=col_a)
+            df0b.to_excel(writer, sheetname0, index=False,startcol=col_b)
+            df0c.to_excel(writer, sheetname0, index=False,startcol=col_c)
+            df1a.to_excel(writer, sheetname1, index=True,startcol=col_a)
+            df1b.to_excel(writer, sheetname1, index=False,startcol=col_b)
+            df1c.to_excel(writer, sheetname1, index=False,startcol=col_c)
+            df2a.to_excel(writer, sheetname2, index=True,startcol=col_a)
+            df2b.to_excel(writer, sheetname2, index=False,startcol=col_b)
+            df2c.to_excel(writer, sheetname2, index=False,startcol=col_c)
+            df3a.to_excel(writer, sheetname3, index=True,startcol=col_a)
+            df3b.to_excel(writer, sheetname3, index=False,startcol=col_b)
+            df3c.to_excel(writer, sheetname3, index=False,startcol=col_c)
+            df4a.to_excel(writer, sheetname4, index=True,startcol=col_a)
+            df4b.to_excel(writer, sheetname4, index=False,startcol=col_b)
+            df4c.to_excel(writer, sheetname4, index=False,startcol=col_c)
+            df5a.to_excel(writer, sheetname5, index=True,startcol=col_a)
+            df5b.to_excel(writer, sheetname5, index=False,startcol=col_b)
+            df5c.to_excel(writer, sheetname5, index=False,startcol=col_c)
+            df6a.to_excel(writer, sheetname6, index=True,startcol=col_a)
+            df6b.to_excel(writer, sheetname6, index=False,startcol=col_b)
+            df6c.to_excel(writer, sheetname6, index=False,startcol=col_c)
+            df7a.to_excel(writer, sheetname7, index=True,startcol=col_a)
+            df7b.to_excel(writer, sheetname7, index=False,startcol=col_b)
+            df7c.to_excel(writer, sheetname7, index=False,startcol=col_c)
+            df8a.to_excel(writer, sheetname8, index=True,startcol=col_a)
+            df8b.to_excel(writer, sheetname8, index=False,startcol=col_b)
+            df8c.to_excel(writer, sheetname8, index=False,startcol=col_c)
             df9.to_excel(writer, sheetname9, index=True)
             df10.to_excel(writer, sheetname10, index=True)
             df11.to_excel(writer, sheetname11, index=True)
