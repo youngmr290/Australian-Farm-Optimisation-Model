@@ -3289,7 +3289,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             hp_maint_sire = temp0
                             # meme_sire = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs()
                         if eqn_compare:
-                            r_compare7_q0q2tpsire[eqn_system, 0, :, p, ...] = temp0
+                            r_compare7_q0q2tpsire[eqn_system, 0, :, p, ...] = temp1
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] >0):
@@ -3303,7 +3303,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             # meme_dams = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs(), will cause error if not using r_compare
                             kl_dams = temp2
                         if eqn_compare:
-                            r_compare7_q0q2tpdams[eqn_system, 0, :, p, ...] = temp0
+                            r_compare7_q0q2tpdams[eqn_system, 0, :, p, ...] = temp1
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] >0):
@@ -3316,7 +3316,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             hp_maint_offs = temp0
                             # meme_offs = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs()
                         if eqn_compare:
-                            r_compare7_q0q2tpoffs[eqn_system, 0, :, p, ...] = temp0
+                            r_compare7_q0q2tpoffs[eqn_system, 0, :, p, ...] = temp1
 
 
                 ##foetal growth - dams
@@ -4238,7 +4238,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         hp_maint_yatf = temp0
                         # meme_yatf = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs()
                     if eqn_compare:
-                        r_compare7_q0q2tpyatf[eqn_system, 0, :, p,...] = temp0
+                        r_compare7_q0q2tpyatf[eqn_system, 0, :, p,...] = temp1
 
 
             ##wool production - yatf
