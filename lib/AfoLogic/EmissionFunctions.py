@@ -368,6 +368,51 @@ def f_crop_residue_n2o_nir(residue_dm, F, decay_before_burning):
     return n2o_residues, n2o_leach, n2o_burning, ch4_burning
 
 
+def f_pas_residue_n2o_nir(residue_dm, RBG_t, NCAG_t, NCBG_t):
+    '''
+    Nitrous oxide emissions from pasture residues (green pasture senescence, dry pasture, nap):
+
+        1. the combined nitrification-denitrification process that
+           occurs on the nitrogen returned to soil from residues.
+
+    POC is not included atm (because not much poc). To hook it up would require making a new variable that is v_poc_slack
+    and then making con_poc_available ==.
+
+    These parameters are hooked up to both the pasture growth and consumption decision variables.
+    The AFO equation is a simplified version of the NIR formula below
+    because the decision variables are already represented in dry matter and account for removal.
+
+    M = Aikl x FracRenewal x (Yk / 1000) x (1 - FFODik) x NC AGk) + (Aikl x FracRenewal x (Yk / 1000) x RBGk x NC BGk)
+
+        - M = mass of N in pasture residues
+        - Aikl = area of pasture (ha)
+        - FracRENEWAL = fraction of pasture renewed = 1/ X where X is the average renewal period in years: 10 years for intensive systems and 30 years for other systems
+        - Yk = average yield (t DM/ha)
+        - RBGk = below ground-residue: above-ground residue ratio
+        - NCAGk = N content of above-ground residue
+        - NCBGk = N content of below-ground residue
+        - FFODik = fraction of pasture yield that is removed
+
+    Nitrous oxide production from nitrification-denitrification process (E)	E = M x EF x Cg
+
+    :param residue_dm: dry matter mass of residue decision variable.
+    :param RBG: below ground-residue to above ground residue ratio.
+    :param NCAG: nitrogen content of above-ground crop residue.
+    :param NCBG: nitrogen content of below-ground crop residue.
+    :return: Nitrous oxide production from nitrification-denitrification process and nitrous oxide production from leaching and runoff.
+    '''
+    ##inputs
+    Cg_n2o = uinp.emissions['i_cf_n2o']  # 44/28 - weight conversion factor of Nitrogen (molecular weight 28) to Nitrous oxide (molecular weight 44)
+    EF = uinp.emissions['i_ef_residue'] #emision factor for break down of N from residue.
+    FracRENEWAL = uinp.emissions['i_FracRENEWAL'] #fraction of pasture renewed = 1/ X where X is the average renewal period in years: 10 years for intensive systems and 30 years for other systems
+
+    ##The mass of N in above and below ground crop residues returned to soils (M).
+    M_t = (residue_dm * FracRENEWAL * NCAG_t) + (residue_dm * FracRENEWAL * RBG_t * NCBG_t) * (residue_dm>0) #last bit is to make it so that below ground residue is not included in the consumption call
+
+    ##Nitrous oxide production from nitrification-denitrification process
+    n2o_residues_t = M_t * EF * Cg_n2o
+    return n2o_residues_t
+
 def f_n2o_atmospheric_deposition(N, ef, FracGASM):
     '''
     Calculate the nitrous oxide production from atmospheric deposition due to ammonia released from volatilization

@@ -408,7 +408,9 @@ def f_var_reshape(lp_vars, r_vals):
     d_keys['keys_qszp5kl'] = [keys_q, keys_s, keys_z, keys_p5, keys_k, keys_l]
     ##biomass
     d_keys['keys_qsp7zkls2'] = [keys_q, keys_s, keys_p7, keys_z, keys_k, keys_l, keys_s2]
-    
+    ##v_phase residue
+    d_keys['keys_qsp7dp6zrlt'] = [keys_q, keys_s, keys_p7, keys_d, keys_p6, keys_z, keys_r, keys_l, keys_t]
+
 
     #########
     #shapes #
@@ -436,6 +438,8 @@ def f_var_reshape(lp_vars, r_vals):
     qszp5kl = len_q, len_s, len_z, len_p5, len_k, len_l
     ###biomass
     qsp7zkls2 = len_q, len_s, len_p7, len_z, len_k1, len_l, len_s2
+    ###v_phase
+    qsp7zrl = len_q, len_s, len_p7, len_z, len_r, len_l
 
 
     ##############
@@ -530,6 +534,11 @@ def f_var_reshape(lp_vars, r_vals):
     v_seeding_machdays = f_vars2np(lp_vars, 'v_seeding_machdays', qszp5kl, maskz8_zp5nana, z_pos=-4)
     d_vars['base']['v_seeding_machdays'] = v_seeding_machdays
     d_vars['qsz_weighted']['v_seeding_machdays'] = v_seeding_machdays * prob_qsz[...,na,na,na]
+
+    ##v_phase
+    v_phase_area_qsp7zrl = f_vars2np(lp_vars, 'v_phase_area', qsp7zrl, mask_season_p7z[:, :, na, na], z_pos=-3)
+    d_vars['base']['v_phase_area_qsp7zrl'] = v_phase_area_qsp7zrl
+    d_vars['qsz_weighted']['v_phase_area_qsp7zrl'] = v_phase_area_qsp7zrl * prob_qsz[:,:,na,:,na,na]
 
 
 
@@ -2319,6 +2328,51 @@ def f_emission_summary(lp_vars, r_vals):
     n2o_residue_co2e_qsz = (residue_harv_n2o_qsz + residue_cons_n2o_qsz) * n2o_gwp_factor / 1000 #convert to tonnes
     total_residue_co2e_qsz = ch4_residue_co2e_qsz + n2o_residue_co2e_qsz
 
+    ##Emissions from pasture residues (POC not included atm - see note in EmissionFunctions)
+    ###germination and nap
+    type = 'pas'
+    prod = 'n2o_pas_residue_v_phase_growth_p7dp6zrlt'
+    na_prod = [0, 1]  # q,s
+    weights = 'v_phase_area_qsp7zrl'
+    na_weights = [3,4,8] #d,p6,t
+    keys = 'keys_qsp7dp6zrlt'
+    index = [0, 1, 5]  # q,s,z
+    cols = []
+    residue_n2o_vphase_growth = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+    ###grn pasture
+    type = 'pas'
+    prod = 'grnpas_n2o_residue_gop6lzt'
+    na_prod = [0, 1, 2]  # q,s,f
+    weights = 'greenpas_ha_qsfgop6lzt'
+    keys = 'keys_qsfgop6lzt'
+    index = [0, 1, 7]  # q,s,z
+    cols = []
+    residue_n2o_grnpas = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols)
+    ###dry pasture
+    type = 'pas'
+    prod = 'pas_n2o_residue_cons_t'
+    na_prod = [0,1,2,3,4,5] #q,s,f,d,p6,z
+    weights = 'drypas_consumed_qsfdp6zlt'
+    keys = 'keys_qsfdp6zlt'
+    index = [0, 1, 5]  # [q,s,z]
+    cols = []
+    residue_n2o_drypas_cons = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols)
+    ###nap pasture
+    type = 'pas'
+    prod = 'pas_n2o_residue_cons_t'  # nap is same emissions as dry pasture
+    na_prod = [0,1,2,3,4,5] #q,s,f,d,p6,z
+    weights = 'nap_consumed_qsfdp6zt'
+    keys = 'keys_qsfdp6zt'
+    index = [0, 1, 5]  # [q,s,z]
+    cols = []
+    residue_n2o_nap_cons = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols)
+    ###total residue emissions
+    n2o_pas_residue_co2e_qsz = (residue_n2o_vphase_growth + residue_n2o_grnpas + residue_n2o_drypas_cons + residue_n2o_nap_cons) * n2o_gwp_factor / 1000 #convert to tonnes
+
     ##calc info for intensity calcs
     ###wool production
     ####sires
@@ -2393,16 +2447,18 @@ def f_emission_summary(lp_vars, r_vals):
     meat_cols = [str("FFCFW Sold ")+i[:-3]+str("(kg)") for i in total_meat_qsz_s7.columns]
 
     ##tally farm emissions
-    total_farm_co2e_qsz = total_liveco2e_qsz + total_residue_co2e_qsz
+    total_farm_co2e_qsz = total_liveco2e_qsz + total_residue_co2e_qsz + n2o_pas_residue_co2e_qsz
 
     ##make final df
     emissions_qsz = pd.concat([total_farm_co2e_qsz,
                                total_liveco2e_qsz, ch4_liveco2e_qsz, n2o_liveco2e_qsz,
                                total_residue_co2e_qsz, ch4_residue_co2e_qsz, n2o_residue_co2e_qsz,
+                               n2o_pas_residue_co2e_qsz, n2o_pas_residue_co2e_qsz,
                                total_clean_wool_qsz, total_meat_qsz_s7], axis=1)
     emissions_qsz.columns = ['Total Farm co2e (t)',
                              'Total Livestock co2e (t)', 'Livestock Methane co2e (t)', 'Livestock Nitrous Oxide co2e (t)',
                              'Total Crop Residue co2e (t)', 'Crop Residue Methane co2e (t)', 'Crop Residue Nitrous Oxide co2e (t)',
+                             'Total Pas Residue co2e (t)', 'Pasture Residue Nitrous Oxide co2e (t)',
                              'Clean Wool Sold (kg)']+meat_cols
     return emissions_qsz
 

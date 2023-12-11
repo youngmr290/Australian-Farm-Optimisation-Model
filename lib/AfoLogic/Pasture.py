@@ -330,8 +330,13 @@ def f_pasture(params, r_vals, nv):
     cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
     cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
 
-    ###create dry and green pasture exists mask
-    ###in the late brk season dry feed can occur in fp0&1.
+    ##universal emission inputs
+    RBG_t = uinp.emissions['i_RBG_t'][pinp.general['pas_inc_t']]  # below ground-residue to above ground residue ratio
+    NCAG_t = uinp.emissions['i_NCAG_t'][pinp.general['pas_inc_t']]  # nitrogen content of above-ground crop residue
+    NCBG_t = uinp.emissions['i_NCBG_t'][pinp.general['pas_inc_t']]  # nitrogen content of below-ground crop residue
+
+    ##create dry and green pasture exists mask
+    ##in the late brk season dry feed can occur in fp0&1.
     season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
     idx_fp_start_gs_z = fun.searchsort_multiple_dim(feed_period_dates_p6z, season_break_z, 1, 0, side='right') - 1
     mask_dryfeed_exists_p6zt[...] = np.logical_or(index_p6[:, na, na] >= i_dry_exists_zt, index_p6[:, na, na]<idx_fp_start_gs_z[...,na])   #mask periods when dry feed is available to livestock.
@@ -473,6 +478,16 @@ def f_pasture(params, r_vals, nv):
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
         stock_n2o_grnpas_gop6lzt = efun.f_stock_n2o_feed_nir(cons_grnha_t_gop6lzt*1000, dmd_diet_grnha_gop6lzt, i_grn_cp_p6zt[:,na,:,:])
 
+    ##residue nitrous oxide emissions - two separate calls because consumption doesnt reduce below ground biomass emissions (it does reduce future growth but doesnt the existing below ground biomass does not change)
+    grnpas_n2o_residue_growth_gop6lzt = efun.f_pas_residue_n2o_nir(pgr_grnha_gop6lzt, RBG_t, NCAG_t, NCBG_t)
+    grnpas_n2o_residue_cons_gop6lzt = efun.f_pas_residue_n2o_nir(- cons_grnha_t_gop6lzt*1000, RBG_t, NCAG_t, NCBG_t)
+    grnpas_n2o_residue_gop6lzt = grnpas_n2o_residue_growth_gop6lzt + grnpas_n2o_residue_cons_gop6lzt
+
+    ##residue nitrous oxide emissions from consumption of 1t or growth of 1kg of pasture
+    ## used for grn germination, dry pas consumption, nap production and consumption
+    pas_n2o_residue_cons_t = efun.f_pas_residue_n2o_nir(-1000, RBG_t, NCAG_t, NCBG_t)
+    pas_n2o_residue_growth_t = efun.f_pas_residue_n2o_nir(1, RBG_t, NCAG_t, NCBG_t)
+    n2o_pas_residue_v_phase_growth_dp6lrzt = pas_n2o_residue_growth_t * (nap_dp6lrzt + germination_p6lrzt + np.maximum(0, foo_grn_reseeding_p6lrzt))  #max so that any foo removed at destocking is treated like it has been decayed because it gets sprayed out.
 
     ##adjust dmd of dry feed post growing season - this doesnt do anything for perennials that are growing the whole yr.
     ##For annual pastures the dmd of dry feed is calculated based on the days since senescence.
@@ -600,14 +615,8 @@ def f_pasture(params, r_vals, nv):
     stock_n2o_drypas_dp6zt = stock_n2o_drypas_dp6zt * mask_fp_z8var_p6zt
     stock_ch4_poc_p6z = stock_ch4_poc_p6z * mask_fp_z8var_p6z
     stock_n2o_poc_p6z = stock_n2o_poc_p6z * mask_fp_z8var_p6z
-
-
-    #####################
-    #calc co2e params   #
-    #####################
-    co2e_grnpas_gop6lzt = stock_ch4_grnpas_gop6lzt * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_grnpas_gop6lzt * uinp.emissions['i_n2o_gwp_factor']
-    co2e_drypas_dp6zt = stock_ch4_drypas_dp6zt * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_drypas_dp6zt * uinp.emissions['i_n2o_gwp_factor']
-    co2e_poc_p6z = stock_ch4_poc_p6z * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_poc_p6z * uinp.emissions['i_n2o_gwp_factor']
+    grnpas_n2o_residue_gop6lzt = grnpas_n2o_residue_gop6lzt * mask_fp_z8var_p6lzt
+    n2o_pas_residue_v_phase_growth_dp6lrzt = n2o_pas_residue_v_phase_growth_dp6lrzt * mask_fp_z8var_p6lrzt
 
 
     #############################################
@@ -625,6 +634,19 @@ def f_pasture(params, r_vals, nv):
     phase_area_p7p6lrzt = phase_area_p6lrzt * alloc_p7p6lrzt
     germination_p7p6lrzt = germination_p6lrzt * alloc_p7p6lrzt
     nap_p7dp6lrzt = nap_dp6lrzt * alloc_p7dp6lrzt
+    n2o_pas_residue_v_phase_growth_p7dp6lrzt = n2o_pas_residue_v_phase_growth_dp6lrzt * alloc_p7dp6lrzt
+
+
+    #####################
+    #calc co2e params   #
+    #####################
+    co2e_grnpas_gop6lzt = (stock_ch4_grnpas_gop6lzt * uinp.emissions['i_ch4_gwp_factor'] 
+                           + (stock_n2o_grnpas_gop6lzt + grnpas_n2o_residue_gop6lzt) * uinp.emissions['i_n2o_gwp_factor'])
+    co2e_drypas_cons_dp6zt = (stock_ch4_drypas_dp6zt * uinp.emissions['i_ch4_gwp_factor']
+                              + (stock_n2o_drypas_dp6zt + pas_n2o_residue_cons_t) * uinp.emissions['i_n2o_gwp_factor'])
+    co2e_poc_p6z = stock_ch4_poc_p6z * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_poc_p6z * uinp.emissions['i_n2o_gwp_factor']
+    co2e_pas_residue_v_phase_growth_p7dp6lrzt = n2o_pas_residue_v_phase_growth_p7dp6lrzt * uinp.emissions['i_n2o_gwp_factor']
+
 
     ###########
     #params   #
@@ -683,8 +705,9 @@ def f_pasture(params, r_vals, nv):
     params['p_poc_md_fp6z'] = fun.f1_make_pyomo_dict(poc_md_fp6z, arrays_fp6z)
 
     params['p_co2e_grnpas_gop6lzt'] = fun.f1_make_pyomo_dict(co2e_grnpas_gop6lzt, arrays_gop6lzt)
-    params['p_co2e_drypas_dp6zt'] = fun.f1_make_pyomo_dict(co2e_drypas_dp6zt, arrays_dp6zt)
+    params['p_co2e_drypas_cons_dp6zt'] = fun.f1_make_pyomo_dict(co2e_drypas_cons_dp6zt, arrays_dp6zt)
     params['p_co2e_poc_p6z'] = fun.f1_make_pyomo_dict(co2e_poc_p6z, arrays_p6z8)
+    params['p_co2e_pas_residue_v_phase_growth_p7dp6lrzt'] = fun.f1_make_pyomo_dict(co2e_pas_residue_v_phase_growth_p7dp6lrzt, arrays_p7dp6lrzt)
 
 
     ###########
@@ -731,5 +754,8 @@ def f_pasture(params, r_vals, nv):
     fun.f1_make_r_val(r_vals,stock_n2o_drypas_dp6zt,'stock_n2o_drypas_dp6zt',mask_fp_z8var_p6zt,z_pos=-2)
     fun.f1_make_r_val(r_vals,stock_ch4_poc_p6z,'stock_ch4_poc_p6z',mask_fp_z8var_p6z,z_pos=-1)
     fun.f1_make_r_val(r_vals,stock_n2o_poc_p6z,'stock_n2o_poc_p6z',mask_fp_z8var_p6z,z_pos=-1)
+    fun.f1_make_r_val(r_vals,pas_n2o_residue_cons_t,'pas_n2o_residue_cons_t')
+    fun.f1_make_r_val(r_vals,grnpas_n2o_residue_gop6lzt,'grnpas_n2o_residue_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,np.swapaxes(n2o_pas_residue_v_phase_growth_p7dp6lrzt,3,5),'n2o_pas_residue_v_phase_growth_p7dp6zrlt',mask_fp_z8var_p6z[:,:,na,na,na],z_pos=-4)
 
 
