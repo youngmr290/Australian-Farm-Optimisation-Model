@@ -1511,7 +1511,7 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
     ##Protein gain (protein DM)
     pg = pcg * ebg
-    ##Allocate total protein gain to muscle and viscera using rule of thumb that 10% of total protein is viscera
+    ##Allocate total protein gain to muscle and viscera using rule of thumb that 10% of total protein DM is viscera (Viscera is 13% of wet weight of protein)
     mg = 0.9 * pg
     vg = 0.1 * pg
     ##fat gain (fat DM)
@@ -1521,9 +1521,9 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     t_d_muscle = mg / cg[27, ...]
     t_d_viscera = vg / cg[28, ...]
     ##scale fat, muscle & viscera weight gain to match ebg (required because energy might not tally & because of the REV adjustment)
-    d_fat = fun.f_divide(t_d_fat * ebg, (t_d_fat + t_d_muscle + t_d_viscera))
-    d_muscle = fun.f_divide(t_d_muscle * ebg, (t_d_fat + t_d_muscle + t_d_viscera))
-    d_viscera = fun.f_divide(t_d_viscera * ebg, (t_d_fat + t_d_muscle + t_d_viscera))
+    d_fat = t_d_fat * fun.f_divide(ebg, (t_d_fat + t_d_muscle + t_d_viscera))
+    d_muscle = t_d_muscle * fun.f_divide(ebg, (t_d_fat + t_d_muscle + t_d_viscera))
+    d_viscera = t_d_viscera * fun.f_divide(ebg, (t_d_fat + t_d_muscle + t_d_viscera))
     return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
 
@@ -1550,7 +1550,7 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     fg = ebg * adipose_propn * cg[26, ...]
     ##Protein gain (kg of protein dm)
     pg = (neg - fg * cg[20, ...]) / cg[21, ...]
-    ##Allocate total protein gain to muscle and viscera using rule of thumb that 10% of total protein is viscera
+    ##Allocate total protein gain to muscle and viscera using rule of thumb that 10% of total protein DM is viscera (Viscera is 13% of wet weight of protein)
     mg = 0.9 * pg
     vg = 0.1 * pg
     ## Fat, Muscle & Viscera wet weight
@@ -1558,9 +1558,9 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     t_d_muscle = mg / cg[27, ...]
     t_d_viscera = vg / cg[28, ...]
     ##scale fat, muscle & viscera weight gain to match ebg (required because energy might not tally & because of the REV adjustment)
-    d_fat = fun.f_divide(t_d_fat * ebg, (t_d_fat + t_d_muscle + t_d_viscera))
-    d_muscle = fun.f_divide(t_d_muscle * ebg, (t_d_fat + t_d_muscle + t_d_viscera))
-    d_viscera = fun.f_divide(t_d_viscera * ebg, (t_d_fat + t_d_muscle + t_d_viscera))
+    d_fat = t_d_fat * fun.f_divide(ebg, (t_d_fat + t_d_muscle + t_d_viscera))
+    d_muscle = t_d_muscle * fun.f_divide(ebg, (t_d_fat + t_d_muscle + t_d_viscera))
+    d_viscera = t_d_viscera * fun.f_divide(ebg, (t_d_fat + t_d_muscle + t_d_viscera))
     return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
 

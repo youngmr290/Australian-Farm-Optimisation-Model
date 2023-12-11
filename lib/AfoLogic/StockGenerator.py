@@ -3300,7 +3300,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                          , intake_f_dams, dmd_dams, sam_mr = sam_mr_dams)
                         if eqn_used:
                             hp_maint_dams = temp0
-                            # meme_dams = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs(), will cause error if not using r_compare
+                            # Commenting out the next line will cause an error if not using r_compare because meme_dams is used for milk production
+                            # meme_dams = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs()
                             kl_dams = temp2
                         if eqn_compare:
                             r_compare7_q0q2tpdams[eqn_system, 0, :, p, ...] = temp1
