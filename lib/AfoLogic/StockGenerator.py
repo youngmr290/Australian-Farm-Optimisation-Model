@@ -3280,42 +3280,41 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] >0):
-                        temp0, temp1, temp2 = sfun.f_energy_nfs(ck_sire, cm_sire, cg_sire, lw_start_sire, ffcfw_start_sire, fat_start_sire
-                                                         , muscle_start_sire, viscera_start_sire, mei_sire, md_solid_sire
+                        temp0, temp1 = sfun.f_energy_nfs(cm_sire, cg_sire, lw_start_sire, ffcfw_start_sire, fat_start_sire
+                                                         , muscle_start_sire, viscera_start_sire, mei_sire, km_sire
                                                          , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg0[p]
                                                          , foo_sire, confinementw_tpa1e1b1nwzida0e0b0xyg0[:, p]
                                                          , intake_f_sire, dmd_sire, sam_mr = sam_mr_sire)
                         if eqn_used:
                             hp_maint_sire = temp0
-                            # meme_sire = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs()
+                            meme_sire = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs() which you might want to do when using r_compare
                         if eqn_compare:
                             r_compare7_q0q2tpsire[eqn_system, 0, :, p, ...] = temp1
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] >0):
-                        temp0, temp1, temp2 = sfun.f_energy_nfs(ck_dams, cm_dams, cg_dams, lw_start_dams, ffcfw_start_dams, fat_start_dams
-                                                         , muscle_start_dams, viscera_start_dams, mei_dams, md_solid_dams
+                        temp0, temp1 = sfun.f_energy_nfs(cm_dams, cg_dams, lw_start_dams, ffcfw_start_dams, fat_start_dams
+                                                         , muscle_start_dams, viscera_start_dams, mei_dams, km_dams
                                                          , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg1[p]
                                                          , foo_dams, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p]
                                                          , intake_f_dams, dmd_dams, sam_mr = sam_mr_dams)
                         if eqn_used:
                             hp_maint_dams = temp0
                             # Commenting out the next line will cause an error if not using r_compare because meme_dams is used for milk production
-                            # meme_dams = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs()
-                            kl_dams = temp2
+                            meme_dams = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs() which you might want to do when using r_compare
                         if eqn_compare:
                             r_compare7_q0q2tpdams[eqn_system, 0, :, p, ...] = temp1
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] >0):
-                        temp0, temp1, temp2 = sfun.f_energy_nfs(ck_offs, cm_offs, cg_offs, lw_start_offs, ffcfw_start_offs, fat_start_offs
-                                                         , muscle_start_offs, viscera_start_offs, mei_offs, md_solid_offs
+                        temp0, temp1 = sfun.f_energy_nfs(cm_offs, cg_offs, lw_start_offs, ffcfw_start_offs, fat_start_offs
+                                                         , muscle_start_offs, viscera_start_offs, mei_offs, km_offs
                                                          , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg3[p]
                                                          , foo_offs, confinementw_tpa1e1b1nwzida0e0b0xyg3[:, p]
                                                          , intake_f_offs, dmd_offs, sam_mr = sam_mr_offs)
                         if eqn_used:
                             hp_maint_offs = temp0
-                            # meme_offs = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs()
+                            meme_offs = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs() which you might want to do when using r_compare
                         if eqn_compare:
                             r_compare7_q0q2tpoffs[eqn_system, 0, :, p, ...] = temp1
 
@@ -4230,14 +4229,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
-                    temp0, temp1, temp2 = sfun.f_energy_nfs(ck_yatf, cm_yatf, cg_yatf, lw_start_yatf, ffcfw_start_yatf, fat_start_yatf
-                                                     , muscle_start_yatf, viscera_start_yatf, mei_yatf, md_solid_yatf
+                    temp0, temp1 = sfun.f_energy_nfs(cm_yatf, cg_yatf, lw_start_yatf, ffcfw_start_yatf, fat_start_yatf
+                                                     , muscle_start_yatf, viscera_start_yatf, mei_yatf, km_yatf
                                                      , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p]
                                                      , foo_yatf, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p]
                                                      , intake_f_yatf, dmd_yatf, sam_mr = sam_mr_yatf)  #same feedsupply as dams
                     if eqn_used:
                         hp_maint_yatf = temp0
-                        # meme_yatf = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs()
+                        # meme_yatf = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs() which you might want to do if using r_compare
                     if eqn_compare:
                         r_compare7_q0q2tpyatf[eqn_system, 0, :, p,...] = temp1
 

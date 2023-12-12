@@ -951,15 +951,9 @@ def f_energy_cs(cx, cm, lw, ffcfw, mr_age, mei, omer_history_start, days_period,
     return meme, omer_history
 
 
-def f_energy_nfs(ck, cm, cg, lw, ffcfw, fat, muscle, viscera, mei, md_solid, i_steepness, density, foo
+def f_energy_nfs(cm, cg, lw, ffcfw, fat, muscle, viscera, mei, km, i_steepness, density, foo
                  , confinement, intake_f, dmd, mei_propn_milk=0, sam_mr=1):
-    #Heat production associated with maintenance (fasting heat production and heat associated with feeding) & efficiency
-    #todo km & kl could be calculated using f1_efficiency() & then pass them in as args (and not return kl from this function)
-    ##Efficiency for maintenance (note: Blaxter & Boyne showed that km fits better if the coefficients vary with feed type)
-    km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
-    bmei = 1 - km
-    ##Efficiency for lactation - dam only
-    kl =  ck[5, ...] + ck[6, ...] * md_solid
+    '''Heat production associated with maintenance (fasting heat production and heat associated with feeding) & efficiency'''
     ##Calculate the energy content of fat, muscle and viscera from the weight
     f = f1_weight2energy(cg, fat, 0)
     m = f1_weight2energy(cg, muscle, 1)
@@ -970,6 +964,7 @@ def f_energy_nfs(ck, cm, cg, lw, ffcfw, fat, muscle, viscera, mei, md_solid, i_s
     hp_fasting = (cm[20, ...] * f + cm[21, ...] * m + cm[22, ...] * v) * (1 + cm[5, ...] * mei_propn_milk)
     ##Heat associated with feeding - eating, rumination, rumen fermentation, digestion and excretion
     ## Note: rumination might change with fibre length but this is not accounted for, only varies with M/D
+    bmei = 1 - km
     hp_mei = bmei * mei
     ##Distance walked (horizontal equivalent)
     distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
@@ -984,7 +979,7 @@ def f_energy_nfs(ck, cm, cg, lw, ffcfw, fat, muscle, viscera, mei, md_solid, i_s
     hp_maint = (hp_fasting + hp_mei + hp_graze) * sam_mr
     ##Equivalent of MR from CSIRO feeding standards. Estimate of MEI for RE==0
     meme = (hp_fasting + hp_graze) / km * sam_mr
-    return hp_maint, meme, kl
+    return hp_maint, meme
 
 
 def f_foetus_cs(cb1, cp, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f):
