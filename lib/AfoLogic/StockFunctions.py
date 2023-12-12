@@ -844,7 +844,7 @@ def f_intake(pi, ri, md_herb, confinement, intake_s, i_md_supp, mp2=0):
 
 def f1_efficiency(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, mei_propn_milk=0, sam_kg=1):
     #Energy required for maintenance and efficiency of energy use for maintenance & growth
-    ##Efficiency for maintenance
+    ##Efficiency for maintenance (note: Blaxter & Boyne showed that km fits better if the coefficients vary with feed type)
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
     ##Efficiency for lactation - dam only
     kl =  ck[5, ...] + ck[6, ...] * md_solid
@@ -955,7 +955,7 @@ def f_energy_nfs(ck, cm, cg, lw, ffcfw, fat, muscle, viscera, mei, md_solid, i_s
                  , confinement, intake_f, dmd, mei_propn_milk=0, sam_mr=1):
     #Heat production associated with maintenance (fasting heat production and heat associated with feeding) & efficiency
     #todo km & kl could be calculated using f1_efficiency() & then pass them in as args (and not return kl from this function)
-    ##Efficiency for maintenance
+    ##Efficiency for maintenance (note: Blaxter & Boyne showed that km fits better if the coefficients vary with feed type)
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
     bmei = 1 - km
     ##Efficiency for lactation - dam only
@@ -965,8 +965,11 @@ def f_energy_nfs(ck, cm, cg, lw, ffcfw, fat, muscle, viscera, mei, md_solid, i_s
     m = f1_weight2energy(cg, muscle, 1)
     v = f1_weight2energy(cg, viscera, 2)
     ##Heat production from maintaining protein
+    ###(1+cm5)*propn_milk is to represent the measured difference in MEm for milk fed vs pasture grazing lambs.
+    ### Difference might be due to differences in viscera. Milk fed lambs have small rumen and large abomasum, and the abomasum uses more energy than the rumen.
     hp_fasting = (cm[20, ...] * f + cm[21, ...] * m + cm[22, ...] * v) * (1 + cm[5, ...] * mei_propn_milk)
-    ##Heat associated with feeding - rumination & digestion (Note: rumination might change with fibre length but this is not accounted for, only M/D).
+    ##Heat associated with feeding - eating, rumination, rumen fermentation, digestion and excretion
+    ## Note: rumination might change with fibre length but this is not accounted for, only varies with M/D
     hp_mei = bmei * mei
     ##Distance walked (horizontal equivalent)
     distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
@@ -974,7 +977,8 @@ def f_energy_nfs(ck, cm, cg, lw, ffcfw, fat, muscle, viscera, mei, md_solid, i_s
     distance = distance * np.logical_not(confinement)
     ##Energy required for movement
     hp_move = cm[16, ...] * distance * lw
-    ##Energy required for eating (chewing and ruminating)
+    ##Extra energy required for eating paddock feed than an equivalent feed in a pen (chewing and ruminating)
+    ##Low quality paddock feed is likely to be longer fibre length which might increase the energy to chew and ruminate.
     hp_graze = cm[6, ...] * ffcfw * intake_f * (cm[7, ...] - dmd) + hp_move
     ##Heat produced by maintenance type functions (before ECold)
     hp_maint = (hp_fasting + hp_mei + hp_graze) * sam_mr
@@ -1204,7 +1208,7 @@ def f_milk_cs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_sta
     ##Max milk prodn based on dam rc birth
     mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
     ##Excess ME available for milk	
-    mel_xs = np.maximum(0, (mei - (meme + mew_min * relsize_start))) * cl[5, ...] * kl
+    mel_xs = np.maximum(0, (mei - (meme + mew_min * relsize_start))) * cl[5, ...] * kl   #todo is this double counting the mew_min because meme includes an energy allowance for a maintenance level of wool growth
     ##Excess ME as a ratio of mpmax
     milk_ratio = fun.f_divide(mel_xs, mpmax) #func stops div0 error - and milk ratio is later discarded because days period f = 0
     ##Age or energy factor
