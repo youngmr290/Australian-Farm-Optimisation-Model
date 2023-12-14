@@ -59,7 +59,7 @@ from . import SaltbushPyomo as slppy
 #########################
 
 def exp(solver_method, user_data, property, trial_name, trial_description, sinp_defaults, uinp_defaults, pinp_defaults,
-        d_rot_info, cat_propn_s1_ks2, pkl_fs):
+        d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output):
 
     ##can use logger to get status on multiprocessing
     # logger.info('Received {}'.format(row))
@@ -169,7 +169,7 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     bndpy.f1_boundarypyomo_local(params, model)
     pyomocalc_end = time.time()
     print(f'{trial_description}, time for localpyomo: {pyomocalc_end - pyomocalc_start:.2f} finished at {time.ctime()}')
-    profit, obj, trial_infeasible = core.coremodel_all(trial_name, model, solver_method, nv)
+    profit, obj, trial_infeasible = core.coremodel_all(trial_name, model, solver_method, nv, print_debug_output)
     print(f'{trial_description}, time for corepyomo: {time.time() - pyomocalc_end:.2f} finished at {time.ctime()}')
 
     ##build lp_vars

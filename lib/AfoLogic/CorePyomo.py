@@ -33,7 +33,7 @@ from . import CropGrazingPyomo as cgzpy
 from . import SaltbushPyomo as slppy
 from . import relativeFile
 
-def coremodel_all(trial_name, model, method, nv):
+def coremodel_all(trial_name, model, method, nv, print_debug_output):
     '''
     Wraps all of the core model into a function so it can be run multiple times in a loop
 
@@ -109,7 +109,9 @@ def coremodel_all(trial_name, model, method, nv):
     #         v[s] = prev
 
     ##sometimes if there is a bug when solved it is good to write lp here - because the code doesn't run to the other place where lp written
-    # model.write(os.path.join('Output/test.lp'),io_options={'symbolic_solver_labels': True})  # comment this out when not debugging
+    ## print_debug_output can be set to True in RunAfoRaw.
+    if print_debug_output==True:
+        model.write(os.path.join('Output/test.lp'),io_options={'symbolic_solver_labels': True})
 
     ##tells the solver you want duals and rc
     model.dual = pe.Suffix(direction=pe.Suffix.IMPORT)

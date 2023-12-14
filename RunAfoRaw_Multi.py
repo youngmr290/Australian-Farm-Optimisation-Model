@@ -20,6 +20,7 @@ from lib.RawVersion import SaveOutputs as out
 ############
 force_run = False #set to True if you want to force all trials to run even if they are up to date.
 solver_method = 'CPLEX'
+print_debug_output = False
 
 ########################################
 ##load excel data and experiment data  #
@@ -69,7 +70,7 @@ def run_afo(row):
     global d_rot_info #has to be defined as global sincie it is defined outside this function above
     model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info = (
         afo.exp(solver_method, user_sa, property, trial_name, trial_description, sinp_defaults, uinp_defaults,
-                pinp_defaults, d_rot_info, cat_propn_s1_ks2, pkl_fs))
+                pinp_defaults, d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output))
 
     ##save AFO outputs
     out.f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info)
