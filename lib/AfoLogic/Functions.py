@@ -948,12 +948,11 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
     tup = tuple(map(tuple,index_masked))
     return dict(zip(tup, param_masked))
 
-def write_variablesummary(model, row, exp_data, obj, option=0, property_id=''):
+def write_variablesummary(model, trial_name, obj, option=0, property_id=''):
     '''
 
     :param model: pyomo model
-    :param row: trial row
-    :param exp_data: exp info
+    :param trial_name: Trial name
     :param obj: objective value
     :param option: 0: trial name and property ID will be included in file name
                    1: file name will be generic
@@ -963,11 +962,11 @@ def write_variablesummary(model, row, exp_data, obj, option=0, property_id=''):
     ### written with trial description in file name if full solution is requested (option 0)
     ### written every iteration with generic name (option 1) - can be used to check progress of analysis each iteration
     if option == 0:
-        file = open(f'Output/Variable summary {exp_data.index[row][3]} - {property_id}.txt','w')  # file name has to have capital
+        file = open(f'Output/Variable summary {trial_name} - {property_id}.txt','w')  # file name has to have capital
     else:
         file = open('Output/Variable summary.txt','w')  # file name has to have capital
-    file.write('Trial: %s\n' % exp_data.index[row][3])  # the first line is the name of the trial
-    file.write('{0} profit: {1}\n'.format(exp_data.index[row][3],obj))  # the second line is profit
+    file.write('Trial: %s\n' % trial_name)  # the first line is the name of the trial
+    file.write('{0} profit: {1}\n'.format(trial_name,obj))  # the second line is profit
     for v in model.component_objects(pe.Var,active=True):
         file.write("Variable %s\n" % v)  # \n makes new line
         for index in v:

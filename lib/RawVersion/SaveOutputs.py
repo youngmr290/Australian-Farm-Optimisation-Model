@@ -40,7 +40,7 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
 
 
     ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
-    fun.write_variablesummary(model, row, exp_data, profit, 1, property_id=pinp.general['i_property_id'])
+    fun.write_variablesummary(model, exp_data.index[row][3], profit, 1, property_id=pinp.general['i_property_id'])
 
     ##check if user wants full solution
     if exp_data.index[row][1] == True and not trial_infeasible:
@@ -48,7 +48,7 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
         model.write('Output/%s.lp' %trial_name,io_options={'symbolic_solver_labels':True})  #file name has to have capital
 
         ##This writes variable summary for full solution (same file as the temporary version created above)
-        fun.write_variablesummary(model, row, exp_data, profit, property_id=pinp.general['i_property_id'])
+        fun.write_variablesummary(model, exp_data.index[row][3], profit, property_id=pinp.general['i_property_id'])
 
         ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
         with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
