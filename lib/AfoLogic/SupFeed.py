@@ -352,30 +352,18 @@ def f_sup_emissions(r_vals, nv):
 
     co2e_sup_fk = stock_ch4_sup_fk * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_sup_fk * uinp.emissions['i_n2o_gwp_factor']
 
-    ##apply season mask and grazing exists mask
-    ###calc season mask
-    date_start_p6z = per.f_feed_periods()[:-1]
-    mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
-    ###apply masks
-    stock_n2o_sup_fkp6z = stock_n2o_sup_fk[:,na,na] * mask_fp_z8var_p6z
-    stock_ch4_sup_fkp6z = stock_ch4_sup_fk[:,na,na] * mask_fp_z8var_p6z
-    co2e_sup_fkp6z = co2e_sup_fk[:,na,na] * mask_fp_z8var_p6z
-
     ##build df
-    keys_z = zfun.f_keys_z()
-    keys_p6 = pinp.period['i_fp_idx']
     keys_f = np.array(['nv{0}'.format(i) for i in range(nv['len_nv'])])
-    index_fkp6z = pd.MultiIndex.from_product([keys_f, sup_md_vol.columns, keys_p6, keys_z])
-    co2e_sup_fkp6z = pd.Series(co2e_sup_fkp6z.ravel(), index=index_fkp6z)
-    stock_n2o_sup_fkp6z = pd.Series(stock_n2o_sup_fkp6z.ravel(), index=index_fkp6z)
-    stock_ch4_sup_fkp6z = pd.Series(stock_ch4_sup_fkp6z.ravel(), index=index_fkp6z)
-
+    index_fk = pd.MultiIndex.from_product([keys_f, sup_md_vol.columns])
+    co2e_sup_fk = pd.Series(co2e_sup_fk.ravel(), index=index_fk)
+    stock_n2o_sup_fk = pd.Series(stock_n2o_sup_fk.ravel(), index=index_fk)
+    stock_ch4_sup_fk = pd.Series(stock_ch4_sup_fk.ravel(), index=index_fk)
 
     ##store report vals
-    fun.f1_make_r_val(r_vals,stock_n2o_sup_fkp6z,'stock_n2o_sup_fkp6z',mask_fp_z8var_p6z,z_pos=-1)
-    fun.f1_make_r_val(r_vals,stock_ch4_sup_fkp6z,'stock_ch4_sup_fkp6z',mask_fp_z8var_p6z,z_pos=-1)
+    fun.f1_make_r_val(r_vals,stock_n2o_sup_fk,'stock_n2o_sup_fk')
+    fun.f1_make_r_val(r_vals,stock_ch4_sup_fk,'stock_ch4_sup_fk')
 
-    return co2e_sup_fkp6z
+    return co2e_sup_fk
 
 def f_sup_labour(nv):
     '''
@@ -564,7 +552,7 @@ def f1_sup_selectivity():
 def f_sup_params(params,r_vals, nv):
     total_sup_cost, total_sup_wc, storage_dep, storage_asset, confinement_dep = f_sup_cost(r_vals, nv)
     vol_tonne, md_tonne = f_sup_md_vol(r_vals, nv)
-    co2e_sup_fkp6z = f_sup_emissions(r_vals, nv)
+    co2e_sup_consumption_fk = f_sup_emissions(r_vals, nv)
     sup_labour = f_sup_labour(nv)
     buy_grain_price, buy_grain_wc, buy_grain_prov_p7z = f_buy_grain_price(r_vals)
     a_p6_p7 = f1_a_p6_p7()
@@ -583,7 +571,7 @@ def f_sup_params(params,r_vals, nv):
     params['buy_grain_prov_p7z'] = buy_grain_prov_p7z.to_dict()
 
     ##create season params
-    params['co2e_sup_fkp6z'] = co2e_sup_fkp6z.to_dict()
+    params['co2e_sup_fk'] = co2e_sup_consumption_fk.to_dict()
     params['total_sup_cost'] = total_sup_cost.to_dict()
     params['total_sup_wc'] = total_sup_wc.to_dict()
     params['sup_labour'] = sup_labour.to_dict()

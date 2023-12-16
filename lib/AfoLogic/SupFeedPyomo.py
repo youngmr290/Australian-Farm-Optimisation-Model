@@ -80,7 +80,7 @@ def f1_suppyomo_local(params, model):
     model.p_sup_s2 = pe.Param(model.s_crops, model.s_biomass_uses, initialize=params['sup_s2_ks2'], default = 0.0, doc='link between sup k and s2')
 
     ##sup emissions
-    model.co2e_sup_fkp6z = pe.Param(model.s_feed_pools, model.s_crops, model.s_feed_periods, model.s_season_types, initialize=params['co2e_sup_fkp6z'] , default = 0.0, doc='emissions per tonne of grain consumed')
+    model.co2e_sup_fk = pe.Param(model.s_feed_pools, model.s_crops, initialize=params['co2e_sup_fk'] , default = 0.0, doc='emissions per tonne of grain consumed/fed')
 
     ##a_p6_p7
     model.p_a_p6_p7 = pe.Param(model.s_season_periods, model.s_feed_periods, model.s_season_types, initialize=params['a_p6_p7'], default = 0.0, doc='link between p6 and m')
@@ -174,9 +174,9 @@ def f_sup_emissions(model,q,s,p6,z):
     Used in global constraint (con_emissions). See BoundPyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.co2e_sup_fkp6z[f,k,p6,z] for f in model.s_feed_pools
+    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.co2e_sup_fk[f,k] for f in model.s_feed_pools
                for g in model.s_grain_pools for k in model.s_crops
-               if pe.value(model.co2e_sup_fkp6z[f,k,p6,z])!=0)
+               if pe.value(model.p_mask_season_p6z[p6,z])!=0)
 
 
     
