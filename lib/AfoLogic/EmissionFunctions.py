@@ -451,3 +451,28 @@ def f_n2o_leach_runoff(N, FracWET, FracLEACH):
     n2o = N * FracWET * FracLEACH * property_leach_factor * ef * Cg
 
     return n2o
+
+def f_fuel_emissions(diesel_used):
+    '''
+    co2, n2o and ch4 emissions from fuel combustion. Assumption in AFO is that all equipment is diesel.
+
+    For some reason in this function, ef also converts to co2e.
+
+    :param diesel_used: L of diesel used by one unit of a given decision variable.
+    :return:
+    '''
+
+    co2e_ef_diesel_co2 = uinp.emissions['i_ef_diesel_co2']  # Scope 1 Emission Factor CO2-e / L
+    co2e_ef_diesel_ch4 = uinp.emissions['i_ef_diesel_ch4']  # Scope 1 Emission Factor CO2-e / L
+    co2e_ef_diesel_n2o = uinp.emissions['i_ef_diesel_n2o']  # Scope 1 Emission Factor CO2-e / L
+
+    ##co2e from co2
+    co2_fuel_co2e = diesel_used * co2e_ef_diesel_co2
+
+    ##co2e from ch4
+    ch4_fuel_co2e = diesel_used * co2e_ef_diesel_ch4
+
+    ##co2e from n2o
+    n2o_fuel_co2e = diesel_used * co2e_ef_diesel_n2o
+
+    return co2_fuel_co2e, ch4_fuel_co2e, n2o_fuel_co2e

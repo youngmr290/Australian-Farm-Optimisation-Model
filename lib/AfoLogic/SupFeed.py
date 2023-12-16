@@ -162,7 +162,7 @@ def f_sup_cost(r_vals, nv):
     # p_name_c = cashflow_df['cash period'].values[:-1]
 
     ##determine cost of feeding in each feed period and cashflow period
-    feeding_cost_k = mac.sup_mach_cost()
+    feeding_cost_k, fuel_used_k = mac.sup_mach_cost()
     storage_cost_k = grain_info.loc['cost']
 
     ##confinement costs
@@ -181,6 +181,7 @@ def f_sup_cost(r_vals, nv):
     index_fk = pd.MultiIndex.from_product([keys_f, keys_k])
     cost_factor_fk = cost_factor_f.reindex(index_fk, level=0)
     feeding_cost_fk = feeding_cost_k.mul(cost_factor_fk, level=1)
+    fuel_used_fk = fuel_used_k.mul(cost_factor_fk, level=1)
     ###variable confinemnet infra r&m costs only occur for confinement nv pool
     confinement_rm_f = confinement_rm * nv_is_confinement_f
     confinement_rm_f = pd.Series(confinement_rm_f, index=keys_f)
@@ -227,15 +228,23 @@ def f_sup_cost(r_vals, nv):
     storage_dep_p7p6zk = alloc_p7p6zk.mul(storage_dep_k, level=-1)
     storage_asset_p7p6zk = alloc_p7p6zk.mul(storage_asset_k, level=-1)
 
+    ##emissions from fuel used to feed sup
+    co2_fuel_co2e_fk, ch4_fuel_co2e_fk, n2o_fuel_co2e_fk = efun.f_fuel_emissions(fuel_used_fk)
+    co2e_fuel_fk =  co2_fuel_co2e_fk + ch4_fuel_co2e_fk + n2o_fuel_co2e_fk
+    ###build df
+    index_fk = pd.MultiIndex.from_product([keys_f, keys_k])
+    co2e_fuel_fk = pd.Series(co2e_fuel_fk.ravel(), index=index_fk)
+
     ##store r_vals
     ###make z8 mask - used to uncluster
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
     fun.f1_make_r_val(r_vals, total_sup_cost_p7zp6kf, 'total_sup_cost_p7zp6kf', mask_season_p7z[:,:,na,na,na], z_pos=-4)
+    fun.f1_make_r_val(r_vals, co2e_fuel_fk, 'co2e_sup_fuel_fk')
 
     ##return cost, dep and asset value
-    return total_sup_cost_p7zp6kf, total_sup_wc_c0p7zp6kf, storage_dep_p7p6zk, storage_asset_p7p6zk, confinement_dep
+    return total_sup_cost_p7zp6kf, total_sup_wc_c0p7zp6kf, storage_dep_p7p6zk, storage_asset_p7p6zk, confinement_dep, co2e_fuel_fk
 
 
 def f_sup_md_vol(r_vals, nv):
@@ -550,7 +559,7 @@ def f1_sup_selectivity():
 
 ##collates all the params
 def f_sup_params(params,r_vals, nv):
-    total_sup_cost, total_sup_wc, storage_dep, storage_asset, confinement_dep = f_sup_cost(r_vals, nv)
+    total_sup_cost, total_sup_wc, storage_dep, storage_asset, confinement_dep, co2e_fuel_fk = f_sup_cost(r_vals, nv)
     vol_tonne, md_tonne = f_sup_md_vol(r_vals, nv)
     co2e_sup_consumption_fk = f_sup_emissions(r_vals, nv)
     sup_labour = f_sup_labour(nv)
@@ -571,7 +580,7 @@ def f_sup_params(params,r_vals, nv):
     params['buy_grain_prov_p7z'] = buy_grain_prov_p7z.to_dict()
 
     ##create season params
-    params['co2e_sup_fk'] = co2e_sup_consumption_fk.to_dict()
+    params['co2e_sup_fk'] = co2e_sup_consumption_fk.add(co2e_fuel_fk).to_dict()
     params['total_sup_cost'] = total_sup_cost.to_dict()
     params['total_sup_wc'] = total_sup_wc.to_dict()
     params['sup_labour'] = sup_labour.to_dict()

@@ -96,6 +96,10 @@ def f1_croppyomo_local(params, model):
 
     model.p_can_sow = pe.Param(model.s_labperiods, model.s_season_types, model.s_landuses, initialize=params['can_sow_p5zk'], default = 0.0, doc='mask used to stop model sowing to get poc or crop grazing.')
 
+    model.p_co2e_phase_fuel_zrl = pe.Param(model.s_season_types, model.s_phases, model.s_lmus,
+                                     initialize=params['co2e_phase_fuel_zrl'], default=0, mutable=False,
+                                     doc='kgs of co2e emissions from fuel used to spray, spreading and stubble handling for 1 unit of rotation increment')
+
 
 #######################################################################################################################################################
 #######################################################################################################################################################
@@ -193,6 +197,22 @@ def f_rotation_depn(model, q, s, p7, z):
                for r in model.s_phases for l in model.s_lmus
                if pe.value(model.p_spreader_sprayer_dep_p7zlr[p7, z, l, r]) != 0 or pe.value(
         model.p_increment_spreader_sprayer_dep_p7zlr[p7, z, l, r]) != 0)
+
+#######################
+# fuel emission       #
+#######################
+
+def f_rot_fuel_emissions(model, q, s, p7, z):
+    '''
+    Tallies the co2e emissions from fuel use linked to rotation phase.
+
+    Use in con_emissions see BoundsPyomo.py
+    '''
+    rot_co2e = sum(model.p_co2e_phase_fuel_zrl[z, l, r] * model.v_phase_change_increase[q, s, p7, z, r, l]
+                   for r in model.s_phases for l in model.s_lmus)
+
+    return rot_co2e
+
 
     ######
     # # Area #

@@ -78,7 +78,7 @@ def f1_p5_alloc(item_start=0, item_length=1, z_pos=-1, is_phase_param=False):
     return alloc_p5etc
 
 
-def f_p5_p7_allocation():
+def f_p5_p7_allocation(param=False):
     '''Allocation of labour periods (p5) to each p7 period.'''
     labour_period_p5z = per.f_p_dates_df()
     labour_period_start_p5z = labour_period_p5z.values[:-1]
@@ -86,6 +86,14 @@ def f_p5_p7_allocation():
     length_p5z = labour_period_start_p5z - labour_period_end_p5z
     ##allocate p5 to p7
     alloc_p7p5z = zfun.f1_z_period_alloc(labour_period_start_p5z[na,:,:],length_p5z[na,:,:],z_pos=-1)
+
+    if param==True:
+        ##make df
+        keys_z = zfun.f_keys_z()
+        keys_p7 = per.f_season_periods(keys=True)
+        keys_p5 = labour_period_p5z.index[:-1]
+        new_index_p7p5z = pd.MultiIndex.from_product([keys_p7, keys_p5, keys_z])
+        alloc_p7p5z = pd.Series(alloc_p7p5z.ravel(), index=new_index_p7p5z)
     return alloc_p7p5z
 
 
@@ -345,6 +353,7 @@ def f1_labcrop_params(params,r_vals):
     params['variable_crop_monitor'] = variable_crop_monitor.to_dict()
     params['increment_variable_crop_monitor'] = increment_variable_crop_monitor.to_dict()
     params['fixed_crop_monitor'] = fixed_crop_monitor.to_dict()
+    params['a_p5_p7'] = f_p5_p7_allocation(param=True).to_dict()
 
 
 

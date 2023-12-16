@@ -103,6 +103,14 @@ def f1_machpyomo_local(params, model):
 
     model.p_harv_delays = pe.Param(initialize=params['harv_delays'], default = 0.0, doc='proportion of time harvest can not occur each period')
 
+    model.p_co2e_fuel_seeding_l = pe.Param( model.s_lmus, initialize=params['co2e_fuel_seeding_l'],
+                                                  default=0, mutable=False, doc='kgs of co2e emissions from fuel for seeding 1 unit of rotation')
+
+    model.p_co2e_fuel_harv = pe.Param(initialize=params['co2e_fuel_harv'], default=0, mutable=False,
+                                     doc='kgs of co2e emissions from 1hr of harvest')
+
+
+
     ###################################
     #call local constraints           #
     ###################################
@@ -317,6 +325,19 @@ def f_mach_asset(model,p7):
     return model.p_mach_asset[p7]
 
 
+## fuel emission
+def f_seeding_harv_fuel_emissions(model, q, s, p7, z):
+    '''
+    Tallies the co2e emissions from fuel use linked to rotation phase.
+
+    Use in con_emissions see BoundsPyomo.py
+    '''
+    harv_seeding_co2e = sum(model.p_co2e_fuel_harv * (model.v_harv_hours[q,s,z,p5,k] + model.v_contractharv_hours[q,s,z,p5,k])
+                            + sum(model.p_co2e_fuel_seeding_l[l] * (model.v_contractseeding_ha[q, s, z, p5, k, l] +
+                                  model.v_seeding_machdays[q, s, z, p5, k, l] * model.p_seeding_rate[k, l])
+                                  for l in model.s_lmus)
+                            * model.p_a_p5_p7[p7,p5,z] for k in model.s_crops for p5 in model.s_labperiods)
+    return harv_seeding_co2e
 
 
 

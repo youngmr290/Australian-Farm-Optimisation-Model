@@ -53,6 +53,7 @@ from . import StructuralInputs as sinp
 from . import Periods as per
 from . import Functions as fun
 from . import SeasonalFunctions as zfun
+from . import EmissionFunctions as efun
 from . import Finance as fin
 
 na = np.newaxis
@@ -91,9 +92,10 @@ def sup_mach_cost():
     '''
     sup_cost=uinp.mach[pinp.mach['option']]['sup_feed'].copy() #need this so it doesn't alter inputs
     ##add fuel cost
-    sup_cost['litres']=sup_cost['litres'] * fuel_price()
+    fuel_used_k = sup_cost['litres']
+    sup_cost['litres']=fuel_used_k * fuel_price()
     ##sum the cost of r&m and fuel - note that rm is in the sup_cost df
-    return sup_cost.sum(axis=1)
+    return sup_cost.sum(axis=1), fuel_used_k
 
 #######################################################################################################################################################
 #######################################################################################################################################################
@@ -793,7 +795,6 @@ def f_hay_making_cost():
     '''
     ##cost allocation
     hay_start = np.array([pinp.crop['hay_making_date']])
-    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     keys_p7 = per.f_season_periods(keys=True)
@@ -1157,6 +1158,41 @@ def f_insurance(r_vals):
     return insurance_cost_p7z.to_dict(), insurance_wc_c0p7z.to_dict()
 
 
+#########################
+#emissions              #
+#########################
+def f_seeding_harv_fuel_emissions(r_vals):
+    '''
+    Counts emissions from fuel use for harvest and seeding.
+
+    Harvest is linked to personal and contract harvest activities.
+
+    Seeding is linked to personal and contract seeding activities.
+
+    :return:
+    '''
+
+    ##v_harv_hours and v_contractharv_hours
+    harv_fuel_used = uinp.mach[pinp.mach['option']]['harv_fuel_consumption'] #fuel used L/hr - same for each crop
+    harv_fuel_used = np.array([harv_fuel_used])
+    ###convert to emissions
+    co2_harv_fuel_co2e, ch4_harv_fuel_co2e, n2o_harv_fuel_co2e = efun.f_fuel_emissions(harv_fuel_used)
+    total_co2e_fuel_harv = co2_harv_fuel_co2e + ch4_harv_fuel_co2e + n2o_harv_fuel_co2e
+
+    ##v_seeding_machdays and v_contractseeding_ha
+    seeding_fuel_ha_l = fuel_use_seeding().squeeze()
+    ###convert to emissions
+    co2_seeding_fuel_co2e_l, ch4_seeding_fuel_co2e_l, n2o_seeding_fuel_co2e_l = efun.f_fuel_emissions(seeding_fuel_ha_l)
+    total_co2e_fuel_seeding_l = co2_seeding_fuel_co2e_l + ch4_seeding_fuel_co2e_l + n2o_seeding_fuel_co2e_l
+
+    ##store r_vals
+    fun.f1_make_r_val(r_vals, total_co2e_fuel_seeding_l, 'co2e_seeding_fuel_l')
+    fun.f1_make_r_val(r_vals, total_co2e_fuel_harv, 'co2e_harv_fuel')
+
+    return total_co2e_fuel_seeding_l, total_co2e_fuel_harv
+
+
+
 #######################################################################################################################################################
 #######################################################################################################################################################
 #params
@@ -1185,6 +1221,7 @@ def f_mach_params(params,r_vals):
     seeding_dep = f_seeding_dep()
     insurance_cost, insurance_wc = f_insurance(r_vals)
     mach_asset_value = f_total_clearing_value()
+    total_co2e_fuel_seeding_l, total_co2e_fuel_harv = f_seeding_harv_fuel_emissions(r_vals)
 
     ##add inputs that are params to dict
     params['number_seeding_gear'] = uinp.mach[pinp.mach['option']]['number_of_seeders']
@@ -1200,6 +1237,9 @@ def f_mach_params(params,r_vals):
     params['seeding_gear_clearing_value'] = seeding_gear_clearing_value
     params['seeding_dep'] = seeding_dep.to_dict()
     params['mach_asset_value'] = mach_asset_value.to_dict()
+    params['co2e_fuel_seeding_l'] = total_co2e_fuel_seeding_l.to_dict()
+    params['co2e_fuel_harv'] = total_co2e_fuel_harv
+
 
     ##create season params
     params['seed_days'] = seed_days.to_dict()

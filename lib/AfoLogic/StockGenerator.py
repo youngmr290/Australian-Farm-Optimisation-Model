@@ -7127,7 +7127,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##Husbandry - shearing costs apply to p[0] but they are dropped because no numbers in p[0]
     #todo add feedbudgeting and 'labour for maintenance of infrastructure' (it currently has a cost that is representing materials and labour)
     ###Sire: cost, labour and infrastructure requirements
-    husbandry_cost_tpg0, husbandry_labour_l2tpg0, husbandry_infrastructure_h1tpg0 = sfun.f_husbandry(
+    husbandry_cost_tpg0, husbandry_labour_l2tpg0, husbandry_infrastructure_h1tpg0, fuel_cost_tpg0 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_sire'], mobsize_pa1e1b1nwzida0e0b0xyg0, o_ffcfw_tpsire, o_cfw_tpsire, operations_triggerlevels_h5h7h2tpg,
         p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg0, period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0,
         period_is_wean_pa1e1b1nwzida0e0b0xyg0, gender_xyg[0], o_ebg_tpsire, wool_genes_yg0, husb_operations_muster_propn_h2tpg,
@@ -7135,7 +7135,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         husb_operations_infrastructurereq_h1h2tpg, husb_operations_contract_cost_h2tpg, husb_muster_requisites_prob_h6h4tpg,
         musters_per_hour_l2h4tpg, husb_muster_infrastructurereq_h1h4tpg, dtype=dtype)
     ###Dams: cost, labour and infrastructure requirements - accounts for yatf costs as well
-    husbandry_cost_tpg1, husbandry_labour_l2tpg1, husbandry_infrastructure_h1tpg1 = sfun.f_husbandry(
+    husbandry_cost_tpg1, husbandry_labour_l2tpg1, husbandry_infrastructure_h1tpg1, fuel_cost_tpg1 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_dams'], mobsize_pa1e1b1nwzida0e0b0xyg1, o_ffcfw_tpdams, o_cfw_tpdams, operations_triggerlevels_h5h7h2tpg,
         p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg1, period_is_shearing_tpa1e1b1nwzida0e0b0xyg1,
         period_is_wean_husb_pa1e1b1nwzida0e0b0xyg1, gender_xyg[1], o_ebg_tpdams, wool_genes_yg1, husb_operations_muster_propn_h2tpg,
@@ -7144,7 +7144,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         musters_per_hour_l2h4tpg, husb_muster_infrastructurereq_h1h4tpg, a_t_g1, nyatf_b1nwzida0e0b0xyg, period_is_join_pa1e1b1nwzida0e0b0xyg1,
         animal_mated_b1g1, scan_option_pa1e1b1nwzida0e0b0xyg1, period_is_matingend_pa1e1b1nwzida0e0b0xyg1, dtype=dtype)
     ###offs: cost, labour and infrastructure requirements
-    husbandry_cost_tpg3, husbandry_labour_l2tpg3, husbandry_infrastructure_h1tpg3 = sfun.f_husbandry(
+    husbandry_cost_tpg3, husbandry_labour_l2tpg3, husbandry_infrastructure_h1tpg3, fuel_cost_tpg3 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_offs'], mobsize_pa1e1b1nwzida0e0b0xyg3, o_ffcfw_tpoffs, o_cfw_tpoffs, operations_triggerlevels_h5h7h2tpg,
         p_index_pa1e1b1nwzida0e0b0xyg3, age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p], period_is_shearing_tpa1e1b1nwzida0e0b0xyg3,
         period_is_wean_pa1e1b1nwzida0e0b0xyg3, gender_xyg[mask_x], o_ebg_tpoffs, wool_genes_yg3, husb_operations_muster_propn_h2tpg,
@@ -7153,6 +7153,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         musters_per_hour_l2h4tpg, husb_muster_infrastructurereq_h1h4tpg, dtype=dtype)
 
     husb_finish= time.time()
+
+    ##fuel used for husb - for GHG calcs
+    fuel_price = uinp.price['diesel'] - uinp.price['diesel_rebate']
+    fuel_used_tpg0 = fuel_cost_tpg0/fuel_price
+    fuel_used_tpg1 = fuel_cost_tpg1/fuel_price
+    fuel_used_tpg3 = fuel_cost_tpg3/fuel_price
 
     ##variable infra r&m cost per hd
     rm_stockinfra_var_h1tpg = fun.f_expand(uinp.sheep['i_infrastructure_costvariable_h1'], p_pos-2)
@@ -7362,7 +7368,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     nv_propn_ftpdams[-1, ...] = fun.f_update(nv_propn_ftpdams[-1, ...], 1.0, confinementw_tpa1e1b1nwzida0e0b0xyg1)
     nv_propn_ftpoffs[-1, ...] = fun.f_update(nv_propn_ftpoffs[-1, ...], 1.0, confinementw_tpa1e1b1nwzida0e0b0xyg3)
 
-
     #######
     #co2e #
     #######
@@ -7370,20 +7375,20 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     co2e_animal_tpsire = o_ch4_animal_tpsire * uinp.emissions['i_ch4_gwp_factor'] + o_n2o_animal_tpsire * uinp.emissions['i_n2o_gwp_factor']
     co2e_animal_tpdams = o_ch4_animal_tpdams * uinp.emissions['i_ch4_gwp_factor'] + o_n2o_animal_tpdams * uinp.emissions['i_n2o_gwp_factor']
     co2e_animal_tpoffs = o_ch4_animal_tpoffs * uinp.emissions['i_ch4_gwp_factor'] + o_n2o_animal_tpoffs * uinp.emissions['i_n2o_gwp_factor']
-    ##add p7 axis
-    co2e_animal_p7tpsire = co2e_animal_tpsire * alloc_p7tpa1e1b1nwzida0e0b0xyg
-    co2e_animal_p7tpdams = co2e_animal_tpdams * alloc_p7tpa1e1b1nwzida0e0b0xyg
-    co2e_animal_p7tpoffs = co2e_animal_tpoffs * alloc_p7tpa1e1b1nwzida0e0b0xyg[:, :, mask_p_offs_p]
 
     ##emissions from fuel - dont need to multiply for gwp (already done in the function for fuel)
-    #todo dont need to report fuel seperalty. just report total co2e. Need to change this for machinery.phase stuff.
     co2_husb_fuel_co2e_tpg0, ch4_husb_fuel_co2e_tpg0, n2o_husb_fuel_co2e_tpg0 = efun.f_fuel_emissions(fuel_used_tpg0)
-    total_co2e_fuel_husb_tpg0 = co2_husb_fuel_co2e_tpg0 + ch4_husb_fuel_co2e_tpg0 + n2o_husb_fuel_co2e_tpg0
+    co2e_fuel_tpg0 = co2_husb_fuel_co2e_tpg0 + ch4_husb_fuel_co2e_tpg0 + n2o_husb_fuel_co2e_tpg0
     co2_husb_fuel_co2e_tpg1, ch4_husb_fuel_co2e_tpg1, n2o_husb_fuel_co2e_tpg1 = efun.f_fuel_emissions(fuel_used_tpg1)
-    total_co2e_fuel_husb_tpg1 = co2_husb_fuel_co2e_tpg1 + ch4_husb_fuel_co2e_tpg1 + n2o_husb_fuel_co2e_tpg1
+    co2e_fuel_tpg1 = co2_husb_fuel_co2e_tpg1 + ch4_husb_fuel_co2e_tpg1 + n2o_husb_fuel_co2e_tpg1
     co2_husb_fuel_co2e_tpg3, ch4_husb_fuel_co2e_tpg3, n2o_husb_fuel_co2e_tpg3 = efun.f_fuel_emissions(fuel_used_tpg3)
-    total_co2e_fuel_husb_tpg3 = co2_husb_fuel_co2e_tpg3 + ch4_husb_fuel_co2e_tpg3 + n2o_husb_fuel_co2e_tpg3
-    
+    co2e_fuel_tpg3 = co2_husb_fuel_co2e_tpg3 + ch4_husb_fuel_co2e_tpg3 + n2o_husb_fuel_co2e_tpg3
+
+    ##total co2e emissions for pyomo with p7 axis - so it can be multiplied by prob qszp7 in pyomo
+    total_co2e_p7tpsire = (co2e_fuel_tpg0 + co2e_animal_tpsire) * alloc_p7tpa1e1b1nwzida0e0b0xyg
+    total_co2e_p7tpdams = (co2e_fuel_tpg1 + co2e_animal_tpdams) * alloc_p7tpa1e1b1nwzida0e0b0xyg
+    total_co2e_p7tpoffs = (co2e_fuel_tpg3 + co2e_animal_tpoffs) * alloc_p7tpa1e1b1nwzida0e0b0xyg[:, :, mask_p_offs_p]
+
     ################################
     #convert variables from p to v #
     ################################
@@ -7394,21 +7399,28 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
     n2o_animal_tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_n2o_animal_tpsire, numbers_p=o_numbers_end_tpsire
                                         , on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
-    co2e_animal_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(co2e_animal_p7tpsire, numbers_p=o_numbers_end_tpsire
+    co2e_fuel_tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(co2e_fuel_tpg0, numbers_p=o_numbers_end_tpsire
                                         , on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
+    total_co2e_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(total_co2e_p7tpsire, numbers_p=o_numbers_end_tpsire
+                                        , on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
+
     ###dams
     ch4_animal_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ch4_animal_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1)
     n2o_animal_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_n2o_animal_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1)
-    co2e_animal_p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(co2e_animal_p7tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
+    co2e_fuel_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(co2e_fuel_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
+                                        , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1)
+    total_co2e_p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(total_co2e_p7tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1)
     ###offs
     ch4_animal_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ch4_animal_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3)
     n2o_animal_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_n2o_animal_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3)
-    co2e_animal_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(co2e_animal_p7tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
+    co2e_fuel_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(co2e_fuel_tpg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
+                                        , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3)
+    total_co2e_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(total_co2e_p7tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3)
 
 
@@ -8141,7 +8153,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##emissions
     ch4_animal_tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', ch4_animal_tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0)
     n2o_animal_tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', n2o_animal_tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0)
-    co2e_animal_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', co2e_animal_p7tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0)
+    co2e_fuel_tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', co2e_fuel_tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0)
+    total_co2e_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', total_co2e_p7tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0)
     ch4_animal_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', ch4_animal_tva1e1b1nwzida0e0b0xyg1
                                                                       , a_k2cluster_va1e1b1nwzida0e0b0xyg1
                                                                       , index_k2tva1e1b1nwzida0e0b0xyg1
@@ -8156,7 +8169,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                       , mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1
                                                                                  *mask_z8var_va1e1b1nwzida0e0b0xyg1
                                                                                  *mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
-    co2e_animal_k2p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', co2e_animal_p7tva1e1b1nwzida0e0b0xyg1
+    co2e_fuel_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', co2e_fuel_tva1e1b1nwzida0e0b0xyg1
+                                                                      , a_k2cluster_va1e1b1nwzida0e0b0xyg1
+                                                                      , index_k2tva1e1b1nwzida0e0b0xyg1
+                                                                      , numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1
+                                                                      , mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1
+                                                                                 *mask_z8var_va1e1b1nwzida0e0b0xyg1
+                                                                                 *mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
+    total_co2e_k2p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', total_co2e_p7tva1e1b1nwzida0e0b0xyg1
                                                                       , a_k2cluster_va1e1b1nwzida0e0b0xyg1
                                                                       , index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
                                                                       , numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1
@@ -8177,7 +8197,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                         , index_k5tva1e1b1nwzida0e0b0xyg3
                                                                         , numbers_start_tva1e1b1nwzida0e0b0xyg3
                                                                         , mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
-    co2e_animal_k3k5p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', co2e_animal_p7tva1e1b1nwzida0e0b0xyg3
+    co2e_fuel_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', co2e_fuel_tva1e1b1nwzida0e0b0xyg3
+                                                                        , a_k3cluster_da0e0b0xyg3
+                                                                        , index_k3k5tva1e1b1nwzida0e0b0xyg3
+                                                                        , a_k5cluster_da0e0b0xyg3
+                                                                        , index_k5tva1e1b1nwzida0e0b0xyg3
+                                                                        , numbers_start_tva1e1b1nwzida0e0b0xyg3
+                                                                        , mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
+    total_co2e_k3k5p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', total_co2e_p7tva1e1b1nwzida0e0b0xyg3
                                                                         , a_k3cluster_da0e0b0xyg3
                                                                         , index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...]
                                                                         , a_k5cluster_da0e0b0xyg3
@@ -9326,9 +9353,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     params['p_numbers_prov_offs'] = fun.f1_make_pyomo_dict(numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9, arrays_k3k5tvnw8ziaxyg3w9, loop_axis_pos=p_pos-1, index_loop_axis_pos=-10)
 
     ##emissions
-    params['p_co2e_p7zg0'] = fun.f1_make_pyomo_dict(co2e_animal_p7tva1e1b1nwzida0e0b0xyg0, arrays_p7zg0)
-    params['p_co2e_k2p7tva1nwziyg1'] = fun.f1_make_pyomo_dict(co2e_animal_k2p7tva1e1b1nwzida0e0b0xyg1, arrays_k2p7tvanwziyg1)
-    params['p_co2e_k3k5p7tvnwziaxyg3'] = fun.f1_make_pyomo_dict(co2e_animal_k3k5p7tva1e1b1nwzida0e0b0xyg3, arrays_k3k5p7tvnwziaxyg3)
+    params['p_co2e_p7zg0'] = fun.f1_make_pyomo_dict(total_co2e_p7tva1e1b1nwzida0e0b0xyg0, arrays_p7zg0)
+    params['p_co2e_k2p7tva1nwziyg1'] = fun.f1_make_pyomo_dict(total_co2e_k2p7tva1e1b1nwzida0e0b0xyg1, arrays_k2p7tvanwziyg1)
+    params['p_co2e_k3k5p7tvnwziaxyg3'] = fun.f1_make_pyomo_dict(total_co2e_k3k5p7tva1e1b1nwzida0e0b0xyg3, arrays_k3k5p7tvnwziaxyg3)
 
 
     ##mei
@@ -9913,6 +9940,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fun.f1_make_r_val(r_vals, n2o_animal_k2tva1e1b1nwzida0e0b0xyg1, 'n2o_animal_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals, ch4_animal_k3k5tva1e1b1nwzida0e0b0xyg3, 'ch4_animal_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
     fun.f1_make_r_val(r_vals, n2o_animal_k3k5tva1e1b1nwzida0e0b0xyg3, 'n2o_animal_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals, co2e_fuel_tva1e1b1nwzida0e0b0xyg0, 'co2e_fuel_zg0', shape=zg0_shape) #no mask needed since no active period axis
+    fun.f1_make_r_val(r_vals, co2e_fuel_k2tva1e1b1nwzida0e0b0xyg1, 'co2e_fuel_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals, co2e_fuel_k3k5tva1e1b1nwzida0e0b0xyg3, 'co2e_fuel_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
 
     ###sale weight for emission intensity report
     fun.f1_make_r_val(r_vals,sale_ffcfw_s7k2tva1e1b1nwzida0e0b0xyg1,'sale_ffcfw_s7k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, s7k2tva1nwziyg1_shape)

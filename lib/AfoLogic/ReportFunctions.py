@@ -406,10 +406,12 @@ def f_var_reshape(lp_vars, r_vals):
     d_keys['keys_p6z'] = [keys_p6, keys_z]
     ##machine
     d_keys['keys_qszp5kl'] = [keys_q, keys_s, keys_z, keys_p5, keys_k, keys_l]
+    d_keys['keys_qszp5k'] = [keys_q, keys_s, keys_z, keys_p5, keys_k1]
     ##biomass
     d_keys['keys_qsp7zkls2'] = [keys_q, keys_s, keys_p7, keys_z, keys_k, keys_l, keys_s2]
     ##v_phase residue
     d_keys['keys_qsp7dp6zrlt'] = [keys_q, keys_s, keys_p7, keys_d, keys_p6, keys_z, keys_r, keys_l, keys_t]
+    d_keys['keys_qsp7zrl'] = [keys_q, keys_s, keys_p7, keys_z, keys_r, keys_l]
 
 
     #########
@@ -436,6 +438,7 @@ def f_var_reshape(lp_vars, r_vals):
     qszl = len_q, len_s, len_z, len_l
     ###machinery
     qszp5kl = len_q, len_s, len_z, len_p5, len_k, len_l
+    qszp5k = len_q, len_s, len_z, len_p5, len_k1
     ###biomass
     qsp7zkls2 = len_q, len_s, len_p7, len_z, len_k1, len_l, len_s2
     ###v_phase
@@ -527,6 +530,7 @@ def f_var_reshape(lp_vars, r_vals):
     maskz8_p5z = r_vals['lab']['maskz8_p5z']
     maskz8_zp5 = maskz8_p5z.T
     maskz8_zp5nana = maskz8_zp5[:, :, na, na]
+    maskz8_zp5na = maskz8_zp5[:, :, na]
     ###mach variable
     v_contractseeding_ha = f_vars2np(lp_vars, 'v_contractseeding_ha', qszp5kl, maskz8_zp5nana, z_pos=-4)
     d_vars['base']['v_contractseeding_ha'] = v_contractseeding_ha
@@ -534,6 +538,12 @@ def f_var_reshape(lp_vars, r_vals):
     v_seeding_machdays = f_vars2np(lp_vars, 'v_seeding_machdays', qszp5kl, maskz8_zp5nana, z_pos=-4)
     d_vars['base']['v_seeding_machdays'] = v_seeding_machdays
     d_vars['qsz_weighted']['v_seeding_machdays'] = v_seeding_machdays * prob_qsz[...,na,na,na]
+    v_harv_hours = f_vars2np(lp_vars, 'v_harv_hours', qszp5k, maskz8_zp5na, z_pos=-3)
+    d_vars['base']['v_harv_hours'] = v_harv_hours
+    d_vars['qsz_weighted']['v_harv_hours'] = v_harv_hours * prob_qsz[...,na,na]
+    v_contractharv_hours = f_vars2np(lp_vars, 'v_contractharv_hours', qszp5k, maskz8_zp5na, z_pos=-3)
+    d_vars['base']['v_contractharv_hours'] = v_contractharv_hours
+    d_vars['qsz_weighted']['v_contractharv_hours'] = v_contractharv_hours * prob_qsz[...,na,na]
 
     ##v_phase
     v_phase_area_qsp7zrl = f_vars2np(lp_vars, 'v_phase_area', qsp7zrl, mask_season_p7z[:, :, na, na], z_pos=-3)
@@ -2139,12 +2149,11 @@ def f_emission_summary(lp_vars, r_vals):
     ##inputs
     ch4_gwp_factor = r_vals['stock']['ch4_gwp_factor']
     n2o_gwp_factor = r_vals['stock']['n2o_gwp_factor']
-    n2o = {}
-    ch4 = {}
-    co2 = {}
     arith = 2
 
     ##calculate n2o and ch4 emissions from livestock (emissions are linked to animal and feed activities)
+    n2o = {}
+    ch4 = {}
     for e in ['ch4', 'n2o']:
         d = eval(e)
         ###sires
@@ -2373,6 +2382,69 @@ def f_emission_summary(lp_vars, r_vals):
     ###total residue emissions
     n2o_pas_residue_co2e_qsz = (residue_n2o_vphase_growth + residue_n2o_grnpas + residue_n2o_drypas_cons + residue_n2o_nap_cons) * n2o_gwp_factor / 1000 #convert to tonnes
 
+    ##Emissions from fuel use
+    ###seeding
+    type = 'mach'
+    prod = 'co2e_seeding_fuel_l'.format(e)
+    na_prod = [0,1,2,3,4]  # q,s,z,p5,k
+    prod_weights = 'seeding_rate'
+    na_prodweights = [0,1,2,3] #q,s,z,p5
+    weights = 'v_seeding_machdays'
+    keys = 'keys_qszp5kl'
+    index = [0, 1, 2]  # q,s,z
+    cols = []
+    fuel_co2e_seeding_qsz = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          prod_weights=prod_weights, na_prodweights=na_prodweights, keys=keys,
+                                          arith=arith, index=index, cols=cols)
+    ###contract seeding
+    type = 'mach'
+    prod = 'co2e_seeding_fuel_l'.format(e)
+    na_prod = [0,1,2,3,4]  # q,s,z,p5,k
+    weights = 'v_contractseeding_ha'
+    keys = 'keys_qszp5kl'
+    index = [0, 1, 2]  # q,s,z
+    cols = []
+    fuel_co2e_contract_seeding_qsz = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols)
+    ###harvesting
+    type = 'mach'
+    prod = 'co2e_harv_fuel'.format(e)
+    na_prod = [0,1,2,3,4]  # q,s,z,p5,k
+    weights = 'v_harv_hours'
+    keys = 'keys_qszp5k'
+    index = [0, 1, 2]  # q,s,z
+    cols = []
+    fuel_co2e_harv_qsz = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols)
+    ###contract harvesting
+    type = 'mach'
+    prod = 'co2e_harv_fuel'.format(e)
+    na_prod = [0,1,2,3,4]  # q,s,z,p5,k
+    weights = 'v_contractharv_hours'
+    keys = 'keys_qszp5k'
+    index = [0, 1, 2]  # q,s,z
+    cols = []
+    fuel_co2e_contract_harv_qsz = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols)
+    ###spreading. spraying & stubble handling
+    type = 'crop'
+    prod = 'co2e_phase_fuel_zrl'.format(e)
+    na_prod = [0,1,2]  # q,s,p7
+    weights = 'v_phase_area_qsp7zrl'
+    keys = 'keys_qsp7zrl'
+    index = [0, 1, 3]  # q,s,z
+    cols = []
+    fuel_co2e_phase_qsz = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols)
+    ###sup
+    fuel_sup_emissions_fk = r_vals['sup']['co2e_sup_fuel_fk'.format(e)]
+    grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
+    fuel_sup_emissions_qszp6_fk = grain_fed_qszkfp6.unstack([4, 3]).sort_index(axis=1).mul(fuel_sup_emissions_fk, axis=1)
+    fuel_co2e_sup_emissions_qsz = pd.DataFrame(fuel_sup_emissions_qszp6_fk.unstack([3]).sum(axis=1))
+
+    total_fuel_co2e_qsz = (fuel_co2e_seeding_qsz + fuel_co2e_contract_seeding_qsz + fuel_co2e_harv_qsz +
+                           fuel_co2e_contract_harv_qsz + fuel_co2e_phase_qsz + fuel_co2e_sup_emissions_qsz)/ 1000 #convert to tonnes. Note it has already been converted to co2e.
+
     ##calc info for intensity calcs
     ###wool production
     ####sires
@@ -2447,18 +2519,20 @@ def f_emission_summary(lp_vars, r_vals):
     meat_cols = [str("FFCFW Sold ")+i[:-3]+str("(kg)") for i in total_meat_qsz_s7.columns]
 
     ##tally farm emissions
-    total_farm_co2e_qsz = total_liveco2e_qsz + total_residue_co2e_qsz + n2o_pas_residue_co2e_qsz
+    total_farm_co2e_qsz = total_liveco2e_qsz + total_residue_co2e_qsz + n2o_pas_residue_co2e_qsz + total_fuel_co2e_qsz
 
     ##make final df
     emissions_qsz = pd.concat([total_farm_co2e_qsz,
                                total_liveco2e_qsz, ch4_liveco2e_qsz, n2o_liveco2e_qsz,
                                total_residue_co2e_qsz, ch4_residue_co2e_qsz, n2o_residue_co2e_qsz,
                                n2o_pas_residue_co2e_qsz, n2o_pas_residue_co2e_qsz,
+                               total_fuel_co2e_qsz,
                                total_clean_wool_qsz, total_meat_qsz_s7], axis=1)
     emissions_qsz.columns = ['Total Farm co2e (t)',
                              'Total Livestock co2e (t)', 'Livestock Methane co2e (t)', 'Livestock Nitrous Oxide co2e (t)',
                              'Total Crop Residue co2e (t)', 'Crop Residue Methane co2e (t)', 'Crop Residue Nitrous Oxide co2e (t)',
                              'Total Pas Residue co2e (t)', 'Pasture Residue Nitrous Oxide co2e (t)',
+                             'Total Fuel co2e (t)',
                              'Clean Wool Sold (kg)']+meat_cols
     return emissions_qsz
 
