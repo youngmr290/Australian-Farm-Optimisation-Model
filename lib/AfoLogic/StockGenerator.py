@@ -7371,10 +7371,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     co2e_animal_tpdams = o_ch4_animal_tpdams * uinp.emissions['i_ch4_gwp_factor'] + o_n2o_animal_tpdams * uinp.emissions['i_n2o_gwp_factor']
     co2e_animal_tpoffs = o_ch4_animal_tpoffs * uinp.emissions['i_ch4_gwp_factor'] + o_n2o_animal_tpoffs * uinp.emissions['i_n2o_gwp_factor']
     ##add p7 axis
-    co2e_animal_p7tpsire = co2e_animal_tpsire * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
-    co2e_animal_p7tpdams = co2e_animal_tpdams * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
-    co2e_animal_p7tpoffs = co2e_animal_tpoffs * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg[:, :, mask_p_offs_p]
+    co2e_animal_p7tpsire = co2e_animal_tpsire * alloc_p7tpa1e1b1nwzida0e0b0xyg
+    co2e_animal_p7tpdams = co2e_animal_tpdams * alloc_p7tpa1e1b1nwzida0e0b0xyg
+    co2e_animal_p7tpoffs = co2e_animal_tpoffs * alloc_p7tpa1e1b1nwzida0e0b0xyg[:, :, mask_p_offs_p]
 
+    ##emissions from fuel - dont need to multiply for gwp (already done in the function for fuel)
+    #todo dont need to report fuel seperalty. just report total co2e. Need to change this for machinery.phase stuff.
+    co2_husb_fuel_co2e_tpg0, ch4_husb_fuel_co2e_tpg0, n2o_husb_fuel_co2e_tpg0 = efun.f_fuel_emissions(fuel_used_tpg0)
+    total_co2e_fuel_husb_tpg0 = co2_husb_fuel_co2e_tpg0 + ch4_husb_fuel_co2e_tpg0 + n2o_husb_fuel_co2e_tpg0
+    co2_husb_fuel_co2e_tpg1, ch4_husb_fuel_co2e_tpg1, n2o_husb_fuel_co2e_tpg1 = efun.f_fuel_emissions(fuel_used_tpg1)
+    total_co2e_fuel_husb_tpg1 = co2_husb_fuel_co2e_tpg1 + ch4_husb_fuel_co2e_tpg1 + n2o_husb_fuel_co2e_tpg1
+    co2_husb_fuel_co2e_tpg3, ch4_husb_fuel_co2e_tpg3, n2o_husb_fuel_co2e_tpg3 = efun.f_fuel_emissions(fuel_used_tpg3)
+    total_co2e_fuel_husb_tpg3 = co2_husb_fuel_co2e_tpg3 + ch4_husb_fuel_co2e_tpg3 + n2o_husb_fuel_co2e_tpg3
+    
     ################################
     #convert variables from p to v #
     ################################
