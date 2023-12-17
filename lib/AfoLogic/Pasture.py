@@ -223,6 +223,7 @@ def f_pasture(params, r_vals, nv):
 
     ### mdp6lrzt
     arrays_p7dp6lrzt=[keys_p7, keys_d, keys_p6, keys_l, keys_r, keys_z, keys_t]
+    arrays_dp6lrzt=[keys_d, keys_p6, keys_l, keys_r, keys_z, keys_t]
 
     ### fdp6zt
     arrays_fdp6zt=[keys_f, keys_d, keys_p6, keys_z, keys_t]
@@ -634,7 +635,6 @@ def f_pasture(params, r_vals, nv):
     phase_area_p7p6lrzt = phase_area_p6lrzt * alloc_p7p6lrzt
     germination_p7p6lrzt = germination_p6lrzt * alloc_p7p6lrzt
     nap_p7dp6lrzt = nap_dp6lrzt * alloc_p7dp6lrzt
-    n2o_pas_residue_v_phase_growth_p7dp6lrzt = n2o_pas_residue_v_phase_growth_dp6lrzt * alloc_p7dp6lrzt
 
 
     #####################
@@ -645,7 +645,7 @@ def f_pasture(params, r_vals, nv):
     co2e_drypas_cons_dp6zt = (stock_ch4_drypas_dp6zt * uinp.emissions['i_ch4_gwp_factor']
                               + (stock_n2o_drypas_dp6zt + pas_n2o_residue_cons_t) * uinp.emissions['i_n2o_gwp_factor'])
     co2e_poc_p6z = stock_ch4_poc_p6z * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_poc_p6z * uinp.emissions['i_n2o_gwp_factor']
-    co2e_pas_residue_v_phase_growth_p7dp6lrzt = n2o_pas_residue_v_phase_growth_p7dp6lrzt * uinp.emissions['i_n2o_gwp_factor']
+    co2e_pas_residue_v_phase_growth_dp6lrzt = n2o_pas_residue_v_phase_growth_dp6lrzt * uinp.emissions['i_n2o_gwp_factor']
 
 
     ###########
@@ -707,7 +707,7 @@ def f_pasture(params, r_vals, nv):
     params['p_co2e_grnpas_gop6lzt'] = fun.f1_make_pyomo_dict(co2e_grnpas_gop6lzt, arrays_gop6lzt)
     params['p_co2e_drypas_cons_dp6zt'] = fun.f1_make_pyomo_dict(co2e_drypas_cons_dp6zt, arrays_dp6zt)
     params['p_co2e_poc_p6z'] = fun.f1_make_pyomo_dict(co2e_poc_p6z, arrays_p6z8)
-    params['p_co2e_pas_residue_v_phase_growth_p7dp6lrzt'] = fun.f1_make_pyomo_dict(co2e_pas_residue_v_phase_growth_p7dp6lrzt, arrays_p7dp6lrzt)
+    params['p_co2e_pas_residue_v_phase_growth_dp6lrzt'] = fun.f1_make_pyomo_dict(co2e_pas_residue_v_phase_growth_dp6lrzt, arrays_dp6lrzt)
 
 
     ###########
@@ -756,6 +756,6 @@ def f_pasture(params, r_vals, nv):
     fun.f1_make_r_val(r_vals,stock_n2o_poc_p6z,'stock_n2o_poc_p6z',mask_fp_z8var_p6z,z_pos=-1)
     fun.f1_make_r_val(r_vals,pas_n2o_residue_cons_t,'pas_n2o_residue_cons_t')
     fun.f1_make_r_val(r_vals,grnpas_n2o_residue_gop6lzt,'grnpas_n2o_residue_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
-    fun.f1_make_r_val(r_vals,np.swapaxes(n2o_pas_residue_v_phase_growth_p7dp6lrzt,3,5),'n2o_pas_residue_v_phase_growth_p7dp6zrlt',mask_fp_z8var_p6z[:,:,na,na,na],z_pos=-4)
+    fun.f1_make_r_val(r_vals,np.swapaxes(n2o_pas_residue_v_phase_growth_dp6lrzt,2,4),'n2o_pas_residue_v_phase_growth_dp6zrlt',mask_fp_z8var_p6z[:,na,na,na],z_pos=-4)
 
 

@@ -145,9 +145,9 @@ def f1_paspyomo_local(params, model):
     model.p_co2e_poc_p6z = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['p_co2e_poc_p6z'],
                                default=0, mutable=False, doc='emissions from grazing pasture on crop paddocks')
 
-    model.p_co2e_pas_residue_v_phase_growth_p7dp6lrzt = pe.Param(model.s_season_periods, model.s_dry_groups, model.s_feed_periods, model.s_lmus,
-                           model.s_phases, model.s_season_types, model.s_pastures, initialize=params['p_co2e_pas_residue_v_phase_growth_p7dp6lrzt'], default=0,
-                           mutable=False, doc='kgs of co2e emissions linked to v_phase due to pasture growth from green germination and NAP')
+    model.p_co2e_pas_residue_v_phase_growth_dp6lrzt = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_lmus,
+                           model.s_phases, model.s_season_types, model.s_pastures, initialize=params['p_co2e_pas_residue_v_phase_growth_dp6lrzt'], default=0,
+                           mutable=False, doc='kgs of co2e emissions linked to v_phase_increase due to pasture growth from green germination and NAP')
 
     model.p_parentz_provwithin_fp = pe.Param(model.s_feed_periods, model.s_season_types, model.s_season_types,
                                                   initialize=params['p_parentz_provwithin_fp'], default=0.0,
@@ -425,9 +425,9 @@ def f_pas_emissions(model,q,s,p6,z):
     return sum(sum(sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z,t] * model.p_co2e_grnpas_gop6lzt[f,g,o,p6,l,z,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
                     + sum(sum(model.v_drypas_consumed[q,s,f,d,p6,z,l,t] * model.p_co2e_drypas_cons_dp6zt[f,d,p6,z,t] for l in model.s_lmus) \
                           + model.v_nap_consumed[q,s,f,d,p6,z,t] * model.p_co2e_drypas_cons_dp6zt[f,d,p6,z,t]
-                          + sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_co2e_pas_residue_v_phase_growth_p7dp6lrzt[p7,d,p6,l,r,z,t]
+                          + sum(model.v_phase_change_increase[q,s,p7,z,r,l] * model.p_co2e_pas_residue_v_phase_growth_dp6lrzt[d,p6,l,r,z,t]
                                 for r in model.s_phases for p7 in model.s_season_periods for l in model.s_lmus
-                                if pe.value(model.p_co2e_pas_residue_v_phase_growth_p7dp6lrzt[p7,d,p6,l,r,z,t])!=0)
+                                if pe.value(model.p_mask_season_p7z[p7,z])!=0)
                           for d in model.s_dry_groups) for t in model.s_pastures)\
                 + sum(model.v_poc[q,s,f,p6,l,z] * model.p_co2e_poc_p6z[f,p6,z] for l in model.s_lmus)
                for f in model.s_feed_pools)

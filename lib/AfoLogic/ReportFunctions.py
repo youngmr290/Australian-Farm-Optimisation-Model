@@ -2343,9 +2343,9 @@ def f_emission_summary(lp_vars, r_vals):
     ##Emissions from pasture residues (POC not included atm - see note in EmissionFunctions)
     ###germination and nap
     type = 'pas'
-    prod = 'n2o_pas_residue_v_phase_growth_p7dp6zrlt'
-    na_prod = [0, 1]  # q,s
-    weights = 'v_phase_area_qsp7zrl'
+    prod = 'n2o_pas_residue_v_phase_growth_dp6zrlt'
+    na_prod = [0, 1, 2]  # q,s,p7
+    weights = 'v_phase_change_increase_qsp7zrl'
     na_weights = [3,4,8] #d,p6,t
     keys = 'keys_qsp7dp6zrlt'
     index = [0, 1, 5]  # q,s,z
