@@ -1200,7 +1200,7 @@ def f_spraying_spreading_dep():
 #########################
 #emissions              #
 #########################
-def f_rot_fuel_emissions(r_vals):
+def f1_rot_fuel_emissions(r_vals):
     '''
     Counts fuel used for 1 ha of each rotation. Accounts for:
 
@@ -1246,6 +1246,34 @@ def f_rot_fuel_emissions(r_vals):
 
     return total_co2e_phase_fuel_zrl
 
+def f1_rot_fert_emissions(r_vals):
+    '''
+    Calcs totoal co2e emissions for fertilising. See EmissionsFunctions.py for more details.
+
+    fert emissions are connected to v_phase_increase. Which means even if a phase is changed before all of the emissions are incurred
+    they are still included. If this becomes a limitation then the parameter need to be allocated to p7 periods and
+    linked to v_phase activity.
+
+    :param r_vals:
+    :return:
+    '''
+    ##call emission function
+    co2e_fert_k = efun.f_fert_emissions()
+
+    ##convert k to r
+    keys_k = sinp.landuse['All']
+    phases_df = pinp.phases_r
+    landuse_r = phases_df.iloc[:, -1].values
+    a_k_rk = landuse_r[:, na] == keys_k
+    co2e_fert_r = np.sum(co2e_fert_k * a_k_rk, axis=1)
+
+    ##save r_val
+    fun.f1_make_r_val(r_vals, co2e_fert_r, 'co2e_fert_r')
+
+    ##make df
+    keys_r = np.array(phases_df.index).astype('str')
+    co2e_fert_r = pd.Series(co2e_fert_r, keys_r)
+    return co2e_fert_r
 
 #########################
 #total rot cost         #
@@ -1420,7 +1448,8 @@ def f1_crop_params(params,r_vals):
     grain_price, grain_wc = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
     sow_prov_p7p5zk, can_sow_p5zk = f_sow_prov()
-    total_co2e_phase_fuel_zrl = f_rot_fuel_emissions(r_vals)
+    total_co2e_phase_fuel_zrl = f1_rot_fuel_emissions(r_vals)
+    co2e_fert_r = f1_rot_fert_emissions(r_vals)
 
     ##create params
     params['grain_pool_proportions'] = propn.to_dict()
@@ -1438,6 +1467,7 @@ def f1_crop_params(params,r_vals):
     params['spreader_sprayer_dep_p7zlr'] = spreader_sprayer_dep_p7zlr.to_dict()
     params['increment_spreader_sprayer_dep_p7zlr'] = increment_spreader_sprayer_dep_p7zlr.to_dict()
     params['co2e_phase_fuel_zrl'] = total_co2e_phase_fuel_zrl.to_dict()
+    params['co2e_phase_fert_r'] = co2e_fert_r.to_dict()
 
 
 

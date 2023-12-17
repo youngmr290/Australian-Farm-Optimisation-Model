@@ -549,6 +549,9 @@ def f_var_reshape(lp_vars, r_vals):
     v_phase_area_qsp7zrl = f_vars2np(lp_vars, 'v_phase_area', qsp7zrl, mask_season_p7z[:, :, na, na], z_pos=-3)
     d_vars['base']['v_phase_area_qsp7zrl'] = v_phase_area_qsp7zrl
     d_vars['qsz_weighted']['v_phase_area_qsp7zrl'] = v_phase_area_qsp7zrl * prob_qsz[:,:,na,:,na,na]
+    v_phase_change_increase_qsp7zrl = f_vars2np(lp_vars, 'v_phase_change_increase', qsp7zrl, mask_season_p7z[:, :, na, na], z_pos=-3)
+    d_vars['base']['v_phase_change_increase_qsp7zrl'] = v_phase_change_increase_qsp7zrl
+    d_vars['qsz_weighted']['v_phase_change_increase_qsp7zrl'] = v_phase_change_increase_qsp7zrl * prob_qsz[:,:,na,:,na,na]
 
 
 
@@ -2430,7 +2433,7 @@ def f_emission_summary(lp_vars, r_vals):
     type = 'crop'
     prod = 'co2e_phase_fuel_zrl'.format(e)
     na_prod = [0,1,2]  # q,s,p7
-    weights = 'v_phase_area_qsp7zrl'
+    weights = 'v_phase_change_increase_qsp7zrl'
     keys = 'keys_qsp7zrl'
     index = [0, 1, 3]  # q,s,z
     cols = []
@@ -2444,6 +2447,18 @@ def f_emission_summary(lp_vars, r_vals):
 
     total_fuel_co2e_qsz = (fuel_co2e_seeding_qsz + fuel_co2e_contract_seeding_qsz + fuel_co2e_harv_qsz +
                            fuel_co2e_contract_harv_qsz + fuel_co2e_phase_qsz + fuel_co2e_sup_emissions_qsz)/ 1000 #convert to tonnes. Note it has already been converted to co2e.
+
+    ##Fertiliser
+    type = 'crop'
+    prod = 'co2e_fert_r'.format(e)
+    na_prod = [0,1,2,3,5]  # q,s,p7,z,l
+    weights = 'v_phase_change_increase_qsp7zrl'
+    keys = 'keys_qsp7zrl'
+    index = [0, 1, 3]  # q,s,z
+    cols = []
+    fert_co2e_qsz = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols)
+    fert_co2e_qsz = fert_co2e_qsz/1000 #convert to tonnes
 
     ##calc info for intensity calcs
     ###wool production
@@ -2519,7 +2534,7 @@ def f_emission_summary(lp_vars, r_vals):
     meat_cols = [str("FFCFW Sold ")+i[:-3]+str("(kg)") for i in total_meat_qsz_s7.columns]
 
     ##tally farm emissions
-    total_farm_co2e_qsz = total_liveco2e_qsz + total_residue_co2e_qsz + n2o_pas_residue_co2e_qsz + total_fuel_co2e_qsz
+    total_farm_co2e_qsz = total_liveco2e_qsz + total_residue_co2e_qsz + n2o_pas_residue_co2e_qsz + total_fuel_co2e_qsz + fert_co2e_qsz
 
     ##make final df
     emissions_qsz = pd.concat([total_farm_co2e_qsz,
@@ -2527,12 +2542,14 @@ def f_emission_summary(lp_vars, r_vals):
                                total_residue_co2e_qsz, ch4_residue_co2e_qsz, n2o_residue_co2e_qsz,
                                n2o_pas_residue_co2e_qsz, n2o_pas_residue_co2e_qsz,
                                total_fuel_co2e_qsz,
+                               fert_co2e_qsz,
                                total_clean_wool_qsz, total_meat_qsz_s7], axis=1)
     emissions_qsz.columns = ['Total Farm co2e (t)',
                              'Total Livestock co2e (t)', 'Livestock Methane co2e (t)', 'Livestock Nitrous Oxide co2e (t)',
                              'Total Crop Residue co2e (t)', 'Crop Residue Methane co2e (t)', 'Crop Residue Nitrous Oxide co2e (t)',
                              'Total Pas Residue co2e (t)', 'Pasture Residue Nitrous Oxide co2e (t)',
                              'Total Fuel co2e (t)',
+                             'Total Fertiliser co2e (t)',
                              'Clean Wool Sold (kg)']+meat_cols
     return emissions_qsz
 

@@ -100,6 +100,10 @@ def f1_croppyomo_local(params, model):
                                      initialize=params['co2e_phase_fuel_zrl'], default=0, mutable=False,
                                      doc='kgs of co2e emissions from fuel used to spray, spreading and stubble handling for 1 unit of rotation increment')
 
+    model.p_co2e_phase_fert_r = pe.Param(model.s_phases,
+                                     initialize=params['co2e_phase_fert_r'], default=0, mutable=False,
+                                     doc='kgs of co2e emissions from fert applied to 1 unit of rotation increment')
+
 
 #######################################################################################################################################################
 #######################################################################################################################################################
@@ -202,13 +206,13 @@ def f_rotation_depn(model, q, s, p7, z):
 # fuel emission       #
 #######################
 
-def f_rot_fuel_emissions(model, q, s, p7, z):
+def f_rot_emissions(model, q, s, p7, z):
     '''
-    Tallies the co2e emissions from fuel use linked to rotation phase.
+    Tallies the co2e emissions from fuel use and fertiliser linked to rotation phase.
 
     Use in con_emissions see BoundsPyomo.py
     '''
-    rot_co2e = sum(model.p_co2e_phase_fuel_zrl[z, l, r] * model.v_phase_change_increase[q, s, p7, z, r, l]
+    rot_co2e = sum((model.p_co2e_phase_fuel_zrl[z, l, r] + model.p_co2e_phase_fert_r[r]) * model.v_phase_change_increase[q, s, p7, z, r, l]
                    for r in model.s_phases for l in model.s_lmus)
 
     return rot_co2e
