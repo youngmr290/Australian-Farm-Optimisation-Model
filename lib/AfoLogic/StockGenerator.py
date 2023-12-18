@@ -6731,7 +6731,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ####association between dvp and shearing - this is required because in the last dvp that the animal exist (ie when the generator ends) the sheep did not exist at shearing.
     ##the main practical difference between the prev & next association is for the DVP prior to the first shearing opportunity
     a_prev_s_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(a_prev_s_pa1e1b1nwzida0e0b0xyg3, a_p_va1e1b1nwzida0e0b0xyg3, axis=0)   #used for masking
-    a_next_s_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(a_next_s_pa1e1b1nwzida0e0b0xyg3, a_p_va1e1b1nwzida0e0b0xyg3, axis=0)   # used for bounds #todo error in the final DVP which points to the previous opportunity
+    a_next_s_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(a_next_s_pa1e1b1nwzida0e0b0xyg3, a_p_va1e1b1nwzida0e0b0xyg3, axis=0)   # used for bounds #todo error in the final DVP which points to the previous opportunity (MRY 18/12/23: i dont think that is an error I think that is what we want)
     a_sw_pa1e1b1nwzida0e0b0xyg3 = np.apply_along_axis(fun.f_next_prev_association,0, date_wean_shearing_sa1e1b1nwzida0e0b0xyg3
                                                       , offs_date_end_p, 1, 'right')  #shearing opp with weaning included.
     ###cluster
