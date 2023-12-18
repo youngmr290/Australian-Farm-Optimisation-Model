@@ -588,12 +588,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                           )[...,0:1,:,:] #slice x-axis for only male
     mask_shear_g0 = np.max(date_shear_sida0e0b0xyg0<=date_end_p[-1], axis=tuple(range(i_pos, 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg0 = date_shear_sida0e0b0xyg0[mask_shear_g0]
+    ####adjust shearing dates if they occur before birth (this is incase user input the wrong year on the shearing dates)
+    date_shear_sida0e0b0xyg0 = date_shear_sida0e0b0xyg0 + np.maximum(0, np.ceil((date_born1st_ida0e0b0xyg0 - date_shear_sida0e0b0xyg0[0])/364)) * 364
     ###dam
     date_shear_sida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_date_shear_sixg1'], x_pos, right_pos=g_pos, swap=True,left_pos2=i_pos,right_pos2=x_pos,
                                            condition=mask_dams_inc_g1, axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos
                                           )[...,1:2,:,:] #slice x-axis for only female
     mask_shear_g1 = np.max(date_shear_sida0e0b0xyg1<=date_end_p[-1], axis=tuple(range(i_pos, 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg1 = date_shear_sida0e0b0xyg1[mask_shear_g1]
+    ####adjust shearing dates if they occur before birth (this is incase user input the wrong year on the shearing dates)
+    date_shear_sida0e0b0xyg1 = date_shear_sida0e0b0xyg1 + np.maximum(0, np.ceil((date_born1st_ida0e0b0xyg1 - date_shear_sida0e0b0xyg1[0])/364)) * 364
     ###off - the first shearing must occur as offspring because if yatf were shorn then all lambs would have to be shorn (ie no scope to not shear the lambs that are going to be fed up and sold)
     #### the offspring decision variables are not linked to the yatf (which are in the dam decision variables) and it would require doubling the dam DVs to have shorn and unshorn yatf
     ####note: if age_wean_g3 gets a d axis it needs to be the same for all animals that get clustered (see date born below)
@@ -603,6 +607,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     mask_shear_g3 = np.max(date_shear_sida0e0b0xyg3<=offs_date_end_p[-1], axis=tuple(range(i_pos, 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3[mask_shear_g3]
     len_s3 = np.count_nonzero(mask_shear_g3)
+    ####adjust shearing dates if they occur before birth (this is incase user input the wrong year on the shearing dates)
+    date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3 + np.maximum(0, np.ceil((np.max(date_born1st_ida0e0b0xyg3,axis=d_pos) - date_shear_sida0e0b0xyg3[0])/364)) * 364 #max across d axis means shearing cant occur before the youngest animal is born (we dont want to add a d axis to shearing date).
 
     ##if generating for stubble then overwrite some of these inputs to match the stubble trial
     if stubble:
