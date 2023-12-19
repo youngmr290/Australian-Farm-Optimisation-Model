@@ -2533,6 +2533,17 @@ def f_emission_summary(lp_vars, r_vals):
     total_meat_qsz_s7 = ffcfw_sold_prog + ffcfw_sold_dams + ffcfw_sold_offs
     meat_cols = [str("FFCFW Sold ")+i[:-3]+str("(kg)") for i in total_meat_qsz_s7.columns]
 
+    ###crop (grain/hay) production
+    type = 'crop'
+    prod = 'biomass2product_kls2'
+    na_prod = [0, 1, 2]  # q,s,p7
+    weights = 'v_use_biomass_qsp7zkls2'
+    keys = 'keys_qsp7zkls2'
+    index = [0, 1, 3]  # q,s,z
+    cols = []
+    crop_production_qsz = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                                   keys=keys, arith=arith, index=index, cols=cols)
+
     ##tally farm emissions
     total_farm_co2e_qsz = total_liveco2e_qsz + total_residue_co2e_qsz + n2o_pas_residue_co2e_qsz + total_fuel_co2e_qsz + fert_co2e_qsz
 
@@ -2543,6 +2554,7 @@ def f_emission_summary(lp_vars, r_vals):
                                n2o_pas_residue_co2e_qsz, n2o_pas_residue_co2e_qsz,
                                total_fuel_co2e_qsz,
                                fert_co2e_qsz,
+                               crop_production_qsz,
                                total_clean_wool_qsz, total_meat_qsz_s7], axis=1)
     emissions_qsz.columns = ['Total Farm co2e (t)',
                              'Total Livestock co2e (t)', 'Livestock Methane co2e (t)', 'Livestock Nitrous Oxide co2e (t)',
@@ -2550,6 +2562,7 @@ def f_emission_summary(lp_vars, r_vals):
                              'Total Pas Residue co2e (t)', 'Pasture Residue Nitrous Oxide co2e (t)',
                              'Total Fuel co2e (t)',
                              'Total Fertiliser co2e (t)',
+                             'Crop yield (t)',
                              'Clean Wool Sold (kg)']+meat_cols
     return emissions_qsz
 

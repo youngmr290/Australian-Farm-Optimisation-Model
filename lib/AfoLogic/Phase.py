@@ -339,7 +339,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
         ###biomass for pyomo biomass param
         return biomass_rkl_p7z.stack([1,0])
 
-def f_biomass2product():
+def f_biomass2product(r_vals=None):
     '''Relationship between biomass and saleable product. Where saleable product is either grain or hay.
 
     Biomass is related to product through harvest index, harvest proportion and biomass scalar.
@@ -368,6 +368,10 @@ def f_biomass2product():
     frost_harv_factor_kl = (1-frost_kl)
     harvest_index_kls2 = harvest_index_ks2[:,na,:] * frost_harv_factor_kl[:,:,na]
     biomass2product_kls2 = harvest_index_kls2 * propn_grain_harv_ks2[:,na,:] * biomass_scalar_ks2[:,na,:]
+
+    ##store rval before converting to pandas
+    if r_vals is not None:
+        fun.f1_make_r_val(r_vals, biomass2product_kls2, 'biomass2product_kls2')
 
     ##convert to pandas
     keys_k = sinp.landuse['C']
@@ -1443,7 +1447,7 @@ def f1_crop_params(params,r_vals):
     cost, increment_cost, wc, increment_wc = f1_rot_cost(r_vals)
     spreader_sprayer_dep_p7zlr, increment_spreader_sprayer_dep_p7zlr = f_spraying_spreading_dep()
     biomass = f_rot_biomass()
-    biomass2product_kls2 = f_biomass2product()
+    biomass2product_kls2 = f_biomass2product(r_vals)
     propn = f_grain_pool_proportions()
     grain_price, grain_wc = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
