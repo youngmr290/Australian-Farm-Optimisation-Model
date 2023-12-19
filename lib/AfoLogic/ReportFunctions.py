@@ -2388,7 +2388,7 @@ def f_emission_summary(lp_vars, r_vals):
     ##Emissions from fuel use
     ###seeding
     type = 'mach'
-    prod = 'co2e_seeding_fuel_l'.format(e)
+    prod = 'co2e_seeding_fuel_l'
     na_prod = [0,1,2,3,4]  # q,s,z,p5,k
     prod_weights = 'seeding_rate'
     na_prodweights = [0,1,2,3] #q,s,z,p5
@@ -2401,7 +2401,7 @@ def f_emission_summary(lp_vars, r_vals):
                                           arith=arith, index=index, cols=cols)
     ###contract seeding
     type = 'mach'
-    prod = 'co2e_seeding_fuel_l'.format(e)
+    prod = 'co2e_seeding_fuel_l'
     na_prod = [0,1,2,3,4]  # q,s,z,p5,k
     weights = 'v_contractseeding_ha'
     keys = 'keys_qszp5kl'
@@ -2411,8 +2411,8 @@ def f_emission_summary(lp_vars, r_vals):
                                           keys=keys, arith=arith, index=index, cols=cols)
     ###harvesting
     type = 'mach'
-    prod = 'co2e_harv_fuel'.format(e)
-    na_prod = [0,1,2,3,4]  # q,s,z,p5,k
+    prod = 'co2e_harv_fuel'
+    na_prod = [0,1,2,3]  # q,s,z,p5 - prod already has a singlton k axis
     weights = 'v_harv_hours'
     keys = 'keys_qszp5k'
     index = [0, 1, 2]  # q,s,z
@@ -2421,8 +2421,8 @@ def f_emission_summary(lp_vars, r_vals):
                                           keys=keys, arith=arith, index=index, cols=cols)
     ###contract harvesting
     type = 'mach'
-    prod = 'co2e_harv_fuel'.format(e)
-    na_prod = [0,1,2,3,4]  # q,s,z,p5,k
+    prod = 'co2e_harv_fuel'
+    na_prod = [0,1,2,3]  # q,s,z,p5 - prod already has a singlton k axis
     weights = 'v_contractharv_hours'
     keys = 'keys_qszp5k'
     index = [0, 1, 2]  # q,s,z
@@ -2431,7 +2431,7 @@ def f_emission_summary(lp_vars, r_vals):
                                           keys=keys, arith=arith, index=index, cols=cols)
     ###spreading. spraying & stubble handling
     type = 'crop'
-    prod = 'co2e_phase_fuel_zrl'.format(e)
+    prod = 'co2e_phase_fuel_zrl'
     na_prod = [0,1,2]  # q,s,p7
     weights = 'v_phase_change_increase_qsp7zrl'
     keys = 'keys_qsp7zrl'
@@ -2440,7 +2440,7 @@ def f_emission_summary(lp_vars, r_vals):
     fuel_co2e_phase_qsz = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                           keys=keys, arith=arith, index=index, cols=cols)
     ###sup
-    fuel_sup_emissions_fk = r_vals['sup']['co2e_sup_fuel_fk'.format(e)]
+    fuel_sup_emissions_fk = r_vals['sup']['co2e_sup_fuel_fk']
     grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
     fuel_sup_emissions_qszp6_fk = grain_fed_qszkfp6.unstack([4, 3]).sort_index(axis=1).mul(fuel_sup_emissions_fk, axis=1)
     fuel_co2e_sup_emissions_qsz = pd.DataFrame(fuel_sup_emissions_qszp6_fk.unstack([3]).sum(axis=1))

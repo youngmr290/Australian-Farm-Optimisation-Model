@@ -756,6 +756,6 @@ def f_pasture(params, r_vals, nv):
     fun.f1_make_r_val(r_vals,stock_n2o_poc_p6z,'stock_n2o_poc_p6z',mask_fp_z8var_p6z,z_pos=-1)
     fun.f1_make_r_val(r_vals,pas_n2o_residue_cons_t,'pas_n2o_residue_cons_t')
     fun.f1_make_r_val(r_vals,grnpas_n2o_residue_gop6lzt,'grnpas_n2o_residue_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
-    fun.f1_make_r_val(r_vals,np.swapaxes(n2o_pas_residue_v_phase_growth_dp6lrzt,2,4),'n2o_pas_residue_v_phase_growth_dp6zrlt',mask_fp_z8var_p6z[:,na,na,na],z_pos=-4)
+    fun.f1_make_r_val(r_vals,np.swapaxes(n2o_pas_residue_v_phase_growth_dp6lrzt,2,4),'n2o_pas_residue_v_phase_growth_dp6zrlt',mask_fp_z8var_p6z[:,:,na,na,na],z_pos=-4)
 
 
