@@ -3276,11 +3276,15 @@ def f1_husbandry_requisites(level_htpg, treatment_units_h8tpg, husb_requisite_co
         units_htpg = treatment_units_h8tpg[a_h8_h]
     ##Labour requirement for each animal class during the period
     ##calculated using loop to reduce memory
+    fuel_slice = uinp.sheep['i_h6_fuel_slice']
     cost_tpg = 0
+    fuel_cost_tpg = 0
     for h in range(level_htpg.shape[0]):
         cost_tpg += np.sum(level_htpg[h] * units_htpg[h] * husb_requisite_cost_h6tpg *
                      husb_requisites_prob_h6htpg[:,h], axis = 0)
-    return cost_tpg
+        fuel_cost_tpg += (level_htpg[h] * units_htpg[h] * husb_requisite_cost_h6tpg[fuel_slice,...] *
+                         husb_requisites_prob_h6htpg[fuel_slice,h])
+    return cost_tpg, fuel_cost_tpg
 
 
 def f1_husbandry_labour(level_htpg, treatment_units_h8tpg, units_per_labourhour_l2htpg, a_h8_h):
@@ -3332,16 +3336,16 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_tpg, o_cfw_tpg, operations_trig
     application_level_h2tpg = f1_application_level(operation_triggered_h2tpg, animal_triggervalues_h7tpg, operations_triggerlevels_h5h7h2tpg, a_t_g)
     ##The number of times the mob must be mustered
     mustering_level_h4tpg = f1_mustering_required(application_level_h2tpg, husb_operations_muster_propn_h2tpg)[na,...] #needs a h4 axis for the functions below
-    ##The cost of requisites for the operations
-    operations_requisites_cost_tpg = f1_husbandry_requisites(application_level_h2tpg, treatment_units_h8tpg, husb_requisite_cost_h6tpg, husb_operations_requisites_prob_h6h2tpg, uinp.sheep['ia_h8_h2'])
+    ##The cost of requisites for the operations and the fuel cost used for emissions calc
+    operations_requisites_cost_tpg, operations_fuel_cost_tpg = f1_husbandry_requisites(application_level_h2tpg, treatment_units_h8tpg, husb_requisite_cost_h6tpg, husb_operations_requisites_prob_h6h2tpg, uinp.sheep['ia_h8_h2'])
     ##The labour requirement for the operations
     operations_labourreq_l2tpg = f1_husbandry_labour(application_level_h2tpg, treatment_units_h8tpg, operations_per_hour_l2h2tpg, uinp.sheep['ia_h8_h2'])
     ##The infrastructure requirements for the operations
     operations_infrastructurereq_h1tpg = f1_husbandry_infrastructure(application_level_h2tpg, husb_operations_infrastructurereq_h1h2tpg)
     ##Contract cost for husbandry
     contract_cost_tpg = f1_contract_cost(application_level_h2tpg, treatment_units_h8tpg, husb_operations_contract_cost_h2tpg)
-    ##The cost of requisites for mustering
-    mustering_requisites_cost_tpg = f1_husbandry_requisites(mustering_level_h4tpg, treatment_units_h8tpg, husb_requisite_cost_h6tpg, husb_muster_requisites_prob_h6h4tpg, uinp.sheep['ia_h8_h4'])
+    ##The cost of requisites for mustering and the fuel cost used for emissions calc
+    mustering_requisites_cost_tpg, mustering_fuel_cost_tpg = f1_husbandry_requisites(mustering_level_h4tpg, treatment_units_h8tpg, husb_requisite_cost_h6tpg, husb_muster_requisites_prob_h6h4tpg, uinp.sheep['ia_h8_h4'])
     ##The labour requirement for mustering
     mustering_labourreq_l2tpg = f1_husbandry_labour(mustering_level_h4tpg, treatment_units_h8tpg, musters_per_hour_l2h4tpg, uinp.sheep['ia_h8_h4'])
     ##The infrastructure requirements for mustering
@@ -3352,7 +3356,9 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_tpg, o_cfw_tpg, operations_trig
     husbandry_labour_l2tpg = operations_labourreq_l2tpg + mustering_labourreq_l2tpg
     ##infrastructure requirement for husbandry
     husbandry_infrastructure_h1tpg = operations_infrastructurereq_h1tpg + mustering_infrastructurereq_h1tpg
-    return husbandry_cost_tpg, husbandry_labour_l2tpg, husbandry_infrastructure_h1tpg
+    ##total fuel cost for husb used for emissions calc
+    fuel_cost_tpg = operations_fuel_cost_tpg + mustering_fuel_cost_tpg
+    return husbandry_cost_tpg, husbandry_labour_l2tpg, husbandry_infrastructure_h1tpg, fuel_cost_tpg
 
 
 ##################

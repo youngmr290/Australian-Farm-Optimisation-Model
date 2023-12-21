@@ -49,6 +49,9 @@ def f1_labcrppyomo_local(params, model):
 
     model.p_fixed_crop_monitor = pe.Param(model.s_labperiods, model.s_season_types, initialize= params['fixed_crop_monitor'], default = 0.0, mutable=False, doc='fixed time required for crop monitoring (hr/period)')
 
+    model.p_a_p5_p7 = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types,
+                                             initialize= params['a_p5_p7'], default = 0.0, mutable=False, doc='link between p5 and p7')
+
 
 ###################################
 #functions for core model         #

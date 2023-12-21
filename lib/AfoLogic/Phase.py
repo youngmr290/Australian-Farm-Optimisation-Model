@@ -74,6 +74,7 @@ from . import StructuralInputs as sinp
 from . import PropertyInputs as pinp
 from . import Functions as fun
 from . import SeasonalFunctions as zfun
+from . import EmissionFunctions as efun
 from . import Periods as per
 from . import Finance as fin
 from . import Mach as mac
@@ -338,7 +339,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
         ###biomass for pyomo biomass param
         return biomass_rkl_p7z.stack([1,0])
 
-def f_biomass2product():
+def f_biomass2product(r_vals=None):
     '''Relationship between biomass and saleable product. Where saleable product is either grain or hay.
 
     Biomass is related to product through harvest index, harvest proportion and biomass scalar.
@@ -367,6 +368,10 @@ def f_biomass2product():
     frost_harv_factor_kl = (1-frost_kl)
     harvest_index_kls2 = harvest_index_ks2[:,na,:] * frost_harv_factor_kl[:,:,na]
     biomass2product_kls2 = harvest_index_kls2 * propn_grain_harv_ks2[:,na,:] * biomass_scalar_ks2[:,na,:]
+
+    ##store rval before converting to pandas
+    if r_vals is not None:
+        fun.f1_make_r_val(r_vals, biomass2product_kls2, 'biomass2product_kls2')
 
     ##convert to pandas
     keys_k = sinp.landuse['C']
@@ -687,6 +692,18 @@ Limitations with the way stubble is handled in this Table:
 frost is not included because that doesn't reduce biomass
 '''
 
+def f1_stubble_handling_prob():
+    ##calculate the probability of a rotation phase needing stubble handling
+    base_biomass_rkl_z = f_rot_biomass(for_stub=True).unstack()
+    ###convert to grain
+    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because stubble handling is based on harvestable grain yield
+    harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
+    base_yields_rkl_z = base_biomass_rkl_z.mul(harvest_index_k, axis=0, level=1)
+    stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=sinp.landuse['C'], dtype=float)*1000  #have to convert to kg to match base yield
+    probability_handling_rkl_z = base_yields_rkl_z.div(stub_handling_threshold, axis=0, level=1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
+    probability_handling_rl_z = probability_handling_rkl_z.droplevel(1)
+    return probability_handling_rl_z
+
 def f_phase_stubble_cost(r_vals):
     '''
     Cost to handle stubble for 1 ha.
@@ -731,14 +748,7 @@ def f_phase_stubble_cost(r_vals):
     stub_cost=mac.f_stubble_cost_ha()
 
     ##calculate the probability of a rotation phase needing stubble handling
-    base_biomass_rkl_z = f_rot_biomass(for_stub=True).unstack()
-    ###convert to grain
-    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because stubble handling is based on harvestable grain yield
-    harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
-    base_yields_rkl_z = base_biomass_rkl_z.mul(harvest_index_k, axis=0, level=1)
-    stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=sinp.landuse['C'], dtype=float)*1000  #have to convert to kg to match base yield
-    probability_handling_rkl_z = base_yields_rkl_z.div(stub_handling_threshold, axis=0, level=1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
-    probability_handling_rl_z = probability_handling_rkl_z.droplevel(1)
+    probability_handling_rl_z = f1_stubble_handling_prob()
 
     ##adjust the cost of stubble handling by the probability of needing to handle stubble
     stub_cost_rl_z = probability_handling_rl_z * stub_cost
@@ -1192,6 +1202,84 @@ def f_spraying_spreading_dep():
 
 
 #########################
+#emissions              #
+#########################
+def f1_rot_fuel_emissions(r_vals):
+    '''
+    Counts fuel used for 1 ha of each rotation. Accounts for:
+
+        - spraying
+        - spreading
+        - stubble handling
+
+    Spraying, spreading and stubble handling are connected to v_phase_increase. Which means even if a phase is changed before all of the emissions are incurred
+    they are still included. If this becomes a limitation then the parameter need to be allocated to p7 periods and
+    linked to v_phase activity.
+
+    :return:
+    '''
+    ##spreading
+    spread_time_rzl = f1_fertilising_time().groupby(level=[0,1,2]).sum() #sum n
+    spreading_fuel_hr = uinp.mach[pinp.mach['option']]['spreader_fuel']
+    spreading_fuel_ha_rzl = spread_time_rzl * spreading_fuel_hr
+
+    ##spraying
+    spray_time_rzl = f1_spraying_time().groupby(level=[0,1,2]).sum() #sum n
+    spraying_fuel_hr = uinp.mach[pinp.mach['option']]['sprayer_fuel_consumption']
+    spraying_fuel_ha_rzl = spray_time_rzl * spraying_fuel_hr
+
+    ##stubble handling
+    probability_handling_rzl = f1_stubble_handling_prob().unstack().stack([0,1])
+    stubble_handling_fuel_ha = uinp.mach[pinp.mach['option']]['stubble_fuel_consumption']
+    stubble_handling_fuel_ha_rzl = probability_handling_rzl * stubble_handling_fuel_ha
+
+    ##combine
+    stubble_handling_fuel_ha_rzl = stubble_handling_fuel_ha_rzl.reindex(spreading_fuel_ha_rzl.index).fillna(0)
+    phase_fuel_ha_rzl = spreading_fuel_ha_rzl.add(spraying_fuel_ha_rzl).add(stubble_handling_fuel_ha_rzl)
+    phase_fuel_ha_zrl = phase_fuel_ha_rzl.unstack([0,2]).stack([0,1]) #reorder levels to match v_phase_increment
+
+    ##convert to emissions
+    co2_phase_fuel_co2e_zrl, ch4_phase_fuel_co2e_zrl, n2o_phase_fuel_co2e_zrl = efun.f_fuel_emissions(phase_fuel_ha_zrl)
+    total_co2e_phase_fuel_zrl = co2_phase_fuel_co2e_zrl + ch4_phase_fuel_co2e_zrl + n2o_phase_fuel_co2e_zrl
+
+    ##store r_vals - store as nupy
+    len_z = len(zfun.f_keys_z())
+    len_r = len(total_co2e_phase_fuel_zrl.index.levels[1])
+    len_l = len(total_co2e_phase_fuel_zrl.index.levels[2])
+    fun.f1_make_r_val(r_vals, total_co2e_phase_fuel_zrl.values.reshape(len_z, len_r, len_l), 'co2e_phase_fuel_zrl')
+
+    return total_co2e_phase_fuel_zrl
+
+def f1_rot_fert_emissions(r_vals):
+    '''
+    Calcs totoal co2e emissions for fertilising. See EmissionsFunctions.py for more details.
+
+    fert emissions are connected to v_phase_increase. Which means even if a phase is changed before all of the emissions are incurred
+    they are still included. If this becomes a limitation then the parameter need to be allocated to p7 periods and
+    linked to v_phase activity.
+
+    :param r_vals:
+    :return:
+    '''
+    ##call emission function
+    co2e_fert_k = efun.f_fert_emissions()
+
+    ##convert k to r
+    keys_k = sinp.landuse['All']
+    phases_df = pinp.phases_r
+    landuse_r = phases_df.iloc[:, -1].values
+    a_k_rk = landuse_r[:, na] == keys_k
+    co2e_fert_r = np.sum(co2e_fert_k * a_k_rk, axis=1)
+
+    ##save r_val
+    fun.f1_make_r_val(r_vals, co2e_fert_r, 'co2e_fert_r')
+
+    ##make df
+    keys_r = np.array(phases_df.index).astype('str')
+    co2e_fert_r = pd.Series(co2e_fert_r, keys_r)
+    return co2e_fert_r
+
+#########################
 #total rot cost         #
 #########################
 '''
@@ -1359,11 +1447,13 @@ def f1_crop_params(params,r_vals):
     cost, increment_cost, wc, increment_wc = f1_rot_cost(r_vals)
     spreader_sprayer_dep_p7zlr, increment_spreader_sprayer_dep_p7zlr = f_spraying_spreading_dep()
     biomass = f_rot_biomass()
-    biomass2product_kls2 = f_biomass2product()
+    biomass2product_kls2 = f_biomass2product(r_vals)
     propn = f_grain_pool_proportions()
     grain_price, grain_wc = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
     sow_prov_p7p5zk, can_sow_p5zk = f_sow_prov()
+    total_co2e_phase_fuel_zrl = f1_rot_fuel_emissions(r_vals)
+    co2e_fert_r = f1_rot_fert_emissions(r_vals)
 
     ##create params
     params['grain_pool_proportions'] = propn.to_dict()
@@ -1380,6 +1470,8 @@ def f1_crop_params(params,r_vals):
     params['biomass2product_kls2'] = biomass2product_kls2.to_dict()
     params['spreader_sprayer_dep_p7zlr'] = spreader_sprayer_dep_p7zlr.to_dict()
     params['increment_spreader_sprayer_dep_p7zlr'] = increment_spreader_sprayer_dep_p7zlr.to_dict()
+    params['co2e_phase_fuel_zrl'] = total_co2e_phase_fuel_zrl.to_dict()
+    params['co2e_phase_fert_r'] = co2e_fert_r.to_dict()
 
 
 

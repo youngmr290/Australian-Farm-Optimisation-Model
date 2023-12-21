@@ -838,7 +838,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_pgr', 'Run']:
         #returns average pgr per day per ha.
-        #to get total PG change arith to 2 and remove den_weights
+        #to get total PG change arith to 2 (den_weights won't be used)
         type = 'pas'
         prod = 'pgr_grnha_gop6lzt'
         na_prod = [0,1,2] #q,s,f

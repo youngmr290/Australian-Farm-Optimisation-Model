@@ -368,6 +368,51 @@ def f_crop_residue_n2o_nir(residue_dm, F, decay_before_burning):
     return n2o_residues, n2o_leach, n2o_burning, ch4_burning
 
 
+def f_pas_residue_n2o_nir(residue_dm, RBG_t, NCAG_t, NCBG_t):
+    '''
+    Nitrous oxide emissions from pasture residues (green pasture senescence, dry pasture, nap):
+
+        1. the combined nitrification-denitrification process that
+           occurs on the nitrogen returned to soil from residues.
+
+    POC is not included atm (because not much poc). To hook it up would require making a new variable that is v_poc_slack
+    and then making con_poc_available ==.
+
+    These parameters are hooked up to both the pasture growth and consumption decision variables.
+    The AFO equation is a simplified version of the NIR formula below
+    because the decision variables are already represented in dry matter and account for removal.
+
+    M = Aikl x FracRenewal x (Yk / 1000) x (1 - FFODik) x NC AGk) + (Aikl x FracRenewal x (Yk / 1000) x RBGk x NC BGk)
+
+        - M = mass of N in pasture residues
+        - Aikl = area of pasture (ha)
+        - FracRENEWAL = fraction of pasture renewed = 1/ X where X is the average renewal period in years: 10 years for intensive systems and 30 years for other systems
+        - Yk = average yield (t DM/ha)
+        - RBGk = below ground-residue: above-ground residue ratio
+        - NCAGk = N content of above-ground residue
+        - NCBGk = N content of below-ground residue
+        - FFODik = fraction of pasture yield that is removed
+
+    Nitrous oxide production from nitrification-denitrification process (E)	E = M x EF x Cg
+
+    :param residue_dm: dry matter mass of residue decision variable.
+    :param RBG: below ground-residue to above ground residue ratio.
+    :param NCAG: nitrogen content of above-ground crop residue.
+    :param NCBG: nitrogen content of below-ground crop residue.
+    :return: Nitrous oxide production from nitrification-denitrification process and nitrous oxide production from leaching and runoff.
+    '''
+    ##inputs
+    Cg_n2o = uinp.emissions['i_cf_n2o']  # 44/28 - weight conversion factor of Nitrogen (molecular weight 28) to Nitrous oxide (molecular weight 44)
+    EF = uinp.emissions['i_ef_residue'] #emision factor for break down of N from residue.
+    FracRENEWAL = uinp.emissions['i_FracRENEWAL'] #fraction of pasture renewed = 1/ X where X is the average renewal period in years: 10 years for intensive systems and 30 years for other systems
+
+    ##The mass of N in above and below ground crop residues returned to soils (M).
+    M_t = (residue_dm * FracRENEWAL * NCAG_t) + (residue_dm * FracRENEWAL * RBG_t * NCBG_t) * (residue_dm>0) #last bit is to make it so that below ground residue is not included in the consumption call
+
+    ##Nitrous oxide production from nitrification-denitrification process
+    n2o_residues_t = M_t * EF * Cg_n2o
+    return n2o_residues_t
+
 def f_n2o_atmospheric_deposition(N, ef, FracGASM):
     '''
     Calculate the nitrous oxide production from atmospheric deposition due to ammonia released from volatilization
@@ -406,3 +451,87 @@ def f_n2o_leach_runoff(N, FracWET, FracLEACH):
     n2o = N * FracWET * FracLEACH * property_leach_factor * ef * Cg
 
     return n2o
+
+def f_fuel_emissions(diesel_used):
+    '''
+    co2, n2o and ch4 emissions from fuel combustion. Assumption in AFO is that all equipment is diesel.
+
+    For some reason in this function, ef also converts to co2e.
+
+    :param diesel_used: L of diesel used by one unit of a given decision variable.
+    :return:
+    '''
+
+    co2e_ef_diesel_co2 = uinp.emissions['i_ef_diesel_co2']  # Scope 1 Emission Factor CO2-e / L
+    co2e_ef_diesel_ch4 = uinp.emissions['i_ef_diesel_ch4']  # Scope 1 Emission Factor CO2-e / L
+    co2e_ef_diesel_n2o = uinp.emissions['i_ef_diesel_n2o']  # Scope 1 Emission Factor CO2-e / L
+
+    ##co2e from co2
+    co2_fuel_co2e = diesel_used * co2e_ef_diesel_co2
+
+    ##co2e from ch4
+    ch4_fuel_co2e = diesel_used * co2e_ef_diesel_ch4
+
+    ##co2e from n2o
+    n2o_fuel_co2e = diesel_used * co2e_ef_diesel_n2o
+
+    return co2_fuel_co2e, ch4_fuel_co2e, n2o_fuel_co2e
+
+
+def f_fert_emissions():
+    '''
+    Calculates GHG emissions linked to fertiliser applied to rotation activities, using the methods documented
+    in the National Greenhouse Gas Inventory Report.
+
+    Emissions are from several exchanges:
+
+        1. the combined nitrification-denitrification process that occurs on the nitrogen in soil.
+        2. atmospheric deposition due to ammonia released from the volatilization of fert which increases
+           nitrogen in the nitrogen cycle and therefore increase nitrogen deposition which produces some n2o when interacts with the earth.
+        3. runoff and leaching of nitrogen.
+        4. urea hydrolysis: Urea applied to the soil reacts with water and the soil enzyme urease and is rapidly
+           converted to ammonium and bicarbonate.
+        5. Liming hydrolysis: The lime dissolves to form calcium, bicarbonate, and hydroxide ions.
+
+
+    :return: fert co2e kg/ha
+    '''
+    nitrogen_applied_k = pinp.emissions['i_nitrogen_applied_k']
+    propn_urea_k = pinp.emissions['i_propn_Urea']
+    ef_fert = uinp.emissions['i_ef_fert']
+    n2o_gwp_factor = uinp.emissions['i_n2o_gwp_factor']
+
+    ##nitrification
+    Cg = uinp.emissions['i_cf_n2o']  # 44/28 - weight conversion factor of Nitrogen (molecular weight 28) to Nitrous oxide (molecular weight 44)
+    n2o_fert_k = nitrogen_applied_k * ef_fert * Cg
+
+    ##leaching and runoff
+    FracWET = uinp.emissions['i_FracWET_fert'] #fraction of N available for leaching and runoff
+    FracLEACH = uinp.emissions['i_FracLEACH_fert'] #fraction of N lost through leaching and runoff
+    n2o_leach_k = f_n2o_leach_runoff(nitrogen_applied_k, FracWET, FracLEACH)
+
+    ##atmospheric
+    FracGASM = uinp.emissions['i_FracGASM_fert'] #fraction of animal waste N volatilised
+    n2o_atmospheric_deposition_k = f_n2o_atmospheric_deposition(nitrogen_applied_k, ef_fert, FracGASM)
+
+    ##urea hydrolysis
+    Cg_co2 = uinp.emissions['i_cf_co2']  # 44/12 - weight conversion factor of carbon (molecular weight 12) to carbon dioxide (molecular weight 44)
+    ef_urea = uinp.emissions['i_ef_urea']
+    urea_applied_k = nitrogen_applied_k * propn_urea_k / 0.46
+    co2_urea_application = urea_applied_k * ef_urea * Cg_co2
+
+    ##lime hydrolysis
+    ef_limestone = uinp.emissions['i_ef_limestone']
+    ef_dolomite = uinp.emissions['i_ef_dolomite']
+    FracLime = uinp.emissions['i_FracLime']
+    purity_limestone = uinp.emissions['i_purity_limestone']
+    purity_dolomite = uinp.emissions['i_purity_dolomite']
+    lime_applied_k = pinp.emissions['i_lime_applied_k']
+    co2_lime_application = ((lime_applied_k * FracLime * purity_limestone * ef_limestone)
+                            + (lime_applied_k * (1-FracLime) * purity_dolomite * ef_dolomite)) * Cg_co2
+
+    ##total co2e
+    co2e_fert_k = ((n2o_fert_k + n2o_leach_k + n2o_atmospheric_deposition_k) * n2o_gwp_factor
+                   + co2_urea_application + co2_lime_application)
+
+    return co2e_fert_k
