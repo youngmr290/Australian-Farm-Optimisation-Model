@@ -111,7 +111,8 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output):
     ##sometimes if there is a bug when solved it is good to write lp here - because the code doesn't run to the other place where lp written
     ## print_debug_output can be set to True in RunAfoRaw.
     if print_debug_output==True:
-        model.write(os.path.join('Output/test.lp'),io_options={'symbolic_solver_labels': True})
+        output_path = relativeFile.find(__file__, "../../Output", "test.lp")
+        model.write(output_path,io_options={'symbolic_solver_labels': True})
 
     ##tells the solver you want duals and rc
     model.dual = pe.Suffix(direction=pe.Suffix.IMPORT)

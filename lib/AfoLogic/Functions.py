@@ -961,10 +961,13 @@ def write_variablesummary(model, trial_name, obj, option=0, property_id=''):
     ##This writes variables with value greater than 0.0001 to txt file
     ### written with trial description in file name if full solution is requested (option 0)
     ### written every iteration with generic name (option 1) - can be used to check progress of analysis each iteration
+    from . import relativeFile #import here because function.py shouldnt import other modules if possible
     if option == 0:
-        file = open(f'Output/Variable summary {trial_name} - {property_id}.txt','w')  # file name has to have capital
+        output_path = relativeFile.find(__file__, "../../Output", f'Variable summary {trial_name} - {property_id}.txt')
+        file = open(output_path,'w')  # file name has to have capital
     else:
-        file = open('Output/Variable summary.txt','w')  # file name has to have capital
+        output_path = relativeFile.find(__file__, "../../Output", 'Variable summary.txt')
+        file = open(output_path,'w')  # file name has to have capital
     file.write('Trial: %s\n' % trial_name)  # the first line is the name of the trial
     file.write('{0} profit: {1}\n'.format(trial_name,obj))  # the second line is profit
     for v in model.component_objects(pe.Var,active=True):
