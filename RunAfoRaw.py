@@ -15,7 +15,7 @@ from lib.RawVersion import SaveOutputs as out
 ############
 force_run = True #set to True if you want to force all trials to run even if they are up to date.
 solver_method = 'CPLEX'
-print_debug_output = False
+print_debug_output = True
 
 ########################################
 ##load excel data and experiment data  #
