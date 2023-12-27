@@ -351,11 +351,11 @@ def f_rot_hist4_params(params):
     hist4_req_r = pd.merge(phases_rotn_df, hist4_req_k, how='left', left_on=sinp.end_col(), right_index=True)
     hist4_req_r = hist4_req_r.drop(list(range(sinp.general['phase_len'])), axis=1)  # drop the segregated landuse cols
     hist4_req_rh4 = hist4_req_r.set_index(['h4'], append=True)
-    params['hist4_req'] = hist4_req_rh4.squeeze().to_dict()
+    params['hist4_req'] = hist4_req_rh4.squeeze(axis=1).to_dict()
 
     ##hist4 prov - this is just the current landuse
     hist4_prov_r = phases_rotn_df.iloc[:, -1:]
     hist4_prov_r = hist4_prov_r.assign(prov= 1)  # add the param value +1 which is the require value in pyomo
     hist4_prov_rh4 = hist4_prov_r.set_index(hist4_prov_r.columns[0], append=True) #add landuse as index level
-    params['hist4_prov'] = hist4_prov_rh4.squeeze().to_dict()
+    params['hist4_prov'] = hist4_prov_rh4.squeeze(axis=1).to_dict()
 
