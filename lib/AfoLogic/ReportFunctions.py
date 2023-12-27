@@ -891,7 +891,7 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     contract_penalty_qszp5k = contractseeding_ha_qszp5k.mul(sowing_yield_penalty_qszp5k, axis=0)
     total_penalty_qszk = farmer_penalty_qszp5k.add(contract_penalty_qszp5k).unstack(3).sum(axis=1)
     if option == 1:
-        return total_penalty_qszk
+        return total_penalty_qszk/1000 #convert to tonnes of penalty
     ##return all if option==0
     if option == 0:
         return exp_mach_k_p7zqs, mach_insurance_p7z
@@ -949,7 +949,7 @@ def f_biomass_penalty(lp_vars, r_vals):
                                           keys=keys, arith=arith, index=index, cols=cols)
 
     penalty = pd.concat([seeding_penalty_qszp5k, crop_grazing_penalty_qszk], axis=1)
-    penalty.columns=['seeding', 'crop_grazing']
+    penalty.columns=['seeding (t)', 'crop_grazing (t)']
     return penalty
 
 def f_grain_sup_summary(lp_vars, r_vals, option=0):
