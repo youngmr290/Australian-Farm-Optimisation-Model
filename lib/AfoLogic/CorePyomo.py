@@ -149,7 +149,7 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output):
         profit = pe.value(sum((model.v_terminal_wealth[q,s,z,c1] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z])
                                        * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
                                        for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1
-                                       for z in model.s_season_types))
+                                       for z in model.s_season_types if pe.value(model.p_wyear_inc_qs[q,s])))
     except ValueError:
         utility = 0
         profit = 0
@@ -927,7 +927,8 @@ def f_objective(model):
     ##objective function (maximise utility)
     return sum(sum(model.v_utility_points[q,s,z,c1,u] * model.p_utility[u] for u in model.s_utility_points)
                * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
-               for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types)
+               for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types
+               if pe.value(model.p_wyear_inc_qs[q,s]))
 
 
 

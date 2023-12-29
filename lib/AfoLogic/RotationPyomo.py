@@ -231,7 +231,7 @@ def f_phase_link_between(model):
             return model.v_phase_area[q,s9,p7,z9,r,l]  \
                    - model.v_phase_change_increase[q,s9,p7,z9,r,l] * model.p_phase_can_increase[p7,z9,r] \
                    + model.v_phase_change_reduce[q,s9,p7,z9,r,l] * model.p_phase_can_reduce[r,p7,z9] \
-                   - sum(model.v_phase_area[q,s8,p7_prev,z8,r,l]
+                   - sum(model.v_phase_area[q_prev,s8,p7_prev,z8,r,l]
                          * model.p_parentz_provbetween_phase[p7_prev, z8, z9]
                          * (model.p_sequence_prov_qs8zs9[q_prev, s8, z8, s9] + model.p_endstart_prov_qsz[q_prev, s8, z8])
                             for s8 in model.s_sequence for z8 in model.s_season_types) * model.p_phase_area_transfers[p7_prev,z9,r] \
