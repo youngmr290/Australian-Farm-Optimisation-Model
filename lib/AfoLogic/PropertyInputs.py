@@ -521,6 +521,7 @@ def f1_phases(d_rot_info):
     global rot_prov
     global s_rotcon1
     global rot_mask_r
+    global seeding_freq_r
 
     phases_r = d_rot_info["phases_r"]
     rot_req = d_rot_info["rot_req"]
@@ -565,11 +566,13 @@ def f1_phases(d_rot_info):
     ##rotation mask - read in from excel
     if crop['user_crop_rot']:
         rot_mask_r = crop['i_user_rot_inc_r']
+        seeding_freq_r = crop['i_seeding_freq_r']
     else:
         ###build path this way so the file can be access even if AFO is run from another directory eg readthedocs or web app.
         property = general['i_property_id']
         xl_path = relativeFile.findExcel("SimInputs_{0}.xlsx".format(property))
         rot_mask_r = pd.read_excel(xl_path, sheet_name='RotMask', index_col=0, header=0, engine='openpyxl').squeeze().values
+        seeding_freq_r = pd.read_excel(xl_path, sheet_name='SeedFreq', index_col=0, header=0, engine='openpyxl').squeeze().values
 
     ##add user landuse mask to rot mask (allows users to remove all phases with a given landuse)
     crop_landuse_mask_k1 = np.logical_and(general['i_crop_landuse_exists_k1'], general['i_crop_landuse_inc_k1'])
@@ -582,6 +585,7 @@ def f1_phases(d_rot_info):
     ##apply mask
     phases_r_not_masked = phases_r #save version without mask so that rot generator doesnt get run everytime the landuse mask changes.
     phases_r = phases_r.loc[rot_mask_r,:]
+    seeding_freq_r = seeding_freq_r[rot_mask_r]
 
     return {"phases_r": phases_r_not_masked, "rot_req": rot_req, "rot_prov": rot_prov, "s_rotcon1": s_rotcon1}
 

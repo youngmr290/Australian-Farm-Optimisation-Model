@@ -1054,6 +1054,11 @@ def f_seedcost(r_vals):
     seedcost_rl_p7z = phase_seed_cost_r_p7zl.drop(list(range(sinp.general['phase_len'])), axis=1).stack()
     seed_wc_rl_c0p7z = phase_seed_wc_r_c0p7zl.drop(list(range(sinp.general['phase_len'])), axis=1).stack()
 
+    ## multiple by seeding freq
+    seeding_freq_r = pd.Series(pinp.seeding_freq_r, index=phases_df2.index)
+    seedcost_rl_p7z = seedcost_rl_p7z.mul(seeding_freq_r, axis=0, level=0)
+    seed_wc_rl_c0p7z = seed_wc_rl_c0p7z.mul(seeding_freq_r, axis=0, level=0)
+
     ##store r_vals
     ###make z8 mask - used to uncluster
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
@@ -1334,18 +1339,14 @@ def f_phase_sow_req():
     ##adjust arable area
     arable = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
     ##sow = arable area * frequency
-    keys_k = sinp.landuse['All']
     keys_l = arable.index
-    seeding_freq_k = pinp.crop['i_seeding_frequency']
+    seeding_freq_r = pinp.seeding_freq_r
     arable_l = arable.values
-    sow_req_kl = seeding_freq_k[:,na] * arable_l
-    phasesow = pd.DataFrame(sow_req_kl, index=keys_k, columns=keys_l)
-    ##merge to rot phases
-    phasesow = pd.merge(phases_df, phasesow, how='left', left_on=sinp.end_col(), right_index = True)
-    ##add current crop to index
-    phasesow.set_index(sinp.end_col(), append=True, inplace=True)
-    phase_sow = phasesow.drop(list(range(sinp.general['phase_len']-1)), axis=1).stack()
-    return phase_sow
+    sow_req_rl = seeding_freq_r[:,na] * arable_l
+    ##make df
+    keys_rk = pd.MultiIndex.from_arrays([phases_df.index,phases_df.iloc[:,-1]])
+    phasesow = pd.DataFrame(sow_req_rl, index=keys_rk, columns=keys_l).stack()
+    return phasesow
 
 def f_sow_prov():
     '''
@@ -1417,11 +1418,9 @@ def f_sow_prov():
     ###convert t axis to k
     kt = (len(keys_k), len(pastures))
     resown_kt = np.zeros(kt)
-    seeding_freq_k = pinp.crop['i_seeding_frequency']
-    resown_k = seeding_freq_k>0
     for t,pasture in enumerate(pastures):
         pasture_landuses = list(sinp.landuse['pasture_sets'][pasture])
-        resown_kt[:,t] = resown_k * np.in1d(keys_k, pasture_landuses)  #resown if landuse is a pasture and is a sown landuse
+        resown_kt[:,t] = np.in1d(keys_k, pasture_landuses)  #resown if landuse is a pasture and is a sown landuse
     period_is_passeeding_p5zk = np.sum(resown_kt * period_is_passeeding_p5zt[:,:,na,:], -1) #sum t axis - t is counted for in the k axis
 
     ##combine wet, dry and pas

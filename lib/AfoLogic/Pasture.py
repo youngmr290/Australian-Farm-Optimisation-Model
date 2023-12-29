@@ -314,7 +314,7 @@ def f_pasture(params, r_vals, nv):
         i_grn_dig_p6lzt[...,t]           = zfun.f_seasonal_inp(np.moveaxis(exceldata['DigGrn'],0,-1), numpy=True, axis=-1)[:,lmu_mask_l,...]  # numpy array of inputs for green pasture digestibility on each LMU.
 
         ###to handle different length rotation phases (ie simulation is shorter than pinp) the germ df needs to be sliced.
-        offset = exceldata['GermPhases'].shape[-1] - len(phases_rotn_df.columns) - 2 #minus 2 because germ inputs has extra col
+        offset = exceldata['GermPhases'].shape[-1] - len(phases_rotn_df.columns) - 1 #minus 1 because germ inputs has extra col
         ###to handle if there is only one rotation
         exceldata['GermPhases'] = exceldata['GermPhases'][na,:] if exceldata['GermPhases'].ndim==1 else exceldata['GermPhases']
         i_phase_germ_dict[pasture]      = pd.DataFrame(exceldata['GermPhases'][:,offset:])  #DataFrame with germ scalar and resown bool
@@ -406,13 +406,13 @@ def f_pasture(params, r_vals, nv):
                                                                 ,  i_destock_date_zt, i_break_z, rzt)
 
     resown_rt = np.zeros(rt)
-    seeding_freq_k = pinp.crop['i_seeding_frequency']
+    seeding_freq_r = pinp.seeding_freq_r
     landuse_r = phases_rotn_df.iloc[:,-1].values
     a_k_rk = landuse_r[:,na] == keys_k
     for t,pasture in enumerate(pastures):
         pasture_landuses = list(sinp.landuse['pasture_sets'][pasture])
-        resown_k = seeding_freq_k * np.in1d(keys_k, pasture_landuses)  #resown if landuse is a pasture and is a sown landuse
-        resown_rt[:,t] = np.sum(resown_k * a_k_rk, axis=-1)
+        landuse_is_pas_k = np.in1d(keys_k, pasture_landuses)  #if landuse is a pasture
+        resown_rt[:,t] = np.sum(landuse_is_pas_k * a_k_rk, axis=-1) * seeding_freq_r
     foo_grn_reseeding_p6lrzt, foo_dry_reseeding_dp6lrzt, periods_destocked_p6zt = pfun.f_reseeding(
         i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restock_grn_propn_t, resown_rt, feed_period_dates_p6z
         , i_restock_fooscalar_lt, i_restock_foo_arable_t, dry_decay_period_p6zt, i_fxg_foo_op6lzt, c_fxg_a_op6lzt

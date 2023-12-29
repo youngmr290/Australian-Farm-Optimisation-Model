@@ -150,14 +150,13 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
     if not user_crop_rot:
         yr0 = np.array(['b', 'o', 'w', 'f', 'l', 'z','r','of'#, 'h'- not included in v1 to speed calibration process
                        , 'bd','wd','rd','zd'
-                       , 'a', 'ar'
-                       , 's', 'sr'])
+                       , 'a'
+                       , 's'])
                        # , 'm'
-                        # , 'u', 'ur'
-                        # , 'x', 'xr'
-                        # , 'j', 't', 'jr', 'tr'])
-        yr1 = np.array(['AR', 'SR1' #todo not sure that we need to track resowing in yr1? what does it impact (germ, yield, chem & fert are not changed)?
-               ,'B','O1','W', 'N', 'L', 'F', 'OF'
+                        # , 'u'
+                        # , 'x'
+                        # , 'j', 't'])
+        yr1 = np.array(['B','O1','W', 'N', 'L', 'F', 'OF'
                , 'A1'
                , 'S1'])
                # , 'M'
@@ -186,9 +185,20 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
         arrays=[yr4,yr3,yr2,yr1,yr0]
         phases=fun.cartesian_product_simple_transpose(arrays)
 
-
-
-
+        ####add phases with S in yr 3 & 4 so that cont annual pasture can exist (S and A in yr 3 & 4 are the same as
+        #### far as production so it doesnt need to exist for all phases but AAAAa is masked out so we need SAAAa).
+        #### all cont pasture phases that dont have S in yr0-3 need to be added with S in yr 3 & 4.
+        #### posssibly this could be added to generation then use rules to remove unrequired
+        cont_annual = np.array([['S', 'A', 'A2', 'A1', 'a']
+                               , ['S', 'A', 'A2', 'A1', 'ar']
+                               , ['S', 'A', 'A2', 'AR', 'a']
+                               , ['S', 'A', 'A2', 'AR', 'ar']
+                               , ['A', 'S', 'A2', 'A1', 'a']
+                               , ['A', 'S', 'A2', 'A1', 'ar']
+                               , ['A', 'S', 'A2', 'AR', 'a']
+                               , ['A', 'S', 'A2', 'AR', 'ar']
+                                ])
+        phases = np.concatenate((phases, cont_annual))
 
         ###########################################################
         #params used to try make the rules more flexible to change#
@@ -256,35 +266,21 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
                     phases = phases[~(np.isin(phases[:,i], ['U','X'])&~(np.isin(phases[:,i-1], ['U','X', 'Y']) + np.isin(phases[:,i+1], ['U','X','u','x'])))]
                 except IndexError: pass
 
-        ##lucerne and tedera resowing
-        phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['U','X'])&np.isin(phases[:,np.size(phases,1)-1], ['U','X','u','x']))] #lucerne after a non lucern must be resown
-        phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['T','J'])&np.isin(phases[:,np.size(phases,1)-1], ['T','J','t','j']))] #Tedera after a non tedera must be resown
+        # ##lucerne and tedera resowing
+        # phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['U','X'])&np.isin(phases[:,np.size(phases,1)-1], ['U','X','u','x']))] #lucerne after a non lucern must be resown
+        # phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['T','J'])&np.isin(phases[:,np.size(phases,1)-1], ['T','J','t','j']))] #Tedera after a non tedera must be resown
 
-        ##annual resowing
+        ##annual resowing and spraytopping
         resow_cols = np.size(phases,1)-resow_a #the number of cols where resowing can occur ie in yr0 and 1
         for i in range(resow_cols):
             i+=1
             ###if continuous annual it must be spraytopped every 5yrs
             a_index = np.all(np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR','A1','A2','A','M']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['AR','A1','A2','A','M','ar','a','m'])
             phases = phases[~a_index]
-            ####add phases with S in yr 3 & 4 so that cont annual pasture can exist (S and A in yr 3 & 4 are the same as
-            #### far as production so it doesnt need to exist for all phases but AAAAa is masked out so we need SAAAa).
-            #### all cont pasture phases that dont have S in yr0-3 need to be added with S in yr 3 & 4.
-            #### posssibly this could be added to generation then use rules to remove unrequired
-            cont_annual = np.array([['S', 'A', 'A2', 'A1', 'a']
-                                   , ['S', 'A', 'A2', 'A1', 'ar']
-                                   , ['S', 'A', 'A2', 'AR', 'a']
-                                   , ['S', 'A', 'A2', 'AR', 'ar']
-                                   , ['A', 'S', 'A2', 'A1', 'a']
-                                   , ['A', 'S', 'A2', 'A1', 'ar']
-                                   , ['A', 'S', 'A2', 'AR', 'a']
-                                   , ['A', 'S', 'A2', 'AR', 'ar']
-                                   ])
-            phases = np.concatenate((phases, cont_annual))
 
-            ###if there are no annuals in the history then an annual in yr0 or yr1 must be resown
-            a_index2 = np.all(~np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR','SR1','A1','A2','A','M','S','S1']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['a', 's','m','A1','A2','A','M','S','S1'])
-            phases = phases[~a_index2]
+            # ###if there are no annuals in the history then an annual in yr0 or yr1 must be resown
+            # a_index2 = np.all(~np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR','SR1','A1','A2','A','M','S','S1']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['a', 's','m','A1','A2','A','M','S','S1'])
+            # phases = phases[~a_index2]
 
 
         ##X can't be in the same rotation as U, T, J and A

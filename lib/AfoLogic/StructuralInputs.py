@@ -143,35 +143,29 @@ def f_landuse_sets():
     landuse['All_pas']=general['i_idx_k2'] #used in reporting
 
     ##next set is used in pasture.py for mobilisation of below ground reserves and phase area
-    landuse['pasture_sets']={'annual': {'a', 'ar', 'a2'
-                                    , 's', 'sr'
+    landuse['pasture_sets']={'annual': {'a', 'a2'
+                                    , 's'
                                     , 'm'}
-                            ,'lucerne':{'u', 'uc', 'ur'
-                                       , 'x', 'xc', 'xr'}
-                            ,'tedera':{'j','jc', 't','tc', 'jr', 'tr'}
+                            ,'lucerne':{'u', 'uc'
+                                       , 'x', 'xc'}
+                            ,'tedera':{'j','jc', 't','tc'}
                             ,'understory':{'sp'}
                            }
 
-    ##next set is used in rotation.py to identify which sown pasture landuses can be dry sown. Used in the handling of rotations (dry sown landuses can be incremented before the brk of season).
-    landuse['resown_pasture_sets']={'annual': {'ar', 'sr'}
-                            ,'lucerne':{'ur', 'xr'}
-                            ,'tedera':{'jr', 'tr'}
-                            ,'understory':{}
-                           }
 
     ##A1, E, P, G and C1 are just used in pas.py for germination ^can be removed when/if germination is calculated from sim
     ## these are also used for PNC landuses. & E is used in reporting
     landuse['G']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'
-                    , 'a', 'ar', 'a2'
-                    , 's', 'sr'
+                    , 'a', 'a2'
+                    , 's'
                     , 'sp'
                     , 'm'
-                    , 'u', 'ur'
-                    , 'x', 'xr'
-                    , 'j', 't', 'jr', 'tr'
+                    , 'u'
+                    , 'x'
+                    , 'j', 't'
                     , 'G', 'Y', 'B','O','O1','W', 'N', 'K', 'L', 'F', 'OF'
-                    , 'A', 'A1', 'A2', 'AR'
-                    , 'S', 'S1', 'SR1'
+                    , 'A', 'A1', 'A2'
+                    , 'S', 'S1'
                     , 'SP'
                     , 'M'
                     , 'U'
@@ -181,11 +175,11 @@ def f_landuse_sets():
     landuse['P']={'P','K','L', 'F', 'f','i', 'k', 'l', 'v'} #pulses
     landuse['E']={'E','B','O','O1','W', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd'} #cereals
     landuse['Ag0']={'a', 'a2', 's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
-    landuse['Ag1']={'Ag1', 'A1', 'AR', 'a', 'ar'} #all non-spraytopped annual sets that can exist in yr1
-    landuse['Ag2']={'Ag2', 'A', 'AR', 'A2', 'A1'
-                    , 'S', 'S1','SR1'
+    landuse['Ag1']={'Ag1', 'A1', 'a'} #all non-spraytopped annual sets that can exist in yr1
+    landuse['Ag2']={'Ag2', 'A', 'A2', 'A1'
+                    , 'S', 'S1'
                     , 'M'} #all annual sets that can exist in yr2
-    landuse['Sg1']={'Sg1', 'S','S1','SR1', 's', 'sr'} #all spraytopped annual sets that can exist in yr1
+    landuse['Sg1']={'Sg1', 'S','S1', 's'} #all spraytopped annual sets that can exist in yr1
 
     ##dry sown crops, used in phase.py for seeding param (not used for building rotations)
     landuse['dry_sown'] = {'bd', 'od', 'wd', 'zd','rd'}
@@ -198,14 +192,12 @@ def f_landuse_sets():
     #Landuse sets used in to build rotations #
     ##########################################
     landuse['A1']={'a', 'A1'} #annual yr1
-    landuse['A2']={'A2', 'A1', 'AR'} #annual yr2
+    landuse['A2']={'A2', 'A1'} #annual yr2
     landuse['A']={'A', 'A2'
                     , 'S'
                     , 'M'} #annual
-    # landuse['A']={'A', 'A3'} #annual
-    landuse['AR']={'ar', 'AR'} #resown annual
     landuse['B']={'B', 'b', 'bd'} #barleys
-    landuse['J']={'J', 'j', 'jr'} #tedera
+    landuse['J']={'J', 'j'} #tedera
     landuse['K']={'K', 'k'} #chic pea
     landuse['M']={'m', 'M'} #manipulated pasture
     landuse['N']={'N', 'z', 'zd', 'r', 'rd'} #canolas
@@ -215,18 +207,16 @@ def f_landuse_sets():
     landuse['F']={'F', 'f'} #faba
     landuse['L']={'L', 'l'} #lupin
     landuse['S1']={'S1','s'} #spray topped pasture yr1 - needs to be numbered so that sr cannot provide S in yr1
-    landuse['SR1']={'SR1','sr'} #spray topped pasture yr1
-    landuse['S']={'S','S1','SR1'} #spray topped pasture yr1
+    landuse['S']={'S','S1'} #spray topped pasture yr1
     landuse['SP']={'SP','sp'} #salt land pasture (can only be in a cont rotation)
-    landuse['T']={'T', 't', 'tr','J', 'j', 'jr'} #tedera - also includes manipulated tedera because it is combined in yrs 3,4,5
+    landuse['T']={'T', 't', 'J', 'j'} #tedera - also includes manipulated tedera because it is combined in yrs 3,4,5
     landuse['W']={'W', 'w', 'wd'} #wheats
-    landuse['U']={'u', 'ur', 'U','x', 'xr', 'X'} #lucerne
-    landuse['X']={'x', 'xr', 'X'} #lucerne
+    landuse['U']={'u', 'U','x', 'X'} #lucerne
+    landuse['X']={'x', 'X'} #lucerne
     landuse['Y']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'
                     , 'Y', 'B','O','W', 'N', 'K', 'L', 'F', 'OF'} #anything not pasture
 
     landuse['a']={'a'}
-    landuse['ar']={'ar'}
     landuse['b']={'b'}
     landuse['bd']={'bd'}
     landuse['f']={'f'}
@@ -234,7 +224,6 @@ def f_landuse_sets():
     landuse['i']={'i'}
     landuse['j']={'j'}
     landuse['jc']={'jc'}
-    landuse['jr']={'jr'}
     landuse['k']={'k'}
     landuse['l']={'l'}
     landuse['m']={'m'}
@@ -245,19 +234,15 @@ def f_landuse_sets():
     landuse['rd']={'rd'}
     landuse['s']={'s'}
     landuse['sp']={'sp'}
-    landuse['sr']={'sr'}
     landuse['t']={'t'}
     landuse['tc']={'tc'}
-    landuse['tr']={'tr'}
     landuse['u']={'u'}
     landuse['uc']={'uc'}
-    landuse['ur']={'ur'}
     landuse['v']={'v'}
     landuse['w']={'w'}
     landuse['wd']={'wd'}
     landuse['x']={'x'}
     landuse['xc']={'xc'}
-    landuse['xr']={'xr'}
     landuse['z']={'z'}
     landuse['zd']={'zd'}
 

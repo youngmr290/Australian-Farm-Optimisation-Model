@@ -111,12 +111,8 @@ def f_germination(i_germination_std_zt, i_germ_scalar_lzt, i_germ_scalar_p6zt, p
     #todo currently all germination occurs in period 0, however, other code handles germination in other periods if the inputs & this code are changed
     germ_scalar_rzt = np.zeros(rzt,dtype = 'float64')
     for t, pasture in enumerate(pastures):
-        pasture_germ_scalar = i_phase_germ_dict[pasture].iloc[:, :-1].copy() #remove the resown bool col
-        pasture_is_resown = i_phase_germ_dict[pasture].iloc[:,-1].astype(int)
+        pasture_germ_scalar = i_phase_germ_dict[pasture].copy()
         for z in range(germ_scalar_rzt.shape[1]):
-            ##check if destocking occurs before the break of season. If so the resown pastures dont get any germination.
-            if i_destock_date_zt[z,t] <= i_break_z[z]:
-                pasture_germ_scalar.iloc[pasture_is_resown,-1] = 0
             ##expand to r axis
             phase_germresow_df['germ_scalar']=0 #set default to 0
             ###loop through each combo of landuses and pastures (i_phase_germ), then check which rotations fall into each germ category. Then populate the rot phase df with the necessary germination param.
@@ -147,6 +143,12 @@ def f_germination(i_germination_std_zt, i_germ_scalar_lzt, i_germ_scalar_p6zt, p
     germination_p6lrzt = arable_germination_p6lrzt * arable_l[:, na, na, na]
     ## add germination on the non-arable area to the first pasture type
     germination_p6lrzt[..., 0] += na_germination_flrz * (1 - arable_l[:,na,na])
+
+    ##check if destocking occurs before the break of season. If so the resown pastures dont get any germination.
+    ###convert destock date from t axis to r axis so that nonarable pasture on resown paddocks doesnt provide foo during the destocked period. r axis is require because nap is allocated to the annual pasture pool but destocking date is related to r.
+    i_destock_date_rz = np.sum(i_destock_date_zt*pasture_rt[:,na,:], axis=-1)
+    germination_p6lrzt = germination_p6lrzt * (1 - pinp.seeding_freq_r[:,na,na] * (i_destock_date_rz[:,:,na] <= i_break_z[:,na]))
+
     return germination_p6lrzt, max_germination_flzt
 
 def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restock_grn_propn_t, resown_rt

@@ -230,17 +230,24 @@ def f_phase_link_params(params):
     keys_z = zfun.f_keys_z()
     i_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
 
-    ##if pasture sowing can occur beore season break then need to add sown pasture landuses to dry sown list
-    for pasture in sinp.general['pastures'][pinp.general['pas_inc_t']]:
-        resown_pas = sinp.landuse['resown_pasture_sets'][pasture]
-        start_pas_seeding = zfun.f_seasonal_inp(pinp.pasture_inputs[pasture]['Date_Seeding'],numpy=True)
-        if any(start_pas_seeding<i_break_z):
-            dry_sown_landuses = dry_sown_landuses | resown_pas
+    ##calculate which crop phases are dry sown (seeding_freq_r handles if phase is not resown every year)
+    propn_phase_drysown_r = np.any(landuse_r[:, na] == list(dry_sown_landuses), axis=-1) * pinp.seeding_freq_r
+    propn_phase_drysown_zr = propn_phase_drysown_r[na,:] #add singleton z so it can be combined with pasture below.
 
+    ##calculate which pas phases are dry sown (seeding_freq_r handles if phase is not resown every year)
+    ##if pasture sowing can occur before season break then need to add sown pasture landuses to dry sown list
+    for pasture in sinp.general['pastures'][pinp.general['pas_inc_t']]:
+        start_pas_seeding = zfun.f_seasonal_inp(pinp.pasture_inputs[pasture]['Date_Seeding'],numpy=True)
+        pas_landuses = sinp.landuse['pasture_sets'][pasture]
+        phase_is_pas_r = np.any(landuse_r[:, na] == list(pas_landuses), axis=-1)
+        pas_phase_is_resown_r = phase_is_pas_r * pinp.seeding_freq_r
+        pas_phase_is_drysown_zr = pas_phase_is_resown_r * (start_pas_seeding<i_break_z)[:,na]
+        propn_phase_drysown_zr = propn_phase_drysown_zr + pas_phase_is_drysown_zr
 
     ##p_phase_area_transfers is a True/False and is False in the p7 period immediately preceding the break of season
     ## for each weather-year (z). To force a v_phase_change (to current season land-use or to PNC) at the break.
     ## Dry sown phases can't transfer between seasons but they can at break of the medium and late seasons.
+    ## If seeding occurs only a proportion of the time then some of the phase can tranfer across season start but some cant.
     ###first calculate which p7 is break for each season
     start_date_p7z = per.f_season_periods()[:-1, :]  # remove end date of last period
     end_date_p7z = per.f_season_periods()[1:, :]
@@ -249,14 +256,12 @@ def f_phase_link_params(params):
     ###first calculate which p7 is break for each season
     next_period_is_seasonstart_p7z = np.roll(start_date_p7z==start_date_p7z[0,:], shift=-1, axis=0) #have to do it this way because for 'typ' break of season may not be a node.
     next_period_isnot_seasonstart_p7z = np.logical_not(next_period_is_seasonstart_p7z)
-    ###third calculate which phases are dry sown
-    phase_is_drysown_r = np.any(landuse_r[:,na]==list(dry_sown_landuses), axis=-1)
-    ###calculate if period is transfer at season break this is false for everything except dry sown phases
-    transfer_break_p7zr = np.logical_or(next_period_isnot_break_p7z[...,na], phase_is_drysown_r)
+    ###calculate if period is transfer at season break this is 0 for everything except dry sown phases
+    transfer_break_p7zr = np.minimum(1, next_period_isnot_break_p7z[...,na] + propn_phase_drysown_zr)
     ###calculate if period is transfer at season start - this is true for all phases except dry sown ones
-    transfer_seasonstart_p7zr =np.logical_or(next_period_isnot_seasonstart_p7z[...,na], np.logical_not(phase_is_drysown_r))
+    transfer_seasonstart_p7zr = np.minimum(1, next_period_isnot_seasonstart_p7z[...,na] + (1 - propn_phase_drysown_zr))
     ###combine
-    p_phase_area_transfers_p7zr = np.logical_and(transfer_break_p7zr, transfer_seasonstart_p7zr)
+    p_phase_area_transfers_p7zr = transfer_break_p7zr * transfer_seasonstart_p7zr
 
     ##create mask to control what phases can be changed in each p7
     phase_can_increase_kp7 = pinp.general['i_phase_can_increase_kp7'] #input to control what landuses can change_increase in each p7
@@ -274,7 +279,7 @@ def f_phase_link_params(params):
     ### required because the history constraint doesnt exist between season start and break of season so that last yrs
     ### phase can cary over in the medium and later break so that dry pasture and stubble can still be grazed
     season_broken_p7z = end_date_p7z > i_break_z #has the season broken before the end of the given p7
-    phase_can_increase_before_brk_p7zr = np.logical_or(phase_is_drysown_r, season_broken_p7z[...,na])
+    phase_can_increase_before_brk_p7zr = np.logical_or(propn_phase_drysown_zr>0, season_broken_p7z[...,na])
     phase_can_increase_p7zr = np.logical_and(phase_can_increase_p7r[:,na,:], phase_can_increase_before_brk_p7zr)
 
     ##make params
