@@ -462,7 +462,8 @@ def f_fert_passes():
 
     ##fixed fert (fert that is applied to every phase) - currently this does not have season axis so need to reindex to add season axis
     fert_passes_rkz_n = fert_passes_rk_zn.stack(level=0)
-    fixed_fert_passes_rkz_n = pd.DataFrame(pinp.crop['i_fixed_fert_passes'][1], index=fert_passes_rkz_n.index, columns=pinp.crop['i_fixed_fert'][0:1], dtype=float)
+    lime_passes_yearly = pinp.crop['i_lime_freq'] #proportion of lime application each year (cost is allocated equally across each year of rotation)
+    fixed_fert_passes_rkz_n = pd.DataFrame(lime_passes_yearly, index=fert_passes_rkz_n.index, columns=['lime'], dtype=float)
     fert_passes_rkz_n = pd.concat([fert_passes_rkz_n, fixed_fert_passes_rkz_n], axis=1).groupby(axis=1, level=0).sum()
 
     ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
@@ -603,7 +604,8 @@ def f_fert_cost(r_vals):
 
     ##fixed fert (fert that is applied to every phase) - currently this does not have season axis so need to reindex to add season axis
     base_fert_rkz_n = base_fert_rk_zn.stack(level=0)
-    fixed_fert_rkz_n = pd.DataFrame(pinp.crop['i_fixed_fert'][1], index=base_fert_rkz_n.index, columns=pinp.crop['i_fixed_fert'][0:1], dtype=float)
+    lime_cost_yearly = pinp.crop['i_lime'] * pinp.crop['i_lime_freq'] #workout the cost of liming each year (cost is allocated equally across each year of rotation)
+    fixed_fert_rkz_n = pd.DataFrame(lime_cost_yearly, index=base_fert_rkz_n.index, columns=['lime'], dtype=float)
     base_fert_rkz_n = pd.concat([base_fert_rkz_n, fixed_fert_rkz_n], axis=1).groupby(axis=1, level=0).sum()
 
     ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
