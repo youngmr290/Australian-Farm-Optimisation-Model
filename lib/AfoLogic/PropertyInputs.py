@@ -319,8 +319,10 @@ def f_property_inp_sa(pinp_defaults):
     ###sav
     crop['i_poc_inc'] = fun.f_sa(crop['i_poc_inc'], sen.sav['poc_inc'], 5)
     general['pas_inc_t'] = fun.f_sa(general['pas_inc_t'], sen.sav['pas_inc_t'], 5)
+    for t, pasture in enumerate(sinp.general['pastures']):
+        general['pas_inc_t'][t] &= any(x in sinp.landuse['pasture_sets'][pasture] for x in sinp.general['i_idx_k2'][general['i_pas_landuse_inc_k2']]) #exclude pasture type if there is no active landuses.
 
-    for pasture in sinp.general['pastures'][general['pas_inc_t']]: #all pasture inputs are adjusted even if a given pasture is not included
+    for pasture in sinp.general['pastures'][general['pas_inc_t']]:
         ###sav
         ###SAM
         pasture_inputs[pasture]['GermStd'] = fun.f_sa(pasture_inputs[pasture]['GermStd'], sen.sam[('germ',pasture)])
