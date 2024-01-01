@@ -444,11 +444,17 @@ def f_fert_passes():
         ###mask r - need to do this now so that phases_df line up because phases_df has already been masked
         fert_passes = fert_passes.loc[mask_r,:]
         fert_passes_rk_zn = fert_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
+        ###nap fert scalar
+        nap_fert_scalar_r = pd.Series(pinp.crop['i_nap_fert_scalar_r'][mask_r], phases_df.index)
 
     else:
         ###Sim version
         fert_passes_rk_zn = f1_sim_inputs(sheet='No Fert Applications', index=[0,1], header=[0,1])
         fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
+        ###nap fert scalar
+        nap_fert_scalar_r = f1_sim_inputs(sheet='NAP Fert Scalar')
+        nap_fert_scalar_r = nap_fert_scalar_r.loc[mask_r]
+
     ###Mask z axis
     fert_passes_rk_zn = zfun.f_seasonal_inp(fert_passes_rk_zn, axis=1, level=0)
     ###rename index
@@ -459,14 +465,8 @@ def f_fert_passes():
     fixed_fert_passes_rkz_n = pd.DataFrame(pinp.crop['i_fixed_fert_passes'][1], index=fert_passes_rkz_n.index, columns=pinp.crop['i_fixed_fert'][0:1], dtype=float)
     fert_passes_rkz_n = pd.concat([fert_passes_rkz_n, fixed_fert_passes_rkz_n], axis=1).groupby(axis=1, level=0).sum()
 
-    ##landuse specific fert (currently this is just pasture fert ie pas fert is irrelevant of rotation history) - currently this does not have season axis so need to reindex to add season axis
-    landuse_fert_passes_k_n = pinp.crop['i_pas_fert_passes']
-    landuse_fert_passes_rkz_n = landuse_fert_passes_k_n.reindex(fert_passes_rkz_n.index, axis=0, level=1)
-    fert_passes_rkz_n = pd.concat([fert_passes_rkz_n, landuse_fert_passes_rkz_n], axis=1).groupby(axis=1, level=0).sum()
-
     ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
-    nap_fert_passes_scalar_k = pinp.crop['i_nap_fert_passes_scalar_k'].squeeze()
-    nap_fert_passes_rkz_n = fert_passes_rkz_n.mul(nap_fert_passes_scalar_k, axis=0, level=1)
+    nap_fert_passes_rkz_n = fert_passes_rkz_n.mul(nap_fert_scalar_r, axis=0, level=0)
 
     ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
     keys_n = uinp.general['i_fert_idx']
@@ -585,11 +585,17 @@ def f_fert_cost(r_vals):
         base_fert = base_fert.loc[mask_r,:]
         ###add landuse to index
         base_fert_rk_zn = base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
+        ###nap fert scalar
+        nap_fert_scalar_r = pd.Series(pinp.crop['i_nap_fert_scalar_r'][mask_r], phases_df.index)
     else:
         ###Sim version
         base_fert_rk_zn = f1_sim_inputs(sheet='Fert Applied', index=[0,1], header=[0,1])
         ###mask r
         base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
+        ###nap fert scalar
+        nap_fert_scalar_r = f1_sim_inputs(sheet='NAP Fert Scalar')
+        nap_fert_scalar_r = nap_fert_scalar_r.loc[mask_r]
+
     ###Mask z axis
     base_fert_rk_zn = zfun.f_seasonal_inp(base_fert_rk_zn, axis=1, level=0)
     ###rename index
@@ -600,14 +606,8 @@ def f_fert_cost(r_vals):
     fixed_fert_rkz_n = pd.DataFrame(pinp.crop['i_fixed_fert'][1], index=base_fert_rkz_n.index, columns=pinp.crop['i_fixed_fert'][0:1], dtype=float)
     base_fert_rkz_n = pd.concat([base_fert_rkz_n, fixed_fert_rkz_n], axis=1).groupby(axis=1, level=0).sum()
 
-    ##landuse specific fert (currently this is just pasture fert ie pas fert is irrelevant of rotation history) - currently this does not have season axis so need to reindex to add season axis
-    landuse_fert_k_n = pinp.crop['i_pas_fert']
-    landuse_fert_rkz_n = landuse_fert_k_n.reindex(base_fert_rkz_n.index, axis=0, level=1)
-    base_fert_rkz_n = pd.concat([base_fert_rkz_n, landuse_fert_rkz_n], axis=1).groupby(axis=1, level=0).sum()
-
     ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
-    nap_fert_scalar_k = pinp.crop['i_nap_fert_scalar_k'].squeeze()
-    nap_fert_rkz_n = base_fert_rkz_n.mul(nap_fert_scalar_k, axis=0, level=1)
+    nap_fert_rkz_n = base_fert_rkz_n.mul(nap_fert_scalar_r, axis=0, level=0)
 
     ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
     keys_n = uinp.general['i_fert_idx']
