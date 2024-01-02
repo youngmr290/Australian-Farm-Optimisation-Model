@@ -254,7 +254,7 @@ def f_property_inp_sa(pinp_defaults):
     crop['user_crop_rot'] = fun.f_sa(crop['user_crop_rot'], sen.sav['pinp_rot'], 5)
     ####r axis SAVs need special handling because rotations can be added in the web app therefore len_r needs to be dynamic
     if (sen.sav['user_rotphases'] != '-').all():
-#rotation info gets complete overwrite when coming from web app
+        ####rotation info gets complete overwrite when coming from web app
         index = [''.join(x) for x in sen.sav['user_rotphases'][1:].astype(str)]
         web_app_rots = pd.DataFrame(sen.sav['user_rotphases'][1:,1:], index=sen.sav['user_rotphases'][1:,0], columns=sen.sav['user_rotphases'][0,1:])
         crop['fixed_rotphases'] = web_app_rots
@@ -274,6 +274,8 @@ def f_property_inp_sa(pinp_defaults):
         crop['fert_passes'] = fun.f_sa(crop['fert_passes'][0:len_r], sen.sav['fert_passes_R_nz'][0:len_r,:], 5, pandas=True)
         crop['chem_cost'] = fun.f_sa(crop['chem_cost'][0:len_r], sen.sav['chem_R_nz'][0:len_r], 5, pandas=True)
         crop['chem'] = fun.f_sa(crop['chem'][0:len_r], sen.sav['chem_passes_R_nz'][0:len_r,:],5, pandas=True)
+    crop['i_lime'] = fun.f_sa(crop['i_lime'], sen.sav['lime_cost'], 5)
+    crop['i_lime_freq'] = fun.f_sa(crop['i_lime_freq'], sen.sav['liming_freq'], 5)
     crop['yield_by_lmu'] = fun.f_sa(crop['yield_by_lmu'], sen.sav['lmu_yield_adj_kl'], 5)
     crop['fert_by_lmu'] = fun.f_sa(crop['fert_by_lmu'], sen.sav['lmu_fert_adj_nl'], 5)
     crop['chem_by_lmu'] = fun.f_sa(crop['chem_by_lmu'], sen.sav['lmu_chem_adj_l'], 5)

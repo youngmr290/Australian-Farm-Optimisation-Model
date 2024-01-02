@@ -268,6 +268,8 @@ def create_sa():
     sav['lmu_yield_adj_kl'] = np.full((len_k, len_l), '-', dtype=object)    # SA value for yield adjustment by LMU
     sav['lmu_fert_adj_nl'] = np.full((len_n, len_l), '-', dtype=object)    # SA value for fert adjustment by LMU
     sav['lmu_chem_adj_l'] = np.full(len_l, '-', dtype=object)    # SA value for chem adjustment by LMU
+    sav['lime_cost'] = '-'  #cost ($/ha) of lime
+    sav['liming_freq'] = '-'  #number of years between applications
     ##SAM
     sam['crop_yield_k'] = np.ones(len_k, dtype='float64')    # SA multiplier for all rotation yield
     sam['crop_fert_kn'] = np.ones((len_k, len_n), dtype='float64') #SA multipler on crop fertiliser
