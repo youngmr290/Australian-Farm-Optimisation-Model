@@ -7,7 +7,7 @@ import os
 from ..AfoLogic import ReportFunctions as rfun
 from ..AfoLogic import relativeFile
 
-
+#todo should be able to simplify this module using loops with a couple of additions for the unique reports ie writing to excel needs to be diffferent for reports where multiple tables are written to the same sheet. Maybe loop over all report that are standard then do the weird ones by hand after.
 def f_create_report_dfs(non_exist_trials):
     reports = {}
     ##create empty df to stack each trial results into
@@ -100,11 +100,14 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_drydmd"] = pd.DataFrame()  # dmd of dry pas
     reports["stacked_avedryfoo"] = pd.DataFrame()  # Average Foo of dry pas
     reports["stacked_mvf"] = pd.DataFrame()  # Marginal value of feed
-    
+    reports["stacked_pasture_area"] = pd.DataFrame()  # web app analysis
+    reports["stacked_stocking_rate"] = pd.DataFrame()  # web app analysis
+    reports["stacked_legume"] = pd.DataFrame()  # web app analysis
+
     return reports
 
 def f_concat_reports(stacked_reports, reports, report_run, trial_name):
-    stacked_infeasible = rfun.f_append_dfs(stacked_reports["stacked_infeasible"], reports["infeasible"])
+    stacked_reports["stacked_infeasible"] = rfun.f_append_dfs(stacked_reports["stacked_infeasible"], reports["infeasible"])
 
     if report_run.loc['run_summary', 'Run']:
         summary = pd.concat([reports["summary"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -454,6 +457,18 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         mvf = pd.concat([reports["mvf"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_mvf"] = rfun.f_append_dfs(stacked_reports["stacked_mvf"], mvf)
     
+    if report_run.loc['run_pasture_area', 'Run']:
+        pasture_area = pd.concat([reports["pasture_area"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_pasture_area"] = rfun.f_append_dfs(stacked_reports["stacked_pasture_area"], pasture_area)
+
+    if report_run.loc['run_stocking_rate', 'Run']:
+        stocking_rate = pd.concat([reports["stocking_rate"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_stocking_rate"] = rfun.f_append_dfs(stacked_reports["stacked_stocking_rate"], stocking_rate)
+
+    if report_run.loc['run_legume', 'Run']:
+        legume = pd.concat([reports["legume"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_legume"] = rfun.f_append_dfs(stacked_reports["stacked_legume"], legume)
+
     return stacked_reports
 
 def f_save_reports(report_run, reports, processor):
@@ -662,6 +677,12 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_cropcon_available"], 'cropcon_avail', df_settings, option=xl_display_mode)
     if report_run.loc['run_mvf', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_mvf"], 'mvf', df_settings, option=xl_display_mode)
+    if report_run.loc['run_pasture_area', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_pasture_area"], 'pasture_area_analysis', df_settings, option=xl_display_mode)
+    if report_run.loc['run_stocking_rate', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_stocking_rate"], 'stocking_rate_analysis', df_settings, option=xl_display_mode)
+    if report_run.loc['run_legume', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_legume"], 'lupin_analysis', df_settings, option=xl_display_mode)
 
 
     df_settings.to_excel(writer, 'df_settings')

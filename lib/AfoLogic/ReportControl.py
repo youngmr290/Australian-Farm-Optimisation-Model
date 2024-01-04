@@ -1038,6 +1038,13 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         #returns consumption in each FP
         reports["mvf"] = rfun.f_mvf_summary(lp_vars)
 
+    ##special reports for web app
+    if report_run.loc['run_pasture_area', 'Run']:
+        reports["pasture_area"] = rfun.f_pasture_area_analysis(lp_vars,r_vals,"Summary")
+    if report_run.loc['run_stocking_rate', 'Run']:
+        reports["stocking_rate"] = rfun.f_stocking_rate_analysis(lp_vars,r_vals,"Summary")
+    if report_run.loc['run_legume', 'Run']:
+        reports["legume"] = rfun.f_lupin_analysis(lp_vars,r_vals,"Summary")
     return reports
 
 

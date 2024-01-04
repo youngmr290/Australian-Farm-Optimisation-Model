@@ -226,7 +226,7 @@ def f_grain_price(r_vals):
 #########################
 #biomass                #
 #########################
-def f_rot_biomass(for_stub=False, for_insurance=False):
+def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     '''
     Calculates the biomass for each rotation. Accounting for LMU, arable area and frost.
 
@@ -297,6 +297,11 @@ def f_rot_biomass(for_stub=False, for_insurance=False):
     crop_yield_k = pd.Series(sen.sam['crop_yield_k'], index=keys_k)
     base_yields_rk_z = base_yields_rk_z.mul(crop_yield_k, axis=0, level=1).fillna(0)
     base_yields_rkz = base_yields_rk_z.stack()
+
+    ##save expected yield r_val used for web app report
+    if r_vals is not None:
+        base_yields_k_z = base_yields_rk_z.groupby(level=1).mean()
+        fun.f1_make_r_val(r_vals, base_yields_k_z, 'base_yields_k_z')
 
     ##colate other info
     biomass_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
@@ -1447,7 +1452,7 @@ def f_sow_prov():
 def f1_crop_params(params,r_vals):
     cost, increment_cost, wc, increment_wc = f1_rot_cost(r_vals)
     spreader_sprayer_dep_p7zlr, increment_spreader_sprayer_dep_p7zlr = f_spraying_spreading_dep()
-    biomass = f_rot_biomass()
+    biomass = f_rot_biomass(r_vals=r_vals)
     biomass2product_kls2 = f_biomass2product(r_vals)
     propn = f_grain_pool_proportions()
     grain_price, grain_wc = f_grain_price(r_vals)

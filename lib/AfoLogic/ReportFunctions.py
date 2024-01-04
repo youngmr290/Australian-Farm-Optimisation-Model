@@ -640,7 +640,6 @@ def f_summary(lp_vars, r_vals, trial):
     summary_df.loc[trial, 'SR stdev'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[3]
     ##pasture %
     summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
-    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
     Pas_max = f_area_summary(lp_vars, r_vals, option=5)[1]
     Pas_min = f_area_summary(lp_vars, r_vals, option=5)[2]
     summary_df.loc[trial, 'Pas % max'] = Pas_max * np.logical_not(Pas_min==Pas_max) #sets min/max to 0 if range is 0 so the cols get hidden
@@ -2601,6 +2600,61 @@ def f_grazing_summary(lp_vars, r_vals):
 
     graze_info_qsztlp6o_ig = f_numpy2df(graze_info_iqsgop6lzt, keys_iqsgop6lzt, [1,2,7,8,6,5,4], [0,3])
     return graze_info_qsztlp6o_ig
+
+############################
+# reports for web app      #
+############################
+def f_pasture_area_analysis(lp_vars, r_vals, trial):
+    '''Returns a simple 1 row summary of the trial (season results are averaged)'''
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Pas area', 'Sup'])
+    ##profit - no minroe and asset
+    summary_df.loc[trial, 'Profit'] = f_profit(lp_vars, r_vals, option=0)
+    ##pasture area
+    pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
+    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+    summary_df.loc[trial, 'Pas area'] = np.sum(pas_area_qsz * z_prob_qsz.ravel())
+    ##supplement
+    summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
+    return summary_df
+
+def f_stocking_rate_analysis(lp_vars, r_vals, trial):
+    '''Returns a simple 1 row summary of the trial (season results are averaged)'''
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'SR', 'Pas area', 'Sup/DSE'])
+    ##profit - no minroe and asset
+    summary_df.loc[trial, 'Profit'] = f_profit(lp_vars, r_vals, option=0)
+    ##stocking rate
+    sr = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
+    summary_df.loc[trial, 'SR'] = sr
+    ##pasture area
+    pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
+    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+    total_pas_are = np.sum(pas_area_qsz * z_prob_qsz.ravel())
+    summary_df.loc[trial, 'Pas area'] = total_pas_are
+    ##supplement
+    total_sup = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
+    summary_df.loc[trial, 'Sup/DSE'] = total_sup * 1000 / (total_pas_are * sr)
+    return summary_df
+
+def f_lupin_analysis(lp_vars, r_vals, trial):
+    '''Returns a simple 1 row summary of the trial (season results are averaged)'''
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Lupin area', 'Expected Income'])
+    ##profit - no minroe and asset
+    summary_df.loc[trial, 'Profit'] = f_profit(lp_vars, r_vals, option=0)
+    ##lupin area
+    landuse_area_qsz_k = f_area_summary(lp_vars, r_vals, option=4)
+    lupin_area_qsz = landuse_area_qsz_k.loc[:,"l"]
+    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+    total_lupin_area = np.sum(lupin_area_qsz * z_prob_qsz.ravel())
+    summary_df.loc[trial, 'Lupin area'] = total_lupin_area
+    ##expected lupin income - uses average lupin yield in all rotations on the base lmu (this matches the yield graph on web app)
+    lupin_price_p7z = r_vals['crop']['grain_price'].loc[("l","Harv","firsts"),:]
+    lupin_price_z = lupin_price_p7z.groupby(level=1).sum() #sum p7 - price should only exist in one p7 period
+    lupin_price = np.sum(lupin_price_z.values * z_prob_qsz) #avevrage price across z
+    expected_yields_k_z = r_vals['crop']['base_yields_k_z']
+    expected_lupin_yield_z = expected_yields_k_z.loc["l",:]
+    expected_lupin_yield = np.sum(expected_lupin_yield_z.values * z_prob_qsz) #avevrage yield across z.
+    summary_df.loc[trial, 'Expected Income'] = lupin_price * expected_lupin_yield/1000
+    return summary_df
 
 ############################
 # functions for numpy arrays#
