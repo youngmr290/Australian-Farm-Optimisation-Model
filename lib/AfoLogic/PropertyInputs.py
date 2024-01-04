@@ -258,13 +258,13 @@ def f_property_inp_sa(pinp_defaults):
         index = [''.join(x) for x in sen.sav['user_rotphases'][1:].astype(str)]
         web_app_rots = pd.DataFrame(sen.sav['user_rotphases'][1:,1:], index=sen.sav['user_rotphases'][1:,0], columns=sen.sav['user_rotphases'][0,1:])
         crop['fixed_rotphases'] = web_app_rots
-        crop['i_user_rot_inc_r'] = sen.sav['rot_inc_R']
-        crop['i_seeding_freq_r'] = sen.sav['sowing_freq_R']
-        crop['yields'] = pd.DataFrame(sen.sav['yield_Rz'], index=index, columns=crop['yields'].columns)
-        crop['fert'] = pd.DataFrame(sen.sav['fert_R_nz'], index=index, columns=crop['fert'].columns)
-        crop['fert_passes'] = pd.DataFrame(sen.sav['fert_passes_R_nz'], index=index, columns=crop['fert_passes'].columns)
-        crop['chem_cost'] = pd.DataFrame(sen.sav['chem_R_nz'], index=index, columns=crop['chem_cost'].columns)
-        crop['chem'] = pd.DataFrame(sen.sav['chem_passes_R_nz'], index=index, columns=crop['chem'].columns)
+        crop['i_user_rot_inc_r'] = sen.sav['rot_inc_R'].astype(bool)
+        crop['i_seeding_freq_r'] = sen.sav['sowing_freq_R'].astype(float)
+        crop['yields'] = pd.DataFrame(sen.sav['yield_Rz'], index=index, columns=crop['yields'].columns, dtype=float)
+        crop['fert'] = pd.DataFrame(sen.sav['fert_R_nz'], index=index, columns=crop['fert'].columns, dtype=float)
+        crop['fert_passes'] = pd.DataFrame(sen.sav['fert_passes_R_nz'], index=index, columns=crop['fert_passes'].columns, dtype=float)
+        crop['chem_cost'] = pd.DataFrame(sen.sav['chem_R_nz'], index=index, columns=crop['chem_cost'].columns, dtype=float)
+        crop['chem'] = pd.DataFrame(sen.sav['chem_passes_R_nz'], index=index, columns=crop['chem'].columns, dtype=float)
     else:
         len_r = len(crop['fixed_rotphases'])
         crop['i_user_rot_inc_r'] = fun.f_sa(crop['i_user_rot_inc_r'][0:len_r], sen.sav['rot_inc_R'][0:len_r], 5)
