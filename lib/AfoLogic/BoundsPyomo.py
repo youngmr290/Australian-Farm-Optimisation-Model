@@ -66,7 +66,7 @@ def f1_boundarypyomo_local(params, model):
     total_pasture_bound_inc = sen.sav['bnd_total_pas_area_percent'] != '-'  #bound on total pasture (hence also total crop)
     pasture_lmu_bound_inc = np.any(sen.sav['bnd_pas_area_l'] != '-')
     landuse_bound_inc = False #bound on area of each landuse (which is the sum of all the phases for that landuse)
-    crop_area_bound_inc = np.any(sen.sav['bnd_crop_area'] != '-')  # controls if crop area bnd is included.(which is the sum of all the phases for that crop)
+    crop_area_bound_inc = np.any(sen.sav['bnd_crop_area'] != '-') or np.any(sen.sav['bnd_crop_area_percent'] != '-')  # controls if crop area bnd is included.(which is the sum of all the phases for that crop)
     #todo need to make this input below in uinp. Then test the constraint works as expected.
     emissions_bnd_inc = False#uinp.emissions['co2e_limit']>0  # controls if total farm emissions are constrained.
 
@@ -668,16 +668,20 @@ def f1_boundarypyomo_local(params, model):
                     return pe.Constraint.Skip
             model.con_landuse_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_landuses, model.s_season_types, rule=k_bound, doc='bound on total pasture area')
 
-        ##crop bound
+        ##crop bound - this can either be entered as a % of farm area or ha
         ###build bound if turned on
         if crop_area_bound_inc:
-            ###setbound
-            crop_area_bound_k1 = fun.f_sa(np.array([999]), sen.sav['bnd_crop_area'], 5)  # 999 is arbitrary default value which mean skip constraint
+            ###setbound using % of farm area
+            crop_area_percent_k1 = fun.f_sa(np.array([99999]), sen.sav['bnd_crop_area_percent'], 5)  # 99999 is arbitrary default value which mean skip constraint
+            crop_area_bound_k1 = np.full_like(crop_area_percent_k1,99999)
+            crop_area_bound_k1[crop_area_percent_k1!=99999] = (crop_area_percent_k1 * sum(model.p_area[l] for l in model.s_lmus))[crop_area_percent_k1!=99999]
+            ###setbound using ha of farm area
+            crop_area_bound_k1 = fun.f_sa(crop_area_bound_k1, sen.sav['bnd_crop_area'], 5)
             crop_area_bound_k1 = dict(zip(model.s_crops, crop_area_bound_k1))
             ###constraint
             l_p7 = list(model.s_season_periods)
             def k1_bound(model, q, s, p7, k1, z):
-                if p7 == l_p7[-1] and crop_area_bound_k1[k1]!=999 and pe.value(model.p_wyear_inc_qs[q, s]):  #bound will not be built if param == 999
+                if p7 == l_p7[-1] and crop_area_bound_k1[k1]!=99999 and pe.value(model.p_wyear_inc_qs[q, s]):  #bound will not be built if param == 99999
                     return(
                            sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_landuse_area[r, k1] for r in model.s_phases for l in model.s_lmus)
                            == crop_area_bound_k1[k1])
