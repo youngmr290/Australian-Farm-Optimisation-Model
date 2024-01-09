@@ -641,21 +641,20 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["lamb_survival"] = rfun.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                              , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
     if report_run.loc['run_weanper', 'Run']:
-        #todo there is an error here if drys are sold at scanning. We can't think of an easy way to fix it. (note if scan=4 then birth dvp may be different across e axis)
         #with the current structure w CANNOT be reported. 23Apr22 - seems to be working when not using lp_vars
         # problem could be that dams can change w slice between joining (nfoet) and lambing (nyatf)
         #axes are qsk2tvanwziy1g1
         option = f_update_default_controls(user_controls, 'weanper', 'option', 1)
-        index = f_update_default_controls(user_controls, 'weanper', 'index', [4])  #v
-        cols = f_update_default_controls(user_controls, 'weanper', 'cols', [11,9,0,1,8])   #g,i,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
+        index = f_update_default_controls(user_controls, 'weanper', 'index', [])
+        cols = f_update_default_controls(user_controls, 'weanper', 'cols', [])   #(needs t in report if no lp_vars)
         axis_slice = f_update_default_controls(user_controls, 'weanper', 'axis_slice', {})
         reports["weanper"] = rfun.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                        , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
     if report_run.loc['run_scanper', 'Run']:
         #axes are qsk2tvanwziy1g1
         option = f_update_default_controls(user_controls, 'scanper', 'option', 2)
-        index = f_update_default_controls(user_controls, 'scanper', 'index', [4])  #v
-        cols = f_update_default_controls(user_controls, 'scanper', 'cols', [11,9,0,1,8])   #g,i,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
+        index = f_update_default_controls(user_controls, 'scanper', 'index', [])
+        cols = f_update_default_controls(user_controls, 'scanper', 'cols', [])   #(needs t in report if no lp_vars)
         axis_slice = f_update_default_controls(user_controls, 'scanper', 'axis_slice', {})
         reports["scanper"] = rfun.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                        , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -663,7 +662,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         #axes are qsk2tvanwziy1g1
         option = f_update_default_controls(user_controls, 'dry_propn', 'option', 3)
         index = f_update_default_controls(user_controls, 'dry_propn', 'index', [4])  #v
-        cols = f_update_default_controls(user_controls, 'dry_propn', 'cols', [11,9,0,1,8])   #g,i,q,s & z [11,2]      #g & k2 (needs k2 in the current form).
+        cols = f_update_default_controls(user_controls, 'dry_propn', 'cols', [11,9,0,1,8])   #g,i,q,s & z (needs t in report if no lp_vars)
         axis_slice = f_update_default_controls(user_controls, 'dry_propn', 'axis_slice', {})
         reports["dry_propn"] = rfun.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                          , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)

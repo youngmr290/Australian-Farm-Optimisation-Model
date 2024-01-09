@@ -271,7 +271,7 @@ def f_update(existing_value, new_value, mask_for_new):
 
     return updated
 
-def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den_weights=1):
+def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den_weights=1, den_assoc=None, assoc_axis=0):
     '''
     Calculates weighted average (similar to np.average however this will handle:
         if the sum of the weights is 0 (np.average doesn't handle this)
@@ -294,8 +294,12 @@ def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den
         ##for some situations (production) if numbers are 0 we don't want to return 0 we want to return the original value
         weights=f_update(weights,1,np.all(weights==0, axis=axis, keepdims=True))
     weighted_array = np.sum(array * weights, axis=axis, keepdims=keepdims)
-    weights = np.broadcast_to(np.sum(weights * den_weights, axis=axis, keepdims=keepdims), weighted_array.shape)
-    # den_weight = np.broadcast_to(np.sum(den_weight, axis=axis, keepdims=keepdims), weighted_array.shape)
+    ##denom
+    weights = weights * den_weights
+    if den_assoc is not None:
+        weights = np.take_along_axis(weights, den_assoc, axis=assoc_axis)
+    weights = np.broadcast_to(np.sum(weights, axis=axis, keepdims=keepdims), weighted_array.shape)
+    ##take average
     averaged_array = np.zeros_like(weighted_array)
     mask = weights!=0
     averaged_array[mask] = weighted_array[mask] / weights[mask]
