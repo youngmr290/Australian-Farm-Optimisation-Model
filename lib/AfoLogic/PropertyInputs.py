@@ -260,6 +260,7 @@ def f_property_inp_sa(pinp_defaults):
         crop['fixed_rotphases'] = web_app_rots
         crop['i_user_rot_inc_r'] = sen.sav['rot_inc_R'].astype(bool)
         crop['i_seeding_freq_r'] = sen.sav['sowing_freq_R'].astype(float)
+        crop['i_nap_fert_scalar_r'] = 1 - crop['i_seeding_freq_r'] #assumption is that non arable area is only fertilised for non-resown phases.
         crop['yields'] = pd.DataFrame(sen.sav['yield_Rz'], index=index, columns=crop['yields'].columns, dtype=float)
         crop['fert'] = pd.DataFrame(sen.sav['fert_R_nz'], index=index, columns=crop['fert'].columns, dtype=float)
         crop['fert_passes'] = pd.DataFrame(sen.sav['fert_passes_R_nz'], index=index, columns=crop['fert_passes'].columns, dtype=float)
