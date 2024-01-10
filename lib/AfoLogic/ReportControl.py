@@ -313,8 +313,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         keys = 'dams_keys_qsk2tvanwziy1g1'
         arith = f_update_default_controls(user_controls, 'cfw_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'cfw_dams', 'index', [4])      #DVP
-        cols = f_update_default_controls(user_controls, 'cfw_dams', 'cols', [2, 3])     #k2, t
-        axis_slice = f_update_default_controls(user_controls, 'cfw_dams', 'axis_slice', {})
+        cols = f_update_default_controls(user_controls, 'cfw_dams', 'cols', [])
+        axis_slice = f_update_default_controls(user_controls, 'cfw_dams', 'axis_slice', {4: [9, 10, 1]}) #dvp9 - 3.5yo
         reports["cfw_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_fd_dams', 'Run']:
@@ -325,8 +325,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         keys = 'dams_keys_qsk2tvanwziy1g1'
         arith = f_update_default_controls(user_controls, 'fd_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'fd_dams', 'index', [4])      #DVP
-        cols = f_update_default_controls(user_controls, 'fd_dams', 'cols', [11,3,2,8]) #g,t,k2,w
-        axis_slice = f_update_default_controls(user_controls, 'fd_dams', 'axis_slice', {})
+        cols = f_update_default_controls(user_controls, 'fd_dams', 'cols', [])
+        axis_slice = f_update_default_controls(user_controls, 'fd_dams', 'axis_slice', {4: [9, 10, 1]}) #dvp9 - 3.5yo
         reports["fd_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_cfw_offs', 'Run']:
@@ -414,7 +414,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         keys = 'dams_keys_qsk2tvpaebnwziy1g1'
         arith = f_update_default_controls(user_controls, 'ebw_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'ebw_dams', 'index', [5])      #p
-        cols = f_update_default_controls(user_controls, 'ebw_dams', 'cols', [8]) #b1
+        cols = f_update_default_controls(user_controls, 'ebw_dams', 'cols', []) #b1
         axis_slice = f_update_default_controls(user_controls, 'ebw_dams', 'axis_slice', {})
         reports['ebw_dams'] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
                                  , na_weights=na_weights, prod_weights=prod_weights, na_prodweights=na_prodweights
@@ -566,7 +566,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         keys = 'offs_keys_qsk3k5tvpnwzidaebxyg3'
         arith = f_update_default_controls(user_controls, 'ebw_offs', 'arith', 1)
         index = f_update_default_controls(user_controls, 'ebw_offs', 'index', [6])  #p
-        cols = f_update_default_controls(user_controls, 'ebw_offs', 'cols', [17, 3, 15, 4])   #k5, g3, x, t
+        cols = f_update_default_controls(user_controls, 'ebw_offs', 'cols', [])
         axis_slice = f_update_default_controls(user_controls, 'ebw_offs', 'axis_slice', {})
         reports["ebw_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
