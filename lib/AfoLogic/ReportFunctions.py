@@ -758,6 +758,7 @@ def f_area_summary(lp_vars, r_vals, option):
         landuse_area_k_qszl = landuse_area_k_p7qszl.loc[:,landuse_area_k_p7qszl.columns.levels[0][-1].tolist()]
         landuse_area_k_qsz = landuse_area_k_qszl.groupby(axis=1, level=(0,1,2)).sum()
         landuse_area_qsz_k = landuse_area_k_qsz.T.round(2)
+        landuse_area_qsz_k = landuse_area_qsz_k.reindex(r_vals['pas']['keys_k'], axis=1).fillna(0) #expand to full k (incase landuses were masked out) and unused landuses get set to 0
         return landuse_area_qsz_k
 
     if option==5 or option==6 or option==7: #average % of pasture/cereal/canola in p7[-1]
@@ -2658,6 +2659,7 @@ def f_lupin_analysis(lp_vars, r_vals, trial):
     lupin_price_z = lupin_price_p7z.groupby(level=1).sum() #sum p7 - price should only exist in one p7 period
     lupin_price = np.sum(lupin_price_z.values * z_prob_qsz) #avevrage price across z
     expected_yields_k_z = r_vals['crop']['base_yields_k_z']
+    expected_yields_k_z = expected_yields_k_z.reindex(r_vals['pas']['keys_k'], axis=0).fillna(0)  # expand to full k (incase landuses were masked out) and unused landuses get set to 0
     expected_lupin_yield_z = expected_yields_k_z.loc["l",:]
     expected_lupin_yield = np.sum(expected_lupin_yield_z.values * z_prob_qsz) #avevrage yield across z.
     summary_df.loc[trial, 'Expected Income'] = lupin_price * expected_lupin_yield/1000
