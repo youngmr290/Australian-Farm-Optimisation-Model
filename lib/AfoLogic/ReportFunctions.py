@@ -2616,7 +2616,7 @@ def f_pasture_area_analysis(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
     summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Pas area', 'Sup'])
     ##profit - no minroe and asset
-    summary_df.loc[trial, 'Profit'] = f_profit(lp_vars, r_vals, option=0)
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
     ##pasture area
     pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
     z_prob_qsz = r_vals['zgen']['z_prob_qsz']
@@ -2629,10 +2629,10 @@ def f_stocking_rate_analysis(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
     summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'SR', 'Pas area', 'Sup/DSE'])
     ##profit - no minroe and asset
-    summary_df.loc[trial, 'Profit'] = f_profit(lp_vars, r_vals, option=0)
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
     ##stocking rate
     sr = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
-    summary_df.loc[trial, 'SR'] = sr
+    summary_df.loc[trial, 'SR'] = round(sr, 1)
     ##pasture area
     pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
     z_prob_qsz = r_vals['zgen']['z_prob_qsz']
@@ -2640,14 +2640,14 @@ def f_stocking_rate_analysis(lp_vars, r_vals, trial):
     summary_df.loc[trial, 'Pas area'] = total_pas_are
     ##supplement
     total_sup = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
-    summary_df.loc[trial, 'Sup/DSE'] = total_sup * 1000 / (total_pas_are * sr)
+    summary_df.loc[trial, 'Sup/DSE'] = round(total_sup * 1000 / (total_pas_are * sr),0)
     return summary_df
 
 def f_lupin_analysis(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
     summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Lupin area', 'Expected Income'])
     ##profit - no minroe and asset
-    summary_df.loc[trial, 'Profit'] = f_profit(lp_vars, r_vals, option=0)
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
     ##lupin area
     landuse_area_qsz_k = f_area_summary(lp_vars, r_vals, option=4)
     lupin_area_qsz = landuse_area_qsz_k.loc[:,"l"]
@@ -2662,7 +2662,7 @@ def f_lupin_analysis(lp_vars, r_vals, trial):
     expected_yields_k_z = expected_yields_k_z.reindex(r_vals['pas']['keys_k'], axis=0).fillna(0)  # expand to full k (incase landuses were masked out) and unused landuses get set to 0
     expected_lupin_yield_z = expected_yields_k_z.loc["l",:]
     expected_lupin_yield = np.sum(expected_lupin_yield_z.values * z_prob_qsz) #avevrage yield across z.
-    summary_df.loc[trial, 'Expected Income'] = lupin_price * expected_lupin_yield/1000
+    summary_df.loc[trial, 'Expected Income'] = round(lupin_price * expected_lupin_yield/1000, 0)
     return summary_df
 
 ############################
