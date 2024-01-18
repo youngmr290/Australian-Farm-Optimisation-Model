@@ -758,6 +758,7 @@ def f_area_summary(lp_vars, r_vals, option):
         landuse_area_k_qszl = landuse_area_k_p7qszl.loc[:,landuse_area_k_p7qszl.columns.levels[0][-1].tolist()]
         landuse_area_k_qsz = landuse_area_k_qszl.groupby(axis=1, level=(0,1,2)).sum()
         landuse_area_qsz_k = landuse_area_k_qsz.T.round(2)
+        landuse_area_qsz_k = landuse_area_qsz_k.reindex(r_vals['pas']['keys_k'], axis=1).fillna(0) #expand to full k (incase landuses were masked out) and unused landuses get set to 0
         return landuse_area_qsz_k
 
     if option==5 or option==6 or option==7: #average % of pasture/cereal/canola in p7[-1]
@@ -1688,7 +1689,8 @@ def f_profit(lp_vars, r_vals, option=0):
 
 def f_stock_pasture_summary(r_vals, build_df=True, keys=None, type=None, index=[], cols=[], arith=0,
                             prod=np.array([1]), na_prod=[], weights=None, na_weights=[], axis_slice={},
-                            na_denweights=[], den_weights=1, na_prodweights=[], prod_weights=1):
+                            na_denweights=[], den_weights=1, na_prodweights=[], prod_weights=1,
+                            den_assoc=None, na_den_assoc=[], assoc_axis=0):
     '''
 
     ..Note::
@@ -1718,6 +1720,7 @@ def f_stock_pasture_summary(r_vals, build_df=True, keys=None, type=None, index=[
     :key na_weights (optional, default = []): list: position to add new axis
     :key den_weights (optional, default = 1): str: key to variable used to weight the denominator in the weighted average (required p6 reporting)
     :key na_denweights (optional, default = []): list: position to add new axis
+    :key den_assoc (optional, default = None): str: key to variable used as an association (np.take_along) for the weight of the denominator in the weighted average (required for wean % report)
     :key prod_weights (optional, default = 1): str: keys to r_vals referencing array used to weight production.
     :key na_prodweights (optional, default = []): list: position to add new axis
     :key axis_slice (optional, default = {}): dict: keys (int) is the axis. value (list) is the start, stop and step of the slice
@@ -1745,7 +1748,11 @@ def f_stock_pasture_summary(r_vals, build_df=True, keys=None, type=None, index=[
     ##An error here means the key provided for weights does not exist in lp_vars
     ###using None as the default for weights so that an error is generated later if an Arith option is selected that requires weights
     if weights is not None:
-        weights = vars[weights]
+        try:
+            weights = vars[weights]
+        except KeyError: #sometimes when lp_vars are not included we want to use r_val as the weights
+            weights = r_vals[weights]
+
         ###set weights to 0 if very small number (otherwise it can show up in report when it shouldn't)
         weights[np.isclose(weights, 0)] = 0
 
@@ -1767,13 +1774,17 @@ def f_stock_pasture_summary(r_vals, build_df=True, keys=None, type=None, index=[
     if isinstance(den_weights, str):
         den_weights = r_vals[den_weights]
 
+    ##den accosiation - only use for weaning % report
+    if isinstance(den_assoc, str):
+        den_assoc = r_vals[den_assoc]
+
     ##other manipulation
-    prod, weights, den_weights, prod_weights = f_add_axis(prod, na_prod, prod_weights, na_prodweights, weights, na_weights, den_weights, na_denweights)
+    prod, weights, den_weights, prod_weights, den_assoc = f_add_axis(prod, na_prod, prod_weights, na_prodweights, weights, na_weights, den_weights, na_denweights, den_assoc, na_den_assoc)
     prod, prod_weights, weights, den_weights, keys = f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice)
     ##perform arith. if an axis is not reported it is included in the arith and the axis disappears
     report_idx = index + cols
     arith_axis = list(set(range(len(prod.shape))) - set(report_idx))
-    prod = f_arith(prod, prod_weights, weights, den_weights, arith, arith_axis)
+    prod = f_arith(prod, prod_weights, weights, den_weights, arith, arith_axis, den_assoc, assoc_axis)
     ##check for errors
     f_numpy2df_error(prod, weights, arith_axis, index, cols)
     if build_df:
@@ -1829,48 +1840,57 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
     elif option == 1:
         prod = 'nyatf_wean_k2tva1nw8ziyg1'
         na_prod = [0,1]
-        prod_weights = 'n_mated_k2Tva1nw8ziyg1'
-        na_prodweights = [0,1]
+        den_weights = 'n_mated_k2Tva1nw8ziyg1'
+        na_denweights = [0,1]
+        den_assoc = 'a_prev_matingv_wean_va1iyg1' #this is used to roll numbers from mating to weaning
+        na_den_assoc = [0,1,2,3,5,6,7]
+        assoc_axis = 4 #v
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
             na_weights = []
             arith = 1
         else:
-            weights = None
-            na_weights = []
-            arith = 4
+            weights = 'r_numbers_start_k2tva1nwziyg1'
+            na_weights = [0,1]
+            arith = 1
         keys = 'dams_keys_qsk2tvanwziy1g1'
 
     ###scan percent
     elif option == 2:
         prod = 'nfoet_scan_k2tva1nw8ziyg1'
         na_prod = [0,1]
-        prod_weights = 'n_mated_k2Tva1nw8ziyg1'
-        na_prodweights = [0,1]
+        den_weights = 'n_mated_k2Tva1nw8ziyg1'
+        na_denweights = [0,1]
+        den_assoc = 'a_prev_matingv_scan_va1iyg1' #this is used to roll numbers from mating to scan
+        na_den_assoc = [0,1,2,3,5,6,7]
+        assoc_axis = 4 #v
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
             na_weights = []
             arith = 1
         else:
-            weights = None
-            na_weights = []
-            arith = 4
+            weights = 'r_numbers_start_k2tva1nwziyg1'
+            na_weights = [0,1]
+            arith = 1
         keys = 'dams_keys_qsk2tvanwziy1g1'
 
     ###dry propn
     elif option == 3:
         prod = 'n_drys_k2tva1nw8ziyg1'
         na_prod = [0,1]
-        prod_weights = 'n_mated_k2Tva1nw8ziyg1'
-        na_prodweights = [0,1]
+        den_weights = 'n_mated_k2Tva1nw8ziyg1'
+        na_denweights = [0,1]
+        den_assoc = 'a_prev_matingv_scan_va1iyg1' #this is used to roll numbers from mating to scan
+        na_den_assoc = [0,1,2,3,5,6,7]
+        assoc_axis = 4 #v
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
             na_weights = []
             arith = 1
         else:
-            weights = None
-            na_weights = []
-            arith = 4
+            weights = 'r_numbers_start_k2tva1nwziyg1'
+            na_weights = [0,1]
+            arith = 1
         keys = 'dams_keys_qsk2tvanwziy1g1'
 
     ##calcs for survival
@@ -1890,25 +1910,13 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
 
     ##calc for wean % or scan % or dry %
     else:
-        ### The columns that describe an individual (initial) animal (a, y & k2- which was e&b) need to be summed
-        ### after the calculation, because the calculation (prod * prod_weights) returns the n_yatf, n_foet or # dry
-        ### per dam mated. These axes comprise a single dam mated and therefore must be summed rather than averaged.
-        ### These axes are excluded from the calculation by adding them to the columns being reported
-        cols_report = cols.copy()
-        k2_pos=2
-        a1_pos=5
-        y_pos=10
-        cols_summed = [k2_pos, a1_pos, y_pos]
-        cols = list(set(cols_report) | set(cols_summed))
         intermediate, keys_sliced  = f_stock_pasture_summary(r_vals, build_df=False, type=type
-                                    , prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
-                                    , weights=weights, na_weights=na_weights, keys=keys, arith=arith, index=index
+                                    , prod=prod, na_prod=na_prod, weights=weights, na_weights=na_weights
+                                    , den_weights=den_weights, na_denweights=na_denweights
+                                    , den_assoc=den_assoc, na_den_assoc=na_den_assoc, assoc_axis=assoc_axis
+                                    , keys=keys, arith=arith, index=index
                                     , cols=cols, axis_slice=axis_slice)
-        ###sum k2, a & y if not reported and make table
-        cols_summed = list(set(cols_summed) - set(cols_report))
-        if cols_summed:    #test that this at least one element in the columns to be summed
-            intermediate = np.sum(intermediate, axis=tuple(cols_summed), keepdims=True)
-        percentage = f_numpy2df(intermediate, keys_sliced, index, cols_report)
+        percentage = f_numpy2df(intermediate, keys_sliced, index, cols)
 
     return percentage
 
@@ -2608,7 +2616,7 @@ def f_pasture_area_analysis(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
     summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Pas area', 'Sup'])
     ##profit - no minroe and asset
-    summary_df.loc[trial, 'Profit'] = f_profit(lp_vars, r_vals, option=0)
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
     ##pasture area
     pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
     z_prob_qsz = r_vals['zgen']['z_prob_qsz']
@@ -2621,10 +2629,10 @@ def f_stocking_rate_analysis(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
     summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'SR', 'Pas area', 'Sup/DSE'])
     ##profit - no minroe and asset
-    summary_df.loc[trial, 'Profit'] = f_profit(lp_vars, r_vals, option=0)
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
     ##stocking rate
     sr = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
-    summary_df.loc[trial, 'SR'] = sr
+    summary_df.loc[trial, 'SR'] = round(sr, 1)
     ##pasture area
     pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
     z_prob_qsz = r_vals['zgen']['z_prob_qsz']
@@ -2632,14 +2640,14 @@ def f_stocking_rate_analysis(lp_vars, r_vals, trial):
     summary_df.loc[trial, 'Pas area'] = total_pas_are
     ##supplement
     total_sup = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
-    summary_df.loc[trial, 'Sup/DSE'] = total_sup * 1000 / (total_pas_are * sr)
+    summary_df.loc[trial, 'Sup/DSE'] = round(total_sup * 1000 / (total_pas_are * sr),0)
     return summary_df
 
 def f_lupin_analysis(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
     summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Lupin area', 'Expected Income'])
     ##profit - no minroe and asset
-    summary_df.loc[trial, 'Profit'] = f_profit(lp_vars, r_vals, option=0)
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
     ##lupin area
     landuse_area_qsz_k = f_area_summary(lp_vars, r_vals, option=4)
     lupin_area_qsz = landuse_area_qsz_k.loc[:,"l"]
@@ -2651,9 +2659,10 @@ def f_lupin_analysis(lp_vars, r_vals, trial):
     lupin_price_z = lupin_price_p7z.groupby(level=1).sum() #sum p7 - price should only exist in one p7 period
     lupin_price = np.sum(lupin_price_z.values * z_prob_qsz) #avevrage price across z
     expected_yields_k_z = r_vals['crop']['base_yields_k_z']
+    expected_yields_k_z = expected_yields_k_z.reindex(r_vals['pas']['keys_k'], axis=0).fillna(0)  # expand to full k (incase landuses were masked out) and unused landuses get set to 0
     expected_lupin_yield_z = expected_yields_k_z.loc["l",:]
     expected_lupin_yield = np.sum(expected_lupin_yield_z.values * z_prob_qsz) #avevrage yield across z.
-    summary_df.loc[trial, 'Expected Income'] = lupin_price * expected_lupin_yield/1000
+    summary_df.loc[trial, 'Expected Income'] = round(lupin_price * expected_lupin_yield/1000, 0)
     return summary_df
 
 ############################
@@ -2688,7 +2697,7 @@ def f_numpy2df_error(prod, weights, arith_axis, index, cols):
     return
 
 
-def f_add_axis(prod, na_prod, prod_weights, na_prodweights, weights, na_weights, den_weights, na_denweights):
+def f_add_axis(prod, na_prod, prod_weights, na_prodweights, weights, na_weights, den_weights, na_denweights, den_assoc, na_den_assoc):
     '''
     Adds new axis if required.
 
@@ -2702,7 +2711,9 @@ def f_add_axis(prod, na_prod, prod_weights, na_prodweights, weights, na_weights,
     den_weights = np.expand_dims(den_weights, na_denweights)
     prod = np.expand_dims(prod, na_prod)
     prod_weights = np.expand_dims(prod_weights, na_prodweights)
-    return prod, weights, den_weights, prod_weights
+    if den_assoc is not None:
+        den_assoc = np.expand_dims(den_assoc, na_den_assoc)
+    return prod, weights, den_weights, prod_weights, den_assoc
 
 
 def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
@@ -2735,7 +2746,7 @@ def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
     return prod, prod_weights, weights, den_weights, keys
 
 
-def f_arith(prod, prod_weights, weight, den_weights, arith, axis):
+def f_arith(prod, prod_weights, weight, den_weights, arith, axis, den_assoc=None, assoc_axis=0):
     '''
     option 0: return production param averaged across all axis that are not reported.
     option 1: return weighted average of production param (using denominator weight returns production per day the animal is on hand)
@@ -2750,6 +2761,7 @@ def f_arith(prod, prod_weights, weight, den_weights, arith, axis):
     :param den_weight: array: weights the denominator in the weighted average calculation
     :param arith: int: arith option
     :param axis: list: axes to perform arith along
+    :param den_assoc: array: pointer array to preform association (used only on denomiator)
     :return: array
     '''
     ##adjust prod by prod_weights
@@ -2761,7 +2773,7 @@ def f_arith(prod, prod_weights, weight, den_weights, arith, axis):
         prod = np.mean(prod, tuple(axis), keepdims=keepdims)
     ##option 1
     if arith == 1:
-        prod = fun.f_weighted_average(prod, weight, tuple(axis), keepdims=keepdims, den_weights=den_weights)
+        prod = fun.f_weighted_average(prod, weight, tuple(axis), keepdims=keepdims, den_weights=den_weights, den_assoc=den_assoc, assoc_axis=assoc_axis)
     ##option 2
     if arith == 2:
         prod = np.sum(prod * weight, tuple(axis), keepdims=keepdims)

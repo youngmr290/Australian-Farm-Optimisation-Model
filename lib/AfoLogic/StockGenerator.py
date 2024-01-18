@@ -6674,6 +6674,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     dvp_is_mating = sfun.f1_p2v(period_is_mating_pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1).astype(dtypeint)
     dvp_is_mating = fun.f_dynamic_slice(dvp_is_mating, e1_pos, 0, 1) #slice e axis because e axis doesn't alter the mating DVP.
 
+    ###calculate period pointer here because it needed a_v_p association
+    dvp_is_wean = sfun.f1_p2v(period_is_wean_pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1).astype(dtypeint)
+    dvp_is_wean = fun.f_dynamic_slice(dvp_is_wean, e1_pos, 0, 1) #slice e axis because e axis doesn't alter the wean DVP.
+    dvp_is_scan = sfun.f1_p2v(period_is_scan_pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1).astype(dtypeint)
+    dvp_is_scan = fun.f_dynamic_slice(dvp_is_scan, e1_pos, 0, 1) #slice e axis because e axis doesn't alter the scan DVP.
+
     ###other dvp associations and masks
     a_p_va1e1b1nwzida0e0b0xyg1 = fun.f_next_prev_association(date_start_p, dvp_start_va1e1b1nwzida0e0b0xyg1
                                                              , 1, 'right').astype(dtypeint) #returns the period index for the start of each dvp
@@ -7649,25 +7655,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     r_n_drys_tvg1 = sfun.f1_p2v(n_drys_b1g1*1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
                                 on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_scan_pa1e1b1nwzida0e0b0xyg1)
 
-    ##number of mated animals as a proportion of the dams in each slice that has initial numbers == 1
-    ### calculated from the number of ewes mated total (across a1, e1, b1 & y-axis) per ewe in the slice.
-    ### This is designed to be the number mated equivalent of the number of foetuses per ewe
+    ##number of mated animals
     n_mated_tpg1 = animal_mated_b1g1 * o_numbers_end_tpdams
     r_n_mated_tvg1 = sfun.f1_p2v(n_mated_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, 1,
-                                on_hand_tp=True, period_is_tp=period_is_matingend_pa1e1b1nwzida0e0b0xyg1)
-    r_n_mated_tvg1 = np.sum(r_n_mated_tvg1, axis=(a1_pos, e1_pos, b1_pos, y_pos), keepdims=True)
-    ###update periods that are not mating with mating numbers
-    a_matingv_tvg1 =  np.maximum.accumulate(np.any(r_n_mated_tvg1 != 0, axis=b1_pos, keepdims=True)
-                                            * index_va1e1b1nwzida0e0b0xyg1, axis=p_pos) #create association pointing at previous/current mating dvp.
-    r_n_mated_tvg1= np.take_along_axis(r_n_mated_tvg1, a_matingv_tvg1, axis=p_pos)
-    # n_mated_tpg1 = fun.f_divide(np.sum(animal_mated_b1g1 * o_numbers_end_tpdams, axis=(a1_pos, e1_pos, b1_pos, y_pos), keepdims=True)
-    #                             , o_numbers_end_tpdams) * (animal_mated_b1g1>0)
-    # r_n_mated_tvg1 = sfun.f1_p2v(n_mated_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
-    #                             on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_matingend_pa1e1b1nwzida0e0b0xyg1)
-    # ###update periods that are not mating with mating numbers
-    # a_matingv_tvg1 =  np.maximum.accumulate(np.any(r_n_mated_tvg1 != 0, axis=b1_pos, keepdims=True)
-    #                                         * index_va1e1b1nwzida0e0b0xyg1, axis=p_pos) #create association pointing at previous/current mating dvp.
-    # r_n_mated_tvg1= np.take_along_axis(r_n_mated_tvg1, a_matingv_tvg1, axis=p_pos)
+                                on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_matingend_pa1e1b1nwzida0e0b0xyg1)
+
+    ##number of dvps between mating and weaning - used to roll numbers in wean & scan % report
+    a_prev_matingv_vg1 = np.maximum.accumulate(index_va1e1b1nwzida0e0b0xyg1 * dvp_is_mating) 
 
 
     # ##################################
@@ -8861,27 +8855,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     #############################################
     #weaning %, scan % and lamb survival reports#
     #############################################
-    ##The inverse (1/(r_n_mated/start) == start/r_n_mated) of the number of ewes mated as a proportion of the number of ewes at the start of the DVP (accounts for mortality)
-    ### Note: the sum across the a1, e1, b1 & y axes is a single starting animal. Each slice of the other axes are single animals
-    ### Can't call f1_create_production_param() because don't want to cluster r_n_mated_tvg1
-    ### Inverse because number of ewes mated is the denominator of the reproduction calculations
-    #todo at some point we might want repro reports that don't cluster the e & b axes so that repro of multiple in a clustered mob can be reported
-    # This will require having another version of the following variables that are not clustered & different maths in ReportFunction.py
-    mask_sliced = fun.f_dynamic_slice(mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1
-                                      , e1_pos, 0 ,1) #slice e[0] because don't want to add e axis to rnmated
-    r_n_mated_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.sum(numbers_start_tva1e1b1nwzida0e0b0xyg1
-                        * mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1
-                        * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)
-                        , axis=(a1_pos, b1_pos, e1_pos, y_pos), keepdims=True)
-                    , np.sum(r_n_mated_tvg1 * mask_sliced, axis=(a1_pos, b1_pos, e1_pos, y_pos)
-                        , keepdims=True), dtype=r_n_mated_tvg1.dtype)
-    # r_n_mated_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(1, fun.f_divide(np.sum(r_n_mated_tvg1
-    #                 * mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1
-    #                 , axis=(a1_pos, b1_pos, e1_pos, y_pos), keepdims=True)
-    #             , np.sum(numbers_start_tva1e1b1nwzida0e0b0xyg1
-    #                 * mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1
-    #                 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)
-    #                 , axis=(a1_pos, b1_pos, e1_pos, y_pos), keepdims=True), dtype=r_n_mated_tvg1.dtype))
+    ##generator numbers at the start of the dvp - used to weight the weaning% and scanning% report when lp_vars are not included
+    r_numbers_start_k2tva1e1b1nwzida0e0b0xyg1 = np.sum(numbers_start_tva1e1b1nwzida0e0b0xyg1
+                                                       * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)
+                                                       , axis = (sinp.stock['i_b1_pos'], sinp.stock['i_e1_pos']), keepdims=True)  # no numbers required
+
+    ##number of ewes mated as a proportion of the number of ewes at the start of the DVP (accounts for mortality)
+    r_n_mated_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_n_mated_tvg1,
+                                                                          a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                          index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                       numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
+                                                                       mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
 
     ##proportion of drys - per ewe at start of dvp (ie accounting for dam mortality)
     r_n_drys_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_n_drys_tvg1,
@@ -9999,8 +9983,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fun.f1_make_r_val(r_vals,pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3,'pi_offs_k3k5p6ftvnw8ziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],z_pos, k3k5p6ftvnwziaxyg3_shape)
 
 
+    ###numbers start dams - used to weight wean% & scan% report when lp_vars not included.
+    fun.f1_make_r_val(r_vals,r_numbers_start_k2tva1e1b1nwzida0e0b0xyg1,'r_numbers_start_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)
+
     ###proportion mated per dam at beginning of the period (e.g. accounts for mortality)
-    fun.f1_make_r_val(r_vals,r_n_mated_k2tva1e1b1nwzida0e0b0xyg1,'n_mated_k2Tva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_n_mated_k2tva1e1b1nwzida0e0b0xyg1,'n_mated_k2Tva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,a_prev_matingv_vg1*dvp_is_wean,'a_prev_matingv_wean_va1iyg1', shape=(len_v1, len_a1, len_i, len_y1, len_g1))
+    fun.f1_make_r_val(r_vals,a_prev_matingv_vg1*dvp_is_scan,'a_prev_matingv_scan_va1iyg1', shape=(len_v1, len_a1, len_i, len_y1, len_g1))
 
     ###proportion of drys per dam at beginning of the period (e.g. accounts for mortality)
     fun.f1_make_r_val(r_vals,r_n_drys_k2tva1e1b1nwzida0e0b0xyg1,'n_drys_k2tva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)

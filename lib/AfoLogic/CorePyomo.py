@@ -129,6 +129,7 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output):
         solver_result = solver.solve(model)
     elif method=="cbc":
         solver = pe.SolverFactory('cbc')
+        solver.options['seconds'] = 60  # limit solving time. Occasionally CBC takes a long time to find optimum solution but it gets very close to optimum quickly.
         solver_result = solver.solve(model, tee=True) #tee=True will print out solver information
     elif method=="ipopt":
         solver = pe.SolverFactory('ipopt')
