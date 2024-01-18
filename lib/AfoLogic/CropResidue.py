@@ -100,8 +100,7 @@ def f_biomass2residue(residuesim=False):
     harvest_index_ks2 = pinp.stubble['i_harvest_index_ks2']
     biomass_scalar_ks2 = pinp.stubble['i_biomass_scalar_ks2']
     propn_grain_harv_ks2 = pinp.stubble['i_propn_grain_harv_ks2']
-    lmu_mask = pinp.general['i_lmu_area'] > 0
-    frost_kl = pinp.crop['frost'].values[:,lmu_mask]
+    frost_kl = pinp.crop['frost'].values
 
     ##calc biomass to product scalar
     ##if this is being calculated for sim then don't want to include frost (because don't want lmu axis and the frost input in AFO doesn't reflect the trial).
@@ -363,8 +362,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     keys_s2 = pinp.stubble['i_idx_s2']
     keys_f  = np.array(['nv{0}' .format(i) for i in range(len_nv)])
     keys_z = zfun.f_keys_z()
-    lmu_mask = pinp.general['i_lmu_area'] > 0
-    keys_l = pinp.general['i_lmu_idx'][lmu_mask]
+    keys_l = pinp.general['i_lmu_idx']
 
     ##array indexes
     ###stub transfer (cat b & c)

@@ -38,7 +38,7 @@ note:
 
 
 def f1_boundarypyomo_local(params, model):
-    lmu_mask = pinp.general['i_lmu_area'] > 0
+    lmu_mask = pinp.lmu_mask
     mask_r = pinp.rot_mask_r
 
     ##set bounds to include

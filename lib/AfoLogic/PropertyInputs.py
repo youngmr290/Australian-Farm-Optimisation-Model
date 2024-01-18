@@ -193,6 +193,68 @@ def f_select_n_reset_pinp(property, pinp_defaults):
     pasture_inputs = copy.deepcopy(pinp_defaults[property]['pasture_inp'])
 
 
+########################
+#adjust lmu for web app#
+########################
+def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
+    '''
+    After collecting data from a couple of farmers I have found that, for the web app, we need to make the LMU/soil type structure
+    more flexible so farmers can make their own LMUS.
+
+    To achieve this, the user creates their own LMUs and selects which regional LMU most closely aligns. This is done
+    so that the default values for their custom LMU are as realistic as possible. The user can then go and adjust the
+    inputs in the web app that have an LMU axis to allign the production correctly.
+
+    However, because the web app doesnt have every input is an LMU axis this function exists to create the users lmu
+    (for inputs that don't exist in the app the user lmu data will be equal to the nearest regional lmu, as specified by
+    the user).
+
+    Has to occur before SA are applied because the SAs from web app have already been adjusted.
+    '''
+    ##create a global dict with a flag for each input with LMU axis that is adjusted. This allows us to preform a check
+    ##that each input has been included here. The check occurs when the input is masked for lmu axis.
+    global lmu_flag
+    lmu_flag={}
+
+    ##general
+    lmu_flag['i_lmu_idx']=True #manually add this because we dont want to adjust this input
+    fun.f1_lmuregion_to_lmufarmer(general, "i_lmu_area", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(general, "i_non_cropable_area_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(general, "arable", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+
+    ##crop
+    fun.f1_lmuregion_to_lmufarmer(crop, "yield_by_lmu", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(crop, "frost", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(crop, "fert_by_lmu", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(crop, "chem_by_lmu", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(crop, "seeding_rate", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
+
+    ##cropgraze
+    fun.f1_lmuregion_to_lmufarmer(cropgraze, "i_cropgrowth_lmu_factor_kl", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(cropgraze, "i_cropgrazing_inc_landuse", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
+
+    ##saltbush
+    fun.f1_lmuregion_to_lmufarmer(saltbush, "i_sb_lmu_scalar", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+
+    ##pasture
+    for pasture in sinp.general['pastures'][general['i_pastures_exist']]:
+        fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "i_pasture_coverage", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+        fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "GermScalarLMU", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
+        fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "FaG_LMU", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+        fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "LowFOO", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
+        fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "LowPGR", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
+        fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "MedFOO", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
+        fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "MedPGR", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
+        fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "DigGrn", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
+        fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "POCCons", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
+        fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "ErosionLimit", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
+
+    ##machine
+    fun.f1_lmuregion_to_lmufarmer(mach, "seeding_fuel_lmu_adj", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(mach, "tillage_maint_lmu_adj", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(mach, "seeding_rate_lmu_adj", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+
+
 #######################
 #apply SA             #
 #######################
@@ -506,6 +568,73 @@ def f1_expand_p6():
 
     ###fp index needs special handling because it isn't just expanded it is rebuilt
     period['i_fp_idx'] = ['fp%02d'%i for i in range(len(a_p6std_p6z))]
+
+
+
+##################
+#mask lmu inputs #
+##################
+##function to do the masking
+def f1_do_mask_lmu(dict, key, lmu_axis):
+    ##check input with lmu axis was adjusted (if running from the web app)
+    if 'lmu_flag' in globals():
+        if not key in lmu_flag:
+            raise UserWarning("{0} has not been through f_farmer_lmu_adj".format(key))
+
+    ##mask lmu
+    if isinstance(dict[key], pd.DataFrame) or isinstance(dict[key], pd.Series):
+        if lmu_axis == 0:
+            dict[key] = dict[key].loc[lmu_mask]
+        elif lmu_axis == 1:
+            dict[key] = dict[key].loc[:, lmu_mask]
+    else:
+        dict[key] = np.compress(lmu_mask, dict[key], lmu_axis)
+
+
+def f1_mask_lmu():
+    ##make the mask - this is a global input because used to mask incode SAVs in Bounds.py
+    global lmu_mask
+    lmu_mask = general['i_lmu_area'] > 0
+
+    
+    ##general
+    f1_do_mask_lmu(general, "i_lmu_idx", lmu_axis=0)
+    f1_do_mask_lmu(general, "i_lmu_area", lmu_axis=0)
+    f1_do_mask_lmu(general, "i_non_cropable_area_l", lmu_axis=0)
+    f1_do_mask_lmu(general, "arable", lmu_axis=0)
+
+    ##crop
+    f1_do_mask_lmu(crop, "yield_by_lmu", lmu_axis=1)
+    f1_do_mask_lmu(crop, "frost", lmu_axis=1)
+    f1_do_mask_lmu(crop, "fert_by_lmu", lmu_axis=1)
+    f1_do_mask_lmu(crop, "chem_by_lmu", lmu_axis=1)
+    f1_do_mask_lmu(crop, "seeding_rate", lmu_axis=1)
+
+    ##cropgraze
+    f1_do_mask_lmu(cropgraze, "i_cropgrowth_lmu_factor_kl", lmu_axis=1)
+    f1_do_mask_lmu(cropgraze, "i_cropgrazing_inc_landuse", lmu_axis=1)
+
+    ##saltbush
+    f1_do_mask_lmu(saltbush, "i_sb_lmu_scalar", lmu_axis=0)
+
+    ##pasture
+    for pasture in sinp.general['pastures'][general['i_pastures_exist']]:
+        f1_do_mask_lmu(pasture_inputs[pasture], "i_pasture_coverage", lmu_axis=0)
+        f1_do_mask_lmu(pasture_inputs[pasture], "GermScalarLMU", lmu_axis=1)
+        f1_do_mask_lmu(pasture_inputs[pasture], "FaG_LMU", lmu_axis=0)
+        f1_do_mask_lmu(pasture_inputs[pasture], "LowFOO", lmu_axis=2)
+        f1_do_mask_lmu(pasture_inputs[pasture], "LowPGR", lmu_axis=2)
+        f1_do_mask_lmu(pasture_inputs[pasture], "MedFOO", lmu_axis=2)
+        f1_do_mask_lmu(pasture_inputs[pasture], "MedPGR", lmu_axis=2)
+        f1_do_mask_lmu(pasture_inputs[pasture], "DigGrn", lmu_axis=2)
+        f1_do_mask_lmu(pasture_inputs[pasture], "POCCons", lmu_axis=1)
+        f1_do_mask_lmu(pasture_inputs[pasture], "ErosionLimit", lmu_axis=2)
+
+    ##machine
+    f1_do_mask_lmu(mach, "seeding_fuel_lmu_adj", lmu_axis=0)
+    f1_do_mask_lmu(mach, "tillage_maint_lmu_adj", lmu_axis=0)
+    f1_do_mask_lmu(mach, "seeding_rate_lmu_adj", lmu_axis=0)
+
 
 
 

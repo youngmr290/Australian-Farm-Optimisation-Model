@@ -94,15 +94,6 @@ def f1_sim_inputs(sheet=None, index=None, header=None):
     return pd.read_excel(relativeFile.findExcel("SimInputs_{0}.xlsx".format(property)), sheet_name=sheet, index_col=index, header=header, engine='openpyxl')
 
 
-def f1_mask_lmu(df, axis):
-    lmu_mask = pinp.general['i_lmu_area'] > 0
-    if axis==0:
-        df = df.loc[lmu_mask]
-    if axis==1:
-        df = df.loc[:, lmu_mask]
-    return df
-
-
 ########################
 #price                 #
 ########################
@@ -304,8 +295,8 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
         fun.f1_make_r_val(r_vals, base_yields_k_z, 'base_yields_k_z')
 
     ##colate other info
-    biomass_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
-    arable = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0) #read in arable area df
+    biomass_lmus = pinp.crop['yield_by_lmu'] #soil yield factor
+    arable = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']) #read in arable area df
     harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield is inputted as the harvestable grain
     harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
     propn_baled_k = pd.Series(pinp.stubble['i_propn_baled_k'], index=sinp.landuse['C']) #Proportion of biomass at baling that is baled (at point of baling - not including respiration losses).
@@ -367,7 +358,7 @@ def f_biomass2product(r_vals=None):
     harvest_index_ks2 = pinp.stubble['i_harvest_index_ks2']
     biomass_scalar_ks2 = pinp.stubble['i_biomass_scalar_ks2']
     propn_grain_harv_ks2 = pinp.stubble['i_propn_grain_harv_ks2']
-    frost_kl = f1_mask_lmu(pinp.crop['frost'], axis=1).values
+    frost_kl = pinp.crop['frost'].values
 
     ##calc biomass to product scalar - adjusted for frost
     frost_harv_factor_kl = (1-frost_kl)
@@ -381,8 +372,7 @@ def f_biomass2product(r_vals=None):
     ##convert to pandas
     keys_k = sinp.landuse['C']
     keys_s2 = pinp.stubble['i_idx_s2']
-    lmu_mask = pinp.general['i_lmu_area'] > 0
-    keys_l = pinp.general['i_lmu_idx'][lmu_mask]
+    keys_l = pinp.general['i_lmu_idx']
     index_kls2 = pd.MultiIndex.from_product([keys_k, keys_l, keys_s2])
     biomass2product_kls2 = pd.Series(biomass2product_kls2.ravel(), index=index_kls2)
     return biomass2product_kls2
@@ -502,7 +492,7 @@ def f_fert_passes():
     # fert_passes_r_zn = fert_passes_rk_zn.droplevel(1, axis=0)
 
     ##adjust fert passes by arable area
-    arable_l = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
+    arable_l = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx'])
     # fert_passes_rz_n = fert_passes_r_zn.stack(0)
     col_nl = pd.MultiIndex.from_product([fert_passes_rz_n.columns, arable_l.index])
     fert_passes_rz_nl = fert_passes_rz_n.reindex(col_nl, axis=1,level=0)
@@ -578,7 +568,7 @@ def f_fert_cost(r_vals):
     ##read in necessary stuff
     phases_df = pinp.phases_r
     mask_r = pinp.rot_mask_r
-    fert_by_soil = f1_mask_lmu(pinp.crop['fert_by_lmu'], axis=1)
+    fert_by_soil = pinp.crop['fert_by_lmu']
     fert_cost_allocation_p7zn, fert_wc_allocation_c0p7zn = f1_fert_cost_allocation()
     fert_cost_allocation_z_p7n = fert_cost_allocation_p7zn.unstack(1).T
     fert_wc_allocation_z_c0p7n = fert_wc_allocation_c0p7zn.unstack(2).T
@@ -636,7 +626,7 @@ def f_fert_cost(r_vals):
     nap_fert_rz_nl = nap_fert_rz_n.mul(fert_by_soil_nl,axis=1,level=0)
 
     ##account for arable area
-    arable_l = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0) #read in arable area df
+    arable_l = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx'])
     fert_rz_nl = fert_rz_nl.mul(arable_l, axis=1, level=1) #add arable to df
     nap_fert_rz_nl = nap_fert_rz_nl.mul(1-arable_l, axis=1, level=1) #add arable to df
     phase_fert_cost_rzl_n = fert_rz_nl.fillna(0).stack(1) + nap_fert_rz_nl.fillna(0).stack(1)
@@ -862,7 +852,7 @@ def f_chem_application():
     ###drop landuse from index
     chem_passes_rz_n = chem_passes_rkz_n.droplevel(1, axis=0)
     ##adjust chem passes by arable area
-    arable_l = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
+    arable_l = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx'])
     col_nl = pd.MultiIndex.from_product([chem_passes_rz_n.columns, arable_l.index])
     chem_passes_rz_nl = chem_passes_rz_n.reindex(col_nl, axis=1,level=0)
     chem_passes_rz_nl=chem_passes_rz_nl.mul(arable_l,axis=1,level=1)
@@ -915,7 +905,7 @@ def f_chem_cost(r_vals):
     ##read in necessary bits and adjust indexed
     # i_chem_cost = pinp.crop['chem_cost'].sort_index() #cost of fungicide per application
     n_alloc = pinp.crop['chem_info']['chem_cost_alloc'] #allocation of chem cost to category (knockdown, pre-em and post-em). This is used for cashflow allocation.
-    chem_by_soil = f1_mask_lmu(pinp.crop['chem_by_lmu'], axis=1).squeeze() #read in chem by soil
+    chem_by_soil = pinp.crop['chem_by_lmu'].squeeze() #read in chem by soil
     chem_cost_allocation_p7zn, chem_wc_allocation_c0p7zn = f1_chem_cost_allocation()
     chem_cost_allocation_z_p7n = chem_cost_allocation_p7zn.unstack(1).T
     chem_wc_allocation_z_c0p7n = chem_wc_allocation_c0p7zn.unstack(2).T
@@ -945,7 +935,7 @@ def f_chem_cost(r_vals):
     ### sum herbicide and fungicide cost
     chem_cost_r_z = chem_cost_r_zn.groupby(axis=1, level=0).sum()
     ###arable area.
-    arable = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
+    arable = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx'])
     ###adjust by arable area and allocate to category (category allocation only affects cashflow timing hence interest)
     index_zln = pd.MultiIndex.from_product([chem_cost_r_z.columns, arable.index, n_alloc.index])
     chem_cost_r_zln = chem_cost_r_z.reindex(index_zln, axis=1,level=0)
@@ -1022,7 +1012,7 @@ def f_seedcost(r_vals):
     rate1 = pinp.crop['seed_info']['Rate1'] #rate (ml/100g) for dressing 1
     rate2 = pinp.crop['seed_info']['Rate2'] #rate (ml/100g) for dressing 2
     percent_dressed = pinp.crop['seed_info']['percent dressed'] #rate (ml/100g) for dressing 2
-    arable = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
+    arable = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx'])
     ##adjust for arable area.
     seeding_rate = seeding_rate.mul(arable, axis=1)
     ##overall seed grading cost per tonne
@@ -1344,7 +1334,7 @@ def f_phase_sow_req():
     ##read phases
     phases_df = pinp.phases_r
     ##adjust arable area
-    arable = f1_mask_lmu(pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']), axis=0)
+    arable = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx'])
     ##sow = arable area * frequency
     keys_l = arable.index
     seeding_freq_r = pinp.seeding_freq_r

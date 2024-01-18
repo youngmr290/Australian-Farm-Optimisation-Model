@@ -89,11 +89,10 @@ def f_cropgraze_DM(r_vals=None, total_DM=False):
     :param total_DM: boolean when set to True calculates the total crop DM used to calculate relative availability.
     '''
     ##read inputs
-    lmu_mask = pinp.general['i_lmu_area'] > 0
     cropgrazing_inc = pinp.cropgraze['i_cropgrazing_inc']
     growth_kp6z = zfun.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1) #kg/d
     wastage_k = pinp.cropgraze['i_cropgraze_wastage']
-    growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl'][:,lmu_mask]
+    growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl']
     consumption_factor_p6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
     date_feed_periods = per.f_feed_periods()
     date_start_p6z = date_feed_periods[:-1]
@@ -136,9 +135,8 @@ def f_cropgraze_DM(r_vals=None, total_DM=False):
 
     ##landuse mask - some crops can't be grazed
     ###lmu mask
-    lmu_mask = pinp.general['i_lmu_area'] > 0
     ###propn of crop grazing possible for each landuse.
-    landuse_grazing_kl = pinp.cropgraze['i_cropgrazing_inc_landuse'][:, lmu_mask]
+    landuse_grazing_kl = pinp.cropgraze['i_cropgrazing_inc_landuse']
     ###mask which z crop graing can occur
     landuse_grazing_kl = landuse_grazing_kl * cropgrazing_inc
 
@@ -411,8 +409,7 @@ def f1_cropgraze_params(params, r_vals, nv):
     # DM_reduction_kp6p5zl = f_DM_reduction_seeding_time()
 
     ##keys
-    lmu_mask = pinp.general['i_lmu_area'] > 0
-    keys_l = pinp.general['i_lmu_idx'][lmu_mask]
+    keys_l = pinp.general['i_lmu_idx']
     keys_k = sinp.landuse['C']
     keys_p6 = pinp.period['i_fp_idx']
     keys_p5 = np.asarray(per.f_p_dates_df().index[:-1]).astype('str')

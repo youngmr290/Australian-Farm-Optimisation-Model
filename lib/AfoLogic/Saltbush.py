@@ -85,8 +85,7 @@ def f_saltbush_precalcs(params, r_vals, nv):
     sb_expected_growth_zp6 = zfun.f_seasonal_inp(pinp.saltbush['i_sb_expected_growth_zp6'], numpy=True, axis=0) #g/stem/day
     sb_growth_reduction_zp6 = zfun.f_seasonal_inp(pinp.saltbush['i_sb_growth_reduction_zp6'], numpy=True, axis=0) #% per day
     sb_stems_per_ha = pinp.saltbush['i_sbstemspha'] #saltbush stems/ha
-    lmu_mask = pinp.general['i_lmu_area'] > 0
-    sb_lmu_scalar_l = pinp.saltbush['i_sb_lmu_scalar'][lmu_mask]
+    sb_lmu_scalar_l = pinp.saltbush['i_sb_lmu_scalar']
 
     date_feed_periods = per.f_feed_periods()
     date_start_p6z = date_feed_periods[:-1]
@@ -216,7 +215,7 @@ def f_saltbush_precalcs(params, r_vals, nv):
 
     ##make key arrays
     ###keys
-    keys_l = pinp.general['i_lmu_idx'][lmu_mask]
+    keys_l = pinp.general['i_lmu_idx']
     keys_r  = np.array(phases_rotn_df.index).astype('str')
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_p7 = per.f_season_periods(keys=True)

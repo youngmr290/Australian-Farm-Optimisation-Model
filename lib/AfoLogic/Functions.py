@@ -1203,3 +1203,16 @@ def f_next_prev_association(datearray_slice,*args):
     idx = np.clip(idx_next - offset, 0, len(datearray_slice)-1) #makes the max value equal to the length of joining array, because if the period date is after the last lambing opportunity there is no 'next'
     return idx
 
+def f1_lmuregion_to_lmufarmer(dict, key1, a_lmuregion_lmufarmer, lmu_axis, lmu_flag):
+    lmu_flag[key1] = True #set flag to true to say that the lmu input has been adjusted. This gets checked when applying lmu mask. This is to catch user error if the user doesn't update f_farmer_lmu_adj.
+    ##add axes to a_lmuregion_lmufarmer
+    ndims = dict[key1].ndim
+    lmu_pos = lmu_axis - ndims
+    left_pos2 = -ndims
+    a_lmuregion_lmufarmer = f_expand(a_lmuregion_lmufarmer, left_pos=lmu_pos, right_pos2=lmu_pos, left_pos2=left_pos2-1)
+
+    if isinstance(dict[key1], pd.DataFrame):
+        dict[key1].iloc[:,:] = np.take_along_axis(dict[key1].values, a_lmuregion_lmufarmer, lmu_axis)
+    else:
+        dict[key1] = np.take_along_axis(dict[key1], a_lmuregion_lmufarmer, lmu_axis)
+

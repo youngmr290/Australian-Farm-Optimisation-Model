@@ -201,9 +201,8 @@ def f_rot_lmu_params(params):
 
     '''
     ##area
-    lmu_mask = pinp.general['i_lmu_area'] > 0
-    params['lmu_area'] = dict(zip(pinp.general['i_lmu_idx'][lmu_mask], pinp.general['i_lmu_area'][lmu_mask]))
-    params['p_not_cropable_area_l'] = dict(zip(pinp.general['i_lmu_idx'][lmu_mask], pinp.general['i_non_cropable_area_l'][lmu_mask]))
+    params['lmu_area'] = dict(zip(pinp.general['i_lmu_idx'], pinp.general['i_lmu_area']))
+    params['p_not_cropable_area_l'] = dict(zip(pinp.general['i_lmu_idx'], pinp.general['i_non_cropable_area_l']))
 
 
 def f_phase_link_params(params):

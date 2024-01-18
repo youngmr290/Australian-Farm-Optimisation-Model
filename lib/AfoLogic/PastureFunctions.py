@@ -801,9 +801,6 @@ def f1_update_reseeding_foo(foo_grn_reseeding_p6lrzt, foo_dry_reseeding_p6lrzt,
     and the amount of grazing available if the feed is dry
     If there is an adjustment to the dry feed then it is spread equally between the high & the low quality pools.
     '''
-    ##lmu mask
-    lmu_mask_l = pinp.general['i_lmu_area'] > 0
-
     ##base inputs
     n_feed_periods = len(per.f_feed_periods()) - 1
     len_t = np.count_nonzero(pinp.general['pas_inc_t'])
@@ -811,7 +808,7 @@ def f1_update_reseeding_foo(foo_grn_reseeding_p6lrzt, foo_dry_reseeding_p6lrzt,
     len_z = period_zt.shape[0]
     len_r = resown_rt.shape[0]
     lzt = (n_lmu,len_z,len_t)
-    arable_l = pinp.general['arable'][lmu_mask_l]
+    arable_l = pinp.general['arable']
     ##create arrays
     foo_arable_lzt      = np.zeros(lzt, dtype = 'float64')             # create the array foo_arable_lt with the required shape - needed because different sized arrays are passed in
     foo_arable_lzt[...] = foo_arable_zt                                # broadcast foo_arable into foo_arable_lt (to handle foo_arable not having an lmu axis)

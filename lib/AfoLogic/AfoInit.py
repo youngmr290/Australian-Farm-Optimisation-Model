@@ -59,7 +59,7 @@ from . import SaltbushPyomo as slppy
 #########################
 
 def exp(solver_method, user_data, property, trial_name, trial_description, sinp_defaults, uinp_defaults, pinp_defaults,
-        d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output):
+        d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output, a_lmuregion_lmufarmer=None):
 
     ##can use logger to get status on multiprocessing
     # logger.info('Received {}'.format(row))
@@ -70,6 +70,10 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     uinp.f_select_n_reset_uinp(uinp_defaults)
     pinp.f_select_n_reset_pinp(property, pinp_defaults)
 
+    ##for the web app need to update LMU axis
+    if a_lmuregion_lmufarmer is not None:
+        pinp.f_farmer_lmu_adj(a_lmuregion_lmufarmer)
+
     ##update sensitivity values
     sen.create_sa()
     fun.f_update_sen(user_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
@@ -78,6 +82,9 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     sinp.f_structural_inp_sa(sinp_defaults)
     uinp.f_universal_inp_sa(uinp_defaults)
     pinp.f_property_inp_sa(pinp_defaults)
+
+    ##mask lmu
+    pinp.f1_mask_lmu()
 
     ##expand p6 axis to include nodes
     sinp.f1_expand_p6()
