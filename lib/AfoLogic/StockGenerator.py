@@ -2793,18 +2793,30 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         ### sim engine       #
         ######################
         ##load in or create REV dict if doing a relative economic value analysis
-        rev_number = sinp.structuralsa['i_rev_number']
-        if sinp.structuralsa['i_rev_create'] or not np.any(sinp.structuralsa['i_rev_trait_inc']): #if rev is not being used an empty dict is still required.
+        def f_create_empty_rev_dict():
             rev_trait_values = collections.defaultdict(dict)
             for p in range(n_sim_periods - 1):
                 rev_trait_values['sire'][p] = {}
                 rev_trait_values['dams'][p] = {}
                 rev_trait_values['yatf'][p] = {}
                 rev_trait_values['offs'][p] = {}
-        elif np.any(sinp.structuralsa['i_rev_trait_inc']):
+                for trait in sinp.structuralsa['i_rev_trait_name']:
+                    rev_trait_values['sire'][p][trait] = {}
+                    rev_trait_values['dams'][p][trait] = {}
+                    rev_trait_values['yatf'][p][trait] = {}
+                    rev_trait_values['offs'][p][trait] = {}
+            return rev_trait_values
+
+        rev_number = sinp.structuralsa['i_rev_number']
+        if np.all(sinp.structuralsa['i_rev_trait_scenario'] == 0):
+            rev_trait_values = f_create_empty_rev_dict()  #if rev is not being used an empty dict is still required.
+        else:
             print('REV values being used.')
-            with open('pkl/pkl_rev_trait{0}.pkl'.format(rev_number),"rb") as f:
-                rev_trait_values = pkl.load(f)
+            try:
+                with open('pkl/pkl_rev_trait{0}.pkl'.format(rev_number), "rb") as f:
+                    rev_trait_values = pkl.load(f)
+            except FileNotFoundError:     #if rev file is not found, create an empty dict.
+                rev_trait_values = f_create_empty_rev_dict()
 
         ##load in and create condensed start dict - used to standardise the starting animal at condensing time.
         ###load condensed start info from previous trial if being used in this trial.
@@ -9507,8 +9519,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###############
     # REV         #
     ###############
-    ##store rev if trial is rev_create
-    if sinp.structuralsa['i_rev_create']:
+    ##store rev if trial is rev_update
+    if sinp.structuralsa['i_rev_update'] and np.any(sinp.structuralsa['i_rev_trait_scenario'] != 0):
         with open('pkl/pkl_rev_trait{0}.pkl'.format(rev_number),"wb") as f:
             pkl.dump(rev_trait_values, f)
 

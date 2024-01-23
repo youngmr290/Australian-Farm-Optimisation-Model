@@ -732,11 +732,12 @@ def f1_feedsupply_adjust(attempts,feedsupply,itn):
 
 def f1_rev_update(trait_name, trait_value, rev_trait_value):
     trait_idx = sinp.structuralsa['i_rev_trait_name'].tolist().index(trait_name)
-    if sinp.structuralsa['i_rev_trait_inc'][trait_idx]:
-        if sinp.structuralsa['i_rev_create']:
-            rev_trait_value[trait_name] = trait_value.copy() #have to copy so that traits (e.g. mort) that are added to using += do not also update the rev value
+    scenario = sinp.structuralsa['i_rev_trait_scenario'][trait_idx]
+    if scenario != 0:
+        if sinp.structuralsa['i_rev_update']:
+            rev_trait_value[trait_name][scenario] = trait_value.copy() #have to copy so that traits (e.g. mort) that are added to using += do not also update the rev value
         else:
-            trait_value = rev_trait_value[trait_name]
+            trait_value = rev_trait_value[trait_name][scenario]
     return trait_value
 
 
@@ -1289,7 +1290,7 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     ##Net energy required for wool (above basal growth rate)
     new_g = cw_g[1, ...] * (d_cfw_g - cw_g[2, ...] * relsize_start_g) / cw_g[3, ...]
     ##ME required for wool (above basal growth rate)
-    mew_g = new_g / kw_yg #can be negative because mem assumes 4g of wool is grown. If less is grown then mew 'returns' the energy.
+    mew_g = new_g / kw_yg #can be negative because mem assumes 4g of clean wool is grown. If less is grown then mew 'returns' the energy.
     ##Fibre diameter for the days growth
     d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
     ##Process the FD REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary

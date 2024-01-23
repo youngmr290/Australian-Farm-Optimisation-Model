@@ -87,9 +87,9 @@ def create_sa():
     sav['prob_z']      = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)   #SA to alter which seasons are included
     sav['inc_node_periods']      = '-'              #SA to alter if season nodes are included in the steady state model (note they are always included in the dsp version this only effects if they are included in steady state)
     sav['seq_len']      = '-'                     #SA to alter the length of the season sequence in the SQ model
-    sav['rev_create']      = '-'                  #SA to alter if the trial is being used to create rev std values
+    sav['rev_update']      = '-'                  #SA to alter if the trial is being used to create rev std values
     sav['rev_number']      = '-'                  #SA to alter rev number - rev number is appended to the std rev value pkl file and can be used to select which rev is used as std for a given trial.
-    sav['rev_trait_inc'] = np.full_like(sinp.structuralsa['i_rev_trait_inc'], '-', dtype=object) #SA value for which traits are to be held constant in REV analysis.
+    sav['rev_trait_scenario'] = np.full_like(sinp.structuralsa['i_rev_trait_scenario'], '-', dtype=object) #SA value for which traits are to be held constant in REV analysis.
     sav['fs_create_pkl']      = '-'                  #SA to control if the trial is being used to create pkl fs
     sav['fs_create_number']      = '-'                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is created for a given trial.
     sav['gen_with_t']      = '-'                  #SA to control if sheep generator is run with active t axis.
@@ -423,7 +423,9 @@ def create_sa():
     sav['cl0_c2'] = np.full(uinp.parameters['i_cl0_c2'].shape, '-', dtype=object)  #SA value for litter size genotype params.
     ##SAM
     sam['ci_c2'] = np.ones(uinp.parameters['i_ci_c2'].shape, dtype='float64')  #intake params for genotypes
-    sam['sfw_c2'] = 1.0                         #std fleece weight genotype params
+    sam['cm_c2'] = np.ones(uinp.parameters['i_cm_c2'].shape, dtype='float64')  #intake params for genotypes
+    sam['sfw_c2'] = np.ones(uinp.parameters['i_sfw_c2'].shape, dtype='float64')   #std fleece weight genotype params
+    sam['muscle_target_c2'] = np.ones(uinp.parameters['i_muscle_target_c2'].shape, dtype='float64')   #std muscle mass target genotype params
     sam['rr'] = 1.0                        #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
     sam['husb_cost_h2'] = np.ones(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype='float64')  #SA value for contract cost of husbandry operations.
     sam['husb_mustering_h2'] = np.ones(uinp.sheep['i_husb_operations_muster_propn_h2'].shape, dtype='float64')  #SA value for mustering required for husbandry operations.
@@ -431,6 +433,8 @@ def create_sa():
     ##SAP
     ##SAA
     saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
+    saa['cg_c2'] = np.zeros(uinp.parameters['i_cg_c2'].shape, dtype='float64')  #SA value for weight gain params.
+    saa['ck_c2'] = np.zeros(uinp.parameters['i_ck_c2'].shape, dtype='float64')  #SA value for energy efficiency params.
     saa['cl0_c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype='float64')  #SA value for litter size genotype params.
     saa['scan_std_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
     saa['nlb_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
