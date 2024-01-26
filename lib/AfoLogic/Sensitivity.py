@@ -377,9 +377,11 @@ def create_sa():
     sam['kg_adult'] = 1.0                             #energy efficiency of adults (zf2==1)
     sam['mr_adult'] = 1.0                             #Maintenance requirement of adults (zf2==1)
     sam['pi_adult'] = 1.0                             #Potential intake of adults (zf2==1)
-    sam['kg_yatf'] = 1.0                             #energy efficiency of yatf
-    sam['mr_yatf'] = 1.0                             #Maintenance requirement of yatf
-    sam['pi_yatf'] = 1.0                             #Potential intake of yatf
+    sam['mr_pw'] = 1.0                                #Maintenance requirement post weaning
+    sam['pi_pw'] = 1.0                                #Potential intake post weaning
+    sam['kg_yatf'] = 1.0                              #energy efficiency of yatf
+    sam['mr_yatf'] = 1.0                              #Maintenance requirement of yatf
+    sam['pi_yatf'] = 1.0                              #Potential intake of yatf
     sam['LTW_dams'] = 1.0                       #adjust impact of life time wool fleece effects
     sam['LTW_offs'] = 1.0                       #adjust impact of life time wool fleece effects
     sam['pi_post_adult'] = 1.0                        #Post loop potential intake of adults (zf2==1)

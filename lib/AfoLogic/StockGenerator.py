@@ -2945,10 +2945,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 zf1_sire = fun.f_back_transform(-cg_sire[4, ...] * (relsize1_start_sire - cg_sire[5, ...]))
                 ###EVG Size factor (increases at maturity)
                 zf2_sire = np.clip((relsize1_start_sire - cg_sire[6, ...]) / (cg_sire[7, ...] - cg_sire[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) - the adult sensitivity is based on zf2
                 sam_kg_sire = fun.f_update(1, sen.sam['kg_adult'], zf2_sire == 1)
-                sam_mr_sire = fun.f_update(1, sen.sam['mr_adult'], zf2_sire == 1)
-                sam_pi_sire = fun.f_update(1, sen.sam['pi_adult'], zf2_sire == 1)
+                sam_mr_sire = sen.sam['mr_pw'] * fun.f_update(1, sen.sam['mr_adult'], zf2_sire == 1)
+                sam_pi_sire = sen.sam['pi_pw'] * fun.f_update(1, sen.sam['pi_adult'], zf2_sire == 1)
 
             ##dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
@@ -2981,10 +2981,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 zf1_dams = fun.f_back_transform(-cg_dams[4, ...] * (relsize1_start_dams - cg_dams[5, ...]))
                 ###EVG Size factor (increases at maturity)
                 zf2_dams = np.clip((relsize1_start_dams - cg_dams[6, ...]) / (cg_dams[7, ...] - cg_dams[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) - the adult sensitivity is based on zf2
                 sam_kg_dams = fun.f_update(1, sen.sam['kg_adult'], zf2_dams == 1)
-                sam_mr_dams = fun.f_update(1, sen.sam['mr_adult'], zf2_dams == 1)
-                sam_pi_dams = fun.f_update(1, sen.sam['pi_adult'], zf2_dams == 1)
+                sam_mr_dams = sen.sam['mr_pw'] * fun.f_update(1, sen.sam['mr_adult'], zf2_dams == 1)
+                sam_pi_dams = sen.sam['pi_pw'] * fun.f_update(1, sen.sam['pi_adult'], zf2_dams == 1)
                 ##sires for mating
                 n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_sire_req(sire_propn_pa1e1b1nwzida0e0b0xyg1g0[p], sire_periods_g0p8
                                                     , pinp.sheep['i_sire_recovery'], date_end_pa1e1b1nwzida0e0b0xyg[p]
@@ -3037,11 +3037,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 zf1_offs = fun.f_back_transform(-cg_offs[4, ...] * (relsize1_start_offs - cg_offs[5, ...]))
                 ###EVG Size factor (increases at maturity)
                 zf2_offs = np.clip((relsize1_start_offs - cg_offs[6, ...]) / (cg_offs[7, ...] - cg_offs[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on zf2 - the sensitivity is only for adults
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) - the adult sensitivity is based on zf2
                 sam_kg_offs = fun.f_update(1, sen.sam['kg_adult'], zf2_offs == 1)
-                sam_mr_offs = fun.f_update(1, sen.sam['mr_adult'], zf2_offs == 1)
-                sam_pi_offs = fun.f_update(1, sen.sam['pi_adult'], zf2_offs == 1)
-
+                sam_mr_offs = sen.sam['mr_pw'] * fun.f_update(1, sen.sam['mr_adult'], zf2_offs == 1)
+                sam_pi_offs = sen.sam['pi_pw'] * fun.f_update(1, sen.sam['pi_adult'], zf2_offs == 1)
 
 
             ##feed supply loop
