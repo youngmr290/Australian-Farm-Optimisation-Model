@@ -8965,13 +8965,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                      axis = (e1_pos, b1_pos), keepdims=True))
 
     ##ffcfw for select p - to keep the report small it doesn't have full p axis
-    period_is_reportebw_p = fun.f_sa(np.array([False]), sen.sav['period_is_reportebw_p'], 5)
-    period_is_reportebw_p = period_is_reportebw_p[0:len_p]
+    period_is_report_p = fun.f_sa(np.array([False]), sen.sav['period_is_report_p'], 5)
+    period_is_report_p = period_is_report_p[0:len_p]
 
     ##ffcfw in select p slices to reduce size.
     #todo Add variables to allow reporting of the component weights (fat, muscle & viscera) with a 'cut' p axis
-    r_ebw_dams_k2tvPdams = (r_ebw_tpdams[:, na, period_is_reportebw_p, ...]
-                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_reportebw_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+    r_ebw_dams_k2tvPdams = (r_ebw_tpdams[:, na, period_is_report_p, ...]
+                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
                                  == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
 
@@ -9789,7 +9789,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvpanwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvpaebnwziy1g1')
-    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p[period_is_reportebw_p], keys_a, keys_e, keys_b, keys_n1, keys_lw1
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p[period_is_report_p], keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvPaebnwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2p6ftvanwziy1g1')
@@ -9851,8 +9851,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     k2tva1e1b1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
 
     ####ktvPaeb
-    k2TvPa1e1b1nwziyg1_shape = len_k2, len_gen_t1, len_v1, np.count_nonzero(period_is_reportebw_p), len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    k2tvPa1e1b1nwziyg1_shape = len_k2, len_t1, len_v1, np.count_nonzero(period_is_reportebw_p), len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    k2TvPa1e1b1nwziyg1_shape = len_k2, len_gen_t1, len_v1, np.count_nonzero(period_is_report_p), len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    k2tvPa1e1b1nwziyg1_shape = len_k2, len_t1, len_v1, np.count_nonzero(period_is_report_p), len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
 
     ####kvpeb
     pzg0_shape = len_p, len_z, len_g0
@@ -10124,10 +10124,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fun.f1_make_r_val(r_vals,de0b0_denom_weights_prog_k3k5tw8zida0e0b0xyg2,'de0b0_denom_weights_prog_k3k5tw8zida0e0b0xyg2') #no mask because p axis to mask
 
     ###short p version
-    Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1 = ((a_v_pa1e1b1nwzida0e0b0xyg1[period_is_reportebw_p, ...] == index_vpa1e1b1nwzida0e0b0xyg1)
+    Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1 = ((a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p, ...] == index_vpa1e1b1nwzida0e0b0xyg1)
                                                   * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])
-                                                  * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,period_is_reportebw_p,...]
-                                                  * o_numbers_start_tpdams[:,na,period_is_reportebw_p,...])
+                                                  * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,period_is_report_p,...]
+                                                  * o_numbers_start_tpdams[:,na,period_is_report_p,...])
     fun.f1_make_r_val(r_vals,Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1,'Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2tvPa1e1b1nwziyg1_shape)
 
