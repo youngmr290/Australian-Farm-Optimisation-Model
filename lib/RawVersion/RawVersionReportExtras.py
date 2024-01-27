@@ -47,6 +47,9 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_cfw_offs"] = pd.DataFrame()  # clean fleece weight dams
     reports["stacked_fd_offs"] = pd.DataFrame()  # fibre diameter dams
     reports["stacked_wbe_dams"] = pd.DataFrame()  # whole body energy content dams
+    reports["stacked_wbe_cut_dams"] = pd.DataFrame()  # whole body energy content dams for select p period
+    reports["stacked_fat_dams"] = pd.DataFrame()  # whole body energy content dams
+    reports["stacked_fat_cut_dams"] = pd.DataFrame()  # whole body energy content dams for select p period
     reports["stacked_wbe_offs"] = pd.DataFrame()  # whole body energy content offs
     reports["stacked_lw_dams"] = pd.DataFrame()  # live weight dams (large array with p, e and b axis)
     reports["stacked_ebw_dams"] = pd.DataFrame()  # empty body weight dams (large array with p, e and b axis)
@@ -250,6 +253,18 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_wbe_dams', 'Run']:
         wbe_dams = pd.concat([reports["wbe_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_wbe_dams"] = rfun.f_append_dfs(stacked_reports["stacked_wbe_dams"], wbe_dams)
+
+    if report_run.loc['run_wbe_cut_dams', 'Run']:
+        wbe_cut_dams = pd.concat([reports["wbe_cut_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_wbe_cut_dams"] = rfun.f_append_dfs(stacked_reports["stacked_wbe_cut_dams"], wbe_cut_dams)
+
+    if report_run.loc['run_fat_dams', 'Run']:
+        fat_dams = pd.concat([reports["fat_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_fat_dams"] = rfun.f_append_dfs(stacked_reports["stacked_fat_dams"], fat_dams)
+
+    if report_run.loc['run_fat_cut_dams', 'Run']:
+        fat_cut_dams = pd.concat([reports["fat_cut_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_fat_cut_dams"] = rfun.f_append_dfs(stacked_reports["stacked_fat_cut_dams"], fat_cut_dams)
 
     if report_run.loc['run_wbe_offs', 'Run']:
         wbe_offs = pd.concat([reports["wbe_offs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -574,6 +589,12 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_fd_offs"], 'fd_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_wbe_dams', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_wbe_dams"], 'wbe_dams', df_settings, option=xl_display_mode)
+    if report_run.loc['run_wbe_cut_dams', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_wbe_cut_dams"], 'wbe_cut_dams', df_settings, option=xl_display_mode)
+    if report_run.loc['run_fat_dams', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_fat_dams"], 'fat_dams', df_settings, option=xl_display_mode)
+    if report_run.loc['run_fat_cut_dams', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_fat_cut_dams"], 'fat_cut_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_wbe_offs', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_wbe_offs"], 'wbe_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_lw_dams', 'Run']:

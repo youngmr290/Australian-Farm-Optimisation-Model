@@ -365,6 +365,64 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         axis_slice = f_update_default_controls(user_controls, 'wbe_dams', 'axis_slice', {})
         reports["wbe_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_wbe_cut_dams', 'Run']:
+        type = 'stock'
+        prod = 'wbe_dams_k2tvPa1e1b1nw8ziyg1'
+        na_prod = [0, 1]  #q,s
+        prod_weights = 'Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_prodweights = [0,1] #q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        na_weights = [5,7,8]  #p,e,b
+        den_weights = 'Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_denweights = [0,1] #q,s
+        keys = 'dams_keys_qsk2tvPaebnwziy1g1'
+        arith = f_update_default_controls(user_controls, 'wbe_cut_dams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'wbe_cut_dams', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'wbe_cut_dams', 'cols', [8]) #b1
+        axis_slice = f_update_default_controls(user_controls, 'wbe_dams', 'axis_slice', {})
+        # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
+        # axis_slice[4] = [0, 7, 1]  #All DVPs for Triplets
+        reports["wbe_cut_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type
+                                    , prod=prod, na_prod=na_prod
+                                    , weights=weights, na_weights=na_weights
+                                    , prod_weights=prod_weights, na_prodweights=na_prodweights
+                                    , den_weights=den_weights, na_denweights=na_denweights
+                                    , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_fat_dams', 'Run']:
+        type = 'stock'
+        prod = 'fat_k2tva1nwziyg1'
+        na_prod = [0,1] #q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        keys = 'dams_keys_qsk2tvanwziy1g1'
+        arith = f_update_default_controls(user_controls, 'fat_dams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'fat_dams', 'index', [4])      #DVP
+        cols = f_update_default_controls(user_controls, 'fat_dams', 'cols', [2]) #k2
+        axis_slice = f_update_default_controls(user_controls, 'fat_dams', 'axis_slice', {})
+        reports["fat_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_fat_cut_dams', 'Run']:
+        type = 'stock'
+        prod = 'fat_dams_k2tvPa1e1b1nw8ziyg1'
+        na_prod = [0, 1]  #q,s
+        prod_weights = 'Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_prodweights = [0,1] #q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        na_weights = [5,7,8]  #p,e,b
+        den_weights = 'Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_denweights = [0,1] #q,s
+        keys = 'dams_keys_qsk2tvPaebnwziy1g1'
+        arith = f_update_default_controls(user_controls, 'fat_cut_dams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'fat_cut_dams', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'fat_cut_dams', 'cols', [8]) #b1
+        axis_slice = f_update_default_controls(user_controls, 'fat_cut_dams', 'axis_slice', {})
+        # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
+        # axis_slice[4] = [0, 7, 1]  #All DVPs for Triplets
+        reports["fat_cut_dams"] = rfun.f_stock_pasture_summary(lp_vars, r_vals, type=type
+                                    , prod=prod, na_prod=na_prod
+                                    , weights=weights, na_weights=na_weights
+                                    , prod_weights=prod_weights, na_prodweights=na_prodweights
+                                    , den_weights=den_weights, na_denweights=na_denweights
+                                    , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_wbe_offs', 'Run']:
         type = 'stock'
         prod = 'wbe_k3k5tvnwziaxyg3'

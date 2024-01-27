@@ -7700,6 +7700,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     r_wbe_tvg1 = sfun.f1_p2v(r_wbe_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     r_wbe_tvg3 = sfun.f1_p2v(r_wbe_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
 
+    ##fat at start of the DVP - not accounting for mortality
+    r_fat_tvg1 = sfun.f1_p2v(r_fat_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_fat_tvg2 = sfun.f1_p2v(r_fat_tpyatf, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_fat_tvg3 = sfun.f1_p2v(r_fat_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
+
+    ##fat at start of the DVP - not accounting for mortality
+    r_muscle_tvg1 = sfun.f1_p2v(r_muscle_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_muscle_tvg2 = sfun.f1_p2v(r_muscle_tpyatf, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_muscle_tvg3 = sfun.f1_p2v(r_muscle_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
+
+    ##fat at start of the DVP - not accounting for mortality
+    r_viscera_tvg1 = sfun.f1_p2v(r_viscera_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_viscera_tvg2 = sfun.f1_p2v(r_viscera_tpyatf, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_viscera_tvg3 = sfun.f1_p2v(r_viscera_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
+
     ##nfoet scanning
     r_nfoet_scan_tvg1 = sfun.f1_p2v(nfoet_b1nwzida0e0b0xyg, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
                                 on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_scan_pa1e1b1nwzida0e0b0xyg1)
@@ -8913,6 +8928,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                           mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3
                                                                                   * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
+    ##fat - fat mass at start of DVP, no account for mortality
+    r_fat_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_fat_tvg1,
+                                                                        a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                        index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                        mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
+    r_fat_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs',r_fat_tvg3,a_k3cluster_da0e0b0xyg3
+                                      , index_k3k5tva1e1b1nwzida0e0b0xyg3, a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3
+                                      , mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     #############################################
     #weaning %, scan % and lamb survival reports#
@@ -8969,8 +8992,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     period_is_report_p = period_is_report_p[0:len_p]
 
     ##ffcfw in select p slices to reduce size.
-    #todo Add variables to allow reporting of the component weights (fat, muscle & viscera) with a 'cut' p axis
     r_ebw_dams_k2tvPdams = (r_ebw_tpdams[:, na, period_is_report_p, ...]
+                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                                 == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+
+    ##wbe in select p slices to reduce size.
+    r_wbe_dams_k2tvPdams = (r_wbe_tpdams[:, na, period_is_report_p, ...]
+                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                                 == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+
+    ##fat in select p slices to reduce size. #todo could also do muscle and viscera
+    r_fat_dams_k2tvPdams = (r_fat_tpdams[:, na, period_is_report_p, ...]
                               * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
                                  == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
@@ -9967,6 +10001,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fun.f1_make_r_val(r_vals,r_wbe_k2tva1e1b1nwzida0e0b0xyg1,'wbe_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals,r_wbe_k3k5tva1e1b1nwzida0e0b0xyg3,'wbe_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5Tvnwziaxyg3_shape)
 
+    ###fat - this uses generator t axis (thus it can be singleton but it is always broadcastable with normal t)
+    fun.f1_make_r_val(r_vals,r_fat_k2tva1e1b1nwzida0e0b0xyg1,'fat_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_fat_k3k5tva1e1b1nwzida0e0b0xyg3,'fat_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5Tvnwziaxyg3_shape)
+
     ###cfw
     fun.f1_make_r_val(r_vals,r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0,'cfw_hdmob_zg0', shape=zg0_shape) #no mask needed since no active period axis
     fun.f1_make_r_val(r_vals,r_cfw_hdmob_k2tva1e1b1nwzida0e0b0xyg1,'cfw_hdmob_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
@@ -10072,9 +10110,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     nyatf_b1nwzida0e0b0xygb9 = nyatf_b1nwzida0e0b0xyg[...,na] == index_b9
     fun.f1_make_r_val(r_vals,nfoet_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1)),'mask_b1b9_preg_b1nwziygb9')
 
-    ###ffcfw with only a few p slices
-    #todo add the component weights here
+    ###ebw with only a few p slices
     fun.f1_make_r_val(r_vals, r_ebw_dams_k2tvPdams, 'ebw_dams_k2tvPa1e1b1nw8ziyg1',
+                      mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
+
+    ###WBE with only a few p slices
+    fun.f1_make_r_val(r_vals, r_wbe_dams_k2tvPdams, 'wbe_dams_k2tvPa1e1b1nw8ziyg1',
+                      mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
+
+    ###Fat with only a few p slices
+    #todo add muscle and viscera weights here
+    fun.f1_make_r_val(r_vals, r_fat_dams_k2tvPdams, 'fat_dams_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
 
     ###mort - uses b axis instead of k for extra detail when scan=0
