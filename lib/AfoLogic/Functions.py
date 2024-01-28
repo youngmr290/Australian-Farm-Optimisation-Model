@@ -540,7 +540,7 @@ def f_approach_asymptote(day0, p, step):
     :param p -  the rate constant that the measure approaches the asymptote
     :param step - the length of the generator period in days'''
 
-    average = day0 * (1 - (1 - p) ** step) / p / step
+    average = f_divide(day0 * (1 - (1 - p) ** step) / p, step)   #f_divide because length of period can be 0
     return average
 
 def solve_cubic_for_logistic(a, b, c, d):

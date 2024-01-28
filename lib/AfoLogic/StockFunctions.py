@@ -1658,7 +1658,7 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei, md, hp_maint, dw, hp_
     ##Process the muscle REV: if muscle is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     t_dm = f1_rev_update('muscle', t_dm, rev_trait_value)
     ## Step 7c: m can not exceed alpha_m so limit the magnitude of dm
-    dm = np.minimum(t_dm, (alpha_m - m) / step)
+    dm = np.minimum(t_dm, fun.f_divide(alpha_m - m , step))   #f_divide because length of period can be 0
     ## Step 7d: Heat production associated with the change in protein
     hp_dm = bcm * dm
     ##Step 8: Calculate df including heat loss from chill
