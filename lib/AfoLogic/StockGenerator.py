@@ -2811,7 +2811,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         if np.all(sinp.structuralsa['i_rev_trait_scenario'] == 0):
             rev_trait_values = f_create_empty_rev_dict()  #if rev is not being used an empty dict is still required.
         else:
-            print('REV values being used.')
+            print(f'REV {rev_number} values being used.')
             try:
                 with open('pkl/pkl_rev_trait{0}.pkl'.format(rev_number), "rb") as f:
                     rev_trait_values = pkl.load(f)
