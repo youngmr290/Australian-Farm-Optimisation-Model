@@ -123,7 +123,8 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output):
         ##solve with cplex if it exists
         solver = pe.SolverFactory('cplex')
         solver_result = solver.solve(model, warmstart=True, tee=True)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
-    elif method=="HiGHS": #todo this doesnt work yet.
+    elif method=="HiGHS":
+        import highspy
         # solver = appsi.solvers.Highs()
         solver = pe.SolverFactory('appsi_highs')
         solver_result = solver.solve(model)
