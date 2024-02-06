@@ -301,7 +301,7 @@ def f_con_area(model):
     model.con_area = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_season_types, rule=area_rule, doc='rotation area constraint')
 
 
-##Area on each LMU that can't be cropped
+##Max area on each LMU that can be cropped (some paddocks may not be croppable)
 def f_con_max_crop_area(model):
     '''
     Some farms have paddocks that are never cropped due to landscape factors or managerial preferences.
@@ -314,7 +314,7 @@ def f_con_max_crop_area(model):
                         k1 in model.s_crops) <= (model.p_area[l] - model.p_not_cropable_area_l[l]))
         else:
             return pe.Constraint.Skip
-    model.con_crop_area_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
+    model.con_max_crop_area_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
                                               model.s_season_types, model.s_lmus, rule=max_crop_area_bound,
                                               doc='bound on total pasture area')
 
