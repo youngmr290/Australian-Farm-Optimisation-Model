@@ -211,13 +211,13 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
 
     Has to occur before SA are applied because the SAs from web app have already been adjusted.
     '''
-    ##create a global dict with a flag for each input with LMU axis that is adjusted. This allows us to preform a check
+    ##create a global dict with a flag for each input with LMU axis that is adjusted. This allows us to perform a check
     ##that each input has been included here. The check occurs when the input is masked for lmu axis.
     global lmu_flag
     lmu_flag={}
 
     ##general
-    lmu_flag['i_lmu_idx']=True #manually add this because we dont want to adjust this input
+    lmu_flag['i_lmu_idx']=True #manually add this because we don't want to adjust this input
     fun.f1_lmuregion_to_lmufarmer(general, "i_lmu_area", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(general, "i_non_cropable_area_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(general, "arable", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
