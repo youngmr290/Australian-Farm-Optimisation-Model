@@ -272,10 +272,10 @@ def create_sa():
     sav['liming_freq'] = '-'  #number of years between applications
     ##SAM
     sam['crop_yield_k'] = np.ones(len_k, dtype='float64')    # SA multiplier for all rotation yield
-    sam['crop_fert_kn'] = np.ones((len_k, len_n), dtype='float64') #SA multipler on crop fertiliser
-    sam['pas_fert_kn'] = np.ones((len_pas_k, len_n), dtype='float64') #SA multipler on pas fertiliser
-    sam['crop_chem_k'] = np.ones(len_k, dtype='float64') #SA multipler on crop chem package cost (ie all chem timing are scalled the same)
-    sam['pas_chem_k'] = np.ones(len_pas_k, dtype='float64') #SA multipler on pas chem package cost (ie all chem timing are scalled the same)
+    sam['crop_fert_kn'] = np.ones((len_k, len_n), dtype='float64') #SA multiplier on crop fertiliser
+    sam['pas_fert_kn'] = np.ones((len_pas_k, len_n), dtype='float64') #SA multiplier on pas fertiliser
+    sam['crop_chem_k'] = np.ones(len_k, dtype='float64') #SA multiplier on crop chem package cost (ie all chem timing are scaled the same)
+    sam['pas_chem_k'] = np.ones(len_pas_k, dtype='float64') #SA multiplier on pas chem package cost (ie all chem timing are scaled the same)
     ##SAP
     ##SAA
     saa['crop_fert_passes_kn'] = np.zeros((len_k, len_n), dtype='float64') #SA adder on crop fertiliser passes
