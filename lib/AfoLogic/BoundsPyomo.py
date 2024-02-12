@@ -709,12 +709,12 @@ def f1_boundarypyomo_local(params, model):
         ###build bound if turned on
         if pasture_lmu_bound_inc:
             ###setbound
-            pas_area_l = fun.f_sa(np.array([999]), sen.sav['bnd_pas_area_l'], 5)  # 999 is arbitrary default value which mean skip constraint
+            pas_area_l = fun.f_sa(np.array([99999]), sen.sav['bnd_pas_area_l'], 5)  # 99999 is arbitrary default value which mean skip constraint
             pas_area_l = dict(zip(model.s_lmus, pas_area_l))
             ###constraint
             l_p7 = list(model.s_season_periods)
             def pas_bound(model, q, s, p7, z, l):
-                if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]) and pas_area_l[l] != 999:
+                if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]) and pas_area_l[l] != 99999:
                     return (sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_pasture_area[r,t]
                                 for r in model.s_phases for t in model.s_pastures)
                             == pas_area_l[l])
