@@ -282,6 +282,10 @@ def create_sa():
     saa['pas_fert_passes_kn'] = np.zeros((len_pas_k, len_n), dtype='float64') #SA adder on pas fertiliser passes
     saa['crop_chem_passes_kn1'] = np.zeros((len_k, len_n1), dtype='float64') #SA adder on crop chem passes
     saa['pas_chem_passes_kn1'] = np.zeros((len_pas_k, len_n1), dtype='float64') #SA adder on pas chem passes
+    saa['crop_fert_kn'] = np.zeros((len_k, len_n), dtype='float64') #SA adder on crop fertiliser
+    saa['pas_fert_kn'] = np.zeros((len_pas_k, len_n), dtype='float64') #SA adder on pas fertiliser
+    saa['crop_chem_k'] = np.zeros(len_k, dtype='float64') #SA adder on crop chem package cost (ie all chem timing are incremented the same)
+    saa['pas_chem_k'] = np.zeros(len_pas_k, dtype='float64') #SA adder on pas chem package cost (ie all chem timing are incremented the same)
     ##SAT
     ##SAR
 

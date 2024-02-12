@@ -612,6 +612,13 @@ def f_fert_cost(r_vals):
     fert_sam_k_n = pd.concat([crop_fert_k_n, pas_fert_k_n])
     fert_sam_krz_n = fert_sam_k_n.reindex(base_fert_rkz_n.index, axis=0, level=1)
     base_fert_rkz_n = base_fert_rkz_n.mul(fert_sam_krz_n)
+    ## apply saa
+    crop_fert_k_n = pd.DataFrame(sen.saa['crop_fert_kn'], index=keys_k, columns=keys_n)
+    pas_fert_k_n = pd.DataFrame(sen.saa['pas_fert_kn'], index=keys_k2, columns=keys_n)
+    fert_saa_k_n = pd.concat([crop_fert_k_n, pas_fert_k_n])
+    fert_saa_krz_n = fert_saa_k_n.reindex(base_fert_rkz_n.index, axis=0, level=1)
+    base_fert_rkz_n = base_fert_rkz_n.add(fert_saa_krz_n)
+
     ###drop landuse from index
     base_fert_rz_n = base_fert_rkz_n.droplevel(1,axis=0)
 
@@ -927,6 +934,17 @@ def f_chem_cost(r_vals):
     pas_chem_k = pd.Series(sen.sam['pas_chem_k'], index=keys_k2)
     chem_sam_k = pd.concat([crop_chem_k, pas_chem_k])
     chem_cost_rk_zn = chem_cost_rk_zn.mul(chem_sam_k, axis=0, level=1)
+    ###apply SAA - the saa value is applied to both slice of the n axis (herbicide & fungicide). They are summed later
+    crop_chem_k = pd.Series(sen.saa['crop_chem_k'], index=keys_k)
+    pas_chem_k = pd.Series(sen.saa['pas_chem_k'], index=keys_k2)
+    chem_saa_k = pd.concat([crop_chem_k, pas_chem_k])
+    chem_cost_rk_zn = chem_cost_rk_zn.add(chem_saa_k, axis=0, level=1)
+    # ## apply saa
+    # crop_chem_k_n = pd.DataFrame(sen.saa['crop_chem_kn'], index=keys_k, columns=keys_n)
+    # pas_chem_k_n = pd.DataFrame(sen.saa['pas_chem_kn'], index=keys_k2, columns=keys_n)
+    # chem_saa_k_n = pd.concat([crop_chem_k_n, pas_chem_k_n])
+    # chem_saa_kr_zn = chem_saa_k_n.reindex(crop_chem_rk_zn.index, axis=0, level=1)
+    # chem_cost_rk_zn = crop_chem_rk_zn.add(chem_saa_kr_zn)
     ###drop landuse from index
     chem_cost_r_zn = chem_cost_rk_zn.droplevel(1, axis=0)
     ### sum herbicide and fungicide cost
