@@ -9835,7 +9835,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ####period dates
     roe1g1_shape = 4, len_o, len_e1, len_g1 #4 is the number of repro dates stored
     ve1zg1_shape = len_v1, len_e1, len_z, len_g1
+    vzig1_shape = len_v1, len_z, len_i, len_g1
     vzdxg3_shape = len_v3, len_z, len_d, len_x, len_g3
+
+    ###period_is
+    fun.f1_make_r_val(r_vals,dvp_is_mating,'dvp_is_mating_vzig1', shape=vzig1_shape)
 
     ###z8 masks for unclustering lp_vars
     fun.f1_make_r_val(r_vals,mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:],'maskz8_k2tvanwziy1g1') #slice off unused axis
