@@ -173,7 +173,7 @@ def f_landuse_sets():
                     , 'T', 'J'} #all landuses
     landuse['C1']={'C1','B','O','O1','W', 'N', 'K', 'L', 'F', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
     landuse['P']={'P','K','L', 'F', 'f','i', 'k', 'l', 'v'} #pulses
-    landuse['E']={'E','B','O','O1','W', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd'} #cereals
+    landuse['E']={'E','B','O','O1','W', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd'} #cereals
     landuse['Ag0']={'a', 'a2', 's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
     landuse['Ag1']={'Ag1', 'A1', 'a'} #all non-spraytopped annual sets that can exist in yr1
     landuse['Ag2']={'Ag2', 'A', 'A2', 'A1'

@@ -619,6 +619,8 @@ def f_summary(lp_vars, r_vals, trial):
                                                       'SR', 'SR max', 'SR min', 'SR stdev', 'Pas %', 'Pas % max', 'Pas % min', 'Pas % stdev',
                                                       'Cereal %', 'Cereal % max', 'Cereal % min', 'Cereal % stdev',
                                                       'Canola %', 'Canola % max', 'Canola % min', 'Canola % stdev',
+                                                      'Pulse %', 'Pulse % max', 'Pulse % min', 'Pulse % stdev',
+                                                      'Fodder %', 'Fodder % max', 'Fodder % min', 'Fodder % stdev',
                                                       'Sup', 'Sup max', 'Sup min', 'Sup stdev'])
     ##profit - no minroe and asset
     summary_df.loc[trial, 'profit'] = f_profit(lp_vars, r_vals, option=0)
@@ -659,6 +661,20 @@ def f_summary(lp_vars, r_vals, trial):
     summary_df.loc[trial, 'Canola % max'] = Canola_max * np.logical_not(Canola_min==Canola_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Canola % min'] = Canola_min * np.logical_not(Canola_min==Canola_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Canola % stdev'] = f_area_summary(lp_vars, r_vals, option=7)[3]
+    ##pulse %
+    summary_df.loc[trial, 'Pulse %'] = f_area_summary(lp_vars, r_vals, option=8)[0]
+    pulse_max = f_area_summary(lp_vars, r_vals, option=8)[1]
+    pulse_min = f_area_summary(lp_vars, r_vals, option=8)[2]
+    summary_df.loc[trial, 'Pulse % max'] = pulse_max * np.logical_not(pulse_min==pulse_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Pulse % min'] = pulse_min * np.logical_not(pulse_min==pulse_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Pulse % stdev'] = f_area_summary(lp_vars, r_vals, option=8)[3]
+    ##canola %
+    summary_df.loc[trial, 'Fodder %'] = f_area_summary(lp_vars, r_vals, option=9)[0]
+    fodder_max = f_area_summary(lp_vars, r_vals, option=9)[1]
+    fodder_min = f_area_summary(lp_vars, r_vals, option=9)[2]
+    summary_df.loc[trial, 'Fodder % max'] = fodder_max * np.logical_not(fodder_min==fodder_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Fodder % min'] = fodder_min * np.logical_not(fodder_min==fodder_max) #sets min/max to 0 if range is 0 so the cols get hidden
+    summary_df.loc[trial, 'Fodder % stdev'] = f_area_summary(lp_vars, r_vals, option=9)[3]
     ##supplement
     summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
     Sup_max = f_grain_sup_summary(lp_vars, r_vals, option=4)[1]
@@ -709,6 +725,8 @@ def f_area_summary(lp_vars, r_vals, option):
         #. float pasture %, max, min & stdev in p7[-1]
         #. float cereal %, max, min & stdev in p7[-1]
         #. float canola %, max, min & stdev in p7[-1]
+        #. float pulse %, max, min & stdev in p7[-1]
+        #. float fodder %, max, min & stdev in p7[-1]
         #. table all rotations by lmu with disagregated land uses as index
 
     '''
@@ -723,7 +741,7 @@ def f_area_summary(lp_vars, r_vals, option):
         return rot_area_qszr_lp7.round(2)
 
     ##all rotations by lmu - with expanded landuse as index
-    if option == 8:
+    if option == 10:
         ### slice p7[-1] and unstack lmu
         rot_area_qszr_l = rot_area_qszrl_p7.iloc[:,-1].unstack(-1)
         ###remove current land use from index and add to df
@@ -761,7 +779,7 @@ def f_area_summary(lp_vars, r_vals, option):
         landuse_area_qsz_k = landuse_area_qsz_k.reindex(r_vals['pas']['keys_k'], axis=1).fillna(0) #expand to full k (incase landuses were masked out) and unused landuses get set to 0
         return landuse_area_qsz_k
 
-    if option==5 or option==6 or option==7: #average % of pasture/cereal/canola in p7[-1]
+    if option==5 or option==6 or option==7 or option==8 or option==9: #average % of pasture/cereal/canola in p7[-1]
         keys_q = r_vals['zgen']['keys_q']
         keys_s = r_vals['zgen']['keys_s']
         keys_z = r_vals['zgen']['keys_z']
@@ -807,6 +825,32 @@ def f_area_summary(lp_vars, r_vals, option):
             canola_area_min = np.min(ma_canola_area_qsz)
             canola_area_stdev = np.sum((canola_area_qsz - canola_area_mean) ** 2 * z_prob_qsz) ** 0.5
             return round(canola_area_mean, 1), round(canola_area_max, 1), round(canola_area_min, 1), round(canola_area_stdev, 1)
+        if option == 8:
+            all_pulses = r_vals['rot']['all_pulses']  # landuse sets
+            pulse_area_p7qszl = landuse_area_k_p7qszl[landuse_area_k_p7qszl.index.isin(all_pulses)].sum()  # sum landuse
+            pulse_area_p7qsz = pulse_area_p7qszl.groupby(level=(0, 1, 2, 3)).sum()  # sum l
+            pulse_area_qsz = pulse_area_p7qsz.unstack(0).iloc[:, -1]  # slice for p7[-1]
+            pulse_area_qsz = fun.f_divide(pulse_area_qsz, rot_area_qsz) * 100
+            ###stdev and range
+            pulse_area_mean = np.sum(pulse_area_qsz * z_prob_qsz)
+            ma_pulse_area_qsz = np.ma.masked_array(pulse_area_qsz, z_prob_qsz == 0)
+            pulse_area_max = np.max(ma_pulse_area_qsz)
+            pulse_area_min = np.min(ma_pulse_area_qsz)
+            pulse_area_stdev = np.sum((pulse_area_qsz - pulse_area_mean) ** 2 * z_prob_qsz) ** 0.5
+            return round(pulse_area_mean, 1), round(pulse_area_max, 1), round(pulse_area_min, 1), round(pulse_area_stdev, 1)
+        if option == 9:
+            all_fodders = r_vals['rot']['fodder']  # landuse sets
+            fodder_area_p7qszl = landuse_area_k_p7qszl[landuse_area_k_p7qszl.index.isin(all_fodders)].sum()  # sum landuse
+            fodder_area_p7qsz = fodder_area_p7qszl.groupby(level=(0, 1, 2, 3)).sum()  # sum l
+            fodder_area_qsz = fodder_area_p7qsz.unstack(0).iloc[:, -1]  # slice for p7[-1]
+            fodder_area_qsz = fun.f_divide(fodder_area_qsz, rot_area_qsz) * 100
+            ###stdev and range
+            fodder_area_mean = np.sum(fodder_area_qsz * z_prob_qsz)
+            ma_fodder_area_qsz = np.ma.masked_array(fodder_area_qsz, z_prob_qsz == 0)
+            fodder_area_max = np.max(ma_fodder_area_qsz)
+            fodder_area_min = np.min(ma_fodder_area_qsz)
+            fodder_area_stdev = np.sum((fodder_area_qsz - fodder_area_mean) ** 2 * z_prob_qsz) ** 0.5
+            return round(fodder_area_mean, 1), round(fodder_area_max, 1), round(fodder_area_min, 1), round(fodder_area_stdev, 1)
 
 
 def f_mach_summary(lp_vars, r_vals, option=0):
