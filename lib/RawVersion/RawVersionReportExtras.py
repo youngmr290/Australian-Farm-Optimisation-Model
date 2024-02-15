@@ -15,6 +15,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_non_exist"] = pd.DataFrame(non_exist_trials).rename_axis('Trial')  # name of any infeasible trials
     reports["stacked_summary"] = pd.DataFrame()  # 1 line summary of each trial
     reports["stacked_areasum"] = pd.DataFrame()  # area summary
+    reports["stacked_cropsum"] = pd.DataFrame()  # area summary
     reports["stacked_profit"] = pd.DataFrame()  # profit
     reports["stacked_numbers_qsz"] = pd.DataFrame()  # total dse by qsz
     reports["stacked_croparea_qsz"] = pd.DataFrame()  # total crop by qsz
@@ -116,6 +117,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_areasum', 'Run']:
         areasum = pd.concat([reports["areasum"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_areasum"] = rfun.f_append_dfs(stacked_reports["stacked_areasum"], areasum)
+
+    if report_run.loc['run_cropsum', 'Run']:
+        cropsum = pd.concat([reports["cropsum"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_cropsum"] = rfun.f_append_dfs(stacked_reports["stacked_cropsum"], cropsum)
 
     if report_run.loc['run_profit', 'Run']:
         profit = pd.concat([reports["profit"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -509,6 +514,8 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_summary"], 'summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_areasum', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_areasum"], 'areasum', df_settings, option=xl_display_mode)
+    if report_run.loc['run_cropsum', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_cropsum"], 'cropsum', df_settings, option=xl_display_mode)
     if report_run.loc['run_profit', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_profit"], 'profit', df_settings, option=xl_display_mode)
     if report_run.loc['run_numbers_qsz', 'Run']:

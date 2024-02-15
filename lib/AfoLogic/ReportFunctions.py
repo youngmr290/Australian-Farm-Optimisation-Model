@@ -559,7 +559,7 @@ def f_var_reshape(lp_vars, r_vals):
 # intermediate report building functions#
 #########################################
 def f_price_summary(lp_vars, r_vals, option, grid, weight, score):
-    '''Returns price summaries
+    '''Returns price summaries. Prices are before subtracting selling costs.
 
     :param r_vals:
     :param option:
@@ -1015,11 +1015,12 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
 
     :param option: int:
 
-            #. return dict with sup cost
+            #. return dict with sup cost and revenue from grain sales
             #. return total supplement fed in each feed period
             #. return total of each grain supplement fed in each feed period in each season
             #. return total of each grain supplement fed in each feed period for each feed pool in each season
             #. return total sup fed (weighted by season prob)
+            #. return total grain/hay produced on farm.
 
     '''
     ##z masks to uncluster lp_vars
@@ -1058,7 +1059,7 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         return round(grain_fed_mean, 1), round(grain_fed_max, 1), round(grain_fed_min, 1), round(grain_fed_stdev, 1),
 
     ##NOTE: this only works if there is one time of grain purchase/sale
-    if option == 0:
+    if option == 0 or option == 5:
         ##create dict to store grain variables
         grain = {}
         ##prices
@@ -1083,6 +1084,8 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
 
         ##total grain produced by crop enterprise
         total_grain_produced_zks2gqs = grain_sold_zks2gqs + grain_fed_zks2gqs - grain_purchased_zks2gqs  # total grain produced by crop enterprise
+        if option==5:
+            return total_grain_produced_zks2gqs
         grains_sale_price_zks2gqs_p7 = grains_sale_price_zks2g_p7.reindex(total_grain_produced_zks2gqs.index, axis=0)
         grains_buy_price_zks2gqs_p7 = grains_buy_price_zks2g_p7.reindex(total_grain_produced_zks2gqs.index, axis=0)
         rev_grain_k_p7zqs = grains_sale_price_zks2gqs_p7.mul(total_grain_produced_zks2gqs, axis=0).unstack([0,4,5]).groupby(axis=0, level=0).sum()  # sum grain pool and s2
@@ -1100,7 +1103,7 @@ def f_mvf_summary(lp_vars):
     return mvf_qsp6vq.unstack([-1,-2])
 
 
-def f_crop_summary(lp_vars, r_vals, option=0):
+def f_crop_cash_summary(lp_vars, r_vals, option=0):
     '''
     Crop summary. Includes pasture inputs.
     :param option:
@@ -1548,7 +1551,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
 
     '''
     ##read stuff from other functions that is used in rev and cost section
-    exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k_p7zqs = f_crop_summary(lp_vars, r_vals, option=0)
+    exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k_p7zqs = f_crop_cash_summary(lp_vars, r_vals, option=0)
     exp_mach_k_p7zqs, mach_insurance_p7z = f_mach_summary(lp_vars, r_vals)
     stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qszp7 = f_stock_cash_summary(lp_vars, r_vals)
     slp_estab_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='slp', prod='slp_estab_cost_p7z', na_prod=[0,1,4]
@@ -1559,8 +1562,6 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     dep_qsp7z = f_dep_summary(lp_vars, r_vals)
     minroe_qsp7z = f_minroe_summary(lp_vars,r_vals)
     asset_cost_qsp7z = f_asset_cost_summary(lp_vars,r_vals)
-
-
 
     ##manipulate arrays into correct shape
     all_pas = r_vals['rot']['all_pastures']  # landuse sets
@@ -1664,9 +1665,6 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
 
     ##weight the qsz axis if option 2
     if option==2:
-        keys_q = r_vals['zgen']['keys_q']
-        keys_s = r_vals['zgen']['keys_s']
-        keys_z = r_vals['zgen']['keys_z']
         index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
         z_prob_qsz = r_vals['zgen']['z_prob_qsz']
         z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
@@ -1680,6 +1678,87 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl = pnl.astype(float).round(1).fillna(0)  # have to go to float so rounding works
 
     return pnl
+
+
+
+
+def f_crop_summary(lp_vars, r_vals, option):
+    '''
+    Returns a production summary for each crop land use. Similar to that found in a farmers budget report.
+
+    :param lp_vars: dict - results from pyomo
+    :param r_vals: dict - report variable
+    :return: dataframe
+
+    '''
+    ##crop area
+    keys_k = r_vals['pas']['keys_k']
+    keys_k1 = r_vals['stub']['keys_k1']
+    is_crop = np.any(keys_k==keys_k1[:,na], axis=0)
+    landuse_area_qsz_k = f_area_summary(lp_vars, r_vals, option=4)
+    landuse_area_qsz_k1 = landuse_area_qsz_k.loc[:,is_crop]
+
+    ##propn fodder
+    v_use_biomass_qsp7zkls2 = d_vars['base']['v_use_biomass_qsp7zkls2']  # use base vars because z is being reported
+    v_use_biomass_qszks2 = v_use_biomass_qsp7zkls2.sum(axis=(2,5))
+    total_biomass_qszk = v_use_biomass_qszks2.sum(axis=-1)
+    graz_idx = list(r_vals['stub']['keys_s2']).index("Graz")
+    biomass_fodder_qszk = v_use_biomass_qszks2[:,:,:,:,graz_idx]
+    fodder_percent_qszk = fun.f_divide(biomass_fodder_qszk, total_biomass_qszk)
+
+    ##grain harvested
+    total_grain_and_hay_produced_zks2gqs = f_grain_sup_summary(lp_vars, r_vals, option=5)
+    total_grain_and_hay_produced_zks2qs = total_grain_and_hay_produced_zks2gqs.groupby(level=(0,1,2,4,5)).sum() #sum grain pools (note price has already been adjusted for propn of seconds)
+    total_grain_produced_zkqs = total_grain_and_hay_produced_zks2qs.unstack(2).loc[:,'Harv']
+    total_grain_produced_qsz_k1 = total_grain_produced_zkqs.unstack(1).reorder_levels([1,2,0], axis=0)
+
+    ##grain price
+    grain_price_k = r_vals['crop']['farmgate_price'].loc[:,'Harv']
+
+    ##hay made
+    total_hay_made_zkqs = total_grain_and_hay_produced_zks2qs.unstack(2).loc[:,'Bale']
+    total_hay_made_qsz_k1 = total_hay_made_zkqs.unstack(1).reorder_levels([1,2,0], axis=0)
+
+    ##hay price
+    hay_price_k = r_vals['crop']['farmgate_price'].loc[:,'Bale']
+
+    ##create p/l dataframe
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    len_k1 = len(keys_k1)
+
+
+    idx = pd.IndexSlice
+    type = ['Area', 'Fodder %', 'Grain Harvested (t)', 'Hay Made (t)', 'Grain Price', 'Hay Price']
+    index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, type], names=['Sequence_year', 'Sequence', 'Season', 'Type'])
+    cropsum = pd.DataFrame(index=index, columns=keys_k1)  # need to initialise df with multiindex so rows can be added
+    cropsum = cropsum.sort_index() #have to sort to stop performance warning
+
+    ##income - add to p/l table each as a new row
+    ### Note: season start trade - at the start of each season stock numbers are averaged across the z axis. This item essentially accounts for a season with more animals selling some of its animals to seasons with less animals.
+    cropsum.loc[idx[:, :, :,'Area'],:] = landuse_area_qsz_k1.values #reindex because  has been sorted alphabetically
+    cropsum.loc[idx[:, :, :, 'Fodder %'], :] = fodder_percent_qszk.reshape(-1, len_k1)
+    cropsum.loc[idx[:, :, :, 'Grain Harvested (t)'], :] = total_grain_produced_qsz_k1.values
+    cropsum.loc[idx[:, :, :, 'Hay Made (t)'], :] = total_hay_made_qsz_k1.values
+    cropsum.loc[idx[:, :, :, 'Grain Price'], :] = grain_price_k.values
+    cropsum.loc[idx[:, :, :, 'Hay Price'], :] = hay_price_k.values
+
+    ##weight the qsz axis if option 2
+    if option==2:
+        keys_q = r_vals['zgen']['keys_q']
+        keys_s = r_vals['zgen']['keys_s']
+        keys_z = r_vals['zgen']['keys_z']
+        index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+        z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+        z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
+        z_prob_qsz = z_prob_qsz.reindex(cropsum.index, axis=0)
+        cropsum = cropsum.mul(z_prob_qsz, axis=0).groupby(level=(-1), axis=0).sum()
+
+    ##round numbers in df
+    cropsum = cropsum.astype(float).round(1).fillna(0)  # have to go to float so rounding works
+
+    return cropsum
 
 
 def f_profit(lp_vars, r_vals, option=0):
