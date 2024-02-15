@@ -52,7 +52,7 @@ na = np.newaxis
 ###############
 #User control #
 ###############
-trial = 20   #20 is quick test
+trial = 31   #quick test
 
 ######
 #Run #
