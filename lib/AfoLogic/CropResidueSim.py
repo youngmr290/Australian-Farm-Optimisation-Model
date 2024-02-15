@@ -52,7 +52,7 @@ na = np.newaxis
 ###############
 #User control #
 ###############
-trial = 31   #quick test
+trial = 31   #Count the number of rows (starting at 0) offset from the Default trial
 
 ######
 #Run #
@@ -128,15 +128,17 @@ p_end = p_start_trial + pinp.stubble['trial_length']
 stubble_inp['p_start'] = p_start_trial
 stubble_inp['p_end'] = p_end
 
-##lw each period - based off fitting quadratic to the paddock data.
-days_since_trialstart_p = (date_start_p - date_start_p[p_start_trial]).astype(int) #days since trial start
+##lw each period - based on the fitted quadratic on grazing days (gdays) from the paddock data.
+stocking_rate_s2 = pinp.stubble['i_sr_s2']
+gdays_since_trialstart_ps2 = ((date_start_p - date_start_p[p_start_trial])[:, na]
+                              * stocking_rate_s2 / 100).astype(int)  # grazing days (100s) since trial start
 a_ks2 = pinp.stubble['i_a_ks2']
 b_ks2 = pinp.stubble['i_b_ks2']
 c_ks2 = pinp.stubble['i_c_ks2']
-trial_lw_pks2 = a_ks2*days_since_trialstart_p[:,na,na] + b_ks2*days_since_trialstart_p[:,na,na]**2 + c_ks2
+trial_lw_pks2 = a_ks2 * gdays_since_trialstart_ps2[:, na, :] + b_ks2 * gdays_since_trialstart_ps2[:, na, :] ** 2 + c_ks2
 
 ##dmd categories to generate - include deterioration.
-## deteriortation is since harvest because the definition of the categories are at harvest.
+## deterioration is since harvest because the definition of the categories are at harvest.
 dmd_s1 = pinp.stubble['i_stub_cat_dmd_s1'] #at harvest
 days_since_harv_p = (date_start_p - date_start_p[p_start_harv]).astype(int) #days since harvest
 dmd_ps1k = dmd_s1[:,na] * (1 - pinp.stubble['quality_deterioration']) ** days_since_harv_p[:,na,na]
@@ -185,8 +187,10 @@ for k in range(len_k):
 len_p2 = int(step)
 index_p2 = np.arange(len_p2)
 date_start_p1p2 = date_start_p[..., na] + index_p2
-days_since_trialstart_p1p2 = (date_start_p1p2 - date_start_p[p_start_trial,na]).astype(int)  # days since trial start
-trial_lw_p1p2ks2 = a_ks2 * days_since_trialstart_p1p2[:,:,na,na] + b_ks2 * days_since_trialstart_p1p2[:,:,na,na] ** 2 + c_ks2
+gdays_since_trialstart_p1p2s2 = ((date_start_p1p2 - date_start_p[p_start_trial,na])[:,:,na]
+                                 * stocking_rate_s2/100).astype(int)  # grazing days (100s) since trial start
+trial_lw_p1p2ks2 = (a_ks2 * gdays_since_trialstart_p1p2s2[:,:,na,:]
+                    + b_ks2 * gdays_since_trialstart_p1p2s2[:,:,na,:] ** 2 + c_ks2)
 trial_lw_pks2 = trial_lw_p1p2ks2.reshape(-1,len_k,len_s2)
 trial_lwc_pks2 = np.roll(trial_lw_pks2, shift=-1, axis=0) - trial_lw_pks2
 trial_lwc_p1p2ks2 = trial_lwc_pks2.reshape(-1,len_p2, len_k, len_s2)
@@ -197,7 +201,7 @@ grazing_days_p1s1ks2 = np.sum(np.equal(np.min(lwc_diff_p1p2s1ks2, axis=2,keepdim
 adj_intake_p1s1ks2 = intake_p1s1ks2 / (1 - pinp.stubble['quantity_decay'][:,na]) ** days_since_harv_p[:, na, na, na]
 ###multiply by adjusted intake and sum p axis to return the total intake for each dmd (stubble) category
 total_intake_s1ks2 = np.sum(grazing_days_p1s1ks2 * adj_intake_p1s1ks2, axis=0)
-total_intake_ha_s1ks2 = total_intake_s1ks2 * pinp.stubble['i_sr_s2']
+total_intake_ha_s1ks2 = total_intake_s1ks2 * stocking_rate_s2
 ###adjust for trampling - trampling is done as a percentage of consumed stubble thus trampling doesnt remove categories above because they have already been consumed.
 ### Trampling gets added on to reflect the amount of stubble at harvest.
 tramp_ks2 = pinp.stubble['trampling'][:,na]
