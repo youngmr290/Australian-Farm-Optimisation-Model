@@ -529,6 +529,19 @@ def f_comb(n,k):
     combinations = factorial[n]/(factorial[k]*factorial[n-k])
     return combinations
 
+def f_approach_asymptote(day0, p, step):
+    '''For a measure that is approaching an asymptote during the generator period. Convert an estimate of change on
+    day 0 to an average change across the days of the generator period. See Generator9:p14-15 for more detail derivation
+        if d(0) = p(x* - x(0))
+        then d(i) = d(0) * (1 - p)**i
+        and then sum the geometric series (let q = 1-p)
+        sum(d(i) (for i = 0 to n-1)) = d(0) (1-q**n) / (1-q)
+    :param day0 - the estimate of the change on day0 of the generator period
+    :param p -  the rate constant that the measure approaches the asymptote
+    :param step - the length of the generator period in days'''
+
+    average = f_divide(day0 * (1 - (1 - p) ** step) / p, step)   #f_divide because length of period can be 0
+    return average
 
 def solve_cubic_for_logistic(a, b, c, d):
     ''' Solve a general cubic equation of the form ax3 + bx2 + cx + d = 0

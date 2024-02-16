@@ -299,7 +299,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
         base_yields_k_z = base_yields_rk_z.groupby(level=1).mean()
         fun.f1_make_r_val(r_vals, base_yields_k_z, 'base_yields_k_z')
 
-    ##colate other info
+    ##collate other info
     biomass_lmus = pinp.crop['yield_by_lmu'] #soil yield factor
     arable = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']) #read in arable area df
     harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield is inputted as the harvestable grain
@@ -314,11 +314,11 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     baled_factor_k = 1/propn_baled_k/growth_scalar_k/propn_conserved_k * harvest_index_k
     baled_factor_k.iloc[:] = fun.f_update(baled_factor_k.values, 1, np.logical_not(is_baled_k)) #if landuse is not baled then set factor to 1 (mean that the yield inputted is grain at harvest time).
     grain_yields_rkz = base_yields_rkz.div(baled_factor_k, level=1)
-    ###calc biomass frrom grain harvested
+    ###calc biomass from grain harvested
     base_biomass_rkz = grain_yields_rkz.div(harvest_index_k, level=1)
 
     ##calculate biomass - base biomass * arable area * harv_propn * frost * lmu factor - seeding rate
-    biomass_arable_by_soil_k_l = biomass_lmus.mul(arable) #mul arable area to the the lmu factor (easy because dfs have the same axis's).
+    biomass_arable_by_soil_k_l = biomass_lmus.mul(arable) #mul arable area to the lmu factor (easy because dfs have the same axis's).
     biomass_rkz_l=biomass_arable_by_soil_k_l.reindex(base_biomass_rkz.index, axis=0, level=1).mul(base_biomass_rkz,axis=0).fillna(0) #reindes and mul with base biomass
     biomass_rkl_z = biomass_rkz_l.stack().unstack(2)
 
@@ -466,7 +466,7 @@ def f_fert_passes():
     fixed_fert_passes_rkz_n = pd.DataFrame(lime_passes_yearly, index=fert_passes_rkz_n.index, columns=['lime'], dtype=float)
     fert_passes_rkz_n = pd.concat([fert_passes_rkz_n, fixed_fert_passes_rkz_n], axis=1).groupby(axis=1, level=0).sum()
 
-    ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
+    ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks don't get crop (see function docs))
     nap_fert_passes_rkz_n = fert_passes_rkz_n.mul(nap_fert_scalar_r, axis=0, level=0)
 
     ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
@@ -556,14 +556,14 @@ def f_fert_cost(r_vals):
     fertiliser, which is applied based on both the current land use and the
     history.
 
-    Fertiliser is applied to non-arable area in pasture phases, it is not applied to
-    non-arable pasture in a crop phase because the non-arable pasture in a crop phase is not able to
-    be grazed until the end of the year, by which time it is rank and therefore a waste of
-    money to fertilise. Fertiliser rate for non-arable areas can be adjusted separately to the arable area.
+    Fertiliser rate for non-arable areas are calculated as a scalar of the arable area.
+    The standard assumption is that fertiliser is only applied to non-arable area in pasture phases
+    It is not applied to the non-arable area in the crop phase because the non-arable pasture in a crop phase is
+    only grazed at the end of the year when the pasture is rank and therefore fertiliser is not cost-effective.
 
     The cost of fertilising is made up from the cost of the fertilisers, the cost getting
     the fertiliser delivered to the farm and the machinery cost of application (detailed in the machinery section).
-    The cost is incurred in the cashflow period when it is applied. The assumption is that fertiliser is
+    The costs are incurred in the cashflow period when it is applied. The assumption is that fertiliser is
     purchased shortly before application because farmers wait to see how the year unfolds before locking
     in a fertiliser plan.
 
@@ -608,9 +608,6 @@ def f_fert_cost(r_vals):
     fixed_fert_rkz_n = pd.DataFrame(lime_cost_yearly, index=base_fert_rkz_n.index, columns=['lime'], dtype=float)
     base_fert_rkz_n = pd.concat([base_fert_rkz_n, fixed_fert_rkz_n], axis=1).groupby(axis=1, level=0).sum()
 
-    ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
-    nap_fert_rkz_n = base_fert_rkz_n.mul(nap_fert_scalar_r, axis=0, level=0)
-
     ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
     keys_n = uinp.general['i_fert_idx']
     keys_k = sinp.landuse['C']
@@ -620,15 +617,15 @@ def f_fert_cost(r_vals):
     fert_sam_k_n = pd.concat([crop_fert_k_n, pas_fert_k_n])
     fert_sam_krz_n = fert_sam_k_n.reindex(base_fert_rkz_n.index, axis=0, level=1)
     base_fert_rkz_n = base_fert_rkz_n.mul(fert_sam_krz_n)
-    nap_fert_rkz_n = nap_fert_rkz_n.mul(fert_sam_krz_n)
     ###drop landuse from index
     base_fert_rz_n = base_fert_rkz_n.droplevel(1,axis=0)
-    nap_fert_rz_n = nap_fert_rkz_n.droplevel(1,axis=0)
 
     ## adjust the fert cost for each rotation by lmu
     fert_by_soil_nl = fert_by_soil.stack() #read in fert by soil
     fert_rz_nl = base_fert_rz_n.mul(fert_by_soil_nl,axis=1,level=0)
-    nap_fert_rz_nl = nap_fert_rz_n.mul(fert_by_soil_nl,axis=1,level=0)
+
+    ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks dont get crop (see function docs))
+    nap_fert_rz_nl = fert_rz_nl.mul(nap_fert_scalar_r, axis=0, level=0)
 
     ##account for arable area
     arable_l = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx'])
