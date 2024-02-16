@@ -1564,7 +1564,9 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     asset_cost_qsp7z = f_asset_cost_summary(lp_vars,r_vals)
 
     ##manipulate arrays into correct shape
-    all_pas = r_vals['rot']['all_pastures']  # landuse sets
+    slp_landuses = ['sp']
+    all_pas = np.setxor1d(r_vals['rot']['all_pastures'], slp_landuses)  # landuse sets - excludes slp
+    all_crops = r_vals['rot']['all_crops']
     keys_p7 = r_vals['fin']['keys_p7']
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
@@ -1580,12 +1582,16 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     mach_p7_qsz = mach_p7zqs.unstack([2,3]).add(mach_insurance_p7z, axis=0).mul(df_mask_qs,axis=1).unstack()
     ####crop & pasture
     pasfert_p7_qsz = exp_fert_k_p7zqs[exp_fert_k_p7zqs.index.isin(all_pas)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
-    cropfert_p7_qsz = exp_fert_k_p7zqs[~exp_fert_k_p7zqs.index.isin(all_pas)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
+    slpfert_p7_qsz = exp_fert_k_p7zqs[exp_fert_k_p7zqs.index.isin(slp_landuses)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
+    cropfert_p7_qsz = exp_fert_k_p7zqs[exp_fert_k_p7zqs.index.isin(all_crops)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
     paschem_p7_qsz = exp_chem_k_p7zqs[exp_chem_k_p7zqs.index.isin(all_pas)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
-    cropchem_p7_qsz = exp_chem_k_p7zqs[~exp_chem_k_p7zqs.index.isin(all_pas)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
+    slpchem_p7_qsz = exp_chem_k_p7zqs[exp_chem_k_p7zqs.index.isin(slp_landuses)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
+    cropchem_p7_qsz = exp_chem_k_p7zqs[exp_chem_k_p7zqs.index.isin(all_crops)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
     pasmisc_p7_qsz = misc_exp_k_p7zqs[misc_exp_k_p7zqs.index.isin(all_pas)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
-    cropmisc_p7_qsz = misc_exp_k_p7zqs[~misc_exp_k_p7zqs.index.isin(all_pas)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
+    slpmisc_p7_qsz = misc_exp_k_p7zqs[misc_exp_k_p7zqs.index.isin(slp_landuses)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
+    cropmisc_p7_qsz = misc_exp_k_p7zqs[misc_exp_k_p7zqs.index.isin(all_crops)].sum(axis=0).unstack([2,3,1]).sort_index(axis=1)
     pas_p7_qsz = pd.concat([pasfert_p7_qsz, paschem_p7_qsz, pasmisc_p7_qsz], axis=0).groupby(axis=0, level=0).sum()
+    slp_p7_qsz = pd.concat([slpfert_p7_qsz, slpchem_p7_qsz, slpmisc_p7_qsz], axis=0).groupby(axis=0, level=0).sum()
     crop_p7_qsz = pd.concat([cropfert_p7_qsz, cropchem_p7_qsz, cropmisc_p7_qsz], axis=0).groupby(axis=0, level=0).sum()
     ####fixed overhead expenses
     index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
@@ -1599,8 +1605,8 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
 
     ##create p/l dataframe
     idx = pd.IndexSlice
-    subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue']
-    subtype_exp = ['crop', 'pasture', 'slp', 'stock husb and infra', 'stock sup', 'stock purchase', 'machinery', 'labour', 'fixed', 'Total expenses']
+    subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue (net of selling costs and freight)']
+    subtype_exp = ['crop', 'pasture', 'salt land pasture', 'stock husb and infra', 'stock sup', 'stock purchase', 'machinery', 'labour', 'fixed', 'Total expenses']
     subtype_tot = ['1 EBITDA', '2 depreciation', '3 asset value change', '4 profit', '5 opportunity_cost', '6 minRoe', '7 obj'] #numbered to keep them in the correct order
     pnl_rev_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Revenue'], subtype_rev], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
     pnl_exp_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Expense'], subtype_exp], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
@@ -1618,12 +1624,12 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl.loc[idx[:, :, :,'Revenue','grain'],:] = rev_grain_p7_qsz.T.reindex(pnl_cols, axis=1).values #reindex because  has been sorted alphabetically
     pnl.loc[idx[:, :, :, 'Revenue', 'sheep sales'], :] = stocksale_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Revenue', 'wool'], :] = wool_qszp7.reshape(-1, len_p7)
-    pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue'], :] = pnl.loc[pnl.index.get_level_values(3) == 'Revenue'].groupby(axis=0,level=(0,1,2)).sum().values
+    pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue (net of selling costs and freight)'], :] = pnl.loc[pnl.index.get_level_values(3) == 'Revenue'].groupby(axis=0,level=(0,1,2)).sum().values
 
     ##expenses - add to p/l table each as a new row
     pnl.loc[idx[:, :, :, 'Expense', 'crop'], :] = crop_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'pasture'], :] = pas_p7_qsz.T.values
-    pnl.loc[idx[:, :, :, 'Expense', 'slp'], :] = slp_estab_cost_qsz_p7.values
+    pnl.loc[idx[:, :, :, 'Expense', 'salt land pasture'], :] = slp_estab_cost_qsz_p7.add(slp_p7_qsz.T).values
     pnl.loc[idx[:, :, :, 'Expense', 'stock husb and infra'], :] = husbcost_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Expense', 'stock sup'], :] = supcost_qsz_p7.values
     pnl.loc[idx[:, :, :, 'Expense', 'stock purchase'], :] = purchasecost_qszp7.reshape(-1, len_p7)
@@ -1633,7 +1639,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl.loc[idx[:, :, :, 'Expense', 'Total expenses'], :] = pnl.loc[pnl.index.get_level_values(3) == 'Expense'].groupby(axis=0,level=(0,1,2)).sum().values
 
     ##EBITDA
-    ebtd = pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue']].values - pnl.loc[idx[:, :, :, 'Expense', 'Total expenses']].values
+    ebtd = pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue (net of selling costs and freight)']].values - pnl.loc[idx[:, :, :, 'Expense', 'Total expenses']].values
     pnl.loc[idx[:, :, :, 'Total', '1 EBITDA'], :] = ebtd #interest is counted in the cashflow of each item - it is hard to separate so it is not reported separately
 
     ##Full year - add a column which is total of all cashflow period
