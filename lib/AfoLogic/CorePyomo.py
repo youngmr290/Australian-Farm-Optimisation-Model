@@ -867,6 +867,11 @@ def f_objective(model):
     applied which approximates the function using 13 linear segments.
 
     '''
+    #todo in a future risk aversion analysis review the work by Scott M. Swinton (university of Michigan) he talks about
+    # another risk system that is a combination of relative and absolute risk aversion.
+    # The expo-power function we are using is based on Holt & Laurie’s variant of the original function introduced by Saha.  Here are the references:
+    # Saha, A. (1993). Expo‐power utility: a ‘flexible’form for absolute and relative risk aversion. American Journal of Agricultural Economics, 75(4), 905-913.
+    # Holt, C. A., & Laury, S. K. (2002). Risk Aversion and Incentive Effects. American Economic Review, 92(5), 1644-1655.
 
     ##terminal wealth transfer constraint - combine cashflow with depreciation, MINROE and asset value
     variables = model.component_objects(pe.Var,active=True)
