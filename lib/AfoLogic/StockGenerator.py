@@ -47,7 +47,6 @@ from . import StructuralInputs as sinp
 from . import StockFunctions as sfun
 from . import EmissionFunctions as efun
 from . import Periods as per
-from . import PlotViewer as pv
 from . import Exceptions as exc
 
 
@@ -6550,6 +6549,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ### scan-spreadsheet will activate if comparing equations
     scan_spreadsheet = False
     if scan_spreadsheet:
+        from . import PlotViewer as pv #import here so that read the docs doesnt try to import plotviewer
         print('Interact with the graph generator using the PlotViewer spreadsheet, kill each plot to continue')
     while scan_spreadsheet:
         try:
@@ -10496,6 +10496,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ## Call Steve's graph generator.
     ## Will be bypassed unless called from SheepTest.py or line below is uncommented
     if plots:
+        from . import PlotViewer as pv  # import here so that read the docs doesnt try to import plotviewer
         print('Interact with the graph generator using the PlotViewer spreadsheet, kill each plot to continue')
     scan_spreadsheet = plots   # argument passed to the StockGen function. True if called from SheepTest
     # scan_spreadsheet = True    #make line active to generate plots when called from exp.py
