@@ -148,6 +148,12 @@ def f_farmgate_grain_price(r_vals={}):
     price_df['firsts'] = grain_price_firsts_ks2
     price_df['seconds'] = grain_price_seconds_ks2
 
+    ##calc grain price before selling cost - for crop_summary report
+    propn_firsts_k = uinp.price['grain_price_info'][['prop_firsts']].squeeze()
+    propn_seconds_k = uinp.price['grain_price_info'][['prop_seconds']].squeeze()
+    ave_price_ks2 = grain_price_firsts_ks2.mul(propn_firsts_k, level=0) + grain_price_seconds_ks2.mul(propn_seconds_k.squeeze(), level=0)
+    fun.f1_make_r_val(r_vals,ave_price_ks2.unstack(),'farmgate_price')
+
     ##determine cost of selling
     cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance']
             + pinp.general['rail_cartage'] + uinp.price['flagfall'])
@@ -162,8 +168,7 @@ def f_farmgate_grain_price(r_vals={}):
     farmgate_price_ks2g_c1z = farmgate_price_ks2_g.reindex(new_index_c1zg, axis=1, level=2).stack()
     farmgate_price_ks2g_c1z = farmgate_price_ks2g_c1z.mul(grain_price_scalar_c1_z.stack(), axis=1)
     farmgate_price_ks2gc1_z = farmgate_price_ks2g_c1z.stack(0)
-    ##store and return
-    fun.f1_make_r_val(r_vals,farmgate_price_ks2gc1_z,'farmgate_price')
+    ##return
     return farmgate_price_ks2gc1_z
 
 

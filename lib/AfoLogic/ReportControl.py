@@ -88,8 +88,11 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     if report_run.loc['run_summary', 'Run']:
         reports["summary"] = rfun.f_summary(lp_vars,r_vals,"Summary")
     if report_run.loc['run_areasum', 'Run']:
-        option = f_update_default_controls(user_controls, 'areasum', 'option', 8) #default is all rotations by lmu in p7[-1] with disagregate landuse index.
+        option = f_update_default_controls(user_controls, 'areasum', 'option', 10) #default is all rotations by lmu in p7[-1] with disagregate landuse index.
         reports["areasum"] = rfun.f_area_summary(lp_vars, r_vals, option=option)
+    if report_run.loc['run_cropsum', 'Run']:
+        option = f_update_default_controls(user_controls, 'cropsum', 'option', 2) #default is all rotations by lmu in p7[-1] with disagregate landuse index.
+        reports["cropsum"] = rfun.f_crop_summary(lp_vars,r_vals, option=option)
     if report_run.loc['run_profit', 'Run']:
         option = f_update_default_controls(user_controls, 'profit', 'option', 4) #profit by zqs
         reports["profit"] = rfun.f_profit(lp_vars, r_vals, option=option)
