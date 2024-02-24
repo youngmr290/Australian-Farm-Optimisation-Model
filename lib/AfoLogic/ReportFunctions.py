@@ -681,7 +681,7 @@ def f_summary(lp_vars, r_vals, trial):
     summary_df.loc[trial, 'Pulse % max'] = pulse_max * np.logical_not(pulse_min==pulse_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Pulse % min'] = pulse_min * np.logical_not(pulse_min==pulse_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Pulse % stdev'] = f_area_summary(lp_vars, r_vals, option=8)[3]
-    ##canola %
+    ##fodder %
     summary_df.loc[trial, 'Fodder %'] = f_area_summary(lp_vars, r_vals, option=9)[0]
     fodder_max = f_area_summary(lp_vars, r_vals, option=9)[1]
     fodder_min = f_area_summary(lp_vars, r_vals, option=9)[2]
