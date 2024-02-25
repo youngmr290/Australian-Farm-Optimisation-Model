@@ -877,6 +877,9 @@ def f_objective(model):
     # Saha, A. (1993). Expo‐power utility: a ‘flexible’form for absolute and relative risk aversion. American Journal of Agricultural Economics, 75(4), 905-913.
     # Holt, C. A., & Laury, S. K. (2002). Risk Aversion and Incentive Effects. American Economic Review, 92(5), 1644-1655.
 
+    #todo another idea that is probably more akin to farmers attitude is to use the lowest 20% of years as measure of risk
+    # rather than the spread between years as traditionally done.
+
     ##terminal wealth transfer constraint - combine cashflow with depreciation, MINROE and asset value
     variables = model.component_objects(pe.Var,active=True)
     p7_end = list(model.s_season_periods)[-1]
