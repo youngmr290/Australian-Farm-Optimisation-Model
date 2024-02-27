@@ -187,6 +187,7 @@ Precalcs
 .. toctree::
    :maxdepth: 1
 
+   CropResidueSim
    CropResidue
 
 Pyomo

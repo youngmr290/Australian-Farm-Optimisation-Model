@@ -868,7 +868,11 @@ def time_ha():
     distance must be travelled to cover 1 ha in fertiliser)
     '''
     width_df = uinp.mach[pinp.mach['option']]['spreader_width']
-    return 10/(width_df*uinp.mach[pinp.mach['option']]['spreader_speed']*uinp.mach[pinp.mach['option']]['spreader_eff'])
+    time_n = 10/(width_df*uinp.mach[pinp.mach['option']]['spreader_speed']*uinp.mach[pinp.mach['option']]['spreader_eff']).squeeze()
+    ##mulitiplied by a factor (spreader_proportion) 0 or 1 if the fert is applied at seeding (or a fraction if applied at both seeding and another time)
+    spreader_proportion = pd.DataFrame([pinp.crop['fert_info']['spreader_proportion']]).squeeze()
+    time_n = time_n.mul(spreader_proportion)
+    return time_n
 
 #time taken to driving to and from paddock and filling up
 # hr/cubic m = ((ave distance to paddock *2)/speed + fill up time)/ spreader capacity  # *2 because to and from paddock

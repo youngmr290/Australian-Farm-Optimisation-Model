@@ -1686,8 +1686,6 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     return pnl
 
 
-
-
 def f_crop_summary(lp_vars, r_vals, option):
     '''
     Returns a production summary for each crop land use. Similar to that found in a farmers budget report.
@@ -2756,13 +2754,35 @@ def f_grazing_summary(lp_vars, r_vals):
 ############################
 def f_pasture_area_analysis(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
-    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Pas area', 'Sup'])
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Pas area', 'Ewes mated', 'Pas %', 'Cereal %', 'Canola %', 'Pulse %', 'Fodder %', 'Sup'])
     ##profit - no minroe and asset
     summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
     ##pasture area
     pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
     z_prob_qsz = r_vals['zgen']['z_prob_qsz']
     summary_df.loc[trial, 'Pas area'] = np.sum(pas_area_qsz * z_prob_qsz.ravel())
+    ##total dams mated
+    type = 'stock'
+    prod = 'dvp_is_mating_vzig1'
+    na_prod = [0,1,2,3,5,6,7,10]
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    keys = 'dams_keys_qsk2tvanwziy1g1'
+    arith = 2
+    index = []
+    cols = []
+    axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
+    dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc[trial, 'Ewes mated'] = dams_mated.squeeze()
+    ##pasture %
+    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+    ##cereal %
+    summary_df.loc[trial, 'Cereal %'] = f_area_summary(lp_vars, r_vals, option=6)[0]
+    ##canola %
+    summary_df.loc[trial, 'Canola %'] = f_area_summary(lp_vars, r_vals, option=7)[0]
+    ##pulse %
+    summary_df.loc[trial, 'Pulse %'] = f_area_summary(lp_vars, r_vals, option=8)[0]
+    ##fodder %
+    summary_df.loc[trial, 'Fodder %'] = f_area_summary(lp_vars, r_vals, option=9)[0]
     ##supplement
     summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
     return summary_df

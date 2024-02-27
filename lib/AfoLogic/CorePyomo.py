@@ -123,11 +123,14 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output):
         ##solve with cplex if it exists
         solver = pe.SolverFactory('cplex')
         solver_result = solver.solve(model, warmstart=True, tee=True)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
-    elif method=="HiGHS":
-        import highspy
-        # solver = appsi.solvers.Highs()
-        solver = pe.SolverFactory('appsi_highs')
-        solver_result = solver.solve(model)
+    elif method=="glpk":
+        ##solve with glpk to see options enter glpsol --help into command prompt.
+        solver = pe.SolverFactory('glpk')
+        solver.options['tmlim'] = 100  # limit solving time to 100sec in case solver stalls.
+        # solver.options['norelax'] = ""
+        # solver.options['dual'] = ""
+        # solver.options['nopresol'] = ""
+        solver_result = solver.solve(model, tee=True)  # tee=True for solver output - may be useful for troubleshooting
     elif method=="cbc":
         solver = pe.SolverFactory('cbc')
         solver.options['seconds'] = 60  # limit solving time. Occasionally CBC takes a long time to find optimum solution but it gets very close to optimum quickly.
@@ -136,13 +139,14 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output):
         solver = pe.SolverFactory('ipopt')
         solver_result = solver.solve(model, tee=True) #tee=True will print out solver information.
     else:
-        ##solve with glpk to see options enter glpsol --help into command prompt.
-        solver = pe.SolverFactory('glpk')
-        solver.options['tmlim'] = 100  # limit solving time to 100sec in case solver stalls.
-        # solver.options['norelax'] = ""
-        # solver.options['dual'] = ""
-        # solver.options['nopresol'] = ""
-        solver_result = solver.solve(model, tee=True)  # tee=True for solver output - may be useful for troubleshooting
+        import highspy
+        # solver = appsi.solvers.Highs()
+        solver = pe.SolverFactory('appsi_highs')
+        try:
+            solver_result = solver.solve(model)
+        except RuntimeError: #incase trial is infeasible (highs just throws an error but we want AFO to keep running so stop Highs trying to load solution)
+            solver_result = solver.solve(model, load_solutions=False)
+
 
     ##calc profit - profit = terminal wealth (this is the objective without risk) + minroe + asset_cost
     try:  # to handle infeasible (there is no profit component when infeasible)
@@ -867,6 +871,14 @@ def f_objective(model):
     applied which approximates the function using 13 linear segments.
 
     '''
+    #todo in a future risk aversion analysis review the work by Scott M. Swinton (university of Michigan) he talks about
+    # another risk system that is a combination of relative and absolute risk aversion.
+    # The expo-power function we are using is based on Holt & Laurie’s variant of the original function introduced by Saha.  Here are the references:
+    # Saha, A. (1993). Expo‐power utility: a ‘flexible’form for absolute and relative risk aversion. American Journal of Agricultural Economics, 75(4), 905-913.
+    # Holt, C. A., & Laury, S. K. (2002). Risk Aversion and Incentive Effects. American Economic Review, 92(5), 1644-1655.
+
+    #todo another idea that is probably more akin to farmers attitude is to use the lowest 20% of years as measure of risk
+    # rather than the spread between years as traditionally done.
 
     ##terminal wealth transfer constraint - combine cashflow with depreciation, MINROE and asset value
     variables = model.component_objects(pe.Var,active=True)

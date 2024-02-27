@@ -235,6 +235,7 @@ def create_sa():
     ##############
     ##SAV
     sav['cropgrazing_inc'] = '-'  #control if crop grazing is allowed
+    sav['cropgraze_propn_area_grazed_kl'] = np.full((len_k, len_l), '-', dtype=object)  #control proportion of crop area that can be grazed.
     ##SAM
     ##SAP
     ##SAA

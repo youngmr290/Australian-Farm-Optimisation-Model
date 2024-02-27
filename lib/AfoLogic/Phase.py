@@ -534,7 +534,7 @@ def f1_fertilising_time():
 
     ##time linked to spreading a hectare in paddock
     ###time taken to cover 1ha while spreading
-    time_ha_n = mac.time_ha().squeeze()
+    time_ha_n = mac.time_ha()
     ###total time
     time_ha_rzln = total_passes_rzln.mul(time_ha_n, level=-1)
 
