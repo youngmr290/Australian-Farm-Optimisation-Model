@@ -1,3 +1,5 @@
+.. _livestock_ref:
+
 Livestock
 ==================
 

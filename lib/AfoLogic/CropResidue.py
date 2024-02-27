@@ -6,43 +6,33 @@ stubble for stock consumption, or crops can be left standing for fodder grazing.
 and fodder are modelled in the same ways, as follows.
 
 Stubble and fodder are a key feed source for sheep during the summer months. In general, sheep graze crop residues
-selectively, preferring the higher quality components.  Thus, they tend to eat grain first, followed
-by leaf and finally stem. To allow the optimisation of the quantity of the stubble grazed and to reflect selective
-grazing the total crop residues are divided into ten categories. The higher categories are better
-quality but generally lower quantity. Consumption of a higher quality category allows the consumption of a lower
-category (e.g. sheep can not consume any of category B until some of category A has been consumed).
+selectively, preferring the higher quality components. They tend to eat grain first, followed by leaf and finally
+stem. To allow the optimisation of the proportion of the stubble grazed - which is optimising the trade-off
+between quantity and quality of the feed consumed - the total crop residues are divided into ten
+categories (A, B, C ... J). Each category is a defined quality, which is the same across all crop
+types. The higher categories are better quality but generally lower quantity. Lower quality categories
+can’t be consumed until some higher quality categories have been consumed. This reflects the reality
+of selective grazing and ensures the model can’t defer all the high quality stubble categories until
+late in the autumn while grazing lower quality categories earlier in summer. If feed in a given
+category is not consumed then it deteriorates in quality and quantity due to adverse effects of
+weather and the impact of sheep trampling.
 
-The total mass of crop residues at first
-grazing (harvest for stubble and an inputted date for fodder) is calculated as a product of the biomass,
-harvest index and proportion harvested (see f_biomass2residue). Over time if the feed is not consumed it
-deteriorates in quality and quantity due to adverse effects of weather and the impact of sheep trampling.
+The total mass of crop residues at first grazing (harvest for stubble and an inputted date for
+fodder) is calculated as a product of the biomass, harvest index and proportion harvested
+(see f_biomass2residue below). The total mass of the residue is allocated between the
+categories using the AFO’s residue simulator which leverages the AFO stock
+generator (see :ref:`livestock_ref` for more information).
 
-Residue production can be positively impacted by frost because frost during the plants flowering stage
-can damage cell tissue and reduce grain fill :cite:p:`RN144`. This results in less grain and more residue
-due to not using energy resources to fill grain. Thus, the harvest index used to calculate biomass to residue
-is adjusted by a frost factor. The frost factor can be customised for each
-crop which is required because different crops flower at different times, changing the impact and probability of
-frost biomass reduction. Frost factor can be customised for each LMU because frost effects can be altered by
-the LMU topography and soil type. For example, sandy soils are more affected by frost because the lower
-moisture holding capacity reduces the heat buffering from the soil.
-
-To represent crop residues in AFO requires the proportion of total residue in each category and the DMD (quality)
-of each category. The DMD of each category is an input which a proportion of the total residue is allocated to.
-The proportion in each category was determined using AFO's residue simulator which leverages the AFO
-stock generator (documented in a future section) in combination with trial liveweight data (Riggall 2017 pers comm).
-Using AFO's stock generator, animals that reflect those in the paddock trial were simulated on large range of diet
-qualities and daily intake, and liveweight change was determined. The liveweight change of the simulated animals
-was compared with the actual liveweight change in the paddock trial to determine the daily feed quality.
-Based on the number of
-sheep, the sheep intake, and the total crop residue available in the trial, the proportion of residue in each category
-was calculated.
+The proportion of total residue in each category is estimated with the :ref:`cropresiduesim` using
+trial data of sequential animal liveweights grazing crop residue of a crop with known yield. See :ref:`cropresiduesim`
+for more details.
 
 The energy provided from consuming each crop residue category is calculated from DMD. Like pasture, crop residue
 FOO is expressed in units of dry matter (excluding moisture), therefore feed energy is expressed as M/D
 (does not require dry matter content conversion). The volume of each crop residue category is calculated
 based on both the quality and availability of the feed.
 
-Farmer often rake and burn crop residue in preparation for the following seeding. This is represented as a
+Farmers often rake and burn crop residue in preparation for the following seeding. This is represented as a
 cost see Phase.py for further information.
 
 Stubble grazing optimisation in AFO includes:
@@ -92,7 +82,19 @@ na = np.newaxis
 
 def f_biomass2residue(residuesim=False):
     '''
-    Residue produced (Stubble or standing fodder) per kg of biomass .
+    Residue produced (Stubble or standing fodder) per kg of biomass.
+
+    The total mass of crop residues at first grazing (harvest for stubble and an inputted date for fodder) is
+    calculated as a product of the biomass, harvest index, proportion harvested and frost.
+
+    Residue production can be positively impacted by frost because frost during the plants flowering stage
+    can damage cell tissue and reduce grain fill :cite:p:`RN144`. This results in less grain and more residue
+    due to not using energy resources to fill grain. Thus, the harvest index used to calculate biomass to residue
+    is adjusted by a frost factor. The frost factor can be customised for each
+    crop which is required because different crops flower at different times, changing the impact and probability of
+    frost biomass reduction. The frost factor can be customised for each LMU because frost effects can be altered by
+    the LMU topography and soil type. For example, sandy soils are more affected by frost because the lower
+    moisture holding capacity reduces the heat buffering from the soil.
 
     This is a separate function because it is used in residue simulator.
     '''

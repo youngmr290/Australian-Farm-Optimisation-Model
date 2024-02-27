@@ -231,7 +231,7 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
 
     ##cropgraze
     fun.f1_lmuregion_to_lmufarmer(cropgraze, "i_cropgrowth_lmu_factor_kl", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
-    fun.f1_lmuregion_to_lmufarmer(cropgraze, "i_cropgrazing_inc_landuse", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(cropgraze, "i_cropgraze_propn_area_grazed_kl", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
 
     ##saltbush
     fun.f1_lmuregion_to_lmufarmer(saltbush, "i_sb_lmu_scalar", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
@@ -367,6 +367,7 @@ def f_property_inp_sa(pinp_defaults):
     ##crop grazing
     ###sav
     cropgraze['i_cropgrazing_inc'] = fun.f_sa(cropgraze['i_cropgrazing_inc'], sen.sav['cropgrazing_inc'], 5)
+    cropgraze['i_cropgraze_propn_area_grazed_kl'] = fun.f_sa(cropgraze['i_cropgraze_propn_area_grazed_kl'], sen.sav['cropgraze_propn_area_grazed_kl'], 5)
     ###sam
     ###sap
     ###saa
@@ -612,7 +613,7 @@ def f1_mask_lmu():
 
     ##cropgraze
     f1_do_mask_lmu(cropgraze, "i_cropgrowth_lmu_factor_kl", lmu_axis=1)
-    f1_do_mask_lmu(cropgraze, "i_cropgrazing_inc_landuse", lmu_axis=1)
+    f1_do_mask_lmu(cropgraze, "i_cropgraze_propn_area_grazed_kl", lmu_axis=1)
 
     ##saltbush
     f1_do_mask_lmu(saltbush, "i_sb_lmu_scalar", lmu_axis=0)

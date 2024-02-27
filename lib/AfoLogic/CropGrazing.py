@@ -136,9 +136,9 @@ def f_cropgraze_DM(r_vals=None, total_DM=False):
     ##landuse mask - some crops can't be grazed
     ###lmu mask
     ###propn of crop grazing possible for each landuse.
-    landuse_grazing_kl = pinp.cropgraze['i_cropgrazing_inc_landuse']
+    propn_area_grazed_kl = pinp.cropgraze['i_cropgraze_propn_area_grazed_kl']
     ###mask which z crop graing can occur
-    landuse_grazing_kl = landuse_grazing_kl * cropgrazing_inc
+    propn_area_grazed_kl = propn_area_grazed_kl * cropgrazing_inc
 
     ##season mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
@@ -174,7 +174,7 @@ def f_cropgraze_DM(r_vals=None, total_DM=False):
         transfer_exists_p6p5z = transfer_exists_p6p5z * mask_fp_z8var_p6z[:,na,:]
         crop_DM_required_kp6p5z = crop_DM_required_kp6p5z * mask_fp_z8var_p6z[:,na,:]
 
-        crop_DM_provided_kp6p5z8lz9 = crop_DM_provided_kp6p5z8lz9 * landuse_grazing_kl[:,na,na,na,:,na]
+        crop_DM_provided_kp6p5z8lz9 = crop_DM_provided_kp6p5z8lz9 * propn_area_grazed_kl[:,na,na,na,:,na]
 
         ##store report vals
         fun.f1_make_r_val(r_vals, crop_DM_provided_kp6p5z8lz9, 'crop_DM_provided_kp6p5z8lz9') #doesnt need unclustering because of z9 axis
@@ -189,7 +189,7 @@ def f_cropgraze_DM(r_vals=None, total_DM=False):
                                                      date_start_p5z + establishment_days >= date_start_p6z[:,na,:]) #only get initial DM in the fp when seeding first occurs.
         crop_foo_kp6p5zl =  initial_DM_p6p5z[...,na] + np.cumsum(total_dm_growth_kp6p5zl * (1-consumption_factor_p6z[:,na,:,na])
                                                             , axis=1) - total_dm_growth_kp6p5zl/2 * (1-consumption_factor_p6z[:,na,:,na])
-        return crop_foo_kp6p5zl * landuse_grazing_kl[:,na,na,na,:]
+        return crop_foo_kp6p5zl * (propn_area_grazed_kl[:,na,na,na,:]>0) #second part to set unused dv to 0 so it is removed from lp.
 
 # def f_DM_reduction_seeding_time():
 #     '''

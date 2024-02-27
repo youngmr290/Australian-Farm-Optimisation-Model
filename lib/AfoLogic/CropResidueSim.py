@@ -1,13 +1,39 @@
 """
 
-This module determines the proportion of total stubble in each category based on liveweight data from paddock trials.
-DMD for each category is an input along with information about the sheep in the paddock trials. Stockgenerator is
-then run to determine the LWC (live weight change) provided by each category. Based of off the actual trial LWC
-the proportion of stubble in each category is determined (every category is set to have at least some stubble
-so that transferring can always occur).
+The AFO residue simulator estimates the proportion of the crop residue in each category using trial data of
+sequential animal liveweights grazing crop residue of a crop with known yield. There are 2 steps to using
+the residue simulator:
 
-Stockgenerator is run for all sheep groups and then the animal that reflects the trial animal is selected.
-The different DMD levels are reflected along the w axis.
+    1.	The discrete animal liveweights (from trial data) are converted to a continuous function by fitting
+        a quadratic function to the liveweights and the number of grazing days since grazing started
+        (LW = a GD2 + b GD + c). This approach is as developed by Thomas et al. 2021. Using grazing days
+        as the independent variable allows trials that had varying stock numbers to be included.
+
+        The fitted quadratic curves are a better comparison of the grazing achieved from each crop or
+        site than liveweight versus date, because it includes the impact of stock numbers. However, it
+        is not accounting for the differences in the yield of the crops between sites. Yield is
+        accounted for in step 2.
+
+    2.	Run the AFO residue simulator (CropResidueSim.py) which uses inputs from Property.xlsx. The inputs include
+
+        a.	Crop yield
+        b.	Coefficients from the quadratic LW function
+        c.	The commencement day of the trial after the harvest date, so that feed deterioration can be estimated.
+        d.	Description of the animals that were grazing in the trial, including genotype (SRW), age, fleece length (for insulation), the physiological state of ewes (pregnant or lactating with litter size)
+        e.	Description of the environment for calculation of chill effects (wind speed, rainfall and temperature).
+        f.	Level of supplement consumed.
+
+As part of the Crop Residue Simulator, the stock generator (see :ref:`livestock_ref` for more information) is run for a range of
+feed qualities beginning at the week corresponding to the start of grazing in the trial. The liveweight
+change (LWC), metabolizable intake (MEI) & dry matter intake (DMI) is recorded for each feed quality
+assessed. The LWC of the animals in the trial, as estimated from the fitted quadratic, is compared to
+the range of feed qualities assessed to estimate the quality and quantity of the diet that was consumed
+by the animals in the trial. These calculations are carried out for a sufficient period that
+stubble (or fodder crop) from all the AFO stubble categories will have been grazed. The fitting
+of the quadratic to the measured LW means that the calculation of intake can be extended beyond
+the duration of the measurements made in the trial. The quantity of each stubble category is then
+calculated as a proportion of the total residue mass at harvest, and these values are the inputs
+stored in stubble.xlsx.
 
 If there are multiple paddock trials that are being used to simulate stubble there are two options:
 
@@ -32,190 +58,198 @@ import pandas as pd
 import numpy as np
 from scipy.optimize import minimize
 
-#AFO modules
-from lib.RawVersion import LoadExcelInputs as dxl
-from lib.RawVersion import LoadExp as exp
-from lib.RawVersion import RawVersionExtras as rve
-from lib.AfoLogic import UniversalInputs as uinp
-from lib.AfoLogic import PropertyInputs as pinp
-from lib.AfoLogic import StructuralInputs as sinp
-from lib.AfoLogic import StockFunctions as sfun
-from lib.AfoLogic import Functions as fun
-from lib.AfoLogic import Sensitivity as sen
-from lib.AfoLogic import StockGenerator as sgen
-from lib.AfoLogic import CropResidue as stub
-from lib.AfoLogic import relativeFile
+##do this so the module doesnt run when building the docs
+if __name__=="__main__":
+    #AFO modules
+    from lib.RawVersion import LoadExcelInputs as dxl
+    from lib.RawVersion import LoadExp as exp
+    from lib.RawVersion import RawVersionExtras as rve
+    from lib.AfoLogic import UniversalInputs as uinp
+    from lib.AfoLogic import PropertyInputs as pinp
+    from lib.AfoLogic import StructuralInputs as sinp
+    from lib.AfoLogic import StockFunctions as sfun
+    from lib.AfoLogic import Functions as fun
+    from lib.AfoLogic import Sensitivity as sen
+    from lib.AfoLogic import StockGenerator as sgen
+    from lib.AfoLogic import CropResidue as stub
+    from lib.AfoLogic import relativeFile
 
-na = np.newaxis
+    na = np.newaxis
 
+    #todo currently to handle multiple trials we need to run the simulator multiple time. A good long term solution will be
+    # to add trial as an axis. This shouldn't be too hard - just need to expanded the named ranges in pinp.xl and add axis below.
 
-###############
-#User control #
-###############
-trial = 20   #20 is quick test
+    ###############
+    #User control #
+    ###############
+    trial = 31   #Count the number of rows (starting at 0) offset from the Default trial
 
-######
-#Run #
-######
-##load excel data and experiment data
-exp_data, exp_group_bool, trial_pinp = exp.f_read_exp()
-sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp)
-d_rot_info = dxl.f_load_phases()
-cat_propn_s1_ks2 = dxl.f_load_stubble()
+    ######
+    #Run #
+    ######
+    ##load excel data and experiment data
+    exp_data, exp_group_bool, trial_pinp = exp.f_read_exp()
+    sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp)
+    d_rot_info = dxl.f_load_phases()
+    cat_propn_s1_ks2 = dxl.f_load_stubble()
 
-##select property for the current trial
-property = trial_pinp.iloc[trial]
+    ##select property for the current trial
+    property = trial_pinp.iloc[trial]
 
-##process user SA
-user_sa = rve.f_process_user_sa(exp_data, trial)
+    ##process user SA
+    user_sa = rve.f_process_user_sa(exp_data, trial)
 
-##select property and reset default inputs for the current trial. Must occur first.
-sinp.f_select_n_reset_sinp(sinp_defaults)
-sinp.f_landuse_sets()
-uinp.f_select_n_reset_uinp(uinp_defaults)
-pinp.f_select_n_reset_pinp(property, pinp_defaults)
+    ##select property and reset default inputs for the current trial. Must occur first.
+    sinp.f_select_n_reset_sinp(sinp_defaults)
+    sinp.f_landuse_sets()
+    uinp.f_select_n_reset_uinp(uinp_defaults)
+    pinp.f_select_n_reset_pinp(property, pinp_defaults)
 
-##update sensitivity values
-sen.create_sa()
-fun.f_update_sen(user_sa,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
+    ##update sensitivity values
+    sen.create_sa()
+    fun.f_update_sen(user_sa,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
 
-##call sa functions - assigns sa variables to relevant inputs
-sinp.f_structural_inp_sa(sinp_defaults)
-uinp.f_universal_inp_sa(uinp_defaults)
-pinp.f_property_inp_sa(pinp_defaults)
+    ##call sa functions - assigns sa variables to relevant inputs
+    sinp.f_structural_inp_sa(sinp_defaults)
+    uinp.f_universal_inp_sa(uinp_defaults)
+    pinp.f_property_inp_sa(pinp_defaults)
 
-##expand p6 axis to include nodes
-sinp.f1_expand_p6()
-pinp.f1_expand_p6()
+    ##expand p6 axis to include nodes
+    sinp.f1_expand_p6()
+    pinp.f1_expand_p6()
 
-#################
-#inputs for sgen#
-#################
-##inputs are stored in a dict
-stubble_inp = {}
-##create fs - read from inputs
+    #################
+    #inputs for sgen#
+    #################
+    ##inputs are stored in a dict
+    stubble_inp = {}
+    ##create fs - read from inputs
 
-##sim run periods - start and end p
-trial_commencement_date = pinp.stubble['start_trial']
-n_sim_periods, date_start_p, date_start_P, date_end_p, date_end_P, p_index_p, step \
-    = sfun.f1_sim_periods(sinp.stock['i_sim_periods_year'], sinp.stock['i_age_max'], pinp.sheep['i_o_len'])
-n_sim_periods_offs, offs_date_start_p, offs_date_start_P, offs_date_end_p, offs_date_end_P, p_index_offs_p, step \
-    = sfun.f1_sim_periods(sinp.stock['i_sim_periods_year'], sinp.stock['i_age_max_offs'], pinp.sheep['i_o_len'])
-mask_p_offs_p = p_index_p<=(n_sim_periods_offs-1)
+    ##sim run periods - start and end p
+    trial_commencement_date = pinp.stubble['start_trial']
+    n_sim_periods, date_start_p, date_start_P, date_end_p, date_end_P, p_index_p, step \
+        = sfun.f1_sim_periods(sinp.stock['i_sim_periods_year'], sinp.stock['i_age_max'], pinp.sheep['i_o_len'])
+    n_sim_periods_offs, offs_date_start_p, offs_date_start_P, offs_date_end_p, offs_date_end_P, p_index_offs_p, step \
+        = sfun.f1_sim_periods(sinp.stock['i_sim_periods_year'], sinp.stock['i_age_max_offs'], pinp.sheep['i_o_len'])
+    mask_p_offs_p = p_index_p<=(n_sim_periods_offs-1)
 
-###scale trial start to the correct yr in the sim based on animal age
-add_yrs = np.ceil((date_start_p[0] - trial_commencement_date) / 364)
-# sub_yrs = np.ceil(np.maximum(0, (item_start - end_of_periods).astype('timedelta64[D]').astype(int) / 365))
-trial_commencement_date = trial_commencement_date + add_yrs * 364
-####scale for animal age
-trial_commencement_date = trial_commencement_date + pinp.stubble['animal_age'] * 364
+    ###scale trial start to the correct yr in the sim based on animal age
+    add_yrs = np.ceil((date_start_p[0] - trial_commencement_date) / 364)
+    # sub_yrs = np.ceil(np.maximum(0, (item_start - end_of_periods).astype('timedelta64[D]').astype(int) / 365))
+    trial_commencement_date = trial_commencement_date + add_yrs * 364
+    ####scale for animal age
+    trial_commencement_date = trial_commencement_date + pinp.stubble['animal_age'] * 364
 
-##general info
-b0_pos = sinp.stock['i_b0_pos']
-b1_pos = sinp.stock['i_b1_pos']
-p_pos = sinp.stock['i_p_pos']
-s1_pos = sinp.stock['i_w_pos'] #s1 goes in w pos for the stubble sim
+    ##general info
+    b0_pos = sinp.stock['i_b0_pos']
+    b1_pos = sinp.stock['i_b1_pos']
+    p_pos = sinp.stock['i_p_pos']
+    s1_pos = sinp.stock['i_w_pos'] #s1 goes in w pos for the stubble sim
 
-len_k = len(sinp.landuse['C'])
-len_s2 = len(pinp.stubble['i_idx_s2'])
-len_p1 = n_sim_periods
-len_s1 = len(pinp.stubble['i_stub_cat_dmd_s1'])
+    len_k = len(sinp.landuse['C'])
+    len_s2 = len(pinp.stubble['i_idx_s2'])
+    len_p1 = n_sim_periods
+    len_s1 = len(pinp.stubble['i_stub_cat_dmd_s1'])
 
-##determine sgen run periods
-p_start_trial = np.searchsorted(date_start_p, trial_commencement_date)
-p_start_harv = np.searchsorted(date_start_p, trial_commencement_date - pinp.stubble['i_calibration_offest'])
-p_end = p_start_trial + pinp.stubble['trial_length']
-stubble_inp['p_start'] = p_start_trial
-stubble_inp['p_end'] = p_end
+    ##determine sgen run periods
+    p_start_trial = np.searchsorted(date_start_p, trial_commencement_date)
+    p_start_harv = np.searchsorted(date_start_p, trial_commencement_date - pinp.stubble['i_calibration_offest'])
+    p_end = p_start_trial + pinp.stubble['trial_length']
+    stubble_inp['p_start'] = p_start_trial
+    stubble_inp['p_end'] = p_end
 
-##lw each period - based off fitting quadratic to the paddock data.
-days_since_trialstart_p = (date_start_p - date_start_p[p_start_trial]).astype(int) #days since trial start
-a_ks2 = pinp.stubble['i_a_ks2']
-b_ks2 = pinp.stubble['i_b_ks2']
-c_ks2 = pinp.stubble['i_c_ks2']
-trial_lw_pks2 = a_ks2*days_since_trialstart_p[:,na,na] + b_ks2*days_since_trialstart_p[:,na,na]**2 + c_ks2
+    ##lw each period - based on the fitted quadratic on grazing days (gdays) from the paddock data.
+    stocking_rate_s2 = pinp.stubble['i_sr_s2']
+    gdays_since_trialstart_ps2 = ((date_start_p - date_start_p[p_start_trial])[:, na]
+                                  * stocking_rate_s2 / 100).astype(int)  # grazing days (100s) since trial start
+    a_ks2 = pinp.stubble['i_a_ks2']
+    b_ks2 = pinp.stubble['i_b_ks2']
+    c_ks2 = pinp.stubble['i_c_ks2']
+    trial_lw_pks2 = a_ks2 * gdays_since_trialstart_ps2[:, na, :] + b_ks2 * gdays_since_trialstart_ps2[:, na, :] ** 2 + c_ks2
 
-##dmd categories to generate - include deterioration.
-## deteriortation is since harvest because the definition of the categories are at harvest.
-dmd_s1 = pinp.stubble['i_stub_cat_dmd_s1'] #at harvest
-days_since_harv_p = (date_start_p - date_start_p[p_start_harv]).astype(int) #days since harvest
-dmd_ps1k = dmd_s1[:,na] * (1 - pinp.stubble['quality_deterioration']) ** days_since_harv_p[:,na,na]
+    ##dmd categories to generate - include deterioration.
+    ## deterioration is since harvest because the definition of the categories are at harvest.
+    dmd_s1 = pinp.stubble['i_stub_cat_dmd_s1'] #at harvest
+    days_since_harv_p = (date_start_p - date_start_p[p_start_harv]).astype(int) #days since harvest
+    dmd_ps1k = dmd_s1[:,na] * (1 - pinp.stubble['quality_deterioration']) ** days_since_harv_p[:,na,na]
 
-##initilise arrays so they can be assigned by k
-lwc_p1s1ks2 = np.zeros((len_p1,len_s1,len_k,len_s2))
-intake_p1s1ks2 = np.zeros((len_p1,len_s1,len_k,len_s2))
+    ##initilise arrays so they can be assigned by k
+    lwc_p1s1ks2 = np.zeros((len_p1,len_s1,len_k,len_s2))
+    intake_p1s1ks2 = np.zeros((len_p1,len_s1,len_k,len_s2))
 
-for k in range(len_k):
-    for s2 in range(len_s2):
-        ##call stock gen
-        stubble_inp['lw'] = trial_lw_pks2[:,k,s2]
-        stubble_inp['dmd_pw'] = dmd_ps1k[:,:,k]
-        o_pi_tpdams, o_pi_tpoffs, o_ebg_tpdams, o_ebg_tpoffs = sgen.generator(stubble=stubble_inp)
+    for k in range(len_k):
+        for s2 in range(len_s2):
+            ##call stock gen
+            stubble_inp['lw'] = trial_lw_pks2[:,k,s2]
+            stubble_inp['dmd_pw'] = dmd_ps1k[:,:,k]
+            o_pi_tpdams, o_pi_tpoffs, o_ebg_tpdams, o_ebg_tpoffs = sgen.generator(stubble=stubble_inp)
 
-        ##slice based on animal in trial
-        ## currently only the g and b axis are selected based on trial info. Any other axes are averaged. (This could be changed).
-        if pinp.stubble['i_dams_in_trial']:
-            ###select across g axis - weighted
-            mask_dams_inc_g1 = np.any(sinp.stock['i_mask_g1g3'] * pinp.sheep['i_g3_inc'], axis=1)
-            mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis=1)
-            o_ebg_tpdams = np.compress(mask_dams_inc_g1, o_ebg_tpdams, axis=-1)
-            o_pi_tpdams = np.compress(mask_dams_inc_g1, o_pi_tpdams, axis=-1)
-            ###select across b axis - weighted
-            i_b1_propn_b1g = fun.f_expand(pinp.stubble['i_b1_propn'], b1_pos)
-            lwc_ps1g = np.sum(o_ebg_tpdams * i_b1_propn_b1g, b1_pos, keepdims=True)
-            intake_ps1g = np.sum(o_pi_tpdams * i_b1_propn_b1g, b1_pos, keepdims=True)
-            ###average remaining axes
-            lwc_p1s1ks2[:,:,k,s2] = fun.f_reduce_skipfew(np.average, lwc_ps1g, preserveAxis=(p_pos, s1_pos))
-            intake_p1s1ks2[:,:,k,s2] = fun.f_reduce_skipfew(np.average, intake_ps1g, preserveAxis=(p_pos, s1_pos))
-        else:
-            ###select across g axis - weighted
-            mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis=1)
-            o_ebg_tpoffs = np.compress(mask_offs_inc_g3, o_ebg_tpoffs, axis=-1)
-            o_pi_tpoffs = np.compress(mask_offs_inc_g3, o_pi_tpoffs, axis=-1)
-            ###select across b axis - weighted
-            i_b0_propn_b0g = fun.f_expand(pinp.stubble['i_b0_propn'], b0_pos)
-            lwc_ps1g = np.sum(o_ebg_tpoffs * i_b0_propn_b0g, b0_pos, keepdims=True)
-            intake_ps1g = np.sum(o_pi_tpoffs * i_b0_propn_b0g, b0_pos, keepdims=True)
-            ###average remaining axes
-            lwc_p1s1ks2[mask_p_offs_p,:,k,s2] = fun.f_reduce_skipfew(np.average, lwc_ps1g, preserveAxis=(p_pos, s1_pos))
-            intake_p1s1ks2[mask_p_offs_p,:,k,s2] = fun.f_reduce_skipfew(np.average, intake_ps1g, preserveAxis=(p_pos, s1_pos))
+            ##slice based on animal in trial
+            ## currently only the g and b axis are selected based on trial info. Any other axes are averaged. (This could be changed).
+            if pinp.stubble['i_dams_in_trial']:
+                ###select across g axis - weighted
+                mask_dams_inc_g1 = np.any(sinp.stock['i_mask_g1g3'] * pinp.sheep['i_g3_inc'], axis=1)
+                mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis=1)
+                o_ebg_tpdams = np.compress(mask_dams_inc_g1, o_ebg_tpdams, axis=-1)
+                o_pi_tpdams = np.compress(mask_dams_inc_g1, o_pi_tpdams, axis=-1)
+                ###select across b axis - weighted
+                i_b1_propn_b1g = fun.f_expand(pinp.stubble['i_b1_propn'], b1_pos)
+                lwc_ps1g = np.sum(o_ebg_tpdams * i_b1_propn_b1g, b1_pos, keepdims=True)
+                intake_ps1g = np.sum(o_pi_tpdams * i_b1_propn_b1g, b1_pos, keepdims=True)
+                ###average remaining axes
+                lwc_p1s1ks2[:,:,k,s2] = fun.f_reduce_skipfew(np.average, lwc_ps1g, preserveAxis=(p_pos, s1_pos))
+                intake_p1s1ks2[:,:,k,s2] = fun.f_reduce_skipfew(np.average, intake_ps1g, preserveAxis=(p_pos, s1_pos))
+            else:
+                ###select across g axis - weighted
+                mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis=1)
+                o_ebg_tpoffs = np.compress(mask_offs_inc_g3, o_ebg_tpoffs, axis=-1)
+                o_pi_tpoffs = np.compress(mask_offs_inc_g3, o_pi_tpoffs, axis=-1)
+                ###select across b axis - weighted
+                i_b0_propn_b0g = fun.f_expand(pinp.stubble['i_b0_propn'], b0_pos)
+                lwc_ps1g = np.sum(o_ebg_tpoffs * i_b0_propn_b0g, b0_pos, keepdims=True)
+                intake_ps1g = np.sum(o_pi_tpoffs * i_b0_propn_b0g, b0_pos, keepdims=True)
+                ###average remaining axes
+                lwc_p1s1ks2[mask_p_offs_p,:,k,s2] = fun.f_reduce_skipfew(np.average, lwc_ps1g, preserveAxis=(p_pos, s1_pos))
+                intake_p1s1ks2[mask_p_offs_p,:,k,s2] = fun.f_reduce_skipfew(np.average, intake_ps1g, preserveAxis=(p_pos, s1_pos))
 
-##post process the lwc
-###calc trial lw with p1p2 axis (p2 axis is days)
-len_p2 = int(step)
-index_p2 = np.arange(len_p2)
-date_start_p1p2 = date_start_p[..., na] + index_p2
-days_since_trialstart_p1p2 = (date_start_p1p2 - date_start_p[p_start_trial,na]).astype(int)  # days since trial start
-trial_lw_p1p2ks2 = a_ks2 * days_since_trialstart_p1p2[:,:,na,na] + b_ks2 * days_since_trialstart_p1p2[:,:,na,na] ** 2 + c_ks2
-trial_lw_pks2 = trial_lw_p1p2ks2.reshape(-1,len_k,len_s2)
-trial_lwc_pks2 = np.roll(trial_lw_pks2, shift=-1, axis=0) - trial_lw_pks2
-trial_lwc_p1p2ks2 = trial_lwc_pks2.reshape(-1,len_p2, len_k, len_s2)
-###calc grazing days in generator period for each dmd - allocate trial lwc to the simulated lwc and sum the p2
-lwc_diff_p1p2s1ks2 = np.abs(lwc_p1s1ks2[:,na,:,:,:] - trial_lwc_p1p2ks2[:,:,na,:,:])
-grazing_days_p1s1ks2 = np.sum(np.equal(np.min(lwc_diff_p1p2s1ks2, axis=2,keepdims=True) , lwc_diff_p1p2s1ks2), axis=1)
-###adjust intake - allowing for decay related to quantity (to reflect the amount at harvest). (Trampling done below).
-adj_intake_p1s1ks2 = intake_p1s1ks2 / (1 - pinp.stubble['quantity_decay'][:,na]) ** days_since_harv_p[:, na, na, na]
-###multiply by adjusted intake and sum p axis to return the total intake for each dmd (stubble) category
-total_intake_s1ks2 = np.sum(grazing_days_p1s1ks2 * adj_intake_p1s1ks2, axis=0)
-total_intake_ha_s1ks2 = total_intake_s1ks2 * pinp.stubble['i_sr_s2']
-###adjust for trampling - trampling is done as a percentage of consumed stubble thus trampling doesnt remove categories above because they have already been consumed.
-### Trampling gets added on to reflect the amount of stubble at harvest.
-tramp_ks2 = pinp.stubble['trampling'][:,na]
-total_intake_ha_s1ks2 = total_intake_ha_s1ks2 + tramp_ks2 * np.cumsum(total_intake_ha_s1ks2, axis=0)
-###set a minimum for each category so that the transfer between cats can always occur.
-total_intake_ha_s1ks2 = np.maximum(1, total_intake_ha_s1ks2) #minimum of 1kg in each category so stubble can always be transferred between categories.
-###divide intake by total stubble to return stubble proportion in each category
-harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield penalty is inputted as a harvestable grain
-biomass_k = pinp.stubble['i_trial_yield'] / harvest_index_k
-total_residue_ks2 = biomass_k[:,na] * stub.f_biomass2residue(residuesim=True)
-cat_propn_s1ks2 = total_intake_ha_s1ks2/total_residue_ks2
+    ##post process the lwc
+    ###calc trial lw with p1p2 axis (p2 axis is days)
+    len_p2 = int(step)
+    index_p2 = np.arange(len_p2)
+    date_start_p1p2 = date_start_p[..., na] + index_p2
+    gdays_since_trialstart_p1p2s2 = ((date_start_p1p2 - date_start_p[p_start_trial,na])[:,:,na]
+                                     * stocking_rate_s2/100).astype(int)  # grazing days (100s) since trial start
+    trial_lw_p1p2ks2 = (a_ks2 * gdays_since_trialstart_p1p2s2[:,:,na,:]
+                        + b_ks2 * gdays_since_trialstart_p1p2s2[:,:,na,:] ** 2 + c_ks2)
+    trial_lw_pks2 = trial_lw_p1p2ks2.reshape(-1,len_k,len_s2)
+    trial_lwc_pks2 = np.roll(trial_lw_pks2, shift=-1, axis=0) - trial_lw_pks2
+    trial_lwc_p1p2ks2 = trial_lwc_pks2.reshape(-1,len_p2, len_k, len_s2)
+    ###calc grazing days in generator period for each dmd - allocate trial lwc to the simulated lwc and sum the p2
+    lwc_diff_p1p2s1ks2 = np.abs(lwc_p1s1ks2[:,na,:,:,:] - trial_lwc_p1p2ks2[:,:,na,:,:])
+    grazing_days_p1s1ks2 = np.sum(np.equal(np.min(lwc_diff_p1p2s1ks2, axis=2,keepdims=True) , lwc_diff_p1p2s1ks2), axis=1)
+    ###adjust intake - allowing for decay related to quantity (to reflect the amount at harvest). (Trampling done below).
+    adj_intake_p1s1ks2 = intake_p1s1ks2 / (1 - pinp.stubble['quantity_decay'][:,na]) ** days_since_harv_p[:, na, na, na]
+    ###multiply by adjusted intake and sum p axis to return the total intake for each dmd (stubble) category
+    total_intake_s1ks2 = np.sum(grazing_days_p1s1ks2 * adj_intake_p1s1ks2, axis=0)
+    total_intake_ha_s1ks2 = total_intake_s1ks2 * stocking_rate_s2
+    ###adjust for trampling - trampling is done as a percentage of consumed stubble thus trampling doesnt remove categories above because they have already been consumed.
+    ### Trampling gets added on to reflect the amount of stubble at harvest.
+    tramp_ks2 = pinp.stubble['trampling'][:,na]
+    total_intake_ha_s1ks2 = total_intake_ha_s1ks2 + tramp_ks2 * np.cumsum(total_intake_ha_s1ks2, axis=0)
+    ###set a minimum for each category so that the transfer between cats can always occur.
+    total_intake_ha_s1ks2 = np.maximum(1, total_intake_ha_s1ks2) #minimum of 1kg in each category so stubble can always be transferred between categories.
+    ###divide intake by total stubble to return stubble proportion in each category
+    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield penalty is inputted as a harvestable grain
+    biomass_k = pinp.stubble['i_trial_yield'] / harvest_index_k
+    total_residue_ks2 = biomass_k[:,na] * stub.f_biomass2residue(residuesim=True)
+    cat_propn_s1ks2 = total_intake_ha_s1ks2/total_residue_ks2
 
-# Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
-stubble_sim_path = relativeFile.findExcel('stubble sim.xlsx')
-writer = pd.ExcelWriter(stubble_sim_path, engine='xlsxwriter')
-cat_propn_s1_ks2 = pd.DataFrame(cat_propn_s1ks2.reshape(len_s1,len_k*len_s2))
-cat_propn_s1_ks2.to_excel(writer,index=False,header=False)
-writer.close()
+    # Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
+    stubble_sim_path = relativeFile.findExcel('stubble sim.xlsx')
+    writer = pd.ExcelWriter(stubble_sim_path, engine='xlsxwriter')
+    cat_propn_s1_ks2 = pd.DataFrame(cat_propn_s1ks2.reshape(len_s1,len_k*len_s2))
+    cat_propn_s1_ks2.to_excel(writer,index=False,header=False)
+    writer.close()
 
 
 

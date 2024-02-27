@@ -47,7 +47,6 @@ from . import StructuralInputs as sinp
 from . import StockFunctions as sfun
 from . import EmissionFunctions as efun
 from . import Periods as per
-from . import PlotViewer as pv
 from . import Exceptions as exc
 
 
@@ -6550,6 +6549,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ### scan-spreadsheet will activate if comparing equations
     scan_spreadsheet = False
     if scan_spreadsheet:
+        from . import PlotViewer as pv #import here so that read the docs doesnt try to import plotviewer
         print('Interact with the graph generator using the PlotViewer spreadsheet, kill each plot to continue')
     while scan_spreadsheet:
         try:
@@ -9963,7 +9963,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ####period dates
     roe1g1_shape = 4, len_o, len_e1, len_g1 #4 is the number of repro dates stored
     ve1zg1_shape = len_v1, len_e1, len_z, len_g1
+    vzig1_shape = len_v1, len_z, len_i, len_g1
     vzdxg3_shape = len_v3, len_z, len_d, len_x, len_g3
+
+    ###period_is
+    fun.f1_make_r_val(r_vals,dvp_is_mating,'dvp_is_mating_vzig1', shape=vzig1_shape)
 
     ###z8 masks for unclustering lp_vars
     fun.f1_make_r_val(r_vals,mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:],'maskz8_k2tvanwziy1g1') #slice off unused axis
@@ -10492,6 +10496,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ## Call Steve's graph generator.
     ## Will be bypassed unless called from SheepTest.py or line below is uncommented
     if plots:
+        from . import PlotViewer as pv  # import here so that read the docs doesnt try to import plotviewer
         print('Interact with the graph generator using the PlotViewer spreadsheet, kill each plot to continue')
     scan_spreadsheet = plots   # argument passed to the StockGen function. True if called from SheepTest
     # scan_spreadsheet = True    #make line active to generate plots when called from exp.py
