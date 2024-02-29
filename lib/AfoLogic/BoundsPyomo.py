@@ -740,7 +740,7 @@ def f1_boundarypyomo_local(params, model):
                                                             for l in model.s_lmus for p7 in model.s_season_periods))
                 else:
                     return pe.Constraint.Skip
-            model.con_biomass_graze_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, rule=k1_graze_bound, doc='bound on biomass grazing')
+            model.con_biomass_graze_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_crops, model.s_season_types, rule=k1_graze_bound, doc='bound on biomass grazing')
 
 
         if emissions_bnd_inc:
