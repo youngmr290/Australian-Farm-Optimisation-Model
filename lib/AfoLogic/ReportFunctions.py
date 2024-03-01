@@ -624,9 +624,9 @@ def f_summary(lp_vars, r_vals, trial):
                                                       'Fodder %', 'Fodder % max', 'Fodder % min', 'Fodder % stdev',
                                                       'Sup', 'Sup max', 'Sup min', 'Sup stdev'])
     ##profit - no minroe and asset
-    summary_df.loc[trial, 'profit'] = f_profit(lp_vars, r_vals, option=0)
-    profit_max = f_profit(lp_vars, r_vals, option=3)[0]
-    profit_min = f_profit(lp_vars, r_vals, option=3)[1]
+    summary_df.loc[trial, 'profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
+    profit_max = round(f_profit(lp_vars, r_vals, option=3)[0],0)
+    profit_min = round(f_profit(lp_vars, r_vals, option=3)[1],0)
     summary_df.loc[trial, 'profit max'] = profit_max * np.logical_not(profit_min==profit_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'profit min'] = profit_min * np.logical_not(profit_min==profit_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'profit stdev'] = f_profit(lp_vars, r_vals, option=3)[2]
@@ -635,9 +635,9 @@ def f_summary(lp_vars, r_vals, trial):
     ##utility
     summary_df.loc[trial, 'utility'] = f_profit(lp_vars, r_vals, option=2)
     ##total dse/ha in fp0
-    summary_df.loc[trial, 'SR'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
-    SR_max = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[1]
-    SR_min = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[2]
+    summary_df.loc[trial, 'SR'] = round(f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0],1)
+    SR_max = round(f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[1],1)
+    SR_min = round(f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[2],1)
     summary_df.loc[trial, 'SR max'] = SR_max * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'SR min'] = SR_min * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'SR stdev'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[3]
@@ -652,46 +652,46 @@ def f_summary(lp_vars, r_vals, trial):
     cols = []
     axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
     dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    summary_df.loc[trial, 'Ewes mated'] = dams_mated.squeeze()
+    summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
     ##pasture %
-    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
-    Pas_max = f_area_summary(lp_vars, r_vals, option=5)[1]
-    Pas_min = f_area_summary(lp_vars, r_vals, option=5)[2]
+    summary_df.loc[trial, 'Pas %'] = round(f_area_summary(lp_vars, r_vals, option=5)[0],0)
+    Pas_max = round(f_area_summary(lp_vars, r_vals, option=5)[1],0)
+    Pas_min = round(f_area_summary(lp_vars, r_vals, option=5)[2],0)
     summary_df.loc[trial, 'Pas % max'] = Pas_max * np.logical_not(Pas_min==Pas_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Pas % min'] = Pas_min * np.logical_not(Pas_min==Pas_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Pas % stdev'] = f_area_summary(lp_vars, r_vals, option=5)[3]
     ##cereal %
-    summary_df.loc[trial, 'Cereal %'] = f_area_summary(lp_vars, r_vals, option=6)[0]
-    Cereal_max = f_area_summary(lp_vars, r_vals, option=6)[1]
-    Cereal_min = f_area_summary(lp_vars, r_vals, option=6)[2]
+    summary_df.loc[trial, 'Cereal %'] = round(f_area_summary(lp_vars, r_vals, option=6)[0],0)
+    Cereal_max = round(f_area_summary(lp_vars, r_vals, option=6)[1],0)
+    Cereal_min = round(f_area_summary(lp_vars, r_vals, option=6)[2],0)
     summary_df.loc[trial, 'Cereal % max'] = Cereal_max * np.logical_not(Cereal_min==Cereal_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Cereal % min'] = Cereal_min * np.logical_not(Cereal_min==Cereal_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Cereal % stdev'] = f_area_summary(lp_vars, r_vals, option=6)[3]
     ##canola %
-    summary_df.loc[trial, 'Canola %'] = f_area_summary(lp_vars, r_vals, option=7)[0]
-    Canola_max = f_area_summary(lp_vars, r_vals, option=7)[1]
-    Canola_min = f_area_summary(lp_vars, r_vals, option=7)[2]
+    summary_df.loc[trial, 'Canola %'] = round(f_area_summary(lp_vars, r_vals, option=7)[0],0)
+    Canola_max = round(f_area_summary(lp_vars, r_vals, option=7)[1],0)
+    Canola_min = round(f_area_summary(lp_vars, r_vals, option=7)[2],0)
     summary_df.loc[trial, 'Canola % max'] = Canola_max * np.logical_not(Canola_min==Canola_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Canola % min'] = Canola_min * np.logical_not(Canola_min==Canola_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Canola % stdev'] = f_area_summary(lp_vars, r_vals, option=7)[3]
     ##pulse %
-    summary_df.loc[trial, 'Pulse %'] = f_area_summary(lp_vars, r_vals, option=8)[0]
-    pulse_max = f_area_summary(lp_vars, r_vals, option=8)[1]
-    pulse_min = f_area_summary(lp_vars, r_vals, option=8)[2]
+    summary_df.loc[trial, 'Pulse %'] = round(f_area_summary(lp_vars, r_vals, option=8)[0],0)
+    pulse_max = round(f_area_summary(lp_vars, r_vals, option=8)[1],0)
+    pulse_min = round(f_area_summary(lp_vars, r_vals, option=8)[2],0)
     summary_df.loc[trial, 'Pulse % max'] = pulse_max * np.logical_not(pulse_min==pulse_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Pulse % min'] = pulse_min * np.logical_not(pulse_min==pulse_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Pulse % stdev'] = f_area_summary(lp_vars, r_vals, option=8)[3]
     ##fodder %
-    summary_df.loc[trial, 'Fodder %'] = f_area_summary(lp_vars, r_vals, option=9)[0]
-    fodder_max = f_area_summary(lp_vars, r_vals, option=9)[1]
-    fodder_min = f_area_summary(lp_vars, r_vals, option=9)[2]
+    summary_df.loc[trial, 'Fodder %'] = round(f_area_summary(lp_vars, r_vals, option=9)[0],0)
+    fodder_max = round(f_area_summary(lp_vars, r_vals, option=9)[1],0)
+    fodder_min = round(f_area_summary(lp_vars, r_vals, option=9)[2],0)
     summary_df.loc[trial, 'Fodder % max'] = fodder_max * np.logical_not(fodder_min==fodder_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Fodder % min'] = fodder_min * np.logical_not(fodder_min==fodder_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Fodder % stdev'] = f_area_summary(lp_vars, r_vals, option=9)[3]
     ##supplement
-    summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
-    Sup_max = f_grain_sup_summary(lp_vars, r_vals, option=4)[1]
-    Sup_min = f_grain_sup_summary(lp_vars, r_vals, option=4)[2]
+    summary_df.loc[trial, 'Sup'] = round(f_grain_sup_summary(lp_vars,r_vals,option=4)[0],0)
+    Sup_max = round(f_grain_sup_summary(lp_vars, r_vals, option=4)[1],0)
+    Sup_min = round(f_grain_sup_summary(lp_vars, r_vals, option=4)[2],0)
     summary_df.loc[trial, 'Sup max'] = Sup_max * np.logical_not(Sup_min==Sup_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Sup min'] = Sup_min * np.logical_not(Sup_min==Sup_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Sup stdev'] = f_grain_sup_summary(lp_vars, r_vals, option=4)[3]
