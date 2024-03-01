@@ -1403,6 +1403,8 @@ def f_sow_prov():
     period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)\
                                * p5z_isnot_during_false_break_p5z
     ###add k axis
+    if not sinp.structuralsa['i_differentiate_wet_dry_seeding']: #in the web app all land uses can be dry sown (this is a simplification to save seperate representation of dry sown land uses.)
+        dry_sown_landuses = sinp.landuse['C']
     period_is_dryseeding_p5zk = period_is_dryseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(dry_sown_landuses), axis=-1)
 
     ##pasture seeding

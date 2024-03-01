@@ -258,6 +258,7 @@ def create_sa():
     #crop and rotation #
     ####################
     ##SAV
+    sav['differentiate_wet_dry_seeding'] = '-'  #control is wet and dry seeding is differentiated - in the web app this is False meaning that all crops can be either dry or wet sown which removes the need to have special dry sown landuses.
     sav['user_rotphases'] = np.full(len_R, '-', dtype=object)  # SA value for the actual rotations - only used in web app - use capital R because rotation len from the web app can be different
     sav['rot_inc_R'] = np.full(len_R, '-', dtype=object)    # SA value for rotations included - web app - use capital R because rotation len from the web app can be different
     sav['sowing_freq_R'] = np.full(len_R, '-', dtype=object)    # SA value for pinp sowing frequency - use capital R because rotation len from the web app can be different
