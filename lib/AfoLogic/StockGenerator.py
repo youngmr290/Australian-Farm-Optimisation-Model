@@ -620,6 +620,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     len_s3 = np.count_nonzero(mask_shear_g3)
     ####adjust shearing dates if they occur before birth (this is incase user input the wrong year on the shearing dates)
     date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3 + np.maximum(0, np.ceil((np.max(date_born1st_ida0e0b0xyg3,axis=d_pos) - date_shear_sida0e0b0xyg3[0])/364)) * 364 #max across d axis means shearing cant occur before the youngest animal is born (we dont want to add a d axis to shearing date).
+    ####Note: shearing date is adjusted below to stop it occuring before weaning.
 
     ##if generating for stubble then overwrite some of these inputs to match the stubble trial
     if stubble:
