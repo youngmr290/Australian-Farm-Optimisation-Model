@@ -2145,7 +2145,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     # axis_slice[0] = [0, 2, 1]
     res_mei = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                           keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    res_mei = pd.concat([res_mei], keys=['Crop Residue'], axis=1)  # add feed type as header
+    res_mei = pd.concat([res_mei.squeeze()], keys=['Crop Residue'], axis=1)  # add feed type as header. Squeeze gets rid of 0 level from header if no columns are reported.
 
     ###crop graze
     prod = 'crop_md_fkp6p5zl'
@@ -2201,7 +2201,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
                                                  na_weights=na_weights, den_weights=den_weights,
                                                  na_denweights=na_denweights, keys=keys, arith=arith,
                                                  index=index, cols=cols)
-    mei_sire = pd.concat([mei_sire], keys=['Sire'], axis=1) # add stock type as header
+    mei_sire = pd.concat([mei_sire.squeeze()], keys=['Sire'], axis=1) # add stock type as header. Squeeze gets rid of 0 level from header if no columns are reported.
 
     ###dams
     type = 'stock'
@@ -2218,7 +2218,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
                                                  na_weights=na_weights, den_weights=den_weights,
                                                  na_denweights=na_denweights, keys=keys, arith=arith,
                                                  index=index, cols=cols)
-    mei_dams = pd.concat([mei_dams], keys=['Dams'], axis=1) # add stock type as header
+    mei_dams = pd.concat([mei_dams.squeeze()], keys=['Dams'], axis=1) # add stock type as header. Squeeze gets rid of 0 level from header if no columns are reported.
 
     ###offs
     type = 'stock'
@@ -2235,7 +2235,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
                                                  na_weights=na_weights, den_weights=den_weights,
                                                  na_denweights=na_denweights, keys=keys, arith=arith,
                                                  index=index, cols=cols)
-    mei_offs = pd.concat([mei_offs], keys=['Offs'], axis=1)
+    mei_offs = pd.concat([mei_offs.squeeze()], keys=['Offs'], axis=1) # add stock type as header. Squeeze gets rid of 0 level from header if no columns are reported.
 
     ##stick feed stuff together
     ###first make everything have the same number of col levels - not the neatest but couldn't find a better way
@@ -2253,11 +2253,6 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     feed_budget_supply = pd.concat(arrays[0:8], axis=1).round(1) #round so that little numbers don't cause issues
     feed_budget_req = pd.concat(arrays[8:], axis=1).round(1) #round so that little numbers don't cause issues
 
-    ##sum nv axis if nv_option is 1
-    if nv_option==1:
-        feed_budget_supply = feed_budget_supply.groupby(axis=0, level=(0,1,2,3)).sum()
-        feed_budget_req = feed_budget_req.groupby(axis=0, level=(0,1,2,3)).sum()
-
     ###if option 1 - calc propn of mei from each feed source
     if option==0:
         feed_budget_supply = feed_budget_supply.div(feed_budget_supply.sum(axis=1), axis=0).fillna(0)
@@ -2268,6 +2263,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
 
     ###add stock mei requirement
     feed_budget = pd.concat([feed_budget_supply, feed_budget_req], axis=1)
+
+    ##sum nv axis if nv_option is 1
+    if nv_option==1:
+        feed_budget = feed_budget.groupby(axis=0, level=(0,1,2,3)).sum()
 
     ##add fp date to index
     keys_p6 = r_vals['pas']['keys_p6']

@@ -120,15 +120,15 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         option = f_update_default_controls(user_controls, 'feed', 'option', 0)  #0 mei/hd/day & propn from each source, 1 total mei
         nv_option = f_update_default_controls(user_controls, 'feed', 'nv_option', 0)   #0 Separate NV pool, NV pool summed.
         residue_cols = f_update_default_controls(user_controls, 'feed', 'residue_cols', [])
-        dams_cols = f_update_default_controls(user_controls, 'feed', 'dams_cols', [6]) #birth opp
-        offs_cols = f_update_default_controls(user_controls, 'feed', 'offs_cols', [7]) #shear opp
+        dams_cols = f_update_default_controls(user_controls, 'feed', 'dams_cols', [2]) #k
+        offs_cols = f_update_default_controls(user_controls, 'feed', 'offs_cols', []) #shear opp
         reports["feed"] = rfun.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols, residue_cols=residue_cols)
     if report_run.loc['run_feedbudget', 'Run']:
         option = f_update_default_controls(user_controls, 'feed_total', 'option', 1)  #0 mei/hd/day & propn from each source, 1 total mei
         nv_option = f_update_default_controls(user_controls, 'feed_total', 'nv_option', 0)   #0 Separate NV pool, NV pool summed.
         residue_cols = f_update_default_controls(user_controls, 'feed_total', 'residue_cols', [])
-        dams_cols = f_update_default_controls(user_controls, 'feed_total', 'dams_cols', [6]) #birth opp
-        offs_cols = f_update_default_controls(user_controls, 'feed_total', 'offs_cols', [7]) #shear opp
+        dams_cols = f_update_default_controls(user_controls, 'feed_total', 'dams_cols', []) #birth opp
+        offs_cols = f_update_default_controls(user_controls, 'feed_total', 'offs_cols', []) #shear opp
         reports["feed_total"] = rfun.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols, residue_cols=residue_cols)
     if report_run.loc['run_feedbudget', 'Run']:
         reports["grazing"] = rfun.f_grazing_summary(lp_vars, r_vals)
