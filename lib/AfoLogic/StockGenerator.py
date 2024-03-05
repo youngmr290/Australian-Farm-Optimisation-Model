@@ -498,6 +498,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_rc_start_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_ebg_tpoffs = np.zeros(tpg3, dtype =dtype)
     ###arrays for report variables
+    r_intake_f_tpoffs = np.zeros(tpg3, dtype = dtype)   #not used as a report var but used in stubble and used consistient name as dams
     r_ebw_tpoffs = np.zeros(tpg3, dtype=dtype)
     r_wbe_tpoffs = np.zeros(tpg3, dtype =dtype)
     r_fat_tpoffs = np.zeros(tpg3, dtype =dtype)
@@ -2386,9 +2387,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         foo_yatf = pinp.stubble['i_foo']
         foo_offs = pinp.stubble['i_foo']
         dmd_pwg = fun.f_expand(stubble['dmd_pw'],w_pos, left_pos2=p_pos, right_pos2=w_pos)
-        intake_s_dams = pinp.stubble['i_intake_s']
-        intake_s_yatf = pinp.stubble['i_intake_s']
-        intake_s_offs = pinp.stubble['i_intake_s']
+        intake_s_pdams = pinp.stubble['i_intake_s']
+        intake_s_pyatf = pinp.stubble['i_intake_s']
+        intake_s_poffs = pinp.stubble['i_intake_s']
         confinementw_tpa1e1b1nwzida0e0b0xyg1[...] = False
         confinementw_tpa1e1b1nwzida0e0b0xyg3[...] = False
 
@@ -2851,6 +2852,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             # if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p]):
             #     print("period is fvp0 offs: ", period_is_condense_pa1e1b1nwzida0e0b0xyg1[p])
 
+
+            ##Slice the current period for the stubble supplement # this is only a temporary fix for Amelia
+            ###Will throw an error if the inputs don't cover enough periods
+            if stubble:
+                sup_period = p - p_start
+                intake_s_dams = intake_s_pdams[sup_period]
+                intake_s_yatf = intake_s_pyatf[sup_period]
+                intake_s_offs = intake_s_poffs[sup_period]
 
 
             ###################################################################################
@@ -5579,6 +5588,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 o_ebg_tpoffs[:,p] = ebg_offs
 
                 ###store report variables - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
+                r_intake_f_tpoffs[:,p] = intake_f_offs
                 r_ebw_tpoffs[:, p] = ebw_offs
                 r_wbe_tpoffs[:,p] = wbe_offs
                 r_fat_tpoffs[:, p] = fat_offs
@@ -6568,7 +6578,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
 
     if stubble:
-        return o_pi_tpdams, o_pi_tpoffs, o_ebg_tpdams, o_ebg_tpoffs
+        return r_intake_f_tpdams, r_intake_f_tpoffs, o_ebg_tpdams, o_ebg_tpoffs
 
     ###########################
     #post processing inputs  #
