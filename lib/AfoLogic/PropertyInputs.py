@@ -98,10 +98,6 @@ def f_reshape_pinp_defaults(pinp_defaults, sinp_defaults):
             inp['MedPGR'] = np.reshape(inp['MedPGR'], zp6l)
             inp['DigGrn'] = np.reshape(inp['DigGrn'], zp6l)
 
-        ###crop grazing
-        cropgraze_inp = pinp_defaults[property]['cropgraze_inp']
-        cropgraze_inp['i_crop_growth_zkp6'] = np.reshape(cropgraze_inp['i_crop_growth_zkp6'], zkp6)
-
         ###saltbush
         saltbush_inp = pinp_defaults[property]['saltbush_inp']
         saltbush_inp['i_sb_expected_foo_zp6'] = np.reshape(saltbush_inp['i_sb_expected_foo_zp6'], zp6)
@@ -520,7 +516,7 @@ def f1_expand_p6():
     ####crop grazing
     cropgraze['i_cropgraze_yield_reduction_kp6z'] = np.take_along_axis(cropgraze['i_cropgraze_yield_reduction_kp6'][...,na], a_p6std_p6z[na,...], axis=1)
     cropgraze['i_crop_dmd_kp6z'] = np.take_along_axis(cropgraze['i_crop_dmd_kp6'][...,na], a_p6std_p6z[na,...], axis=1)
-    cropgraze['i_crop_growth_zkp6'] = np.take_along_axis(cropgraze['i_crop_growth_zkp6'], a_p6std_zp6[:,na,:], axis=2)
+    cropgraze['i_crop_growth_zp6'] = np.take_along_axis(cropgraze['i_crop_growth_zp6'], a_p6std_zp6[:,:], axis=1)
     cropgraze['i_cropgraze_consumption_factor_zp6'] = np.take_along_axis(cropgraze['i_cropgraze_consumption_factor_zp6'], a_p6std_zp6, axis=1)
 
     ###saltbush
