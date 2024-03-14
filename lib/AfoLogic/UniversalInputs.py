@@ -136,6 +136,7 @@ def f_universal_inp_sa(uinp_defaults):
 
     ##finance
     ###SAV
+    finance['i_working_capital_constraint_included'] = fun.f_sa(finance['i_working_capital_constraint_included'], sen.sav['working_cap_constraint_included'], 5)  #control inclusion of work cap constraint in corepyomo
     finance['minroe'] = fun.f_sa(finance['minroe'], sen.sav['minroe'], 5)  #value for minroe (same sav as below)
     finance['minroe_dsp'] = fun.f_sa(finance['minroe_dsp'], sen.sav['minroe'], 5)  #value for minroe (same sav as above)
     finance['i_interest'] = fun.f_sa(finance['i_interest'], sen.sav['interest_rate'], 5)  #value for bank interest rate
