@@ -19,7 +19,7 @@ def rotation_precalcs(params, report):
     :param report: dictionary which stores all report values.
 
     '''
-    rps.f_rot_lmu_params(params)
+    rps.f_rot_lmu_params(params,report)
     rps.f_landuses_phases(params,report)
     rps.f_season_params(params)
     rps.f_phase_link_params(params)

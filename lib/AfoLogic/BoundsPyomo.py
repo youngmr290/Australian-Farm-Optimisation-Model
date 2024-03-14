@@ -64,6 +64,7 @@ def f1_boundarypyomo_local(params, model):
     bnd_dry_retained_inc = fun.f_sa(False, np.any(pinp.sheep['i_dry_retained_forced_o']), 5) #force the retention of drys in t[0] (t[1] is handled in the generator.
     sr_bound_inc = np.any(sen.sav['bnd_sr_t'] != '-') #controls sr bound
     total_pasture_bound_inc = sen.sav['bnd_total_pas_area_percent'] != '-'  #bound on total pasture (hence also total crop)
+    legume_area_bound_inc = sen.sav['bnd_total_legume_area_percent'] != '-'  #bound on total legume
     pasture_lmu_bound_inc = np.any(sen.sav['bnd_pas_area_l'] != '-')
     landuse_bound_inc = False #bound on area of each landuse (which is the sum of all the phases for that landuse)
     crop_area_bound_inc = np.any(sen.sav['bnd_crop_area'] != '-') or np.any(sen.sav['bnd_crop_area_percent'] != '-')  # controls if crop area bnd is included.(which is the sum of all the phases for that crop)
@@ -688,6 +689,22 @@ def f1_boundarypyomo_local(params, model):
                 else:
                     return pe.Constraint.Skip
             model.con_crop_area_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, rule=k1_bound, doc='bound on total pasture area')
+
+        ##total legume crop area bound
+        ###build bound if turned on
+        if legume_area_bound_inc:
+            total_legume_area_percent = sen.sav['bnd_total_legume_area_percent']
+            landuse_is_legume = dict(zip(model.s_crops, np.array([x in sinp.landuse['P'] for x in sinp.landuse['C']], dtype=int)))
+            ###constraint
+            l_p7 = list(model.s_season_periods)
+            def legume_bound(model, q, s, p7, z):
+                if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]):
+                    return(
+                           sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_landuse_area[r, k1] * landuse_is_legume[k1] for r in model.s_phases for l in model.s_lmus for k1 in model.s_crops)
+                           == sum(model.p_area[l] for l in model.s_lmus) * total_legume_area_percent)
+                else:
+                    return pe.Constraint.Skip
+            model.con_legume_area_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, rule=legume_bound, doc='bound on total pasture area')
 
         ##total pasture area - hence also total crop area
         ###build bound if turned on

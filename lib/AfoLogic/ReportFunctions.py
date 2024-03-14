@@ -799,8 +799,7 @@ def f_area_summary(lp_vars, r_vals, option):
         index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
         z_prob_qsz = r_vals['zgen']['z_prob_qsz']
         z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
-        rot_area_qsz_p7 = rot_area_qszrl_p7.groupby(level=(0,1,2)).sum() #sum r & l
-        rot_area_qsz = rot_area_qsz_p7.iloc[:, -1]  # slice for p7[-1]
+        rot_area_qsz = r_vals['rot']['total_farm_area']
         if option == 5:
             pasture_area_p7qsz = pasture_area_p7qszl.groupby(level=(0,1,2,3)).sum() #sum l
             pasture_area_qsz = pasture_area_p7qsz.unstack(0).iloc[:,-1]  # slice for p7[-1]
@@ -2818,24 +2817,43 @@ def f_stocking_rate_analysis(lp_vars, r_vals, trial):
 
 def f_lupin_analysis(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
-    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Lupin area', 'Expected Income'])
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Legume Area', 'Cereal %', 'Canola %', 'Pas %'])
     ##profit - no minroe and asset
     summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
-    ##lupin area
-    landuse_area_qsz_k = f_area_summary(lp_vars, r_vals, option=4)
-    lupin_area_qsz = landuse_area_qsz_k.loc[:,"l"]
-    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
-    total_lupin_area = np.sum(lupin_area_qsz * z_prob_qsz.ravel())
-    summary_df.loc[trial, 'Lupin area'] = total_lupin_area
-    ##expected lupin income - uses average lupin yield in all rotations on the base lmu (this matches the yield graph on web app)
-    lupin_price_p7z = r_vals['crop']['grain_price'].loc[("l","Harv","firsts"),:]
-    lupin_price_z = lupin_price_p7z.groupby(level=1).sum() #sum p7 - price should only exist in one p7 period
-    lupin_price = np.sum(lupin_price_z.values * z_prob_qsz) #avevrage price across z
-    expected_yields_k_z = r_vals['crop']['base_yields_k_z']
-    expected_yields_k_z = expected_yields_k_z.reindex(r_vals['pas']['keys_k'], axis=0).fillna(0)  # expand to full k (incase landuses were masked out) and unused landuses get set to 0
-    expected_lupin_yield_z = expected_yields_k_z.loc["l",:]
-    expected_lupin_yield = np.sum(expected_lupin_yield_z.values * z_prob_qsz) #avevrage yield across z.
-    summary_df.loc[trial, 'Expected Income'] = round(lupin_price * expected_lupin_yield/1000, 0)
+    ##pulse %
+    total_legume_area = f_area_summary(lp_vars, r_vals, option=8)[0]/100 * r_vals['rot']['total_farm_area']
+    summary_df.loc[trial, 'Legume Area'] = total_legume_area
+    ##cereal %
+    summary_df.loc[trial, 'Cereal %'] = f_area_summary(lp_vars, r_vals, option=6)[0]
+    ##canola %
+    summary_df.loc[trial, 'Canola %'] = f_area_summary(lp_vars, r_vals, option=7)[0]
+    ##pasture %
+    summary_df.loc[trial, 'Pasture %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+
+    legume_names = ["Faba Bean", "Lentils", "Chickpea", "Lupins", "Vetch"]
+    legume_keys = ['f','i', 'k', 'l', 'v']
+    for legume_name, legume_key in zip(legume_names, legume_keys):
+        if r_vals['rot']['crop_landuse_inc_k1'][legume_key]:
+            ##legume area
+            landuse_area_qsz_k = f_area_summary(lp_vars, r_vals, option=4)
+            legume_area_qsz = landuse_area_qsz_k.loc[:,legume_key]
+            z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+            legume_area = np.sum(legume_area_qsz * z_prob_qsz.ravel())
+            summary_df.loc[trial, '{0} Area'.format(legume_name)] = fun.f_divide(legume_area, total_legume_area)
+            ##expected legume income - uses average legume yield in all rotations on the base lmu (this matches the yield graph on web app)
+            legume_price_p7z = r_vals['crop']['grain_price'].loc[(legume_key,"Harv","firsts"),:]
+            legume_price_z = legume_price_p7z.groupby(level=1).sum() #sum p7 - price should only exist in one p7 period
+            legume_price = np.sum(legume_price_z.values * z_prob_qsz) #avevrage price across z
+            expected_yields_k_z = r_vals['crop']['base_yields_k_z']
+            expected_yields_k_z = expected_yields_k_z.reindex(r_vals['pas']['keys_k'], axis=0).fillna(0)  # expand to full k (incase landuses were masked out) and unused landuses get set to 0
+            expected_legume_yield_z = expected_yields_k_z.loc[legume_key,:]
+            expected_legume_yield = np.sum(expected_legume_yield_z.values * z_prob_qsz) #avevrage yield across z.
+            summary_df.loc[trial, 'Expected {0} Income'.format(legume_name)] = round(legume_price * expected_legume_yield/1000, 0)
+        else: #if crop is not included se to None
+            summary_df.loc[trial, '{0} Area'.format(legume_name)] = ""
+            summary_df.loc[trial, 'Expected {0} Income'.format(legume_name)] = ""
+
+    
     return summary_df
 
 ############################
