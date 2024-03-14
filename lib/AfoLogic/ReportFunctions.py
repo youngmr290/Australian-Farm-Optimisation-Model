@@ -2788,12 +2788,24 @@ def f_pasture_area_analysis(lp_vars, r_vals, trial):
 
 def f_stocking_rate_analysis(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
-    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'SR', 'Pas area', 'Sup/DSE'])
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'SR', 'Ewes mated', 'Pas area', 'Sup/DSE'])
     ##profit - no minroe and asset
     summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
     ##stocking rate
     sr = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
     summary_df.loc[trial, 'SR'] = round(sr, 1)
+    ##total dams mated
+    type = 'stock'
+    prod = 'dvp_is_mating_vzig1'
+    na_prod = [0,1,2,3,5,6,7,10]
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    keys = 'dams_keys_qsk2tvanwziy1g1'
+    arith = 2
+    index = []
+    cols = []
+    axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
+    dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
     ##pasture area
     pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
     z_prob_qsz = r_vals['zgen']['z_prob_qsz']
