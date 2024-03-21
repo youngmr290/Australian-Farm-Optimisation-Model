@@ -625,10 +625,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##if generating for stubble then overwrite some of these inputs to match the stubble trial
     if stubble:
         ##shearing
-        date_shear_sida0e0b0xyg1[...] = pinp.stubble['shear_date']
-        date_shear_sida0e0b0xyg3[...] = pinp.stubble['shear_date']
+        date_shear_sida0e0b0xyg1[...] = stubble['shear_date']
+        date_shear_sida0e0b0xyg3[...] = stubble['shear_date']
         ###birth control
-        date_born1st_oa1e1b1nwzida0e0b0xyg2[...] = pinp.stubble['lambing_date']
+        date_born1st_oa1e1b1nwzida0e0b0xyg2[...] = stubble['lambing_date']
 
     ############################
     ### sim param arrays       # '''csiro params '''
@@ -638,8 +638,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     i_g3_inc = pinp.sheep['i_g3_inc']
     ##if generating for stubble then overwrite genotype selection
     if stubble:
-        a_c2_c0 = pinp.stubble['a_c2_c0']
-        i_g3_inc = pinp.stubble['i_g3_inc']
+        a_c2_c0 = stubble['a_c2_c0']
+        i_g3_inc = stubble['i_g3_inc']
 
     ##association for the retained t of each g slice
     a_t_g1 = np.arange(pinp.sheep['i_n_dam_sales'], pinp.sheep['i_n_dam_sales']+len_g1)
@@ -812,12 +812,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     '''
     if stubble:
         legume_p6a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['clover_propn_in_sward_stubble']
-        density_p6a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_sr_s2'][0] #take the harv slice of sr given that it is not important enough to keep the s2 axis
-        ws_p4a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_ws']
-        rain_p4a1e1b1nwzida0e0b0xygp0[...] = pinp.stubble['i_rain']
-        temp_ave_p4a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_temp_ave']
-        temp_max_p4a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_temp_max']
-        temp_min_p4a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_temp_min']
+        density_p6a1e1b1nwzida0e0b0xyg[...] = stubble['i_sr']
+        ws_p4a1e1b1nwzida0e0b0xyg[...] = stubble['i_ws']
+        rain_p4a1e1b1nwzida0e0b0xygp0[...] = stubble['i_rain']
+        temp_ave_p4a1e1b1nwzida0e0b0xyg[...] = stubble['i_temp_ave']
+        temp_max_p4a1e1b1nwzida0e0b0xyg[...] = stubble['i_temp_max']
+        temp_min_p4a1e1b1nwzida0e0b0xyg[...] = stubble['i_temp_min']
 
 
     ########################################
@@ -1795,12 +1795,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     if stubble:
         lw_initial_wzida0e0b0xyg1[...] = stubble['lw'][stubble['p_start']]
         lw_initial_wzida0e0b0xyg3[...] = stubble['lw'][stubble['p_start']]
-        cfw_initial_wzida0e0b0xyg1[...] = pinp.stubble['i_gfw'] * cw_dams[3, ...]
-        cfw_initial_wzida0e0b0xyg3[...] = pinp.stubble['i_gfw'] * cw_offs[3, ...]
-        fd_initial_wzida0e0b0xyg1[...] = pinp.stubble['i_fd']
-        fd_initial_wzida0e0b0xyg3[...] = pinp.stubble['i_fd']
-        fl_initial_wzida0e0b0xyg1[...] = pinp.stubble['i_fl']
-        fl_initial_wzida0e0b0xyg3[...] = pinp.stubble['i_fl']
+        cfw_initial_wzida0e0b0xyg1[...] = stubble['i_gfw'] * cw_dams[3, ...]
+        cfw_initial_wzida0e0b0xyg3[...] = stubble['i_gfw'] * cw_offs[3, ...]
+        fd_initial_wzida0e0b0xyg1[...] = stubble['i_fd']
+        fd_initial_wzida0e0b0xyg3[...] = stubble['i_fd']
+        fl_initial_wzida0e0b0xyg1[...] = stubble['i_fl']
+        fl_initial_wzida0e0b0xyg3[...] = stubble['i_fl']
 
     ##calc initial ffcfw
     ffcfw_initial_wzida0e0b0xyg0 = lw_initial_wzida0e0b0xyg0 - cfw_initial_wzida0e0b0xyg0 / cw_sire[3, ...]
@@ -1831,13 +1831,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     if stubble:
         fat_initial_wzida0e0b0xyg0, muscle_initial_wzida0e0b0xyg0, viscera_initial_wzida0e0b0xyg0 \
             = sfun.f1_body_composition(cg_sire, cn_sire, cx_sire[:,0:1,...], ebw_initial_wzida0e0b0xyg0, srw_b0xyg0
-                                       , pinp.stubble['i_md'], eqn_system = eqn_used_g0_q1p[7,0])
+                                       , stubble['i_md'], eqn_system = eqn_used_g0_q1p[7,0])
         fat_initial_wzida0e0b0xyg1, muscle_initial_wzida0e0b0xyg1, viscera_initial_wzida0e0b0xyg1 \
             = sfun.f1_body_composition(cg_dams, cn_dams, cx_dams[:,1:2,...], ebw_initial_wzida0e0b0xyg1, srw_b0xyg1
-                                       , pinp.stubble['i_md'], eqn_system = eqn_used_g1_q1p[7,0])
+                                       , stubble['i_md'], eqn_system = eqn_used_g1_q1p[7,0])
         fat_initial_wzida0e0b0xyg3, muscle_initial_wzida0e0b0xyg3, viscera_initial_wzida0e0b0xyg3 \
             = sfun.f1_body_composition(cg_offs, cn_offs, cx_offs[:,mask_x,...], ebw_initial_wzida0e0b0xyg3, srw_b0xyg3
-                                       , pinp.stubble['i_md'], eqn_system = eqn_used_g3_q1p[7,0])
+                                       , stubble['i_md'], eqn_system = eqn_used_g3_q1p[7,0])
 
     ##numbers
     ###Distribution of initial numbers across the a1 axis
@@ -2383,13 +2383,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     '''if running the gen for stubble generation then the feed supply info above gets overwritten with
     the stubble feed from the trial.'''
     if stubble:
-        foo_dams = pinp.stubble['i_foo']
-        foo_yatf = pinp.stubble['i_foo']
-        foo_offs = pinp.stubble['i_foo']
+        foo_dams = stubble['i_foo']
+        foo_yatf = stubble['i_foo']
+        foo_offs = stubble['i_foo']
         dmd_pwg = fun.f_expand(stubble['dmd_pw'],w_pos, left_pos2=p_pos, right_pos2=w_pos)
-        intake_s_dams = pinp.stubble['i_intake_s']
-        intake_s_yatf = pinp.stubble['i_intake_s']
-        intake_s_offs = pinp.stubble['i_intake_s']
+        intake_s_dams = stubble['i_sup_intake']
+        intake_s_yatf = stubble['i_sup_intake']
+        intake_s_offs = stubble['i_sup_intake']
         confinementw_tpa1e1b1nwzida0e0b0xyg1[...] = False
         confinementw_tpa1e1b1nwzida0e0b0xyg3[...] = False
 
@@ -2760,23 +2760,23 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
            ffcfw and other initial values are overwritten above'''
         if stubble:
             ##dams
-            w_f_start_dams = pinp.stubble['w_foetus_start']
+            w_f_start_dams = stubble['w_foetus_start']
             nw_f_start_dams = w_f_start_dams
 
             ##yatf
-            ffcfw_start_yatf = np.array([pinp.stubble['i_lw_yatf'] - pinp.stubble['i_gfw_yatf']]) #have to make it an array so it can handle new axis.
+            ffcfw_start_yatf = np.array([stubble['i_lw_yatf'] - stubble['i_gfw_yatf']]) #have to make it an array so it can handle new axis.
             ffcfw_max_start_yatf = ffcfw_start_yatf
             nw_start_yatf = ffcfw_start_yatf
             rc_start_yatf = 1
-            cfw_start_yatf = pinp.stubble['i_gfw_yatf'] * cw_yatf[3, ...]
-            fl_start_yatf = pinp.stubble['i_fl_yatf']
-            fd_start_yatf = pinp.stubble['i_fd_yatf'] #not used for anything so just use the same one as adult
-            foo_lact_ave_start = pinp.stubble['i_foo']
+            cfw_start_yatf = stubble['i_gfw_yatf'] * cw_yatf[3, ...]
+            fl_start_yatf = stubble['i_fl_yatf']
+            fd_start_yatf = stubble['i_fd_yatf'] #not used for anything so just use the same one as adult
+            foo_lact_ave_start = stubble['i_foo']
             ###using input proportions for body composition rather than the function because estimate of gutfill for yatf is poor
             # #todo improve the gut fill calculation for yatf and then calc using f_body_weight().
-            fat_start_yatf = ffcfw_start_yatf * pinp.stubble['i_fat_yatf']
-            muscle_start_yatf = ffcfw_start_yatf * pinp.stubble['i_muscle_yatf']
-            viscera_start_yatf = ffcfw_start_yatf * pinp.stubble['i_viscera_yatf']
+            fat_start_yatf = ffcfw_start_yatf * stubble['i_fat_yatf']
+            muscle_start_yatf = ffcfw_start_yatf * stubble['i_muscle_yatf']
+            viscera_start_yatf = ffcfw_start_yatf * stubble['i_viscera_yatf']
 
             ##offs
             nw_start_offs = 0.0
