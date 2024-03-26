@@ -151,7 +151,11 @@ def sets(model, nv):
     model.s_nut_dams = Set(initialize=np.array(['n%s'%i for i in range(sinp.structuralsa['i_n1_matrix_len'])]), doc='Nutrition levels in each feed period for dams')
 
     ##offs
-    model.s_sale_offs = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t3_len'])], doc='Sales within the year for offs')
+    if sinp.structuralsa['i_offs_sale_method'] == 1:
+        len_t3 = sinp.structuralsa['i_offs_sale_opportunities_per_dvp'] + 1 #+1 for retained slice
+    else:
+        len_t3 = pinp.sheep['i_t3_len']
+    model.s_sale_offs = Set(initialize=['t%s'%i for i in range(len_t3)], doc='Sales within the year for offs')
     model.s_nut_offs = Set(initialize=np.array(['n%s'%i for i in range(sinp.structuralsa['i_n3_matrix_len'])]), doc='Nutrition levels in each feed period for offs')
 
     ##prog

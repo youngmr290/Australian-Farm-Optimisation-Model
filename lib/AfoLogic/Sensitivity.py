@@ -57,7 +57,10 @@ def create_sa():
     len_s7 = len(uinp.sheep['i_salep_price_max_s7']) #s7 = sale grid
     len_t1 = pinp.sheep['i_n_dam_sales'] + len_g0
     len_t2 = pinp.sheep['i_t2_len']
-    len_t3 = pinp.sheep['i_t3_len']
+    if sinp.structuralsa['i_offs_sale_method'] == 1:
+        len_t3 = sinp.structuralsa['i_offs_sale_opportunities_per_dvp'] + 1  # +1 for retained slice
+    else:
+        len_t3 = pinp.sheep['i_t3_len']
     len_P = 500  #Capital P because it is an (over) estimate to initialise the p axes that will be sliced when len_p is known.
     len_p6 = len(pinp.period['i_fp_idx'])
     len_V = 50  #Capital V because it is an (over) estimate to initialise the v axes that will be sliced when len_v is known.
