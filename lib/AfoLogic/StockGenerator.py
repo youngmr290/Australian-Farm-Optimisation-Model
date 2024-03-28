@@ -9767,8 +9767,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     arrays_k3tvzxg3 = [keys_k3, keys_t3, keys_v3, keys_z, keys_x, keys_g3]
     params['p_offs_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_offs_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3tvzxg3)
 
-    ##upper bound prog
-    bnd_upper_prog_tdxg2 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_prog_tdxg2'], 5) #999999 just an arbitrary high value
+    ##upper bound prog - default is that all females (except xb) go to dams.
+    ##t[prog2offs], all[d], x[female], g[bbb,bbm] = 0
+    bnd_upper_prog_tdxg2 = np.full_like(sen.sav['bnd_up_prog_tdxg2'], 999999) #999999 just an arbitrary high value so constraint gets skipped
+    bnd_upper_prog_tdxg2[2,:,1,0:2] = 0 #set the default so that female prog go to dams.
+    bnd_upper_prog_tdxg2 = fun.f_sa(np.array(bnd_upper_prog_tdxg2,dtype=float), sen.sav['bnd_up_prog_tdxg2'], 5)
     # bnd_upper_prog_tdxg2[bnd_upper_prog_tdxg2==999999] = np.inf  # (can't use np.inf because it becomes nan in the following calcs)
     bnd_upper_prog_tva1e1b1nwzida0e0b0xyg2 = fun.f_expand(bnd_upper_prog_tdxg2, left_pos=x_pos, right_pos=-1,
                                                           left_pos2=d_pos, right_pos2=x_pos, left_pos3=p_pos-1, right_pos3=d_pos,
