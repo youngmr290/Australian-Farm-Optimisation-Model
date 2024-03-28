@@ -9239,6 +9239,30 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                     a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...], numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg3,
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
+    ###weaning or mating dams - with a y (year axis)
+    dvp_is_mating_or_weaning = dvp_is_mating.astype(bool)
+    dvp_is_mating_or_weaning[0,...] = True #dvp 0 is weaning so set it to true.
+    idx_mating_or_weaning_yvg1 = (np.broadcast_to(index_va1e1b1nwzida0e0b0xyg1,dvp_is_mating_or_weaning.shape)[
+                                         dvp_is_mating_or_weaning].reshape((-1,)+dvp_is_mating_or_weaning.shape[1:])[:,na,...])
+    dvp_is_mating_or_weaning_yvg1 = idx_mating_or_weaning_yvg1 == index_va1e1b1nwzida0e0b0xyg1
+    ###shearing or weaning offs - with a y (year axis)
+    dvp_is_shear = sfun.f1_p2v(period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3).astype(dtypeint)
+    dvp_is_shear_or_weaning = fun.f_dynamic_slice(dvp_is_shear,d_pos,0,1).astype(bool) #slice d - assuming that shearing dvp will be the same across d. If this is ever a problem we could cluster d.
+    dvp_is_shear_or_weaning[0,...] = True #dvp 0 is weaning so set it to true.
+    idx_mating_or_weaning_yvg3 = (np.broadcast_to(index_va1e1b1nwzida0e0b0xyg3, dvp_is_shear_or_weaning.shape)[
+         dvp_is_shear_or_weaning].reshape((-1,) + dvp_is_shear_or_weaning.shape[1:])[:, na, ...])
+    dvp_is_shear_or_weaning_yvg3 = idx_mating_or_weaning_yvg3 == index_va1e1b1nwzida0e0b0xyg3
+    ###dams - sale dvps in each y
+    idx_next_mating_or_weaning_yvg1 = np.roll(idx_mating_or_weaning_yvg1,shift=-1, axis=0)
+    idx_next_mating_or_weaning_yvg1[-1,...] = np.max(index_va1e1b1nwzida0e0b0xyg1)+1 #overwrite the last slice with the max dvp number because rolling puts the very first dvp at the end.
+    dvp_is_sale_yvg1 = np.logical_and(index_va1e1b1nwzida0e0b0xyg1 >= idx_mating_or_weaning_yvg1, index_va1e1b1nwzida0e0b0xyg1 < idx_next_mating_or_weaning_yvg1)
+    dvp_is_sale_tyvg1 = dvp_is_sale_yvg1 * (index_tva1e1b1nw8zida0e0b0xyg1<2)[:,na,...] #so only a true in the sale t slices
+    ###offs - sale dvps in each y
+    idx_next_mating_or_weaning_yvg3 = np.roll(idx_mating_or_weaning_yvg3,shift=-1, axis=0)
+    idx_next_mating_or_weaning_yvg3[-1,...] = np.max(index_va1e1b1nwzida0e0b0xyg3)+1 #overwrite the last slice with the max dvp number because rolling puts the very first dvp at the end.
+    dvp_is_sale_yvg3 = np.logical_and(index_va1e1b1nwzida0e0b0xyg3 >= idx_mating_or_weaning_yvg3, index_va1e1b1nwzida0e0b0xyg3 < idx_next_mating_or_weaning_yvg3)
+    dvp_is_sale_tyvg3 = dvp_is_sale_yvg3 * (index_tva1e1b1nw8zida0e0b0xyg3>0)[:,na,...] #so only a true in the sale t slices
+
 
 
 
@@ -9847,11 +9871,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     keys_s3 = np.array(['s%s'%i for i in range(len_s3)])
     keys_p = np.array(['p%s'%i for i in range(len_p)])
     keys_p3 = keys_p[mask_p_offs_p]
+    keys_year_offs =  np.array((['Lambs']+['Year%s'%i for i in range(dvp_is_shear_or_weaning_yvg3.shape[0])[1:]]))
+    keys_year_dams =  np.array((['Lambs']+['Year%s'%i for i in range(dvp_is_mating_or_weaning_yvg1.shape[0])[1:]]))
 
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_z, keys_g0],'sire_keys_qszg0')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_p6, keys_f, keys_z, keys_g0],'sire_keys_qsp6fzg0')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvanwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_year_dams, keys_v1, keys_a, keys_n1, keys_lw1
+                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tyvanwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2p7tvanwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_s7, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
@@ -9888,6 +9916,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                             , keys_a, keys_x, keys_g2],'prog_keys_qss7k3k5twzia0xg2')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
                                             , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tvnwziaxyg3')
+    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_year_offs, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
+                                            , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tyvnwziaxyg3')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
                                             , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5p7tvnwziaxyg3')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_s7, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
@@ -9981,6 +10011,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ###period_is
     fun.f1_make_r_val(r_vals,dvp_is_mating,'dvp_is_mating_vzig1', shape=vzig1_shape)
+    ###dvp is weaning or mating dams - with a y (year axis)
+    yvzig1_shape = len(keys_year_dams), len_v1, len_z, len_i, len_g1
+    fun.f1_make_r_val(r_vals,dvp_is_mating_or_weaning_yvg1,'dvp_is_mating_or_weaning_yvzig1', shape=yvzig1_shape)
+    ###dvp is sale dams - with a y (year axis)
+    tyvzig1_shape = len_t1, len(keys_year_dams), len_v1, len_z, len_i, len_g1
+    fun.f1_make_r_val(r_vals,dvp_is_sale_tyvg1,'dvp_is_sale_tyvzig1', shape=tyvzig1_shape)
+    ###shearing or weaning offs - with a y (year axis)
+    yvzixg3_shape = len(keys_year_offs), len_v3, len_z, len_i, len_x, len_g3
+    fun.f1_make_r_val(r_vals,dvp_is_shear_or_weaning_yvg3,'dvp_is_shear_or_weaning_yvzixg3', shape=yvzixg3_shape)
+    ###shearing or weaning offs - with a y (year axis)
+    tyvzixg3_shape = len_t3, len(keys_year_offs), len_v3, len_z, len_i, len_x, len_g3
+    fun.f1_make_r_val(r_vals,dvp_is_sale_tyvg3,'dvp_is_sale_tyvzixg3', shape=tyvzixg3_shape)
 
     ###z8 masks for unclustering lp_vars
     fun.f1_make_r_val(r_vals,mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:],'maskz8_k2tvanwziy1g1') #slice off unused axis
