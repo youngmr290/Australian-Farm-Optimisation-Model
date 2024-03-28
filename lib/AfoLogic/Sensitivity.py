@@ -488,7 +488,6 @@ def create_sa():
     sav['bnd_lo_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #min number of offs
     sav['bnd_up_off_inc'] = '-'   #control if off upper bound is on.
     sav['bnd_up_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #max number of offs
-    sav['bnd_up_prog_inc'] = '-'   #control if prog upper bound is on.
     sav['bnd_up_prog_tdxg2'] = np.full((len_t2,) + (len_d,) + (len_x,) + (len_g2,), '-', dtype=object)   #max number of offs
     sav['bnd_sr_t'] = np.full(pinp.sheep['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
     sav['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
