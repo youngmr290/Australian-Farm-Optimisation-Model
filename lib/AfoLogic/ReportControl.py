@@ -132,6 +132,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["feed_total"] = rfun.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols, residue_cols=residue_cols)
     if report_run.loc['run_feedbudget', 'Run']:
         reports["grazing"] = rfun.f_grazing_summary(lp_vars, r_vals)
+    if report_run.loc['run_numbers_summary', 'Run']:
+        ewe_numbers_summary, wethers_n_crossys_numbers_summary = rfun.f_stock_numbers_summary(r_vals)
+        reports["ewe_numbers_summary"] = ewe_numbers_summary
+        reports["wethers_n_crossys_numbers_summary"] = wethers_n_crossys_numbers_summary
     if report_run.loc['run_emissions', 'Run']:
         reports["emissions"] = rfun.f_emission_summary(lp_vars, r_vals)
     if report_run.loc['run_period_dates', 'Run']:

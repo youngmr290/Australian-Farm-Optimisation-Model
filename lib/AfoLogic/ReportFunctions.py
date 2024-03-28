@@ -2750,6 +2750,121 @@ def f_grazing_summary(lp_vars, r_vals):
 ############################
 # reports for web app      #
 ############################
+def f_stock_numbers_summary(r_vals):
+    '''Returns one reconciliation table per trial (season results are averaged)'''
+    ##prog numbers sold
+    type = 'stock'
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    keys = 'prog_keys_qsk3k5twzia0xg2'
+    arith = 2
+    index = [10]  # g
+    cols = [9]  # gender
+    axis_slice = {0:[1,None,1]} #sale suckers
+    numbers_prog_g_x = f_stock_pasture_summary(r_vals, type=type, weights=weights, keys=keys, arith=arith, index=index, cols=cols,
+                                                           axis_slice=axis_slice)
+    ###female prog sold
+    try:
+        female_prog_sold = numbers_prog_g_x.loc[['BBB','BBM'],'F'] #wrapped in try incase BBM are not included in the trial.
+    except KeyError:
+        female_prog_sold = numbers_prog_g_x.loc['BBB', 'F']
+    ###wether & crossy prog sold
+    wether_prog_sold = numbers_prog_g_x.values.sum() - female_prog_sold
+
+    ##dam numbers open
+    type = 'stock'
+    prod = 'dvp_is_mating_or_weaning_yvzig1'
+    na_prod = [0,1,2,3,6,7,8,11]
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    na_weights = [4] #y (year)
+    keys = 'dams_keys_qsk2tyvanwziy1g1'
+    arith = 2
+    index = [4] #y
+    cols = [3,5] #v,t
+    open_numbers_dams_y_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                               na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+    ###dam open numbers at prejoining (sum v & t to get total start numbers for each year)
+    open_numbers_dams_y = open_numbers_dams_y_tv.sum(axis=1)
+    #count wethers and crossy prog that were born (this get used in its own column), then set open numbers to 0 since there is no open lambs.
+    females_born = open_numbers_dams_y.iloc[0] + female_prog_sold #need to include any suckers that are sold because not captured in offs numbers.
+    open_numbers_dams_y.iloc[0] = 0 #
+
+    ##dam numbers sale
+    type = 'stock'
+    prod = 'dvp_is_sale_tyvzig1'
+    na_prod = [0,1,2,6,7,8,11]
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    na_weights = [4] #y (year)
+    keys = 'dams_keys_qsk2tyvanwziy1g1'
+    arith = 2
+    index = [4] #y
+    cols = [3,5] #v,t
+    sale_numbers_dams_y_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                               na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+    ###dams sold each year
+    sale_numbers_dams_y = sale_numbers_dams_y_tv.sum(axis=1)
+    #add female prog that were sold
+    sale_numbers_dams_y.iloc[0] = female_prog_sold
+    
+    ###concat open, birth and sale
+    numbers_dams = pd.DataFrame()
+    numbers_dams.insert(0, "Open Numbers", open_numbers_dams_y)
+    numbers_dams.insert(1, "Births", 0) #add empty col
+    numbers_dams.iloc[0,1] = females_born
+    numbers_dams.insert(2, "Sales", sale_numbers_dams_y)
+
+    ##open offs numbers
+    type = 'stock'
+    prod = 'dvp_is_shear_or_weaning_yvzixg3'
+    na_prod = [0,1,2,3,4,7,8,11,13]
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = [5] #y (year)
+    keys = 'offs_keys_qsk3k5tyvnwziaxyg3'
+    arith = 2
+    index = [5] #y
+    cols = [4,6] #v,t
+    numbers_offs_y_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                               na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+    ###offs open numbers at prejoining (sum v & t to get total start numbers for each year)
+    open_numbers_offs_y = numbers_offs_y_tv.sum(axis=1)
+    #count wethers and crossy prog that were born (this get used in its own column), then set open numbers to 0 since there is no open lambs.
+    wethers_born = open_numbers_offs_y.iloc[0] + wether_prog_sold #need to include any suckers that are sold becuase not capture in offs numbers.
+    open_numbers_offs_y.iloc[0] = 0 
+
+    ##sale offs numbers
+    type = 'stock'
+    prod = 'dvp_is_sale_tyvzixg3'
+    na_prod = [0,1,2,3,7,8,11,13]
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = [5] #y (year)
+    keys = 'offs_keys_qsk3k5tyvnwziaxyg3'
+    arith = 2
+    index = [5] #y
+    cols = [4,6] #v,t
+    sale_numbers_offs_y_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                               na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+    ###age at sale
+    type = 'stock'
+    prod = 'saleage_tvnwzida0e0b0xyg3'
+    keys = 'offs_keys_tvnwzida0e0b0xyg3'
+    arith = 0
+    index = [0,1] #tv
+    cols = []  #
+    saleage_offs_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, keys=keys, arith=arith, index=index, cols=cols)
+    ###add sale age as headers
+    sale_numbers_offs_y_tv.columns = np.round(saleage_offs_tv.values.squeeze() / 30, 0) #div 30 to convert to months
+    sale_numbers_offs_y_tv = sale_numbers_offs_y_tv.sort_index(axis=1)
+    ####add wether and crossy prog that were sold (they need to be included in the number of lambs born)
+    sale_numbers_offs_y_tv.insert(0, "Weaning",0)
+    sale_numbers_offs_y_tv.iloc[0,0] = wether_prog_sold
+    
+    ###concat open, birth and sale
+    numbers_offs = pd.concat([sale_numbers_offs_y_tv], keys=['Sales (months of age)'], axis=1)
+    numbers_offs.insert(0, "Open Numbers", open_numbers_offs_y)
+    numbers_offs.insert(1, "Births", 0) #add empty col
+    numbers_offs.iloc[0,1] = wethers_born
+
+    return numbers_dams.round(0), numbers_offs.round(0)
+
 def f_pasture_area_analysis(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
     summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Pas area', 'Ewes mated', 'Pas %', 'Cereal %', 'Canola %', 'Pulse %', 'Fodder %', 'Sup'])
