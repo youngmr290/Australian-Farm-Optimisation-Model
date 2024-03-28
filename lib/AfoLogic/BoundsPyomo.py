@@ -53,7 +53,7 @@ def f1_boundarypyomo_local(params, model):
     dams_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_dam_inc'], 5) #upper bound on dams
     offs_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_off_inc'], 5) #lower bound offs
     offs_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_off_inc'], 5) #upper bound on offs
-    prog_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_prog_inc'], 5) #upper bound on prog
+    prog_upbound_inc = any(value != 999999 for value in params['stock']['p_prog_upbound'].values()) #upper bound on prog
     total_dams_scanned_bound_inc = np.any(sen.sav['bnd_total_dams_scanned'] != '-') #equal to bound on the total number of mated dams at scanning
     force_5yo_retention_inc = np.any(sen.sav['bnd_propn_dam5_retained'] != '-') #force a propn of 5yo dams to be retained.
     propn_mated_inc = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
