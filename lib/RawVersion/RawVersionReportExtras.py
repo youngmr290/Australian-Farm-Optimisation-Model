@@ -26,6 +26,8 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_feed"] = pd.DataFrame()  # feed budget
     reports["stacked_feed2"] = pd.DataFrame()  # feed budget
     reports["stacked_grazing"] = pd.DataFrame()  # grazing summary
+    reports["stacked_ewe_numbers_summary"] = pd.DataFrame()  # grazing summary
+    reports["stacked_wethers_n_crossys_numbers_summary"] = pd.DataFrame()  # grazing summary
     reports["stacked_emissions"] = pd.DataFrame()  # GHG emission summary
     reports["stacked_season_nodes"] = pd.DataFrame()  # season periods
     reports["stacked_feed_periods"] = pd.DataFrame()  # feed periods
@@ -168,6 +170,12 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_feedbudget', 'Run']:
         grazing = pd.concat([reports["grazing"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_grazing"] = rfun.f_append_dfs(stacked_reports["stacked_grazing"], grazing)
+
+    if report_run.loc['run_numbers_summary', 'Run']:
+        ewe_numbers_summary = pd.concat([reports["ewe_numbers_summary"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        wethers_n_crossys_numbers_summary = pd.concat([reports["wethers_n_crossys_numbers_summary"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_ewe_numbers_summary"] = rfun.f_append_dfs(stacked_reports["stacked_ewe_numbers_summary"], ewe_numbers_summary)
+        stacked_reports["stacked_wethers_n_crossys_numbers_summary"] = rfun.f_append_dfs(stacked_reports["stacked_wethers_n_crossys_numbers_summary"], wethers_n_crossys_numbers_summary)
 
     if report_run.loc['run_emissions', 'Run']:
         grazing = pd.concat([reports["emissions"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -580,6 +588,9 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_feed"], 'feed budget', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_feed2"], 'feed budget total', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_grazing"], 'grazing summary', df_settings, option=xl_display_mode)
+    if report_run.loc['run_numbers_summary', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_ewe_numbers_summary"], 'ewe_numbers_summary', df_settings, option=xl_display_mode)
+        df_settings = rfun.f_df2xl(writer, reports["stacked_wethers_n_crossys_numbers_summary"], 'wethers_n_xb_numbers_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_emissions', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_emissions"], 'emissions', df_settings, option=xl_display_mode)
     if report_run.loc['run_saleprice', 'Run']:
