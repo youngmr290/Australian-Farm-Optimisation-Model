@@ -376,18 +376,6 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
     ##option 2: if you want to represent the rotations from property.xlsx
     if user_crop_rot:
         phases = pinp.crop['fixed_rotphases'].reset_index().values.astype('str')
-        ###initilise these so that rot generator can be checked (want to make sure each rotation provides a history other than pnc)
-        pnc=np.array([['G','G','G','Ag1','a2']
-                     ,['G','G','G','Sg1','a2']
-                     ,['G','G','Ag2','N','a2']
-                     ,['G','G','Ag2','E','a2']
-                     ,['G','G','Ag2','OF','a2']
-                     ,['G','G','C1','N','a2']
-                     ,['G','G','C1','E','a2']
-                     ,['G','G','C1','P','a2'] #Note APa doesn't exist therefore only necessary option is CPa
-                     ,['G','G','C1','OF','a2']
-                     ])
-
 
 
     ############################################################################################################################################################################################
