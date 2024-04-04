@@ -373,7 +373,7 @@ def f_con_phasesow(model):
                 type(phspy.f_phasesow_req(model,q,s,p7,k,l,z)) == int and all(model.p_sow_prov[p7,p5,z,k]==0 for p5 in model.s_labperiods)):  # if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
             return pe.Constraint.Skip  # skip constraint if no crop is being sown on given rotation
         else:
-            return - sum(model.v_contractseeding_ha[q,s,z,p5,k,l] * model.p_contractseeding_occur[p5,z] * model.p_sow_prov[p7,p5,z,k] for p5 in model.s_labperiods) \
+            return - sum(model.v_contractseeding_ha[q,s,z,p5,k,l] * (model.p_contractseeding_occur[p5,z]*1) * model.p_sow_prov[p7,p5,z,k] for p5 in model.s_labperiods) \
                    - sum(model.v_seeding_machdays[q,s,z,p5,k,l] * model.p_seeding_rate[k,l] * model.p_sow_prov[p7,p5,z,k] for p5 in model.s_labperiods) \
                    + phspy.f_phasesow_req(model,q,s,p7,k,l,z) == 0
     model.con_phasesow = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_landuses, model.s_lmus,model.s_season_types,rule=sow_link,
@@ -415,7 +415,7 @@ def f_con_harv(model):
             return (-macpy.f_harv_supply(model,q,s,p7,k,z9)
                     + sum(model.v_use_biomass[q,s,p7,z9,k,l,s2] * model.p_biomass2product[k,l,s2] #adjust with biomass2product because harv dv are based on grain yield not biomass
                           for l in model.s_lmus)
-                    - model.v_unharvested_yield[q,s,p7,k,z9] * (p7 != p7_end) #must be harvested before the beginning of the next yr - therefore no transfer
+                    - model.v_unharvested_yield[q,s,p7,k,z9] * ((p7 != p7_end)*1) #must be harvested before the beginning of the next yr - therefore no transfer
                     + sum(model.v_unharvested_yield[q,s,p7_prev,k,z8] * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
                           for z8 in model.s_season_types)
                     <= 0)
@@ -438,7 +438,7 @@ def f_con_makehay(model):
             return (-model.v_hay_made[q,s,z9] * model.p_hay_made_prov[p7,z9]
                        + sum(model.v_use_biomass[q,s,p7,z9,k,l,s2] * model.p_biomass2product[k,l,s2]
                              for k in model.s_crops for l in model.s_lmus)
-                   - model.v_hay_tobe_made[q,s,p7,z9] * (p7 != p7_end) #must be baled before the beginning of the next yr - therefore no transfer
+                   - model.v_hay_tobe_made[q,s,p7,z9] * ((p7 != p7_end)*1) #must be baled before the beginning of the next yr - therefore no transfer
                    + sum(model.v_hay_tobe_made[q,s,p7_prev,z8] * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
                          for z8 in model.s_season_types)
                    <= 0)
@@ -465,10 +465,10 @@ def f_con_biomass_transfer(model):
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return -phspy.f_rotation_biomass(model,q,s,p7,k,l,z9) + macpy.f_late_seed_penalty(model,q,s,p7,k,l,z9) \
                    + cgzpy.f_grazecrop_biomass_penalty(model,q,s,p7,k,l,z9) \
-                   - model.v_biomass_debit[q,s,p7,z9,k,l] * 1000 * (p7 != p7_end) \
+                   - model.v_biomass_debit[q,s,p7,z9,k,l] * 1000 * ((p7 != p7_end)*1) \
                    + model.v_biomass_credit[q,s,p7,z9,k,l] * 1000 \
                    + sum((model.v_biomass_debit[q,s,p7_prev,z8,k,l] * 1000 - model.v_biomass_credit[q,s,p7_prev,z8,k,l]
-                          * 1000 * (p7 != p7_start)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
+                          * 1000 * ((p7 != p7_start)*1)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
                          ]   # p7!=p7[0] to stop biomass tranfer from last yr to current yr else unbounded solution.
                          for z8 in model.s_season_types) \
                    + sum(model.v_use_biomass[q,s,p7,z9,k,l,s2] for s2 in model.s_biomass_uses) * 1000 <= 0
@@ -506,10 +506,10 @@ def f_con_product_transfer(model):
             return -phspy.f_rotation_product(model,q,s,p7,g,k,s2,z9) \
                    + sum(model.v_sup_con[q,s,z9,k,g,f,p6] * model.p_sup_s2[k,s2] * model.p_a_p6_p7[p7,p6,z9] * 1000
                          for f in model.s_feed_pools for p6 in model.s_feed_periods) \
-                   - model.v_product_debit[q,s,p7,z9,k,s2,g] * 1000 * (p7 != p7_end) \
+                   - model.v_product_debit[q,s,p7,z9,k,s2,g] * 1000 * ((p7 != p7_end)*1) \
                    + model.v_product_credit[q,s,p7,z9,k,s2,g] * 1000 \
                    + sum((model.v_product_debit[q,s,p7_prev,z8,k,s2,g] * 1000 - model.v_product_credit[q,s,p7_prev,z8,k,s2,g]
-                          * 1000 * (p7 != p7_start)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
+                          * 1000 * ((p7 != p7_start)*1)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
                          ]   # p7!=p7[0] to stop grain tranfer from last yr to current yr else unbounded solution.
                          for z8 in model.s_season_types) \
                    - model.v_buy_product[q,s,p7,z9,k,s2,g] * model.p_buy_product_prov[p7,z9] * 1000 + model.v_sell_product[q,s,p7,z9,k,s2,g] * 1000 <= 0
@@ -656,7 +656,7 @@ def f_con_cashflow(model):
                     + macpy.f_mach_cost(model,q,s,p7,z9) + suppy.f_sup_cost(model,q,s,p7,z9) + model.p_overhead_cost[p7,z9] + slppy.f_saltbush_cost(model,q,s,z9,p7)
                     - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1)
                     - model.v_debit[q,s,c1,p7,z9] + model.v_credit[q,s,c1,p7,z9])
-                    + sum((model.v_debit[q,s,c1,p7_prev,z8] - model.v_credit[q,s,c1,p7_prev,z8]) * model.p_parentz_provwithin_season[p7_prev,z8,z9] * (p7!=p7_start)  #end cashflow doesnot provide start cashflow else unbounded.
+                    + sum((model.v_debit[q,s,c1,p7_prev,z8] - model.v_credit[q,s,c1,p7_prev,z8]) * model.p_parentz_provwithin_season[p7_prev,z8,z9] * ((p7!=p7_start)*1)  #end cashflow doesnot provide start cashflow else unbounded.
                           for z8 in model.s_season_types)) <= 0
         else:
             return pe.Constraint.Skip
@@ -750,7 +750,7 @@ def f_con_dep(model):
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return (macpy.f_total_dep(model,q,s,p7,z9) + suppy.f_sup_dep(model,q,s,p7,z9) - model.v_dep[q,s,p7,z9]
                     + sum(model.v_dep[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
-                          for z8 in model.s_season_types) * (p7!=p7_start) #end doesn't carry over
+                          for z8 in model.s_season_types) * ((p7!=p7_start)*1) #end doesn't carry over
                     <= 0)
         else:
             return pe.Constraint.Skip
@@ -770,7 +770,7 @@ def f_con_asset(model):
             return (suppy.f_sup_asset(model,q,s,p7,z9) + macpy.f_mach_asset(model,p7) + stkpy.f_stock_asset(model,q,s,p7,z9)) * uinp.finance['opportunity_cost_capital'] \
                    - model.v_asset_cost[q,s,p7,z9] \
                    + sum(model.v_asset_cost[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
-                         for z8 in model.s_season_types) * (p7!=p7_start) <= 0 #end doesn't carry over
+                         for z8 in model.s_season_types) * ((p7!=p7_start)*1) <= 0 #end doesn't carry over
         else:
             return pe.Constraint.Skip
     model.con_asset = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,rule=asset_cost,
@@ -789,7 +789,7 @@ def f_con_minroe(model):
                     * fin.f1_min_roe()
                     - model.v_minroe[q,s,p7,z9]
                     + sum(model.v_minroe[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
-                          for z8 in model.s_season_types) * (p7 != p7_start)) <= 0  # end doesn't carry over
+                          for z8 in model.s_season_types) * ((p7 != p7_start)*1)) <= 0  # end doesn't carry over
         else:
             return pe.Constraint.Skip
     model.con_minroe = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,rule=minroe,
@@ -852,7 +852,7 @@ def f_objective(model):
                     + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z]
                     - model.v_tradevalue[q, s, p7_end, z]
                     + 0.00001 * sum(sum(v[idx] for idx in v) for v in variables
-                                       if v._rule_bounds.val[0] is not None and v._rule_bounds.val[0]>=0)) <=0 #all variables with positive bounds (ie variables that can be negative e.g. terminal_wealth are excluded) put a small neg number into objective. This stop cplex selecting variables that don't contribute to the objective (cplex selects variables to remove slack on constraints).
+                                       if v._rule_bounds._initializer.val[0] is not None and v._rule_bounds._initializer.val[0]>=0)) <=0 #all variables with positive bounds (ie variables that can be negative e.g. terminal_wealth are excluded) put a small neg number into objective. This stop cplex selecting variables that don't contribute to the objective (cplex selects variables to remove slack on constraints).
         else:                                                                                                  #note; _rule_bounds.val[0] is the lower bound of each variable
             return pe.Constraint.Skip
     model.con_terminal_wealth = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_c1, rule=terminal_wealth,

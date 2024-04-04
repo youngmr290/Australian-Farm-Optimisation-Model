@@ -1658,7 +1658,7 @@ def f_report(processor, trials, non_exist_trials):
 
 
     df_settings.to_excel(writer, 'df_settings')
-    writer.save()
+    writer.close()
 
     print("Report complete. Processor: {0}".format(processor))
 

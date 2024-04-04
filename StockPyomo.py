@@ -787,8 +787,8 @@ def f_con_stock_trade_profit(model):
                                 if pe.value(model.p_tradevalue_offs[k3, k5, p7, t3, v3, n3, w3, z, i, a, x, y3, g3]) != 0)
                           for a in model.s_wean_times for i in model.s_tol)
             return model.v_tradevalue[q, s, p7, z] - stock \
-                   - sum(model.v_tradevalue[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z]
-                          for z8 in model.s_season_types) * (p7!=p7_start) <=0 #end doesn't carry over
+                   - sum(model.v_tradevalue[q,s,p7_prev,z8] * (model.p_parentz_provwithin_season[p7_prev,z8,z]*1)
+                          for z8 in model.s_season_types) * ((p7!=p7_start)*1) <=0 #end doesn't carry over
         else:
             return pe.Constraint.Skip
     model.con_stock_trade_profit = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
