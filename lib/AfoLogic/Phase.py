@@ -300,8 +300,9 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
         fun.f1_make_r_val(r_vals, base_yields_k_z, 'base_yields_k_z')
 
     ##collate other info
-    biomass_lmus = pinp.crop['yield_by_lmu'] #soil yield factor
-    arable = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']) #read in arable area df
+    biomass_lmus_scalar_k_l = pinp.crop['yield_by_lmu'] #soil yield factor
+    soil_production_scalar_zl = zfun.f_seasonal_inp(pinp.crop['i_soil_production_z_l'].T,numpy=False).unstack() #soil scalar by weather-year (to account for the fact that the relative performance of a soil is weather related)
+    arable_l = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']) #read in arable area df
     harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield is inputted as the harvestable grain
     harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
     propn_baled_k = pd.Series(pinp.stubble['i_propn_baled_k'], index=sinp.landuse['C']) #Proportion of biomass at baling that is baled (at point of baling - not including respiration losses).
@@ -318,8 +319,9 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     base_biomass_rkz = grain_yields_rkz.div(harvest_index_k, level=1)
 
     ##calculate biomass - base biomass * arable area * harv_propn * frost * lmu factor - seeding rate
-    biomass_arable_by_soil_k_l = biomass_lmus.mul(arable) #mul arable area to the lmu factor (easy because dfs have the same axis's).
-    biomass_rkz_l=biomass_arable_by_soil_k_l.reindex(base_biomass_rkz.index, axis=0, level=1).mul(base_biomass_rkz,axis=0).fillna(0) #reindes and mul with base biomass
+    biomass_lmus_scalar_kz_l = biomass_lmus_scalar_k_l.mul(soil_production_scalar_zl, axis=1, level=1).stack(0)
+    biomass_arable_by_soil_kz_l = biomass_lmus_scalar_kz_l.mul(arable_l) #mul arable area to the lmu factor (easy because dfs have the same axis's).
+    biomass_rkz_l=biomass_arable_by_soil_kz_l.unstack().reindex(base_biomass_rkz.unstack().index, axis=0, level=1).stack().mul(base_biomass_rkz,axis=0).fillna(0) #reindes and mul with base biomass
     biomass_rkl_z = biomass_rkz_l.stack().unstack(2)
 
     ##add rotation period axis - if a rotation exists at the beginning of harvest it provides grain and requires harvesting.

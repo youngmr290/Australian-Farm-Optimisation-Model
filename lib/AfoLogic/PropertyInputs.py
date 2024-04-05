@@ -220,6 +220,7 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
 
     ##crop
     fun.f1_lmuregion_to_lmufarmer(crop, "yield_by_lmu", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(crop, "i_soil_production_z_l", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(crop, "frost", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(crop, "fert_by_lmu", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(crop, "chem_by_lmu", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
@@ -241,6 +242,7 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
         fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "LowPGR", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
         fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "MedFOO", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
         fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "MedPGR", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
+        fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "i_soil_production_zl", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
         fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "DigGrn", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
         fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "POCCons", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
         fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "ErosionLimit", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
@@ -602,6 +604,7 @@ def f1_mask_lmu():
 
     ##crop
     f1_do_mask_lmu(crop, "yield_by_lmu", lmu_axis=1)
+    f1_do_mask_lmu(crop, "i_soil_production_z_l", lmu_axis=1)
     f1_do_mask_lmu(crop, "frost", lmu_axis=1)
     f1_do_mask_lmu(crop, "fert_by_lmu", lmu_axis=1)
     f1_do_mask_lmu(crop, "chem_by_lmu", lmu_axis=1)
@@ -624,6 +627,7 @@ def f1_mask_lmu():
         f1_do_mask_lmu(pasture_inputs[pasture], "MedFOO", lmu_axis=2)
         f1_do_mask_lmu(pasture_inputs[pasture], "MedPGR", lmu_axis=2)
         f1_do_mask_lmu(pasture_inputs[pasture], "DigGrn", lmu_axis=2)
+        f1_do_mask_lmu(pasture_inputs[pasture], "i_soil_production_zl", lmu_axis=1)
         f1_do_mask_lmu(pasture_inputs[pasture], "POCCons", lmu_axis=1)
         f1_do_mask_lmu(pasture_inputs[pasture], "ErosionLimit", lmu_axis=2)
 
