@@ -124,22 +124,20 @@ import itertools
 from openpyxl import load_workbook
 
 #AFO modules
-if __name__ == '__main__':
-    from lib.AfoLogic import Functions as fun
-    from lib.AfoLogic import StructuralInputs as sinp
-    from lib.AfoLogic import PropertyInputs as pinp
-else:
-    from . import Functions as fun
-    from . import StructuralInputs as sinp
-    from . import PropertyInputs as pinp
+from lib.AfoLogic import Functions as fun
+from lib.AfoLogic import StructuralInputs as sinp
+from lib.AfoLogic import PropertyInputs as pinp
+
+# from . import Functions as fun
+# from . import StructuralInputs as sinp
+# from . import PropertyInputs as pinp
 
 '''
-Version 1:
-To cut down the number of rotations we have dropped out some less important lanuses.
-Manipulated pasture is not included because farmers are tending to just spraytop pastures and then resow because
-manipulation reduces carrying capacity too much.
-Chickpeas, Lentils and vetch are not included yet.
-No perenials are included yet. These are not very common in current rotations.
+Trevethan version 1:
+Trevethan have cont pasture (which is added at the bottom) and and resown spray topped vetch pasture.
+In version 1 I am just saying the the resown vetch pasture has the same productivity as the cont annual pasture. 
+The vetch pasture is spraytopped so it reduces chem costs and it also reduces fert requirement in the following crop. 
+
 
 Note a2 (pasture with no cost) doesnt provide anything and it doesnt need to because it is only selected until the latest brk.
 '''
@@ -148,29 +146,29 @@ customised_rotations = False
 def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
     print('Running rotation generator', end=' ')
     if not user_crop_rot:
-        yr0 = np.array(['b', 'o', 'w', 'f', 'l', 'z','r','of'#, 'h'- not included in v1 to speed calibration process
+        yr0 = np.array(['b', 'w',  'l', 'z','r','of'#,'od', 'o','f', 'h'- not included in v1 to speed calibration process
                        , 'bd','wd','rd','zd'
                        , 'a'
-                       , 's'])
-                       # , 'm'
-                        # , 'u'
-                        # , 'x'
-                        # , 'j', 't'])
-        yr1 = np.array(['B','O1','W', 'N', 'L', 'F', 'OF'
-               , 'A1'
-               , 'S1'])
-               # , 'M'
-                # , 'U'
-                # , 'X'
-                # , 'T', 'J'])
-        yr2 = np.array(['B','O','W', 'N', 'L', 'F'
-               , 'A2'
+                       ,'s'])#, 'm'
+                        # , 'u', 'ur'
+                        # , 'x', 'xr'
+                        # , 'j', 't', 'jr', 'tr'])
+        yr1 = np.array([
+               'B','W', 'N', 'L', 'OF'#'F',,'O1'
+               , 'A'
                , 'S'])
                # , 'M'
                 # , 'U'
                 # , 'X'
                 # , 'T', 'J'])
-        yr3 = np.array(['B','O','W', 'N', 'L', 'F'
+        yr2 = np.array(['B','O','W', 'N', 'L'#, 'F'
+               , 'A'])
+               # , 'S' #for EWW we are not representing that two spraytopped pastures is better than one.
+               # , 'M'
+                # , 'U'
+                # , 'X'
+                # , 'T', 'J'])
+        yr3 = np.array(['B','O','W', 'N', 'L'#, 'F'
                , 'A'])
                 # , 'U'
                 # , 'T'])
@@ -185,20 +183,9 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
         arrays=[yr4,yr3,yr2,yr1,yr0]
         phases=fun.cartesian_product_simple_transpose(arrays)
 
-        ####add phases with S in yr 3 & 4 so that cont annual pasture can exist (S and A in yr 3 & 4 are the same as
-        #### far as production so it doesnt need to exist for all phases but AAAAa is masked out so we need SAAAa).
-        #### all cont pasture phases that dont have S in yr0-3 need to be added with S in yr 3 & 4.
-        #### posssibly this could be added to generation then use rules to remove unrequired
-        cont_annual = np.array([['S', 'A', 'A2', 'A1', 'a']
-                               , ['S', 'A', 'A2', 'A1', 'ar']
-                               , ['S', 'A', 'A2', 'AR', 'a']
-                               , ['S', 'A', 'A2', 'AR', 'ar']
-                               , ['A', 'S', 'A2', 'A1', 'a']
-                               , ['A', 'S', 'A2', 'A1', 'ar']
-                               , ['A', 'S', 'A2', 'AR', 'a']
-                               , ['A', 'S', 'A2', 'AR', 'ar']
-                                ])
-        phases = np.concatenate((phases, cont_annual))
+
+
+
 
         ###########################################################
         #params used to try make the rules more flexible to change#
@@ -228,6 +215,10 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
                 phases = phases[~(np.isin(phases[:,i], ['L','F'])&np.isin(phases[:,i+2], ['L','F','l','f']))]
             ###no pulse after pasture
             phases = phases[~(np.isin(phases[:,i], ['AR', 'SR1','A1','A2','A','M','S','S1','U','X','T','J'])&np.isin(phases[:,i+1], ['L','F','l','f']))]
+            ###no pasture after pulse
+            phases = phases[~(np.isin(phases[:,i], ['L','F','l','f'])&np.isin(phases[:,i+1], ['a', 's','A1','A2','A','M','S','S1','U','X','T','J']))]
+            ###no fodder after pulse
+            phases = phases[~(np.isin(phases[:,i], ['L','F','l','f'])&np.isin(phases[:,i+1], ['of', 'OF']))]
             ###only spraytopped pasture after manipulated
             phases = phases[~(np.isin(phases[:,i], ['M'])&np.isin(phases[:,i+1], ['AR', 'A1','A2','A', 'M','a','ar','m']))]
             ###not going to resown tedera after a tedera (in a cont rotation you resow every 10yrs but that is accounted for with 'tc')
@@ -246,14 +237,14 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
             ###No spraytopped pasture between a crop and a non spraytopped pasture
             if i<np.size(phases,1)-2:
                 phases = phases[~(np.isin(phases[:,i], ['Y','B','O','O1','W','N','L','F','OF'])&np.isin(phases[:,i+1], ['S','S1','SR1'])&np.isin(phases[:,i+2], ['AR','A1','A2','A','M','ar','a','m']))]
-            ###No resowing between spraytoping
-            phases = phases[~(np.isin(phases[:,i], ['S','S1','SR1'])&np.isin(phases[:,i+1], ['SR1','sr']))]
-            ###only canola after pasture
-            phases = phases[~(np.isin(phases[:,i], ['AR','SR1','A1','A2','A','M','S','S1','U','X','T','J'])&np.isin(phases[:,i+1], ['B','O','O1','W', 'L', 'F', 'OF', 'b', 'h', 'o', 'of', 'w', 'f', 'l', 'bd','wd']))]
+            # ###No resowing between spraytoping
+            # phases = phases[~(np.isin(phases[:,i], ['S','S1','SR1'])&np.isin(phases[:,i+1], ['SR1','sr']))]
+            # ###only canola after pasture
+            # phases = phases[~(np.isin(phases[:,i], ['AR','SR1','A1','A2','A','M','S','S1','U','X','T','J'])&np.isin(phases[:,i+1], ['B','O','O1','W', 'L', 'F', 'OF', 'b', 'h', 'o', 'of', 'w', 'f', 'l', 'bd','wd']))]
             ###no dry seeding after non spraytopped pasture unless RR canola
-            phases = phases[~(np.isin(phases[:,i], ['A1','A2','A','AR','M','U','X','T','J'])&np.isin(phases[:,i+1], ['bd','wd','zd']))]
-            ###no saleable crop after strategic fodder
-            phases = phases[~(np.isin(phases[:,i], ['OF'])&np.isin(phases[:,i+1], ['b', 'h', 'o', 'w', 'f', 'l', 'z','r','bd','wd','rd','zd']))]
+            phases = phases[~(np.isin(phases[:,i], ['A1','A2','A','AR','M','U','X','T','J'])&np.isin(phases[:,i+1], ['bd','od','wd','zd']))]
+            # ###no saleable crop after strategic fodder
+            # phases = phases[~(np.isin(phases[:,i], ['OF'])&np.isin(phases[:,i+1], ['b', 'h', 'o', 'w', 'f', 'l', 'z','r','bd','wd','rd','zd']))]
             ###can't have 1yr of perennial unless it is the earliest yr in the history
             if i == 0:
                 pass #first yr of rotation can be a perennial because a  perennial could have been before it
@@ -266,11 +257,11 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
                     phases = phases[~(np.isin(phases[:,i], ['U','X'])&~(np.isin(phases[:,i-1], ['U','X', 'Y']) + np.isin(phases[:,i+1], ['U','X','u','x'])))]
                 except IndexError: pass
 
-        # ##lucerne and tedera resowing
-        # phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['U','X'])&np.isin(phases[:,np.size(phases,1)-1], ['U','X','u','x']))] #lucerne after a non lucern must be resown
-        # phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['T','J'])&np.isin(phases[:,np.size(phases,1)-1], ['T','J','t','j']))] #Tedera after a non tedera must be resown
+        ##lucerne and tedera resowing
+        phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['U','X'])&np.isin(phases[:,np.size(phases,1)-1], ['U','X','u','x']))] #lucerne after a non lucern must be resown
+        phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['T','J'])&np.isin(phases[:,np.size(phases,1)-1], ['T','J','t','j']))] #Tedera after a non tedera must be resown
 
-        ##annual resowing and spraytopping
+        ##annual resowing
         resow_cols = np.size(phases,1)-resow_a #the number of cols where resowing can occur ie in yr0 and 1
         for i in range(resow_cols):
             i+=1
@@ -278,10 +269,17 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
             a_index = np.all(np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR','A1','A2','A','M']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['AR','A1','A2','A','M','ar','a','m'])
             phases = phases[~a_index]
 
+
+            #there is no ar. Resowing is now controlled in the sim inputs.
             # ###if there are no annuals in the history then an annual in yr0 or yr1 must be resown
             # a_index2 = np.all(~np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR','SR1','A1','A2','A','M','S','S1']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['a', 's','m','A1','A2','A','M','S','S1'])
             # phases = phases[~a_index2]
 
+        cont_annual = np.array([['S', 'A', 'A2', 'A1', 'a']
+                               , ['A', 'S', 'A2', 'A1', 'a']
+                               , ['A', 'A', 'S', 'A1', 'a']
+                               ])
+        phases = np.concatenate((phases, cont_annual))
 
         ##X can't be in the same rotation as U, T, J and A
         a_xutj = np.any(np.isin(phases[:,:], ['AR', 'SR1','ar','a','A1','A2','A','m','M','s','sr','S','S1']), axis=1)&np.any(np.isin(phases[:,:], ['X','x','xr','U','u','ur','T','t','tr','J','j','jr']), axis=1)
@@ -324,6 +322,8 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
                      ,['G','G','C1','OF','a2']
                      ])
         phases = np.concatenate((phases, pnc))
+
+
 
         # todo add back in when required.
         # tc=np.array(['tc','tc','tc','tc','tc'])
@@ -376,6 +376,17 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
     ##option 2: if you want to represent the rotations from property.xlsx
     if user_crop_rot:
         phases = pinp.crop['fixed_rotphases'].reset_index().values.astype('str')
+        ###initilise these so that rot generator can be checked (want to make sure each rotation provides a history other than pnc)
+        pnc=np.array([['G','G','G','Ag1','a2']
+                     ,['G','G','G','Sg1','a2']
+                     ,['G','G','Ag2','N','a2']
+                     ,['G','G','Ag2','E','a2']
+                     ,['G','G','Ag2','OF','a2']
+                     ,['G','G','C1','N','a2']
+                     ,['G','G','C1','E','a2']
+                     ,['G','G','C1','P','a2'] #Note APa doesn't exist therefore only necessary option is CPa
+                     ,['G','G','C1','OF','a2']
+                     ])
 
 
     ############################################################################################################################################################################################
@@ -389,7 +400,6 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
     rot_hist = phases[:,0:np.size(phases,1)-1]
     rot_hist = np.unique(rot_hist, axis=0)
     pnc_hist = pnc[:,0:np.size(phases,1)-1]
-
 
     ##generate a list of the phases and histories (agretated version)
     l_phases = [''.join(x) for x in phases.astype(str)]
@@ -488,17 +498,16 @@ if __name__ == '__main__': #use this so that sphinx doesn't run all the code whe
         rotation_path = relativeFile.findExcel("Rotation.xlsx")
         writer = pd.ExcelWriter(rotation_path, engine='xlsxwriter')
         ##list of rotations - index: tuple, values: expanded version of rotation
-        rot_phases.to_excel(writer, sheet_name='rotation list', index=True, header=False)
+        rot_phases.to_excel(writer, sheet_name='rotation list',index=True,header=False)
         ##con1 - the paramater for which history each rotation provides and requires
-        mps_bool_req.to_excel(writer, sheet_name='rotation_req', index=False, header=False)
-        mps_bool_prov.to_excel(writer, sheet_name='rotation_prov', index=False, header=False)
+        mps_bool_req.to_excel(writer, sheet_name='rotation_req',index=False,header=False)
+        mps_bool_prov.to_excel(writer, sheet_name='rotation_prov',index=False,header=False)
         ##con1 set - passed into the pyomo constraint
-        rot_hist.to_excel(writer, sheet_name='rotation con1 set', index=True, header=False)
+        rot_hist.to_excel(writer, sheet_name='rotation con1 set',index=True,header=False)
         ##finish writing and save
         writer.close()
     except PermissionError:
         warnings.warn("Warning: Rotation.xlsx open therefore can't save new copy")
-
 
 
 

@@ -682,7 +682,16 @@ def f1_phases(d_rot_info):
         base_yields = pd.read_excel(xl_path, sheet_name='Yield', index_col=0, header=0, engine='openpyxl')
     ###if the rotations don't match inputs then rerun rotation generation.
     if len(phases_r) != len(base_yields) or any(base_yields.index!=phases_r.index):
-        from . import RotGeneration
+        ###maybe there is a better way to do this rather than using if statements.
+        property = general['i_property_id']
+        if property=="EWW":
+            from . import RotGeneration_EWW as RotGeneration
+        elif property=="GSW":
+            from . import RotGeneration_GSW as RotGeneration
+        elif property=="CWW":
+            from . import RotGeneration_CWW as RotGeneration
+        else:
+            from . import RotGeneration
         d_rot_info = RotGeneration.f_rot_gen(crop['user_crop_rot'])
         phases_r = d_rot_info["phases_r"]
         rot_req = d_rot_info["rot_req"]
