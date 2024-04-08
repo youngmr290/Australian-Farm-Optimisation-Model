@@ -1066,11 +1066,11 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         prod = 'foo_ave_grnha_gop6lzt'
         weights = None
         keys = 'keys_gop6lzt'
-        arith = f_update_default_controls(user_controls, 'grnfoo', 'arith', 5)
-        index = f_update_default_controls(user_controls, 'grnfoo', 'index', [4,2])   #z,p6
-        cols = f_update_default_controls(user_controls, 'grnfoo', 'cols', [1,0])     #g, o
-        axis_slice = f_update_default_controls(user_controls, 'grnfoo', 'axis_slice', {})
-        reports["grnfoo"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
+        arith = f_update_default_controls(user_controls, 'avegrnfoo', 'arith', 5)
+        index = f_update_default_controls(user_controls, 'avegrnfoo', 'index', [4,2])   #z,p6
+        cols = f_update_default_controls(user_controls, 'avegrnfoo', 'cols', [1,0])     #g, o
+        axis_slice = f_update_default_controls(user_controls, 'avegrnfoo', 'axis_slice', {})
+        reports["avegrnfoo"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_drynv', 'Run']:
         #returns NV during each FP (regardless of whether selected or not)
