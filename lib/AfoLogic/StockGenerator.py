@@ -6919,7 +6919,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     if not bool_steady_state or pinp.general['i_inc_node_periods']:
         period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m: object = sfun.f1_period_is_('period_is', date_node_ya1e1b1nwzidaebxygm[:,na,...], date_start_pa1e1b1nwzida0e0b0xyg3[...,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3[...,na])
         period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.any(period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m, axis=(0,-1))
-        period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3>0) #only have sale opp if animal exists.
+        period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3[...,0:1,:,:,:,:]>0) #only have sale opp if animal exists. slice e axis
         sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...] = np.logical_or(sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...], period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3)
     ###on hand - combine period_is_sale & period_is_transfer then use cumulative max to convert to on_hand
     ### note: animals are on hand in the period they are sold ie sale takes place on the last minute of the period.
@@ -10204,8 +10204,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ###proportion mated per dam at beginning of the period (e.g. accounts for mortality)
     fun.f1_make_r_val(r_vals,r_n_mated_k2tva1e1b1nwzida0e0b0xyg1,'n_mated_k2Tva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
-    fun.f1_make_r_val(r_vals,a_prev_matingv_vg1*dvp_is_wean,'a_prev_matingv_wean_va1iyg1', shape=(len_v1, len_a1, len_i, len_y1, len_g1))
-    fun.f1_make_r_val(r_vals,a_prev_matingv_vg1*dvp_is_scan,'a_prev_matingv_scan_va1iyg1', shape=(len_v1, len_a1, len_i, len_y1, len_g1))
+    fun.f1_make_r_val(r_vals,a_prev_matingv_vg1*dvp_is_wean,'a_prev_matingv_wean_va1ziyg1', shape=(len_v1, len_a1, len_z, len_i, len_y1, len_g1))
+    fun.f1_make_r_val(r_vals,a_prev_matingv_vg1*dvp_is_scan,'a_prev_matingv_scan_va1ziyg1', shape=(len_v1, len_a1, len_z, len_i, len_y1, len_g1))
 
     ###proportion of drys per dam at beginning of the period (e.g. accounts for mortality)
     fun.f1_make_r_val(r_vals,r_n_drys_k2tva1e1b1nwzida0e0b0xyg1,'n_drys_k2tva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)

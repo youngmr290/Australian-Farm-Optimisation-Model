@@ -1981,8 +1981,8 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
         na_prod = [0,1]
         den_weights = 'n_mated_k2Tva1nw8ziyg1'
         na_denweights = [0,1]
-        den_assoc = 'a_prev_matingv_wean_va1iyg1' #this is used to roll numbers from mating to weaning
-        na_den_assoc = [0,1,2,3,5,6,7]
+        den_assoc = 'a_prev_matingv_wean_va1ziyg1' #this is used to roll numbers from mating to weaning
+        na_den_assoc = [0,1,2,3,6,7]
         assoc_axis = 4 #v
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
@@ -2000,8 +2000,8 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
         na_prod = [0,1]
         den_weights = 'n_mated_k2Tva1nw8ziyg1'
         na_denweights = [0,1]
-        den_assoc = 'a_prev_matingv_scan_va1iyg1' #this is used to roll numbers from mating to scan
-        na_den_assoc = [0,1,2,3,5,6,7]
+        den_assoc = 'a_prev_matingv_scan_va1ziyg1' #this is used to roll numbers from mating to scan
+        na_den_assoc = [0,1,2,3,6,7]
         assoc_axis = 4 #v
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
@@ -2019,8 +2019,8 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
         na_prod = [0,1]
         den_weights = 'n_mated_k2Tva1nw8ziyg1'
         na_denweights = [0,1]
-        den_assoc = 'a_prev_matingv_scan_va1iyg1' #this is used to roll numbers from mating to scan
-        na_den_assoc = [0,1,2,3,5,6,7]
+        den_assoc = 'a_prev_matingv_scan_va1ziyg1' #this is used to roll numbers from mating to scan
+        na_den_assoc = [0,1,2,3,6,7]
         assoc_axis = 4 #v
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
