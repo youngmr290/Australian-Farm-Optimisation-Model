@@ -462,7 +462,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     foo_end_ungrazed_grnha_op6lzt = foo_start_grnha_op6lzt + pgr_grnha_gop6lzt[0, ...] - senesce_period_grnha_gop6lzt[0, ...]
     ### foo at end of period with range of grazing intensity prior to eos senescence
     foo_endprior_grnha_gop6lzt = (foo_end_ungrazed_grnha_op6lzt
-                                 - (foo_end_ungrazed_grnha_op6lzt - i_base_p6zt[:, na, :, :])
+                                 - np.maximum(0,foo_end_ungrazed_grnha_op6lzt - i_base_p6zt[:, na, :, :])
                                  * i_foo_graze_propn_gt[:, na, na, na, na, :])
     senesce_eos_grnha_gop6lzt = foo_endprior_grnha_gop6lzt * i_grn_senesce_eos_p6zt[:, na, ...]
     foo_end_grnha_gop6lzt = foo_endprior_grnha_gop6lzt - senesce_eos_grnha_gop6lzt
