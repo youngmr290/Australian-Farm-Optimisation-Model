@@ -1018,7 +1018,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         keys = 'keys_qsfgop6lzt'
         arith = f_update_default_controls(user_controls, 'grncon', 'arith', 2)
         index = f_update_default_controls(user_controls, 'grncon', 'index', [7,5])   #p6 z
-        cols = f_update_default_controls(user_controls, 'grncon', 'cols', [8])     #t
+        cols = f_update_default_controls(user_controls, 'grncon', 'cols', [8,6])     #t,l
         axis_slice = f_update_default_controls(user_controls, 'grncon', 'axis_slice', {})
         reports["grncon"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, prod_weights=prod_weights,
                                 type=type, weights=weights, den_weights=den_weights, na_denweights=na_denweights,
@@ -1102,11 +1102,11 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         prod = 'dry_foo_dp6zt'
         weights = None
         keys = 'keys_dp6zt'
-        arith = f_update_default_controls(user_controls, 'dryfoo', 'arith', 5)
-        index = f_update_default_controls(user_controls, 'dryfoo', 'index', [2,1])   #z,p6
-        cols = f_update_default_controls(user_controls, 'dryfoo', 'cols', [0])     #d
-        axis_slice = f_update_default_controls(user_controls, 'dryfoo', 'axis_slice', {})
-        reports["dryfoo"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
+        arith = f_update_default_controls(user_controls, 'avedryfoo', 'arith', 5)
+        index = f_update_default_controls(user_controls, 'avedryfoo', 'index', [2,1])   #z,p6
+        cols = f_update_default_controls(user_controls, 'avedryfoo', 'cols', [0])     #d
+        axis_slice = f_update_default_controls(user_controls, 'avedryfoo', 'axis_slice', {})
+        reports["avedryfoo"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_napcon', 'Run']:
         #returns consumption in each FP
