@@ -41,7 +41,7 @@ r_vals={}
 ###############
 #User control #
 ###############
-trial = 23   #23 is quick test
+trial = 31   #23 is quick test
 
 ######
 #Run #
@@ -53,7 +53,7 @@ d_rot_info = dxl.f_load_phases()
 cat_propn_s1_ks2 = dxl.f_load_stubble()
 
 ##select property for the current trial
-property = trial_pinp.iloc[trial]
+property = trial_pinp.loc[trial]
 
 ##process user SA
 user_sa = rve.f_process_user_sa(exp_data, trial)
@@ -72,6 +72,9 @@ fun.f_update_sen(user_sa,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
 sinp.f_structural_inp_sa(sinp_defaults)
 uinp.f_universal_inp_sa(uinp_defaults)
 pinp.f_property_inp_sa(pinp_defaults)
+
+##mask lmu
+pinp.f1_mask_lmu()
 
 ##expand p6 axis to include nodes
 sinp.f1_expand_p6()
