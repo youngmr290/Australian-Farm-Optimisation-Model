@@ -499,6 +499,7 @@ def f_sowing_timeliness_penalty(r_vals):
     mach_periods_end_pz = mach_periods.values[1:]
 
     ##wet seeding penalty - penalty = average penalty of period (= (start day + end day) / 2 * penalty)
+    #todo seeding penalty should have a p5 axis. Then don't need to manually set penalty free period.
     seed_start_z = per.f_wet_seeding_start_date()
     penalty_free_days_z = seed_period_lengths_pz[0]
     start_day_pz = 1 + (mach_periods_start_pz - (seed_start_z + penalty_free_days_z))
