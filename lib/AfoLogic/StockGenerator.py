@@ -9085,21 +9085,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##              accounts for mortality as well as on hand.
     if sinp.rep['i_store_on_hand_mort']:
         ###add v axis and adjust for onhand
-        r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1 = r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (
+        r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1 = r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * o_numbers_end_tpdams[:,na,...] * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (
                                                   a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-        r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg3 = r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * (
+        r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg3 = r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * o_numbers_end_tpoffs[:,na,...] * on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * (
                                                   a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
         ###cluster e,b
         r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1,
                                                                               a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...],
                                                                               index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],
-                                                                              numbers_start_vg = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...])  #on_hand to handle the periods when e slices are in different dvps (e.g. can't just have default 1 otherwise it will divide by 2 because both e gets summed)
+                                                                              numbers_start_vg = numbers_start_tva1e1b1nwzida0e0b0xyg1[:,:,na,...])
         r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs',r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg3,
                                                                                      a_k3cluster_da0e0b0xyg3,
                                                                                      index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],
                                                                                      a_k5cluster_da0e0b0xyg3,
                                                                                      index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...],
-                                                                                     numbers_start_vg=on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...]) #on_hand to handle the periods when e slices are in different dvps (e.g. can't just have default 1 otherwise it will divide by 2 because both e gets summed)
+                                                                                     numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg3[:,:,na,...])
 
         ###convert to on hand mort (1-mort)
         r_on_hand_mort_k2tvpa1e1b1nwzida0e0b0xyg1 = 1 - r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1
