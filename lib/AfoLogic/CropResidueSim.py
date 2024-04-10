@@ -213,7 +213,7 @@ if __name__=="__main__":
                 stubble_inp['p_end'] = p_end_t[t]
                 stubble_inp['lw'] = trial_lw_tpks2[t,:,k,s2]
                 stubble_inp['dmd_pw'] = dmd_tps1k[t,:,:,k]
-                o_pi_tpdams, o_pi_tpoffs, o_ebg_tpdams, o_ebg_tpoffs = sgen.generator(stubble=stubble_inp)
+                o_stub_intake_tpdams, o_stub_intake_tpoffs, o_ebg_tpdams, o_ebg_tpoffs = sgen.generator(stubble=stubble_inp)
 
                 ##slice based on animal in trial
                 ## currently only the g and b axis are selected based on trial info. Any other axes are averaged. (This could be changed).
@@ -222,11 +222,11 @@ if __name__=="__main__":
                     mask_dams_inc_g1 = np.any(sinp.stock['i_mask_g1g3'] * pinp.sheep['i_g3_inc'], axis=1)
                     mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis=1)
                     o_ebg_tpdams = np.compress(mask_dams_inc_g1, o_ebg_tpdams, axis=-1)
-                    o_pi_tpdams = np.compress(mask_dams_inc_g1, o_pi_tpdams, axis=-1)
+                    o_stub_intake_tpdams = np.compress(mask_dams_inc_g1, o_stub_intake_tpdams, axis=-1)
                     ###select across b axis - weighted
                     i_b1_propn_b1g = fun.f_expand(pinp.stubble['i_b1_propn_b1t'][:,t], b1_pos)
                     lwc_ps1g = np.sum(o_ebg_tpdams * i_b1_propn_b1g, b1_pos, keepdims=True)
-                    intake_ps1g = np.sum(o_pi_tpdams * i_b1_propn_b1g, b1_pos, keepdims=True)
+                    intake_ps1g = np.sum(o_stub_intake_tpdams * i_b1_propn_b1g, b1_pos, keepdims=True)
                     ###average remaining axes
                     lwc_p1s1ks2[:,:,k,s2] = fun.f_reduce_skipfew(np.average, lwc_ps1g, preserveAxis=(p_pos, s1_pos))
                     intake_p1s1ks2[:,:,k,s2] = fun.f_reduce_skipfew(np.average, intake_ps1g, preserveAxis=(p_pos, s1_pos))
@@ -234,11 +234,11 @@ if __name__=="__main__":
                     ###select across g axis - weighted
                     mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis=1)
                     o_ebg_tpoffs = np.compress(mask_offs_inc_g3, o_ebg_tpoffs, axis=-1)
-                    o_pi_tpoffs = np.compress(mask_offs_inc_g3, o_pi_tpoffs, axis=-1)
+                    o_stub_intake_tpoffs = np.compress(mask_offs_inc_g3, o_stub_intake_tpoffs, axis=-1)
                     ###select across b axis - weighted
                     i_b0_propn_b0g = fun.f_expand(pinp.stubble['i_b0_propn_b0t'][:,t], b0_pos)
                     lwc_ps1g = np.sum(o_ebg_tpoffs * i_b0_propn_b0g, b0_pos, keepdims=True)
-                    intake_ps1g = np.sum(o_pi_tpoffs * i_b0_propn_b0g, b0_pos, keepdims=True)
+                    intake_ps1g = np.sum(o_stub_intake_tpoffs * i_b0_propn_b0g, b0_pos, keepdims=True)
                     ###average remaining axes
                     lwc_p1s1ks2[mask_p_offs_p,:,k,s2] = fun.f_reduce_skipfew(np.average, lwc_ps1g, preserveAxis=(p_pos, s1_pos))
                     intake_p1s1ks2[mask_p_offs_p,:,k,s2] = fun.f_reduce_skipfew(np.average, intake_ps1g, preserveAxis=(p_pos, s1_pos))
@@ -249,12 +249,14 @@ if __name__=="__main__":
         index_p2 = np.arange(len_p2)
         date_start_p1p2 = date_start_p[..., na] + index_p2
         gdays_since_trialstart_p1p2s2 = ((date_start_p1p2 - date_start_p[p_start_trial_t[t],na])[:,:,na]
-                                         * stocking_rate_ts2[t,:]/100).astype(int)  # grazing days (100s) since trial start
-        trial_lw_p1p2ks2 = (a_tks2[t,...] * gdays_since_trialstart_p1p2s2[:,:,na,:] ** 2
-                            + b_tks2[t,...] * gdays_since_trialstart_p1p2s2[:,:,na,:] + c_tks2[t,...])
-        trial_lw_pks2 = trial_lw_p1p2ks2.reshape(-1,len_k,len_s2)
-        trial_lwc_pks2 = np.roll(trial_lw_pks2, shift=-1, axis=0) - trial_lw_pks2
-        trial_lwc_p1p2ks2 = trial_lwc_pks2.reshape(-1,len_p2, len_k, len_s2)
+                                         * stocking_rate_ts2[t,:]/100)  # .astype(int)  # grazing days (100s) since trial start
+        # trial_lw_p1p2ks2 = (a_tks2[t,...] * gdays_since_trialstart_p1p2s2[:,:,na,:] ** 2
+        #                     + b_tks2[t,...] * gdays_since_trialstart_p1p2s2[:,:,na,:] + c_tks2[t,...])
+        # trial_lw_pks2 = trial_lw_p1p2ks2.reshape(-1,len_k,len_s2)
+        # trial_lwc_pks2 = np.roll(trial_lw_pks2, shift=-1, axis=0) - trial_lw_pks2
+        # trial_lwc_p1p2ks2 = trial_lwc_pks2.reshape(-1,len_p2, len_k, len_s2)
+        trial_lwc_p1p2ks2 = (2 * a_tks2[t,...] * gdays_since_trialstart_p1p2s2[:, :, na, :]
+                             + b_tks2[t,...]) * stocking_rate_ts2[t, ...] / 100
         ###calc grazing days in generator period for each dmd - allocate trial lwc to the simulated lwc and sum the p2
         lwc_diff_p1p2s1ks2 = np.abs(lwc_p1s1ks2[:,na,:,:,:] - trial_lwc_p1p2ks2[:,:,na,:,:])
         days_grazed_each_cat_p1s1ks2 = np.sum(np.equal(np.min(lwc_diff_p1p2s1ks2, axis=2,keepdims=True) , lwc_diff_p1p2s1ks2), axis=1)
@@ -263,17 +265,21 @@ if __name__=="__main__":
         ###multiply by adjusted intake and sum p axis to return the total intake for each dmd (stubble) category
         total_intake_s1ks2 = np.sum(days_grazed_each_cat_p1s1ks2 * adj_intake_p1s1ks2, axis=0)
         total_intake_ha_s1ks2 = total_intake_s1ks2 * stocking_rate_ts2[t,:]
-        ###adjust for trampling - trampling is done as a percentage of consumed stubble thus trampling doesnt remove categories above because they have already been consumed.
+        ###adjust for trampling -
         ### Trampling gets added on to reflect the amount of stubble at harvest.
+        #todo Trampling should be the % of the quantity consumed spread across the remaining stubble in the proportion that it exists. But that is difficult in the main code, so it is just the the % of the current category for now
         tramp_ks2 = pinp.stubble['trampling'][:,na]
-        total_intake_ha_s1ks2 = total_intake_ha_s1ks2 + tramp_ks2 * np.cumsum(total_intake_ha_s1ks2, axis=0)
+        total_intake_ha_s1ks2 = total_intake_ha_s1ks2 * (1 + tramp_ks2)   #todo 5Mar24 was:    + tramp_ks2 * np.cumsum(total_intake_ha_s1ks2, axis=0)
         ###set a minimum for each category so that the transfer between cats can always occur.
         total_intake_ha_s1ks2 = np.maximum(1, total_intake_ha_s1ks2) #minimum of 1kg in each category so stubble can always be transferred between categories.
         ###divide intake by total stubble to return stubble proportion in each category
         harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield penalty is inputted as a harvestable grain
         biomass_k = trial_yield_tk[t,:] / harvest_index_k
         total_residue_ks2 = biomass_k[:,na] * stub.f_biomass2residue(residuesim=True)
-        cat_propn_ts1ks2[t,...] = fun.f_divide(total_intake_ha_s1ks2,total_residue_ks2)
+        #adjust the total residue so that consumption can't exceed the biomass
+        total_residue_ks2 = np.maximum(total_residue_ks2, np.sum(total_intake_ha_s1ks2, axis=0))
+        # total_residue_ks2 = 10000     #set to 10000 if the grain yield is to be back calculated
+        cat_propn_ts1ks2[t,...] = fun.f_divide(total_intake_ha_s1ks2, total_residue_ks2)
 
     ##average across t if multiple trials used to generate inputs
     cat_propn_s1ks2 = np.sum(cat_propn_ts1ks2 * (trial_inc_tks2/np.sum(trial_inc_tks2, axis=0))[:,na,...], axis=0)

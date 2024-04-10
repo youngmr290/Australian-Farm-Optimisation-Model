@@ -501,6 +501,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_rc_start_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_ebg_tpoffs = np.zeros(tpg3, dtype =dtype)
     ###arrays for report variables
+    r_intake_f_tpoffs = np.zeros(tpg3, dtype = dtype)   #not used as a report var but in stubble. Used name consistent with dams
     r_ebw_tpoffs = np.zeros(tpg3, dtype=dtype)
     r_wbe_tpoffs = np.zeros(tpg3, dtype =dtype)
     r_fat_tpoffs = np.zeros(tpg3, dtype =dtype)
@@ -5583,6 +5584,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 o_ebg_tpoffs[:,p] = ebg_offs
 
                 ###store report variables - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
+                r_intake_f_tpoffs[:,p] = intake_f_offs
                 r_ebw_tpoffs[:, p] = ebw_offs
                 r_wbe_tpoffs[:,p] = wbe_offs
                 r_fat_tpoffs[:, p] = fat_offs
@@ -6572,7 +6574,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
 
     if stubble:
-        return o_pi_tpdams, o_pi_tpoffs, o_ebg_tpdams, o_ebg_tpoffs
+        return r_intake_f_tpdams, r_intake_f_tpoffs, o_ebg_tpdams, o_ebg_tpoffs
 
     ###########################
     #post processing inputs  #

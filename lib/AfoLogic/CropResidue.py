@@ -308,6 +308,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
                                                       ,period_is_harvest_p6zk[...,na,na]) #Only cat A is provided at harvest
 
     ##amount of available stubble required to consume 1t of each cat in each fp
+    #todo This trampling could be improved by spreading the quantity trampled across the lower quality categories
     stub_req_ks1s2 = 1000*(1+tramp_effect_ks1s2)
 
     ##amount of next category provide by consumption of current category.
