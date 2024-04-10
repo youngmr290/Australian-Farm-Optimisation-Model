@@ -454,7 +454,7 @@ def f_fert_passes():
         fert_passes_rk_zn = f1_sim_inputs(sheet='No Fert Applications', index=[0,1], header=[0,1])
         fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
         ###nap fert scalar
-        nap_fert_scalar_r = f1_sim_inputs(sheet='NAP Fert Scalar')
+        nap_fert_scalar_r = f1_sim_inputs(sheet='NAP Fert Scalar', index=[0], header=[0]).squeeze()
         nap_fert_scalar_r = nap_fert_scalar_r.loc[mask_r]
 
     ###Mask z axis
@@ -596,7 +596,7 @@ def f_fert_cost(r_vals):
         ###mask r
         base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
         ###nap fert scalar
-        nap_fert_scalar_r = f1_sim_inputs(sheet='NAP Fert Scalar')
+        nap_fert_scalar_r = f1_sim_inputs(sheet='NAP Fert Scalar', index=[0], header=[0]).squeeze()
         nap_fert_scalar_r = nap_fert_scalar_r.loc[mask_r]
 
     ###Mask z axis
