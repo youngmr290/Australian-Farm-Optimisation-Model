@@ -249,14 +249,12 @@ if __name__=="__main__":
         index_p2 = np.arange(len_p2)
         date_start_p1p2 = date_start_p[..., na] + index_p2
         gdays_since_trialstart_p1p2s2 = ((date_start_p1p2 - date_start_p[p_start_trial_t[t],na])[:,:,na]
-                                         * stocking_rate_ts2[t,:]/100)  # .astype(int)  # grazing days (100s) since trial start
-        # trial_lw_p1p2ks2 = (a_tks2[t,...] * gdays_since_trialstart_p1p2s2[:,:,na,:] ** 2
-        #                     + b_tks2[t,...] * gdays_since_trialstart_p1p2s2[:,:,na,:] + c_tks2[t,...])
-        # trial_lw_pks2 = trial_lw_p1p2ks2.reshape(-1,len_k,len_s2)
-        # trial_lwc_pks2 = np.roll(trial_lw_pks2, shift=-1, axis=0) - trial_lw_pks2
-        # trial_lwc_p1p2ks2 = trial_lwc_pks2.reshape(-1,len_p2, len_k, len_s2)
-        trial_lwc_p1p2ks2 = (2 * a_tks2[t,...] * gdays_since_trialstart_p1p2s2[:, :, na, :]
-                             + b_tks2[t,...]) * stocking_rate_ts2[t, ...] / 100
+                                         * stocking_rate_ts2[t,:]/100)  # grazing days (100s) since trial start
+        ###calculate live weight change per 100 GD using derivative.
+        trial_lwc_gd_p1p2ks2 = (2 * a_tks2[t,...] * gdays_since_trialstart_p1p2s2[:, :, na, :]
+                             + b_tks2[t,...])
+        ###convert LWC per 100 GD to LWC per day
+        trial_lwc_p1p2ks2 = trial_lwc_gd_p1p2ks2 * stocking_rate_ts2[t, ...] / 100
         ###calc grazing days in generator period for each dmd - allocate trial lwc to the simulated lwc and sum the p2
         lwc_diff_p1p2s1ks2 = np.abs(lwc_p1s1ks2[:,na,:,:,:] - trial_lwc_p1p2ks2[:,:,na,:,:])
         days_grazed_each_cat_p1s1ks2 = np.sum(np.equal(np.min(lwc_diff_p1p2s1ks2, axis=2,keepdims=True) , lwc_diff_p1p2s1ks2), axis=1)
@@ -267,9 +265,9 @@ if __name__=="__main__":
         total_intake_ha_s1ks2 = total_intake_s1ks2 * stocking_rate_ts2[t,:]
         ###adjust for trampling -
         ### Trampling gets added on to reflect the amount of stubble at harvest.
-        #todo Trampling should be the % of the quantity consumed spread across the remaining stubble in the proportion that it exists. But that is difficult in the main code, so it is just the the % of the current category for now
+        #todo Trampling should be the % of the quantity consumed spread across the remaining stubble in the proportion that it exists. But that is difficult in the main code, so it is just the the % of the current category for now (i.e. the origional code below is correct if it could be represented in AFO stubble)
         tramp_ks2 = pinp.stubble['trampling'][:,na]
-        total_intake_ha_s1ks2 = total_intake_ha_s1ks2 * (1 + tramp_ks2)   #todo 5Mar24 was:    + tramp_ks2 * np.cumsum(total_intake_ha_s1ks2, axis=0)
+        total_intake_ha_s1ks2 = total_intake_ha_s1ks2 * (1 + tramp_ks2)   #todo 5Mar24 was (this has been removed to make stub_sim consistent with AFO):    + tramp_ks2 * np.cumsum(total_intake_ha_s1ks2, axis=0)
         ###set a minimum for each category so that the transfer between cats can always occur.
         total_intake_ha_s1ks2 = np.maximum(1, total_intake_ha_s1ks2) #minimum of 1kg in each category so stubble can always be transferred between categories.
         ###divide intake by total stubble to return stubble proportion in each category
