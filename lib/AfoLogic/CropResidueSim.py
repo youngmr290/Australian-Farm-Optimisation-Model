@@ -158,7 +158,7 @@ if __name__=="__main__":
     ##lw each period - based on the fitted quadratic on grazing days (gdays) from the paddock data.
     stocking_rate_ts2 = pinp.stubble['i_sr_s2t'].T
     gdays_since_trialstart_tps2 = ((date_start_p - date_start_p[p_start_trial_t[:, na]])[:, :, na]
-                                  * stocking_rate_ts2[:,na,:] / 100).astype(int)  # grazing days (100s) since trial start
+                                  * stocking_rate_ts2[:,na,:] / 100)    # grazing days (100s) since trial start
     a_tks2 = pinp.stubble['i_a_tks2'].astype(float).reshape(-1,len_k, len_s2)
     b_tks2 = pinp.stubble['i_b_tks2'].astype(float).reshape(-1,len_k, len_s2)
     c_tks2 = pinp.stubble['i_c_tks2'].astype(float).reshape(-1,len_k, len_s2)
