@@ -819,7 +819,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     '''if running the gen for stubble generation then the weather info above gets overwritten with stubble trial info
     '''
     if stubble:
-        legume_p6a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['clover_propn_in_sward_stubble']
+        legume_p6a1e1b1nwzida0e0b0xyg[...] = uinp.stubble['clover_propn_in_sward_stubble']
         density_p6a1e1b1nwzida0e0b0xyg[...] = stubble['i_sr']
         ws_p4a1e1b1nwzida0e0b0xyg[...] = stubble['i_ws']
         rain_p4a1e1b1nwzida0e0b0xygp0[...] = stubble['i_rain']

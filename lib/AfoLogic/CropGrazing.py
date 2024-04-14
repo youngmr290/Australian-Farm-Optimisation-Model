@@ -375,7 +375,7 @@ def f_cropgraze_biomass_penalty(r_vals):
     ##inputs
     # stubble_per_grain_k = stub.f_cropresidue_production().values
     biomass_reduction_propn_kp6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_yield_reduction_kp6z'], numpy=True, axis=-1)
-    # proportion_grain_harv_k = pinp.stubble['proportion_grain_harv']
+    # proportion_grain_harv_k = uinp.stubble['proportion_grain_harv']
     consumption_factor_p6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
 
     # ##adjust seeding penalty - crops that are not harvested e.g. fodder don't have yield penalty. But do have a stubble penalty
@@ -388,7 +388,7 @@ def f_cropgraze_biomass_penalty(r_vals):
     # stubble_reduction_propn_kp6z = stub_yield_reduction_propn_kp6z * stubble_per_grain_k[:,na,na]
 
     ##convert from yield penalty to biomass penalty - required because input is grain yield reduction per tonne of crop consumed
-    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield penalty is inputted as the harvestable grain
+    harvest_index_k = uinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield penalty is inputted as the harvestable grain
     biomass_reduction_propn_kp6z = biomass_reduction_propn_kp6z / harvest_index_k[:,na,na]
 
     ##apply season mask and grazing exists mask

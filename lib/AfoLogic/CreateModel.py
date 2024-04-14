@@ -82,7 +82,7 @@ def sets(model, nv):
     #stubble              #
     #######################
     #stubble categories -  ordered so to allow transferring between categories
-    model.s_stub_cat = Set(ordered=True, initialize=pinp.stubble['i_stub_cat_idx'], doc='stubble categories')
+    model.s_stub_cat = Set(ordered=True, initialize=uinp.stubble['i_stub_cat_idx'], doc='stubble categories')
 
     #######################
     #cropping related     #
@@ -91,7 +91,7 @@ def sets(model, nv):
     model.s_grain_pools = Set(initialize=sinp.general['grain_pools'], doc='grain pools')
 
     ##biomass uses
-    model.s_biomass_uses = Set(initialize=pinp.stubble['i_idx_s2'], doc='uses of phase biomass')
+    model.s_biomass_uses = Set(initialize=uinp.stubble['i_idx_s2'], doc='uses of phase biomass')
 
     ##types of crops
     model.s_crops = Set(initialize=sinp.landuse['C'], doc='crop types')

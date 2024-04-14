@@ -90,6 +90,7 @@ def f_select_n_reset_uinp(uinp_defaults):
     global finance
     global mach_general
     global supfeed
+    global stubble
     global emissions
     global crop
     global sheep
@@ -102,6 +103,7 @@ def f_select_n_reset_uinp(uinp_defaults):
     finance = copy.deepcopy(uinp_defaults["finance_inp"])
     mach_general = copy.deepcopy(uinp_defaults["mach_general_inp"])
     supfeed = copy.deepcopy(uinp_defaults["sup_inp"])
+    stubble = copy.deepcopy(uinp_defaults["stubble_inp"])
     emissions = copy.deepcopy(uinp_defaults["emissions_inp"])
     crop = copy.deepcopy(uinp_defaults["crop_inp"])
     sheep = copy.deepcopy(uinp_defaults["sheep_inp"])

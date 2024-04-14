@@ -76,7 +76,7 @@ na = np.newaxis
 #
 #     This is a separate function because it is used in CropGrazing.py and Mach.py to calculate stubble penalties.
 #     '''
-#     stubble_prod_data = 1 / pinp.stubble['i_harvest_index_ks2'][:,0] - 1 * pinp.stubble['i_propn_grain_harv_ks2'][:,0]  # subtract 1*harv propn to account for the tonne of grain that was harvested and doesn't become stubble.
+#     stubble_prod_data = 1 / uinp.stubble['i_harvest_index_ks2'][:,0] - 1 * uinp.stubble['i_propn_grain_harv_ks2'][:,0]  # subtract 1*harv propn to account for the tonne of grain that was harvested and doesn't become stubble.
 #     stubble = pd.Series(data=stubble_prod_data, index=sinp.landuse['C'])
 #     return stubble
 
@@ -99,9 +99,9 @@ def f_biomass2residue(residuesim=False):
     This is a separate function because it is used in residue simulator.
     '''
     ##inputs
-    harvest_index_ks2 = pinp.stubble['i_harvest_index_ks2']
-    biomass_scalar_ks2 = pinp.stubble['i_biomass_scalar_ks2']
-    propn_grain_harv_ks2 = pinp.stubble['i_propn_grain_harv_ks2']
+    harvest_index_ks2 = uinp.stubble['i_harvest_index_ks2']
+    biomass_scalar_ks2 = uinp.stubble['i_biomass_scalar_ks2']
+    propn_grain_harv_ks2 = uinp.stubble['i_propn_grain_harv_ks2']
     frost_kl = pinp.crop['frost'].values
 
     ##calc biomass to product scalar
@@ -135,7 +135,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     nv_is_not_confinement_f = np.full(len_nv, True)
     nv_is_not_confinement_f[-1] = np.logical_not(nv['confinement_inc']) #if confinement is included the last nv pool is confinement.
     me_threshold_fp6z = np.swapaxes(nv['nv_cutoff_ave_p6fz'], axis1=0, axis2=1)
-    stub_me_eff_gainlose = pinp.stubble['i_stub_me_eff_gainlose']
+    stub_me_eff_gainlose = uinp.stubble['i_stub_me_eff_gainlose']
 
     ##create mask which is stubble available. Stubble is available from the period harvest starts to the beginning of the following growing season.
     ##if the end date of the fp is after harvest then stubble is available.
@@ -173,11 +173,11 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
 
     # todo better would be to deteriorate high categories less because more grain (if changed here need to change in cropresidue.py module)
     ##calc the quantity decline % for each period - used in transfer constraints, need to average the number of days in the period of interest
-    quant_declined_since_harv_p6zk = (1 - pinp.stubble['quantity_decay']) ** average_days_since_harv_p6zk.astype(float)
+    quant_declined_since_harv_p6zk = (1 - uinp.stubble['quantity_decay']) ** average_days_since_harv_p6zk.astype(float)
 
     ##calc the quality decline % for each period
     ###quality of each category is inputted at harvest.
-    qual_declined_p6zk = (1 - pinp.stubble['quality_deterioration']) ** average_days_since_harv_p6zk.astype(float)
+    qual_declined_p6zk = (1 - uinp.stubble['quality_deterioration']) ** average_days_since_harv_p6zk.astype(float)
 
     ###############
     # M/D & vol   #
@@ -193,31 +193,31 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     
     '''
     len_k = len(sinp.landuse['C'])
-    len_s2 = len(pinp.stubble['i_idx_s2'])
-    len_s1 = len(pinp.stubble['i_stub_cat_dmd_s1'])
+    len_s2 = len(uinp.stubble['i_idx_s2'])
+    len_s1 = len(uinp.stubble['i_stub_cat_dmd_s1'])
     cat_propn_ks1s2 = cat_propn_s1_ks2.values.reshape(len_s1,len_k,len_s2).swapaxes(0,1)
 
 
     ##quality of each category in each period
     ###scale dmd at harvest to each period.
-    stub_cat_qual_s1 = pinp.stubble['i_stub_cat_dmd_s1']
+    stub_cat_qual_s1 = uinp.stubble['i_stub_cat_dmd_s1']
     dmd_cat_p6zks1 = stub_cat_qual_s1 * qual_declined_p6zk[...,na]
 
     ##crude protein of each category in each period
     ###scale cp at harvest to each period. Reduces at the same rate as DMD as per MIDAS.
-    stub_cat_cp_s1 = pinp.stubble['i_stub_cat_cp_s1']
+    stub_cat_cp_s1 = uinp.stubble['i_stub_cat_cp_s1']
     cp_cat_p6zks1 = stub_cat_cp_s1 * qual_declined_p6zk[...,na]
 
     ##calc relative quality before converting dmd to md - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
-        ri_quality_p6zks1 = fsfun.f_rq_cs(dmd_cat_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
+        ri_quality_p6zks1 = fsfun.f_rq_cs(dmd_cat_p6zks1, uinp.stubble['clover_propn_in_sward_stubble'])
 
     # ##ri availability (not calced anymore - stubble uses ra=1 now) - first calc stubble foo (stub available) this is the average from all rotations and lmus because we just need one value for foo (crop residue volume is assumed to be the same across lmu - the extra detail could be added)
     # ###try calc the base yield for each crop but if the crop is not one of the rotation phases then assign the average foo (this is only to stop error. it doesn't matter because the crop doesn't exist so the stubble is never used)
     # base_yields = rot_yields_rkl_p7z.droplevel(0, axis=0).groupby(axis=1, level=1).sum() #drop rotation index and sum p7 axis (just want total yield to calc pi)
     # base_yields = base_yields.replace(0,np.NaN) #replace 0 with nan so if yield inputs are missing (e.g. set to 0) the foo is still correct (nan gets skipped in pd.mean)
     # stub_foo_harv_zk = np.zeros((n_seasons, n_crops))
-    # for crop, crop_idx in zip(pinp.stubble['i_stub_landuse_idx'], range(n_crops)):
+    # for crop, crop_idx in zip(uinp.stubble['i_stub_landuse_idx'], range(n_crops)):
     #     try:
     #         stub_foo_harv_zk[:, crop_idx] = base_yields.loc[crop].mean(axis=0) * residue_per_grain_k.loc[crop]
     #     except KeyError: #if the crop is not in any of the rotations assign average foo to stop error - this is not used so could assign any value.
@@ -231,14 +231,14 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     ###adjust for quantity delcine due to deterioration
     # stubble_foo_p6zks1 = stubble_foo_zks1 * quant_declined_since_harv_p6zk[..., na]
     ###ri availability
-    # hf = fsfun.f_hf(pinp.stubble['i_hr'])  # height factor
+    # hf = fsfun.f_hf(uinp.stubble['i_hr'])  # height factor
     # if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used - note that the equation system used is the one selected for dams in p1
     #     ri_availability_p6zks1 = fsfun.f_ra_cs(stubble_foo_p6zks1, hf)
     # elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used - note that the equation system used is the one selected for dams in p1
     #     ri_availability_p6zks1 = fsfun.f_ra_mu(stubble_foo_p6zks1, hf)
 
     ##combine ri quality and ri availability to calc overall vol (potential intake) - use ra=1 for stubble (same as stubble sim)
-    ri_p6zks1 = fsfun.f_rel_intake(1, ri_quality_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
+    ri_p6zks1 = fsfun.f_rel_intake(1, ri_quality_p6zks1, uinp.stubble['clover_propn_in_sward_stubble'])
     vol_p6zks1 = (1000 / ri_p6zks1) / (1 + SA.sap['pi'])
     vol_p6zks1 = vol_p6zks1 * mask_stubble_exists_p6zk[..., na] #stop md being provided if stubble doesn't exist
     vol_fp6zks1 = vol_p6zks1 * nv_is_not_confinement_f[:,na,na,na,na] #me from stubble is 0 in the confinement pool
@@ -269,7 +269,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
 
     ##nitrous oxide emissions from crop residue breakdown, leaching nad burning - linked to both production (+ve) and consumption (-ve) of 1t of stubble
     burn_date = pinp.emissions['i_burn_date'] + 364 * (pinp.emissions['i_burn_date'] < harv_date_zk)
-    decay_harv_to_burn_zk = (1 - pinp.stubble['quantity_decay'])**(burn_date - harv_date_zk)
+    decay_harv_to_burn_zk = (1 - uinp.stubble['quantity_decay'])**(burn_date - harv_date_zk)
     decay_consumption_to_burn_p6zk = decay_harv_to_burn_zk / quant_declined_since_harv_p6zk
 
     ##emissions from 1t of stubble at harvest that is not grazed
@@ -296,7 +296,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     #trampling#
     ###########
     #for now this is just a single number however the input could be changed to per period
-    tramp_effect_ks1s2 = pinp.stubble['trampling'][:,na,na] * cat_propn_ks1s2 #mul by cat propn because only want to include the trampling of the categry being consumed.
+    tramp_effect_ks1s2 = uinp.stubble['trampling'][:,na,na] * cat_propn_ks1s2 #mul by cat propn because only want to include the trampling of the categry being consumed.
 
     ################################
     # allow access to next category#
@@ -305,7 +305,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     ##Note: In the sim each category has a minimum of 1kg so that the following transfers always work.
 
     ##quantity of cat A stubble provided from 1t of total stubble at harvest
-    cat_a_prov_p6zks1s2 = 1000 * cat_propn_ks1s2 * np.logical_and(np.arange(len(pinp.stubble['i_stub_cat_idx']))[:,na]==0
+    cat_a_prov_p6zks1s2 = 1000 * cat_propn_ks1s2 * np.logical_and(np.arange(len(uinp.stubble['i_stub_cat_idx']))[:,na]==0
                                                       ,period_is_harvest_p6zk[...,na,na]) #Only cat A is provided at harvest
 
     ##amount of available stubble required to consume 1t of each cat in each fp
@@ -362,8 +362,8 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     ##keys
     keys_k = sinp.landuse['C']
     keys_p6 = pinp.period['i_fp_idx']
-    keys_s1 = pinp.stubble['i_stub_cat_idx']
-    keys_s2 = pinp.stubble['i_idx_s2']
+    keys_s1 = uinp.stubble['i_stub_cat_idx']
+    keys_s2 = uinp.stubble['i_idx_s2']
     keys_f  = np.array(['nv{0}' .format(i) for i in range(len_nv)])
     keys_z = zfun.f_keys_z()
     keys_l = pinp.general['i_lmu_idx']
