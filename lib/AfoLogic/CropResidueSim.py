@@ -173,6 +173,8 @@ if __name__=="__main__":
     cat_propn_s1t = np.zeros((len_s1, n_trials))
 
     for t in range(n_trials):
+        if not pinp.stubble['i_trial_inc_t'][t]:
+            continue
         ###trial crop index position
         k = list(sinp.landuse['C']).index(pinp.stubble['i_trial_crop_t'][t])
         s2 = list(pinp.stubble['i_idx_s2']).index(pinp.stubble['i_trial_biomass_use_t'][t])
