@@ -258,7 +258,7 @@ if __name__=="__main__":
         ###calc grazing days in generator period for each dmd - allocate trial lwc to the simulated lwc and sum the p2
         lwc_diff_p1p2s1 = np.abs(lwc_p1s1[:,na,:] - trial_lwc_p1p2[:,:,na])
         days_grazed_each_cat_p1s1 = np.sum(np.equal(np.min(lwc_diff_p1p2s1, axis=2,keepdims=True) , lwc_diff_p1p2s1), axis=1)
-        ###adjust intake - allowing for decay related to quantity (to reflect the amount at harvest). (Trampling done below).
+        ###adjust intake - allowing for decay related to quantity (to reflect the amount at harvest). (Trampling done below). #todo better would be to deteriorate high categories less because more grain (if changed here need to change in cropresidue.py module)
         adj_intake_p1s1 = intake_p1s1 / (1 - pinp.stubble['quantity_decay'][k]) ** days_since_harv_tp[t,:, na]
         ###multiply by adjusted intake and sum p axis to return the total intake for each dmd (stubble) category
         total_intake_s1 = np.sum(days_grazed_each_cat_p1s1 * adj_intake_p1s1, axis=0)

@@ -171,6 +171,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     average_days_since_harv_p6zk = days_since_harv_p6zk - np.minimum(days_since_harv_p6zk, (fp_end_p6z - fp_start_p6z)[...,na])/2 #subtract half the length of current period to get the average days since harv. Minimum is to handle the period when harvest occurs.
     average_days_since_harv_p6zk = average_days_since_harv_p6zk.astype(float)
 
+    # todo better would be to deteriorate high categories less because more grain (if changed here need to change in cropresidue.py module)
     ##calc the quantity decline % for each period - used in transfer constraints, need to average the number of days in the period of interest
     quant_declined_since_harv_p6zk = (1 - pinp.stubble['quantity_decay']) ** average_days_since_harv_p6zk.astype(float)
 
