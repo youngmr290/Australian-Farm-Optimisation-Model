@@ -300,13 +300,14 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
         fun.f1_make_r_val(r_vals, base_yields_k_z, 'base_yields_k_z')
 
     ##collate other info
-    biomass_lmus = pinp.crop['yield_by_lmu'] #soil yield factor
-    arable = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']) #read in arable area df
-    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield is inputted as the harvestable grain
+    biomass_lmus_scalar_k_l = pinp.crop['yield_by_lmu'] #soil yield factor
+    soil_production_scalar_zl = zfun.f_seasonal_inp(pinp.crop['i_soil_production_z_l'].T,numpy=False).unstack() #soil scalar by weather-year (to account for the fact that the relative performance of a soil is weather related)
+    arable_l = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']) #read in arable area df
+    harvest_index_k = uinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield is inputted as the harvestable grain
     harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
-    propn_baled_k = pd.Series(pinp.stubble['i_propn_baled_k'], index=sinp.landuse['C']) #Proportion of biomass at baling that is baled (at point of baling - not including respiration losses).
-    growth_scalar_k = pd.Series(pinp.stubble['i_growth_scalar_k'], index=sinp.landuse['C']) #Biomass at baling relative to biomass at harvest (if not baled). To account for growth from date of baling to harvest.
-    propn_conserved_k = pd.Series(pinp.stubble['i_propn_conserved_k'], index=sinp.landuse['C']) #Proportion of baled biomass available to feed out. To allow for losses due to respiration during drying.
+    propn_baled_k = pd.Series(uinp.stubble['i_propn_baled_k'], index=sinp.landuse['C']) #Proportion of biomass at baling that is baled (at point of baling - not including respiration losses).
+    growth_scalar_k = pd.Series(uinp.stubble['i_growth_scalar_k'], index=sinp.landuse['C']) #Biomass at baling relative to biomass at harvest (if not baled). To account for growth from date of baling to harvest.
+    propn_conserved_k = pd.Series(uinp.stubble['i_propn_conserved_k'], index=sinp.landuse['C']) #Proportion of baled biomass available to feed out. To allow for losses due to respiration during drying.
     is_baled_k = sinp.general['i_is_baled_k'] #is the land use baled normally
 
     ##convert to biomass at grain harvest time
@@ -318,8 +319,9 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     base_biomass_rkz = grain_yields_rkz.div(harvest_index_k, level=1)
 
     ##calculate biomass - base biomass * arable area * harv_propn * frost * lmu factor - seeding rate
-    biomass_arable_by_soil_k_l = biomass_lmus.mul(arable) #mul arable area to the lmu factor (easy because dfs have the same axis's).
-    biomass_rkz_l=biomass_arable_by_soil_k_l.reindex(base_biomass_rkz.index, axis=0, level=1).mul(base_biomass_rkz,axis=0).fillna(0) #reindes and mul with base biomass
+    biomass_lmus_scalar_kz_l = biomass_lmus_scalar_k_l.mul(soil_production_scalar_zl, axis=1, level=1).stack(0)
+    biomass_arable_by_soil_kz_l = biomass_lmus_scalar_kz_l.mul(arable_l) #mul arable area to the lmu factor (easy because dfs have the same axis's).
+    biomass_rkz_l=biomass_arable_by_soil_kz_l.unstack().reindex(base_biomass_rkz.unstack().index, axis=0, level=1).stack().mul(base_biomass_rkz,axis=0).fillna(0) #reindes and mul with base biomass
     biomass_rkl_z = biomass_rkz_l.stack().unstack(2)
 
     ##add rotation period axis - if a rotation exists at the beginning of harvest it provides grain and requires harvesting.
@@ -360,9 +362,9 @@ def f_biomass2product(r_vals=None):
         for frost). The LMU yield factor must then capture the difference of frost across LMUS.
     '''
     ##inputs
-    harvest_index_ks2 = pinp.stubble['i_harvest_index_ks2']
-    biomass_scalar_ks2 = pinp.stubble['i_biomass_scalar_ks2']
-    propn_grain_harv_ks2 = pinp.stubble['i_propn_grain_harv_ks2']
+    harvest_index_ks2 = uinp.stubble['i_harvest_index_ks2']
+    biomass_scalar_ks2 = uinp.stubble['i_biomass_scalar_ks2']
+    propn_grain_harv_ks2 = uinp.stubble['i_propn_grain_harv_ks2']
     frost_kl = pinp.crop['frost'].values
 
     ##calc biomass to product scalar - adjusted for frost
@@ -376,7 +378,7 @@ def f_biomass2product(r_vals=None):
 
     ##convert to pandas
     keys_k = sinp.landuse['C']
-    keys_s2 = pinp.stubble['i_idx_s2']
+    keys_s2 = uinp.stubble['i_idx_s2']
     keys_l = pinp.general['i_lmu_idx']
     index_kls2 = pd.MultiIndex.from_product([keys_k, keys_l, keys_s2])
     biomass2product_kls2 = pd.Series(biomass2product_kls2.ravel(), index=index_kls2)
@@ -452,7 +454,7 @@ def f_fert_passes():
         fert_passes_rk_zn = f1_sim_inputs(sheet='No Fert Applications', index=[0,1], header=[0,1])
         fert_passes_rk_zn = fert_passes_rk_zn.loc[mask_r,:]
         ###nap fert scalar
-        nap_fert_scalar_r = f1_sim_inputs(sheet='NAP Fert Scalar')
+        nap_fert_scalar_r = f1_sim_inputs(sheet='NAP Fert Scalar', index=[0], header=[0]).squeeze()
         nap_fert_scalar_r = nap_fert_scalar_r.loc[mask_r]
 
     ###Mask z axis
@@ -594,7 +596,7 @@ def f_fert_cost(r_vals):
         ###mask r
         base_fert_rk_zn = base_fert_rk_zn.loc[mask_r,:]
         ###nap fert scalar
-        nap_fert_scalar_r = f1_sim_inputs(sheet='NAP Fert Scalar')
+        nap_fert_scalar_r = f1_sim_inputs(sheet='NAP Fert Scalar', index=[0], header=[0]).squeeze()
         nap_fert_scalar_r = nap_fert_scalar_r.loc[mask_r]
 
     ###Mask z axis
@@ -702,7 +704,7 @@ def f1_stubble_handling_prob():
     ##calculate the probability of a rotation phase needing stubble handling
     base_biomass_rkl_z = f_rot_biomass(for_stub=True).unstack()
     ###convert to grain
-    harvest_index_k = pinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because stubble handling is based on harvestable grain yield
+    harvest_index_k = uinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because stubble handling is based on harvestable grain yield
     harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
     base_yields_rkl_z = base_biomass_rkl_z.mul(harvest_index_k, axis=0, level=1)
     stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=sinp.landuse['C'], dtype=float)*1000  #have to convert to kg to match base yield
@@ -1421,6 +1423,8 @@ def f_sow_prov():
     period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)\
                                * p5z_isnot_during_false_break_p5z
     ###add k axis
+    if not sinp.structuralsa['i_differentiate_wet_dry_seeding']: #in the web app all land uses can be dry sown (this is a simplification to save seperate representation of dry sown land uses.)
+        dry_sown_landuses = sinp.landuse['C']
     period_is_dryseeding_p5zk = period_is_dryseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(dry_sown_landuses), axis=-1)
 
     ##pasture seeding

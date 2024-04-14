@@ -134,11 +134,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###################################
     ## calculate masks                #
     ###################################
+    ##select which breeds are included
+    i_g3_inc = pinp.sheep['i_g3_inc']
+    ##if generating for stubble then overwrite genotype selection
+    if stubble:
+        i_g3_inc = stubble['i_g3_inc']
+
     ##masks required for initialising arrays
-    mask_sire_inc_g0 = np.any(sinp.stock['i_mask_g0g3'] * pinp.sheep['i_g3_inc'], axis =1)
-    mask_dams_inc_g1 = np.any(sinp.stock['i_mask_g1g3'] * pinp.sheep['i_g3_inc'], axis =1)
-    mask_yatf_inc_g2 = np.any(sinp.stock['i_mask_g2g3'] * pinp.sheep['i_g3_inc'], axis =1)
-    mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis =1)
+    mask_sire_inc_g0 = np.any(sinp.stock['i_mask_g0g3'] * i_g3_inc, axis =1)
+    mask_dams_inc_g1 = np.any(sinp.stock['i_mask_g1g3'] * i_g3_inc, axis =1)
+    mask_yatf_inc_g2 = np.any(sinp.stock['i_mask_g2g3'] * i_g3_inc, axis =1)
+    mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * i_g3_inc, axis =1)
     ##o/d mask - if dob is after the end of the sim then it is masked out -  the mask is created before the date of birth is adjusted to the start of a period however it is adjusted to the start of the next period so the mask won't cut out a birth event that actually would occur, additionally this is the birth of the first however the matrix sees the birth of average animal which is also later therefore if anything the mask will leave in unnecessary o slices
     date_born1st_oa1e1b1nwzida0e0b0xyg2 = fun.f_expand(pinp.sheep['i_date_born1st_iog2'], i_pos, right_pos=g_pos, swap=True,
                                                       left_pos2=p_pos,right_pos2=i_pos, condition=mask_yatf_inc_g2, axis=g_pos,
@@ -190,7 +196,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     len_t0 = 1 #alway just one t slice for sires
     len_t1 = pinp.sheep['i_n_dam_sales'] + len_g0
     len_t2 = pinp.sheep['i_t2_len']
-    len_t3 = pinp.sheep['i_t3_len']
+    if sinp.structuralsa['i_offs_sale_method'] == 1:
+        len_t3 = sinp.structuralsa['i_offs_sale_opportunities_per_dvp'] + 1 #+1 for retained slice
+    else:
+        len_t3 = pinp.sheep['i_t3_len']
     len_w0 = sinp.structuralsa['i_w0_len']
     len_w_prog = sinp.structuralsa['i_progeny_w2_len']
     len_x = np.count_nonzero(mask_x)
@@ -498,7 +507,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_rc_start_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_ebg_tpoffs = np.zeros(tpg3, dtype =dtype)
     ###arrays for report variables
-    r_intake_f_tpoffs = np.zeros(tpg3, dtype = dtype)   #not used as a report var but used in stubble and used consistient name as dams
+    r_intake_f_tpoffs = np.zeros(tpg3, dtype = dtype)   #not used as a report var but in stubble. Used name consistent with dams
     r_ebw_tpoffs = np.zeros(tpg3, dtype=dtype)
     r_wbe_tpoffs = np.zeros(tpg3, dtype =dtype)
     r_fat_tpoffs = np.zeros(tpg3, dtype =dtype)
@@ -616,30 +625,29 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     date_shear_sida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_date_shear_sixg3'], x_pos, right_pos=g_pos, swap=True,left_pos2=i_pos,right_pos2=x_pos,
                                            condition=mask_offs_inc_g3, axis=g_pos, condition2=pinp.sheep['i_mask_i'], axis2=i_pos,
                                            condition3=mask_x, axis3=x_pos)
-    mask_shear_g3 = np.max(date_shear_sida0e0b0xyg3<=offs_date_end_p[-1], axis=tuple(range(i_pos, 0))) #mask out shearing opps that occur after gen is done
-    date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3[mask_shear_g3]
-    len_s3 = np.count_nonzero(mask_shear_g3)
+    mask_shear_s3 = np.max(date_shear_sida0e0b0xyg3<=offs_date_end_p[-1], axis=tuple(range(i_pos, 0))) #mask out shearing opps that occur after gen is done
+    date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3[mask_shear_s3]
+    len_s3 = np.count_nonzero(mask_shear_s3)
     ####adjust shearing dates if they occur before birth (this is incase user input the wrong year on the shearing dates)
     date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3 + np.maximum(0, np.ceil((np.max(date_born1st_ida0e0b0xyg3,axis=d_pos) - date_shear_sida0e0b0xyg3[0])/364)) * 364 #max across d axis means shearing cant occur before the youngest animal is born (we dont want to add a d axis to shearing date).
+    ####Note: shearing date is adjusted below to stop it occuring before weaning.
 
     ##if generating for stubble then overwrite some of these inputs to match the stubble trial
     if stubble:
         ##shearing
-        date_shear_sida0e0b0xyg1[...] = pinp.stubble['shear_date']
-        date_shear_sida0e0b0xyg3[...] = pinp.stubble['shear_date']
+        date_shear_sida0e0b0xyg1[...] = stubble['shear_date']
+        date_shear_sida0e0b0xyg3[...] = stubble['shear_date']
         ###birth control
-        date_born1st_oa1e1b1nwzida0e0b0xyg2[...] = pinp.stubble['lambing_date']
+        date_born1st_oa1e1b1nwzida0e0b0xyg2[...] = stubble['lambing_date']
 
     ############################
     ### sim param arrays       # '''csiro params '''
     ############################
     ##select the genotype
     a_c2_c0 = pinp.sheep['a_c2_c0']
-    i_g3_inc = pinp.sheep['i_g3_inc']
     ##if generating for stubble then overwrite genotype selection
     if stubble:
-        a_c2_c0 = pinp.stubble['a_c2_c0']
-        i_g3_inc = pinp.stubble['i_g3_inc']
+        a_c2_c0 = stubble['a_c2_c0']
 
     ##association for the retained t of each g slice
     a_t_g1 = np.arange(pinp.sheep['i_n_dam_sales'], pinp.sheep['i_n_dam_sales']+len_g1)
@@ -811,13 +819,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     '''if running the gen for stubble generation then the weather info above gets overwritten with stubble trial info
     '''
     if stubble:
-        legume_p6a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['clover_propn_in_sward_stubble']
-        density_p6a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_sr_s2'][0] #take the harv slice of sr given that it is not important enough to keep the s2 axis
-        ws_p4a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_ws']
-        rain_p4a1e1b1nwzida0e0b0xygp0[...] = pinp.stubble['i_rain']
-        temp_ave_p4a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_temp_ave']
-        temp_max_p4a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_temp_max']
-        temp_min_p4a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['i_temp_min']
+        legume_p6a1e1b1nwzida0e0b0xyg[...] = uinp.stubble['clover_propn_in_sward_stubble']
+        density_p6a1e1b1nwzida0e0b0xyg[...] = stubble['i_sr']
+        ws_p4a1e1b1nwzida0e0b0xyg[...] = stubble['i_ws']
+        rain_p4a1e1b1nwzida0e0b0xygp0[...] = stubble['i_rain']
+        temp_ave_p4a1e1b1nwzida0e0b0xyg[...] = stubble['i_temp_ave']
+        temp_max_p4a1e1b1nwzida0e0b0xyg[...] = stubble['i_temp_max']
+        temp_min_p4a1e1b1nwzida0e0b0xyg[...] = stubble['i_temp_min']
 
 
     ########################################
@@ -1795,12 +1803,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     if stubble:
         lw_initial_wzida0e0b0xyg1[...] = stubble['lw'][stubble['p_start']]
         lw_initial_wzida0e0b0xyg3[...] = stubble['lw'][stubble['p_start']]
-        cfw_initial_wzida0e0b0xyg1[...] = pinp.stubble['i_gfw'] * cw_dams[3, ...]
-        cfw_initial_wzida0e0b0xyg3[...] = pinp.stubble['i_gfw'] * cw_offs[3, ...]
-        fd_initial_wzida0e0b0xyg1[...] = pinp.stubble['i_fd']
-        fd_initial_wzida0e0b0xyg3[...] = pinp.stubble['i_fd']
-        fl_initial_wzida0e0b0xyg1[...] = pinp.stubble['i_fl']
-        fl_initial_wzida0e0b0xyg3[...] = pinp.stubble['i_fl']
+        cfw_initial_wzida0e0b0xyg1[...] = stubble['i_gfw'] * cw_dams[3, ...]
+        cfw_initial_wzida0e0b0xyg3[...] = stubble['i_gfw'] * cw_offs[3, ...]
+        fd_initial_wzida0e0b0xyg1[...] = stubble['i_fd']
+        fd_initial_wzida0e0b0xyg3[...] = stubble['i_fd']
+        fl_initial_wzida0e0b0xyg1[...] = stubble['i_fl']
+        fl_initial_wzida0e0b0xyg3[...] = stubble['i_fl']
 
     ##calc initial ffcfw
     ffcfw_initial_wzida0e0b0xyg0 = lw_initial_wzida0e0b0xyg0 - cfw_initial_wzida0e0b0xyg0 / cw_sire[3, ...]
@@ -1831,13 +1839,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     if stubble:
         fat_initial_wzida0e0b0xyg0, muscle_initial_wzida0e0b0xyg0, viscera_initial_wzida0e0b0xyg0 \
             = sfun.f1_body_composition(cg_sire, cn_sire, cx_sire[:,0:1,...], ebw_initial_wzida0e0b0xyg0, srw_b0xyg0
-                                       , pinp.stubble['i_md'], eqn_system = eqn_used_g0_q1p[7,0])
+                                       , stubble['i_md'], eqn_system = eqn_used_g0_q1p[7,0])
         fat_initial_wzida0e0b0xyg1, muscle_initial_wzida0e0b0xyg1, viscera_initial_wzida0e0b0xyg1 \
             = sfun.f1_body_composition(cg_dams, cn_dams, cx_dams[:,1:2,...], ebw_initial_wzida0e0b0xyg1, srw_b0xyg1
-                                       , pinp.stubble['i_md'], eqn_system = eqn_used_g1_q1p[7,0])
+                                       , stubble['i_md'], eqn_system = eqn_used_g1_q1p[7,0])
         fat_initial_wzida0e0b0xyg3, muscle_initial_wzida0e0b0xyg3, viscera_initial_wzida0e0b0xyg3 \
             = sfun.f1_body_composition(cg_offs, cn_offs, cx_offs[:,mask_x,...], ebw_initial_wzida0e0b0xyg3, srw_b0xyg3
-                                       , pinp.stubble['i_md'], eqn_system = eqn_used_g3_q1p[7,0])
+                                       , stubble['i_md'], eqn_system = eqn_used_g3_q1p[7,0])
 
     ##numbers
     ###Distribution of initial numbers across the a1 axis
@@ -2383,13 +2391,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     '''if running the gen for stubble generation then the feed supply info above gets overwritten with
     the stubble feed from the trial.'''
     if stubble:
-        foo_dams = pinp.stubble['i_foo']
-        foo_yatf = pinp.stubble['i_foo']
-        foo_offs = pinp.stubble['i_foo']
+        foo_dams = stubble['i_foo']
+        foo_yatf = stubble['i_foo']
+        foo_offs = stubble['i_foo']
         dmd_pwg = fun.f_expand(stubble['dmd_pw'],w_pos, left_pos2=p_pos, right_pos2=w_pos)
-        intake_s_pdams = pinp.stubble['i_intake_s']
-        intake_s_pyatf = pinp.stubble['i_intake_s']
-        intake_s_poffs = pinp.stubble['i_intake_s']
+        intake_s_dams = stubble['i_sup_intake']
+        intake_s_yatf = stubble['i_sup_intake']
+        intake_s_offs = stubble['i_sup_intake']
         confinementw_tpa1e1b1nwzida0e0b0xyg1[...] = False
         confinementw_tpa1e1b1nwzida0e0b0xyg3[...] = False
 
@@ -2760,23 +2768,23 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
            ffcfw and other initial values are overwritten above'''
         if stubble:
             ##dams
-            w_f_start_dams = pinp.stubble['w_foetus_start']
+            w_f_start_dams = stubble['w_foetus_start']
             nw_f_start_dams = w_f_start_dams
 
             ##yatf
-            ffcfw_start_yatf = np.array([pinp.stubble['i_lw_yatf'] - pinp.stubble['i_gfw_yatf']]) #have to make it an array so it can handle new axis.
+            ffcfw_start_yatf = np.array([stubble['i_lw_yatf'] - stubble['i_gfw_yatf']]) #have to make it an array so it can handle new axis.
             ffcfw_max_start_yatf = ffcfw_start_yatf
             nw_start_yatf = ffcfw_start_yatf
             rc_start_yatf = 1
-            cfw_start_yatf = pinp.stubble['i_gfw_yatf'] * cw_yatf[3, ...]
-            fl_start_yatf = pinp.stubble['i_fl_yatf']
-            fd_start_yatf = pinp.stubble['i_fd_yatf'] #not used for anything so just use the same one as adult
-            foo_lact_ave_start = pinp.stubble['i_foo']
+            cfw_start_yatf = stubble['i_gfw_yatf'] * cw_yatf[3, ...]
+            fl_start_yatf = stubble['i_fl_yatf']
+            fd_start_yatf = stubble['i_fd_yatf'] #not used for anything so just use the same one as adult
+            foo_lact_ave_start = stubble['i_foo']
             ###using input proportions for body composition rather than the function because estimate of gutfill for yatf is poor
             # #todo improve the gut fill calculation for yatf and then calc using f_body_weight().
-            fat_start_yatf = ffcfw_start_yatf * pinp.stubble['i_fat_yatf']
-            muscle_start_yatf = ffcfw_start_yatf * pinp.stubble['i_muscle_yatf']
-            viscera_start_yatf = ffcfw_start_yatf * pinp.stubble['i_viscera_yatf']
+            fat_start_yatf = ffcfw_start_yatf * stubble['i_fat_yatf']
+            muscle_start_yatf = ffcfw_start_yatf * stubble['i_muscle_yatf']
+            viscera_start_yatf = ffcfw_start_yatf * stubble['i_viscera_yatf']
 
             ##offs
             nw_start_offs = 0.0
@@ -2852,14 +2860,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             # if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p]):
             #     print("period is fvp0 offs: ", period_is_condense_pa1e1b1nwzida0e0b0xyg1[p])
 
-
-            ##Slice the current period for the stubble supplement # this is only a temporary fix for Amelia
-            ###Will throw an error if the inputs don't cover enough periods
-            if stubble:
-                sup_period = p - p_start
-                intake_s_dams = intake_s_pdams[sup_period]
-                intake_s_yatf = intake_s_pyatf[sup_period]
-                intake_s_offs = intake_s_poffs[sup_period]
 
 
             ###################################################################################
@@ -6694,20 +6694,20 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##offs
     ###dvp mask - basically the shearing mask plus a true for the first dvp which is weaning
-    sale_mask_g3 = np.concatenate([np.array([True]), mask_shear_g3]) #need to add true to the start of the shear mask because the first dvp is weaning
+    sale_mask_s3 = np.concatenate([np.array([True]), mask_shear_s3]) #need to add true to the start of the shear mask because the first dvp is weaning
     ###age for sale opp
     sale_age_tsa1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_sales_age_tsg3'], p_pos, right_pos=g_pos,
-                                                       condition=mask_offs_inc_g3, axis=g_pos, condition2=sale_mask_g3, axis2=p_pos)
+                                                       condition=mask_offs_inc_g3, axis=g_pos, condition2=sale_mask_s3, axis2=p_pos)
     ###target weight in a dvp where sale occurs
     target_weight_tsa1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_target_weight_tsg3'], p_pos, right_pos=g_pos,
-                                                        condition=mask_offs_inc_g3, axis=g_pos, condition2=sale_mask_g3, axis2=p_pos) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
+                                                        condition=mask_offs_inc_g3, axis=g_pos, condition2=sale_mask_s3, axis2=p_pos) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
     ###mask for nutrition profiles. this doesn't have a full w axis because it only has the nutrition options it is expanded to w further down.
     sav_mask_nut_offs_sWix = sen.sav['nut_mask_offs_sWix'][:,0:len_nut_offs,...] #This controls if a nutrition pattern is included. (if error here adjust len_max_W3 in sen.py)
     mask_nut_offs_sWix = fun.f_sa(np.array(True), sav_mask_nut_offs_sWix,5) #all nut options included unless SAV is false
     mask_nut_sa1e1b1nWzida0e0b0xyg3 = fun.f_expand(mask_nut_offs_sWix, x_pos, left_pos2=i_pos, left_pos3=w_pos,left_pos4=p_pos,
                                                    right_pos2=x_pos,right_pos3=i_pos,right_pos4=w_pos,
                                                    condition=pinp.sheep['i_mask_i'], axis=i_pos,
-                                                   condition2=mask_shear_g3, axis2=p_pos, condition3=mask_x, axis3=x_pos)
+                                                   condition2=mask_shear_s3, axis2=p_pos, condition3=mask_x, axis3=x_pos)
 
     #################################
     ##post processing associations  #
@@ -6880,30 +6880,52 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
 
     ##offs
-    ###t0 - retained
-    ###t1 - For dsp (and when nodes are included) sold when seasons first identified (if dvp is not a node then sale is as per SE). For SE sold target age or target weight or sold on the last day of dvp (not much value selling at start of dvp for SE model because there is only 1 dvp)
-    ###t2 - sold target age or target weight or sold on the last day of dvp
+    ##There are two ways to specify sale in AFO. (i) simply enter a number of sale options per dvp and AFO will
+    ## make on t slice for each opportunity. The opportunities are evenly space within the dvp. This is the default
+    ## option. (ii) enter weights and ages that trigger sales. This method can be useful to reduce t sices but
+    ## care must be taken when doing the inputs.
 
-    ###calc sale date then determine shearing date
-    ###sale - at age
-    sale_age_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(sale_age_tsa1e1b1nwzida0e0b0xyg3,a_sw_pa1e1b1nwzida0e0b0xyg3[na],1)
-    ###sale - weight target
-    ####convert from shearing/dvp to p array. Increments at dvp ie point to previous sale opp until new dvp then point at next dvp.
-    target_weight_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(target_weight_tsa1e1b1nwzida0e0b0xyg3, a_sw_pa1e1b1nwzida0e0b0xyg3[na],1) #gets the target weight for each gen period
-    ####adjust generator lw to reflect the cumulative max per period
-    #####lw could go above target then drop back below, but it is already sold so the on hand bool shouldn't change. therefore need to use a cumulative max and reset each dvp
-    weight_tpa1e1b1nwzida0e0b0xyg3= sfun.f1_cum_dvp(o_ffcfw_tpoffs,a_v_pa1e1b1nwzida0e0b0xyg3, axis=p_pos)
-    ###period is sale
-    #### t0 slice = True - this is handled by the inputs ie weight and date are high therefore not reached therefore on hand == true
-    #### t1 & t2 slice date_p<sale_date or weight<target weight (these slices are also sold on the last period of a dvp if there is no other sale opp, see code below)
-    sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(np.logical_and(age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] <= sale_age_tpa1e1b1nwzida0e0b0xyg3,
-                                                                    sale_age_tpa1e1b1nwzida0e0b0xyg3 <= age_end_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p]),
-                                                     weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
+    ###sale based on user inputted number of sale times spaced evenly within each DVP
+    if sinp.structuralsa['i_offs_sale_method'] == 1:
+        ###t0 - retained
+        ###t1 - sale at the end of the dvp. For dsp (and when nodes are included) this gets shifted to the start of the dvp
+        ###>=t2 - sale even spread within the dvp
+        dvp_end_va1e1b1nwzida0e0b0xyg3 = np.roll(dvp_start_va1e1b1nwzida0e0b0xyg3, shift=-1, axis=0) - step
+        dvp_end_va1e1b1nwzida0e0b0xyg3[-1,...] = date_start_pa1e1b1nwzida0e0b0xyg3[-1,...] #set end of last dvp to final generator period
+        offs_sale_opportunities_per_dvp = sinp.structuralsa['i_offs_sale_opportunities_per_dvp']
+        sale_offset_days_vg3 = (dvp_end_va1e1b1nwzida0e0b0xyg3 - np.maximum(
+            date_weaned_ida0e0b0xyg3, dvp_start_va1e1b1nwzida0e0b0xyg3))/offs_sale_opportunities_per_dvp
+        sale_offset_days_tvg3 = sale_offset_days_vg3 * fun.f_expand(np.roll(np.arange(len_t3), shift=1, axis=0), p_pos-1) #len t3 includes the retained slice so roll because we want t[1] to be 0 offest so sale occurs at the end of the dvp.
+        sale_date_tvg3 = dvp_end_va1e1b1nwzida0e0b0xyg3 - sale_offset_days_tvg3 #minus 7 to get the last period of previous dvp.
+        sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.any(sfun.f1_period_is_('period_is', sale_date_tvg3[:,:,na,...],
+                                                                     date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3), axis=1)
+        ####set t0 sale_opp to false because no sale in t[0]
+        sale_opp_tpa1e1b1nwzida0e0b0xyg3[0] = False
+
+    ###sale based on user inputted number of sale times spaced evenly within each DVP
+    else:
+        ###t0 - retained
+        ###t1 - For dsp (and when nodes are included) sold when seasons first identified (if dvp is not a node then sale is as per SE). For SE sold target age or target weight or sold on the last day of dvp (not much value selling at start of dvp for SE model because there is only 1 dvp)
+        ###t2 - sold target age or target weight or sold on the last day of dvp
+        ###sale - at age
+        sale_age_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(sale_age_tsa1e1b1nwzida0e0b0xyg3,a_sw_pa1e1b1nwzida0e0b0xyg3[na],1)
+        ###sale - weight target
+        ####convert from shearing/dvp to p array. Increments at dvp ie point to previous sale opp until new dvp then point at next dvp.
+        target_weight_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(target_weight_tsa1e1b1nwzida0e0b0xyg3, a_sw_pa1e1b1nwzida0e0b0xyg3[na],1) #gets the target weight for each gen period
+        ####adjust generator lw to reflect the cumulative max per period
+        #####lw could go above target then drop back below, but it is already sold so the on hand bool shouldn't change. therefore need to use a cumulative max and reset each dvp
+        weight_tpa1e1b1nwzida0e0b0xyg3= sfun.f1_cum_dvp(o_ffcfw_tpoffs,a_v_pa1e1b1nwzida0e0b0xyg3, axis=p_pos)
+        ###period is sale
+        #### t0 slice = False - this is handled by the inputs ie weight and date are high therefore not reached therefore on hand == true
+        #### t1 & t2 slice date_p<sale_date or weight<target weight (these slices are also sold on the last period of a dvp if there is no other sale opp, see code below)
+        sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(np.logical_and(age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] <= sale_age_tpa1e1b1nwzida0e0b0xyg3,
+                                                                        sale_age_tpa1e1b1nwzida0e0b0xyg3 <= age_end_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p]),
+                                                         weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
     ###if dsp then t1 gets a sale opportunity at the start of dvp when seasons are identified (this will be first period of dvp so any other sale opportunities in that dvp will be disregarded).
     if not bool_steady_state or pinp.general['i_inc_node_periods']:
         period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m: object = sfun.f1_period_is_('period_is', date_node_ya1e1b1nwzidaebxygm[:,na,...], date_start_pa1e1b1nwzida0e0b0xyg3[...,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3[...,na])
         period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.any(period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m, axis=(0,-1))
-        period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3>0) #only have sale opp if animal exists.
+        period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3[...,0:1,:,:,:,:]>0) #only have sale opp if animal exists. slice e axis
         sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...] = np.logical_or(sale_opp_tpa1e1b1nwzida0e0b0xyg3[1,...], period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3)
     ###on hand - combine period_is_sale & period_is_transfer then use cumulative max to convert to on_hand
     ### note: animals are on hand in the period they are sold ie sale takes place on the last minute of the period.
@@ -9069,21 +9091,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##              accounts for mortality as well as on hand.
     if sinp.rep['i_store_on_hand_mort']:
         ###add v axis and adjust for onhand
-        r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1 = r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (
+        r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1 = r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * o_numbers_end_tpdams[:,na,...] * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (
                                                   a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-        r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg3 = r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * (
+        r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg3 = r_cum_dvp_mort_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * o_numbers_end_tpoffs[:,na,...] * on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * (
                                                   a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
         ###cluster e,b
         r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1,
                                                                               a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...],
                                                                               index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],
-                                                                              numbers_start_vg = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...])  #on_hand to handle the periods when e slices are in different dvps (e.g. can't just have default 1 otherwise it will divide by 2 because both e gets summed)
+                                                                              numbers_start_vg = numbers_start_tva1e1b1nwzida0e0b0xyg1[:,:,na,...])
         r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs',r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg3,
                                                                                      a_k3cluster_da0e0b0xyg3,
                                                                                      index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],
                                                                                      a_k5cluster_da0e0b0xyg3,
                                                                                      index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...],
-                                                                                     numbers_start_vg=on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...]) #on_hand to handle the periods when e slices are in different dvps (e.g. can't just have default 1 otherwise it will divide by 2 because both e gets summed)
+                                                                                     numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg3[:,:,na,...])
 
         ###convert to on hand mort (1-mort)
         r_on_hand_mort_k2tvpa1e1b1nwzida0e0b0xyg1 = 1 - r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1
@@ -10052,12 +10074,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fun.f1_make_r_val(r_vals,r_salevalue_prog_k3k5p7tva1e1b1nwzida0e0b0xyg2,'salevalue_k3k5p7twzia0xg2',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, k3k5p7twziaxyg2_shape)
     fun.f1_make_r_val(r_vals,r_salevalue_k3k5p7tva1e1b1nwzida0e0b0xyg3,'salevalue_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
 
-    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg0,'salegrid_zg0', shape=zg0_shape)
-    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg1,'salegrid_tva1e1b1nwziyg1', shape=tva1e1b1nwziyg1_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
-    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg2,'salegrid_Tva1e1b1nwzixyg2', shape=Tva1e1b1nwzixyg2_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
-    fun.f1_make_r_val(r_vals,r_saleage_tva1e1b1nwzida0e0b0xyg3,'saleage_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
-    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg3,'salegrid_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
-
     fun.f1_make_r_val(r_vals,r_woolvalue_p7tva1e1b1nwzida0e0b0xyg0,'woolvalue_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
     fun.f1_make_r_val(r_vals,r_woolvalue_k2p7tva1e1b1nwzida0e0b0xyg1,'woolvalue_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals,r_woolvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3,'woolvalue_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
@@ -10075,8 +10091,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###purchase costs
     fun.f1_make_r_val(r_vals,purchcost_p7tva1e1b1nwzida0e0b0xyg0,'purchcost_sire_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
 
-    ###sale date
-    fun.f1_make_r_val(r_vals,r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3,'saledate_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
+    ###sale date / age / grid
+    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg0,'salegrid_zg0', shape=zg0_shape)
+    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg1,'salegrid_tva1e1b1nwziyg1', shape=tva1e1b1nwziyg1_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
+    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg2,'salegrid_Tva1e1b1nwzixyg2', shape=Tva1e1b1nwzixyg2_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
+    fun.f1_make_r_val(r_vals,np.broadcast_to(r_saleage_tva1e1b1nwzida0e0b0xyg3, r_salegrid_tva1e1b1nwzida0e0b0xyg3.shape),
+                      'saleage_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #need to broadcast because some axes are not active with sale method 1 (sale split within dvp). Also didn't worry about unclustering since not important report and wasn't masked by z8
+    fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg3,'salegrid_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
+    fun.f1_make_r_val(r_vals,np.broadcast_to(r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3, r_cfw_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3.shape),
+                      'saledate_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape) #need to broadcast because some axes are not active with sale method 1 (sale split within dvp).
 
     ###dvp date
     r_repro_dates_roe1zg1 = np.stack([fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1, fvp_scan_start_oa1e1b1nwzida0e0b0xyg1,
@@ -10187,8 +10210,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ###proportion mated per dam at beginning of the period (e.g. accounts for mortality)
     fun.f1_make_r_val(r_vals,r_n_mated_k2tva1e1b1nwzida0e0b0xyg1,'n_mated_k2Tva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
-    fun.f1_make_r_val(r_vals,a_prev_matingv_vg1*dvp_is_wean,'a_prev_matingv_wean_va1iyg1', shape=(len_v1, len_a1, len_i, len_y1, len_g1))
-    fun.f1_make_r_val(r_vals,a_prev_matingv_vg1*dvp_is_scan,'a_prev_matingv_scan_va1iyg1', shape=(len_v1, len_a1, len_i, len_y1, len_g1))
+    fun.f1_make_r_val(r_vals,a_prev_matingv_vg1*dvp_is_wean,'a_prev_matingv_wean_va1ziyg1', shape=(len_v1, len_a1, len_z, len_i, len_y1, len_g1))
+    fun.f1_make_r_val(r_vals,a_prev_matingv_vg1*dvp_is_scan,'a_prev_matingv_scan_va1ziyg1', shape=(len_v1, len_a1, len_z, len_i, len_y1, len_g1))
 
     ###proportion of drys per dam at beginning of the period (e.g. accounts for mortality)
     fun.f1_make_r_val(r_vals,r_n_drys_k2tva1e1b1nwzida0e0b0xyg1,'n_drys_k2tva1nw8ziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)

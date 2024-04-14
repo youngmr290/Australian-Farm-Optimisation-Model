@@ -57,7 +57,10 @@ def create_sa():
     len_s7 = len(uinp.sheep['i_salep_price_max_s7']) #s7 = sale grid
     len_t1 = pinp.sheep['i_n_dam_sales'] + len_g0
     len_t2 = pinp.sheep['i_t2_len']
-    len_t3 = pinp.sheep['i_t3_len']
+    if sinp.structuralsa['i_offs_sale_method'] == 1:
+        len_t3 = sinp.structuralsa['i_offs_sale_opportunities_per_dvp'] + 1  # +1 for retained slice
+    else:
+        len_t3 = pinp.sheep['i_t3_len']
     len_P = 500  #Capital P because it is an (over) estimate to initialise the p axes that will be sliced when len_p is known.
     len_p6 = len(pinp.period['i_fp_idx'])
     len_V = 50  #Capital V because it is an (over) estimate to initialise the v axes that will be sliced when len_v is known.
@@ -119,6 +122,7 @@ def create_sa():
     #finance #
     ##########
     ##SAV
+    sav['working_cap_constraint_included'] = '-' #SA to control inclusion of work cap constraint in corepyomo
     sav['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
     sav['capital_limit']      = '-'          #SA to alter the capital limit (amount of money that can be loaned from bank)
     sav['interest_rate']      = '-'           #SA to alter the credit and debit interest from bank
@@ -258,6 +262,7 @@ def create_sa():
     #crop and rotation #
     ####################
     ##SAV
+    sav['differentiate_wet_dry_seeding'] = '-'  #control is wet and dry seeding is differentiated - in the web app this is False meaning that all crops can be either dry or wet sown which removes the need to have special dry sown landuses.
     sav['user_rotphases'] = np.full(len_R, '-', dtype=object)  # SA value for the actual rotations - only used in web app - use capital R because rotation len from the web app can be different
     sav['rot_inc_R'] = np.full(len_R, '-', dtype=object)    # SA value for rotations included - web app - use capital R because rotation len from the web app can be different
     sav['sowing_freq_R'] = np.full(len_R, '-', dtype=object)    # SA value for pinp sowing frequency - use capital R because rotation len from the web app can be different
@@ -461,9 +466,11 @@ def create_sa():
     sav['bnd_sb_consumption_p6'] = np.full(len(pinp.period['i_fp_idx']), '-', dtype=object)  #upper bnd on the amount of sb consumed
     sav['bnd_crop_area'] = np.full(len_k, '-', dtype=object)  #crop area for bound. if all values are '-' the bnd wont be used (there is not bnd_inc control for this one)
     sav['bnd_crop_area_percent'] = np.full(len_k, '-', dtype=object)  #crop area percent of farm area. if all values are '-' the bnd wont be used (there is not bnd_inc control for this one)
+    sav['bnd_total_legume_area_percent'] = '-'  #Control the total percent of legume area on farm.
     sav['bnd_biomass_graze'] = np.full(len_k, '-', dtype=object)  #biomass graze area for bound. if all values are '-' the bnd wont be used (there is not bnd_inc control for this one)
     sav['bnd_total_pas_area_percent'] = '-'  #Control the total percent of pasture area on farm.
     sav['bnd_pas_area_l'] = np.full(len_l, '-', dtype=object)  #pasture area by lmu for bound. if all values are '-' the bnd wont be used (there is not bnd_inc control for this one)
+    sav['bnd_landuse_area_klz'] = np.full((len_k, len_l, len_z), '-', dtype=object)  #landuse area by lmu and z. if all values are '-' the bnd wont be used
     sav['bnd_rotn_inc'] = '-'   #SA to turn on the phase area bounds
     sav['bnd_sup_per_dse'] = '-'   #SA to control the supplement per dse (kg/dse)
     sav['bnd_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated

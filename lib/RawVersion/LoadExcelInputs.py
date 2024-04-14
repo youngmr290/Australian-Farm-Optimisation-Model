@@ -184,6 +184,9 @@ def f_load_excel_default_inputs(load_all_pinp=False, trial_pinp=None):
     ##sup inputs
     uinp_defaults['sup_inp'] = xl_all_named_ranges(universal_xl_path,"Sup Feed")
 
+    ##CropResidue inputs
+    uinp_defaults['stubble_inp'] = xl_all_named_ranges(universal_xl_path,"CropResidue", numpy=True)
+
     ##emissions inputs
     uinp_defaults['emissions_inp'] = xl_all_named_ranges(universal_xl_path,"Emissions")
 
@@ -200,6 +203,7 @@ def f_load_excel_default_inputs(load_all_pinp=False, trial_pinp=None):
     uinp_defaults['machine_options_dict_inp']={}
     uinp_defaults['machine_options_dict_inp'][1] = xl_all_named_ranges(universal_xl_path,"Mach 1")
     uinp_defaults['machine_options_dict_inp'][2] = xl_all_named_ranges(universal_xl_path,"Mach 2")
+    uinp_defaults['machine_options_dict_inp'][3] = xl_all_named_ranges(universal_xl_path,"Mach 3")
 
 
     ##read in price variation inputs from xl - this might change

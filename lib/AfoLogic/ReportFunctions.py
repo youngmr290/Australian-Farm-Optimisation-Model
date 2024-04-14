@@ -624,9 +624,9 @@ def f_summary(lp_vars, r_vals, trial):
                                                       'Fodder %', 'Fodder % max', 'Fodder % min', 'Fodder % stdev',
                                                       'Sup', 'Sup max', 'Sup min', 'Sup stdev'])
     ##profit - no minroe and asset
-    summary_df.loc[trial, 'profit'] = f_profit(lp_vars, r_vals, option=0)
-    profit_max = f_profit(lp_vars, r_vals, option=3)[0]
-    profit_min = f_profit(lp_vars, r_vals, option=3)[1]
+    summary_df.loc[trial, 'profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
+    profit_max = round(f_profit(lp_vars, r_vals, option=3)[0],0)
+    profit_min = round(f_profit(lp_vars, r_vals, option=3)[1],0)
     summary_df.loc[trial, 'profit max'] = profit_max * np.logical_not(profit_min==profit_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'profit min'] = profit_min * np.logical_not(profit_min==profit_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'profit stdev'] = f_profit(lp_vars, r_vals, option=3)[2]
@@ -635,9 +635,9 @@ def f_summary(lp_vars, r_vals, trial):
     ##utility
     summary_df.loc[trial, 'utility'] = f_profit(lp_vars, r_vals, option=2)
     ##total dse/ha in fp0
-    summary_df.loc[trial, 'SR'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
-    SR_max = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[1]
-    SR_min = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[2]
+    summary_df.loc[trial, 'SR'] = round(f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0],1)
+    SR_max = round(f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[1],1)
+    SR_min = round(f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[2],1)
     summary_df.loc[trial, 'SR max'] = SR_max * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'SR min'] = SR_min * np.logical_not(SR_min==SR_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'SR stdev'] = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[3]
@@ -652,46 +652,46 @@ def f_summary(lp_vars, r_vals, trial):
     cols = []
     axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
     dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    summary_df.loc[trial, 'Ewes mated'] = dams_mated.squeeze()
+    summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
     ##pasture %
-    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
-    Pas_max = f_area_summary(lp_vars, r_vals, option=5)[1]
-    Pas_min = f_area_summary(lp_vars, r_vals, option=5)[2]
+    summary_df.loc[trial, 'Pas %'] = round(f_area_summary(lp_vars, r_vals, option=5)[0],0)
+    Pas_max = round(f_area_summary(lp_vars, r_vals, option=5)[1],0)
+    Pas_min = round(f_area_summary(lp_vars, r_vals, option=5)[2],0)
     summary_df.loc[trial, 'Pas % max'] = Pas_max * np.logical_not(Pas_min==Pas_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Pas % min'] = Pas_min * np.logical_not(Pas_min==Pas_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Pas % stdev'] = f_area_summary(lp_vars, r_vals, option=5)[3]
     ##cereal %
-    summary_df.loc[trial, 'Cereal %'] = f_area_summary(lp_vars, r_vals, option=6)[0]
-    Cereal_max = f_area_summary(lp_vars, r_vals, option=6)[1]
-    Cereal_min = f_area_summary(lp_vars, r_vals, option=6)[2]
+    summary_df.loc[trial, 'Cereal %'] = round(f_area_summary(lp_vars, r_vals, option=6)[0],0)
+    Cereal_max = round(f_area_summary(lp_vars, r_vals, option=6)[1],0)
+    Cereal_min = round(f_area_summary(lp_vars, r_vals, option=6)[2],0)
     summary_df.loc[trial, 'Cereal % max'] = Cereal_max * np.logical_not(Cereal_min==Cereal_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Cereal % min'] = Cereal_min * np.logical_not(Cereal_min==Cereal_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Cereal % stdev'] = f_area_summary(lp_vars, r_vals, option=6)[3]
     ##canola %
-    summary_df.loc[trial, 'Canola %'] = f_area_summary(lp_vars, r_vals, option=7)[0]
-    Canola_max = f_area_summary(lp_vars, r_vals, option=7)[1]
-    Canola_min = f_area_summary(lp_vars, r_vals, option=7)[2]
+    summary_df.loc[trial, 'Canola %'] = round(f_area_summary(lp_vars, r_vals, option=7)[0],0)
+    Canola_max = round(f_area_summary(lp_vars, r_vals, option=7)[1],0)
+    Canola_min = round(f_area_summary(lp_vars, r_vals, option=7)[2],0)
     summary_df.loc[trial, 'Canola % max'] = Canola_max * np.logical_not(Canola_min==Canola_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Canola % min'] = Canola_min * np.logical_not(Canola_min==Canola_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Canola % stdev'] = f_area_summary(lp_vars, r_vals, option=7)[3]
     ##pulse %
-    summary_df.loc[trial, 'Pulse %'] = f_area_summary(lp_vars, r_vals, option=8)[0]
-    pulse_max = f_area_summary(lp_vars, r_vals, option=8)[1]
-    pulse_min = f_area_summary(lp_vars, r_vals, option=8)[2]
+    summary_df.loc[trial, 'Pulse %'] = round(f_area_summary(lp_vars, r_vals, option=8)[0],0)
+    pulse_max = round(f_area_summary(lp_vars, r_vals, option=8)[1],0)
+    pulse_min = round(f_area_summary(lp_vars, r_vals, option=8)[2],0)
     summary_df.loc[trial, 'Pulse % max'] = pulse_max * np.logical_not(pulse_min==pulse_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Pulse % min'] = pulse_min * np.logical_not(pulse_min==pulse_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Pulse % stdev'] = f_area_summary(lp_vars, r_vals, option=8)[3]
     ##fodder %
-    summary_df.loc[trial, 'Fodder %'] = f_area_summary(lp_vars, r_vals, option=9)[0]
-    fodder_max = f_area_summary(lp_vars, r_vals, option=9)[1]
-    fodder_min = f_area_summary(lp_vars, r_vals, option=9)[2]
+    summary_df.loc[trial, 'Fodder %'] = round(f_area_summary(lp_vars, r_vals, option=9)[0],0)
+    fodder_max = round(f_area_summary(lp_vars, r_vals, option=9)[1],0)
+    fodder_min = round(f_area_summary(lp_vars, r_vals, option=9)[2],0)
     summary_df.loc[trial, 'Fodder % max'] = fodder_max * np.logical_not(fodder_min==fodder_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Fodder % min'] = fodder_min * np.logical_not(fodder_min==fodder_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Fodder % stdev'] = f_area_summary(lp_vars, r_vals, option=9)[3]
     ##supplement
-    summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
-    Sup_max = f_grain_sup_summary(lp_vars, r_vals, option=4)[1]
-    Sup_min = f_grain_sup_summary(lp_vars, r_vals, option=4)[2]
+    summary_df.loc[trial, 'Sup'] = round(f_grain_sup_summary(lp_vars,r_vals,option=4)[0],0)
+    Sup_max = round(f_grain_sup_summary(lp_vars, r_vals, option=4)[1],0)
+    Sup_min = round(f_grain_sup_summary(lp_vars, r_vals, option=4)[2],0)
     summary_df.loc[trial, 'Sup max'] = Sup_max * np.logical_not(Sup_min==Sup_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Sup min'] = Sup_min * np.logical_not(Sup_min==Sup_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Sup stdev'] = f_grain_sup_summary(lp_vars, r_vals, option=4)[3]
@@ -799,8 +799,7 @@ def f_area_summary(lp_vars, r_vals, option):
         index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
         z_prob_qsz = r_vals['zgen']['z_prob_qsz']
         z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
-        rot_area_qsz_p7 = rot_area_qszrl_p7.groupby(level=(0,1,2)).sum() #sum r & l
-        rot_area_qsz = rot_area_qsz_p7.iloc[:, -1]  # slice for p7[-1]
+        rot_area_qsz = r_vals['rot']['total_farm_area']
         if option == 5:
             pasture_area_p7qsz = pasture_area_p7qszl.groupby(level=(0,1,2,3)).sum() #sum l
             pasture_area_qsz = pasture_area_p7qsz.unstack(0).iloc[:,-1]  # slice for p7[-1]
@@ -1982,8 +1981,8 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
         na_prod = [0,1]
         den_weights = 'n_mated_k2Tva1nw8ziyg1'
         na_denweights = [0,1]
-        den_assoc = 'a_prev_matingv_wean_va1iyg1' #this is used to roll numbers from mating to weaning
-        na_den_assoc = [0,1,2,3,5,6,7]
+        den_assoc = 'a_prev_matingv_wean_va1ziyg1' #this is used to roll numbers from mating to weaning
+        na_den_assoc = [0,1,2,3,6,7]
         assoc_axis = 4 #v
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
@@ -2001,8 +2000,8 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
         na_prod = [0,1]
         den_weights = 'n_mated_k2Tva1nw8ziyg1'
         na_denweights = [0,1]
-        den_assoc = 'a_prev_matingv_scan_va1iyg1' #this is used to roll numbers from mating to scan
-        na_den_assoc = [0,1,2,3,5,6,7]
+        den_assoc = 'a_prev_matingv_scan_va1ziyg1' #this is used to roll numbers from mating to scan
+        na_den_assoc = [0,1,2,3,6,7]
         assoc_axis = 4 #v
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
@@ -2020,8 +2019,8 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
         na_prod = [0,1]
         den_weights = 'n_mated_k2Tva1nw8ziyg1'
         na_denweights = [0,1]
-        den_assoc = 'a_prev_matingv_scan_va1iyg1' #this is used to roll numbers from mating to scan
-        na_den_assoc = [0,1,2,3,5,6,7]
+        den_assoc = 'a_prev_matingv_scan_va1ziyg1' #this is used to roll numbers from mating to scan
+        na_den_assoc = [0,1,2,3,6,7]
         assoc_axis = 4 #v
         if lp_vars_inc:
             weights = 'dams_numbers_qsk2tvanwziy1g1'
@@ -2145,7 +2144,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     # axis_slice[0] = [0, 2, 1]
     res_mei = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                           keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    res_mei = pd.concat([res_mei], keys=['Crop Residue'], axis=1)  # add feed type as header
+    res_mei = pd.concat([res_mei.squeeze()], keys=['Crop Residue'], axis=1)  # add feed type as header. Squeeze gets rid of 0 level from header if no columns are reported.
 
     ###crop graze
     prod = 'crop_md_fkp6p5zl'
@@ -2201,7 +2200,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
                                                  na_weights=na_weights, den_weights=den_weights,
                                                  na_denweights=na_denweights, keys=keys, arith=arith,
                                                  index=index, cols=cols)
-    mei_sire = pd.concat([mei_sire], keys=['Sire'], axis=1) # add stock type as header
+    mei_sire = pd.concat([mei_sire.squeeze()], keys=['Sire'], axis=1) # add stock type as header. Squeeze gets rid of 0 level from header if no columns are reported.
 
     ###dams
     type = 'stock'
@@ -2218,7 +2217,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
                                                  na_weights=na_weights, den_weights=den_weights,
                                                  na_denweights=na_denweights, keys=keys, arith=arith,
                                                  index=index, cols=cols)
-    mei_dams = pd.concat([mei_dams], keys=['Dams'], axis=1) # add stock type as header
+    mei_dams = pd.concat([mei_dams.squeeze()], keys=['Dams'], axis=1) # add stock type as header. Squeeze gets rid of 0 level from header if no columns are reported.
 
     ###offs
     type = 'stock'
@@ -2235,7 +2234,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
                                                  na_weights=na_weights, den_weights=den_weights,
                                                  na_denweights=na_denweights, keys=keys, arith=arith,
                                                  index=index, cols=cols)
-    mei_offs = pd.concat([mei_offs], keys=['Offs'], axis=1)
+    mei_offs = pd.concat([mei_offs.squeeze()], keys=['Offs'], axis=1) # add stock type as header. Squeeze gets rid of 0 level from header if no columns are reported.
 
     ##stick feed stuff together
     ###first make everything have the same number of col levels - not the neatest but couldn't find a better way
@@ -2253,11 +2252,6 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     feed_budget_supply = pd.concat(arrays[0:8], axis=1).round(1) #round so that little numbers don't cause issues
     feed_budget_req = pd.concat(arrays[8:], axis=1).round(1) #round so that little numbers don't cause issues
 
-    ##sum nv axis if nv_option is 1
-    if nv_option==1:
-        feed_budget_supply = feed_budget_supply.groupby(axis=0, level=(0,1,2,3)).sum()
-        feed_budget_req = feed_budget_req.groupby(axis=0, level=(0,1,2,3)).sum()
-
     ###if option 1 - calc propn of mei from each feed source
     if option==0:
         feed_budget_supply = feed_budget_supply.div(feed_budget_supply.sum(axis=1), axis=0).fillna(0)
@@ -2268,6 +2262,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
 
     ###add stock mei requirement
     feed_budget = pd.concat([feed_budget_supply, feed_budget_req], axis=1)
+
+    ##sum nv axis if nv_option is 1
+    if nv_option==1:
+        feed_budget = feed_budget.groupby(axis=0, level=(0,1,2,3)).sum()
 
     ##add fp date to index
     keys_p6 = r_vals['pas']['keys_p6']
@@ -2904,12 +2902,24 @@ def f_pasture_area_analysis(lp_vars, r_vals, trial):
 
 def f_stocking_rate_analysis(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
-    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'SR', 'Pas area', 'Sup/DSE'])
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'SR', 'Ewes mated', 'Pas area', 'Sup/DSE'])
     ##profit - no minroe and asset
     summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
     ##stocking rate
     sr = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
     summary_df.loc[trial, 'SR'] = round(sr, 1)
+    ##total dams mated
+    type = 'stock'
+    prod = 'dvp_is_mating_vzig1'
+    na_prod = [0,1,2,3,5,6,7,10]
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    keys = 'dams_keys_qsk2tvanwziy1g1'
+    arith = 2
+    index = []
+    cols = []
+    axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
+    dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
     ##pasture area
     pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
     z_prob_qsz = r_vals['zgen']['z_prob_qsz']
@@ -2922,24 +2932,43 @@ def f_stocking_rate_analysis(lp_vars, r_vals, trial):
 
 def f_lupin_analysis(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
-    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Lupin area', 'Expected Income'])
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Legume Area', 'Cereal %', 'Canola %', 'Pas %'])
     ##profit - no minroe and asset
     summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
-    ##lupin area
-    landuse_area_qsz_k = f_area_summary(lp_vars, r_vals, option=4)
-    lupin_area_qsz = landuse_area_qsz_k.loc[:,"l"]
-    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
-    total_lupin_area = np.sum(lupin_area_qsz * z_prob_qsz.ravel())
-    summary_df.loc[trial, 'Lupin area'] = total_lupin_area
-    ##expected lupin income - uses average lupin yield in all rotations on the base lmu (this matches the yield graph on web app)
-    lupin_price_p7z = r_vals['crop']['grain_price'].loc[("l","Harv","firsts"),:]
-    lupin_price_z = lupin_price_p7z.groupby(level=1).sum() #sum p7 - price should only exist in one p7 period
-    lupin_price = np.sum(lupin_price_z.values * z_prob_qsz) #avevrage price across z
-    expected_yields_k_z = r_vals['crop']['base_yields_k_z']
-    expected_yields_k_z = expected_yields_k_z.reindex(r_vals['pas']['keys_k'], axis=0).fillna(0)  # expand to full k (incase landuses were masked out) and unused landuses get set to 0
-    expected_lupin_yield_z = expected_yields_k_z.loc["l",:]
-    expected_lupin_yield = np.sum(expected_lupin_yield_z.values * z_prob_qsz) #avevrage yield across z.
-    summary_df.loc[trial, 'Expected Income'] = round(lupin_price * expected_lupin_yield/1000, 0)
+    ##pulse %
+    total_legume_area = f_area_summary(lp_vars, r_vals, option=8)[0]/100 * r_vals['rot']['total_farm_area']
+    summary_df.loc[trial, 'Legume Area'] = total_legume_area
+    ##cereal %
+    summary_df.loc[trial, 'Cereal %'] = f_area_summary(lp_vars, r_vals, option=6)[0]
+    ##canola %
+    summary_df.loc[trial, 'Canola %'] = f_area_summary(lp_vars, r_vals, option=7)[0]
+    ##pasture %
+    summary_df.loc[trial, 'Pasture %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+
+    legume_names = ["Faba Bean", "Lentils", "Chickpea", "Lupins", "Vetch"]
+    legume_keys = ['f','i', 'k', 'l', 'v']
+    for legume_name, legume_key in zip(legume_names, legume_keys):
+        if r_vals['rot']['crop_landuse_inc_k1'][legume_key]:
+            ##legume area
+            landuse_area_qsz_k = f_area_summary(lp_vars, r_vals, option=4)
+            legume_area_qsz = landuse_area_qsz_k.loc[:,legume_key]
+            z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+            legume_area = np.sum(legume_area_qsz * z_prob_qsz.ravel())
+            summary_df.loc[trial, '{0} Area'.format(legume_name)] = fun.f_divide(legume_area, total_legume_area)
+            ##expected legume income - uses average legume yield in all rotations on the base lmu (this matches the yield graph on web app)
+            legume_price_p7z = r_vals['crop']['grain_price'].loc[(legume_key,"Harv","firsts"),:]
+            legume_price_z = legume_price_p7z.groupby(level=1).sum() #sum p7 - price should only exist in one p7 period
+            legume_price = np.sum(legume_price_z.values * z_prob_qsz) #avevrage price across z
+            expected_yields_k_z = r_vals['crop']['base_yields_k_z']
+            expected_yields_k_z = expected_yields_k_z.reindex(r_vals['pas']['keys_k'], axis=0).fillna(0)  # expand to full k (incase landuses were masked out) and unused landuses get set to 0
+            expected_legume_yield_z = expected_yields_k_z.loc[legume_key,:]
+            expected_legume_yield = np.sum(expected_legume_yield_z.values * z_prob_qsz) #avevrage yield across z.
+            summary_df.loc[trial, 'Expected {0} Income'.format(legume_name)] = round(legume_price * expected_legume_yield/1000, 0)
+        else: #if crop is not included se to None
+            summary_df.loc[trial, '{0} Area'.format(legume_name)] = ""
+            summary_df.loc[trial, 'Expected {0} Income'.format(legume_name)] = ""
+
+    
     return summary_df
 
 ############################

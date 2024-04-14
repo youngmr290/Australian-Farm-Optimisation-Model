@@ -120,15 +120,15 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         option = f_update_default_controls(user_controls, 'feed', 'option', 0)  #0 mei/hd/day & propn from each source, 1 total mei
         nv_option = f_update_default_controls(user_controls, 'feed', 'nv_option', 0)   #0 Separate NV pool, NV pool summed.
         residue_cols = f_update_default_controls(user_controls, 'feed', 'residue_cols', [])
-        dams_cols = f_update_default_controls(user_controls, 'feed', 'dams_cols', [6]) #birth opp
-        offs_cols = f_update_default_controls(user_controls, 'feed', 'offs_cols', [7]) #shear opp
+        dams_cols = f_update_default_controls(user_controls, 'feed', 'dams_cols', [2]) #k
+        offs_cols = f_update_default_controls(user_controls, 'feed', 'offs_cols', []) #shear opp
         reports["feed"] = rfun.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols, residue_cols=residue_cols)
     if report_run.loc['run_feedbudget', 'Run']:
         option = f_update_default_controls(user_controls, 'feed_total', 'option', 1)  #0 mei/hd/day & propn from each source, 1 total mei
         nv_option = f_update_default_controls(user_controls, 'feed_total', 'nv_option', 0)   #0 Separate NV pool, NV pool summed.
         residue_cols = f_update_default_controls(user_controls, 'feed_total', 'residue_cols', [])
-        dams_cols = f_update_default_controls(user_controls, 'feed_total', 'dams_cols', [6]) #birth opp
-        offs_cols = f_update_default_controls(user_controls, 'feed_total', 'offs_cols', [7]) #shear opp
+        dams_cols = f_update_default_controls(user_controls, 'feed_total', 'dams_cols', []) #birth opp
+        offs_cols = f_update_default_controls(user_controls, 'feed_total', 'offs_cols', []) #shear opp
         reports["feed_total"] = rfun.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols, residue_cols=residue_cols)
     if report_run.loc['run_feedbudget', 'Run']:
         reports["grazing"] = rfun.f_grazing_summary(lp_vars, r_vals)
@@ -968,6 +968,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     if report_run.loc['run_pgr', 'Run']:
         #returns average pgr per day per ha.
         #to get total PG change arith to 2 (den_weights won't be used)
+        #todo would be good if this could include germination but doesnt work atm because germ has r axis.
         type = 'pas'
         prod = 'pgr_grnha_gop6lzt'
         na_prod = [0,1,2] #q,s,f
@@ -1018,7 +1019,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         keys = 'keys_qsfgop6lzt'
         arith = f_update_default_controls(user_controls, 'grncon', 'arith', 2)
         index = f_update_default_controls(user_controls, 'grncon', 'index', [7,5])   #p6 z
-        cols = f_update_default_controls(user_controls, 'grncon', 'cols', [8])     #t
+        cols = f_update_default_controls(user_controls, 'grncon', 'cols', [8,6])     #t,l
         axis_slice = f_update_default_controls(user_controls, 'grncon', 'axis_slice', {})
         reports["grncon"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, prod_weights=prod_weights,
                                 type=type, weights=weights, den_weights=den_weights, na_denweights=na_denweights,
@@ -1066,11 +1067,11 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         prod = 'foo_ave_grnha_gop6lzt'
         weights = None
         keys = 'keys_gop6lzt'
-        arith = f_update_default_controls(user_controls, 'grnfoo', 'arith', 5)
-        index = f_update_default_controls(user_controls, 'grnfoo', 'index', [4,2])   #z,p6
-        cols = f_update_default_controls(user_controls, 'grnfoo', 'cols', [1,0])     #g, o
-        axis_slice = f_update_default_controls(user_controls, 'grnfoo', 'axis_slice', {})
-        reports["grnfoo"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
+        arith = f_update_default_controls(user_controls, 'avegrnfoo', 'arith', 5)
+        index = f_update_default_controls(user_controls, 'avegrnfoo', 'index', [4,2])   #z,p6
+        cols = f_update_default_controls(user_controls, 'avegrnfoo', 'cols', [1,0])     #g, o
+        axis_slice = f_update_default_controls(user_controls, 'avegrnfoo', 'axis_slice', {})
+        reports["avegrnfoo"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_drynv', 'Run']:
         #returns NV during each FP (regardless of whether selected or not)
@@ -1102,11 +1103,11 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         prod = 'dry_foo_dp6zt'
         weights = None
         keys = 'keys_dp6zt'
-        arith = f_update_default_controls(user_controls, 'dryfoo', 'arith', 5)
-        index = f_update_default_controls(user_controls, 'dryfoo', 'index', [2,1])   #z,p6
-        cols = f_update_default_controls(user_controls, 'dryfoo', 'cols', [0])     #d
-        axis_slice = f_update_default_controls(user_controls, 'dryfoo', 'axis_slice', {})
-        reports["dryfoo"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
+        arith = f_update_default_controls(user_controls, 'avedryfoo', 'arith', 5)
+        index = f_update_default_controls(user_controls, 'avedryfoo', 'index', [2,1])   #z,p6
+        cols = f_update_default_controls(user_controls, 'avedryfoo', 'cols', [0])     #d
+        axis_slice = f_update_default_controls(user_controls, 'avedryfoo', 'axis_slice', {})
+        reports["avedryfoo"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_napcon', 'Run']:
         #returns consumption in each FP

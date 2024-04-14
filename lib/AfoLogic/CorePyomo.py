@@ -722,7 +722,7 @@ def f_con_totalcap_within(model):
      '''
     def total_cap_within(model,q,s,c0,p7,z9):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
-        if pe.value(model.p_mask_childz_within_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s]):
+        if pe.value(model.p_mask_childz_within_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s]) and uinp.finance['i_working_capital_constraint_included']:
             return (-f1_grain_wc(model,q,s,c0,p7,z9) + phspy.f_rotation_wc(model,q,s,c0,p7,z9) + labpy.f_labour_wc(model,q,s,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s,c0,p7,z9) + suppy.f_sup_wc(model,q,s,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
                     - stkpy.f_stock_wc(model,q,s,c0,p7,z9) + f1_start_asset_value(model,q,s,p7,z9)
@@ -752,7 +752,7 @@ def f_con_totalcap_between(model):
     def total_cap_between(model,q,s9,c0,p7,z9):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
-        if pe.value(model.p_mask_childz_between_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]):
+        if pe.value(model.p_mask_childz_between_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and uinp.finance['i_working_capital_constraint_included']:
             return (-f1_grain_wc(model,q,s9,c0,p7,z9) + phspy.f_rotation_wc(model,q,s9,c0,p7,z9) + labpy.f_labour_wc(model,q,s9,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s9,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s9,c0,p7,z9) + suppy.f_sup_wc(model,q,s9,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
                     - stkpy.f_stock_wc(model,q,s9,c0,p7,z9) + f1_start_asset_value(model,q,s9,p7,z9)

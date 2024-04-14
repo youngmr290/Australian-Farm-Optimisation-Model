@@ -82,7 +82,7 @@ def sets(model, nv):
     #stubble              #
     #######################
     #stubble categories -  ordered so to allow transferring between categories
-    model.s_stub_cat = Set(ordered=True, initialize=pinp.stubble['i_stub_cat_idx'], doc='stubble categories')
+    model.s_stub_cat = Set(ordered=True, initialize=uinp.stubble['i_stub_cat_idx'], doc='stubble categories')
 
     #######################
     #cropping related     #
@@ -91,7 +91,7 @@ def sets(model, nv):
     model.s_grain_pools = Set(initialize=sinp.general['grain_pools'], doc='grain pools')
 
     ##biomass uses
-    model.s_biomass_uses = Set(initialize=pinp.stubble['i_idx_s2'], doc='uses of phase biomass')
+    model.s_biomass_uses = Set(initialize=uinp.stubble['i_idx_s2'], doc='uses of phase biomass')
 
     ##types of crops
     model.s_crops = Set(initialize=sinp.landuse['C'], doc='crop types')
@@ -151,7 +151,11 @@ def sets(model, nv):
     model.s_nut_dams = Set(initialize=np.array(['n%s'%i for i in range(sinp.structuralsa['i_n1_matrix_len'])]), doc='Nutrition levels in each feed period for dams')
 
     ##offs
-    model.s_sale_offs = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t3_len'])], doc='Sales within the year for offs')
+    if sinp.structuralsa['i_offs_sale_method'] == 1:
+        len_t3 = sinp.structuralsa['i_offs_sale_opportunities_per_dvp'] + 1 #+1 for retained slice
+    else:
+        len_t3 = pinp.sheep['i_t3_len']
+    model.s_sale_offs = Set(initialize=['t%s'%i for i in range(len_t3)], doc='Sales within the year for offs')
     model.s_nut_offs = Set(initialize=np.array(['n%s'%i for i in range(sinp.structuralsa['i_n3_matrix_len'])]), doc='Nutrition levels in each feed period for offs')
 
     ##prog

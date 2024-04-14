@@ -100,7 +100,7 @@ def f_structural_inp_sa(sinp_defaults):
     structuralsa['i_fs_use_number'] = fun.f_sa(structuralsa['i_fs_use_number'], sen.sav['fs_use_number'],5)
     structuralsa['i_use_pkl_condensed_start_condition'] = fun.f_sa(structuralsa['i_use_pkl_condensed_start_condition'], sen.sav['use_pkl_condensed_start_condition'],5)
     structuralsa['i_r2adjust_inc'] = fun.f_sa(structuralsa['i_r2adjust_inc'], sen.sav['r2adjust_inc'],5)
-
+    structuralsa['i_differentiate_wet_dry_seeding'] = fun.f_sa(structuralsa['i_differentiate_wet_dry_seeding'], sen.sav['differentiate_wet_dry_seeding'], 5)
     ##report controls
     ###SAV
     rep['i_store_nv_rep'] = fun.f_sa(rep['i_store_nv_rep'], sen.sav['nv_inc'], 5)
@@ -192,8 +192,8 @@ def f_landuse_sets():
     #Landuse sets used in to build rotations #
     ##########################################
     landuse['A1']={'a', 'A1'} #annual yr1
-    landuse['A2']={'A2', 'A1'} #annual yr2
-    landuse['A']={'A', 'A2'
+    landuse['A2']={'A2', 'A1'} #annual yr2 - A1 and A2 exist so that S can be differentiated from A in those years
+    landuse['A']={'a', 'A', 'A2'
                     , 'S'
                     , 'M'} #annual
     landuse['B']={'B', 'b', 'bd'} #barleys
@@ -206,8 +206,7 @@ def f_landuse_sets():
     landuse['OF']={'OF', 'of'} #oats fodder
     landuse['F']={'F', 'f'} #faba
     landuse['L']={'L', 'l'} #lupin
-    landuse['S1']={'S1','s'} #spray topped pasture yr1 - needs to be numbered so that sr cannot provide S in yr1
-    landuse['S']={'S','S1'} #spray topped pasture yr1
+    landuse['S']={'s', 'S','S1'} #spray topped pasture yr1
     landuse['SP']={'SP','sp'} #salt land pasture (can only be in a cont rotation)
     landuse['T']={'T', 't', 'J', 'j'} #tedera - also includes manipulated tedera because it is combined in yrs 3,4,5
     landuse['W']={'W', 'w', 'wd'} #wheats

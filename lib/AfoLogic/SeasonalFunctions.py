@@ -81,21 +81,18 @@ def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
         ##weighted average if steady state
         if pinp.general['steady_state']:
             z_prob = pd.Series(z_prob, index=keys_z)
-            if axis==0:
-                sum_level = list(range(inp.index.nlevels))
-            else:
-                sum_level = list(range(inp.columns.nlevels))
+            sum_level = list(range(inp.columns.nlevels))
 
             del sum_level[level]
             if sum_level == []:
-                inp = inp.mul(z_prob, axis=axis, level=level).sum(axis=axis)
-                inp = pd.concat([inp],keys=[keys_z[0]],axis=axis) #add z0 index key
+                inp = inp.mul(z_prob, axis=1, level=level).sum(axis=1)
+                inp = pd.concat([inp],keys=[keys_z[0]],axis=1) #add z0 index key
             else:
-                inp = inp.mul(z_prob, axis=axis, level=level).groupby(axis=axis, level=sum_level).sum()
-                inp = pd.concat([inp],keys=[keys_z[0]],axis=axis) #add z0 index key
+                inp = inp.mul(z_prob, axis=1, level=level).groupby(axis=1, level=sum_level).sum()
+                inp = pd.concat([inp],keys=[keys_z[0]],axis=1) #add z0 index key
                 col_level_order = sum_level[:]
                 col_level_order.insert(level,0)
-                inp = inp.reorder_levels(col_level_order, axis=axis).sort_index(axis=axis)
+                inp = inp.reorder_levels(col_level_order, axis=1).sort_index(axis=1)
     return inp
 
 def f_keys_z():

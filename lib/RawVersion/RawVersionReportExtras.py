@@ -462,7 +462,7 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         stacked_reports["stacked_grndmd"] = rfun.f_append_dfs(stacked_reports["stacked_grndmd"], grndmd)
 
     if report_run.loc['run_avegrnfoo', 'Run']:
-        grnfoo = pd.concat([reports["grnfoo"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        grnfoo = pd.concat([reports["avegrnfoo"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_avegrnfoo"] = rfun.f_append_dfs(stacked_reports["stacked_avegrnfoo"], grnfoo)
 
     if report_run.loc['run_drynv', 'Run']:
@@ -474,7 +474,7 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         stacked_reports["stacked_drydmd"] = rfun.f_append_dfs(stacked_reports["stacked_drydmd"], drydmd)
 
     if report_run.loc['run_avedryfoo', 'Run']:
-        dryfoo = pd.concat([reports["dryfoo"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        dryfoo = pd.concat([reports["avedryfoo"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_avedryfoo"] = rfun.f_append_dfs(stacked_reports["stacked_avedryfoo"], dryfoo)
 
     if report_run.loc['run_napcon', 'Run']:

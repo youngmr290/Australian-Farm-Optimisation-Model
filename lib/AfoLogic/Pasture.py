@@ -131,6 +131,7 @@ def f_pasture(params, r_vals, nv):
     # c_fxg_bi_op6lt               = np.zeros(op6lt, dtype = 'float64')     # coefficient b for the FOO/growth/grazing variables. PGR = a + b FOO
 
     i_grn_dig_p6lzt              = np.zeros(p6lzt, dtype = 'float64') # green pasture digestibility in each period, LMU, season & pasture type.
+    i_soil_production_lzt              = np.zeros(lzt, dtype = 'float64') # green pasture digestibility in each period, LMU, season & pasture type.
     i_poc_intake_daily_p6lzt      = np.zeros(p6lzt, dtype = 'float64')  # intake per day of pasture on crop paddocks prior to seeding
     i_lmu_conservation_p6lzt      = np.zeros(p6lzt, dtype = 'float64')  # minimum foo at end of each period to reduce risk of wind & water erosion
 
@@ -306,6 +307,7 @@ def f_pasture(params, r_vals, nv):
         i_fxg_pgr_op6lzt[1,...,t]        = zfun.f_seasonal_inp(np.moveaxis(exceldata['MedPGR'],0,-1), numpy=True, axis=-1)
         i_fxg_pgr_op6lzt[2,...,t]        = zfun.f_seasonal_inp(np.moveaxis(exceldata['MedPGR'],0,-1), numpy=True, axis=-1)  #PGR for high (last entry) is the same as PGR for medium
         i_grn_dig_p6lzt[...,t]           = zfun.f_seasonal_inp(np.moveaxis(exceldata['DigGrn'],0,-1), numpy=True, axis=-1)  # numpy array of inputs for green pasture digestibility on each LMU.
+        i_soil_production_lzt[...,t]           = zfun.f_seasonal_inp(exceldata['i_soil_production_zl'], numpy=True, axis=0).T  # numpy array of inputs for green pasture digestibility on each LMU.
 
         ###to handle different length rotation phases (ie simulation is shorter than pinp) the germ df needs to be sliced.
         offset = exceldata['GermPhases'].shape[-1] - len(phases_rotn_df.columns) - 1 #minus 1 because germ inputs has extra col
@@ -360,6 +362,8 @@ def f_pasture(params, r_vals, nv):
     ###dry transfer required is the amount of dry feed required in the current period to transfer into the next period (1000 mask by dry exists)
     dry_transfer_req_t_p6zt = 1000 * mask_dryfeed_exists_p6zt #this parameter exists so that the constraint wont be built for fp when no dry feed exists.
 
+    ###adjust pgr for loil by weather-year scalar - this accounts for the fact that relativesoil production can vary due to weather-year
+    i_fxg_pgr_op6lzt = i_fxg_pgr_op6lzt * i_soil_production_lzt
     ###create equation coefficients for pgr = a+b*foo
     i_fxg_foo_op6lzt[2,...]  = 100000 #large number so that the np.searchsorted doesn't go above
     c_fxg_b_op6lzt[0,...] =  fun.f_divide(i_fxg_pgr_op6lzt[0,...], i_fxg_foo_op6lzt[0,...])

@@ -188,6 +188,7 @@ def f_landuses_phases(params,r_vals):
     params['phases_rk'] = dict.fromkeys(phases_rk.index,1)
 
     ##store r_vals
+    fun.f1_make_r_val(r_vals,pd.Series(pinp.general['i_crop_landuse_inc_k1'], index=sinp.landuse['C']),'crop_landuse_inc_k1')
     fun.f1_make_r_val(r_vals,phases,'phases')
     fun.f1_make_r_val(r_vals,sinp.landuse['All_pas'],'all_pastures')#all_pas2 includes the cont pasture landuses
     fun.f1_make_r_val(r_vals,sinp.landuse['C'],'all_crops')
@@ -197,7 +198,7 @@ def f_landuses_phases(params,r_vals):
     fun.f1_make_r_val(r_vals,sinp.landuse['OF'],'fodder') #strategical fodder
 
 
-def f_rot_lmu_params(params):
+def f_rot_lmu_params(params, r_vals):
     '''
     Create parameters for the total area available on each LMU and the total area that is never cropped on each lmu due
     to topography, paddock location or farmer preference.
@@ -206,6 +207,10 @@ def f_rot_lmu_params(params):
     ##area
     params['lmu_area'] = dict(zip(pinp.general['i_lmu_idx'], pinp.general['i_lmu_area']))
     params['p_not_cropable_area_l'] = dict(zip(pinp.general['i_lmu_idx'], pinp.general['i_non_cropable_area_l']))
+
+    ##store r_vals
+    fun.f1_make_r_val(r_vals, np.sum(pinp.general['i_lmu_area']),'total_farm_area')
+
 
 
 def f_phase_link_params(params):

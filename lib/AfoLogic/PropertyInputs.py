@@ -98,10 +98,6 @@ def f_reshape_pinp_defaults(pinp_defaults, sinp_defaults):
             inp['MedPGR'] = np.reshape(inp['MedPGR'], zp6l)
             inp['DigGrn'] = np.reshape(inp['DigGrn'], zp6l)
 
-        ###crop grazing
-        cropgraze_inp = pinp_defaults[property]['cropgraze_inp']
-        cropgraze_inp['i_crop_growth_zkp6'] = np.reshape(cropgraze_inp['i_crop_growth_zkp6'], zkp6)
-
         ###saltbush
         saltbush_inp = pinp_defaults[property]['saltbush_inp']
         saltbush_inp['i_sb_expected_foo_zp6'] = np.reshape(saltbush_inp['i_sb_expected_foo_zp6'], zp6)
@@ -224,6 +220,7 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
 
     ##crop
     fun.f1_lmuregion_to_lmufarmer(crop, "yield_by_lmu", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(crop, "i_soil_production_z_l", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(crop, "frost", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(crop, "fert_by_lmu", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(crop, "chem_by_lmu", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
@@ -245,6 +242,7 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
         fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "LowPGR", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
         fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "MedFOO", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
         fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "MedPGR", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
+        fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "i_soil_production_zl", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
         fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "DigGrn", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
         fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "POCCons", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
         fun.f1_lmuregion_to_lmufarmer(pasture_inputs[pasture], "ErosionLimit", a_lmuregion_lmufarmer, lmu_axis=2, lmu_flag=lmu_flag)
@@ -520,7 +518,7 @@ def f1_expand_p6():
     ####crop grazing
     cropgraze['i_cropgraze_yield_reduction_kp6z'] = np.take_along_axis(cropgraze['i_cropgraze_yield_reduction_kp6'][...,na], a_p6std_p6z[na,...], axis=1)
     cropgraze['i_crop_dmd_kp6z'] = np.take_along_axis(cropgraze['i_crop_dmd_kp6'][...,na], a_p6std_p6z[na,...], axis=1)
-    cropgraze['i_crop_growth_zkp6'] = np.take_along_axis(cropgraze['i_crop_growth_zkp6'], a_p6std_zp6[:,na,:], axis=2)
+    cropgraze['i_crop_growth_zp6'] = np.take_along_axis(cropgraze['i_crop_growth_zp6'], a_p6std_zp6[:,:], axis=1)
     cropgraze['i_cropgraze_consumption_factor_zp6'] = np.take_along_axis(cropgraze['i_cropgraze_consumption_factor_zp6'], a_p6std_zp6, axis=1)
 
     ###saltbush
@@ -606,6 +604,7 @@ def f1_mask_lmu():
 
     ##crop
     f1_do_mask_lmu(crop, "yield_by_lmu", lmu_axis=1)
+    f1_do_mask_lmu(crop, "i_soil_production_z_l", lmu_axis=1)
     f1_do_mask_lmu(crop, "frost", lmu_axis=1)
     f1_do_mask_lmu(crop, "fert_by_lmu", lmu_axis=1)
     f1_do_mask_lmu(crop, "chem_by_lmu", lmu_axis=1)
@@ -628,6 +627,7 @@ def f1_mask_lmu():
         f1_do_mask_lmu(pasture_inputs[pasture], "MedFOO", lmu_axis=2)
         f1_do_mask_lmu(pasture_inputs[pasture], "MedPGR", lmu_axis=2)
         f1_do_mask_lmu(pasture_inputs[pasture], "DigGrn", lmu_axis=2)
+        f1_do_mask_lmu(pasture_inputs[pasture], "i_soil_production_zl", lmu_axis=1)
         f1_do_mask_lmu(pasture_inputs[pasture], "POCCons", lmu_axis=1)
         f1_do_mask_lmu(pasture_inputs[pasture], "ErosionLimit", lmu_axis=2)
 
@@ -682,7 +682,16 @@ def f1_phases(d_rot_info):
         base_yields = pd.read_excel(xl_path, sheet_name='Yield', index_col=0, header=0, engine='openpyxl')
     ###if the rotations don't match inputs then rerun rotation generation.
     if len(phases_r) != len(base_yields) or any(base_yields.index!=phases_r.index):
-        from . import RotGeneration
+        ###maybe there is a better way to do this rather than using if statements.
+        property = general['i_property_id']
+        if property=="EWW":
+            from . import RotGeneration_EWW as RotGeneration
+        elif property=="GSW":
+            from . import RotGeneration_GSW as RotGeneration
+        elif property=="CWW":
+            from . import RotGeneration_CWW as RotGeneration
+        else:
+            from . import RotGeneration
         d_rot_info = RotGeneration.f_rot_gen(crop['user_crop_rot'])
         phases_r = d_rot_info["phases_r"]
         rot_req = d_rot_info["rot_req"]
