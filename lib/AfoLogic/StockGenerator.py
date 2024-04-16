@@ -10096,7 +10096,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg1,'salegrid_tva1e1b1nwziyg1', shape=tva1e1b1nwziyg1_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg2,'salegrid_Tva1e1b1nwzixyg2', shape=Tva1e1b1nwzixyg2_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
     fun.f1_make_r_val(r_vals,np.broadcast_to(r_saleage_tva1e1b1nwzida0e0b0xyg3, r_salegrid_tva1e1b1nwzida0e0b0xyg3.shape),
-                      'saleage_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #need to broadcast because some axes are not active with sale method 1 (sale split within dvp). Also didn't worry about unclustering since not important report and wasn't masked by z8
+                      'saleage_tvnwzida0e0b0xyg3', mask_z8var_va1e1b1nwzida0e0b0xyg3, z_pos, shape=tvnwzidaebxyg3_shape) #need to broadcast because some axes are not active with sale method 1 (sale split within dvp). Also didn't worry about unclustering since not important report and wasn't masked by z8
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg3,'salegrid_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
     fun.f1_make_r_val(r_vals,np.broadcast_to(r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3, r_cfw_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3.shape),
                       'saledate_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape) #need to broadcast because some axes are not active with sale method 1 (sale split within dvp).
