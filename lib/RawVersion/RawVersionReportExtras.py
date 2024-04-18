@@ -603,6 +603,10 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_salegrid_offs"], 'salegrid_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_saleage_offs', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_saleage_offs"], 'saleage_offs', df_settings, option=xl_display_mode)
+    if report_run.loc['run_saledate_offs', 'Run']:
+        reports["stacked_saledate_offs"] = reports["stacked_saledate_offs"].astype(object)
+        reports["stacked_saledate_offs"][reports["stacked_saledate_offs"]==np.datetime64('1970-01-01')] = 0
+        df_settings = rfun.f_df2xl(writer, reports["stacked_saledate_offs"], 'saledate_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_salevalue_offs', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_salevalue_offs"], 'salevalue_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_salevalue_dams', 'Run']:
@@ -613,10 +617,6 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_woolvalue_offs"], 'woolvalue_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_woolvalue_dams', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_woolvalue_dams"], 'woolvalue_dams', df_settings, option=xl_display_mode)
-    if report_run.loc['run_saledate_offs', 'Run']:
-        reports["stacked_saledate_offs"] = reports["stacked_saledate_offs"].astype(object)
-        reports["stacked_saledate_offs"][reports["stacked_saledate_offs"]==np.datetime64('1970-01-01')] = 0
-        df_settings = rfun.f_df2xl(writer, reports["stacked_saledate_offs"], 'saledate_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_cfw_dams', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_cfw_dams"], 'cfw_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_fd_dams', 'Run']:
