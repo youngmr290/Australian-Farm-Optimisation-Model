@@ -134,11 +134,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###################################
     ## calculate masks                #
     ###################################
+    ##select which breeds are included
+    i_g3_inc = pinp.sheep['i_g3_inc']
+    ##if generating for stubble then overwrite genotype selection
+    if stubble:
+        i_g3_inc = stubble['i_g3_inc']
+
     ##masks required for initialising arrays
-    mask_sire_inc_g0 = np.any(sinp.stock['i_mask_g0g3'] * pinp.sheep['i_g3_inc'], axis =1)
-    mask_dams_inc_g1 = np.any(sinp.stock['i_mask_g1g3'] * pinp.sheep['i_g3_inc'], axis =1)
-    mask_yatf_inc_g2 = np.any(sinp.stock['i_mask_g2g3'] * pinp.sheep['i_g3_inc'], axis =1)
-    mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis =1)
+    mask_sire_inc_g0 = np.any(sinp.stock['i_mask_g0g3'] * i_g3_inc, axis =1)
+    mask_dams_inc_g1 = np.any(sinp.stock['i_mask_g1g3'] * i_g3_inc, axis =1)
+    mask_yatf_inc_g2 = np.any(sinp.stock['i_mask_g2g3'] * i_g3_inc, axis =1)
+    mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * i_g3_inc, axis =1)
     ##o/d mask - if dob is after the end of the sim then it is masked out -  the mask is created before the date of birth is adjusted to the start of a period however it is adjusted to the start of the next period so the mask won't cut out a birth event that actually would occur, additionally this is the birth of the first however the matrix sees the birth of average animal which is also later therefore if anything the mask will leave in unnecessary o slices
     date_born1st_oa1e1b1nwzida0e0b0xyg2 = fun.f_expand(pinp.sheep['i_date_born1st_iog2'], i_pos, right_pos=g_pos, swap=True,
                                                       left_pos2=p_pos,right_pos2=i_pos, condition=mask_yatf_inc_g2, axis=g_pos,
@@ -639,11 +645,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ############################
     ##select the genotype
     a_c2_c0 = pinp.sheep['a_c2_c0']
-    i_g3_inc = pinp.sheep['i_g3_inc']
     ##if generating for stubble then overwrite genotype selection
     if stubble:
         a_c2_c0 = stubble['a_c2_c0']
-        i_g3_inc = stubble['i_g3_inc']
 
     ##association for the retained t of each g slice
     a_t_g1 = np.arange(pinp.sheep['i_n_dam_sales'], pinp.sheep['i_n_dam_sales']+len_g1)
@@ -815,7 +819,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     '''if running the gen for stubble generation then the weather info above gets overwritten with stubble trial info
     '''
     if stubble:
-        legume_p6a1e1b1nwzida0e0b0xyg[...] = pinp.stubble['clover_propn_in_sward_stubble']
+        legume_p6a1e1b1nwzida0e0b0xyg[...] = uinp.stubble['clover_propn_in_sward_stubble']
         density_p6a1e1b1nwzida0e0b0xyg[...] = stubble['i_sr']
         ws_p4a1e1b1nwzida0e0b0xyg[...] = stubble['i_ws']
         rain_p4a1e1b1nwzida0e0b0xygp0[...] = stubble['i_rain']
@@ -10092,7 +10096,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg1,'salegrid_tva1e1b1nwziyg1', shape=tva1e1b1nwziyg1_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg2,'salegrid_Tva1e1b1nwzixyg2', shape=Tva1e1b1nwzixyg2_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
     fun.f1_make_r_val(r_vals,np.broadcast_to(r_saleage_tva1e1b1nwzida0e0b0xyg3, r_salegrid_tva1e1b1nwzida0e0b0xyg3.shape),
-                      'saleage_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #need to broadcast because some axes are not active with sale method 1 (sale split within dvp). Also didn't worry about unclustering since not important report and wasn't masked by z8
+                      'saleage_tvnwzida0e0b0xyg3', mask_z8var_va1e1b1nwzida0e0b0xyg3, z_pos, shape=tvnwzidaebxyg3_shape) #need to broadcast because some axes are not active with sale method 1 (sale split within dvp). Also didn't worry about unclustering since not important report and wasn't masked by z8
     fun.f1_make_r_val(r_vals,r_salegrid_tva1e1b1nwzida0e0b0xyg3,'salegrid_tvnwzida0e0b0xyg3', shape=tvnwzidaebxyg3_shape) #didn't worry about unclustering since not important report and wasn't masked by z8
     fun.f1_make_r_val(r_vals,np.broadcast_to(r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3, r_cfw_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3.shape),
                       'saledate_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape) #need to broadcast because some axes are not active with sale method 1 (sale split within dvp).
