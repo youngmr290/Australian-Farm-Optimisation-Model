@@ -2844,12 +2844,15 @@ def f_stock_numbers_summary(r_vals):
                                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
     ###age at sale
     type = 'stock'
-    prod = 'saleage_tvnwzida0e0b0xyg3'
-    keys = 'offs_keys_tvnwzida0e0b0xyg3'
-    arith = 0
-    index = [0,1] #tv
+    prod = 'saleage_k3k5tvnwziaxyg3'
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = []
+    keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+    arith = 1
+    index = [4,5] #tv
     cols = []  #
-    saleage_offs_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, keys=keys, arith=arith, index=index, cols=cols)
+    saleage_offs_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, weights=weights,na_weights=na_weights,
+                                              keys=keys, arith=arith, index=index, cols=cols)
     ###add sale age as headers
     sale_numbers_offs_y_tv.columns = np.round(saleage_offs_tv.values.squeeze() / 30, 0) #div 30 to convert to months
     sale_numbers_offs_y_tv = sale_numbers_offs_y_tv.sort_index(axis=1)
