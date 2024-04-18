@@ -3033,6 +3033,8 @@ def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
     :param axis_slice: dict: containing list of with slice params (start, stop, step)
     :return: prod array
     '''
+    ### if arith is being conducted these arrays need to be the same size so slicing can work
+    prod, prod_weights, weights, den_weights = np.broadcast_arrays(prod, prod_weights, weights, den_weights)
     ##slice axis - slice the keys and the array - if user hasn't specified slice the whole axis will be included
     sl = [slice(None)] * prod.ndim
     keys = keys.copy()  # need to copy so that it doesn't change the underlying array (because assigning in a loop)
@@ -3043,8 +3045,6 @@ def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
         sl[axis] = slice(start, stop, step)
         keys[axis] = keys[axis][start:stop:step]
     ###apply slice to np array
-    ### if arith is being conducted these arrays need to be the same size so slicing can work
-    prod, prod_weights, weights, den_weights = np.broadcast_arrays(prod, prod_weights, weights, den_weights)
     prod = prod[tuple(sl)]
     prod_weights = prod_weights[tuple(sl)]
     weights = weights[tuple(sl)]
