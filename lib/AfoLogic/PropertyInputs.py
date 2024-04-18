@@ -445,7 +445,7 @@ def f_property_inp_sa(pinp_defaults):
     sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.sav['r2_isk2g1'],5)
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.sav['r1_izg3'],5)
     sheep['ia_r2_ik0g3'] = fun.f_sa(sheep['ia_r2_ik0g3'], sen.sav['r2_ik0g3'],5)
-    sheep['i_sr_constraint_t'] = fun.f_sa(sheep['i_sr_constraint_t'], sen.sav['bnd_sr_t'],5)
+    sheep['i_sr_constraint_t'] = fun.f_sa(sheep['i_sr_constraint_t'].astype(float), sen.sav['bnd_sr_t'],5)
     feedsupply['i_feedsupply_adj_options_r2p'] = fun.f_sa(feedsupply['i_feedsupply_adj_options_r2p'], sen.sav['feedsupply_adj_r2p'], 5)   #SAV before SAA allows the Property.xl inputs to be overwritten with 0 and then add SAA values from exp.xl
 
     ###sam
