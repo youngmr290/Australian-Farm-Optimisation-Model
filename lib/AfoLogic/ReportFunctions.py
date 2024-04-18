@@ -2271,7 +2271,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     keys_p6 = r_vals['pas']['keys_p6']
     keys_z = r_vals['zgen']['keys_z']
     fp_dates = r_vals['pas']['fp_date_start_p6z']
-    fp_dates = pd.DataFrame(fp_dates, index=keys_p6, columns=keys_z).T.stack()
+    fp_dates = pd.DataFrame(np.maximum(1, fp_dates), index=keys_p6, columns=keys_z).T.stack() #min 1 because to_datetime cant handle 0.
     fp_dates = pd.to_datetime(fp_dates, format='%j').dt.strftime('%d-%b')
     if nv_option == 0:
         fp_idx = feed_budget.index.droplevel([0,1,-1]).tolist()
