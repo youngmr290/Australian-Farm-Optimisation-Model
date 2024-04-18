@@ -117,14 +117,14 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         profitarea.loc[trial_name,'profit'] = rfun.f_profit(lp_vars,r_vals,profit_option)
         reports["profitarea"] = profitarea
     if report_run.loc['run_feedbudget', 'Run']:
-        option = f_update_default_controls(user_controls, 'feed', 'option', 0)  #0 mei/hd/day & propn from each source, 1 total mei
+        option = f_update_default_controls(user_controls, 'feed', 'option', 0)  #0 mei/hd/day & propn from each source, 1 total mei/d
         nv_option = f_update_default_controls(user_controls, 'feed', 'nv_option', 0)   #0 Separate NV pool, NV pool summed.
         residue_cols = f_update_default_controls(user_controls, 'feed', 'residue_cols', [])
         dams_cols = f_update_default_controls(user_controls, 'feed', 'dams_cols', [2]) #k
         offs_cols = f_update_default_controls(user_controls, 'feed', 'offs_cols', []) #shear opp
         reports["feed"] = rfun.f_feed_budget(lp_vars, r_vals, option=option, nv_option=nv_option, dams_cols=dams_cols, offs_cols=offs_cols, residue_cols=residue_cols)
     if report_run.loc['run_feedbudget', 'Run']:
-        option = f_update_default_controls(user_controls, 'feed_total', 'option', 1)  #0 mei/hd/day & propn from each source, 1 total mei
+        option = f_update_default_controls(user_controls, 'feed_total', 'option', 1)  #0 mei/hd/day & propn from each source, 1 total mei/d
         nv_option = f_update_default_controls(user_controls, 'feed_total', 'nv_option', 0)   #0 Separate NV pool, NV pool summed.
         residue_cols = f_update_default_controls(user_controls, 'feed_total', 'residue_cols', [])
         dams_cols = f_update_default_controls(user_controls, 'feed_total', 'dams_cols', []) #birth opp
