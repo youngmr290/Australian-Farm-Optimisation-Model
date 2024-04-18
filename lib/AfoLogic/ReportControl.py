@@ -227,13 +227,14 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_saleage_offs', 'Run']:
         type = 'stock'
-        prod = 'saleage_tvnwzida0e0b0xyg3'
-        keys = 'offs_keys_tvnwzida0e0b0xyg3'
+        prod = 'saleage_k3k5tvnwziaxyg3'
+        na_prod = [0,1]  # q,s
+        keys = 'offs_keys_qsk3k5tvnwziaxyg3'
         arith = f_update_default_controls(user_controls, 'saleage_offs', 'arith', 0)
-        index = f_update_default_controls(user_controls, 'saleage_offs', 'index', [1])
-        cols = f_update_default_controls(user_controls, 'saleage_offs', 'cols', [0,6,9,10,12]) #t,d,b,x,g
+        index = f_update_default_controls(user_controls, 'saleage_offs', 'index', [5]) #v
+        cols = f_update_default_controls(user_controls, 'saleage_offs', 'cols', [13, 2, 3, 4, 11]) #g3, dam age, BTRT, t, gender
         axis_slice = f_update_default_controls(user_controls, 'saleage_offs', 'axis_slice', {})
-        reports["saleage_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod,
+        reports["saleage_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_saledate_offs', 'Run']:
         type = 'stock'
