@@ -506,7 +506,8 @@ def f_fert_passes():
     nap_fert_passes_rz_nl = nap_fert_passes_rz_n.reindex(col_nl, axis=1,level=0)
     fert_passes_rz_nl=fert_passes_rz_nl.mul(arable_l,axis=1,level=1)
     nap_fert_passes_rz_nl=nap_fert_passes_rz_nl.mul(arable_l,axis=1,level=1)
-    return fert_passes_rz_nl.fillna(0).stack(1) + nap_fert_passes_rz_nl.fillna(0).stack(1)
+    total_fert_passes_rz_nl = fert_passes_rz_nl.fillna(0).stack(1) + nap_fert_passes_rz_nl.fillna(0).stack(1)
+    return total_fert_passes_rz_nl.sort_index()
 
 
 def f1_fertilising_time():
