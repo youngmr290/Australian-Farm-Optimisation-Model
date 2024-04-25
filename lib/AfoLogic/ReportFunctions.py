@@ -2859,6 +2859,8 @@ def f_stock_numbers_summary(r_vals):
     ####add wether and crossy prog that were sold (they need to be included in the number of lambs born)
     sale_numbers_offs_y_tv.insert(0, "Weaning",0)
     sale_numbers_offs_y_tv.iloc[0,0] = wether_prog_sold
+    ###sum cols with same sale age (to stop error when concat the report with other trials because of duplicate col names)
+    sale_numbers_offs_y_tv = sale_numbers_offs_y_tv.groupby(sale_numbers_offs_y_tv.columns, axis=1).sum()
     
     ###concat open, birth and sale
     numbers_offs = pd.concat([sale_numbers_offs_y_tv], keys=['Sales (months of age)'], axis=1)
