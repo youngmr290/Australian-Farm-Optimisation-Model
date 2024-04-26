@@ -43,7 +43,7 @@ def f1_boundarypyomo_local(params, model):
 
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
-    rot_lobound_inc = fun.f_sa(False, sen.sav['bnd_rotn_inc'], 5)  #controls rot bound
+    rot_lobound_inc = np.any(sen.sav['rot_lobound_rl'] != '-')  #controls rot bound
     slp_area_inc = np.any(sen.sav['bnd_slp_area_l'][lmu_mask] != '-') #control the area of salt land pasture
     sb_upbound_inc = np.any(sen.sav['bnd_sb_consumption_p6'] != '-') #upper bound on the quantity of saltbush consumed
     sup_lobound_inc = False #controls sup feed bound
