@@ -175,7 +175,7 @@ def f_landuse_sets():
     landuse['P']={'P','K','L', 'F', 'f','i', 'k', 'l', 'v'} #pulses
     landuse['E']={'E','B','O','O1','W', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd'} #cereals
     landuse['Ag0']={'a', 'a2', 's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
-    landuse['Ag1']={'Ag1', 'A1', 'a'} #all non-spraytopped annual sets that can exist in yr1
+    landuse['Ag1']={'A', 'Ag1', 'A1', 'a'} #all non-spraytopped annual sets that can exist in yr1. This also include 'A' to handle cases when A1 is not used (A1 not required unless differentiating S and A in yr1).
     landuse['Ag2']={'Ag2', 'A', 'A2', 'A1'
                     , 'S', 'S1'
                     , 'M'} #all annual sets that can exist in yr2
@@ -193,7 +193,7 @@ def f_landuse_sets():
     ##########################################
     landuse['A1']={'a', 'A1'} #annual yr1
     landuse['A2']={'A2', 'A1'} #annual yr2 - A1 and A2 exist so that S can be differentiated from A in those years
-    landuse['A']={'a', 'A', 'A2'
+    landuse['A']={'a', 'A', 'A2', 'A1' #this includes A1 because some regions dont have A2 (A2 not required if S and A are not differentiated in yr2)
                     , 'S'
                     , 'M'} #annual
     landuse['B']={'B', 'b', 'bd'} #barleys

@@ -155,14 +155,14 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
                         # , 'j', 't', 'jr', 'tr'])
         yr1 = np.array([
                'B','W', 'N', 'L', 'OF'#'F',,'O1'
-               , 'A'
+               , 'A1'
                , 'S'])
                # , 'M'
                 # , 'U'
                 # , 'X'
                 # , 'T', 'J'])
         yr2 = np.array(['B','O','W', 'N', 'L'#, 'F'
-               , 'A'])
+               , 'A'])# we dont track A2 because A2 is only required if S is being differentiated in yr2
                # , 'S' #for EWW we are not representing that two spraytopped pastures is better than one.
                # , 'M'
                 # , 'U'
@@ -275,8 +275,8 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
             # a_index2 = np.all(~np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR','SR1','A1','A2','A','M','S','S1']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['a', 's','m','A1','A2','A','M','S','S1'])
             # phases = phases[~a_index2]
 
-        cont_annual = np.array([['S', 'A', 'A2', 'A1', 'a']
-                               , ['A', 'S', 'A2', 'A1', 'a']
+        cont_annual = np.array([['S', 'A', 'A', 'A1', 'a']
+                               , ['A', 'S', 'A', 'A1', 'a']
                                , ['A', 'A', 'S', 'A1', 'a']
                                ])
         phases = np.concatenate((phases, cont_annual))
@@ -426,7 +426,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
             for i in range(len(hist)):
                 req*=np.isin(rot_phase[i], list(l_hist[i]))  #checks each set in a given rotation for the req part of the equation
                 prov*=np.isin(rot_phase[i+1],list(l_hist[i])) #checks each set in a given rotation for the prov part of the equation
-            if not any(all(hist == h) for h in pnc_hist): #ignore pnc phases in the error check
+            if not any(all(hist == h) for h in pnc_hist) or rot_phase[-1]=='a2': #For the error check, ignore pnc histories unless current landuse is a2 - otherwise rotations just provide pnc and we dont catch errors
                 test+=prov
                 test2+=req
             mps_bool_req.append(req)
