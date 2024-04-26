@@ -428,7 +428,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
             for i in range(len(hist)):
                 req*=np.isin(rot_phase[i], list(l_hist[i]))  #checks each set in a given rotation for the req part of the equation
                 prov*=np.isin(rot_phase[i+1],list(l_hist[i])) #checks each set in a given rotation for the prov part of the equation
-            if not any(all(hist == h) for h in pnc_hist): #ignore pnc phases in the error check
+            if not any(all(hist == h) for h in pnc_hist) or rot_phase[-1]=='a2': #For the error check, ignore pnc histories unless current landuse is a2 - otherwise rotations just provide pnc and we dont catch errors
                 test+=prov
                 test2+=req
             mps_bool_req.append(req)
