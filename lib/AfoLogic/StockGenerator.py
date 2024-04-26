@@ -8097,10 +8097,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     date_initiate_zidaebxyg = fun.f_expand(date_initiate_z, z_pos)
     index_zidaebxyg = fun.f_expand(index_z, z_pos)
     ##dams child parent transfer
+    t_dvp_date_for_season_mask_vg1 = dvp_start_va1e1b1nwzida0e0b0xyg1.copy() #create copy so i can modify the dvp dates.
+    t_dvp_date_for_season_mask_vg1[0, ...] = date_weaned_ida0e0b0xyg1 #for z8 mask we need the first dvp date to be weaning so that the function can tell which seasons exist in dvp0 (ie if dvpdate[0]==0 and the first dvp is a node period the model will think the season exists in dvp[0] when infact it is identified in dvp[1]).
     mask_provwithinz8z9_va1e1b1nwzida0e0b0xyg1z9, mask_provbetweenz8z9_va1e1b1nwzida0e0b0xyg1z9, \
     mask_childz_reqwithin_va1e1b1nwzida0e0b0xyg1, mask_childz_reqbetween_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(
-        dvp_start_va1e1b1nwzida0e0b0xyg1, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg1==season_vtype1, z_pos=z_pos)
-    mask_z8var_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, z_pos=z_pos, mask=True)
+        t_dvp_date_for_season_mask_vg1, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg1==season_vtype1, z_pos=z_pos)
+    mask_z8var_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(t_dvp_date_for_season_mask_vg1, z_pos=z_pos, mask=True)
     ###create z8z9 param that is index with v
     ####cluster e and b (e axis is active from the dvp dates)
     mask_childz_reqwithin_k2tva1e1b1nwzida0e0b0xyg1 = 1 * (np.sum(mask_childz_reqwithin_va1e1b1nwzida0e0b0xyg1
@@ -8117,10 +8119,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                   axis=(e1_pos-1,b1_pos-1), keepdims=True) > 0)
 
     ##offs child parent transfer
+    t_dvp_date_for_season_mask_vg3 = dvp_start_va1e1b1nwzida0e0b0xyg3.copy() #create copy so i can modify the dvp dates.
+    t_dvp_date_for_season_mask_vg3[0, ...] = date_weaned_ida0e0b0xyg3 #for z8 mask we need the first dvp date to be weaning so that the function can tell which seasons exist in dvp0 (ie if dvpdate[0]==0 and the first dvp is a node period the model will think the season exists in dvp[0] when infact it is identified in dvp[1]).
     mask_provwithinz8z9_va1e1b1nwzida0e0b0xyg3z9, mask_provbetweenz8z9_va1e1b1nwzida0e0b0xyg3z9, \
     mask_childz_reqwithin_va1e1b1nwzida0e0b0xyg3, mask_childz_reqbetween_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(
-        dvp_start_va1e1b1nwzida0e0b0xyg3, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg3==season_vtype3, z_pos=z_pos)
-    mask_z8var_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg3, z_pos=z_pos, mask=True)
+        t_dvp_date_for_season_mask_vg3, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg3==season_vtype3, z_pos=z_pos)
+    mask_z8var_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(t_dvp_date_for_season_mask_vg3, z_pos=z_pos, mask=True)
     ###create z8z9 param that is index with v
     ####cluster d (d axis is active from the dvp dates)
     mask_childz_reqwithin_k3k5tva1e1b1nwzida0e0b0xyg3 = 1 * (np.sum(mask_childz_reqwithin_va1e1b1nwzida0e0b0xyg3
@@ -9848,13 +9852,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##create z8 mask to uncluster report vars
     ###dams - cluster e and b (e axis is active from the dvp dates)
-    mask_z8var_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, z_pos=z_pos, mask=True)
     mask_z8var_k2tva1e1b1nwzida0e0b0xyg1 = 1 * (np.sum(mask_z8var_va1e1b1nwzida0e0b0xyg1
                                                 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1),
                                                 axis=(e1_pos,b1_pos), keepdims=True) > 0)
 
     ###offs - cluster d (d axis is active from the dvp dates)
-    mask_z8var_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg3, z_pos=z_pos, mask=True)
     mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3 = 1 * (np.sum(mask_z8var_va1e1b1nwzida0e0b0xyg3
                                                          * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
                                                          axis=d_pos, keepdims=True) > 0)
