@@ -209,18 +209,24 @@ def f_ra_cs(foo, hf, cr=None, zf=1):
         cr5 = cr[5, ...]
         cr6 = cr[6, ...]
         cr13 = cr[13, ...]
-    ##Adjust the FOO level to allow for the ungrazable limit measured in the units of FOO defined by GrazPlan.
-    ### This is so RI=0 when foo == i_min_grazing_limit and just above 0 is foo is just above the limit.
-    foo = np.maximum(0, foo - uinp.pastparameters['i_min_grazing_limit'])
+
+    ##Convert the FOO to a height adjusted FOO equivalent including an allowance for the ungrazable limit
+    ### The limit is measured in the units of FOO defined by GrazPlan for the standard density pasture.
+    ### RI=0 when foo == i_min_grazing_limit and just above 0 if foo is just above the limit.
+    ### The grazable limit is related to height and therefore needs to reduce for sparse (taller) pastures
+    foo_height_adjusted = foo * hf
+    limit_height_adjusted = uinp.pastparameters['i_min_grazing_limit'] / hf
+    foo = np.maximum(0, foo_height_adjusted - limit_height_adjusted)
+
     ##Relative rate of eating (rr) & Relative time spent grazing (rt)
     try:
         ###Scalar version
-        rr = 1 - math.exp(-(1 + cr13 * 1) * cr4 * hf * zf * foo) #todo *1 is a reminder that this formula could be improved in a future version
-        rt = 1 + cr5 * math.exp(-(1 + cr13 * 1) * (cr6 * hf * zf * foo)**2)
+        rr = 1 - math.exp(-(1 + cr13 * 1) * cr4 * zf * foo) #todo *1 is a reminder that this formula could be improved in a future version
+        rt = 1 + cr5 * math.exp(-(1 + cr13 * 1) * (cr6 * zf * foo)**2)
     except:
         ###Numpy version
-        rr = 1 - np.exp(-(1 + cr13 * 1) * cr4 * hf * zf * foo) #todo *1 is a reminder that this formula could be improved in a future version
-        rt = 1 + cr5 * np.exp(-(1 + cr13 * 1) * (cr6 * hf * zf * foo)**2)
+        rr = 1 - np.exp(-(1 + cr13 * 1) * cr4 * zf * foo) #todo *1 is a reminder that this formula could be improved in a future version
+        rt = 1 + cr5 * np.exp(-(1 + cr13 * 1) * (cr6 * zf * foo)**2)
     ##Relative availability
     ra = rr * rt
     return ra
@@ -283,17 +289,22 @@ def f_ra_mu(foo, hf, zf=1, cu0=None):
         cu0 = uinp.parameters['i_cu0_c2'][0, 0]
     else:
         cu0 = cu0[0, ...]
-    ##Adjust the FOO level to allow for the ungrazable limit measured in the units of FOO defined by GrazPlan.
-    ### This is so RI=0 when foo == i_min_grazing_limit and just above 0 is foo is just above the limit.
-    ### The same minimum limit is used for this equation system as for the GrazPlan equations
-    foo = np.maximum(0, foo - uinp.pastparameters['i_min_grazing_limit'])
+
+    ##Convert the FOO to a height adjusted FOO equivalent including an allowance for the ungrazable limit
+    ### The limit is measured in the units of FOO defined by GrazPlan for the standard density pasture.
+    ### RI=0 when foo == i_min_grazing_limit and just above 0 if foo is just above the limit.
+    ### The grazable limit is related to height and therefore needs to reduce for sparse (taller) pastures
+    foo_height_adjusted = foo * hf
+    limit_height_adjusted = uinp.pastparameters['i_min_grazing_limit'] / hf
+    foo = np.maximum(0, foo_height_adjusted - limit_height_adjusted)
+
     ##Relative availability
     try:
         ###Scalar version
-        ra = 1 - cu0 ** (hf * zf * foo)
+        ra = 1 - cu0 ** (zf * foo)
     except:
         ###Numpy version (exact same so not required atm)
-        ra = 1 - cu0 ** (hf * zf * foo)
+        ra = 1 - cu0 ** (zf * foo)
     return ra
 
 
