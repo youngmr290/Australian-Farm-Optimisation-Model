@@ -217,7 +217,7 @@ def f1_boundarypyomo_local(params, model):
                            for t in model.s_sale_dams for v in model.s_dvp_dams for a in model.s_wean_times
                            for n in model.s_nut_dams for w8 in model.s_lw_dams for z in model.s_season_types
                            for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                           if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1 and v in prejoin_v #only sum the numbers once per year (at prejoining)
+                           if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1 and v in prejoin_v and k2 != 'NM-0'#only sum the numbers once per year (at prejoining)
                            ) == bnd_total_dams
             model.con_total_dams_eqbound = pe.Constraint(rule=f_total_dams_eqbound, doc='total number of dams')
 
