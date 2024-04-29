@@ -755,6 +755,13 @@ def f_area_summary(lp_vars, r_vals, option):
 
     ##all rotations by lmu - with expanded landuse as index
     if option == 10:
+        keys_q = r_vals['zgen']['keys_q']
+        keys_s = r_vals['zgen']['keys_s']
+        keys_z = r_vals['zgen']['keys_z']
+        index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+        z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+        z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
+
         ### slice p7[-1] and unstack lmu
         rot_area_qszr_l = rot_area_qszrl_p7.iloc[:,-1].unstack(-1)
         ###remove current land use from index and add to df
@@ -762,6 +769,8 @@ def f_area_summary(lp_vars, r_vals, option):
         phases_r.insert(loc=len(phases_r.columns), column=len(phases_r.columns), value=phases_rk.index.get_level_values(1))
         ###add disagregated landuse as index.
         rot_area_qszr_l = rot_area_qszr_l.reset_index([0,1,2]).join(phases_r).set_index(['level_0','level_1','level_2']+list(range(len(phases_r.columns))))
+
+        rot_area_qszr_l=rot_area_qszr_l.stack().unstack((-10, -9, -8)).mul(z_prob_qsz, axis=1).sum(axis=1).unstack()
         return rot_area_qszr_l.round(2)
 
     ###pasture area

@@ -448,16 +448,18 @@ def f1_boundarypyomo_local(params, model):
             ###scan dvps
             scan_v = list(params['stock']['p_scan_v_dams'])
             ###constraint - sum all mated dams in scan dvp.
-            def f_total_dams_scanned(model,q,s,z):
-                if pe.value(model.p_wyear_inc_qs[q, s]) and total_dams_scanned != 999999:
-                    return sum(model.v_dams[q,s,k28,t,v,a,n,w8,z,i,y,g1] for k28 in model.s_k2_birth_dams for t in model.s_sale_dams
+            def f_total_dams_scanned(model):
+                if total_dams_scanned != 999999:
+                    return sum(model.v_dams[q,s,k28,t,v,a,n,w8,z,i,y,g1] * model.p_season_prob_qsz[q,s,z]
+                               for q in model.s_sequence_year for s in model.s_sequence for z in model.s_season_types
+                               for k28 in model.s_k2_birth_dams for t in model.s_sale_dams
                                for v in model.s_dvp_dams for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
                                if pe.value(model.p_mask_dams[k28,t,v,w8,z,g1]) == 1 and v in scan_v and k28 != 'NM-0') \
                        == total_dams_scanned
                 else:
                     pe.Constraint.Skip
-            model.con_total_dams_scanned = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=f_total_dams_scanned, doc='total dams scanned')
+            model.con_total_dams_scanned = pe.Constraint(rule=f_total_dams_scanned, doc='total dams scanned')
 
         ##force 5yo dam retention - fix a proportion of dams at 6yo scanning dvp.
         ###build bound if turned on
