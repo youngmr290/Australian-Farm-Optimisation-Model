@@ -295,7 +295,7 @@ def f_con_area(model):
 
     def area_rule(model, q,  s, p7, l, z):
         if pe.value(model.p_mask_season_p7z[p7,z]) and pe.value(model.p_wyear_inc_qs[q, s]):
-            return sum(model.v_phase_area[q,s,p7,z,r,l] for r in model.s_phases) <= model.p_area[l]
+            return sum(model.v_phase_area[q,s,p7,z,r,l] for r in model.s_phases) == model.p_area[l]
         else:
             return pe.Constraint.Skip
     model.con_area = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_season_types, rule=area_rule, doc='rotation area constraint')
