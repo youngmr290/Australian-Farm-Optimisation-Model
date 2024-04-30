@@ -137,7 +137,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["ewe_numbers_summary"] = ewe_numbers_summary
         reports["wethers_n_crossys_numbers_summary"] = wethers_n_crossys_numbers_summary
     if report_run.loc['run_emissions', 'Run']:
-        reports["emissions"] = rfun.f_emission_summary(lp_vars, r_vals)
+        option = f_update_default_controls(user_controls, 'emissions', 'option', 1)
+        reports["emissions"] = rfun.f_emission_summary(lp_vars, r_vals, option)
     if report_run.loc['run_period_dates', 'Run']:
         ###season nodes (p7)
         type = 'zgen'

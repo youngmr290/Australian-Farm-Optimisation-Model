@@ -2285,13 +2285,14 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     return feed_budget.astype(float).round(2)
 
 
-def f_emission_summary(lp_vars, r_vals):
+def f_emission_summary(lp_vars, r_vals, option=0):
     '''
     Summary of whole farm emissions. The report summarises the methane, nitrous oxide, carbon dioxide and
     carbon dioxide equivalents.
 
     :param lp_vars:
     :param r_vals:
+    :param option: 0 = active z, 1 = weighted average z
     :return:
     '''
     ##inputs
@@ -2709,6 +2710,15 @@ def f_emission_summary(lp_vars, r_vals):
                              'Total Fertiliser co2e (t)',
                              'Crop yield (t)',
                              'Clean Wool Sold (kg)']+meat_cols
+    ##weighted average of z axis if required.
+    if option==1:
+        keys_q = r_vals['zgen']['keys_q']
+        keys_s = r_vals['zgen']['keys_s']
+        keys_z = r_vals['zgen']['keys_z']
+        index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+        z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+        z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
+        emissions_qsz = pd.DataFrame(emissions_qsz.mul(z_prob_qsz, axis=0).sum(axis=0)).T
     return emissions_qsz
 
 
