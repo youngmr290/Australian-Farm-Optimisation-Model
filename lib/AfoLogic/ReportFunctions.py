@@ -770,7 +770,7 @@ def f_area_summary(lp_vars, r_vals, option):
         ###add disagregated landuse as index.
         rot_area_qszr_l = rot_area_qszr_l.reset_index([0,1,2]).join(phases_r).set_index(['level_0','level_1','level_2']+list(range(len(phases_r.columns))))
 
-        rot_area_qszr_l=rot_area_qszr_l.stack().unstack((-10, -9, -8)).mul(z_prob_qsz, axis=1).sum(axis=1).unstack()
+        rot_area_qszr_l=rot_area_qszr_l.stack().unstack((-9, -8,-7)).mul(z_prob_qsz, axis=1).sum(axis=1).unstack()
         return rot_area_qszr_l.round(2)
 
     ###pasture area
