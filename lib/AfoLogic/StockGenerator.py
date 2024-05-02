@@ -8030,7 +8030,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###dvp0 has no transfer even though it is dvp type 0
     ###animals that are sold t[0] & t[1] only exist if the period is sale. Note t[1] sale is already masked for scan>=1 & for dry ewes only
     period_is_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)[:,:,:,0:1,...] #slice e[0] transfer not effected by e
-    mask_tvars_tva1e1b1nw8zida0e0b0xyg1 = np.logical_or(np.logical_and(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, index_va1e1b1nwzida0e0b0xyg1 != 0)
+    mask_tvars_tva1e1b1nw8zida0e0b0xyg1 = np.logical_or(period_is_transfer_tva1e1b1nwzida0e0b0xyg1
                                                         , (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
     period_is_sale_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(period_is_sale_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
     period_is_sale_k2tva1e1b1nwzida0e0b0xyg1 = np.sum(period_is_sale_tva1e1b1nwzida0e0b0xyg1
@@ -8536,10 +8536,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     axis=e1_pos, keepdims=True)[..., na,na]) #na for w9 and g9 (use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_divide(numerator,denominator, dtype=dtype)
 
-    ####dams transferring between ram groups in the same DVP.
-    #### This occurs if the transfer is to a different ram group (a_g1_tg1 != g1) and is occurring from a prejoining dvp which indicates that the transfer is from prejoining dvp to prejoining dvp because the destination ram group is joining after the source
+    ####dams transferring between ram groups in the same DVP (if prejoing is the same date then transfer occurs from the dvp before prejoining to the prejoing dvp).
+    #### This occurs if prejoining is not the same period therefore the transfer is to a different ram group (a_g1_tg1 != g1) and is occurring from a prejoining dvp which indicates that the transfer is from prejoining dvp to prejoining dvp because the destination ram group is joining after the source
     numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = (numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9
-                                                                * ((dvp_type_va1e1b1nwzida0e0b0xyg1[:, :, 0:1, ...] == prejoin_vtype1)
+                                                                * (np.logical_and(dvp_type_va1e1b1nwzida0e0b0xyg1[:, :, 0:1, ...] == prejoin_vtype1,
+                                                                                  index_va1e1b1nwzida0e0b0xyg1 != 0) #have to not count dvp[0] because it has type=prejoining even though it is not prejoining.
                                                                    * (a_g1_tpa1e1b1nwzida0e0b0xyg1 != index_g1))[...,na,na])   #take slice 0 of e (for prejoining all e slices are the same)
     ####dams providing to the next period (the norm)
     ####Only different from the total because it excludes those providing to the same period
