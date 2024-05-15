@@ -801,6 +801,22 @@ def f_area_summary(lp_vars, r_vals, option):
         landuse_area_qsz_k = landuse_area_qsz_k.reindex(r_vals['pas']['keys_k'], axis=1).fillna(0) #expand to full k (incase landuses were masked out) and unused landuses get set to 0
         return landuse_area_qsz_k
 
+    if option==14: #landuse area in p7[-1] (lmu summed)
+        landuse_area_k_qszl = landuse_area_k_p7qszl.loc[:,landuse_area_k_p7qszl.columns.levels[0][-1].tolist()]
+        keys_q = r_vals['zgen']['keys_q']
+        keys_s = r_vals['zgen']['keys_s']
+        keys_z = r_vals['zgen']['keys_z']
+        index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+        z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+        z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
+
+        landuse_area_k_l = landuse_area_k_qszl.stack((-1)).mul(z_prob_qsz, axis=1).sum(axis=1).unstack()
+        return landuse_area_k_l
+        # landuse_area_k_qsz = landuse_area_k_qszl.groupby(axis=1, level=(0,1,2)).sum()
+        # landuse_area_qsz_k = landuse_area_k_qsz.T.round(2)
+        # landuse_area_qsz_k = landuse_area_qsz_k.reindex(r_vals['pas']['keys_k'], axis=1).fillna(0) #expand to full k (incase landuses were masked out) and unused landuses get set to 0
+        # return landuse_area_qsz_k
+
     if option==5 or option==6 or option==7 or option==8 or option==9: #average % of pasture/cereal/canola in p7[-1]
         keys_q = r_vals['zgen']['keys_q']
         keys_s = r_vals['zgen']['keys_s']
