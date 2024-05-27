@@ -22,6 +22,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_pnl"] = pd.DataFrame()  # profit and loss statement
     reports["stacked_wc"] = pd.DataFrame()  # max bank overdraw
     reports["stacked_penalty"] = pd.DataFrame()  # biomass penalty from seeding timeliness and crop grazing
+    reports["stacked_sowing_date"] = pd.DataFrame()  # average sowing date
     reports["stacked_profitarea"] = pd.DataFrame()  # profit by land area
     reports["stacked_feed"] = pd.DataFrame()  # feed budget
     reports["stacked_feed2"] = pd.DataFrame()  # feed budget
@@ -154,6 +155,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_biomass_penalty', 'Run']:
         penalty = pd.concat([reports["penalty"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_penalty"] = rfun.f_append_dfs(stacked_reports["stacked_penalty"], penalty)
+
+    if report_run.loc['run_sowing_date', 'Run']:
+        penalty = pd.concat([reports["sowing_date"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_sowing_date"] = rfun.f_append_dfs(stacked_reports["stacked_sowing_date"], penalty)
 
     if report_run.loc['run_profitarea', 'Run']:
         profitarea = pd.concat([reports["profitarea"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -581,6 +586,8 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_offs_dvp_dates"], 'period_dates', df_settings, option=0, colstart=offs_start_col)
     if report_run.loc['run_biomass_penalty', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_penalty"], 'biomass_penalty', df_settings, option=xl_display_mode)
+    if report_run.loc['run_sowing_date', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_sowing_date"], 'sowing_date', df_settings, option=xl_display_mode)
     if report_run.loc['run_profitarea', 'Run']:
         plot = rfun.f_xy_graph(reports["stacked_profitarea"])
         plot.savefig('Output/profitarea_curve.png')

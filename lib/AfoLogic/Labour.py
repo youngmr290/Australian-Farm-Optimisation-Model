@@ -267,6 +267,8 @@ def f_labour_general(params,r_vals):
     fun.f1_make_r_val(r_vals, maskz8_p5z, 'maskz8_p5z')
     fun.f1_make_r_val(r_vals, keys_p5, 'keys_p5')
     fun.f1_make_r_val(r_vals, casual_cost_p7zp5, 'casual_cost_p7zp5', mask_season_p7z[:,:,na], z_pos=-2)
+    fun.f1_make_r_val(r_vals, lp_start_p5z, 'lp_start_p5z', maskz8_p5z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, lp_end_p5z, 'lp_end_p5z', maskz8_p5z, z_pos=-1)
 
 
 def f_perm_cost(params, r_vals):

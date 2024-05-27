@@ -872,6 +872,7 @@ def f_mach_summary(lp_vars, r_vals, option=0):
 
         #. table: total machine cost for each crop in each cash period
         #. table: total seeding biomass penalty for untimely sowing.
+        #. table: average sowing date.
 
     '''
     ##call rotation function to get rotation info
@@ -881,78 +882,94 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     ##masks to uncluster z axis
     maskz8_zp5 = r_vals['lab']['maskz8_p5z'].T
 
-    ##harv
-    contractharv_hours_qszp5k = f_vars2df(lp_vars, 'v_contractharv_hours', maskz8_zp5[:,:,na], z_pos=-3)
-    contractharv_hours_zp5kqs = contractharv_hours_qszp5k.reorder_levels([2,3,4,0,1]).sort_index()  # change the order so that reindexing works (new levels being added must be at the end)
-    harv_hours_qszp5k = f_vars2df(lp_vars, 'v_harv_hours', maskz8_zp5[:,:,na], z_pos=-3)
-    harv_hours_zp5kqs = harv_hours_qszp5k.reorder_levels([2,3,4,0,1]).sort_index()  # change the order so that reindexing works (new levels being added must be at the end)
-    contract_harvest_cost_zp5k_p7 = r_vals['mach']['contract_harvest_cost'].unstack(0)
-    contract_harvest_cost_zp5kqs_p7 = contract_harvest_cost_zp5k_p7.reindex(contractharv_hours_zp5kqs.index, axis=0)
-    own_harvest_cost_zp5k_p7 = r_vals['mach']['harvest_cost'].unstack(0)
-    own_harvest_cost_zp5kqs_p7 = own_harvest_cost_zp5k_p7.reindex(harv_hours_zp5kqs.index, axis=0)
-    harvest_cost_zp5kqs_p7 = contract_harvest_cost_zp5kqs_p7.mul(contractharv_hours_zp5kqs, axis=0) + own_harvest_cost_zp5kqs_p7.mul(harv_hours_zp5kqs, axis=0)
-    harvest_cost_zkqs_p7 = harvest_cost_zp5kqs_p7.groupby(axis=0, level=(0,2,3,4)).sum() #sum p5
-
-    ##seeding
+    ##variables used in multiple places.
     seeding_days_qszp5_kl = f_vars2df(lp_vars, 'v_seeding_machdays', maskz8_zp5[:,:,na,na], z_pos=-4).unstack([4,5])
     seeding_rate_kl = r_vals['mach']['seeding_rate'].stack()
-    seeding_ha_qszp5_kl = seeding_days_qszp5_kl.mul(seeding_rate_kl.reindex(seeding_days_qszp5_kl.columns), axis=1) # note seeding ha won't equal the rotation area because arable area is included in seed_ha.
-    seeding_ha_zp5lkqs = seeding_ha_qszp5_kl.stack([0,1]).reorder_levels([2,3,5,4,0,1]).sort_index()
-    seeding_cost_zp5l_p7 = r_vals['mach']['seeding_cost'].unstack(0)
-    seeding_cost_zp5lkqs_p7 = seeding_cost_zp5l_p7.reindex(seeding_ha_zp5lkqs.index, axis=0)
-    seeding_cost_own_zkqs_p7 = seeding_cost_zp5lkqs_p7.mul(seeding_ha_zp5lkqs, axis=0).groupby(axis=0, level=(0,3,4,5)).sum()  # sum lmu axis and p5
-
     contractseeding_ha_qszp5k_l = f_vars2df(lp_vars, 'v_contractseeding_ha', maskz8_zp5[:,:,na,na], z_pos=-4).unstack(-1)
-    contractseeding_ha_qszp5k = contractseeding_ha_qszp5k_l.sum(axis=1)  # sum lmu axis (cost doesn't vary by lmu for contract)
-    contractseeding_ha_zp5kqs = contractseeding_ha_qszp5k.reorder_levels([2,3,4,0,1]).sort_index()
-    contractseed_cost_ha_zp5_p7 = r_vals['mach']['contractseed_cost'].unstack(0)
-    contractseed_cost_ha_zp5kqs_p7 = contractseed_cost_ha_zp5_p7.reindex(contractseeding_ha_zp5kqs.index, axis=0)
-    seeding_cost_contract_zkqs_p7 =  contractseed_cost_ha_zp5kqs_p7.mul(contractseeding_ha_zp5kqs, axis=0).groupby(axis=0, level=(0,2,3,4)).sum()  # sum p5
-    seeding_cost_zkqs_p7 = seeding_cost_contract_zkqs_p7 + seeding_cost_own_zkqs_p7
-    # seeding_cost_c0p7z_k = seeding_cost_c0p7_zk.stack(0)
-
-    ##fert & chem mach cost
-    fert_app_cost_rl_p7z = r_vals['crop']['fert_app_cost']
-    chem_app_cost_ha_rl_p7z = r_vals['crop']['chem_app_cost_ha']
-    fertchem_cost_rl_p7z = pd.concat([fert_app_cost_rl_p7z, chem_app_cost_ha_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()  # cost per ha
-
-    fertchem_cost_zrl_p7 = fertchem_cost_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
-    fertchem_cost_zrlqs_p7 = fertchem_cost_zrl_p7.reindex(rot_area_zrlqs_p7.index, axis=0)
-    fertchem_cost_zrqs_p7 = fertchem_cost_zrlqs_p7.mul(rot_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
-    fertchem_cost_k_p7zqs = fertchem_cost_zrqs_p7.unstack([0,2,3]).reindex(phases_rk.index, axis=0, level=0).groupby(axis=0,level=1).sum()  # reindex to include landuse and sum rot
-    fertchem_cost_zkqs_p7 = fertchem_cost_k_p7zqs.stack([1,2,3]).swaplevel(0,1)
-
-    ##combine all costs
-    exp_mach_zkqs_p7 = pd.concat([fertchem_cost_zkqs_p7, seeding_cost_zkqs_p7, harvest_cost_zkqs_p7
-                               ], axis=0).groupby(axis=0, level=(0,1,2,3)).sum()
-    exp_mach_k_p7zqs = exp_mach_zkqs_p7.unstack([0,2,3])
-    ##insurance
-    mach_insurance_p7z = r_vals['mach']['mach_insurance']
-
-    ##yield penalty from untimely sowing
-    sowing_yield_penalty_p7p5zkl = r_vals['mach']['sowing_yield_penalty_p7p5zkl']
-    sowing_yield_penalty_p5zkl = sowing_yield_penalty_p7p5zkl.groupby(level=(1,2,3,4)).sum() #sum p7
-    sowing_yield_penalty_zp5kl = sowing_yield_penalty_p5zkl.reorder_levels((1,0,2,3))
     ###ha sown by farmer
-    seeding_ha_qszp5_kl = seeding_days_qszp5_kl.mul(seeding_rate_kl.reindex(seeding_days_qszp5_kl.columns), axis=1) # note seeding ha won't equal the rotation area because arable area is included in seed_ha.
+    seeding_ha_qszp5_kl = seeding_days_qszp5_kl.mul(seeding_rate_kl.reindex(seeding_days_qszp5_kl.columns), axis=1)  # note seeding ha won't equal the rotation area because arable area is included in seed_ha.
     seeding_ha_qszp5k_l = seeding_ha_qszp5_kl.stack(0)
-    ###reindex penalty param
-    ####add q & s axis
-    sowing_yield_penalty_qsz_lkp5 = sowing_yield_penalty_zp5kl.unstack((-1,-2,-3)).reindex(seeding_ha_qszp5_kl.unstack(-1).index, axis=0, level=-1)
-    sowing_yield_penalty_qszp5k_l = sowing_yield_penalty_qsz_lkp5.stack((2,1))
-    ####expand k to include pastures
-    sowing_yield_penalty_qszp5k_l = sowing_yield_penalty_qszp5k_l.reindex(seeding_ha_qszp5k_l.index)
-    ###calc penalty
-    farmer_penalty_qszp5k_l = seeding_ha_qszp5k_l.mul(sowing_yield_penalty_qszp5k_l)
-    farmer_penalty_qszp5k = farmer_penalty_qszp5k_l.sum(axis=1)
-    contract_penalty_qszp5k_l = contractseeding_ha_qszp5k_l.mul(sowing_yield_penalty_qszp5k_l)
-    contract_penalty_qszp5k = contract_penalty_qszp5k_l.sum(axis=1)
-    total_penalty_qszk = farmer_penalty_qszp5k.add(contract_penalty_qszp5k).unstack(3).sum(axis=1)
-    if option == 1:
-        return total_penalty_qszk/1000 #convert to tonnes of penalty
-    ##return all if option==0
+
+    ##return mach costs
     if option == 0:
+        ##harv
+        contractharv_hours_qszp5k = f_vars2df(lp_vars, 'v_contractharv_hours', maskz8_zp5[:,:,na], z_pos=-3)
+        contractharv_hours_zp5kqs = contractharv_hours_qszp5k.reorder_levels([2,3,4,0,1]).sort_index()  # change the order so that reindexing works (new levels being added must be at the end)
+        harv_hours_qszp5k = f_vars2df(lp_vars, 'v_harv_hours', maskz8_zp5[:,:,na], z_pos=-3)
+        harv_hours_zp5kqs = harv_hours_qszp5k.reorder_levels([2,3,4,0,1]).sort_index()  # change the order so that reindexing works (new levels being added must be at the end)
+        contract_harvest_cost_zp5k_p7 = r_vals['mach']['contract_harvest_cost'].unstack(0)
+        contract_harvest_cost_zp5kqs_p7 = contract_harvest_cost_zp5k_p7.reindex(contractharv_hours_zp5kqs.index, axis=0)
+        own_harvest_cost_zp5k_p7 = r_vals['mach']['harvest_cost'].unstack(0)
+        own_harvest_cost_zp5kqs_p7 = own_harvest_cost_zp5k_p7.reindex(harv_hours_zp5kqs.index, axis=0)
+        harvest_cost_zp5kqs_p7 = contract_harvest_cost_zp5kqs_p7.mul(contractharv_hours_zp5kqs, axis=0) + own_harvest_cost_zp5kqs_p7.mul(harv_hours_zp5kqs, axis=0)
+        harvest_cost_zkqs_p7 = harvest_cost_zp5kqs_p7.groupby(axis=0, level=(0,2,3,4)).sum() #sum p5
+
+        ##seeding
+        seeding_ha_qszp5_kl = seeding_days_qszp5_kl.mul(seeding_rate_kl.reindex(seeding_days_qszp5_kl.columns), axis=1) # note seeding ha won't equal the rotation area because arable area is included in seed_ha.
+        seeding_ha_zp5lkqs = seeding_ha_qszp5_kl.stack([0,1]).reorder_levels([2,3,5,4,0,1]).sort_index()
+        seeding_cost_zp5l_p7 = r_vals['mach']['seeding_cost'].unstack(0)
+        seeding_cost_zp5lkqs_p7 = seeding_cost_zp5l_p7.reindex(seeding_ha_zp5lkqs.index, axis=0)
+        seeding_cost_own_zkqs_p7 = seeding_cost_zp5lkqs_p7.mul(seeding_ha_zp5lkqs, axis=0).groupby(axis=0, level=(0,3,4,5)).sum()  # sum lmu axis and p5
+
+        contractseeding_ha_qszp5k = contractseeding_ha_qszp5k_l.sum(axis=1)  # sum lmu axis (cost doesn't vary by lmu for contract)
+        contractseeding_ha_zp5kqs = contractseeding_ha_qszp5k.reorder_levels([2,3,4,0,1]).sort_index()
+        contractseed_cost_ha_zp5_p7 = r_vals['mach']['contractseed_cost'].unstack(0)
+        contractseed_cost_ha_zp5kqs_p7 = contractseed_cost_ha_zp5_p7.reindex(contractseeding_ha_zp5kqs.index, axis=0)
+        seeding_cost_contract_zkqs_p7 =  contractseed_cost_ha_zp5kqs_p7.mul(contractseeding_ha_zp5kqs, axis=0).groupby(axis=0, level=(0,2,3,4)).sum()  # sum p5
+        seeding_cost_zkqs_p7 = seeding_cost_contract_zkqs_p7 + seeding_cost_own_zkqs_p7
+        # seeding_cost_c0p7z_k = seeding_cost_c0p7_zk.stack(0)
+
+        ##fert & chem mach cost
+        fert_app_cost_rl_p7z = r_vals['crop']['fert_app_cost']
+        chem_app_cost_ha_rl_p7z = r_vals['crop']['chem_app_cost_ha']
+        fertchem_cost_rl_p7z = pd.concat([fert_app_cost_rl_p7z, chem_app_cost_ha_rl_p7z], axis=1).groupby(axis=1, level=(0,1)).sum()  # cost per ha
+
+        fertchem_cost_zrl_p7 = fertchem_cost_rl_p7z.stack().reorder_levels([2,0,1], axis=0).sort_index()
+        fertchem_cost_zrlqs_p7 = fertchem_cost_zrl_p7.reindex(rot_area_zrlqs_p7.index, axis=0)
+        fertchem_cost_zrqs_p7 = fertchem_cost_zrlqs_p7.mul(rot_area_zrlqs_p7, axis=0).groupby(axis=0, level=(0,1,3,4)).sum()  # mul area and sum lmu
+        fertchem_cost_k_p7zqs = fertchem_cost_zrqs_p7.unstack([0,2,3]).reindex(phases_rk.index, axis=0, level=0).groupby(axis=0,level=1).sum()  # reindex to include landuse and sum rot
+        fertchem_cost_zkqs_p7 = fertchem_cost_k_p7zqs.stack([1,2,3]).swaplevel(0,1)
+
+        ##combine all costs
+        exp_mach_zkqs_p7 = pd.concat([fertchem_cost_zkqs_p7, seeding_cost_zkqs_p7, harvest_cost_zkqs_p7
+                                   ], axis=0).groupby(axis=0, level=(0,1,2,3)).sum()
+        exp_mach_k_p7zqs = exp_mach_zkqs_p7.unstack([0,2,3])
+        ##insurance
+        mach_insurance_p7z = r_vals['mach']['mach_insurance']
         return exp_mach_k_p7zqs, mach_insurance_p7z
+
+    ##yield penalty
+    if option == 1:
+        ##yield penalty from untimely sowing
+        sowing_yield_penalty_p7p5zkl = r_vals['mach']['sowing_yield_penalty_p7p5zkl']
+        sowing_yield_penalty_p5zkl = sowing_yield_penalty_p7p5zkl.groupby(level=(1,2,3,4)).sum() #sum p7
+        sowing_yield_penalty_zp5kl = sowing_yield_penalty_p5zkl.reorder_levels((1,0,2,3))
+        ###reindex penalty param
+        ####add q & s axis
+        sowing_yield_penalty_qsz_lkp5 = sowing_yield_penalty_zp5kl.unstack((-1,-2,-3)).reindex(seeding_ha_qszp5_kl.unstack(-1).index, axis=0, level=-1)
+        sowing_yield_penalty_qszp5k_l = sowing_yield_penalty_qsz_lkp5.stack((2,1))
+        ####expand k to include pastures
+        sowing_yield_penalty_qszp5k_l = sowing_yield_penalty_qszp5k_l.reindex(seeding_ha_qszp5k_l.index)
+        ###calc penalty
+        farmer_penalty_qszp5k_l = seeding_ha_qszp5k_l.mul(sowing_yield_penalty_qszp5k_l)
+        farmer_penalty_qszp5k = farmer_penalty_qszp5k_l.sum(axis=1)
+        contract_penalty_qszp5k_l = contractseeding_ha_qszp5k_l.mul(sowing_yield_penalty_qszp5k_l)
+        contract_penalty_qszp5k = contract_penalty_qszp5k_l.sum(axis=1)
+        total_penalty_qszk = farmer_penalty_qszp5k.add(contract_penalty_qszp5k).unstack(3).sum(axis=1)
+        return total_penalty_qszk/1000 #convert to tonnes of penalty
+
+    ##sowing date
+    if option==2:
+        labour_period_start_p5z = r_vals['lab']['lp_start_p5z']
+        labour_period_end_p5z = r_vals['lab']['lp_end_p5z']
+        labour_period_ave_p5z = (labour_period_start_p5z + labour_period_end_p5z)/2
+        labour_period_ave_zp5 = labour_period_ave_p5z.T
+        labour_period_ave_zp5 = pd.DataFrame(labour_period_ave_zp5, index=r_vals['zgen']['keys_z'], columns=r_vals['lab']['keys_p5']).stack()
+        ha_sown_qszp5k_l = contractseeding_ha_qszp5k_l + seeding_ha_qszp5k_l
+        ha_sown_qszp5k = ha_sown_qszp5k_l.sum(axis=1) #sum l
+        ha_sown_qsk_zp5 = ha_sown_qszp5k.unstack([-3,-2])
+        ave_sow_date_qskz = ha_sown_qsk_zp5.mul(labour_period_ave_zp5,axis=1).stack(0).sum(axis=1).div(ha_sown_qsk_zp5.stack(0).sum(axis=1))
+        return ave_sow_date_qskz.unstack(-2)
 
 def f_available_cropgrazing(r_vals):
     '''

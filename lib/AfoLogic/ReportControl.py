@@ -109,6 +109,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["wc"] = rfun.f_wc_summary(lp_vars, r_vals)
     if report_run.loc['run_biomass_penalty', 'Run']:
         reports["penalty"] = rfun.f_biomass_penalty(lp_vars, r_vals)
+    if report_run.loc['run_biomass_penalty', 'Run']:
+        reports["sowing_date"] = rfun.f_mach_summary(lp_vars, r_vals, option=2)
     if report_run.loc['run_profitarea', 'Run']:
         area_option = f_update_default_controls(user_controls, 'profitarea', 'area_option', 2)     # 2 total crop area each season in p7[-1]
         profit_option = f_update_default_controls(user_controls, 'profitarea', 'profit_option', 0)   # 0 Profit, 1 Risk neutral Obj, 2 Utility, 3 range and std dev of profit.
