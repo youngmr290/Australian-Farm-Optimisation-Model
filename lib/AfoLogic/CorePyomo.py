@@ -435,7 +435,7 @@ def f_con_harv(model):
         p7_end = l_p7[-1]
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return (-macpy.f_harv_supply(model,q,s,p7,k,z9)
-                    + sum(model.v_use_biomass[q,s,p7,z9,k,l,s2] * model.p_biomass2product[k,l,s2] #adjust with biomass2product because harv dv are based on grain yield not biomass
+                    + sum(model.v_use_biomass[q,s,p7,z9,k,l,s2] * model.p_biomass2product[k,s2] #adjust with biomass2product because harv dv are based on grain yield not biomass
                           for l in model.s_lmus)
                     - model.v_unharvested_yield[q,s,p7,k,z9] * ((p7 != p7_end)*1) #must be harvested before the beginning of the next yr - therefore no transfer
                     + sum(model.v_unharvested_yield[q,s,p7_prev,k,z8] * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
@@ -458,7 +458,7 @@ def f_con_makehay(model):
         p7_end = l_p7[-1]
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return (-model.v_hay_made[q,s,z9] * model.p_hay_made_prov[p7,z9]
-                       + sum(model.v_use_biomass[q,s,p7,z9,k,l,s2] * model.p_biomass2product[k,l,s2]
+                       + sum(model.v_use_biomass[q,s,p7,z9,k,l,s2] * model.p_biomass2product[k,s2]
                              for k in model.s_crops for l in model.s_lmus)
                    - model.v_hay_tobe_made[q,s,p7,z9] * ((p7 != p7_end)*1) #must be baled before the beginning of the next yr - therefore no transfer
                    + sum(model.v_hay_tobe_made[q,s,p7_prev,z8] * model.p_parentz_provwithin_phase[p7_prev,z8,z9]

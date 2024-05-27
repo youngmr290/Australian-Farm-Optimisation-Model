@@ -123,6 +123,7 @@ def f_seed_days():
 
 def f_contractseeding_occurs():
     '''
+    #todo i think this can be removed because contract seeding is hooked up to the yield penalty.
     This function just sets the period when contract seeding must occur (period when wet seeding begins).
     Contract seeding is not hooked up to yield penalty because if you're going to hire someone you will hire
     them at the optimum time. Contract seeding is hooked up to poc so this param stops the model having late seeding
@@ -451,81 +452,101 @@ def f_contract_seed_cost(r_vals):
 
 def f_sowing_timeliness_penalty(r_vals):
     '''
-    Calculates the biomass penalty in each mach period due to wet sowing timeliness- kg/ha/period/crop.
+    Calculates the biomass penalty in each mach period due to effective germination date - kg/ha/period/crop.
 
     The timelines of sowing can have a large impact on crop biomass. AFO accounts for this using a
-    biomass penalty.
-
-    Late sowing receives a biomass reduction because the crop has less time to mature (e.g. shorter
+    biomass penalty. Late sowing receives a biomass reduction because the crop has less time to mature (e.g. shorter
     growing season) and grain filling often occurs during hotter, drier conditions :cite:p:`RN121, RN122`.
-    The user can specify the length of time after the beginning of wet seeding that no penalty applies,
-    after that a penalty is applied. The biomass reduction is cumulative per day, so the longer sowing is
-    delayed the larger the biomass reduction.
+    Early sowing can also incur a yield penalty mainly due to frost.
 
-    Biomass penalty reduces grain available to sell and reduces stubble production.
+    The biomass reduction is cumulative per day, so the longer sowing is
+    delayed the larger the biomass reduction. Biomass penalty reduces grain available to sell and
+    reduces stubble production. The penalty can be customised for each LMU because frost effects can be altered by
+    the LMU topography and soil type. For example, sandy soils are more affected by frost because the lower
+    moisture holding capacity reduces the heat buffering from the soil.
 
     The assumption is that seeding is done evenly throughout a given period. In reality this is wrong e.g. if a
     period is 5 days long but the farmer only has to sow 20ha they will do it on the first day of the period not
-    4ha each day of the period. Therefore, the calculation overestimates the biomass penalty.
+    4ha each day of the period. Therefore, the calculation overestimates the biomass penalty. The error can be
+    reduced by having shorter p5 periods.
 
-    .. note:: There are also risks associated with dry sowing such as less effective weed control (i.e. crops germinate at
+    .. note:: The penalty represented in this function is based on germination date. Therefore, dry seeding occurs the same penalty
+        as sowing at the break of season. Other risks associated with dry sowing such as less effective weed control (i.e. crops germinate at
         the same time as the weeds so you miss out on a knock down spray opportunity), poor crop emergence (if
         opening rains are spasmodic patchy crop germination is possible and early crop vigour may be absent without
-        adequate follow up rain) and increased chance of frost :cite:p:`RN119`. These risks are represented
-        in the model via the biomass inputs because dry sown crop are separate landuses.
+        adequate follow up rain) :cite:p:`RN119` are represented
+        in the model via the biomass/yield inputs because dry sown crop are separate landuses.
 
     '''
     ##inputs
-    seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
-    wet_seeding_penalty_k_z = zfun.f_seasonal_inp(pinp.crop['yield_penalty_wet'], axis=1)
+    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
+    seeding_penalty_k_p = pinp.crop['seeding_yield_penalty']
+    seeding_penalty_lmu_scalar_l_p = pinp.crop['seeding_penalty_lmu_scalar_lp']
+    seeding_penalty_scalar_z_k = zfun.f_seasonal_inp(pinp.crop['seeding_penalty_scalar_kz'], axis=1).T
+    mach_periods = per.f_p_dates_df()
+    mach_periods_start_p5z = mach_periods.values[:-1]
+    keys_z = zfun.f_keys_z()
+    keys_p5 = mach_periods.index[:-1]
+    keys_k = sinp.general['i_idx_k1']
+    keys_p7 = per.f_season_periods(keys=True)
+    keys_l = pinp.general['i_lmu_idx']
+    len_z = len(keys_z)
+    len_k = len(keys_k)
 
-    # ##adjust seeding penalty - crops that are not harvested e.g. fodder don't have yield penalty. But do have a stubble penalty
-    # if stub:
-    #     ###if calculating yield penalty for stubble then include all crop (e.g. include fodders)
-    #     pass
-    # else:
-    #     ###if calculating yield penalty for grain transfer then only include harvested crops (e.g. don't include fodders)
-    #     proportion_grain_harv_k = pd.Series(uinp.stubble['proportion_grain_harv'], index=sinp.landuse['C'])
-    #     wet_seeding_penalty_k_z = wet_seeding_penalty_k_z.mul(proportion_grain_harv_k>0, axis=0)
+
+    ##calc the yield penalty for each day of the year
+    date_p = seeding_penalty_k_p.columns #inputs dates
+    seeding_penalty_zkp = seeding_penalty_k_p.values * seeding_penalty_scalar_z_k.values[:,:,na]
+    doy_p0 = np.arange(364)
+    a_p_p0 = fun.f_next_prev_association(date_p,doy_p0, 1, "right")
+    seeding_penalty_zkp0 = seeding_penalty_zkp[:,:,a_p_p0]
+
+    ##accumulated yield penalty from break - yield relative to sowing at the break (this could be a positive number if sowing at the break is not optimal ie due to frost)
+    adj_seeding_penalty_zkp0 = seeding_penalty_zkp0 * (doy_p0>=season_break_z[:,na,na])
+    cum_seeding_penalty_zkp0 = np.cumsum(adj_seeding_penalty_zkp0, axis=-1)
+
+    ##yield penalty relative to sowing at the optimum time.
+    seeding_penalty_zkp0 = cum_seeding_penalty_zkp0 - np.max(cum_seeding_penalty_zkp0, axis=-1, keepdims=True)
+
+    ##sowing before the break (dry seeding) has the same sowing penalty as sowing on the first day of wet seeding.
+    ## dry seeding may occur a yield penalty due to more weed pressure or less seed vigour due to time in the ground but this penalty is handled in the yield input
+    for z in np.arange(len_z):
+        for k in np.arange(len_k):
+            period_is_drysowing_p0 = np.logical_and(doy_p0 >= pinp.crop['dry_seed_start'],
+                                               doy_p0 < season_break_z[z])
+            period_is_break_p0 = doy_p0 == season_break_z[z]
+            seeding_penalty_zkp0[z,k,period_is_drysowing_p0] = seeding_penalty_zkp0[z,k,period_is_break_p0]
+
+    ##scale for lmu (l by p)
+    seeding_penalty_lmu_scalar_lp0 = seeding_penalty_lmu_scalar_l_p.values[:,a_p_p0]
+    seeding_penalty_zklp0 = seeding_penalty_zkp0[:,:,na,:] * seeding_penalty_lmu_scalar_lp0
+
+    ###calc the average penalty for each p5 period (kg/ha)
+    alloc_p5zp0 = fun.f_range_allocation_np(mach_periods.values[:,:,na], doy_p0)[:-1,:,:] #remove last p5 period it was just the end date.
+    seeding_penalty_p5zkl = fun.f_weighted_average(seeding_penalty_zklp0, weights=alloc_p5zp0[:,:,na,na,:], axis=-1)
+
+    ##convert to positive number because pyomo expecting a positive number as the penalty.
+    seeding_penalty_p5zkl = np.abs(seeding_penalty_p5zkl)
 
     ##convert from yield penalty to biomass penalty
     harvest_index_k = uinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield penalty is inputted as the harvestable grain
-    harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
-    wet_seeding_penalty_k_z = wet_seeding_penalty_k_z.div(harvest_index_k, axis=0)
-
-    ##general info
-    mach_periods = per.f_p_dates_df()
-    mach_periods_start_pz = mach_periods.values[:-1]
-    mach_periods_end_pz = mach_periods.values[1:]
-
-    ##wet seeding penalty - penalty = average penalty of period (= (start day + end day) / 2 * penalty)
-    #todo seeding penalty should have a p5 axis. Then don't need to manually set penalty free period.
-    seed_start_z = per.f_wet_seeding_start_date()
-    penalty_free_days_z = seed_period_lengths_pz[0]
-    start_day_pz = 1 + (mach_periods_start_pz - (seed_start_z + penalty_free_days_z))
-    end_day_pz = (mach_periods_end_pz - (seed_start_z + penalty_free_days_z))
-    wet_penalty_pzk = (start_day_pz + end_day_pz)[...,na] / 2 * wet_seeding_penalty_k_z.T.values
-    wet_penalty_pzk = np.clip(wet_penalty_pzk, 0, np.inf)
+    seeding_penalty_p5zkl = seeding_penalty_p5zkl / harvest_index_k[:,na]
 
     ##add p7 axis - needed so yield penalty can be combined with phase yield
-    alloc_p7p5z = zfun.f1_z_period_alloc(mach_periods_start_pz[na,:,:], z_pos=-1)
-    penalty_p7p5zk = wet_penalty_pzk * alloc_p7p5z[...,na]
+    alloc_p7p5z = zfun.f1_z_period_alloc(mach_periods_start_p5z[na,:,:], z_pos=-1)
+    penalty_p7p5zkl = seeding_penalty_p5zkl * alloc_p7p5z[...,na,na]
 
     ##put into df
-    keys_z = zfun.f_keys_z()
-    keys_p5 = mach_periods.index[:-1]
-    keys_k = wet_seeding_penalty_k_z.index
-    keys_p7 = per.f_season_periods(keys=True)
-    cols_p7p5zk = pd.MultiIndex.from_product([keys_p7, keys_p5, keys_z, keys_k])
-    penalty_p7p5zk = pd.Series(penalty_p7p5zk.ravel(), index=cols_p7p5zk)
+    cols_p7p5zkl = pd.MultiIndex.from_product([keys_p7, keys_p5, keys_z, keys_k, keys_l])
+    penalty_p7p5zkl = pd.Series(penalty_p7p5zkl.ravel(), index=cols_p7p5zkl)
 
     ##store r_vals
     ###make z8 mask - used to uncluster
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
 
-    fun.f1_make_r_val(r_vals, penalty_p7p5zk, 'sowing_yield_penalty_p7p5zk', mask_season_p7z[:, na, :, na], z_pos=-2)
-    return penalty_p7p5zk
+    fun.f1_make_r_val(r_vals, penalty_p7p5zkl, 'sowing_yield_penalty_p7p5zkl', mask_season_p7z[:, na, :, na, na], z_pos=-3)
+    return penalty_p7p5zkl
 
 
 # def f_stubble_penalty():

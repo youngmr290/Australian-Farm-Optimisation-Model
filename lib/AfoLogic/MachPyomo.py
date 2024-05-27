@@ -76,7 +76,7 @@ def f1_machpyomo_local(params, model):
     
     model.p_hay_made_prov = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['hay_made_prov_p7z'], default = 0.0, doc='phase period when hay is made (required so that hay is made in the same season stage that the cost is incurred)')
 
-    model.p_biomass_penalty = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_crops, initialize=params['biomass_penalty'], default = 0.0, mutable=False, doc='kg/ha/day penalty for late sowing in each period')
+    model.p_biomass_penalty = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_crops, model.s_lmus, initialize=params['biomass_penalty'], default = 0.0, mutable=False, doc='kg/ha/day penalty for late sowing in each period')
     
     # model.p_stubble_penalty = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_crops, initialize=params['stubble_penalty'], default = 0.0, mutable=False, doc='kg/ha/day penalty for late sowing in each period')
 
@@ -200,10 +200,10 @@ def f_late_seed_penalty(model,q,s,p7,k,l,z):
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
 
-    farmer_penalty = sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[q,s,z,p,k,l] * model.p_biomass_penalty[p7,p,z,k]
+    farmer_penalty = sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[q,s,z,p,k,l] * model.p_biomass_penalty[p7,p,z,k,l]
                          for p in model.s_labperiods)
 
-    contract_penalty = sum(model.v_contractseeding_ha[q,s,z,p,k,l] * model.p_biomass_penalty[p7,p,z,k]
+    contract_penalty = sum(model.v_contractseeding_ha[q,s,z,p,k,l] * model.p_biomass_penalty[p7,p,z,k,l]
                            for p in model.s_labperiods)
 
     return farmer_penalty + contract_penalty

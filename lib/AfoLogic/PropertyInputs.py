@@ -221,7 +221,7 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
     ##crop
     fun.f1_lmuregion_to_lmufarmer(crop, "yield_by_lmu", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(crop, "i_soil_production_z_l", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
-    fun.f1_lmuregion_to_lmufarmer(crop, "frost", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(crop, "seeding_penalty_lmu_scalar_lp", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(crop, "fert_by_lmu", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(crop, "chem_by_lmu", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(crop, "seeding_rate", a_lmuregion_lmufarmer, lmu_axis=1, lmu_flag=lmu_flag)
@@ -605,7 +605,7 @@ def f1_mask_lmu():
     ##crop
     f1_do_mask_lmu(crop, "yield_by_lmu", lmu_axis=1)
     f1_do_mask_lmu(crop, "i_soil_production_z_l", lmu_axis=1)
-    f1_do_mask_lmu(crop, "frost", lmu_axis=1)
+    f1_do_mask_lmu(crop, "seeding_penalty_lmu_scalar_lp", lmu_axis=0)
     f1_do_mask_lmu(crop, "fert_by_lmu", lmu_axis=1)
     f1_do_mask_lmu(crop, "chem_by_lmu", lmu_axis=1)
     f1_do_mask_lmu(crop, "seeding_rate", lmu_axis=1)

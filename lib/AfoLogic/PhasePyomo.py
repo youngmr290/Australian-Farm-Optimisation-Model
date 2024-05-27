@@ -79,7 +79,7 @@ def f1_croppyomo_local(params, model):
     model.p_rotation_biomass = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_season_types, model.s_season_periods,
                                       initialize=params['rot_biomass'], default = 0.0, mutable=False, doc='biomass production for all crops for 1 unit of rotation')
 
-    model.p_biomass2product = pe.Param(model.s_crops, model.s_lmus, model.s_biomass_uses, initialize=params['biomass2product_kls2'],
+    model.p_biomass2product = pe.Param(model.s_crops, model.s_biomass_uses, initialize=params['biomass2product_ks2'],
                              default = 0.0, mutable=False, doc='conversion of biomass to yield (grain or hay) for each biomass use (harvesting as normal, baling for hay and grazing as fodder)')
 
     model.p_grainpool_proportion = pe.Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
@@ -137,7 +137,7 @@ def f_rotation_product(model,q,s,p7,g,k,s2,z):
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
-    return sum(model.v_use_biomass[q,s,p7,z,k,l,s2] * 1000 * model.p_biomass2product[k,l,s2]
+    return sum(model.v_use_biomass[q,s,p7,z,k,l,s2] * 1000 * model.p_biomass2product[k,s2]
                for l in model.s_lmus) * model.p_grainpool_proportion[k,g]
 
 

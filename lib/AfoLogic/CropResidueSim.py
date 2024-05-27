@@ -273,7 +273,7 @@ if __name__=="__main__":
         ###divide intake by total stubble to return stubble proportion in each category
         harvest_index = uinp.stubble['i_harvest_index_ks2'][k,0] #select the harvest s2 slice because yield penalty is inputted as a harvestable grain
         biomass = trial_yield_t[t] / harvest_index
-        total_residue = biomass * stub.f_biomass2residue(residuesim=True)[k,s2]
+        total_residue = biomass * stub.f_biomass2residue()[k,s2]
         #adjust the total residue so that consumption can't exceed the biomass
         total_residue = np.maximum(total_residue, np.sum(total_intake_ha_s1, axis=0))
         # total_residue_ks2 = 10000     #set to 10000 if the grain yield is to be back calculated

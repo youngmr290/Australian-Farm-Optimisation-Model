@@ -902,7 +902,8 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     seeding_cost_zp5lkqs_p7 = seeding_cost_zp5l_p7.reindex(seeding_ha_zp5lkqs.index, axis=0)
     seeding_cost_own_zkqs_p7 = seeding_cost_zp5lkqs_p7.mul(seeding_ha_zp5lkqs, axis=0).groupby(axis=0, level=(0,3,4,5)).sum()  # sum lmu axis and p5
 
-    contractseeding_ha_qszp5k = f_vars2df(lp_vars, 'v_contractseeding_ha', maskz8_zp5[:,:,na,na], z_pos=-4).groupby(level=(0,1,2,3,4)).sum()  # sum lmu axis (cost doesn't vary by lmu for contract)
+    contractseeding_ha_qszp5k_l = f_vars2df(lp_vars, 'v_contractseeding_ha', maskz8_zp5[:,:,na,na], z_pos=-4).unstack(-1)
+    contractseeding_ha_qszp5k = contractseeding_ha_qszp5k_l.sum(axis=1)  # sum lmu axis (cost doesn't vary by lmu for contract)
     contractseeding_ha_zp5kqs = contractseeding_ha_qszp5k.reorder_levels([2,3,4,0,1]).sort_index()
     contractseed_cost_ha_zp5_p7 = r_vals['mach']['contractseed_cost'].unstack(0)
     contractseed_cost_ha_zp5kqs_p7 = contractseed_cost_ha_zp5_p7.reindex(contractseeding_ha_zp5kqs.index, axis=0)
@@ -929,22 +930,23 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     mach_insurance_p7z = r_vals['mach']['mach_insurance']
 
     ##yield penalty from untimely sowing
-    sowing_yield_penalty_p7p5zk = r_vals['mach']['sowing_yield_penalty_p7p5zk']
-    sowing_yield_penalty_p5zk = sowing_yield_penalty_p7p5zk.groupby(level=(1,2,3)).sum() #sum p7
-    sowing_yield_penalty_zp5k = sowing_yield_penalty_p5zk.reorder_levels((1,0,2))
+    sowing_yield_penalty_p7p5zkl = r_vals['mach']['sowing_yield_penalty_p7p5zkl']
+    sowing_yield_penalty_p5zkl = sowing_yield_penalty_p7p5zkl.groupby(level=(1,2,3,4)).sum() #sum p7
+    sowing_yield_penalty_zp5kl = sowing_yield_penalty_p5zkl.reorder_levels((1,0,2,3))
     ###ha sown by farmer
     seeding_ha_qszp5_kl = seeding_days_qszp5_kl.mul(seeding_rate_kl.reindex(seeding_days_qszp5_kl.columns), axis=1) # note seeding ha won't equal the rotation area because arable area is included in seed_ha.
     seeding_ha_qszp5k_l = seeding_ha_qszp5_kl.stack(0)
     ###reindex penalty param
     ####add q & s axis
-    sowing_yield_penalty_qsz_kp5 = sowing_yield_penalty_zp5k.unstack((-1,-2)).reindex(seeding_ha_qszp5_kl.unstack(-1).index, axis=0, level=-1)
-    sowing_yield_penalty_qszp5k = sowing_yield_penalty_qsz_kp5.stack((1,0))
+    sowing_yield_penalty_qsz_lkp5 = sowing_yield_penalty_zp5kl.unstack((-1,-2,-3)).reindex(seeding_ha_qszp5_kl.unstack(-1).index, axis=0, level=-1)
+    sowing_yield_penalty_qszp5k_l = sowing_yield_penalty_qsz_lkp5.stack((2,1))
     ####expand k to include pastures
-    sowing_yield_penalty_qszp5k = sowing_yield_penalty_qszp5k.reindex(seeding_ha_qszp5k_l.index)
+    sowing_yield_penalty_qszp5k_l = sowing_yield_penalty_qszp5k_l.reindex(seeding_ha_qszp5k_l.index)
     ###calc penalty
-    farmer_penalty_qszp5k_l = seeding_ha_qszp5k_l.mul(sowing_yield_penalty_qszp5k, axis=0)
+    farmer_penalty_qszp5k_l = seeding_ha_qszp5k_l.mul(sowing_yield_penalty_qszp5k_l)
     farmer_penalty_qszp5k = farmer_penalty_qszp5k_l.sum(axis=1)
-    contract_penalty_qszp5k = contractseeding_ha_qszp5k.mul(sowing_yield_penalty_qszp5k, axis=0)
+    contract_penalty_qszp5k_l = contractseeding_ha_qszp5k_l.mul(sowing_yield_penalty_qszp5k_l)
+    contract_penalty_qszp5k = contract_penalty_qszp5k_l.sum(axis=1)
     total_penalty_qszk = farmer_penalty_qszp5k.add(contract_penalty_qszp5k).unstack(3).sum(axis=1)
     if option == 1:
         return total_penalty_qszk/1000 #convert to tonnes of penalty
@@ -2438,8 +2440,8 @@ def f_emission_summary(lp_vars, r_vals, option=0):
     type = 'stub'
     prod = 'residue_harv_n2o_zk'
     na_prod = [0, 1, 2,5,6]  # q,s,p7,l,s2
-    prod_weights = 'biomass2residue_kls2' #needed to convert v_biomass to residue
-    na_prod_weights = [0, 1, 2, 3]  # q,s,p7,z
+    prod_weights = 'biomass2residue_ks2' #needed to convert v_biomass to residue
+    na_prod_weights = [0, 1, 2, 3,5]  # q,s,p7,z,l
     weights = 'v_use_biomass_qsp7zkls2'
     keys = 'keys_qsp7zkls2'
     index = [0, 1, 3]  # q,s,z
@@ -2451,8 +2453,8 @@ def f_emission_summary(lp_vars, r_vals, option=0):
     type = 'stub'
     prod = 'residue_harv_ch4_zk'
     na_prod = [0, 1, 2,5,6]  # q,s,p7,l,s2
-    prod_weights = 'biomass2residue_kls2' #needed to convert v_biomass to residue
-    na_prod_weights = [0, 1, 2, 3]  # q,s,p7,z
+    prod_weights = 'biomass2residue_ks2' #needed to convert v_biomass to residue
+    na_prod_weights = [0, 1, 2, 3,5]  # q,s,p7,z,l
     weights = 'v_use_biomass_qsp7zkls2'
     keys = 'keys_qsp7zkls2'
     index = [0, 1, 3]  # q,s,z
@@ -2681,8 +2683,8 @@ def f_emission_summary(lp_vars, r_vals, option=0):
 
     ###crop (grain/hay) production
     type = 'crop'
-    prod = 'biomass2product_kls2'
-    na_prod = [0, 1, 2]  # q,s,p7
+    prod = 'biomass2product_ks2'
+    na_prod = [0, 1, 2,3,5]  # q,s,p7,z,l
     weights = 'v_use_biomass_qsp7zkls2'
     keys = 'keys_qsp7zkls2'
     index = [0, 1, 3]  # q,s,z

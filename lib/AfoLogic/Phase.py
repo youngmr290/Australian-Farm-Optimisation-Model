@@ -226,7 +226,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     '''
     Calculates the biomass for each rotation. Accounting for LMU, arable area and frost.
 
-    The crop yield for each rotation phase, on the base LMU [#]_, before frost and harvested proportion adjustment
+    The crop yield for each rotation phase, on the base LMU [#]_, at the optimal time of seeding and before harvested proportion adjustment
     (spilt/split grain), is entered as an input. The yield is inputted assuming seeding was completed at the optimal time.
     The base yield inputs are read in from either the simulation output or
     from Property.xl depending on what the user has specified to do. The yield input is dependent on the
@@ -242,6 +242,13 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     harvest time and is adjusted downwards for 'baling' because a crop is baled prior to harvest. Grazing of standing
     fodder is assumed to occur at or after harvest.
 
+    Dry sown land uses can have a lower yield input to represent the
+    risks associated with dry sowing such as less effective weed control (i.e. crops germinate at
+    the same time as the weeds so you miss out on a knock down spray opportunity), poor crop emergence (if
+    opening rains are spasmodic patchy crop germination is possible and early crop vigour may be absent without
+    adequate follow up rain) :cite:p:`RN119`. Dry sowing may not incur a yield penalty in seasons with a late break or
+    if more/better herbicide is applied.
+
     To extrapolate the inputs from the base LMU to the other LMUs an LMU adjustment factor is
     applied which determines the yield on each other LMU as a proportion of the base LMU. The LMU adjustment
     factor accounts for the variation in yield on different LMUs when management is the same.
@@ -251,15 +258,11 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     trees the yield is adjusted by the arable proportion. (e.g. if wheat yields 4 t/ha on LMU5 and LMU5 is 80%
     arable then 1 unit of the decision variable will yield 3.2t of wheat).
 
-    Frost does not impact total biomass however it does impact yield and stubble. Thus, frost is counted for
-    in biomass2product and biomass2residue functions. See those functions for more documentation on frost.
-
-    Furthermore, as detailed in the machinery chapter, sowing timeliness can also impact yield. Dry sowing tends [#]_
-    to incur a yield reduction due to forgoing an initial knockdown spray. While later sowing incurs a yield
-    loss due to a reduced growing season.
+    Furthermore, as detailed in the machinery chapter, sowing timeliness can also impact yield. For example,
+    sowing to early may incur a yield reduction due to increased frost or forgoing an initial knockdown spray.
+    While later sowing incurs a yield loss due to a reduced growing season.
 
     .. [#] Base LMU – standardise LMU to which other LMUs are compared against.
-    .. [#] Dry sowing may not incur a yield penalty in seasons with a late break or if more/better herbicide is applied.
 
     :param for_stub: Boolean set to true when calculating the yield that is used to calculate total stubble production.
     :return: Dataframe of rotation yields - passed to pyomo and used to calc grain insurance & stubble handling cost
@@ -351,38 +354,28 @@ def f_biomass2product(r_vals=None):
     Biomass scalar is the total biomass production from the area baled net of respiration losses relative
     to biomass at harvest if not baled. This is to account for difference in biomass between harvest and baling time.
 
-    Crop yield can also be adversely impacted by frost during the plants flowing stage :cite:p:`RN144`. Thus,
-    the harvest index of each rotation phase is adjusted by a frost factor. The frost factor can be customised for each
-    crop which is required because different crops flower at different times, changing the impact and probability of
-    frost biomass reduction. Frost factor can be customised for each LMU because frost effects can be altered by
-    the LMU topography and soil type. For example, sandy soils are more affected by frost because the lower
-    moisture holding capacity reduces the heat buffering from the soil.
+    Crop yield can also be adversely impacted by frost during the plants flowing stage :cite:p:`RN144`.
+    However, the impact of frost varies based on sowing date. Thus, frost is accounted for in the seeding penalty in Mach.py.
 
-    .. note:: Potentially frost can be accounted for in the inputs (particularly if the simulation model accounts
-        for frost). The LMU yield factor must then capture the difference of frost across LMUS.
     '''
     ##inputs
     harvest_index_ks2 = uinp.stubble['i_harvest_index_ks2']
     biomass_scalar_ks2 = uinp.stubble['i_biomass_scalar_ks2']
     propn_grain_harv_ks2 = uinp.stubble['i_propn_grain_harv_ks2']
-    frost_kl = pinp.crop['frost'].values
 
     ##calc biomass to product scalar - adjusted for frost
-    frost_harv_factor_kl = (1-frost_kl)
-    harvest_index_kls2 = harvest_index_ks2[:,na,:] * frost_harv_factor_kl[:,:,na]
-    biomass2product_kls2 = harvest_index_kls2 * propn_grain_harv_ks2[:,na,:] * biomass_scalar_ks2[:,na,:]
+    biomass2product_ks2 = harvest_index_ks2 * propn_grain_harv_ks2 * biomass_scalar_ks2
 
     ##store rval before converting to pandas
     if r_vals is not None:
-        fun.f1_make_r_val(r_vals, biomass2product_kls2, 'biomass2product_kls2')
+        fun.f1_make_r_val(r_vals, biomass2product_ks2, 'biomass2product_ks2')
 
     ##convert to pandas
     keys_k = sinp.landuse['C']
     keys_s2 = uinp.stubble['i_idx_s2']
-    keys_l = pinp.general['i_lmu_idx']
-    index_kls2 = pd.MultiIndex.from_product([keys_k, keys_l, keys_s2])
-    biomass2product_kls2 = pd.Series(biomass2product_kls2.ravel(), index=index_kls2)
-    return biomass2product_kls2
+    index_ks2 = pd.MultiIndex.from_product([keys_k, keys_s2])
+    biomass2product_ks2 = pd.Series(biomass2product_ks2.ravel(), index=index_ks2)
+    return biomass2product_ks2
 
 
 def f_grain_pool_proportions():
@@ -1096,9 +1089,9 @@ def f_insurance(r_vals):
     insurance_ks2z = insurance_k_zs2.stack([1,0])
     ##calc phase product for each s2 option then select the s2 slice with maximum insurance cost (maximum because that would most likely be the expected s2 option)
     biomass_rklz = f_rot_biomass(for_insurance=True)
-    biomass2product_kls2 = f_biomass2product()
-    yields_rz_kls2 = biomass_rklz.unstack([1,2]).reindex(biomass2product_kls2.index, axis=1).mul(biomass2product_kls2, axis=1)
-    yields_rl_ks2z = yields_rz_kls2.unstack(1).stack(1)
+    biomass2product_ks2 = f_biomass2product()
+    yields_rlz_ks2 = biomass_rklz.unstack(1).reindex(biomass2product_ks2.index, axis=1).mul(biomass2product_ks2, axis=1)
+    yields_rl_ks2z = yields_rlz_ks2.unstack(2)
     yields_rl_ks2z = yields_rl_ks2z.reindex(insurance_ks2z.index, axis=1).mul(insurance_ks2z, axis=1)/1000 #divide by 1000 to convert yield to tonnes
     yields_rl_kz = yields_rl_ks2z.groupby(axis=1, level=[0,2]).max()
     rot_insurance_rl_z = yields_rl_kz.stack(0).droplevel(axis=0, level=-1)
@@ -1450,7 +1443,7 @@ def f1_crop_params(params,r_vals):
     cost, increment_cost, wc, increment_wc = f1_rot_cost(r_vals)
     spreader_sprayer_dep_p7zlr, increment_spreader_sprayer_dep_p7zlr = f_spraying_spreading_dep()
     biomass = f_rot_biomass(r_vals=r_vals)
-    biomass2product_kls2 = f_biomass2product(r_vals)
+    biomass2product_ks2 = f_biomass2product(r_vals)
     propn = f_grain_pool_proportions()
     grain_price, grain_wc = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
@@ -1470,7 +1463,7 @@ def f1_crop_params(params,r_vals):
     params['rot_wc'] = wc.to_dict()
     params['increment_rot_wc'] = increment_wc.to_dict()
     params['rot_biomass'] = biomass[biomass!=0].to_dict() #only save non-zero params to save space.
-    params['biomass2product_kls2'] = biomass2product_kls2.to_dict()
+    params['biomass2product_ks2'] = biomass2product_ks2.to_dict()
     params['spreader_sprayer_dep_p7zlr'] = spreader_sprayer_dep_p7zlr.to_dict()
     params['increment_spreader_sprayer_dep_p7zlr'] = increment_spreader_sprayer_dep_p7zlr.to_dict()
     params['co2e_phase_fuel_zrl'] = total_co2e_phase_fuel_zrl.to_dict()

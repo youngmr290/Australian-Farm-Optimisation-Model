@@ -80,21 +80,18 @@ na = np.newaxis
 #     stubble = pd.Series(data=stubble_prod_data, index=sinp.landuse['C'])
 #     return stubble
 
-def f_biomass2residue(residuesim=False):
+def f_biomass2residue():
     '''
     Residue produced (Stubble or standing fodder) per kg of biomass.
 
     The total mass of crop residues at first grazing (harvest for stubble and an inputted date for fodder) is
-    calculated as a product of the biomass, harvest index, proportion harvested and frost.
+    calculated as a product of the biomass, harvest index and proportion harvested.
 
+    .. note:: Any frost impact on residue production has not been included because frost is captured within the
+    seeding penalty inputs because it changes based on sowing date.
     Residue production can be positively impacted by frost because frost during the plants flowering stage
     can damage cell tissue and reduce grain fill :cite:p:`RN144`. This results in less grain and more residue
-    due to not using energy resources to fill grain. Thus, the harvest index used to calculate biomass to residue
-    is adjusted by a frost factor. The frost factor can be customised for each
-    crop which is required because different crops flower at different times, changing the impact and probability of
-    frost biomass reduction. The frost factor can be customised for each LMU because frost effects can be altered by
-    the LMU topography and soil type. For example, sandy soils are more affected by frost because the lower
-    moisture holding capacity reduces the heat buffering from the soil.
+    due to not using energy resources to fill grain.
 
     This is a separate function because it is used in residue simulator.
     '''
@@ -102,21 +99,10 @@ def f_biomass2residue(residuesim=False):
     harvest_index_ks2 = uinp.stubble['i_harvest_index_ks2']
     biomass_scalar_ks2 = uinp.stubble['i_biomass_scalar_ks2']
     propn_grain_harv_ks2 = uinp.stubble['i_propn_grain_harv_ks2']
-    frost_kl = pinp.crop['frost'].values
 
     ##calc biomass to product scalar
-    ##if this is being calculated for sim then don't want to include frost (because don't want lmu axis and the frost input in AFO doesn't reflect the trial).
-    ##the assumption is that a frosted crop will not be used in the stubble trial.
-    if residuesim:
-        biomass2residue_ks2 = (1 - harvest_index_ks2 * propn_grain_harv_ks2) * biomass_scalar_ks2
-        return biomass2residue_ks2
-
-    ##calc biomass to product scalar - adjusted for frost
-    frost_harv_factor_kl = (1-frost_kl)
-    harvest_index_kls2 = harvest_index_ks2[:,na,:] * frost_harv_factor_kl[:,:,na]
-    biomass2residue_kls2 = (1 - harvest_index_kls2 * propn_grain_harv_ks2[:,na,:]) * biomass_scalar_ks2[:,na,:]
-
-    return biomass2residue_kls2
+    biomass2residue_ks2 = (1 - harvest_index_ks2 * propn_grain_harv_ks2) * biomass_scalar_ks2
+    return biomass2residue_ks2
 
 
 def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
@@ -381,7 +367,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     ###harv con & feed period transfer
     arrays_p6zk = [keys_p6, keys_z, keys_k]
     ###biomass to residue
-    arrays_kls2 = [keys_k, keys_l, keys_s2]
+    arrays_ks2 = [keys_k, keys_s2]
 
     ################
     ##pyomo params #
@@ -407,8 +393,8 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     params['cat_a_prov'] = fun.f1_make_pyomo_dict(cat_a_prov_p6zks1s2, arrays_p6zks1s2)
 
     ###category A transfer param
-    biomass2residue_kls2 = f_biomass2residue()
-    params['biomass2residue_kls2'] = fun.f1_make_pyomo_dict(biomass2residue_kls2, arrays_kls2)
+    biomass2residue_ks2 = f_biomass2residue()
+    params['biomass2residue_ks2'] = fun.f1_make_pyomo_dict(biomass2residue_ks2, arrays_ks2)
 
     ##md
     params['md'] = fun.f1_make_pyomo_dict(md_fp6zks1, arrays_fp6zks1)
@@ -432,7 +418,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     fun.f1_make_r_val(r_vals,np.moveaxis(np.moveaxis(md_fp6zks1, 0, 2), 0, 1),'md_zp6fks1',mask_fp_z8var_zp6[:,:,na,na,na],z_pos=-5)
     fun.f1_make_r_val(r_vals,np.moveaxis(stock_ch4_stub_p6zks1, 0, 1),'stock_ch4_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
     fun.f1_make_r_val(r_vals,np.moveaxis(stock_n2o_stub_p6zks1, 0, 1),'stock_n2o_stub_zp6ks1',mask_fp_z8var_zp6[:,:,na,na],z_pos=-4)
-    fun.f1_make_r_val(r_vals,biomass2residue_kls2,'biomass2residue_kls2')
+    fun.f1_make_r_val(r_vals,biomass2residue_ks2,'biomass2residue_ks2')
     fun.f1_make_r_val(r_vals,residue_harv_n2o_zk,'residue_harv_n2o_zk')
     fun.f1_make_r_val(r_vals,residue_harv_ch4_zk,'residue_harv_ch4_zk')
     fun.f1_make_r_val(r_vals,np.moveaxis(residue_cons_n2o_p6zk, 0, 1),'residue_cons_n2o_zp6k',mask_fp_z8var_zp6[:,:,na],z_pos=-3)
