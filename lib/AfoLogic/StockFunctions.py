@@ -936,20 +936,32 @@ def f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
     return kg
 
 
+def f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd):
+    '''Extra energy required for eating paddock feed than an equivalent feed in a pen (walking, chewing and ruminating)
+    Energy required for walking around the paddock is estimated from distance being a function of feed available
+    Low quality paddock feed is likely to be longer fibre length which might increase the energy to chew and ruminate.
+    '''
+    ##Distance walked (horizontal equivalent)
+    distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
+    ##Set Distance walked to 0 if in confinement
+    distance = distance * np.logical_not(confinement)
+    ##Energy required for movement
+    emove = cm[16, ...] * distance * lw
+    ##Extra energy required for chewing and ruminating
+    emasticate = cm[6, ...] * lw * intake_f * (cm[7, ...] - dmd)
+    ##Energy required for grazing (chewing and walking around)
+    egraze = emove + emasticate
+    return egraze
+
+
 def f_energy_cs(cx, cm, lw, ffcfw, mr_age, mei, omer_history_start, days_period, km
                 , i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_mr=1):
     #Energy required for maintenance and efficiency of energy use for maintenance & growth
     ##Energy required at maint for metabolism
     emetab = cx[10, ...] * cm[2, ...] * ffcfw ** 0.75 * mr_age * (1 + cm[5, ...] * mei_propn_milk)
-    ##Distance walked (horizontal equivalent)	
-    distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
-    ##Set Distance walked to 0 if in confinement	
-    distance = distance * np.logical_not(confinement)
-    ##Energy required for movement	
-    emove = cm[16, ...] * distance * lw
-    ##Energy required for grazing (chewing and walking around)
-    egraze = cm[6, ...] * ffcfw * intake_f * (cm[7, ...] - dmd) + emove
-    ##Energy associated with organ activity
+    ##Energy required for grazing (chewing, ruminating and walking)
+    egraze = f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd)
+    ##Energy associated with organ activity (organ ME requirement)
     omer, omer_history = f1_history(omer_history_start, cm[1, ...] * mei, days_period)
     ##ME requirement for maintenance (before ECold)
     meme = ((emetab + egraze) / km + omer) * sam_mr
@@ -957,7 +969,8 @@ def f_energy_cs(cx, cm, lw, ffcfw, mr_age, mei, omer_history_start, days_period,
     return meme, omer_history
 
 
-def f_energy_nfs(cm, cg, lw, ffcfw, fat, muscle, viscera, mei, km, i_steepness, density, foo
+
+def f_energy_nfs(cm, cg, lw, fat, muscle, viscera, mei, km, i_steepness, density, foo
                  , confinement, intake_f, dmd, mei_propn_milk=0, sam_mr=1):
     '''Heat production associated with maintenance (fasting heat production and heat associated with feeding) & efficiency'''
     ##Calculate the energy content of fat, muscle and viscera from the weight
@@ -972,15 +985,8 @@ def f_energy_nfs(cm, cg, lw, ffcfw, fat, muscle, viscera, mei, km, i_steepness, 
     ## Note: rumination might change with fibre length but this is not accounted for, only varies with M/D
     bmei = 1 - km
     hp_mei = bmei * mei
-    ##Distance walked (horizontal equivalent)
-    distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
-    ##Set Distance walked to 0 if in confinement
-    distance = distance * np.logical_not(confinement)
-    ##Energy required for movement
-    hp_move = cm[16, ...] * distance * lw
-    ##Extra energy required for eating paddock feed than an equivalent feed in a pen (chewing and ruminating)
-    ##Low quality paddock feed is likely to be longer fibre length which might increase the energy to chew and ruminate.
-    hp_graze = cm[6, ...] * ffcfw * intake_f * (cm[7, ...] - dmd) + hp_move
+    ##Extra heat production associated with grazing (chewing, ruminating and walking)
+    hp_graze = f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd)
     ##Heat produced by maintenance type functions (before ECold)
     hp_maint = (hp_fasting + hp_mei + hp_graze) * sam_mr
     ##Equivalent of MR from CSIRO feeding standards. Estimate of MEI for RE==0
