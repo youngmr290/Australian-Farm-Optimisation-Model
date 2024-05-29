@@ -994,7 +994,7 @@ def f_energy_nfs(cm, cg, lw, fat, muscle, viscera, mei, km, i_steepness, density
     return hp_maint, meme
 
 
-def f_foetus_cs(cb1, cp, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f
+def f_foetus_cs(cb1, cp, kc, nfoet, rc_start, w_b_std_y, w_b_exp_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f
                 , dce_age_f, rev_trait_value):
     '''Parameters
         ----------
@@ -1002,9 +1002,10 @@ def f_foetus_cs(cb1, cp, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
         cp : Numpy array, sim parameters - pregnancy requirements.
         kc : Efficiency of use of energy for gain foetal weight (includes the energy required for the whole of conceptus)
         nfoet : number of foetus (across the b1 axis)
-        relsize_start : current relative size of the dam
+        # relsize_start : current relative size of the dam
         rc_start : relative condition of the dam at the start of the period
         w_b_std_y : standard birth weight of lambs for a dam of this age
+        w_b_exp_y : expected birth weight of lambs accounting for dam relative condition
         w_f_start : weight of the foetus at the start of the period
         nw_f_start : normal weight of the foetus at the start of the period
         nwf_age_f : multiplier of BW to generate the normal weight of the foetus by age
@@ -1021,8 +1022,8 @@ def f_foetus_cs(cb1, cp, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
         '''
     #calculates the energy requirement for gestation for the days gestating.
     # The results are multiplied by gest_propn when used in sgen.
-    ##expected normal birth weight with dam age adj.
-    w_b_exp_y = (1 - cp[4, ...] * (1 - relsize_start)) * w_b_std_y
+    # ##expected normal birth weight with dam age adj.
+    # w_b_exp_y = (1 - cp[4, ...] * (1 - relsize_start)) * w_b_std_y
     ##Normal weight of foetus (mid-period - dam calcs)
     nw_f = w_b_exp_y * nwf_age_f
     ##change in normal weight of foetus	
@@ -1055,38 +1056,40 @@ def f_foetus_cs(cb1, cp, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
     # nec = np.maximum(0,fun.f_divide(nec_cum - nec_cum_start, days_period_f))
     ##ME required for conceptus	
     mec = nec / kc
-    return w_f, mec, nec, w_b_exp_y, nw_f, guw
+    return w_f, mec, nec, nw_f, guw
 
 
-def f_foetus_nfs(cg, ck, cp, step, c_start, muscle_start, dm, nfoet, relsize_start, w_b_std_y, w_f_start
-                 , nwf_age_f, guw_age_f, ce_day1_f, dcdt_age_f, gest_propn, rev_trait_value):
+def f_foetus_nfs(cg, ck, cp, step, c_start, muscle_start, d_muscle, nfoet, w_b_exp_y, w_f_start
+                 , nwf_age_f, guw_age_f, dcdt_age_f, bc, gest_propn, rev_trait_value):
     '''Parameters
     ----------
     cg : Numpy array, sim parameters - weight change.
     ck : Numpy array, sim parameters - efficiency of energy use.
     cp : Numpy array, sim parameters - pregnancy requirements.
-    step : number of days in a generator period
+    step : number of days gestating in the generator period
     c_start : energy in the foetus at the start of the period
     muscle_start : muscle weight at the start of the period
-    dm : change in muscle energy during the previous period (can't use current period because not calculated yet)
+    d_muscle : change in muscle mass during the previous period (can't use current period because not calculated yet)
     nfoet : number of foetus (across the b1 axis)
-    relsize_start : current relative size of the dam
-    w_b_std_y : standard birth weight of lambs for a dam of this age
+    # relsize_start : current relative size of the dam
+    # w_b_std_y : standard birth weight of lambs for a dam of this age
+    w_b_exp_y : expected birth weight of lambs accounting for dam relative condition
     w_f_start : weight of the foetus at the start of the period
     nwf_age_f : multiplier of BW to generate the normal weight of the foetus by age
     guw_age_f : multiplier of BW to generate the normal weight of the conceptus by age (gravid uterus)
-    ce_day1_f : multiplier of BW to generate the energy content of the conceptus on day 1 of pregnancy
     dcdt_age_f : multiplier of conceptus energy content to generate the increase in energy content by age
+    bc: parameter for hp from gaining conceptus weight (like kc except accounts for HAF)
     gest_propn : Numpy array, optional, Proportion of the period that the dam is gestating. The default is 0.
     '''
     #calculates the energy requirement for gestation for the days gestating. The result is scaled by gest_propn when used
-    ##expected normal birth weight with dam age adj.
-    w_b_exp_y = (1 - cp[4, ...] * (1 - relsize_start)) * w_b_std_y
-    ##c_start. If this is the first period of lactation then c_start needs to be initialised.
-    ### if the beginning of gestation calculate c_start for day 1 of gestation
-    c_start = fun.f_update(c_start, w_b_exp_y * ce_day1_f, c_start == 0)
+    # ##expected normal birth weight with dam age adj.
+    # w_b_exp_y = (1 - cp[4, ...] * (1 - relsize_start)) * w_b_std_y
+    # ##c_start. If this is the first period of lactation then c_start needs to be initialised.
+    # ### if the beginning of gestation calculate c_start for day 1 of gestation from total weight of lamb expected
+    # c_start = fun.f_update(c_start, w_b_exp_y * nfoet * ce_day1_f, c_start == 0)
     ## Conceptus growth scalar based on muscle growth in the previous period
-    m_start = f1_weight2energy(cg, muscle_start, 2)
+    dm = f1_weight2energy(cg, d_muscle, 1)
+    m_start = f1_weight2energy(cg, muscle_start, 1)
     dm_scalar = 1 + cp[19, ...] * dm / m_start
     ##Proportional change in conceptus energy for the first day of the generator period (Proportion of c_start)
     dce_propn = dm_scalar * dcdt_age_f
@@ -1099,18 +1102,19 @@ def f_foetus_nfs(cg, ck, cp, step, c_start, muscle_start, dm, nfoet, relsize_sta
     dc = f1_rev_update('foetus', dc, rev_trait_value)
     ##Normal weight of individual conceptus (mid-period)
     nw_gu = w_b_exp_y * guw_age_f
-    ##change in foetus weight
+    ##change in foetus weight Note:dc is conceptus so divide by n_foet to get change per foetus
     #d_w_f = d_nw_f *(1 + np.minimum(cfpreg, cfpreg * cb1[14, ...]))
-    d_w_f = dc / (cp[8, ...] * cp[5, ...])
+    d_w_f = fun.f_divide(dc, nfoet, option=0) / (cp[8, ...] * cp[5, ...])   #option=0 returns 0 for n_foet==0
     ##foetus weight (end of period)
-    w_f = w_f_start + d_w_f
+    w_f = w_f_start + d_w_f * step
     ##Normal weight of foetus (mid-period - dam calcs)
     nw_f = w_b_exp_y * nwf_age_f
     ##Weight of the gravid uterus (conceptus - mid-period)
     guw = nfoet * (nw_gu + (w_f - nw_f))
     ##HP associated with conceptus growth
-    hp_dc = ck[24, ...] * dc
-    return w_f, dc, hp_dc, w_b_exp_y, nw_f, guw
+    # hp_dc = ck[24, ...] * dc   #fixed efficiency during gestation as per SCA(1990)
+    hp_dc = bc * dc   #variable efficiency during gestation
+    return w_f, dc, hp_dc, nw_f, guw
 
 
 def f1_carryforward_u1(cu1, cg, ebg, period_between_joinstartend, period_between_mated90, period_between_d90birth
@@ -1258,13 +1262,13 @@ def f_milk_cs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_sta
     return mp2, mel, nel, ldr, lb
 
 
-def f_milk_nfs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start, ffcfw75_exp_yatf, lb_start
+def f_milk_nfs(cl, ck, srw, relsize_start, rc_birth_start, mei, hp_maint, mew_min, rc_start, ffcfw75_exp_yatf, lb_start
            , ldr_start, age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect, rev_trait_value):
     #calculates the energy requirement for lactation for the days lactating. The result is scaled by lact_propn when used
     ##Max milk prodn based on dam rc birth
     mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
-    ##Excess ME available for milk
-    mel_xs = np.maximum(0, (mei - (meme + mew_min * relsize_start))) * cl[5, ...] * kl
+    ##Excess ME available for milk. CSIRO uses meme which is a lower than hp_maint, therefore using 0.9 instead of using kl
+    mel_xs = np.maximum(0, (mei - (hp_maint + mew_min * relsize_start))) * cl[5, ...] * 0.9  #kl
     ##Excess ME as a ratio of mpmax
     milk_ratio = fun.f_divide(mel_xs, mpmax) #func stops div0 error - and milk ratio is later discarded because days period f = 0
     ##Age or energy factor
@@ -1281,8 +1285,8 @@ def f_milk_nfs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_st
     ##NE for lactation
     #todo What is the role of cl[5] (milk metabolisability) in reducing the amount of energy available for milk production
     dl = mp2 / cl[5, ...]
-    ##ME for lactation (per day lactating)
-    hp_dl = mp2 * (1 - kl) / kl
+    ##Heat production associated with lactation (per day lactating)
+    hp_dl = mp2 * ck[25, ...]
     ##ratio of actual to potential milk
     dr = fun.f_divide(mp2, mpmax) #div func stops div0 error - and dr has no effect later because days period f = 0
     ##Lagged DR (lactation deficit)
@@ -1333,7 +1337,7 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
 
 def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, mew_min_g, d_cfw_ave_g
             , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g, days_period_g, sfw_ltwadj_g, sfd_ltwadj_g
-            , rev_trait_value, mec_g1=0, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
+            , rev_trait_value, dc_g1=0, hp_dc_g1=0, dl_g1=0, hp_dl_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##Wool growth is a copy of CSIRO but with different calculation of energy stored and heat production
     ##There is some discrepancy in Hutton's equations because the energy content is for protein DM (not as shorn)
     ##adjust wge, cfw_ave, mew_min & sfd for the LTW adjustments (CFW is a scalar and FD is an addition)
@@ -1347,7 +1351,8 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
     ###which is required for the GEPEP analysis that is calibrating the adult intake and the fleece weight
     wge_a0e0b0xyg = wge_a0e0b0xyg / sam_pi
     ##ME available for wool growth
-    mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
+    mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - ((dc_g1 + hp_dc_g1) * gest_propn_g1
+                                                                + (dl_g1 + hp_dl_g1) * lact_propn_g1))
     ##Wool growth (protein weight-as shorn i.e. not DM) if there was no lag
     d_cfw_nolag_g = cw_g[8, ...] * wge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
     ##Process the CFW REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
@@ -1377,14 +1382,14 @@ def f_heat_cs(cc, ck, mei, mem, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, 
     ##Efficiency for growth (before ECold)
     kg = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
     ##Heat production per animal
-    hp_total = (mei - nec * gest_propn - nel * lact_propn - new
-                - kg * (mei - (mem + mec * gest_propn + mel * lact_propn + mew))
-                + cc[16, ...] * guw)
+    ###Net energy of gain in empty body
+    neg = kg * (mei - (mem + mec * gest_propn + mel * lact_propn + mew))
+    hp_total = (mei - nec * gest_propn - nel * lact_propn - new - neg + cc[16, ...] * guw)
     ##Level of feeding (at maint level = 0)
     #todo what is the definition of 'level' - it is used in Blaxter & Clapperton emissions calculation.
     # Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
     # Does it include me_cold
-    # Current assumption that it is level of feeding relative to maintenance requirement excluding conceptus, milk, extra wool & cold
+    # Current assumption is level of feeding relative to maintenance functions (excluding conceptus, milk, extra wool & cold)
     level = fun.f_divide(mei, mem) - 1
     return hp_total, level
 
@@ -1394,7 +1399,7 @@ def f1_level_nfs(mei, hp_maint):
     #todo what is the definition of 'level' - it is used in Blaxter & Clapperton emissions calculation.
     # Is it relative to the HP for maintenance functions or MEI for maintaining FFCFW (the difference being does it include conceptus energy & lactation energy)
     # Does it include me_cold
-    # Current assumption that it is level of feeding relative to FHP + HAF
+    # Current assumption is level of feeding relative to FHP + HAF (Note: FHP + HAF is different to MEm used in CFS)
     level = fun.f_divide(mei, hp_maint) - 1
     return level
 
@@ -1628,6 +1633,7 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei, md, hp_maint, dw, hp_
     pv = cg[33, ...]
     ## Step 1a: calculate dv from alpha_v for day 0
     alpha_v = np.maximum(0, cg[35, ...] * mei + cg[36, ...] * m**0.41 + cg[37, ...] * md)
+    # alpha_v = np.maximum(0, (0.5 - 0.02 * md + 0.014 * mei) * m ** 0.75)   #alternative equation proposed & rejected by Hutton 8May24 6:27am
     dv0 = pv * (alpha_v - v)
     ## Step 1b: estimate average dv across the duration of the step (because approaching an asymptote).
     ###Assumption is that alpha_v doesn't change during the step. Which is an imperfect assumption because
@@ -1689,14 +1695,15 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei, md, hp_maint, dw, hp_
     ### represented unless body composition is also being held constant (i.e. WBE is a trait in the BO).
     ###This is a better outcome for reflecting the energy cost of traits than occurs with the CSIRO feeding standards.
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
-    ##Step 10: Calculate MEI from the components as updated by the REVs
+    ##Step 10: Calculate MEI from the components as updated by the REVs  #todo Consider revamping this equation to allow for HAF being controlled by MEI
+    #something like mei = (df + dm + dv ... + hp_fhp + hp_df + ... + chill_increment) / (km). But the chill increment needs some work in the recalc because it could change.
     mei = (df + dm + dv + dw + gest_propn * dc + lact_propn * dl
            + np.maximum(heat_loss, hp_maint + hp_df + hp_dm + hp_dv + hp_dw + hp_dc + hp_dl))
     ##Energy value of gain (reflects if ebg is held constant due to REV calculation).
     evg = (df + dm + dv) / ebg
 
     ##Surplus energy and kg, as a comparison with old feeding standards
-    ##surplus energy id energy above (maintenance + conceptus growth + milk production) so different to neg.
+    ##surplus energy is energy above (maintenance + conceptus growth + milk production) so different to neg.
     surplus_energy = df + dm + dv + hp_df + hp_dm + hp_dv
     kg = np.where((df + dm + dv) > 0, (df + dm + dv) / surplus_energy, 0) # a comparison with the old feeding standards
 
