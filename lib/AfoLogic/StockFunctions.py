@@ -1524,6 +1524,9 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     neg = kg * surplus_energy
     ##Energy Value of gain (MJ/kg EBW)
     evg = cg[8, ...] - zf1 * (cg[9, ...] - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
+    ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
+    ###Note: REV[evg] does very little in the CSIRO feeding system (nothing if REV[ebg] is active), because partitioning is controlled by pcg formula.
+    evg = f1_rev_update('evg', evg, rev_trait_value)
     ##Protein content of gain (kg/kg EBW) (some uncertainty for sign associated with zf2.
     ### GrazFeed documentation had +ve however, this implies that PCG increases when BC > 1. So changed to -ve
     #todo check this equation when converting to a heat production based model.
@@ -1532,7 +1535,7 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     ebg = neg / evg
     ##Process the Liveweight REV: if LW is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     ###Note: In the CSIRO feeding standards, holding the LW trait constant is also holding the energy content of the
-    ### body constant because body composition is a function of weight. If the trait being changed is changing energy
+    ### body constant because body composition is a function of relative size (weight). If the trait being changed is changing energy
     ### transactions (eg increasing CFW) then the energy cost of the trait (CFW) will be lost and the 'cost' of energy
     ### of those traits will only be represented in the breeding program by correlations with weight &/or intake and their REVs.
     ###The REV of weight includes the mechanism used to cause the weight change (probably increased intake),

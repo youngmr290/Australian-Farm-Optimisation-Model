@@ -214,10 +214,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     len_s = np.power(len_z,len_q - 1)
     len_s7 = len(uinp.sheep['i_salegrid_keys'])
 
-    ###length t used in generator due to pkl feedsupply (user can specify to generate with t axis - default is active t axis)
+    ###length t used in generator. It specified by user (sensible to be false if using Excel feedsupply - default is active t axis)
     ### t is always singleton for sires
     ### t is same len for dams and yatf in gen because yatf use dams fs
-    if sinp.structuralsa['i_fs_use_pkl'] and sinp.structuralsa['i_generate_with_t']:
+    if sinp.structuralsa['i_generate_with_t']:
         len_gen_t1 = len_t1
         len_gen_t3 = len_t3
     else:
@@ -327,7 +327,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ############################
     '''only if assigned with a slice'''
     ##unique array shapes required to initialise arrays
-    tpg0 = (1, len_p, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)  #todo should this start with (len_t0, rather than (1, or is ijust assuming that len_t0 is 0 (seems to happen in afew place but len_t0 is used in some places
+    tpg0 = (1, len_p, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)  #todo should this start with (len_t0, rather than (1, or is it just assuming that len_t0 is 0 (seems to happen in afew place but len_t0 is used in some places
     pg1 = (len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
     pg3 = (lenoffs_p, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
     tpg1 = (len_gen_t1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
@@ -564,7 +564,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     a_g3_g0 = pinp.sheep['ia_g3_g0'][mask_sire_inc_g0]   # the sire association (purebred B, M & T) are all based on purebred B because there are no purebred M & T inputs
     a_g3_g1 = pinp.sheep['ia_g3_g1'][mask_dams_inc_g1]   # if BMT exist then BBM exist, and they will be in slice 1, therefore the association value doesn't need to be adjusted for "prior exclusions"
 
-    ##age weaning- used to calc wean date and also to calc p1 stuff, sire and dams have no active a0 slice therefore just take the first slice
+    ##age weaning, used to calc wean date and also to calc p1 stuff, sire and dams have no active a0 slice therefore just take the first slice
     ###note: if age_wean_g3 gets a d axis it needs to be the same for all animals that get clustered (see date born below)
     age_wean1st_a0e0b0xyg3 = fun.f_expand(pinp.sheep['i_age_wean_a0g3'], a0_pos, right_pos=g_pos, condition=mask_offs_inc_g3,
                                          axis=g_pos, condition2=pinp.sheep['i_mask_a'], axis2=a0_pos)
@@ -629,8 +629,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3[mask_shear_s3]
     len_s3 = np.count_nonzero(mask_shear_s3)
     ####adjust shearing dates if they occur before birth (this is incase user input the wrong year on the shearing dates)
-    date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3 + np.maximum(0, np.ceil((np.max(date_born1st_ida0e0b0xyg3,axis=d_pos) - date_shear_sida0e0b0xyg3[0])/364)) * 364 #max across d axis means shearing cant occur before the youngest animal is born (we dont want to add a d axis to shearing date).
-    ####Note: shearing date is adjusted below to stop it occuring before weaning.
+    date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3 + np.maximum(0, np.ceil((np.max(date_born1st_ida0e0b0xyg3,axis=d_pos) - date_shear_sida0e0b0xyg3[0])/364)) * 364 #max across d axis means shearing cant occur before the youngest animal is born (we don't want to add a d axis to shearing date).
+    ####Note: shearing date is adjusted below to stop it occurring before weaning.
 
     ##if generating for stubble then overwrite some of these inputs to match the stubble trial
     if stubble:
@@ -3307,7 +3307,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                          , intake_f_sire, dmd_sire, sam_mr = sam_mr_sire)
                         if eqn_used:
                             hp_maint_sire = temp0
-                            meme_sire = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs() which you might want to do when using r_compare
+                            meme_sire = temp1   #comment out this code to use meme from CSIRO in f_heat_cs() & f_chill_cs() which you might want to do when using r_compare
                         if eqn_compare:
                             r_compare7_q0q2tpsire[eqn_system, 0, :, p, ...] = temp1
                     ###dams
@@ -3321,7 +3321,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         if eqn_used:
                             hp_maint_dams = temp0
                             # Commenting out the next line will cause an error if not using r_compare because meme_dams is used for milk production
-                            meme_dams = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs() which you might want to do when using r_compare
+                            meme_dams = temp1   #comment out this code to use meme from CSIRO in f_milk_cs(), f_heat_cs() & f_chill_cs() which you might want to do when using r_compare
                         if eqn_compare:
                             r_compare7_q0q2tpdams[eqn_system, 0, :, p, ...] = temp1
                     ###offs
@@ -3334,7 +3334,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                          , intake_f_offs, dmd_offs, sam_mr = sam_mr_offs)
                         if eqn_used:
                             hp_maint_offs = temp0
-                            meme_offs = temp1   #comment out this code to use meme from CSIRO in f_lwc_cs() which you might want to do when using r_compare
+                            meme_offs = temp1   #comment out this code to use meme from CSIRO in f_heat_cs() & f_chill_cs() which you might want to do when using r_compare
                         if eqn_compare:
                             r_compare7_q0q2tpoffs[eqn_system, 0, :, p, ...] = temp1
 
@@ -3417,7 +3417,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 eqn_group = 17
                 eqn_system = 0 # CSIRO = 0
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_cs(cw_sire, cc_sire, ffcfw_start_sire
                                            , relsize_start_sire, d_cfw_history_start_p2g0
@@ -3440,7 +3440,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             r_compare17_q0q2tpsire[eqn_system, 1, :, p, ...] = temp1
                             r_compare17_q0q2tpsire[eqn_system, 2, :, p, ...] = temp4
 
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_cs(cw_dams, cc_dams, ffcfw_start_dams
                                            , relsize_start_dams, d_cfw_history_start_p2g1
@@ -3466,7 +3466,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             r_compare17_q0q2tpdams[eqn_system, 1, :, p, ...] = temp1
                             r_compare17_q0q2tpdams[eqn_system, 2, :, p, ...] = temp4
 
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_cs(cw_offs, cc_offs, ffcfw_start_offs
                                            , relsize_start_offs, d_cfw_history_start_p2g3
@@ -3492,7 +3492,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
                 eqn_system = 2 # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
-                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_nfs(cw_sire, cc_sire, cg_sire, ck_sire
                                             , ffcfw_start_sire, relsize_start_sire, d_cfw_history_start_p2g0, mei_sire
@@ -3514,7 +3514,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             r_compare17_q0q2tpsire[eqn_system, 1, :, p, ...] = temp1
                             r_compare17_q0q2tpsire[eqn_system, 2, :, p, ...] = temp4 + temp5
 
-                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_nfs(cw_dams, cc_dams, cg_dams, ck_dams
                                             , ffcfw_start_dams, relsize_start_dams, d_cfw_history_start_p2g1, mei_dams
@@ -3538,7 +3538,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             r_compare17_q0q2tpdams[eqn_system, 1, :, p, ...] = temp1
                             r_compare17_q0q2tpdams[eqn_system, 2, :, p, ...] = temp4 + temp5
 
-                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_nfs(cw_offs, cc_offs, cg_offs, ck_offs
                                             , ffcfw_start_offs, relsize_start_offs, d_cfw_history_start_p2g3, mei_offs
@@ -3571,7 +3571,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1 = sfun.f_heat_cs(cc_sire, ck_sire, mei_sire, meme_sire, mew_sire, new_sire, km_sire
                                                , kg_supp_sire, kg_fodd_sire, mei_propn_supp_sire, mei_propn_herb_sire)
-                        #use CSIRO version of hp_total in f_chill_cs() even if only comparing the CSIRO equation system
+                        #outside the if statement so that the CSIRO version of hp_total is used in f_chill_cs() when comparing equation systems
                         hp_total_sire = temp0
                         if eqn_used:
                             level_sire = temp1
@@ -3599,7 +3599,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                , mec = mec_dams, mel = mel_dams, nec = nec_dams, nel = nel_dams
                                                , gest_propn = gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                                , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
-                        #use CSIRO version of hp_total in f_chill_cs() even if only comparing the CSIRO equation system
+                        #outside the if statement so that the CSIRO version of hp_total is used in f_chill_cs() when comparing equation systems
                         hp_total_dams = temp0
                         if eqn_used:
                             level_dams = temp1
@@ -3626,7 +3626,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         temp0, temp1 = sfun.f_heat_cs(cc_offs, ck_offs, mei_offs, meme_offs, mew_offs, new_offs, km_offs
                                                , kg_supp_offs, kg_fodd_offs, mei_propn_supp_offs, mei_propn_herb_offs)
-                        #use CSIRO version of hp_total in f_chill_cs() even if only comparing the CSIRO equation system
+                        #outside the if statement so that the CSIRO version of hp_total is used in f_chill_cs() when comparing equation systems
                         hp_total_offs = temp0
                         if eqn_used:
                             level_offs = temp1
@@ -6559,7 +6559,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ### scan-spreadsheet will activate if comparing equations
     scan_spreadsheet = False
     if scan_spreadsheet:
-        from . import PlotViewer as pv #import here so that read the docs doesnt try to import plotviewer
+        from . import PlotViewer as pv #import here so that read the docs doesn't try to import plotviewer
         print('Interact with the graph generator using the PlotViewer spreadsheet, kill each plot to continue')
     while scan_spreadsheet:
         try:
@@ -6882,7 +6882,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##offs
     ##There are two ways to specify sale in AFO. (i) simply enter a number of sale options per dvp and AFO will
     ## make on t slice for each opportunity. The opportunities are evenly space within the dvp. This is the default
-    ## option. (ii) enter weights and ages that trigger sales. This method can be useful to reduce t sices but
+    ## option. (ii) enter weights and ages that trigger sales. This method can be useful to reduce t slices but
     ## care must be taken when doing the inputs.
 
     ###sale based on user inputted number of sale times spaced evenly within each DVP
@@ -6895,7 +6895,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         offs_sale_opportunities_per_dvp = sinp.structuralsa['i_offs_sale_opportunities_per_dvp']
         sale_offset_days_vg3 = (dvp_end_va1e1b1nwzida0e0b0xyg3 - np.maximum(
             date_weaned_ida0e0b0xyg3, dvp_start_va1e1b1nwzida0e0b0xyg3))/offs_sale_opportunities_per_dvp
-        sale_offset_days_tvg3 = sale_offset_days_vg3 * fun.f_expand(np.roll(np.arange(len_t3), shift=1, axis=0), p_pos-1) #len t3 includes the retained slice so roll because we want t[1] to be 0 offest so sale occurs at the end of the dvp.
+        sale_offset_days_tvg3 = sale_offset_days_vg3 * fun.f_expand(np.roll(np.arange(len_t3), shift=1, axis=0), p_pos-1) #len t3 includes the retained slice so roll because we want t[1] to be 0 offset so sale occurs at the end of the dvp.
         sale_date_tvg3 = dvp_end_va1e1b1nwzida0e0b0xyg3 - sale_offset_days_tvg3 #minus 7 to get the last period of previous dvp.
         sale_opp_tpa1e1b1nwzida0e0b0xyg3 = np.any(sfun.f1_period_is_('period_is', sale_date_tvg3[:,:,na,...],
                                                                      date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3), axis=1)
@@ -7482,7 +7482,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     co2e_animal_tpdams = o_ch4_animal_tpdams * uinp.emissions['i_ch4_gwp_factor'] + o_n2o_animal_tpdams * uinp.emissions['i_n2o_gwp_factor']
     co2e_animal_tpoffs = o_ch4_animal_tpoffs * uinp.emissions['i_ch4_gwp_factor'] + o_n2o_animal_tpoffs * uinp.emissions['i_n2o_gwp_factor']
 
-    ##emissions from fuel - dont need to multiply for gwp (already done in the function for fuel)
+    ##emissions from fuel - don't need to multiply for gwp (already done in the function for fuel)
     co2_husb_fuel_co2e_tpg0, ch4_husb_fuel_co2e_tpg0, n2o_husb_fuel_co2e_tpg0 = efun.f_fuel_emissions(fuel_used_tpg0)
     co2e_fuel_tpg0 = co2_husb_fuel_co2e_tpg0 + ch4_husb_fuel_co2e_tpg0 + n2o_husb_fuel_co2e_tpg0
     co2_husb_fuel_co2e_tpg1, ch4_husb_fuel_co2e_tpg1, n2o_husb_fuel_co2e_tpg1 = efun.f_fuel_emissions(fuel_used_tpg1)
@@ -7663,7 +7663,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###########################
     #  report P2V             #
     ###########################
-    ###sale weight - used to report emission intensity - note prog dont have p axis so prog weight is added in the next step
+    ###sale weight - used to report emission intensity - note prog don't have p axis so prog weight is added in the next step
     ### this could become a param so that a constraint can be made on emission intensity
     ####dams
     sale_ffcfw_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_start_tpdams,
@@ -8120,7 +8120,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##offs child parent transfer
     t_dvp_date_for_season_mask_vg3 = dvp_start_va1e1b1nwzida0e0b0xyg3.copy() #create copy so i can modify the dvp dates.
-    t_dvp_date_for_season_mask_vg3[0, ...] = date_weaned_ida0e0b0xyg3 #for z8 mask we need the first dvp date to be weaning so that the function can tell which seasons exist in dvp0 (ie if dvpdate[0]==0 and the first dvp is a node period the model will think the season exists in dvp[0] when infact it is identified in dvp[1]).
+    t_dvp_date_for_season_mask_vg3[0, ...] = date_weaned_ida0e0b0xyg3 #for z8 mask we need the first dvp date to be weaning so that the function can tell which seasons exist in dvp0 (ie if dvpdate[0]==0 and the first dvp is a node period the model will think the season exists in dvp[0] when in fact it is identified in dvp[1]).
     mask_provwithinz8z9_va1e1b1nwzida0e0b0xyg3z9, mask_provbetweenz8z9_va1e1b1nwzida0e0b0xyg3z9, \
     mask_childz_reqwithin_va1e1b1nwzida0e0b0xyg3, mask_childz_reqbetween_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(
         t_dvp_date_for_season_mask_vg3, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg3==season_vtype3, z_pos=z_pos)
@@ -8536,7 +8536,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     axis=e1_pos, keepdims=True)[..., na,na]) #na for w9 and g9 (use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_divide(numerator,denominator, dtype=dtype)
 
-    ####dams transferring between ram groups in the same DVP (if prejoing is the same date then transfer occurs from the dvp before prejoining to the prejoing dvp).
+    ####dams transferring between ram groups in the same DVP (if prejoining is the same date then transfer occurs from the dvp before prejoining to the prejoining dvp).
     #### This occurs if prejoining is not the same period therefore the transfer is to a different ram group (a_g1_tg1 != g1) and is occurring from a prejoining dvp which indicates that the transfer is from prejoining dvp to prejoining dvp because the destination ram group is joining after the source
     numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = (numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9
                                                                 * (np.logical_and(dvp_type_va1e1b1nwzida0e0b0xyg1[:, :, 0:1, ...] == prejoin_vtype1,
