@@ -849,17 +849,20 @@ def f_intake(pi, ri, md_herb, confinement, intake_s, i_md_supp, mp2=0):
 
 
 def f1_efficiency(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, mei_propn_milk=0, sam_kg=1):
-    #Energy required for maintenance and efficiency of energy use for maintenance & growth
-    ##Efficiency for maintenance (note: Blaxter & Boyne showed that km fits better if the coefficients vary with feed type)
+    ##Energy required for maintenance and efficiency of energy use for maintenance & growth
+    ###Efficiency for maintenance (note: Blaxter & Boyne showed that km fits better if the coefficients vary with feed type)
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
-    ##Efficiency for lactation - dam only
+    ###Efficiency for lactation - dam only
     kl =  ck[5, ...] + ck[6, ...] * md_solid
-    ##Efficiency for growth (supplement) including the sensitivity scalar
+    ###Efficiency for growth (supplement) including the sensitivity scalar
     kg_supp = ck[16, ...] * i_md_supp * sam_kg
-    ##Efficiency for growth (fodder) including the sensitivity scalar
+    ###Efficiency for growth (fodder) including the sensitivity scalar
     kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb * sam_kg
-    ##Energy required at maint for metabolism
-    return km, kg_fodd, kg_supp, kl
+    ###Efficiency for gaining fat
+    kf = 1 / (ck[20, ...] + 1)
+    ###Efficiency for gaining protein
+    kp = 1 / (ck[21, ...] + 1)
+    return km, kg_fodd, kg_supp, kl, kf, kp
 
 
 def f1_weight2energy(cg, weight, option):
@@ -965,9 +968,33 @@ def f_energy_cs(cx, cm, lw, ffcfw, mr_age, mei, omer_history_start, days_period,
     omer, omer_history = f1_history(omer_history_start, cm[1, ...] * mei, days_period)
     ##ME requirement for maintenance (before ECold)
     meme = ((emetab + egraze) / km + omer) * sam_mr
-    #todo Could add a return variable for hp_maint as a direct comparison with the new feeding standards.
-    return meme, omer_history
+    ##Calculate hp_maint for comparison with the new feeding standards which include HP for MEI above maintenance
+    ### the heat associated with feeding is the proportion that is not available for maintenance
+    bmei = 1 - km
+    ### HAF for the CFS is for energy intake surplus to maintenance
+    hp_mei = bmei * (mei - meme)
+    hp_maint = meme + hp_mei
+    return meme, omer_history, hp_maint
 
+
+def f_energy_mu(cx, cm, lw, lean, mr_age, mei, omer_history_start, days_period, km
+                , i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_mr=1):
+    #Energy required for maintenance and efficiency of energy use for maintenance & growth
+    ##Energy required at maint for metabolism
+    emetab = cx[10, ...] * cm[24, ...] * lean * mr_age * (1 + cm[26, ...] * mei_propn_milk)
+    ##Energy required for grazing (chewing, ruminating and walking)
+    egraze = f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd)
+    ##Energy associated with organ activity (organ ME requirement)
+    omer, omer_history = f1_history(omer_history_start, cm[23, ...] * mei, days_period)
+    ##ME requirement for maintenance (before ECold)
+    meme = ((emetab + egraze) / km + omer) * sam_mr
+    ##Calculate hp_maint for comparison with the new feeding standards which include HP for MEI above maintenance
+    ### the heat associated with feeding is the proportion that is not available for maintenance
+    bmei = 1 - km
+    ### HAF for the CFS is for energy intake surplus to maintenance
+    hp_mei = bmei * (mei - meme)
+    hp_maint = meme + hp_mei
+    return meme, omer_history, hp_maint
 
 
 def f_energy_nfs(cm, cg, lw, fat, muscle, viscera, mei, km, i_steepness, density, foo
@@ -1565,26 +1592,42 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
 
-def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
-    #same energy & efficiency calculation as CSIRO but different method for calculating the proportion of fat and lean in the gain
+def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kf, kp, rev_trait_value, mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
+    #uses energy & efficiency approach like CSIRO but separates kf & kp and calculates proportion of fat & protein from mass and energy balance
     ## requirement for maintenance
     maintenance = mem + mec * gest_propn + mel * lact_propn + mew
     ##Level of feeding (maint = 0)
     level = (mei / maintenance) - 1
     ##Energy intake that is surplus to maintenance
     surplus_energy = mei - maintenance
-    ##Net energy gain (based on ME)
-    neg = kg * surplus_energy
+    # ##Net energy gain (based on ME)
+    # neg = kg * surplus_energy
     ##Energy Value of gain as calculated.
     c_evg = cg[8, ...] - zf1 * (cg[9, ...] - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
     ## Scale from calculated to input evg based on zf2. If zf2 = 1 then scale based on the SAP
     evg = c_evg * (1 + sen.sap['evg_adult'] * zf2)
+    ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
+    evg = f1_rev_update('evg', evg, rev_trait_value)
+    ## proportion of fat in LW gain, determined from the EVG based on mass & energy balance (% by wet weight)
+    adipose_propn = (evg - (cg[21, ...] * cg[27, ...])) / ((cg[20, ...] * cg[26, ...]) - (cg[21, ...] * cg[27, ...]))
+    ## proportion of fat in energy gain (% by energy)
+    fat_propn = (adipose_propn * cg[20, ...] * cg[26, ...]) / evg
+    ## proportion of protein in energy gain (% by energy)
+    prot_propn = 1 - fat_propn
+    ## efficiency of surplus energy conversion to retained energy.
+    ### based on the proportion of energy gained as fat with efficiency kf and the proportion gained as protein kp
+    kg = 1 / (fat_propn / kf + prot_propn/ kp)
+    # ##Step 5: Total heat production (excluding the increase in HP to cover any extra required for chilling)
+    # hp_total = mei - neg_wo
+    # ##Step 6: Check if heat loss is greater than heat production. Replace neg if HP needs to increase
+    # neg = np.minimum(neg_wo, mei - heat_loss)
+    ##Net energy gain (based on ME)
+    neg = kg * surplus_energy
     ##Empty bodyweight gain
     ebg = neg / evg
     ##Process the Liveweight REV: if LW is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
-    ## proportion of fat and lean is determined from the EVG based on energy and DM content of muscle and adipose
-    adipose_propn = (evg - (cg[21, ...] * cg[27, ...])) / ((cg[20, ...] * cg[26, ...]) - (cg[21, ...] * cg[27, ...]))
+    ## energy gained as fat
     fg = ebg * adipose_propn * cg[26, ...]
     ##Protein gain (kg of protein dm)
     pg = (neg - fg * cg[20, ...]) / cg[21, ...]
@@ -2458,7 +2501,7 @@ def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_starts
     E.g. if drys were sold the prejoining animal would be a little bit lighter (because drys tend to weigh more).
 
     An extra step occurs if generating for stubble. For stubble the function selects the starting animal for the
-    next period based on animal liveweight compare to the stubble trial. The animals that have te closest lw
+    next period based on animal liveweight compare to the stubble trial. The animals that have the closest lw
     to the paddock trial become the starting animals next period.
     '''
     ##Set variable level = value at end of previous	
