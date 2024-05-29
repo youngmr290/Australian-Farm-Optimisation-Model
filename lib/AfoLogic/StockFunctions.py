@@ -1511,10 +1511,11 @@ def f_heatloss_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp
     sky_temp_m0p1 = f1_skytemp(cc, temp_ave, temp_max, temp_min, rain_p1, index_m0)
     ##Heat loss to the environment (MJ/m2) for the specified ambient temperature during the day
     heat_loss_m0p1 = fun.f_divide(cc[11, ..., na, na] - (temperature_m0[..., na] - sky_temp_m0p1) + cc[12, ..., na, na] * in_ext_m0p1
-                                        ,in_tissue[..., na, na] + in_ext_m0p1) * area[..., na, na]
-    ##Heat loss to the environment
-    heat_loss = np.average(heat_loss_m0p1, axis = (-1,-2))
-    return heat_loss
+                                        ,in_tissue[..., na, na] + in_ext_m0p1)
+    ##Heat loss to the environment (MJ/d) average for the generator period. This is compared with average heat production.
+    ### Note: This is slightly different to CFS because CFS averages the heat loss above heat production each day
+    total_heat_loss_m0p1 =  area[..., na, na] * heat_loss_m0p1
+    return total_heat_loss_m0p1
 
 
 def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
@@ -1601,7 +1602,7 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
 
-def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei, md, hp_maint, dw, hp_dw, heat_loss, step
+def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei, md, hp_maint, dw, hp_dw, heat_loss_m0p1, step
               , rev_trait_value, dc=0, hp_dc=0, dl=0, hp_dl=0, gest_propn = 0, lact_propn = 0):
     ##fat gain (MJ/d) is calculated using a formula derived from the Oddy etal 2023 paper (see Generator9:p16-17)
     ###The calculation is multistep because parameter values (bcm & bcf) depend on the sign of dm and df
@@ -1663,8 +1664,10 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei, md, hp_maint, dw, hp_
                     / (1 + bcm * pm * M)) #formula for NEG as the sink for energy, excluding dm
     ##Step 5: Total heat production (excluding the increase in HP to cover any extra required for chilling)
     hp_total = mei - neg_wo
-    ##Step 6: Check if heat loss is greater than heat production. Replace neg if HP needs to increase
-    neg = np.minimum(neg_wo, mei - heat_loss)
+    ##Step 6: The heat production increment due to chill (average of the m0p1 periods where heatloss is greater than heap production)
+    chill_increment = np.average(np.maximum(0, heat_loss_m0p1 - hp_total[..., na, na]), axis = (-1,-2))
+    #Reduce neg by the chill increment
+    neg = neg_wo - chill_increment
     ##Step 7a: Change in muscle protein (MJ/d) for day 0
     dm0 = (pm * neg + e0) * M   # which can also be written  (pm * neg + e0) / alpha_m * (alpha_m - m)
     ## Step 7b: estimate average dm across the duration of the step. Assumptions is that NEG doesn't change during
@@ -1698,16 +1701,16 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei, md, hp_maint, dw, hp_
     ##Step 10: Calculate MEI from the components as updated by the REVs  #todo Consider revamping this equation to allow for HAF being controlled by MEI
     #something like mei = (df + dm + dv ... + hp_fhp + hp_df + ... + chill_increment) / (km). But the chill increment needs some work in the recalc because it could change.
     mei = (df + dm + dv + dw + gest_propn * dc + lact_propn * dl
-           + np.maximum(heat_loss, hp_maint + hp_df + hp_dm + hp_dv + hp_dw + hp_dc + hp_dl))
+           + hp_maint + hp_df + hp_dm + hp_dv + hp_dw + hp_dc + hp_dl + chill_increment )
     ##Energy value of gain (reflects if ebg is held constant due to REV calculation).
     evg = (df + dm + dv) / ebg
 
     ##Surplus energy and kg, as a comparison with old feeding standards
     ##surplus energy is energy above (maintenance + conceptus growth + milk production) so different to neg.
     surplus_energy = df + dm + dv + hp_df + hp_dm + hp_dv
-    kg = np.where((df + dm + dv) > 0, (df + dm + dv) / surplus_energy, 0) # a comparison with the old feeding standards
+    kg_wo_haf = np.where((df + dm + dv) > 0, (df + dm + dv) / surplus_energy, 0) # a comparison with the old feeding standards
 
-    return ebg, evg, d_fat, d_muscle, d_viscera, mei, hp_total, surplus_energy, kg
+    return ebg, evg, d_fat, d_muscle, d_viscera, mei, hp_total, surplus_energy, kg_wo_haf, chill_increment
 
 
 def f_wbe_mu(cg, fat, muscle, viscera=0):
