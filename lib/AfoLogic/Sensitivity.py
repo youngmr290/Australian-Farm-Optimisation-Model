@@ -203,7 +203,6 @@ def create_sa():
     sav['variable_dep_hr_spreading'] = '-'               #variable depn of spreading gear per machine hour of spreading
 
     for option in uinp.mach:
-        ##SAV
         sav['clearing_value', option] = np.full(len(uinp.mach[option]['clearing_value']), '-', dtype=object) #clearing sale value of each item of machinery
         sav['number_seeders', option] = '-'                                 #number of seeders
         sav['seeding_rate_base', option] = '-'                                  #seeding speed of wheat on base LMU (km/hr)
@@ -214,11 +213,11 @@ def create_sa():
         sav['spreader_width', option] = np.full(len_n, '-', dtype=object)   #width for each fert type (m)
         sav['spreading_speed', option] = '-'                                #speed (km/hr)
         sav['spreading_eff', option] = '-'                                  #paddock efficiency of harvesting (accounts for overlap)
-        ##SAM
-        ##SAP
-        ##SAA
-        ##SAT
-        ##SAR
+    ##SAM
+    ##SAP
+    ##SAA
+    ##SAT
+    ##SAR
 
     ###########
     #Sup feed #
@@ -282,6 +281,7 @@ def create_sa():
     sam['pas_fert_kn'] = np.ones((len_pas_k, len_n), dtype='float64') #SA multiplier on pas fertiliser
     sam['crop_chem_k'] = np.ones(len_k, dtype='float64') #SA multiplier on crop chem package cost (ie all chem timing are scaled the same)
     sam['pas_chem_k'] = np.ones(len_pas_k, dtype='float64') #SA multiplier on pas chem package cost (ie all chem timing are scaled the same)
+    sam['sowing_penalty'] = 1.0  #sam on sowing timeliness yield penalty
     ##SAP
     ##SAA
     saa['crop_fert_passes_kn'] = np.zeros((len_k, len_n), dtype='float64') #SA adder on crop fertiliser passes

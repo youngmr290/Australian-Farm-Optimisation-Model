@@ -341,6 +341,7 @@ def f_property_inp_sa(pinp_defaults):
     crop['fert_by_lmu'] = fun.f_sa(crop['fert_by_lmu'], sen.sav['lmu_fert_adj_nl'], 5)
     crop['chem_by_lmu'] = fun.f_sa(crop['chem_by_lmu'], sen.sav['lmu_chem_adj_l'], 5)
     ###sam
+    crop['seeding_yield_penalty'] = fun.f_sa(crop['seeding_yield_penalty'], sen.sam['sowing_penalty'])
     ###sap
     ###saa
     ###sat
