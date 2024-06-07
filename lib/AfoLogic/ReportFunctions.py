@@ -969,7 +969,10 @@ def f_mach_summary(lp_vars, r_vals, option=0):
         ha_sown_qszp5k = ha_sown_qszp5k_l.sum(axis=1) #sum l
         ha_sown_qsk_zp5 = ha_sown_qszp5k.unstack([-3,-2])
         ave_sow_date_qskz = ha_sown_qsk_zp5.mul(labour_period_ave_zp5,axis=1).stack(0).sum(axis=1).div(ha_sown_qsk_zp5.stack(0).sum(axis=1))
-        return ave_sow_date_qskz.unstack(-2)
+        ave_sow_date_qsz_k = ave_sow_date_qskz.unstack(-2)
+        contractseeding_ha_qsz = contractseeding_ha_qszp5k_l.unstack((-1,-2)).sum(axis=1)
+        contractseeding_ha_qsz = pd.DataFrame(contractseeding_ha_qsz, columns=["Contract seeded (ha)"])
+        return pd.concat([contractseeding_ha_qsz, ave_sow_date_qsz_k], axis=1)
 
 def f_available_cropgrazing(r_vals):
     '''
