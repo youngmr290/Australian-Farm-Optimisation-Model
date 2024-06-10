@@ -118,8 +118,7 @@ def f_farmgate_grain_price(r_vals={}):
     '''
     ##inputs
     grain_price_info_df = uinp.price['grain_price_info'] #grain info
-    percentile_price_df = uinp.price['grain_price'] #grain price for 3 different percentiles
-    percentile_price_k_s2p = percentile_price_df.T.set_index(['percentile'], append=True).T.astype(float) #convert to float because array was initialised with string as well therefore it is an object type.
+    percentile_price_k_s2p = uinp.price['grain_price'] #grain price for 3 different percentiles
     grain_price_percentile = uinp.price['grain_price_percentile'] #price percentile to use
     grain_price_scalar_c1_z = zfun.f_seasonal_inp(uinp.price_variation['grain_price_scalar_c1z']
                                                  ,numpy=False, axis=1, level=0)
@@ -133,10 +132,10 @@ def f_farmgate_grain_price(r_vals={}):
 
     ##apply price SAV and SAM (SAV first)
     grain_price_firsts_k_s2 = grain_price_firsts_ks2.unstack()
-    grain_price_firsts_k_s2.loc[:,'Harv'] = fun.f_sa(grain_price_firsts_k_s2.loc[:,'Harv'], sen.sav['grainp_k'], 5)
-    grain_price_firsts_k_s2.loc[:,'Bale'] = fun.f_sa(grain_price_firsts_k_s2.loc[:,'Bale'], sen.sav['hayp_k'], 5)
+    grain_price_firsts_k_s2.loc[:,'Harv'] = fun.f_sa(grain_price_firsts_k_s2.loc[:,'Harv'], sen.sav['grainp_k'][pinp.crop_landuse_mask_k1], 5)
+    grain_price_firsts_k_s2.loc[:,'Bale'] = fun.f_sa(grain_price_firsts_k_s2.loc[:,'Bale'], sen.sav['hayp_k'][pinp.crop_landuse_mask_k1], 5)
     ###apply sam with k axis
-    grain_price_firsts_k_s2 = fun.f_sa(grain_price_firsts_k_s2, sen.sam['grainp_k'][:,na], 0)
+    grain_price_firsts_k_s2 = fun.f_sa(grain_price_firsts_k_s2, sen.sam['grainp_k'][pinp.crop_landuse_mask_k1,na], 0)
     grain_price_firsts_ks2 = grain_price_firsts_k_s2.stack()
 
     ##seconds price
@@ -271,7 +270,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     ##read phases
     phases_df = pinp.phases_r
     mask_r = pinp.rot_mask_r
-    keys_k = sinp.landuse['C']
+    keys_k = sinp.general['i_idx_k1']
 
     ##read in base yields
     if pinp.crop['user_crop_rot']:
@@ -293,7 +292,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     base_yields_rk_z = zfun.f_seasonal_inp(base_yields_rk_z, axis=1)
 
     ##apply sam with k axis
-    crop_yield_k = pd.Series(sen.sam['crop_yield_k'], index=keys_k)
+    crop_yield_k = pd.Series(sen.sam['crop_yield_k'][pinp.crop_landuse_mask_k1], index=keys_k)
     base_yields_rk_z = base_yields_rk_z.mul(crop_yield_k, axis=0, level=1).fillna(0)
     base_yields_rkz = base_yields_rk_z.stack()
 
@@ -307,10 +306,10 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     soil_production_scalar_zl = zfun.f_seasonal_inp(pinp.crop['i_soil_production_z_l'].T,numpy=False).unstack() #soil scalar by weather-year (to account for the fact that the relative performance of a soil is weather related)
     arable_l = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']) #read in arable area df
     harvest_index_k = uinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because yield is inputted as the harvestable grain
-    harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
-    propn_baled_k = pd.Series(uinp.stubble['i_propn_baled_k'], index=sinp.landuse['C']) #Proportion of biomass at baling that is baled (at point of baling - not including respiration losses).
-    growth_scalar_k = pd.Series(uinp.stubble['i_growth_scalar_k'], index=sinp.landuse['C']) #Biomass at baling relative to biomass at harvest (if not baled). To account for growth from date of baling to harvest.
-    propn_conserved_k = pd.Series(uinp.stubble['i_propn_conserved_k'], index=sinp.landuse['C']) #Proportion of baled biomass available to feed out. To allow for losses due to respiration during drying.
+    harvest_index_k = pd.Series(harvest_index_k, index=sinp.general['i_idx_k1'])
+    propn_baled_k = pd.Series(uinp.stubble['i_propn_baled_k'], index=sinp.general['i_idx_k1']) #Proportion of biomass at baling that is baled (at point of baling - not including respiration losses).
+    growth_scalar_k = pd.Series(uinp.stubble['i_growth_scalar_k'], index=sinp.general['i_idx_k1']) #Biomass at baling relative to biomass at harvest (if not baled). To account for growth from date of baling to harvest.
+    propn_conserved_k = pd.Series(uinp.stubble['i_propn_conserved_k'], index=sinp.general['i_idx_k1']) #Proportion of baled biomass available to feed out. To allow for losses due to respiration during drying.
     is_baled_k = sinp.general['i_is_baled_k'] #is the land use baled normally
 
     ##convert to biomass at grain harvest time
@@ -371,7 +370,7 @@ def f_biomass2product(r_vals=None):
         fun.f1_make_r_val(r_vals, biomass2product_ks2, 'biomass2product_ks2')
 
     ##convert to pandas
-    keys_k = sinp.landuse['C']
+    keys_k = sinp.general['i_idx_k1']
     keys_s2 = uinp.stubble['i_idx_s2']
     index_ks2 = pd.MultiIndex.from_product([keys_k, keys_s2])
     biomass2product_ks2 = pd.Series(biomass2product_ks2.ravel(), index=index_ks2)
@@ -466,10 +465,10 @@ def f_fert_passes():
 
     ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
     keys_n = uinp.general['i_fert_idx']
-    keys_k = sinp.landuse['C']
-    keys_k2 = sinp.landuse['All_pas']
-    crop_fert_passes_k_n = pd.DataFrame(sen.saa['crop_fert_passes_kn'], index=keys_k, columns=keys_n)
-    pas_fert_passes_k_n = pd.DataFrame(sen.saa['pas_fert_passes_kn'], index=keys_k2, columns=keys_n)
+    keys_k = sinp.general['i_idx_k1']
+    keys_k2 = sinp.general['i_idx_k2']
+    crop_fert_passes_k_n = pd.DataFrame(sen.saa['crop_fert_passes_kn'][pinp.crop_landuse_mask_k1,:], index=keys_k, columns=keys_n)
+    pas_fert_passes_k_n = pd.DataFrame(sen.saa['pas_fert_passes_kn'][pinp.pas_landuse_mask_k2,:], index=keys_k2, columns=keys_n)
     fert_passes_saa_k_n = pd.concat([crop_fert_passes_k_n, pas_fert_passes_k_n])
     fert_passes_saa_krz_n = fert_passes_saa_k_n.reindex(fert_passes_rkz_n.index, axis=0, level=1)
     fert_passes_rkz_n = fert_passes_rkz_n.add(fert_passes_saa_krz_n)
@@ -606,10 +605,10 @@ def f_fert_cost(r_vals):
 
     ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
     keys_n = uinp.general['i_fert_idx']
-    keys_k = sinp.landuse['C']
-    keys_k2 = sinp.landuse['All_pas']
-    crop_fert_k_n = pd.DataFrame(sen.sam['crop_fert_kn'], index=keys_k, columns=keys_n)
-    pas_fert_k_n = pd.DataFrame(sen.sam['pas_fert_kn'], index=keys_k2, columns=keys_n)
+    keys_k = sinp.general['i_idx_k1']
+    keys_k2 = sinp.general['i_idx_k2']
+    crop_fert_k_n = pd.DataFrame(sen.sam['crop_fert_kn'][pinp.crop_landuse_mask_k1,:], index=keys_k, columns=keys_n)
+    pas_fert_k_n = pd.DataFrame(sen.sam['pas_fert_kn'][pinp.pas_landuse_mask_k2,:], index=keys_k2, columns=keys_n)
     fert_sam_k_n = pd.concat([crop_fert_k_n, pas_fert_k_n])
     fert_sam_krz_n = fert_sam_k_n.reindex(base_fert_rkz_n.index, axis=0, level=1)
     base_fert_rkz_n = base_fert_rkz_n.mul(fert_sam_krz_n)
@@ -692,9 +691,9 @@ def f1_stubble_handling_prob():
     base_biomass_rkl_z = f_rot_biomass(for_stub=True).unstack()
     ###convert to grain
     harvest_index_k = uinp.stubble['i_harvest_index_ks2'][:,0] #select the harvest s2 slice because stubble handling is based on harvestable grain yield
-    harvest_index_k = pd.Series(harvest_index_k, index=sinp.landuse['C'])
+    harvest_index_k = pd.Series(harvest_index_k, index=sinp.general['i_idx_k1'])
     base_yields_rkl_z = base_biomass_rkl_z.mul(harvest_index_k, axis=0, level=1)
-    stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=sinp.landuse['C'], dtype=float)*1000  #have to convert to kg to match base yield
+    stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=sinp.general['i_idx_k1'], dtype=float)*1000  #have to convert to kg to match base yield
     probability_handling_rkl_z = base_yields_rkl_z.div(stub_handling_threshold, axis=0, level=1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
     probability_handling_rl_z = probability_handling_rkl_z.droplevel(1)
     return probability_handling_rl_z
@@ -838,10 +837,10 @@ def f_chem_application():
     chem_passes_rk_zn = zfun.f_seasonal_inp(chem_passes_rk_zn, axis=1, level=0)
     ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
     keys_n = uinp.general['i_chem_idx']
-    keys_k = sinp.landuse['C']
-    keys_k2 = sinp.landuse['All_pas']
-    crop_chem_passes_k_n = pd.DataFrame(sen.saa['crop_chem_passes_kn1'], index=keys_k, columns=keys_n)
-    pas_chem_passes_k_n = pd.DataFrame(sen.saa['pas_chem_passes_kn1'], index=keys_k2, columns=keys_n)
+    keys_k = sinp.general['i_idx_k1']
+    keys_k2 = sinp.general['i_idx_k2']
+    crop_chem_passes_k_n = pd.DataFrame(sen.saa['crop_chem_passes_kn1'][pinp.crop_landuse_mask_k1,:], index=keys_k, columns=keys_n)
+    pas_chem_passes_k_n = pd.DataFrame(sen.saa['pas_chem_passes_kn1'][pinp.pas_landuse_mask_k2,:], index=keys_k2, columns=keys_n)
     chem_passes_saa_k_n = pd.concat([crop_chem_passes_k_n, pas_chem_passes_k_n])
     chem_passes_rkz_n = chem_passes_rk_zn.stack(0)
     chem_passes_saa_krz_n = chem_passes_saa_k_n.reindex(chem_passes_rkz_n.index, axis=0, level=1)
@@ -922,10 +921,10 @@ def f_chem_cost(r_vals):
     ###Mask z axis
     chem_cost_rk_zn = zfun.f_seasonal_inp(chem_cost_rk_zn, axis=1, level=0)
     ###apply SAM
-    keys_k = sinp.landuse['C']
-    keys_k2 = sinp.landuse['All_pas']
-    crop_chem_k = pd.Series(sen.sam['crop_chem_k'], index=keys_k)
-    pas_chem_k = pd.Series(sen.sam['pas_chem_k'], index=keys_k2)
+    keys_k = sinp.general['i_idx_k1']
+    keys_k2 = sinp.general['i_idx_k2']
+    crop_chem_k = pd.Series(sen.sam['crop_chem_k'][pinp.crop_landuse_mask_k1], index=keys_k)
+    pas_chem_k = pd.Series(sen.sam['pas_chem_k'][pinp.pas_landuse_mask_k2], index=keys_k2)
     chem_sam_k = pd.concat([crop_chem_k, pas_chem_k])
     chem_cost_rk_zn = chem_cost_rk_zn.mul(chem_sam_k, axis=0, level=1)
     ###drop landuse from index
@@ -1265,7 +1264,7 @@ def f1_rot_fert_emissions(r_vals):
     co2e_fert_k = efun.f_fert_emissions()
 
     ##convert k to r
-    keys_k = sinp.landuse['All']
+    keys_k = sinp.general['i_idx_k']
     phases_df = pinp.phases_r
     landuse_r = phases_df.iloc[:, -1].values
     a_k_rk = landuse_r[:, na] == keys_k
@@ -1365,12 +1364,12 @@ def f_sow_prov():
     labour_period_end_p5z = labour_period_p5z.values[1:]
 
     ##general info
-    keys_k = sinp.landuse['All']
+    keys_k = sinp.general['i_idx_k']
     keys_z = zfun.f_keys_z()
     keys_p5 = labour_period_p5z.index[:-1]
     keys_p7 = per.f_season_periods(keys=True)
     dry_sown_landuses = sinp.landuse['dry_sown']
-    wet_sown_landuses = set(sinp.landuse['C']) - dry_sown_landuses #can subtract sets to return differences
+    wet_sown_landuses = set(sinp.general['i_idx_k1']) - dry_sown_landuses #can subtract sets to return differences
     false_brk_identification_z = zfun.f_seasonal_inp(pinp.general['i_false_brk_identification_z'],numpy=True,axis=0)
     false_brk_followuprains_z = zfun.f_seasonal_inp(pinp.general['i_false_brk_followuprains_z'],numpy=True,axis=0)
 
@@ -1400,7 +1399,7 @@ def f_sow_prov():
                                * p5z_isnot_during_false_break_p5z
     ###add k axis
     if not sinp.structuralsa['i_differentiate_wet_dry_seeding']: #in the web app all land uses can be dry sown (this is a simplification to save seperate representation of dry sown land uses.)
-        dry_sown_landuses = sinp.landuse['C']
+        dry_sown_landuses = sinp.general['i_idx_k1']
     period_is_dryseeding_p5zk = period_is_dryseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(dry_sown_landuses), axis=-1)
 
     ##pasture seeding

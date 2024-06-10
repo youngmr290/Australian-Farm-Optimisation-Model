@@ -188,10 +188,10 @@ def f_landuses_phases(params,r_vals):
     params['phases_rk'] = dict.fromkeys(phases_rk.index,1)
 
     ##store r_vals
-    fun.f1_make_r_val(r_vals,pd.Series(pinp.general['i_crop_landuse_inc_k1'], index=sinp.landuse['C']),'crop_landuse_inc_k1')
+    # fun.f1_make_r_val(r_vals,pd.Series(pinp.general['i_crop_landuse_inc_k1'], index=sinp.general['i_idx_k1']),'crop_landuse_inc_k1')
     fun.f1_make_r_val(r_vals,phases,'phases')
-    fun.f1_make_r_val(r_vals,sinp.landuse['All_pas'],'all_pastures')#all_pas2 includes the cont pasture landuses
-    fun.f1_make_r_val(r_vals,sinp.landuse['C'],'all_crops')
+    fun.f1_make_r_val(r_vals,sinp.general['i_idx_k2'],'all_pastures')#all_pas2 includes the cont pasture landuses
+    fun.f1_make_r_val(r_vals,sinp.general['i_idx_k1'],'all_crops')
     fun.f1_make_r_val(r_vals,sinp.landuse['E'],'all_cereals')
     fun.f1_make_r_val(r_vals,sinp.landuse['N'],'all_canolas')
     fun.f1_make_r_val(r_vals,sinp.landuse['P'],'all_pulses')
@@ -230,7 +230,7 @@ def f_phase_link_params(params):
     dry_sown_landuses = sinp.landuse['dry_sown']
     phases_df = pinp.phases_r
     landuse_r = phases_df.iloc[:,-1].values
-    keys_k  = np.asarray(list(sinp.landuse['All']))  #landuse
+    keys_k  = np.asarray(list(sinp.general['i_idx_k']))  #landuse
     phases_rotn_df = pinp.phases_r
     keys_p7 = per.f_season_periods(keys=True)
     keys_r = np.array(phases_rotn_df.index).astype('str')
@@ -349,7 +349,7 @@ def f_rot_hist4_params(params):
     History 4 constraint is used to ensure dual landuse follows the correct part a landuse.
 
     '''
-    keys_k  = np.asarray(list(sinp.landuse['All']))  #landuse
+    keys_k  = np.asarray(list(sinp.general['i_idx_k']))  #landuse
     phases_rotn_df = pinp.phases_r
 
     ##phase is dual - used to skip constraint

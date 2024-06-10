@@ -637,6 +637,89 @@ def f1_mask_lmu():
     f1_do_mask_lmu(mach, "tillage_maint_lmu_adj", lmu_axis=0)
     f1_do_mask_lmu(mach, "seeding_rate_lmu_adj", lmu_axis=0)
 
+def f1_do_mask_landuse(dict, key, landuse_axis_type, landuse_axis):
+    '''
+    This function mask the land use axis. Note, sometimes the crop/pasture landuses are
+    input separate and sometimes together.
+    :param dict: input dictionary.
+    :param key:  dictionary key to find input.
+    :param landuse_axis_type: "all" - all land uses, "crop" - crop land uses, "pas" - pasture land uses.
+    :param landuse_axis: axis position
+    :return:
+    '''
+
+    ##select the masking
+    if landuse_axis_type=="all":
+        k_mask = all_landuse_mask_k
+    elif landuse_axis_type=="crop":
+        k_mask = crop_landuse_mask_k1
+    elif landuse_axis_type=="pas":
+        k_mask = pas_landuse_mask_k2
+
+    ##mask landuse
+    if isinstance(dict[key], pd.DataFrame) or isinstance(dict[key], pd.Series):
+        if landuse_axis == 0:
+            dict[key] = dict[key].loc[k_mask]
+        elif landuse_axis == 1:
+            dict[key] = dict[key].loc[:, k_mask]
+    else:
+        dict[key] = np.compress(k_mask, dict[key], landuse_axis)
+
+def f1_mask_landuse():
+    ##make the mask - this is a global input because used to mask incode SAVs in Bounds.py
+    global crop_landuse_mask_k1
+    global pas_landuse_mask_k2
+    global all_landuse_mask_k
+    crop_landuse_mask_k1 = np.logical_and(general['i_crop_landuse_exists_k1'], general['i_crop_landuse_inc_k1'])
+    pas_landuse_mask_k2 = np.logical_and(general['i_pas_landuse_exists_k2'], general['i_pas_landuse_inc_k2'])
+    ###create the k mask for the full land use array. Needs to be ordered correctly
+    ####concat the crop and pasture mask
+    t_mask_k = np.concatenate([crop_landuse_mask_k1, pas_landuse_mask_k2], axis=0)
+    t_idx_k = np.concatenate([sinp.general['i_idx_k1'], sinp.general['i_idx_k2']], axis=0)
+    ####order mask_k to match the input order (alphebetic)
+    a_tk_k = np.where(sinp.general['i_idx_k'][:, na] == t_idx_k)[1]
+    all_landuse_mask_k = t_mask_k[a_tk_k]
+
+    ##general
+    f1_do_mask_landuse(general, "i_phase_can_increase_kp7", landuse_axis_type="all", landuse_axis=0)
+    f1_do_mask_landuse(general, "i_phase_can_reduce_kp7", landuse_axis_type="all", landuse_axis=0)
+
+    ##crop
+    f1_do_mask_landuse(crop, "seeding_yield_penalty", landuse_axis_type="crop", landuse_axis=0)
+    f1_do_mask_landuse(crop, "seeding_penalty_scalar_kz", landuse_axis_type="crop", landuse_axis=0)
+    f1_do_mask_landuse(crop, "start_harvest_crops", landuse_axis_type="crop", landuse_axis=0)
+    f1_do_mask_landuse(crop, "yield_by_lmu", landuse_axis_type="crop", landuse_axis=0)
+    f1_do_mask_landuse(crop, "seeding_rate", landuse_axis_type="all", landuse_axis=0)
+    f1_do_mask_landuse(crop, "seed_info", landuse_axis_type="all", landuse_axis=0)
+
+    ##emmisions
+    f1_do_mask_landuse(emissions, "i_burn_propn_k", landuse_axis_type="crop", landuse_axis=0)
+    f1_do_mask_landuse(emissions, "i_nitrogen_applied_k", landuse_axis_type="all", landuse_axis=0)
+    f1_do_mask_landuse(emissions, "i_propn_Urea", landuse_axis_type="all", landuse_axis=0)
+    f1_do_mask_landuse(emissions, "i_lime_applied_k", landuse_axis_type="all", landuse_axis=0)
+
+    ##cropgrazing
+    f1_do_mask_landuse(cropgraze, "i_cropgraze_propn_area_grazed_kl", landuse_axis_type="crop", landuse_axis=0)
+    f1_do_mask_landuse(cropgraze, "i_crop_growth_landuse_scalar_k", landuse_axis_type="crop", landuse_axis=0)
+    f1_do_mask_landuse(cropgraze, "i_cropgrowth_lmu_factor_kl", landuse_axis_type="crop", landuse_axis=0)
+    f1_do_mask_landuse(cropgraze, "i_cropgraze_wastage", landuse_axis_type="crop", landuse_axis=0)
+    f1_do_mask_landuse(cropgraze, "i_cropgraze_yield_reduction_kp6z", landuse_axis_type="crop", landuse_axis=0)
+    f1_do_mask_landuse(cropgraze, "i_crop_dmd_kp6z", landuse_axis_type="crop", landuse_axis=0)
+
+    ##labour
+    f1_do_mask_landuse(labour, "harvest_helper", landuse_axis_type="crop", landuse_axis=0)
+    f1_do_mask_landuse(labour, "variable_crop_monitoring", landuse_axis_type="crop", landuse_axis=0)
+
+    ##stub
+    f1_do_mask_landuse(stubble, "stubble_handling", landuse_axis_type="crop", landuse_axis=0)
+
+    ##Index names - sinp
+    f1_do_mask_landuse(sinp.general, "i_idx_k", landuse_axis_type="all", landuse_axis=0)
+    f1_do_mask_landuse(sinp.general, "i_idx_k1", landuse_axis_type="crop", landuse_axis=0)
+    f1_do_mask_landuse(sinp.general, "i_idx_k2", landuse_axis_type="pas", landuse_axis=0)
+    f1_do_mask_landuse(sinp.general, "i_is_baled_k", landuse_axis_type="crop", landuse_axis=0)
+    f1_do_mask_landuse(sinp.general, "i_landuse_is_dual", landuse_axis_type="all", landuse_axis=0)
+    f1_do_mask_landuse(sinp.general, "i_history4_req", landuse_axis_type="all", landuse_axis=0)
 
 
 

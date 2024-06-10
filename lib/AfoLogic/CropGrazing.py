@@ -417,7 +417,7 @@ def f1_cropgraze_params(params, r_vals, nv):
 
     ##keys
     keys_l = pinp.general['i_lmu_idx']
-    keys_k = sinp.landuse['C']
+    keys_k = sinp.general['i_idx_k1']
     keys_p6 = pinp.period['i_fp_idx']
     keys_p5 = np.asarray(per.f_p_dates_df().index[:-1]).astype('str')
     keys_f = np.array(['nv{0}' .format(i) for i in range(nv['len_nv'])])

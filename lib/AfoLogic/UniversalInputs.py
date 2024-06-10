@@ -19,6 +19,7 @@ import copy
 import os.path
 
 from . import Functions as fun
+from . import PropertyInputs as pinp
 
 
 def f_reshape_uinp_defaults(uinp_defaults):
@@ -48,6 +49,9 @@ def f_reshape_uinp_defaults(uinp_defaults):
     cu1 = (uinp_defaults["parameters_inp"]['i_cu1_len'], uinp_defaults["parameters_inp"]['i_cu1_len2'],-1)
     cu2 = (uinp_defaults["parameters_inp"]['i_cu2_len'], uinp_defaults["parameters_inp"]['i_cu2_len2'],-1)
     cx = (uinp_defaults["parameters_inp"]['i_cx_len'], uinp_defaults["parameters_inp"]['i_cx_len2'],-1)
+
+    ###price
+    uinp_defaults["price_inp"]['grain_price'] = uinp_defaults["price_inp"]['grain_price'].T.set_index(['percentile'], append=True).T.astype(float) #convert to float because array was initialised with string as well therefore it is an object type.
 
     ###stock
     uinp_defaults["sheep_inp"]['i_salep_months_priceadj_s7s9p4'] = np.reshape(uinp_defaults["sheep_inp"]['i_salep_months_priceadj_s7s9p4'], s7s9p4)
@@ -255,3 +259,38 @@ def f_universal_inp_sa(uinp_defaults):
         price_variation['len_c1'] = len(price_variation['prob_c1'])
 
 
+def f1_mask_landuse():
+    ##price
+    pinp.f1_do_mask_landuse(price, "contract_harv_cost", landuse_axis_type="crop", landuse_axis=0)
+    pinp.f1_do_mask_landuse(price, "grain_price_info", landuse_axis_type="crop", landuse_axis=0)
+    pinp.f1_do_mask_landuse(price, "grain_price", landuse_axis_type="crop", landuse_axis=0)
+
+    ##sup feed
+    pinp.f1_do_mask_landuse(supfeed, "sup_md_vol", landuse_axis_type="crop", landuse_axis=1)
+    pinp.f1_do_mask_landuse(supfeed, "grain_density", landuse_axis_type="crop", landuse_axis=1)
+    pinp.f1_do_mask_landuse(supfeed, "i_sup_s2_ks2", landuse_axis_type="crop", landuse_axis=0)
+
+    ##stub
+    pinp.f1_do_mask_landuse(stubble, "i_growth_scalar_k", landuse_axis_type="crop", landuse_axis=0)
+    pinp.f1_do_mask_landuse(stubble, "i_propn_baled_k", landuse_axis_type="crop", landuse_axis=0)
+    pinp.f1_do_mask_landuse(stubble, "i_propn_conserved_k", landuse_axis_type="crop", landuse_axis=0)
+    pinp.f1_do_mask_landuse(stubble, "i_biomass_scalar_ks2", landuse_axis_type="crop", landuse_axis=0)
+    pinp.f1_do_mask_landuse(stubble, "i_harvest_index_ks2", landuse_axis_type="crop", landuse_axis=0)
+    pinp.f1_do_mask_landuse(stubble, "i_propn_grain_harv_ks2", landuse_axis_type="crop", landuse_axis=0)
+    pinp.f1_do_mask_landuse(stubble, "quantity_decay", landuse_axis_type="crop", landuse_axis=0)
+    pinp.f1_do_mask_landuse(stubble, "quality_deterioration", landuse_axis_type="crop", landuse_axis=0)
+    pinp.f1_do_mask_landuse(stubble, "trampling", landuse_axis_type="crop", landuse_axis=0)
+    pinp.f1_do_mask_landuse(stubble, "i_t_inc_s2kt", landuse_axis_type="crop", landuse_axis=1)
+
+    ##emissions
+    pinp.f1_do_mask_landuse(emissions, "i_Rbg", landuse_axis_type="crop", landuse_axis=0)
+
+    ##mach general
+    pinp.f1_do_mask_landuse(mach_general, "contract_harvest_rate", landuse_axis_type="crop", landuse_axis=0)
+
+    for option in mach: #all mach inputs are adjusted even if not used
+        ###sav
+        pinp.f1_do_mask_landuse(mach[option], "seeding_rate_crop_adj", landuse_axis_type="all", landuse_axis=0)
+        pinp.f1_do_mask_landuse(mach[option], "harvest_rate", landuse_axis_type="crop", landuse_axis=0)
+        pinp.f1_do_mask_landuse(mach[option], "harvest_maint", landuse_axis_type="crop", landuse_axis=0)
+        pinp.f1_do_mask_landuse(mach[option], "sup_feed", landuse_axis_type="crop", landuse_axis=0)

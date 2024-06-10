@@ -300,7 +300,7 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
 #     period_is_passeeding_p5zt = (labour_period_start_p5z[:,:,na] < i_reseeding_date_end_zt) * (labour_period_end_p5z[:,:,na] > i_reseeding_date_start_zt)
 #
 #     ## add k (landuse axis) - this is required for sow param
-#     keys_k = np.asarray(list(sinp.landuse['All']))
+#     keys_k = np.asarray(list(sinp.general['i_idx_k']))
 #     kt = (len(keys_k), len(pastures))
 #     seeding_landuses = uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj'].index
 #     resown_kt = np.zeros(kt)

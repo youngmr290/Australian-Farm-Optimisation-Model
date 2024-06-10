@@ -28,6 +28,6 @@ def f_input_logic_test():
 
     ##if legume bnd is on then some legume crops must be included
     crop_landuse_mask_k1 = np.logical_and(pinp.general['i_crop_landuse_exists_k1'], pinp.general['i_crop_landuse_inc_k1'])
-    legume_included = np.array([x in sinp.landuse['P'] for x in sinp.landuse['C'][crop_landuse_mask_k1]], dtype=bool)
+    legume_included = np.array([x in sinp.landuse['P'] for x in sinp.general['i_idx_k1'][crop_landuse_mask_k1]], dtype=bool)
     if sen.sav['bnd_total_legume_area_percent']!='-' and not legume_included.any():
         raise ValueError('No legume land uses are included yet the legume area bound is on')

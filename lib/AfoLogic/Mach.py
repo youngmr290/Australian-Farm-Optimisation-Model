@@ -1089,7 +1089,7 @@ def f_seeding_dep():
     keys_p5 = mach_periods.index[:-1]
     keys_z = zfun.f_keys_z()
     keys_p7 = per.f_season_periods(keys=True)
-    keys_k = sinp.landuse['All']
+    keys_k = sinp.general['i_idx_k']
     keys_l = rate_direct_drill_k_l.columns
     index_p7p5z = pd.MultiIndex.from_product([keys_p7,keys_p5,keys_z])
     alloc_p7p5z = pd.Series(alloc_p7p5z.ravel(), index=index_p7p5z)

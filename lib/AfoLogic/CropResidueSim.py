@@ -141,7 +141,7 @@ if __name__=="__main__":
     p_pos = sinp.stock['i_p_pos']
     s1_pos = sinp.stock['i_w_pos'] #s1 goes in w pos for the stubble sim
 
-    len_k = len(sinp.landuse['C'])
+    len_k = len(sinp.general['i_idx_k1'])
     len_s2 = len(uinp.stubble['i_idx_s2'])
     len_p1 = n_sim_periods
     len_s1 = len(uinp.stubble['i_stub_cat_dmd_s1'])
@@ -176,7 +176,7 @@ if __name__=="__main__":
         if not uinp.stubble['i_trial_inc_t'][t]:
             continue
         ###trial crop index position
-        k = list(sinp.landuse['C']).index(uinp.stubble['i_trial_crop_t'][t])
+        k = list(sinp.general['i_idx_k1']).index(uinp.stubble['i_trial_crop_t'][t])
         s2 = list(uinp.stubble['i_idx_s2']).index(uinp.stubble['i_trial_biomass_use_t'][t])
 
         ##dmd categories to generate - include deterioration.

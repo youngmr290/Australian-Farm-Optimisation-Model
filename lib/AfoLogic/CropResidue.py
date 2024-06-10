@@ -77,7 +77,7 @@ na = np.newaxis
 #     This is a separate function because it is used in CropGrazing.py and Mach.py to calculate stubble penalties.
 #     '''
 #     stubble_prod_data = 1 / uinp.stubble['i_harvest_index_ks2'][:,0] - 1 * uinp.stubble['i_propn_grain_harv_ks2'][:,0]  # subtract 1*harv propn to account for the tonne of grain that was harvested and doesn't become stubble.
-#     stubble = pd.Series(data=stubble_prod_data, index=sinp.landuse['C'])
+#     stubble = pd.Series(data=stubble_prod_data, index=sinp.general['i_idx_k1'])
 #     return stubble
 
 def f_biomass2residue():
@@ -178,10 +178,11 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     4) calcs the md of each stubble category (dmd to MD)
     
     '''
-    len_k = len(sinp.landuse['C'])
+    len_k = len(sinp.general['i_idx_k1'])
     len_s2 = len(uinp.stubble['i_idx_s2'])
     len_s1 = len(uinp.stubble['i_stub_cat_dmd_s1'])
-    cat_propn_ks1s2 = cat_propn_s1_ks2.values.reshape(len_s1,len_k,len_s2).swapaxes(0,1)
+    cat_propn_ks1s2 = cat_propn_s1_ks2.values.reshape(len_s1,-1,len_s2).swapaxes(0,1)
+    cat_propn_ks1s2 = cat_propn_ks1s2[pinp.crop_landuse_mask_k1,:,:] #mask k
 
 
     ##quality of each category in each period
@@ -346,7 +347,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     ##keys  #
     #########
     ##keys
-    keys_k = sinp.landuse['C']
+    keys_k = sinp.general['i_idx_k1']
     keys_p6 = pinp.period['i_fp_idx']
     keys_s1 = uinp.stubble['i_stub_cat_idx']
     keys_s2 = uinp.stubble['i_idx_s2']

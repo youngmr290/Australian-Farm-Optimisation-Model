@@ -478,7 +478,7 @@ def f_sup_labour(nv):
     keys_z = zfun.f_keys_z()
     keys_p5 = lp_dates_p5z.index[:-1]
     keys_p6 = pinp.period['i_fp_idx']
-    keys_k = sinp.landuse['C']
+    keys_k = sinp.general['i_idx_k1']
     keys_f = np.array(['nv{0}'.format(i) for i in range(nv['len_nv'])])
     index = pd.MultiIndex.from_product([keys_p5, keys_p6, keys_z, keys_k, keys_f])
     total_time_p5p6zkf = pd.Series(total_time_p5p6zkf.ravel(), index=index)

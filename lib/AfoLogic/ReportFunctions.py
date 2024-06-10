@@ -2985,7 +2985,7 @@ def f_lupin_analysis(lp_vars, r_vals, trial):
     legume_names = ["Faba Bean", "Lentils", "Chickpea", "Lupins", "Vetch"]
     legume_keys = ['f','i', 'k', 'l', 'v']
     for legume_name, legume_key in zip(legume_names, legume_keys):
-        if r_vals['rot']['crop_landuse_inc_k1'][legume_key]:
+        if legume_key in r_vals['rot']['all_crops']:
             ##legume area
             landuse_area_qsz_k = f_area_summary(lp_vars, r_vals, option=4)
             legume_area_qsz = landuse_area_qsz_k.loc[:,legume_key]
@@ -3001,7 +3001,7 @@ def f_lupin_analysis(lp_vars, r_vals, trial):
             expected_legume_yield_z = expected_yields_k_z.loc[legume_key,:]
             expected_legume_yield = np.sum(expected_legume_yield_z.values * z_prob_qsz) #avevrage yield across z.
             summary_df.loc[trial, 'Expected {0} Income'.format(legume_name)] = round(legume_price * expected_legume_yield/1000, 0)
-        else: #if crop is not included se to None
+        else: #if crop is not included set to None
             summary_df.loc[trial, '{0} Area'.format(legume_name)] = ""
             summary_df.loc[trial, 'Expected {0} Income'.format(legume_name)] = ""
 

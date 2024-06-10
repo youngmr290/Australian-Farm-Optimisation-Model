@@ -94,11 +94,11 @@ def sets(model, nv):
     model.s_biomass_uses = Set(initialize=uinp.stubble['i_idx_s2'], doc='uses of phase biomass')
 
     ##types of crops
-    model.s_crops = Set(initialize=sinp.landuse['C'], doc='crop types')
+    model.s_crops = Set(initialize=sinp.general['i_idx_k1'], doc='crop types')
 
 
     ##all crops and each pasture landuse e.g. t, tr
-    model.s_landuses = Set(initialize=sinp.landuse['All'], doc='landuses')
+    model.s_landuses = Set(initialize=sinp.general['i_idx_k'], doc='landuses')
 
     ##different fert options - used in labourcroppyomo
     model.s_fert_type = Set(initialize=uinp.general['i_fert_idx'], doc='fertiliser options')

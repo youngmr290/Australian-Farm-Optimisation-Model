@@ -694,7 +694,7 @@ def f1_boundarypyomo_local(params, model):
         ###build bound if turned on
         if legume_area_bound_inc:
             total_legume_area_percent = sen.sav['bnd_total_legume_area_percent']
-            landuse_is_legume = dict(zip(model.s_crops, np.array([x in sinp.landuse['P'] for x in sinp.landuse['C']], dtype=int)))
+            landuse_is_legume = dict(zip(model.s_crops, np.array([x in sinp.landuse['P'] for x in sinp.general['i_idx_k1']], dtype=int)))
             ###constraint
             l_p7 = list(model.s_season_periods)
             def legume_bound(model, q, s, p7, z):

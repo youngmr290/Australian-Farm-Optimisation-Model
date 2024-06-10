@@ -83,9 +83,6 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     uinp.f_universal_inp_sa(uinp_defaults)
     pinp.f_property_inp_sa(pinp_defaults)
 
-    ##mask lmu
-    pinp.f1_mask_lmu()
-
     ##expand p6 axis to include nodes
     sinp.f1_expand_p6()
     pinp.f1_expand_p6()
@@ -97,6 +94,14 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     inptest.f_input_logic_test()
     inptest.f_input_shape_test()
     inptest.f_input_value_test()
+
+    ##mask lmu
+    pinp.f1_mask_lmu()
+
+    ##mask land use
+    pinp.f1_mask_landuse()
+    uinp.f1_mask_landuse()
+
 
     ##create empty dicts - have to do it here because need the trial as the first key, so whole trial can be compared when determining if pyomo needs to be run
     ###params

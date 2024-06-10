@@ -39,8 +39,8 @@ def create_sa():
     len_h5 = pinp.sheep['i_h5_len']
     len_h7 = pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'].shape[-1]
     len_i = pinp.sheep['i_i_len']
-    len_k = len(sinp.landuse['C'])
-    len_pas_k = len(sinp.landuse['All_pas'])
+    len_k = len(sinp.general['i_idx_k1'])
+    len_pas_k = len(sinp.general['i_idx_k2'])
     len_k0 = pinp.sheep['i_k0_len'] #Weaning option
     len_k1 = pinp.sheep['i_k1_len'] #Oestrus cycle
     len_k2 = pinp.sheep['i_k2_len'] #LSLN cluster

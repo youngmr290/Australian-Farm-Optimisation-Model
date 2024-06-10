@@ -195,7 +195,7 @@ def f_pasture(params, r_vals, nv):
     keys_p5  = np.array(per.f_p_date2_df().index).astype('str')
     keys_r  = np.array(phases_rotn_df.index).astype('str')
     keys_t  = np.asarray(pastures)                                      # pasture type index description
-    keys_k  = np.asarray(list(sinp.landuse['All']))                     #landuse
+    keys_k  = np.asarray(list(sinp.general['i_idx_k']))                     #landuse
     keys_z  = zfun.f_keys_z()
 
     ### rt
