@@ -118,16 +118,16 @@ na=np.newaxis
 def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1nwzida0e0b0xyg,
                  period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1,
                  scan_management_pa1e1b1nwzida0e0b0xyg1, gbal_management_pa1e1b1nwzida0e0b0xyg1, wean_management_pa1e1b1nwzida0e0b0xyg1,
-                 a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, a_t_tpg1, mask_p_offs_p, len_p, pkl_fs_info, pkl_fs):
+                 a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, a_t_tpg1, i_g3_inc, mask_p_offs_p, len_p, pkl_fs_info, pkl_fs):
 
     #########
     #inputs #
     #########
     ##masks required for initialising arrays
-    mask_sire_inc_g0 = np.any(sinp.stock['i_mask_g0g3'] * pinp.sheep['i_g3_inc'], axis =1)
-    mask_dams_inc_g1 = np.any(sinp.stock['i_mask_g1g3'] * pinp.sheep['i_g3_inc'], axis =1)
-    mask_yatf_inc_g2 = np.any(sinp.stock['i_mask_g2g3'] * pinp.sheep['i_g3_inc'], axis =1)
-    mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis =1)
+    mask_sire_inc_g0 = np.any(sinp.stock['i_mask_g0g3'] * i_g3_inc, axis =1)
+    mask_dams_inc_g1 = np.any(sinp.stock['i_mask_g1g3'] * i_g3_inc, axis =1)
+    mask_yatf_inc_g2 = np.any(sinp.stock['i_mask_g2g3'] * i_g3_inc, axis =1)
+    mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * i_g3_inc, axis =1)
 
     ##pos
     a0_pos = sinp.stock['i_a0_pos']

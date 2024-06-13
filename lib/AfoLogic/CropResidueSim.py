@@ -220,8 +220,7 @@ if __name__=="__main__":
         ## currently only the g and b axis are selected based on trial info. Any other axes are averaged. (This could be changed).
         if uinp.stubble['i_dams_in_trial_t'][t]:
             ###select across g axis - weighted
-            mask_dams_inc_g1 = np.any(sinp.stock['i_mask_g1g3'] * pinp.sheep['i_g3_inc'], axis=1)
-            mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis=1)
+            mask_dams_inc_g1 = uinp.stubble['i_g3_inc_g3t'][:,t][np.any(sinp.stock['i_mask_g1g3'][:,uinp.stubble['i_g3_inc_g3t'][:,t]], axis=1)]
             o_ebg_tpdams = np.compress(mask_dams_inc_g1, o_ebg_tpdams, axis=-1)
             o_stub_intake_tpdams = np.compress(mask_dams_inc_g1, o_stub_intake_tpdams, axis=-1)
             ###select across b axis - weighted
@@ -233,7 +232,7 @@ if __name__=="__main__":
             intake_p1s1 = fun.f_reduce_skipfew(np.average, intake_ps1g, preserveAxis=(p_pos, s1_pos))
         else:
             ###select across g axis - weighted
-            mask_offs_inc_g3 = np.any(sinp.stock['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis=1)
+            mask_offs_inc_g3 = uinp.stubble['i_g3_inc_g3t'][:,t][np.any(sinp.stock['i_mask_g3g3'][:,uinp.stubble['i_g3_inc_g3t'][:,t]], axis=1)]
             o_ebg_tpoffs = np.compress(mask_offs_inc_g3, o_ebg_tpoffs, axis=-1)
             o_stub_intake_tpoffs = np.compress(mask_offs_inc_g3, o_stub_intake_tpoffs, axis=-1)
             ###select across b axis - weighted
