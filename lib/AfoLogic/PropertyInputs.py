@@ -517,7 +517,7 @@ def f1_expand_p6():
     sheep['i_wg_propn_p6z'] = np.take_along_axis(sheep['i_wg_propn_p6'][:,na], a_p6std_p6z, axis=0)
 
     ####crop grazing
-    cropgraze['i_cropgraze_yield_reduction_kp6z'] = np.take_along_axis(cropgraze['i_cropgraze_yield_reduction_kp6'][...,na], a_p6std_p6z[na,...], axis=1)
+    cropgraze['i_cropgraze_yield_reduction_scalar_zp6'] = np.take_along_axis(cropgraze['i_cropgraze_yield_reduction_scalar_zp6'], a_p6std_zp6, axis=0)
     cropgraze['i_crop_dmd_kp6z'] = np.take_along_axis(cropgraze['i_crop_dmd_kp6'][...,na], a_p6std_p6z[na,...], axis=1)
     cropgraze['i_crop_growth_zp6'] = np.take_along_axis(cropgraze['i_crop_growth_zp6'], a_p6std_zp6[:,:], axis=1)
     cropgraze['i_cropgraze_consumption_factor_zp6'] = np.take_along_axis(cropgraze['i_cropgraze_consumption_factor_zp6'], a_p6std_zp6, axis=1)
@@ -703,7 +703,7 @@ def f1_mask_landuse():
     f1_do_mask_landuse(cropgraze, "i_crop_growth_landuse_scalar_k", landuse_axis_type="crop", landuse_axis=0)
     f1_do_mask_landuse(cropgraze, "i_cropgrowth_lmu_factor_kl", landuse_axis_type="crop", landuse_axis=0)
     f1_do_mask_landuse(cropgraze, "i_cropgraze_wastage", landuse_axis_type="crop", landuse_axis=0)
-    f1_do_mask_landuse(cropgraze, "i_cropgraze_yield_reduction_kp6z", landuse_axis_type="crop", landuse_axis=0)
+    f1_do_mask_landuse(cropgraze, "i_cropgraze_yield_reduction_k", landuse_axis_type="crop", landuse_axis=0)
     f1_do_mask_landuse(cropgraze, "i_crop_dmd_kp6z", landuse_axis_type="crop", landuse_axis=0)
 
     ##labour

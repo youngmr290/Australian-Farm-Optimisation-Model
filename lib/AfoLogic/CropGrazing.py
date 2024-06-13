@@ -374,7 +374,9 @@ def f_cropgraze_biomass_penalty(r_vals):
     # import CropResidue as stub
     ##inputs
     # stubble_per_grain_k = stub.f_cropresidue_production().values
-    biomass_reduction_propn_kp6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_yield_reduction_kp6z'], numpy=True, axis=-1)
+    biomass_reduction_propn_k = pinp.cropgraze['i_cropgraze_yield_reduction_k']
+    biomass_reduction_propn_p6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_yield_reduction_scalar_zp6'], numpy=True, axis=0).T
+    biomass_reduction_propn_kp6z = biomass_reduction_propn_k[:,na,na] * biomass_reduction_propn_p6z
     # proportion_grain_harv_k = uinp.stubble['proportion_grain_harv']
     consumption_factor_p6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
 
