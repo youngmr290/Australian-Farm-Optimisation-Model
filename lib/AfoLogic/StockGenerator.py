@@ -2155,7 +2155,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                             * np.exp(-ck_dams[18, ..., na] * age_f_p0_pa1e1b1nwzida0e0b0xyg1p0)
                                                     , weights=age_f_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
     ##Conceptus energy pattern (c_start) on day 1
-    ce_day1_f_dams = np.exp(cp_dams[16, ..., na] - cp_dams[17, ..., na] * np.exp(-cp_dams[18, 0, ..., na] * 1)) / 4
+    ce_day1_f_dams = np.exp(cp_dams[16, ...] - cp_dams[17, ...] * np.exp(-cp_dams[18, 0, ...] * 1)) / 4
 
     ##genotype calc that requires af_wool. ME for minimum wool growth (with no intake, relsize = 1)
     mew_min_pa1e1b1nwzida0e0b0xyg0 =cw_sire[14, ...] * sfw_a0e0b0xyg0[0, ...] / cw_sire[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg0 * dlf_wool_pa1e1b1nwzida0e0b0xyg0 * cw_sire[1, ...] / kw_yg0
