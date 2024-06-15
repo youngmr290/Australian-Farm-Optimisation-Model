@@ -741,6 +741,7 @@ def f_area_summary(lp_vars, r_vals, option):
         #. float pulse %, max, min & stdev in p7[-1]
         #. float fodder %, max, min & stdev in p7[-1]
         #. table all rotations by lmu with disagregated land uses as index
+        #. landuse area in p7[-1] with lmu axis
 
     '''
 
@@ -791,6 +792,12 @@ def f_area_summary(lp_vars, r_vals, option):
         landuse_area_qsz_k = landuse_area_k_qsz.T.round(2)
         landuse_area_qsz_k = landuse_area_qsz_k.reindex(r_vals['pas']['keys_k'], axis=1).fillna(0) #expand to full k (incase landuses were masked out) and unused landuses get set to 0
         return landuse_area_qsz_k
+
+    if option==11: #landuse area in p7[-1] (lmu active)
+        landuse_area_k_qszl = landuse_area_k_p7qszl.loc[:,landuse_area_k_p7qszl.columns.levels[0][-1].tolist()]
+        landuse_area_qszl_k = landuse_area_k_qszl.T.round(2)
+        landuse_area_qszl_k = landuse_area_qszl_k.reindex(r_vals['pas']['keys_k'], axis=1).fillna(0) #expand to full k (incase landuses were masked out) and unused landuses get set to 0
+        return landuse_area_qszl_k
 
     if option==5 or option==6 or option==7 or option==8 or option==9: #average % of pasture/cereal/canola in p7[-1]
         keys_q = r_vals['zgen']['keys_q']
@@ -3005,7 +3012,52 @@ def f_lupin_analysis(lp_vars, r_vals, trial):
             summary_df.loc[trial, '{0} Area'.format(legume_name)] = ""
             summary_df.loc[trial, 'Expected {0} Income'.format(legume_name)] = ""
 
-    
+    return summary_df
+
+def f_cropgrazing_analysis(lp_vars, r_vals, trial):
+    '''Returns a simple 1 row summary of the trial (season results are averaged)'''
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'SR', 'Pas area (%)', 'Crop area (%)', 'Sup/DSE', 'Crop grazing intensity (kg/ha)'])
+    ##profit - no minroe and asset
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0))
+    ##stocking rate
+    sr = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
+    summary_df.loc[trial, 'SR'] = round(sr, 1)
+    ##pasture %
+    pas_area_percent = f_area_summary(lp_vars, r_vals, option=5)[0]
+    summary_df.loc[trial, 'Pas area (%)'] = round(pas_area_percent)
+    ##crop %
+    summary_df.loc[trial, 'Crop area (%)'] = round(100 - pas_area_percent)
+    ##supplement
+    total_sup = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
+    pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
+    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+    total_pas_are = np.sum(pas_area_qsz * z_prob_qsz.ravel())
+    summary_df.loc[trial, 'Sup/DSE'] = round(total_sup * 1000 / (total_pas_are * sr))
+    ##crop grazing intensity
+    keys_k = r_vals['pas']['keys_k']
+    keys_k1 = r_vals['stub']['keys_k1']
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    keys_l = r_vals['pas']['keys_l']
+    len_q = len(keys_q)
+    len_s = len(keys_s)
+    len_z = len(keys_z)
+    len_l = len(keys_l)
+    len_k1 = len(keys_k1)
+    ###get landuse area with crop landuse (k1) axis
+    landuse_area_qszl_k = f_area_summary(lp_vars, r_vals, option=11)
+    is_crop = np.any(keys_k==keys_k1[:,na], axis=0)
+    landuse_area_qszl_k1 = landuse_area_qszl_k.loc[:,is_crop]
+    landuse_area_qszlk1 = landuse_area_qszl_k1.stack().values.reshape(len_q, len_s, len_z, len_l, len_k1)
+    ###total crop consumed (kgs)
+    crop_consumed_qsz = np.sum(d_vars['base']['crop_consumed_qsfkp6p5zl'], axis=(2,3,4,5,7)) * 1000
+    ###kilograms of crop consumed per hectare of crop that could have been grazed.
+    GI_qsz = crop_consumed_qsz / np.sum(landuse_area_qszlk1 * r_vals['crpgrz']['propn_area_grazable_k1l'].T, axis=(-1,-2))
+    ###weight z
+    GI = np.sum(GI_qsz * r_vals['zgen']['z_prob_qsz'])
+    summary_df.loc[trial, 'Crop grazing intensity (kg/ha)'] = round(GI)
+
     return summary_df
 
 ############################

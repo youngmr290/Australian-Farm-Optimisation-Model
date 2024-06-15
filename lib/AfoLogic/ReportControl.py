@@ -1179,6 +1179,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["stocking_rate"] = rfun.f_stocking_rate_analysis(lp_vars,r_vals,"Summary")
     if report_run.loc['run_legume', 'Run']:
         reports["legume"] = rfun.f_lupin_analysis(lp_vars,r_vals,"Summary")
+    if report_run.loc['run_cropgraze', 'Run']:
+        reports["cropgrazing"] = rfun.f_cropgrazing_analysis(lp_vars,r_vals,"Summary")
     return reports
 
 

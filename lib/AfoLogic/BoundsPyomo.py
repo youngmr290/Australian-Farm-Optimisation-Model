@@ -48,6 +48,7 @@ def f1_boundarypyomo_local(params, model):
     sb_upbound_inc = np.any(sen.sav['bnd_sb_consumption_p6'] != '-') #upper bound on the quantity of saltbush consumed
     sup_lobound_inc = False #controls sup feed bound
     sup_per_dse_bnd_inc = sen.sav['bnd_sup_per_dse'] != '-' #lower bound dams #controls sup per dse bound
+    crop_grazing_intensity_bnd_inc = sen.sav['bnd_crop_grazing_intensity'] != '-'
     total_dams_eqbound_inc = sen.sav['bnd_total_dams'] != '-' #bound the total number of dams at prejoining
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_dam_inc'], 5) #lower bound dams
     dams_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_dam_inc'], 5) #upper bound on dams
@@ -198,6 +199,25 @@ def f1_boundarypyomo_local(params, model):
                     return pe.Constraint.Skip
             model.con_sup_per_dse_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, rule=sup_per_dse_bound,
                                                 doc='total supplement fed per dse for the whole year')
+
+        ##bnd on crop grazing intensity (kg/crop ha that can be grazed)
+        if crop_grazing_intensity_bnd_inc:
+            ###tonnes of crop consumed per grazable hectare
+            tonnes_crop_consume_ha = sen.sav['bnd_crop_grazing_intensity']/1000 #div 1000 because input is in kgs
+            l_p7 = list(model.s_season_periods)
+            def f_crop_grazing_intensity(model, q, s, p7, z):
+                if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]):
+                    return (sum(sum(model.v_phase_area[q, s, p7, z, r, l] * model.p_landuse_area[r, k1] for r in model.s_phases)
+                            * model.p_cropgrazing_can_occur_kl[k1,l] * tonnes_crop_consume_ha
+                            for l in model.s_lmus for k1 in model.s_crops)
+                            == sum(model.v_tonnes_crop_consumed[q,s,f,k1,p6,p5,z,l] for f in model.s_feed_pools
+                                   for p6 in model.s_feed_periods for p5 in model.s_labperiods
+                                   for l in model.s_lmus for k1 in model.s_crops
+                                   if model.p_crop_DM_required[k1,p6,p5,z]!=0)) #skip if grazing doesnt occur
+            model.con_crop_grazing_intensity = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
+                                                             model.s_season_types, rule=f_crop_grazing_intensity,
+                                                             doc='crop consumed per hectare of grazable crop')
+
 
         ##bnd numbers of dams at prejoining
         if total_dams_eqbound_inc:

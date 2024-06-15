@@ -186,9 +186,10 @@ def f_cropgraze_DM(r_vals=None, total_DM=False):
 
         ##store report vals
         fun.f1_make_r_val(r_vals, crop_DM_provided_kp6p5z8lz9, 'crop_DM_provided_kp6p5z8lz9') #doesnt need unclustering because of z9 axis
-        fun.f1_make_r_val(r_vals, crop_DM_required_kp6p5z, 'crop_DM_required_kp6p5z') #doesnt need unclustering because of z9 axis
+        fun.f1_make_r_val(r_vals, crop_DM_required_kp6p5z, 'crop_DM_required_kp6p5z',mask_fp_z8var_p6z[:,na,:],z_pos=-1)
+        fun.f1_make_r_val(r_vals, propn_area_grazed_kl, 'propn_area_grazable_k1l')
 
-        return crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z
+        return crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z, propn_area_grazed_kl
 
     else:
         total_dm_growth_kp6p5zl = f1_calc_dm_growth(delay=0)  # this is growth since seeding (hence 0 day delay)
@@ -411,7 +412,7 @@ def f_cropgraze_biomass_penalty(r_vals):
 
 def f1_cropgraze_params(params, r_vals, nv):
     # grazecrop_area_rkl = f_graze_crop_area()
-    crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z = f_cropgraze_DM(r_vals=r_vals)
+    crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z, propn_area_grazed_kl = f_cropgraze_DM(r_vals=r_vals)
     biomass_reduction_propn_kp6z = f_cropgraze_biomass_penalty(r_vals)
     crop_md_fkp6p5zl, crop_vol_fkp6p5zl = crop_md_vol(nv, r_vals)
     co2e_cropgraze_kp6z = f_cropgraze_emissions(r_vals)
@@ -428,6 +429,8 @@ def f1_cropgraze_params(params, r_vals, nv):
     ##array indexes
     ###DM prov
     arrays_kp6p5z8lz9 = [keys_k, keys_p6, keys_p5, keys_z, keys_l, keys_z]
+    ###kl
+    arrays_kl = [keys_k, keys_l]
     ###DM req
     arrays_kp6p5z = [keys_k, keys_p6, keys_p5, keys_z]
     ###yield & stub penalty
@@ -441,6 +444,7 @@ def f1_cropgraze_params(params, r_vals, nv):
     params['crop_DM_provided_kp6p5z8lz9'] = fun.f1_make_pyomo_dict(crop_DM_provided_kp6p5z8lz9, arrays_kp6p5z8lz9)
     params['crop_DM_required_kp6p5z'] = fun.f1_make_pyomo_dict(crop_DM_required_kp6p5z, arrays_kp6p5z)
     params['transfer_exists_p6p5z'] = fun.f1_make_pyomo_dict(transfer_exists_p6p5z, arrays_p6p5z)
+    params['propn_area_grazed_kl'] = fun.f1_make_pyomo_dict(propn_area_grazed_kl, arrays_kl)
     params['biomass_reduction_propn_kp6z'] = fun.f1_make_pyomo_dict(biomass_reduction_propn_kp6z, arrays_kp6z)
     # params['stubble_reduction_propn_kp6z'] = fun.f1_make_pyomo_dict(stubble_reduction_propn_kp6z, arrays_kp6z)
     params['crop_md_fkp6p5zl'] = fun.f1_make_pyomo_dict(crop_md_fkp6p5zl, arrays_fkp6p5zl)

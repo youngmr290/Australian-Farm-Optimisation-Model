@@ -60,6 +60,10 @@ def f1_cropgrazepyomo_local(params,model):
                                      initialize=params['transfer_exists_p6p5z'], default=0, mutable=False,
                                      doc='transfer exists into current feed period')
 
+    model.p_cropgrazing_can_occur_kl = pe.Param(model.s_crops, model.s_lmus,
+                                     initialize=params['propn_area_grazed_kl'], default=0, mutable=False,
+                                     doc='max proportion of area for each crop and lmu, that can be grazed')
+
     model.p_cropgraze_biomass_penalty = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types,
                                                initialize=params['biomass_reduction_propn_kp6z'], default=0, mutable=False,
                                                doc='yield penalty as a proportion of crop consumed')

@@ -114,6 +114,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_pasture_area"] = pd.DataFrame()  # web app analysis
     reports["stacked_stocking_rate"] = pd.DataFrame()  # web app analysis
     reports["stacked_legume"] = pd.DataFrame()  # web app analysis
+    reports["stacked_cropgrazing"] = pd.DataFrame()  # web app analysis
 
     return reports
 
@@ -522,6 +523,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         legume = pd.concat([reports["legume"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_legume"] = rfun.f_append_dfs(stacked_reports["stacked_legume"], legume)
 
+    if report_run.loc['run_cropgraze', 'Run']:
+        cropgrazing = pd.concat([reports["cropgrazing"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_cropgrazing"] = rfun.f_append_dfs(stacked_reports["stacked_cropgrazing"], cropgrazing)
+
     return stacked_reports
 
 def f_save_reports(report_run, reports, processor):
@@ -757,6 +762,8 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_stocking_rate"], 'stocking_rate_analysis', df_settings, option=xl_display_mode)
     if report_run.loc['run_legume', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_legume"], 'lupin_analysis', df_settings, option=xl_display_mode)
+    if report_run.loc['run_cropgraze', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_cropgrazing"], 'cropgrazing_analysis', df_settings, option=xl_display_mode)
 
 
     df_settings.to_excel(writer, 'df_settings')
