@@ -1344,14 +1344,14 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     new_g = cw_g[1, ...] * (d_cfw_g - cw_g[2, ...] * relsize_start_g) / cw_g[3, ...]
     ##ME required for wool (above basal growth rate)
     mew_g = new_g / kw_yg #can be negative because mem assumes 4g of clean wool is grown. If less is grown then mew 'returns' the energy.
-    ##Fibre diameter for the days growth
+    ##Fibre diameter for the days growth (um)
     d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
     ##Process the FD REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_fd_g = f1_rev_update('fd', d_fd_g, rev_trait_value)
-    ##Surface Area
+    ##Surface Area (m2)
     area = cc_g[1, ...] * ffcfw_start_g ** (2/3)
-    ##Daily fibre length growth
-    d_fl_g = 100 * fun.f_divide(d_cfw_g, cw_g[10, ...] * cw_g[11, ...] * area * np.pi * (0.5 * d_fd_g / 10**6) ** 2) #func to stop div/0 error, when d_fd==0 so does d_cfw
+    ##Daily fibre length growth (mm)
+    d_fl_g = 1000 * fun.f_divide(d_cfw_g, cw_g[10, ...] * cw_g[11, ...] * area * np.pi * (0.5 * d_fd_g / 10**6) ** 2) #func to stop div/0 error, when d_fd==0 so does d_cfw
     return d_cfw_g, d_fd_g, d_fl_g, d_cfw_history_p2g, mew_g, new_g
 
 
@@ -2840,7 +2840,8 @@ def f1_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf
 #################
 #post processing#
 #################
-def f_wool_additional(fd, sl, ss, vm,  pmb, cvfd=0.22, cvsl=0.18):
+def f_wool_hauteur(fd, sl, ss, vm,  pmb, cvfd=0.22, cvsl=0.18):
+    ''' Calculate predicted hauteur, CVH & romaine using the selected equation option: CSIRO, TEAM 1, TEAM2 & TEAM3'''
     cu5_u5c5=uinp.sheep['i_cu5_c5']
     i_eqn_ph=uinp.sheep['i_eqn_ph']
     i_eqn_cvh=uinp.sheep['i_eqn_cvh']
@@ -2864,6 +2865,97 @@ def f_wool_additional(fd, sl, ss, vm,  pmb, cvfd=0.22, cvsl=0.18):
       cu5_u5c5[3, i_eqn_romaine] * pmb + cu5_u5c5[5, i_eqn_romaine] * vm + cu5_u5c5[6, i_eqn_romaine] * cvfd + \
       cu5_u5c5[7, i_eqn_romaine] * cvsl + cu5_u5c5[8, i_eqn_romaine]
     return ph, cvh, romaine
+
+
+def f_wool_ss(fd_pg, ss_pg):
+    ''' Calculate price scalar for ss and sl
+    See AFO SS & SL.xlsx for the derivation of the parameters
+    The P&D for SS is assumed to be linear (slope) between a minimum value (min) and a maximum (max)
+    The intercept is defined by the intersection with the x axis (ss_pd0)
+    min, max & slope are adjusted for FD using a decreasing exponential (a & b) that was fitted with to data with 17u = 1
+    The exponential is scaled by the 17u value and bound in the range from 'lower' to 'upper' (the sensible range from the data)
+    '''
+    ##unpack the parameters required from the Universal.xlsx range name
+    lower_min = uinp.sheep['i_woolp_ss'][0,0]
+    upper_min = uinp.sheep['i_woolp_ss'][1,0]
+    fd17_min = uinp.sheep['i_woolp_ss'][2,0]
+    a_min = uinp.sheep['i_woolp_ss'][3,0]
+    b_min = uinp.sheep['i_woolp_ss'][4,0]
+    lower_max = uinp.sheep['i_woolp_ss'][0,1]
+    upper_max = uinp.sheep['i_woolp_ss'][1,1]
+    fd17_max = uinp.sheep['i_woolp_ss'][2,1]
+    a_max = uinp.sheep['i_woolp_ss'][3,1]
+    b_max = uinp.sheep['i_woolp_ss'][4,1]
+    lower_slope = uinp.sheep['i_woolp_ss'][0,2]
+    upper_slope = uinp.sheep['i_woolp_ss'][1,2]
+    fd17_slope = uinp.sheep['i_woolp_ss'][2,2]
+    a_slope = uinp.sheep['i_woolp_ss'][3,2]
+    b_slope = uinp.sheep['i_woolp_ss'][4,2]
+    ss_pd0 = uinp.sheep['i_woolp_ss_pd0']
+
+    ##Calculate the minimum value (largest discount) for the FD.
+    min_pg = np.clip(fd17_min * a_min * np.exp(b_min * fd_pg), lower_min, upper_min)
+    ##Calculate the maximum value (largest premium) for the FD.
+    max_pg = np.clip(fd17_max * a_max * np.exp(b_max * fd_pg), lower_max, upper_max)
+    ##Calculate the minimum value (largest discount) for the FD.
+    slope_pg = np.clip(fd17_slope * a_slope * np.exp(b_slope * fd_pg), lower_slope, upper_slope)
+
+    ##Calculate the premium or discount for SS for the wool using the above parameters that have been adjusted for fd
+    ss_adj_pg = np.clip(slope_pg * (ss_pg - ss_pd0), min_pg, max_pg)
+    return ss_adj_pg
+
+
+def f_wool_sl(fd_pg, sl_pg):
+    ''' Calculate price scalar for sl
+    See AFO SS & SL.xlsx for the derivation of the parameters
+    The discounts for SL is assumed to be zero in the optimum range of SL between 'bottom' & 'top'
+    The optimum range of SL across the range of FD is estimated using a bounded increasing exponential.
+    The discount per mm above 'top' is 'above'. The discount below 'bottom' is 'below'.
+    Note: slope_below is a positive value because it is the change in price per mm increase in SL
+    At a threshold SL (threshold = 50mm) there is a 'drop' in the discount.
+    Below the threshold the discount increases at the same rate as above the threshold.
+    The slopes and the threshold_drop are adjusted for FD using a decreasing exponential (a & b) that was fitted with to data with 17u = 1
+    The exponential is scaled by the 17u value and bound in the range from 'lower' to 'upper' (the sensible range from the data)
+    '''
+    ##unpack the parameters required from the Universal.xlsx range name
+    lower_top = uinp.sheep['i_woolp_sl'][0,0]
+    upper_top = uinp.sheep['i_woolp_sl'][1,0]
+    fd17_top = uinp.sheep['i_woolp_sl'][2,0]
+    a_top = uinp.sheep['i_woolp_sl'][3,0]
+    b_top = uinp.sheep['i_woolp_sl'][4,0]
+    lower_below = uinp.sheep['i_woolp_sl'][0,1]
+    upper_below = uinp.sheep['i_woolp_sl'][1,1]
+    fd17_below = uinp.sheep['i_woolp_sl'][2,1]
+    a_below = uinp.sheep['i_woolp_sl'][3,1]
+    b_below = uinp.sheep['i_woolp_sl'][4,1]
+    lower_above = uinp.sheep['i_woolp_sl'][0,2]
+    upper_above = uinp.sheep['i_woolp_sl'][1,2]
+    fd17_above = uinp.sheep['i_woolp_sl'][2,2]
+    a_above = uinp.sheep['i_woolp_sl'][3,2]
+    b_above = uinp.sheep['i_woolp_sl'][4,2]
+    lower_drop = uinp.sheep['i_woolp_sl'][0,3]
+    upper_drop = uinp.sheep['i_woolp_sl'][1,3]
+    fd17_drop = uinp.sheep['i_woolp_sl'][2,3]
+    a_drop = uinp.sheep['i_woolp_sl'][3,3]
+    b_drop = uinp.sheep['i_woolp_sl'][4,3]
+    sl_threshold = uinp.sheep['i_woolp_sl_threshold']
+    sl_range = uinp.sheep['i_woolp_sl_range']
+
+    ##Calculate the top-end of the optimum range of SL
+    top_pg = np.clip(fd17_top * a_top * np.exp(b_top * fd_pg), lower_top, upper_top)
+    ##Calculate the bottom-end of the range for the optimum SL
+    bottom_pg = top_pg - sl_range
+    ##Calculate the slope below the optimum range for the FD.
+    below_pg = np.clip(fd17_below * a_below * np.exp(b_below * fd_pg), lower_below, upper_below)
+    ##Calculate the slope above the optimum range for the FD.
+    above_pg = np.clip(fd17_above * a_above * np.exp(b_above * fd_pg), lower_above, upper_above)
+    ##Calculate the drop in discount at the threshold for the FD.
+    drop_pg = np.clip(fd17_drop * a_drop * np.exp(b_drop * fd_pg), lower_drop, upper_drop)
+
+    ##Calculate the premium or discount for SS for the wool using the above parameters that have been adjusted for fd
+    sl_adj_pg = (np.minimum(0, below_pg * (sl_pg - bottom_pg)) + np.minimum(0, above_pg * (sl_pg - top_pg))
+                 + drop_pg * (sl_pg < sl_threshold))
+    return sl_adj_pg
 
 
 def f1_woolprice():
@@ -2915,24 +3007,34 @@ def f_wool_value(stb_mpg_w4, wool_price_scalar_c1w4tpg, cfw_pg, fd_pg, sl_pg, ss
     STB is sweep the board i.e. including all the wool types that are produced (fleece, pieces, bellies ...)
     NIB is net in the bank i.e. all selling, testing & freight costs removed
     '''
-    ##call function to calculate predicted hauteur (ph), CV of hauteur (cvh) and romaine
-    ph_pg, cvh_pg, romaine_pg = f_wool_additional(fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg)
     ##STB price for FNF (free or nearly free of fault)
     fnfstb_pg = np.interp(fd_pg, uinp.sheep['i_woolp_fd_range_w4'], stb_mpg_w4 ).astype(dtype)
     ##vm price adj
     vm_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_vm_adj_w4w6'], uinp.sheep['i_woolp_vm_range_w6']
                                            , uinp.sheep['i_woolp_fd_range_w4'], vm_pg,fd_pg).astype(dtype)
-    ##predicted hauteur price adj
-    ph_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_ph_adj_w4w7'], uinp.sheep['i_woolp_ph_range_w7']
-                                           , uinp.sheep['i_woolp_fd_range_w4'], ph_pg,fd_pg).astype(dtype)
-    ##cv hauteur price adj
-    cvh_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_cvh_adj_w4w8'], uinp.sheep['i_woolp_cvh_range_w8']
-                                            , uinp.sheep['i_woolp_fd_range_w4'], cvh_pg,fd_pg).astype(dtype)
-    ##romaine price adj
-    romaine_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_romaine_adj_w4w9'], uinp.sheep['i_woolp_romaine_range_w9']
-                                                , uinp.sheep['i_woolp_fd_range_w4'], romaine_pg,fd_pg).astype(dtype)
+
+    # ##code for calculating predicted hauteur and adjusting price. Replaced by scalars for SS & SL. Retained to allow reversion
+    # ##call function to calculate predicted hauteur (ph), CV of hauteur (cvh) and romaine
+    # ph_pg, cvh_pg, romaine_pg = f_wool_hauteur(fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg)
+    # ##predicted hauteur price adj
+    # ph_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_ph_adj_w4w7'], uinp.sheep['i_woolp_ph_range_w7']
+    #                                        , uinp.sheep['i_woolp_fd_range_w4'], ph_pg,fd_pg).astype(dtype)
+    # ##cv hauteur price adj
+    # cvh_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_cvh_adj_w4w8'], uinp.sheep['i_woolp_cvh_range_w8']
+    #                                         , uinp.sheep['i_woolp_fd_range_w4'], cvh_pg,fd_pg).astype(dtype)
+    # ##romaine price adj
+    # romaine_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_romaine_adj_w4w9'], uinp.sheep['i_woolp_romaine_range_w9']
+    #                                             , uinp.sheep['i_woolp_fd_range_w4'], romaine_pg,fd_pg).astype(dtype)
+    # ##wool price with adjustments
+    # woolp_stb_pg = fnfstb_pg * (1 + vm_adj_pg) * (1 + ph_adj_pg) * (1 - cvh_adj_pg) * (1 - romaine_adj_pg)
+
+    ##SS price adjustment
+    ss_adj_pg = f_wool_ss(fd_pg, ss_pg)
+    ##SS price adjustment
+    sl_adj_pg = f_wool_sl(fd_pg, sl_pg)
     ##wool price with adjustments
-    woolp_stb_pg = fnfstb_pg * (1 + vm_adj_pg) * (1 + ph_adj_pg) * (1 - cvh_adj_pg) * (1 - romaine_adj_pg)
+    woolp_stb_pg = fnfstb_pg * (1 + vm_adj_pg) * (1 + ss_adj_pg) * (1 + sl_adj_pg)
+
     ##stb net in the bank price
     woolp_stbnib_pg = woolp_stb_pg * (1 - uinp.sheep['i_wool_cost_pc']) - uinp.sheep['i_wool_cost_kg']
     ##wool value if shorn this period
