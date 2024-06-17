@@ -118,7 +118,7 @@ def f_farmgate_grain_price(r_vals={}):
     '''
     ##inputs
     grain_price_info_df = uinp.price['grain_price_info'] #grain info
-    percentile_price_k_s2p = uinp.price['grain_price'] #grain price for 3 different percentiles
+    percentile_price_k_s2p = uinp.price['grain_price'] #grain price for 5 different percentiles
     grain_price_percentile = uinp.price['grain_price_percentile'] #price percentile to use
     grain_price_scalar_c1_z = zfun.f_seasonal_inp(uinp.price_variation['grain_price_scalar_c1z']
                                                  ,numpy=False, axis=1, level=0)
