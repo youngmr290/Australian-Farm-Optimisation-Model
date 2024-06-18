@@ -412,7 +412,7 @@ def f_sup_labour(nv):
     ##convert to hr/m3 for lupins and hr/bale for hay
     grain_density= uinp.supfeed['grain_density'].T.reset_index() #reindex so it can be combined with different grains
     grain_density=grain_density.set_index(['index','silo type']).squeeze()
-    empty_df[('grain','empty rate lupins')]=1/(empty_df[('grain','empty rate lupins')]*60*60/1000/grain_density.loc['l','grain']) #convert from kg/sec lupins to hr/m3 (which is the same for all grains). First convert kg/sec to t/hr then divide by density
+    empty_df[('grain','empty rate lupins')]=1/(empty_df[('grain','empty rate lupins')]*60*60/1000/0.72) #convert from kg/sec lupins (density of lupins is 0.72 - this has to be hard coded incase lupins are masked out of the land uses) to hr/m3 (which is the same for all grains). First convert kg/sec to t/hr then divide by density
     empty_df[('hay','empty rate')]=empty_df[('hay','empty rate')]/60 #convert min/bale to hr/bale
     ##combine time to fill and empty then convert to per tonne for each grain
     empty_df=empty_df.droplevel(1, axis=1)
