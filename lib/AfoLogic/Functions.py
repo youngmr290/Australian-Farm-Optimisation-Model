@@ -305,6 +305,12 @@ def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den
     averaged_array[mask] = weighted_array[mask] / weights[mask]
     return averaged_array
 
+
+def f_divide_float(numerator, denominator):
+    '''this is the version when dividing singel values. Use f_divide() below for numpy.'''
+    return numerator / denominator if denominator else 0
+
+
 def f_divide(numerator, denominator, dtype='float64', option=0):
     '''
     Elementwise divides two arrays.

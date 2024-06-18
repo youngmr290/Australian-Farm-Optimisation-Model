@@ -2971,7 +2971,7 @@ def f_stocking_rate_analysis(lp_vars, r_vals, trial):
     summary_df.loc[trial, 'Pas area'] = total_pas_are
     ##supplement
     total_sup = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
-    summary_df.loc[trial, 'Sup/DSE'] = round(total_sup * 1000 / (total_pas_are * sr),0)
+    summary_df.loc[trial, 'Sup/DSE'] = round(fun.f_divide_float(total_sup * 1000, (total_pas_are * sr)))
     return summary_df
 
 def f_lupin_analysis(lp_vars, r_vals, trial):
@@ -3032,7 +3032,7 @@ def f_cropgrazing_analysis(lp_vars, r_vals, trial):
     pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
     z_prob_qsz = r_vals['zgen']['z_prob_qsz']
     total_pas_are = np.sum(pas_area_qsz * z_prob_qsz.ravel())
-    summary_df.loc[trial, 'Sup/DSE'] = round(total_sup * 1000 / (total_pas_are * sr))
+    summary_df.loc[trial, 'Sup/DSE'] = round(fun.f_divide_float(total_sup * 1000, (total_pas_are * sr)))
     ##crop grazing intensity
     keys_k = r_vals['pas']['keys_k']
     keys_k1 = r_vals['stub']['keys_k1']
@@ -3053,7 +3053,7 @@ def f_cropgrazing_analysis(lp_vars, r_vals, trial):
     ###total crop consumed (kgs)
     crop_consumed_qsz = np.sum(d_vars['base']['crop_consumed_qsfkp6p5zl'], axis=(2,3,4,5,7)) * 1000
     ###kilograms of crop consumed per hectare of crop that could have been grazed.
-    GI_qsz = crop_consumed_qsz / np.sum(landuse_area_qszlk1 * r_vals['crpgrz']['propn_area_grazable_k1l'].T, axis=(-1,-2))
+    GI_qsz = fun.f_divide(crop_consumed_qsz, np.sum(landuse_area_qszlk1 * r_vals['crpgrz']['propn_area_grazable_k1l'].T, axis=(-1,-2)))
     ###weight z
     GI = np.sum(GI_qsz * r_vals['zgen']['z_prob_qsz'])
     summary_df.loc[trial, 'Crop grazing intensity (kg/ha)'] = round(GI)
