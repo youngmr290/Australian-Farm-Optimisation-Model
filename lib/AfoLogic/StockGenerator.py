@@ -3474,7 +3474,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                     eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
-                        temp0, temp1, temp2, temp3, temp4 = sfun.f_foetus_nfs(cg_dams, ck_dams, cp_dams
+                        temp0, temp1, temp2, temp3, temp4 = sfun.f_foetus_nfs(cg_dams, cp_dams
                                         , days_period_pa1e1b1nwzida0e0b0xyg1[p], c_start_dams, muscle_start_dams
                                         , d_muscle_dams, nfoet_b1nwzida0e0b0xyg, w_b_exp_y_dams, w_f_start_dams    #d_muscle is change in the previous period because dm this period is dependent on dc which is being calculated in this function call
                                         , nwf_age_f_pa1e1b1nwzida0e0b0xyg1[p], guw_age_f_pa1e1b1nwzida0e0b0xyg1[p]

@@ -1391,7 +1391,7 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
     ##Surface Area
     area = cc_g[1, ...] * ffcfw_start_g ** (2/3)
     ##Daily fibre length growth
-    d_fl_g = 100 * fun.f_divide(d_cfw_g, cw_g[10, ...] * cw_g[11, ...] * area * np.pi * (0.5 * d_fd_g / 10**6) ** 2) #func to stop div/0 error, when d_fd==0 so does d_cfw
+    d_fl_g = 1000 * fun.f_divide(d_cfw_g, cw_g[10, ...] * cw_g[11, ...] * area * np.pi * (0.5 * d_fd_g / 10**6) ** 2) #func to stop div/0 error, when d_fd==0 so does d_cfw
     return d_cfw_g, d_fd_g, d_fl_g, d_cfw_history_p2g, dw_g, hp_dw_g
 
 
