@@ -367,7 +367,9 @@ def f_property_inp_sa(pinp_defaults):
     ###sav
     cropgraze['i_cropgrazing_inc'] = fun.f_sa(cropgraze['i_cropgrazing_inc'], sen.sav['cropgrazing_inc'], 5)
     cropgraze['i_cropgraze_propn_area_grazed_kl'] = fun.f_sa(cropgraze['i_cropgraze_propn_area_grazed_kl'], sen.sav['cropgraze_propn_area_grazed_kl'], 5)
+    cropgraze['i_cropgraze_yield_reduction_k'] = fun.f_sa(cropgraze['i_cropgraze_yield_reduction_k'], sen.sav['cropgraze_yield_penalty_k'], 5)
     ###sam
+    crop['i_cropgraze_yield_reduction_k'] = fun.f_sa(crop['i_cropgraze_yield_reduction_k'], sen.sam['cropgraze_yield_penalty'])
     ###sap
     ###saa
     ###sat

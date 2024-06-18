@@ -242,6 +242,7 @@ def create_sa():
     sav['cropgraze_propn_area_grazed_kl'] = np.full((len_k, len_l), '-', dtype=object)  #control proportion of crop area that can be grazed.
     sav['cropgraze_yield_penalty_k'] = np.full((len_k), '-', dtype=object)  #Reduction in yield per kg of crop consumed (if grazed early in the growing season after the crop is established).
     ##SAM
+    sam['cropgraze_yield_penalty'] = 1.0   # SA multiplier for the cropgraze yield penalty
     ##SAP
     ##SAA
     ##SAT
