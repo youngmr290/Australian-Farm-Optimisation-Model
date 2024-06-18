@@ -421,7 +421,7 @@ def f_sup_labour(nv):
     ##calc time between paddocks
     ###convert lupin rate fed to mj/hd/d
     feedrate=pinp.supfeed['feed_rate']
-    mj=feedrate['feed rate']/1000000*uinp.supfeed['sup_md_vol'].loc['energy', 'l'] #divide by 1000000 because convert g to tonnes because energy is in mj/tonne
+    mj=feedrate['feed rate']/1000000*13300 #13300 is energy of 1t lupins. Divide by 1000000 because convert g to tonnes because energy is in mj/tonne
     ###determine how many mj are feed to each paddock each time feeding occurs ie total mj per week divided by frequency of feeding per week
     mj_mob_per_trip = mj * feedrate['mob size'] * 7 / pinp.supfeed['feed_freq']
     ###time per mj. this is just the time to drive between two paddocks divided by the mj fed
