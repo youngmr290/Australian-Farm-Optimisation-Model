@@ -1543,48 +1543,52 @@ def f_heatloss_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp
 
 def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
     ##Note: The energy components of rev_trait_value are not active in this function. Have to be using f_lwc_nfs
-    ## requirement for maintenance
+    ## ME requirement to maintain maternal body energy (maintenance). Surplus is available for maternal body gain
     maintenance = mem + mec * gest_propn + mel * lact_propn + mew
     ##Level of feeding (maint = 0)
     level = (mei / maintenance) - 1
     ##Energy intake that is surplus to maintenance
     surplus_energy = mei - maintenance
-    ##Net energy gain (based on ME)
+    ##Net energy gain (based on ME) Note: will be negative if losing weight
     neg = kg * surplus_energy
     ##Energy Value of gain (MJ/kg EBW)
     evg = cg[8, ...] - zf1 * (cg[9, ...] - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
-    ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
-    ###Note: REV[evg] does very little in the CSIRO feeding system (nothing if REV[ebg] is active), because partitioning is controlled by pcg formula.
-    evg = f1_rev_update('evg', evg, rev_trait_value)
+    # ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
+    # ###Note: REV[evg] does very little in the CSIRO feeding system (nothing if REV[ebg] is active), because partitioning is controlled by pcg formula.
+    # evg = f1_rev_update('evg', evg, rev_trait_value)
     ##Protein content of gain (kg/kg EBW) (some uncertainty for sign associated with zf2.
     ### GrazFeed documentation had +ve however, this implies that PCG increases when BC > 1. So changed to -ve
     #todo check this equation when converting to a heat production based model.
     pcg = cg[12, ...] + zf1 * (cg[13, ...] - cg[14, ...] * (level - 1)) - zf2 * cg[15, ...] * (rc_start - 1)
     ##Empty bodyweight gain
     ebg = neg / evg
-    ##Process the Liveweight REV: if LW is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
-    ###Note: In the CSIRO feeding standards, holding the LW trait constant is also holding the energy content of the
-    ### body constant because body composition is a function of relative size (weight). If the trait being changed is changing energy
-    ### transactions (eg increasing CFW) then the energy cost of the trait (CFW) will be lost and the 'cost' of energy
-    ### of those traits will only be represented in the breeding program by correlations with weight &/or intake and their REVs.
-    ###The REV of weight includes the mechanism used to cause the weight change (probably increased intake),
-    ### so a correlation between CFW & lower weight will be valuing that correlation as if the animal was eating less (bad).
-    ebg = f1_rev_update('lwc', ebg, rev_trait_value)
-    ##Protein gain (protein DM)
-    pg = pcg * ebg
-    ##Allocate total protein gain to muscle and viscera using rule of thumb that 10% of total protein DM is viscera (Viscera is 13% of wet weight of protein)
+    ##Protein gain (protein MJ)
+    pg = f1_weight_energy_conversion(cg, 1, weight=pcg * ebg)
+    ##Allocate total protein gain to muscle and viscera using rule of thumb that 10% of total protein energy is viscera (Viscera is 13% of wet weight of protein)
     mg = 0.9 * pg
     vg = 0.1 * pg
-    ##fat gain (fat DM)
-    fg = (neg - pg * cg[21, ...]) /cg[20, ...]
+    ##fat gain (fat MJ)
+    fg = (neg - pg)
     ## Fat, Muscle & Viscera wet weight
-    t_d_fat = fg / cg[26, ...]
-    t_d_muscle = mg / cg[27, ...]
-    t_d_viscera = vg / cg[28, ...]
+    d_fat = f1_weight_energy_conversion(cg, 0, energy=fg)
+    d_muscle = f1_weight_energy_conversion(cg, 1, energy=mg)
+    d_viscera = f1_weight_energy_conversion(cg, 2, energy=vg)
+    ##Process the Liveweight REV: if LW is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
+    ###Note: In the CSIRO feeding standards, holding the LW trait constant is also holding the energy content of the
+    ### body constant because the body composition calculations do not alter the energy available to be mobilised
+    ### because body composition is a function of relative size (weight). If the trait being changed is changing energy
+    ### transactions (eg increasing CFW) then the energy cost of the trait (CFW) will not be included in the REV of CFW.
+    ### The cost of the energy will only be valued through correlated traits. This works well if CFW were correlated
+    ### with intake and intake was in the BO. However, if increased CFW is correlated with reduced LW and the REV of LW
+    ### includes the mechanism used to cause the weight change (probably increased intake), the correlation between CFW
+    ### & lower weight will be valuing CFW as if the animal required less energy to increase CFW (ie the opposite).
+    ebg = f1_rev_update('lwc', ebg, rev_trait_value)
     ##scale fat, muscle & viscera weight gain to match ebg (required because energy might not tally & because of the REV adjustment)
-    d_fat = t_d_fat * fun.f_divide(ebg, (t_d_fat + t_d_muscle + t_d_viscera))
-    d_muscle = t_d_muscle * fun.f_divide(ebg, (t_d_fat + t_d_muscle + t_d_viscera))
-    d_viscera = t_d_viscera * fun.f_divide(ebg, (t_d_fat + t_d_muscle + t_d_viscera))
+    scalar = fun.f_divide(ebg, d_fat + d_muscle + d_viscera)
+    d_fat *= scalar
+    d_muscle *= scalar
+    d_viscera *= scalar
+    ##Note: in the CSIRO equation system fat, muscle and viscera are just for reporting purposes
     return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
 
