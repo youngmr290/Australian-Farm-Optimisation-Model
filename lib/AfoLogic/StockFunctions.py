@@ -1638,7 +1638,7 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, zf1, zf2, kf, kp, rev_trait_value, mec
     return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
 
-def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei, md, hp_maint, dw, hp_dw, heat_loss_m0p1, step
+def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei, km, md, hp_maint, dw, hp_dw, heat_loss_m0p1, step
               , rev_trait_value, dc=0, hp_dc=0, dl=0, hp_dl=0, gest_propn = 0, lact_propn = 0):
     ##fat gain (MJ/d) is calculated using a formula derived from the Oddy etal 2023 paper (see Generator9:p16-17)
     ###The calculation is multistep because parameter values (bcm & bcf) depend on the sign of dm and df
@@ -1657,53 +1657,64 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei, md, hp_maint, dw, hp_
     ###9. Calculate ebg from weight change of the components
     ###10.
 
+    ##convert km to NFS terminology
+    bmei = 1 - km
+
     ##Convert weight of muscle and viscera to energy content
     m = f1_weight2energy(cg, muscle, 1)
     v = f1_weight2energy(cg, viscera, 2)
     alpha_m = f1_weight2energy(cg, muscle_target, 1)
 
-    ## To retain the flavour of the derivation, substitute some coefficient names
+    ## To retain the flavour of the derivation carried out, substitute some coefficient names
     M = 1 - m / alpha_m   #this factor in the calculation means that once m reaches alpha_m it will never change - needs considering so that m can reduce with under nutrition.
     pm = cg[32, ...]
     e0 = cg[34, ...]
     blf = ck[26, ...]
     pv = cg[33, ...]
-    ## Step 1a: calculate dv from alpha_v for day 0
+
+    ##Step 1: Calculate viscera values
+    ### Step 1a: calculate dv from alpha_v for day 0
     alpha_v = np.maximum(0, cg[35, ...] * mei + cg[36, ...] * m**0.41 + cg[37, ...] * md)
     # alpha_v = np.maximum(0, (0.5 - 0.02 * md + 0.014 * mei) * m ** 0.75)   #alternative equation proposed & rejected by Hutton 8May24 6:27am
     dv0 = pv * (alpha_v - v)
-    ## Step 1b: estimate average dv across the duration of the step (because approaching an asymptote).
+    ### Step 1b: estimate average dv across the duration of the step (because approaching an asymptote).
     ###Assumption is that alpha_v doesn't change during the step. Which is an imperfect assumption because
     ### m may change during the timestep. Could change HP by 0.2 MJ/d (see '[Sheep Calc.xlsx]v error!')
     dv = fun.f_approach_asymptote(dv0, pv, step)
     ##Process the viscera REV: if viscera is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     dv = f1_rev_update('viscera', dv, rev_trait_value)
-    ## Step 1c: heat production from change in viscera (MJ/d)
+    ### Step 1c: heat production from change in viscera (MJ/d)
     bcv = np.where(dv >= 0, ck[22, ...], ck[28, ...])
     hp_dv = bcv * dv  #select value for bpv based on sign of dp
+
     ##Step 2: Calculate MEI when dm==0 (mei_dm0) using derived equation and set bpm to required value
     mei_dm0 = (hp_maint + hp_dv + hp_dw + gest_propn * hp_dc + lact_propn * hp_dl - e0 / pm
                - blf * (dv + dw + gest_propn * dc + lact_propn * dl + e0 / pm))
     bcm = np.where(mei > mei_dm0, ck[21, ...], ck[27, ...])
-    ##Step 3a: Calculate the numerator of df and set bf to required value
+
+    ##Step 3: Calculate fat
+    ###Step 3a: Calculate the numerator of df and set bf to required value
     df_numerator = ((1 - pm * M) * (mei - (hp_maint + hp_dv + hp_dw + gest_propn * hp_dc + lact_propn * hp_dl + bcm * e0 * M))
                     - (1 + bcm * pm * M) * (dv + dw + gest_propn * dc + lact_propn * dl + e0 * M))
     bcf = np.where(df_numerator > 0, ck[20, ...], ck[26, ...])
-    ##Step 3b: Calculate the denominator of df
+    ###Step 3b: Calculate the denominator of df
     df_denominator = (1 + bcm * pm * M + bcf * (1 - pm * M))
-    ##Step 3c: Calculate fat change (MJ/d & kg/d) & heat production from fat change (without heat loss included)
+    ###Step 3c: Calculate fat change (MJ/d & kg/d) & heat production from fat change (without heat loss included)
     dfwo = df_numerator / df_denominator
     hp_dfwo = bcf * dfwo
+
     ##Step 4: Net energy gain (MJ/d) (without heat loss included)
     neg_wo = (dfwo + dv + dw + gest_propn * dc + lact_propn * dl + e0 * M) / (1 - pm * M)   #formula for NEG as the source of energy, excluding dm
     neg_wo_check = ((mei - (hp_maint + hp_dv + hp_dw + gest_propn * hp_dc + lact_propn * hp_dl + hp_dfwo + bcm * e0 * M))
                     / (1 + bcm * pm * M)) #formula for NEG as the sink for energy, excluding dm
+
     ##Step 5: Total heat production (excluding the increase in HP to cover any extra required for chilling)
     hp_total = mei - neg_wo
-    ##Step 6: The heat production increment due to chill (average of the m0p1 periods where heatloss is greater than heap production)
-    chill_increment = np.average(np.maximum(0, heat_loss_m0p1 - hp_total[..., na, na]), axis = (-1,-2))
-    #Reduce neg by the chill increment
-    neg = neg_wo - chill_increment
+
+    ##Step 6: Reduce neg if heat production is less than heat_loss (average of the m0p1 periods where heatloss is greater than heap production)
+    neg = np.average(np.minimum(neg_wo[..., na, na], mei[..., na, na] - heat_loss_m0p1), axis = (-1,-2))
+
+    ##Step 7: Calculate muscle
     ##Step 7a: Change in muscle protein (MJ/d) for day 0
     dm0 = (pm * neg + e0) * M   # which can also be written  (pm * neg + e0) / alpha_m * (alpha_m - m)
     ## Step 7b: estimate average dm across the duration of the step. Assumptions is that NEG doesn't change during
@@ -1715,38 +1726,50 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei, md, hp_maint, dw, hp_
     dm = np.minimum(t_dm, fun.f_divide(alpha_m - m , step))   #f_divide because length of period can be 0
     ## Step 7d: Heat production associated with the change in protein
     hp_dm = bcm * dm
-    ##Step 8: Calculate df including heat loss from chill
+
+    ##Step 8: Recalculate df including heat loss from chill and muscle REV (if muscle is altered by the REV then df changes)
     df = neg - (dm + dv + dw + gest_propn * dc + lact_propn * dl)
     ##Process the fat REV: if fat is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     df = f1_rev_update('fat', df, rev_trait_value)
     ##Calculate HP from fat change
     hp_df = bcf * df
-    ##Step 9a: Calculate weight change of components
+
+    ##Step 9: Calculate weight changes
+    ###Step 9a: Calculate weight change of components
     d_fat = df / (cg[20, ...] * cg[26, ...])
     d_muscle = dm / (cg[21, ...] * cg[27, ...])
     d_viscera = dv / (cg[22, ...] * cg[28, ...])
-    ##Step 9b: Empty bodyweight change
+    ###Step 9b: Empty bodyweight change
     ebg = d_fat + d_muscle + d_viscera
-    ##Process the Liveweight REV: if LW is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
+    ###Process the Liveweight REV: if LW is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     ###The LW trait is different in the new feeding standards compared with CSIRO standards.
     ###Note: In the new feeding standards, holding LW constant does not result in energy content being held constant.
     ### If the trait being changed is changing energy transactions (eg increasing CFW) then the energy cost will be
     ### represented unless body composition is also being held constant (i.e. WBE is a trait in the BO).
     ###This is a better outcome for reflecting the energy cost of traits than occurs with the CSIRO feeding standards.
+    ###Changing EBG with constant fat & muscle alters sale value (based on DW) but not energy = sale value for 'free'
     ebg = f1_rev_update('lwc', ebg, rev_trait_value)
-    ##Step 10: Calculate MEI from the components as updated by the REVs  #todo Consider revamping this equation to allow for HAF being controlled by MEI
-    #something like mei = (df + dm + dv ... + hp_fhp + hp_df + ... + chill_increment) / (km). But the chill increment needs some work in the recalc because it could change.
-    mei = (df + dm + dv + dw + gest_propn * dc + lact_propn * dl
-           + hp_maint + hp_df + hp_dm + hp_dv + hp_dw + hp_dc + hp_dl + chill_increment )
-    ##Energy value of gain (reflects if ebg is held constant due to REV calculation).
+
+    ##Step 10: Back calculate MEI from the components as updated by the REVs
+    ###Requires removing the HAF from hp_maint (mei * bmei from original mei),
+    ### then adding it back in for the updated mei: /(1-bmei)
+    retained_energy = df + dm + dv + dw + gest_propn * dc + lact_propn * dl
+    hre = hp_df + hp_dm + hp_dv + hp_dw + hp_dc + hp_dl  # HrE is heat of product formation
+    mei = np.average(np.maximum(((retained_energy + (hp_maint - mei * bmei) + hre)/(1 - bmei))[...,na, na]
+                                , retained_energy[..., na, na] + heat_loss_m0p1), axis = (-1,-2))
+
+    ##Step 11: Calculate parameters for comparison with the CSIRO feeding standards
+    ###Energy value of gain (reflects if ebg is held constant due to REV calculation).
     evg = (df + dm + dv) / ebg
 
-    ##Surplus energy and kg, as a comparison with old feeding standards
-    ##surplus energy is energy above (maintenance + conceptus growth + milk production) so different to neg.
-    surplus_energy = df + dm + dv + hp_df + hp_dm + hp_dv
-    kg_wo_haf = np.where((df + dm + dv) > 0, (df + dm + dv) / surplus_energy, 0) # a comparison with the old feeding standards
+    ###Surplus energy: energy above (maintenance + conceptus growth + milk production) that is available for growth.
+    surplus_energy = (df + dm + dv + hp_df + hp_dm + hp_dv) / (1 - bmei)
+    ###kg efficiency that 'surplus energy is stored in fat, muscle & viscera
+    kg = np.where((df + dm + dv) > 0, (df + dm + dv) / surplus_energy, 0)
+    ###mem including the increment for heat loss. (MEI minus energy stored plus the associated HP)
+    mem = mei - (retained_energy + hre) / (1 - bmei)
 
-    return ebg, evg, d_fat, d_muscle, d_viscera, mei, hp_total, surplus_energy, kg_wo_haf, chill_increment
+    return ebg, evg, d_fat, d_muscle, d_viscera, mei, hp_total, surplus_energy, kg, mem
 
 
 def f_wbe_mu(cg, fat, muscle, viscera=0):
