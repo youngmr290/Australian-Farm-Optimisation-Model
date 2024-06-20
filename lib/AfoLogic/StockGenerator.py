@@ -64,7 +64,8 @@ from . import Exceptions as exc
 
 # from memory_profiler import profile
 # @profile
-def generator(coefficients=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_fs={}, stubble=None, gepep=None, calibration_weights=None, calibration_targets=None, plots = False):
+def generator(coefficients=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_fs={}, stubble=None
+              , gepep=None, calibration_weights=None, calibration_targets=None, plots = False):
     """
     A function to wrap the generator and post-processing that can be called by SheepPyomo.
 
