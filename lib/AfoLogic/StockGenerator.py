@@ -64,7 +64,7 @@ from . import Exceptions as exc
 
 # from memory_profiler import profile
 # @profile
-def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None, plots = False):
+def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None, gepep=None, plots = False):
     """
     A function to wrap the generator and post-processing that can be called by SheepPyomo.
 
@@ -6992,6 +6992,38 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     if stubble:
         return r_intake_f_tpdams, r_intake_f_tpoffs, o_ebg_tpdams, o_ebg_tpoffs
+
+    if gepep:   #add the calibration variables to r_vals and return
+        # r_vals['cfw'] = o_cfw_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #CFW of ewes at 2.5yo
+        # r_vals['fd'] = o_fd_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]             #FD of ewes at 2.5yo
+        # r_vals['ss'] = o_ss_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]           #SS of ewes at 2.5yo
+        # r_vals['sl'] = o_sl_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]           #SL of ewes at 2.5yo
+        # r_vals['con'] = 0.08           #% dry of adult ewes average across 2, 3, 4 & 5yo
+        # r_vals['ls'] = 1.5           #% litter size of adult ewes average across 2, 3, 4 & 5yo
+        # r_vals['era'] = 0.8           #single lamb survival of adult ewes average across 2, 3, 4 & 5yo
+        # r_vals['fat'] = 15           #kg of fat for the wethers (need to sort the sgen period)
+        # r_vals['lw'] = 60           #LW of wethers at above age
+        # r_vals['mort'] = 0.2           #Cumulative mortality of ewes from yearling age to 5.5yo
+        # r_vals['wwt'] = 25           #Weaning weight of
+
+        calibration_values = np.zeros(11)   #could set this up with a zeros_like()
+
+        calibration_values[0] = o_cfw_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #CFW of ewes at 2.5yo
+        calibration_values[1] = o_fd_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]             #FD of ewes at 2.5yo
+        calibration_values[2] = o_ss_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]           #SS of ewes at 2.5yo
+        calibration_values[3] = o_sl_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]           #SL of ewes at 2.5yo
+        calibration_values[4] = 0.08           #% dry of adult ewes average across 2, 3, 4 & 5yo
+        calibration_values[5] = 1.5           #% litter size of adult ewes average across 2, 3, 4 & 5yo
+        calibration_values[6] = 0.8           #single lamb survival of adult ewes average across 2, 3, 4 & 5yo
+        calibration_values[7] = 15           #kg of fat for the wethers (need to sort the sgen period)
+        calibration_values[8] = 60           #LW of wethers at above age
+        calibration_values[9] = 0.2           #Cumulative mortality of ewes from yearling age to 5.5yo
+        calibration_values[10] = 25           #Weaning weight of
+
+        ##Calculate the objective value for the calibration
+        objective = wsmse = np.sum((calibration_values - calibration_targets) * calibration_weights)
+
+        return objective
 
     ###########################
     #post processing inputs  #
