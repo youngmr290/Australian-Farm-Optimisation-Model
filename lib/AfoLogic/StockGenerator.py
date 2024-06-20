@@ -7021,7 +7021,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         calibration_values[10] = 25           #Weaning weight of
 
         ##Calculate the objective value for the calibration
-        objective = wsmse = np.sum((calibration_values - calibration_targets) * calibration_weights)
+        objective = np.sum(((calibration_values - calibration_targets) / calibration_targets) ** 2 * calibration_weights)
 
         return objective
 

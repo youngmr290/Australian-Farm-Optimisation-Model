@@ -52,18 +52,16 @@ bestbet = []
 
 #Set some of the control variables (that might want to be tweaked later)
 maxiter = 2    #1000    The number of iterations of 'popsize' that can be carried out
-popsize = 3    #15     The number of simulations being selected from
+popsize = 4    #15     The number of simulations being selected from
 disp = True     #False   Display the result each iteration
 polish = False  #True   After the differential evolution carry out some further refining
 workers = 2     #1       The number of multi-processes. #todo perhaps could access this from the RunAFORaw arg
 
 
 ## call the optimise routine
-calibration = spo.differential_evolution(sgen.generator, bounds, maxiter=maxiter,popsize=popsize, disp=disp, polish=polish, workers=workers, x0 = bestbet)
+calibration = spo.differential_evolution(sgen.generator, bounds, args = (params, r_vals, nv, pkl_fs_info, pkl_fs, gepep = True)
+                                         ,maxiter=maxiter,popsize=popsize, disp=disp, polish=polish, workers=workers, x0 = bestbet)
 
-
-# spy.stock_precalcs(params,report)
-sgen.generator(params, r_vals, nv, pkl_fs_info, pkl_fs, gepep = True)
 
 
 # time_list.append(timer()) ; time_was.append("simulation loops")
