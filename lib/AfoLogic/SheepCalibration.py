@@ -11,6 +11,9 @@ import numpy as np
 import pandas as pd
 from scipy import optimize as spo
 import multiprocessing as mp
+import os
+import sys
+import multiprocessing
 
 
 time_list = [] ; time_was = []
@@ -37,7 +40,7 @@ r_vals={}
 ###############
 #User control #
 ###############
-trial = 31   #31 is quick test
+trial = 0   #31 is quick test
 
 ######
 #Run #
@@ -114,7 +117,8 @@ wsmse_t = np.zeros(n_teams)
 message_t = np.empty(n_teams, dtype = object)
 
 ##loop through teams and save output
-for t in np.arange(n_teams):
+
+def f_run_calibration(t,coefficients_dict, success_dict, wsmse_dict, message_dict):
     ## weightings for the calibration objective function
     ### these are defined for all teams and don't vary
     calibration_weights = weights_c
@@ -125,44 +129,65 @@ for t in np.arange(n_teams):
     ##specify the best starting conditions. Again good to be from exp.xls
     bestbet = bestbet_tc[t]
 
-    if __name__ == '__main__':
-        ##Set some of the control variables (that might want to be tweaked later)
-        maxiter = 1000  #1000    The number of iterations of 'popsize' that can be carried out
-        popsize = 15  #15      The number of simulations being selected from
-        tol = 0.1  #0.01    The optimisation relative tolerance
-        disp = True  #False   Display the result each iteration
-        polish = True  #True    After the differential evolution carry out some further refining
-        workers = 30  #1       The number of multi-processes. #todo perhaps could access this from the RunAFORaw arg
-        updating = 'deferred'  #   Use deferred if workers > 1 to suppress warning
+    ##Set some of the control variables (that might want to be tweaked later)
+    maxiter = 0  #1000    The number of iterations of 'popsize' that can be carried out
+    popsize = 0  #15      The number of simulations being selected from
+    tol = 0.1  #0.01    The optimisation relative tolerance
+    disp = True  #False   Display the result each iteration
+    polish = True  #True    After the differential evolution carry out some further refining
+    workers = 1  #1       The number of multi-processes. #todo perhaps could access this from the RunAFORaw arg
+    updating = 'deferred'  #   Use deferred if workers > 1 to suppress warning
 
-        mp.freeze_support()
-        ## call the optimise routine
-        result = spo.differential_evolution(sgen.generator, bounds
-            , args = (params, r_vals, nv, pkl_fs_info, pkl_fs, stubble, gepep, calibration_weights, calibration_targets)
-            , maxiter=maxiter, popsize=popsize, tol=tol, disp=disp, polish=polish, updating=updating, workers=workers, x0=bestbet)
-        #assign the team results to arrays
-        coefficients_tc[t, :] = result.x
-        success_t[t] = result.success
-        wsmse_t[t] = result.fun
-        message_t[t] = result.message
-        print(f"Team {t} coefficients are {result.x} obj: {result.fun} evaluations {result.nfev}")
+    # mp.freeze_support()
+    ## call the optimise routine
+    result = spo.differential_evolution(sgen.generator, bounds
+        , args = (params, r_vals, nv, pkl_fs_info, pkl_fs, stubble, gepep, calibration_weights, calibration_targets)
+        , maxiter=maxiter, popsize=popsize, tol=tol, disp=disp, polish=polish, updating=updating, workers=workers, x0=bestbet)
+    #assign the team results to arrays
+    coefficients_dict[t] = result.x
+    success_dict[t] = result.success
+    wsmse_dict[t] = result.fun
+    message_dict[t] = result.message
+    print(f"Team {t} coefficients are {result.x} obj: {result.fun} evaluations {result.nfev}")
+
+teams = list(range(n_teams))
+if __name__ == '__main__':
+    manager = multiprocessing.Manager()
+    coefficients_dict = manager.dict()
+    success_dict = manager.dict()
+    wsmse_dict = manager.dict()
+    message_dict = manager.dict()
+    from functools import partial
+    ##start multiprocessing
+    ### number of agents (processes) should be min of the num of cpus, number of trials or the user specified limit due to memory capacity
+    agents = min(multiprocessing.cpu_count(), n_teams)
+
+    with multiprocessing.Pool(processes=agents) as pool:
+        # results = pool.map(f_run_calibration, teams, return_dict, chunksize=1)
+        results = pool.map(partial(f_run_calibration, coefficients_dict=coefficients_dict, success_dict=success_dict, wsmse_dict=wsmse_dict, message_dict=message_dict), teams, chunksize=1)
 
 
-##save output by trial - just so that user can check (this is not for AFO)
-### Set up the dataframes
-coefficients = pd.DataFrame(coefficients_tc, index=keys_t, columns=keys_c)
-success = pd.DataFrame(success_t, index=keys_t, columns=["Optimal"])
-wsmse  = pd.DataFrame(wsmse_t, index=keys_t, columns=["WSMSE"])
-message = pd.DataFrame(message_t, index=keys_t, columns=["Message"])
+    ##save output by trial - just so that user can check (this is not for AFO)
+    ### Set up the dataframes
+    keys_t = coefficients_dict.keys() #incase teams are out of order
+    coefficients_tc = np.array(coefficients_dict.values())
+    success_t = np.array(success_dict.values())
+    wsmse_t = np.array(wsmse_dict.values())
+    message_t = np.array(message_dict.values())
 
-### Write to Excel
-calibration_path = relativeFile.findExcel('calibration.xlsx')
-writer = pd.ExcelWriter(calibration_path, engine='xlsxwriter')
-coefficients.to_excel(writer,"result", index=True, header=True, startrow=0, startcol=0)
-success.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+1)
-wsmse.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+2)
-message.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+3)
-writer.close()
+    coefficients = pd.DataFrame(coefficients_tc, index=keys_t, columns=keys_c)
+    success = pd.DataFrame(success_t, index=keys_t, columns=["Optimal"])
+    wsmse  = pd.DataFrame(wsmse_t, index=keys_t, columns=["WSMSE"])
+    message = pd.DataFrame(message_t, index=keys_t, columns=["Message"])
 
-time_list.append(timer()) ; time_was.append("end")
-print("elapsed total time for calibration", f"{time_list[-1] - time_list[0]:0.4f}", "secs") # Time in seconds
+    ### Write to Excel
+    calibration_path = relativeFile.findExcel('calibration.xlsx')
+    writer = pd.ExcelWriter(calibration_path, engine='xlsxwriter')
+    coefficients.to_excel(writer,"result", index=True, header=True, startrow=0, startcol=0)
+    success.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+1)
+    wsmse.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+2)
+    message.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+3)
+    writer.close()
+
+    time_list.append(timer()) ; time_was.append("end")
+    print("elapsed total time for calibration", f"{time_list[-1] - time_list[0]:0.4f}", "secs") # Time in seconds
