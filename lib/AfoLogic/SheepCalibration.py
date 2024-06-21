@@ -44,7 +44,7 @@ r_vals={}
 ###############
 #User control #
 ###############
-trial = 36   #36 is MU test
+trial = 259   #259 is Exp500
 
 ######
 #Run #

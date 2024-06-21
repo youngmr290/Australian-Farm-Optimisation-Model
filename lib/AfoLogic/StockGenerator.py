@@ -85,20 +85,33 @@ def generator(coefficients=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_
     ##GEPEP coefficients #
     ######################
     if gepep:
-        uinp.parameters['i_sfw_c2'][1] = coefficients[0]           #cfw
-        uinp.parameters['i_sfd_c2'][1]  = coefficients[1]          #fd
-        # uinp.parameters['i_cw_c2'][16, 1] = coefficients[2]        #SS
-        # uinp.parameters['i_cw_c2'][11, 1] = coefficients[3]        #SL
-        # uinp.parameters['i_cu2_c2'][25, -1, 1] = coefficients[4]   #% dry (Con)
-        # uinp.parameters['i_cl0_c2'][25, 2, 1] = coefficients[5]    #Litter size
-        # uinp.parameters['i_cu2_c2'][8, -1, 1] = coefficients[6]    #Lamb survival (ERA)
-        # uinp.parameters['i_srw_c2'][1] = coefficients[7]           #Adult LW
+        n_coeff = len(coefficients)
+        i=0
+        uinp.parameters['i_sfw_c2'][1] = coefficients[i]           #cfw
+        i += 1
+        uinp.parameters['i_sfd_c2'][1]  = coefficients[i]          #fd
+        i += 1
+        uinp.parameters['i_cw_c2'][16, 1] = coefficients[i]        #SS
+        i += 1
+        uinp.parameters['i_cw_c2'][11, 1] = coefficients[i]        #SL
+        i += 1
+        uinp.parameters['i_cu2_c2'][25, -1, 1] = coefficients[i]   #% dry (Con)
+        i += 1
+        uinp.parameters['i_cl0_c2'][25, 2, 1] = coefficients[i]    #Litter size
+        i += 1
+        uinp.parameters['i_cu2_c2'][8, -1, 1] = coefficients[i]    #Lamb survival (ERA)
+        i += 1
+        # uinp.parameters['i_srw_c2'][1] = coefficients[i]           #Adult LW
+        # i += 1
         # cg[9] calculated from the deviation in cg[8]
-        # uinp.parameters['i_cg_c2'][9, 1] += (coefficients[8] - uinp.parameters['i_cg_c2'][8, 1])
-        # uinp.parameters['i_cg_c2'][8, 1] = coefficients[8]         #Fatness EVG
-        # uinp.parameters['i_ci_c2'][1, 1] = coefficients[9]         #Intake
-        # uinp.parameters['i_cd_c2'][1, 1] = coefficients[10]        #Basal mortality
-        # uinp.parameters['i_cl_c2'][0, 1] = coefficients[11]        #Wwt, by milk production and intake scalar
+        uinp.parameters['i_cg_c2'][9, 1] += (coefficients[i] - uinp.parameters['i_cg_c2'][8, 1])
+        uinp.parameters['i_cg_c2'][8, 1] = coefficients[i]         #Fatness EVG
+        i += 1
+        uinp.parameters['i_ci_c2'][1, 1] = coefficients[i]         #Intake
+        i += 1
+        uinp.parameters['i_cd_c2'][1, 1] = coefficients[i]        #Basal mortality
+        i += 1
+        uinp.parameters['i_cl_c2'][0, 1] = coefficients[i]        #Wwt, by milk production and intake scalar
 
 
     ######################
@@ -7014,30 +7027,19 @@ def generator(coefficients=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_
         return r_intake_f_tpdams, r_intake_f_tpoffs, o_ebg_tpdams, o_ebg_tpoffs
 
     if gepep:   #add the calibration variables to r_vals and return
-        # r_vals['cfw'] = o_cfw_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #CFW of ewes at 2.5yo
-        # r_vals['fd'] = o_fd_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]             #FD of ewes at 2.5yo
-        # r_vals['ss'] = o_ss_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]           #SS of ewes at 2.5yo
-        # r_vals['sl'] = o_sl_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]           #SL of ewes at 2.5yo
-        # r_vals['con'] = 0.08           #% dry of adult ewes average across 2, 3, 4 & 5yo
-        # r_vals['ls'] = 1.5           #% litter size of adult ewes average across 2, 3, 4 & 5yo
-        # r_vals['era'] = 0.8           #single lamb survival of adult ewes average across 2, 3, 4 & 5yo
-        # r_vals['fat'] = 15           #kg of fat for the wethers (need to sort the sgen period)
-        # r_vals['lw'] = 60           #LW of wethers at above age
-        # r_vals['mort'] = 0.2           #Cumulative mortality of ewes from yearling age to 5.5yo
-        # r_vals['wwt'] = 25           #Weaning weight of
-        calibration_values = np.zeros(2)   #could set this up with a zeros_like()
+        calibration_values = np.zeros(n_coeff)   #could set this up with a zeros_like()
 
         calibration_values[0] = o_cfw_tpdams[0,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #CFW of ewes at 2.5yo
         calibration_values[1] = o_fd_tpdams[0,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]             #FD of ewes at 2.5yo
-        # calibration_values[2] = o_ss_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]           #SS of ewes at 2.5yo
-        # calibration_values[3] = o_sl_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]           #SL of ewes at 2.5yo
-        # calibration_values[4] = 0.08           #% dry of adult ewes average across 2, 3, 4 & 5yo
-        # calibration_values[5] = 1.5           #% litter size of adult ewes average across 2, 3, 4 & 5yo
-        # calibration_values[6] = 0.8           #single lamb survival of adult ewes average across 2, 3, 4 & 5yo
-        # calibration_values[7] = 15           #kg of fat for the wethers (need to sort the sgen period)
-        # calibration_values[8] = 60           #LW of wethers at above age
-        # calibration_values[9] = 0.2           #Cumulative mortality of ewes from yearling age to 5.5yo
-        # calibration_values[10] = 25           #Weaning weight of
+        calibration_values[2] = o_ss_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]           #SS of ewes at 2.5yo
+        calibration_values[3] = o_sl_tpdams[2,200,0,0,2,0,0,0,0,0,0,0,0,0,0,0]           #SL of ewes at 2.5yo
+        calibration_values[4] = 0.08           #% dry of adult ewes average across 2, 3, 4 & 5yo
+        calibration_values[5] = 1.5           #% litter size of adult ewes average across 2, 3, 4 & 5yo
+        calibration_values[6] = 0.8           #single lamb survival of adult ewes average across 2, 3, 4 & 5yo
+        calibration_values[7] = 15           #kg of fat for the wethers (need to sort the sgen period)
+        calibration_values[8] = 60           #LW of wethers at above age
+        calibration_values[9] = 0.2           #Cumulative mortality of ewes from yearling age to 5.5yo
+        calibration_values[10] = 25           #Weaning weight of
 
         ##Calculate the objective value for the calibration
         objective = np.sum(((calibration_values - calibration_targets) / calibration_targets) ** 2 * calibration_weights)
