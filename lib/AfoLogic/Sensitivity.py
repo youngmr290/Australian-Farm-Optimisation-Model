@@ -340,6 +340,8 @@ def create_sa():
     sav['onhand_mort_p_inc'] = '-'  #SA to store onhand report values
     sav['mort_inc'] = '-'  #SA to store mort report values
     sav['feedbud_inc'] = '-'  #SA to store feed budget report values
+    sav['age_max'] = '-'  #SA on length of the generator for dams (years)
+    sav['age_max_offs'] = '-'    #SA on length of the generator for offspring (years)
     sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared
     sav['eqn_used_g0_q1p7'] = np.full(uinp.sheep['i_eqn_used_g0_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
     sav['eqn_used_g1_q1p7'] = np.full(uinp.sheep['i_eqn_used_g1_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
