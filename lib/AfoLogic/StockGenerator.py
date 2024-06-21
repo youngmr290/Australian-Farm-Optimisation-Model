@@ -82,11 +82,23 @@ def generator(coefficients=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_
     generator_start = time.time()
 
     ######################
-    ##coefficients       #
+    ##GEPEP coefficients #
     ######################
-    uinp.parameters['i_sfw_c2'][1] = coefficients[0]
-    uinp.parameters['i_sfd_c2'][1]  = coefficients[1]
-
+    if gepep:
+        uinp.parameters['i_sfw_c2'][1] = coefficients[0]           #cfw
+        uinp.parameters['i_sfd_c2'][1]  = coefficients[1]          #fd
+        # uinp.parameters['i_cw_c2'][16, 1] = coefficients[2]        #SS
+        # uinp.parameters['i_cw_c2'][11, 1] = coefficients[3]        #SL
+        # uinp.parameters['i_cu2_c2'][25, -1, 1] = coefficients[4]   #% dry (Con)
+        # uinp.parameters['i_cl0_c2'][25, 2, 1] = coefficients[5]    #Litter size
+        # uinp.parameters['i_cu2_c2'][8, -1, 1] = coefficients[6]    #Lamb survival (ERA)
+        # uinp.parameters['i_srw_c2'][1] = coefficients[7]           #Adult LW
+        # cg[9] calculated from the deviation in cg[8]
+        # uinp.parameters['i_cg_c2'][9, 1] += (coefficients[8] - uinp.parameters['i_cg_c2'][8, 1])
+        # uinp.parameters['i_cg_c2'][8, 1] = coefficients[8]         #Fatness EVG
+        # uinp.parameters['i_ci_c2'][1, 1] = coefficients[9]         #Intake
+        # uinp.parameters['i_cd_c2'][1, 1] = coefficients[10]        #Basal mortality
+        # uinp.parameters['i_cl_c2'][0, 1] = coefficients[11]        #Wwt, by milk production and intake scalar
 
 
     ######################

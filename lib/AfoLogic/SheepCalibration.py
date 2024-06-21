@@ -100,14 +100,6 @@ bestbet_tc = bestbet_tc.values
 bnd_lo_tc = bnd_lo_tc.values
 bnd_up_tc = bnd_up_tc.values
 
-##Set some of the control variables (that might want to be tweaked later)
-maxiter = 20    #1000    The number of iterations of 'popsize' that can be carried out
-popsize = 15    #15     The number of simulations being selected from
-disp = True     #False   Display the result each iteration
-polish = True  #True   After the differential evolution carry out some further refining
-workers = 15     #1       The number of multi-processes. #todo perhaps could access this from the RunAFORaw arg
-updating = 'deferred'  # Used deferred if workers > 1
-
 ##sgen args
 nv={}
 pkl_fs_info={}
@@ -116,7 +108,7 @@ gepep = True
 stubble=False
 
 ## create empty arrays to accept the output
-calibration_tc = np.zeros((n_teams,n_coef))
+coefficients_tc = np.zeros((n_teams,n_coef))
 success_t = np.zeros(n_teams, dtype=bool)
 wsmse_t = np.zeros(n_teams)
 message_t = np.empty(n_teams, dtype = object)
@@ -134,21 +126,31 @@ for t in np.arange(n_teams):
     bestbet = bestbet_tc[t]
 
     if __name__ == '__main__':
+        ##Set some of the control variables (that might want to be tweaked later)
+        maxiter = 1000  #1000    The number of iterations of 'popsize' that can be carried out
+        popsize = 15  #15      The number of simulations being selected from
+        tol = 0.1  #0.01    The optimisation relative tolerance
+        disp = True  #False   Display the result each iteration
+        polish = True  #True    After the differential evolution carry out some further refining
+        workers = 30  #1       The number of multi-processes. #todo perhaps could access this from the RunAFORaw arg
+        updating = 'deferred'  #   Use deferred if workers > 1 to suppress warning
+
         mp.freeze_support()
         ## call the optimise routine
-        result = spo.differential_evolution(sgen.generator, bounds, args = (params, r_vals, nv, pkl_fs_info
-                            , pkl_fs, stubble, gepep, calibration_weights, calibration_targets)
-                            ,maxiter=maxiter, popsize=popsize, disp=disp, polish=polish, workers=workers, x0 = bestbet)
-        calibration_tc[t, :] = result.x
+        result = spo.differential_evolution(sgen.generator, bounds
+            , args = (params, r_vals, nv, pkl_fs_info, pkl_fs, stubble, gepep, calibration_weights, calibration_targets)
+            , maxiter=maxiter, popsize=popsize, tol=tol, disp=disp, polish=polish, updating=updating, workers=workers, x0=bestbet)
+        #assign the team results to arrays
+        coefficients_tc[t, :] = result.x
         success_t[t] = result.success
         wsmse_t[t] = result.fun
         message_t[t] = result.message
-        print(calibration_tc[t], wsmse[t])
+        print(f"Team {t} coefficients are {result.x} obj: {result.fun} evaluations {result.nfev}")
 
 
 ##save output by trial - just so that user can check (this is not for AFO)
 ### Set up the dataframes
-calibration = pd.DataFrame(calibration_tc, index=keys_t, columns=keys_c)
+coefficients = pd.DataFrame(coefficients_tc, index=keys_t, columns=keys_c)
 success = pd.DataFrame(success_t, index=keys_t, columns=["Optimal"])
 wsmse  = pd.DataFrame(wsmse_t, index=keys_t, columns=["WSMSE"])
 message = pd.DataFrame(message_t, index=keys_t, columns=["Message"])
@@ -156,7 +158,7 @@ message = pd.DataFrame(message_t, index=keys_t, columns=["Message"])
 ### Write to Excel
 calibration_path = relativeFile.findExcel('calibration.xlsx')
 writer = pd.ExcelWriter(calibration_path, engine='xlsxwriter')
-calibration.to_excel(writer,"result", index=True, header=True, startrow=0, startcol=0)
+coefficients.to_excel(writer,"result", index=True, header=True, startrow=0, startcol=0)
 success.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+1)
 wsmse.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+2)
 message.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+3)
