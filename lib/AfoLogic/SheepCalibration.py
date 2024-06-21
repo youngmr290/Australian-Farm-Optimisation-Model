@@ -3,6 +3,10 @@
 Created on Thu Feb 13 09:35:26 2020
 
 @author: John
+
+Multi-process the teams if there are sufficient teams to occupy the computer resource
+If not, use multiple workers. The maximum useful number of workers is the size of the selection population
+Multiprocessing teams should be more efficient because it can use 'immediate' updating
 """
 
 from timeit import default_timer as timer
@@ -40,7 +44,7 @@ r_vals={}
 ###############
 #User control #
 ###############
-trial = 0   #31 is quick test
+trial = 36   #36 is MU test
 
 ######
 #Run #
@@ -96,6 +100,17 @@ keys_c = targets_tc.columns
 n_coef = len(keys_c)
 n_teams = len(keys_t)
 
+##############
+##processors #
+##############
+## the upper limit of number of processes (concurrent trials) based on the memory capacity of this machine
+try:
+    maximum_processes = int(sys.argv[1])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
+except IndexError:  # in case no arg passed to python
+    maximum_processes = 1  # available memory / value determined by size of the model being run (~5GB for the small model)
+## number of agents (processes) should be min of the num of cpus, number of teams or the user specified limit due to memory capacity
+n_processes = min(multiprocessing.cpu_count(),n_teams, maximum_processes)
+
 ###convert to np
 targets_tc = targets_tc.values
 weights_c = weights_c.values
@@ -130,20 +145,19 @@ def f_run_calibration(t,coefficients_dict, success_dict, wsmse_dict, message_dic
     bestbet = bestbet_tc[t]
 
     ##Set some of the control variables (that might want to be tweaked later)
-    maxiter = 0  #1000    The number of iterations of 'popsize' that can be carried out
-    popsize = 0  #15      The number of simulations being selected from
-    tol = 0.1  #0.01    The optimisation relative tolerance
-    disp = True  #False   Display the result each iteration
-    polish = True  #True    After the differential evolution carry out some further refining
-    workers = 1  #1       The number of multi-processes. #todo perhaps could access this from the RunAFORaw arg
-    updating = 'deferred'  #   Use deferred if workers > 1 to suppress warning
+    maxiter = 1000  #1000      The maximum number of iterations. # calls = (maxiter + 1) * selection population
+    popsize = 5     #15        The selection population is (popsize * n coefficients)
+    tol = 0.1       #0.01      The optimisation relative tolerance
+    disp = True     #False     Display the result each iteration
+    polish = True   #True      After the differential evolution carry out some further refining
+    workers = 1     #10        Must be equal to 1 if multiprocessing the teams
+    updating = 'immediate'  #  Use deferred if workers > 1 to suppress warning
 
-    # mp.freeze_support()
     ## call the optimise routine
     result = spo.differential_evolution(sgen.generator, bounds
         , args = (params, r_vals, nv, pkl_fs_info, pkl_fs, stubble, gepep, calibration_weights, calibration_targets)
         , maxiter=maxiter, popsize=popsize, tol=tol, disp=disp, polish=polish, updating=updating, workers=workers, x0=bestbet)
-    #assign the team results to arrays
+    #assign the team results to dicts
     coefficients_dict[t] = result.x
     success_dict[t] = result.success
     wsmse_dict[t] = result.fun
@@ -152,28 +166,71 @@ def f_run_calibration(t,coefficients_dict, success_dict, wsmse_dict, message_dic
 
 teams = list(range(n_teams))
 if __name__ == '__main__':
-    manager = multiprocessing.Manager()
-    coefficients_dict = manager.dict()
-    success_dict = manager.dict()
-    wsmse_dict = manager.dict()
-    message_dict = manager.dict()
-    from functools import partial
-    ##start multiprocessing
-    ### number of agents (processes) should be min of the num of cpus, number of trials or the user specified limit due to memory capacity
-    agents = min(multiprocessing.cpu_count(), n_teams)
+    if n_processes != 1:    # read as a string so need to convert to int
+        print (f"multiprocess across {n_processes} teams")
+        manager = multiprocessing.Manager()
+        coefficients_dict = manager.dict()
+        success_dict = manager.dict()
+        wsmse_dict = manager.dict()
+        message_dict = manager.dict()
+        from functools import partial
+        ##start multiprocessing
+        ### number of agents (processes) should be min of the num of cpus, number of trials or the user specified limit due to memory capacity
+        agents = n_processes
 
-    with multiprocessing.Pool(processes=agents) as pool:
-        # results = pool.map(f_run_calibration, teams, return_dict, chunksize=1)
-        results = pool.map(partial(f_run_calibration, coefficients_dict=coefficients_dict, success_dict=success_dict, wsmse_dict=wsmse_dict, message_dict=message_dict), teams, chunksize=1)
+        with multiprocessing.Pool(processes=agents) as pool:
+            # results = pool.map(f_run_calibration, teams, return_dict, chunksize=1)
+            results = pool.map(partial(f_run_calibration, coefficients_dict=coefficients_dict, success_dict=success_dict
+                                       , wsmse_dict=wsmse_dict, message_dict=message_dict), teams, chunksize=1)
 
+        ##save output by trial - just so that user can check (this is not for AFO)
+        ### Set up the dataframes
+        keys_t = coefficients_dict.keys() #incase teams are out of order
+        coefficients_tc = np.array(coefficients_dict.values())
+        success_t = np.array(success_dict.values())
+        wsmse_t = np.array(wsmse_dict.values())
+        message_t = np.array(message_dict.values())
 
-    ##save output by trial - just so that user can check (this is not for AFO)
-    ### Set up the dataframes
-    keys_t = coefficients_dict.keys() #incase teams are out of order
-    coefficients_tc = np.array(coefficients_dict.values())
-    success_t = np.array(success_dict.values())
-    wsmse_t = np.array(wsmse_dict.values())
-    message_t = np.array(message_dict.values())
+    else:
+        for t in np.arange(n_teams):
+            ## weightings for the calibration objective function
+            ### these are defined for all teams and don't vary
+            calibration_weights = weights_c
+            ## the targets vary for each team. Would be good to control these from exp.xls
+            calibration_targets = targets_tc[t]
+            ## create the bounds for the calibration coefficients. Would be good to control these from exp so they can be tweaked for each team
+            bounds = list(zip(bnd_lo_tc[t], bnd_up_tc[t]))
+            ##specify the best starting conditions. Again good to be from exp.xls
+            bestbet = bestbet_tc[t]
+
+            ##Set some of the control variables (that might want to be tweaked later)
+            maxiter = 1000  #1000      The maximum number of iterations. # calls = (maxiter + 1) * selection population
+            popsize = 5  #15        The selection population is (popsize * n coefficients)
+            tol = 0.1  #0.01      The optimisation relative tolerance
+            disp = True  #False     Display the result each iteration
+            polish = True  #True      After the differential evolution carry out some further refining
+            population = popsize * n_coef
+            max_workers = 30  #1         The number of multi-processes, while calculating the population. Relate to size of population
+            workers = min(population, max_workers)
+            if workers != 1:
+                updating = 'deferred'  #   Use deferred if workers > 1 to suppress warning
+            else:
+                updating = 'immediate'
+
+            print(f"multiprocess the population of {population} with {workers} workers")
+
+            mp.freeze_support()
+            ## call the optimise routine
+            result = spo.differential_evolution(sgen.generator, bounds
+                , args = (params, r_vals, nv, pkl_fs_info, pkl_fs, stubble, gepep, calibration_weights, calibration_targets)
+                , maxiter=maxiter, popsize=popsize, tol=tol, disp=disp, polish=polish, updating=updating, workers=workers, x0=bestbet)
+            #assign the team results to arrays
+            coefficients_tc[t, :] = result.x
+            success_t[t] = result.success
+            wsmse_t[t] = result.fun
+            message_t[t] = result.message
+            time_list.append(timer()); time_was.append(t)
+            print(f"Team {t} coefficients are {result.x} obj: {result.fun} evaluations {result.nfev} {time_list[-1] - time_list[-2]:0.4f}secs")
 
     coefficients = pd.DataFrame(coefficients_tc, index=keys_t, columns=keys_c)
     success = pd.DataFrame(success_t, index=keys_t, columns=["Optimal"])
@@ -190,4 +247,4 @@ if __name__ == '__main__':
     writer.close()
 
     time_list.append(timer()) ; time_was.append("end")
-    print("elapsed total time for calibration", f"{time_list[-1] - time_list[0]:0.4f}", "secs") # Time in seconds
+    print(f"elapsed total time for calibration: {time_list[-1] - time_list[0]:0.4f} secs") # Time in seconds
