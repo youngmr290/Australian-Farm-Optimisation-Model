@@ -219,7 +219,7 @@ if __name__ == '__main__':
             disp = True  #False     Display the result each iteration
             polish = True  #True      After the differential evolution carry out some further refining
             population = popsize * n_coef
-            max_workers = 30  #1         The number of multi-processes, while calculating the population. Relate to size of population
+            max_workers = 15  #1         The number of multi-processes, while calculating the population. Relate to size of population
             workers = min(multiprocessing.cpu_count(), population, max_workers)
             if workers != 1:
                 updating = 'deferred'  #   Use deferred if workers > 1 to suppress warning
