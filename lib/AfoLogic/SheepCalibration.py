@@ -44,7 +44,11 @@ r_vals={}
 ###############
 #User control #
 ###############
-trial = 259   #259 is Exp500
+##set the row of trial to run. The number is the number in Col A of exp.xls. If no argument is passed in then QT trial 31 is used
+try:
+    trial = int(sys.argv[1])  #reads in as string so need to convert to int, the script path is the first value hence take the second.
+except (IndexError, ValueError) as e:  #in case no arg passed to python
+    trial = 31   #31 is QT
 
 ######
 #Run #
@@ -105,7 +109,7 @@ n_teams = len(keys_t)
 ##############
 ## the upper limit of number of processes (concurrent trials) based on the memory capacity of this machine
 try:
-    maximum_processes = int(sys.argv[1])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
+    maximum_processes = int(sys.argv[2])  # reads in as string so need to convert to int, the trial is the first value hence take the second.
 except IndexError:  # in case no arg passed to python
     maximum_processes = 1  # available memory / value determined by size of the model being run (~5GB for the small model)
 ## number of agents (processes) should be min of the num of cpus, number of teams or the user specified limit due to memory capacity
