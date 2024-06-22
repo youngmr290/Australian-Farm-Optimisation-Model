@@ -7,7 +7,11 @@ Created on Thu Feb 13 09:35:26 2020
 Multi-process the teams if there are sufficient teams to occupy the computer resource
 If not, use multiple workers. The maximum useful number of workers is the size of the selection population
 Multiprocessing teams should be more efficient because it can use 'immediate' updating
+
+sys.argv: Experiment number (will use the first trial in the experiment). If blank uses QT (trial 31)
+          Number of multi processes. If blank will not process but will use workers
 """
+
 
 from timeit import default_timer as timer
 
@@ -44,10 +48,11 @@ r_vals={}
 ###############
 #User control #
 ###############
-##set the row of trial to run. The number is the number in Col A of exp.xls. If no argument is passed in then QT trial 31 is used
 try:
-    trial = int(sys.argv[1])  #reads in as string so need to convert to int, the script path is the first value hence take the second.
-except (IndexError, ValueError) as e:  #in case no arg passed to python
+    exp_number = int(sys.argv[1])  #reads in as string so need to convert to int, the script path is the first value hence take the second.
+    trial = 0    #If an experiment was passed as an argument then take the first trial in the experiment
+except (IndexError, ValueError) as e:  #in case no arg passed to python specify a trial number
+    ## the trial number is value in Col A of target trial in exp.xls. Default is QT (trial 31) but can point to any trial
     trial = 31   #31 is QT
 
 ######
@@ -215,7 +220,7 @@ if __name__ == '__main__':
             polish = True  #True      After the differential evolution carry out some further refining
             population = popsize * n_coef
             max_workers = 30  #1         The number of multi-processes, while calculating the population. Relate to size of population
-            workers = min(population, max_workers)
+            workers = min(multiprocessing.cpu_count(), population, max_workers)
             if workers != 1:
                 updating = 'deferred'  #   Use deferred if workers > 1 to suppress warning
             else:
