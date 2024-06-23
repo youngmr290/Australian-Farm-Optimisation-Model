@@ -103,12 +103,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         uinp.parameters['i_cu2_c2'][8, -1, 2] = coefficients_c[i]    #Lamb survival (ERA)
         i += 1
         uinp.parameters['i_srw_c2'][2] = coefficients_c[i]           #Adult LW
-        # i += 1
-        # uinp.parameters['i_ci_c2'][1, 2] = coefficients_c[i]         #Intake
-        # i += 1
-        # # cg[9] calculated from the deviation in cg[8]
-        # uinp.parameters['i_cg_c2'][9, 2] += (coefficients_c[i] - uinp.parameters['i_cg_c2'][8, 2])
-        # uinp.parameters['i_cg_c2'][8, 2] = coefficients_c[i]         #Fatness EVG
+        i += 1
+        uinp.parameters['i_ci_c2'][1, 2] = coefficients_c[i]         #Intake
+        i += 1
+        # cg[9] calculated from the deviation in cg[8]
+        uinp.parameters['i_cg_c2'][9, 2] += (coefficients_c[i] - uinp.parameters['i_cg_c2'][8, 2])
+        uinp.parameters['i_cg_c2'][8, 2] = coefficients_c[i]         #Fatness EVG
         i += 1
         uinp.parameters['i_cd_c2'][1, 2] = coefficients_c[i]        #Basal mortality
         i += 1
@@ -7078,9 +7078,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         calibration_values_p[i] = twin_surv     #single lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
         i += 1
         calibration_values_p[i] = o_ffcfw_tpdams[0,211,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
-        # i += 1
-        # calibration_values_p[i] = fun.f_divide(r_fat_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0]
-        #                                      , r_ebw_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0])  #% of fat for the wethers 30mo BTRT 11, first cycle, from 3yo
+        i += 1
+        calibration_values_p[i] = fun.f_divide(r_fat_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0]
+                                             , r_ebw_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0])  #% of fat for the wethers 30mo BTRT 11, first cycle, from 3yo
         i += 1
         calibration_values_p[i] = fun.f_divide(np.sum(o_numbers_start_tpdams[0,308,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
                                              , np.sum(o_numbers_start_tpdams[0,100,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
@@ -7113,8 +7113,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         print(f"Twin survival {calibration_values_p[i]} ({coefficients_c[i]})")  #twin lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
         i += 1
         print(f"Dam weight 3yo joining {calibration_values_p[i]} ({coefficients_c[i]})")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
-        # i += 1
-        # print(f"Proportion fat {calibration_values_p[i]} ({coefficients_c[i]})")
+        i += 1
+        print(f"Proportion fat {calibration_values_p[i]} ({coefficients_c[i]})")
         i += 1
         print(f"Dam survival Y-A5 {calibration_values_p[i]} ({coefficients_c[i]})")
         i += 1
