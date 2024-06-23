@@ -64,6 +64,9 @@ sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(tr
 d_rot_info = dxl.f_load_phases()
 cat_propn_s1_ks2 = dxl.f_load_stubble()
 
+##cut exp_data based on the experiment group
+exp_data = exp.f_group_exp(exp_data, exp_group_bool)
+
 ##select property for the current trial
 property = trial_pinp.iloc[trial]
 
