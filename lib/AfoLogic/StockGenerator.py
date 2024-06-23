@@ -7088,39 +7088,38 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         calibration_values_p[i] = o_wean_w_tpyatf[0,196,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Weaning weight of 1st cycle singles
         ##Calculate the objective value based on sum of squares of the relative error (error as a proportion of the target)
         ### Handle the multi-trait calibration using an a-priori method
-        ###Option 1 A linear scalarising method, based on subjective weights (calibration weights)
-        objective = np.sum((fun.f_divide(calibration_values_p - calibration_targets_p, calibration_targets_p) ** 2)
-                            * calibration_weights_p)
+        ###Option 1 A linear scalarising method, based on subjective weights / SD of the target trait range (calibration weights)
+        objective = np.sum(((calibration_values_p - calibration_targets_p) * calibration_weights_p) ** 2)
+
         # ###Option 2 A Chebyshev scalarisation. The weighting is the inverse of the coefficient increasing weight on small coefficients
         # ###The objective is the deviation of the worst trait relative to the size of the coefficient
         # ###Requires n_coef = n_production traits & coefficient to be > 0
         # objective = np.max((fun.f_divide(calibration_values_p - calibration_targets_p, calibration_targets_p) ** 2)
         #                     / np.maximum(0.0001, np.abs(coefficients_c)))
+        print(f"obj: {objective} trait & (coefficient)")
         i = 0
-        print(f"CFW {calibration_values_p[i]}")  #CFW of single ewes at 3.5yo
+        print(f"CFW {calibration_values_p[i]} ({coefficients_c[i]})")  #CFW of single ewes at 3.5yo
         i += 1
-        print(f"FD {calibration_values_p[i]}")  #FD of single ewes at 3.5yo
+        print(f"FD {calibration_values_p[i]} ({coefficients_c[i]})")  #FD of single ewes at 3.5yo
         i += 1
-        print(f"SS {calibration_values_p[i]}")  #SS of single ewes at 3.5yo
+        print(f"SS {calibration_values_p[i]} ({coefficients_c[i]})")  #SS of single ewes at 3.5yo
         i += 1
-        print(f"SL {calibration_values_p[i]}")  #SL of single ewes at 3.5yo
+        print(f"SL {calibration_values_p[i]} ({coefficients_c[i]})")  #SL of single ewes at 3.5yo
         i += 1
-        print(f"% Dry {calibration_values_p[i]}")  #% dry of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
+        print(f"% Dry {calibration_values_p[i]} ({coefficients_c[i]})")  #% dry of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
         i += 1
-        print(f"Litter Size {calibration_values_p[i]}")  #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
+        print(f"Litter Size {calibration_values_p[i]} ({coefficients_c[i]})")  #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
         i += 1
-        print(f"Twin survival {calibration_values_p[i]}")  #twin lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
+        print(f"Twin survival {calibration_values_p[i]} ({coefficients_c[i]})")  #twin lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
         i += 1
-        print(f"Dam weight 3yo joining {calibration_values_p[i]}")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
+        print(f"Dam weight 3yo joining {calibration_values_p[i]} ({coefficients_c[i]})")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
         # i += 1
-        # print(f"Proportion fat {calibration_values_p[i]}")
+        # print(f"Proportion fat {calibration_values_p[i]} ({coefficients_c[i]})")
         i += 1
-        print(f"Dam survival Y-A5 {calibration_values_p[i]}")
+        print(f"Dam survival Y-A5 {calibration_values_p[i]} ({coefficients_c[i]})")
         i += 1
+        print(f"Wean weight {calibration_values_p[i]} ({coefficients_c[i]})")  #Weaning weight of 1st cycle singles
 
-        print(f"Wean weight {calibration_values_p[i]}")  #Weaning weight of 1st cycle singles
-
-        print("obj: ",objective)
         return objective
 
     else:
