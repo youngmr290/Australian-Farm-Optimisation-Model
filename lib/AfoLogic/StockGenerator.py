@@ -7030,7 +7030,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     if gepep:
         ##store the calibration variables for each production trait (p)
         ##Comment any traits that don't have target values
-        calibration_values_p = np.zeros(n_coeff)   #could set this up with a zeros_like()
+        calibration_values_p = np.zeros_like(calibration_targets_p)   #could set this up with a zeros_like()
         i = 0
         calibration_values_p[i] = o_cfw_tpdams[0,204,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #CFW of single ewes at 3.5yo
         i += 1
@@ -7041,51 +7041,51 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         calibration_values_p[i] = o_sl_tpdams[0,204,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #SL of single ewes at 3.5yo
         i += 1
         ##proportion of dry is number of dry (b[1]) divided by the number dry and pregnant (b[1:5])
-        dry_2yo = fun.f_divide(o_numbers_start_tpdams[0,111,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        dry_3yo = fun.f_divide(o_numbers_start_tpdams[0,163,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        dry_4yo = fun.f_divide(o_numbers_start_tpdams[0,215,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,215,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        dry_5yo = fun.f_divide(o_numbers_start_tpdams[0,267,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        dry_2yo = fun.f_divide(o_numbers_start_tpdams[0,108,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                        np.sum(o_numbers_start_tpdams[0,108,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        dry_3yo = fun.f_divide(o_numbers_start_tpdams[0,160,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                        np.sum(o_numbers_start_tpdams[0,160,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        dry_4yo = fun.f_divide(o_numbers_start_tpdams[0,212,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                        np.sum(o_numbers_start_tpdams[0,212,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        dry_5yo = fun.f_divide(o_numbers_start_tpdams[0,264,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                        np.sum(o_numbers_start_tpdams[0,264,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
         propn_dry = (dry_2yo + dry_3yo + dry_4yo + dry_5yo) / 4
         calibration_values_p[i] = propn_dry     #% dry of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
         i += 1
         ##Litter size is sum of the ewes weighted by # foetuses (np.dot with arange(4)) divided by pregnant ewes
-        ls_2yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                            , np.sum(o_numbers_start_tpdams[0,111,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        ls_3yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                            , np.sum(o_numbers_start_tpdams[0,163,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        ls_4yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,215,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                            , np.sum(o_numbers_start_tpdams[0,215,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        ls_5yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                            , np.sum(o_numbers_start_tpdams[0,267,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
+        ls_2yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,108,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
+                            , np.sum(o_numbers_start_tpdams[0,108,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
+        ls_3yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,160,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
+                            , np.sum(o_numbers_start_tpdams[0,160,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
+        ls_4yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,212,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
+                            , np.sum(o_numbers_start_tpdams[0,212,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
+        ls_5yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,264,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
+                            , np.sum(o_numbers_start_tpdams[0,264,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
         litter_size = (ls_2yo + ls_3yo + ls_4yo + ls_5yo) / 4
         calibration_values_p[i] = litter_size     #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
         i += 1
         ##twin survival is square root of the number of ewe with twins (BT22) after lambing / number before lambing
         ##Square root is simpler to calculate than summing BTRT 22 * 2 & 21 * 1
-        twin_surv_2yo = fun.f_divide(o_numbers_start_tpdams[0,131,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                   , o_numbers_start_tpdams[0,127,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        twin_surv_3yo = fun.f_divide(o_numbers_start_tpdams[0,183,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                   , o_numbers_start_tpdams[0,179,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        twin_surv_4yo = fun.f_divide(o_numbers_start_tpdams[0,235,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                   , o_numbers_start_tpdams[0,231,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        twin_surv_5yo = fun.f_divide(o_numbers_start_tpdams[0,287,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                   , o_numbers_start_tpdams[0,283,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
+        twin_surv_2yo = fun.f_divide(o_numbers_start_tpdams[0,133,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
+                                   , o_numbers_start_tpdams[0,129,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
+        twin_surv_3yo = fun.f_divide(o_numbers_start_tpdams[0,185,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
+                                   , o_numbers_start_tpdams[0,181,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
+        twin_surv_4yo = fun.f_divide(o_numbers_start_tpdams[0,237,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
+                                   , o_numbers_start_tpdams[0,233,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
+        twin_surv_5yo = fun.f_divide(o_numbers_start_tpdams[0,289,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
+                                   , o_numbers_start_tpdams[0,285,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
         twin_surv = (twin_surv_2yo + twin_surv_3yo + twin_surv_4yo + twin_surv_5yo) / 4
         calibration_values_p[i] = twin_surv     #single lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
         i += 1
-        calibration_values_p[i] = o_ffcfw_tpdams[0,209,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
+        calibration_values_p[i] = o_ffcfw_tpdams[0,211,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
         # i += 1
-        # calibration_values_p[i] = fun.f_divide(r_fat_tpoffs[0,158,0,0,0,0,0,0,0,3,0,0,0,1,0,0]
-        #                                      , r_ebw_tpoffs[0,158,0,0,0,0,0,0,0,3,0,0,0,1,0,0])  #% of fat for the wethers 30mo BTRT 11, first cycle, from 3yo
+        # calibration_values_p[i] = fun.f_divide(r_fat_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0]
+        #                                      , r_ebw_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0])  #% of fat for the wethers 30mo BTRT 11, first cycle, from 3yo
         i += 1
-        calibration_values_p[i] = fun.f_divide(np.sum(o_numbers_start_tpdams[0,309,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
-                                             , np.sum(o_numbers_start_tpdams[0,101,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+        calibration_values_p[i] = fun.f_divide(np.sum(o_numbers_start_tpdams[0,308,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
+                                             , np.sum(o_numbers_start_tpdams[0,100,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
         i += 1
-        calibration_values_p[i] = o_wean_w_tpyatf[0,194,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Weaning weight of 1st cycle singles
+        calibration_values_p[i] = o_wean_w_tpyatf[0,196,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Weaning weight of 1st cycle singles
         ##Calculate the objective value based on sum of squares of the relative error (error as a proportion of the target)
         ### Handle the multi-trait calibration using an a-priori method
         ###Option 1 A linear scalarising method, based on subjective weights (calibration weights)
@@ -7106,47 +7106,47 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         print(f"SS {o_ss_tpdams[0,204,0,0,2,0,0,0,0,0,0,0,0,0,0,0]}")  #SS of single ewes at 3.5yo
         print(f"SL {o_sl_tpdams[0,204,0,0,2,0,0,0,0,0,0,0,0,0,0,0]}")  #SL of single ewes at 3.5yo
         ##proportion of dry is number of dry (b[1]) divided by the number dry and pregnant (b[1:5])
-        dry_2yo = fun.f_divide(o_numbers_start_tpdams[0,111,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        dry_3yo = fun.f_divide(o_numbers_start_tpdams[0,163,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        dry_4yo = fun.f_divide(o_numbers_start_tpdams[0,215,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,215,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        dry_5yo = fun.f_divide(o_numbers_start_tpdams[0,267,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        dry_2yo = fun.f_divide(o_numbers_start_tpdams[0,108,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                        np.sum(o_numbers_start_tpdams[0,108,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        dry_3yo = fun.f_divide(o_numbers_start_tpdams[0,160,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                        np.sum(o_numbers_start_tpdams[0,160,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        dry_4yo = fun.f_divide(o_numbers_start_tpdams[0,212,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                        np.sum(o_numbers_start_tpdams[0,212,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        dry_5yo = fun.f_divide(o_numbers_start_tpdams[0,264,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                        np.sum(o_numbers_start_tpdams[0,264,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
         propn_dry = (dry_2yo + dry_3yo + dry_4yo + dry_5yo) / 4
         print(f"% Dry {propn_dry}")  #% dry of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
         ##Litter size is sum of the ewes weighted by # foetuses (np.dot with arange(4)) divided by pregnant ewes
-        ls_2yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                            , np.sum(o_numbers_start_tpdams[0,111,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        ls_3yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                            , np.sum(o_numbers_start_tpdams[0,163,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        ls_4yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,215,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                            , np.sum(o_numbers_start_tpdams[0,215,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        ls_5yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                            , np.sum(o_numbers_start_tpdams[0,267,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
+        ls_2yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,108,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
+                            , np.sum(o_numbers_start_tpdams[0,108,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
+        ls_3yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,160,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
+                            , np.sum(o_numbers_start_tpdams[0,160,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
+        ls_4yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,212,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
+                            , np.sum(o_numbers_start_tpdams[0,212,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
+        ls_5yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,264,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
+                            , np.sum(o_numbers_start_tpdams[0,264,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
         litter_size = (ls_2yo + ls_3yo + ls_4yo + ls_5yo) / 4
         print(f"Litter Size {litter_size}")  #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
         ##twin survival is square root of the number of ewe with twins (BT22) after lambing / number before lambing
         ##Square root is simpler to calculate than summing BTRT 22 * 2 & 21 * 1
-        twin_surv_2yo = fun.f_divide(o_numbers_start_tpdams[0,131,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                   , o_numbers_start_tpdams[0,127,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        twin_surv_3yo = fun.f_divide(o_numbers_start_tpdams[0,183,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                   , o_numbers_start_tpdams[0,179,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        twin_surv_4yo = fun.f_divide(o_numbers_start_tpdams[0,235,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                   , o_numbers_start_tpdams[0,231,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        twin_surv_5yo = fun.f_divide(o_numbers_start_tpdams[0,287,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                   , o_numbers_start_tpdams[0,283,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
+        twin_surv_2yo = fun.f_divide(o_numbers_start_tpdams[0,133,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
+                                   , o_numbers_start_tpdams[0,129,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
+        twin_surv_3yo = fun.f_divide(o_numbers_start_tpdams[0,185,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
+                                   , o_numbers_start_tpdams[0,181,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
+        twin_surv_4yo = fun.f_divide(o_numbers_start_tpdams[0,237,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
+                                   , o_numbers_start_tpdams[0,233,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
+        twin_surv_5yo = fun.f_divide(o_numbers_start_tpdams[0,289,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
+                                   , o_numbers_start_tpdams[0,285,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
         twin_surv = (twin_surv_2yo + twin_surv_3yo + twin_surv_4yo + twin_surv_5yo) / 4
         print(f"Twin survival {twin_surv}")  #twin lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
-        print(f"Dam weight 3yo joining {o_ffcfw_tpdams[0,209,0,0,2,0,0,0,0,0,0,0,0,0,0,0]}")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
-        fat_propn = fun.f_divide(r_fat_tpoffs[0,158,0,0,0,0,0,0,0,3,0,0,0,1,0,0]
-                               , r_ebw_tpoffs[0,158,0,0,0,0,0,0,0,3,0,0,0,1,0,0])  #% of fat for the wethers 30mo BTRT 11,first cycle,from 3yo
+        print(f"Dam weight 3yo joining {o_ffcfw_tpdams[0,211,0,0,2,0,0,0,0,0,0,0,0,0,0,0]}")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
+        fat_propn = fun.f_divide(r_fat_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0]
+                               , r_ebw_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0])  #% of fat for the wethers 30mo BTRT 11,first cycle,from 3yo
         print(f"Proportion fat {fat_propn}")
-        dam_mort = fun.f_divide(np.sum(o_numbers_start_tpdams[0,309,0,:,:,0,0,0,0,0,0,0,0,0,0,0])  #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
-                              , np.sum(o_numbers_start_tpdams[0,101,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+        dam_mort = fun.f_divide(np.sum(o_numbers_start_tpdams[0,308,0,:,:,0,0,0,0,0,0,0,0,0,0,0])  #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
+                              , np.sum(o_numbers_start_tpdams[0,100,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
         print(f"Dam survival Y-A5 {dam_mort}")
-        print(f"Wean weight {o_wean_w_tpyatf[0,194,0,0,2,0,0,0,0,0,0,0,0,0,0,0]}")  #Weaning weight of 1st cycle singles
+        print(f"Wean weight {o_wean_w_tpyatf[0,196,0,0,2,0,0,0,0,0,0,0,0,0,0,0]}")  #Weaning weight of 1st cycle singles
 
     ###########################
     #post processing inputs  #
