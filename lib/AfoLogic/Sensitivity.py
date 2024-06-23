@@ -433,7 +433,15 @@ def create_sa():
     #####################
     ##SAV
     sav['srw_c2'] = np.full(uinp.parameters['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
-    sav['cl0_c2'] = np.full(uinp.parameters['i_cl0_c2'].shape, '-', dtype=object)  #SA value for litter size genotype params.
+    sav['sfw_c2'] = np.full(uinp.parameters['i_sfw_c2'].shape, '-', dtype=object)  #std fleece weight genotype params
+    sav['sfd_c2'] = np.full(uinp.parameters['i_sfd_c2'].shape, '-', dtype=object)  #std fibre diameter genotype params
+    sav['ci_c2'] = np.full(uinp.parameters['i_ci_c2'].shape, '-', dtype=object)  #intake params for genotypes
+    sav['cl_c2'] = np.full(uinp.parameters['i_cl_c2'].shape, '-', dtype=object)  #lactation params for genotypes.
+    sav['cw_c2'] = np.full(uinp.parameters['i_cw_c2'].shape, '-', dtype=object)  #wool growth params for genotypes
+    sav['cg_c2'] = np.full(uinp.parameters['i_cg_c2'].shape, '-', dtype=object)  #weight gain params for genotypes.
+    sav['cd_c2'] = np.full(uinp.parameters['i_cd_c2'].shape, '-', dtype=object)  #mortality params for genotypes.
+    sav['cl0_c2'] = np.full(uinp.parameters['i_cl0_c2'].shape, '-', dtype=object)  #litter size genotype params for genotypes.
+    sav['cu2_c2'] = np.full(uinp.parameters['i_cu2_c2'].shape, '-', dtype=object)  #lamb survival params for genotypes.
     ##SAM
     sam['ci_c2'] = np.ones(uinp.parameters['i_ci_c2'].shape, dtype='float64')  #intake params for genotypes
     sam['cm_c2'] = np.ones(uinp.parameters['i_cm_c2'].shape, dtype='float64')  #intake params for genotypes
