@@ -250,7 +250,7 @@ if __name__ == '__main__':
     message = pd.DataFrame(message_t, index=keys_t, columns=["Message"])
 
     ### Write to Excel
-    calibration_path = relativeFile.findExcel('calibration.xlsx')
+    calibration_path = relativeFile.findExcel('CalibrationResults.xlsx')
     writer = pd.ExcelWriter(calibration_path, engine='xlsxwriter')
     coefficients.to_excel(writer,"result", index=True, header=True, startrow=0, startcol=0)
     success.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+1)
