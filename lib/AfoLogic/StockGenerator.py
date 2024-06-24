@@ -87,6 +87,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     if gepep:
         ##Comment any coefficients that aren't being calibrated
         n_coeff = len(coefficients_c)
+        n_traits = len(calibration_weights_p)
         i=0
         uinp.parameters['i_sfw_c2'][2] = coefficients_c[i]           #cfw
         i += 1
@@ -7096,29 +7097,30 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         # ###Requires n_coef = n_production traits & coefficient to be > 0
         # objective = np.max((fun.f_divide(calibration_values_p - calibration_targets_p, calibration_targets_p) ** 2)
         #                     / np.maximum(0.0001, np.abs(coefficients_c)))
-        print(f"obj: {objective} trait & (coefficient)")
-        i = 0
-        print(f"CFW {calibration_values_p[i]} ({coefficients_c[i]})")  #CFW of single ewes at 3.5yo
-        i += 1
-        print(f"FD {calibration_values_p[i]} ({coefficients_c[i]})")  #FD of single ewes at 3.5yo
-        i += 1
-        print(f"SS {calibration_values_p[i]} ({coefficients_c[i]})")  #SS of single ewes at 3.5yo
-        i += 1
-        print(f"SL {calibration_values_p[i]} ({coefficients_c[i]})")  #SL of single ewes at 3.5yo
-        i += 1
-        print(f"% Dry {calibration_values_p[i]} ({coefficients_c[i]})")  #% dry of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
-        i += 1
-        print(f"Litter Size {calibration_values_p[i]} ({coefficients_c[i]})")  #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
-        i += 1
-        print(f"Twin survival {calibration_values_p[i]} ({coefficients_c[i]})")  #twin lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
-        i += 1
-        print(f"Dam weight 3yo joining {calibration_values_p[i]} ({coefficients_c[i]})")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
-        i += 1
-        print(f"Proportion fat {calibration_values_p[i]} ({coefficients_c[i]})")
-        i += 1
-        print(f"Dam survival Y-A5 {calibration_values_p[i]} ({coefficients_c[i]})")
-        i += 1
-        print(f"Wean weight {calibration_values_p[i]} ({coefficients_c[i]})")  #Weaning weight of 1st cycle singles
+        print(f"obj: {objective} trait & (coefficient) Team SRW:{coefficients_c[7]}")
+        i = 0; j = 0
+        print(f"CFW {calibration_values_p[i]} ({coefficients_c[j]})")  #CFW of single ewes at 3.5yo
+        i += 1; j += 1
+        print(f"FD {calibration_values_p[i]} ({coefficients_c[j]})")  #FD of single ewes at 3.5yo
+        i += 1; j += 1
+        print(f"SS {calibration_values_p[i]} ({coefficients_c[j]})")  #SS of single ewes at 3.5yo
+        i += 1; j += 1
+        print(f"SL {calibration_values_p[i]} ({coefficients_c[j]})")  #SL of single ewes at 3.5yo
+        i += 1; j += 1
+        print(f"% Dry {calibration_values_p[i]} ({coefficients_c[j]})")  #% dry of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
+        i += 1; j += 1
+        print(f"Litter Size {calibration_values_p[i]} ({coefficients_c[j]})")  #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
+        i += 1; j += 1
+        print(f"Twin survival {calibration_values_p[i]} ({coefficients_c[j]})")  #twin lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
+        i += 1; j += 1
+        if n_coeff > n_traits: j += 1   # means that SRW was past as a fixed trait so skip in the reporting
+        print(f"Dam weight 3yo joining {calibration_values_p[i]} ({coefficients_c[j]})")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
+        i += 1; j += 1
+        print(f"Proportion fat {calibration_values_p[i]} ({coefficients_c[j]})")
+        i += 1; j += 1
+        print(f"Dam survival Y-A5 {calibration_values_p[i]} ({coefficients_c[j]})")
+        i += 1; j += 1
+        print(f"Wean weight {calibration_values_p[i]} ({coefficients_c[j]})")  #Weaning weight of 1st cycle singles
 
         return objective
 

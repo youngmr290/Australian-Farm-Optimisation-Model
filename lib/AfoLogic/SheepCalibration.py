@@ -101,14 +101,14 @@ d_rot_info = pinp.f1_phases(d_rot_info)
 # time_list.append(timer()) ; time_was.append("import other modules")
 
 
-targets_tc = pd.read_excel(relativeFile.findExcel("GEPEP_calibration.xlsx"), sheet_name="Targets",index_col=[0],header=[0], engine='openpyxl')
-weights_c = pd.read_excel(relativeFile.findExcel("GEPEP_calibration.xlsx"), sheet_name="Weights",index_col=[0],header=[0], engine='openpyxl')
+targets_tp = pd.read_excel(relativeFile.findExcel("GEPEP_calibration.xlsx"), sheet_name="Targets",index_col=[0],header=[0], engine='openpyxl')
+weights_p = pd.read_excel(relativeFile.findExcel("GEPEP_calibration.xlsx"), sheet_name="Weights",index_col=[0],header=[0], engine='openpyxl')
 bestbet_tc = pd.read_excel(relativeFile.findExcel("GEPEP_calibration.xlsx"), sheet_name="BestBet",index_col=[0],header=[0], engine='openpyxl')
 bnd_lo_tc = pd.read_excel(relativeFile.findExcel("GEPEP_calibration.xlsx"), sheet_name="Low",index_col=[0],header=[0], engine='openpyxl')
 bnd_up_tc = pd.read_excel(relativeFile.findExcel("GEPEP_calibration.xlsx"), sheet_name="High",index_col=[0],header=[0], engine='openpyxl')
 
-keys_t = targets_tc.index
-keys_c = targets_tc.columns
+keys_t = targets_tp.index
+keys_c = bestbet_tc.columns
 n_coef = len(keys_c)
 n_teams = len(keys_t)
 
@@ -124,8 +124,8 @@ except IndexError:  # in case no arg passed to python
 n_processes = min(multiprocessing.cpu_count(),n_teams, maximum_processes)
 
 ###convert to np
-targets_tc = targets_tc.values
-weights_c = weights_c.values
+targets_tp = targets_tp.values
+weights_p = weights_p.values
 bestbet_tc = bestbet_tc.values
 bnd_lo_tc = bnd_lo_tc.values
 bnd_up_tc = bnd_up_tc.values
@@ -148,9 +148,9 @@ message_t = np.empty(n_teams, dtype = object)
 def f_run_calibration(t,coefficients_dict, success_dict, wsmse_dict, message_dict):
     ## weightings for the calibration objective function
     ### these are defined for all teams and don't vary
-    calibration_weights = weights_c
+    calibration_weights = weights_p
     ## the targets vary for each team. Would be good to control these from exp.xls
-    calibration_targets = targets_tc[t]
+    calibration_targets = targets_tp[t]
     ## create the bounds for the calibration coefficients. Would be good to control these from exp so they can be tweaked for each team
     bounds = list(zip(bnd_lo_tc[t], bnd_up_tc[t]))
     ##specify the best starting conditions. Again good to be from exp.xls
@@ -207,9 +207,9 @@ if __name__ == '__main__':
         for t in np.arange(n_teams):
             ## weightings for the calibration objective function
             ### these are defined for all teams and don't vary
-            calibration_weights = weights_c
+            calibration_weights = weights_p
             ## the targets vary for each team. Would be good to control these from exp.xls
-            calibration_targets = targets_tc[t]
+            calibration_targets = targets_tp[t]
             ## create the bounds for the calibration coefficients. Would be good to control these from exp so they can be tweaked for each team
             bounds = list(zip(bnd_lo_tc[t], bnd_up_tc[t]))
             ##specify the best starting conditions. Again good to be from exp.xls
