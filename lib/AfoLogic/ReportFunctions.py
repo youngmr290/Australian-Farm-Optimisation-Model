@@ -1372,6 +1372,7 @@ def f_labour_summary(lp_vars, r_vals, option=0):
 
     qsp5z = len_q, len_s, len_p5, len_z
     qsz = len_q, len_s, len_z
+    qs = len_q, len_s
 
     ##total labour cost
     if option == 0:
@@ -1381,13 +1382,13 @@ def f_labour_summary(lp_vars, r_vals, option=0):
         quantity_casual_qszp5 = np.swapaxes(quantity_casual_qsp5z, -1, -2)
         cas_cost_p7qsz = np.sum(casual_cost_p7zp5[:,na,na,:,:] * quantity_casual_qszp5, axis=-1)
         ###perm
-        quantity_perm = f_vars2np(lp_vars, 'v_quantity_perm', 1)  #1 because not sets
+        quantity_perm_qs = f_vars2np(lp_vars, 'v_quantity_perm', qs)  #no mask because no z axis
         perm_cost_p7z = r_vals['lab']['perm_cost_p7z']
-        perm_cost_p7qsz = perm_cost_p7z[:,na,na,:] * quantity_perm * r_vals['zgen']['mask_qs'][:,:,na]
+        perm_cost_p7qsz = perm_cost_p7z[:,na,na,:] * quantity_perm_qs[:,:,na] * r_vals['zgen']['mask_qs'][:,:,na]
         ###manager
-        quantity_manager = f_vars2np(lp_vars, 'v_quantity_manager', 1) #1 because not sets
+        quantity_manager_qs = f_vars2np(lp_vars, 'v_quantity_manager', qs) #no mask because no z axis
         manager_cost_p7z = r_vals['lab']['manager_cost_p7z']
-        manager_cost_p7qsz = manager_cost_p7z[:,na,na,:] * quantity_manager * r_vals['zgen']['mask_qs'][:,:,na]
+        manager_cost_p7qsz = manager_cost_p7z[:,na,na,:] * quantity_manager_qs[:,:,na] * r_vals['zgen']['mask_qs'][:,:,na]
         ###total
         total_lab_cost_p7qsz = cas_cost_p7qsz + perm_cost_p7qsz + manager_cost_p7qsz
         return total_lab_cost_p7qsz
