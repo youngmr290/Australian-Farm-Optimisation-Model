@@ -51,13 +51,13 @@ def f1_labpyomo_local(params, model):
 
     # Amount of permanent labour.
     max_perm = pinp.labour['max_perm'] if pinp.labour['max_perm'] != 'inf' else None  # if none convert to python None
-    model.v_quantity_perm = pe.Var(bounds=(pinp.labour['min_perm'],max_perm),
+    model.v_quantity_perm = pe.Var(model.s_sequence_year, model.s_sequence, bounds=(pinp.labour['min_perm'],max_perm),
                                 doc='number of permanent labour used in each labour period')
 
     # Amount of manager labour
     max_managers = pinp.labour['max_managers'] if pinp.labour[
                                                       'max_managers'] != 'inf' else None  # if none convert to python None
-    model.v_quantity_manager = pe.Var(bounds=(pinp.labour['min_managers'],max_managers),
+    model.v_quantity_manager = pe.Var(model.s_sequence_year, model.s_sequence, bounds=(pinp.labour['min_managers'],max_managers),
                                    doc='number of manager/owner labour used in each labour period')
 
     # Casual supervision
@@ -67,7 +67,7 @@ def f1_labpyomo_local(params, model):
                                             doc='hours of manager labour used for supervision of casual')
 
     # Perm supervision
-    model.v_permsupervision_manager = pe.Var(model.s_labperiods, model.s_season_types, bounds=(0,None),
+    model.v_permsupervision_manager = pe.Var(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, bounds=(0,None),
                                             doc='hours of manager labour used for supervision of permanent staff')
 
     # manager pool
@@ -200,15 +200,15 @@ def f_con_perm_supervision(model):
     is met.
     '''
     ##perm supervision - can be done by manager
-    def transfer_perm_supervision(model,p,z):
-        return -model.v_permsupervision_manager[p,z] + (model.p_perm_supervision[p,z] * model.v_quantity_perm) <= 0
-    model.con_perm_supervision = pe.Constraint(model.s_labperiods, model.s_season_types, rule = transfer_perm_supervision, doc='perm require supervision from perm or manager')
+    def transfer_perm_supervision(model,q,s,p,z):
+        return -model.v_permsupervision_manager[q,s,p,z] + (model.p_perm_supervision[p,z] * model.v_quantity_perm[q,s]) <= 0
+    model.con_perm_supervision = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_labperiods, model.s_season_types, rule = transfer_perm_supervision, doc='perm require supervision from perm or manager')
 
 def f_manager_holiday_allocation(model):
     '''Optimise the timing of manager holidays.'''
     def manager_holiday_allocation(model,q,s):
         if pe.value(model.p_wyear_inc_qs[q, s]):
-            return -sum(model.v_manager_holiday_allocation[q,s,p5] for p5 in model.s_labperiods) <= -1 * model.v_quantity_manager
+            return -sum(model.v_manager_holiday_allocation[q,s,p5] for p5 in model.s_labperiods) <= -1 * model.v_quantity_manager[q,s]
         else:
             return pe.Constraint.Skip
     model.con_manager_holiday_allocation = pe.Constraint(model.s_sequence_year, model.s_sequence, rule=manager_holiday_allocation, doc='allocates manager holiday to each labour period')
@@ -217,7 +217,7 @@ def f_perm_holiday_allocation(model):
     '''Optimise the timing of perm holidays.'''
     def perm_holiday_allocation(model,q,s):
         if pe.value(model.p_wyear_inc_qs[q, s]):
-            return -sum(model.v_perm_holiday_allocation[q,s,p5] for p5 in model.s_labperiods) <= -1 * model.v_quantity_perm
+            return -sum(model.v_perm_holiday_allocation[q,s,p5] for p5 in model.s_labperiods) <= -1 * model.v_quantity_perm[q,s]
         else:
             return pe.Constraint.Skip
     model.con_perm_holiday_allocation = pe.Constraint(model.s_sequence_year, model.s_sequence, rule=perm_holiday_allocation, doc='allocates perm holiday to each labour period')
@@ -227,7 +227,7 @@ def f_con_labour_transfer_manager(model):
     #manager, this is a little more complex because also need to subtract the supervision hours off of the manager supply of workable hours
     def labour_transfer_manager(model,q,s,p,z):
         if pe.value(model.p_wyear_inc_qs[q, s]):
-            return -(model.v_quantity_manager * model.p_manager_hours[p,z]) + model.v_permsupervision_manager[p,z] + model.v_casualsupervision_manager[q,s,p,z]      \
+            return -(model.v_quantity_manager[q,s] * model.p_manager_hours[p,z]) + model.v_permsupervision_manager[q,s,p,z] + model.v_casualsupervision_manager[q,s,p,z]      \
             + model.v_manager_holiday_allocation[q,s,p] * model.p_manager_holiday_hours \
             + sum(model.v_sheep_labour_manager[q,s,p,w,z] + model.v_phase_labour_manager[q,s,p,w,z] + model.v_fixed_labour_manager[q,s,p,w,z] for w in model.s_worker_levels)  <= 0
         else:
@@ -239,7 +239,7 @@ def f_con_labour_transfer_permanent(model):
     #permanent
     def labour_transfer_permanent(model,q,s,p,z):
         if pe.value(model.p_wyear_inc_qs[q, s]):
-            return -(model.v_quantity_perm * model.p_perm_hours[p,z]) + model.v_casualsupervision_perm[q,s,p,z]  \
+            return -(model.v_quantity_perm[q,s] * model.p_perm_hours[p,z]) + model.v_casualsupervision_perm[q,s,p,z]  \
             + model.v_perm_holiday_allocation[q,s,p] * model.p_perm_holiday_hours \
             + sum(model.v_sheep_labour_permanent[q,s,p,w,z] + model.v_phase_labour_permanent[q,s,p,w,z] + model.v_fixed_labour_permanent[q,s,p,w,z] for w in model.s_worker_levels if w in sinp.general['worker_levels'][0:-1]) <= 0 #if statement just to remove unnecessary activities from lp output
         else:
@@ -273,8 +273,8 @@ def f_labour_cost(model,q,s,p7,z):
     Used in global constraint (con_profit). See CorePyomo
     '''
     cas = sum(model.v_quantity_casual[q,s,p5,z] * model.p_casual_cost[p7,z,p5] for p5 in model.s_labperiods)
-    perm = model.v_quantity_perm * model.p_perm_cost[p7,z]
-    manager = model.v_quantity_manager * model.p_manager_cost[p7,z]
+    perm = model.v_quantity_perm[q,s] * model.p_perm_cost[p7,z]
+    manager = model.v_quantity_manager[q,s] * model.p_manager_cost[p7,z]
     return cas + perm + manager
 
 def f_labour_wc(model,q,s,c0,p7,z):
@@ -285,8 +285,8 @@ def f_labour_wc(model,q,s,c0,p7,z):
     Used in global constraint (con_workingcap). See CorePyomo
     '''
     cas = sum(model.v_quantity_casual[q,s,p5,z] * model.p_casual_wc[c0,p7,z,p5] for p5 in model.s_labperiods)
-    perm = model.v_quantity_perm * model.p_perm_wc[c0,p7,z]
-    manager = model.v_quantity_manager * model.p_manager_wc[c0,p7,z]
+    perm = model.v_quantity_perm[q,s] * model.p_perm_wc[c0,p7,z]
+    manager = model.v_quantity_manager[q,s] * model.p_manager_wc[c0,p7,z]
     return cas + perm + manager
 
 
