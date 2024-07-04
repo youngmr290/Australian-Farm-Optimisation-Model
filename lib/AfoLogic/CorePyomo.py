@@ -888,7 +888,7 @@ def f_objective(model):
             return (model.v_terminal_wealth[q,s,z,c1] - model.v_credit[q,s,c1,p7_end,z] + model.v_debit[q,s,c1,p7_end,z] # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
                     + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z]
                     - model.v_tradevalue[q, s, p7_end, z]
-                    + 0.00001 * sum(sum(v[idx] for idx in v) for v in variables
+                    + 0.00001 * sum(sum(v[idx] for idx in v if idx[0]==q) for v in variables #only sum for given q (this is required for the MP model otherwise the variable bnd on the first year doesnt work because len q affect v_terminal wealth).
                                        if v._rule_bounds._initializer.val[0] is not None and v._rule_bounds._initializer.val[0]>=0)) <=0 #all variables with positive bounds (ie variables that can be negative e.g. terminal_wealth are excluded) put a small neg number into objective. This stop cplex selecting variables that don't contribute to the objective (cplex selects variables to remove slack on constraints).
         else:                                                                                                  #note; _rule_bounds.val[0] is the lower bound of each variable
             return pe.Constraint.Skip
