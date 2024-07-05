@@ -99,7 +99,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         i += 1
         uinp.parameters['i_cl0_c2'][25, 0, 2] = coefficients_c[i]   #% dry (Con)
         i += 1
-        uinp.parameters['i_cl0_c2'][25, 2, 2] = coefficients_c[i]    #Litter size
+        uinp.parameters['i_cl0_c2'][25, 1, 2] = coefficients_c[i]    #Litter size
         i += 1
         uinp.parameters['i_cu2_c2'][8, -1, 2] = coefficients_c[i]    #Lamb survival (ERA)
         i += 1
@@ -128,7 +128,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         i += 1
         coefficients_c[i] = uinp.parameters['i_cl0_c2'][25, 0, 2]   #% dry (Con)
         i += 1
-        coefficients_c[i] = uinp.parameters['i_cl0_c2'][25, 2, 2]    #Litter size
+        coefficients_c[i] = uinp.parameters['i_cl0_c2'][25, 1, 2]    #Litter size
         i += 1
         coefficients_c[i] = uinp.parameters['i_cu2_c2'][8, -1, 2]    #Lamb survival (ERA)
         i += 1
@@ -7200,8 +7200,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         twin_surv = (twin_surv_2yo + twin_surv_3yo + twin_surv_4yo + twin_surv_5yo) / 4
         print(f"Twin survival {twin_surv} with ({coefficients_c[j]})")  #twin lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
         j += 1
+        # j += 1  #comment this out if calibrating with SRW
         print(f"Dam weight 3yo joining {o_ffcfw_tpdams[0,211,0,0,2,0,0,0,0,0,0,0,0,0,0,0]} with ({coefficients_c[j]})")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
         j += 1
+        j += 1  #comment this out if calibrating with PI
         fat_propn = fun.f_divide(r_fat_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0]
                                , r_ebw_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0])  #% of fat for the wethers 30mo BTRT 11,first cycle,from 3yo
         print(f"Proportion fat {fat_propn} with ({coefficients_c[j]})")
