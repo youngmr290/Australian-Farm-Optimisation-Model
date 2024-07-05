@@ -673,7 +673,7 @@ def f1_boundarypyomo_local(params, model):
         ###build bound if turned on
         if landuse_bound_inc:
             ###setbound using % of farm area
-            area_bound_klz = fun.f_sa(np.array([99999]), sen.sav['bnd_landuse_area_klz'], 5)  # 99999 is arbitrary default value which mean skip constraint
+            area_bound_klz = fun.f_sa(np.array([99999]), sen.sav['bnd_landuse_area_klz'][pinp.all_landuse_mask_k,:,:], 5)  # 99999 is arbitrary default value which mean skip constraint
             arrays = [model.s_landuses, model.s_lmus, model.s_season_types]
             index_klz = fun.cartesian_product_simple_transpose(arrays)
             tup_klz = tuple(map(tuple, index_klz))
@@ -693,11 +693,11 @@ def f1_boundarypyomo_local(params, model):
         ###build bound if turned on
         if crop_area_bound_inc:
             ###setbound using % of farm area
-            crop_area_percent_k1 = fun.f_sa(np.array([99999]), sen.sav['bnd_crop_area_percent'], 5)  # 99999 is arbitrary default value which mean skip constraint
+            crop_area_percent_k1 = fun.f_sa(np.array([99999]), sen.sav['bnd_crop_area_percent'][pinp.crop_landuse_mask_k1], 5)  # 99999 is arbitrary default value which mean skip constraint
             crop_area_bound_k1 = np.full_like(crop_area_percent_k1,99999)
             crop_area_bound_k1[crop_area_percent_k1!=99999] = (crop_area_percent_k1 * sum(model.p_area[l] for l in model.s_lmus))[crop_area_percent_k1!=99999]
             ###setbound using ha of farm area
-            crop_area_bound_k1 = fun.f_sa(crop_area_bound_k1, sen.sav['bnd_crop_area'], 5)
+            crop_area_bound_k1 = fun.f_sa(crop_area_bound_k1, sen.sav['bnd_crop_area'][pinp.crop_landuse_mask_k1], 5)
             crop_area_bound_k1 = dict(zip(model.s_crops, crop_area_bound_k1))
             ###constraint
             l_p7 = list(model.s_season_periods)
