@@ -497,7 +497,7 @@ def f_fert_passes():
     fert_passes_rz_nl = fert_passes_rz_n.reindex(col_nl, axis=1,level=0)
     nap_fert_passes_rz_nl = nap_fert_passes_rz_n.reindex(col_nl, axis=1,level=0)
     fert_passes_rz_nl=fert_passes_rz_nl.mul(arable_l,axis=1,level=1)
-    nap_fert_passes_rz_nl=nap_fert_passes_rz_nl.mul(arable_l,axis=1,level=1)
+    nap_fert_passes_rz_nl=nap_fert_passes_rz_nl.mul(1-arable_l,axis=1,level=1)
     total_fert_passes_rz_nl = fert_passes_rz_nl.fillna(0).stack(1) + nap_fert_passes_rz_nl.fillna(0).stack(1)
     return total_fert_passes_rz_nl.sort_index()
 
@@ -1370,6 +1370,7 @@ def f_sow_prov():
     keys_p7 = per.f_season_periods(keys=True)
     dry_sown_landuses = sinp.landuse['dry_sown']
     wet_sown_landuses = set(sinp.general['i_idx_k1']) - dry_sown_landuses #can subtract sets to return differences
+    dry_sown_landuses = dry_sown_landuses | {"ms"}
     false_brk_identification_z = zfun.f_seasonal_inp(pinp.general['i_false_brk_identification_z'],numpy=True,axis=0)
     false_brk_followuprains_z = zfun.f_seasonal_inp(pinp.general['i_false_brk_followuprains_z'],numpy=True,axis=0)
 
