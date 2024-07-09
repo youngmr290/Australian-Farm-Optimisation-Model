@@ -721,7 +721,7 @@ def f_rotation(lp_vars, r_vals):
     return phases_rk, v_phase_change_increase_area_qszrl_p7, v_phase_area_qszrl_p7, v_phase_area_qszlrk_p7
 
 
-def f_area_summary(lp_vars, r_vals, option):
+def f_area_summary(lp_vars, r_vals, option, active_z=True):
     '''
     Rotation & landuse area summary. With multiple output levels.
     return options:
@@ -729,6 +729,7 @@ def f_area_summary(lp_vars, r_vals, option):
     :param lp_vars: dict
     :param r_vals: dict
     :key option:
+    :key active_z: Bool stating if z is active.
 
         #. table all rotations by lmu
         #. total pasture area each season in p7[-1]
@@ -749,10 +750,22 @@ def f_area_summary(lp_vars, r_vals, option):
     phases_rk, v_phase_change_increase_area_qszrl_p7, rot_area_qszrl_p7, rot_area_qszlrk_p7 = f_rotation(lp_vars, r_vals)
     landuse_area_k_p7qszl = rot_area_qszlrk_p7.groupby(axis=0, level=(0,1,2,3,5)).sum().unstack([0,1,2,3])  # area of each landuse (sum lmu and rotation)
 
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+    z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
+
     ##all rotations by lmu and p7
     rot_area_qszr_lp7 = rot_area_qszrl_p7.stack().unstack([-2,-1])
     if option == 0:
-        return rot_area_qszr_lp7.round(2)
+        ###weight z if required
+        if active_z == False:
+            rot_area_r_lp7 = rot_area_qszr_lp7.unstack(-1).mul(z_prob_qsz, axis=0).sum(axis=0).unstack(-1).T
+            return rot_area_r_lp7.round(2)
+        else:
+            return rot_area_qszr_lp7.round(2)
 
     ##all rotations by lmu - with expanded landuse as index
     if option == 10:
@@ -763,49 +776,74 @@ def f_area_summary(lp_vars, r_vals, option):
         phases_r.insert(loc=len(phases_r.columns), column=len(phases_r.columns), value=phases_rk.index.get_level_values(1))
         ###add disagregated landuse as index.
         rot_area_qszr_l = rot_area_qszr_l.reset_index([0,1,2]).join(phases_r).set_index(['level_0','level_1','level_2']+list(range(len(phases_r.columns))))
-        return rot_area_qszr_l.round(2)
+        ###weight z if required
+        if active_z == False:
+            rot_area_r_l = rot_area_qszr_l.unstack(['level_0','level_1','level_2']).stack(0).mul(z_prob_qsz, axis=1).sum(axis=1).unstack(-1)
+            return rot_area_r_l.round(2)
+        else:
+            return rot_area_qszr_l.round(2)
 
     ###pasture area
     all_pas = r_vals['rot']['all_pastures']  # landuse sets
     pasture_area_p7qszl = landuse_area_k_p7qszl[landuse_area_k_p7qszl.index.isin(all_pas)].sum()  # sum landuse
+    pasture_area_qszl = pasture_area_p7qszl.loc[pasture_area_p7qszl.index.levels[0][-1].tolist()] #slice for p7[-1]
     if option == 1:
-        pasture_area_qszl = pasture_area_p7qszl.loc[pasture_area_p7qszl.index.levels[0][-1].tolist()] #slice for p7[-1]
-        return pasture_area_qszl.groupby(level=(0,1,2)).sum().round(0) #sum lmu
+        pasture_area_qsz = pasture_area_qszl.groupby(level=(0, 1, 2)).sum()  # sum lmu
+        ###weight z if required
+        if active_z == False:
+            pasture_area = pasture_area_qsz.mul(z_prob_qsz, axis=0).sum(axis=0)
+            return pd.DataFrame([pasture_area]).round(0)
+        else:
+            return pasture_area_qsz.round(0)
 
     ###crop area
     crop_area_p7qszl = landuse_area_k_p7qszl[~landuse_area_k_p7qszl.index.isin(all_pas)].sum()  # sum landuse
+    crop_area_qszl = crop_area_p7qszl.loc[crop_area_p7qszl.index.levels[0][-1].tolist()]
     if option == 2:
-        crop_area_qszl = crop_area_p7qszl.loc[crop_area_p7qszl.index.levels[0][-1].tolist()]
         crop_area_qsz = crop_area_qszl.groupby(level=(0,1,2)).sum().round(0) #sum lmu
-        return crop_area_qsz.unstack(-1)
+        ###weight z if required
+        if active_z == False:
+            crop_area = crop_area_qsz.mul(z_prob_qsz, axis=0).sum(axis=0)
+            return pd.DataFrame([crop_area]).round(0)
+        else:
+            return crop_area_qsz.unstack(-1)
 
     ##crop & pasture area by lmu
     if option == 3:
-        croppas_area_qszl = pd.DataFrame()
-        croppas_area_qszl['pasture'] = pasture_area_p7qszl
-        croppas_area_qszl['crop'] = crop_area_p7qszl
-        return croppas_area_qszl.round(0)
+        croppas_area_qszl_k = pd.DataFrame()
+        croppas_area_qszl_k['pasture'] = pasture_area_qszl
+        croppas_area_qszl_k['crop'] = crop_area_qszl
+        ###weight z if required
+        if active_z == False:
+            croppas_area_l_k = croppas_area_qszl_k.unstack(-1).mul(z_prob_qsz, axis=0).sum(axis=0).unstack(-1).T
+            return croppas_area_l_k.round(0)
+        else:
+            return croppas_area_qszl_k.round(0)
 
     if option==4: #landuse area in p7[-1] (lmu summed)
         landuse_area_k_qszl = landuse_area_k_p7qszl.loc[:,landuse_area_k_p7qszl.columns.levels[0][-1].tolist()]
         landuse_area_k_qsz = landuse_area_k_qszl.groupby(axis=1, level=(0,1,2)).sum()
         landuse_area_qsz_k = landuse_area_k_qsz.T.round(2)
         landuse_area_qsz_k = landuse_area_qsz_k.reindex(r_vals['pas']['keys_k'], axis=1).fillna(0) #expand to full k (incase landuses were masked out) and unused landuses get set to 0
-        return landuse_area_qsz_k
+        ###weight z if required
+        if active_z == False:
+            landuse_area_k = landuse_area_qsz_k.mul(z_prob_qsz, axis=0).sum(axis=0)
+            return pd.DataFrame(landuse_area_k).round(0)
+        else:
+            return landuse_area_qsz_k.round(0)
 
     if option==11: #landuse area in p7[-1] (lmu active)
         landuse_area_k_qszl = landuse_area_k_p7qszl.loc[:,landuse_area_k_p7qszl.columns.levels[0][-1].tolist()]
         landuse_area_qszl_k = landuse_area_k_qszl.T.round(2)
         landuse_area_qszl_k = landuse_area_qszl_k.reindex(r_vals['pas']['keys_k'], axis=1).fillna(0) #expand to full k (incase landuses were masked out) and unused landuses get set to 0
-        return landuse_area_qszl_k
+        ###weight z if required
+        if active_z == False:
+            landuse_area_l_k = landuse_area_qszl_k.unstack(-1).mul(z_prob_qsz, axis=0).sum(axis=0).unstack(-1).T
+            return landuse_area_l_k.round(0)
+        else:
+            return landuse_area_qszl_k.round(0)
 
     if option==5 or option==6 or option==7 or option==8 or option==9: #average % of pasture/cereal/canola in p7[-1]
-        keys_q = r_vals['zgen']['keys_q']
-        keys_s = r_vals['zgen']['keys_s']
-        keys_z = r_vals['zgen']['keys_z']
-        index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
-        z_prob_qsz = r_vals['zgen']['z_prob_qsz']
-        z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
         rot_area_qsz = r_vals['rot']['total_farm_area']
         if option == 5:
             pasture_area_p7qsz = pasture_area_p7qszl.groupby(level=(0,1,2,3)).sum() #sum l
