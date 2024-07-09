@@ -160,6 +160,7 @@ def f_landuse_sets():
                     , 's'
                     , 'sp'
                     , 'm'
+                    , 'ms'
                     , 'u'
                     , 'x'
                     , 'j', 't'
@@ -168,10 +169,11 @@ def f_landuse_sets():
                     , 'S', 'S1'
                     , 'SP'
                     , 'M'
+                    , 'MS'
                     , 'U'
                     , 'X'
                     , 'T', 'J'} #all landuses
-    landuse['C1']={'C1','B','O','O1','W', 'N', 'K', 'L', 'F', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
+    landuse['C1']={'C1','B','O','O1','W', 'N', 'K', 'L', 'MS', 'F', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'ms', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
     landuse['P']={'P','K','L', 'F', 'f','i', 'k', 'l', 'v'} #pulses
     landuse['E']={'E','B','O','O1','W', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd'} #cereals
     landuse['Ag0']={'a', 'a2', 's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
@@ -200,6 +202,7 @@ def f_landuse_sets():
     landuse['J']={'J', 'j'} #tedera
     landuse['K']={'K', 'k'} #chic pea
     landuse['M']={'m', 'M'} #manipulated pasture
+    landuse['MS']={'ms', 'MS'} #mixed species land use
     landuse['N']={'N', 'z', 'zd', 'r', 'rd'} #canolas
     landuse['O1']={'O1', 'h', 'o', 'od'} #oats - only in yr1 doesnt include foder
     landuse['O']={'O', 'O1', 'OF', 'h', 'o', 'od', 'of'} #oats
@@ -226,6 +229,7 @@ def f_landuse_sets():
     landuse['k']={'k'}
     landuse['l']={'l'}
     landuse['m']={'m'}
+    landuse['ms']={'ms'}
     landuse['o']={'o'}
     landuse['od']={'od'}
     landuse['of']={'of'}

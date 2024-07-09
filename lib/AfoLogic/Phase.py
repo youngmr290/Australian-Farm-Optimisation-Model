@@ -497,7 +497,7 @@ def f_fert_passes():
     fert_passes_rz_nl = fert_passes_rz_n.reindex(col_nl, axis=1,level=0)
     nap_fert_passes_rz_nl = nap_fert_passes_rz_n.reindex(col_nl, axis=1,level=0)
     fert_passes_rz_nl=fert_passes_rz_nl.mul(arable_l,axis=1,level=1)
-    nap_fert_passes_rz_nl=nap_fert_passes_rz_nl.mul(arable_l,axis=1,level=1)
+    nap_fert_passes_rz_nl=nap_fert_passes_rz_nl.mul(1-arable_l,axis=1,level=1)
     total_fert_passes_rz_nl = fert_passes_rz_nl.fillna(0).stack(1) + nap_fert_passes_rz_nl.fillna(0).stack(1)
     return total_fert_passes_rz_nl.sort_index()
 
@@ -1089,7 +1089,7 @@ def f_insurance(r_vals):
     ##calc phase product for each s2 option then select the s2 slice with maximum insurance cost (maximum because that would most likely be the expected s2 option)
     biomass_rklz = f_rot_biomass(for_insurance=True)
     biomass2product_ks2 = f_biomass2product()
-    yields_rlz_ks2 = biomass_rklz.unstack(1).reindex(biomass2product_ks2.index, axis=1).mul(biomass2product_ks2, axis=1)
+    yields_rlz_ks2 = biomass_rklz.unstack(1).reindex(biomass2product_ks2.index, axis=1, level=0).mul(biomass2product_ks2, axis=1)
     yields_rl_ks2z = yields_rlz_ks2.unstack(2)
     yields_rl_ks2z = yields_rl_ks2z.reindex(insurance_ks2z.index, axis=1).mul(insurance_ks2z, axis=1)/1000 #divide by 1000 to convert yield to tonnes
     yields_rl_kz = yields_rl_ks2z.groupby(axis=1, level=[0,2]).max()
@@ -1370,6 +1370,7 @@ def f_sow_prov():
     keys_p7 = per.f_season_periods(keys=True)
     dry_sown_landuses = sinp.landuse['dry_sown']
     wet_sown_landuses = set(sinp.general['i_idx_k1']) - dry_sown_landuses #can subtract sets to return differences
+    dry_sown_landuses = dry_sown_landuses | {"ms"}
     false_brk_identification_z = zfun.f_seasonal_inp(pinp.general['i_false_brk_identification_z'],numpy=True,axis=0)
     false_brk_followuprains_z = zfun.f_seasonal_inp(pinp.general['i_false_brk_followuprains_z'],numpy=True,axis=0)
 

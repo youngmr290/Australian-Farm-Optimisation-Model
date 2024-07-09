@@ -89,7 +89,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["summary"] = rfun.f_summary(lp_vars,r_vals,"Summary")
     if report_run.loc['run_areasum', 'Run']:
         option = f_update_default_controls(user_controls, 'areasum', 'option', 10) #default is all rotations by lmu in p7[-1] with disagregate landuse index.
-        reports["areasum"] = rfun.f_area_summary(lp_vars, r_vals, option=option)
+        active_z = f_update_default_controls(user_controls, 'areasum', 'active_z', True) #default is to show the q, s and z axes.
+        reports["areasum"] = rfun.f_area_summary(lp_vars, r_vals, option=option, active_z=active_z)
     if report_run.loc['run_cropsum', 'Run']:
         option = f_update_default_controls(user_controls, 'cropsum', 'option', 2) #default is all rotations by lmu in p7[-1] with disagregate landuse index.
         reports["cropsum"] = rfun.f_crop_summary(lp_vars,r_vals, option=option)
