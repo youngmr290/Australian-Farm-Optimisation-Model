@@ -111,7 +111,7 @@ def f_p_dates_df():
     seed_and_harv_periods_pz = np.concatenate([seeding_periods_pz,harv_periods_pz])
 
     ##For the weighted average steady state model the periods are adjusted so that seeding and harv peirods are a labour period
-    if pinp.general['steady_state'] and np.count_nonzero(pinp.general['i_mask_z'])!=1:
+    if sinp.structuralsa['steady_state'] and np.count_nonzero(pinp.general['i_mask_z'])!=1:
         periods = periods.round(0) #round periods to nearest day
         ###make all lp at least 7 days
         for p in range(len(periods)):
@@ -173,7 +173,7 @@ def f_p_dates_df():
         # periods.index = index
 
     ##if node periods included, check the nodes have been included
-    if pinp.general['i_inc_node_periods'] or (not pinp.general['steady_state'] and np.count_nonzero(pinp.general['i_mask_z']) != 1):
+    if sinp.structuralsa['i_inc_node_periods'] or (not sinp.structuralsa['steady_state'] and np.count_nonzero(pinp.general['i_mask_z']) != 1):
         ##error check: node dates must be included in the lab periods
         date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'], numpy=True, axis=0)
         if np.all(np.any(periods.values[:,:,na]==date_node_zm, axis=0)):
@@ -216,7 +216,7 @@ def f_feed_periods(option=0):
     ##automatically adding nodes to fps resulted in error with scenesence - see google doc dsp section
     fp_std_p6z = fp_p6z
     # ###add node dates as feed periods if dsp
-    # if pinp.general['i_inc_node_periods'] or np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
+    # if sinp.structuralsa['i_inc_node_periods'] or np.logical_not(sinp.structuralsa['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
     #     date_node_mz = pinp.general['i_date_node_zm'].T
     #     date_node_mz = date_node_mz + 364 * (date_node_mz < fp_std_p6z[0,:])
     #     fp_p6z = np.concatenate([fp_std_p6z, date_node_mz])
@@ -240,7 +240,7 @@ def f_feed_periods(option=0):
     fp_p6z = zfun.f_seasonal_inp(fp_p6z, numpy=True, axis=1)
 
     ##if node periods included, check the nodes have been included
-    if pinp.general['i_inc_node_periods'] or (not pinp.general['steady_state'] and np.count_nonzero(pinp.general['i_mask_z']) != 1):
+    if sinp.structuralsa['i_inc_node_periods'] or (not sinp.structuralsa['steady_state'] and np.count_nonzero(pinp.general['i_mask_z']) != 1):
         ##error check: node dates must be included in the lab periods
         date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'], numpy=True, axis=0)
         if np.all(np.any(fp_p6z[:,:,na]==date_node_zm, axis=0)):
@@ -269,7 +269,7 @@ def f_season_periods(keys=False):
     date_node_zp7 = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0)
     ##if steady state then p7 axis is singleton (start and finish at the break of season).
     ## all node are included even in steady state model if user overwrites.
-    if np.logical_not(pinp.general['i_inc_node_periods']) and (pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1):
+    if np.logical_not(sinp.structuralsa['i_inc_node_periods']) and (sinp.structuralsa['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1):
         date_node_zp7 = date_node_zp7[:,0:1]
         ###add end date of last node period - required for the allocation function
         end_zp7 = date_node_zp7[:,0:1] + 364  # increment the first date by 1yr so it becomes the end date for the last period

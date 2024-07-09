@@ -3,6 +3,7 @@ import numpy as np
 
 ##import AFO module
 from . import PropertyInputs as pinp
+from . import StructuralInputs as sinp
 from . import Functions as fun
 from . import SeasonalFunctions as zfun
 from . import Periods as per
@@ -34,12 +35,12 @@ def f_season_precalcs(params, r_vals):
     #sequence #
     ###########
     ##lengths
-    bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
+    bool_steady_state = sinp.structuralsa['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
     if bool_steady_state:
         len_z = 1
     else:
         len_z = np.count_nonzero(pinp.general['i_mask_z'])
-    len_q = pinp.general['i_len_q'] #length of season sequence
+    len_q = sinp.structuralsa['i_len_q'] #length of season sequence
     len_s = np.power(len_z,len_q - 1)
 
     ##indexs

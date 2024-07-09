@@ -274,11 +274,8 @@ def f_property_inp_sa(pinp_defaults):
 
     ##general
     ###sav
-    general['steady_state'] = fun.f_sa(general['steady_state'], sen.sav['steady_state'], 5)
     general['i_mask_z'] = fun.f_sa(general['i_mask_z'], sen.sav['mask_z'], 5)
     general['i_season_propn_z'] = fun.f_sa(general['i_season_propn_z'], sen.sav['prob_z'], 5)
-    general['i_inc_node_periods'] = fun.f_sa(general['i_inc_node_periods'], sen.sav['inc_node_periods'], 5)
-    general['i_len_q'] = fun.f_sa(general['i_len_q'], sen.sav['seq_len'], 5)
     labour['max_managers'] = fun.f_sa(labour['max_managers'], sen.sav['manager_ub'], 5)
     labour['min_managers'] = fun.f_sa(labour['min_managers'], sen.sav['manager_lo'], 5)
     labour['max_perm'] = fun.f_sa(labour['max_perm'], sen.sav['perm_ub'], 5)
@@ -478,8 +475,8 @@ def f_property_inp_sa(pinp_defaults):
     mask_m = np.any(mask_zm, axis=0)
     mask_m = np.logical_and(duplicate_mask_m, mask_m)
     ###if steady state and nodes are not included then mask out node period (except p7[0])
-    if np.logical_not(general['i_inc_node_periods']) and (
-            general['steady_state'] or np.count_nonzero(general['i_mask_z']) == 1):
+    if np.logical_not(sinp.structuralsa['i_inc_node_periods']) and (
+            sinp.structuralsa['steady_state'] or np.count_nonzero(general['i_mask_z']) == 1):
         mask_m[1:] = False
     ###mask inputs
     general['i_date_node_zm'] = general['i_date_node_zm'][:,mask_m]

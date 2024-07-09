@@ -246,7 +246,7 @@ def overheads(params, r_vals):
 def f1_min_roe():
     ##the default inputs for min roe are different for steady-state and stochastic version.
     ##but one SAV controls both inputs. So steady-state and stochastic can fairly be compared.
-    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
+    if sinp.structuralsa['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
         min_roe = uinp.finance['minroe']
     else:
         min_roe = uinp.finance['minroe_dsp']
