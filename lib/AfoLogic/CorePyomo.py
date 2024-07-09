@@ -84,36 +84,15 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output):
     f_con_asset(model)
     f_con_minroe(model)
 
-    import pickle as pkl
-    with open('pkl/pkl_lp_vars_{0}.pkl'.format("Quick test"), "rb") as f:
-        lp_vars = pkl.load(f)
 
-    i=0
-    list_v=[]
-    list_s=[]
-    list_idx =[]
-    list_bnd=[]
-    for v in model.component_objects(pe.Var, active=True):
-        for s in v:
-            # print(v,s)
-            list_idx.append(i)
-            list_v.append(v)
-            list_s.append(s)
-            ###make it so that all q in mp model look at q0 from lp_vars (because lp vars are from SE model that only has q[0])
-            s_adjusted = ("q0",) + s[1:] 
-            list_bnd.append(lp_vars[str(v)][s_adjusted])
-            i=i+1
-    def test(model,idx):
-        # print(idx)
-        v = list_v[idx]
-        s = list_s[idx]
-        q = s[0]
-        if q=='q0':
-            bnd = list_bnd[idx]
-            return v[s] == bnd
-        else:
-            return pe.Constraint.Skip
-    model.con_test = pe.Constraint(list_idx, rule=test)
+    ###this last constraint is for the MP model to constrain the starting point
+    if sinp.structuralsa['model_is_MP']:
+        #todo this will need to be read in with the other inputs in the raw file so that this can be passed through from web app.
+        import pickle as pkl
+        with open('pkl/pkl_lp_vars_{0}.pkl'.format("Quick test"), "rb") as f:
+            lp_vars = pkl.load(f)
+
+        f_con_MP(model, lp_vars)
 
 
     #############
@@ -976,8 +955,36 @@ def f_objective(model):
                for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types
                if pe.value(model.p_wyear_inc_qs[q,s]))
 
+def f_con_MP(model, lp_vars):
+    # todo need to add the p7 mask so that variables can be bnd for only part of a year
+    i = 0
+    list_v = []
+    list_s = []
+    list_idx = []
+    list_bnd = []
+    for v in model.component_objects(pe.Var, active=True):
+        for s in v:
+            # print(v,s)
+            list_idx.append(i)
+            list_v.append(v)
+            list_s.append(s)
+            ###make it so that all q in mp model look at q0 from lp_vars (because lp vars are from SE model that only has q[0])
+            s_adjusted = ("q0",) + s[1:]
+            list_bnd.append(lp_vars[str(v)][s_adjusted])
+            i = i + 1
 
+    def test(model, idx):
+        # print(idx)
+        v = list_v[idx]
+        s = list_s[idx]
+        q = s[0]
+        if q == 'q0':
+            bnd = list_bnd[idx]
+            return v[s] == bnd
+        else:
+            return pe.Constraint.Skip
 
+    model.con_test = pe.Constraint(list_idx, rule=test)
 
     # ##Notes:
     # ##1.
