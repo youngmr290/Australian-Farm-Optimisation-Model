@@ -152,8 +152,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     mask_o_dams = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2-uinp.sheep['prejoin_to_lamb_offset_approx']<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp). Offset is so that the o mask is controlled based on prejoining which has to happen so that the prejoining dvp exists even if the generator finishes before birth.
     mask_d_offs = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2-uinp.sheep['prejoin_to_lamb_offset_approx']<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp). Offset is so that the o mask is controlled based on prejoining which has to happen so that the prejoining dvp exists even if the generator finishes before birth.
     mask_x = pinp.sheep['i_gender_propn_x']>0
-    bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
-    mask_node_is_fvp = pinp.general['i_node_is_fvp'] * (pinp.general['i_inc_node_periods']
+    bool_steady_state = sinp.structuralsa['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
+    mask_node_is_fvp = pinp.general['i_node_is_fvp'] * (sinp.structuralsa['i_inc_node_periods']
                                                         or np.logical_not(bool_steady_state)) #node fvp/dvp are not included if it is steadystate.
     fvp_mask_dams = np.concatenate([mask_node_is_fvp[0:1], sinp.stock['i_fixed_fvp_mask_dams'], sinp.structuralsa['i_fvp_mask_dams'], mask_node_is_fvp[1:]]) #season start is at the front. because ss has to be first in the fvp/dvp
     fvp_mask_offs = np.concatenate([mask_node_is_fvp[0:1], sinp.structuralsa['i_fvp_mask_offs'], mask_node_is_fvp[1:]]) #season start is at the front. because ss has to be first in the fvp/dvp
@@ -210,7 +210,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         len_z = 1
     else:
         len_z = np.count_nonzero(pinp.general['i_mask_z'])
-    len_q = pinp.general['i_len_q'] #length of season sequence
+    len_q = sinp.structuralsa['i_len_q'] #length of season sequence
     len_s = np.power(len_z,len_q - 1)
     len_s7 = len(uinp.sheep['i_salegrid_keys'])
 
@@ -1249,7 +1249,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
         ##dams
         ###build dvps from fvps
-        mask_node_is_dvp = np.full(len_m, True) * (pinp.general['i_inc_node_periods'] or np.logical_not(bool_steady_state)) #node fvp/dvp are not included if it is steadystate.
+        mask_node_is_dvp = np.full(len_m, True) * (sinp.structuralsa['i_inc_node_periods'] or np.logical_not(bool_steady_state)) #node fvp/dvp are not included if it is steadystate.
         dvp_mask_f1 = np.concatenate([mask_node_is_dvp[0:1], sinp.stock['i_fixed_dvp_mask_f1'], sinp.structuralsa['i_dvp_mask_f1'], mask_node_is_dvp[1:]]) #season start is first
         dvp1_inc = np.concatenate([dvp_mask_f1[0:1], np.array([True]), dvp_mask_f1[1:]]) #True at start is to count for the period from the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesn't occur each year)
         dvp_date_inc_v1 = fvp_date_all_f1[dvp1_inc]
@@ -7335,7 +7335,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                         sale_age_tpa1e1b1nwzida0e0b0xyg3 <= age_end_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p]),
                                                          weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
     ###if dsp then t1 gets a sale opportunity at the start of dvp when seasons are identified (this will be first period of dvp so any other sale opportunities in that dvp will be disregarded).
-    if not bool_steady_state or pinp.general['i_inc_node_periods']:
+    if not bool_steady_state or sinp.structuralsa['i_inc_node_periods']:
         period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m: object = sfun.f1_period_is_('period_is', date_node_ya1e1b1nwzidaebxygm[:,na,...], date_start_pa1e1b1nwzida0e0b0xyg3[...,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3[...,na])
         period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.any(period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m, axis=(0,-1))
         period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3[...,0:1,:,:,:,:]>0) #only have sale opp if animal exists. slice e axis

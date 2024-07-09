@@ -9,6 +9,7 @@ na=np.newaxis
 
 ##import AFO modules - should only import input modules
 from . import PropertyInputs as pinp
+from . import StructuralInputs as sinp
 from . import Functions as fun
 
 
@@ -19,7 +20,7 @@ def f_z_prob(keep_z=False):
 
     :param keep_z: True means the active z axis is kept even in steady state model. This is used for the season input handling.
     '''
-    steady_state_bool = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
+    steady_state_bool = sinp.structuralsa['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
     if steady_state_bool and not keep_z:
         z_prob = np.array([1])
     else:
@@ -63,7 +64,7 @@ def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
         inp = np.compress(z_mask, inp, axis)
 
         ##weighted average if steady state
-        if pinp.general['steady_state']:
+        if sinp.structuralsa['steady_state']:
             inp = np.expand_dims(np.average(inp, axis=axis, weights=z_prob), axis)
 
     else:
@@ -79,7 +80,7 @@ def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
             inp = inp.loc[:,z_mask]
 
         ##weighted average if steady state
-        if pinp.general['steady_state']:
+        if sinp.structuralsa['steady_state']:
             z_prob = pd.Series(z_prob, index=keys_z)
             sum_level = list(range(inp.columns.nlevels))
 
@@ -97,7 +98,7 @@ def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
 
 def f_keys_z():
     '''Returns the index/keys for the z axis'''
-    if pinp.general['steady_state']:
+    if sinp.structuralsa['steady_state']:
         keys_z = np.array([pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]]).astype('str')
     else:
         keys_z = pinp.general['i_z_idx'][pinp.general['i_mask_z']].astype('str')
@@ -138,7 +139,7 @@ def f_season_transfer_mask(period_dates_pz, z_pos, period_is_seasonstart_pz=Fals
     '''
     ##inputs
     date_initiate_z = f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0)
-    bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
+    bool_steady_state = sinp.structuralsa['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
     if bool_steady_state:
         len_z = 1
     else:

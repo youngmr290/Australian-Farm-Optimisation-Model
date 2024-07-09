@@ -141,7 +141,7 @@ def f_season_params(params):
     # mask_childz8_p7z8 = zfun.f_season_transfer_mask(start_phase_periods_p7z,z_pos=-1,mask=True)
 
     # ##mask phases which transfer in each m
-    # if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
+    # if sinp.structuralsa['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
     #     ###if steady state then there is no m transfering
     #     mask_phases_rm = np.zeros((len(phases_df),len(keys_p7)))
     # else:

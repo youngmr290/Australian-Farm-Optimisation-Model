@@ -75,6 +75,9 @@ def f_structural_inp_sa(sinp_defaults):
     from . import Sensitivity as sen
 
     ##SAV
+    structuralsa['steady_state'] = fun.f_sa(structuralsa['steady_state'], sen.sav['steady_state'], 5)
+    structuralsa['i_inc_node_periods'] = fun.f_sa(structuralsa['i_inc_node_periods'], sen.sav['inc_node_periods'], 5)
+    structuralsa['i_len_q'] = fun.f_sa(structuralsa['i_len_q'], sen.sav['seq_len'], 5)
     structuralsa['i_nut_spread_n1'] = fun.f_sa(structuralsa['i_nut_spread_n1'], sen.sav['nut_spread_n1'],5)
     structuralsa['i_confinement_n1'] = fun.f_sa(structuralsa['i_confinement_n1'], sen.sav['confinement_n1'],5)
     structuralsa['i_nut_spread_n3'] = fun.f_sa(structuralsa['i_nut_spread_n3'], sen.sav['nut_spread_n3'],5)

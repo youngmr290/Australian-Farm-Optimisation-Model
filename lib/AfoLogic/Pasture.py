@@ -62,7 +62,7 @@ def f_pasture(params, r_vals, nv):
     n_phases_rotn   = len(phases_rotn_df.index)
     n_pasture_types = len(pastures)   #^ need to sort timing of the definition of pastures
     # n_total_seasons = len(pinp.general['i_mask_z']) #used to reshape inputs
-    if pinp.general['steady_state']:
+    if sinp.structuralsa['steady_state']:
         n_season_types = 1
     else:
         n_season_types = np.count_nonzero(pinp.general['i_mask_z'])
