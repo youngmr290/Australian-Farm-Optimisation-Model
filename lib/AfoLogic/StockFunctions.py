@@ -31,19 +31,17 @@ def f1_sim_periods(periods_per_year, oldest_animal, len_o):
     All calculations are based on a day of the year rather than a date and the periods are weeks of the year
     This saves managing the difficulties associated with the extra day in the year and in leap years.
 
-    Parameters:
-    start_year = int: year to start simulation.
-    periods_per_year = int: number of periods per year.
-    oldest_animal = float: age of the oldest animal to be simulated (yrs).
+    :param start_year: int: year to start simulation.
+    :param periods_per_year: int: number of periods per year.
+    :param oldest_animal: float: age of the oldest animal to be simulated (yrs).
 
-    Returns:
-    n_sim_periods: total number of sim periods
-    date_start_p: array of period dates (1D periods)
-    date_start_P: array of period dates that go beyond the end of the simulation (used when rounding dates to the end/start of a generator period)
-    date_end_p: array of period end dates (1D periods) (date of the last day in the period)
-    date_end_P: array of period end dates that go beyond the end of the simulation (used when rounding dates to the end/start of a generator period)
-    index_p: index of the periods (for pyomo)
-    step: days in each period
+    :return: n_sim_periods: total number of sim periods
+    :return: date_start_p: array of period dates (1D periods)
+    :return: date_start_P: array of period dates that go beyond the end of the simulation (used when rounding dates to the end/start of a generator period)
+    :return: date_end_p: array of period end dates (1D periods) (date of the last day in the period)
+    :return: date_end_P: array of period end dates that go beyond the end of the simulation (used when rounding dates to the end/start of a generator period)
+    :return: index_p: index of the periods (for pyomo)
+    :return: step: days in each period
 
     Number of weeks is 52 and the range is 0 to 51
     '''
@@ -59,21 +57,15 @@ def f1_sim_periods(periods_per_year, oldest_animal, len_o):
 
 def f1_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_end_p=0):
     '''
-    Parameters
-    ----------
-    period_is: string - type of period is calc to return.
-    date_start_p: start date of each period (must have all axis).
-    date_end_p: end date of each period (must have all axis).
-    date_array: array of dates of interest e.g. mating dates.
-    date_array2: array of end dates used to determine if period is between.
+    :param period_is: string - type of period is calc to return.
+    :param date_start_p: start date of each period (must have all axis).
+    :param date_end_p: end date of each period (must have all axis).
+    :param date_array: array of dates of interest e.g. mating dates.
+    :param date_array2: array of end dates used to determine if period is between.
 
-    Returns
-    -------
-    period_is: boolean array shaped like the date array with the addition of the p axis. This is true if a given date from date array is within the date of a given period and false if not.
-
-    period_is_any: 1D boolean array shape of the period dates array. True if any of the dates in the date array fall into a given period.
-
-    period_is_between: return true if the period is between two dates (it is inclusive ie if an activity occurs during the period that period will be treated as between the two dates)
+    :return: period_is: boolean array shaped like the date array with the addition of the p axis. This is true if a given date from date array is within the date of a given period and false if not.
+    :return: period_is_any: 1D boolean array shape of the period dates array. True if any of the dates in the date array fall into a given period.
+    :return: period_is_between: return true if the period is between two dates (it is inclusive ie if an activity occurs during the period that period will be treated as between the two dates)
     '''
     if period_is == 'period_is':
         period_is=np.logical_and((date_array>=date_start_p) , (date_array<=date_end_p))
@@ -96,20 +88,16 @@ def f1_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_e
 
 def f1_c2g(params_c2, y, a_c2_c0, i_g3_inc, var_pos=0, condition=None, axis=0, dtype=False):
     '''
-    Parameters
-    ----------
-    params_c2 : array - parameter array - input from excel.
-    y : array - sensitivity array for genetic merit.
-    a_c2_c0 :
-    i_g3_inc : the offspring genotypes that are included in this trial
-    var_pos : int - position of last axis when inserted into all axis.
-    condition :
-    axis:
-    dtype :
+    :param params_c2 : array - parameter array - input from excel.
+    :param y : array - sensitivity array for genetic merit.
+    :param a_c2_c0 :
+    :param i_g3_inc : the offspring genotypes that are included in this trial
+    :param var_pos : int - position of last axis when inserted into all axis.
+    :param condition :
+    :param axis:
+    :param dtype :
 
-    Returns
-    -------
-    param array for each genotype. Grouped by sheep group ie sire, offs, dams, yatf.
+    :return: param array for each genotype. Grouped by sheep group ie sire, offs, dams, yatf.
 
     '''
 
@@ -181,17 +169,13 @@ def f1_DSTw_adjust(propn_source_b1, cycles_source, cycles_destination, axis_b1, 
     to cycles_destination
     The conversion keeps the litter size constant (the proportion of single, twin & triplet) and varies the
     proportion of dry animals assuming that conception would be the same in each cycle.
-    Parameters
-    ----------
-    propn_source_b1 : np array - The proportion of dams in each b1 slice if mated for the source number of cycles.
-    cycles_source: int, optional - the number of cycles from which the input proportions have been estimated.
-    cycles_destination: int, optional - the number of cycles for which the prediction is required.
-    axis_b1 : int, optional - the axis that has the proportion of each litter size
-    dry_slice: int, optional - the slice of axis that is the dry animals. If dry_slice is != 0, implies NM exists.
 
-    Returns
-    -------
-    propn_destination_b1 : np array - Proportion of dry, single, twins & triplets.
+    :param propn_source_b1 : np array - The proportion of dams in each b1 slice if mated for the source number of cycles.
+    :param cycles_source: int, optional - the number of cycles from which the input proportions have been estimated.
+    :param cycles_destination: int, optional - the number of cycles for which the prediction is required.
+    :param axis_b1 : int, optional - the axis that has the proportion of each litter size
+    :param dry_slice: int, optional - the slice of axis that is the dry animals. If dry_slice is != 0, implies NM exists.
+    :return: propn_destination_b1 : np array - Proportion of dry, single, twins & triplets.
 
     '''
     ##create slices for the b1 axis
@@ -226,13 +210,9 @@ def f1_DSTw(scan_g, cycles=1):
     Prediction uses a polynomial formula y=intercept+ax+bx^2+cx^3+dx^4, where x is the scanning %
     The polynomial has been fitted to data measured in the Triplets project.
 
-    Parameters
-    ----------
-    scan_g : np array - scanning percentage of genotypes if mated for the number of calibration cycles.
-    cycles: int, optional - the number of cycles for which the prediction is required.
-    Returns
-    -------
-    Proportion of dry, single, twins & triplets.
+    :param scan_g : np array - scanning percentage of genotypes if mated for the number of calibration cycles.
+    :param cycles: int, optional - the number of cycles for which the prediction is required.
+    :return: Proportion of dry, single, twins & triplets.
 
     '''
     calibration_cycles = 2  #The data used to calibrate the coefficients used are assumed to have been derived from mating for 2 cycles.
@@ -268,13 +248,9 @@ def f1_RR_propn_logistic(RR_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     See Working8:pg 28 for derivation of the coefficients of the cubic equation.
     Approach is also implemented in Excel 'Components combined - latest v2.xlsx'
 
-    Parameters
-    ----------
-    RR_g : np array - scanning percentage of genotypes if mated for the number of calibration cycles.
-    cycles: int, optional - the number of cycles for which the prediction is required.
-    Returns
-    -------
-    Proportion of dry, single, twins & triplets.
+    :param RR_g : np array - scanning percentage of genotypes if mated for the number of calibration cycles.
+    :param cycles: int, optional - the number of cycles for which the prediction is required.
+    :return: Proportion of dry, single, twins & triplets.
 
     '''
 
@@ -314,12 +290,8 @@ def f1_LS_propn_logistic(LS_g, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
     See Working8:pg 37 for derivation of the coefficients of the cubic equation.
     Approach is also implemented in Excel 'Components combined - latest v2.xlsx'
 
-    Parameters
-    ----------
-    LS_g : np array - scanning percentage of genotypes if mated for the number of calibration cycles.
-    Returns
-    -------
-    Proportion of empty, single, twins & triplets.
+    :param LS_g : np array - scanning percentage of genotypes if mated for the number of calibration cycles.
+    :return: Proportion of empty, single, twins & triplets.
 
     '''
 
@@ -400,17 +372,11 @@ def f1_cp_from_cutoff(cutoff0, cb1, nfoet_b1any, nyatf_b1any, b1_pos, cycles=1):
 
 def f1_btrt0(dstwtr_propn,pss,pstw,pstr): #^this function is inflexible ie if you want to add quadruplets
     '''
-    Parameters
-    ----------
-    dstwtr_propn : np array, proportion of dams that are dry, singles, twin and triplets prior to birth.
-    pss : np array, survival of single born progeny at birth.
-    pstw : np array, survival of twin born progeny at birth.
-    pstr : np array, survival of triplet born progeny at birth.
-
-    Returns
-    -------
-    btrt_b0xyg : np array, proportion of progeny in each btrt category (e.g. 11, 22, 21 ...).
-    progeny_total_xyg: np array, total number of progeny alive after birth per ewe mated
+    :param dstwtr_propn: np array, proportion of dams that are dry, singles, twin and triplets prior to birth.
+    :param pss: np array, survival of single born progeny at birth.
+    :param pstw: np array, survival of twin born progeny at birth.
+    :param pstr: np array, survival of triplet born progeny at birth.
+    :return: btrt_b0xyg - np array, proportion of progeny in each btrt category (e.g. 11, 22, 21 ...). Progeny_total_xyg: np array, total number of progeny alive after birth per ewe mated
 
     '''
     ##progeny numbers is the number of alive progeny in each b0 slice per dam giving birth to that litter size
@@ -440,17 +406,12 @@ def f1_btrt1(dstwtr_l0yg,pss,pstw,pstr): #^this function is inflexible ie if you
     '''
     Return proportion of progeny reared with each BTRT based on the BT proportion and lamb survival
     Used to scale the lifetime production of offspring that are the flock replacements.
-    Parameters
-    ----------
-    dstwtr_l0yg : np array - proportion of dry, singles, twin and triplets.
-    pss : np array - single survival.
-    pstw : np array - twin survival.
-    pstr : np array - triplet survival.
 
-    Returns
-    -------
-    btrt_b1nwzida0e0b0xyg : np array
-        probability of ewe with lambs in each btrt category (e.g. 11, 22, 21 ...).
+    :param dstwtr_l0yg: np array - proportion of dry, singles, twin and triplets.
+    :param pss: np array - single survival.
+    :param pstw: np array - twin survival.
+    :param pstr: np array - triplet survival.
+    :return: btrt_b1nwzida0e0b0xyg - np array probability of ewe with lambs in each btrt category (e.g. 11, 22, 21 ...).
 
     '''
 
@@ -472,16 +433,13 @@ def f1_btrt1(dstwtr_l0yg,pss,pstw,pstr): #^this function is inflexible ie if you
 
 def f1_lsln(dstwtr_l0yg,pss,pstw,pstr): #^this function is inflexible ie if you want to add quadruplets
     '''
-    Return proportion of dams with each LSLN based on the BT proportion and lamb survival
-    Parameters
-    ----------
-    dstwtr_l0yg : np array - proportion of dry, singles, twin and triplets.
+    Calc the proportion of dams with each LSLN based on the BT proportion and lamb survival.
 
-    Returns
-    -------
-    btrt_b1nwzida0e0b0xyg : np array
-        probability of ewe with lambs in each btrt category (e.g. 11, 22, 21 ...).
-
+    :param dstwtr_l0yg: np array - proportion of dry, singles, twin and triplets.
+    :param pss: np array - single survival.
+    :param pstw: np array - twin survival.
+    :param pstr: np array - triplet survival.
+    :return: btrt_b1nwzida0e0b0xyg - np array probability of ewe with lambs in each btrt category (e.g. 11, 22, 21 ...).
     '''
 
     ##dam numbers is the number of dams in each b1 category per animal at birth, based on peri-natal survival of s, tw and tr.
@@ -866,15 +824,13 @@ def f1_efficiency(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, mei_propn_
 
 
 def f1_weight_energy_conversion(cg, option, weight=None, energy=None):
-    '''Parameters
-    ----------
-    cg : Numpy array, sim parameters - weight change.
-    weight : Numpy array of float, weight of component (fresh weight).
-    option : 0 = fat, 1 = muscle, 2 = viscera, 3 = wool, 4 = conceptus, 5 = milk.
+    '''
 
-    Returns
-    -------
-    energy - Energy content of the component.
+    :param cg: Numpy array, sim parameters - weight change.
+    :param option: 0 = fat, 1 = muscle, 2 = viscera, 3 = wool, 4 = conceptus, 5 = milk.
+    :param weight: Numpy array of float, weight of component (fresh weight).
+    :param energy:
+    :return: Energy content of the component.
     '''
     ## select the relevant coefficients for the component
     if option == 0:  #Fat
@@ -1026,30 +982,22 @@ def f_energy_nfs(cm, cg, lw, fat, muscle, viscera, mei, km, i_steepness, density
 
 def f_foetus_cs(cb1, cp, kc, nfoet, rc_start, w_b_std_y, w_b_exp_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f
                 , dce_age_f, rev_trait_value):
-    '''Parameters
-        ----------
-        cb1 : Numpy array, sim parameters - parameters altered by LSLN (b1 axis).
-        cp : Numpy array, sim parameters - pregnancy requirements.
-        kc : Efficiency of use of energy for gain foetal weight (includes the energy required for the whole of conceptus)
-        nfoet : number of foetus (across the b1 axis)
-        # relsize_start : current relative size of the dam
-        rc_start : relative condition of the dam at the start of the period
-        w_b_std_y : standard birth weight of lambs for a dam of this age
-        w_b_exp_y : expected birth weight of lambs accounting for dam relative condition
-        w_f_start : weight of the foetus at the start of the period
-        nw_f_start : normal weight of the foetus at the start of the period
-        nwf_age_f : multiplier of BW to generate the normal weight of the foetus by age
-        guw_age_f : multiplier of BW to generate the normal weight of the conceptus by age (gravid uterus)
-        dce_age_f : multiplier of BW to generate the energy content of the conceptus on day 1 of pregnancy
-        rev_trait_value : Dictionary of the production levels for the sheep class and period
-    Return
-        w_f:
-        mec:
-        nec:
-        w_b_exp_y:
-        nw_f:
-        guw:
-        '''
+    '''
+    :param cb1: Numpy array, sim parameters - parameters altered by LSLN (b1 axis).
+    :param cp: Numpy array, sim parameters - pregnancy requirements.
+    :param kc: Efficiency of use of energy for gain foetal weight (includes the energy required for the whole of conceptus)
+    :param nfoet: number of foetus (across the b1 axis)
+    :param rc_start: relative condition of the dam at the start of the period
+    :param w_b_std_y: standard birth weight of lambs for a dam of this age
+    :param w_b_exp_y: expected birth weight of lambs accounting for dam relative condition
+    :param w_f_start: weight of the foetus at the start of the period
+    :param nw_f_start: normal weight of the foetus at the start of the period
+    :param nwf_age_f: multiplier of BW to generate the normal weight of the foetus by age
+    :param guw_age_f: multiplier of BW to generate the normal weight of the conceptus by age (gravid uterus)
+    :param dce_age_f: multiplier of BW to generate the energy content of the conceptus on day 1 of pregnancy
+    :param rev_trait_value: Dictionary of the production levels for the sheep class and period
+    :return:
+    '''
     #calculates the energy requirement for gestation for the days gestating.
     # The results are multiplied by gest_propn when used in sgen.
     ##Normal weight of foetus (mid-period - dam calcs)
@@ -1089,25 +1037,24 @@ def f_foetus_cs(cb1, cp, kc, nfoet, rc_start, w_b_std_y, w_b_exp_y, w_f_start, n
 
 def f_foetus_nfs(cg, cp, step, c_start, muscle_start, d_muscle, nfoet, w_b_exp_y, w_f_start
                  , nwf_age_f, guw_age_f, dcdt_age_f, bc, gest_propn, rev_trait_value):
-    '''Parameters
-    ----------
-    cg : Numpy array, sim parameters - weight change.
-    ck : Numpy array, sim parameters - efficiency of energy use.
-    cp : Numpy array, sim parameters - pregnancy requirements.
-    step : number of days gestating in the generator period
-    c_start : energy in the foetus at the start of the period
-    muscle_start : muscle weight at the start of the period
-    d_muscle : change in muscle mass during the previous period (can't use current period because not calculated yet)
-    nfoet : number of foetus (across the b1 axis)
-    # relsize_start : current relative size of the dam
-    # w_b_std_y : standard birth weight of lambs for a dam of this age
-    w_b_exp_y : expected birth weight of lambs accounting for dam relative condition
-    w_f_start : weight of the foetus at the start of the period
-    nwf_age_f : multiplier of BW to generate the normal weight of the foetus by age
-    guw_age_f : multiplier of BW to generate the normal weight of the conceptus by age (gravid uterus)
-    dcdt_age_f : multiplier of conceptus energy content to generate the increase in energy content by age
-    bc: parameter for hp from gaining conceptus weight (like kc except accounts for HAF)
-    gest_propn : Numpy array, optional, Proportion of the period that the dam is gestating. The default is 0.
+    '''
+
+    :param cg: Numpy array, sim parameters - weight change.
+    :param cp: Numpy array, sim parameters - pregnancy requirements.
+    :param step: number of days gestating in the generator period
+    :param c_start: energy in the foetus at the start of the period
+    :param muscle_start: muscle weight at the start of the period
+    :param d_muscle: change in muscle mass during the previous period (can't use current period because not calculated yet)
+    :param nfoet: number of foetus (across the b1 axis)
+    :param w_b_exp_y: expected birth weight of lambs accounting for dam relative condition
+    :param w_f_start: weight of the foetus at the start of the period
+    :param nwf_age_f: multiplier of BW to generate the normal weight of the foetus by age
+    :param guw_age_f: multiplier of BW to generate the normal weight of the conceptus by age (gravid uterus)
+    :param dcdt_age_f: multiplier of conceptus energy content to generate the increase in energy content by age
+    :param bc: parameter for hp from gaining conceptus weight (like kc except accounts for HAF)
+    :param gest_propn: Numpy array, optional, Proportion of the period that the dam is gestating. The default is 0.
+    :param rev_trait_value: Dictionary of the production levels for the sheep class and period
+    :return:
     '''
     #calculates the energy requirement for gestation for the days gestating. The result is scaled by gest_propn when used
     ## Conceptus growth scalar based on muscle growth in the previous period

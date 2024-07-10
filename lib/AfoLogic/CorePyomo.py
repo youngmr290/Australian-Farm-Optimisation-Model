@@ -37,9 +37,6 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output):
     '''
     Wraps all of the core model into a function so it can be run multiple times in a loop
 
-    Returns
-    -------
-    None.
 
     '''
     ##################
