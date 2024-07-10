@@ -32,6 +32,12 @@ FOO is expressed in units of dry matter (excluding moisture), therefore feed ene
 (does not require dry matter content conversion). The volume of each crop residue category is calculated
 based on both the quality and availability of the feed.
 
+Work with farmers suggested that hay residue is treated just as any other crop residue. However,
+there are small differences between hay and a normally harvest crop. Hay is cut earlier
+therefore there is no split or spilt grain but there is some higher quality regrowth.
+The model captures the difference in quality through the :ref:`cropresiduesim` and the impact on residue volume
+is handled through adjusting the harvest index and proportion harvested inputs.
+
 Farmers often rake and burn crop residue in preparation for the following seeding. This is represented as a
 cost see Phase.py for further information.
 
@@ -88,10 +94,10 @@ def f_biomass2residue():
     calculated as a product of the biomass, harvest index and proportion harvested.
 
     .. note:: Any frost impact on residue production has not been included because frost is captured within the
-    seeding penalty inputs because it changes based on sowing date.
-    Residue production can be positively impacted by frost because frost during the plants flowering stage
-    can damage cell tissue and reduce grain fill :cite:p:`RN144`. This results in less grain and more residue
-    due to not using energy resources to fill grain.
+              seeding penalty inputs because it changes based on sowing date.
+              Residue production can be positively impacted by frost because frost during the plants flowering stage
+              can damage cell tissue and reduce grain fill :cite:p:`RN144`. This results in less grain and more residue
+              due to not using energy resources to fill grain.
 
     This is a separate function because it is used in residue simulator.
     '''

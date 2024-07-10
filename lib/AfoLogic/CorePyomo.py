@@ -57,8 +57,6 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output):
     f_con_labour_sheep_manager(model)
     # stubble & nap consumption at harvest
     f_con_harv_stub_nap_cons(model)
-    # # stubble
-    # f_con_cropresidue_a(model)
     # sow landuse
     f_con_phasesow(model)
     # harvest and make hay
@@ -326,11 +324,19 @@ def f_con_labour_sheep_manager(model):
 
 def f_con_harv_stub_nap_cons(model):
     '''
-    Constrains the ME from stubble and non arable pasture in the feed period that harvest occurs. To consume ME from
-    stubble and non arable pasture sheep must also consume a proportion (depending on when harvest occurs within
-    the feed period) of their total intake from pasture. This stops sheep consuming all their energy intake
-    for a given period from stubble and non arable pasture when they don’t become available until after harvest
-    (the logic behind this is explained in the stubble section of this document).
+    Stubble and non-arable pasture may become available part way through a feed period, this means sheep could
+    fill their entire energy requirement for that feed period solely with stubble and non-arable pasture.
+    This is unreasonable because stubble can only be grazed after harvest.
+    To solve this a constraint is implemented which forces a
+    proportion (depending on when harvest occurs in the feed period) of the sheep
+    energy intake to be consumed from pasture.
+
+    The constraint is built so that consumption of any stubble requires a certain amount of pasture consumed.
+    However, if one crop is harvested before another, consuming stubble from the latter crop still
+    requires a certain amount of pasture to be consumed. This is a slight limitation because in reality
+    the sheep may have been consuming crop A stubble. However consuming crop A stubble doesn't provide
+    the ability to consume crop B stubble.
+
     '''
     def harv_stub_nap_cons(model,q,s,p6,z):
         if any(model.p_nap_prop[p6,z] or model.p_harv_prop[p6,z,k] for k in model.s_crops) and pe.value(model.p_wyear_inc_qs[q, s]):
@@ -345,32 +351,6 @@ def f_con_harv_stub_nap_cons(model):
     model.con_harv_stub_nap_cons = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods,model.s_season_types,rule=harv_stub_nap_cons,
                                                  doc='limit stubble and nap consumption in the period harvest occurs')
 
-
-# def f_con_cropresidue_a(model):
-#     '''
-#     Constrains the amount of stubble required to consume 1t of category A to no more than the total amount of
-#     stubble produced from each rotation.
-#     '''
-#     ##has to have p7 axis and transfer because penalties occur at seeding time and have to transfer as seasons are unclustered (same as yield)
-#     def cropresidue_a(model,q,s,p7,k,z9):
-#         l_p7 = list(model.s_season_periods)
-#         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
-#         p7_end = l_p7[-1]
-#         if pe.value(model.p_wyear_inc_qs[q,s]):
-#             return (-sum(model.v_phase_area[q,s,p7,z9,r,l] * model.p_rot_stubble[r,k,l,p7,z9]
-#                          for r in model.s_phases for l in model.s_lmus
-#                          if pe.value(model.p_rot_stubble[r,k,l,p7,z9]) != 0)
-#                     + macpy.f_cropresidue_penalty(model,q,s,p7,k,z9) + cgzpy.f_grazecrop_cropresidue_penalty(model,q,s,p7,k,z9)
-#                     + sum(model.v_stub_harv[q,s,p6,z9,k] * 1000 * model.p_a_p6_p7[p7,p6,z9] for p6 in model.s_feed_periods)
-#                     - model.v_stub_debit[q,s,p7,k,z9] *1000 * (p7 != p7_end) #cant debit in the final period otherwise unlimited stubble.
-#
-#                     + sum(model.v_stub_debit[q,s,p7_prev,k,z8] * 1000 * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
-#                           for z8 in model.s_season_types) <= 0)
-#         else:
-#             return pe.Param.Skip
-#
-#     model.con_cropresidue_a = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, rule=cropresidue_a,
-#                                         doc='Total stubble at harvest. Provides Cat A at harvest.')
 
 
 def f_con_phasesow(model):
