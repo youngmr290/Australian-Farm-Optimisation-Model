@@ -155,7 +155,8 @@ def f_farmgate_grain_price(r_vals={}):
 
     ##determine cost of selling
     cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance']
-            + pinp.general['rail_cartage'] + uinp.price['flagfall'])
+             + grain_price_info_df['incur_rail_cost']*pinp.general['rail_cartage']
+             + uinp.price['flagfall'])
     tolls= grain_price_info_df['grain_tolls']
     total_fees= cartage+tolls
     farmgate_price_ks2_g = price_df.sub(total_fees, axis=0, level=0).clip(0)
