@@ -7114,8 +7114,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         calibration_values_p[i] = fun.f_divide(np.sum(o_numbers_start_tpdams[0,308,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
                                              , np.sum(o_numbers_start_tpdams[0,100,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
         i += 1
-        calibration_values_p[i] = o_wean_w_tpyatf[0,196,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Weaning weight of 1st cycle singles
-        ##Calculate the objective value based on sum of squares of the relative error (error as a proportion of the target)
+        calibration_values_p[i] = o_wean_w_tpyatf[0,196,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Weaning weight of 1st cycle single born ewes
+        ##Calculate the objective value based on sum of squares of the relative error (error as a proportion of the SD of the target trait)
         ### Handle the multi-trait calibration using an a-priori method
         ###Option 1 A linear scalarising method, based on a subjective weight divided by the SD of the target trait range (calibration weights)
         calibration_objective = np.sum(((calibration_values_p - calibration_targets_p) * calibration_weights_p) ** 2)
@@ -7141,7 +7141,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         i += 1; j += 1
         print(f"Twin survival this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #twin lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
         i += 1; j += 1
-        if n_coeff > n_traits: j += 1   # means that SRW was past as a fixed trait so skip in the reporting
+        if n_coeff > n_traits: j += 1   # n_coeff > n_traits means that SRW was past as a fixed trait so skip in the reporting
         print(f"Dam weight 3yo joining this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
         i += 1; j += 1
         print(f"Proportion fat this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")
@@ -7150,7 +7150,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         i += 1; j += 1
         print(f"Wean weight this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #Weaning weight of 1st cycle singles
 
-        return objective
+        return calibration_objective
 
     else:
         ##print the calibration variables
@@ -7202,8 +7202,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         j += 1
         # j += 1  #comment this out if calibrating with SRW
         print(f"Dam weight 3yo joining {o_ffcfw_tpdams[0,211,0,0,2,0,0,0,0,0,0,0,0,0,0,0]} with ({coefficients_c[j]})")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
+        j += 1   #comment this out if calibrating with PI
         j += 1
-        j += 1  #comment this out if calibrating with PI
         fat_propn = fun.f_divide(r_fat_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0]
                                , r_ebw_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0])  #% of fat for the wethers 30mo BTRT 11,first cycle,from 3yo
         print(f"Proportion fat {fat_propn} with ({coefficients_c[j]})")
