@@ -97,7 +97,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         i += 1
         uinp.parameters['i_cw_c2'][11, 2] = coefficients_c[i]        #SL
         i += 1
-        uinp.parameters['i_cl0_c2'][25, 0, 2] = coefficients_c[i]   #% dry (Con)
+        uinp.parameters['i_cl0_c2'][25, 0, 2] = coefficients_c[i]   #% preg (Con)
         i += 1
         uinp.parameters['i_cl0_c2'][25, 1, 2] = coefficients_c[i]    #Litter size
         i += 1
@@ -126,7 +126,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         i += 1
         coefficients_c[i] = uinp.parameters['i_cw_c2'][11, 2]        #SL
         i += 1
-        coefficients_c[i] = uinp.parameters['i_cl0_c2'][25, 0, 2]   #% dry (Con)
+        coefficients_c[i] = uinp.parameters['i_cl0_c2'][25, 0, 2]   #% preg (Con)
         i += 1
         coefficients_c[i] = uinp.parameters['i_cl0_c2'][25, 1, 2]    #Litter size
         i += 1
@@ -7069,17 +7069,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         i += 1
         calibration_values_p[i] = o_sl_tpdams[0,204,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #SL of single ewes at 3.5yo
         i += 1
-        ##proportion of dry is number of dry (b[1]) divided by the number dry and pregnant (b[1:5])
-        dry_2yo = fun.f_divide(o_numbers_start_tpdams[0,108,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,108,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        dry_3yo = fun.f_divide(o_numbers_start_tpdams[0,160,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,160,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        dry_4yo = fun.f_divide(o_numbers_start_tpdams[0,212,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,212,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        dry_5yo = fun.f_divide(o_numbers_start_tpdams[0,264,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,264,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        propn_dry = (dry_2yo + dry_3yo + dry_4yo + dry_5yo) / 4
-        calibration_values_p[i] = propn_dry     #% dry of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
+        ##proportion of preg is 1 - (number of dry (b[1]) divided by the number dry and pregnant (b[1:5]))
+        preg_2yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,108,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                             np.sum(o_numbers_start_tpdams[0,108,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        preg_3yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,160,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                             np.sum(o_numbers_start_tpdams[0,160,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        preg_4yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,212,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                             np.sum(o_numbers_start_tpdams[0,212,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        preg_5yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,264,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                             np.sum(o_numbers_start_tpdams[0,264,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        propn_preg = (preg_2yo + preg_3yo + preg_4yo + preg_5yo) / 4
+        calibration_values_p[i] = propn_preg     #% preg of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
         i += 1
         ##Litter size is sum of the ewes weighted by # foetuses (np.dot with arange(4)) divided by pregnant ewes
         ls_2yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,108,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
@@ -7094,7 +7094,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         calibration_values_p[i] = litter_size     #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
         i += 1
         ##twin survival is square root of the number of ewe with twins (BT22) after lambing / number before lambing
-        ##Square root is simpler to calculate than summing BTRT 22 * 2 & 21 * 1
+        ##Square root is simpler to calculate than summing BTRT 22 * 2 & 21 * 1, but this will need to change if the assumption on survival of twins being independent is relaxed
         twin_surv_2yo = fun.f_divide(o_numbers_start_tpdams[0,133,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
                                    , o_numbers_start_tpdams[0,129,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
         twin_surv_3yo = fun.f_divide(o_numbers_start_tpdams[0,185,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
@@ -7117,15 +7117,15 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         calibration_values_p[i] = o_wean_w_tpyatf[0,196,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Weaning weight of 1st cycle singles
         ##Calculate the objective value based on sum of squares of the relative error (error as a proportion of the target)
         ### Handle the multi-trait calibration using an a-priori method
-        ###Option 1 A linear scalarising method, based on subjective weights / SD of the target trait range (calibration weights)
-        objective = np.sum(((calibration_values_p - calibration_targets_p) * calibration_weights_p) ** 2)
+        ###Option 1 A linear scalarising method, based on a subjective weight divided by the SD of the target trait range (calibration weights)
+        calibration_objective = np.sum(((calibration_values_p - calibration_targets_p) * calibration_weights_p) ** 2)
 
         # ###Option 2 A Chebyshev scalarisation. The weighting is the inverse of the coefficient increasing weight on small coefficients
         # ###The objective is the deviation of the worst trait relative to the size of the coefficient
-        # ###Requires n_coef = n_production traits & coefficient to be > 0
+        # ###Requires n_coef = n_production traits & coefficient to be > 0. Stopped using this because of these constraints and no apparent benefit.
         # objective = np.max((fun.f_divide(calibration_values_p - calibration_targets_p, calibration_targets_p) ** 2)
         #                     / np.maximum(0.0001, np.abs(coefficients_c)))
-        print(f"obj: {objective} trait & (coefficient) Team SRW:{coefficients_c[7]}")
+        print(f"obj: {calibration_objective} trait & (coefficient) Team SRW:{coefficients_c[7]}")
         i = 0; j = 0
         print(f"CFW this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #CFW of single ewes at 3.5yo
         i += 1; j += 1
@@ -7135,7 +7135,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         i += 1; j += 1
         print(f"SL this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #SL of single ewes at 3.5yo
         i += 1; j += 1
-        print(f"% Dry this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #% dry of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
+        print(f"% preg this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #% preg of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
         i += 1; j += 1
         print(f"Litter Size this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
         i += 1; j += 1
@@ -7163,17 +7163,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         j += 1
         print(f"SL {o_sl_tpdams[0,204,0,0,2,0,0,0,0,0,0,0,0,0,0,0]} with ({coefficients_c[j]})")  #SL of single ewes at 3.5yo
         j += 1
-        ##proportion of dry is number of dry (b[1]) divided by the number dry and pregnant (b[1:5])
-        dry_2yo = fun.f_divide(o_numbers_start_tpdams[0,108,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,108,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        dry_3yo = fun.f_divide(o_numbers_start_tpdams[0,160,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,160,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        dry_4yo = fun.f_divide(o_numbers_start_tpdams[0,212,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,212,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        dry_5yo = fun.f_divide(o_numbers_start_tpdams[0,264,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                        np.sum(o_numbers_start_tpdams[0,264,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        propn_dry = (dry_2yo + dry_3yo + dry_4yo + dry_5yo) / 4
-        print(f"% Dry {propn_dry} with ({coefficients_c[j]})")  #% dry of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
+        ##proportion of preg is 1- (number of dry (b[1]) divided by the number dry and pregnant (b[1:5]))
+        preg_2yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,108,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                             np.sum(o_numbers_start_tpdams[0,108,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        preg_3yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,160,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                             np.sum(o_numbers_start_tpdams[0,160,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        preg_4yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,212,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                             np.sum(o_numbers_start_tpdams[0,212,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        preg_5yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,264,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                             np.sum(o_numbers_start_tpdams[0,264,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+        propn_preg = (preg_2yo + preg_3yo + preg_4yo + preg_5yo) / 4
+        print(f"% Preg {propn_preg} with ({coefficients_c[j]})")  #% preg of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
         j += 1
         ##Litter size is sum of the ewes weighted by # foetuses (np.dot with arange(4)) divided by pregnant ewes
         ls_2yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,108,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
