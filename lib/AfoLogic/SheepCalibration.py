@@ -252,11 +252,12 @@ if __name__ == '__main__':
     ### Write to Excel
     calibration_path = relativeFile.findExcel('CalibrationResults.xlsx')
     writer = pd.ExcelWriter(calibration_path, engine='xlsxwriter')
-    coefficients.to_excel(writer,"result", index=True, header=True, startrow=0, startcol=0)
-    success.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+1)
-    wsmse.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+2)
-    message.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+3)
+    coefficients.to_excel(writer,"result", index=True, header=True, startrow=0, startcol=1)
+    success.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+2)
+    wsmse.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+3)
+    message.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+4)
     writer.close()
 
     time_list.append(timer()) ; time_was.append("end")
-    print(f"elapsed total time for calibration: {time_list[-1] - time_list[0]:0.4f} secs") # Time in seconds
+    time_elapsed = time_list[-1] - time_list[0]
+    print(f"elapsed total time for calibration {time_elapsed//3600:>02.0f}:{time_elapsed%3600//60:02.0f}:{time_elapsed%60:07.4f} ") # Time in seconds
