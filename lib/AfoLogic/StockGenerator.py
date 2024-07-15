@@ -27,6 +27,7 @@ import functions from other modules
 # import datetime as dt
 # import pandas as pd
 import numpy as np
+# np.seterr(all='raise')   #uncomment this line to be able to debug any numpy floating point warnings
 import pickle as pkl
 #import matplotlib.pyplot as plt
 import time
@@ -4099,6 +4100,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             d_fat_sire = temp2
                             d_muscle_sire = temp3
                             d_viscera_sire = temp4
+                            pi_sire = pi_sire * fun.f_divide(temp5, mei_sire)  #scale pi by the variation in mei that results from REV changes.
                             mei_sire = temp5
                             surplus_energy_sire = temp7
                             mem_sire = temp9  #will overwrite the CSIRO version if NFS system is being used.
@@ -4133,6 +4135,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             d_fat_dams = temp2
                             d_muscle_dams = temp3
                             d_viscera_dams = temp4
+                            pi_dams = pi_dams * fun.f_divide(temp5, mei_dams)  #scale pi by the variation in mei that results from REV changes.
                             mei_dams = temp5
                             surplus_energy_dams = temp7
                             mem_dams = temp9  #will overwrite the CSIRO version if NFS system is being used. Only used for post-loop SA.
@@ -4155,6 +4158,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             d_fat_offs = temp2
                             d_muscle_offs = temp3
                             d_viscera_offs = temp4
+                            pi_offs = pi_offs * fun.f_divide(temp5, mei_offs)  #scale pi by the variation in mei that results from REV changes.
                             mei_offs = temp5
                             surplus_energy_offs = temp7
                             mem_offs = temp9  #will overwrite the CSIRO version if NFS system is being used.
@@ -4185,6 +4189,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             d_fat_sire = temp2
                             d_muscle_sire = temp3
                             d_viscera_sire = temp4
+                            pi_sire = pi_sire * fun.f_divide(temp5, mei_sire)  #scale pi by the variation in mei that results from REV changes.
                             mei_sire = temp5
                             surplus_energy_sire = temp7
                             mem_sire = temp9 #will overwrite the CSIRO version if NFS system is being used.
@@ -4229,6 +4234,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             d_fat_dams = temp2
                             d_muscle_dams = temp3
                             d_viscera_dams = temp4
+                            pi_dams = pi_dams * fun.f_divide(temp5, mei_dams)  #scale pi by the variation in mei that results from REV changes.
                             mei_dams = temp5
                             surplus_energy_dams = temp7
                             mem_dams = temp9 #will overwrite the CSIRO version if NFS system is being used. Only used for post-loop SA.
@@ -4271,6 +4277,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             d_fat_offs = temp2
                             d_muscle_offs = temp3
                             d_viscera_offs = temp4
+                            pi_offs = pi_offs * fun.f_divide(temp5, mei_offs)  #scale pi by the variation in mei that results from REV changes.
                             mei_offs = temp5
                             surplus_energy_offs = temp7
                             mem_offs = temp9 #will overwrite the CSIRO version if NFS system is being used.
@@ -4845,6 +4852,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         d_fat_yatf = temp2
                         d_muscle_yatf = temp3
                         d_viscera_yatf = temp4
+                        pi_yatf = pi_yatf * fun.f_divide(temp5, mei_yatf)  #scale pi by the variation in mei that results from REV changes.
                         mei_yatf = temp5
                         surplus_energy_yatf = temp7
                         mem_yatf = temp9  #will overwrite the CSIRO version if NFS system is being used.
@@ -4874,6 +4882,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         d_fat_yatf = temp2
                         d_muscle_yatf = temp3
                         d_viscera_yatf = temp4
+                        pi_yatf = pi_yatf * fun.f_divide(temp5, mei_yatf)  #scale pi by the variation in mei that results from REV changes.
                         mei_yatf = temp5
                         surplus_energy_yatf = temp7
                         mem_yatf = temp9 #will overwrite the CSIRO version if NFS system is being used.

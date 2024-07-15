@@ -1695,7 +1695,7 @@ def f_lwc_mu(cg, rc_start, mei, meme, mew, new, zf1, zf2, kge, kf, kp, heat_loss
     ###Scale so that the sum of the components equals the ebg using the proportions from the rev'd energy components
     ### If EBG is the target trait it wouldn't be overwritten by f1_rev_update, therefore equal value before and after
     ###Note: if ebg is not changed by the SA on the target trait then energy will be scaled but scalar = 1
-    if np.allclose(ebg, ebg_prior, equal_nan=True):
+    if np.allclose(ebg, ebg_prior, equal_nan=True):     #either not doing REVs or ebg is the target trait or the REV SA doesn't alter ebg
         d_fat = f1_weight_energy_conversion(cg, 0, energy=nefat)
         d_muscle = f1_weight_energy_conversion(cg, 1, energy=nemuscle)
         d_viscera = f1_weight_energy_conversion(cg, 2, energy=neviscera)
@@ -1746,7 +1746,7 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei, km, md, hp_maint, dw,
     ###8. Calculate df, including REV update and HP product formation
     ###9. Calculate ebg from weight change of the components
     ###10. Adjust values from REVs
-    ###11. Back calculate MEI if values were change in step 10
+    ###11. Back calculate MEI if values were changed in step 10
     ###12. Calculate parameters to compare with CSIRO equations
 
     ##convert km to NFS terminology
