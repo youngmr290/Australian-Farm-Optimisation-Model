@@ -223,8 +223,8 @@ def f_universal_inp_sa(uinp_defaults):
     ##parameters (c2 genotype sensitivity)
     ###SAV - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_srw_c2'] = fun.f_sa(parameters['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5) #genotype srw
-    parameters['i_srw_c2'] = fun.f_sa(parameters['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5) #genotype srw
-    parameters['i_srw_c2'] = fun.f_sa(parameters['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5) #genotype srw
+    parameters['i_sfw_c2'] = fun.f_sa(parameters['i_sfw_c2'].astype(float), sen.sav['sfw_c2'], 5) #genotype srw
+    parameters['i_sfd_c2'] = fun.f_sa(parameters['i_sfd_c2'].astype(float), sen.sav['sfd_c2'], 5) #genotype srw
     parameters['i_ci_c2'] = fun.f_sa(parameters['i_ci_c2'].astype(float), sen.sav['ci_c2'], 5) #propn of twice drys
     parameters['i_cl_c2'] = fun.f_sa(parameters['i_cl_c2'].astype(float), sen.sav['cl_c2'], 5) #propn of twice drys
     parameters['i_cw_c2'] = fun.f_sa(parameters['i_cw_c2'].astype(float), sen.sav['cw_c2'], 5) #propn of twice drys
