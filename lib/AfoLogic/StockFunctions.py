@@ -1706,13 +1706,14 @@ def f_lwc_mu(cg, rc_start, mei_initial, meme, mew, new, zf1, zf2, kge, kf, kp, h
         nefat = nefat * scalar
         nemuscle = nemuscle * scalar
         neviscera = neviscera * scalar
-        mefat = nefat / kf
-        memuscle = nemuscle / kp
-        meviscera = neviscera / kp
     ###Step 10c: Update weights after REV & scaling
     d_fat = f1_weight_energy_conversion(cg, 0, energy=nefat)
     d_muscle = f1_weight_energy_conversion(cg, 1, energy=nemuscle)
     d_viscera = f1_weight_energy_conversion(cg, 2, energy=neviscera)
+    ###Step 10d: Update heat production associated with retained energy (metabolisable energy)
+    mefat = nefat / kf
+    memuscle = nemuscle / kp
+    meviscera = neviscera / kp
 
     ##Step 11: Back calculate MEI from the components as updated by the REVs
     ### calculated with a minimum heat production (heat_loss_m0p1) to cover situations when the REVs reduce hp.
