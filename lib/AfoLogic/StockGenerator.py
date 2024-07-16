@@ -11165,269 +11165,269 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##Slice the r_compare array and return the equation systems and p axes.
         try:  #Catch error when the variable doesn't exist, which for r_compare occurs if eqn_compare is false for a trial
             ##comment out either dams or offs because only one can be save to Excel unless array names and df names are expanded.
-            # array7_0a = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_0b = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_0c = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_1a = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_1b = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_1c = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_2a = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_2b = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_2c = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_3a = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_3b = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_3c = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_4a = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_4b = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_4c = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_5a = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_5b = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_5c = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_6a = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_6b = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_6c = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array9_1a = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array9_1b = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array9_1c = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array9_2a = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array9_2b = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array9_2c = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array17_2a = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array17_2b = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array17_2c = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array18_1a = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array18_1b = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array18_1c = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array18_2a = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array18_2b = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array18_2c = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # arrayA = o_mei_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            # arrayB = r_md_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            # arrayC = nv_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            # arrayD = r_ebw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            # arrayE = r_wbe_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            # arrayF = r_fat_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            # arrayG = r_muscle_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            # arrayH = r_viscera_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            # arrayI = r_w_f_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            # arrayJ = o_cfw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            #
-            # ##calculations for the extra sheets
-            # array_calc7_3a = sfun.f1_weight2energy(cg_dams, array7_3a, 0)
-            # array_calc7_3b = sfun.f1_weight2energy(cg_dams, array7_3b, 0)
-            # array_calc7_3c = sfun.f1_weight2energy(cg_dams, array7_3c, 0)
-            # array_calc7_4a = sfun.f1_weight2energy(cg_dams, array7_4a, 1)
-            # array_calc7_4b = sfun.f1_weight2energy(cg_dams, array7_4b, 1)
-            # array_calc7_4c = sfun.f1_weight2energy(cg_dams, array7_4c, 1)
-            # array_calc7_5a = sfun.f1_weight2energy(cg_dams, array7_5a, 2)
-            # array_calc7_5b = sfun.f1_weight2energy(cg_dams, array7_5b, 2)
-            # array_calc7_5c = sfun.f1_weight2energy(cg_dams, array7_5c, 2)
-            # ###retained energy = df + dm + dv + dc + dw + dl
-            # array_calc7_6a = array_calc7_3a + array_calc7_4a + array_calc7_5a + array9_1a + array17_2a + array18_1a
-            # array_calc7_6b = array_calc7_3b + array_calc7_4b + array_calc7_5b + array9_1b + array17_2b + array18_1b
-            # array_calc7_6c = array_calc7_3c + array_calc7_4c + array_calc7_5c + array9_1c + array17_2c + array18_1c
-            # array_calcF = sfun.f1_weight2energy(cg_dams, arrayF, 0)
-            # array_calcG = sfun.f1_weight2energy(cg_dams, arrayG, 1)
-            # array_calcH = sfun.f1_weight2energy(cg_dams, arrayH, 2)
-
-            ## Assign Offspring values to the array variables
-            array7_0a = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array7_0b = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array7_0c = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array7_1a = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array7_1b = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array7_1c = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array7_2a = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array7_2b = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array7_2c = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array7_3a = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array7_3b = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array7_3c = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array7_4a = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array7_4b = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array7_4c = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array7_5a = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array7_5b = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array7_5c = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array7_6a = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array7_6b = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array7_6c = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array9_1a = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array9_1b = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array9_1c = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array9_2a = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array9_2b = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array9_2c = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array17_2a = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array17_2b = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array17_2c = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array18_1a = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array18_1b = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array18_1c = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array18_2a = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array18_2b = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array18_2c = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            arrayA = o_mei_solid_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
-            arrayB = r_md_solid_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
-            arrayC = nv_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
-            arrayD = r_ebw_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            arrayE = r_wbe_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            arrayF = r_fat_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            arrayG = r_muscle_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            arrayH = r_viscera_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            arrayI = r_w_f_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            arrayJ = o_cfw_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            array7_0a = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_0b = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_0c = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_1a = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_1b = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_1c = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_2a = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_2b = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_2c = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_3a = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_3b = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_3c = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_4a = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_4b = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_4c = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_5a = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_5b = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_5c = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_6a = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_6b = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_6c = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array9_1a = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array9_1b = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array9_1c = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array9_2a = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array9_2b = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array9_2c = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array17_2a = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array17_2b = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array17_2c = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array18_1a = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array18_1b = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array18_1c = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array18_2a = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array18_2b = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array18_2c = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            arrayA = o_mei_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
+            arrayB = r_md_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
+            arrayC = nv_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
+            arrayD = r_ebw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            arrayE = r_wbe_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            arrayF = r_fat_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            arrayG = r_muscle_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            arrayH = r_viscera_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            arrayI = r_w_f_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            arrayJ = o_cfw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
 
             ##calculations for the extra sheets
-            array_calc7_3a = sfun.f1_weight2energy(cg_offs, array7_3a, 0)
-            array_calc7_3b = sfun.f1_weight2energy(cg_offs, array7_3b, 0)
-            array_calc7_3c = sfun.f1_weight2energy(cg_offs, array7_3c, 0)
-            array_calc7_4a = sfun.f1_weight2energy(cg_offs, array7_4a, 1)
-            array_calc7_4b = sfun.f1_weight2energy(cg_offs, array7_4b, 1)
-            array_calc7_4c = sfun.f1_weight2energy(cg_offs, array7_4c, 1)
-            array_calc7_5a = sfun.f1_weight2energy(cg_offs, array7_5a, 2)
-            array_calc7_5b = sfun.f1_weight2energy(cg_offs, array7_5b, 2)
-            array_calc7_5c = sfun.f1_weight2energy(cg_offs, array7_5c, 2)
+            array_calc7_3a = sfun.f1_weight_energy_conversion(cg_dams, 0, weight=array7_3a)
+            array_calc7_3b = sfun.f1_weight_energy_conversion(cg_dams, 0, weight=array7_3b)
+            array_calc7_3c = sfun.f1_weight_energy_conversion(cg_dams, 0, weight=array7_3c)
+            array_calc7_4a = sfun.f1_weight_energy_conversion(cg_dams, 1, weight=array7_4a)
+            array_calc7_4b = sfun.f1_weight_energy_conversion(cg_dams, 1, weight=array7_4b)
+            array_calc7_4c = sfun.f1_weight_energy_conversion(cg_dams, 1, weight=array7_4c)
+            array_calc7_5a = sfun.f1_weight_energy_conversion(cg_dams, 2, weight=array7_5a)
+            array_calc7_5b = sfun.f1_weight_energy_conversion(cg_dams, 2, weight=array7_5b)
+            array_calc7_5c = sfun.f1_weight_energy_conversion(cg_dams, 2, weight=array7_5c)
             ###retained energy = df + dm + dv + dc + dw + dl
             array_calc7_6a = array_calc7_3a + array_calc7_4a + array_calc7_5a + array9_1a + array17_2a + array18_1a
             array_calc7_6b = array_calc7_3b + array_calc7_4b + array_calc7_5b + array9_1b + array17_2b + array18_1b
             array_calc7_6c = array_calc7_3c + array_calc7_4c + array_calc7_5c + array9_1c + array17_2c + array18_1c
-            array_calcF = sfun.f1_weight2energy(cg_offs, arrayF, 0)
-            array_calcG = sfun.f1_weight2energy(cg_offs, arrayG, 1)
-            array_calcH = sfun.f1_weight2energy(cg_offs, arrayH, 2)
+            array_calcF = sfun.f1_weight_energy_conversion(cg_dams, 0, weight=arrayF)
+            array_calcG = sfun.f1_weight_energy_conversion(cg_dams, 1, weight=arrayG)
+            array_calcH = sfun.f1_weight_energy_conversion(cg_dams, 2, weight=arrayH)
+
+            ## Assign Offspring values to the array variables
+            # array7_0a = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_0b = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_0c = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_1a = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_1b = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_1c = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_2a = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_2b = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_2c = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_3a = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_3b = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_3c = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_4a = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_4b = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_4c = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_5a = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_5b = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_5c = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_6a = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_6b = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_6c = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array9_1a = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array9_1b = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array9_1c = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array9_2a = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array9_2b = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array9_2c = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array17_2a = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array17_2b = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array17_2c = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array18_1a = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array18_1b = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array18_1c = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array18_2a = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array18_2b = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array18_2c = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # arrayA = o_mei_solid_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
+            # arrayB = r_md_solid_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
+            # arrayC = nv_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
+            # arrayD = r_ebw_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            # arrayE = r_wbe_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            # arrayF = r_fat_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            # arrayG = r_muscle_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            # arrayH = r_viscera_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            # arrayI = r_w_f_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            # arrayJ = o_cfw_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            #
+            # ##calculations for the extra sheets
+            # array_calc7_3a = sfun.f1_weight_energy_conversion(cg_offs, 0, weight=array7_3a)
+            # array_calc7_3b = sfun.f1_weight_energy_conversion(cg_offs, 0, weight=array7_3b)
+            # array_calc7_3c = sfun.f1_weight_energy_conversion(cg_offs, 0, weight=array7_3c)
+            # array_calc7_4a = sfun.f1_weight_energy_conversion(cg_offs, 1, weight=array7_4a)
+            # array_calc7_4b = sfun.f1_weight_energy_conversion(cg_offs, 1, weight=array7_4b)
+            # array_calc7_4c = sfun.f1_weight_energy_conversion(cg_offs, 1, weight=array7_4c)
+            # array_calc7_5a = sfun.f1_weight_energy_conversion(cg_offs, 2, weight=array7_5a)
+            # array_calc7_5b = sfun.f1_weight_energy_conversion(cg_offs, 2, weight=array7_5b)
+            # array_calc7_5c = sfun.f1_weight_energy_conversion(cg_offs, 2, weight=array7_5c)
+            # ###retained energy = df + dm + dv + dc + dw + dl
+            # array_calc7_6a = array_calc7_3a + array_calc7_4a + array_calc7_5a + array9_1a + array17_2a + array18_1a
+            # array_calc7_6b = array_calc7_3b + array_calc7_4b + array_calc7_5b + array9_1b + array17_2b + array18_1b
+            # array_calc7_6c = array_calc7_3c + array_calc7_4c + array_calc7_5c + array9_1c + array17_2c + array18_1c
+            # array_calcF = sfun.f1_weight_energy_conversion(cg_offs, 0, weight=arrayF)
+            # array_calcG = sfun.f1_weight_energy_conversion(cg_offs, 1, weight=arrayG)
+            # array_calcH = sfun.f1_weight_energy_conversion(cg_offs, 2, weight=arrayH)
 
 
         except: #do not write the trial if any of the variables don't exist
             print('Error when setting up the variables for saving in Excel - check the variables exist and are sliced appropriately')
         else:  #Carry out this code if array was successfully created
             ##comment out either dams or offs because only one can be save to Excel unless array names and df names are expanded.
-            # df7_0a = rfun.f_numpy2df(array7_0a, keys_q0p, [1], [0])
-            # df7_0b = rfun.f_numpy2df(array7_0b, keys_q0p, [1], [0])
-            # df7_0c = rfun.f_numpy2df(array7_0c, keys_q0p, [1], [0])
-            # df7_1a = rfun.f_numpy2df(array7_1a, keys_q0p, [1], [0])
-            # df7_1b = rfun.f_numpy2df(array7_1b, keys_q0p, [1], [0])
-            # df7_1c = rfun.f_numpy2df(array7_1c, keys_q0p, [1], [0])
-            # df7_2a = rfun.f_numpy2df(array7_2a, keys_q0p, [1], [0])
-            # df7_2b = rfun.f_numpy2df(array7_2b, keys_q0p, [1], [0])
-            # df7_2c = rfun.f_numpy2df(array7_2c, keys_q0p, [1], [0])
-            # df7_3a = rfun.f_numpy2df(array7_3a, keys_q0p, [1], [0])
-            # df7_3b = rfun.f_numpy2df(array7_3b, keys_q0p, [1], [0])
-            # df7_3c = rfun.f_numpy2df(array7_3c, keys_q0p, [1], [0])
-            # df7_4a = rfun.f_numpy2df(array7_4a, keys_q0p, [1], [0])
-            # df7_4b = rfun.f_numpy2df(array7_4b, keys_q0p, [1], [0])
-            # df7_4c = rfun.f_numpy2df(array7_4c, keys_q0p, [1], [0])
-            # df7_5a = rfun.f_numpy2df(array7_5a, keys_q0p, [1], [0])
-            # df7_5b = rfun.f_numpy2df(array7_5b, keys_q0p, [1], [0])
-            # df7_5c = rfun.f_numpy2df(array7_5c, keys_q0p, [1], [0])
-            # df7_6a = rfun.f_numpy2df(array7_6a, keys_q0p, [1], [0])
-            # df7_6b = rfun.f_numpy2df(array7_6b, keys_q0p, [1], [0])
-            # df7_6c = rfun.f_numpy2df(array7_6c, keys_q0p, [1], [0])
-            # df9_1a = rfun.f_numpy2df(array9_1a, keys_q0p, [1], [0])
-            # df9_1b = rfun.f_numpy2df(array9_1b, keys_q0p, [1], [0])
-            # df9_1c = rfun.f_numpy2df(array9_1c, keys_q0p, [1], [0])
-            # df9_2a = rfun.f_numpy2df(array9_2a, keys_q0p, [1], [0])
-            # df9_2b = rfun.f_numpy2df(array9_2b, keys_q0p, [1], [0])
-            # df9_2c = rfun.f_numpy2df(array9_2c, keys_q0p, [1], [0])
-            # df17_2a = rfun.f_numpy2df(array17_2a, keys_q0p, [1], [0])
-            # df17_2b = rfun.f_numpy2df(array17_2b, keys_q0p, [1], [0])
-            # df17_2c = rfun.f_numpy2df(array17_2c, keys_q0p, [1], [0])
-            # df18_1a = rfun.f_numpy2df(array18_1a, keys_q0p, [1], [0])
-            # df18_1b = rfun.f_numpy2df(array18_1b, keys_q0p, [1], [0])
-            # df18_1c = rfun.f_numpy2df(array18_1c, keys_q0p, [1], [0])
-            # df18_2a = rfun.f_numpy2df(array18_2a, keys_q0p, [1], [0])
-            # df18_2b = rfun.f_numpy2df(array18_2b, keys_q0p, [1], [0])
-            # df18_2c = rfun.f_numpy2df(array18_2c, keys_q0p, [1], [0])
-            # dfA = rfun.f_numpy2df(arrayA, keys_bp, [1], [0])
-            # dfB = rfun.f_numpy2df(arrayB, keys_bp, [1], [0])
-            # dfC = rfun.f_numpy2df(arrayC, keys_bp, [1], [0])
-            # dfD = rfun.f_numpy2df(arrayD, keys_bp, [1], [0])
-            # dfE = rfun.f_numpy2df(arrayE, keys_bp, [1], [0])
-            # dfF = rfun.f_numpy2df(arrayF, keys_bp, [1], [0])
-            # dfG = rfun.f_numpy2df(arrayG, keys_bp, [1], [0])
-            # dfH = rfun.f_numpy2df(arrayH, keys_bp, [1], [0])
-            # dfI = rfun.f_numpy2df(arrayI, keys_bp, [1], [0])
-            # dfJ = rfun.f_numpy2df(arrayJ, keys_bp, [1], [0])
-            #
-            # ## the extra calculation arrays
-            # df_calc7_3a = rfun.f_numpy2df(array_calc7_3a, keys_q0p, [1], [0])
-            # df_calc7_3b = rfun.f_numpy2df(array_calc7_3b, keys_q0p, [1], [0])
-            # df_calc7_3c = rfun.f_numpy2df(array_calc7_3c, keys_q0p, [1], [0])
-            # df_calc7_4a = rfun.f_numpy2df(array_calc7_4a, keys_q0p, [1], [0])
-            # df_calc7_4b = rfun.f_numpy2df(array_calc7_4b, keys_q0p, [1], [0])
-            # df_calc7_4c = rfun.f_numpy2df(array_calc7_4c, keys_q0p, [1], [0])
-            # df_calc7_5a = rfun.f_numpy2df(array_calc7_5a, keys_q0p, [1], [0])
-            # df_calc7_5b = rfun.f_numpy2df(array_calc7_5b, keys_q0p, [1], [0])
-            # df_calc7_5c = rfun.f_numpy2df(array_calc7_5c, keys_q0p, [1], [0])
-            # df_calc7_6a = rfun.f_numpy2df(array_calc7_6a, keys_q0p, [1], [0])
-            # df_calc7_6b = rfun.f_numpy2df(array_calc7_6b, keys_q0p, [1], [0])
-            # df_calc7_6c = rfun.f_numpy2df(array_calc7_6c, keys_q0p, [1], [0])
-            # df_calcF = rfun.f_numpy2df(array_calcF, keys_bp, [1], [0])
-            # df_calcG = rfun.f_numpy2df(array_calcG, keys_bp, [1], [0])
-            # df_calcH = rfun.f_numpy2df(array_calcH, keys_bp, [1], [0])
-
-            df7_0a = rfun.f_numpy2df(array7_0a, keys_q0p3, [1], [0])
-            df7_0b = rfun.f_numpy2df(array7_0b, keys_q0p3, [1], [0])
-            df7_0c = rfun.f_numpy2df(array7_0c, keys_q0p3, [1], [0])
-            df7_1a = rfun.f_numpy2df(array7_1a, keys_q0p3, [1], [0])
-            df7_1b = rfun.f_numpy2df(array7_1b, keys_q0p3, [1], [0])
-            df7_1c = rfun.f_numpy2df(array7_1c, keys_q0p3, [1], [0])
-            df7_2a = rfun.f_numpy2df(array7_2a, keys_q0p3, [1], [0])
-            df7_2b = rfun.f_numpy2df(array7_2b, keys_q0p3, [1], [0])
-            df7_2c = rfun.f_numpy2df(array7_2c, keys_q0p3, [1], [0])
-            df7_3a = rfun.f_numpy2df(array7_3a, keys_q0p3, [1], [0])
-            df7_3b = rfun.f_numpy2df(array7_3b, keys_q0p3, [1], [0])
-            df7_3c = rfun.f_numpy2df(array7_3c, keys_q0p3, [1], [0])
-            df7_4a = rfun.f_numpy2df(array7_4a, keys_q0p3, [1], [0])
-            df7_4b = rfun.f_numpy2df(array7_4b, keys_q0p3, [1], [0])
-            df7_4c = rfun.f_numpy2df(array7_4c, keys_q0p3, [1], [0])
-            df7_5a = rfun.f_numpy2df(array7_5a, keys_q0p3, [1], [0])
-            df7_5b = rfun.f_numpy2df(array7_5b, keys_q0p3, [1], [0])
-            df7_5c = rfun.f_numpy2df(array7_5c, keys_q0p3, [1], [0])
-            df7_6a = rfun.f_numpy2df(array7_6a, keys_q0p3, [1], [0])
-            df7_6b = rfun.f_numpy2df(array7_6b, keys_q0p3, [1], [0])
-            df7_6c = rfun.f_numpy2df(array7_6c, keys_q0p3, [1], [0])
-            df9_1a = rfun.f_numpy2df(array9_1a, keys_q0p3, [1], [0])
-            df9_1b = rfun.f_numpy2df(array9_1b, keys_q0p3, [1], [0])
-            df9_1c = rfun.f_numpy2df(array9_1c, keys_q0p3, [1], [0])
-            df9_2a = rfun.f_numpy2df(array9_2a, keys_q0p3, [1], [0])
-            df9_2b = rfun.f_numpy2df(array9_2b, keys_q0p3, [1], [0])
-            df9_2c = rfun.f_numpy2df(array9_2c, keys_q0p3, [1], [0])
-            df17_2a = rfun.f_numpy2df(array17_2a, keys_q0p3, [1], [0])
-            df17_2b = rfun.f_numpy2df(array17_2b, keys_q0p3, [1], [0])
-            df17_2c = rfun.f_numpy2df(array17_2c, keys_q0p3, [1], [0])
-            df18_1a = rfun.f_numpy2df(array18_1a, keys_q0p3, [1], [0])
-            df18_1b = rfun.f_numpy2df(array18_1b, keys_q0p3, [1], [0])
-            df18_1c = rfun.f_numpy2df(array18_1c, keys_q0p3, [1], [0])
-            df18_2a = rfun.f_numpy2df(array18_2a, keys_q0p3, [1], [0])
-            df18_2b = rfun.f_numpy2df(array18_2b, keys_q0p3, [1], [0])
-            df18_2c = rfun.f_numpy2df(array18_2c, keys_q0p3, [1], [0])
-            dfA = rfun.f_numpy2df(arrayA, keys_bp3, [1], [0])
-            dfB = rfun.f_numpy2df(arrayB, keys_bp3, [1], [0])
-            dfC = rfun.f_numpy2df(arrayC, keys_bp3, [1], [0])
-            dfD = rfun.f_numpy2df(arrayD, keys_bp3, [1], [0])
-            dfE = rfun.f_numpy2df(arrayE, keys_bp3, [1], [0])
-            dfF = rfun.f_numpy2df(arrayF, keys_bp3, [1], [0])
-            dfG = rfun.f_numpy2df(arrayG, keys_bp3, [1], [0])
-            dfH = rfun.f_numpy2df(arrayH, keys_bp3, [1], [0])
-            dfI = rfun.f_numpy2df(arrayI, keys_bp3, [1], [0])
-            dfJ = rfun.f_numpy2df(arrayJ, keys_bp3, [1], [0])
+            df7_0a = rfun.f_numpy2df(array7_0a, keys_q0p, [1], [0])
+            df7_0b = rfun.f_numpy2df(array7_0b, keys_q0p, [1], [0])
+            df7_0c = rfun.f_numpy2df(array7_0c, keys_q0p, [1], [0])
+            df7_1a = rfun.f_numpy2df(array7_1a, keys_q0p, [1], [0])
+            df7_1b = rfun.f_numpy2df(array7_1b, keys_q0p, [1], [0])
+            df7_1c = rfun.f_numpy2df(array7_1c, keys_q0p, [1], [0])
+            df7_2a = rfun.f_numpy2df(array7_2a, keys_q0p, [1], [0])
+            df7_2b = rfun.f_numpy2df(array7_2b, keys_q0p, [1], [0])
+            df7_2c = rfun.f_numpy2df(array7_2c, keys_q0p, [1], [0])
+            df7_3a = rfun.f_numpy2df(array7_3a, keys_q0p, [1], [0])
+            df7_3b = rfun.f_numpy2df(array7_3b, keys_q0p, [1], [0])
+            df7_3c = rfun.f_numpy2df(array7_3c, keys_q0p, [1], [0])
+            df7_4a = rfun.f_numpy2df(array7_4a, keys_q0p, [1], [0])
+            df7_4b = rfun.f_numpy2df(array7_4b, keys_q0p, [1], [0])
+            df7_4c = rfun.f_numpy2df(array7_4c, keys_q0p, [1], [0])
+            df7_5a = rfun.f_numpy2df(array7_5a, keys_q0p, [1], [0])
+            df7_5b = rfun.f_numpy2df(array7_5b, keys_q0p, [1], [0])
+            df7_5c = rfun.f_numpy2df(array7_5c, keys_q0p, [1], [0])
+            df7_6a = rfun.f_numpy2df(array7_6a, keys_q0p, [1], [0])
+            df7_6b = rfun.f_numpy2df(array7_6b, keys_q0p, [1], [0])
+            df7_6c = rfun.f_numpy2df(array7_6c, keys_q0p, [1], [0])
+            df9_1a = rfun.f_numpy2df(array9_1a, keys_q0p, [1], [0])
+            df9_1b = rfun.f_numpy2df(array9_1b, keys_q0p, [1], [0])
+            df9_1c = rfun.f_numpy2df(array9_1c, keys_q0p, [1], [0])
+            df9_2a = rfun.f_numpy2df(array9_2a, keys_q0p, [1], [0])
+            df9_2b = rfun.f_numpy2df(array9_2b, keys_q0p, [1], [0])
+            df9_2c = rfun.f_numpy2df(array9_2c, keys_q0p, [1], [0])
+            df17_2a = rfun.f_numpy2df(array17_2a, keys_q0p, [1], [0])
+            df17_2b = rfun.f_numpy2df(array17_2b, keys_q0p, [1], [0])
+            df17_2c = rfun.f_numpy2df(array17_2c, keys_q0p, [1], [0])
+            df18_1a = rfun.f_numpy2df(array18_1a, keys_q0p, [1], [0])
+            df18_1b = rfun.f_numpy2df(array18_1b, keys_q0p, [1], [0])
+            df18_1c = rfun.f_numpy2df(array18_1c, keys_q0p, [1], [0])
+            df18_2a = rfun.f_numpy2df(array18_2a, keys_q0p, [1], [0])
+            df18_2b = rfun.f_numpy2df(array18_2b, keys_q0p, [1], [0])
+            df18_2c = rfun.f_numpy2df(array18_2c, keys_q0p, [1], [0])
+            dfA = rfun.f_numpy2df(arrayA, keys_bp, [1], [0])
+            dfB = rfun.f_numpy2df(arrayB, keys_bp, [1], [0])
+            dfC = rfun.f_numpy2df(arrayC, keys_bp, [1], [0])
+            dfD = rfun.f_numpy2df(arrayD, keys_bp, [1], [0])
+            dfE = rfun.f_numpy2df(arrayE, keys_bp, [1], [0])
+            dfF = rfun.f_numpy2df(arrayF, keys_bp, [1], [0])
+            dfG = rfun.f_numpy2df(arrayG, keys_bp, [1], [0])
+            dfH = rfun.f_numpy2df(arrayH, keys_bp, [1], [0])
+            dfI = rfun.f_numpy2df(arrayI, keys_bp, [1], [0])
+            dfJ = rfun.f_numpy2df(arrayJ, keys_bp, [1], [0])
 
             ## the extra calculation arrays
-            df_calc7_3a = rfun.f_numpy2df(array_calc7_3a, keys_q0p3, [1], [0])
-            df_calc7_3b = rfun.f_numpy2df(array_calc7_3b, keys_q0p3, [1], [0])
-            df_calc7_3c = rfun.f_numpy2df(array_calc7_3c, keys_q0p3, [1], [0])
-            df_calc7_4a = rfun.f_numpy2df(array_calc7_4a, keys_q0p3, [1], [0])
-            df_calc7_4b = rfun.f_numpy2df(array_calc7_4b, keys_q0p3, [1], [0])
-            df_calc7_4c = rfun.f_numpy2df(array_calc7_4c, keys_q0p3, [1], [0])
-            df_calc7_5a = rfun.f_numpy2df(array_calc7_5a, keys_q0p3, [1], [0])
-            df_calc7_5b = rfun.f_numpy2df(array_calc7_5b, keys_q0p3, [1], [0])
-            df_calc7_5c = rfun.f_numpy2df(array_calc7_5c, keys_q0p3, [1], [0])
-            df_calc7_6a = rfun.f_numpy2df(array_calc7_6a, keys_q0p3, [1], [0])
-            df_calc7_6b = rfun.f_numpy2df(array_calc7_6b, keys_q0p3, [1], [0])
-            df_calc7_6c = rfun.f_numpy2df(array_calc7_6c, keys_q0p3, [1], [0])
-            df_calcF = rfun.f_numpy2df(array_calcF, keys_bp3, [1], [0])
-            df_calcG = rfun.f_numpy2df(array_calcG, keys_bp3, [1], [0])
-            df_calcH = rfun.f_numpy2df(array_calcH, keys_bp3, [1], [0])
+            df_calc7_3a = rfun.f_numpy2df(array_calc7_3a, keys_q0p, [1], [0])
+            df_calc7_3b = rfun.f_numpy2df(array_calc7_3b, keys_q0p, [1], [0])
+            df_calc7_3c = rfun.f_numpy2df(array_calc7_3c, keys_q0p, [1], [0])
+            df_calc7_4a = rfun.f_numpy2df(array_calc7_4a, keys_q0p, [1], [0])
+            df_calc7_4b = rfun.f_numpy2df(array_calc7_4b, keys_q0p, [1], [0])
+            df_calc7_4c = rfun.f_numpy2df(array_calc7_4c, keys_q0p, [1], [0])
+            df_calc7_5a = rfun.f_numpy2df(array_calc7_5a, keys_q0p, [1], [0])
+            df_calc7_5b = rfun.f_numpy2df(array_calc7_5b, keys_q0p, [1], [0])
+            df_calc7_5c = rfun.f_numpy2df(array_calc7_5c, keys_q0p, [1], [0])
+            df_calc7_6a = rfun.f_numpy2df(array_calc7_6a, keys_q0p, [1], [0])
+            df_calc7_6b = rfun.f_numpy2df(array_calc7_6b, keys_q0p, [1], [0])
+            df_calc7_6c = rfun.f_numpy2df(array_calc7_6c, keys_q0p, [1], [0])
+            df_calcF = rfun.f_numpy2df(array_calcF, keys_bp, [1], [0])
+            df_calcG = rfun.f_numpy2df(array_calcG, keys_bp, [1], [0])
+            df_calcH = rfun.f_numpy2df(array_calcH, keys_bp, [1], [0])
+
+            # df7_0a = rfun.f_numpy2df(array7_0a, keys_q0p3, [1], [0])
+            # df7_0b = rfun.f_numpy2df(array7_0b, keys_q0p3, [1], [0])
+            # df7_0c = rfun.f_numpy2df(array7_0c, keys_q0p3, [1], [0])
+            # df7_1a = rfun.f_numpy2df(array7_1a, keys_q0p3, [1], [0])
+            # df7_1b = rfun.f_numpy2df(array7_1b, keys_q0p3, [1], [0])
+            # df7_1c = rfun.f_numpy2df(array7_1c, keys_q0p3, [1], [0])
+            # df7_2a = rfun.f_numpy2df(array7_2a, keys_q0p3, [1], [0])
+            # df7_2b = rfun.f_numpy2df(array7_2b, keys_q0p3, [1], [0])
+            # df7_2c = rfun.f_numpy2df(array7_2c, keys_q0p3, [1], [0])
+            # df7_3a = rfun.f_numpy2df(array7_3a, keys_q0p3, [1], [0])
+            # df7_3b = rfun.f_numpy2df(array7_3b, keys_q0p3, [1], [0])
+            # df7_3c = rfun.f_numpy2df(array7_3c, keys_q0p3, [1], [0])
+            # df7_4a = rfun.f_numpy2df(array7_4a, keys_q0p3, [1], [0])
+            # df7_4b = rfun.f_numpy2df(array7_4b, keys_q0p3, [1], [0])
+            # df7_4c = rfun.f_numpy2df(array7_4c, keys_q0p3, [1], [0])
+            # df7_5a = rfun.f_numpy2df(array7_5a, keys_q0p3, [1], [0])
+            # df7_5b = rfun.f_numpy2df(array7_5b, keys_q0p3, [1], [0])
+            # df7_5c = rfun.f_numpy2df(array7_5c, keys_q0p3, [1], [0])
+            # df7_6a = rfun.f_numpy2df(array7_6a, keys_q0p3, [1], [0])
+            # df7_6b = rfun.f_numpy2df(array7_6b, keys_q0p3, [1], [0])
+            # df7_6c = rfun.f_numpy2df(array7_6c, keys_q0p3, [1], [0])
+            # df9_1a = rfun.f_numpy2df(array9_1a, keys_q0p3, [1], [0])
+            # df9_1b = rfun.f_numpy2df(array9_1b, keys_q0p3, [1], [0])
+            # df9_1c = rfun.f_numpy2df(array9_1c, keys_q0p3, [1], [0])
+            # df9_2a = rfun.f_numpy2df(array9_2a, keys_q0p3, [1], [0])
+            # df9_2b = rfun.f_numpy2df(array9_2b, keys_q0p3, [1], [0])
+            # df9_2c = rfun.f_numpy2df(array9_2c, keys_q0p3, [1], [0])
+            # df17_2a = rfun.f_numpy2df(array17_2a, keys_q0p3, [1], [0])
+            # df17_2b = rfun.f_numpy2df(array17_2b, keys_q0p3, [1], [0])
+            # df17_2c = rfun.f_numpy2df(array17_2c, keys_q0p3, [1], [0])
+            # df18_1a = rfun.f_numpy2df(array18_1a, keys_q0p3, [1], [0])
+            # df18_1b = rfun.f_numpy2df(array18_1b, keys_q0p3, [1], [0])
+            # df18_1c = rfun.f_numpy2df(array18_1c, keys_q0p3, [1], [0])
+            # df18_2a = rfun.f_numpy2df(array18_2a, keys_q0p3, [1], [0])
+            # df18_2b = rfun.f_numpy2df(array18_2b, keys_q0p3, [1], [0])
+            # df18_2c = rfun.f_numpy2df(array18_2c, keys_q0p3, [1], [0])
+            # dfA = rfun.f_numpy2df(arrayA, keys_bp3, [1], [0])
+            # dfB = rfun.f_numpy2df(arrayB, keys_bp3, [1], [0])
+            # dfC = rfun.f_numpy2df(arrayC, keys_bp3, [1], [0])
+            # dfD = rfun.f_numpy2df(arrayD, keys_bp3, [1], [0])
+            # dfE = rfun.f_numpy2df(arrayE, keys_bp3, [1], [0])
+            # dfF = rfun.f_numpy2df(arrayF, keys_bp3, [1], [0])
+            # dfG = rfun.f_numpy2df(arrayG, keys_bp3, [1], [0])
+            # dfH = rfun.f_numpy2df(arrayH, keys_bp3, [1], [0])
+            # dfI = rfun.f_numpy2df(arrayI, keys_bp3, [1], [0])
+            # dfJ = rfun.f_numpy2df(arrayJ, keys_bp3, [1], [0])
+            #
+            # ## the extra calculation arrays
+            # df_calc7_3a = rfun.f_numpy2df(array_calc7_3a, keys_q0p3, [1], [0])
+            # df_calc7_3b = rfun.f_numpy2df(array_calc7_3b, keys_q0p3, [1], [0])
+            # df_calc7_3c = rfun.f_numpy2df(array_calc7_3c, keys_q0p3, [1], [0])
+            # df_calc7_4a = rfun.f_numpy2df(array_calc7_4a, keys_q0p3, [1], [0])
+            # df_calc7_4b = rfun.f_numpy2df(array_calc7_4b, keys_q0p3, [1], [0])
+            # df_calc7_4c = rfun.f_numpy2df(array_calc7_4c, keys_q0p3, [1], [0])
+            # df_calc7_5a = rfun.f_numpy2df(array_calc7_5a, keys_q0p3, [1], [0])
+            # df_calc7_5b = rfun.f_numpy2df(array_calc7_5b, keys_q0p3, [1], [0])
+            # df_calc7_5c = rfun.f_numpy2df(array_calc7_5c, keys_q0p3, [1], [0])
+            # df_calc7_6a = rfun.f_numpy2df(array_calc7_6a, keys_q0p3, [1], [0])
+            # df_calc7_6b = rfun.f_numpy2df(array_calc7_6b, keys_q0p3, [1], [0])
+            # df_calc7_6c = rfun.f_numpy2df(array_calc7_6c, keys_q0p3, [1], [0])
+            # df_calcF = rfun.f_numpy2df(array_calcF, keys_bp3, [1], [0])
+            # df_calcG = rfun.f_numpy2df(array_calcG, keys_bp3, [1], [0])
+            # df_calcH = rfun.f_numpy2df(array_calcH, keys_bp3, [1], [0])
 
             print("Writing to Excel")
             ##first check that Excel is not open (Microsoft puts a lock on files, so they can't be updated from elsewhere while open)
