@@ -1692,10 +1692,12 @@ def f_lwc_mu(cg, rc_start, mei_initial, meme, mew, new, zf1, zf2, kge, kf, kp, h
     nemuscle = f1_rev_update('muscle', nemuscle, rev_trait_value)
     nefat = f1_rev_update('fat', nefat, rev_trait_value)
     ebg = f1_rev_update('lwc', ebg_prior, rev_trait_value)
-    ###Step 10b: Scale the energy traits if ebg is the target trait. So LW change has a corresponding energy requirement
-    ###Scale so that the sum of the components equals the ebg using the proportions from the rev'd energy components
-    ### If EBG is the target trait it wouldn't be overwritten by f1_rev_update, therefore equal value before and after
+    ###Step 10b: Scale the energy traits if ebg is the target trait, so that LW change requires energy.
+    ###Scaling adjusts the components, holding body composition constant, the back calc then alters MEI.
+    ###If EBG is the target trait it wouldn't be overwritten by f1_rev_update, therefore equal value before and after
     ###Note: if ebg is not changed by the SA on the target trait then energy will be scaled but scalar = 1
+    ###Scaling doesn't occur if the EBG is altered by f1_rev_update. This happens if the target trait is one of the
+    ### components traits. An implied assumption is that the component traits do not change animal sale value.
     if np.allclose(ebg, ebg_prior, equal_nan=True):     #either not doing REVs or ebg is the target trait or the REV SA doesn't alter ebg
         d_fat = f1_weight_energy_conversion(cg, 0, energy=nefat)
         d_muscle = f1_weight_energy_conversion(cg, 1, energy=nemuscle)
@@ -1840,10 +1842,12 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_ma
     dm = f1_rev_update('muscle', dm, rev_trait_value)
     df = f1_rev_update('fat', df, rev_trait_value)
     ebg = f1_rev_update('lwc', ebg_components, rev_trait_value)
-    ###Step 10b: Scale the energy traits if ebg is the target trait. So LW change has a corresponding energy requirement
-    ###Scale so that the sum of the components equals the ebg using the proportions from the rev'd energy components
-    ### If EBG is the target trait it wouldn't be overwritten by f1_rev_update, therefore equal value before and after
+    ###Step 10b: Scale the energy traits if ebg is the target trait, so that LW change requires energy.
+    ###Scaling adjusts the components, holding body composition constant, the back calc then alters MEI.
+    ###If EBG is the target trait it wouldn't be overwritten by f1_rev_update, therefore equal value before and after
     ###Note: if ebg is not changed by the SA on the target trait then energy will be scaled but scalar = 1
+    ###Scaling doesn't occur if the EBG is altered by f1_rev_update. This happens if the target trait is one of the
+    ### components traits. An implied assumption is that the component traits do not change animal sale value.
     if np.allclose(ebg, ebg_components, equal_nan=True):
         d_fat = f1_weight_energy_conversion(cg, 0, energy=df)
         d_muscle = f1_weight_energy_conversion(cg, 1, energy=dm)
