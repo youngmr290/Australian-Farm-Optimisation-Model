@@ -107,7 +107,7 @@ def f_buy_grain_price(r_vals):
     fun.f1_make_r_val(r_vals, r_buy_grain_price_ks2g_p7z, 'buy_grain_price', mask_season_p7z, z_pos=-1)
     return buy_grain_price_ks2gc1_p7z.unstack([2,0,1,3]).sort_index(), buy_grain_price_wc_ks2g_c0p7z.unstack([2,0,1]).sort_index(), buy_grain_prov_p7z
 
-def f_sup_cost(r_vals, nv):
+def f_sup_feeding_cost(r_vals, nv):
     '''
 
     Machinery, storage and depreciation costs incurred to feed 1t of supplement.
@@ -559,7 +559,7 @@ def f1_sup_selectivity():
 
 ##collates all the params
 def f_sup_params(params,r_vals, nv):
-    total_sup_cost, total_sup_wc, storage_dep, storage_asset, confinement_dep, co2e_fuel_fk = f_sup_cost(r_vals, nv)
+    total_sup_cost, total_sup_wc, storage_dep, storage_asset, confinement_dep, co2e_fuel_fk = f_sup_feeding_cost(r_vals, nv)
     vol_tonne, md_tonne = f_sup_md_vol(r_vals, nv)
     co2e_sup_consumption_fk = f_sup_emissions(r_vals, nv)
     sup_labour = f_sup_labour(nv)

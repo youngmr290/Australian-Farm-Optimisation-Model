@@ -218,8 +218,8 @@ def f_landuse_sets():
     landuse['W']={'W', 'w', 'wd'} #wheats
     landuse['U']={'u', 'U','x', 'X'} #lucerne
     landuse['X']={'x', 'X'} #lucerne
-    landuse['Y']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'
-                    , 'Y', 'B','O','W', 'N', 'K', 'L', 'F', 'OF'} #anything not pasture
+    landuse['Y']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'ms', 'v', 'z', 'zd', 'r', 'rd'
+                    , 'Y', 'B','O','W', 'N', 'K', 'L', 'MS', 'F', 'OF'} #anything not pasture
 
     landuse['a']={'a'}
     landuse['b']={'b'}

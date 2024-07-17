@@ -91,7 +91,7 @@ def f1_suppyomo_local(params, model):
 #functions for core model
 #######################################################################################################################################################
 #######################################################################################################################################################
-def f_sup_cost(model,q,s,p7,z):
+def f_sup_feeding_cost(model,q,s,p7,z):
     '''
     Calculate the total cost of feeding the selected level of supplement.
 
