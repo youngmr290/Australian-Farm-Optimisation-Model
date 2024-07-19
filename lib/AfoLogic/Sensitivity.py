@@ -63,7 +63,7 @@ def create_sa():
         len_t3 = pinp.sheep['i_t3_len']
     len_P = 500  #Capital P because it is an (over) estimate to initialise the p axes that will be sliced when len_p is known.
     len_p6 = len(pinp.period['i_fp_idx'])
-    len_q = sinp.structuralsa['i_len_q'] #number of years in MP model
+    len_Q = 20 #number of years in MP model - use a big number because len_q can be adjusted by SA
     len_V = 50  #Capital V because it is an (over) estimate to initialise the v axes that will be sliced when len_v is known.
     len_max_W1 = 3125 #number of nut options (i_nut_spread_n1 ** n_fvp) (this used to be calculated but the max possible was too big. This now assumes max n=5 and max fvp =5) #the max number of options for each starting w if all n and fvps included.
     len_max_W3 = 3125 #number of nut options (i_nut_spread_n3 ** n_fvp) (this used to be calculated but the max possible was too big. This now assumes max n=5 and max fvp =5) #the max number of options for each starting w if all n and fvps included.
@@ -158,7 +158,7 @@ def create_sa():
     sav['sale_ffcfw_max'] = np.full(len_s7, '-', dtype=object)        #max weight for sale in grid
     ##SAM
     sam['grainp_k'] = np.ones(len_k, dtype='float64')   # SA multiplier for grain prices for each crop
-    sam['q_grain_price_scalar_qk'] = np.ones((len_q, len_k), dtype='float64')   # SAM for grain price with q axis
+    sam['q_grain_price_scalar_Qk'] = np.ones((len_Q, len_k), dtype='float64')   # SAM for grain price with q axis
     sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron
     sam['salep_max_s7'] = np.ones(len_s7, dtype='float64')        #max sale price in grid
     sam['salep_month_adjust_s7s9p4'] = np.ones(uinp.sheep['i_salep_months_priceadj_s7s9p4'].shape, dtype='float64')      #monthly sale price

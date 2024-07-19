@@ -1129,8 +1129,8 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         ##create dict to store grain variables
         grain = {}
         ##prices
-        grains_sale_price_zks2g_p7 = r_vals['crop']['grain_price'].stack().reorder_levels([3,0,1,2]).sort_index()
-        grains_buy_price_zks2g_p7 = r_vals['sup']['buy_grain_price'].stack().reorder_levels([3,0,1,2]).sort_index()
+        grains_sale_price_zks2gq_p7 = r_vals['crop']['grain_price'].stack([0,2]).reorder_levels([4,0,1,2,3]).sort_index()
+        grains_buy_price_zks2gq_p7 = r_vals['sup']['buy_grain_price'].stack([0,2]).reorder_levels([4,0,1,2,3]).sort_index()
 
         ##grain purchased
         grain_purchased_qsp7zks2g = f_vars2df(lp_vars,'v_buy_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
@@ -1152,8 +1152,8 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         total_grain_produced_zks2gqs = grain_sold_zks2gqs + grain_fed_zks2gqs - grain_purchased_zks2gqs  # total grain produced by crop enterprise
         if option==5:
             return total_grain_produced_zks2gqs
-        grains_sale_price_zks2gqs_p7 = grains_sale_price_zks2g_p7.reindex(total_grain_produced_zks2gqs.index, axis=0)
-        grains_buy_price_zks2gqs_p7 = grains_buy_price_zks2g_p7.reindex(total_grain_produced_zks2gqs.index, axis=0)
+        grains_sale_price_zks2gqs_p7 = grains_sale_price_zks2gq_p7.reindex(total_grain_produced_zks2gqs.index, axis=0)
+        grains_buy_price_zks2gqs_p7 = grains_buy_price_zks2gq_p7.reindex(total_grain_produced_zks2gqs.index, axis=0)
         rev_grain_k_p7zqs = grains_sale_price_zks2gqs_p7.mul(total_grain_produced_zks2gqs, axis=0).unstack([0,4,5]).groupby(axis=0, level=0).sum()  # sum grain pool and s2
         grain['rev_grain_k_p7zqs'] = rev_grain_k_p7zqs
 
@@ -3039,9 +3039,9 @@ def f_lupin_analysis(lp_vars, r_vals, trial):
             legume_area = np.sum(legume_area_qsz * z_prob_qsz.ravel())
             summary_df.loc[trial, '{0} Area'.format(legume_name)] = fun.f_divide(legume_area, total_legume_area)
             ##expected legume income - uses average legume yield in all rotations on the base lmu (this matches the yield graph on web app)
-            legume_price_p7z = r_vals['crop']['grain_price'].loc[(legume_key,"Harv","firsts"),:]
-            legume_price_z = legume_price_p7z.groupby(level=1).sum() #sum p7 - price should only exist in one p7 period
-            legume_price = np.sum(legume_price_z.values * z_prob_qsz) #avevrage price across z
+            legume_price_qp7z = r_vals['crop']['grain_price'].loc[(legume_key,"Harv","firsts"),:]
+            legume_price_qz = legume_price_qp7z.groupby(level=(0,2)).sum() #sum p7 - price should only exist in one p7 period
+            legume_price = np.sum(legume_price_qz.unstack().values[:,na,:] * z_prob_qsz) #avevrage price across q and z
             expected_yields_k_z = r_vals['crop']['base_yields_k_z']
             expected_yields_k_z = expected_yields_k_z.reindex(r_vals['pas']['keys_k'], axis=0).fillna(0)  # expand to full k (incase landuses were masked out) and unused landuses get set to 0
             expected_legume_yield_z = expected_yields_k_z.loc[legume_key,:]

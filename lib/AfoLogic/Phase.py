@@ -173,7 +173,7 @@ def f_farmgate_grain_price(r_vals={}):
     len_q = sinp.structuralsa['i_len_q'] #number of years in MP model
     keys_q = np.array(['q%s' % i for i in range(len_q)])
     keys_k1 = sinp.general['i_idx_k1']
-    q_grain_price_scalar_q_k = pd.DataFrame(sen.sam['q_grain_price_scalar_qk'][:,pinp.crop_landuse_mask_k1], index = keys_q, columns=keys_k1)
+    q_grain_price_scalar_q_k = pd.DataFrame(sen.sam['q_grain_price_scalar_Qk'][0:len_q,pinp.crop_landuse_mask_k1], index = keys_q, columns=keys_k1) #have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
     farmgate_price_s2gc1z_qk = farmgate_price_ks2gc1_z.stack().unstack(0).mul(q_grain_price_scalar_q_k.stack(), axis=1, level=1)
     farmgate_price_ks2gc1_qz = farmgate_price_s2gc1z_qk.stack(1).unstack(-2).reorder_levels([-1,0,1,2], axis=0)
     ##return
