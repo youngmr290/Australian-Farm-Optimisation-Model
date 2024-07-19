@@ -6,6 +6,7 @@ from pyomo import environ as pe
 
 ##AFO modules
 from . import Pasture as pas
+from . import StructuralInputs as sinp
 from . import FeedsupplyFunctions as fsfun
 
 
@@ -212,7 +213,21 @@ def f_con_greenpas_between(model):
     l_fp = list(model.s_feed_periods)
     def greenpas(model,q,s9,p6,l,z9,t):
         p6_prev = l_fp[l_fp.index(p6) - 1] #need the activity level from last feed period
-        q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
+        l_q = list(model.s_sequence_year_between_con)
+        ###adjust q_prev for multi-period model
+        if sinp.structuralsa['model_is_MP']:
+            ####yr0 is SE so q_prev is q
+            if q == l_q[0]:
+                q_prev = q
+            ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
+            elif q == l_q[-1]:
+                q = l_q[l_q.index(q) - 1]
+                q_prev = q
+            else:
+                q_prev = l_q[l_q.index(q) - 1]
+        else:
+            q_prev = l_q[l_q.index(q) - 1]
+
         if pe.value(model.p_mask_childz_between_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and any(model.p_foo_start_grnha[o,p6,l,z9,t] for o in model.s_foo_levels):
             return sum(model.v_phase_area[q,s9,p7,z9,r,l] * (-model.p_germination[p7,p6,l,r,z9,t] - model.p_foo_grn_reseeding[p7,p6,l,r,z9,t])
                        for r in model.s_phases for p7 in model.s_season_periods
@@ -229,7 +244,7 @@ def f_con_greenpas_between(model):
         else:
             return pe.Constraint.Skip
     #todo the greenpas (FOO) and pasarea (ha) could be replaced by a grnha constraint that passes area and foo together. Needs a FooB (base level) and reseeding foo removal and addition associated with the reseeding rotation phases
-    model.con_greenpas_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = greenpas, doc='Between seasons - green pasture of each type available on each soil type in each feed period')
+    model.con_greenpas_between = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = greenpas, doc='Between seasons - green pasture of each type available on each soil type in each feed period')
 
 def f_con_drypas_within(model):
     '''
@@ -270,7 +285,21 @@ def f_con_drypas_between(model):
     l_fp = list(model.s_feed_periods)
     def drypas_between(model,q,s9,d,p6,z9,l,t):
         p6_prev = l_fp[l_fp.index(p6) - 1] #need the activity level from last feed period
-        q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
+        l_q = list(model.s_sequence_year_between_con)
+        ###adjust q_prev for multi-period model
+        if sinp.structuralsa['model_is_MP']:
+            ####yr0 is SE so q_prev is q
+            if q == l_q[0]:
+                q_prev = q
+            ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
+            elif q == l_q[-1]:
+                q = l_q[l_q.index(q) - 1]
+                q_prev = q
+            else:
+                q_prev = l_q[l_q.index(q) - 1]
+        else:
+            q_prev = l_q[l_q.index(q) - 1]
+
         if pe.value(model.p_mask_childz_between_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and (model.p_dry_removal_t[p6,z9,t] != 0 or model.p_dry_transfer_req_t[p6,z9,t] != 0):
             return sum(model.v_phase_area[q,s9,p7,z9,r,l] * model.p_foo_dry_reseeding[p7,d,p6,l,r,z9,t]
                        for r in model.s_phases for p7 in model.s_season_periods)   \
@@ -287,7 +316,7 @@ def f_con_drypas_between(model):
                  + model.v_drypas_transfer[q,s9,d,p6,z9,l,t] * model.p_dry_transfer_req_t[p6,z9,t] <=0
         else:
             return pe.Constraint.Skip
-    model.con_drypas_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dry_groups, model.s_feed_periods,
+    model.con_drypas_between = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_dry_groups, model.s_feed_periods,
                                              model.s_season_types, model.s_lmus, model.s_pastures, rule = drypas_between, doc='Between seasons: High and low quality dry pasture of each type available in each period')
 
 def f_con_nappas(model):

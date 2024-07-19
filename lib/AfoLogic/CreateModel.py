@@ -48,9 +48,17 @@ def sets(model, nv):
     ##season periods
     model.s_season_periods = Set(initialize=per.f_season_periods(keys=True),doc='season nodes')
 
-    ##season sequence set
+    ##season sequence set 1
     len_q = sinp.structuralsa['i_len_q']
     model.s_sequence_year = Set(initialize=np.array(['q%s' % i for i in range(len_q)]), doc='season sequences')
+
+    ##season sequence set 2 - used in the between constrains for the MP model. An extra element is added to the set so that the final year has two constraints.
+    ###in the MP model this set is increased
+    if sinp.structuralsa['model_is_MP']:
+        t_len_q = len_q+1
+    else:
+        t_len_q = len_q
+    model.s_sequence_year_between_con = Set(initialize=np.array(['q%s' % i for i in range(t_len_q)]), doc='season sequences used for the between constraints')
 
     ##season sequence set
     len_z = len(z_keys)

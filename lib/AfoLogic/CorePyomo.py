@@ -84,7 +84,7 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output):
     if sinp.structuralsa['model_is_MP']:
         #todo this will need to be read in with the other inputs in the raw file so that this can be passed through from web app.
         import pickle as pkl
-        with open('pkl/pkl_lp_vars_{0}.pkl'.format("Quick test"), "rb") as f:
+        with open('pkl/pkl_lp_vars_{0}.pkl'.format("Quick test_1"), "rb") as f:
             lp_vars = pkl.load(f)
 
         f_con_MP(model, lp_vars)
@@ -739,7 +739,21 @@ def f_con_totalcap_between(model):
     '''
     def total_cap_between(model,q,s9,c0,p7,z9):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
-        q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
+        l_q = list(model.s_sequence_year_between_con)
+        ###adjust q_prev for multi-period model
+        if sinp.structuralsa['model_is_MP']:
+            ####yr0 is SE so q_prev is q
+            if q == l_q[0]:
+                q_prev = q
+            ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
+            elif q == l_q[-1]:
+                q = l_q[l_q.index(q) - 1]
+                q_prev = q
+            else:
+                q_prev = l_q[l_q.index(q) - 1]
+        else:
+            q_prev = l_q[l_q.index(q) - 1]
+
         if pe.value(model.p_mask_childz_between_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and uinp.finance['i_working_capital_constraint_included']:
             return (-f1_grain_wc(model,q,s9,c0,p7,z9) + phspy.f_rotation_wc(model,q,s9,c0,p7,z9) + labpy.f_labour_wc(model,q,s9,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s9,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s9,c0,p7,z9) + suppy.f_sup_wc(model,q,s9,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
@@ -753,7 +767,7 @@ def f_con_totalcap_between(model):
                           for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)) <= 0
         else:
             return pe.Constraint.Skip
-    model.con_totalcap_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=total_cap_between,
+    model.con_totalcap_between = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=total_cap_between,
                                        doc='working capital transfer between years')
 
 

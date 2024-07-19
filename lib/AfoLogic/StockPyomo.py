@@ -12,7 +12,7 @@ import numpy as np
 
 #AFO modules
 from . import StockGenerator as sgen
-from . import PropertyInputs as pinp
+from . import StructuralInputs as sinp
 
 
 def stock_precalcs(params, r_vals, nv, pkl_fs_info, pkl_fs):
@@ -435,7 +435,21 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
     '''
     def offbetweenR(model,q,s9,k3,k5,v3,a,z9,i,x,y3,g3,w9):
         v3_prev = l_v3[l_v3.index(v3) - 1]  #used to get the activity number from the last period
-        q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]  #used to get the activity number from the last period
+        l_q = list(model.s_sequence_year_between_con) #used to get the activity number from the last period
+        ###adjust q_prev for multi-period model
+        if sinp.structuralsa['model_is_MP']:
+            ####yr0 is SE so q_prev is q
+            if q == l_q[0]:
+                q_prev = q
+            ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
+            elif q == l_q[-1]:
+                q = l_q[l_q.index(q) - 1]
+                q_prev = q
+            else:
+                q_prev = l_q[l_q.index(q) - 1]
+        else:
+            q_prev = l_q[l_q.index(q) - 1]
+
         ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys e.g. k28
         ###get the index number - required so numpy array can be indexed
         t_k3 = l_k3.index(k3)
@@ -462,7 +476,7 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
         else:
             return pe.Constraint.Skip
     start_con_offbetweenR=time.time()
-    model.con_offbetweenR = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gender,
+    model.con_offbetweenR = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gender,
                                    model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_offs, rule=offbetweenR, doc='transfer off to off from last dvp to current dvp.')
     end_con_offbetweenR=time.time()
     # print('con_offbetweenR: ',end_con_offR - start_con_offR)
@@ -524,7 +538,21 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
     '''
     def dambetweenR(model,q,s9,k29,v1,a,z9,i,y1,g9,w9):
         v1_prev = l_v1[l_v1.index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
-        q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
+        l_q = list(model.s_sequence_year_between_con)
+        ###adjust q_prev for multi-period model
+        if sinp.structuralsa['model_is_MP']:
+            ####yr0 is SE so q_prev is q
+            if q == l_q[0]:
+                q_prev = q
+            ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
+            elif q == l_q[-1]:
+                q = l_q[l_q.index(q) - 1]
+                q_prev = q
+            else:
+                q_prev = l_q[l_q.index(q) - 1]
+        else:
+            q_prev = l_q[l_q.index(q) - 1]
+
         ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys e.g. k28
         ###get the index number - required so numpy array can be indexed
         t_k29 = l_k29.index(k29)
@@ -555,7 +583,7 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
         else:
             return pe.Constraint.Skip
     start_con_damR=time.time()
-    model.con_dam_betweenR = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
+    model.con_dam_betweenR = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
                                    model.s_groups_dams, model.s_lw_dams, rule=dambetweenR, doc='sason start - transfer dam to dam from last dvp to current dvp.')
     end_con_damR=time.time()
     print('con_dambetweenR: ',end_con_damR-start_con_damR)

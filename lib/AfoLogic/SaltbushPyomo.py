@@ -11,6 +11,7 @@ import pyomo.environ as pe
 # AFO modules
 from . import PropertyInputs as pinp
 from . import Saltbush as slp
+from . import StructuralInputs as sinp
 
 
 def saltbush_precalcs(params, r_vals, nv):
@@ -139,7 +140,21 @@ def f_con_saltbush_between(model):
     l_fp = list(model.s_feed_periods)
     def saltbush_foo(model,q,s9,z9,p6,l):
         p6_prev = l_fp[l_fp.index(p6) - 1] #need the activity level from last feed period
-        q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
+        l_q = list(model.s_sequence_year_between_con)
+        ###adjust q_prev for multi-period model
+        if sinp.structuralsa['model_is_MP']:
+            ####yr0 is SE so q_prev is q
+            if q == l_q[0]:
+                q_prev = q
+            ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
+            elif q == l_q[-1]:
+                q = l_q[l_q.index(q) - 1]
+                q_prev = q
+            else:
+                q_prev = l_q[l_q.index(q) - 1]
+        else:
+            q_prev = l_q[l_q.index(q) - 1]
+
         if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_childz_between_fp[p6,z9]) and pinp.general['pas_inc_t'][3]:
             return - model.v_slp_ha[q,s9,z9,l] * model.p_max_growth_per_ha[z9,p6,l]  \
                    - sum(model.v_tonnes_sb_transfer[q,s8,z8,p6_prev,l] * model.p_sb_transfer_provide[z8,p6_prev]
@@ -150,7 +165,7 @@ def f_con_saltbush_between(model):
                    + model.v_tonnes_sb_transfer[q,s9,z9,p6,l] * 1000 <=0
         else:
             return pe.Constraint.Skip
-    model.con_saltbush_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods, model.s_lmus,
+    model.con_saltbush_between = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_season_types, model.s_feed_periods, model.s_lmus,
                                               rule=saltbush_foo, doc='between seasons - saltbush feed available in each feed period')
 
 
