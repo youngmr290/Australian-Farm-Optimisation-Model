@@ -61,10 +61,10 @@ def f_buy_grain_price(r_vals):
 
     '''
     ##purchase price from neighbour is farm gate price plus transaction and transport
-    farmgate_price_ks2gc1_z = phs.f_farmgate_grain_price()
+    farmgate_price_ks2gc1_qz = phs.f_farmgate_grain_price()
     cartage=uinp.price['sup_cartage']
     transaction_fee=uinp.price['sup_transaction']
-    buy_price_ks2gc1_z = farmgate_price_ks2gc1_z + cartage + transaction_fee
+    buy_price_ks2gc1_qz = farmgate_price_ks2gc1_qz + cartage + transaction_fee
 
     ##allocate farm gate grain price for each cashflow period and calc interest
     start = np.array([pinp.crop['i_grain_income_date']])
@@ -85,14 +85,16 @@ def f_buy_grain_price(r_vals):
     # grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
     # buy_grain_price =  price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
     # buy_grain_price_wc =  price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
-
-    buy_grain_price_ks2gc1_p7z =  buy_price_ks2gc1_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
-    buy_grain_price_wc_ks2gc1_c0p7z =  buy_price_ks2gc1_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
+    buy_price_ks2gc1q_z = buy_price_ks2gc1_qz.stack(0)
+    buy_grain_price_ks2gc1q_p7z =  buy_price_ks2gc1q_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
+    buy_grain_price_ks2gc1_qp7z = buy_grain_price_ks2gc1q_p7z.unstack(-1).reorder_levels([2, 0, 1], axis=1)
+    buy_grain_price_wc_ks2gc1q_c0p7z =  buy_price_ks2gc1q_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
+    buy_grain_price_wc_ks2gc1_qc0p7z = buy_grain_price_wc_ks2gc1q_c0p7z.unstack(-1).reorder_levels([3, 0, 1, 2], axis=1)
 
     ##average c1 axis for wc and report
     c1_prob = uinp.price_variation['prob_c1']
-    buy_grain_price_wc_ks2g_c0p7z = buy_grain_price_wc_ks2gc1_c0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
-    r_buy_grain_price_ks2g_p7z = buy_grain_price_ks2gc1_p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
+    buy_grain_price_wc_ks2g_qc0p7z = buy_grain_price_wc_ks2gc1_qc0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
+    r_buy_grain_price_ks2g_qp7z = buy_grain_price_ks2gc1_qp7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
 
     ##buy grain period - purchased grain can only provide into the grain transfer constraint in the phase period when it is purchased (otherwise it will get free grain)
     alloc_p7z = zfun.f1_z_period_alloc(start[na], z_pos=-1)
@@ -104,8 +106,8 @@ def f_buy_grain_price(r_vals):
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, r_buy_grain_price_ks2g_p7z, 'buy_grain_price', mask_season_p7z, z_pos=-1)
-    return buy_grain_price_ks2gc1_p7z.unstack([2,0,1,3]).sort_index(), buy_grain_price_wc_ks2g_c0p7z.unstack([2,0,1]).sort_index(), buy_grain_prov_p7z
+    fun.f1_make_r_val(r_vals, r_buy_grain_price_ks2g_qp7z, 'buy_grain_price', mask_season_p7z, z_pos=-1)
+    return buy_grain_price_ks2gc1_qp7z.unstack([2,0,1,3]).sort_index(), buy_grain_price_wc_ks2g_qc0p7z.unstack([2,0,1]).sort_index(), buy_grain_prov_p7z
 
 def f_sup_feeding_cost(r_vals, nv):
     '''

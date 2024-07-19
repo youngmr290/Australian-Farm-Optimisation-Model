@@ -168,8 +168,16 @@ def f_farmgate_grain_price(r_vals={}):
     farmgate_price_ks2g_c1z = farmgate_price_ks2_g.reindex(new_index_c1zg, axis=1, level=2).stack()
     farmgate_price_ks2g_c1z = farmgate_price_ks2g_c1z.mul(grain_price_scalar_c1_z.stack(), axis=1)
     farmgate_price_ks2gc1_z = farmgate_price_ks2g_c1z.stack(0)
+
+    ##add q axis
+    len_q = sinp.structuralsa['i_len_q'] #number of years in MP model
+    keys_q = np.array(['q%s' % i for i in range(len_q)])
+    keys_k1 = sinp.general['i_idx_k1']
+    q_grain_price_scalar_q_k = pd.DataFrame(sen.sam['q_grain_price_scalar_qk'][:,pinp.crop_landuse_mask_k1], index = keys_q, columns=keys_k1)
+    farmgate_price_s2gc1z_qk = farmgate_price_ks2gc1_z.stack().unstack(0).mul(q_grain_price_scalar_q_k.stack(), axis=1, level=1)
+    farmgate_price_ks2gc1_qz = farmgate_price_s2gc1z_qk.stack(1).unstack(-2).reorder_levels([-1,0,1,2], axis=0)
     ##return
-    return farmgate_price_ks2gc1_z
+    return farmgate_price_ks2gc1_qz
 
 
 def f_grain_price(r_vals):
@@ -181,7 +189,7 @@ def f_grain_price(r_vals):
 
     '''
     ##get grain price - accounts for tolls and other fees
-    farmgate_price_ks2gc1_z=f_farmgate_grain_price(r_vals)
+    farmgate_price_ks2gc1_qz=f_farmgate_grain_price(r_vals)
 
     ##allocate farm gate grain price for each cashflow period and calc interest
     start = np.array([pinp.crop['i_grain_income_date']])
@@ -196,27 +204,32 @@ def f_grain_price(r_vals):
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     grain_wc_allocation_c0p7z = pd.Series(grain_wc_allocation_c0p7z.ravel(), index=new_index_c0p7z)
 
+    farmgate_price_ks2gc1q_z = farmgate_price_ks2gc1_qz.stack(0)
     # cols_p7zg = pd.MultiIndex.from_product([keys_p7, keys_z, farm_gate_price_k_g.columns])
     # grain_income_allocation_p7zg = grain_income_allocation_p7z.reindex(cols_p7zg, axis=1)#adds level to header so i can mul in the next step
     # grain_price =  farm_gate_price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
-    grain_price_ks2gc1_p7z =  farmgate_price_ks2gc1_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
+    grain_price_ks2gc1q_p7z = farmgate_price_ks2gc1q_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
+    grain_price_ks2gc1_qp7z = grain_price_ks2gc1q_p7z.unstack(-1).reorder_levels([2,0,1], axis=1)
     # cols_c0p7zg = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, farm_gate_price_k_g.columns])
     # grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
     # grain_price_wc =  farm_gate_price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
-    grain_price_wc_ks2gc1_c0p7z =  farmgate_price_ks2gc1_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
+    grain_price_wc_ks2gc1q_c0p7z = farmgate_price_ks2gc1q_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
+    grain_price_wc_ks2gc1_qc0p7z = grain_price_wc_ks2gc1q_c0p7z.unstack(-1).reorder_levels([3,0,1,2], axis=1)
 
     ##average c1 axis for wc and report
     c1_prob = uinp.price_variation['prob_c1']
-    r_grain_price_ks2g_p7z = grain_price_ks2gc1_p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
-    grain_price_wc_ks2g_c0p7z = grain_price_wc_ks2gc1_c0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
+    r_grain_price_ks2g_qp7z = grain_price_ks2gc1_qp7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
+    grain_price_wc_ks2g_qc0p7z = grain_price_wc_ks2gc1_qc0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
 
     ##store r_vals
     ###make z8 mask - used to uncluster
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, r_grain_price_ks2g_p7z, 'grain_price', mask_season_p7z, z_pos=-1)
-    return grain_price_ks2gc1_p7z.unstack([2,0,1,3]).sort_index(), grain_price_wc_ks2g_c0p7z.unstack([2,0,1]).sort_index()
+    fun.f1_make_r_val(r_vals, r_grain_price_ks2g_qp7z, 'grain_price', mask_season_p7z, z_pos=-1)
+    grain_price_qp7zgks2c1 = grain_price_ks2gc1_qp7z.unstack([2,0,1,3]).sort_index()
+    grain_price_wc_qc0p7zgks2 = grain_price_wc_ks2g_qc0p7z.unstack([2,0,1]).sort_index()
+    return grain_price_qp7zgks2c1, grain_price_wc_qc0p7zgks2
 # a=grain_price()
 
 #########################
@@ -1078,11 +1091,12 @@ def f_insurance(r_vals):
     '''
     ##weight c1 to get average price
     c1_prob = uinp.price_variation['prob_c1']
-    farmgate_price_ks2gc1_z = f_farmgate_grain_price()
-    farmgate_price_ks2g_z = farmgate_price_ks2gc1_z.mul(c1_prob,axis=0,level=-1).groupby(axis=0,level=[0,1,2]).sum()
+    farmgate_price_ks2gc1_qz = f_farmgate_grain_price()
+    farmgate_price_ks2g_qz = farmgate_price_ks2gc1_qz.mul(c1_prob,axis=0,level=-1).groupby(axis=0,level=[0,1,2]).sum()
     ##combine each grain pool to get average price
     grain_pool_proportions_kg = f_grain_pool_proportions()
-    farmgate_price_kg_zs2 = farmgate_price_ks2g_z.unstack(1)
+    ###take q[0] under assumption insurance is based on average price.
+    farmgate_price_kg_zs2 = farmgate_price_ks2g_qz.stack(1).iloc[:,0].unstack([-1,1])
     ave_price_k_zs2 = farmgate_price_kg_zs2.mul(grain_pool_proportions_kg, axis=0).groupby(axis=0, level=0).sum()
     ##calc insurance cost per tonne
     insurance_k_zs2 = ave_price_k_zs2.mul(uinp.price['grain_price_info']['insurance']/100, axis=0)  #div by 100 because insurance is a percent
