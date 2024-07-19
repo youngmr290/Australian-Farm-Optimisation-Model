@@ -258,10 +258,11 @@ def f_phase_link_params(params):
     ###first calculate which p7 is break for each season
     start_date_p7z = per.f_season_periods()[:-1, :]  # remove end date of last period
     end_date_p7z = per.f_season_periods()[1:, :]
-    next_period_is_break_p7z = np.roll(np.logical_and(start_date_p7z<=i_break_z, i_break_z<end_date_p7z), shift=-1, axis=0) #have to do it this way because for 'typ' break of season may not be a node.
+    next_period_is_break_p7z = np.roll(np.logical_or(np.logical_and(start_date_p7z<=i_break_z, i_break_z<end_date_p7z),
+                                                     np.logical_and(end_date_p7z%364<=start_date_p7z, i_break_z<end_date_p7z%364)), shift=-1, axis=0) #have to do it this way because for 'typ' break of season may not be a node and in the MP model the first node might be after season brk.
     next_period_isnot_break_p7z = np.logical_not(next_period_is_break_p7z)
     ###first calculate which p7 is break for each season
-    next_period_is_seasonstart_p7z = np.roll(start_date_p7z==start_date_p7z[0,:], shift=-1, axis=0) #have to do it this way because for 'typ' break of season may not be a node.
+    next_period_is_seasonstart_p7z = np.roll(start_date_p7z==start_date_p7z[0,:], shift=-1, axis=0)
     next_period_isnot_seasonstart_p7z = np.logical_not(next_period_is_seasonstart_p7z)
     ###calculate if period is transfer at season break this is 0 for everything except dry sown phases
     transfer_break_p7zr = np.minimum(1, next_period_isnot_break_p7z[...,na] + propn_phase_drysown_zr)
