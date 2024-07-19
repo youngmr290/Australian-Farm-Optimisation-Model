@@ -390,7 +390,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         arith = f_update_default_controls(user_controls, 'wbe_cut_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'wbe_cut_dams', 'index', [5])      #p
         cols = f_update_default_controls(user_controls, 'wbe_cut_dams', 'cols', [8]) #b1
-        axis_slice = f_update_default_controls(user_controls, 'wbe_dams', 'axis_slice', {})
+        axis_slice = f_update_default_controls(user_controls, 'wbe_cut_dams', 'axis_slice', {})
         # axis_slice[2] = [2, 3, 1]     #the 11 slice  (in EL analysis only scanning for Preg Status)
         # axis_slice[4] = [0, 7, 1]  #All DVPs for Triplets
         reports["wbe_cut_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod
@@ -567,10 +567,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         den_weights = 'Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1'  # weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_denweights = [0, 1]  # q,s
         keys = 'dams_keys_qsk2tvPaebnwziy1g1'
-        arith = f_update_default_controls(user_controls, 'ebw_dams', 'arith', 1)
-        index = f_update_default_controls(user_controls, 'ebw_dams', 'index', [5])      #p
-        cols = f_update_default_controls(user_controls, 'ebw_dams', 'cols', [8]) #b1
-        axis_slice = f_update_default_controls(user_controls, 'ebw_dams', 'axis_slice', {})
+        arith = f_update_default_controls(user_controls, 'ebw_cut_dams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'ebw_cut_dams', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'ebw_cut_dams', 'cols', [8]) #b1
+        axis_slice = f_update_default_controls(user_controls, 'ebw_cut_dams', 'axis_slice', {})
         reports["ebw_cut_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod
                                                 , weights=weights, na_weights=na_weights
                                                 , prod_weights=prod_weights, na_prodweights=na_prodweights

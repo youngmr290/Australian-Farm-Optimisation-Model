@@ -1374,7 +1374,7 @@ def f_fibre_mu(cw_g, cc_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_s
     wbge_a0e0b0xyg = wbge_a0e0b0xyg / sam_pi
     ##ME available for wool growth
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
-    ##Wool growth (wool base - dry clean fibre) if there was no lag
+    ##Wool growth (wool base - clean dry fibre) if there was no lag
     d_wb_nolag_g = cw_g[8, ...] * wbge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
     ##Process the CFW REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_wb_nolag_g = f1_rev_update('cfw', d_wb_nolag_g, rev_trait_value)
