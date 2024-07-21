@@ -454,6 +454,7 @@ def create_sa():
     ##SAP
     ##SAA
     saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
+    saa['srw_c2'] = 0.0                     #std reference weight genotype params
     saa['cg_c2'] = np.zeros(uinp.parameters['i_cg_c2'].shape, dtype='float64')  #SA value for weight gain params.
     saa['ck_c2'] = np.zeros(uinp.parameters['i_ck_c2'].shape, dtype='float64')  #SA value for energy efficiency params.
     saa['cl0_c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype='float64')  #SA value for litter size genotype params.

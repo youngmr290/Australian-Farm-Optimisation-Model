@@ -242,6 +242,7 @@ def f_universal_inp_sa(uinp_defaults):
     ###SAA - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_nlb_c2'] = fun.f_sa(parameters['i_nlb_c2'].astype(float),sen.saa['nlb_c2'], 2)
     parameters['i_sfd_c2'] = fun.f_sa(parameters['i_sfd_c2'].astype(float),sen.saa['sfd_c2'], 2)
+    parameters['i_srw_c2'] = fun.f_sa(parameters['i_srw_c2'].astype(float),sen.saa['srw_c2'], 2)
     parameters['i_cg_c2'] = fun.f_sa(parameters['i_cg_c2'].astype(float), sen.saa['cg_c2'], 2) #genotype growth params
     parameters['i_ck_c2'] = fun.f_sa(parameters['i_ck_c2'].astype(float), sen.saa['ck_c2'], 2) #genotype efficiency params
     parameters['i_cl0_c2'] = fun.f_sa(parameters['i_cl0_c2'].astype(float), sen.saa['cl0_c2'], 2) #genotype litter size params
