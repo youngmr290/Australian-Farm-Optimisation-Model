@@ -4146,7 +4146,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             d_fat_dams = temp2
                             d_muscle_dams = temp3
                             d_viscera_dams = temp4
-                            pi_dams = pi_dams * (1 + fun.f_divide(temp5, mei_dams))  #scale pi by the variation in mei that results from REV changes.
+                            pi_dams = pi_dams * (1 + fun.f_divide(temp5, mei_dams) * sen.sam['rev_pi_scalar'])  #scale pi by the variation in mei that results from REV changes.
                             mei_dams = mei_dams + temp5
                             mei_solid_dams = mei_solid_dams + temp5
                             surplus_energy_dams = temp7

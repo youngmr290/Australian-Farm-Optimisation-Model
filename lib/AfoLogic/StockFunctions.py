@@ -1595,7 +1595,7 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     ##Energy Value of gain (MJ/kg EBW)
     evg = cg[8, ...] - zf1 * (cg[9, ...] - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
     ## Scale based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
-    evg = fun.f_sa(evg, sen.sap['evg_adult'] * zf2, 1)
+    evg = fun.f_sa(evg, sen.sap['evg'], 1)   # * zf2, 1)
     # ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     # ###Note: REV[evg] does very little in the CSIRO feeding system (nothing if REV[ebg] is active), because partitioning is controlled by pcg formula.
     # evg = f1_rev_update('evg', evg, rev_trait_value)
@@ -1642,13 +1642,10 @@ def f_lwc_mu(cg, rc_start, mei_initial, meme, mew, new, zf1, zf2, kge, kf, kp, h
     maintenance = meme + mec * gest_propn + mel * lact_propn + mew
     ##Level of feeding (maint = 0) Note: level is calculated elsewhere (differently) for use in Blaxter & Clapperton equations
     level = (mei_initial / maintenance) - 1
-    ##Energy intake that is surplus to maintenance
-    surplus_energy = mei_initial - maintenance
-    below_maintenance = surplus_energy < 0
     ##Energy Value of gain as calculated.
     evg = cg[8, ...] - zf1 * (cg[9, ...] - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
     ## Scale based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
-    evg = fun.f_sa(evg, sen.sap['evg_adult'] * zf2, 1)
+    evg = fun.f_sa(evg, sen.sap['evg'], 1)     # * zf2, 1)
     # ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     # evg = f1_rev_update('evg', evg, rev_trait_value)
     ## proportion of fat in LW gain, determined from the EVG based on mass & energy balance (% by wet weight)
@@ -1657,6 +1654,9 @@ def f_lwc_mu(cg, rc_start, mei_initial, meme, mew, new, zf1, zf2, kge, kf, kp, h
     fat_propn = f1_weight_energy_conversion(cg, 0, weight=adipose_propn) / evg
     ## proportion of protein in energy gain (% by energy)
     prot_propn = 1 - fat_propn
+    ##Energy intake that is surplus to maintenance
+    surplus_energy = mei_initial - maintenance
+    below_maintenance = surplus_energy < 0
     ## efficiency of surplus energy conversion to retained energy. If losing weight use kg from the args
     ### based on the proportion of energy gained as fat with efficiency kf and the proportion gained as protein kp
     kg = np.where(below_maintenance, kge, 1 / (fat_propn / kf + prot_propn/ kp))
@@ -1697,7 +1697,8 @@ def f_lwc_mu(cg, rc_start, mei_initial, meme, mew, new, zf1, zf2, kge, kf, kp, h
     ###If EBG is the target trait it wouldn't be overwritten by f1_rev_update, therefore equal value before and after
     ###Note: if ebg is not changed by the SA on the target trait then energy will be scaled but scalar = 1
     ###Scaling doesn't occur if the EBG is altered by f1_rev_update. This happens if the target trait is one of the
-    ### components traits. An implied assumption is that the component traits do not change animal sale value.
+    ###components traits.
+    ###An implied assumption is that the component traits do not change animal sale value.
     if np.allclose(ebg, ebg_prior, equal_nan=True):     #either not doing REVs or ebg is the target trait or the REV SA doesn't alter ebg
         d_fat = f1_weight_energy_conversion(cg, 0, energy=nefat)
         d_muscle = f1_weight_energy_conversion(cg, 1, energy=nemuscle)
@@ -2153,8 +2154,8 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
     :param rev_trait_value:
     :param saa_rr:
     :param sam_rr: combine sam on reproductive rate
-    :param saa_con:
-    :param saa_ls:
+    :param saa_con: SA on the proportion empty
+    :param saa_ls: SA on litter size
     :param saa_preg_increment:
     :return: Dam conception. Proportion of dams that conceive 0,1,2 or 3 for this oestrus cycle. Conceiving 0 means falls pregnant but loses the embryo after the joining period has ended (so can't be remated)
     '''

@@ -395,13 +395,14 @@ def create_sa():
     sam['pi_yatf'] = 1.0                              #Potential intake of yatf
     sam['LTW_dams'] = 1.0                       #adjust impact of life time wool fleece effects
     sam['LTW_offs'] = 1.0                       #adjust impact of life time wool fleece effects
+    sam['rev_pi_scalar'] = 1.0                      #Proportion to scale PI if MEI is scaled by REV adjustments
     sam['pi_post_adult'] = 1.0                        #Post loop potential intake of adults (zf2==1)
     sam['pi_post_yatf'] = 1.0                        #Post loop potential intake of yatf
     sam['chill'] = 1.0                        #intermediate sam on chill.
     sam['rr_og1'] = np.ones(pinp.sheep['i_scan_og1'].shape, dtype='float64')    # reproductive rate by age. Use shape that has og1
     sam['wean_redn_ol0g2'] = np.ones((len_o, len_l0, len_g2), dtype='float64')  #Adjust the number of yatf transferred at weaning - this is a high level sa, it impacts within a calculation not on an input
     ##SAP
-    sap['evg_adult'] = 0.0               #energy content of liveweight gain - this is a high level sa, it impacts within a calculation not on an input and is only implemented on adults
+    sap['evg'] = 0.0               #energy content of liveweight gain - this is a high level sa, it impacts within a calculation not on an input. It was only implemented on adults now all animals
     sap['mortalityb'] = 0.0        #Scale the calculated base mortality (for all animals) - this is a high level sa, it impacts within a calculation not on an input
     sap['kg_post_adult'] = 0.0           #Post loop energy efficiency of adults (zf2==1)
     sap['kg_post_yatf'] = 0.0           #Post loop energy efficiency of yatf
