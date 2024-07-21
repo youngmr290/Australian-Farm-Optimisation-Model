@@ -112,9 +112,10 @@ def create_sa():
     sav['non_cropable_area_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
     sav['lmu_arable_propn_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
     ##SAM
-    sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to remove it)
+    sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to revert the code)
     ##SAP
     ##SAA
+    saa['random'] = 1.0   # SA addition used to tweak any random variable when debugging or checking something (after being used it is best to revert the code )
     ##SAT
     ##SAR
 
