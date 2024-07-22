@@ -947,7 +947,8 @@ def f_objective(model):
                if pe.value(model.p_wyear_inc_qs[q,s]))
 
 def f_con_MP(model, lp_vars):
-    # todo need to add the p7 mask so that variables can be bnd for only part of a year
+    #todo add stock sale partial bnd
+    len_p7 = len(model.s_season_periods)
     i = 0
     list_v = []
     list_s = []
@@ -964,7 +965,7 @@ def f_con_MP(model, lp_vars):
             list_bnd.append(lp_vars[str(v)][s_adjusted])
             i = i + 1
 
-    def test(model, idx):
+    def MP(model, idx):
         # print(idx)
         v = list_v[idx]
         s = list_s[idx]
@@ -972,10 +973,14 @@ def f_con_MP(model, lp_vars):
         if q == 'q0':
             bnd = list_bnd[idx]
             return v[s] == bnd
+        ###bnd rotation variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
+        elif q == 'q1' and len_p7>1 and str(v) == "v_phase_area" and s[2] == 'zm0':
+            bnd = list_bnd[idx]
+            return v[s] == bnd
         else:
             return pe.Constraint.Skip
 
-    model.con_test = pe.Constraint(list_idx, rule=test)
+    model.con_MP = pe.Constraint(list_idx, rule=MP)
 
     # ##Notes:
     # ##1.
