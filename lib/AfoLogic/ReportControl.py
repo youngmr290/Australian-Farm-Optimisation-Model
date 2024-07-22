@@ -325,7 +325,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         arith = f_update_default_controls(user_controls, 'cfw_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'cfw_dams', 'index', [4])      #DVP
         cols = f_update_default_controls(user_controls, 'cfw_dams', 'cols', [])
-        axis_slice = f_update_default_controls(user_controls, 'cfw_dams', 'axis_slice', {4: [9, 10, 1]}) #dvp9 - 3.5yo
+        axis_slice = f_update_default_controls(user_controls, 'cfw_dams', 'axis_slice', {}) #dvp9 - 3.5yo
         reports["cfw_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_fd_dams', 'Run']:
@@ -337,7 +337,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         arith = f_update_default_controls(user_controls, 'fd_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'fd_dams', 'index', [4])      #DVP
         cols = f_update_default_controls(user_controls, 'fd_dams', 'cols', [])
-        axis_slice = f_update_default_controls(user_controls, 'fd_dams', 'axis_slice', {4: [9, 10, 1]}) #dvp9 - 3.5yo
+        axis_slice = f_update_default_controls(user_controls, 'fd_dams', 'axis_slice', {}) #dvp9 - 3.5yo
         reports["fd_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_cfw_offs', 'Run']:
@@ -512,7 +512,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         axis_slice = f_update_default_controls(user_controls, 'wbe_offs', 'axis_slice', {})
         reports["wbe_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    if report_run.loc['run_lw_dams', 'Run']:
+    if report_run.loc['run_lw_pdams', 'Run']:
         ##Average dam lw with p, e & b axis. Lw is adjusted for animals that are sold but not adjusted by mortality (Ie if the light ones all die during a dvp then the weighting of animals that are averaged should change relatively across p)
         ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
@@ -526,14 +526,26 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_denweights = [0,1] #q,s
         keys = 'dams_keys_qsk2tvpaebnwziy1g1'
-        arith = f_update_default_controls(user_controls, 'lw_dams', 'arith', 1)
-        index = f_update_default_controls(user_controls, 'lw_dams', 'index', [5])      #p
-        cols = f_update_default_controls(user_controls, 'lw_dams', 'cols', [8]) #b1
-        axis_slice = f_update_default_controls(user_controls, 'lw_dams', 'axis_slice', {})
-        reports["lw_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
+        arith = f_update_default_controls(user_controls, 'lw_pdams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'lw_pdams', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'lw_pdams', 'cols', [8]) #b1
+        axis_slice = f_update_default_controls(user_controls, 'lw_pdams', 'axis_slice', {})
+        reports["lw_pdams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
                                  , na_weights=na_weights, prod_weights=prod_weights, na_prodweights=na_prodweights, den_weights=den_weights, na_denweights=na_denweights
                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_ebw_dams', 'Run']:
+        type = 'stock'
+        prod = 'ebw_k2tva1nwziyg1'
+        na_prod = [0,1] #q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        keys = 'dams_keys_qsk2tvanwziy1g1'
+        arith = f_update_default_controls(user_controls, 'ebw_dams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'ebw_dams', 'index', [4])      #DVP
+        cols = f_update_default_controls(user_controls, 'ebw_dams', 'cols', [2]) #k2
+        axis_slice = f_update_default_controls(user_controls, 'ebw_dams', 'axis_slice', {})
+        reports["ebw_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_ebw_pdams', 'Run']:
         ##Average dam ebw with p, e & b axis. ebw is adjusted for animals that are sold but not adjusted by mortality (Ie if the light ones all die then the weighting of ebw by p should change)
         ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
@@ -547,11 +559,11 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_denweights = [0,1] #q,s
         keys = 'dams_keys_qsk2tvpaebnwziy1g1'
-        arith = f_update_default_controls(user_controls, 'ebw_dams', 'arith', 1)
-        index = f_update_default_controls(user_controls, 'ebw_dams', 'index', [5])      #p
-        cols = f_update_default_controls(user_controls, 'ebw_dams', 'cols', []) #b1
-        axis_slice = f_update_default_controls(user_controls, 'ebw_dams', 'axis_slice', {})
-        reports['ebw_dams'] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
+        arith = f_update_default_controls(user_controls, 'ebw_pdams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'ebw_pdams', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'ebw_pdams', 'cols', []) #b1
+        axis_slice = f_update_default_controls(user_controls, 'ebw_pdams', 'axis_slice', {})
+        reports['ebw_pdams'] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
                                  , na_weights=na_weights, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , den_weights=den_weights, na_denweights=na_denweights, keys=keys, arith=arith
                                  , index=index, cols=cols, axis_slice=axis_slice)
@@ -576,7 +588,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                                 , prod_weights=prod_weights, na_prodweights=na_prodweights
                                                 , den_weights=den_weights, na_denweights=na_denweights
                                                 , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    if report_run.loc['run_cs_dams', 'Run']:
+    if report_run.loc['run_cs_pdams', 'Run']:
         ##Average dam condition score with p, e & b axis. 
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
         type = 'stock'
@@ -589,15 +601,15 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'  #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_denweights = [0, 1]  #q,s
         keys = 'dams_keys_qsk2tvpaebnwziy1g1'
-        arith = f_update_default_controls(user_controls, 'cs_dams', 'arith', 1)
-        index = f_update_default_controls(user_controls, 'cs_dams', 'index', [5])      #p
-        cols = f_update_default_controls(user_controls, 'cs_dams', 'cols', [14, 3, 8])  #g1, t & b1
-        axis_slice = f_update_default_controls(user_controls, 'cs_dams', 'axis_slice', {})
-        reports["cs_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod,
+        arith = f_update_default_controls(user_controls, 'cs_pdams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'cs_pdams', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'cs_pdams', 'cols', [14, 3, 8])  #g1, t & b1
+        axis_slice = f_update_default_controls(user_controls, 'cs_pdams', 'axis_slice', {})
+        reports["cs_pdams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod,
                                prod_weights=prod_weights, na_prodweights=na_prodweights, weights=weights, na_weights=na_weights,
                                den_weights=den_weights, na_denweights=na_denweights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    if report_run.loc['run_fs_dams', 'Run']:
+    if report_run.loc['run_fs_pdams', 'Run']:
         ##Average dam fat score with p, e & b axis.
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
         type = 'stock'
@@ -610,15 +622,15 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'  #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_denweights = [0, 1]  #q,s
         keys = 'dams_keys_qsk2tvpaebnwziy1g1'
-        arith = f_update_default_controls(user_controls, 'fs_dams', 'arith', 1)
-        index = f_update_default_controls(user_controls, 'fs_dams', 'index', [5])      #p
-        cols = f_update_default_controls(user_controls, 'fs_dams', 'cols', [14, 3, 8])  #g1, t & b1
-        axis_slice = f_update_default_controls(user_controls, 'fs_dams', 'axis_slice', {})
-        reports["fs_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod,
+        arith = f_update_default_controls(user_controls, 'fs_pdams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'fs_pdams', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'fs_pdams', 'cols', [14, 3, 8])  #g1, t & b1
+        axis_slice = f_update_default_controls(user_controls, 'fs_pdams', 'axis_slice', {})
+        reports["fs_pdams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod,
                                prod_weights=prod_weights, na_prodweights=na_prodweights, weights=weights, na_weights=na_weights,
                                den_weights=den_weights, na_denweights=na_denweights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    if report_run.loc['run_nv_dams', 'Run']:
+    if report_run.loc['run_nv_pdams', 'Run']:
         ##Average dam NV with p, e & b axis. NV is adjusted for animals that are sold but not adjusted by mortality (Ie if the light ones all die then the weighting by p should change)
         ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
@@ -632,15 +644,15 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'  #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_denweights = [0, 1]  #q,s
         keys = 'dams_keys_qsk2tvpaebnwziy1g1'
-        arith = f_update_default_controls(user_controls, 'nv_dams', 'arith', 1)
-        index = f_update_default_controls(user_controls, 'nv_dams', 'index', [5])      #p
-        cols = f_update_default_controls(user_controls, 'nv_dams', 'cols', [14, 7, 3, 8])  #g1, e, t & b1
-        axis_slice = f_update_default_controls(user_controls, 'nv_dams', 'axis_slice', {})
-        reports["nv_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod,
+        arith = f_update_default_controls(user_controls, 'nv_pdams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'nv_pdams', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'nv_pdams', 'cols', [14, 7, 3, 8])  #g1, e, t & b1
+        axis_slice = f_update_default_controls(user_controls, 'nv_pdams', 'axis_slice', {})
+        reports["nv_pdams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod,
                                prod_weights=prod_weights, na_prodweights=na_prodweights, weights=weights, na_weights=na_weights,
                                den_weights=den_weights, na_denweights=na_denweights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    if report_run.loc['run_ebw_yatf', 'Run']:
+    if report_run.loc['run_ebw_pyatf', 'Run']:
         ##Average yatf ebw with p, e & b axis. ebw is not adjusted by mortality (Ie if the light ones all die then the weighting by p should change)
         ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
@@ -657,11 +669,11 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         den_weights = 'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_denweights = [0,1] #q,s
         keys = 'yatf_keys_qsk2tvpaebnwzixy1g1'
-        arith = f_update_default_controls(user_controls, 'ebw_yatf', 'arith', 1)
-        index = f_update_default_controls(user_controls, 'ebw_yatf', 'index', [5])      #p
-        cols = f_update_default_controls(user_controls, 'ebw_yatf', 'cols', [2,15, 10, 13])  #k2, g2, w8, x
-        axis_slice = f_update_default_controls(user_controls, 'ebw_yatf', 'axis_slice', {8: [2,None,1]}) #b with yatf
-        reports["ebw_yatf"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+        arith = f_update_default_controls(user_controls, 'ebw_pyatf', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'ebw_pyatf', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'ebw_pyatf', 'cols', [2,15, 10, 13])  #k2, g2, w8, x
+        axis_slice = f_update_default_controls(user_controls, 'ebw_pyatf', 'axis_slice', {8: [2,None,1]}) #b with yatf
+        reports["ebw_pyatf"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys
                                  , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_ebw_prog', 'Run']:
@@ -685,6 +697,18 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                                  , na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_ebw_offs', 'Run']:
+        type = 'stock'
+        prod = 'ebw_k3k5tvnwziaxyg3'
+        na_prod = [0,1] #q,s
+        weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+        keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+        arith = f_update_default_controls(user_controls, 'ebw_offs', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'ebw_offs', 'index', [5])      #DVP
+        cols = f_update_default_controls(user_controls, 'ebw_offs', 'cols', [13, 2, 3, 4])  #g3, dam age, BTRT, t
+        axis_slice = f_update_default_controls(user_controls, 'ebw_offs', 'axis_slice', {})
+        reports["ebw_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_ebw_poffs', 'Run']:
         ##Average offs ebw with p, e & b axis. ebw is adjusted for animals that are sold but not adjusted by mortality
         ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
@@ -698,14 +722,14 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_denweights = [0,1] #q,s
         keys = 'offs_keys_qsk3k5tvpnwzidaebxyg3'
-        arith = f_update_default_controls(user_controls, 'ebw_offs', 'arith', 1)
-        index = f_update_default_controls(user_controls, 'ebw_offs', 'index', [6])  #p
-        cols = f_update_default_controls(user_controls, 'ebw_offs', 'cols', [])
-        axis_slice = f_update_default_controls(user_controls, 'ebw_offs', 'axis_slice', {})
-        reports["ebw_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+        arith = f_update_default_controls(user_controls, 'ebw_poffs', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'ebw_poffs', 'index', [6])  #p
+        cols = f_update_default_controls(user_controls, 'ebw_poffs', 'cols', [])
+        axis_slice = f_update_default_controls(user_controls, 'ebw_poffs', 'axis_slice', {})
+        reports["ebw_poffs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    if report_run.loc['run_cs_offs', 'Run']:
+    if report_run.loc['run_cs_poffs', 'Run']:
         ##Average offs cs with p, e & b axis. 
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
         type = 'stock'
@@ -718,14 +742,14 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_denweights = [0,1] #q,s
         keys = 'offs_keys_qsk3k5tvpnwzidaebxyg3'
-        arith = f_update_default_controls(user_controls, 'cs_offs', 'arith', 1)
-        index = f_update_default_controls(user_controls, 'cs_offs', 'index', [6])  #p
-        cols = f_update_default_controls(user_controls, 'cs_offs', 'cols', [17, 3, 15, 4])   #k5, g3, x, t
-        axis_slice = f_update_default_controls(user_controls, 'cs_offs', 'axis_slice', {})
-        reports["cs_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+        arith = f_update_default_controls(user_controls, 'cs_poffs', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'cs_poffs', 'index', [6])  #p
+        cols = f_update_default_controls(user_controls, 'cs_poffs', 'cols', [17, 3, 15, 4])   #k5, g3, x, t
+        axis_slice = f_update_default_controls(user_controls, 'cs_poffs', 'axis_slice', {})
+        reports["cs_poffs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    if report_run.loc['run_fs_offs', 'Run']:
+    if report_run.loc['run_fs_poffs', 'Run']:
         ##Average offs fs with p, e & b axis. 
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
         type = 'stock'
@@ -738,14 +762,14 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_denweights = [0,1] #q,s
         keys = 'offs_keys_qsk3k5tvpnwzidaebxyg3'
-        arith = f_update_default_controls(user_controls, 'fs_offs', 'arith', 1)
-        index = f_update_default_controls(user_controls, 'fs_offs', 'index', [6])  #p
-        cols = f_update_default_controls(user_controls, 'fs_offs', 'cols', [17, 3, 15, 4])   #k5, g3, x, t
-        axis_slice = f_update_default_controls(user_controls, 'fs_offs', 'axis_slice', {})
-        reports["fs_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+        arith = f_update_default_controls(user_controls, 'fs_poffs', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'fs_poffs', 'index', [6])  #p
+        cols = f_update_default_controls(user_controls, 'fs_poffs', 'cols', [17, 3, 15, 4])   #k5, g3, x, t
+        axis_slice = f_update_default_controls(user_controls, 'fs_poffs', 'axis_slice', {})
+        reports["fs_poffs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                  , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    if report_run.loc['run_nv_offs', 'Run']:
+    if report_run.loc['run_nv_poffs', 'Run']:
         ##Average offs NV with p, e & b axis. NV is adjusted for animals that are sold but not adjusted by mortality
         ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
         ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
@@ -759,11 +783,11 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
         na_denweights = [0,1] #q, s
         keys = 'offs_keys_qsk3k5tvpnwzidaebxyg3'
-        arith = f_update_default_controls(user_controls, 'nv_offs', 'arith', 1)
-        index = f_update_default_controls(user_controls, 'nv_offs', 'index', [6])  #p
-        cols = f_update_default_controls(user_controls, 'nv_offs', 'cols', [2,15,3,4,8])  #k3,x,k5,t,w
-        axis_slice = f_update_default_controls(user_controls, 'nv_offs', 'axis_slice', {})
-        reports["nv_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+        arith = f_update_default_controls(user_controls, 'nv_poffs', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'nv_poffs', 'index', [6])  #p
+        cols = f_update_default_controls(user_controls, 'nv_poffs', 'cols', [2,15,3,4,8])  #k3,x,k5,t,w
+        axis_slice = f_update_default_controls(user_controls, 'nv_poffs', 'axis_slice', {})
+        reports["nv_poffs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_lamb_survival', 'Run']:
@@ -874,18 +898,18 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         axis_slice = f_update_default_controls(user_controls, 'numbers_dams', 'axis_slice', {})
         reports["numbers_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    if report_run.loc['run_numbers_dams_p', 'Run']:
+    if report_run.loc['run_numbers_pdams', 'Run']:
         type = 'stock'
         prod = 'on_hand_mort_k2tvpa1nwziyg1'
         na_prod = [0,1]  # q,s
         weights = 'dams_numbers_qsk2tvanwziy1g1'
         na_weights = [5]
         keys = 'dams_keys_qsk2tvpanwziy1g1'
-        arith = f_update_default_controls(user_controls, 'numbers_dams_p', 'arith', 2)
-        index = f_update_default_controls(user_controls, 'numbers_dams_p', 'index', [4,5])       #DVP, p
-        cols = f_update_default_controls(user_controls, 'numbers_dams_p', 'cols', [2, 3, 8]) #k2, t, w
-        axis_slice = f_update_default_controls(user_controls, 'numbers_dams_p', 'axis_slice', {})
-        reports["numbers_dams_p"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        arith = f_update_default_controls(user_controls, 'numbers_pdams', 'arith', 2)
+        index = f_update_default_controls(user_controls, 'numbers_pdams', 'index', [4,5])       #DVP, p
+        cols = f_update_default_controls(user_controls, 'numbers_pdams', 'cols', [2, 3, 8]) #k2, t, w
+        axis_slice = f_update_default_controls(user_controls, 'numbers_pdams', 'axis_slice', {})
+        reports["numbers_pdams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_numbers_prog', 'Run']:
         type = 'stock'
@@ -907,46 +931,46 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         axis_slice = f_update_default_controls(user_controls, 'numbers_offs', 'axis_slice', {})
         reports["numbers_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    if report_run.loc['run_numbers_offs_p', 'Run']:
+    if report_run.loc['run_numbers_poffs', 'Run']:
         type = 'stock'
         prod = 'on_hand_mort_k3k5tvpnwziaxyg3'
         na_prod = [0,1]  # q,s
         weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
         na_weights = [6]
         keys = 'offs_keys_qsk3k5tvpnwziaxyg3'
-        arith = f_update_default_controls(user_controls, 'numbers_offs_p', 'arith', 2)
-        index = f_update_default_controls(user_controls, 'numbers_offs_p', 'index', [6])   #p
-        cols = f_update_default_controls(user_controls, 'numbers_offs_p', 'cols', [14, 2,12,3,4,8])  #genotype, dam age, gender, BTRT, t, w
-        axis_slice = f_update_default_controls(user_controls, 'numbers_offs_p', 'axis_slice', {})
-        reports["numbers_offs_p"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+        arith = f_update_default_controls(user_controls, 'numbers_poffs', 'arith', 2)
+        index = f_update_default_controls(user_controls, 'numbers_poffs', 'index', [6])   #p
+        cols = f_update_default_controls(user_controls, 'numbers_poffs', 'cols', [14, 2,12,3,4,8])  #genotype, dam age, gender, BTRT, t, w
+        axis_slice = f_update_default_controls(user_controls, 'numbers_poffs', 'axis_slice', {})
+        reports["numbers_poffs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
                                axis_slice=axis_slice)
-    if report_run.loc['run_mort_dams', 'Run']:
+    if report_run.loc['run_mort_pdams', 'Run']:
         ##note t axis will be singleton unless stock generator was run with active t axis.
         type = 'stock'
         prod = 'mort_Tpa1e1b1nwziyg1' #uses b axis instead of k for extra detail when scan=0
         weights = None
         na_weights = []
         keys = 'dams_keys_Tpaebnwziy1g1'
-        arith = f_update_default_controls(user_controls, 'mort_dams', 'arith', 4)
-        index = f_update_default_controls(user_controls, 'mort_dams', 'index', [1])   #p
-        cols = f_update_default_controls(user_controls, 'mort_dams', 'cols', [10, 4, 6])     #genotype, LSLN, w
-        axis_slice = f_update_default_controls(user_controls, 'mort_dams', 'axis_slice', {})
-        reports["mort_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, weights=weights,
+        arith = f_update_default_controls(user_controls, 'mort_pdams', 'arith', 4)
+        index = f_update_default_controls(user_controls, 'mort_pdams', 'index', [1])   #p
+        cols = f_update_default_controls(user_controls, 'mort_pdams', 'cols', [10, 4, 6])     #genotype, LSLN, w
+        axis_slice = f_update_default_controls(user_controls, 'mort_pdams', 'axis_slice', {})
+        reports["mort_pdams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
                                axis_slice=axis_slice)
-    if report_run.loc['run_mort_offs', 'Run']:
+    if report_run.loc['run_mort_poffs', 'Run']:
         ##note t axis will be singleton unless stock generator was run with active t axis.
         type = 'stock'
         prod = 'mort_Tpnwzida0e0b0xyg3' #uses b axis instead of k for extra detail when scan=0
         weights = None
         na_weights = []
         keys = 'offs_keys_Tpnwzidaebxyg3'
-        arith = f_update_default_controls(user_controls, 'mort_offs', 'arith', 4)
-        index = f_update_default_controls(user_controls, 'mort_offs', 'index', [1])   #p
-        cols = f_update_default_controls(user_controls, 'mort_offs', 'cols', [12, 9, 3, 10])     #g3, BTRT, w, gender
-        axis_slice = f_update_default_controls(user_controls, 'mort_offs', 'axis_slice', {})
-        reports["mort_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, weights=weights,
+        arith = f_update_default_controls(user_controls, 'mort_poffs', 'arith', 4)
+        index = f_update_default_controls(user_controls, 'mort_poffs', 'index', [1])   #p
+        cols = f_update_default_controls(user_controls, 'mort_poffs', 'cols', [12, 9, 3, 10])     #g3, BTRT, w, gender
+        axis_slice = f_update_default_controls(user_controls, 'mort_poffs', 'axis_slice', {})
+        reports["mort_poffs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
                                axis_slice=axis_slice)
     if report_run.loc['run_dse', 'Run']:

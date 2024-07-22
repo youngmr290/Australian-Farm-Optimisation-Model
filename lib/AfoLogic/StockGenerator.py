@@ -8417,6 +8417,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     r_fd_hd_tvg3 = sfun.f1_p2v(o_fd_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
                                period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
 
+    ##ebw at start of the DVP - not accounting for mortality
+    r_ebw_tvg1 = sfun.f1_p2v(r_ebw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_ebw_tvg3 = sfun.f1_p2v(r_ebw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
+
     ##wbe at start of the DVP - not accounting for mortality
     r_wbe_tvg1 = sfun.f1_p2v(r_wbe_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     r_wbe_tvg3 = sfun.f1_p2v(r_wbe_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
@@ -9652,6 +9656,18 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                                           mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3
                                                                                   * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
+    ##ebw - empty body weight at start of DVP, no account for mortality
+    r_ebw_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', r_ebw_tvg1,
+                                                                      a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                      index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                      mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
+    r_ebw_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', r_ebw_tvg3, a_k3cluster_da0e0b0xyg3,
+                                                                        index_k3k5tva1e1b1nwzida0e0b0xyg3,
+                                                                        a_k5cluster_da0e0b0xyg3,
+                                                                        index_k5tva1e1b1nwzida0e0b0xyg3,
+                                                                        mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3
+                                                                                * mask_z8var_va1e1b1nwzida0e0b0xyg3)
+
     ##wbe - wholebody energy at start of DVP, no account for mortality
     r_wbe_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_wbe_tvg1,
                                                                         a_k2cluster_va1e1b1nwzida0e0b0xyg1,
@@ -9741,11 +9757,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                             , np.sum(numbers_start_tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1),
                                                                      axis = (e1_pos, b1_pos), keepdims=True))
 
-    ##ffcfw for select p - to keep the report small it doesn't have full p axis
+    ##select p - to keep the report small it doesn't have full p axis
     period_is_report_p = fun.f_sa(np.array([False]), sen.sav['period_is_report_p'], 5)
     period_is_report_p = period_is_report_p[0:len_p]
 
-    ##ffcfw in select p slices to reduce size.
+    ##ebw in select p slices to reduce size.
     r_ebw_dams_k2tvPdams = (r_ebw_tpdams[:, na, period_is_report_p, ...]
                               * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
@@ -10810,6 +10826,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     fun.f1_make_r_val(r_vals,dvp_start_va1e1b1nwzida0e0b0xyg1 % 364,'dvp_start_vezg1', shape=ve1zg1_shape) #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
     fun.f1_make_r_val(r_vals,dvp_start_va1e1b1nwzida0e0b0xyg3 % 364,'dvp_start_vzdxg3', shape=vzdxg3_shape) #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
     fun.f1_make_r_val(r_vals,r_repro_dates_roe1g1 % 364,'r_repro_dates_roe1g1', shape=roe1g1_shape) #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
+
+    ###ebw - this uses generator t axis (thus it can be singleton but it is always broadcastable with normal t)
+    fun.f1_make_r_val(r_vals,r_ebw_k2tva1e1b1nwzida0e0b0xyg1,'ebw_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_ebw_k3k5tva1e1b1nwzida0e0b0xyg3,'ebw_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5Tvnwziaxyg3_shape)
 
     ###wbe - this uses generator t axis (thus it can be singleton but it is always broadcastable with normal t)
     fun.f1_make_r_val(r_vals,r_wbe_k2tva1e1b1nwzida0e0b0xyg1,'wbe_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)
