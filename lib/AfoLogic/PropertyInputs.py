@@ -272,6 +272,17 @@ def f_property_inp_sa(pinp_defaults):
     ##have to import it here since sen.py imports this module
     from . import Sensitivity as sen
 
+    ##special sav to change node dates for MP model
+    if np.any(sen.sav['date_node_p7']!='-'):
+        ###slice p7 so that inputs match new p7 definition
+        len_p7 = len(sen.sav['date_node_p7'])
+        general['i_date_node_zm'] = general['i_date_node_zm'][:,0:len_p7] #slice p7
+        general['i_phase_can_increase_kp7'] = general['i_phase_can_increase_kp7'][:,0:len_p7]
+        general['i_phase_can_reduce_kp7'] = general['i_phase_can_reduce_kp7'][:,0:len_p7]
+        general['i_node_is_fvp'] = general['i_node_is_fvp'][0:len_p7]
+        ###update node dates
+        general['i_date_node_zm'][...] = sen.sav['date_node_p7']
+
     ##general
     ###sav
     general['i_mask_z'] = fun.f_sa(general['i_mask_z'], sen.sav['mask_z'], 5)

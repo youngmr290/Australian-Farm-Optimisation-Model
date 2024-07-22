@@ -89,6 +89,7 @@ def create_sa():
     sav['steady_state']      = '-'                  #SA to alter if the model is steady state
     sav['mask_z']      = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)   #SA to alter which seasons are included
     sav['prob_z']      = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)   #SA to alter which seasons are included
+    sav['date_node_p7']      = np.full(2, '-', dtype=object) #SA to alter p7 period dates (for MP model). Len 2 because p7 has two periods in the MP model. Note the node periods need to line up with p5 and p6 periods
     sav['inc_node_periods']      = '-'              #SA to alter if season nodes are included in the steady state model (note they are always included in the dsp version this only effects if they are included in steady state)
     sav['seq_len']      = '-'                     #SA to alter the length of the season sequence in the SQ model
     sav['model_is_MP']      = '-'                 #SA to control when the MP framework is used.
