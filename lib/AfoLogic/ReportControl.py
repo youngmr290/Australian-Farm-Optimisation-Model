@@ -630,6 +630,18 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                prod_weights=prod_weights, na_prodweights=na_prodweights, weights=weights, na_weights=na_weights,
                                den_weights=den_weights, na_denweights=na_denweights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_nv_dams', 'Run']:
+        type = 'stock'
+        prod = 'nv_k2tva1nwziyg1'
+        na_prod = [0,1] #q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        keys = 'dams_keys_qsk2tvanwziy1g1'
+        arith = f_update_default_controls(user_controls, 'nv_dams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'nv_dams', 'index', [4])      #DVP
+        cols = f_update_default_controls(user_controls, 'nv_dams', 'cols', [2]) #k2
+        axis_slice = f_update_default_controls(user_controls, 'nv_dams', 'axis_slice', {})
+        reports["nv_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_nv_pdams', 'Run']:
         ##Average dam NV with p, e & b axis. NV is adjusted for animals that are sold but not adjusted by mortality (Ie if the light ones all die then the weighting by p should change)
         ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
@@ -652,6 +664,27 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                prod_weights=prod_weights, na_prodweights=na_prodweights, weights=weights, na_weights=na_weights,
                                den_weights=den_weights, na_denweights=na_denweights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_nv_cut_dams', 'Run']:
+        ##ebw for a select number of p periods
+        type = 'stock'
+        prod = 'nv_dams_k2tvPa1e1b1nw8ziyg1'
+        na_prod = [0, 1]  #q,s
+        prod_weights = 'Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_prodweights = [0,1] #q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        na_weights = [5,7,8]  #p,e,b
+        den_weights = 'Pe1b1_numbers_weights_k2tvPa1e1b1nw8ziyg1'  # weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_denweights = [0, 1]  # q,s
+        keys = 'dams_keys_qsk2tvPaebnwziy1g1'
+        arith = f_update_default_controls(user_controls, 'nv_cut_dams', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'nv_cut_dams', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'nv_cut_dams', 'cols', [8]) #b1
+        axis_slice = f_update_default_controls(user_controls, 'nv_cut_dams', 'axis_slice', {})
+        reports["nv_cut_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod
+                                                , weights=weights, na_weights=na_weights
+                                                , prod_weights=prod_weights, na_prodweights=na_prodweights
+                                                , den_weights=den_weights, na_denweights=na_denweights
+                                                , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_ebw_pyatf', 'Run']:
         ##Average yatf ebw with p, e & b axis. ebw is not adjusted by mortality (Ie if the light ones all die then the weighting by p should change)
         ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).

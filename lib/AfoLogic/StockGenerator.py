@@ -8440,6 +8440,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     r_viscera_tvg2 = sfun.f1_p2v(r_viscera_tpyatf, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     r_viscera_tvg3 = sfun.f1_p2v(r_viscera_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
 
+    ##feeding value of diet  #todo convert this to nv during period rather than single period
+    r_nv_tvg1 = sfun.f1_p2v(nv_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_nv_tvg3 = sfun.f1_p2v(nv_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
+
     ##nfoet scanning
     r_nfoet_scan_tvg1 = sfun.f1_p2v(nfoet_b1nwzida0e0b0xyg, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
                                 on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_scan_pa1e1b1nwzida0e0b0xyg1)
@@ -9707,6 +9711,18 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                       , index_k3k5tva1e1b1nwzida0e0b0xyg3, a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3
                                       , mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
+    ##nv - feeding value of dams & offs
+    r_nv_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', r_nv_tvg1,
+                                                                      a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                      index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                      mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
+    r_nv_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', r_nv_tvg3, a_k3cluster_da0e0b0xyg3,
+                                                                        index_k3k5tva1e1b1nwzida0e0b0xyg3,
+                                                                        a_k5cluster_da0e0b0xyg3,
+                                                                        index_k5tva1e1b1nwzida0e0b0xyg3,
+                                                                        mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3
+                                                                                * mask_z8var_va1e1b1nwzida0e0b0xyg3)
+
     #############################################
     #weaning %, scan % and lamb survival reports#
     #############################################
@@ -9787,6 +9803,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##viscera in select p slices to reduce size.
     r_viscera_dams_k2tvPdams = (r_viscera_tpdams[:, na, period_is_report_p, ...]
+                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                                 == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+
+    ##nv in select p slices to reduce size.
+    r_nv_dams_k2tvPdams = (nv_tpdams[:, na, period_is_report_p, ...]
                               * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
                                  == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
@@ -10847,6 +10869,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     fun.f1_make_r_val(r_vals,r_viscera_k2tva1e1b1nwzida0e0b0xyg1,'viscera_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals,r_viscera_k3k5tva1e1b1nwzida0e0b0xyg3,'viscera_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5Tvnwziaxyg3_shape)
 
+    ###nv - this uses generator t axis (thus it can be singleton but it is always broadcastable with normal t)
+    fun.f1_make_r_val(r_vals,r_nv_k2tva1e1b1nwzida0e0b0xyg1,'nv_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_nv_k3k5tva1e1b1nwzida0e0b0xyg3,'nv_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5Tvnwziaxyg3_shape)
+
     ###cfw
     fun.f1_make_r_val(r_vals,r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0,'cfw_hdmob_zg0', shape=zg0_shape) #no mask needed since no active period axis
     fun.f1_make_r_val(r_vals,r_cfw_hdmob_k2tva1e1b1nwzida0e0b0xyg1,'cfw_hdmob_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2tva1nwziyg1_shape)
@@ -10970,6 +10996,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ###Viscera with only a few p slices
     fun.f1_make_r_val(r_vals, r_viscera_dams_k2tvPdams, 'viscera_dams_k2tvPa1e1b1nw8ziyg1',
+                      mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
+
+    ###nv with only a few p slices
+    fun.f1_make_r_val(r_vals, r_nv_dams_k2tvPdams, 'nv_dams_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
 
     ###mort - uses b axis instead of k for extra detail when scan=0
