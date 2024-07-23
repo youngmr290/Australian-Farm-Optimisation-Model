@@ -7,7 +7,7 @@ import os
 from ..AfoLogic import ReportFunctions as rfun
 from ..AfoLogic import relativeFile
 
-#todo should be able to simplify this module using loops with a couple of additions for the unique reports ie writing to excel needs to be diffferent for reports where multiple tables are written to the same sheet. Maybe loop over all report that are standard then do the weird ones by hand after.
+#todo should be able to simplify this module using loops with a couple of additions for the unique reports ie writing to excel needs to be different for reports where multiple tables are written to the same sheet. Maybe loop over all report that are standard then do the weird ones by hand after.
 def f_create_report_dfs(non_exist_trials):
     reports = {}
     ##create empty df to stack each trial results into

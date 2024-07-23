@@ -88,10 +88,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     if report_run.loc['run_summary', 'Run']:
         reports["summary"] = rfun.f_summary(lp_vars,r_vals,"Summary")
     if report_run.loc['run_areasum', 'Run']:
-        option = f_update_default_controls(user_controls, 'areasum', 'option', 10) #default is all rotations by lmu in p7[-1] with disagregate landuse index.
+        option = f_update_default_controls(user_controls, 'areasum', 'option', 10) #default is all rotations by lmu in p7[-1] with disaggregate landuse index.
         reports["areasum"] = rfun.f_area_summary(lp_vars, r_vals, option=option)
     if report_run.loc['run_cropsum', 'Run']:
-        option = f_update_default_controls(user_controls, 'cropsum', 'option', 2) #default is all rotations by lmu in p7[-1] with disagregate landuse index.
+        option = f_update_default_controls(user_controls, 'cropsum', 'option', 2) #default is all rotations by lmu in p7[-1] with disaggregate landuse index.
         reports["cropsum"] = rfun.f_crop_summary(lp_vars,r_vals, option=option)
     if report_run.loc['run_profit', 'Run']:
         option = f_update_default_controls(user_controls, 'profit', 'option', 4) #profit by zqs
@@ -824,7 +824,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights
                                , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_lamb_survival', 'Run']:
-        #axes are qsk2tvaeb9nwziy1g1      b9 axis is shorten b axis: [0,1,2,3]
+        #axes are qsk2tvaeb9nwziy1g1      b9 axis is shortened b axis: [0,1,2,3]
         option = f_update_default_controls(user_controls, 'lamb_survival', 'option', 0)
         index = f_update_default_controls(user_controls, 'lamb_survival', 'index', [4])  #v
         cols = f_update_default_controls(user_controls, 'lamb_survival', 'cols', [13,11,0,1,10,7])    #g,i,q,s,z & b9 #report must include the b axis otherwise an error is caused because the axis added after the arith.

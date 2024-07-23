@@ -67,7 +67,7 @@ def run_afo(row):
     pkl_fs = dxl.f_load_fs(fs_use_pkl, fs_use_number)
 
     ##run AFO
-    global d_rot_info #has to be defined as global sincie it is defined outside this function above
+    global d_rot_info #has to be defined as global since it is defined outside this function above
     model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info = (
         afo.exp(solver_method, user_sa, property, trial_name, trial_description, sinp_defaults, uinp_defaults,
                 pinp_defaults, d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output))
