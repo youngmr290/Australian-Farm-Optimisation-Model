@@ -1728,7 +1728,7 @@ def f_lwc_mu(cg, rc_start, mei_initial, meme, mew, new, zf1, zf2, kge, kf, kp, h
     surplus_energy = mefat + memuscle + meviscera
     ###mem: maintenance energy requirement including the increment for heat loss (excluding conceptus growth & lactation)
     ### (MEI minus energy stored plus the associated HP for product formation and HAF)
-    mem = mei - metabolisable_energy
+    mem = mei - (mefat + memuscle + meviscera + mew + gest_propn * mec + lact_propn * mel)
     ### Calculate adjustment to mei to reflect the changes made by the REV or post calc SA
     mei_adjustment = mei - mei_initial
 
