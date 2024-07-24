@@ -341,6 +341,7 @@ def create_sa():
     sav['onhand_mort_p_inc'] = '-'  #SA to store onhand report values
     sav['mort_inc'] = '-'  #SA to store mort report values
     sav['feedbud_inc'] = '-'  #SA to store feed budget report values
+    sav['force_ebg_scalar'] = False  #SA to force scaling of energy components to ebg (active if components are the REV target traits)
     sav['age_max'] = '-'  #SA on length of the generator for dams (years)
     sav['age_max_offs'] = '-'    #SA on length of the generator for offspring (years)
     sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared

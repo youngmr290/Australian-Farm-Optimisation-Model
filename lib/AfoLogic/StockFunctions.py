@@ -1698,8 +1698,8 @@ def f_lwc_mu(cg, rc_start, mei_initial, meme, mew, new, zf1, zf2, kge, kf, kp, h
     ###Note: if ebg is not changed by the SA on the target trait then energy will be scaled but scalar = 1
     ###Scaling doesn't occur if the EBG is altered by f1_rev_update. This happens if the target trait is one of the
     ###components traits.
-    ###An implied assumption is that the component traits do not change animal sale value.
-    if np.allclose(ebg, ebg_prior, equal_nan=True):     #either not doing REVs or ebg is the target trait or the REV SA doesn't alter ebg
+    ###An implied assumption: varying the component traits doesn't change animal sale value because ebg is constant.
+    if np.allclose(ebg, ebg_prior, equal_nan=True) or sen.sav['force_ebg_scalar']:     #either not doing REVs or ebg is the target trait or the REV SA doesn't alter ebg
         d_fat = f1_weight_energy_conversion(cg, 0, energy=nefat)
         d_muscle = f1_weight_energy_conversion(cg, 1, energy=nemuscle)
         d_viscera = f1_weight_energy_conversion(cg, 2, energy=neviscera)
