@@ -977,6 +977,18 @@ def f_con_MP(model, lp_vars):
         elif q == 'q1' and len_p7>1 and str(v) == "v_phase_area" and s[2] == 'zm0':
             bnd = list_bnd[idx]
             return v[s] == bnd
+        ###bnd dams sale variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
+        elif q == 'q1' and len_p7>1 and str(v) == "v_dams" and int(s[3][-1]) < 2 and model.p_dvp_is_node1_vzg1[s[4], s[8], s[11]]:
+            bnd = list_bnd[idx]
+            return v[s] == bnd
+        ###bnd dams sale variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
+        elif q == 'q1' and len_p7>1 and str(v) == "v_offs" and int(s[4][-1]) > 0 and model.p_dvp_is_node1_k3vzxg3[s[2],s[5],s[8],s[11], s[13]]:
+            bnd = list_bnd[idx]
+            return v[s] == bnd
+        ###bnd dams sale variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
+        elif q == 'q1' and len_p7>1 and str(v) == "v_prog" and int(s[3][-1]) == 0 and model.p_dvp_is_node1_k3g2[s[2], s[10]]:
+            bnd = list_bnd[idx]
+            return v[s] == bnd
         else:
             return pe.Constraint.Skip
 
