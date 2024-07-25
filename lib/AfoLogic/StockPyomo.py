@@ -324,6 +324,18 @@ def f1_stockpyomo_local(params, model):
                                                   initialize=params['p_mask_childz_between_offs'], default=0.0,
                                                   mutable=False, doc='mask child season require params')
 
+    ##multiperiod
+    model.p_dvp_is_node1_vzg1 = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
+                                         initialize=params['p_dvp_is_node1_vzg1'], default=0.0,
+                                         mutable=False, doc='mask which dam dvps are in the first season period.')
+    model.p_dvp_is_node1_k3vzxg3 = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_season_types,
+                                            model.s_gender, model.s_groups_offs, initialize=params['p_dvp_is_node1_k3vzxg3'], default=0.0,
+                                                  mutable=False, doc='mask which offs dvps are in the first season period.')
+    model.p_dvp_is_node1_k3g2 = pe.Param(model.s_k3_damage_offs, model.s_groups_prog, initialize=params['p_dvp_is_node1_k3g2'], default=0.0,
+                                                  mutable=False, doc='mask if weaning occurs in the first season period.')
+
+
+
     ##write param to text file.
     # textbuffer = StringIO()
     # model.p_numbers_prov_dams.pprint(textbuffer)
