@@ -1501,7 +1501,7 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False, summa
         if true it returns the total expected DSE/ha in winter. Used in the summary report
     :param summary2: Bool
         if true it returns the total numbers at the start and end of the season with qsz axis. Used in numbers summary report.
-    :param summary1: Bool
+    :param summary3: Bool
         if true it returns the total DSE/ha in winter for each season.
     :return: DSE per pasture hectare for each sheep group.
 
@@ -1935,6 +1935,7 @@ def f_stock_pasture_summary(r_vals, build_df=True, keys=None, type=None, index=[
     '''
     keys_key = keys
     keys_z = r_vals['zgen']['keys_z'] #before r_vals get sliced
+    keys_q = r_vals['zgen']['keys_q'] #before r_vals get sliced
 
     ##read from stock reshape function
     if type == 'stock':
@@ -1946,11 +1947,18 @@ def f_stock_pasture_summary(r_vals, build_df=True, keys=None, type=None, index=[
         ###keys that will become the index and cols for table
         keys = d_keys[keys_key]
 
-    ##determine if use weighted or base version of vars (use base if z is in the index or cols)
-    if any(list(key) == list(keys_z) for key in [keys[i] for i in index+cols]):
+    ##determine if use weighted or base version of vars (use base if z is in the index or cols). If z is singleton the q axis controls if weighting happens (this is required for MP model).
+    ## this is not a perfect system it doesnt handle the sq model if z was summed and q was reported but that is not very likely.
+    if len(keys_z) > 1 and any(list(key) == list(keys_z) for key in [keys[i] for i in index+cols]):
         vars = d_vars['base']
-    else:
+    elif len(keys_z) > 1:
         vars = d_vars['qsz_weighted']
+    elif len(keys_q) > 1 and any(list(key) == list(keys_q) for key in [keys[i] for i in index+cols]):
+        vars = d_vars['base']
+    elif len(keys_q) > 1:
+        vars = d_vars['qsz_weighted']
+    else:
+        vars = d_vars['base']
 
     ##An error here means the key provided for weights does not exist in lp_vars
     ###using None as the default for weights so that an error is generated later if an Arith option is selected that requires weights
