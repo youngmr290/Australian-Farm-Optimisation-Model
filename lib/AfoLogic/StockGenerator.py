@@ -10091,7 +10091,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##stuff for MP model
     arrays_vzg1 = [keys_v1, keys_z, keys_g1]
     arrays_k3vzxg3 = [keys_k3, keys_v3, keys_z, keys_x, keys_g3]
-    arrays_k3g2 = [keys_k3, keys_g2]
+    arrays_k3zg2 = [keys_k3, keys_z, keys_g2]
 
     ###identify which dvps fall in the first season period (this is when management in the MP must still be constrained)
     idx_zidaebxygm = np.searchsorted(date_start_P, date_node_zidaebxygm, 'left')  # use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
@@ -10109,13 +10109,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                axis=d_pos, keepdims=True) > 0)
     params['p_dvp_is_node1_k3vzxg3'] = fun.f1_make_pyomo_dict(dvp_is_node1_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3vzxg3)
     ###prog - check if prog are weaned in the first season period (if so then sale at weaning in the MP model must match the base SE management).
-    wean_is_node1_ida0e0b0xyg2 = np.logical_and(date_weaned_ida0e0b0xyg3 % 364 >= date_node_zidaebxygm[...,0],
+    wean_is_node1_zida0e0b0xyg2 = np.logical_and(date_weaned_ida0e0b0xyg3 % 364 >= date_node_zidaebxygm[...,0],
                                                 date_weaned_ida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., 1]) #use off weaning date because that is the same as prog except it has d axis instead of o axis.
     #####cluster d (d axis is active from the dvp dates)
-    wean_is_node1_k3k5tva1e1b1nwzida0e0b0xyg3 = 1 * (np.sum(wean_is_node1_ida0e0b0xyg2
+    wean_is_node1_k3k5tva1e1b1nwzida0e0b0xyg3 = 1 * (np.sum(wean_is_node1_zida0e0b0xyg2
                                                                * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
                                                                axis=d_pos, keepdims=True) > 0)
-    params['p_dvp_is_node1_k3g2'] = fun.f1_make_pyomo_dict(wean_is_node1_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3g2)
+    params['p_dvp_is_node1_k3zg2'] = fun.f1_make_pyomo_dict(wean_is_node1_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3zg2)
 
 
 
