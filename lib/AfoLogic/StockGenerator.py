@@ -8885,34 +8885,34 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###sire
     start_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 = assetvalue_a5p7qtva1e1b1nwzida0e0b0xyg0[1]
     end_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 = assetvalue_a5p7qtva1e1b1nwzida0e0b0xyg0[2]
-    assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 = end_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 - start_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0
+    tradevalue_p7qtva1e1b1nwzida0e0b0xyg0 = end_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 - start_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0
     ###dams
     start_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = assetvalue_a5p7qk2tva1e1b1nwzida0e0b0xyg1[1]
     end_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = assetvalue_a5p7qk2tva1e1b1nwzida0e0b0xyg1[2] * (index_tva1e1b1nw8zida0e0b0xyg1>=2) #only retained animals have an end value (animals that are sold don't have a value)
-    assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = end_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 - start_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1
+    tradevalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = end_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 - start_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1
     ###offs
     start_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 = assetvalue_a5p7qk3k5tva1e1b1nwzida0e0b0xyg3[1]
     end_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 = assetvalue_a5p7qk3k5tva1e1b1nwzida0e0b0xyg3[2] * (index_tva1e1b1nw8zida0e0b0xyg3==0) #only retained animals have an end value (animals that are sold don't have a value)
-    assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 = end_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 - start_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3
+    tradevalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 = end_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 - start_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3
 
     ##if steady state set everything to 0 - there is no "season start" in SE model so there is no opportunity for trade between seasons
     if bool_steady_state:
         ###sire
         end_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 = start_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 # sires don't get distributed at season start so asset value end = start
-        assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 = end_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 - start_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0
+        tradevalue_p7qtva1e1b1nwzida0e0b0xyg0 = end_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 - start_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0
         ###dams
         end_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = start_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 # sires don't get distributed at season start so asset value end = start
-        assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = end_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 - start_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1
+        tradevalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = end_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 - start_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1
         ###offs
         end_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 = start_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 # sires don't get distributed at season start so asset value end = start
-        assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 = end_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 - start_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3
+        tradevalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 = end_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 - start_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3
 
     ##if risk is not included then tradevalue is not included in objective. For standard dsp the tradevalue is only required in the pnl report.
     ## if risk is included then need to include tradevalue in obj to stop the model selling extra sheep in poor year to increase utility.
     if not uinp.general['i_inc_risk']:
-        assetvalue_p7qtva1e1b1nwzida0e0b0xyg0[...] = 0
-        assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1[...] = 0
-        assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3[...] = 0
+        tradevalue_p7qtva1e1b1nwzida0e0b0xyg0[...] = 0
+        tradevalue_p7qk2tva1e1b1nwzida0e0b0xyg1[...] = 0
+        tradevalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3[...] = 0
 
     ###########################
     #create numbers params    #
@@ -10033,11 +10033,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##trade value
     ## a5[1] start of season & a5[2] end of season.
     ###sire
-    params['p_tradevalue_p7qzg0'] = fun.f1_make_pyomo_dict(assetvalue_p7qtva1e1b1nwzida0e0b0xyg0, arrays_p7qzg0)
+    params['p_tradevalue_p7qzg0'] = fun.f1_make_pyomo_dict(tradevalue_p7qtva1e1b1nwzida0e0b0xyg0, arrays_p7qzg0)
     ###dams
-    params['p_tradevalue_p7qk2tva1nwziyg1'] = fun.f1_make_pyomo_dict(assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1, arrays_p7qk2tvanwziyg1)
+    params['p_tradevalue_p7qk2tva1nwziyg1'] = fun.f1_make_pyomo_dict(tradevalue_p7qk2tva1e1b1nwzida0e0b0xyg1, arrays_p7qk2tvanwziyg1)
     ###offs
-    params['p_tradevalue_p7qk3k5tvnwziaxyg3'] = fun.f1_make_pyomo_dict(assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3, arrays_p7qk3k5tvnwziaxyg3)
+    params['p_tradevalue_p7qk3k5tvnwziaxyg3'] = fun.f1_make_pyomo_dict(tradevalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3, arrays_p7qk3k5tvnwziaxyg3)
 
     ##labour
     ###anyone labour - sire
