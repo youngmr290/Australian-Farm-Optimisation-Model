@@ -331,7 +331,7 @@ def f1_stockpyomo_local(params, model):
     model.p_dvp_is_node1_k3vzxg3 = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_season_types,
                                             model.s_gender, model.s_groups_offs, initialize=params['p_dvp_is_node1_k3vzxg3'], default=0.0,
                                                   mutable=False, doc='mask which offs dvps are in the first season period.')
-    model.p_dvp_is_node1_k3g2 = pe.Param(model.s_k3_damage_offs, model.s_groups_prog, initialize=params['p_dvp_is_node1_k3g2'], default=0.0,
+    model.p_dvp_is_node1_k3zg2 = pe.Param(model.s_k3_damage_offs, model.s_season_types, model.s_groups_prog, initialize=params['p_dvp_is_node1_k3zg2'], default=0.0,
                                                   mutable=False, doc='mask if weaning occurs in the first season period.')
 
 

@@ -986,7 +986,7 @@ def f_con_MP(model, lp_vars):
             bnd = list_bnd[idx]
             return v[s] == bnd
         ###bnd dams sale variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
-        elif q == 'q1' and len_p7>1 and str(v) == "v_prog" and int(s[3][-1]) == 0 and model.p_dvp_is_node1_k3g2[s[2], s[10]]:
+        elif q == 'q1' and len_p7>1 and str(v) == "v_prog" and int(s[3][-1]) == 0 and model.p_dvp_is_node1_k3zg2[s[2], s[6], s[10]]:
             bnd = list_bnd[idx]
             return v[s] == bnd
         else:
