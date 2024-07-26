@@ -19,6 +19,7 @@ import os.path
 import sys
 from openpyxl import load_workbook
 from openpyxl.worksheet.cell_range import CellRange
+from datetime import datetime
 
 from . import LoadExp as exp
 from ..AfoLogic import StructuralInputs as sinp
@@ -84,7 +85,7 @@ def f_load_excel_default_inputs(load_all_pinp=False, trial_pinp=None):
     structural_xl_path = relativeFile.findExcel("Structural.xlsx")
 
     ##read from Excel
-    print('Reading structural inputs from Excel',end=' ',flush=True)
+    print(f'Reading structural inputs from Excel, last saved: {datetime.fromtimestamp(round(os.path.getmtime(structural_xl_path)))}', end=' ', flush=True)
     ##general
     sinp_defaults['general_inp'] = xl_all_named_ranges(structural_xl_path,"General")
 
@@ -119,7 +120,7 @@ def f_load_excel_default_inputs(load_all_pinp=False, trial_pinp=None):
         property_xl_path = relativeFile.findExcel("Property_{0}.xlsx".format(property))
 
         ##read from excel
-        print('Reading property {0} inputs from Excel'.format(property), end=' ', flush=True)
+        print(f'Reading property {property} inputs from Excel, last saved: {datetime.fromtimestamp(round(os.path.getmtime(property_xl_path)))}', end=' ', flush=True)
         pinp_defaults[property]['general_inp'] = xl_all_named_ranges(property_xl_path,"General", numpy=True)
 
         pinp_defaults[property]['labour_inp'] = xl_all_named_ranges(property_xl_path,"Labour")
@@ -168,7 +169,7 @@ def f_load_excel_default_inputs(load_all_pinp=False, trial_pinp=None):
     universal_xl_path = relativeFile.findExcel("Universal.xlsx")
 
     ##read from excel
-    print('Reading universal inputs from Excel', end=' ', flush=True)
+    print(f'Reading universal inputs from Excel, last saved: {datetime.fromtimestamp(round(os.path.getmtime(universal_xl_path)))}', end=' ', flush=True)
     ##general
     uinp_defaults['general_inp'] = xl_all_named_ranges(universal_xl_path,"General")
 
