@@ -69,7 +69,7 @@ def f1_boundarypyomo_local(params, model):
     pasture_lmu_bound_inc = np.any(sen.sav['bnd_pas_area_l'] != '-')
     landuse_bound_inc = np.any(sen.sav['bnd_landuse_area_klz'] != '-') #bound on area of each landuse (which is the sum of all the phases for that landuse)
     crop_area_bound_inc = np.any(sen.sav['bnd_crop_area'] != '-') or np.any(sen.sav['bnd_crop_area_percent'] != '-')  # controls if crop area bnd is included.(which is the sum of all the phases for that crop)
-    biomass_graze_bound_inc = np.any(sen.sav['bnd_biomass_graze'] != '-')   # controls if biomass grazed bnd is included.(which is the proportion of crop biomass that is grazed)
+    biomass_graze_bound_inc = np.any(sen.sav['bnd_biomass_graze_k1'] != '-')   # controls if biomass grazed bnd is included.(which is the proportion of crop biomass that is grazed)
     #todo need to make this input below in uinp. Then test the constraint works as expected.
     emissions_bnd_inc = False#uinp.emissions['co2e_limit']>0  # controls if total farm emissions are constrained.
 
@@ -766,7 +766,7 @@ def f1_boundarypyomo_local(params, model):
         ###build bound if turned on
         if biomass_graze_bound_inc:
             ###setbound using ha of farm area
-            biomass_graze_bound_k1 = fun.f_sa(np.array([99999]), sen.sav['bnd_biomass_graze'], 5)  # 99999 is arbitrary default value which mean skip constraint
+            biomass_graze_bound_k1 = fun.f_sa(np.array([99999]), sen.sav['bnd_biomass_graze_k1'], 5)  # 99999 is arbitrary default value which mean skip constraint
             biomass_graze_bound_k1 = dict(zip(model.s_crops, biomass_graze_bound_k1))
 
             def k1_graze_bound(model, q, s, k1, z):
