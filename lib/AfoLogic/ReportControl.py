@@ -254,66 +254,66 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_salevalue_dams', 'Run']:
         type = 'stock'
-        prod = 'salevalue_k2p7tva1nwziyg1'
-        na_prod = [0,1]  # q,s
+        prod = 'salevalue_p7qk2tva1nwziyg1'
+        na_prod = [2]  # s
         weights = 'dams_numbers_qsk2tvanwziy1g1'
-        na_weights = [3]  #p7
-        keys = 'dams_keys_qsk2p7tvanwziy1g1'
+        na_weights = [0]  #p7
+        keys = 'dams_keys_p7qsk2tvanwziy1g1'
         arith = f_update_default_controls(user_controls, 'salevalue_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'salevalue_dams', 'index', [5])
-        cols = f_update_default_controls(user_controls, 'salevalue_dams', 'cols', [2, 3, 4])  # k2, p7, t
+        cols = f_update_default_controls(user_controls, 'salevalue_dams', 'cols', [3, 0, 4])  # k2, p7, t
         axis_slice = f_update_default_controls(user_controls, 'salevalue_dams', 'axis_slice', {})
         reports["salevalue_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_salevalue_offs', 'Run']:
         type = 'stock'
-        prod = 'salevalue_k3k5p7tvnwziaxyg3'
-        na_prod = [0,1]  # q,s
+        prod = 'salevalue_p7qk3k5tvnwziaxyg3'
+        na_prod = [2]  # s
         weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
-        na_weights = [4]  #p7
-        keys = 'offs_keys_qsk3k5p7tvnwziaxyg3'
+        na_weights = [0]  #p7
+        keys = 'offs_keys_p7qsk3k5tvnwziaxyg3'
         arith = f_update_default_controls(user_controls, 'salevalue_offs', 'arith', 1)
         index = f_update_default_controls(user_controls, 'salevalue_offs', 'index', [5])
-        cols = f_update_default_controls(user_controls, 'salevalue_offs', 'cols', [2, 3, 4])  # k2, p7, t
+        cols = f_update_default_controls(user_controls, 'salevalue_offs', 'cols', [3, 0, 4])  # k3, p7, t
         axis_slice = f_update_default_controls(user_controls, 'salevalue_offs', 'axis_slice', {})
         reports["salevalue_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_salevalue_prog', 'Run']:
         type = 'stock'
-        prod = 'salevalue_k3k5p7twzia0xg2'
-        na_prod = [0,1]  # q,s
+        prod = 'salevalue_p7qk3k5twzia0xg2'
+        na_prod = [2]  # s
         weights = 'prog_numbers_qsk3k5twzia0xg2'
-        na_weights = [4]  #p7
-        keys = 'prog_keys_qsk3k5p7twzia0xg2'
+        na_weights = [0]  #p7
+        keys = 'prog_keys_p7qsk3k5twzia0xg2'
         arith = f_update_default_controls(user_controls, 'salevalue_prog', 'arith', 1)
         index = f_update_default_controls(user_controls, 'salevalue_prog', 'index', [6]) #w
-        cols = f_update_default_controls(user_controls, 'salevalue_prog', 'cols', [4, 11, 5])    #cashflow period, g2, t
+        cols = f_update_default_controls(user_controls, 'salevalue_prog', 'cols', [0, 11, 5])    #cashflow period, g2, t
         axis_slice = f_update_default_controls(user_controls, 'salevalue_prog', 'axis_slice', {})
         reports["salevalue_prog"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_woolvalue_dams', 'Run']:
         type = 'stock'
-        prod = 'woolvalue_k2p7tva1nwziyg1'
-        na_prod = [0,1]  # q,s
+        prod = 'woolvalue_p7qk2tva1nwziyg1'
+        na_prod = [2]  # s
         weights = 'dams_numbers_qsk2tvanwziy1g1'
-        na_weights = [3]  #p7
-        keys = 'dams_keys_qsk2p7tvanwziy1g1'
+        na_weights = [0]  #p7
+        keys = 'dams_keys_p7qsk2tvanwziy1g1'
         arith = f_update_default_controls(user_controls, 'woolvalue_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'woolvalue_dams', 'index', [5])
-        cols = f_update_default_controls(user_controls, 'woolvalue_dams', 'cols', [2, 3, 4])  # k2, p7, t
+        cols = f_update_default_controls(user_controls, 'woolvalue_dams', 'cols', [3, 0, 4])  # k2, p7, t
         axis_slice = f_update_default_controls(user_controls, 'woolvalue_dams', 'axis_slice', {})
         reports["woolvalue_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_woolvalue_offs', 'Run']:
         type = 'stock'
-        prod = 'woolvalue_k3k5p7tvnwziaxyg3'
-        na_prod = [0,1]  # q,s
+        prod = 'woolvalue_p7qk3k5tvnwziaxyg3'
+        na_prod = [2]  # s
         weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
-        na_weights = [4] #p7
-        keys = 'offs_keys_qsk3k5p7tvnwziaxyg3'
+        na_weights = [0] #p7
+        keys = 'offs_keys_p7qsk3k5tvnwziaxyg3'
         arith = f_update_default_controls(user_controls, 'woolvalue_offs', 'arith', 1)
         index = f_update_default_controls(user_controls, 'woolvalue_offs', 'index', [6, 12])     #DVP, gender
-        cols = f_update_default_controls(user_controls, 'woolvalue_offs', 'cols', [4, 14, 5])   #cashflow period, g3, t
+        cols = f_update_default_controls(user_controls, 'woolvalue_offs', 'cols', [0, 14, 5])   #cashflow period, g3, t
         axis_slice = f_update_default_controls(user_controls, 'woolvalue_offs', 'axis_slice', {})
         reports["woolvalue_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
