@@ -3084,7 +3084,7 @@ def f1_woolprice():
     return mpg_w4 * stb_scalar_w4
 
 
-def f_wool_value(stb_mpg_w4, wool_price_scalar_c1w4tpg, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg,dtype=None):
+def f_wool_value(stb_mpg_w4, wool_price_scalar_c1tpg, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg,dtype=None):
     '''Calculate the net value of the wool on the sheep's back (cost of shearing is not included in these calculations)
     Includes adjusting price for FD, level of fault (VM & predicted hauteur) and all components of the clip (STB)
     FNF is 'free or nearly free' i.e. wool with no fault (low VM & high SS)
@@ -3121,9 +3121,19 @@ def f_wool_value(stb_mpg_w4, wool_price_scalar_c1w4tpg, cfw_pg, fd_pg, sl_pg, ss
 
     ##stb net in the bank price
     woolp_stbnib_pg = woolp_stb_pg * (1 - uinp.sheep['i_wool_cost_pc']) - uinp.sheep['i_wool_cost_kg']
+
+    ##add q axis
+    len_q = sinp.structuralsa['i_len_q']  # number of years in MP model
+    q_wool_price_scalar_q = sen.sam['q_wool_price_scalar_Q'][0:len_q]  # have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
+    q_wool_price_scalar_qtpg = fun.f_expand(q_wool_price_scalar_q, left_pos=sinp.stock['i_p_pos']-2)
+
+    ##scale wool price for q and c1
+    woolp_stbnib_c1qtpg = woolp_stbnib_pg * wool_price_scalar_c1tpg[:,na,...] * q_wool_price_scalar_qtpg
+
     ##wool value if shorn this period
-    wool_value_pg = woolp_stbnib_pg * wool_price_scalar_c1w4tpg * cfw_pg
-    return wool_value_pg, woolp_stbnib_pg
+    wool_value_c1qtpg = woolp_stbnib_c1qtpg * cfw_pg
+
+    return wool_value_c1qtpg, woolp_stbnib_c1qtpg
 
 
 def f1_condition_score(rc_tpg, cn):
@@ -3350,9 +3360,16 @@ def f_sale_value(cn, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj_
     mask_ffcfw_s7tpg = np.logical_and(o_ffcfw_tpg>sale_ffcfw_min_s7tpg, o_ffcfw_tpg<sale_ffcfw_max_s7tpg)
     sale_value_c1s7tpg = sale_value_c1s7tpg * mask_ffcfw_s7tpg
     ###Select the maximum value across the grids
-    sale_value = np.max(sale_value_c1s7tpg, axis=1)
-    sale_grid = np.argmax(sale_value_c1s7tpg, axis=1)
-    return sale_value, sale_grid
+    sale_value_c1tpg = np.max(sale_value_c1s7tpg, axis=1)
+    sale_grid_c1tpg = np.argmax(sale_value_c1s7tpg, axis=1)
+
+    ##add q axis
+    len_q = sinp.structuralsa['i_len_q']  # number of years in MP model
+    q_meat_price_scalar_q = sen.sam['q_meat_price_scalar_Q'][0:len_q]  # have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
+    q_meat_price_scalar_qtpg = fun.f_expand(q_meat_price_scalar_q, left_pos=sinp.stock['i_p_pos']-2)
+    sale_value_c1qtpg = sale_value_c1tpg[:,na,...] * q_meat_price_scalar_qtpg
+
+    return sale_value_c1qtpg, sale_grid_c1tpg
 
 def f1_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_is_wean_pg, gender, o_ebg_tpg, wool_genes,
                             period_is_joining_pg, animal_mated, scan_option, period_is_endmating_pg):

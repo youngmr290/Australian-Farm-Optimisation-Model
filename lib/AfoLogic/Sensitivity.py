@@ -160,6 +160,8 @@ def create_sa():
     ##SAM
     sam['grainp_k'] = np.ones(len_k, dtype='float64')   # SA multiplier for grain prices for each crop
     sam['q_grain_price_scalar_Qk'] = np.ones((len_Q, len_k), dtype='float64')   # SAM for grain price with q axis
+    sam['q_wool_price_scalar_Q'] = np.ones(len_Q, dtype='float64')   # SAM for wool price with q axis
+    sam['q_meat_price_scalar_Q'] = np.ones(len_Q, dtype='float64')   # SAM for meat price with q axis
     sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron
     sam['salep_max_s7'] = np.ones(len_s7, dtype='float64')        #max sale price in grid
     sam['salep_month_adjust_s7s9p4'] = np.ones(uinp.sheep['i_salep_months_priceadj_s7s9p4'].shape, dtype='float64')      #monthly sale price

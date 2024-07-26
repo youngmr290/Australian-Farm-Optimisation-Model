@@ -1264,60 +1264,60 @@ def f_stock_cash_summary(lp_vars, r_vals):
     offs_numbers_qsk3k5tvnwziaxyg3 = stock_vars['offs_numbers_qsk3k5tvnwziaxyg3']
 
     ##husb cost
-    sire_cost_qsp7zg0 = r_vals['stock']['sire_cost_p7zg0'] * sire_numbers_qszg0[:, :, na, :, :]
-    dams_cost_qsk2p7tva1nwziyg1 = r_vals['stock']['dams_cost_k2p7tva1nwziyg1'] * dams_numbers_qsk2tvanwziy1g1[:, :, :, na, ...]
-    offs_cost_qsk3k5p7tvnwziaxyg3 = r_vals['stock']['offs_cost_k3k5p7tvnwziaxyg3'] * offs_numbers_qsk3k5tvnwziaxyg3[:, :, :, :, na, ...]
+    sire_cost_p7qszg0 = r_vals['stock']['sire_cost_p7zg0'][:,na,na,...] * sire_numbers_qszg0
+    dams_cost_p7qsk2tva1nwziyg1 = r_vals['stock']['dams_cost_p7k2tva1nwziyg1'][:,na,na,...] * dams_numbers_qsk2tvanwziy1g1
+    offs_cost_p7qsk3k5tvnwziaxyg3 = r_vals['stock']['offs_cost_p7k3k5tvnwziaxyg3'][:,na,na,...] * offs_numbers_qsk3k5tvnwziaxyg3
 
     ##purchase cost
-    sire_purchcost_qsp7zg0 = r_vals['stock']['purchcost_sire_p7zg0'] * sire_numbers_qszg0[:, :, na, :, :]
+    sire_purchcost_p7qszg0 = r_vals['stock']['purchcost_sire_p7zg0'][:,na,na,...] * sire_numbers_qszg0
 
     ##sale income
-    salevalue_qsp7zg0 = r_vals['stock']['salevalue_p7zg0'] * sire_numbers_qszg0[:, :, na, :, :]
-    salevalue_qsk2p7tva1nwziyg1 = r_vals['stock']['salevalue_k2p7tva1nwziyg1'] * dams_numbers_qsk2tvanwziy1g1[:, :, :, na, ...]
-    salevalue_qsk3k5p7twzia0xg2 = r_vals['stock']['salevalue_k3k5p7twzia0xg2'] * prog_numbers_qsk3k5twzia0xg2[:, :, :, :, na, ...]
-    salevalue_qsk3k5p7tvnwziaxyg3 = r_vals['stock']['salevalue_k3k5p7tvnwziaxyg3'] * offs_numbers_qsk3k5tvnwziaxyg3[:, :, :, :, na, ...]
+    salevalue_p7qszg0 = r_vals['stock']['salevalue_p7qzg0'][:,:,na,...] * sire_numbers_qszg0
+    salevalue_p7qsk2tva1nwziyg1 = r_vals['stock']['salevalue_p7qk2tva1nwziyg1'][:,:,na,...] * dams_numbers_qsk2tvanwziy1g1
+    salevalue_p7qsk3k5twzia0xg2 = r_vals['stock']['salevalue_p7qk3k5twzia0xg2'][:,:,na,...] * prog_numbers_qsk3k5twzia0xg2
+    salevalue_p7qsk3k5tvnwziaxyg3 = r_vals['stock']['salevalue_p7qk3k5tvnwziaxyg3'][:,:,na,...] * offs_numbers_qsk3k5tvnwziaxyg3
 
     ##asset income - used to calculate the change in asset value at the start of season. This is required in the pnl report because sale management can vary across the z axis and then at the start of the season all z get averaged e.g. z0 might retain sheep and z4 might sell. If there is no asset value then z0 will look worse.
-    assetvalue_startseason_qsp7zg0 = r_vals['stock']['assetvalue_startseason_p7zg0'] * sire_numbers_qszg0[:, :, na, :, :]
-    assetvalue_endseason_qsp7zg0 = r_vals['stock']['assetvalue_endseason_p7zg0'] * sire_numbers_qszg0[:, :, na, :, :]
-    assetvalue_startseason_qsk2p7tva1nwziyg1 = r_vals['stock']['assetvalue_startseason_k2p7tva1nwziyg1'] * dams_numbers_qsk2tvanwziy1g1[:, :, :, na, ...]
-    assetvalue_endseason_qsk2p7tva1nwziyg1 = r_vals['stock']['assetvalue_endseason_k2p7tva1nwziyg1'] * dams_numbers_qsk2tvanwziy1g1[:, :, :, na, ...]
-    assetvalue_startseason_qsk3k5p7tvnwziaxyg3 = r_vals['stock']['assetvalue_startseason_k3k5p7tvnwziaxyg3'] * offs_numbers_qsk3k5tvnwziaxyg3[:, :, :, :, na, ...]
-    assetvalue_endseason_qsk3k5p7tvnwziaxyg3 = r_vals['stock']['assetvalue_endseason_k3k5p7tvnwziaxyg3'] * offs_numbers_qsk3k5tvnwziaxyg3[:, :, :, :, na, ...]
+    assetvalue_startseason_p7qszg0 = r_vals['stock']['assetvalue_startseason_p7qzg0'][:,:,na,...] * sire_numbers_qszg0
+    assetvalue_endseason_p7qszg0 = r_vals['stock']['assetvalue_endseason_p7qzg0'][:,:,na,...] * sire_numbers_qszg0
+    assetvalue_startseason_p7qsk2tva1nwziyg1 = r_vals['stock']['assetvalue_startseason_p7qk2tva1nwziyg1'][:,:,na,...] * dams_numbers_qsk2tvanwziy1g1
+    assetvalue_endseason_p7qsk2tva1nwziyg1 = r_vals['stock']['assetvalue_endseason_p7qk2tva1nwziyg1'][:,:,na,...] * dams_numbers_qsk2tvanwziy1g1
+    assetvalue_startseason_p7qsk3k5tvnwziaxyg3 = r_vals['stock']['assetvalue_startseason_p7qk3k5tvnwziaxyg3'][:,:,na,...] * offs_numbers_qsk3k5tvnwziaxyg3
+    assetvalue_endseason_p7qsk3k5tvnwziaxyg3 = r_vals['stock']['assetvalue_endseason_p7qk3k5tvnwziaxyg3'][:,:,na,...] * offs_numbers_qsk3k5tvnwziaxyg3
 
     ##wool income
-    woolvalue_qsp7zg0 = r_vals['stock']['woolvalue_p7zg0'] * sire_numbers_qszg0[:, :, na, :, :]
-    woolvalue_qsk2p7tva1nwziyg1 = r_vals['stock']['woolvalue_k2p7tva1nwziyg1'] * dams_numbers_qsk2tvanwziy1g1[:, :, :, na, ...]
-    woolvalue_qsk3k5p7tvnwziaxyg3 = r_vals['stock']['woolvalue_k3k5p7tvnwziaxyg3'] * offs_numbers_qsk3k5tvnwziaxyg3[:, :, :, :, na, ...]
+    woolvalue_p7qszg0 = r_vals['stock']['woolvalue_p7qzg0'][:,:,na,...] * sire_numbers_qszg0
+    woolvalue_p7qsk2tva1nwziyg1 = r_vals['stock']['woolvalue_p7qk2tva1nwziyg1'][:,:,na,...] * dams_numbers_qsk2tvanwziy1g1
+    woolvalue_p7qsk3k5tvnwziaxyg3 = r_vals['stock']['woolvalue_p7qk3k5tvnwziaxyg3'][:,:,na,...] * offs_numbers_qsk3k5tvnwziaxyg3
 
     ###sum axis to return total income in each cash period
-    siresale_qsp7z = fun.f_reduce_skipfew(np.sum, salevalue_qsp7zg0, preserveAxis=(0,1,2,3))  # sum all axis except q,s,p7
-    damssale_qsp7z = fun.f_reduce_skipfew(np.sum, salevalue_qsk2p7tva1nwziyg1, preserveAxis=(0,1,3,9))  # sum all axis except q,s,p7,z
-    progsale_qsp7z = fun.f_reduce_skipfew(np.sum, salevalue_qsk3k5p7twzia0xg2, preserveAxis=(0,1,4,7))  # sum all axis except q,s,p7,z
-    offssale_qsp7z = fun.f_reduce_skipfew(np.sum, salevalue_qsk3k5p7tvnwziaxyg3, preserveAxis=(0,1,4,9))  # sum all axis except q,s,p7,z
-    sirewool_qsp7z = fun.f_reduce_skipfew(np.sum, woolvalue_qsp7zg0, preserveAxis=(0,1,2,3))  # sum all axis except q,s,p7,z
-    damswool_qsp7z = fun.f_reduce_skipfew(np.sum, woolvalue_qsk2p7tva1nwziyg1, preserveAxis=(0,1,3,9))  # sum all axis except q,s,p7,z
-    offswool_qsp7z = fun.f_reduce_skipfew(np.sum, woolvalue_qsk3k5p7tvnwziaxyg3, preserveAxis=(0,1,4,9))  # sum all axis except q,s,p7,z
-    stocksale_qsp7z = siresale_qsp7z + damssale_qsp7z + progsale_qsp7z + offssale_qsp7z
-    wool_qsp7z = sirewool_qsp7z + damswool_qsp7z + offswool_qsp7z
+    siresale_p7qsz = fun.f_reduce_skipfew(np.sum, salevalue_p7qszg0, preserveAxis=(0,1,2,3))  # sum all axis except q,s,p7
+    damssale_p7qsz = fun.f_reduce_skipfew(np.sum, salevalue_p7qsk2tva1nwziyg1, preserveAxis=(0,1,2,9))  # sum all axis except q,s,p7,z
+    progsale_p7qsz = fun.f_reduce_skipfew(np.sum, salevalue_p7qsk3k5twzia0xg2, preserveAxis=(0,1,2,7))  # sum all axis except q,s,p7,z
+    offssale_p7qsz = fun.f_reduce_skipfew(np.sum, salevalue_p7qsk3k5tvnwziaxyg3, preserveAxis=(0,1,2,9))  # sum all axis except q,s,p7,z
+    sirewool_p7qsz = fun.f_reduce_skipfew(np.sum, woolvalue_p7qszg0, preserveAxis=(0,1,2,3))  # sum all axis except q,s,p7,z
+    damswool_p7qsz = fun.f_reduce_skipfew(np.sum, woolvalue_p7qsk2tva1nwziyg1, preserveAxis=(0,1,2,9))  # sum all axis except q,s,p7,z
+    offswool_p7qsz = fun.f_reduce_skipfew(np.sum, woolvalue_p7qsk3k5tvnwziaxyg3, preserveAxis=(0,1,2,9))  # sum all axis except q,s,p7,z
+    stocksale_p7qsz = siresale_p7qsz + damssale_p7qsz + progsale_p7qsz + offssale_p7qsz
+    wool_p7qsz = sirewool_p7qsz + damswool_p7qsz + offswool_p7qsz
 
-    sirecost_qsp7z = fun.f_reduce_skipfew(np.sum, sire_cost_qsp7zg0, preserveAxis=(0,1,2,3))  # sum all axis except q,s,p7,z
-    damscost_qsp7z = fun.f_reduce_skipfew(np.sum, dams_cost_qsk2p7tva1nwziyg1, preserveAxis=(0,1,3,9))  # sum all axis except q,s,p7,z
-    offscost_qsp7z = fun.f_reduce_skipfew(np.sum, offs_cost_qsk3k5p7tvnwziaxyg3, preserveAxis=(0,1,4,9))  # sum all axis except q,s,p7,z
+    sirecost_p7qsz = fun.f_reduce_skipfew(np.sum, sire_cost_p7qszg0, preserveAxis=(0,1,2,3))  # sum all axis except q,s,p7,z
+    damscost_p7qsz = fun.f_reduce_skipfew(np.sum, dams_cost_p7qsk2tva1nwziyg1, preserveAxis=(0,1,2,9))  # sum all axis except q,s,p7,z
+    offscost_p7qsz = fun.f_reduce_skipfew(np.sum, offs_cost_p7qsk3k5tvnwziaxyg3, preserveAxis=(0,1,2,9))  # sum all axis except q,s,p7,z
 
-    sire_purchcost_qsp7z = fun.f_reduce_skipfew(np.sum, sire_purchcost_qsp7zg0, preserveAxis=(0,1,2,3))  # sum all axis except q,s,p7
+    sire_purchcost_p7qsz = fun.f_reduce_skipfew(np.sum, sire_purchcost_p7qszg0, preserveAxis=(0,1,2,3))  # sum all axis except q,s,p7
 
     ###change in asset value at the season start. This needs to be reported in pnl because at the season start stock numbers get averaged.
     ### Meaning that if z0 retains animals and z1 sells animals z0 will have a lower apparent profit which is not correct.
     ### Adding this essentially means that at the end of the season animals are purchased and sold to get back to the starting point (e.g. a good season with more animals sells some animals to the poor season that has less animals so that all seasons have the same starting point).
     ### Note if weaning occurs in the period before season start there will be an error (value of prog that are sold will get double counted). Easiest solution is to change weaning date.
-    trade_value_sire_qsp7z = (fun.f_reduce_skipfew(np.sum, assetvalue_endseason_qsp7zg0, preserveAxis=(0,1,2,3))
-                                 - np.roll(fun.f_reduce_skipfew(np.sum, assetvalue_startseason_qsp7zg0, preserveAxis=(0,1,2,3)), shift=-1, axis=2))  # sum all axis except q,s,p7. Roll so that the result is in the end p7
-    trade_value_dams_qsp7z = (fun.f_reduce_skipfew(np.sum, assetvalue_endseason_qsk2p7tva1nwziyg1, preserveAxis=(0,1,3,9))
-                                 - np.roll(fun.f_reduce_skipfew(np.sum, assetvalue_startseason_qsk2p7tva1nwziyg1, preserveAxis=(0,1,3,9)), shift=-1, axis=2))  # sum all axis except q,s,p7,z. Roll so that the result is in the end p7
-    trade_value_offs_qsp7z = (fun.f_reduce_skipfew(np.sum, assetvalue_endseason_qsk3k5p7tvnwziaxyg3, preserveAxis=(0,1,4,9))
-                                 - np.roll(fun.f_reduce_skipfew(np.sum, assetvalue_startseason_qsk3k5p7tvnwziaxyg3, preserveAxis=(0,1,4,9)), shift=-1, axis=2))  # sum all axis except q,s,p7,z. Roll so that the result is in the end p7
-    trade_value_qsp7z = trade_value_sire_qsp7z + trade_value_dams_qsp7z + trade_value_offs_qsp7z
+    trade_value_sire_p7qsz = (fun.f_reduce_skipfew(np.sum, assetvalue_endseason_p7qszg0, preserveAxis=(0,1,2,3))
+                                 - np.roll(fun.f_reduce_skipfew(np.sum, assetvalue_startseason_p7qszg0, preserveAxis=(0,1,2,3)), shift=-1, axis=0))  # sum all axis except q,s,p7. Roll so that the result is in the end p7
+    trade_value_dams_p7qsz = (fun.f_reduce_skipfew(np.sum, assetvalue_endseason_p7qsk2tva1nwziyg1, preserveAxis=(0,1,2,9))
+                                 - np.roll(fun.f_reduce_skipfew(np.sum, assetvalue_startseason_p7qsk2tva1nwziyg1, preserveAxis=(0,1,2,9)), shift=-1, axis=0))  # sum all axis except q,s,p7,z. Roll so that the result is in the end p7
+    trade_value_offs_p7qsz = (fun.f_reduce_skipfew(np.sum, assetvalue_endseason_p7qsk3k5tvnwziaxyg3, preserveAxis=(0,1,2,9))
+                                 - np.roll(fun.f_reduce_skipfew(np.sum, assetvalue_startseason_p7qsk3k5tvnwziaxyg3, preserveAxis=(0,1,2,9)), shift=-1, axis=0))  # sum all axis except q,s,p7,z. Roll so that the result is in the end p7
+    trade_value_p7qsz = trade_value_sire_p7qsz + trade_value_dams_p7qsz + trade_value_offs_p7qsz
 
     ##expenses sup feeding
     ###read in dict from grain summary
@@ -1332,19 +1332,19 @@ def f_stock_cash_summary(lp_vars, r_vals):
     supp_feedstorage_cost_p7zqs = supp_feedstorage_cost_p7_zkfp6qs.groupby(axis=1, level=(0,4,5)).sum().stack([0,1,2]) #sum k & p6 & f
 
     ##infrastructure
-    fixed_infra_cost_qsp7z = r_vals['stock']['rm_stockinfra_fix_p7z'] * r_vals['zgen']['mask_qs'][:,:,na,na]
+    fixed_infra_cost_p7qsz = r_vals['stock']['rm_stockinfra_fix_p7z'][:,na,na,:] * r_vals['zgen']['mask_qs'][:,:,na]
 
     ##total costs
-    husbcost_qsp7z = sirecost_qsp7z + damscost_qsp7z + offscost_qsp7z + fixed_infra_cost_qsp7z
+    husbcost_p7qsz = sirecost_p7qsz + damscost_p7qsz + offscost_p7qsz + fixed_infra_cost_p7qsz
     supcost_p7zqs = sup_grain_cost_p7zqs + supp_feedstorage_cost_p7zqs
-    purchasecost_qsp7z = sire_purchcost_qsp7z
+    purchasecost_qsp7z = sire_purchcost_p7qsz
 
     ##get axis in correct order for pnl table
-    stocksale_qszp7 = np.moveaxis(stocksale_qsp7z, source=-1, destination=2)
-    trade_value_qszp7 = np.moveaxis(trade_value_qsp7z, source=-1, destination=2)
-    wool_qszp7 = np.moveaxis(wool_qsp7z, source=-1, destination=2)
-    husbcost_qszp7 = np.moveaxis(husbcost_qsp7z, source=-1, destination=2)
-    purchasecost_qszp7 = np.moveaxis(purchasecost_qsp7z, source=-1, destination=2)
+    stocksale_qszp7 = np.moveaxis(stocksale_p7qsz, source=0, destination=-1)
+    trade_value_qszp7 = np.moveaxis(trade_value_p7qsz, source=0, destination=-1)
+    wool_qszp7 = np.moveaxis(wool_p7qsz, source=0, destination=-1)
+    husbcost_qszp7 = np.moveaxis(husbcost_p7qsz, source=0, destination=-1)
+    purchasecost_qszp7 = np.moveaxis(purchasecost_qsp7z, source=0, destination=-1)
     supcost_qsz_p7 = supcost_p7zqs.unstack([2,3,1]).sort_index(axis=1).T
     return stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qszp7
 
@@ -1528,9 +1528,9 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False, summa
         offs_preserve_ax = (0, 1, 4, 9)
 
     if summary2: #for summary2 DSE needs to be calculated with q,s,z axis
-        sire_preserve_ax = (0, 1, 3)
-        dams_preserve_ax = (0, 1, 9)
-        offs_preserve_ax = (0, 1, 9)
+        sire_preserve_ax = (1, 2, 3)
+        dams_preserve_ax = (1, 2, 9)
+        offs_preserve_ax = (1, 2, 9)
 
     stock_vars = d_vars['base'] #change this if z is not preserved
 
@@ -1574,18 +1574,18 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False, summa
         sr_stdev = np.sum((sr_qsz - sr_mean) ** 2 * prob_qsz)**0.5
         return sr_mean, sr_max, sr_min, sr_stdev
     elif summary2:
-        sire_numbers_startseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_startseason_p7zg0']>0)
-                                                           * stock_vars['sire_numbers_qszg0'][:, :, na, :, :], preserveAxis=sire_preserve_ax)
-        sire_numbers_endseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_endseason_p7zg0']>0)
-                                                         * stock_vars['sire_numbers_qszg0'][:, :, na, :, :], preserveAxis=sire_preserve_ax)
-        dams_numbers_startseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_startseason_k2p7tva1nwziyg1']>0)
-                                                                     * stock_vars['dams_numbers_qsk2tvanwziy1g1'][:, :, :, na, ...], preserveAxis=dams_preserve_ax)
-        dams_numbers_endseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_endseason_k2p7tva1nwziyg1']>0)
-                                                                   * stock_vars['dams_numbers_qsk2tvanwziy1g1'][:, :, :, na, ...], preserveAxis=dams_preserve_ax)
-        offs_numbers_startseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_startseason_k3k5p7tvnwziaxyg3']>0)
-                                                                       * stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'][:, :, :, :, na, ...], preserveAxis=offs_preserve_ax)
-        offs_numbers_endseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_endseason_k3k5p7tvnwziaxyg3']>0)
-                                                                     * stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'][:, :, :, :, na, ...], preserveAxis=offs_preserve_ax)
+        sire_numbers_startseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_startseason_p7qzg0'][:, :, na, ...]>0)
+                                                           * stock_vars['sire_numbers_qszg0'], preserveAxis=sire_preserve_ax)
+        sire_numbers_endseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_endseason_p7qzg0'][:, :, na, ...]>0)
+                                                         * stock_vars['sire_numbers_qszg0'], preserveAxis=sire_preserve_ax)
+        dams_numbers_startseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_startseason_p7qk2tva1nwziyg1'][:, :, na, ...]>0)
+                                                                     * stock_vars['dams_numbers_qsk2tvanwziy1g1'], preserveAxis=dams_preserve_ax)
+        dams_numbers_endseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_endseason_p7qk2tva1nwziyg1'][:, :, na, ...]>0)
+                                                                   * stock_vars['dams_numbers_qsk2tvanwziy1g1'], preserveAxis=dams_preserve_ax)
+        offs_numbers_startseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_startseason_p7qk3k5tvnwziaxyg3'][:, :, na, ...]>0)
+                                                                       * stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'], preserveAxis=offs_preserve_ax)
+        offs_numbers_endseason_qsz = fun.f_reduce_skipfew(np.sum, (r_vals['stock']['assetvalue_endseason_p7qk3k5tvnwziaxyg3'][:, :, na, ...]>0)
+                                                                     * stock_vars['offs_numbers_qsk3k5tvnwziaxyg3'], preserveAxis=offs_preserve_ax)
 
         keys_qszS = [keys_q, keys_s, keys_z, ['start', 'end']]
         numbers_start_qsz = (sire_numbers_startseason_qsz + dams_numbers_startseason_qsz + offs_numbers_startseason_qsz).round(2)
