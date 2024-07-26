@@ -4150,7 +4150,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             mei_dams = mei_dams + temp5
                             mei_solid_dams = mei_solid_dams + temp5
                             surplus_energy_dams = temp7
-                            mem_dams = temp9  #will overwrite the CSIRO version if NFS system is being used. Only used for post-loop SA.
+                            mem_dams = temp9  #will overwrite the CSIRO version if GFS system is being used. Only used for post-loop SA.
                         temp0 = sfun.f1_level_nfs(mei_dams, hp_maint_dams)
                         if eqn_used:
                             level_dams = temp0
