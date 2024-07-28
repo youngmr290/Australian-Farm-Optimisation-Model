@@ -173,6 +173,7 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False, 
     stk_c0_inc = np.array([pinp.sheep['i_stk_c0_inc']])
     mask_c0_inc = np.concatenate([stk_c0_inc, crop_c0_inc]) #order of concat is important - needs to be the same as the c0 order in periods.py
     ###date of the most recent main income relative to stk peak debt
+    start_of_cash_c0 = start_of_cash_c0 + 364*(start_of_cash_c0<peakdebt_date_c0%364) # make sure previous cashflow date is greater than peak debt date
     stk_previous_main_cashflow = np.max(start_of_cash_c0[mask_c0_inc] * np.logical_or(start_of_cash_c0<peakdebt_date_c0[0] % 364,
                                                                                       np.all(peakdebt_date_c0[0] % 364 < start_of_cash_c0))
                                         , axis=0, keepdims=True)
