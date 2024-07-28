@@ -7699,8 +7699,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##fixed infra r&m cost - #fixed costs are incurred in the middle of the year and incur half a yr interest (in attempt to represent an even spread)
     rm_stockinfra_fix = np.sum(uinp.sheep['i_infrastructure_costfixed_h1'], axis=0)
-    rm_start_c0 = per.f_cashflow_date() + 182 #incurred in the middle of the year and incur half a yr interest
-    rm_cash_allocation_p7z, rm_wc_allocation_c0p7z = fin.f_cashflow_allocation(rm_start_c0[:,na], enterprise='stk', z_pos=-1, c0_inc=True)
+    rm_start = np.array([182]) #incurred in the middle of the year and incur half a yr interest
+    rm_cash_allocation_p7z, rm_wc_allocation_c0p7z = fin.f_cashflow_allocation(rm_start, enterprise='stk', z_pos=-1)
     rm_stockinfra_fix_p7z = rm_stockinfra_fix * rm_cash_allocation_p7z
     rm_stockinfra_fix_wc_c0p7z = rm_stockinfra_fix * rm_wc_allocation_c0p7z
 
