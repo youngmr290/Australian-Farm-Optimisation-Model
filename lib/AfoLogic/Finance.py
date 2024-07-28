@@ -161,7 +161,7 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False, 
     final_cashflow_p7c0 = cashflow_interest_c0 * p7_alloc_p7c0
     final_wc_p7c0 = wc_interest_c0 * p7_alloc_p7c0
 
-    ##adjust wc if incur date falls outside of the wc period.
+    ##Allocate wc to the correct c0 slice (note if cashflow falls between peak debt and the start of the cashflow period (i.e. the main income) it doesnt get allocated to any wc period.
     ##If both stk and crp are both big enterprises then wc is basically reset at the point of main income for both enterprises.
     ## Therefore, in real life, stk wc accumulates from just after harv (main income for crop) until just before shearing
     ## (peak debt for stk). And crp wc accumulates from just after shearing until just before harvest.
@@ -173,14 +173,18 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False, 
     stk_c0_inc = np.array([pinp.sheep['i_stk_c0_inc']])
     mask_c0_inc = np.concatenate([stk_c0_inc, crop_c0_inc]) #order of concat is important - needs to be the same as the c0 order in periods.py
     ###date of the most recent main income relative to stk peak debt
-    stk_previous_main_cashflow = np.max(start_of_cash_c0[mask_c0_inc] * (start_of_cash_c0<peakdebt_date_c0[0] % 364)
+    stk_previous_main_cashflow = np.max(start_of_cash_c0[mask_c0_inc] * np.logical_or(start_of_cash_c0<peakdebt_date_c0[0] % 364,
+                                                                                      np.all(peakdebt_date_c0[0] % 364 < start_of_cash_c0))
                                         , axis=0, keepdims=True)
-    crp_previous_main_cashflow = np.max(start_of_cash_c0[mask_c0_inc] * (start_of_cash_c0<peakdebt_date_c0[1] % 364)
+    crp_previous_main_cashflow = np.max(start_of_cash_c0[mask_c0_inc] * np.logical_or(start_of_cash_c0<peakdebt_date_c0[1] % 364,
+                                                                                       np.all(peakdebt_date_c0[1] % 364 < start_of_cash_c0))
                                         , axis=0, keepdims=True)
-    previous_main_cashflow = np.concatenate([stk_previous_main_cashflow, crp_previous_main_cashflow]) #order of concat is important - needs to be the same as the c0 order in periods.py
+    previous_main_cashflow_c0 = np.concatenate([stk_previous_main_cashflow, crp_previous_main_cashflow]) #order of concat is important - needs to be the same as the c0 order in periods.py
     ###check if date incurred falls between last main income (from either enterprise) and peak debt date
-    mask_wc_c0 = np.logical_and(date_incurred_c0 % 364 >= previous_main_cashflow
-                                , date_incurred_c0 % 364 <= peakdebt_date_c0 % 364)
+    mask_wc_c0 = np.logical_or(np.logical_and(date_incurred_c0 % 364 >= previous_main_cashflow_c0
+                                              , date_incurred_c0 % 364 <= peakdebt_date_c0 % 364),
+                               np.logical_and(np.all(date_incurred_c0 % 364 <= peakdebt_date_c0 % 364, axis=0)
+                                              , np.max(previous_main_cashflow_c0) == previous_main_cashflow_c0))
     final_wc_p7c0 = final_wc_p7c0 * mask_wc_c0
 
     ##get axis back into correct order - because all the other code was done before this function so rest of code expects different order
