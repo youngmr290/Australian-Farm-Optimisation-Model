@@ -7890,10 +7890,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     co2_husb_fuel_co2e_tpg3, ch4_husb_fuel_co2e_tpg3, n2o_husb_fuel_co2e_tpg3 = efun.f_fuel_emissions(fuel_used_tpg3)
     co2e_fuel_tpg3 = co2_husb_fuel_co2e_tpg3 + ch4_husb_fuel_co2e_tpg3 + n2o_husb_fuel_co2e_tpg3
 
-    ##total co2e emissions for pyomo with p7 axis - so it can be multiplied by prob qszp7 in pyomo
+    ##total co2e emissions for pyomo with p7 axis - so it can be multiplied by prob qszp7 in pyomo - p7 added later for offs and dams
     total_co2e_p7tpsire = (co2e_fuel_tpg0 + co2e_animal_tpsire) * alloc_p7tpa1e1b1nwzida0e0b0xyg
-    total_co2e_p7tpdams = (co2e_fuel_tpg1 + co2e_animal_tpdams) * alloc_p7tpa1e1b1nwzida0e0b0xyg
-    total_co2e_p7tpoffs = (co2e_fuel_tpg3 + co2e_animal_tpoffs) * alloc_p7tpa1e1b1nwzida0e0b0xyg[:, :, mask_p_offs_p]
+    total_co2e_tpdams = (co2e_fuel_tpg1 + co2e_animal_tpdams)
+    total_co2e_tpoffs = (co2e_fuel_tpg3 + co2e_animal_tpoffs)
 
     ################################
     #convert variables from p to v #
@@ -7917,7 +7917,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1)
     co2e_fuel_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(co2e_fuel_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1)
-    total_co2e_p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(total_co2e_p7tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
+    total_co2e_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(total_co2e_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1)
     ###offs
     ch4_animal_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ch4_animal_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
@@ -7926,7 +7926,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3)
     co2e_fuel_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(co2e_fuel_tpg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3)
-    total_co2e_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(total_co2e_p7tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
+    total_co2e_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(total_co2e_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3)
 
 
@@ -8689,13 +8689,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                       , mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1
                                                                                  *mask_z8var_va1e1b1nwzida0e0b0xyg1
                                                                                  *mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
-    total_co2e_k2p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', total_co2e_p7tva1e1b1nwzida0e0b0xyg1
+    total_co2e_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', total_co2e_tva1e1b1nwzida0e0b0xyg1
                                                                       , a_k2cluster_va1e1b1nwzida0e0b0xyg1
-                                                                      , index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
+                                                                      , index_k2tva1e1b1nwzida0e0b0xyg1
                                                                       , numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1
                                                                       , mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1
                                                                                  *mask_z8var_va1e1b1nwzida0e0b0xyg1
-                                                                                 *mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,...]))
+                                                                                 *mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
     ch4_animal_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', ch4_animal_tva1e1b1nwzida0e0b0xyg3
                                                                         , a_k3cluster_da0e0b0xyg3
                                                                         , index_k3k5tva1e1b1nwzida0e0b0xyg3
@@ -8717,11 +8717,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                         , index_k5tva1e1b1nwzida0e0b0xyg3
                                                                         , numbers_start_tva1e1b1nwzida0e0b0xyg3
                                                                         , mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
-    total_co2e_k3k5p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', total_co2e_p7tva1e1b1nwzida0e0b0xyg3
+    total_co2e_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', total_co2e_tva1e1b1nwzida0e0b0xyg3
                                                                         , a_k3cluster_da0e0b0xyg3
-                                                                        , index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...]
+                                                                        , index_k3k5tva1e1b1nwzida0e0b0xyg3
                                                                         , a_k5cluster_da0e0b0xyg3
-                                                                        , index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...]
+                                                                        , index_k5tva1e1b1nwzida0e0b0xyg3
                                                                         , numbers_start_tva1e1b1nwzida0e0b0xyg3
                                                                         , mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
@@ -9664,6 +9664,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##add p7 axis to dams and offs
     ###dams
+    total_co2e_p7k2tva1e1b1nwzida0e0b0xyg1 = total_co2e_k2tva1e1b1nwzida0e0b0xyg1 * alloc_p7k2tva1e1b1nwzida0e0b0xyg1
     assetvalue_a5p7qk2tva1e1b1nwzida0e0b0xyg1 = assetvalue_a5qk2tva1e1b1nwzida0e0b0xyg1[:,na,...] * alloc_p7k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
     cashflow_c1p7qk2tva1e1b1nwzida0e0b0xyg1 = cashflow_c1qk2tva1e1b1nwzida0e0b0xyg1[:,na,...] * alloc_p7k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
     wc_c0p7qk2tva1e1b1nwzida0e0b0xyg1 = wc_c0qk2tva1e1b1nwzida0e0b0xyg1[:,na,...] * alloc_p7k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
@@ -9671,6 +9672,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     r_salevalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = r_salevalue_qk2tva1e1b1nwzida0e0b0xyg1 * alloc_p7k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
     r_woolvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = r_woolvalue_qk2tva1e1b1nwzida0e0b0xyg1 * alloc_p7k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
     ###offs
+    total_co2e_p7k3k5tva1e1b1nwzida0e0b0xyg3 = total_co2e_k3k5tva1e1b1nwzida0e0b0xyg3 * alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3
     assetvalue_a5p7qk3k5tva1e1b1nwzida0e0b0xyg3 = assetvalue_a5qk3k5tva1e1b1nwzida0e0b0xyg3[:,na,...] * alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3[:,na,...]
     cashflow_c1p7qk3k5tva1e1b1nwzida0e0b0xyg3 = cashflow_c1qk3k5tva1e1b1nwzida0e0b0xyg3[:,na,...] * alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3[:,na,...]
     wc_c0p7qk3k5tva1e1b1nwzida0e0b0xyg3 = wc_c0qk3k5tva1e1b1nwzida0e0b0xyg3[:,na,...] * alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3[:,na,...]
@@ -9882,14 +9884,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###cashflow & wc dams
     arrays_c1p7qk2tvanwziyg1 = [keys_c1, keys_p7, keys_q, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     arrays_c0p7qk2tvanwziyg1 = [keys_c0, keys_p7, keys_q, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    arrays_p7k2tvanwziyg1 = [keys_p7, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     ###cashflow & wc prog
     arrays_c1p7qk3k5twzia0xg2 = [keys_c1, keys_p7, keys_q, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_g2]
     arrays_c0p7qk3k5twzia0xg2 = [keys_c0, keys_p7, keys_q, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_g2]
-    ###cashflow & wc offs 
+    ###cashflow & wc offs
     arrays_c1p7qk3k5tvnwziaxyg3 = [keys_c1, keys_p7, keys_q, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
     arrays_c0p7qk3k5tvnwziaxyg3 = [keys_c0, keys_p7, keys_q, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
-    arrays_p7k3k5tvnwziaxyg3 = [keys_p7, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     ### asset sire
     arrays_p7qzg0 = [keys_p7, keys_q, keys_z, keys_g0]
@@ -9898,12 +9898,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ### asset offs
     arrays_p7qk3k5tvnwziaxyg3 = [keys_p7, keys_q, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
-    ### emissions sire
+    ### emissions
     arrays_p7zg0 = [keys_p7, keys_z, keys_g0]
-    ### emissions dams
-    arrays_k2p7tvanwziyg1 = [keys_k2, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    ### emissions offs
-    arrays_k3k5p7tvnwziaxyg3 = [keys_k3, keys_k5, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    arrays_p7k2tvanwziyg1 = [keys_p7, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    arrays_p7k3k5tvnwziaxyg3 = [keys_p7, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     ###p5zg0 - labour sire
     arrays_p5zg0 = [keys_p5, keys_z, keys_g0]
@@ -9986,8 +9984,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##emissions
     params['p_co2e_p7zg0'] = fun.f1_make_pyomo_dict(total_co2e_p7tva1e1b1nwzida0e0b0xyg0, arrays_p7zg0)
-    params['p_co2e_k2p7tva1nwziyg1'] = fun.f1_make_pyomo_dict(total_co2e_k2p7tva1e1b1nwzida0e0b0xyg1, arrays_k2p7tvanwziyg1)
-    params['p_co2e_k3k5p7tvnwziaxyg3'] = fun.f1_make_pyomo_dict(total_co2e_k3k5p7tva1e1b1nwzida0e0b0xyg3, arrays_k3k5p7tvnwziaxyg3)
+    params['p_co2e_p7k2tva1nwziyg1'] = fun.f1_make_pyomo_dict(total_co2e_p7k2tva1e1b1nwzida0e0b0xyg1, arrays_p7k2tvanwziyg1)
+    params['p_co2e_p7k3k5tvnwziaxyg3'] = fun.f1_make_pyomo_dict(total_co2e_p7k3k5tva1e1b1nwzida0e0b0xyg3, arrays_p7k3k5tvnwziaxyg3)
 
 
     ##mei

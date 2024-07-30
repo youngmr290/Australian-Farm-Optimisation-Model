@@ -266,13 +266,13 @@ def f1_stockpyomo_local(params, model):
     model.p_co2e_p7zg0 = pe.Param(model.s_season_periods, model.s_season_types, model.s_groups_sire,
                                 initialize=params['p_co2e_p7zg0'],
                                   default=0.0, mutable=False, doc='co2e sire (includes entric fermentation, manure, fuel)')
-    model.p_co2e_k2p7tva1nwziyg1 = pe.Param(model.s_k2_birth_dams, model.s_season_periods, model.s_sale_dams, model.s_dvp_dams,
+    model.p_co2e_p7k2tva1nwziyg1 = pe.Param(model.s_season_periods, model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams,
                                model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types,
-                               model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_co2e_k2p7tva1nwziyg1'],
+                               model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_co2e_p7k2tva1nwziyg1'],
                                 default=0.0, mutable=False, doc='co2e dams (includes entric fermentation, manure, fuel)')
-    model.p_co2e_k3k5p7tvnwziaxyg3 = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_season_periods, model.s_sale_offs,
+    model.p_co2e_p7k3k5tvnwziaxyg3 = pe.Param(model.s_season_periods, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs,
                                model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_wean_times,
-                               model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, initialize=params['p_co2e_k3k5p7tvnwziaxyg3'],
+                               model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, initialize=params['p_co2e_p7k3k5tvnwziaxyg3'],
                                 default=0.0, mutable=False, doc='co2e offs (includes entric fermentation, manure, fuel)')
 
 
@@ -992,14 +992,14 @@ def f_stock_emissions(model,q,s,p7,z):
     '''
 
     return sum(model.v_sire[q,s,g0] * model.p_co2e_p7zg0[p7,z,g0] for g0 in model.s_groups_sire)\
-           + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_pi_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]
+           + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_co2e_p7k2tva1nwziyg1[p7,k2,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                     if pe.value(model.p_pi_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
-                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_pi_offs[k3,k5,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                     if pe.value(model.p_co2e_p7k2tva1nwziyg1[p7,k2,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
+                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_co2e_p7k3k5tvnwziaxyg3[p7,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if pe.value(model.p_pi_offs[k3,k5,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
+                      if pe.value(model.p_co2e_p7k3k5tvnwziaxyg3[p7,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
 
 
