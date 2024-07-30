@@ -171,6 +171,8 @@ def f_farmgate_grain_price(r_vals={}):
 
     ##add q axis
     len_q = sinp.structuralsa['i_len_q'] #number of years in MP model
+    if np.all(sen.sam['q_grain_price_scalar_Qk']==1):
+        len_q = 1 #make q singleton if price doesnt change across q.
     keys_q = np.array(['q%s' % i for i in range(len_q)])
     keys_k1 = sinp.general['i_idx_k1']
     q_grain_price_scalar_q_k = pd.DataFrame(sen.sam['q_grain_price_scalar_Qk'][0:len_q,pinp.crop_landuse_mask_k1], index = keys_q, columns=keys_k1) #have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
