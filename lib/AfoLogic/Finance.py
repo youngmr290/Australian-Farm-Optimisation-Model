@@ -170,6 +170,7 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False, 
     ## (peak debt for stk). And crp wc accumulates from just after shearing until just before harvest.
     ##If only one enterprise is big then wc accumulates from just after the main income for that enterprise until
     ### just before the main income for that enterprise.
+    ### Note: cashflow items that fall between peak debt and main income (i.e they are the main cashflow) therefore doesn't get allocated to any wc constraint.
     ##mask c0 included - enterprises are only included if they are main enterprises (if it is a small enterprise
     ### it doesn't need its own wc constraint because the income will be insufficient to affect peak debt)
     crop_c0_inc = np.array([pinp.crop['i_crp_c0_inc']])
@@ -185,10 +186,17 @@ def f_cashflow_allocation(date_incurred,enterprise=None,z_pos=-1, c0_inc=False, 
                                         , axis=0, keepdims=True)
     previous_main_cashflow_c0 = np.concatenate([stk_previous_main_cashflow, crp_previous_main_cashflow]) #order of concat is important - needs to be the same as the c0 order in periods.py
     ###calculate which wc constraint (stk or crop) the cashflow item falls into ie check if date incurred falls between last main income (from either enterprise) and peak debt date
-    mask_wc_c0 = np.logical_or(np.logical_and(date_incurred_c0 % 364 >= previous_main_cashflow_c0
-                                              , date_incurred_c0 % 364 <= peakdebt_date_c0 % 364),
-                               np.logical_and(np.all(date_incurred_c0 % 364 <= peakdebt_date_c0 % 364, axis=0)
-                                              , np.max(previous_main_cashflow_c0) == previous_main_cashflow_c0))
+    incur_between = np.logical_and(date_incurred_c0 % 364 >= previous_main_cashflow_c0
+                                              , date_incurred_c0 % 364 <= peakdebt_date_c0 % 364)
+    incur_before = np.logical_and(np.all(date_incurred_c0 % 364 <= peakdebt_date_c0 % 364, axis=0)
+                                              , np.max(previous_main_cashflow_c0) == previous_main_cashflow_c0)
+    incur_after = np.logical_and(np.all(date_incurred_c0 % 364 > previous_main_cashflow_c0, axis=0)
+                                              , np.max(previous_main_cashflow_c0) == previous_main_cashflow_c0)
+    ###handle the exception - when peak debt is the end of the year and main cashflow date is start of the year the maincashflow gets adjusted by adding 364 so that it is a bigger number than peak debt date. This works for most cases except if date incured occurs at the start of the year technically between peak debt and main income.
+    ### is_exception == true means that the cashflow item fals between peak debt and main income therefore doesn't get allocated to any wc constraint.
+    is_exception = np.any(np.logical_and(previous_main_cashflow_c0 > 364, previous_main_cashflow_c0 % 364 > date_incurred_c0 % 364), axis=0)
+    ###combine all logic to identify the wc constraint that the cashflow item falls into.
+    mask_wc_c0 = np.logical_and(np.logical_or(np.logical_or(incur_between, incur_before), incur_after), np.logical_not(is_exception))
     wc_interest_c0 = wc_interest_c0 * mask_wc_c0
 
     ##return before allocating to p7 if required
