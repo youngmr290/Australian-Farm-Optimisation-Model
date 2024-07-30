@@ -761,22 +761,25 @@ def f1_boundarypyomo_local(params, model):
 
 
         if emissions_bnd_inc:
-            def emissions(model,q,s):
+            def emissions(model):
                 '''
                 Constrains total farm co2e emissions.
 
+                p7 axis required due to season clustering.
+
                 Note this constraint could be modified to constrain emission intensity or to constrain emissions from each enterprise.
                 '''
-                if pe.value(model.p_wyear_inc_qs[q, s]) and model.p_co2e_limit>0:
+                if model.p_co2e_limit>0:
                     return sum((sum((suppy.f_sup_emissions(model,q,s,p6,z) + cgzpy.f_grazecrop_emissions(model,q,s,p6,z)
                                      + stubpy.f_cropresidue_consumption_emissions(model,q,s,p6,z) + slppy.f_saltbush_emissions(model,q,s,z,p6)
                                      + paspy.f_pas_emissions(model,q,s,p6,z))*model.p_a_p6_p7[p7,p6,z] for p6 in model.s_feed_periods)
                                 + stkpy.f_stock_emissions(model,q,s,p7,z) + stubpy.f_cropresidue_production_emissions(model,q,s,p7,z)
                                 + phspy.f_rot_emissions(model, q, s, p7, z) + macpy.f_seeding_harv_fuel_emissions(model, q, s, p7, z)) * model.p_season_seq_prob_qszp7[q,s,z,p7]
-                                for z in model.s_season_types for p7 in model.s_season_periods if pe.value(model.p_mask_season_p7z[p7,z]) != 0) <= uinp.emissions['co2e_limit']
+                                for q in model.s_sequence_year for s in model.s_sequence
+                                for z in model.s_season_types for p7 in model.s_season_periods if pe.value(model.p_season_seq_prob_qszp7[q,s,z,p7]) != 0) <= uinp.emissions['co2e_limit']
                 else:
                     return pe.Constraint.Skip
-            model.con_emissions = pe.Constraint(model.s_sequence_year, model.s_sequence,rule=emissions,doc='co2e emissions')
+            model.con_emissions = pe.Constraint(rule=emissions,doc='co2e emissions')
 
 
 
