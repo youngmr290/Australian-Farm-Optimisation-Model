@@ -10122,15 +10122,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     arrays_k3zg2 = [keys_k3, keys_z, keys_g2]
 
     ###identify which dvps fall in the first season period (this is when management in the MP must still be constrained)
+    ### if there is only one node (i.e. no partial bnds because conditions change at the same time as management) this should return False.
     idx_zidaebxygm = np.searchsorted(date_start_P, date_node_zidaebxygm, 'left')  # use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
     date_node_zidaebxygm = date_start_P[idx_zidaebxygm]
     ####dams
     dvp_is_node1_va1e1b1nwzida0e0b0xyg1 = np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0,...] % 364 >= date_node_zidaebxygm[...,0],
-                                                         dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0,...] % 364 < date_node_zidaebxygm[..., 1]) #remove e axis because e wont make a big difference to dvp dates so it shouldnt change the result.
+                                                         dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0,...] % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)]) #remove e axis because e wont make a big difference to dvp dates so it shouldnt change the result.
     params['p_dvp_is_node1_vzg1'] = fun.f1_make_pyomo_dict(dvp_is_node1_va1e1b1nwzida0e0b0xyg1, arrays_vzg1)
     ####offs
     dvp_is_node1_va1e1b1nwzida0e0b0xyg3 = np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 >= date_node_zidaebxygm[...,0],
-                                                         dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., 1])
+                                                         dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)])
     #####cluster d (d axis is active from the dvp dates)
     dvp_is_node1_k3k5tva1e1b1nwzida0e0b0xyg3 = 1 * (np.sum(dvp_is_node1_va1e1b1nwzida0e0b0xyg3
                                                                * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
@@ -10138,7 +10139,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     params['p_dvp_is_node1_k3vzxg3'] = fun.f1_make_pyomo_dict(dvp_is_node1_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3vzxg3)
     ###prog - check if prog are weaned in the first season period (if so then sale at weaning in the MP model must match the base SE management).
     wean_is_node1_zida0e0b0xyg2 = np.logical_and(date_weaned_ida0e0b0xyg3 % 364 >= date_node_zidaebxygm[...,0],
-                                                date_weaned_ida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., 1]) #use off weaning date because that is the same as prog except it has d axis instead of o axis.
+                                                date_weaned_ida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)]) #use off weaning date because that is the same as prog except it has d axis instead of o axis.
     #####cluster d (d axis is active from the dvp dates)
     wean_is_node1_k3k5tva1e1b1nwzida0e0b0xyg3 = 1 * (np.sum(wean_is_node1_zida0e0b0xyg2
                                                                * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
