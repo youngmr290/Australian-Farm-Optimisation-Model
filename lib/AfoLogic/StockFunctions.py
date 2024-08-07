@@ -3125,8 +3125,6 @@ def f_wool_value(stb_mpg_w4, wool_price_scalar_c1tpg, cfw_pg, fd_pg, sl_pg, ss_p
     ##add q axis
     len_q = sinp.structuralsa['i_len_q']  # number of years in MP model
     q_wool_price_scalar_q = sen.sam['q_wool_price_scalar_Q'][0:len_q]  # have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
-    if np.all(q_wool_price_scalar_q==1):
-        q_wool_price_scalar_q = q_wool_price_scalar_q[0:1] #make q singleton if price doesnt change across q.
     q_wool_price_scalar_qtpg = fun.f_expand(q_wool_price_scalar_q, left_pos=sinp.stock['i_p_pos']-2)
 
     ##scale wool price for q and c1
@@ -3368,8 +3366,6 @@ def f_sale_value(cn, cx, o_rc_tpg, o_ffcfw_tpg, dressp_adj_yg, dresspercent_adj_
     ##add q axis
     len_q = sinp.structuralsa['i_len_q']  # number of years in MP model
     q_meat_price_scalar_q = sen.sam['q_meat_price_scalar_Q'][0:len_q]  # have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
-    if np.all(q_meat_price_scalar_q==1):
-        q_meat_price_scalar_q = q_meat_price_scalar_q[0:1] #make q singleton if price doesnt change across q.
     q_meat_price_scalar_qtpg = fun.f_expand(q_meat_price_scalar_q, left_pos=sinp.stock['i_p_pos']-2)
     sale_value_c1qtpg = sale_value_c1tpg[:,na,...] * q_meat_price_scalar_qtpg
 
