@@ -153,9 +153,9 @@ def f_germination(i_germination_std_zt, i_germ_scalar_lzt, i_germ_scalar_p6zt, p
 
 def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restock_grn_propn_t, resown_rt
                 , feed_period_dates_fz, i_restock_fooscalar_lt, i_restock_foo_arable_t, dry_decay_period_p6zt
-                , i_fxg_foo_op6lzt, c_fxg_a_op6lzt, c_fxg_b_op6lzt, i_grn_senesce_eos_p6zt
+                , i_fxg_foo_op6lzt, c_fxg_a_qop6lzt, c_fxg_b_qop6lzt, i_grn_senesce_eos_p6zt
                 , grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, max_germination_flzt
-                , length_fz, n_feed_periods, p6lrzt, p6zt, t_idx, z_idx, l_idx):
+                , length_fz, n_feed_periods, p6lrzt, p6zt, t_idx, z_idx, len_q):
     '''
     Generates the green & dry FOO that is lost and gained from reseeding pasture.
 
@@ -175,8 +175,8 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     :param i_restock_foo_arable_t: FOO at restocking on the arable area of the resown pastures.
     :param dry_decay_period_p6zt: decline in dry foo for each period.
     :param i_fxg_foo_op6lzt: each level of starting FOO used in conjunction with PGR.
-    :param c_fxg_a_op6lzt: coefficient a for the FOO/growth/grazing variables. PGR = a + b FOO
-    :param c_fxg_b_op6lzt: coefficient b for the FOO/growth/grazing variables. PGR = a + b FOO
+    :param c_fxg_a_qop6lzt: coefficient a for the FOO/growth/grazing variables. PGR = a + b FOO
+    :param c_fxg_b_qop6lzt: coefficient b for the FOO/growth/grazing variables. PGR = a + b FOO
     :param i_grn_senesce_eos_p6zt: proportion of green feed that senesces in period (due to a water deficit or completing life cycle).
     :param grn_senesce_startfoo_p6zt: proportion of start foo that senesces during the period (due to leaf drop).
     :param grn_senesce_pgrcons_p6zt: change of senescence over the period (due to growth and consumption).
@@ -184,7 +184,7 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     :return: Change in FOO due to reseeding pasture.
     '''
     #todo test the calculation of FOO on the resown area when the full set of rotation phases is included
-
+    len_p6 = length_fz.shape[0]
     foo_grn_reseeding_p6lrzt     = np.zeros(p6lrzt,  dtype = 'float64')  # green FOO adjustment for destocking and restocking of the resown area (kg/ha)
     foo_dry_reseeding_p6lrzt     = np.zeros(p6lrzt,  dtype = 'float64')  # dry FOO adjustment for destocking and restocking of the resown area (kg/ha)
     foo_na_destock_p6zt = np.zeros(p6zt, dtype = 'float64')
@@ -199,7 +199,7 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     ### the change in FOO on the nonarable area occurs in pasture type 0 (annuals) because it is assumed that other pasture species have not been established.
     ### Note: the arable proportion is accounted for in function
     foo_grn_reseeding_p6lrzt, foo_dry_reseeding_p6lrzt = f1_update_reseeding_foo(
-        foo_grn_reseeding_p6lrzt, foo_dry_reseeding_p6lrzt, resown_rt, period_zt, 1 - proportion_zt, -foo_arable_destock_zt
+        foo_grn_reseeding_p6lrzt, foo_dry_reseeding_p6lrzt, resown_rt[:,na,:], period_zt, 1 - proportion_zt, -foo_arable_destock_zt
         , - foo_na_destock_zt) # Assumes that all feed lost is green
 
     ##FOO on the arable area of each LMU when reseeded pasture is restocked (this is calculated from input values)
@@ -228,35 +228,37 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     ####create temp arrays where all t slices have annual params (need to keep the t slices active for the next function so cant just slice the t)
     t_dry_decay_period_p6zt = np.zeros_like(dry_decay_period_p6zt)
     t_i_fxg_foo_op6lzt = np.zeros_like(i_fxg_foo_op6lzt)
-    t_c_fxg_a_op6lzt = np.zeros_like(c_fxg_a_op6lzt)
-    t_c_fxg_b_op6lzt = np.zeros_like(c_fxg_b_op6lzt)
+    t_c_fxg_a_qop6lzt = np.zeros_like(c_fxg_a_qop6lzt)
+    t_c_fxg_b_qop6lzt = np.zeros_like(c_fxg_b_qop6lzt)
     t_i_grn_senesce_eos_p6zt = np.zeros_like(i_grn_senesce_eos_p6zt)
     t_grn_senesce_startfoo_p6zt = np.zeros_like(grn_senesce_startfoo_p6zt)
     t_grn_senesce_pgrcons_p6zt = np.zeros_like(grn_senesce_pgrcons_p6zt)
     t_dry_decay_period_p6zt[...] = dry_decay_period_p6zt[..., 0:1]
     t_i_fxg_foo_op6lzt[...] = i_fxg_foo_op6lzt[..., 0:1]
-    t_c_fxg_a_op6lzt[...] = c_fxg_a_op6lzt[..., 0:1]
-    t_c_fxg_b_op6lzt[...] = c_fxg_b_op6lzt[..., 0:1]
+    t_c_fxg_a_qop6lzt[...] = c_fxg_a_qop6lzt[..., 0:1]
+    t_c_fxg_b_qop6lzt[...] = c_fxg_b_qop6lzt[..., 0:1]
     t_i_grn_senesce_eos_p6zt[...] = i_grn_senesce_eos_p6zt[..., 0:1]
     t_grn_senesce_startfoo_p6zt[...] = grn_senesce_startfoo_p6zt[..., 0:1]
     t_grn_senesce_pgrcons_p6zt[...] = grn_senesce_pgrcons_p6zt[..., 0:1]
 
     ###FOO at the end of the destocked period is calculated from the FOO profile from destocking to restocking
     #todo should these names should have na in them (because they are non arable)?
-    grn_restock_foo_p6lzt, dry_restock_foo_p6lzt = f1_calc_foo_profile(grn_foo_na_initial_p6lzt  # axes are aligned in the function
+    grn_restock_foo_qp6lzt, dry_restock_foo_qp6lzt = f1_calc_foo_profile(grn_foo_na_initial_p6lzt  # axes are aligned in the function
                                                                      , t_dry_decay_period_p6zt
                                                                      , days_each_period_p6zt
                                                                      , t_i_fxg_foo_op6lzt
-                                                                     , t_c_fxg_a_op6lzt
-                                                                     , t_c_fxg_b_op6lzt
+                                                                     , t_c_fxg_a_qop6lzt
+                                                                     , t_c_fxg_b_qop6lzt
                                                                      , t_i_grn_senesce_eos_p6zt
                                                                      , t_grn_senesce_startfoo_p6zt
-                                                                     , t_grn_senesce_pgrcons_p6zt)
+                                                                     , t_grn_senesce_pgrcons_p6zt
+                                                                     , len_q)
 
     ### combine dry and grn foo because the proportion of green at restocking is an input
     #### foo is calculated at the start of period, +1 to get end period FOO.
-    foo_na_restock_lzt = grn_restock_foo_p6lzt[period_zt+1,l_idx[:,na,na], z_idx[:,na], t_idx]   \
-                        + dry_restock_foo_p6lzt[period_zt+1,l_idx[:,na,na], z_idx[:,na], t_idx] #foo is calc at the start of period, +1 to get end period foo.
+    #todo MRY 2024: is the +1 correct? why do we want foo at the end of the period (restocking can happen at the start of the period)?
+    p6_idx = np.arange(len_p6)[:,na,na,na]
+    foo_na_restock_qlzt = np.sum(grn_restock_foo_qp6lzt * (period_zt+1==p6_idx) + dry_restock_foo_qp6lzt * (period_zt+1==p6_idx), axis=1) #sum p6 - foo at restocking gets allocated to the right p6 in the next function call.
 
     ## increment the change in green and dry foo on the arable and non-arable areas when pasture is restocked after reseeding
     ### Note: the function call includes += for the green and dry foo variables
@@ -264,19 +266,19 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     ## combine the non-arable and arable foo to get the resulting foo in the green and dry pools when paddocks are restocked. Spread between periods based on date grazed. (arable proportion accounted for in function)
     ### the change in FOO on the nonarable area occurs in pasture type 0 (annuals) because it is assumed that other pasture species have not been established.
     ### Note: the arable proportion is accounted for in function
-    foo_grn_reseeding_p6lrzt, foo_dry_reseeding_p6lrzt = f1_update_reseeding_foo(foo_grn_reseeding_p6lrzt  #axes aligned in function
+    foo_grn_reseeding_qp6lrzt, foo_dry_reseeding_qp6lrzt = f1_update_reseeding_foo(foo_grn_reseeding_p6lrzt
                                                                                , foo_dry_reseeding_p6lrzt
-                                                                               ,                 resown_rt
+                                                                               ,                 resown_rt[:,na,:]
                                                                                ,               period_zt
                                                                                ,       1 - proportion_zt
-                                                                               ,   foo_arable_restock_lt[:,na,:]
-                                                                               ,       foo_na_restock_lzt
+                                                                               ,   foo_arable_restock_lt[:,na,na,:]
+                                                                               ,       foo_na_restock_qlzt[:,na,:,na,:,:]
                                                                                , propn_grn=i_restock_grn_propn_t)
 
     ## split the change in dry FOO between the high & low quality FOO pools
     ### a 50% split assumes the dry feed removed at destocking and added at restocking is average quality.
-    foo_dry_reseeding_dp6lrzt = np.stack([foo_dry_reseeding_p6lrzt * 0.5, foo_dry_reseeding_p6lrzt * 0.5], axis=0)
-    return foo_grn_reseeding_p6lrzt, foo_dry_reseeding_dp6lrzt, periods_destocked_p6zt
+    foo_dry_reseeding_qdp6lrzt = np.stack([foo_dry_reseeding_qp6lrzt[:,na,...] * 0.5, foo_dry_reseeding_qp6lrzt[:,na,...] * 0.5], axis=1)
+    return foo_grn_reseeding_qp6lrzt, foo_dry_reseeding_qdp6lrzt, periods_destocked_p6zt
 
 
 # def f_pas_sow(i_reseeding_date_start_zt, i_reseeding_date_end_zt, resown_rt, arable_l, phases_rotn_df, pastures):
@@ -353,11 +355,11 @@ def f_erosion(i_lmu_conservation_p6lzt, arable_l, pasture_rt):
     return erosion_p6lrzt
 
 
-def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_gp6zt, grn_foo_start_ungrazed_p6lzt, foo_grn_reseeding_p6lrzt
+def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_qop6lzt, c_pgr_gi_scalar_gp6zt, grn_foo_start_ungrazed_qp6lzt, foo_grn_reseeding_qp6lrzt
                   , i_foo_graze_propn_gt, grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, i_grn_senesce_eos_p6zt
-                  , i_base_p6zt, i_grn_trampling_ft, i_grn_dig_p6lzt, i_grn_dmd_range_p6zt, i_pasture_stage_p6zt
+                  , i_base_p6zt, i_grn_trampling_p6t, i_grn_dig_p6lzt, i_grn_dmd_range_p6zt, i_pasture_stage_p6zt
                   , i_legume_zt, i_hr_scalar_zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_greenfeed_exists_p6zt
-                  , length_fz, nv_is_not_confinement_f):
+                  , length_p6z, nv_is_not_confinement_f, len_q):
     '''
     Pasture growth, consumption and senescence of green feed.
 
@@ -414,9 +416,9 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     :param cu3: params used to convert foo for rel availability.
     :param cu4: params used to convert height for rel availability.
     :param i_fxg_foo_op6lzt: each level of starting FOO used in conjunction with PGR.
-    :param i_fxg_pgr_op6lzt: PGR at each level of starting FOO if the pasture is not grazed for each soil type (typically derived from a simulation model).
+    :param i_fxg_pgr_qop6lzt: PGR at each level of starting FOO if the pasture is not grazed for each soil type (typically derived from a simulation model).
     :param c_pgr_gi_scalar_gp6zt: The impact of grazing intensity within the period on the PGR achieved.
-    :param grn_foo_start_ungrazed_p6lzt:  FOO at the start of the period if the pasture has been ungrazed from the start of the growing season.
+    :param grn_foo_start_ungrazed_qp6lzt:  FOO at the start of the period if the pasture has been ungrazed from the start of the growing season.
     :param i_foo_graze_propn_gt: proportion of the FOO available (greater than the base level) that is grazed for each level of grazing intensity.
     :param grn_senesce_startfoo_p6zt: The proportion of the green feed at the start of the period that senesces.
     :param grn_senesce_pgrcons_p6zt: The proportion of the green feed that grows during the period that senesces (or the reduction in senescence if FOO reduces due to grazing).
@@ -425,7 +427,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
                       level is set with several criteria in mind; the physical limit at which animals can graze, an
                       erosion limit below which farmers wouldn't or shouldn't graze; the optimum level of FOO based on
                       the trade-off between PGR and FOO.
-    :param i_grn_trampling_ft: amount of feed that is trampled while green feed is being consumed as a proportion of the feed consumed.
+    :param i_grn_trampling_p6t: amount of feed that is trampled while green feed is being consumed as a proportion of the feed consumed.
     :param i_grn_dig_p6lzt: DMD of the green feed that would be consumed if animals graze with 25% grazing intensity a sward that has medium FOO level in each feed period on each LMU.
     :param i_grn_dmd_range_p6zt: Range of DMDin the sward between the 25th percentile to the 75th percentile.
     :param i_pasture_stage_p6zt: Maturity of the pasture (establishment or vegetative as defined by CSIRO)
@@ -443,39 +445,40 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     foo_start_grnha_op6lzt = i_fxg_foo_op6lzt
     #    foo_start_grnha_op6lzt = np.maximum(i_fxg_foo_op6lzt, i_base_ft[:, na, na, :])  # to ensure that final foo can not be below the base level
     #FOO of the high FOO slice is the maximum of ungrazed foo and foo from the medium foo level #todo in the new pasture we probs won't want to sum p6 in the resown foo (it is only required now because v_phase provides less than a hectare so FooH=reson foo/area (which is the same as summing the p6 axis). When foo and area are the same variable this shouldnt be required.)
-    max_foo_p6lzt = np.maximum(np.maximum(i_fxg_foo_op6lzt[1, ...], grn_foo_start_ungrazed_p6lzt), np.max(np.sum(foo_grn_reseeding_p6lrzt, axis=0,keepdims=True), axis=2)) #sum p6 axis reseeding on germination because it needs to represent total reseeding foo even if grazing occurs halfway through a period because ogf the area constraint which says that the resown phase only provide half a hectare therefore the max foo still needs to be the full resown amount. i.e. if resowing foo is 1500 and seeding is 66% through a period the phase will provide 500foo and 0.33 ha and the v_green_ha will require 1 ha therefore needs to be 1500Foo.
+    max_foo_qp6lzt = np.maximum(np.maximum(i_fxg_foo_op6lzt[1, ...], grn_foo_start_ungrazed_qp6lzt), np.max(np.sum(np.maximum(0,foo_grn_reseeding_qp6lrzt), axis=1,keepdims=True), axis=3)) #sum p6 axis on reseeding germination (after removing any negitive foo so that we are only counting foo added at restocking and not including the negitive foo at de-stocking) because it needs to represent total reseeding foo even if grazing occurs halfway through a period because of the area constraint which says that the resown phase only provide half a hectare therefore the max foo still needs to be the full resown amount. i.e. if resowing foo is 1500 and seeding is 66% through a period the phase will provide 500foo and 0.33 ha and the v_green_ha will require 1 ha therefore needs to be 1500Foo.
     #maximum accumulated along the feed periods axis, i.e. max to date
-    foo_start_grnha_op6lzt[2, ...] = np.maximum.accumulate(max_foo_p6lzt, axis=0)
+    foo_start_grnha_qop6lzt = foo_start_grnha_op6lzt * np.ones(len_q)[:,na,na,na,na,na] #add q axis
+    foo_start_grnha_qop6lzt[:,2, ...] = np.maximum.accumulate(max_foo_qp6lzt, axis=1)
     #masks out any green foo at the end of periods in which green pasture doesn't exist.
-    foo_start_grnha_op6lzt = foo_start_grnha_op6lzt * mask_greenfeed_exists_p6zt[:, na,...]
+    foo_start_grnha_qop6lzt = foo_start_grnha_qop6lzt * mask_greenfeed_exists_p6zt[:, na,...]
 
     ## green, pasture growth for the 'grnha' decision variables
     #todo revisit the effect of gi on PGR by basing the reduction on the effect of gi on average FOO (rather than c_pgr_gi_scalar)
-    pgr_grnha_gop6lzt = (i_fxg_pgr_op6lzt * length_fz[:, na, :, na]
+    pgr_grnha_qgop6lzt = (i_fxg_pgr_qop6lzt[:,na,...] * length_p6z[:, na, :, na]
                         * c_pgr_gi_scalar_gp6zt[:, na, :, na, :, :] * mask_greenfeed_exists_p6zt[:, na, ...])
 
     ## green, final foo from initial, pgr and senescence
     ### senescence during the period is senescence of the starting FOO and of the FOO that is added/reduced by growth/grazing
-    senesce_period_grnha_gop6lzt = (foo_start_grnha_op6lzt * grn_senesce_startfoo_p6zt[:, na, ...]
-                                   + pgr_grnha_gop6lzt * grn_senesce_pgrcons_p6zt[:, na, ...])
+    senesce_period_grnha_qgop6lzt = (foo_start_grnha_qop6lzt[:,na,...] * grn_senesce_startfoo_p6zt[:, na, ...]
+                                   + pgr_grnha_qgop6lzt * grn_senesce_pgrcons_p6zt[:, na, ...])
     ### foo at end of period if ungrazed
-    foo_end_ungrazed_grnha_op6lzt = foo_start_grnha_op6lzt + pgr_grnha_gop6lzt[0, ...] - senesce_period_grnha_gop6lzt[0, ...]
+    foo_end_ungrazed_grnha_qop6lzt = foo_start_grnha_qop6lzt + pgr_grnha_qgop6lzt[:,0, ...] - senesce_period_grnha_qgop6lzt[:,0, ...]
     ### foo at end of period with range of grazing intensity prior to eos senescence
-    foo_endprior_grnha_gop6lzt = (foo_end_ungrazed_grnha_op6lzt
-                                 - np.maximum(0,foo_end_ungrazed_grnha_op6lzt - i_base_p6zt[:, na, :, :])
+    foo_endprior_grnha_qgop6lzt = (foo_end_ungrazed_grnha_qop6lzt[:,na,...]
+                                 - np.maximum(0,foo_end_ungrazed_grnha_qop6lzt[:,na,...] - i_base_p6zt[:, na, :, :])
                                  * i_foo_graze_propn_gt[:, na, na, na, na, :])
-    senesce_eos_grnha_gop6lzt = foo_endprior_grnha_gop6lzt * i_grn_senesce_eos_p6zt[:, na, ...]
-    foo_end_grnha_gop6lzt = foo_endprior_grnha_gop6lzt - senesce_eos_grnha_gop6lzt
+    senesce_eos_grnha_qgop6lzt = foo_endprior_grnha_qgop6lzt * i_grn_senesce_eos_p6zt[:, na, ...]
+    foo_end_grnha_qgop6lzt = foo_endprior_grnha_qgop6lzt - senesce_eos_grnha_qgop6lzt
     #apply mask to remove any green foo at the end of period in periods when green pas doesn't exist.
-    foo_end_grnha_gop6lzt = foo_end_grnha_gop6lzt * mask_greenfeed_exists_p6zt[:, na, ...]
+    foo_end_grnha_qgop6lzt = foo_end_grnha_qgop6lzt * mask_greenfeed_exists_p6zt[:, na, ...]
 
     ## green, removal & dmi
     ### divide by (1 - grn_senesce_pgrcons) to allows for consuming feed reducing senescence
-    removal_grnha_gop6lzt = np.maximum(0, fun.f_divide((foo_start_grnha_op6lzt * (1 - grn_senesce_startfoo_p6zt[:, na, ...])
-                                                        + pgr_grnha_gop6lzt * (1 - grn_senesce_pgrcons_p6zt[:, na, :])
-                                                        - foo_endprior_grnha_gop6lzt)
+    removal_grnha_qgop6lzt = np.maximum(0, fun.f_divide((foo_start_grnha_qop6lzt[:,na,...] * (1 - grn_senesce_startfoo_p6zt[:, na, ...])
+                                                        + pgr_grnha_qgop6lzt * (1 - grn_senesce_pgrcons_p6zt[:, na, :])
+                                                        - foo_endprior_grnha_qgop6lzt)
                                                        , (1 - grn_senesce_pgrcons_p6zt[:, na, :])))
-    cons_grnha_gop6lzt = removal_grnha_gop6lzt / (1 + i_grn_trampling_ft[:, na, na, :])
+    cons_grnha_qgop6lzt = removal_grnha_qgop6lzt / (1 + i_grn_trampling_p6t[:, na, na, :])
 
     ## green, dmd & md from input values and impact of foo & grazing intensity
     ### sward digestibility is reduced with higher FOO (based on start FOO)
@@ -483,64 +486,64 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     #### Low FOO or low grazing intensity is input
     #### High FOO with 100% grazing is reduced by half the range in digestibility.
     #### Between low and high FOO it is a linear interpolation
-    dmd_sward_start_grnha_op6lzt = (i_grn_dig_p6lzt - i_grn_dmd_range_p6zt[:, na, :, :] / 2
-                                   * fun.f_divide(foo_start_grnha_op6lzt - foo_start_grnha_op6lzt[0, ...]
-                                                  , foo_start_grnha_op6lzt[-1, ...] - foo_start_grnha_op6lzt[0, ...]))
+    dmd_sward_start_grnha_qop6lzt = (i_grn_dig_p6lzt - i_grn_dmd_range_p6zt[:, na, :, :] / 2
+                                   * fun.f_divide(foo_start_grnha_qop6lzt - foo_start_grnha_qop6lzt[:,0:1, ...]
+                                                  , foo_start_grnha_qop6lzt[:,-1:, ...] - foo_start_grnha_qop6lzt[:,0:1, ...]))
     #### Diet digestibility includes a linear interpolation of selectivity
     #### 0.25 is grazing intensity that gives diet quality == input value.
-    dmd_diet_grnha_gop6lzt = (i_grn_dig_p6lzt - i_grn_dmd_range_p6zt[:, na, :, :] / 2
-                             * fun.f_divide(foo_start_grnha_op6lzt - foo_start_grnha_op6lzt[0, ...]
-                                            , foo_start_grnha_op6lzt[-1, ...] - foo_start_grnha_op6lzt[0, ...])
+    dmd_diet_grnha_qgop6lzt = (i_grn_dig_p6lzt - i_grn_dmd_range_p6zt[:, na, :, :] / 2
+                             * fun.f_divide(foo_start_grnha_qop6lzt[:,na,...] - foo_start_grnha_qop6lzt[:,na,0:1, ...]
+                                            , foo_start_grnha_qop6lzt[:,na,-1:, ...] - foo_start_grnha_qop6lzt[:,na,0:1, ...])
                              * (i_foo_graze_propn_gt[:, na, na, na, na, :] - 0.25) / (1 - 0.25))
     #### dmd of the sward after grazing is reduced due to removal of the high quality feed from selective grazing
-    dmd_sward_end_grnha_gop6lzt = dmd_sward_start_grnha_op6lzt - ((dmd_diet_grnha_gop6lzt - dmd_sward_start_grnha_op6lzt)
+    dmd_sward_end_grnha_qgop6lzt = dmd_sward_start_grnha_qop6lzt[:,na,...] - ((dmd_diet_grnha_qgop6lzt - dmd_sward_start_grnha_qop6lzt[:,na,...])
                                                                 * fun.f_divide(i_foo_graze_propn_gt[:, na, na, na, na, :]
                                                                     , 1 - i_foo_graze_propn_gt[:, na, na, na, na, :]))
-    grn_md_grnha_gop6lzt = fsfun.f1_dmd_to_md(dmd_diet_grnha_gop6lzt)
+    grn_md_grnha_qgop6lzt = fsfun.f1_dmd_to_md(dmd_diet_grnha_qgop6lzt)
 
     ## green, mei & volume
     ###Average FOO is calculated using FOO at the end prior to EOS senescence (which assumes all pasture senesces after grazing)
-    foo_ave_grnha_gop6lzt = (foo_start_grnha_op6lzt + foo_endprior_grnha_gop6lzt) / 2
+    foo_ave_grnha_qgop6lzt = (foo_start_grnha_qop6lzt[:,na,...] + foo_endprior_grnha_qgop6lzt) / 2
     ### pasture params used to convert foo for rel availability
     pasture_stage_p6lzt = i_pasture_stage_p6zt[:, na, :, :]
     ### adjust foo and calc hf - only used for intake equations
-    intake_foo_ave_grnha_gop6lzt, hf = fsfun.f_foo_convert(cu3, cu4, foo_ave_grnha_gop6lzt, pasture_stage_p6lzt
+    intake_foo_ave_grnha_qgop6lzt, hf = fsfun.f_foo_convert(cu3, cu4, foo_ave_grnha_qgop6lzt, pasture_stage_p6lzt
                                                     , i_legume_zt, i_hr_scalar_zt, z_pos=-2)
     ### calc relative availability - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][5, 0] == 0:  #csiro function used
-        grn_ri_availability_gop6lzt = fsfun.f_ra_cs(intake_foo_ave_grnha_gop6lzt, hf)
+        grn_ri_availability_qgop6lzt = fsfun.f_ra_cs(intake_foo_ave_grnha_qgop6lzt, hf)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][5, 0] == 1:  #Murdoch function used
-        grn_ri_availability_gop6lzt = fsfun.f_ra_mu(intake_foo_ave_grnha_gop6lzt, hf)
+        grn_ri_availability_qgop6lzt = fsfun.f_ra_mu(intake_foo_ave_grnha_qgop6lzt, hf)
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6, 0] == 0:  #csiro function used
-        grn_ri_quality_gop6lzt = fsfun.f_rq_cs(dmd_diet_grnha_gop6lzt, i_legume_zt)
-    grn_ri_gop6lzt = fsfun.f_rel_intake(grn_ri_availability_gop6lzt, grn_ri_quality_gop6lzt, i_legume_zt)
+        grn_ri_quality_qgop6lzt = fsfun.f_rq_cs(dmd_diet_grnha_qgop6lzt, i_legume_zt)
+    grn_ri_qgop6lzt = fsfun.f_rel_intake(grn_ri_availability_qgop6lzt, grn_ri_quality_qgop6lzt, i_legume_zt)
 
     ###reduce me if nv is above diet requirement
     confinement_inc = np.any(np.logical_not(nv_is_not_confinement_f))
-    me_cons_grnha_fgop6lzt = fsfun.f_effective_mei(cons_grnha_gop6lzt, grn_md_grnha_gop6lzt
+    me_cons_grnha_qfgop6lzt = fsfun.f_effective_mei(cons_grnha_qgop6lzt[:,na,...], grn_md_grnha_qgop6lzt[:,na,...]
                                                   , me_threshold_fp6zt[:, na, na, :, na, ...], confinement_inc
-                                                  , grn_ri_gop6lzt, i_me_eff_gainlose_p6zt[:, na, :, :])
+                                                  , grn_ri_qgop6lzt[:,na,...], i_me_eff_gainlose_p6zt[:, na, :, :], f_pos=1)
     #apply mask - this masks out any green foo at the end of period in periods when green pas doesn't exist.
-    me_cons_grnha_fgop6lzt = me_cons_grnha_fgop6lzt * mask_greenfeed_exists_p6zt[:, na, ...]
+    me_cons_grnha_qfgop6lzt = me_cons_grnha_qfgop6lzt * mask_greenfeed_exists_p6zt[:, na, ...]
     ## Pasture can't be grazed in confinement so ME is 0
-    me_cons_grnha_fgop6lzt = me_cons_grnha_fgop6lzt * nv_is_not_confinement_f[:, na, na, na, na, na, na]
+    me_cons_grnha_qfgop6lzt = me_cons_grnha_qfgop6lzt * nv_is_not_confinement_f[:, na, na, na, na, na, na]
 
     # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
-    volume_grnha_gop6lzt = cons_grnha_gop6lzt / grn_ri_gop6lzt
+    volume_grnha_qgop6lzt = cons_grnha_qgop6lzt / grn_ri_qgop6lzt
     #apply mask - this masks out any green foo at the end of period in periods when green pas doesn't exist.
-    volume_grnha_gop6lzt = volume_grnha_gop6lzt * mask_greenfeed_exists_p6zt[:, na,...]
+    volume_grnha_qgop6lzt = volume_grnha_qgop6lzt * mask_greenfeed_exists_p6zt[:, na,...]
     #me from pasture is 0 in the confinement pool
-    volume_grnha_fgop6lzt = volume_grnha_gop6lzt * nv_is_not_confinement_f[:, na, na, na, na, na, na]
+    volume_grnha_qfgop6lzt = volume_grnha_qgop6lzt[:,na,...] * nv_is_not_confinement_f[:, na, na, na, na, na, na]
 
     ##convert to tonnes
-    cons_grnha_t_gop6lzt = cons_grnha_gop6lzt/1000
-    return (me_cons_grnha_fgop6lzt, volume_grnha_fgop6lzt, foo_start_grnha_op6lzt, foo_end_grnha_gop6lzt
-           , senesce_period_grnha_gop6lzt, senesce_eos_grnha_gop6lzt, dmd_sward_end_grnha_gop6lzt, pgr_grnha_gop6lzt
-           , foo_endprior_grnha_gop6lzt, cons_grnha_t_gop6lzt, foo_ave_grnha_gop6lzt, dmd_diet_grnha_gop6lzt)
+    cons_grnha_t_qgop6lzt = cons_grnha_qgop6lzt/1000
+    return (me_cons_grnha_qfgop6lzt, volume_grnha_qfgop6lzt, foo_start_grnha_qop6lzt, foo_end_grnha_qgop6lzt
+           , senesce_period_grnha_qgop6lzt, senesce_eos_grnha_qgop6lzt, dmd_sward_end_grnha_qgop6lzt, pgr_grnha_qgop6lzt
+           , foo_endprior_grnha_qgop6lzt, cons_grnha_t_qgop6lzt, foo_ave_grnha_qgop6lzt, dmd_diet_grnha_qgop6lzt)
 
 
-def f1_senescence(senesce_period_grnha_gop6lzt, senesce_eos_grnha_gop6lzt, dry_decay_period_p6zt, dmd_sward_end_grnha_gop6lzt
+def f1_senescence(senesce_period_grnha_qgop6lzt, senesce_eos_grnha_qgop6lzt, dry_decay_period_p6zt, dmd_sward_end_grnha_qgop6lzt
                  , i_grn_dmd_senesce_redn_p6zt, dry_dmd_dp6zt, mask_greenfeed_exists_p6zt):
     '''
     Combines the components of senescence and allocates to the dry pasture pools.
@@ -548,10 +551,10 @@ def f1_senescence(senesce_period_grnha_gop6lzt, senesce_eos_grnha_gop6lzt, dry_d
     The proportion of senesced pasture that enters the high and low quality dry pasture pool is calculated based
     on the range of quality in the senescing green feed.
 
-    :param senesce_period_grnha_gop6lzt: senescence of green pasture during the period.
-    :param senesce_eos_grnha_gop6lzt: end of season senescence of green pasture.
+    :param senesce_period_grnha_qgop6lzt: senescence of green pasture during the period.
+    :param senesce_eos_grnha_qgop6lzt: end of season senescence of green pasture.
     :param dry_decay_period_p6zt: decline in dry foo for each period.
-    :param dmd_sward_end_grnha_gop6lzt: dmd of the sward after grazing is reduced due to removal of the high quality feed from selective grazing.
+    :param dmd_sward_end_grnha_qgop6lzt: dmd of the sward after grazing is reduced due to removal of the high quality feed from selective grazing.
     :param i_grn_dmd_senesce_redn_p6zt: reduction in digestibility of green feed when it senesces
     :param dry_dmd_dp6zt: digestibility of each dry pasture pool.
     :param mask_greenfeed_exists_p6zt: Boolean array stating which periods dry pasture exists.
@@ -561,16 +564,16 @@ def f1_senescence(senesce_period_grnha_gop6lzt, senesce_eos_grnha_gop6lzt, dry_d
     ## the pasture that senesces at the eos is assumed to be senescing at the end of the growth period and doesn't decay
     ## the pasture that senesces during the period decays prior to being transferred
     ## the senesced feed that is available to stock is that which senesces at the end of the growing season (i.e. not during the growing season)
-    senesce_total_grnha_gop6lzt = senesce_eos_grnha_gop6lzt + senesce_period_grnha_gop6lzt * (1 - dry_decay_period_p6zt[:, na, ...])
-    grn_dmd_senesce_gop6lzt = dmd_sward_end_grnha_gop6lzt + i_grn_dmd_senesce_redn_p6zt[:, na, ...]
+    senesce_total_grnha_qgop6lzt = senesce_eos_grnha_qgop6lzt + senesce_period_grnha_qgop6lzt * (1 - dry_decay_period_p6zt[:, na, ...])
+    grn_dmd_senesce_qgop6lzt = dmd_sward_end_grnha_qgop6lzt + i_grn_dmd_senesce_redn_p6zt[:, na, ...]
     # senescence to high pool. np.clip reduces the range of the dmd to the range of dmd in the dry feed pools
-    senesce_propn_h_gop6lzt = np.clip((grn_dmd_senesce_gop6lzt - dry_dmd_dp6zt[0,:, na, :])
+    senesce_propn_h_qgop6lzt = np.clip((grn_dmd_senesce_qgop6lzt - dry_dmd_dp6zt[0,:, na, :])
                                       / (dry_dmd_dp6zt[1,:, na,:] - dry_dmd_dp6zt[0,:, na,:]), 0, 1)
-    senesce_propn_l_dgop6lzt = 1- senesce_propn_h_gop6lzt                       # senescence to low pool
-    senesce_propn_dgop6lzt = np.stack([senesce_propn_l_dgop6lzt, senesce_propn_h_gop6lzt])
-    senesce_grnha_dgop6lzt = senesce_total_grnha_gop6lzt * senesce_propn_dgop6lzt       # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
-    senesce_grnha_dgop6lzt = senesce_grnha_dgop6lzt * mask_greenfeed_exists_p6zt[:, na, ...]  # apply mask - green pasture only senesces when green pas exists.
-    return senesce_grnha_dgop6lzt
+    senesce_propn_l_qgop6lzt = 1- senesce_propn_h_qgop6lzt                       # senescence to low pool
+    senesce_propn_qdgop6lzt = np.stack([senesce_propn_l_qgop6lzt, senesce_propn_h_qgop6lzt], axis=1)
+    senesce_grnha_qdgop6lzt = senesce_total_grnha_qgop6lzt[:,na,...] * senesce_propn_qdgop6lzt       # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
+    senesce_grnha_qdgop6lzt = senesce_grnha_qdgop6lzt * mask_greenfeed_exists_p6zt[:, na, ...]  # apply mask - green pasture only senesces when green pas exists.
+    return senesce_grnha_qdgop6lzt
 
 
 def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_high_p6zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_dryfeed_exists_p6zt
@@ -730,8 +733,8 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_
 
 
 def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_p6zt
-                        , i_fxg_foo_op6lzt, c_fxg_a_op6lzt, c_fxg_b_op6lzt, i_grn_senesce_eos_p6zt
-                        , grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt):
+                        , i_fxg_foo_op6lzt, c_fxg_a_qop6lzt, c_fxg_b_qop6lzt, i_grn_senesce_eos_p6zt
+                        , grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, len_q):
     '''
     Calculate the FOO level at the start of each feed period from the germination & sam on PGR provided
 
@@ -748,45 +751,47 @@ def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_p6z
     n_lmu = np.count_nonzero(pinp.general['i_lmu_area'])
     n_pasture_types = germination_p6lzt.shape[-1]
     n_season = length_of_periods_p6zt.shape[-2]
-    p6lzt = (n_feed_periods, n_lmu, n_season, n_pasture_types)
+    qp6lzt = (len_q, n_feed_periods, n_lmu, n_season, n_pasture_types)
     ### reshape the inputs passed and set some initial variables that are required
-    grn_foo_start_p6lzt   = np.zeros(p6lzt, dtype = 'float64')
-    grn_foo_end_p6lzt     = np.zeros(p6lzt, dtype = 'float64')
-    dry_foo_start_p6lzt   = np.zeros(p6lzt, dtype = 'float64')
-    dry_foo_end_p6lzt     = np.zeros(p6lzt, dtype = 'float64')
+    grn_foo_start_qp6lzt   = np.zeros(qp6lzt, dtype = 'float64')
+    grn_foo_end_qp6lzt     = np.zeros(qp6lzt, dtype = 'float64')
+    dry_foo_start_qp6lzt   = np.zeros(qp6lzt, dtype = 'float64')
+    dry_foo_end_qp6lzt     = np.zeros(qp6lzt, dtype = 'float64')
     pgr_daily_lt          = np.zeros((n_lmu, n_pasture_types), dtype=float)  #only required if using the ## loop on lmu. The boolean filter method creates the array
 
     index_t = np.arange(n_pasture_types)
     ## loop through the feed periods and calculate the foo at the start of each period
-    for f in range(n_feed_periods):
-        grn_foo_start_p6lzt[f,:,:,:] = germination_p6lzt[f,:,:,:] + grn_foo_end_p6lzt[f-1,:,:,:]
-        dry_foo_start_p6lzt[f,:,:,:] = dry_foo_end_p6lzt[f-1,:,:,:]
-        ##loop season
-        for z in range(n_season):
-            ## alternative approach (a1)
-            ## for pgr by creating an index using searchsorted (requires an lmu loop). ^ More readable than other but requires pgr_daily matrix to be predefined
-            for l in [*range(n_lmu)]: #loop through lmu
-                ###find where foo_start fits into the input data
-                o_idx_t = fun.searchsort_multiple_dim(i_fxg_foo_op6lzt[:,f,l,z,:], grn_foo_start_p6lzt[f,l,z,:], axis_a0=1, axis_v0=0, side='left')
-                pgr_daily_lt[l] = (      c_fxg_a_op6lzt[o_idx_t,f,l,z,index_t] #advanced indexing
-                                  +      c_fxg_b_op6lzt[o_idx_t,f,l,z,index_t] #advanced indexing
-                                  * grn_foo_start_p6lzt[f,l,z,:])
-            grn_foo_end_p6lzt[f,:,z,:] = (            grn_foo_start_p6lzt[f,:,z,:]
-                                         * (1 - grn_senesce_startfoo_p6zt[f,na,z,:])
-                                         +                   pgr_daily_lt[:,:]  #z axis is indexed, so don't want a newaxis
-                                         *          length_of_periods_p6zt[f,na,z,:]
-                                         * (1 -  grn_senesce_pgrcons_p6zt[f,na,z,:])) \
-                                        * (1 -     i_grn_senesce_eos_p6zt[f,na,z,:])
-            senescence_lt = grn_foo_start_p6lzt[f,:,z,:]  \
-                          +    pgr_daily_lt * length_of_periods_p6zt[f,na,z,:]  \
-                          -  grn_foo_end_p6lzt[f,:,z,:]
-            dry_foo_end_p6lzt[f,:,z,:] = dry_foo_start_p6lzt[f,:,z,:] \
-                                    * (1 - dry_decay_p6zt[f,na,z,:]) \
-                                    + senescence_lt    #p6 & z axes are indexed, so don't want a newaxis
-    return grn_foo_start_p6lzt, dry_foo_start_p6lzt
+    for p6 in range(n_feed_periods):
+        grn_foo_start_qp6lzt[:,p6,:,:,:] = germination_p6lzt[p6,:,:,:] + grn_foo_end_qp6lzt[:,p6-1,:,:,:]
+        dry_foo_start_qp6lzt[:,p6,:,:,:] = dry_foo_end_qp6lzt[:,p6-1,:,:,:]
+        ##loop sequence year
+        for q in range(len_q):
+            ##loop season
+            for z in range(n_season):
+                ## alternative approach (a1)
+                ## for pgr by creating an index using searchsorted (requires an lmu loop). ^ More readable than other but requires pgr_daily matrix to be predefined
+                for l in [*range(n_lmu)]: #loop through lmu
+                    ###find where foo_start fits into the input data
+                    o_idx_t = fun.searchsort_multiple_dim(i_fxg_foo_op6lzt[:,p6,l,z,:], grn_foo_start_qp6lzt[q,p6,l,z,:], axis_a0=1, axis_v0=0, side='left')
+                    pgr_daily_lt[l] = (      c_fxg_a_qop6lzt[q,o_idx_t,p6,l,z,index_t] #advanced indexing
+                                      +      c_fxg_b_qop6lzt[q,o_idx_t,p6,l,z,index_t] #advanced indexing
+                                      * grn_foo_start_qp6lzt[q,p6,l,z,:])
+                grn_foo_end_qp6lzt[q,p6,:,z,:] = (            grn_foo_start_qp6lzt[q,p6,:,z,:]
+                                             * (1 - grn_senesce_startfoo_p6zt[p6,na,z,:])
+                                             +                   pgr_daily_lt[:,:]  #z axis is indexed, so don't want a newaxis
+                                             *          length_of_periods_p6zt[p6,na,z,:]
+                                             * (1 -  grn_senesce_pgrcons_p6zt[p6,na,z,:])) \
+                                            * (1 -     i_grn_senesce_eos_p6zt[p6,na,z,:])
+                senescence_lt = grn_foo_start_qp6lzt[q,p6,:,z,:]  \
+                              +    pgr_daily_lt * length_of_periods_p6zt[p6,na,z,:]  \
+                              -  grn_foo_end_qp6lzt[q,p6,:,z,:]
+                dry_foo_end_qp6lzt[q,p6,:,z,:] = dry_foo_start_qp6lzt[q,p6,:,z,:] \
+                                        * (1 - dry_decay_p6zt[p6,na,z,:]) \
+                                        + senescence_lt    #p6 & z axes are indexed, so don't want a newaxis
+    return grn_foo_start_qp6lzt, dry_foo_start_qp6lzt
 
 def f1_update_reseeding_foo(foo_grn_reseeding_p6lrzt, foo_dry_reseeding_p6lrzt,
-                         resown_rt, period_zt, proportion_zt,
+                         resown_rzt, period_zt, proportion_zt,
                          foo_arable_zt, foo_na_zt, propn_grn=1): #, dmd_dry=0):
     ''' Adjust p_foo parameters due to changes associated with reseeding: destocking pastures prior to spraying and restocking after reseeding
 
@@ -803,44 +808,32 @@ def f1_update_reseeding_foo(foo_grn_reseeding_p6lrzt, foo_dry_reseeding_p6lrzt,
     '''
     ##base inputs
     n_feed_periods = len(per.f_feed_periods()) - 1
-    len_t = np.count_nonzero(pinp.general['pas_inc_t'])
-    n_lmu = np.count_nonzero(pinp.general['i_lmu_area'])
-    len_z = period_zt.shape[0]
-    len_r = resown_rt.shape[0]
-    lzt = (n_lmu,len_z,len_t)
     arable_l = pinp.general['arable']
-    ##create arrays
-    foo_arable_lzt      = np.zeros(lzt, dtype = 'float64')             # create the array foo_arable_lt with the required shape - needed because different sized arrays are passed in
-    foo_arable_lzt[...] = foo_arable_zt                                # broadcast foo_arable into foo_arable_lt (to handle foo_arable not having an lmu axis)
-    foo_na_lzt          = np.zeros(lzt, dtype = 'float64')             # create the array foo_na_l with the required shape
-    foo_na_lzt[...]     = foo_na_zt                                    # broadcast foo_na into foo_na_l (to handle foo_arable not having an lmu axis)
-#    propn_grn_t         = np.ones(len_t, dtype = 'float64')            # create the array propn_grn_t with the required shape
-#    propn_grn_t[:]      = propn_grn                                    # broadcast propn_grn into propn_grn_t (to handle propn_grn not having a pasture type axis)
 
     ### the arable foo allocated to the rotation phases
-    foo_arable_lrzt = foo_arable_lzt[:,na,...]  \
+    foo_arable_lrzt = foo_arable_zt  \
                         * arable_l[:,na,na,na] \
-                        * resown_rt[:,na,:]
+                        * resown_rzt
     foo_arable_lrzt[np.isnan(foo_arable_lrzt)] = 0
 
-    foo_na_lrz = np.sum(foo_na_lzt[:, na,:,0:1]
-                   * (1-arable_l[:,na,na,na])
-                   *    resown_rt[:, na,0:1], axis = -1)
-    foo_na_lrz[np.isnan(foo_na_lrz)] = 0
-    foo_change_lrzt         = foo_arable_lrzt
-    foo_change_lrzt[...,0] += foo_na_lrz  #because all non-arable is pasture 0 (annuals)
+    ### all non-arable on resown paddocks is pasture 0 (annuals)
+    t_idx = np.arange(foo_na_zt.shape[-1])
+    foo_na_lrz = np.sum(foo_na_zt[...,0:1] * (1-arable_l[:,na,na,na]) * resown_rzt, axis=-1)
+    foo_na_lrzt = foo_na_lrz[...,na] * (t_idx==0) #add t axis back
+    foo_na_lrzt[np.isnan(foo_na_lrzt)] = 0
+    foo_change_lrzt = foo_arable_lrzt + foo_na_lrzt
 
-    ##allocate into reseeding period - using advanced indexing
-    period_lrzt = period_zt[na,na,...]
-    next_period_lrzt = (period_lrzt+1) % n_feed_periods
-    l_idx=np.arange(n_lmu)[:,na,na,na]
-    r_idx=np.arange(len_r)[:,na,na]
-    z_idx=np.arange(len_z)[:,na]
-    t_idx=np.arange(len_t)
-    foo_grn_reseeding_p6lrzt[period_lrzt,l_idx,r_idx,z_idx,t_idx]      = foo_change_lrzt *    proportion_zt  * propn_grn      # add the amount of green for the first period
-    foo_grn_reseeding_p6lrzt[next_period_lrzt,l_idx,r_idx,z_idx,t_idx] = foo_change_lrzt * (1-proportion_zt) * propn_grn  # add the remainder to the next period (wrapped if past the 10th period)
-    foo_dry_reseeding_p6lrzt[period_lrzt,l_idx,r_idx,z_idx,t_idx]      = foo_change_lrzt *    proportion_zt  * (1-propn_grn) * 0.5  # assume 50% in high & 50% into low pool. for the first period
-    foo_dry_reseeding_p6lrzt[next_period_lrzt,l_idx,r_idx,z_idx,t_idx] = foo_change_lrzt * (1-proportion_zt) * (1-propn_grn) * 0.5  # add the remainder to the next period (wrapped if past the 10th period)
+    ##allocate into reseeding period
+    next_period_zt = (period_zt+1) % n_feed_periods
+    p6_idx=np.arange(n_feed_periods)[:,na,na,na,na]
+    foo_grn_reseeding_change_1_p6lrzt = (period_zt==p6_idx) * foo_change_lrzt * proportion_zt * propn_grn      # add the amount of green for the first period
+    foo_grn_reseeding_change_2_p6lrzt = (next_period_zt==p6_idx) * foo_change_lrzt * (1-proportion_zt) * propn_grn  # add the remainder to the next period (wrapped if past the 10th period)
+    foo_dry_reseeding_change_1_p6lrzt = (period_zt==p6_idx) * foo_change_lrzt * proportion_zt  * (1-propn_grn)  # for the first period
+    foo_dry_reseeding_change_2_p6lrzt = (next_period_zt==p6_idx) * foo_change_lrzt * (1-proportion_zt) * (1-propn_grn)  # add the remainder to the next period (wrapped if past the 10th period)
+
+    foo_grn_reseeding_p6lrzt = foo_grn_reseeding_p6lrzt + foo_grn_reseeding_change_1_p6lrzt + foo_grn_reseeding_change_2_p6lrzt
+    foo_dry_reseeding_p6lrzt = foo_dry_reseeding_p6lrzt + foo_dry_reseeding_change_1_p6lrzt + foo_dry_reseeding_change_2_p6lrzt
+
 
     return foo_grn_reseeding_p6lrzt, foo_dry_reseeding_p6lrzt
 

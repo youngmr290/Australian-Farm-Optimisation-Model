@@ -573,7 +573,7 @@ def f_con_link_understory_saltbush_consumption(model):
     def link_us_sb(model,q,s,z,p6,f,l):
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p6z[p6,z]) and pinp.general['pas_inc_t'][3]:
             return - slppy.f_saltbush_selection(model,q,s,z,p6,f,l) \
-                   + sum(model.v_greenpas_ha[q, s, f, g, o, p6, l, z, 'understory'] * model.p_volume_grnha[f, g, o, p6, l, z, 'understory'] * model.p_sb_selectivity_zp6[z,p6]
+                   + sum(model.v_greenpas_ha[q, s, f, g, o, p6, l, z, 'understory'] * model.p_volume_grnha[q,f, g, o, p6, l, z, 'understory'] * model.p_sb_selectivity_zp6[z,p6]
                         for g in model.s_grazing_int for o in model.s_foo_levels) \
                    + sum(model.v_drypas_consumed[q, s, f, d, p6, z, l, 'understory'] * model.p_dry_volume_t[f, d, p6, z, 'understory'] * model.p_sb_selectivity_zp6[z,p6]
                          for d in model.s_dry_groups) == 0

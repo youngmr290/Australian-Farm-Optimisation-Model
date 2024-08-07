@@ -52,7 +52,7 @@ def f1_md_to_dmd(md):
     return (md + 1.707) / 17.2              # from formula 1.12A from Freer et al 2007 pg 7.
 
 
-def f_effective_mei(dmi, md, threshold_f, confinement_inc, ri=1, eff_above=0.5):
+def f_effective_mei(dmi, md, threshold_f, confinement_inc, ri=1, eff_above=0.5, f_pos=0):
     """According to the Australian Feeding Standards (Freer et al 2007) an animal that is gaining weight then
        losing weight is less efficient than an animal that is maintaining weight on a constant diet. Therefore,
        switching between a high quality diet and a low quality diet to maintain weight requires more MJ of ME
@@ -91,7 +91,9 @@ def f_effective_mei(dmi, md, threshold_f, confinement_inc, ri=1, eff_above=0.5):
     nv_effective_f  = np.minimum(nv, threshold_f + (nv - threshold_f) * eff_above)
     ## no reduction in efficiency in the highest nv pool (excluding confinement pool) on the assumption that LWG is the target for these animals.
     f_high_idx = -1 - confinement_inc #highest pool is -1 unless confinement is included then it is -2.
-    nv_effective_f[f_high_idx,...] = nv
+    sl = [slice(None)] * nv_effective_f.ndim
+    sl[f_pos] = slice(f_high_idx, f_high_idx+1)
+    nv_effective_f[tuple(sl)] = nv
     md_effective_f = nv_effective_f / ri
     mei_effective_f = dmi * md_effective_f
     return mei_effective_f

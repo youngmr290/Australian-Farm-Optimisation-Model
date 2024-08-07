@@ -306,6 +306,8 @@ def create_sa():
     ##SAV
     sav['poc_inc'] = '-'  #control if poc is included
     sav['pas_inc_t'] = np.full_like(pinp.general['pas_inc_t'], '-', dtype=object) #SA value for pastures included mask
+    ##SAM
+    sam['q_pgr_scalar_Qp6'] = np.ones((len_Q, len_p6), dtype='float64')   # SAM for pgr with q axis
     
     for pasture in sinp.general['pastures'][pinp.general['i_pastures_exist']]:
         ##SAV

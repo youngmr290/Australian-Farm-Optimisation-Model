@@ -960,8 +960,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     if report_run.loc['run_grnfoo', 'Run']:
         #returns foo at end of each FP
         type = 'pas'
-        prod = 'foo_end_grnha_gop6lzt'
-        na_prod = [0,1,2] #q,s,f
+        prod = 'foo_end_grnha_qgop6lzt'
+        na_prod = [1,2] #q,s,f
         weights = 'greenpas_ha_qsfgop6lzt'
         keys = 'keys_qsfgop6lzt'
         arith = f_update_default_controls(user_controls, 'grnfoo', 'arith', 2)
@@ -975,8 +975,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         #to get total PG change arith to 2 (den_weights won't be used)
         #todo would be good if this could include germination but doesnt work atm because germ has r axis.
         type = 'pas'
-        prod = 'pgr_grnha_gop6lzt'
-        na_prod = [0,1,2] #q,s,f
+        prod = 'pgr_grnha_qgop6lzt'
+        na_prod = [1,2] #q,s,f
         weights = 'greenpas_ha_qsfgop6lzt'
         den_weights = 'days_p6z'
         na_denweights = [1,3]
@@ -1015,8 +1015,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         #returns consumption per ha per day
         # to get total consumption, change arith to 2 and remove den_weights
         type = 'pas'
-        prod = 'cons_grnha_t_gop6lzt'
-        na_prod = [0,1]  # q,s
+        prod = 'cons_grnha_t_qgop6lzt'
+        na_prod = [1]  # q,s
         prod_weights = 1000 #to convert to kg/ha/day
         weights = 'greenpas_ha_qsfgop6lzt'
         den_weights = 'days_p6z'
@@ -1045,9 +1045,9 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     if report_run.loc['run_grnnv', 'Run']:
         #returns NV during each FP regardless of whether selected or not
         type = 'pas'
-        prod = 'nv_grnha_fgop6lzt'
+        prod = 'nv_grnha_qfgop6lzt'
         weights = None
-        keys = 'keys_fgop6lzt'
+        keys = 'keys_qfgop6lzt'
         arith = f_update_default_controls(user_controls, 'grnnv', 'arith', 5)
         index = f_update_default_controls(user_controls, 'grnnv', 'index', [5,3])   #p6 z
         cols = f_update_default_controls(user_controls, 'grnnv', 'cols', [2,1])     #lmu
@@ -1057,9 +1057,9 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     if report_run.loc['run_grndmd', 'Run']:
         #returns DMD during each FP (regardless of whether selected or not)
         type = 'pas'
-        prod = 'dmd_diet_grnha_gop6lzt'
+        prod = 'dmd_diet_grnha_qgop6lzt'
         weights = None
-        keys = 'keys_gop6lzt'
+        keys = 'keys_qgop6lzt'
         arith = f_update_default_controls(user_controls, 'grndmd', 'arith', 5)
         index = f_update_default_controls(user_controls, 'grndmd', 'index', [4,2])   #z,p6
         cols = f_update_default_controls(user_controls, 'grndmd', 'cols', [1,0])     #g, o
@@ -1069,9 +1069,9 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     if report_run.loc['run_avegrnfoo', 'Run']:
         #returns average FOO during each FP (regardless of whether selected or not)
         type = 'pas'
-        prod = 'foo_ave_grnha_gop6lzt'
+        prod = 'foo_ave_grnha_qgop6lzt'
         weights = None
-        keys = 'keys_gop6lzt'
+        keys = 'keys_qgop6lzt'
         arith = f_update_default_controls(user_controls, 'avegrnfoo', 'arith', 5)
         index = f_update_default_controls(user_controls, 'avegrnfoo', 'index', [4,2])   #z,p6
         cols = f_update_default_controls(user_controls, 'avegrnfoo', 'cols', [1,0])     #g, o
