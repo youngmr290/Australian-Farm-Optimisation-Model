@@ -385,8 +385,8 @@ def f_var_reshape(lp_vars, r_vals):
     #note stock keys are built in sgen.
     ###pasture
     d_keys['keys_qsfgop6lzt'] = [keys_q, keys_s, keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
-    d_keys['keys_fgop6lzt'] = [keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
-    d_keys['keys_gop6lzt'] = [keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    d_keys['keys_qfgop6lzt'] = [keys_q, keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    d_keys['keys_qgop6lzt'] = [keys_q, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
     d_keys['keys_qsfdp6zt'] = [keys_q, keys_s, keys_f, keys_dry_pool, keys_p6, keys_z, keys_t]
     d_keys['keys_qsfdp6zlt'] = [keys_q, keys_s, keys_f, keys_dry_pool, keys_p6, keys_z, keys_l, keys_t]
     d_keys['keys_fdp6zt'] = [keys_f, keys_dry_pool, keys_p6, keys_z, keys_t]
@@ -410,7 +410,7 @@ def f_var_reshape(lp_vars, r_vals):
     ##biomass
     d_keys['keys_qsp7zkls2'] = [keys_q, keys_s, keys_p7, keys_z, keys_k, keys_l, keys_s2]
     ##v_phase residue
-    d_keys['keys_qsp7dp6zrlt'] = [keys_q, keys_s, keys_p7, keys_d, keys_p6, keys_z, keys_r, keys_l, keys_t]
+    d_keys['keys_qsp7p6zrlt'] = [keys_q, keys_s, keys_p7, keys_p6, keys_z, keys_r, keys_l, keys_t]
     d_keys['keys_qsp7zrl'] = [keys_q, keys_s, keys_p7, keys_z, keys_r, keys_l]
 
 
@@ -2157,8 +2157,8 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     ##mei supply
     ###grn pasture
     type = 'pas'
-    prod = 'me_cons_grnha_fgop6lzt'
-    na_prod = [0, 1]  # q,s
+    prod = 'me_cons_grnha_qfgop6lzt'
+    na_prod = [1]  # s
     weights = 'greenpas_ha_qsfgop6lzt'
     keys = 'keys_qsfgop6lzt'
     arith = 2
@@ -2416,8 +2416,8 @@ def f_emission_summary(lp_vars, r_vals, option=0):
 
         ###grn pasture
         type = 'pas'
-        prod = 'stock_{0}_grnpas_gop6lzt'.format(e)
-        na_prod = [0,1,2]  # q,s,f
+        prod = 'stock_{0}_grnpas_qgop6lzt'.format(e)
+        na_prod = [1,2]  # s,f
         weights = 'greenpas_ha_qsfgop6lzt'
         keys = 'keys_qsfgop6lzt'
         index = [0,1,7] #q,s,z
@@ -2565,19 +2565,19 @@ def f_emission_summary(lp_vars, r_vals, option=0):
     ##Emissions from pasture residues (POC not included atm - see note in EmissionFunctions)
     ###germination and nap
     type = 'pas'
-    prod = 'n2o_pas_residue_v_phase_growth_dp6zrlt'
-    na_prod = [0, 1, 2]  # q,s,p7
+    prod = 'n2o_pas_residue_v_phase_growth_qp6zrlt'
+    na_prod = [1, 2]  # q,s,p7
     weights = 'v_phase_change_increase_qsp7zrl'
-    na_weights = [3,4,8] #d,p6,t
-    keys = 'keys_qsp7dp6zrlt'
-    index = [0, 1, 5]  # q,s,z
+    na_weights = [3,7] #p6,t
+    keys = 'keys_qsp7p6zrlt'
+    index = [0, 1, 4]  # q,s,z
     cols = []
     residue_n2o_vphase_growth = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                           na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
     ###grn pasture
     type = 'pas'
-    prod = 'grnpas_n2o_residue_gop6lzt'
-    na_prod = [0, 1, 2]  # q,s,f
+    prod = 'grnpas_n2o_residue_qgop6lzt'
+    na_prod = [1, 2]  # s,f
     weights = 'greenpas_ha_qsfgop6lzt'
     keys = 'keys_qsfgop6lzt'
     index = [0, 1, 7]  # q,s,z
@@ -2805,18 +2805,18 @@ def f_grazing_summary(lp_vars, r_vals):
     '''
     feed_vars = d_vars['base'] #z is reported so use base version
     greenpas_ha_qsfgop6lzt = feed_vars['greenpas_ha_qsfgop6lzt']
-    foo_ave_grnha_gop6lzt = r_vals['pas']['foo_ave_grnha_gop6lzt']
-    foo_start_grnha_op6lzt = r_vals['pas']['foo_start_grnha_op6lzt']
+    foo_ave_grnha_qgop6lzt = r_vals['pas']['foo_ave_grnha_qgop6lzt']
+    foo_start_grnha_qop6lzt = r_vals['pas']['foo_start_grnha_qop6lzt']
     foo_gi_gt = r_vals['pas']['i_foo_graze_propn_gt']
 
     ##calc average foo for f (nv pool), o (start foo) and g (grazing int)
-    foo_ave_grnha_qsp6lzt = fun.f_weighted_average(foo_ave_grnha_gop6lzt, greenpas_ha_qsfgop6lzt, axis=(2,3,4))
+    foo_ave_grnha_qsp6lzt = fun.f_weighted_average(foo_ave_grnha_qgop6lzt[:,na,na,...], greenpas_ha_qsfgop6lzt, axis=(2,3,4))
 
     ##sum f axis to return total ha of each pasture activity
     greenpas_ha_qsgop6lzt = np.sum(greenpas_ha_qsfgop6lzt, axis=2)
 
     ##combine everything
-    graze_info_iqsgop6lzt = np.stack(np.broadcast_arrays(greenpas_ha_qsgop6lzt, foo_start_grnha_op6lzt[na,na,na], foo_ave_grnha_qsp6lzt[:,:,na,na,...]), axis=0)
+    graze_info_iqsgop6lzt = np.stack(np.broadcast_arrays(greenpas_ha_qsgop6lzt, foo_start_grnha_qop6lzt[na,na], foo_ave_grnha_qsp6lzt[:,:,na,na,...]), axis=0)
 
     ##make df
     keys_g = r_vals['pas']['keys_g']
