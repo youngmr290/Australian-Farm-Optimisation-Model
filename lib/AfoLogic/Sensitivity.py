@@ -285,6 +285,7 @@ def create_sa():
     sav['lime_cost'] = '-'  #cost ($/ha) of lime
     sav['liming_freq'] = '-'  #number of years between applications
     ##SAM
+    sam['q_crop_yield_scalar_Qk'] = np.ones((len_Q, len_k), dtype='float64')  # SAM for grain price with q axis
     sam['crop_yield_k'] = np.ones(len_k, dtype='float64')    # SA multiplier for all rotation yield
     sam['crop_fert_kn'] = np.ones((len_k, len_n), dtype='float64') #SA multiplier on crop fertiliser
     sam['pas_fert_kn'] = np.ones((len_pas_k, len_n), dtype='float64') #SA multiplier on pas fertiliser

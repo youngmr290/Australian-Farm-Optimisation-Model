@@ -76,7 +76,7 @@ def f1_croppyomo_local(params, model):
                                              model.s_phases, initialize=params['increment_rot_wc'],
                                              default=0, mutable=False, doc='total wc for 1 unit of rotation')
 
-    model.p_rotation_biomass = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_season_types, model.s_season_periods,
+    model.p_rotation_biomass = pe.Param(model.s_sequence_year, model.s_phases, model.s_crops, model.s_lmus, model.s_season_types, model.s_season_periods,
                                       initialize=params['rot_biomass'], default = 0.0, mutable=False, doc='biomass production for all crops for 1 unit of rotation')
 
     model.p_biomass2product = pe.Param(model.s_crops, model.s_biomass_uses, initialize=params['biomass2product_ks2'],
@@ -122,8 +122,8 @@ def f_rotation_biomass(model,q,s,p7,k,l,z):
 
     Used in global constraint (con_biomass_transfer). See CorePyomo
     '''
-    return sum(model.p_rotation_biomass[r,k,l,z,p7]*model.v_phase_area[q,s,p7,z,r,l]
-               for r in model.s_phases if pe.value(model.p_rotation_biomass[r,k,l,z,p7]) != 0)
+    return sum(model.p_rotation_biomass[q,r,k,l,z,p7]*model.v_phase_area[q,s,p7,z,r,l]
+               for r in model.s_phases if pe.value(model.p_rotation_biomass[q,r,k,l,z,p7]) != 0)
 
 
 ##############
