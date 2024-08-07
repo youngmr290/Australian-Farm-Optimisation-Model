@@ -237,7 +237,7 @@ def f_grain_price(r_vals):
 #########################
 def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     '''
-    Calculates the biomass for each rotation. Accounting for LMU, arable area and frost.
+    Calculates the biomass for each rotation. Accounting for LMU and arable area.
 
     The crop yield for each rotation phase, on the base LMU [#]_, at the optimal time of seeding and before harvested proportion adjustment
     (spilt/split grain), is entered as an input. The yield is inputted assuming seeding was completed at the optimal time.
@@ -351,12 +351,24 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     ###mul m allocation with cost
     biomass_rkl_p7z = biomass_rkl_z.mul(alloc_p7z, axis=1,level=1)
 
+    ##add q axis
+    len_q = sinp.structuralsa['i_len_q']  # number of years in MP model
+    keys_q = np.array(['q%s' % i for i in range(len_q)])
+    q_crop_yield_scalar_q_k = pd.DataFrame(sen.sam['q_crop_yield_scalar_Qk'][0:len_q, pinp.crop_landuse_mask_k1],
+                                            index=keys_q, columns=keys_k)  # have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
+    biomass_rlp7z_qk = biomass_rkl_p7z.stack([0,1]).unstack(1).mul(q_crop_yield_scalar_q_k.stack(), axis=1, level=1)
+    biomass_rlp7zqk = biomass_rlp7z_qk.stack([0,1])
+    biomass_qrklzp7 = biomass_rlp7zqk.reorder_levels([4,0,5,1,3,2])
+
     if for_insurance or for_stub:
+        ###use q[0] (average yield) because that saves a bit of complexity without losing much accuracy.
+        biomass_rklzp7 = biomass_qrklzp7.unstack(0).iloc[:,0]
         ###return biomass for stubble before accounting for frost, seed rate and harv propn
-        return biomass_rkl_p7z.groupby(axis=1, level=1).sum().stack()
+        biomass_rklz = biomass_rklzp7.unstack(-1).sum(axis=1)
+        return biomass_rklz
     else:
         ###biomass for pyomo biomass param
-        return biomass_rkl_p7z.stack([1,0])
+        return biomass_qrklzp7
 
 def f_biomass2product(r_vals=None):
     '''Relationship between biomass and saleable product. Where saleable product is either grain or hay.
