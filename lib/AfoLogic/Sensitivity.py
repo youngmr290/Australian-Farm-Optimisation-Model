@@ -55,6 +55,7 @@ def create_sa():
     len_R = 5000 #just use a big number - it is cut down later (this is because the length of r is not known because it can be affected by SA)
     len_s = pinp.sheep['i_s_len'] #s = shear
     len_s7 = len(uinp.sheep['i_salep_price_max_s7']) #s7 = sale grid
+    len_t = len(pinp.general['pas_inc_t'])
     len_t1 = pinp.sheep['i_n_dam_sales'] + len_g0
     len_t2 = pinp.sheep['i_t2_len']
     if sinp.structuralsa['i_offs_sale_method'] == 1:
@@ -476,10 +477,10 @@ def create_sa():
     ##SAV
     sav['bnd_slp_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of slp on each lmu
     sav['bnd_sb_consumption_p6'] = np.full(len(pinp.period['i_fp_idx']), '-', dtype=object)  #upper bnd on the amount of sb consumed
-    sav['bnd_crop_area'] = np.full(len_k, '-', dtype=object)  #crop area for bound. if all values are '-' the bnd wont be used (there is not bnd_inc control for this one)
-    sav['bnd_crop_area_percent'] = np.full(len_k, '-', dtype=object)  #crop area percent of farm area. if all values are '-' the bnd wont be used (there is not bnd_inc control for this one)
+    sav['bnd_crop_area'] = np.full((len_Q, len_k), '-', dtype=object)  #crop area for bound. if all values are '-' the bnd wont be used (there is not bnd_inc control for this one)
+    sav['bnd_crop_area_percent'] = np.full((len_Q, len_k), '-', dtype=object)  #crop area percent of farm area. if all values are '-' the bnd wont be used (there is not bnd_inc control for this one)
     sav['bnd_total_legume_area_percent'] = '-'  #Control the total percent of legume area on farm.
-    sav['bnd_total_pas_area_percent'] = '-'  #Control the total percent of pasture area on farm.
+    sav['bnd_total_pas_area_percent'] = np.full(len_Q, '-', dtype=object)  #Control the total percent of pasture area on farm.
     sav['bnd_pas_area_l'] = np.full(len_l, '-', dtype=object)  #pasture area by lmu for bound. if all values are '-' the bnd wont be used (there is not bnd_inc control for this one)
     sav['bnd_landuse_area_klz'] = np.full((len_k, len_l, len_z), '-', dtype=object)  #landuse area by lmu and z. if all values are '-' the bnd wont be used
     sav['bnd_sup_per_dse'] = '-'   #SA to control the supplement per dse (kg/dse)
@@ -506,7 +507,7 @@ def create_sa():
     sav['bnd_up_off_inc'] = '-'   #control if off upper bound is on.
     sav['bnd_up_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #max number of offs
     sav['bnd_up_prog_tdxg2'] = np.full((len_t2,) + (len_d,) + (len_x,) + (len_g2,), '-', dtype=object)   #max number of offs
-    sav['bnd_sr_t'] = np.full(pinp.sheep['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
+    sav['bnd_sr_Qt'] = np.full((len_Q, len_t), '-', dtype=object)   #SA to fix stocking rate
     sav['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
     sav['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
     sav['bnd_min_sale_age_female_g1'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a dam can be sold - BBT offspring can be sold but BBT dams can't (because they are BB)
