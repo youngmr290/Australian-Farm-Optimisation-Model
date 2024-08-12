@@ -287,6 +287,7 @@ def f_property_inp_sa(pinp_defaults):
     ###sav
     general['i_mask_z'] = fun.f_sa(general['i_mask_z'], sen.sav['mask_z'], 5)
     general['i_season_propn_z'] = fun.f_sa(general['i_season_propn_z'], sen.sav['prob_z'], 5)
+    general['i_node_is_fvp'] = fun.f_sa(general['i_node_is_fvp'], sen.sav['node_is_fvp'][0:len(general['i_node_is_fvp'])], 5)
     labour['max_managers'] = fun.f_sa(labour['max_managers'], sen.sav['manager_ub'], 5)
     labour['min_managers'] = fun.f_sa(labour['min_managers'], sen.sav['manager_lo'], 5)
     labour['max_perm'] = fun.f_sa(labour['max_perm'], sen.sav['perm_ub'], 5)

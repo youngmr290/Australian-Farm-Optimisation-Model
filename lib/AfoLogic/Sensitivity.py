@@ -63,6 +63,7 @@ def create_sa():
         len_t3 = pinp.sheep['i_t3_len']
     len_P = 500  #Capital P because it is an (over) estimate to initialise the p axes that will be sliced when len_p is known.
     len_p6 = len(pinp.period['i_fp_idx'])
+    len_P7 = 10 #number of season node - use a big number because len_p7 can be adjusted by SA (if using MP model)
     len_Q = 20 #number of years in MP model - use a big number because len_q can be adjusted by SA
     len_V = 50  #Capital V because it is an (over) estimate to initialise the v axes that will be sliced when len_v is known.
     len_max_W1 = 3125 #number of nut options (i_nut_spread_n1 ** n_fvp) (this used to be calculated but the max possible was too big. This now assumes max n=5 and max fvp =5) #the max number of options for each starting w if all n and fvps included.
@@ -91,6 +92,7 @@ def create_sa():
     sav['prob_z']      = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)   #SA to alter which seasons are included
     sav['date_node_p7']      = np.full(2, '-', dtype=object) #SA to alter p7 period dates (for MP model). Len 2 because p7 has two periods in the MP model. Note the node periods need to line up with p5 and p6 periods
     sav['inc_node_periods']      = '-'              #SA to alter if season nodes are included in the steady state model (note they are always included in the dsp version this only effects if they are included in steady state)
+    sav['node_is_fvp'] = np.full(len_P7, '-', dtype=object) #SA to alter if season nodes are used as FVPs. This is generally True in the MP model.
     sav['seq_len']      = '-'                     #SA to alter the length of the season sequence in the SQ model
     sav['model_is_MP']      = '-'                 #SA to control when the MP framework is used.
     sav['rev_update']      = '-'                  #SA to alter if the trial is being used to create rev std values
@@ -371,10 +373,12 @@ def create_sa():
     sav['n_fs_dams'] = '-'      #nut options dams
     sav['n_fs_offs'] = '-'      #nut options offs
     sav['n_initial_lw_dams'] = '-'      #number of initial lws dams - note with the current code this can only be 2 or 3
+    sav['n_initial_lw_offs'] = '-'      #number of initial lws offs - note with the current code this can only be 2 or 3
     sav['adjp_lw_initial_w1'] = np.full(sinp.structuralsa['i_adjp_lw_initial_w1'].shape, '-', dtype=object)      #initial lw adjustment dams
     sav['adjp_cfw_initial_w1'] = np.full(sinp.structuralsa['i_adjp_cfw_initial_w1'].shape, '-', dtype=object)    #initial cfw adjustment dams
     sav['adjp_fd_initial_w1'] = np.full(sinp.structuralsa['i_adjp_fd_initial_w1'].shape, '-', dtype=object)      #initial fd adjustment dams
     sav['adjp_fl_initial_w1'] = np.full(sinp.structuralsa['i_adjp_fl_initial_w1'].shape, '-', dtype=object)      #initial fl adjustment dams
+    sav['condense_at_seasonstart'] = '-'  # SA to alter if condensing occurs at season start. Default is False except in the MP model when this can be set to True so that core fvps can be masked out and just just the season nodes for fvps.
     sav['user_fvp_date_dams_iu'] = np.full(sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['user_fvp_date_dams_yiu'] = np.full((len_y,)+sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['mask_fvp_dams'] = np.full(sinp.structuralsa['i_fvp_mask_dams'].shape, '-', dtype=object)      #SA to mask optional fvps.
