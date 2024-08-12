@@ -326,7 +326,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         arith = f_update_default_controls(user_controls, 'cfw_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'cfw_dams', 'index', [4])      #DVP
         cols = f_update_default_controls(user_controls, 'cfw_dams', 'cols', [])
-        axis_slice = f_update_default_controls(user_controls, 'cfw_dams', 'axis_slice', {4: [9, 10, 1]}) #dvp9 - 3.5yo
+        axis_slice = f_update_default_controls(user_controls, 'cfw_dams', 'axis_slice', {4: [9, 15, 1]}) #dvp9-15 - 3.5yo (take multiple dvps because shearing can change dvp - in the web app the max value is displayed)
         reports["cfw_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_fd_dams', 'Run']:
@@ -338,7 +338,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         arith = f_update_default_controls(user_controls, 'fd_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'fd_dams', 'index', [4])      #DVP
         cols = f_update_default_controls(user_controls, 'fd_dams', 'cols', [])
-        axis_slice = f_update_default_controls(user_controls, 'fd_dams', 'axis_slice', {4: [9, 10, 1]}) #dvp9 - 3.5yo
+        axis_slice = f_update_default_controls(user_controls, 'fd_dams', 'axis_slice', {4: [9, 15, 1]}) #dvp9-15 - 3.5yo (take multiple dvps because shearing can change dvp - in the web app the max value is displayed)
         reports["fd_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_cfw_offs', 'Run']:
