@@ -155,7 +155,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     bool_steady_state = sinp.structuralsa['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
     mask_node_is_fvp = pinp.general['i_node_is_fvp'] * (sinp.structuralsa['i_inc_node_periods']
                                                         or np.logical_not(bool_steady_state)) #node fvp/dvp are not included if it is steadystate.
-    fvp_mask_dams = np.concatenate([mask_node_is_fvp[0:1], sinp.stock['i_fixed_fvp_mask_dams'], sinp.structuralsa['i_fvp_mask_dams'], mask_node_is_fvp[1:]]) #season start is at the front. because ss has to be first in the fvp/dvp
+    fvp_mask_dams = np.concatenate([mask_node_is_fvp[0:1], sinp.structuralsa['i_fvp_mask_dams'], mask_node_is_fvp[1:]]) #season start is at the front. because ss has to be first in the fvp/dvp
     fvp_mask_offs = np.concatenate([mask_node_is_fvp[0:1], sinp.structuralsa['i_fvp_mask_offs'], mask_node_is_fvp[1:]]) #season start is at the front. because ss has to be first in the fvp/dvp
     ##t1 mask
     mask_t1 = np.concatenate([np.full(pinp.sheep['i_n_dam_sales'], True), mask_sire_inc_g0])  # sale t slices plus transfer t slices
@@ -401,8 +401,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_numbers_join_tpdams = np.zeros(tpg1, dtype =dtype)
     o_numbers_end_tpdams = np.zeros(tpg1, dtype =dtype) #default 1 so that transfer can exist for dvps before weaning
     o_ffcfw_tpdams = np.zeros(tpg1, dtype =dtype)
-    o_ffcfw_season_tpdams = np.zeros(tpg1, dtype =dtype)
-    o_ffcfw_condensed_tpdams = np.zeros(tpg1, dtype =dtype)
+    o_ffcfw_lw_dist_tpdams = np.zeros(tpg1, dtype =dtype)
     o_nw_start_tpdams = np.zeros(tpg1, dtype = dtype)
     o_mortality_dams = np.zeros(tpg1, dtype =dtype)
     o_lw_tpdams = np.zeros(tpg1, dtype =dtype)
@@ -498,8 +497,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_numbers_start_tpoffs = np.zeros(tpg3, dtype =dtype) # filled with the initial numbers later, so that dvp0 (p0) has start numbers.
     o_numbers_end_tpoffs = np.zeros(tpg3, dtype =dtype) # filled with the initial numbers later, so that transfer can exist for dvps before weaning
     o_ffcfw_tpoffs = np.zeros(tpg3, dtype =dtype)
-    o_ffcfw_season_tpoffs = np.zeros(tpg3, dtype =dtype)
-    o_ffcfw_condensed_tpoffs = np.zeros(tpg3, dtype =dtype)
+    o_ffcfw_lw_dist_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_nw_start_tpoffs = np.zeros(tpg3, dtype=dtype)
     o_mortality_offs = np.zeros(tpg3, dtype =dtype)
     o_lw_tpoffs = np.zeros(tpg3, dtype =dtype)
@@ -952,11 +950,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##fvp/dvp types
     core_dvp_types_f1 = sinp.stock['i_core_dvp_types_f1'] #core dvps/fvps need a certain type because repro dvps are linked to them
     prejoin_vtype1 = core_dvp_types_f1[0]
-    condense_vtype1 = prejoin_vtype1 #currently for dams, condensing must occur at prejoining, most of the code is flexible to handle different timing except the lw_distribution section.
     scan_vtype1 = core_dvp_types_f1[1]
     birth_vtype1 = core_dvp_types_f1[2]
-    season_vtype1 = max(core_dvp_types_f1) + 1
+    season_start_vtype1 = max(core_dvp_types_f1) + 1
     other_vtype1 = max(core_dvp_types_f1) + 2
+    ###condense can occur at prejoining or season start (default is at prjoining but for MP model it happens at season start so that we can run 2 fvps at node periods)
+    condense_at_seasonstart = fun.f_sa(False, sen.sav['condense_at_seasonstart'], 5)
+    if condense_at_seasonstart:
+        condense_vtype1 = season_start_vtype1 #this can only happen if nodes are included as fvps
+    else:
+        condense_vtype1 = prejoin_vtype1
 
     ##if stubble we don't want it to condense so change condense type to something that is not triggered
     if stubble:
@@ -1038,7 +1041,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     for m in range(len_m):
         ##season start dvp/fvp needs its own type because it needs to be distinguishable so that dvp can get distributed (only when season nodes included).
         if m==0:
-            node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, season_vtype1)
+            node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, season_start_vtype1)
         else:
             node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, other_vtype1)
 
@@ -1096,9 +1099,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     # dvp/fvps are set to be the same within a cluster.
 
     ##fvp/dvp types
-    condense_vtype3 = 0 #for offs, condensing can occur at any dvp. Currently it occurs at shearing.
-    other_vtype3 = condense_vtype3 + 1
-    season_vtype3 = other_vtype3 + 1
+    shear_vtype3 = 0
+    other_vtype3 = shear_vtype3 + 1
+    season_start_vtype3 = other_vtype3 + 1
+    ###condense can occur at shearing or season start (default is at shearing but for MP model it happens at season start so that we can run 2 fvps at node periods)
+    if condense_at_seasonstart:
+        condense_vtype3 = season_start_vtype3 #this can only happen if nodes are included as fvps
+    else:
+        condense_vtype3 = shear_vtype3 #for offs, condensing can occur at any dvp. Currently it occurs at shearing.
 
     ##if stubble we don't want it to condense so change condense type
     if stubble:
@@ -1171,10 +1179,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     for m in range(len_m):
         node_fvp_m[m] = np.broadcast_to(node_fvp_m[m],(node_fvp_m[m].shape[0],)+tuple(shape))
 
-    fvp_b0_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_b0_start_ba1e1b1nwzida0e0b0xyg3.shape, condense_vtype3)
+    fvp_b0_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_b0_start_ba1e1b1nwzida0e0b0xyg3.shape, shear_vtype3)
     fvp_b1_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_b1_start_ba1e1b1nwzida0e0b0xyg3.shape, other_vtype3)
     fvp_b2_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_b2_start_ba1e1b1nwzida0e0b0xyg3.shape, other_vtype3)
-    fvp_0_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_0_start_sa1e1b1nwzida0e0b0xyg3.shape, condense_vtype3)
+    fvp_0_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_0_start_sa1e1b1nwzida0e0b0xyg3.shape, shear_vtype3)
     fvp_1_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_1_start_sa1e1b1nwzida0e0b0xyg3.shape, other_vtype3)
     fvp_2_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_2_start_sa1e1b1nwzida0e0b0xyg3.shape, other_vtype3)
     user_fvp_type_u = np.zeros_like(user_fvp_u)
@@ -1183,7 +1191,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     for m in range(len_m):
         ##season start dvp/fvp needs its own type because it needs to be distinguishable so that dvp can get distributed (only when season nodes included).
         if m==0:
-            node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, season_vtype3)
+            node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, season_start_vtype3)
         else:
             node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, other_vtype3)
 
@@ -1197,7 +1205,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                 fvp_1_type_va1e1b1nwzida0e0b0xyg3, fvp_2_type_va1e1b1nwzida0e0b0xyg3], dtype=object)
     fvp_type_all_f3 = np.concatenate([node_fvp_type_m[0:1], fvp_type_all_f3, user_fvp_type_u, node_fvp_type_m[1:]]) #seasons start needs to be first because it needs to be the first dvp in situations where there is a clash. so that distributing can occur from v_prev.
     ###if shearing is less than 3 sim periods after weaning then set the break fvp dates to the first date of the sim (so they aren't used)
-    mask_initial_fvp = np.all((date_shear_sa1e1b1nwzida0e0b0xyg3[0:1] - date_weaned_ida0e0b0xyg3) > ((step+1)*3)) #true if not enough gap between weaning and shearing for extra dvps.
+    ### these initial fvps are turned off in MP when condensing at season start (because they are calculated assuming shearing is conesing - this could be altered if condensing at season start become default).
+    if condense_at_seasonstart:
+        mask_initial_fvp = False
+    else:
+        mask_initial_fvp = np.all((date_shear_sa1e1b1nwzida0e0b0xyg3[0:1] - date_weaned_ida0e0b0xyg3) > ((step+1)*3)) #true if not enough gap between weaning and shearing for extra dvps.
     ###create the fvp mask. fvps are masked out depending on what the user has specified (the extra fvps at the start are removed if weaning is within 3weeks of shearing).
     fvp3_inc = np.concatenate([fvp_mask_offs[0:1], np.array([True, True and mask_initial_fvp, True and mask_initial_fvp]), fvp_mask_offs[1:]]) #Trues in middle are to count for the extra fvp at the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesn't occur each year)
     fvp_date_inc_f3 = fvp_date_all_f3[fvp3_inc]
@@ -1238,7 +1250,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     2. can remove dvp if it clashes for all axis and type ==other. Because repro dvps are used for clustering and season and condense are used for distributing.
     3. prejoin must be in the same v slice across g axis because g activities can transfer to other g activities
     4. season start must be in the same v slice across all z axis because the weighted average needs all season starts to be in same v.
-    5. condense and season start cant clash (unless they have the same vtype).
+    5. prejoining and season start cant clash.
     
     Nothing guarantees that the order of other dvps are the same e.g. for z1 weaning dvp could be before summer node dvp
     but for z2 weaning dvp could be after summer node dvp. However, it is probably not that likely that
@@ -1263,7 +1275,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                           date_start_p,other_vtype1,condense_vtype1,step)
 
         ##check season start is same v slice across z axis
-        if np.any(np.logical_and(np.any(dvp_type_va1e1b1nwzida0e0b0xyg1==season_vtype1, axis=z_pos), np.logical_not(np.all(dvp_type_va1e1b1nwzida0e0b0xyg1==season_vtype1, axis=z_pos)))):
+        if np.any(np.logical_and(np.any(dvp_type_va1e1b1nwzida0e0b0xyg1==season_start_vtype1, axis=z_pos), np.logical_not(np.all(dvp_type_va1e1b1nwzida0e0b0xyg1==season_start_vtype1, axis=z_pos)))):
             raise exc.FVPError('''Dams - Season start is not in the same v slice across all z.''')
 
         ##check prejoining is same v slice across g and e
@@ -1277,13 +1289,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             can_remove_type  = np.all(dvp_type_va1e1b1nwzida0e0b0xyg1[v,...]==other_vtype1) #can only remove dvp if it is type=other.
             can_remove_date = np.all(np.any(dvp_start_va1e1b1nwzida0e0b0xyg1[v,...] == dvp_start_va1e1b1nwzida0e0b0xyg1[0:v,...], axis=0, keepdims=True))
             duplicate_mask_v.append(np.logical_not(np.logical_and(can_remove_type, can_remove_date)))
-            ###check that condense and season start don't clash - note this doesn't throw an error if condense_type==season_type (this is correct).
+            ###check that prejoining and season start don't clash - note this doesn't throw an error if prejoing_type==season_type (this is correct).
             clash_type = dvp_type_va1e1b1nwzida0e0b0xyg1[0:v][dvp_start_va1e1b1nwzida0e0b0xyg1[v,...] == dvp_start_va1e1b1nwzida0e0b0xyg1[0:v,...]]
             current_type = dvp_type_va1e1b1nwzida0e0b0xyg1[v]
-            season_condense_clash = np.logical_and(np.any(np.logical_or(clash_type==season_vtype1, clash_type==condense_vtype1)),
-                                                   np.any(np.logical_or(clash_type == season_vtype1, clash_type == condense_vtype1)))
+            season_condense_clash = np.logical_and(np.any(clash_type==season_start_vtype1),
+                                                   np.any(clash_type == prejoin_vtype1))
             if season_condense_clash:
-                raise exc.FVPError('''Dams - Condense and season start dvps cant clash otherwise error with distribution.''')
+                raise exc.FVPError('''Dams - prejoining and season start dvps cant clash otherwise error with distribution.''')
         dvp_start_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1[duplicate_mask_v]
         dvp_type_va1e1b1nwzida0e0b0xyg1 = dvp_type_va1e1b1nwzida0e0b0xyg1[duplicate_mask_v]
 
@@ -1309,7 +1321,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                           ,offs_date_start_p,other_vtype3,condense_vtype3,step)
 
         ##check season start is same v slice across z axis
-        if np.any(np.logical_and(np.any(dvp_type_va1e1b1nwzida0e0b0xyg3==season_vtype1, axis=z_pos), np.logical_not(np.all(dvp_type_va1e1b1nwzida0e0b0xyg3==season_vtype1, axis=z_pos)))):
+        if np.any(np.logical_and(np.any(dvp_type_va1e1b1nwzida0e0b0xyg3==season_start_vtype1, axis=z_pos), np.logical_not(np.all(dvp_type_va1e1b1nwzida0e0b0xyg3==season_start_vtype1, axis=z_pos)))):
             raise exc.FVPError('''Offs - Season start is not in the same v slice across all z.''')
 
         ##check prejoining is same v slice across g and e
@@ -1323,13 +1335,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             can_remove_type  = np.all(dvp_type_va1e1b1nwzida0e0b0xyg3[v,...]==other_vtype3) #can only remove dvp if it is type=other.
             can_remove_date = np.all(np.any(dvp_start_va1e1b1nwzida0e0b0xyg3[v,...] == dvp_start_va1e1b1nwzida0e0b0xyg3[0:v,...], axis=0, keepdims=True))
             duplicate_mask_v.append(np.logical_not(np.logical_and(can_remove_type, can_remove_date)))
-            ###check that condense and season start don't clash - note this doesn't throw an error if condense_type==season_type (this is correct).
-            clash_type = dvp_type_va1e1b1nwzida0e0b0xyg3[0:v][dvp_start_va1e1b1nwzida0e0b0xyg3[v,...] == dvp_start_va1e1b1nwzida0e0b0xyg3[0:v,...]]
-            current_type = dvp_type_va1e1b1nwzida0e0b0xyg3[v]
-            season_condense_clash = np.logical_and(np.any(np.logical_or(clash_type==season_vtype3, clash_type==condense_vtype3)),
-                                                   np.any(np.logical_or(clash_type == season_vtype3, clash_type == condense_vtype3)))
-            if season_condense_clash:
-                raise exc.FVPError('''Offs - Condense and season start dvps cant clash otherwise error with distribution.''')
         dvp_start_va1e1b1nwzida0e0b0xyg3 = dvp_start_va1e1b1nwzida0e0b0xyg3[duplicate_mask_v]
         dvp_type_va1e1b1nwzida0e0b0xyg3 = dvp_type_va1e1b1nwzida0e0b0xyg3[duplicate_mask_v]
 
@@ -5753,9 +5758,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     o_numbers_start_tpdams = fun.f_update(o_numbers_start_tpdams, t_scaled_start_numbers.astype(dtype)
                                                          , (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
                 o_ffcfw_tpdams[:,p] = ffcfw_dams
-                o_ffcfw_season_tpdams[:,p] = sfun.f1_season_wa(numbers_end_dams, ffcfw_dams, season_tup, mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
+                ffcfw_season_tdams = sfun.f1_season_wa(numbers_end_dams, ffcfw_dams, season_tup, mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
-                o_ffcfw_condensed_tpdams[:,p] = sfun.f1_condensed(ffcfw_dams, idx_sorted_w_dams, condense_w_mask_dams
+                o_ffcfw_lw_dist_tpdams[:,p] = sfun.f1_condensed(ffcfw_season_tdams, idx_sorted_w_dams, condense_w_mask_dams
                                                               , n_fs_dams, len_w1, n_fvps_percondense_dams
                                                               , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
                                                               , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'o_ffcfw_dams')  #condensed lw at the end of the period
@@ -5946,9 +5951,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 o_numbers_start_tpoffs[:,p] = numbers_start_offs
                 o_numbers_end_tpoffs[:,p] = numbers_end_offs
                 o_ffcfw_tpoffs[:,p] = ffcfw_offs
-                o_ffcfw_season_tpoffs[:,p] = sfun.f1_season_wa(numbers_end_offs, ffcfw_offs, season_tup, mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
+                ffcfw_season_toffs = sfun.f1_season_wa(numbers_end_offs, ffcfw_offs, season_tup, mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
                                                                , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
-                o_ffcfw_condensed_tpoffs[:,p] = sfun.f1_condensed(ffcfw_offs, idx_sorted_w_offs, condense_w_mask_offs
+                o_ffcfw_lw_dist_tpoffs[:,p] = sfun.f1_condensed(ffcfw_season_toffs, idx_sorted_w_offs, condense_w_mask_offs
                                                               , n_fs_offs, len_w3, n_fvps_percondense_offs
                                                               , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
                                                               , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'o_ffcfw_offs')  #condensed lw at the end of the period before fvp0
@@ -8306,8 +8311,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nw8zida0e0b0xyg1
     ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesn't mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
-    dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1 = np.logical_or(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1
-                                                                , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == season_vtype1) #when distribution occurs any w8 can provide w9
+    dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1 = np.logical_or(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == prejoin_vtype1
+                                                                , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == season_start_vtype1) #when distribution occurs any w8 can provide w9
     ###Mask the provide constraint (w9)
     mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
                         * (np.trunc((index_wzida0e0b0xyg1[...,na] * np.logical_not(dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1[...,na])
@@ -8401,7 +8406,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     mask_w8vars_va1e1b1nw8zida0e0b0xyg3 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_w8nut_va1e1b1nwzida0e0b0xyg3
     ###Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesn't mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
     dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3 = np.logical_or(dvp_type_next_va1e1b1nwzida0e0b0xyg3 == condense_vtype3
-                                                               , dvp_type_next_va1e1b1nwzida0e0b0xyg3 == season_vtype3) #when distribution occurs any w8 can provide w9
+                                                               , dvp_type_next_va1e1b1nwzida0e0b0xyg3 == season_start_vtype3) #when distribution occurs any w8 can provide w9
     ###Mask the provide constraint (w9)
     mask_numbers_provw8w9_va1e1b1nw8zida0e0b0xyg3w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3[...,na] \
                         * (np.trunc((index_wzida0e0b0xyg3[...,na] * np.logical_not(dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3[...,na])
@@ -8501,7 +8506,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     t_dvp_date_for_season_mask_vg1[0, ...] = date_weaned_ida0e0b0xyg1 #for z8 mask we need the first dvp date to be weaning so that the function can tell which seasons exist in dvp0 (ie if dvpdate[0]==0 and the first dvp is a node period the model will think the season exists in dvp[0] when infact it is identified in dvp[1]).
     mask_provwithinz8z9_va1e1b1nwzida0e0b0xyg1z9, mask_provbetweenz8z9_va1e1b1nwzida0e0b0xyg1z9, \
     mask_childz_reqwithin_va1e1b1nwzida0e0b0xyg1, mask_childz_reqbetween_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(
-        t_dvp_date_for_season_mask_vg1, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg1==season_vtype1, z_pos=z_pos)
+        t_dvp_date_for_season_mask_vg1, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg1==season_start_vtype1, z_pos=z_pos)
     mask_z8var_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(t_dvp_date_for_season_mask_vg1, z_pos=z_pos, mask=True)
     ###create z8z9 param that is index with v
     ####cluster e and b (e axis is active from the dvp dates)
@@ -8523,7 +8528,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     t_dvp_date_for_season_mask_vg3[0, ...] = date_weaned_ida0e0b0xyg3 #for z8 mask we need the first dvp date to be weaning so that the function can tell which seasons exist in dvp0 (ie if dvpdate[0]==0 and the first dvp is a node period the model will think the season exists in dvp[0] when in fact it is identified in dvp[1]).
     mask_provwithinz8z9_va1e1b1nwzida0e0b0xyg3z9, mask_provbetweenz8z9_va1e1b1nwzida0e0b0xyg3z9, \
     mask_childz_reqwithin_va1e1b1nwzida0e0b0xyg3, mask_childz_reqbetween_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(
-        t_dvp_date_for_season_mask_vg3, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg3==season_vtype3, z_pos=z_pos)
+        t_dvp_date_for_season_mask_vg3, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg3==season_start_vtype3, z_pos=z_pos)
     mask_z8var_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(t_dvp_date_for_season_mask_vg3, z_pos=z_pos, mask=True)
     ###create z8z9 param that is index with v
     ####cluster d (d axis is active from the dvp dates)
@@ -8560,17 +8565,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     '''
     Distributing happens at the start of each season/season sequence when all the different seasons are combined back
     to a common season. It also happens when lw is condensed back to the starting number for the livestock year.
-    For dams lw distributing is also required at prejoining when dams can be transferred to different sires and 
-    dams with different LSLN in the previous reproduction cycle are combined for the next cycle. 
+    For dams lw distributing is also required when dams can be transferred to different sires (at prejoining).  
 
-    Note: 1. For dams condensing for the livestock year is carried out at prejoining which coincides with when
-          distribution is required. The generator can handle dam condensing and prejoining to be in different dvps 
-          however the distribution below requires condensing to occur at prejoining (although it may be possible 
-          to change the distribution code to handle condensing and prejoining in different dvps).
+    Note: 1. For dams condensing for the livestock year is carried out at prejoining or season start which coincides with when
+          distribution is required. The generator can handle dam condensing at any time however the 
+          distribution code below requires condensing to occur at prejoining or season start (although it may be possible 
+          to change the distribution code to handle condensing and prejoining in different dvps). Generally, it is
+          best to condense at prejoining to avoid loss of information about different sheep because at prejoining
+          the e and b axes get averaged so best to also average w axis here too.
 
           2. Distribution of animals is controlled by LW and distributing maintains the current average LW. The
           errors associated with difference in wool production that are not 100% correlated with LW will be
           minimised if condensing and distributing are occurring soon after shearing.
+          
+          3. For offs, condensing can occur whenever however if condensing and season start occur at the same time there 
+          only needs to be one lw distrubution. This is handled with an if statement below.
 
 
     What this section does:
@@ -8582,9 +8591,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ## calc the ‘source’ weight of the animal at the end of each period in which they can be transferred
     ###dams - the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
-    ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,
+    ffcfw_source_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,
                                                                 period_is_tp=period_is_transfer_tpa1e1b1nwzida0e0b0xyg1)  #numbers not required for ffcfw
-    ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1,
+    ffcfw_source_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_source_transfer_tva1e1b1nwzida0e0b0xyg1,
                                                                     a_p_va1e1b1nwzida0e0b0xyg1,
                                                                     a_v_pa1e1b1nwzida0e0b0xyg1)
     ffcfw_source_season_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,
@@ -8604,34 +8613,34 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ## calc the ‘destination’ weight of each group of animal at the end of the period prior to the transfer (transfer is next period is prejoining for the destination animal)
     ### for dams select the ‘destination’ condensed weight for the ‘source’ slices using a_g1_tg1
-    ffcfw_condensed_tdams = np.take_along_axis(o_ffcfw_condensed_tpdams, a_g1_tpa1e1b1nwzida0e0b0xyg1, -1)
+    ffcfw_transfer_dest_tdams = np.take_along_axis(o_ffcfw_lw_dist_tpdams, a_g1_tpa1e1b1nwzida0e0b0xyg1, -1)
     ### Convert from p to v.
     #### for dams the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
-    ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(ffcfw_condensed_tdams, a_v_pa1e1b1nwzida0e0b0xyg1,
+    ffcfw_dest_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(ffcfw_transfer_dest_tdams, a_v_pa1e1b1nwzida0e0b0xyg1,
                                                               period_is_tp=period_is_transfer_tpa1e1b1nwzida0e0b0xyg1)  #numbers not required for ffcfw
-    ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1,
+    ffcfw_dest_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_dest_transfer_tva1e1b1nwzida0e0b0xyg1,
                                                                   a_p_va1e1b1nwzida0e0b0xyg1,
                                                                   a_v_pa1e1b1nwzida0e0b0xyg1)
-    ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_season_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,
+    ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_lw_dist_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,
                                                            period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg)  #numbers not required for ffcfw
     ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1,
                                                                a_p_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
     ###offs
-    ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_condensed_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
+    ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_lw_dist_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
                                                              period_is_tp=nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
     ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3,
                                                                  a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
-    ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_season_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
+    ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_lw_dist_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
                                                            period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
     ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3,
                                                                a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
 
     ##distributing at condensing - all lws back to starting number of LWs and dams to different sires at prejoining
     ###t0 and t1 are distributed however this is not used because t0 and t1 don't transfer to next dvp
-    distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
-        ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1, ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1,
+    distribution_transfer_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
+        ffcfw_dest_transfer_tva1e1b1nwzida0e0b0xyg1, ffcfw_source_transfer_tva1e1b1nwzida0e0b0xyg1,
         mask_dest_tva1e1b1nwzida0e0b0xyg1,
-        index_wzida0e0b0xyg1, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na], condense_vtype1)
+        index_wzida0e0b0xyg1, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na], prejoin_vtype1)
     distribution_condense_tva1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
         ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3, ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg3,
         mask_dest_va1e1b1nwzida0e0b0xyg3[na],
@@ -8641,15 +8650,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     distribution_season_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
         ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1, ffcfw_source_season_tva1e1b1nwzida0e0b0xyg1,
         mask_dest_tva1e1b1nwzida0e0b0xyg1,
-        index_wzida0e0b0xyg1, dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na], season_vtype1)
+        index_wzida0e0b0xyg1, dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na], season_start_vtype1)
     distribution_season_tva1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
         ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3, ffcfw_source_season_tva1e1b1nwzida0e0b0xyg3,
         mask_dest_va1e1b1nwzida0e0b0xyg3[na],
-        index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[..., na], season_vtype3)
+        index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[..., na], season_start_vtype3)
 
     ##combine distributions
-    distribution_tva1e1b1nw8zida0e0b0xyg1w9 = distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 * distribution_season_tva1e1b1nw8zida0e0b0xyg1w9
-    distribution_tva1e1b1nw8zida0e0b0xyg3w9 = distribution_condense_tva1e1b1nw8zida0e0b0xyg3w9 * distribution_season_tva1e1b1nw8zida0e0b0xyg3w9
+    distribution_tva1e1b1nw8zida0e0b0xyg1w9 = distribution_transfer_tva1e1b1nw8zida0e0b0xyg1w9 * distribution_season_tva1e1b1nw8zida0e0b0xyg1w9
+    ###for offs, if season start and condensing are the same then the season distribution already contains the condensed info
+    distribution_tva1e1b1nw8zida0e0b0xyg3w9 = distribution_season_tva1e1b1nw8zida0e0b0xyg3w9 * (distribution_condense_tva1e1b1nw8zida0e0b0xyg3w9 if season_start_vtype3 != condense_vtype3 else 1) #only multiply the two distributions if they occur in different dvps
 
     # ##store cluster associations for use in creating the optimal feedsupply at the end of the trial
     # pkl_fs_info['distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9'] = distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9
