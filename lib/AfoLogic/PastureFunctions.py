@@ -277,7 +277,7 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
 
     ## split the change in dry FOO between the high & low quality FOO pools
     ### a 50% split assumes the dry feed removed at destocking and added at restocking is average quality.
-    foo_dry_reseeding_qdp6lrzt = np.stack([foo_dry_reseeding_qp6lrzt[:,na,...] * 0.5, foo_dry_reseeding_qp6lrzt[:,na,...] * 0.5], axis=1)
+    foo_dry_reseeding_qdp6lrzt = np.stack([foo_dry_reseeding_qp6lrzt * 0.5, foo_dry_reseeding_qp6lrzt * 0.5], axis=1)
     return foo_grn_reseeding_qp6lrzt, foo_dry_reseeding_qdp6lrzt, periods_destocked_p6zt
 
 
