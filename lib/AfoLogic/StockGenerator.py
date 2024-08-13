@@ -7783,11 +7783,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     woolvalue_c1qtpa1e1b1nwzida0e0b0xyg3 = woolvalue_c1qtpa1e1b1nwzida0e0b0xyg3 * period_is_shearing_tpa1e1b1nwzida0e0b0xyg3
     ####cashflow and wc - p7 axis is added later to reduce size in p2v (this can be done because the v axis lines up with p7)
     cashflow_c1qtpa1e1b1nwzida0e0b0xyg3 =  ((salevalue_c1qtpa1e1b1nwzida0e0b0xyg3 + woolvalue_c1qtpa1e1b1nwzida0e0b0xyg3
-                                         - husbandry_n_infra_cost_tpg3)[:,na,...]
+                                         - husbandry_n_infra_cost_tpg3)
                                             * interest_factor_tpa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p,...])
     wc_c0qtpa1e1b1nwzida0e0b0xyg3 =  ((salevalue_qtpa1e1b1nwzida0e0b0xyg3 + woolvalue_qtpa1e1b1nwzida0e0b0xyg3
                                          - husbandry_n_infra_cost_tpg3)
-                                            * wc_interest_factor_c0tpa1e1b1nwzida0e0b0xyg[:,na,na,:,mask_p_offs_p,...])
+                                            * wc_interest_factor_c0tpa1e1b1nwzida0e0b0xyg[:,na,:,mask_p_offs_p,...])
     husbandry_n_infra_cost_tpg3 = husbandry_n_infra_cost_tpg3 * interest_factor_tpa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p,...]
     r_salevalue_qtpa1e1b1nwzida0e0b0xyg3 = salevalue_qtpa1e1b1nwzida0e0b0xyg3 * interest_factor_tpa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p,...]
     r_woolvalue_qtpa1e1b1nwzida0e0b0xyg3 = woolvalue_qtpa1e1b1nwzida0e0b0xyg3 * interest_factor_tpa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p,...]
@@ -9209,8 +9209,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                             numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
                                                                             mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
     r_salevalue_prog_p7qk3k5tva1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(salevalue_prog_c1p7qk3k5tva1e1b1nwzida0e0b0xyg2, prob_c1tpg[:,na,na,na,na,...], axis=p_pos-6)
-    r_salevalue_qk3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs',
-                                                                              r_salevalue_qtva1e1b1nwzida0e0b0xyg3,
+    r_salevalue_qk3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', r_salevalue_qtva1e1b1nwzida0e0b0xyg3[:,na,na,...],
                                                                               a_k3cluster_da0e0b0xyg3,
                                                                               index_k3k5tva1e1b1nwzida0e0b0xyg3,
                                                                               a_k5cluster_da0e0b0xyg3,
@@ -9246,8 +9245,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                             index_k2tva1e1b1nwzida0e0b0xyg1,
                                                                             numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
                                                                             mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
-    r_woolvalue_qk3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs',
-                                                                              r_woolvalue_qtva1e1b1nwzida0e0b0xyg3,
+    r_woolvalue_qk3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', r_woolvalue_qtva1e1b1nwzida0e0b0xyg3[:,na,na,...],
                                                                               a_k3cluster_da0e0b0xyg3,
                                                                               index_k3k5tva1e1b1nwzida0e0b0xyg3,
                                                                               a_k5cluster_da0e0b0xyg3,
