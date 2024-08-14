@@ -947,7 +947,7 @@ def f_objective(model):
                if pe.value(model.p_wyear_inc_qs[q,s]))
 
 def f_con_MP(model, lp_vars):
-    #todo add stock sale partial bnd
+    #Unfortunately there was a case when == constraint made the model infeasible (maybe a rounding error). So now there is an upper and lower bnd on each variable.
     len_p7 = len(model.s_season_periods)
     i = 0
     list_v = []
@@ -965,34 +965,63 @@ def f_con_MP(model, lp_vars):
             list_bnd.append(lp_vars[str(v)][s_adjusted])
             i = i + 1
 
-    def MP(model, idx):
+    def MP_upper(model, idx):
         # print(idx)
         v = list_v[idx]
         s = list_s[idx]
         q = s[0]
-        if q == 'q0':
+        if q == 'q0' and list_bnd[idx]>0:
             bnd = list_bnd[idx]
-            return v[s] == bnd
+            return v[s] >= bnd - 1 #minus 1 to give the model a tiny bit of wriggle room for rounding issues
         ###bnd rotation variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
         elif q == 'q1' and len_p7>1 and str(v) == "v_phase_area" and s[2] == 'zm0':
             bnd = list_bnd[idx]
-            return v[s] == bnd
+            return v[s] >= bnd - 1 #minus 1 to give the model a tiny bit of wriggle room for rounding issues
         ###bnd dams sale variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
         elif q == 'q1' and len_p7>1 and str(v) == "v_dams" and int(s[3][-1]) < 2 and model.p_dvp_is_node1_vzg1[s[4], s[8], s[11]]:
             bnd = list_bnd[idx]
-            return v[s] == bnd
+            return v[s] >= bnd - 1 #minus 1 to give the model a tiny bit of wriggle room for rounding issues
         ###bnd dams sale variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
         elif q == 'q1' and len_p7>1 and str(v) == "v_offs" and int(s[4][-1]) > 0 and model.p_dvp_is_node1_k3vzxg3[s[2],s[5],s[8],s[11], s[13]]:
             bnd = list_bnd[idx]
-            return v[s] == bnd
+            return v[s] >= bnd - 1 #minus 1 to give the model a tiny bit of wriggle room for rounding issues
         ###bnd dams sale variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
         elif q == 'q1' and len_p7>1 and str(v) == "v_prog" and int(s[3][-1]) == 0 and model.p_dvp_is_node1_k3zg2[s[2], s[6], s[10]]:
             bnd = list_bnd[idx]
-            return v[s] == bnd
+            return v[s] >= bnd - 1 #minus 1 to give the model a tiny bit of wriggle room for rounding issues
         else:
             return pe.Constraint.Skip
 
-    model.con_MP = pe.Constraint(list_idx, rule=MP)
+    model.con_MP_upper = pe.Constraint(list_idx, rule=MP_upper)
+
+    def MP_lower(model, idx):
+        # print(idx)
+        v = list_v[idx]
+        s = list_s[idx]
+        q = s[0]
+        if q == 'q0' and list_bnd[idx]>0:
+            bnd = list_bnd[idx]
+            return v[s] <= bnd + 1 #plus 1 to give the model a tiny bit of wriggle room for rounding issues
+        ###bnd rotation variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
+        elif q == 'q1' and len_p7>1 and str(v) == "v_phase_area" and s[2] == 'zm0':
+            bnd = list_bnd[idx]
+            return v[s] <= bnd + 1 #plus 1 to give the model a tiny bit of wriggle room for rounding issues
+        ###bnd dams sale variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
+        elif q == 'q1' and len_p7>1 and str(v) == "v_dams" and int(s[3][-1]) < 2 and model.p_dvp_is_node1_vzg1[s[4], s[8], s[11]]:
+            bnd = list_bnd[idx]
+            return v[s] <= bnd + 1 #plus 1 to give the model a tiny bit of wriggle room for rounding issues
+        ###bnd dams sale variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
+        elif q == 'q1' and len_p7>1 and str(v) == "v_offs" and int(s[4][-1]) > 0 and model.p_dvp_is_node1_k3vzxg3[s[2],s[5],s[8],s[11], s[13]]:
+            bnd = list_bnd[idx]
+            return v[s] <= bnd + 1 #plus 1 to give the model a tiny bit of wriggle room for rounding issues
+        ###bnd dams sale variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
+        elif q == 'q1' and len_p7>1 and str(v) == "v_prog" and int(s[3][-1]) == 0 and model.p_dvp_is_node1_k3zg2[s[2], s[6], s[10]]:
+            bnd = list_bnd[idx]
+            return v[s] <= bnd + 1 #plus 1 to give the model a tiny bit of wriggle room for rounding issues
+        else:
+            return pe.Constraint.Skip
+
+    model.con_MP_lower = pe.Constraint(list_idx, rule=MP_lower)
 
     # ##Notes:
     # ##1.
