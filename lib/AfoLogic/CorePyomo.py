@@ -883,9 +883,9 @@ def f_objective(model):
     # rather than the spread between years as traditionally done.
 
     ##terminal wealth transfer constraint - combine cashflow with depreciation, MINROE and asset value
-    variables = model.component_objects(pe.Var,active=True)
     p7_end = list(model.s_season_periods)[-1]
     def terminal_wealth(model,q,s,z,c1):
+        variables = model.component_objects(pe.Var,active=True) #this has to get called for each constraint (something to do with generator objects)
         if pe.value(model.p_wyear_inc_qs[q,s]):
             return (model.v_terminal_wealth[q,s,z,c1] - model.v_credit[q,s,c1,p7_end,z] + model.v_debit[q,s,c1,p7_end,z] # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
                     + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z]
