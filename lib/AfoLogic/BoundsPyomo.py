@@ -64,6 +64,7 @@ def f1_boundarypyomo_local(params, model):
     bnd_sale_twice_drys_inc = fun.f_sa(False, sen.sav['bnd_sale_twice_dry_inc'], 5) #proportion of drys sold (can be sold at either sale opp)
     bnd_dry_retained_inc = fun.f_sa(False, np.any(pinp.sheep['i_dry_retained_forced_o']), 5) #force the retention of drys in t[0] (t[1] is handled in the generator.
     sr_bound_inc = np.any(sen.sav['bnd_sr_Qt'] != '-') #controls sr bound
+    lw_bound_inc = sen.sav['bnd_lw_change'] != '-' #controls lw bound
     total_pasture_bound_inc = np.any(sen.sav['bnd_total_pas_area_percent'] != '-') #bound on total pasture (hence also total crop)
     legume_area_bound_inc = sen.sav['bnd_total_legume_area_percent'] != '-'  #bound on total legume
     pasture_lmu_bound_inc = np.any(sen.sav['bnd_pas_area_l'] != '-')
@@ -667,6 +668,50 @@ def f1_boundarypyomo_local(params, model):
             model.con_SR_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, rule=SR_bound,
                                                 doc='stocking rate bound for each feed period')
 
+        ##LW - target difference in LW compared to the base w (nut 0) at the end of p7[0]. Used in MP model.
+        ###build bound
+        if lw_bound_inc:
+            ###initilise
+            model.p_lw_diff_from_target_k2tva1nwziyg1 = pe.Param(model.s_k2_birth_dams, model.s_sale_dams,
+                                        model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
+                                        model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
+                                        model.s_groups_dams,
+                                        initialize=params['stock']['p_lw_diff_from_target_k2tva1nwziyg1'], default=0.0, mutable=False,
+                                        doc='')
+            model.p_lw_diff_from_target_k3k5tvnwziaxyg3 = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs,
+                                        model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+                                        model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender,
+                                        model.s_gen_merit_offs, model.s_groups_offs,
+                                        initialize=params['stock']['p_lw_diff_from_target_k3k5tvnwziaxyg3'], default=0.0, mutable=False,
+                                        doc='')
+            ###constraint
+            def lw_dams_bound(model,q,s,k2,t1,v1,a,z,i,y1,g1):
+                ##note 1: the lw_diff param is 0 unless dvp is end of node 1.
+                ##note 2: constraint is only active in q[1]
+                if pe.value(model.p_wyear_inc_qs[q, s]) and q=='q1' and any(pe.value(model.p_lw_diff_from_target_k2tva1nwziyg1[k2,t1,v1,a,n1,w1,z,i,y1,g1])!=0 for n1 in model.s_nut_dams for w1 in model.s_lw_dams):
+                    return sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lw_diff_from_target_k2tva1nwziyg1[k2,t1,v1,a,n1,w1,z,i,y1,g1]
+                               for n1 in model.s_nut_dams for w1 in model.s_lw_dams
+                               if pe.value(model.p_lw_diff_from_target_k2tva1nwziyg1[k2,t1,v1,a,n1,w1,z,i,y1,g1])!=0) == 0
+                else:
+                    return pe.Constraint.Skip
+            model.con_lw_dams_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_sale_dams,
+                                                    model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
+                                                    model.s_groups_dams, rule=lw_dams_bound,
+                                                    doc='target difference in LW compared to the base w (nut 0)')
+
+            def lw_offs_bound(model,q,s,k3,k5,t3,v3,z,i,a,x,y3,g3):
+                ##note 1: the lw_diff param is 0 unless dvp is end of node 1.
+                ##note 2: constraint is only active in q[1]
+                if pe.value(model.p_wyear_inc_qs[q, s]) and q=='q1' and any(pe.value(model.p_lw_diff_from_target_k3k5tvnwziaxyg3[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0 for n3 in model.s_nut_offs for w3 in model.s_lw_offs):
+                    return sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3] * model.p_lw_diff_from_target_k3k5tvnwziaxyg3[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                               for n3 in model.s_nut_offs for w3 in model.s_lw_offs
+                               if pe.value(model.p_lw_diff_from_target_k3k5tvnwziaxyg3[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0) == 0
+                else:
+                    return pe.Constraint.Skip
+            model.con_lw_offs_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs,
+                                                    model.s_dvp_offs, model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs,
+                                                    model.s_groups_offs, rule=lw_offs_bound,
+                                                    doc='target difference in LW compared to the base w (nut 0)')
 
         ##landuse bound
         ###build bound if turned on

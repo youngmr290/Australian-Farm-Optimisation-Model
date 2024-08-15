@@ -10323,6 +10323,55 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     arrays_k3txg2 = [keys_k3, keys_t2, keys_x, keys_g2]
     params['p_prog_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_prog_k3k5tva1e1b1nwzida0e0b0xyg2, arrays_k3txg2)
 
+    ##lw bnd at the end of the first season node - used to force the MP model to lose/gain weight
+    ## we are assuming that the base w pattern (nut spread 0) is the farmers normal pattern.
+    ## They can enter the current condition of their stock compared to normal and then AFO makes a bnd that forces the model to
+    ## select animals in w slices that results in the same lw change as experienced on farm.
+    if sen.sav['bnd_lw_change'] != '-':
+        user_lw_change =  fun.f_sa(0, sen.sav['bnd_lw_change'], 5)
+        nextperiod_is_startnode2_pa1e1b1nwzida0e0b0xyg = np.roll(date_start_pa1e1b1nwzida0e0b0xyg % 364 == date_node_zidaebxygm[..., -1],-1,axis=0)
+        ###get the lw at the end of first season node (in the MP model this is the current point in time) - number not required for ffcfw
+        ffcfw_end_dvp_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=nextperiod_is_startnode2_pa1e1b1nwzida0e0b0xyg,
+                                                            on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1)
+        ffcfw_end_dvp_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startnode2_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],
+                                                            on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3)
+
+        ffcfw_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', ffcfw_end_dvp_tva1e1b1nwzida0e0b0xyg1
+                                                                          , a_k2cluster_va1e1b1nwzida0e0b0xyg1
+                                                                          , index_k2tva1e1b1nwzida0e0b0xyg1)
+        ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', ffcfw_end_dvp_tva1e1b1nwzida0e0b0xyg3
+                                                                            , a_k3cluster_da0e0b0xyg3
+                                                                            , index_k3k5tva1e1b1nwzida0e0b0xyg3
+                                                                            , a_k5cluster_da0e0b0xyg3
+                                                                            , index_k5tva1e1b1nwzida0e0b0xyg3)
+        ###calc weight difference of each w slice from the base w slice
+        a_wbase_w1 = (len_nut_dams * np.floor(index_w1 / len_nut_dams)).astype(int) #identify the base w slice (nut 0) for each w
+        a_wbase_w3 = (len_nut_offs * np.floor(index_w3 / len_nut_offs)).astype(int) #identify the base w slice (nut 0) for each w
+        base_ffcfw_k2tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(ffcfw_k2tva1e1b1nwzida0e0b0xyg1, a_wbase_w1[na,na,na,na,na,na,na,:,na,na,na,na,na,na,na,na,na], axis=w_pos)
+        base_ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3, a_wbase_w3[na,na,na,na,na,na,na,na,:,na,na,na,na,na,na,na,na,na], axis=w_pos)
+        lw_diff_from_base_k2tva1e1b1nwzida0e0b0xyg1 = ffcfw_k2tva1e1b1nwzida0e0b0xyg1 - base_ffcfw_k2tva1e1b1nwzida0e0b0xyg1
+        lw_diff_from_base_k3k5tva1e1b1nwzida0e0b0xyg3 = ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3 - base_ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3
+        ###clip the user_lw_change to stop it being more than the maximum spread between w slices to stop the model being infeasible.
+        ### this has to be done for each starting weight because lw_diff_from_base can vary a bit based on starting w.
+        ####add starting weight axis - this gets removed in the next step when taking the min or max.
+        lw_diff_from_base_k2tva1e1b1nswzida0e0b0xyg1 = fun.f_split_axis(lw_diff_from_base_k2tva1e1b1nwzida0e0b0xyg1, w_start_len1, w_pos)
+        lw_diff_from_base_k3k5tva1e1b1nswzida0e0b0xyg3 = fun.f_split_axis(lw_diff_from_base_k3k5tva1e1b1nwzida0e0b0xyg3, w_start_len3, w_pos)
+        if user_lw_change > 0:
+            user_lw_change_k2tva1e1b1nszida0e0b0xyg1 = np.minimum(user_lw_change, np.max(lw_diff_from_base_k2tva1e1b1nswzida0e0b0xyg1, axis=w_pos))
+            user_lw_change_k3k5tva1e1b1nszida0e0b0xyg3 = np.minimum(user_lw_change, np.max(lw_diff_from_base_k3k5tva1e1b1nswzida0e0b0xyg3, axis=w_pos))
+        else:
+            user_lw_change_k2tva1e1b1nszida0e0b0xyg1 = np.maximum(user_lw_change, np.min(lw_diff_from_base_k2tva1e1b1nswzida0e0b0xyg1, axis=w_pos))
+            user_lw_change_k3k5tva1e1b1nszida0e0b0xyg3 = np.maximum(user_lw_change, np.min(lw_diff_from_base_k3k5tva1e1b1nswzida0e0b0xyg3, axis=w_pos))
+        ####expand start w axis back to the full w axis
+        a_wstart_w1 = np.floor(index_w1 / len_nut_dams).astype(int) #identify the start w slice (nut 0) for each w
+        a_wstart_w3 = np.floor(index_w3 / len_nut_offs).astype(int) #identify the start w slice (nut 0) for each w
+        user_lw_change_k2tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(user_lw_change_k2tva1e1b1nszida0e0b0xyg1, a_wstart_w1[na,na,na,na,na,na,na,:,na,na,na,na,na,na,na,na,na], axis=w_pos)
+        user_lw_change_k3k5tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(user_lw_change_k3k5tva1e1b1nszida0e0b0xyg3, a_wstart_w3[na,na,na,na,na,na,na,na,:,na,na,na,na,na,na,na,na,na], axis=w_pos)
+        ###make the param for the bnd - difference between target lw change and lw change of each w slice (this gets bnd to 0)
+        p_lw_diff_from_target_k2tva1e1b1nwzida0e0b0xyg1 = lw_diff_from_base_k2tva1e1b1nwzida0e0b0xyg1 - user_lw_change_k2tva1e1b1nwzida0e0b0xyg1
+        p_lw_diff_from_target_k3k5tva1e1b1nwzida0e0b0xyg3 = lw_diff_from_base_k3k5tva1e1b1nwzida0e0b0xyg3 - user_lw_change_k3k5tva1e1b1nwzida0e0b0xyg3
+        params['p_lw_diff_from_target_k2tva1nwziyg1'] = fun.f1_make_pyomo_dict(p_lw_diff_from_target_k2tva1e1b1nwzida0e0b0xyg1, arrays_k2tva1nwziyg1)
+        params['p_lw_diff_from_target_k3k5tvnwziaxyg3'] = fun.f1_make_pyomo_dict(p_lw_diff_from_target_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3k5tvnwziaxyg3)
 
 
 
