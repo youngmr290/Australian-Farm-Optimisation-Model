@@ -508,6 +508,7 @@ def create_sa():
     sav['bnd_up_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #max number of offs
     sav['bnd_up_prog_tdxg2'] = np.full((len_t2,) + (len_d,) + (len_x,) + (len_g2,), '-', dtype=object)   #max number of offs
     sav['bnd_sr_Qt'] = np.full((len_Q, len_t), '-', dtype=object)   #SA to fix stocking rate
+    sav['bnd_lw_change'] = '-'   #target difference in LW compared to the base w (nut 0). Used in MP model. A positive value means animals must be heavier than the base w slice at the end of the first node. A negitive value means the animals must be lighter. This bnd is only active in q[1].
     sav['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
     sav['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
     sav['bnd_min_sale_age_female_g1'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a dam can be sold - BBT offspring can be sold but BBT dams can't (because they are BB)
