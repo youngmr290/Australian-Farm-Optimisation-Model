@@ -89,7 +89,7 @@ if __name__=="__main__":
     cat_propn_s1_ks2 = dxl.f_load_stubble()
 
     ##select property for the current trial
-    property = trial_pinp.iloc[trial]
+    property = trial_pinp.loc[trial]
 
     ##process user SA
     user_sa = rve.f_process_user_sa(exp_data, trial)
