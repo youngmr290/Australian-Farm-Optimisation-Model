@@ -28,7 +28,7 @@ r_vals={}
 ###############
 #User control #
 ###############
-trial = 4   #4 is quick test
+trial = 31   #31 is quick test
 
 ######
 #Run #
@@ -40,7 +40,7 @@ d_rot_info = dxl.f_load_phases()
 cat_propn_s1_ks2 = dxl.f_load_stubble()
 
 ##select property for the current trial
-property = trial_pinp.iloc[trial]
+property = trial_pinp.loc[trial]
 
 ##process user SA
 user_sa = rve.f_process_user_sa(exp_data, trial)
