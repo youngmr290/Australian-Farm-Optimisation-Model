@@ -236,7 +236,7 @@ def f_con_greenpas_between(model):
                           - model.p_foo_added_annual_increase[p7,p6,l,r,z9,t] * model.p_phase_can_increase[p7,z9,r] * model.v_phase_change_increase[q,s9,p7,z9,r,l]
                           for r in model.s_phases for p7 in model.s_season_periods)            \
                    + sum(model.v_greenpas_ha[q,s9,f,g,o,p6,l,z9,t] * model.p_foo_start_grnha[q,o,p6,l,z9,t]   \
-                         - sum(model.v_greenpas_ha[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_foo_end_grnha[q,g,o,p6_prev,l,z8,t]
+                         - sum(model.v_greenpas_ha[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_foo_end_grnha[q_prev,g,o,p6_prev,l,z8,t]
                                * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
                                * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
                                for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
