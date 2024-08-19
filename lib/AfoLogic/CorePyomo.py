@@ -33,7 +33,7 @@ from . import CropGrazingPyomo as cgzpy
 from . import SaltbushPyomo as slppy
 from . import relativeFile
 
-def coremodel_all(trial_name, model, method, nv, print_debug_output):
+def coremodel_all(trial_name, model, method, nv, print_debug_output, lp_vars):
     '''
     Wraps all of the core model into a function so it can be run multiple times in a loop
 
@@ -82,11 +82,6 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output):
 
     ###this last constraint is for the MP model to constrain the starting point
     if sinp.structuralsa['model_is_MP']:
-        #todo this will need to be read in with the other inputs in the raw file so that this can be passed through from web app.
-        import pickle as pkl
-        with open('pkl/pkl_lp_vars_{0}.pkl'.format("Quick test_1"), "rb") as f:
-            lp_vars = pkl.load(f)
-
         f_con_MP(model, lp_vars)
 
 
@@ -742,7 +737,7 @@ def f_con_totalcap_between(model):
         l_q = list(model.s_sequence_year_between_con)
         ###adjust q_prev for multi-period model
         if sinp.structuralsa['model_is_MP']:
-            ####yr0 is SE so q_prev is q
+            ####yr0 is SE so q_prev is q. Note dont need to use lp_var in this between constraint because it is not a production constraint.
             if q == l_q[0]:
                 q_prev = q
             ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
@@ -947,64 +942,39 @@ def f_objective(model):
                if pe.value(model.p_wyear_inc_qs[q,s]))
 
 def f_con_MP(model, lp_vars):
-    #Unfortunately there was a case when == constraint made the model infeasible (maybe a rounding error). So now there is an upper and lower bnd on each variable.
+    ''''These constraints are to bound the variable levels in the first node of the first year in the MP model. This
+    is when farm conditions have changed but management has not yet reacted. Therefore, key production management is
+    bound to be as per normal (based on the Initial MP run).
+    '''
     len_p7 = len(model.s_season_periods)
-    i = 0
-    list_v = []
-    list_s = []
-    list_idx = []
-    list_bnd = []
-    for v in model.component_objects(pe.Var, active=True):
-        for s in v:
-            # print(v,s)
-            list_idx.append(i)
-            list_v.append(v)
-            list_s.append(s)
-            ###make it so that all q in mp model look at q0 from lp_vars (because lp vars are from SE model that only has q[0])
-            s_adjusted = ("q0",) + s[1:]
-            list_bnd.append(lp_vars[str(v)][s_adjusted])
-            i = i + 1
 
-    def MP_upper(model, idx):
-        v = list_v[idx]
-        s = list_s[idx]
-        q = s[0]
-        if q == 'q0' and list_bnd[idx]>0 and (str(v)=='v_dams'  or str(v)=='v_offs' or str(v)=='v_phase_area' or
-                                              str(v)=='v_greenpas_ha' or str(v)=='v_drypas_transfer' or
-                                              str(v)=='v_tonnes_sb_transfer' or str(v)=='v_stub_transfer'): #only need to constrain variables that transfer from q_prev
-            bnd = list_bnd[idx]
-            return v[s] >= bnd * 0.99 #minus 1 to give the model a tiny bit of wriggle room for rounding issues
-        ###bnd rotation variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
-        elif q == 'q1' and len_p7>1 and str(v) == "v_phase_area" and s[2] == 'zm0':
-            bnd = list_bnd[idx]
-            return v[s] >= bnd * 0.99 #minus 1 to give the model a tiny bit of wriggle room for rounding issues
+    def MP_rotation_q0_lower(model,q,s,p7,z,r,l):
+        ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
+        ## give 1% flex on the bnd to allow for any rounding.
+        if q == 'q0' and len_p7>1:
+            return (model.v_phase_area[q,s,p7,z,r,l] <=
+                    lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 1.01)
         else:
             return pe.Constraint.Skip
+    model.con_MP_rotation_q0_lower = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
+                                                   model.s_season_types, model.s_phases, model.s_lmus, rule=MP_rotation_q0_lower,
+                                            doc='phase area bnd for node 1 in the MP model')
 
-    model.con_MP_upper = pe.Constraint(list_idx, rule=MP_upper)
-
-    def MP_lower(model, idx):
-        v = list_v[idx]
-        s = list_s[idx]
-        q = s[0]
-        if q == 'q0' and list_bnd[idx]>0 and (str(v)=='v_dams'  or str(v)=='v_offs' or str(v)=='v_phase_area' or
-                                              str(v)=='v_greenpas_ha' or str(v)=='v_drypas_transfer' or
-                                              str(v)=='v_tonnes_sb_transfer' or str(v)=='v_stub_transfer'): #only need to constrain variables that transfer from q_prev
-            bnd = list_bnd[idx]
-            return v[s] <= bnd * 1.01 #plus 1 to give the model a tiny bit of wriggle room for rounding issues
-        ###bnd rotation variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
-        elif q == 'q1' and len_p7>1 and str(v) == "v_phase_area" and s[2] == 'zm0':
-            bnd = list_bnd[idx]
-            return v[s] <= bnd * 1.01 #plus 1 to give the model a tiny bit of wriggle room for rounding issues
+    def MP_rotation_q0_upper(model,q,s,p7,z,r,l):
+        ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
+        ## give 1% flex on the bnd to allow for any rounding.
+        if q == 'q0' and len_p7>1:
+            return (model.v_phase_area[q,s,p7,z,r,l] >=
+                    lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 0.99)
         else:
             return pe.Constraint.Skip
-
-    model.con_MP_lower = pe.Constraint(list_idx, rule=MP_lower)
+    model.con_MP_rotation_q0_upper = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
+                                                   model.s_season_types, model.s_phases, model.s_lmus, rule=MP_rotation_q0_upper,
+                                            doc='phase area bnd for node 1 in the MP model')
 
     def MP_dams_sale_lower(model, q, s, k2, t1, v1, a, z, i, y1, g1):
-        ##bnd the first node in q[1] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
-        ##this has to be a seperate function to allow w to be summed.
-        if q == 'q1' and len_p7>1 and (t1=='t0' or t1=='t1') and model.p_dvp_is_node1_vzg1[v1, z, g1]:
+        ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
+        if q == 'q0' and len_p7>1 and (t1=='t0' or t1=='t1') and model.p_dvp_is_node1_vzg1[v1, z, g1]:
             return (sum(model.v_dams[q, s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
                        for n1 in model.s_nut_dams for w1 in model.s_lw_dams) <=
                     sum(lp_vars[str('v_dams')]['q0', s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
@@ -1017,15 +987,14 @@ def f_con_MP(model, lp_vars):
                                             doc='dams numbers bnd for node 1 in the MP model')
 
     def MP_dams_sale_upper(model, q, s, k2, t1, v1, a, z, i, y1, g1):
-        ##bnd the first node in q[1] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
-        ##this has to be a seperate function to allow w to be summed.
-        if q == 'q1' and len_p7>1 and (t1=='t0' or t1=='t1') and model.p_dvp_is_node1_vzg1[v1, z, g1]:
+        ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
+        if q == 'q0' and len_p7>1 and (t1=='t0' or t1=='t1') and model.p_dvp_is_node1_vzg1[v1, z, g1]:
             return (sum(model.v_dams[q, s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
                        for n1 in model.s_nut_dams for w1 in model.s_lw_dams) >=
                     sum(lp_vars[str('v_dams')]['q0', s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
                         for n1 in model.s_nut_dams for w1 in model.s_lw_dams)*0.99)
         else:
-            return pe.Constraint.Skip
+           return pe.Constraint.Skip
     model.con_MP_dams_sale_upper = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams,
                                             model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol,
                                             model.s_gen_merit_dams, model.s_groups_dams, rule=MP_dams_sale_upper,
@@ -1034,7 +1003,7 @@ def f_con_MP(model, lp_vars):
     ##need to have upper and lower bnd here for mortality. If we force lighter animal it might die more therefore cant sell exactly the same as normal.
     def MP_offs_sale_lower(model, q, s, k3, k5, t3, v3, z, i, a, x, y3, g3):
         ##bnd the first node in q[1] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
-        if q == 'q1' and len_p7>1 and t3!='t0' and model.p_dvp_is_node1_k3vzxg3[k3,v3,z,x,g3]:
+        if q == 'q0' and len_p7>1 and t3!='t0' and model.p_dvp_is_node1_k3vzxg3[k3,v3,z,x,g3]:
             return (sum(model.v_offs[q, s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
                        for n3 in model.s_nut_offs for w3 in model.s_lw_offs) <=
                     sum(lp_vars[str('v_offs')]['q0', s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
@@ -1049,8 +1018,8 @@ def f_con_MP(model, lp_vars):
                                             doc='offs numbers bnd for node 1 in the MP model')
 
     def MP_offs_sale_upper(model, q, s, k3, k5, t3, v3, z, i, a, x, y3, g3):
-        ##bnd the first node in q[1] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
-        if q == 'q1' and len_p7>1 and t3!='t0' and model.p_dvp_is_node1_k3vzxg3[k3,v3,z,x,g3]:
+        ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
+        if q == 'q0' and len_p7>1 and t3!='t0' and model.p_dvp_is_node1_k3vzxg3[k3,v3,z,x,g3]:
             return (sum(model.v_offs[q, s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
                        for n3 in model.s_nut_offs for w3 in model.s_lw_offs) >=
                     sum(lp_vars[str('v_offs')]['q0', s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
@@ -1065,9 +1034,9 @@ def f_con_MP(model, lp_vars):
                                             doc='offs numbers bnd for node 1 in the MP model')
 
     def MP_prog_bound(model, q, s, k3, k5, t2, z, i, a, x, g2):
-        ##bnd the first node in q[1] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
+        ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
         ##doesnt need upper and lower because there is no LW bnd for prog.
-        if q == 'q1' and len_p7>1 and t2=='t0' and model.p_dvp_is_node1_k3zg2[k3,z,g2]:
+        if q == 'q0' and len_p7>1 and t2=='t0' and model.p_dvp_is_node1_k3zg2[k3,z,g2]:
             return (sum(model.v_prog[q,s,k3, k5, t2, w2, z, i, a, x, g2] for w2 in model.s_lw_prog) ==
                     sum(lp_vars[str('v_prog')]['q0',s,k3, k5, t2, w2, z, i, a, x, g2] for w2 in model.s_lw_prog))
         else:
@@ -1077,6 +1046,63 @@ def f_con_MP(model, lp_vars):
                                             model.s_season_types, model.s_tol, model.s_wean_times,
                                             model.s_gender, model.s_groups_prog, rule=MP_prog_bound,
                                             doc='prog numbers bnd for node 1 in the MP model')
+
+
+    ##origional version (it worked but model seemed to sometime not solve because to degenerate):
+    # #Unfortunately there was a case when == constraint made the model infeasible (maybe a rounding error). So now there is an upper and lower bnd on each variable.
+    # i = 0
+    # list_v = []
+    # list_s = []
+    # list_idx = []
+    # list_bnd = []
+    # for v in model.component_objects(pe.Var, active=True):
+    #     for s in v:
+    #         # print(v,s)
+    #         list_idx.append(i)
+    #         list_v.append(v)
+    #         list_s.append(s)
+    #         ###make it so that all q in mp model look at q0 from lp_vars (because lp vars are from SE model that only has q[0])
+    #         s_adjusted = ("q0",) + s[1:]
+    #         list_bnd.append(lp_vars[str(v)][s_adjusted])
+    #         i = i + 1
+    #
+    # def MP_upper(model, idx):
+    #     v = list_v[idx]
+    #     s = list_s[idx]
+    #     q = s[0]
+    #     if q == 'q0' and (str(v)=='v_dams'  or str(v)=='v_offs' or str(v)=='v_phase_area' or
+    #                                           str(v)=='v_greenpas_ha' or str(v)=='v_drypas_transfer' or
+    #                                           str(v)=='v_tonnes_sb_transfer' or str(v)=='v_stub_transfer'): #only need to constrain variables that transfer from q_prev
+    #         bnd = list_bnd[idx]
+    #         return v[s] >= bnd * 0.99 #minus 1 to give the model a tiny bit of wriggle room for rounding issues
+    #     ###bnd rotation variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
+    #     elif q == 'q0' and len_p7>1 and str(v) == "v_phase_area" and s[2] == 'zm0':
+    #         bnd = list_bnd[idx]
+    #         return v[s] >= bnd * 0.99 #minus 1 to give the model a tiny bit of wriggle room for rounding issues
+    #     else:
+    #         return pe.Constraint.Skip
+    #
+    # # model.con_MP_upper = pe.Constraint(list_idx, rule=MP_upper)
+    #
+    # def MP_lower(model, idx):
+    #     v = list_v[idx]
+    #     s = list_s[idx]
+    #     q = s[0]
+    #     if q == 'q0' and (str(v)=='v_dams'  or str(v)=='v_offs' or str(v)=='v_phase_area' or
+    #                                           str(v)=='v_greenpas_ha' or str(v)=='v_drypas_transfer' or
+    #                                           str(v)=='v_tonnes_sb_transfer' or str(v)=='v_stub_transfer'): #only need to constrain variables that transfer from q_prev
+    #         bnd = list_bnd[idx]
+    #         return v[s] <= bnd * 1.01 #plus 1 to give the model a tiny bit of wriggle room for rounding issues
+    #     ###bnd rotation variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
+    #     elif q == 'q0' and len_p7>1 and str(v) == "v_phase_area" and s[2] == 'zm0':
+    #         bnd = list_bnd[idx]
+    #         return v[s] <= bnd * 1.01 #plus 1 to give the model a tiny bit of wriggle room for rounding issues
+    #     else:
+    #         return pe.Constraint.Skip
+    #
+    # # model.con_MP_lower = pe.Constraint(list_idx, rule=MP_lower)
+
+
 
     # ##Notes:
     # ##1.

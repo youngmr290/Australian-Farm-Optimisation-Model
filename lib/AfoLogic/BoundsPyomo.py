@@ -687,8 +687,8 @@ def f1_boundarypyomo_local(params, model):
             ###constraint
             def lw_dams_bound(model,q,s,k2,t1,v1,a,z,i,y1,g1):
                 ##note 1: the lw_diff param is 0 unless dvp is end of node 1.
-                ##note 2: constraint is only active in q[1]
-                if pe.value(model.p_wyear_inc_qs[q, s]) and q=='q1' and any(pe.value(model.p_lw_diff_from_target_k2tva1nwziyg1[k2,t1,v1,a,n1,w1,z,i,y1,g1])!=0 for n1 in model.s_nut_dams for w1 in model.s_lw_dams):
+                ##note 2: constraint is only active in q[0] at the end of node 0.
+                if pe.value(model.p_wyear_inc_qs[q, s]) and q=='q0' and any(pe.value(model.p_lw_diff_from_target_k2tva1nwziyg1[k2,t1,v1,a,n1,w1,z,i,y1,g1])!=0 for n1 in model.s_nut_dams for w1 in model.s_lw_dams):
                     return sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lw_diff_from_target_k2tva1nwziyg1[k2,t1,v1,a,n1,w1,z,i,y1,g1]
                                for n1 in model.s_nut_dams for w1 in model.s_lw_dams
                                if pe.value(model.p_lw_diff_from_target_k2tva1nwziyg1[k2,t1,v1,a,n1,w1,z,i,y1,g1])!=0) == 0
@@ -700,9 +700,9 @@ def f1_boundarypyomo_local(params, model):
                                                     doc='target difference in LW compared to the base w (nut 0)')
 
             def lw_offs_bound(model,q,s,k3,k5,t3,v3,z,i,a,x,y3,g3):
-                ##note 1: the lw_diff param is 0 unless dvp is end of node 1.
-                ##note 2: constraint is only active in q[1]
-                if pe.value(model.p_wyear_inc_qs[q, s]) and q=='q1' and any(pe.value(model.p_lw_diff_from_target_k3k5tvnwziaxyg3[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0 for n3 in model.s_nut_offs for w3 in model.s_lw_offs):
+                ##note 1: the lw_diff param is 0 unless dvp is end of node 0.
+                ##note 2: constraint is only active in q[0] at the end of node 0.
+                if pe.value(model.p_wyear_inc_qs[q, s]) and q=='q0' and any(pe.value(model.p_lw_diff_from_target_k3k5tvnwziaxyg3[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0 for n3 in model.s_nut_offs for w3 in model.s_lw_offs):
                     return sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3] * model.p_lw_diff_from_target_k3k5tvnwziaxyg3[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]
                                for n3 in model.s_nut_offs for w3 in model.s_lw_offs
                                if pe.value(model.p_lw_diff_from_target_k3k5tvnwziaxyg3[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0) == 0

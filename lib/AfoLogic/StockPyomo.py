@@ -20,7 +20,7 @@ def stock_precalcs(params, r_vals, nv, pkl_fs_info, pkl_fs):
 
 
 
-def f1_stockpyomo_local(params, model):
+def f1_stockpyomo_local(params, model, MP_lp_vars):
 
     ##these sets require info from the stock module
     model.s_wean_times = pe.Set(initialize=params['a_idx'], doc='weaning options')
@@ -374,9 +374,9 @@ def f1_stockpyomo_local(params, model):
 
     ##call local constraint functions
     f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs)
-    f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs)
+    f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs, MP_lp_vars)
     f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9)
-    f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9)
+    f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9, MP_lp_vars)
     f_con_progR(model)
     f_con_prog2damsR(model,l_v1)
     f_con_prog2offsR(model,l_v3)
@@ -440,7 +440,7 @@ def f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9
     end_con_offwithinR=time.time()
     # print('con_offwithinR: ',end_con_offR - start_con_offR)
 
-def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs):
+def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs, MP_lp_vars):
     '''
     Between year numbers/transfers of offspring to offspring in the following decision variable period.
 
@@ -453,15 +453,18 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
             ####yr0 is SE so q_prev is q
             if q == l_q[0]:
                 q_prev = q
+                v_offs_hist = MP_lp_vars[str('v_offs')]  # q[0] is provided by the MP set up run.
             ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
             elif q == l_q[-1]:
                 q = l_q[l_q.index(q) - 1]
                 q_prev = q
+                v_offs_hist = model.v_offs
             else:
                 q_prev = l_q[l_q.index(q) - 1]
+                v_offs_hist = model.v_offs
         else:
             q_prev = l_q[l_q.index(q) - 1]
-
+            v_offs_hist = model.v_offs
         ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys e.g. k28
         ###get the index number - required so numpy array can be indexed
         t_k3 = l_k3.index(k3)
@@ -478,7 +481,7 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
             ###note: don't need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
             ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
             return sum(model.v_offs[q,s9,k3,k5,t3,v3,n3,w8,z9,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]
-                       - sum(model.v_offs[q_prev,s8,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
+                       - sum(v_offs_hist[q_prev,s8,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
                              * model.p_parentz_provbetween_offs[k3,v3_prev,z8,x,g3,z9]
                              * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
                              for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
@@ -538,7 +541,7 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
     end_con_damR=time.time()
     print('con_damwithinR: ',end_con_damR-start_con_damR)
 
-def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9):
+def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9, MP_lp_vars):
     '''
     Between year numbers/transfers of
 
@@ -556,14 +559,18 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
             ####yr0 is SE so q_prev is q
             if q == l_q[0]:
                 q_prev = q
+                v_dams_hist = MP_lp_vars[str('v_dams')]  # q[0] is provided by the MP set up run.
             ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
             elif q == l_q[-1]:
                 q = l_q[l_q.index(q) - 1]
                 q_prev = q
+                v_dams_hist = model.v_dams
             else:
                 q_prev = l_q[l_q.index(q) - 1]
+                v_dams_hist = model.v_dams
         else:
             q_prev = l_q[l_q.index(q) - 1]
+            v_dams_hist = model.v_dams
 
         ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys e.g. k28
         ###get the index number - required so numpy array can be indexed
@@ -582,7 +589,7 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
             ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
             return sum(model.v_dams[q,s9,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
                        - model.v_dams[q,s9,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
-                       - sum(model.v_dams[q_prev,s8,k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
+                       - sum(v_dams_hist[q_prev,s8,k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
                              * model.p_parentz_provbetween_dams[k28,v1_prev,z8,g1,z9]
                              * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
                              for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
