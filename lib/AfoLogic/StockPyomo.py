@@ -747,7 +747,7 @@ def f_con_stock_trade_profit(model):
         p7_start = l_p7[0]
         if pe.value(model.p_wyear_inc_qs[q, s]):
             stock = sum(model.v_sire[q, s, g0] * model.p_tradevalue_sire[p7, q, z, g0] for g0 in model.s_groups_sire) \
-                    + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_tradevalue_dams[p7,q,k2t1,v1,a,n1,w1,z,i,y1,g1]
+                    + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_tradevalue_dams[p7,q,k2,t1,v1,a,n1,w1,z,i,y1,g1]
                               for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                               for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
                               if pe.value(model.p_tradevalue_dams[p7, q, k2, t1, v1, a, n1, w1, z, i, y1, g1]) != 0)
