@@ -22,7 +22,7 @@ def paspyomo_precalcs(params, r_vals, nv):
 
     pas.f_pasture(params, r_vals, nv)
 
-def f1_paspyomo_local(params, model):
+def f1_paspyomo_local(params, model, MP_lp_vars):
     ''' Builds pyomo variables, parameters and constraints'''
     ###################
     # variable         #
@@ -166,9 +166,9 @@ def f1_paspyomo_local(params, model):
     #call local constraint #
     ########################
     f_con_greenpas_within(model)
-    f_con_greenpas_between(model)
+    f_con_greenpas_between(model, MP_lp_vars)
     f_con_drypas_within(model)
-    f_con_drypas_between(model)
+    f_con_drypas_between(model, MP_lp_vars)
     f_con_nappas(model)
     f_con_pasarea(model)
     f_con_erosion(model)
@@ -203,7 +203,7 @@ def f_con_greenpas_within(model):
     #todo the greenpas (FOO) and pasarea (ha) could be replaced by a grnha constraint that passes area and foo together. Needs a FooB (base level) and reseeding foo removal and addition associated with the reseeding rotation phases
     model.con_greenpas_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = greenpas, doc='Within seasons - green pasture of each type available on each soil type in each feed period')
 
-def f_con_greenpas_between(model):
+def f_con_greenpas_between(model, MP_lp_vars):
     '''
     Constrain the green pasture available on each soil type in each feed period between a given season.
     Determined by rotation selection (germination and resowing), growth and consumption on each
@@ -219,14 +219,18 @@ def f_con_greenpas_between(model):
             ####yr0 is SE so q_prev is q
             if q == l_q[0]:
                 q_prev = q
+                v_greenpas_ha_hist = MP_lp_vars[str('v_greenpas_ha')]  # q[0] is provided by the MP set up run.
             ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
             elif q == l_q[-1]:
                 q = l_q[l_q.index(q) - 1]
                 q_prev = q
+                v_greenpas_ha_hist = model.v_greenpas_ha
             else:
                 q_prev = l_q[l_q.index(q) - 1]
+                v_greenpas_ha_hist = model.v_greenpas_ha
         else:
             q_prev = l_q[l_q.index(q) - 1]
+            v_greenpas_ha_hist = model.v_greenpas_ha
 
         if pe.value(model.p_mask_childz_between_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and any(model.p_foo_start_grnha[q,o,p6,l,z9,t] for o in model.s_foo_levels):
             return sum(model.v_phase_area[q,s9,p7,z9,r,l] * (-model.p_germination[p7,p6,l,r,z9,t] - model.p_foo_grn_reseeding[p7,q,p6,l,r,z9,t])
@@ -236,7 +240,7 @@ def f_con_greenpas_between(model):
                           - model.p_foo_added_annual_increase[p7,p6,l,r,z9,t] * model.p_phase_can_increase[p7,z9,r] * model.v_phase_change_increase[q,s9,p7,z9,r,l]
                           for r in model.s_phases for p7 in model.s_season_periods)            \
                    + sum(model.v_greenpas_ha[q,s9,f,g,o,p6,l,z9,t] * model.p_foo_start_grnha[q,o,p6,l,z9,t]   \
-                         - sum(model.v_greenpas_ha[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_foo_end_grnha[q_prev,g,o,p6_prev,l,z8,t]
+                         - sum(v_greenpas_ha_hist[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_foo_end_grnha[q_prev,g,o,p6_prev,l,z8,t]
                                * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
                                * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
                                for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
@@ -273,7 +277,7 @@ def f_con_drypas_within(model):
     model.con_drypas_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dry_groups, model.s_feed_periods,
                                             model.s_season_types, model.s_lmus, model.s_pastures, rule = drypas_within, doc='Within seasons: High and low quality dry pasture of each type available in each period')
 
-def f_con_drypas_between(model):
+def f_con_drypas_between(model, MP_lp_vars):
     '''
     Constrains the high and low quality dry pasture available in each period. Determined by senesced green pasture
     in the current period, dry pasture transferred from previous period and livestock consumption. Pasture decay and
@@ -291,25 +295,33 @@ def f_con_drypas_between(model):
             ####yr0 is SE so q_prev is q
             if q == l_q[0]:
                 q_prev = q
+                v_drypas_transfer_hist = MP_lp_vars[str('v_drypas_transfer')]  # q[0] is provided by the MP set up run.
+                v_greenpas_ha_hist = MP_lp_vars[str('v_greenpas_ha')]  # q[0] is provided by the MP set up run.
             ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
             elif q == l_q[-1]:
                 q = l_q[l_q.index(q) - 1]
                 q_prev = q
+                v_drypas_transfer_hist = model.v_drypas_transfer
+                v_greenpas_ha_hist = model.v_greenpas_ha
             else:
                 q_prev = l_q[l_q.index(q) - 1]
+                v_drypas_transfer_hist = model.v_drypas_transfer
+                v_greenpas_ha_hist = model.v_greenpas_ha
         else:
             q_prev = l_q[l_q.index(q) - 1]
+            v_drypas_transfer_hist = model.v_drypas_transfer
+            v_greenpas_ha_hist = model.v_greenpas_ha
 
         if pe.value(model.p_mask_childz_between_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and (model.p_dry_removal_t[p6,z9,t] != 0 or model.p_dry_transfer_req_t[p6,z9,t] != 0):
             return sum(model.v_phase_area[q,s9,p7,z9,r,l] * model.p_foo_dry_reseeding[p7,q,d,p6,l,r,z9,t]
                        for r in model.s_phases for p7 in model.s_season_periods)   \
-                 + sum(-sum(model.v_greenpas_ha[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_senesce_grnha[q,d,g,o,p6_prev,l,z8,t]
+                 + sum(-sum(v_greenpas_ha_hist[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_senesce_grnha[q,d,g,o,p6_prev,l,z8,t]
                             * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
                             * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
                             for z8 in model.s_season_types for s8 in model.s_sequence for g in model.s_grazing_int
                             for o in model.s_foo_levels if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
                        + model.v_drypas_consumed[q,s9,f,d,p6,z9,l,t] * model.p_dry_removal_t[p6,z9,t] for f in model.s_feed_pools) \
-                 - sum(model.v_drypas_transfer[q_prev,s8,d,p6_prev,z8,l,t] * model.p_dry_transfer_prov_t[p6_prev,z8,t]
+                 - sum(v_drypas_transfer_hist[q_prev,s8,d,p6_prev,z8,l,t] * model.p_dry_transfer_prov_t[p6_prev,z8,t]
                        * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
                        * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
                        for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0) \
