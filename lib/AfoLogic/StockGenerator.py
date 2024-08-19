@@ -10134,12 +10134,25 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     idx_zidaebxygm = np.searchsorted(date_start_P, date_node_zidaebxygm, 'left')  # use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
     date_node_zidaebxygm = date_start_P[idx_zidaebxygm]
     ####dams
+
     dvp_is_node1_va1e1b1nwzida0e0b0xyg1 = np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0,...] % 364 >= date_node_zidaebxygm[...,0],
                                                          dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0,...] % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)]) #remove e axis because e wont make a big difference to dvp dates so it shouldnt change the result.
+    #####handle cases where node[0] is later in the year than node[1] (this can happen in MP model).
+    case2_dvp_is_node1_va1e1b1nwzida0e0b0xyg1 = np.logical_or(np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0,...] % 364 >= date_node_zidaebxygm[...,0] - 364,
+                                                                             dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0,...] % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)]),
+                                                              np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg1[:, :, 0, ...] % 364 >= date_node_zidaebxygm[..., 0],
+                                                                             dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0,...] % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)] + 364)) #remove e axis because e wont make a big difference to dvp dates so it shouldnt change the result.
+    dvp_is_node1_va1e1b1nwzida0e0b0xyg1 = fun.f_update(dvp_is_node1_va1e1b1nwzida0e0b0xyg1, case2_dvp_is_node1_va1e1b1nwzida0e0b0xyg1, date_node_zidaebxygm[...,0]>date_node_zidaebxygm[...,1])
     params['p_dvp_is_node1_vzg1'] = fun.f1_make_pyomo_dict(dvp_is_node1_va1e1b1nwzida0e0b0xyg1, arrays_vzg1)
     ####offs
     dvp_is_node1_va1e1b1nwzida0e0b0xyg3 = np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 >= date_node_zidaebxygm[...,0],
                                                          dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)])
+    #####handle cases where node[0] is later in the year than node[1] (this can happen in MP model).
+    case2_dvp_is_node1_va1e1b1nwzida0e0b0xyg3 = np.logical_or(np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 >= date_node_zidaebxygm[...,0] - 364,
+                                                                             dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)]),
+                                                              np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 >= date_node_zidaebxygm[..., 0],
+                                                                             dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)] + 364)) #remove e axis because e wont make a big difference to dvp dates so it shouldnt change the result.
+    dvp_is_node1_va1e1b1nwzida0e0b0xyg3 = fun.f_update(dvp_is_node1_va1e1b1nwzida0e0b0xyg3, case2_dvp_is_node1_va1e1b1nwzida0e0b0xyg3, date_node_zidaebxygm[...,0]>date_node_zidaebxygm[...,1])
     #####cluster d (d axis is active from the dvp dates)
     dvp_is_node1_k3k5tva1e1b1nwzida0e0b0xyg3 = 1 * (np.sum(dvp_is_node1_va1e1b1nwzida0e0b0xyg3
                                                                * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
@@ -10148,6 +10161,12 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###prog - check if prog are weaned in the first season period (if so then sale at weaning in the MP model must match the base SE management).
     wean_is_node1_zida0e0b0xyg2 = np.logical_and(date_weaned_ida0e0b0xyg3 % 364 >= date_node_zidaebxygm[...,0],
                                                 date_weaned_ida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)]) #use off weaning date because that is the same as prog except it has d axis instead of o axis.
+    #####handle cases where node[0] is later in the year than node[1] (this can happen in MP model).
+    case2_wean_is_node1_zida0e0b0xyg2 = np.logical_or(np.logical_and(date_weaned_ida0e0b0xyg3 % 364 >= date_node_zidaebxygm[...,0] - 364,
+                                                                             date_weaned_ida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)]),
+                                                              np.logical_and(date_weaned_ida0e0b0xyg3 % 364 >= date_node_zidaebxygm[..., 0],
+                                                                             date_weaned_ida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)] + 364)) #remove e axis because e wont make a big difference to dvp dates so it shouldnt change the result.
+    wean_is_node1_zida0e0b0xyg2 = fun.f_update(wean_is_node1_zida0e0b0xyg2, case2_wean_is_node1_zida0e0b0xyg2, date_node_zidaebxygm[...,0]>date_node_zidaebxygm[...,1])
     #####cluster d (d axis is active from the dvp dates)
     wean_is_node1_k3k5tva1e1b1nwzida0e0b0xyg3 = 1 * (np.sum(wean_is_node1_zida0e0b0xyg2
                                                                * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
