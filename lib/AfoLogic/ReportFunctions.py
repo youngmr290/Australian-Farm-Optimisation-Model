@@ -2845,12 +2845,12 @@ def f_stock_numbers_summary(r_vals):
     arith = 2
     index = [10]  # g
     cols = [9]  # gender
-    axis_slice = {0:[1,None,1]} #sale suckers
+    axis_slice = {4:[0,1,1]} #sale suckers
     numbers_prog_g_x = f_stock_pasture_summary(r_vals, type=type, weights=weights, keys=keys, arith=arith, index=index, cols=cols,
                                                            axis_slice=axis_slice)
     ###female prog sold
     try:
-        female_prog_sold = numbers_prog_g_x.loc[['BBB','BBM'],'F'] #wrapped in try incase BBM are not included in the trial.
+        female_prog_sold = numbers_prog_g_x.loc[['BBB','BBM'],'F'] #wrapped in try incase BBM are not included in the trial. Note BBT are added with wethers.
     except KeyError:
         female_prog_sold = numbers_prog_g_x.loc['BBB', 'F']
     ###wether & crossy prog sold
@@ -3169,6 +3169,9 @@ def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
     :param axis_slice: dict: containing list of with slice params (start, stop, step)
     :return: prod array
     '''
+    ## if arith is being conducted these arrays need to be the same size so slicing can work
+    prod, prod_weights, weights, den_weights = np.broadcast_arrays(prod, prod_weights, weights, den_weights)
+
     ##slice axis - slice the keys and the array - if user hasn't specified slice the whole axis will be included
     sl = [slice(None)] * prod.ndim
     keys = keys.copy()  # need to copy so that it doesn't change the underlying array (because assigning in a loop)
@@ -3179,8 +3182,6 @@ def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
         sl[axis] = slice(start, stop, step)
         keys[axis] = keys[axis][start:stop:step]
     ###apply slice to np array
-    ### if arith is being conducted these arrays need to be the same size so slicing can work
-    prod, prod_weights, weights, den_weights = np.broadcast_arrays(prod, prod_weights, weights, den_weights)
     prod = prod[tuple(sl)]
     prod_weights = prod_weights[tuple(sl)]
     weights = weights[tuple(sl)]
