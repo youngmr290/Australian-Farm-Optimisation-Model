@@ -10387,8 +10387,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         user_lw_change_k2tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(user_lw_change_k2tva1e1b1nszida0e0b0xyg1, a_wstart_w1[na,na,na,na,na,na,na,:,na,na,na,na,na,na,na,na,na], axis=w_pos)
         user_lw_change_k3k5tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(user_lw_change_k3k5tva1e1b1nszida0e0b0xyg3, a_wstart_w3[na,na,na,na,na,na,na,na,:,na,na,na,na,na,na,na,na,na], axis=w_pos)
         ###make the param for the bnd - difference between target lw change and lw change of each w slice (this gets bnd to 0)
-        p_lw_diff_from_target_k2tva1e1b1nwzida0e0b0xyg1 = lw_diff_from_base_k2tva1e1b1nwzida0e0b0xyg1 - user_lw_change_k2tva1e1b1nwzida0e0b0xyg1
-        p_lw_diff_from_target_k3k5tva1e1b1nwzida0e0b0xyg3 = lw_diff_from_base_k3k5tva1e1b1nwzida0e0b0xyg3 - user_lw_change_k3k5tva1e1b1nwzida0e0b0xyg3
+        p_lw_diff_from_target_k2tva1e1b1nwzida0e0b0xyg1 = np.round(lw_diff_from_base_k2tva1e1b1nwzida0e0b0xyg1 - user_lw_change_k2tva1e1b1nwzida0e0b0xyg1, 1) #need to round because there are cases where ffcfw that should be the same are slightly different
+        p_lw_diff_from_target_k3k5tva1e1b1nwzida0e0b0xyg3 = np.round(lw_diff_from_base_k3k5tva1e1b1nwzida0e0b0xyg3 - user_lw_change_k3k5tva1e1b1nwzida0e0b0xyg3, 1) #need to round because there are cases where ffcfw that should be the same are slightly different
         params['p_lw_diff_from_target_k2tva1nwziyg1'] = fun.f1_make_pyomo_dict(p_lw_diff_from_target_k2tva1e1b1nwzida0e0b0xyg1, arrays_k2tva1nwziyg1)
         params['p_lw_diff_from_target_k3k5tvnwziaxyg3'] = fun.f1_make_pyomo_dict(p_lw_diff_from_target_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3k5tvnwziaxyg3)
 
