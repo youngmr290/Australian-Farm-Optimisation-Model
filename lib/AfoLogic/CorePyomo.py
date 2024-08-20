@@ -974,11 +974,13 @@ def f_con_MP(model, lp_vars):
 
     def MP_dams_sale_lower(model, q, s, k2, t1, v1, a, z, i, y1, g1):
         ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
-        if q == 'q0' and len_p7>1 and (t1=='t0' or t1=='t1') and model.p_dvp_is_node1_vzg1[v1, z, g1]:
+        ## bnd sale and not mated animals so the model can't choose to not mate then sell at the second node.
+        ## therefore give 5% flex on the bnd to allow for mort.
+        if q == 'q0' and len_p7>1 and (t1=='t0' or t1=='t1' or k2=='NM-0') and model.p_dvp_is_node1_vzg1[v1, z, g1]:
             return (sum(model.v_dams[q, s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
                        for n1 in model.s_nut_dams for w1 in model.s_lw_dams) <=
                     sum(lp_vars[str('v_dams')]['q0', s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
-                        for n1 in model.s_nut_dams for w1 in model.s_lw_dams)*1.01)
+                        for n1 in model.s_nut_dams for w1 in model.s_lw_dams)*1.05)
         else:
             return pe.Constraint.Skip
     model.con_MP_dams_sale_lower = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams,
@@ -988,11 +990,13 @@ def f_con_MP(model, lp_vars):
 
     def MP_dams_sale_upper(model, q, s, k2, t1, v1, a, z, i, y1, g1):
         ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
-        if q == 'q0' and len_p7>1 and (t1=='t0' or t1=='t1') and model.p_dvp_is_node1_vzg1[v1, z, g1]:
+        ## bnd sale and not mated animals so the model can't choose to not mate then sell at the second node.
+        ## therefore give 5% flex on the bnd to allow for mort.
+        if q == 'q0' and len_p7>1 and (t1=='t0' or t1=='t1' or k2=='NM-0') and model.p_dvp_is_node1_vzg1[v1, z, g1]:
             return (sum(model.v_dams[q, s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
                        for n1 in model.s_nut_dams for w1 in model.s_lw_dams) >=
                     sum(lp_vars[str('v_dams')]['q0', s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
-                        for n1 in model.s_nut_dams for w1 in model.s_lw_dams)*0.99)
+                        for n1 in model.s_nut_dams for w1 in model.s_lw_dams)*0.95)
         else:
            return pe.Constraint.Skip
     model.con_MP_dams_sale_upper = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams,
