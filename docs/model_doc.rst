@@ -16,7 +16,8 @@ Model Logic
    machinery_index
    emission_index
    seasonality_index
-   CorePyomo
+   ShortTermDecisions_index
+   corepyomo_index
    bibliography
 
 

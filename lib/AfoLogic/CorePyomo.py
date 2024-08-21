@@ -942,7 +942,8 @@ def f_objective(model):
                if pe.value(model.p_wyear_inc_qs[q,s]))
 
 def f_con_MP(model, lp_vars):
-    ''''These constraints are to bound the variable levels in the first node of the first year in the MP model. This
+    ''''
+    These constraints are to bound the variable levels in the first node of the first year in the MP model. This
     is when farm conditions have changed but management has not yet reacted. Therefore, key production management is
     bound to be as per normal (based on the Initial MP run).
     '''
