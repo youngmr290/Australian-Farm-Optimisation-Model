@@ -67,7 +67,9 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_fs_pdams"] = pd.DataFrame()  # fat score dams (large array with p, e and b axis)
     reports["stacked_nv_dams"] = pd.DataFrame()  # diet nutritive value for dams (large array with p, e and b axis)
     reports["stacked_nv_pdams"] = pd.DataFrame()  # diet nutritive value for dams (large array with p, e and b axis)
-    reports["stacked_nv_cut_dams"] = pd.DataFrame()  # diet nutritive value for dams (large array with p, e and b axis)
+    reports["stacked_nv_cut_dams"] = pd.DataFrame()  # diet nutritive value for dams for select p periods
+    reports["stacked_mei_pdams"] = pd.DataFrame()  # metabolisable intake for dams (large array with p, e and b axis)
+    reports["stacked_pi_pdams"] = pd.DataFrame()  # potential intake for dams (large array with p, e and b axis)
     reports["stacked_ebw_pyatf"] = pd.DataFrame()  # empty body weight yatf (large array with p, e and b axis)
     reports["stacked_ebw_prog"] = pd.DataFrame()  # empty body weight prog (with e and b axis)
     reports["stacked_ebw_offs"] = pd.DataFrame()  # empty body weight offs (DVP)
@@ -349,6 +351,14 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_nv_cut_dams', 'Run']:
         nv_cut_dams = pd.concat([reports["nv_cut_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_nv_cut_dams"] = rfun.f_append_dfs(stacked_reports["stacked_nv_cut_dams"], nv_cut_dams)
+
+    if report_run.loc['run_mei_pdams', 'Run']:
+        mei_pdams = pd.concat([reports["mei_pdams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_mei_pdams"] = rfun.f_append_dfs(stacked_reports["stacked_mei_pdams"], mei_pdams)
+
+    if report_run.loc['run_pi_pdams', 'Run']:
+        pi_pdams = pd.concat([reports["pi_pdams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_pi_pdams"] = rfun.f_append_dfs(stacked_reports["stacked_pi_pdams"], pi_pdams)
 
     if report_run.loc['run_ebw_pyatf', 'Run']:
         ebw_pyatf = pd.concat([reports["ebw_pyatf"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -692,6 +702,12 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_nv_dams"], 'nv_dams', df_settings, option=xl_display_mode)
     if report_run.loc['run_nv_pdams', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_nv_pdams"], 'nv_pdams', df_settings, option=xl_display_mode)
+    if report_run.loc['run_nv_cut_dams', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_nv_cut_dams"], 'nv_cut_dams', df_settings, option=xl_display_mode)
+    if report_run.loc['run_mei_pdams', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_mei_pdams"], 'mei_pdams', df_settings, option=xl_display_mode)
+    if report_run.loc['run_pi_pdams', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_pi_pdams"], 'pi_pdams', df_settings, option=xl_display_mode)
     if report_run.loc['run_ebw_prog', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ebw_prog"], 'ebw_prog', df_settings, option=xl_display_mode)
     if report_run.loc['run_ebw_offs', 'Run']:
