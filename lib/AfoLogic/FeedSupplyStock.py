@@ -449,7 +449,8 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ###convert feedsupply from having an active n axis to active w axis by applying association
     ### each slice of w has a combination of nutrition levels during the nutrition cycle and that is specified in the association a_n_pw
     ### if generating from pkl then there is a starting weight axis which has to be reshaped to the full w.
-    if sinp.structuralsa['i_fs_use_pkl']:
+    ###Note: if start w len is different in the current trial compared to the pkl fs then the pkl feedsupply is sliced for start weight [0]. Thus all start weights get the same FS.
+    if sinp.structuralsa['i_fs_use_pkl'] and (sinp.structuralsa['i_w_start_len1']==feedsupply_std_stpa1e1b1nwzida0e0b0xyg1.shape[w_pos]):
         ###dams
         len_w1 = a_n_pa1e1b1nwzida0e0b0xyg1.shape[w_pos]
         l_nut1 = int(len_w1/sinp.structuralsa['i_w_start_len1'])#number of nutrition patterns
@@ -457,6 +458,10 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
         feedsupplyw_tpa1e1b1nwzida0e0b0xyg1 = fun.f_merge_axis(feedsupplyw_stpa1e1b1nwzida0e0b0xyg1, 0, w_pos)
         confinementw_stpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(confinement_std_stpa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg1[na,na,:,:,:,:,:,0:l_nut1,...], axis=n_pos)
         confinementw_tpa1e1b1nwzida0e0b0xyg1 = fun.f_merge_axis(confinementw_stpa1e1b1nwzida0e0b0xyg1, 0, w_pos)
+    else:
+        feedsupplyw_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(feedsupply_std_stpa1e1b1nwzida0e0b0xyg1[0], a_n_pa1e1b1nwzida0e0b0xyg1[na], axis=n_pos) #slice off the singleton s axis (this also handles cases where pkl fs has more starting weights than the current run)
+        confinementw_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(confinement_std_stpa1e1b1nwzida0e0b0xyg1[0], a_n_pa1e1b1nwzida0e0b0xyg1[na], axis=n_pos) #slice off the singleton s axis (this also handles cases where pkl fs has more starting weights than the current run)
+    if sinp.structuralsa['i_fs_use_pkl'] and (sinp.structuralsa['i_w_start_len3']==feedsupply_std_stpa1e1b1nwzida0e0b0xyg3.shape[w_pos]):
         ###offs
         len_w3 = a_n_pa1e1b1nwzida0e0b0xyg3.shape[w_pos]
         l_nut3 = int(len_w3/sinp.structuralsa['i_w_start_len3'])#number of nutrition patterns
@@ -465,10 +470,8 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
         confinementw_stpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(confinement_std_stpa1e1b1nwzida0e0b0xyg3, a_n_pa1e1b1nwzida0e0b0xyg3[na,na,:,:,:,:,:,0:l_nut3,...], axis=n_pos)
         confinementw_tpa1e1b1nwzida0e0b0xyg3 = fun.f_merge_axis(confinementw_stpa1e1b1nwzida0e0b0xyg3, 0, w_pos)
     else:
-        feedsupplyw_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(feedsupply_std_stpa1e1b1nwzida0e0b0xyg1[0], a_n_pa1e1b1nwzida0e0b0xyg1[na], axis=n_pos) #slice off the singleton s axis
-        confinementw_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(confinement_std_stpa1e1b1nwzida0e0b0xyg1[0], a_n_pa1e1b1nwzida0e0b0xyg1[na], axis=n_pos) #slice off the singleton s axis
-        feedsupplyw_tpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(feedsupply_std_stpa1e1b1nwzida0e0b0xyg3[0], a_n_pa1e1b1nwzida0e0b0xyg3[na], axis=n_pos) #slice off the singleton s axis
-        confinementw_tpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(confinement_std_stpa1e1b1nwzida0e0b0xyg3[0], a_n_pa1e1b1nwzida0e0b0xyg3[na], axis=n_pos) #slice off the singleton s axis
+        feedsupplyw_tpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(feedsupply_std_stpa1e1b1nwzida0e0b0xyg3[0], a_n_pa1e1b1nwzida0e0b0xyg3[na], axis=n_pos) #slice off the singleton s axis (this also handles cases where pkl fs has more starting weights than the current run)
+        confinementw_tpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(confinement_std_stpa1e1b1nwzida0e0b0xyg3[0], a_n_pa1e1b1nwzida0e0b0xyg3[na], axis=n_pos) #slice off the singleton s axis (this also handles cases where pkl fs has more starting weights than the current run)
     ###sires
     feedsupplyw_tpa1e1b1nwzida0e0b0xyg0 = feedsupply_std_tpa1e1b1nwzida0e0b0xyg0 #^only one n slice so doesn't need following code yet: np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg0,a_n_pa1e1b1nwzida0e0b0xyg0,axis=n_pos)
     confinementw_tpa1e1b1nwzida0e0b0xyg0 = confinement_std_tpa1e1b1nwzida0e0b0xyg0 #^only one n slice so doesn't need following code yet: np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg0,a_n_pa1e1b1nwzida0e0b0xyg0,axis=n_pos)

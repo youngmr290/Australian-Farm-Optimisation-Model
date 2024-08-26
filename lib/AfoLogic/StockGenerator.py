@@ -217,10 +217,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     mask_o_dams = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2-uinp.sheep['prejoin_to_lamb_offset_approx']<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp). Offset is so that the o mask is controlled based on prejoining which has to happen so that the prejoining dvp exists even if the generator finishes before birth.
     mask_d_offs = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2-uinp.sheep['prejoin_to_lamb_offset_approx']<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp). Offset is so that the o mask is controlled based on prejoining which has to happen so that the prejoining dvp exists even if the generator finishes before birth.
     mask_x = pinp.sheep['i_gender_propn_x']>0
-    bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
-    mask_node_is_fvp = pinp.general['i_node_is_fvp'] * (pinp.general['i_inc_node_periods']
+    bool_steady_state = sinp.structuralsa['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
+    mask_node_is_fvp = pinp.general['i_node_is_fvp'] * (sinp.structuralsa['i_inc_node_periods']
                                                         or np.logical_not(bool_steady_state)) #node fvp/dvp are not included if it is steadystate.
-    fvp_mask_dams = np.concatenate([mask_node_is_fvp[0:1], sinp.stock['i_fixed_fvp_mask_dams'], sinp.structuralsa['i_fvp_mask_dams'], mask_node_is_fvp[1:]]) #season start is at the front. because ss has to be first in the fvp/dvp
+    fvp_mask_dams = np.concatenate([mask_node_is_fvp[0:1], sinp.structuralsa['i_fvp_mask_dams'], mask_node_is_fvp[1:]]) #season start is at the front. because ss has to be first in the fvp/dvp
     fvp_mask_offs = np.concatenate([mask_node_is_fvp[0:1], sinp.structuralsa['i_fvp_mask_offs'], mask_node_is_fvp[1:]]) #season start is at the front. because ss has to be first in the fvp/dvp
     ##t1 mask
     mask_t1 = np.concatenate([np.full(pinp.sheep['i_n_dam_sales'], True), mask_sire_inc_g0])  # sale t slices plus transfer t slices
@@ -275,7 +275,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         len_z = 1
     else:
         len_z = np.count_nonzero(pinp.general['i_mask_z'])
-    len_q = pinp.general['i_len_q'] #length of season sequence
+    len_q = sinp.structuralsa['i_len_q'] #length of season sequence
     len_s = np.power(len_z,len_q - 1)
     len_s7 = len(uinp.sheep['i_salegrid_keys'])
 
@@ -425,8 +425,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     omer_historymu_start_p3g0 = np.zeros(p3g0, dtype = 'float64')
     omer_historymu_sire = np.zeros(p3g0, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
     d_cfw_history_start_p2g0 = np.zeros(p2g0, dtype = 'float64')
-    woolvalue_c1tpa1e1b1nwzida0e0b0xyg0 = np.zeros(c1tpg0, dtype =dtype)
-    salevalue_c1tpa1e1b1nwzida0e0b0xyg0 = np.zeros(c1tpg0, dtype =dtype)
+    woolvalue_c1qtpa1e1b1nwzida0e0b0xyg0 = np.zeros((len_c1,)+(len_q,)+tpg0, dtype =dtype)
+    salevalue_c1qtpa1e1b1nwzida0e0b0xyg0 = np.zeros((len_c1,)+(len_q,)+tpg0, dtype =dtype)
     ###arrays for postprocessing
     o_numbers_start_tpsire = np.zeros(tpg0, dtype =dtype)
     o_numbers_end_tpsire = np.zeros(tpg0, dtype =dtype)
@@ -459,15 +459,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     omer_historymu_start_p3g1 = np.zeros(p3g1, dtype = 'float64')
     omer_historymu_dams = np.zeros(p3g1, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
     d_cfw_history_start_p2g1 = np.zeros(p2g1, dtype = 'float64')
-    woolvalue_c1tpa1e1b1nwzida0e0b0xyg1 = np.zeros((len_c1,)+(len_t1,)+tpg1[1:], dtype =dtype)
-    salevalue_c1tpa1e1b1nwzida0e0b0xyg1 = np.zeros(c1tpg1, dtype =dtype)
+    woolvalue_c1qtpa1e1b1nwzida0e0b0xyg1 = np.zeros((len_c1,)+(len_q,)+(len_t1,)+tpg1[1:], dtype =dtype)
+    salevalue_c1qtpa1e1b1nwzida0e0b0xyg1 = np.zeros((len_c1,)+(len_q,)+tpg1, dtype =dtype)
     ###arrays for postprocessing
     o_numbers_start_tpdams = np.zeros(tpg1, dtype =dtype) #default 1 so that dvp0 (p0) has start numbers
     o_numbers_join_tpdams = np.zeros(tpg1, dtype =dtype)
     o_numbers_end_tpdams = np.zeros(tpg1, dtype =dtype) #default 1 so that transfer can exist for dvps before weaning
     o_ffcfw_tpdams = np.zeros(tpg1, dtype =dtype)
-    o_ffcfw_season_tpdams = np.zeros(tpg1, dtype =dtype)
-    o_ffcfw_condensed_tpdams = np.zeros(tpg1, dtype =dtype)
+    o_ffcfw_lw_dist_tpdams = np.zeros(tpg1, dtype =dtype)
     o_nw_start_tpdams = np.zeros(tpg1, dtype = dtype)
     o_mortality_dams = np.zeros(tpg1, dtype =dtype)
     o_lw_tpdams = np.zeros(tpg1, dtype =dtype)
@@ -547,7 +546,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     r_intake_f_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_nw_start_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_salegrid_c1tpa1e1b1nwzida0e0b0xyg2 = np.zeros(c1tpg2, dtype = dtype)
-    salevalue_perdam_tpa1e1b1nwzida0e0b0xyg2 = np.zeros(tpg2, dtype = dtype)
+    salevalue_perdam_qtpa1e1b1nwzida0e0b0xyg2 = np.zeros((len_q,)+tpg2, dtype = dtype)
 
 
     ##offs
@@ -557,14 +556,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     omer_historymu_start_p3g3 = np.zeros(p3g3, dtype = 'float64')
     omer_historymu_offs = np.zeros(p3g3, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
     d_cfw_history_start_p2g3 = np.zeros(p2g3, dtype = 'float64')
-    woolvalue_c1tpa1e1b1nwzida0e0b0xyg3 = np.zeros((len_c1,)+(len_t3,)+tpg3[1:], dtype =dtype)
-    salevalue_c1tpa1e1b1nwzida0e0b0xyg3 = np.zeros(c1tpg3, dtype =dtype)
+    woolvalue_c1qtpa1e1b1nwzida0e0b0xyg3 = np.zeros((len_c1,)+(len_q,)+(len_t3,)+tpg3[1:], dtype =dtype)
+    salevalue_c1qtpa1e1b1nwzida0e0b0xyg3 = np.zeros((len_c1,)+(len_q,)+tpg3, dtype =dtype)
     ###array for postprocessing
     o_numbers_start_tpoffs = np.zeros(tpg3, dtype =dtype) # filled with the initial numbers later, so that dvp0 (p0) has start numbers.
     o_numbers_end_tpoffs = np.zeros(tpg3, dtype =dtype) # filled with the initial numbers later, so that transfer can exist for dvps before weaning
     o_ffcfw_tpoffs = np.zeros(tpg3, dtype =dtype)
-    o_ffcfw_season_tpoffs = np.zeros(tpg3, dtype =dtype)
-    o_ffcfw_condensed_tpoffs = np.zeros(tpg3, dtype =dtype)
+    o_ffcfw_lw_dist_tpoffs = np.zeros(tpg3, dtype =dtype)
     o_nw_start_tpoffs = np.zeros(tpg3, dtype=dtype)
     o_mortality_offs = np.zeros(tpg3, dtype =dtype)
     o_lw_tpoffs = np.zeros(tpg3, dtype =dtype)
@@ -1017,11 +1015,16 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##fvp/dvp types
     core_dvp_types_f1 = sinp.stock['i_core_dvp_types_f1'] #core dvps/fvps need a certain type because repro dvps are linked to them
     prejoin_vtype1 = core_dvp_types_f1[0]
-    condense_vtype1 = prejoin_vtype1 #currently for dams, condensing must occur at prejoining, most of the code is flexible to handle different timing except the lw_distribution section.
     scan_vtype1 = core_dvp_types_f1[1]
     birth_vtype1 = core_dvp_types_f1[2]
-    season_vtype1 = max(core_dvp_types_f1) + 1
+    season_start_vtype1 = max(core_dvp_types_f1) + 1
     other_vtype1 = max(core_dvp_types_f1) + 2
+    ###condense can occur at prejoining or season start (default is at prjoining but for MP model it happens at season start so that we can run 2 fvps at node periods)
+    condense_at_seasonstart = fun.f_sa(False, sen.sav['condense_at_seasonstart'], 5)
+    if condense_at_seasonstart:
+        condense_vtype1 = season_start_vtype1 #this can only happen if nodes are included as fvps
+    else:
+        condense_vtype1 = prejoin_vtype1
 
     ##if stubble we don't want it to condense so change condense type to something that is not triggered
     if stubble:
@@ -1103,7 +1106,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     for m in range(len_m):
         ##season start dvp/fvp needs its own type because it needs to be distinguishable so that dvp can get distributed (only when season nodes included).
         if m==0:
-            node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, season_vtype1)
+            node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, season_start_vtype1)
         else:
             node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, other_vtype1)
 
@@ -1161,9 +1164,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     # dvp/fvps are set to be the same within a cluster.
 
     ##fvp/dvp types
-    condense_vtype3 = 0 #for offs, condensing can occur at any dvp. Currently it occurs at shearing.
-    other_vtype3 = condense_vtype3 + 1
-    season_vtype3 = other_vtype3 + 1
+    shear_vtype3 = 0
+    other_vtype3 = shear_vtype3 + 1
+    season_start_vtype3 = other_vtype3 + 1
+    ###condense can occur at shearing or season start (default is at shearing but for MP model it happens at season start so that we can run 2 fvps at node periods)
+    if condense_at_seasonstart:
+        condense_vtype3 = season_start_vtype3 #this can only happen if nodes are included as fvps
+    else:
+        condense_vtype3 = shear_vtype3 #for offs, condensing can occur at any dvp. Currently it occurs at shearing.
 
     ##if stubble we don't want it to condense so change condense type
     if stubble:
@@ -1236,10 +1244,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     for m in range(len_m):
         node_fvp_m[m] = np.broadcast_to(node_fvp_m[m],(node_fvp_m[m].shape[0],)+tuple(shape))
 
-    fvp_b0_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_b0_start_ba1e1b1nwzida0e0b0xyg3.shape, condense_vtype3)
+    fvp_b0_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_b0_start_ba1e1b1nwzida0e0b0xyg3.shape, shear_vtype3)
     fvp_b1_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_b1_start_ba1e1b1nwzida0e0b0xyg3.shape, other_vtype3)
     fvp_b2_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_b2_start_ba1e1b1nwzida0e0b0xyg3.shape, other_vtype3)
-    fvp_0_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_0_start_sa1e1b1nwzida0e0b0xyg3.shape, condense_vtype3)
+    fvp_0_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_0_start_sa1e1b1nwzida0e0b0xyg3.shape, shear_vtype3)
     fvp_1_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_1_start_sa1e1b1nwzida0e0b0xyg3.shape, other_vtype3)
     fvp_2_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_2_start_sa1e1b1nwzida0e0b0xyg3.shape, other_vtype3)
     user_fvp_type_u = np.zeros_like(user_fvp_u)
@@ -1248,7 +1256,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     for m in range(len_m):
         ##season start dvp/fvp needs its own type because it needs to be distinguishable so that dvp can get distributed (only when season nodes included).
         if m==0:
-            node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, season_vtype3)
+            node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, season_start_vtype3)
         else:
             node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, other_vtype3)
 
@@ -1262,7 +1270,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 fvp_1_type_va1e1b1nwzida0e0b0xyg3, fvp_2_type_va1e1b1nwzida0e0b0xyg3], dtype=object)
     fvp_type_all_f3 = np.concatenate([node_fvp_type_m[0:1], fvp_type_all_f3, user_fvp_type_u, node_fvp_type_m[1:]]) #seasons start needs to be first because it needs to be the first dvp in situations where there is a clash. so that distributing can occur from v_prev.
     ###if shearing is less than 3 sim periods after weaning then set the break fvp dates to the first date of the sim (so they aren't used)
-    mask_initial_fvp = np.all((date_shear_sa1e1b1nwzida0e0b0xyg3[0:1] - date_weaned_ida0e0b0xyg3) > ((step+1)*3)) #true if not enough gap between weaning and shearing for extra dvps.
+    ### these initial fvps are turned off in MP when condensing at season start (because they are calculated assuming shearing is conesing - this could be altered if condensing at season start become default).
+    if condense_at_seasonstart:
+        mask_initial_fvp = False
+    else:
+        mask_initial_fvp = np.all((date_shear_sa1e1b1nwzida0e0b0xyg3[0:1] - date_weaned_ida0e0b0xyg3) > ((step+1)*3)) #true if not enough gap between weaning and shearing for extra dvps.
     ###create the fvp mask. fvps are masked out depending on what the user has specified (the extra fvps at the start are removed if weaning is within 3weeks of shearing).
     fvp3_inc = np.concatenate([fvp_mask_offs[0:1], np.array([True, True and mask_initial_fvp, True and mask_initial_fvp]), fvp_mask_offs[1:]]) #Trues in middle are to count for the extra fvp at the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesn't occur each year)
     fvp_date_inc_f3 = fvp_date_all_f3[fvp3_inc]
@@ -1303,7 +1315,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     2. can remove dvp if it clashes for all axis and type ==other. Because repro dvps are used for clustering and season and condense are used for distributing.
     3. prejoin must be in the same v slice across g axis because g activities can transfer to other g activities
     4. season start must be in the same v slice across all z axis because the weighted average needs all season starts to be in same v.
-    5. condense and season start cant clash (unless they have the same vtype).
+    5. prejoining and season start cant clash.
     
     Nothing guarantees that the order of other dvps are the same e.g. for z1 weaning dvp could be before summer node dvp
     but for z2 weaning dvp could be after summer node dvp. However, it is probably not that likely that
@@ -1314,7 +1326,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
         ##dams
         ###build dvps from fvps
-        mask_node_is_dvp = np.full(len_m, True) * (pinp.general['i_inc_node_periods'] or np.logical_not(bool_steady_state)) #node fvp/dvp are not included if it is steadystate.
+        mask_node_is_dvp = np.full(len_m, True) * (sinp.structuralsa['i_inc_node_periods'] or np.logical_not(bool_steady_state)) #node fvp/dvp are not included if it is steadystate.
         dvp_mask_f1 = np.concatenate([mask_node_is_dvp[0:1], sinp.stock['i_fixed_dvp_mask_f1'], sinp.structuralsa['i_dvp_mask_f1'], mask_node_is_dvp[1:]]) #season start is first
         dvp1_inc = np.concatenate([dvp_mask_f1[0:1], np.array([True]), dvp_mask_f1[1:]]) #True at start is to count for the period from the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesn't occur each year)
         dvp_date_inc_v1 = fvp_date_all_f1[dvp1_inc]
@@ -1328,7 +1340,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                           date_start_p,other_vtype1,condense_vtype1,step)
 
         ##check season start is same v slice across z axis
-        if np.any(np.logical_and(np.any(dvp_type_va1e1b1nwzida0e0b0xyg1==season_vtype1, axis=z_pos), np.logical_not(np.all(dvp_type_va1e1b1nwzida0e0b0xyg1==season_vtype1, axis=z_pos)))):
+        if np.any(np.logical_and(np.any(dvp_type_va1e1b1nwzida0e0b0xyg1==season_start_vtype1, axis=z_pos), np.logical_not(np.all(dvp_type_va1e1b1nwzida0e0b0xyg1==season_start_vtype1, axis=z_pos)))):
             raise exc.FVPError('''Dams - Season start is not in the same v slice across all z.''')
 
         ##check prejoining is same v slice across g and e
@@ -1342,13 +1354,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             can_remove_type  = np.all(dvp_type_va1e1b1nwzida0e0b0xyg1[v,...]==other_vtype1) #can only remove dvp if it is type=other.
             can_remove_date = np.all(np.any(dvp_start_va1e1b1nwzida0e0b0xyg1[v,...] == dvp_start_va1e1b1nwzida0e0b0xyg1[0:v,...], axis=0, keepdims=True))
             duplicate_mask_v.append(np.logical_not(np.logical_and(can_remove_type, can_remove_date)))
-            ###check that condense and season start don't clash - note this doesn't throw an error if condense_type==season_type (this is correct).
+            ###check that prejoining and season start don't clash - note this doesn't throw an error if prejoing_type==season_type (this is correct).
             clash_type = dvp_type_va1e1b1nwzida0e0b0xyg1[0:v][dvp_start_va1e1b1nwzida0e0b0xyg1[v,...] == dvp_start_va1e1b1nwzida0e0b0xyg1[0:v,...]]
             current_type = dvp_type_va1e1b1nwzida0e0b0xyg1[v]
-            season_condense_clash = np.logical_and(np.any(np.logical_or(clash_type==season_vtype1, clash_type==condense_vtype1)),
-                                                   np.any(np.logical_or(clash_type == season_vtype1, clash_type == condense_vtype1)))
+            season_condense_clash = np.logical_and(np.any(clash_type==season_start_vtype1),
+                                                   np.any(clash_type == prejoin_vtype1))
             if season_condense_clash:
-                raise exc.FVPError('''Dams - Condense and season start dvps cant clash otherwise error with distribution.''')
+                raise exc.FVPError('''Dams - prejoining and season start dvps cant clash otherwise error with distribution.''')
         dvp_start_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1[duplicate_mask_v]
         dvp_type_va1e1b1nwzida0e0b0xyg1 = dvp_type_va1e1b1nwzida0e0b0xyg1[duplicate_mask_v]
 
@@ -1374,7 +1386,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                           ,offs_date_start_p,other_vtype3,condense_vtype3,step)
 
         ##check season start is same v slice across z axis
-        if np.any(np.logical_and(np.any(dvp_type_va1e1b1nwzida0e0b0xyg3==season_vtype1, axis=z_pos), np.logical_not(np.all(dvp_type_va1e1b1nwzida0e0b0xyg3==season_vtype1, axis=z_pos)))):
+        if np.any(np.logical_and(np.any(dvp_type_va1e1b1nwzida0e0b0xyg3==season_start_vtype1, axis=z_pos), np.logical_not(np.all(dvp_type_va1e1b1nwzida0e0b0xyg3==season_start_vtype1, axis=z_pos)))):
             raise exc.FVPError('''Offs - Season start is not in the same v slice across all z.''')
 
         ##check prejoining is same v slice across g and e
@@ -1388,13 +1400,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             can_remove_type  = np.all(dvp_type_va1e1b1nwzida0e0b0xyg3[v,...]==other_vtype3) #can only remove dvp if it is type=other.
             can_remove_date = np.all(np.any(dvp_start_va1e1b1nwzida0e0b0xyg3[v,...] == dvp_start_va1e1b1nwzida0e0b0xyg3[0:v,...], axis=0, keepdims=True))
             duplicate_mask_v.append(np.logical_not(np.logical_and(can_remove_type, can_remove_date)))
-            ###check that condense and season start don't clash - note this doesn't throw an error if condense_type==season_type (this is correct).
-            clash_type = dvp_type_va1e1b1nwzida0e0b0xyg3[0:v][dvp_start_va1e1b1nwzida0e0b0xyg3[v,...] == dvp_start_va1e1b1nwzida0e0b0xyg3[0:v,...]]
-            current_type = dvp_type_va1e1b1nwzida0e0b0xyg3[v]
-            season_condense_clash = np.logical_and(np.any(np.logical_or(clash_type==season_vtype3, clash_type==condense_vtype3)),
-                                                   np.any(np.logical_or(clash_type == season_vtype3, clash_type == condense_vtype3)))
-            if season_condense_clash:
-                raise exc.FVPError('''Offs - Condense and season start dvps cant clash otherwise error with distribution.''')
         dvp_start_va1e1b1nwzida0e0b0xyg3 = dvp_start_va1e1b1nwzida0e0b0xyg3[duplicate_mask_v]
         dvp_type_va1e1b1nwzida0e0b0xyg3 = dvp_type_va1e1b1nwzida0e0b0xyg3[duplicate_mask_v]
 
@@ -5871,9 +5876,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     o_numbers_start_tpdams = fun.f_update(o_numbers_start_tpdams, t_scaled_start_numbers.astype(dtype)
                                                          , (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
                 o_ffcfw_tpdams[:,p] = ffcfw_dams
-                o_ffcfw_season_tpdams[:,p] = sfun.f1_season_wa(numbers_end_dams, ffcfw_dams, season_tup, mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
+                ffcfw_season_tdams = sfun.f1_season_wa(numbers_end_dams, ffcfw_dams, season_tup, mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
                                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
-                o_ffcfw_condensed_tpdams[:,p] = sfun.f1_condensed(ffcfw_dams, idx_sorted_w_dams, condense_w_mask_dams
+                o_ffcfw_lw_dist_tpdams[:,p] = sfun.f1_condensed(ffcfw_season_tdams, idx_sorted_w_dams, condense_w_mask_dams
                                                               , n_fs_dams, len_w1, n_fvps_percondense_dams
                                                               , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
                                                               , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'o_ffcfw_dams')  #condensed lw at the end of the period
@@ -6064,9 +6069,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 o_numbers_start_tpoffs[:,p] = numbers_start_offs
                 o_numbers_end_tpoffs[:,p] = numbers_end_offs
                 o_ffcfw_tpoffs[:,p] = ffcfw_offs
-                o_ffcfw_season_tpoffs[:,p] = sfun.f1_season_wa(numbers_end_offs, ffcfw_offs, season_tup, mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
+                ffcfw_season_toffs = sfun.f1_season_wa(numbers_end_offs, ffcfw_offs, season_tup, mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
                                                                , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
-                o_ffcfw_condensed_tpoffs[:,p] = sfun.f1_condensed(ffcfw_offs, idx_sorted_w_offs, condense_w_mask_offs
+                o_ffcfw_lw_dist_tpoffs[:,p] = sfun.f1_condensed(ffcfw_season_toffs, idx_sorted_w_offs, condense_w_mask_offs
                                                               , n_fs_offs, len_w3, n_fvps_percondense_offs
                                                               , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
                                                               , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'o_ffcfw_offs')  #condensed lw at the end of the period before fvp0
@@ -7278,8 +7283,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     index_p6tpa1e1b1nwzida0e0b0xyg = fun.f_expand(index_p6, p_pos-2).astype(dtypeint)
     ###cash period allocation
     ###call allocation/interest function - assumption is that cashflow happens on the first day of the generator period.
-    cash_allocation_p7tpa1e1b1nwzida0e0b0xyg, wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg = fin.f_cashflow_allocation(
-        date_start_pa1e1b1nwzida0e0b0xyg[na], enterprise='stk', z_pos=z_pos) #add t axis
+    interest_factor_tpa1e1b1nwzida0e0b0xyg, wc_interest_factor_c0tpa1e1b1nwzida0e0b0xyg = fin.f_cashflow_allocation(
+        date_start_pa1e1b1nwzida0e0b0xyg[na], enterprise='stk', z_pos=z_pos, interest_only=True) #add t axis
     ###season period allocation - required for asset value
     alloc_p7tpa1e1b1nwzida0e0b0xyg = zfun.f1_z_period_alloc(date_start_pa1e1b1nwzida0e0b0xyg[na,na,...],z_pos=z_pos, mask_z=False) #don't want to mask z at this point, z gets masked when clustered
 
@@ -7611,7 +7616,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                                         sale_age_tpa1e1b1nwzida0e0b0xyg3 <= age_end_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p]),
                                                          weight_tpa1e1b1nwzida0e0b0xyg3>target_weight_tpa1e1b1nwzida0e0b0xyg3)
     ###if dsp then t1 gets a sale opportunity at the start of dvp when seasons are identified (this will be first period of dvp so any other sale opportunities in that dvp will be disregarded).
-    if not bool_steady_state or pinp.general['i_inc_node_periods']:
+    if not bool_steady_state or sinp.structuralsa['i_inc_node_periods']:
         period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m: object = sfun.f1_period_is_('period_is', date_node_ya1e1b1nwzidaebxygm[:,na,...], date_start_pa1e1b1nwzida0e0b0xyg3[...,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3[...,na])
         period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.any(period_is_startseasondvp_ypa1e1b1nwzida0e0b0xyg3m, axis=(0,-1))
         period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_startseasondvp_pa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3[...,0:1,:,:,:,:]>0) #only have sale opp if animal exists. slice e axis
@@ -7741,8 +7746,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
 
     ##purchase cost
-    purchcost_p7tpa1e1b1nwzida0e0b0xyg0 = purchcost_ida0e0b0xyg0 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
-    purchcost_wc_c0p7tpa1e1b1nwzida0e0b0xyg0 = purchcost_ida0e0b0xyg0 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
+    purchcost_p7tpa1e1b1nwzida0e0b0xyg0 = purchcost_ida0e0b0xyg0 * interest_factor_tpa1e1b1nwzida0e0b0xyg * alloc_p7tpa1e1b1nwzida0e0b0xyg
+    purchcost_wc_c0p7tpa1e1b1nwzida0e0b0xyg0 = purchcost_ida0e0b0xyg0 * wc_interest_factor_c0tpa1e1b1nwzida0e0b0xyg[:,na,...] * alloc_p7tpa1e1b1nwzida0e0b0xyg
 
     ##calc wool value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
     ###create mask which is the periods where shearing occurs
@@ -7809,20 +7814,20 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     stb_mpg_w4 = sfun.f1_woolprice().astype(dtype)/100
     r_vals['woolp_mpg_w4'] = stb_mpg_w4
     r_vals['fd_range'] = uinp.sheep['i_woolp_fd_range_w4']
-    woolvalue_c1tpa1e1b1nwzida0e0b0xyg0[:,:,shear_mask_p0], woolp_stbnib_sire = (
+    woolvalue_c1qtpa1e1b1nwzida0e0b0xyg0[:,:,:,shear_mask_p0], woolp_stbnib_sire = (
                             sfun.f_wool_value(stb_mpg_w4, wool_price_scalar_c1tpg, cfw_sire_p9, fd_sire_p9, sl_sire_p9, ss_sire_p9
                                               , vm_p9a1e1b1nwzida0e0b0xyg0, pmb_p9a1e1b1nwzida0e0b0xyg0, dtype))
-    woolvalue_c1tpa1e1b1nwzida0e0b0xyg1[:,:,shear_mask_p1], woolp_stbnib_dams = (
+    woolvalue_c1qtpa1e1b1nwzida0e0b0xyg1[:,:,:,shear_mask_p1], woolp_stbnib_dams = (
                             sfun.f_wool_value(stb_mpg_w4, wool_price_scalar_c1tpg, cfw_dams_p9, fd_dams_p9, sl_dams_p9, ss_dams_p9
                                               , vm_p9a1e1b1nwzida0e0b0xyg1, pmb_tp9a1e1b1nwzida0e0b0xyg1, dtype))
-    woolvalue_c1tpa1e1b1nwzida0e0b0xyg3[:,:,shear_mask_p3], woolp_stbnib_offs = (
+    woolvalue_c1qtpa1e1b1nwzida0e0b0xyg3[:,:,:,shear_mask_p3], woolp_stbnib_offs = (
                             sfun.f_wool_value(stb_mpg_w4, wool_price_scalar_c1tpg, cfw_offs_p9, fd_offs_p9, sl_offs_p9, ss_offs_p9
                                               , vm_p9a1e1b1nwzida0e0b0xyg3, pmb_tp9a1e1b1nwzida0e0b0xyg3, dtype))
 
     ###create woolvalue with average c1 - this is used for wc/minroe and reporting because we don't think c1 is needed for them
-    woolvalue_tpa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(woolvalue_c1tpa1e1b1nwzida0e0b0xyg0, prob_c1tpg, axis=0)
-    woolvalue_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(woolvalue_c1tpa1e1b1nwzida0e0b0xyg1, prob_c1tpg, axis=0)
-    woolvalue_tpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(woolvalue_c1tpa1e1b1nwzida0e0b0xyg3, prob_c1tpg, axis=0)
+    woolvalue_qtpa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(woolvalue_c1qtpa1e1b1nwzida0e0b0xyg0, prob_c1tpg[:,na,...], axis=0)
+    woolvalue_qtpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(woolvalue_c1qtpa1e1b1nwzida0e0b0xyg1, prob_c1tpg[:,na,...], axis=0)
+    woolvalue_qtpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(woolvalue_c1qtpa1e1b1nwzida0e0b0xyg3, prob_c1tpg[:,na,...], axis=0)
     wool_finish= time.time()
 
 
@@ -7866,7 +7871,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ffcfw_tp9a1e1b1nwzida0e0b0xyg2 = o_ffcfw_start_tpyatf[:,sale_mask_p2]
     ffcfw_tp9a1e1b1nwzida0e0b0xyg3 = o_ffcfw_tpoffs[:,sale_mask_p3]
 
-    salevalue_c1tpa1e1b1nwzida0e0b0xyg0[:,:,sale_mask_p0], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg0[:,:,sale_mask_p0] = sfun.f_sale_value(
+    salevalue_c1qtpa1e1b1nwzida0e0b0xyg0[:,:,:,sale_mask_p0], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg0[:,:,sale_mask_p0] = sfun.f_sale_value(
         cn_sire.astype(dtype), cx_sire[:,0:1,...].astype(dtype), rc_start_sire_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg0
         , dresspercent_adj_yg0, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg, dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg0
@@ -7876,7 +7881,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg[...,0:1,:,:], sale_agemax_s7tpa1e1b1nwzida0e0b0xyg0, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg0
         ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, mask_s7g_s7tpa1e1b1nwzida0e0b0xyg0, dtype)
-    salevalue_c1tpa1e1b1nwzida0e0b0xyg1[:,:,sale_mask_p1], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg1[:,:,sale_mask_p1] = sfun.f_sale_value(
+    salevalue_c1qtpa1e1b1nwzida0e0b0xyg1[:,:,:,sale_mask_p1], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg1[:,:,sale_mask_p1] = sfun.f_sale_value(
         cn_dams.astype(dtype), cx_dams[:,1:2,...].astype(dtype), rc_start_dams_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg1
         , dresspercent_adj_yg1, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg1
@@ -7886,7 +7891,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg[...,1:2,:,:], sale_agemax_s7tpa1e1b1nwzida0e0b0xyg1, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg1
         ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, mask_s7g_s7tpa1e1b1nwzida0e0b0xyg1, dtype)
-    salevalue_c1tp9a1e1b1nwzida0e0b0xyg2, r_salegrid_c1tpa1e1b1nwzida0e0b0xyg2[:,:,sale_mask_p2] = sfun.f_sale_value(                                                #keep it as a condensed p axis
+    salevalue_c1qtp9a1e1b1nwzida0e0b0xyg2, r_salegrid_c1tpa1e1b1nwzida0e0b0xyg2[:,:,sale_mask_p2] = sfun.f_sale_value(                                                #keep it as a condensed p axis
         cn_yatf.astype(dtype), cx_yatf[:,mask_x,...].astype(dtype), rc_start_yatf_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg2
         , dresspercent_adj_yg2, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg2
@@ -7896,7 +7901,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemax_s7tpa1e1b1nwzida0e0b0xyg2, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg2
         ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, mask_s7g_s7tpa1e1b1nwzida0e0b0xyg2, dtype)
-    salevalue_c1tpa1e1b1nwzida0e0b0xyg3[:,:,sale_mask_p3], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg3[:,:,sale_mask_p3] = sfun.f_sale_value(
+    salevalue_c1qtpa1e1b1nwzida0e0b0xyg3[:,:,:,sale_mask_p3], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg3[:,:,sale_mask_p3] = sfun.f_sale_value(
         cn_offs, cx_offs[:,mask_x,...].astype(dtype), rc_start_offs_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg3
         , dresspercent_adj_yg3, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6tpa1e1b1nwzida0e0b0xyg, sale_price_scalar_c1s7tpg, month_scalar_s7tp9a1e1b1nwzida0e0b0xyg3
@@ -7908,10 +7913,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, mask_s7g_s7tpa1e1b1nwzida0e0b0xyg3, dtype)
 
     ###create salevalue with average c1 - this is used for wc/minroe and reporting because we don't think c1 is needed for them
-    salevalue_tpa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(salevalue_c1tpa1e1b1nwzida0e0b0xyg0, prob_c1tpg, axis=0)
-    salevalue_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(salevalue_c1tpa1e1b1nwzida0e0b0xyg1, prob_c1tpg, axis=0)
-    salevalue_tp9a1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(salevalue_c1tp9a1e1b1nwzida0e0b0xyg2, prob_c1tpg, axis=0)
-    salevalue_tpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(salevalue_c1tpa1e1b1nwzida0e0b0xyg3, prob_c1tpg, axis=0)
+    salevalue_qtpa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(salevalue_c1qtpa1e1b1nwzida0e0b0xyg0, prob_c1tpg[:,na,...], axis=0)
+    salevalue_qtpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(salevalue_c1qtpa1e1b1nwzida0e0b0xyg1, prob_c1tpg[:,na,...], axis=0)
+    salevalue_qtp9a1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(salevalue_c1qtp9a1e1b1nwzida0e0b0xyg2, prob_c1tpg[:,na,...], axis=0)
+    salevalue_qtpa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(salevalue_c1qtpa1e1b1nwzida0e0b0xyg3, prob_c1tpg[:,na,...], axis=0)
     r_salegrid_tpa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(r_salegrid_c1tpa1e1b1nwzida0e0b0xyg0, prob_c1tpg, axis=0)
     r_salegrid_tpa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(r_salegrid_c1tpa1e1b1nwzida0e0b0xyg1, prob_c1tpg, axis=0)
     r_salegrid_tpa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(r_salegrid_c1tpa1e1b1nwzida0e0b0xyg2, prob_c1tpg, axis=0)
@@ -7965,18 +7970,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     husbandry_n_infra_cost_tpg0 = husbandry_cost_tpg0 + rm_stockinfra_var_tpg0
     husbandry_n_infra_cost_tpg1 = husbandry_cost_tpg1 + rm_stockinfra_var_tpg1
     husbandry_n_infra_cost_tpg3 = husbandry_cost_tpg3 + rm_stockinfra_var_tpg3
-    ###p7 allocation
-    husbandry_n_infra_cost_p7tpg0 = husbandry_n_infra_cost_tpg0 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
-    husbandry_n_infra_cost_wc_c0p7tpg0 = husbandry_n_infra_cost_tpg0 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
-    husbandry_n_infra_cost_p7tpg1 = husbandry_n_infra_cost_tpg1 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
-    husbandry_n_infra_cost_wc_c0p7tpg1 = husbandry_n_infra_cost_tpg1 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
-    husbandry_n_infra_cost_p7tpg3 = husbandry_n_infra_cost_tpg3 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg[:,:, mask_p_offs_p]
-    husbandry_n_infra_cost_wc_c0p7tpg3 = husbandry_n_infra_cost_tpg3 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg[:,:,:, mask_p_offs_p]
 
     ##fixed infra r&m cost - #fixed costs are incurred in the middle of the year and incur half a yr interest (in attempt to represent an even spread)
     rm_stockinfra_fix = np.sum(uinp.sheep['i_infrastructure_costfixed_h1'], axis=0)
-    rm_start_c0 = per.f_cashflow_date() + 182 #incurred in the middle of the year and incur half a yr interest
-    rm_cash_allocation_p7z, rm_wc_allocation_c0p7z = fin.f_cashflow_allocation(rm_start_c0[:,na], enterprise='stk', z_pos=-1, c0_inc=True)
+    rm_start = np.array([182]) #incurred in the middle of the year and incur half a yr interest
+    rm_cash_allocation_p7z, rm_wc_allocation_c0p7z = fin.f_cashflow_allocation(rm_start, enterprise='stk', z_pos=-1)
     rm_stockinfra_fix_p7z = rm_stockinfra_fix * rm_cash_allocation_p7z
     rm_stockinfra_fix_wc_c0p7z = rm_stockinfra_fix * rm_wc_allocation_c0p7z
 
@@ -8001,80 +7999,74 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##combine income and cost from wool, sale and husb.
     ###sire
     ####asset value - calc asset value before adjusting by period is sale and shearing
-    assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg0 =  ((salevalue_tpa1e1b1nwzida0e0b0xyg0 + woolvalue_tpa1e1b1nwzida0e0b0xyg0)
-                                            * period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,na,na,...] * alloc_p7tpa1e1b1nwzida0e0b0xyg)
+    assetvalue_a5p7qtpa1e1b1nwzida0e0b0xyg0 =  ((salevalue_qtpa1e1b1nwzida0e0b0xyg0 + woolvalue_qtpa1e1b1nwzida0e0b0xyg0)
+                                            * period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,na,na,na,...] * alloc_p7tpa1e1b1nwzida0e0b0xyg[:,na,...])
     ####adjust for period is sale/shear (needs to be done here rather than p2v so that cashflow can be combined).
-    salevalue_tpa1e1b1nwzida0e0b0xyg0 = salevalue_tpa1e1b1nwzida0e0b0xyg0 * period_is_sale_pa1e1b1nwzida0e0b0xyg0
-    salevalue_c1tpa1e1b1nwzida0e0b0xyg0 = salevalue_c1tpa1e1b1nwzida0e0b0xyg0 * period_is_sale_pa1e1b1nwzida0e0b0xyg0
-    woolvalue_tpa1e1b1nwzida0e0b0xyg0 = woolvalue_tpa1e1b1nwzida0e0b0xyg0 * period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0
-    woolvalue_c1tpa1e1b1nwzida0e0b0xyg0 = woolvalue_c1tpa1e1b1nwzida0e0b0xyg0 * period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0
-    ####cashflow and wc
-    salevalue_c1p7tpa1e1b1nwzida0e0b0xyg0 = salevalue_c1tpa1e1b1nwzida0e0b0xyg0[:,na,...] * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
-    salevalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg0 = salevalue_tpa1e1b1nwzida0e0b0xyg0 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
-    woolvalue_c1p7tpa1e1b1nwzida0e0b0xyg0 = woolvalue_c1tpa1e1b1nwzida0e0b0xyg0[:,na,...] * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
-    woolvalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg0 = woolvalue_tpa1e1b1nwzida0e0b0xyg0 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
-    cashflow_c1p7tpa1e1b1nwzida0e0b0xyg0 =  (salevalue_c1p7tpa1e1b1nwzida0e0b0xyg0 + woolvalue_c1p7tpa1e1b1nwzida0e0b0xyg0
-                                         - husbandry_n_infra_cost_p7tpg0)
-    wc_c0p7tpa1e1b1nwzida0e0b0xyg0 =  (salevalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg0 + woolvalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg0
-                                         - husbandry_n_infra_cost_wc_c0p7tpg0)
-    ####report info
     r_salegrid_tpa1e1b1nwzida0e0b0xyg0 = r_salegrid_tpa1e1b1nwzida0e0b0xyg0 * period_is_sale_pa1e1b1nwzida0e0b0xyg0
-    r_salevalue_p7tpa1e1b1nwzida0e0b0xyg0 = salevalue_tpa1e1b1nwzida0e0b0xyg0 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
-    r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg0 = woolvalue_tpa1e1b1nwzida0e0b0xyg0 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
+    salevalue_qtpa1e1b1nwzida0e0b0xyg0 = salevalue_qtpa1e1b1nwzida0e0b0xyg0 * period_is_sale_pa1e1b1nwzida0e0b0xyg0
+    salevalue_c1qtpa1e1b1nwzida0e0b0xyg0 = salevalue_c1qtpa1e1b1nwzida0e0b0xyg0 * period_is_sale_pa1e1b1nwzida0e0b0xyg0
+    woolvalue_qtpa1e1b1nwzida0e0b0xyg0 = woolvalue_qtpa1e1b1nwzida0e0b0xyg0 * period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0
+    woolvalue_c1qtpa1e1b1nwzida0e0b0xyg0 = woolvalue_c1qtpa1e1b1nwzida0e0b0xyg0 * period_is_mainshearing_pa1e1b1nwzida0e0b0xyg0
+    ####calc costs, wc and cashflow - add interest and p7 axis (sires get p7 axis added here because there is no v axis).
+    cashflow_c1p7qtpa1e1b1nwzida0e0b0xyg0 =  ((salevalue_c1qtpa1e1b1nwzida0e0b0xyg0 + woolvalue_c1qtpa1e1b1nwzida0e0b0xyg0
+                                         - husbandry_n_infra_cost_tpg0)[:,na,...]
+                                       * interest_factor_tpa1e1b1nwzida0e0b0xyg * alloc_p7tpa1e1b1nwzida0e0b0xyg[:,na,...])
+    wc_c0p7qtpa1e1b1nwzida0e0b0xyg0 = ((salevalue_qtpa1e1b1nwzida0e0b0xyg0 + woolvalue_qtpa1e1b1nwzida0e0b0xyg0
+                                                              - husbandry_n_infra_cost_tpg0)
+                                       * wc_interest_factor_c0tpa1e1b1nwzida0e0b0xyg[:,na,na,...] * alloc_p7tpa1e1b1nwzida0e0b0xyg[:,na,...])
+    husbandry_n_infra_cost_p7tpg0 = husbandry_n_infra_cost_tpg0 * interest_factor_tpa1e1b1nwzida0e0b0xyg * alloc_p7tpa1e1b1nwzida0e0b0xyg
+    r_salevalue_p7qtpa1e1b1nwzida0e0b0xyg0 = salevalue_qtpa1e1b1nwzida0e0b0xyg0 * interest_factor_tpa1e1b1nwzida0e0b0xyg * alloc_p7tpa1e1b1nwzida0e0b0xyg[:,na,...]
+    r_woolvalue_p7qtpa1e1b1nwzida0e0b0xyg0 = woolvalue_qtpa1e1b1nwzida0e0b0xyg0 * interest_factor_tpa1e1b1nwzida0e0b0xyg * alloc_p7tpa1e1b1nwzida0e0b0xyg[:,na,...]
 
     ###dams
     ####asset value - calc asset value before adjusting by period is sale and shearing. Dam asset value includes yatf
-    salevalue_perdam_tpa1e1b1nwzida0e0b0xyg2[:,sale_mask_p2] = salevalue_tp9a1e1b1nwzida0e0b0xyg2 * o_numbers_start_tpyatf[:,sale_mask_p2]
-    assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg1 =  ((salevalue_tpa1e1b1nwzida0e0b0xyg1 + woolvalue_tpa1e1b1nwzida0e0b0xyg1
-                                                + np.sum(salevalue_perdam_tpa1e1b1nwzida0e0b0xyg2, axis=x_pos, keepdims=True)) #sum x-axis for yatf
-                                            * period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,na,na,...] * alloc_p7tpa1e1b1nwzida0e0b0xyg)
+    salevalue_perdam_qtpa1e1b1nwzida0e0b0xyg2[:,:,sale_mask_p2] = salevalue_qtp9a1e1b1nwzida0e0b0xyg2 * o_numbers_start_tpyatf[:,sale_mask_p2]
+    assetvalue_a5qtpa1e1b1nwzida0e0b0xyg1 =  ((salevalue_qtpa1e1b1nwzida0e0b0xyg1 + woolvalue_qtpa1e1b1nwzida0e0b0xyg1
+                                                + np.sum(salevalue_perdam_qtpa1e1b1nwzida0e0b0xyg2, axis=x_pos, keepdims=True)) #sum x-axis for yatf
+                                            * period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,na,na,...])
     ####adjust for period is sale/shear (needs to be done here rather than p2v so that cashflow can be combined).
-    salevalue_tpa1e1b1nwzida0e0b0xyg1 = salevalue_tpa1e1b1nwzida0e0b0xyg1 * period_is_sale_tpa1e1b1nwzida0e0b0xyg1
-    salevalue_c1tpa1e1b1nwzida0e0b0xyg1 = salevalue_c1tpa1e1b1nwzida0e0b0xyg1 * period_is_sale_tpa1e1b1nwzida0e0b0xyg1
-    woolvalue_tpa1e1b1nwzida0e0b0xyg1 = woolvalue_tpa1e1b1nwzida0e0b0xyg1 * period_is_shearing_tpa1e1b1nwzida0e0b0xyg1
-    woolvalue_c1tpa1e1b1nwzida0e0b0xyg1 = woolvalue_c1tpa1e1b1nwzida0e0b0xyg1 * period_is_shearing_tpa1e1b1nwzida0e0b0xyg1
-    ####cashflow and wc
-    salevalue_c1p7tpa1e1b1nwzida0e0b0xyg1 = salevalue_c1tpa1e1b1nwzida0e0b0xyg1[:,na,...] * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
-    salevalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg1 = salevalue_tpa1e1b1nwzida0e0b0xyg1 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
-    woolvalue_c1p7tpa1e1b1nwzida0e0b0xyg1 = woolvalue_c1tpa1e1b1nwzida0e0b0xyg1[:,na,...] * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
-    woolvalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg1 = woolvalue_tpa1e1b1nwzida0e0b0xyg1 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg
-    cashflow_c1p7tpa1e1b1nwzida0e0b0xyg1 =  (salevalue_c1p7tpa1e1b1nwzida0e0b0xyg1 + woolvalue_c1p7tpa1e1b1nwzida0e0b0xyg1
-                                         - husbandry_n_infra_cost_p7tpg1)
-    wc_c0p7tpa1e1b1nwzida0e0b0xyg1 =  (salevalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg1 + woolvalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg1
-                                         - husbandry_n_infra_cost_wc_c0p7tpg1)
-    ####report info
     r_salegrid_tpa1e1b1nwzida0e0b0xyg1 = r_salegrid_tpa1e1b1nwzida0e0b0xyg1 * period_is_sale_tpa1e1b1nwzida0e0b0xyg1
-    r_salevalue_p7tpa1e1b1nwzida0e0b0xyg1 = salevalue_tpa1e1b1nwzida0e0b0xyg1 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
-    r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg1 = woolvalue_tpa1e1b1nwzida0e0b0xyg1 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg
+    salevalue_qtpa1e1b1nwzida0e0b0xyg1 = salevalue_qtpa1e1b1nwzida0e0b0xyg1 * period_is_sale_tpa1e1b1nwzida0e0b0xyg1
+    salevalue_c1qtpa1e1b1nwzida0e0b0xyg1 = salevalue_c1qtpa1e1b1nwzida0e0b0xyg1 * period_is_sale_tpa1e1b1nwzida0e0b0xyg1
+    woolvalue_qtpa1e1b1nwzida0e0b0xyg1 = woolvalue_qtpa1e1b1nwzida0e0b0xyg1 * period_is_shearing_tpa1e1b1nwzida0e0b0xyg1
+    woolvalue_c1qtpa1e1b1nwzida0e0b0xyg1 = woolvalue_c1qtpa1e1b1nwzida0e0b0xyg1 * period_is_shearing_tpa1e1b1nwzida0e0b0xyg1
+    ####cashflow and wc - p7 axis is added later to reduce size in p2v (this can be done because the v axis lines up with p7)
+    cashflow_c1qtpa1e1b1nwzida0e0b0xyg1 = ((salevalue_c1qtpa1e1b1nwzida0e0b0xyg1 + woolvalue_c1qtpa1e1b1nwzida0e0b0xyg1
+                                             - husbandry_n_infra_cost_tpg1)
+                                            * interest_factor_tpa1e1b1nwzida0e0b0xyg)
+    wc_c0qtpa1e1b1nwzida0e0b0xyg1 =  ((salevalue_qtpa1e1b1nwzida0e0b0xyg1 + woolvalue_qtpa1e1b1nwzida0e0b0xyg1
+                                         - husbandry_n_infra_cost_tpg1)
+                                        * wc_interest_factor_c0tpa1e1b1nwzida0e0b0xyg[:,na,...])
+    husbandry_n_infra_cost_tpg1 = husbandry_n_infra_cost_tpg1 * interest_factor_tpa1e1b1nwzida0e0b0xyg
+    r_salevalue_qtpa1e1b1nwzida0e0b0xyg1 = salevalue_qtpa1e1b1nwzida0e0b0xyg1 * interest_factor_tpa1e1b1nwzida0e0b0xyg
+    r_woolvalue_qtpa1e1b1nwzida0e0b0xyg1 = woolvalue_qtpa1e1b1nwzida0e0b0xyg1 * interest_factor_tpa1e1b1nwzida0e0b0xyg
 
-    ###yatf
-    salevalue_c1p7tp9a1e1b1nwzida0e0b0xyg2 = salevalue_c1tp9a1e1b1nwzida0e0b0xyg2[:,na,...] * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg[:,:,sale_mask_p2,...]
-    salevalue_wc_c0p7tp9a1e1b1nwzida0e0b0xyg2 = salevalue_tp9a1e1b1nwzida0e0b0xyg2 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg[:,:,:,sale_mask_p2,...]
+    ###yatf wc and cashflow - add interest and p7 axis (yatf get p7 axis added here because there is no v axis). (costs and asset value are accounted for with dams so don't need that here)
+    salevalue_c1p7qtp9a1e1b1nwzida0e0b0xyg2 = salevalue_c1qtp9a1e1b1nwzida0e0b0xyg2[:,na,...] * interest_factor_tpa1e1b1nwzida0e0b0xyg[:,sale_mask_p2,...] * alloc_p7tpa1e1b1nwzida0e0b0xyg[:,na,:,sale_mask_p2,...]
+    salevalue_wc_c0p7qtp9a1e1b1nwzida0e0b0xyg2 = salevalue_qtp9a1e1b1nwzida0e0b0xyg2 * wc_interest_factor_c0tpa1e1b1nwzida0e0b0xyg[:,na,na,:,sale_mask_p2,...] * alloc_p7tpa1e1b1nwzida0e0b0xyg[:,na,:,sale_mask_p2,...]
     r_salegrid_tpa1e1b1nwzida0e0b0xyg2 = r_salegrid_tpa1e1b1nwzida0e0b0xyg2 * period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2
 
     ###offs
     ####asset value - calc asset value before adjusting by period is sale and shearing
-    assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg3 =  ((salevalue_tpa1e1b1nwzida0e0b0xyg3 + woolvalue_tpa1e1b1nwzida0e0b0xyg3)
-                                            * period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,na,na,mask_p_offs_p,...] * alloc_p7tpa1e1b1nwzida0e0b0xyg[:,:,mask_p_offs_p,...])
+    assetvalue_a5qtpa1e1b1nwzida0e0b0xyg3 =  ((salevalue_qtpa1e1b1nwzida0e0b0xyg3 + woolvalue_qtpa1e1b1nwzida0e0b0xyg3)
+                                            * period_is_assetvalue_a5pa1e1b1nwzida0e0b0xyg[:,na,na,mask_p_offs_p,...])
     ####adjust for period is sale/shear (needs to be done here rather than p2v so that cashflow can be combined).
-    salevalue_tpa1e1b1nwzida0e0b0xyg3 = salevalue_tpa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
-    salevalue_c1tpa1e1b1nwzida0e0b0xyg3 = salevalue_c1tpa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
-    woolvalue_tpa1e1b1nwzida0e0b0xyg3 = woolvalue_tpa1e1b1nwzida0e0b0xyg3 * period_is_shearing_tpa1e1b1nwzida0e0b0xyg3
-    woolvalue_c1tpa1e1b1nwzida0e0b0xyg3 = woolvalue_c1tpa1e1b1nwzida0e0b0xyg3 * period_is_shearing_tpa1e1b1nwzida0e0b0xyg3
-    ####cashflow and wc
-    salevalue_c1p7tpa1e1b1nwzida0e0b0xyg3 = salevalue_c1tpa1e1b1nwzida0e0b0xyg3[:,na,...] * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg[:,:,mask_p_offs_p]
-    salevalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg3 = salevalue_tpa1e1b1nwzida0e0b0xyg3 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg[:,:,:,mask_p_offs_p]
-    woolvalue_c1p7tpa1e1b1nwzida0e0b0xyg3 = woolvalue_c1tpa1e1b1nwzida0e0b0xyg3[:,na,...] * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg[:,:,mask_p_offs_p]
-    woolvalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg3 = woolvalue_tpa1e1b1nwzida0e0b0xyg3 * wc_allocation_c0p7tpa1e1b1nwzida0e0b0xyg[:,:,:,mask_p_offs_p]
-    cashflow_c1p7tpa1e1b1nwzida0e0b0xyg3 =  (salevalue_c1p7tpa1e1b1nwzida0e0b0xyg3 + woolvalue_c1p7tpa1e1b1nwzida0e0b0xyg3
-                                         - husbandry_n_infra_cost_p7tpg3)
-    wc_c0p7tpa1e1b1nwzida0e0b0xyg3 =  (salevalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg3 + woolvalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg3
-                                         - husbandry_n_infra_cost_wc_c0p7tpg3)
-    ####report info
     r_saleage_tpa1e1b1nwzida0e0b0xyg3 = age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
     r_salegrid_tpa1e1b1nwzida0e0b0xyg3 = r_salegrid_tpa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
-    r_salevalue_p7tpa1e1b1nwzida0e0b0xyg3 = salevalue_tpa1e1b1nwzida0e0b0xyg3 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg[:,:,mask_p_offs_p]
-    r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg3 = woolvalue_tpa1e1b1nwzida0e0b0xyg3 * cash_allocation_p7tpa1e1b1nwzida0e0b0xyg[:,:,mask_p_offs_p]
+    salevalue_qtpa1e1b1nwzida0e0b0xyg3 = salevalue_qtpa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
+    salevalue_c1qtpa1e1b1nwzida0e0b0xyg3 = salevalue_c1qtpa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
+    woolvalue_qtpa1e1b1nwzida0e0b0xyg3 = woolvalue_qtpa1e1b1nwzida0e0b0xyg3 * period_is_shearing_tpa1e1b1nwzida0e0b0xyg3
+    woolvalue_c1qtpa1e1b1nwzida0e0b0xyg3 = woolvalue_c1qtpa1e1b1nwzida0e0b0xyg3 * period_is_shearing_tpa1e1b1nwzida0e0b0xyg3
+    ####cashflow and wc - p7 axis is added later to reduce size in p2v (this can be done because the v axis lines up with p7)
+    cashflow_c1qtpa1e1b1nwzida0e0b0xyg3 =  ((salevalue_c1qtpa1e1b1nwzida0e0b0xyg3 + woolvalue_c1qtpa1e1b1nwzida0e0b0xyg3
+                                         - husbandry_n_infra_cost_tpg3)
+                                            * interest_factor_tpa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p,...])
+    wc_c0qtpa1e1b1nwzida0e0b0xyg3 =  ((salevalue_qtpa1e1b1nwzida0e0b0xyg3 + woolvalue_qtpa1e1b1nwzida0e0b0xyg3
+                                         - husbandry_n_infra_cost_tpg3)
+                                            * wc_interest_factor_c0tpa1e1b1nwzida0e0b0xyg[:,na,:,mask_p_offs_p,...])
+    husbandry_n_infra_cost_tpg3 = husbandry_n_infra_cost_tpg3 * interest_factor_tpa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p,...]
+    r_salevalue_qtpa1e1b1nwzida0e0b0xyg3 = salevalue_qtpa1e1b1nwzida0e0b0xyg3 * interest_factor_tpa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p,...]
+    r_woolvalue_qtpa1e1b1nwzida0e0b0xyg3 = woolvalue_qtpa1e1b1nwzida0e0b0xyg3 * interest_factor_tpa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p,...]
 
 
     ######################
@@ -8179,10 +8171,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     co2_husb_fuel_co2e_tpg3, ch4_husb_fuel_co2e_tpg3, n2o_husb_fuel_co2e_tpg3 = efun.f_fuel_emissions(fuel_used_tpg3)
     co2e_fuel_tpg3 = co2_husb_fuel_co2e_tpg3 + ch4_husb_fuel_co2e_tpg3 + n2o_husb_fuel_co2e_tpg3
 
-    ##total co2e emissions for pyomo with p7 axis - so it can be multiplied by prob qszp7 in pyomo
+    ##total co2e emissions for pyomo with p7 axis - so it can be multiplied by prob qszp7 in pyomo - p7 added later for offs and dams
     total_co2e_p7tpsire = (co2e_fuel_tpg0 + co2e_animal_tpsire) * alloc_p7tpa1e1b1nwzida0e0b0xyg
-    total_co2e_p7tpdams = (co2e_fuel_tpg1 + co2e_animal_tpdams) * alloc_p7tpa1e1b1nwzida0e0b0xyg
-    total_co2e_p7tpoffs = (co2e_fuel_tpg3 + co2e_animal_tpoffs) * alloc_p7tpa1e1b1nwzida0e0b0xyg[:, :, mask_p_offs_p]
+    total_co2e_tpdams = (co2e_fuel_tpg1 + co2e_animal_tpdams)
+    total_co2e_tpoffs = (co2e_fuel_tpg3 + co2e_animal_tpoffs)
 
     ################################
     #convert variables from p to v #
@@ -8206,7 +8198,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1)
     co2e_fuel_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(co2e_fuel_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1)
-    total_co2e_p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(total_co2e_p7tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
+    total_co2e_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(total_co2e_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1)
     ###offs
     ch4_animal_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ch4_animal_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
@@ -8215,7 +8207,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3)
     co2e_fuel_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(co2e_fuel_tpg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3)
-    total_co2e_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(total_co2e_p7tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
+    total_co2e_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(total_co2e_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs
                                         , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3)
 
 
@@ -8256,38 +8248,38 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                        period_is_tvp=period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0)[:,:,na,...]#add singleton v
     purchcost_wc_c0p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(purchcost_wc_c0p7tpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
                                                        period_is_tvp=period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0)[:,:,:,na,...]#add singleton v
-    cashflow_c1p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(cashflow_c1p7tpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
-                                              on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,na,...]#add singleton v
-    wc_c0p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(wc_c0p7tpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
-                                              on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,:,na,...]#add singleton v
+    cashflow_c1p7qtva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(cashflow_c1p7qtpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
+                                              on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,:,:,na,...]#add singleton v
+    wc_c0p7qtva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(wc_c0p7qtpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
+                                              on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,:,:,na,...]#add singleton v
     cost_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(husbandry_n_infra_cost_p7tpg0, numbers_p=o_numbers_end_tpsire,
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,na,...]#add singleton v
-    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
-                                              on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,na,...]#add singleton v
+    assetvalue_a5p7qtva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(assetvalue_a5p7qtpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
+                                              on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,:,na,...]#add singleton v
     ###dams
-    cashflow_c1p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(cashflow_c1p7tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+    cashflow_c1qtva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(cashflow_c1qtpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1)
-    wc_c0p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(wc_c0p7tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+    wc_c0qtva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(wc_c0qtpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1)
-    cost_p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(husbandry_n_infra_cost_p7tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+    cost_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(husbandry_n_infra_cost_tpg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1)
-    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+    assetvalue_a5qtva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(assetvalue_a5qtpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1)
     ###yatf can be sold as sucker, not shorn therefore only include sale value. husbandry is accounted for with dams so don't need that here. use numbers start because weaning is beginning of period
-    salevalue_d_c1p7ta1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v_std(salevalue_c1p7tp9a1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2]
+    salevalue_d_c1p7qta1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v_std(salevalue_c1p7qtp9a1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2]
                                                    , numbers_p=(o_numbers_start_tpyatf * o_numbers_start_tpdams)[:,sale_mask_p2]
                                                    , a_any1_p=a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2], index_any1tvp=index_da0e0b0xyg)
-    salevalue_wc_d_c0p7ta1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v_std(salevalue_wc_c0p7tp9a1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2]
+    salevalue_wc_d_c0p7qta1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v_std(salevalue_wc_c0p7qtp9a1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2]
                                                    , numbers_p=(o_numbers_start_tpyatf * o_numbers_start_tpdams)[:,sale_mask_p2]
                                                    , a_any1_p=a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2], index_any1tvp=index_da0e0b0xyg)
     ###offs
-    cashflow_c1p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(cashflow_c1p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
+    cashflow_c1qtva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(cashflow_c1qtpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
-    wc_c0p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(wc_c0p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
+    wc_c0qtva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(wc_c0qtpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
-    cost_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(husbandry_n_infra_cost_p7tpg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
+    cost_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(husbandry_n_infra_cost_tpg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
-    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(assetvalue_a5p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
+    assetvalue_a5qtva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(assetvalue_a5qtpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
 
     ##every period - with labour (p5) axis
@@ -8362,25 +8354,25 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         on_hand_tpa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_sale_tpa1e1b1nwzida0e0b0xyg3)
 
     ##cashflow stuff
-    r_salevalue_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(r_salevalue_p7tpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
+    r_salevalue_p7qtva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(r_salevalue_p7qtpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,:,na,...]#add singleton v
     r_salegrid_tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(r_salegrid_tpa1e1b1nwzida0e0b0xyg0, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,na,...]#add singleton v
-    r_woolvalue_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
+    r_woolvalue_p7qtva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(r_woolvalue_p7qtpa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_tpsire,
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)[:,:,:,na,...]#add singleton v
-    r_salevalue_p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(r_salevalue_p7tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+    r_salevalue_qtva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(r_salevalue_qtpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1)
     r_salegrid_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(r_salegrid_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1,
                                                     on_hand_tpa1e1b1nwzida0e0b0xyg1)
     r_salegrid_tva1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v(r_salegrid_tpa1e1b1nwzida0e0b0xyg2, a_v_pa1e1b1nwzida0e0b0xyg1)
-    r_woolvalue_p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
+    r_woolvalue_qtva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(r_woolvalue_qtpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1)
-    r_salevalue_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_salevalue_p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
+    r_salevalue_qtva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_salevalue_qtpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
     r_saleage_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_saleage_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
                                                      on_hand_tpa1e1b1nwzida0e0b0xyg3)
     r_salegrid_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_salegrid_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
                                                      on_hand_tpa1e1b1nwzida0e0b0xyg3)
-    r_woolvalue_p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_woolvalue_p7tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
+    r_woolvalue_qtva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_woolvalue_qtpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_tpoffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
 
     ##sale time - no numbers needed because they don't affect sale date. Use date end since sale is end of period.
@@ -8603,8 +8595,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ###Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nw8zida0e0b0xyg1
     ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesn't mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
-    dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1 = np.logical_or(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1
-                                                                , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == season_vtype1) #when distribution occurs any w8 can provide w9
+    dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1 = np.logical_or(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == prejoin_vtype1
+                                                                , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == season_start_vtype1) #when distribution occurs any w8 can provide w9
     ###Mask the provide constraint (w9)
     mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
                         * (np.trunc((index_wzida0e0b0xyg1[...,na] * np.logical_not(dist_occurs_nextdvp_tva1e1b1nwzida0e0b0xyg1[...,na])
@@ -8698,7 +8690,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     mask_w8vars_va1e1b1nw8zida0e0b0xyg3 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_w8nut_va1e1b1nwzida0e0b0xyg3
     ###Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesn't mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
     dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3 = np.logical_or(dvp_type_next_va1e1b1nwzida0e0b0xyg3 == condense_vtype3
-                                                               , dvp_type_next_va1e1b1nwzida0e0b0xyg3 == season_vtype3) #when distribution occurs any w8 can provide w9
+                                                               , dvp_type_next_va1e1b1nwzida0e0b0xyg3 == season_start_vtype3) #when distribution occurs any w8 can provide w9
     ###Mask the provide constraint (w9)
     mask_numbers_provw8w9_va1e1b1nw8zida0e0b0xyg3w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3[...,na] \
                         * (np.trunc((index_wzida0e0b0xyg3[...,na] * np.logical_not(dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3[...,na])
@@ -8798,7 +8790,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     t_dvp_date_for_season_mask_vg1[0, ...] = date_weaned_ida0e0b0xyg1 #for z8 mask we need the first dvp date to be weaning so that the function can tell which seasons exist in dvp0 (ie if dvpdate[0]==0 and the first dvp is a node period the model will think the season exists in dvp[0] when infact it is identified in dvp[1]).
     mask_provwithinz8z9_va1e1b1nwzida0e0b0xyg1z9, mask_provbetweenz8z9_va1e1b1nwzida0e0b0xyg1z9, \
     mask_childz_reqwithin_va1e1b1nwzida0e0b0xyg1, mask_childz_reqbetween_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(
-        t_dvp_date_for_season_mask_vg1, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg1==season_vtype1, z_pos=z_pos)
+        t_dvp_date_for_season_mask_vg1, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg1==season_start_vtype1, z_pos=z_pos)
     mask_z8var_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(t_dvp_date_for_season_mask_vg1, z_pos=z_pos, mask=True)
     ###create z8z9 param that is index with v
     ####cluster e and b (e axis is active from the dvp dates)
@@ -8820,7 +8812,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     t_dvp_date_for_season_mask_vg3[0, ...] = date_weaned_ida0e0b0xyg3 #for z8 mask we need the first dvp date to be weaning so that the function can tell which seasons exist in dvp0 (ie if dvpdate[0]==0 and the first dvp is a node period the model will think the season exists in dvp[0] when in fact it is identified in dvp[1]).
     mask_provwithinz8z9_va1e1b1nwzida0e0b0xyg3z9, mask_provbetweenz8z9_va1e1b1nwzida0e0b0xyg3z9, \
     mask_childz_reqwithin_va1e1b1nwzida0e0b0xyg3, mask_childz_reqbetween_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(
-        t_dvp_date_for_season_mask_vg3, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg3==season_vtype3, z_pos=z_pos)
+        t_dvp_date_for_season_mask_vg3, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg3==season_start_vtype3, z_pos=z_pos)
     mask_z8var_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(t_dvp_date_for_season_mask_vg3, z_pos=z_pos, mask=True)
     ###create z8z9 param that is index with v
     ####cluster d (d axis is active from the dvp dates)
@@ -8857,17 +8849,21 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     '''
     Distributing happens at the start of each season/season sequence when all the different seasons are combined back
     to a common season. It also happens when lw is condensed back to the starting number for the livestock year.
-    For dams lw distributing is also required at prejoining when dams can be transferred to different sires and 
-    dams with different LSLN in the previous reproduction cycle are combined for the next cycle. 
+    For dams lw distributing is also required when dams can be transferred to different sires (at prejoining).  
 
-    Note: 1. For dams condensing for the livestock year is carried out at prejoining which coincides with when
-          distribution is required. The generator can handle dam condensing and prejoining to be in different dvps 
-          however the distribution below requires condensing to occur at prejoining (although it may be possible 
-          to change the distribution code to handle condensing and prejoining in different dvps).
+    Note: 1. For dams condensing for the livestock year is carried out at prejoining or season start which coincides with when
+          distribution is required. The generator can handle dam condensing at any time however the 
+          distribution code below requires condensing to occur at prejoining or season start (although it may be possible 
+          to change the distribution code to handle condensing and prejoining in different dvps). Generally, it is
+          best to condense at prejoining to avoid loss of information about different sheep because at prejoining
+          the e and b axes get averaged so best to also average w axis here too.
 
           2. Distribution of animals is controlled by LW and distributing maintains the current average LW. The
           errors associated with difference in wool production that are not 100% correlated with LW will be
           minimised if condensing and distributing are occurring soon after shearing.
+          
+          3. For offs, condensing can occur whenever however if condensing and season start occur at the same time there 
+          only needs to be one lw distrubution. This is handled with an if statement below.
 
 
     What this section does:
@@ -8879,9 +8875,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ## calc the ‘source’ weight of the animal at the end of each period in which they can be transferred
     ###dams - the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
-    ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,
+    ffcfw_source_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,
                                                                 period_is_tp=period_is_transfer_tpa1e1b1nwzida0e0b0xyg1)  #numbers not required for ffcfw
-    ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1,
+    ffcfw_source_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_source_transfer_tva1e1b1nwzida0e0b0xyg1,
                                                                     a_p_va1e1b1nwzida0e0b0xyg1,
                                                                     a_v_pa1e1b1nwzida0e0b0xyg1)
     ffcfw_source_season_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,
@@ -8901,34 +8897,34 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ## calc the ‘destination’ weight of each group of animal at the end of the period prior to the transfer (transfer is next period is prejoining for the destination animal)
     ### for dams select the ‘destination’ condensed weight for the ‘source’ slices using a_g1_tg1
-    ffcfw_condensed_tdams = np.take_along_axis(o_ffcfw_condensed_tpdams, a_g1_tpa1e1b1nwzida0e0b0xyg1, -1)
+    ffcfw_transfer_dest_tdams = np.take_along_axis(o_ffcfw_lw_dist_tpdams, a_g1_tpa1e1b1nwzida0e0b0xyg1, -1)
     ### Convert from p to v.
     #### for dams the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
-    ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(ffcfw_condensed_tdams, a_v_pa1e1b1nwzida0e0b0xyg1,
+    ffcfw_dest_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(ffcfw_transfer_dest_tdams, a_v_pa1e1b1nwzida0e0b0xyg1,
                                                               period_is_tp=period_is_transfer_tpa1e1b1nwzida0e0b0xyg1)  #numbers not required for ffcfw
-    ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1,
+    ffcfw_dest_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_dest_transfer_tva1e1b1nwzida0e0b0xyg1,
                                                                   a_p_va1e1b1nwzida0e0b0xyg1,
                                                                   a_v_pa1e1b1nwzida0e0b0xyg1)
-    ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_season_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,
+    ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_lw_dist_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1,
                                                            period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg)  #numbers not required for ffcfw
     ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1,
                                                                a_p_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
     ###offs
-    ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_condensed_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
+    ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_lw_dist_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
                                                              period_is_tp=nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
     ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3,
                                                                  a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
-    ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_season_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
+    ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_lw_dist_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3,
                                                            period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
     ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3,
                                                                a_p_va1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
 
     ##distributing at condensing - all lws back to starting number of LWs and dams to different sires at prejoining
     ###t0 and t1 are distributed however this is not used because t0 and t1 don't transfer to next dvp
-    distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
-        ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1, ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1,
+    distribution_transfer_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
+        ffcfw_dest_transfer_tva1e1b1nwzida0e0b0xyg1, ffcfw_source_transfer_tva1e1b1nwzida0e0b0xyg1,
         mask_dest_tva1e1b1nwzida0e0b0xyg1,
-        index_wzida0e0b0xyg1, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na], condense_vtype1)
+        index_wzida0e0b0xyg1, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na], prejoin_vtype1)
     distribution_condense_tva1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
         ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg3, ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg3,
         mask_dest_va1e1b1nwzida0e0b0xyg3[na],
@@ -8938,15 +8934,16 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     distribution_season_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f1_lw_distribution(
         ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg1, ffcfw_source_season_tva1e1b1nwzida0e0b0xyg1,
         mask_dest_tva1e1b1nwzida0e0b0xyg1,
-        index_wzida0e0b0xyg1, dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na], season_vtype1)
+        index_wzida0e0b0xyg1, dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na], season_start_vtype1)
     distribution_season_tva1e1b1nw8zida0e0b0xyg3w9 = sfun.f1_lw_distribution(
         ffcfw_dest_season_tva1e1b1nwzida0e0b0xyg3, ffcfw_source_season_tva1e1b1nwzida0e0b0xyg3,
         mask_dest_va1e1b1nwzida0e0b0xyg3[na],
-        index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[..., na], season_vtype3)
+        index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[..., na], season_start_vtype3)
 
     ##combine distributions
-    distribution_tva1e1b1nw8zida0e0b0xyg1w9 = distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 * distribution_season_tva1e1b1nw8zida0e0b0xyg1w9
-    distribution_tva1e1b1nw8zida0e0b0xyg3w9 = distribution_condense_tva1e1b1nw8zida0e0b0xyg3w9 * distribution_season_tva1e1b1nw8zida0e0b0xyg3w9
+    distribution_tva1e1b1nw8zida0e0b0xyg1w9 = distribution_transfer_tva1e1b1nw8zida0e0b0xyg1w9 * distribution_season_tva1e1b1nw8zida0e0b0xyg1w9
+    ###for offs, if season start and condensing are the same then the season distribution already contains the condensed info
+    distribution_tva1e1b1nw8zida0e0b0xyg3w9 = distribution_season_tva1e1b1nw8zida0e0b0xyg3w9 * (distribution_condense_tva1e1b1nw8zida0e0b0xyg3w9 if season_start_vtype3 != condense_vtype3 else 1) #only multiply the two distributions if they occur in different dvps
 
     # ##store cluster associations for use in creating the optimal feedsupply at the end of the trial
     # pkl_fs_info['distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9'] = distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9
@@ -8986,13 +8983,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                                       , mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1
                                                                                  *mask_z8var_va1e1b1nwzida0e0b0xyg1
                                                                                  *mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
-    total_co2e_k2p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', total_co2e_p7tva1e1b1nwzida0e0b0xyg1
+    total_co2e_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', total_co2e_tva1e1b1nwzida0e0b0xyg1
                                                                       , a_k2cluster_va1e1b1nwzida0e0b0xyg1
-                                                                      , index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
+                                                                      , index_k2tva1e1b1nwzida0e0b0xyg1
                                                                       , numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1
                                                                       , mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1
                                                                                  *mask_z8var_va1e1b1nwzida0e0b0xyg1
-                                                                                 *mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,...]))
+                                                                                 *mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
     ch4_animal_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', ch4_animal_tva1e1b1nwzida0e0b0xyg3
                                                                         , a_k3cluster_da0e0b0xyg3
                                                                         , index_k3k5tva1e1b1nwzida0e0b0xyg3
@@ -9014,11 +9011,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                                         , index_k5tva1e1b1nwzida0e0b0xyg3
                                                                         , numbers_start_tva1e1b1nwzida0e0b0xyg3
                                                                         , mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
-    total_co2e_k3k5p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', total_co2e_p7tva1e1b1nwzida0e0b0xyg3
+    total_co2e_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', total_co2e_tva1e1b1nwzida0e0b0xyg3
                                                                         , a_k3cluster_da0e0b0xyg3
-                                                                        , index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...]
+                                                                        , index_k3k5tva1e1b1nwzida0e0b0xyg3
                                                                         , a_k5cluster_da0e0b0xyg3
-                                                                        , index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...]
+                                                                        , index_k5tva1e1b1nwzida0e0b0xyg3
                                                                         , numbers_start_tva1e1b1nwzida0e0b0xyg3
                                                                         , mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
@@ -9056,57 +9053,57 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##cashflow & cost & working capital
     purchcost_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', purchcost_p7tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
                                                                            mask_vg=mask_z8var_p7tva1e1b1nwzida0e0b0xyg)
-    cashflow_c1p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', cashflow_c1p7tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
-                                                                          mask_vg=mask_z8var_p7tva1e1b1nwzida0e0b0xyg)
-    cashflow_k2c1p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', cashflow_c1p7tva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1,
-                                                index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...], numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
-                                                mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,...]))
-    cashflow_k3k5c1p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', cashflow_c1p7tva1e1b1nwzida0e0b0xyg3,
-                                                    a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],
-                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...], numbers_start_tva1e1b1nwzida0e0b0xyg3,
+    cashflow_c1p7qtva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', cashflow_c1p7qtva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
+                                                                          mask_vg=mask_z8var_p7tva1e1b1nwzida0e0b0xyg[:,na,...])
+    cashflow_c1qk2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', cashflow_c1qtva1e1b1nwzida0e0b0xyg1[:,:,na,...], a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                index_k2tva1e1b1nwzida0e0b0xyg1, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
+                                                mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
+    cashflow_c1qk3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', cashflow_c1qtva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],
+                                                    a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3,
+                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3, numbers_start_tva1e1b1nwzida0e0b0xyg3,
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
     purchcost_wc_c0p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', purchcost_wc_c0p7tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
                                                                               mask_vg=mask_z8var_p7tva1e1b1nwzida0e0b0xyg)
-    wc_c0p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', wc_c0p7tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
-                                                                      mask_vg=mask_z8var_p7tva1e1b1nwzida0e0b0xyg)
-    wc_k2c0p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', wc_c0p7tva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],
-                                                                 numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
-                                                                 mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,...]))
-    wc_k3k5c0p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', wc_c0p7tva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],
-                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...], numbers_start_tva1e1b1nwzida0e0b0xyg3,
+    wc_c0p7qtva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', wc_c0p7qtva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
+                                                                      mask_vg=mask_z8var_p7tva1e1b1nwzida0e0b0xyg[:,na,...])
+    wc_c0qk2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', wc_c0qtva1e1b1nwzida0e0b0xyg1[:,:,na,...], a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                        index_k2tva1e1b1nwzida0e0b0xyg1, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
+                                                                 mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
+    wc_c0qk3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', wc_c0qtva1e1b1nwzida0e0b0xyg3[:,:,na,na,...], a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3,
+                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3, numbers_start_tva1e1b1nwzida0e0b0xyg3,
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
     cost_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', cost_p7tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
                                                                       mask_vg=mask_z8var_p7tva1e1b1nwzida0e0b0xyg)
-    cost_k2p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', cost_p7tva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1,
-                                            index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...], numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
-                                            mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,...]))
-    cost_k3k5p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', cost_p7tva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],
-                                            a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...], numbers_start_tva1e1b1nwzida0e0b0xyg3,
+    cost_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', cost_tva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                            index_k2tva1e1b1nwzida0e0b0xyg1, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
+                                            mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
+    cost_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', cost_tva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3,
+                                            a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3, numbers_start_tva1e1b1nwzida0e0b0xyg3,
                                             mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     ##asset value
     ###set start of season assetvalue for season trade to be the same across t & z axis (it has been calculated at the end of the first generator period but we want to reflect the start of the period - at the start all t & z are the same). All T & z need to be the same or the model can optimise trade vale.
-    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1[1, 0, ...] = np.take_along_axis(fun.f_dynamic_slice(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1, z_pos, 0, 1), a_t_tpg1[na,na,...], axis=p_pos-1)[1, 0, ...]
-    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3[1, 0, ...] = np.take_along_axis(fun.f_dynamic_slice(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3, z_pos, 0, 1), a_t_tpg3[na,na,...], axis=p_pos-1)[1, 0, ...]
+    assetvalue_a5qtva1e1b1nwzida0e0b0xyg1[1, ...] = np.take_along_axis(fun.f_dynamic_slice(assetvalue_a5qtva1e1b1nwzida0e0b0xyg1, z_pos, 0, 1), a_t_tpg1[na,na,...], axis=p_pos-1)[1,...]
+    assetvalue_a5qtva1e1b1nwzida0e0b0xyg3[1, ...] = np.take_along_axis(fun.f_dynamic_slice(assetvalue_a5qtva1e1b1nwzida0e0b0xyg3, z_pos, 0, 1), a_t_tpg3[na,na,...], axis=p_pos-1)[1,...]
     ###back calculate the end of season asset value at the end of the last dvp. Technically the asset value at the end
     #### of the season should equal the asset value at the start of the next season (because this is the
     ### same point in time). However, at the season start a new animal is formed (from the weighted average of all
     ### the seasons), so we can't use the same asset value parameter for the end and the start. We also can't simply calc
     ### the asset value for both periods because even just one generator period has a bit of effect on asset value
     ### due to mortality and LW change and this allowed the model to optimise tradevalue in a way that it shouldn't.
-    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[2,-1,...] = assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[1,0,...] #sires don't get distributed at season start so asset value end = start
-    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1[2,-1,...] = fun.f_weighted_average(np.swapaxes(np.roll(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1, shift=-1, axis=p_pos)[1,0,...,na], axis1=w_pos-1, axis2=-1)
+    assetvalue_a5p7qtva1e1b1nwzida0e0b0xyg0[2,-1,...] = assetvalue_a5p7qtva1e1b1nwzida0e0b0xyg0[1,0,...] #sires don't get distributed at season start so asset value end = start
+    assetvalue_a5qtva1e1b1nwzida0e0b0xyg1[2,...] = fun.f_weighted_average(np.swapaxes(np.roll(assetvalue_a5qtva1e1b1nwzida0e0b0xyg1, shift=-1, axis=p_pos)[1,...,na], axis1=w_pos-1, axis2=-1)
            , distribution_season_tva1e1b1nw8zida0e0b0xyg1w9, axis=-1)
-    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3[2,-1,...] = fun.f_weighted_average(np.swapaxes(np.roll(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3, shift=-1, axis=p_pos)[1,0,...,na], axis1=w_pos-1, axis2=-1)
+    assetvalue_a5qtva1e1b1nwzida0e0b0xyg3[2,...] = fun.f_weighted_average(np.swapaxes(np.roll(assetvalue_a5qtva1e1b1nwzida0e0b0xyg3, shift=-1, axis=p_pos)[1,...,na], axis1=w_pos-1, axis2=-1)
            , distribution_season_tva1e1b1nw8zida0e0b0xyg3w9, axis=-1)
     ###cluster
-    assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
-                                                                          mask_vg=mask_z8var_p7tva1e1b1nwzida0e0b0xyg)
-    assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', assetvalue_a5p7tva1e1b1nwzida0e0b0xyg1[:,na,...], a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
+    assetvalue_a5p7qtva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', assetvalue_a5p7qtva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0,
+                                                                          mask_vg=mask_z8var_p7tva1e1b1nwzida0e0b0xyg[:,na,...])
+    assetvalue_a5qk2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', assetvalue_a5qtva1e1b1nwzida0e0b0xyg1[:,:,na,...], a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1,
                                                                  numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
-                                                                 mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,...]))
-    assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', assetvalue_a5p7tva1e1b1nwzida0e0b0xyg3[:,na,na,...], a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],
-                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...], numbers_start_tva1e1b1nwzida0e0b0xyg3,
+                                                                 mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
+    assetvalue_a5qk3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', assetvalue_a5qtva1e1b1nwzida0e0b0xyg3[:,:,na,na,...], a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3,
+                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3, numbers_start_tva1e1b1nwzida0e0b0xyg3,
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     ##labour - manager - split the l2 axis to reduce ram size
@@ -9140,63 +9137,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
 
-    ###########################
-    #Livestock trade          #
-    ###########################
-    '''
-    Similar to benchmarking we have a 'Livestock Trading Profit' concept. This is required because when using the DSP
-    stock numbers are averaged at the beginning of the each season. Thus essentially the poor season (with less stock numbers)
-    buys some stock from the good season. This is not reflected as a cash transaction and doesn't effect profit
-    but when using risk aversion the model opts to sell more sheep in the poor year when the utility is higher. This gives the
-    appearance that risk is being lowered but the bit that is not captured is that at the start of the season
-    the numbers are averaged across z. Which essentially means the good season is selling more to the poor season.
-    The 'Livestock Trading Profit' captures this transfer.
-
-    LTP = livestock value at end of year - value at start of the year.
-    The value of the stock at the end of the year minus the value at the start of the year should tally to 0 across all z.
-    The concept is a little hard to visualise because the generator is over multiple years (best to think about each yr
-    in the gen as a different age group animal). Because the model is in steady state the animals at the start equal
-    the animals at the end.
-    
-    Potentially we could alter the cost a bit to include a transaction cost. To reflect the effort and genetic loss
-    associated with selling sheep in the poor year and then having to buy them back at the market.
-
-    There is a small amount of error in the calculation (about 8k) which will have a small impact on the risk included version (tradevalue is only included in the obj in the risk version).
-    Unsure where the 8k comes from (MRY spent a lot of time improving the trade value calc which improved the error a lot but there is still 8k unexplained).
-    '''
-    ##trade value - end value minus start value (do it here to save time in pyomo)
-    ## a5[1] start of season & a5[2] end of season.
-    ###sire
-    start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0 = assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[1]
-    end_assetvalue_p7tva1e1b1nwzida0e0b0xyg0 = assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[2]
-    assetvalue_p7tva1e1b1nwzida0e0b0xyg0 = end_assetvalue_p7tva1e1b1nwzida0e0b0xyg0 - start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0
-    ###dams
-    start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1[1]
-    end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1[2] * (index_tva1e1b1nw8zida0e0b0xyg1>=2) #only retained animals have an end value (animals that are sold don't have a value)
-    assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 - start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1
-    ###offs
-    start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[1]
-    end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[2] * (index_tva1e1b1nw8zida0e0b0xyg3==0) #only retained animals have an end value (animals that are sold don't have a value)
-    assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 - start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3
-
-    ##if steady state set everything to 0 - there is no "season start" in SE model so there is no opportunity for trade between seasons
-    if bool_steady_state:
-        ###sire
-        end_assetvalue_p7tva1e1b1nwzida0e0b0xyg0 = start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0 # sires don't get distributed at season start so asset value end = start
-        assetvalue_p7tva1e1b1nwzida0e0b0xyg0 = end_assetvalue_p7tva1e1b1nwzida0e0b0xyg0 - start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0
-        ###dams
-        end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 # sires don't get distributed at season start so asset value end = start
-        assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1 - start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1
-        ###offs
-        end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 # sires don't get distributed at season start so asset value end = start
-        assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 - start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3
-
-    ##if risk is not included then tradevalue is not included in objective. For standard dsp the tradevalue is only required in the pnl report.
-    ## if risk is included then need to include tradevalue in obj to stop the model selling extra sheep in poor year to increase utility.
-    if not uinp.general['i_inc_risk']:
-        assetvalue_p7tva1e1b1nwzida0e0b0xyg0[...] = 0
-        assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1[...] = 0
-        assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3[...] = 0
 
     ###########################
     #create numbers params    #
@@ -9334,14 +9274,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ### mask the ffcfw & salevalue for only those that have numbers > 0. Removes animals that have died or don't exist
     ebw_range_ta1e1b1nwzida0e0b0xyg2 = ebw_start_d_yatf_ta1e1b1nwzida0e0b0xyg2 * (numbers_start_d_yatf_ta1e1b1nwzida0e0b0xyg2 > 0)
     ffcfw_range_ta1e1b1nwzida0e0b0xyg2 = ffcfw_start_d_yatf_ta1e1b1nwzida0e0b0xyg2 * (numbers_start_d_yatf_ta1e1b1nwzida0e0b0xyg2 > 0)
-    salevalue_range_c1p7ta1e1b1nwzida0e0b0xyg2 = salevalue_d_c1p7ta1e1b1nwzida0e0b0xyg2 * (numbers_start_d_yatf_ta1e1b1nwzida0e0b0xyg2 > 0)
-    salevalue_wc_range_c0p7ta1e1b1nwzida0e0b0xyg2 = salevalue_wc_d_c0p7ta1e1b1nwzida0e0b0xyg2 * (numbers_start_d_yatf_ta1e1b1nwzida0e0b0xyg2 > 0)
+    salevalue_range_c1p7qta1e1b1nwzida0e0b0xyg2 = salevalue_d_c1p7qta1e1b1nwzida0e0b0xyg2 * (numbers_start_d_yatf_ta1e1b1nwzida0e0b0xyg2 > 0)
+    salevalue_wc_range_c0p7qta1e1b1nwzida0e0b0xyg2 = salevalue_wc_d_c0p7qta1e1b1nwzida0e0b0xyg2 * (numbers_start_d_yatf_ta1e1b1nwzida0e0b0xyg2 > 0)
     ###remove t axis by reshaping with w axis. Thus the t is reflected by more w slices.
     ebw_range_a1e1b1nwzida0e0b0xyg2 = fun.f_merge_axis(ebw_range_ta1e1b1nwzida0e0b0xyg2, source_axis=0, target_axis=w_pos)
     ffcfw_range_a1e1b1nwzida0e0b0xyg2 = fun.f_merge_axis(ffcfw_range_ta1e1b1nwzida0e0b0xyg2, source_axis=0, target_axis=w_pos)
     numbers_start_d_yatf_a1e1b1nwzida0e0b0xyg2 = fun.f_merge_axis(numbers_start_d_yatf_ta1e1b1nwzida0e0b0xyg2, source_axis=0, target_axis=w_pos)
-    salevalue_range_c1p7a1e1b1nwzida0e0b0xyg2 = fun.f_merge_axis(salevalue_range_c1p7ta1e1b1nwzida0e0b0xyg2, source_axis=2, target_axis=w_pos)
-    salevalue_wc_range_c0p7a1e1b1nwzida0e0b0xyg2 = fun.f_merge_axis(salevalue_wc_range_c0p7ta1e1b1nwzida0e0b0xyg2, source_axis=2, target_axis=w_pos)
+    salevalue_range_c1p7qa1e1b1nwzida0e0b0xyg2 = fun.f_merge_axis(salevalue_range_c1p7qta1e1b1nwzida0e0b0xyg2, source_axis=3, target_axis=w_pos)
+    salevalue_wc_range_c0p7qa1e1b1nwzida0e0b0xyg2 = fun.f_merge_axis(salevalue_wc_range_c0p7qta1e1b1nwzida0e0b0xyg2, source_axis=3, target_axis=w_pos)
     ### The index that sorts the weight array
     ind_sorted_a1e1b1nwzida0e0b0xyg2 = np.argsort(ffcfw_range_a1e1b1nwzida0e0b0xyg2, axis = w_pos)
     ### Select the values for the 10 equally spaced values spanning lowest to highest inclusive.
@@ -9353,8 +9293,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     #### Later these variables are used with the 10 weights in the i_w_pos, so note whether w9 on end or not
     ebw_prog_a1e1b1_a1e1b1nwzida0e0b0xyg2 = np.take_along_axis(ebw_range_a1e1b1nwzida0e0b0xyg2, ind, axis=w_pos)
     ffcfw_prog_a1e1b1_a1e1b1nwzida0e0b0xyg2 = np.take_along_axis(ffcfw_range_a1e1b1nwzida0e0b0xyg2, ind, axis = w_pos)
-    salevalue_prog_a1e1b1_c1p7a1e1b1nwzida0e0b0xyg2 = np.take_along_axis(salevalue_range_c1p7a1e1b1nwzida0e0b0xyg2, ind[na,na,...], axis = w_pos)
-    salevalue_wc_prog_a1e1b1_c0p7a1e1b1nwzida0e0b0xyg2 = np.take_along_axis(salevalue_wc_range_c0p7a1e1b1nwzida0e0b0xyg2, ind[na,na,...], axis = w_pos)
+    salevalue_prog_a1e1b1_c1p7qa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(salevalue_range_c1p7qa1e1b1nwzida0e0b0xyg2, ind[na,na,na,...], axis = w_pos)
+    salevalue_wc_prog_a1e1b1_c0p7qa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(salevalue_wc_range_c0p7qa1e1b1nwzida0e0b0xyg2, ind[na,na,na,...], axis = w_pos)
     t_numbers_start_d_prog_a1e1b1_a1e1b1nwzida0e0b0xyg2 = np.take_along_axis(numbers_start_d_yatf_a1e1b1nwzida0e0b0xyg2, ind, axis = w_pos)
 
     ##distribute the yatf to the intermediate progeny activity
@@ -9367,9 +9307,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                      * (nyatf_b1nwzida0e0b0xyg > 0), axis=b1_pos, keepdims=True)  #convert b1 to b0
     t_ffcfw_prog_a1e1b0_a1e1b1nwzida0e0b0xyg2 = np.sum(ffcfw_prog_a1e1b1_a1e1b1nwzida0e0b0xyg2 * (a_b0_b1nwzida0e0b0xyg == index_b0xyg)
                                                      * (nyatf_b1nwzida0e0b0xyg > 0), axis=b1_pos, keepdims=True) #convert b1 to b0
-    t_salevalue_prog_a1e1b0_c1p7a1e1b1nwzida0e0b0xyg2 = np.sum(salevalue_prog_a1e1b1_c1p7a1e1b1nwzida0e0b0xyg2 * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
+    t_salevalue_prog_a1e1b0_c1p7qa1e1b1nwzida0e0b0xyg2 = np.sum(salevalue_prog_a1e1b1_c1p7qa1e1b1nwzida0e0b0xyg2 * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
                                               , axis=b1_pos, keepdims=True) #convert b1 to b0
-    t_salevalue_wc_prog_a1e1b0_c0p7a1e1b1nwzida0e0b0xyg2 = np.sum(salevalue_wc_prog_a1e1b1_c0p7a1e1b1nwzida0e0b0xyg2 * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
+    t_salevalue_wc_prog_a1e1b0_c0p7qa1e1b1nwzida0e0b0xyg2 = np.sum(salevalue_wc_prog_a1e1b1_c0p7qa1e1b1nwzida0e0b0xyg2 * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
                                               , axis=b1_pos, keepdims=True) #convert b1 to b0
     t_numbers_start_d_prog_a1e1b0_a1e1b1nwzida0e0b0xyg2 = np.sum(t_numbers_start_d_prog_a1e1b1_a1e1b1nwzida0e0b0xyg2 * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
                                               , axis=b1_pos, keepdims=True) #convert b1 to b0
@@ -9377,17 +9317,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     t_ffcfw_prog_a0e1b0_a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_ffcfw_prog_a1e1b0_a1e1b1nwzida0e0b0xyg2, a1_pos, a0_pos) #swap a1 and a0
     ebw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_ebw_prog_a0e1b0_a1e1b1nwzida0e0b0xyg2, e1_pos, e0_pos) #swap e1 and e0
     ffcfw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_ffcfw_prog_a0e1b0_a1e1b1nwzida0e0b0xyg2, e1_pos, e0_pos) #swap e1 and e0
-    t_salevalue_prog_a0e1b0_c1p7a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_salevalue_prog_a1e1b0_c1p7a1e1b1nwzida0e0b0xyg2, a1_pos, a0_pos) #swap a1 and a0
-    t_salevalue_wc_prog_a0e1b0_c0p7a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_salevalue_wc_prog_a1e1b0_c0p7a1e1b1nwzida0e0b0xyg2, a1_pos, a0_pos) #swap a1 and a0
-    salevalue_prog_a0e0b0_c1p7a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_salevalue_prog_a0e1b0_c1p7a1e1b1nwzida0e0b0xyg2, e1_pos, e0_pos) #swap e1 and e0
-    salevalue_wc_prog_a0e0b0_c0p7a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_salevalue_wc_prog_a0e1b0_c0p7a1e1b1nwzida0e0b0xyg2, e1_pos, e0_pos) #swap e1 and e0
+    t_salevalue_prog_a0e1b0_c1p7qa1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_salevalue_prog_a1e1b0_c1p7qa1e1b1nwzida0e0b0xyg2, a1_pos, a0_pos) #swap a1 and a0
+    t_salevalue_wc_prog_a0e1b0_c0p7qa1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_salevalue_wc_prog_a1e1b0_c0p7qa1e1b1nwzida0e0b0xyg2, a1_pos, a0_pos) #swap a1 and a0
+    salevalue_prog_a0e0b0_c1p7qa1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_salevalue_prog_a0e1b0_c1p7qa1e1b1nwzida0e0b0xyg2, e1_pos, e0_pos) #swap e1 and e0
+    salevalue_wc_prog_a0e0b0_c0p7qa1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_salevalue_wc_prog_a0e1b0_c0p7qa1e1b1nwzida0e0b0xyg2, e1_pos, e0_pos) #swap e1 and e0
     t_numbers_start_d_prog_a0e1b0_a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_numbers_start_d_prog_a1e1b0_a1e1b1nwzida0e0b0xyg2, a1_pos, a0_pos) #swap a1 and a0
     numbers_start_d_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_numbers_start_d_prog_a0e1b0_a1e1b1nwzida0e0b0xyg2, e1_pos, e0_pos) #swap e1 and e0
 
     ##add t axis to progeny - slice 0 is sold as sucker, slice 1 (to dams) and 2 (to offs) are retained
     index_tpa1e1b1nwzida0e0b0xyg2 = fun.f_expand(index_t2, p_pos-1)
-    salevalue_prog_c1p7tva1e1b1nwzida0e0b0xyg2 = salevalue_prog_a0e0b0_c1p7a1e1b1nwzida0e0b0xyg2[:,:,na,na,...] * (index_tpa1e1b1nwzida0e0b0xyg2==0)
-    salevalue_wc_prog_c0p7tva1e1b1nwzida0e0b0xyg2 = salevalue_wc_prog_a0e0b0_c0p7a1e1b1nwzida0e0b0xyg2[:,:,na,na,...] * (index_tpa1e1b1nwzida0e0b0xyg2==0)
+    salevalue_prog_c1p7qtva1e1b1nwzida0e0b0xyg2 = salevalue_prog_a0e0b0_c1p7qa1e1b1nwzida0e0b0xyg2[:,:,:,na,na,...] * (index_tpa1e1b1nwzida0e0b0xyg2==0)
+    salevalue_wc_prog_c0p7qtva1e1b1nwzida0e0b0xyg2 = salevalue_wc_prog_a0e0b0_c0p7qa1e1b1nwzida0e0b0xyg2[:,:,:,na,na,...] * (index_tpa1e1b1nwzida0e0b0xyg2==0)
 
     #add c axis to prog - using period_is_wean so that correct c slice is activated
     # period_is_wean_d_pa1e1b1nwzida0e0b0xyg2 = period_is_wean_pa1e1b1nwzida0e0b0xyg2 *  (a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2==index_da0e0b0xyg)
@@ -9397,19 +9337,19 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     #                                  a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)).astype(dtype)
 
     ## cluster sale value - can use offs function because clustering is the same. Numbers required to weight a,e,b when clustering.
-    salevalue_prog_k3k5c1p7tva1e1b1nwzida0e0b0xyg2 = sfun.f1_create_production_param('offs',
-                                                                                  salevalue_prog_c1p7tva1e1b1nwzida0e0b0xyg2,
+    salevalue_prog_c1p7qk3k5tva1e1b1nwzida0e0b0xyg2 = sfun.f1_create_production_param('offs',
+                                                                                  salevalue_prog_c1p7qtva1e1b1nwzida0e0b0xyg2[:,:,:,na,na,...],
                                                                                   a_k3cluster_da0e0b0xyg3,
-                                                                                  index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],
+                                                                                  index_k3k5tva1e1b1nwzida0e0b0xyg3,
                                                                                   a_k5cluster_da0e0b0xyg3,
-                                                                                  index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...],
+                                                                                  index_k5tva1e1b1nwzida0e0b0xyg3,
                                                                                   numbers_start_d_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2)
-    salevalue_wc_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2 = sfun.f1_create_production_param('offs',
-                                                                                  salevalue_wc_prog_c0p7tva1e1b1nwzida0e0b0xyg2,
+    salevalue_wc_prog_c0p7qk3k5tva1e1b1nwzida0e0b0xyg2 = sfun.f1_create_production_param('offs',
+                                                                                  salevalue_wc_prog_c0p7qtva1e1b1nwzida0e0b0xyg2[:,:,:,na,na,...],
                                                                                   a_k3cluster_da0e0b0xyg3,
-                                                                                  index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:, na,na,...],
+                                                                                  index_k3k5tva1e1b1nwzida0e0b0xyg3,
                                                                                   a_k5cluster_da0e0b0xyg3,
-                                                                                  index_k5tva1e1b1nwzida0e0b0xyg3[:,na, na,...],
+                                                                                  index_k5tva1e1b1nwzida0e0b0xyg3,
                                                                                   numbers_start_d_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2)
 
     ##mask w8 (prog) to w9 (dams)
@@ -9545,20 +9485,19 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                             mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     ##sale value - needed for reporting
-    r_salevalue_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire',r_salevalue_p7tva1e1b1nwzida0e0b0xyg0,
+    r_salevalue_p7qtva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire',r_salevalue_p7qtva1e1b1nwzida0e0b0xyg0,
                                                                           numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0)
-    r_salevalue_k2p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_salevalue_p7tva1e1b1nwzida0e0b0xyg1,
+    r_salevalue_qk2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_salevalue_qtva1e1b1nwzida0e0b0xyg1[:,na,...],
                                                                             a_k2cluster_va1e1b1nwzida0e0b0xyg1,
-                                                                            index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
+                                                                            index_k2tva1e1b1nwzida0e0b0xyg1,
                                                                             numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
                                                                             mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
-    r_salevalue_prog_k3k5p7tva1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(salevalue_prog_k3k5c1p7tva1e1b1nwzida0e0b0xyg2, prob_c1tpg[:,na,...], axis=p_pos-3)
-    r_salevalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs',
-                                                                              r_salevalue_p7tva1e1b1nwzida0e0b0xyg3,
+    r_salevalue_prog_p7qk3k5tva1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(salevalue_prog_c1p7qk3k5tva1e1b1nwzida0e0b0xyg2, prob_c1tpg[:,na,na,na,na,...], axis=p_pos-6)
+    r_salevalue_qk3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', r_salevalue_qtva1e1b1nwzida0e0b0xyg3[:,na,na,...],
                                                                               a_k3cluster_da0e0b0xyg3,
-                                                                              index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],
+                                                                              index_k3k5tva1e1b1nwzida0e0b0xyg3,
                                                                               a_k5cluster_da0e0b0xyg3,
-                                                                              index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...],
+                                                                              index_k5tva1e1b1nwzida0e0b0xyg3,
                                                                               numbers_start_tva1e1b1nwzida0e0b0xyg3,
                                                                               mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3
                                                                                       * mask_z8var_va1e1b1nwzida0e0b0xyg3)
@@ -9583,19 +9522,18 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
 
     ##wool value
-    r_woolvalue_p7tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire',r_woolvalue_p7tva1e1b1nwzida0e0b0xyg0,
+    r_woolvalue_p7qtva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire',r_woolvalue_p7qtva1e1b1nwzida0e0b0xyg0,
                                                                           numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg0)
-    r_woolvalue_k2p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_woolvalue_p7tva1e1b1nwzida0e0b0xyg1,
+    r_woolvalue_qk2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_woolvalue_qtva1e1b1nwzida0e0b0xyg1[:,na,...],
                                                                             a_k2cluster_va1e1b1nwzida0e0b0xyg1,
-                                                                            index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
+                                                                            index_k2tva1e1b1nwzida0e0b0xyg1,
                                                                             numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
                                                                             mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
-    r_woolvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs',
-                                                                              r_woolvalue_p7tva1e1b1nwzida0e0b0xyg3,
+    r_woolvalue_qk3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', r_woolvalue_qtva1e1b1nwzida0e0b0xyg3[:,na,na,...],
                                                                               a_k3cluster_da0e0b0xyg3,
-                                                                              index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],
+                                                                              index_k3k5tva1e1b1nwzida0e0b0xyg3,
                                                                               a_k5cluster_da0e0b0xyg3,
-                                                                              index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...],
+                                                                              index_k5tva1e1b1nwzida0e0b0xyg3,
                                                                               numbers_start_tva1e1b1nwzida0e0b0xyg3,
                                                                               mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3
                                                                                       * mask_z8var_va1e1b1nwzida0e0b0xyg3)
@@ -10032,9 +9970,101 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     dvp_is_sale_tyvg3 = dvp_is_sale_yvg3 * (index_tva1e1b1nw8zida0e0b0xyg3>0)[:,na,...] #so only a true in the sale t slices
 
 
+    ##################################
+    #add p7 to dams and offs cashflow#
+    ##################################
+    ##this is done here to reduce the size in the p2v and clustering functions.
+    ## this is possible because the v axis includes all the p7 periods so we can make a a_v_p7.
+    ## this cant be done for sires and yatf because there isnt a v axis (for sires and yatf the p7 axis is added when there is still a p axis)
 
+    ##create association between p7 and v for dams and offs
+    ###cluster dvp dates to remove e axis (note dvp dates dont vary by e unless seperatley clustered i.e scan==4). There are some k which have no animals for certain dvp therefore they get the date for e[0].
+    dvp_start_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', dvp_start_va1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1)
+    t_dvp_start_k2tva1e1b1nwzida0e0b0xyg1 = np.broadcast_to(dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], dvp_start_k2tva1e1b1nwzida0e0b0xyg1.shape)
+    dvp_start_k2tva1e1b1nwzida0e0b0xyg1[dvp_start_k2tva1e1b1nwzida0e0b0xyg1==0] = t_dvp_start_k2tva1e1b1nwzida0e0b0xyg1[dvp_start_k2tva1e1b1nwzida0e0b0xyg1==0]
+    ###cluster dvp dates to remove d axis (note dvp dates dont vary by d unless seperatley clustered).
+    dvp_start_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', dvp_start_va1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3)
+    ###create p7 allocation
+    alloc_p7k2tva1e1b1nwzida0e0b0xyg1 = zfun.f1_z_period_alloc(dvp_start_k2tva1e1b1nwzida0e0b0xyg1[na, ...], z_pos=z_pos)
+    alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3 = zfun.f1_z_period_alloc(dvp_start_k3k5tva1e1b1nwzida0e0b0xyg3[na, ...], z_pos=z_pos)
 
+    ##add p7 axis to dams and offs
+    ###dams
+    total_co2e_p7k2tva1e1b1nwzida0e0b0xyg1 = total_co2e_k2tva1e1b1nwzida0e0b0xyg1 * alloc_p7k2tva1e1b1nwzida0e0b0xyg1
+    assetvalue_a5p7qk2tva1e1b1nwzida0e0b0xyg1 = assetvalue_a5qk2tva1e1b1nwzida0e0b0xyg1[:,na,...] * alloc_p7k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
+    cashflow_c1p7qk2tva1e1b1nwzida0e0b0xyg1 = cashflow_c1qk2tva1e1b1nwzida0e0b0xyg1[:,na,...] * alloc_p7k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
+    wc_c0p7qk2tva1e1b1nwzida0e0b0xyg1 = wc_c0qk2tva1e1b1nwzida0e0b0xyg1[:,na,...] * alloc_p7k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
+    cost_p7k2tva1e1b1nwzida0e0b0xyg1 = cost_k2tva1e1b1nwzida0e0b0xyg1 * alloc_p7k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...]
+    r_salevalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = r_salevalue_qk2tva1e1b1nwzida0e0b0xyg1 * alloc_p7k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
+    r_woolvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = r_woolvalue_qk2tva1e1b1nwzida0e0b0xyg1 * alloc_p7k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
+    ###offs
+    total_co2e_p7k3k5tva1e1b1nwzida0e0b0xyg3 = total_co2e_k3k5tva1e1b1nwzida0e0b0xyg3 * alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3
+    assetvalue_a5p7qk3k5tva1e1b1nwzida0e0b0xyg3 = assetvalue_a5qk3k5tva1e1b1nwzida0e0b0xyg3[:,na,...] * alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3[:,na,...]
+    cashflow_c1p7qk3k5tva1e1b1nwzida0e0b0xyg3 = cashflow_c1qk3k5tva1e1b1nwzida0e0b0xyg3[:,na,...] * alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3[:,na,...]
+    wc_c0p7qk3k5tva1e1b1nwzida0e0b0xyg3 = wc_c0qk3k5tva1e1b1nwzida0e0b0xyg3[:,na,...] * alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3[:,na,...]
+    cost_p7k3k5tva1e1b1nwzida0e0b0xyg3 = cost_k3k5tva1e1b1nwzida0e0b0xyg3 * alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...]
+    r_salevalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 = r_salevalue_qk3k5tva1e1b1nwzida0e0b0xyg3 * alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3[:,na,...]
+    r_woolvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 = r_woolvalue_qk3k5tva1e1b1nwzida0e0b0xyg3 * alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3[:,na,...]
 
+    ###########################
+    # Livestock trade          #
+    ###########################
+    '''
+    Similar to benchmarking we have a 'Livestock Trading Profit' concept. This is required because when using the DSP
+    stock numbers are averaged at the beginning of the each season. Thus essentially the poor season (with less stock numbers)
+    buys some stock from the good season. This is not reflected as a cash transaction and doesn't effect profit
+    but when using risk aversion the model opts to sell more sheep in the poor year when the utility is higher. This gives the
+    appearance that risk is being lowered but the bit that is not captured is that at the start of the season
+    the numbers are averaged across z. Which essentially means the good season is selling more to the poor season.
+    The 'Livestock Trading Profit' captures this transfer.
+
+    LTP = livestock value at end of year - value at start of the year.
+    The value of the stock at the end of the year minus the value at the start of the year should tally to 0 across all z.
+    The concept is a little hard to visualise because the generator is over multiple years (best to think about each yr
+    in the gen as a different age group animal). Because the model is in steady state the animals at the start equal
+    the animals at the end.
+
+    Potentially we could alter the cost a bit to include a transaction cost. To reflect the effort and genetic loss
+    associated with selling sheep in the poor year and then having to buy them back at the market.
+
+    There is a small amount of error in the calculation (about 8k) which will have a small impact on the risk included version (tradevalue is only included in the obj in the risk version).
+    Unsure where the 8k comes from (MRY spent a lot of time improving the trade value calc which improved the error a lot but there is still 8k unexplained).
+    '''
+    ##trade value - end value minus start value (do it here to save time in pyomo)
+    ## a5[1] start of season & a5[2] end of season.
+    ###sire
+    start_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 = assetvalue_a5p7qtva1e1b1nwzida0e0b0xyg0[1]
+    end_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 = assetvalue_a5p7qtva1e1b1nwzida0e0b0xyg0[2]
+    tradevalue_p7qtva1e1b1nwzida0e0b0xyg0 = end_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 - start_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0
+    ###dams
+    start_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = assetvalue_a5p7qk2tva1e1b1nwzida0e0b0xyg1[1]
+    end_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = assetvalue_a5p7qk2tva1e1b1nwzida0e0b0xyg1[2] * (
+                index_tva1e1b1nw8zida0e0b0xyg1 >= 2)  # only retained animals have an end value (animals that are sold don't have a value)
+    tradevalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = end_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 - start_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1
+    ###offs
+    start_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 = assetvalue_a5p7qk3k5tva1e1b1nwzida0e0b0xyg3[1]
+    end_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 = assetvalue_a5p7qk3k5tva1e1b1nwzida0e0b0xyg3[2] * (
+                index_tva1e1b1nw8zida0e0b0xyg3 == 0)  # only retained animals have an end value (animals that are sold don't have a value)
+    tradevalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 = end_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 - start_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3
+
+    ##if steady state set everything to 0 - there is no "season start" in SE model so there is no opportunity for trade between seasons
+    if bool_steady_state:
+        ###sire
+        end_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 = start_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0  # sires don't get distributed at season start so asset value end = start
+        tradevalue_p7qtva1e1b1nwzida0e0b0xyg0 = end_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0 - start_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0
+        ###dams
+        end_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = start_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1  # sires don't get distributed at season start so asset value end = start
+        tradevalue_p7qk2tva1e1b1nwzida0e0b0xyg1 = end_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1 - start_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1
+        ###offs
+        end_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 = start_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3  # sires don't get distributed at season start so asset value end = start
+        tradevalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 = end_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3 - start_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3
+
+    ##if risk is not included then tradevalue is not included in objective. For standard dsp the tradevalue is only required in the pnl report.
+    ## if risk is included then need to include tradevalue in obj to stop the model selling extra sheep in poor year to increase utility.
+    if not uinp.general['i_inc_risk']:
+        tradevalue_p7qtva1e1b1nwzida0e0b0xyg0[...] = 0
+        tradevalue_p7qk2tva1e1b1nwzida0e0b0xyg1[...] = 0
+        tradevalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3[...] = 0
     # plt.plot(r_ebw_tpdams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])         #compare e1 for singles
     # plt.plot(r_ebw_tpdams[:, 0, 1, 3, 0, 17:19, 0, 0, 0, 0, 0, 0, 0, 0, 0])         #compare w for singles and e1[1]
     # plt.plot(r_ebw_start_tpyatf[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])   #compare e1 for singles
@@ -10174,24 +10204,30 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     arrays_k3k5p6tvnwziaxyg3 = [keys_k3, keys_k5, keys_p6, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     ###cashflow & wc sire
-    arrays_c1p7zg0 = [keys_c1, keys_p7, keys_z, keys_g0]
+    arrays_c1p7qzg0 = [keys_c1, keys_p7, keys_q, keys_z, keys_g0]
+    arrays_c0p7qzg0 = [keys_c0, keys_p7, keys_q, keys_z, keys_g0]
     arrays_c0p7zg0 = [keys_c0, keys_p7, keys_z, keys_g0]
     ###cashflow & wc dams
-    arrays_k2c1p7tvanwziyg1 = [keys_k2, keys_c1, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    arrays_k2c0p7tvanwziyg1 = [keys_k2, keys_c0, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    arrays_c1p7qk2tvanwziyg1 = [keys_c1, keys_p7, keys_q, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    arrays_c0p7qk2tvanwziyg1 = [keys_c0, keys_p7, keys_q, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     ###cashflow & wc prog
-    arrays_k3k5c1p7twzia0xg2 = [keys_k3, keys_k5, keys_c1, keys_p7, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_g2]
-    arrays_k3k5c0p7twzia0xg2 = [keys_k3, keys_k5, keys_c0, keys_p7, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_g2]
+    arrays_c1p7qk3k5twzia0xg2 = [keys_c1, keys_p7, keys_q, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_g2]
+    arrays_c0p7qk3k5twzia0xg2 = [keys_c0, keys_p7, keys_q, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_g2]
     ###cashflow & wc offs
-    arrays_k3k5c1p7tvnwziaxyg3 = [keys_k3, keys_k5, keys_c1, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
-    arrays_k3k5c0p7tvnwziaxyg3 = [keys_k3, keys_k5, keys_c0, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    arrays_c1p7qk3k5tvnwziaxyg3 = [keys_c1, keys_p7, keys_q, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    arrays_c0p7qk3k5tvnwziaxyg3 = [keys_c0, keys_p7, keys_q, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     ### asset sire
-    arrays_p7zg0 = [keys_p7, keys_z, keys_g0]
+    arrays_p7qzg0 = [keys_p7, keys_q, keys_z, keys_g0]
     ### asset dams
-    arrays_k2p7tvanwziyg1 = [keys_k2, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    arrays_p7qk2tvanwziyg1 = [keys_p7, keys_q, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     ### asset offs
-    arrays_k3k5p7tvnwziaxyg3 = [keys_k3, keys_k5, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    arrays_p7qk3k5tvnwziaxyg3 = [keys_p7, keys_q, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+
+    ### emissions
+    arrays_p7zg0 = [keys_p7, keys_z, keys_g0]
+    arrays_p7k2tvanwziyg1 = [keys_p7, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    arrays_p7k3k5tvnwziaxyg3 = [keys_p7, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     ###p5zg0 - labour sire
     arrays_p5zg0 = [keys_p5, keys_z, keys_g0]
@@ -10274,8 +10310,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##emissions
     params['p_co2e_p7zg0'] = fun.f1_make_pyomo_dict(total_co2e_p7tva1e1b1nwzida0e0b0xyg0, arrays_p7zg0)
-    params['p_co2e_k2p7tva1nwziyg1'] = fun.f1_make_pyomo_dict(total_co2e_k2p7tva1e1b1nwzida0e0b0xyg1, arrays_k2p7tvanwziyg1)
-    params['p_co2e_k3k5p7tvnwziaxyg3'] = fun.f1_make_pyomo_dict(total_co2e_k3k5p7tva1e1b1nwzida0e0b0xyg3, arrays_k3k5p7tvnwziaxyg3)
+    params['p_co2e_p7k2tva1nwziyg1'] = fun.f1_make_pyomo_dict(total_co2e_p7k2tva1e1b1nwzida0e0b0xyg1, arrays_p7k2tvanwziyg1)
+    params['p_co2e_p7k3k5tvnwziaxyg3'] = fun.f1_make_pyomo_dict(total_co2e_p7k3k5tva1e1b1nwzida0e0b0xyg3, arrays_p7k3k5tvnwziaxyg3)
 
 
     ##mei
@@ -10296,31 +10332,31 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##cashflow
     ###cashflow - sire
-    params['p_cashflow_sire'] = fun.f1_make_pyomo_dict(cashflow_c1p7tva1e1b1nwzida0e0b0xyg0, arrays_c1p7zg0)
+    params['p_cashflow_sire'] = fun.f1_make_pyomo_dict(cashflow_c1p7qtva1e1b1nwzida0e0b0xyg0, arrays_c1p7qzg0)
     ###cashflow - dams
-    params['p_cashflow_dams'] = fun.f1_make_pyomo_dict(cashflow_k2c1p7tva1e1b1nwzida0e0b0xyg1, arrays_k2c1p7tvanwziyg1)
+    params['p_cashflow_dams'] = fun.f1_make_pyomo_dict(cashflow_c1p7qk2tva1e1b1nwzida0e0b0xyg1, arrays_c1p7qk2tvanwziyg1)
     ###cashflow - prog - only consists of sale value
-    params['p_cashflow_prog'] = fun.f1_make_pyomo_dict(salevalue_prog_k3k5c1p7tva1e1b1nwzida0e0b0xyg2, arrays_k3k5c1p7twzia0xg2)
+    params['p_cashflow_prog'] = fun.f1_make_pyomo_dict(salevalue_prog_c1p7qk3k5tva1e1b1nwzida0e0b0xyg2, arrays_c1p7qk3k5twzia0xg2)
     ###cashflow - offs
-    params['p_cashflow_offs'] = fun.f1_make_pyomo_dict(cashflow_k3k5c1p7tva1e1b1nwzida0e0b0xyg3, arrays_k3k5c1p7tvnwziaxyg3)
+    params['p_cashflow_offs'] = fun.f1_make_pyomo_dict(cashflow_c1p7qk3k5tva1e1b1nwzida0e0b0xyg3, arrays_c1p7qk3k5tvnwziaxyg3)
 
     ##wc
     ###wc - sire
-    params['p_wc_sire'] = fun.f1_make_pyomo_dict(wc_c0p7tva1e1b1nwzida0e0b0xyg0, arrays_c0p7zg0)
+    params['p_wc_sire'] = fun.f1_make_pyomo_dict(wc_c0p7qtva1e1b1nwzida0e0b0xyg0, arrays_c0p7qzg0)
     ###wc - dams
-    params['p_wc_dams'] = fun.f1_make_pyomo_dict(wc_k2c0p7tva1e1b1nwzida0e0b0xyg1, arrays_k2c0p7tvanwziyg1)
+    params['p_wc_dams'] = fun.f1_make_pyomo_dict(wc_c0p7qk2tva1e1b1nwzida0e0b0xyg1, arrays_c0p7qk2tvanwziyg1)
     ###wc - prog - only consists of sale value
-    params['p_wc_prog'] = fun.f1_make_pyomo_dict(salevalue_wc_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2, arrays_k3k5c0p7twzia0xg2)
+    params['p_wc_prog'] = fun.f1_make_pyomo_dict(salevalue_wc_prog_c0p7qk3k5tva1e1b1nwzida0e0b0xyg2, arrays_c0p7qk3k5twzia0xg2)
     ###wc - offs
-    params['p_wc_offs'] = fun.f1_make_pyomo_dict(wc_k3k5c0p7tva1e1b1nwzida0e0b0xyg3, arrays_k3k5c0p7tvnwziaxyg3)
+    params['p_wc_offs'] = fun.f1_make_pyomo_dict(wc_c0p7qk3k5tva1e1b1nwzida0e0b0xyg3, arrays_c0p7qk3k5tvnwziaxyg3)
 
     ##cost (for minROE)
     ###cost - sire
     params['p_cost_sire'] = fun.f1_make_pyomo_dict(cost_p7tva1e1b1nwzida0e0b0xyg0, arrays_p7zg0)
     ###cost - dams
-    params['p_cost_dams'] = fun.f1_make_pyomo_dict(cost_k2p7tva1e1b1nwzida0e0b0xyg1, arrays_k2p7tvanwziyg1)
+    params['p_cost_dams'] = fun.f1_make_pyomo_dict(cost_p7k2tva1e1b1nwzida0e0b0xyg1, arrays_p7k2tvanwziyg1)
     ###cost - offs
-    params['p_cost_offs'] = fun.f1_make_pyomo_dict(cost_k3k5p7tva1e1b1nwzida0e0b0xyg3, arrays_k3k5p7tvnwziaxyg3)
+    params['p_cost_offs'] = fun.f1_make_pyomo_dict(cost_p7k3k5tva1e1b1nwzida0e0b0xyg3, arrays_p7k3k5tvnwziaxyg3)
 
     ##purchase cost
     ###purchcost - sire
@@ -10332,20 +10368,20 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##asset value - take slice a5[0] to get the asset value at the cashflow date
     ###sire
-    params['p_assetvalue_sire'] = fun.f1_make_pyomo_dict(assetvalue_a5p7tva1e1b1nwzida0e0b0xyg0[0], arrays_p7zg0)
+    params['p_assetvalue_sire'] = fun.f1_make_pyomo_dict(assetvalue_a5p7qtva1e1b1nwzida0e0b0xyg0[0], arrays_p7qzg0)
     ###dams
-    params['p_assetvalue_dams'] = fun.f1_make_pyomo_dict(assetvalue_a5k2p7tva1e1b1nwzida0e0b0xyg1[0], arrays_k2p7tvanwziyg1)
+    params['p_assetvalue_dams'] = fun.f1_make_pyomo_dict(assetvalue_a5p7qk2tva1e1b1nwzida0e0b0xyg1[0], arrays_p7qk2tvanwziyg1)
     ###offs
-    params['p_assetvalue_offs'] = fun.f1_make_pyomo_dict(assetvalue_a5k3k5p7tva1e1b1nwzida0e0b0xyg3[0], arrays_k3k5p7tvnwziaxyg3)
+    params['p_assetvalue_offs'] = fun.f1_make_pyomo_dict(assetvalue_a5p7qk3k5tva1e1b1nwzida0e0b0xyg3[0], arrays_p7qk3k5tvnwziaxyg3)
 
     ##trade value
     ## a5[1] start of season & a5[2] end of season.
     ###sire
-    params['p_tradevalue_p7zg0'] = fun.f1_make_pyomo_dict(assetvalue_p7tva1e1b1nwzida0e0b0xyg0, arrays_p7zg0)
+    params['p_tradevalue_p7qzg0'] = fun.f1_make_pyomo_dict(tradevalue_p7qtva1e1b1nwzida0e0b0xyg0, arrays_p7qzg0)
     ###dams
-    params['p_tradevalue_k2p7tva1nwziyg1'] = fun.f1_make_pyomo_dict(assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1, arrays_k2p7tvanwziyg1)
+    params['p_tradevalue_p7qk2tva1nwziyg1'] = fun.f1_make_pyomo_dict(tradevalue_p7qk2tva1e1b1nwzida0e0b0xyg1, arrays_p7qk2tvanwziyg1)
     ###offs
-    params['p_tradevalue_k3k5p7tvnwziaxyg3'] = fun.f1_make_pyomo_dict(assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3, arrays_k3k5p7tvnwziaxyg3)
+    params['p_tradevalue_p7qk3k5tvnwziaxyg3'] = fun.f1_make_pyomo_dict(tradevalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3, arrays_p7qk3k5tvnwziaxyg3)
 
     ##labour
     ###anyone labour - sire
@@ -10405,6 +10441,56 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     params['p_parentz_provwithin_offs'] = fun.f1_make_pyomo_dict(mask_provwithinz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9, arrays_k3vz8xg3z9)
     ###offs prov between
     params['p_parentz_provbetween_offs'] = fun.f1_make_pyomo_dict(mask_provbetweenz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9, arrays_k3vz8xg3z9)
+
+    ##stuff for MP model
+    arrays_vzg1 = [keys_v1, keys_z, keys_g1]
+    arrays_k3vzxg3 = [keys_k3, keys_v3, keys_z, keys_x, keys_g3]
+    arrays_k3zg2 = [keys_k3, keys_z, keys_g2]
+
+    ###identify which dvps fall in the first season period (this is when management in the MP must still be constrained)
+    ### if there is only one node (i.e. no partial bnds because conditions change at the same time as management) this should return False.
+    idx_zidaebxygm = np.searchsorted(date_start_P, date_node_zidaebxygm, 'left')  # use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
+    date_node_zidaebxygm = date_start_P[idx_zidaebxygm]
+    ####dams
+
+    dvp_is_node1_va1e1b1nwzida0e0b0xyg1 = np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0,...] % 364 >= date_node_zidaebxygm[...,0],
+                                                         dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0,...] % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)]) #remove e axis because e wont make a big difference to dvp dates so it shouldnt change the result.
+    #####handle cases where node[0] is later in the year than node[1] (this can happen in MP model).
+    case2_dvp_is_node1_va1e1b1nwzida0e0b0xyg1 = np.logical_or(np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0,...] % 364 >= date_node_zidaebxygm[...,0] - 364,
+                                                                             dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0,...] % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)]),
+                                                              np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg1[:, :, 0, ...] % 364 >= date_node_zidaebxygm[..., 0],
+                                                                             dvp_start_va1e1b1nwzida0e0b0xyg1[:,:,0,...] % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)] + 364)) #remove e axis because e wont make a big difference to dvp dates so it shouldnt change the result.
+    dvp_is_node1_va1e1b1nwzida0e0b0xyg1 = fun.f_update(dvp_is_node1_va1e1b1nwzida0e0b0xyg1, case2_dvp_is_node1_va1e1b1nwzida0e0b0xyg1, date_node_zidaebxygm[...,0]>date_node_zidaebxygm[...,min(1, len_p7-1)])
+    params['p_dvp_is_node1_vzg1'] = fun.f1_make_pyomo_dict(dvp_is_node1_va1e1b1nwzida0e0b0xyg1, arrays_vzg1)
+    ####offs
+    dvp_is_node1_va1e1b1nwzida0e0b0xyg3 = np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 >= date_node_zidaebxygm[...,0],
+                                                         dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)])
+    #####handle cases where node[0] is later in the year than node[1] (this can happen in MP model).
+    case2_dvp_is_node1_va1e1b1nwzida0e0b0xyg3 = np.logical_or(np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 >= date_node_zidaebxygm[...,0] - 364,
+                                                                             dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)]),
+                                                              np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 >= date_node_zidaebxygm[..., 0],
+                                                                             dvp_start_va1e1b1nwzida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)] + 364)) #remove e axis because e wont make a big difference to dvp dates so it shouldnt change the result.
+    dvp_is_node1_va1e1b1nwzida0e0b0xyg3 = fun.f_update(dvp_is_node1_va1e1b1nwzida0e0b0xyg3, case2_dvp_is_node1_va1e1b1nwzida0e0b0xyg3, date_node_zidaebxygm[...,0]>date_node_zidaebxygm[...,min(1, len_p7-1)])
+    #####cluster d (d axis is active from the dvp dates)
+    dvp_is_node1_k3k5tva1e1b1nwzida0e0b0xyg3 = 1 * (np.sum(dvp_is_node1_va1e1b1nwzida0e0b0xyg3
+                                                               * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
+                                                               axis=d_pos, keepdims=True) > 0)
+    params['p_dvp_is_node1_k3vzxg3'] = fun.f1_make_pyomo_dict(dvp_is_node1_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3vzxg3)
+    ###prog - check if prog are weaned in the first season period (if so then sale at weaning in the MP model must match the base SE management).
+    wean_is_node1_zida0e0b0xyg2 = np.logical_and(date_weaned_ida0e0b0xyg3 % 364 >= date_node_zidaebxygm[...,0],
+                                                date_weaned_ida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)]) #use off weaning date because that is the same as prog except it has d axis instead of o axis.
+    #####handle cases where node[0] is later in the year than node[1] (this can happen in MP model).
+    case2_wean_is_node1_zida0e0b0xyg2 = np.logical_or(np.logical_and(date_weaned_ida0e0b0xyg3 % 364 >= date_node_zidaebxygm[...,0] - 364,
+                                                                             date_weaned_ida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)]),
+                                                              np.logical_and(date_weaned_ida0e0b0xyg3 % 364 >= date_node_zidaebxygm[..., 0],
+                                                                             date_weaned_ida0e0b0xyg3 % 364 < date_node_zidaebxygm[..., min(1, len_p7-1)] + 364)) #remove e axis because e wont make a big difference to dvp dates so it shouldnt change the result.
+    wean_is_node1_zida0e0b0xyg2 = fun.f_update(wean_is_node1_zida0e0b0xyg2, case2_wean_is_node1_zida0e0b0xyg2, date_node_zidaebxygm[...,0]>date_node_zidaebxygm[...,min(1, len_p7-1)])
+    #####cluster d (d axis is active from the dvp dates)
+    wean_is_node1_k3k5tva1e1b1nwzida0e0b0xyg3 = 1 * (np.sum(wean_is_node1_zida0e0b0xyg2
+                                                               * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
+                                                               axis=d_pos, keepdims=True) > 0)
+    params['p_dvp_is_node1_k3zg2'] = fun.f1_make_pyomo_dict(wean_is_node1_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3zg2)
+
 
 
 
@@ -10574,6 +10660,55 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     arrays_k3txg2 = [keys_k3, keys_t2, keys_x, keys_g2]
     params['p_prog_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_prog_k3k5tva1e1b1nwzida0e0b0xyg2, arrays_k3txg2)
 
+    ##lw bnd at the end of the first season node - used to force the MP model to lose/gain weight
+    ## we are assuming that the base w pattern (nut spread 0) is the farmers normal pattern.
+    ## They can enter the current condition of their stock compared to normal and then AFO makes a bnd that forces the model to
+    ## select animals in w slices that results in the same lw change as experienced on farm.
+    if sen.sav['bnd_lw_change'] != '-':
+        user_lw_change =  fun.f_sa(0, sen.sav['bnd_lw_change'], 5)
+        nextperiod_is_startnode2_pa1e1b1nwzida0e0b0xyg = np.roll(date_start_pa1e1b1nwzida0e0b0xyg % 364 == date_node_zidaebxygm[..., -1],-1,axis=0)
+        ###get the lw at the end of first season node (in the MP model this is the current point in time) - number not required for ffcfw
+        ffcfw_end_dvp_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=nextperiod_is_startnode2_pa1e1b1nwzida0e0b0xyg,
+                                                            on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1)
+        ffcfw_end_dvp_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startnode2_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],
+                                                            on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3)
+
+        ffcfw_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', ffcfw_end_dvp_tva1e1b1nwzida0e0b0xyg1
+                                                                          , a_k2cluster_va1e1b1nwzida0e0b0xyg1
+                                                                          , index_k2tva1e1b1nwzida0e0b0xyg1)
+        ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', ffcfw_end_dvp_tva1e1b1nwzida0e0b0xyg3
+                                                                            , a_k3cluster_da0e0b0xyg3
+                                                                            , index_k3k5tva1e1b1nwzida0e0b0xyg3
+                                                                            , a_k5cluster_da0e0b0xyg3
+                                                                            , index_k5tva1e1b1nwzida0e0b0xyg3)
+        ###calc weight difference of each w slice from the base w slice
+        a_wbase_w1 = (len_nut_dams * np.floor(index_w1 / len_nut_dams)).astype(int) #identify the base w slice (nut 0) for each w
+        a_wbase_w3 = (len_nut_offs * np.floor(index_w3 / len_nut_offs)).astype(int) #identify the base w slice (nut 0) for each w
+        base_ffcfw_k2tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(ffcfw_k2tva1e1b1nwzida0e0b0xyg1, a_wbase_w1[na,na,na,na,na,na,na,:,na,na,na,na,na,na,na,na,na], axis=w_pos)
+        base_ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3, a_wbase_w3[na,na,na,na,na,na,na,na,:,na,na,na,na,na,na,na,na,na], axis=w_pos)
+        lw_diff_from_base_k2tva1e1b1nwzida0e0b0xyg1 = ffcfw_k2tva1e1b1nwzida0e0b0xyg1 - base_ffcfw_k2tva1e1b1nwzida0e0b0xyg1
+        lw_diff_from_base_k3k5tva1e1b1nwzida0e0b0xyg3 = ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3 - base_ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3
+        ###clip the user_lw_change to stop it being more than the maximum spread between w slices to stop the model being infeasible.
+        ### this has to be done for each starting weight because lw_diff_from_base can vary a bit based on starting w.
+        ####add starting weight axis - this gets removed in the next step when taking the min or max.
+        lw_diff_from_base_k2tva1e1b1nswzida0e0b0xyg1 = fun.f_split_axis(lw_diff_from_base_k2tva1e1b1nwzida0e0b0xyg1, w_start_len1, w_pos)
+        lw_diff_from_base_k3k5tva1e1b1nswzida0e0b0xyg3 = fun.f_split_axis(lw_diff_from_base_k3k5tva1e1b1nwzida0e0b0xyg3, w_start_len3, w_pos)
+        if user_lw_change > 0:
+            user_lw_change_k2tva1e1b1nszida0e0b0xyg1 = np.minimum(user_lw_change, np.max(lw_diff_from_base_k2tva1e1b1nswzida0e0b0xyg1, axis=w_pos))
+            user_lw_change_k3k5tva1e1b1nszida0e0b0xyg3 = np.minimum(user_lw_change, np.max(lw_diff_from_base_k3k5tva1e1b1nswzida0e0b0xyg3, axis=w_pos))
+        else:
+            user_lw_change_k2tva1e1b1nszida0e0b0xyg1 = np.maximum(user_lw_change, np.min(lw_diff_from_base_k2tva1e1b1nswzida0e0b0xyg1, axis=w_pos))
+            user_lw_change_k3k5tva1e1b1nszida0e0b0xyg3 = np.maximum(user_lw_change, np.min(lw_diff_from_base_k3k5tva1e1b1nswzida0e0b0xyg3, axis=w_pos))
+        ####expand start w axis back to the full w axis
+        a_wstart_w1 = np.floor(index_w1 / len_nut_dams).astype(int) #identify the start w slice (nut 0) for each w
+        a_wstart_w3 = np.floor(index_w3 / len_nut_offs).astype(int) #identify the start w slice (nut 0) for each w
+        user_lw_change_k2tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(user_lw_change_k2tva1e1b1nszida0e0b0xyg1, a_wstart_w1[na,na,na,na,na,na,na,:,na,na,na,na,na,na,na,na,na], axis=w_pos)
+        user_lw_change_k3k5tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(user_lw_change_k3k5tva1e1b1nszida0e0b0xyg3, a_wstart_w3[na,na,na,na,na,na,na,na,:,na,na,na,na,na,na,na,na,na], axis=w_pos)
+        ###make the param for the bnd - difference between target lw change and lw change of each w slice (this gets bnd to 0)
+        p_lw_diff_from_target_k2tva1e1b1nwzida0e0b0xyg1 = np.round(lw_diff_from_base_k2tva1e1b1nwzida0e0b0xyg1 - user_lw_change_k2tva1e1b1nwzida0e0b0xyg1, 1) #need to round because there are cases where ffcfw that should be the same are slightly different
+        p_lw_diff_from_target_k3k5tva1e1b1nwzida0e0b0xyg3 = np.round(lw_diff_from_base_k3k5tva1e1b1nwzida0e0b0xyg3 - user_lw_change_k3k5tva1e1b1nwzida0e0b0xyg3, 1) #need to round because there are cases where ffcfw that should be the same are slightly different
+        params['p_lw_diff_from_target_k2tva1nwziyg1'] = fun.f1_make_pyomo_dict(p_lw_diff_from_target_k2tva1e1b1nwzida0e0b0xyg1, arrays_k2tva1nwziyg1)
+        params['p_lw_diff_from_target_k3k5tvnwziaxyg3'] = fun.f1_make_pyomo_dict(p_lw_diff_from_target_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3k5tvnwziaxyg3)
 
 
 
@@ -10646,8 +10781,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                              , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tvanwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_year_dams, keys_v1, keys_a, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2tyvanwziy1g1')
-    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
-                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qsk2p7tvanwziy1g1')
+    fun.f1_make_r_val(r_vals,[keys_p7, keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
+                                             , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_p7qsk2tvanwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_s7, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1],'dams_keys_qss7k2tvanwziy1g1')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b9, keys_n1, keys_lw1
@@ -10676,16 +10811,16 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                             , keys_a, keys_x, keys_g2],'prog_keys_qsk3k5twzia0xg2')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d
                                             , keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g2],'prog_keys_qsk3k5twzida0e0b0xyg2')
-    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p7, keys_t2, keys_lw_prog, keys_z, keys_i
-                                            , keys_a, keys_x, keys_g2],'prog_keys_qsk3k5p7twzia0xg2')
+    fun.f1_make_r_val(r_vals,[keys_p7, keys_q, keys_s, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i
+                                            , keys_a, keys_x, keys_g2],'prog_keys_p7qsk3k5twzia0xg2')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_s7, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i
                                             , keys_a, keys_x, keys_g2],'prog_keys_qss7k3k5twzia0xg2')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
                                             , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tvnwziaxyg3')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_year_offs, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
                                             , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5tyvnwziaxyg3')
-    fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
-                                            , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qsk3k5p7tvnwziaxyg3')
+    fun.f1_make_r_val(r_vals,[keys_p7, keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
+                                            , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_p7qsk3k5tvnwziaxyg3')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_s7, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
                                             , keys_a, keys_x, keys_y3, keys_g3],'offs_keys_qss7k3k5tvnwziaxyg3')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
@@ -10760,9 +10895,15 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ####cg
     p7zg0_shape = len_p7, len_z, len_g0
-    k2p7tva1nwziyg1_shape = len_k2, len_p7, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    k3k5p7twziaxyg2_shape = len_k3, len_k5, len_p7, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
-    k3k5p7tvnwziaxyg3_shape = len_k3, len_k5, len_p7, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
+    p7k2tva1nwziyg1_shape = len_p7, len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    p7k3k5twziaxyg2_shape = len_p7, len_k3, len_k5, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
+    p7k3k5tvnwziaxyg3_shape = len_p7, len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
+
+    ####p7qg - cashflow
+    p7qzg0_shape = len_p7, len_q, len_z, len_g0
+    p7qk2tva1nwziyg1_shape = len_p7, len_q, len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    p7qk3k5twziaxyg2_shape = len_p7, len_q, len_k3, len_k5, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
+    p7qk3k5tvnwziaxyg3_shape = len_p7, len_q, len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####s7
     s7k2tva1nwziyg1_shape = len_s7, len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
@@ -10810,27 +10951,27 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ###cashflow
     fun.f1_make_r_val(r_vals,cost_p7tva1e1b1nwzida0e0b0xyg0,'sire_cost_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
-    fun.f1_make_r_val(r_vals,cost_k2p7tva1e1b1nwzida0e0b0xyg1,'dams_cost_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
-    fun.f1_make_r_val(r_vals,cost_k3k5p7tva1e1b1nwzida0e0b0xyg3,'offs_cost_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,cost_p7k2tva1e1b1nwzida0e0b0xyg1,'dams_cost_p7k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, p7k2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,cost_p7k3k5tva1e1b1nwzida0e0b0xyg3,'offs_cost_p7k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, p7k3k5tvnwziaxyg3_shape)
 
-    fun.f1_make_r_val(r_vals,r_salevalue_p7tva1e1b1nwzida0e0b0xyg0,'salevalue_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
-    fun.f1_make_r_val(r_vals,r_salevalue_k2p7tva1e1b1nwzida0e0b0xyg1,'salevalue_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
-    fun.f1_make_r_val(r_vals,r_salevalue_prog_k3k5p7tva1e1b1nwzida0e0b0xyg2,'salevalue_k3k5p7twzia0xg2',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, k3k5p7twziaxyg2_shape)
-    fun.f1_make_r_val(r_vals,r_salevalue_k3k5p7tva1e1b1nwzida0e0b0xyg3,'salevalue_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,r_salevalue_p7qtva1e1b1nwzida0e0b0xyg0,'salevalue_p7qzg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg[:,na,...],z_pos, p7qzg0_shape)
+    fun.f1_make_r_val(r_vals,r_salevalue_p7qk2tva1e1b1nwzida0e0b0xyg1,'salevalue_p7qk2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, p7qk2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_salevalue_prog_p7qk3k5tva1e1b1nwzida0e0b0xyg2,'salevalue_p7qk3k5twzia0xg2',mask_z8var_p7tva1e1b1nwzida0e0b0xyg[:,na,na,na,...],z_pos, p7qk3k5twziaxyg2_shape)
+    fun.f1_make_r_val(r_vals,r_salevalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3,'salevalue_p7qk3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, p7qk3k5tvnwziaxyg3_shape)
 
-    fun.f1_make_r_val(r_vals,r_woolvalue_p7tva1e1b1nwzida0e0b0xyg0,'woolvalue_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
-    fun.f1_make_r_val(r_vals,r_woolvalue_k2p7tva1e1b1nwzida0e0b0xyg1,'woolvalue_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
-    fun.f1_make_r_val(r_vals,r_woolvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3,'woolvalue_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,r_woolvalue_p7qtva1e1b1nwzida0e0b0xyg0,'woolvalue_p7qzg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg[:,na,...],z_pos, p7qzg0_shape)
+    fun.f1_make_r_val(r_vals,r_woolvalue_p7qk2tva1e1b1nwzida0e0b0xyg1,'woolvalue_p7qk2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, p7qk2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_woolvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3,'woolvalue_p7qk3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, p7qk3k5tvnwziaxyg3_shape)
 
     fun.f1_make_r_val(r_vals,rm_stockinfra_fix_p7z,'rm_stockinfra_fix_p7z',mask_season_p7z,z_pos=-1)
 
     ###asset value used in pnl report to track changes in stock on hand because different z could sell at different time. e.g. if z0 retains but z3 sells z3 will look more profitable even though it is not.
-    fun.f1_make_r_val(r_vals,start_assetvalue_p7tva1e1b1nwzida0e0b0xyg0,'assetvalue_startseason_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
-    fun.f1_make_r_val(r_vals,end_assetvalue_p7tva1e1b1nwzida0e0b0xyg0,'assetvalue_endseason_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)
-    fun.f1_make_r_val(r_vals,start_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1,'assetvalue_startseason_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
-    fun.f1_make_r_val(r_vals,end_assetvalue_k2p7tva1e1b1nwzida0e0b0xyg1,'assetvalue_endseason_k2p7tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],z_pos, k2p7tva1nwziyg1_shape)
-    fun.f1_make_r_val(r_vals,start_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3,'assetvalue_startseason_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
-    fun.f1_make_r_val(r_vals,end_assetvalue_k3k5p7tva1e1b1nwzida0e0b0xyg3,'assetvalue_endseason_k3k5p7tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],z_pos, k3k5p7tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,start_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0,'assetvalue_startseason_p7qzg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg[:,na,...],z_pos, p7qzg0_shape)
+    fun.f1_make_r_val(r_vals,end_assetvalue_p7qtva1e1b1nwzida0e0b0xyg0,'assetvalue_endseason_p7qzg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg[:,na,...],z_pos, p7qzg0_shape)
+    fun.f1_make_r_val(r_vals,start_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1,'assetvalue_startseason_p7qk2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, p7qk2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,end_assetvalue_p7qk2tva1e1b1nwzida0e0b0xyg1,'assetvalue_endseason_p7qk2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, p7qk2tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,start_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3,'assetvalue_startseason_p7qk3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, p7qk3k5tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,end_assetvalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3,'assetvalue_endseason_p7qk3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, p7qk3k5tvnwziaxyg3_shape)
 
     ###purchase costs
     fun.f1_make_r_val(r_vals,purchcost_p7tva1e1b1nwzida0e0b0xyg0,'purchcost_sire_p7zg0',mask_z8var_p7tva1e1b1nwzida0e0b0xyg,z_pos, p7zg0_shape)

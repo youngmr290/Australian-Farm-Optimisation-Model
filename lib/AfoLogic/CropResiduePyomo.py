@@ -8,7 +8,7 @@ import pyomo.environ as pe
 
 #AFO modules
 from . import CropResidue as stub
-from . import PropertyInputs as pinp
+from . import StructuralInputs as sinp
 
 def stub_precalcs(params, r_vals, nv, cat_propn_s1_ks2):
     '''
@@ -22,7 +22,7 @@ def stub_precalcs(params, r_vals, nv, cat_propn_s1_ks2):
     
     
     
-def f1_stubpyomo_local(params, model):
+def f1_stubpyomo_local(params, model, MP_lp_vars):
     ''' Builds pyomo variables, parameters and constraints'''
     ###################
     # variable         #
@@ -91,7 +91,7 @@ def f1_stubpyomo_local(params, model):
     #call local constraint #
     ########################
     f_con_cropresidue_within(model)
-    f_con_cropresidue_between(model)
+    f_con_cropresidue_between(model, MP_lp_vars)
 
 
 
@@ -123,7 +123,7 @@ def f_con_cropresidue_within(model):
                                              model.s_crops, model.s_stub_cat, model.s_biomass_uses, rule=cropresidue_transfer_within, doc='stubble transfer between feed periods and stubble transfer between categories.')
 
 
-def f_con_cropresidue_between(model):
+def f_con_cropresidue_between(model, MP_lp_vars):
     ''' Links the consumption of a given category with the provision of another category, or the transfer of
     stubble to the following period. E.g. category A consumption provides category B. Category B can either be
     consumed (hence providing category C) or transferred to the following period.
@@ -131,11 +131,29 @@ def f_con_cropresidue_between(model):
     ##stubble transfer from category to category and period to period
     ##s2 required because cat propn can vary across s2
     def cropresidue_transfer_between(model,q,s9,p6,z9,k,sc,s2):
+        sc_prev = list(model.s_stub_cat)[list(model.s_stub_cat).index(sc)-1] #previous stubble cat - used to transfer from current cat to the next, list is required because indexing of an ordered set starts at 1 which means index of 0 chucks error
+        p6_prev = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6)-1] #have to convert to a list first because indexing of an ordered set starts at 1
+        l_q = list(model.s_sequence_year_between_con)
+        ###adjust q_prev for multi-period model
+        if sinp.structuralsa['model_is_MP']:
+            ####yr0 is SE so q_prev is q
+            if q == l_q[0]:
+                q_prev = q
+                v_stub_transfer_hist = MP_lp_vars[str('v_stub_transfer')]  # q[0] is provided by the MP set up run.
+            ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
+            elif q == l_q[-1]:
+                q = l_q[l_q.index(q) - 1]
+                q_prev = q
+                v_stub_transfer_hist = model.v_stub_transfer
+            else:
+                q_prev = l_q[l_q.index(q) - 1]
+                v_stub_transfer_hist = model.v_stub_transfer
+        else:
+            q_prev = l_q[l_q.index(q) - 1]
+            v_stub_transfer_hist = model.v_stub_transfer
+
         if pe.value(model.p_mask_childz_between_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_stub_transfer_req[p6,z9,k]): #p_stub_transfer_req included to remove constraints when stubble doesn't exist
-            sc_prev = list(model.s_stub_cat)[list(model.s_stub_cat).index(sc)-1] #previous stubble cat - used to transfer from current cat to the next, list is required because indexing of an ordered set starts at 1 which means index of 0 chucks error
-            p6_prev = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6)-1] #have to convert to a list first because indexing of an ordered set starts at 1
-            q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
-            return  - sum(model.v_stub_transfer[q_prev,s8,z8,p6_prev,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
+            return  - sum(v_stub_transfer_hist[q_prev,s8,z8,p6_prev,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
                           * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
                           * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
                           for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)  \
@@ -147,7 +165,7 @@ def f_con_cropresidue_between(model):
                           for f in model.s_feed_pools) <=0
         else:
             return pe.Constraint.Skip
-    model.con_cropresidue_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods, model.s_season_types,
+    model.con_cropresidue_between = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_feed_periods, model.s_season_types,
                                               model.s_crops, model.s_stub_cat, model.s_biomass_uses, rule=cropresidue_transfer_between, doc='stubble transfer between feed periods and stubble transfer between categories.')
 
 

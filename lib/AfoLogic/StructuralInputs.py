@@ -75,6 +75,10 @@ def f_structural_inp_sa(sinp_defaults):
     from . import Sensitivity as sen
 
     ##SAV
+    structuralsa['steady_state'] = fun.f_sa(structuralsa['steady_state'], sen.sav['steady_state'], 5)
+    structuralsa['i_inc_node_periods'] = fun.f_sa(structuralsa['i_inc_node_periods'], sen.sav['inc_node_periods'], 5)
+    structuralsa['i_len_q'] = fun.f_sa(structuralsa['i_len_q'], sen.sav['seq_len'], 5)
+    structuralsa['model_is_MP'] = fun.f_sa(structuralsa['model_is_MP'], sen.sav['model_is_MP'], 5)
     structuralsa['i_nut_spread_n1'] = fun.f_sa(structuralsa['i_nut_spread_n1'], sen.sav['nut_spread_n1'],5)
     structuralsa['i_confinement_n1'] = fun.f_sa(structuralsa['i_confinement_n1'], sen.sav['confinement_n1'],5)
     structuralsa['i_nut_spread_n3'] = fun.f_sa(structuralsa['i_nut_spread_n3'], sen.sav['nut_spread_n3'],5)
@@ -82,6 +86,7 @@ def f_structural_inp_sa(sinp_defaults):
     structuralsa['i_n1_len'] = fun.f_sa(structuralsa['i_n1_len'], sen.sav['n_fs_dams'],5)
     structuralsa['i_n3_len'] = fun.f_sa(structuralsa['i_n3_len'], sen.sav['n_fs_offs'],5)
     structuralsa['i_w_start_len1'] = fun.f_sa(structuralsa['i_w_start_len1'], sen.sav['n_initial_lw_dams'],5)
+    structuralsa['i_w_start_len3'] = fun.f_sa(structuralsa['i_w_start_len3'], sen.sav['n_initial_lw_offs'],5)
     structuralsa['i_adjp_lw_initial_w1'] = fun.f_sa(structuralsa['i_adjp_lw_initial_w1'], sen.sav['adjp_lw_initial_w1'],5)
     structuralsa['i_adjp_cfw_initial_w1'] = fun.f_sa(structuralsa['i_adjp_cfw_initial_w1'], sen.sav['adjp_cfw_initial_w1'],5)
     structuralsa['i_adjp_fd_initial_w1'] = fun.f_sa(structuralsa['i_adjp_fd_initial_w1'], sen.sav['adjp_fd_initial_w1'],5)
@@ -162,6 +167,7 @@ def f_landuse_sets():
                     , 's'
                     , 'sp'
                     , 'm'
+                    , 'ms'
                     , 'u'
                     , 'x'
                     , 'j', 't'
@@ -170,10 +176,11 @@ def f_landuse_sets():
                     , 'S', 'S1'
                     , 'SP'
                     , 'M'
+                    , 'MS'
                     , 'U'
                     , 'X'
                     , 'T', 'J'} #all landuses
-    landuse['C1']={'C1','B','O','O1','W', 'N', 'K', 'L', 'F', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
+    landuse['C1']={'C1','B','O','O1','W', 'N', 'K', 'L', 'MS', 'F', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'ms', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
     landuse['P']={'P','K','L', 'F', 'f','i', 'k', 'l', 'v'} #pulses
     landuse['E']={'E','B','O','O1','W', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd'} #cereals
     landuse['Ag0']={'a', 'a2', 's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
@@ -202,6 +209,7 @@ def f_landuse_sets():
     landuse['J']={'J', 'j'} #tedera
     landuse['K']={'K', 'k'} #chic pea
     landuse['M']={'m', 'M'} #manipulated pasture
+    landuse['MS']={'ms', 'MS'} #mixed species land use
     landuse['N']={'N', 'z', 'zd', 'r', 'rd'} #canolas
     landuse['O1']={'O1', 'h', 'o', 'od'} #oats - only in yr1 doesnt include foder
     landuse['O']={'O', 'O1', 'OF', 'h', 'o', 'od', 'of'} #oats
@@ -214,8 +222,8 @@ def f_landuse_sets():
     landuse['W']={'W', 'w', 'wd'} #wheats
     landuse['U']={'u', 'U','x', 'X'} #lucerne
     landuse['X']={'x', 'X'} #lucerne
-    landuse['Y']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'
-                    , 'Y', 'B','O','W', 'N', 'K', 'L', 'F', 'OF'} #anything not pasture
+    landuse['Y']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'ms', 'v', 'z', 'zd', 'r', 'rd'
+                    , 'Y', 'B','O','W', 'N', 'K', 'L', 'MS', 'F', 'OF'} #anything not pasture
 
     landuse['a']={'a'}
     landuse['b']={'b'}
@@ -228,6 +236,7 @@ def f_landuse_sets():
     landuse['k']={'k'}
     landuse['l']={'l'}
     landuse['m']={'m'}
+    landuse['ms']={'ms'}
     landuse['o']={'o'}
     landuse['od']={'od'}
     landuse['of']={'of'}

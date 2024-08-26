@@ -62,11 +62,11 @@ def f_pasture(params, r_vals, nv):
     n_phases_rotn   = len(phases_rotn_df.index)
     n_pasture_types = len(pastures)   #^ need to sort timing of the definition of pastures
     # n_total_seasons = len(pinp.general['i_mask_z']) #used to reshape inputs
-    if pinp.general['steady_state']:
+    if sinp.structuralsa['steady_state']:
         n_season_types = 1
     else:
         n_season_types = np.count_nonzero(pinp.general['i_mask_z'])
-
+    len_q = sinp.structuralsa['i_len_q']  # number of years in MP model
     index_p6 = np.arange(n_feed_periods)
 
     ## indexes required for advanced indexing
@@ -93,14 +93,15 @@ def f_pasture(params, r_vals, nv):
     gp6zt     = (n_grazing_int, n_feed_periods, n_season_types, n_pasture_types)
     gt      = (n_grazing_int, n_pasture_types)
     op6lzt   = (n_foo_levels, n_feed_periods, n_lmu, n_season_types, n_pasture_types)
+    qop6lzt   = (len_q, n_foo_levels, n_feed_periods, n_lmu, n_season_types, n_pasture_types)
     # dp6lrt   = (n_dry_groups, n_feed_periods, n_lmu, n_phases_rotn, n_pasture_types)
-    dp6lrzt  = (n_dry_groups, n_feed_periods, n_lmu, n_phases_rotn, n_season_types, n_pasture_types)
-    p6lrt    = (n_feed_periods, n_lmu, n_phases_rotn, n_pasture_types)
+    qdp6lrzt  = (len_q, n_dry_groups, n_feed_periods, n_lmu, n_phases_rotn, n_season_types, n_pasture_types)
+    # p6lrt    = (n_feed_periods, n_lmu, n_phases_rotn, n_pasture_types)
     p6lrzt   = (n_feed_periods, n_lmu, n_phases_rotn, n_season_types, n_pasture_types)
     # p6rt     = (n_feed_periods, n_phases_rotn, n_pasture_types)
     rt      = (n_phases_rotn, n_pasture_types)
     rzt      = (n_phases_rotn, n_season_types, n_pasture_types)
-    p6lt     = (n_feed_periods, n_lmu, n_pasture_types)
+    # p6lt     = (n_feed_periods, n_lmu, n_pasture_types)
     p6lzt    = (n_feed_periods, n_lmu, n_season_types, n_pasture_types)
     lt      = (n_lmu, n_pasture_types)
     lzt     = (n_lmu, n_season_types, n_pasture_types)
@@ -124,9 +125,9 @@ def f_pasture(params, r_vals, nv):
     i_foo_graze_propn_gt        = np.zeros(gt, dtype ='float64')        # proportion of available feed consumed for each grazing intensity level.
 
     i_fxg_foo_op6lzt             = np.zeros(op6lzt, dtype = 'float64')    # FOO level     for the FOO/growth/grazing variables.
-    i_fxg_pgr_op6lzt             = np.zeros(op6lzt, dtype = 'float64')    # PGR level     for the FOO/growth/grazing variables.
-    c_fxg_a_op6lzt               = np.zeros(op6lzt, dtype = 'float64')    # coefficient a for the FOO/growth/grazing variables. PGR = a + b FOO
-    c_fxg_b_op6lzt               = np.zeros(op6lzt, dtype = 'float64')    # coefficient b for the FOO/growth/grazing variables. PGR = a + b FOO
+    i_fxg_pgr_qop6lzt             = np.zeros(qop6lzt, dtype = 'float64')    # PGR level     for the FOO/growth/grazing variables.
+    c_fxg_a_qop6lzt               = np.zeros(qop6lzt, dtype = 'float64')    # coefficient a for the FOO/growth/grazing variables. PGR = a + b FOO
+    c_fxg_b_qop6lzt               = np.zeros(qop6lzt, dtype = 'float64')    # coefficient b for the FOO/growth/grazing variables. PGR = a + b FOO
     # c_fxg_ai_op6lt               = np.zeros(op6lt, dtype = 'float64')     # coefficient a for the FOO/growth/grazing variables. PGR = a + b FOO
     # c_fxg_bi_op6lt               = np.zeros(op6lt, dtype = 'float64')     # coefficient b for the FOO/growth/grazing variables. PGR = a + b FOO
 
@@ -196,6 +197,7 @@ def f_pasture(params, r_vals, nv):
     keys_r  = np.array(phases_rotn_df.index).astype('str')
     keys_t  = np.asarray(pastures)                                      # pasture type index description
     keys_k  = np.asarray(list(sinp.general['i_idx_k']))                     #landuse
+    keys_q = np.array(['q%s' % i for i in range(len_q)])
     keys_z  = zfun.f_keys_z()
 
     ### rt
@@ -204,21 +206,24 @@ def f_pasture(params, r_vals, nv):
     ### mp6lrzt
     arrays_p7p6lrzt=[keys_p7, keys_p6, keys_l, keys_r, keys_z, keys_t]
 
+    ### mp6lrzt
+    arrays_p7qp6lrzt=[keys_p7, keys_q, keys_p6, keys_l, keys_r, keys_z, keys_t]
+
     ### op6lzt
-    arrays_op6lzt=[keys_o, keys_p6, keys_l, keys_z, keys_t]
+    arrays_qop6lzt=[keys_q, keys_o, keys_p6, keys_l, keys_z, keys_t]
 
     ### gop6lzt
-    arrays_gop6lzt=[keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    arrays_qgop6lzt=[keys_q, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
 
     ### fgop6lzt
-    arrays_fgop6lzt=[keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    arrays_qfgop6lzt=[keys_q, keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
 
     ### dgop6lzt
-    arrays_dgop6lzt=[keys_d, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    arrays_qdgop6lzt=[keys_q, keys_d, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
 
     ### mdp6lrzt
-    arrays_p7dp6lrzt=[keys_p7, keys_d, keys_p6, keys_l, keys_r, keys_z, keys_t]
-    arrays_dp6lrzt=[keys_d, keys_p6, keys_l, keys_r, keys_z, keys_t]
+    arrays_p7qdp6lrzt=[keys_p7, keys_q, keys_d, keys_p6, keys_l, keys_r, keys_z, keys_t]
+    arrays_qp6lrzt=[keys_q, keys_p6, keys_l, keys_r, keys_z, keys_t]
 
     ### fdp6zt
     arrays_fdp6zt=[keys_f, keys_d, keys_p6, keys_z, keys_t]
@@ -303,9 +308,9 @@ def f_pasture(params, r_vals, nv):
         i_nv_maintenance_t[t]          = exceldata['MaintenanceNV']
         ## # i_fxg_foo_op6lt[-1,...] is calculated later and is the maximum foo that can be achieved (on that lmu in that period)
         ## # it is affected by sa on pgr so it must be calculated during the experiment where sam might be altered.
-        i_fxg_pgr_op6lzt[0,...,t]        = zfun.f_seasonal_inp(np.moveaxis(exceldata['LowPGR'],0,-1), numpy=True, axis=-1)
-        i_fxg_pgr_op6lzt[1,...,t]        = zfun.f_seasonal_inp(np.moveaxis(exceldata['MedPGR'],0,-1), numpy=True, axis=-1)
-        i_fxg_pgr_op6lzt[2,...,t]        = zfun.f_seasonal_inp(np.moveaxis(exceldata['MedPGR'],0,-1), numpy=True, axis=-1)  #PGR for high (last entry) is the same as PGR for medium
+        i_fxg_pgr_qop6lzt[:,0,...,t]        = zfun.f_seasonal_inp(np.moveaxis(exceldata['LowPGR'],0,-1), numpy=True, axis=-1)
+        i_fxg_pgr_qop6lzt[:,1,...,t]        = zfun.f_seasonal_inp(np.moveaxis(exceldata['MedPGR'],0,-1), numpy=True, axis=-1)
+        i_fxg_pgr_qop6lzt[:,2,...,t]        = zfun.f_seasonal_inp(np.moveaxis(exceldata['MedPGR'],0,-1), numpy=True, axis=-1)  #PGR for high (last entry) is the same as PGR for medium
         i_grn_dig_p6lzt[...,t]           = zfun.f_seasonal_inp(np.moveaxis(exceldata['DigGrn'],0,-1), numpy=True, axis=-1)  # numpy array of inputs for green pasture digestibility on each LMU.
         i_soil_production_lzt[...,t]           = zfun.f_seasonal_inp(exceldata['i_soil_production_zl'], numpy=True, axis=0).T  # numpy array of inputs for green pasture digestibility on each LMU.
 
@@ -331,6 +336,10 @@ def f_pasture(params, r_vals, nv):
     RBG_t = uinp.emissions['i_RBG_t'][pinp.general['pas_inc_t']]  # below ground-residue to above ground residue ratio
     NCAG_t = uinp.emissions['i_NCAG_t'][pinp.general['pas_inc_t']]  # nitrogen content of above-ground crop residue
     NCBG_t = uinp.emissions['i_NCBG_t'][pinp.general['pas_inc_t']]  # nitrogen content of below-ground crop residue
+
+    ##scale pasture production for q (sequence year) for MP model. version 1: all pasture types scaled the same.
+    q_pgr_scalar_qp6 = sen.sam['q_pgr_scalar_Qp6'][0:len_q,:]  # have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
+    i_fxg_pgr_qop6lzt = i_fxg_pgr_qop6lzt * q_pgr_scalar_qp6[:,na,:,na,na,na]
 
     ##create dry and green pasture exists mask
     ##in the late brk season dry feed can occur in fp0&1.
@@ -362,17 +371,17 @@ def f_pasture(params, r_vals, nv):
     ###dry transfer required is the amount of dry feed required in the current period to transfer into the next period (1000 mask by dry exists)
     dry_transfer_req_t_p6zt = 1000 * mask_dryfeed_exists_p6zt #this parameter exists so that the constraint wont be built for fp when no dry feed exists.
 
-    ###adjust pgr for loil by weather-year scalar - this accounts for the fact that relativesoil production can vary due to weather-year
-    i_fxg_pgr_op6lzt = i_fxg_pgr_op6lzt * i_soil_production_lzt
+    ###adjust pgr for soil by weather-year scalar - this accounts for the fact that relativesoil production can vary due to weather-year
+    i_fxg_pgr_qop6lzt = i_fxg_pgr_qop6lzt * i_soil_production_lzt
     ###create equation coefficients for pgr = a+b*foo
     i_fxg_foo_op6lzt[2,...]  = 100000 #large number so that the np.searchsorted doesn't go above
-    c_fxg_b_op6lzt[0,...] =  fun.f_divide(i_fxg_pgr_op6lzt[0,...], i_fxg_foo_op6lzt[0,...])
-    c_fxg_b_op6lzt[1,...] =   fun.f_divide((i_fxg_pgr_op6lzt[1,...] - i_fxg_pgr_op6lzt[0,...])
+    c_fxg_b_qop6lzt[:,0,...] =  fun.f_divide(i_fxg_pgr_qop6lzt[:,0,...], i_fxg_foo_op6lzt[0,...])
+    c_fxg_b_qop6lzt[:,1,...] =   fun.f_divide((i_fxg_pgr_qop6lzt[:,1,...] - i_fxg_pgr_qop6lzt[:,0,...])
                             , (i_fxg_foo_op6lzt[1,...] - i_fxg_foo_op6lzt[0,...]))
-    c_fxg_b_op6lzt[2,...] =  0
-    c_fxg_a_op6lzt[0,...] =  0
-    c_fxg_a_op6lzt[1,...] =  i_fxg_pgr_op6lzt[0,...] - c_fxg_b_op6lzt[1,...] * i_fxg_foo_op6lzt[0,...]
-    c_fxg_a_op6lzt[2,...] =  i_fxg_pgr_op6lzt[1,...] # because slope = 0
+    c_fxg_b_qop6lzt[:,2,...] =  0
+    c_fxg_a_qop6lzt[:,0,...] =  0
+    c_fxg_a_qop6lzt[:,1,...] =  i_fxg_pgr_qop6lzt[:,0,...] - c_fxg_b_qop6lzt[:,1,...] * i_fxg_foo_op6lzt[0,...]
+    c_fxg_a_qop6lzt[:,2,...] =  i_fxg_pgr_qop6lzt[:,1,...] # because slope = 0
 
     ## proportion of start foo that senesces during the period, different formula than excel
     grn_senesce_startfoo_p6zt = 1 - ((1 - i_grn_senesce_daily_p6zt) **  length_p6z[...,na])
@@ -411,11 +420,11 @@ def f_pasture(params, r_vals, nv):
         pasture_landuses = list(sinp.landuse['pasture_sets'][pasture])
         landuse_is_pas_k = np.in1d(keys_k, pasture_landuses)  #if landuse is a pasture
         resown_rt[:,t] = np.sum(landuse_is_pas_k * a_k_rk, axis=-1) * seeding_freq_r
-    foo_grn_reseeding_p6lrzt, foo_dry_reseeding_dp6lrzt, periods_destocked_p6zt = pfun.f_reseeding(
+    foo_grn_reseeding_qp6lrzt, foo_dry_reseeding_qdp6lrzt, periods_destocked_p6zt = pfun.f_reseeding(
         i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restock_grn_propn_t, resown_rt, feed_period_dates_p6z
-        , i_restock_fooscalar_lt, i_restock_foo_arable_t, dry_decay_period_p6zt, i_fxg_foo_op6lzt, c_fxg_a_op6lzt
-        , c_fxg_b_op6lzt, i_grn_senesce_eos_p6zt, grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, max_germination_p6lzt
-        , length_p6z, n_feed_periods, p6lrzt, p6zt, t_idx, z_idx, l_idx)
+        , i_restock_fooscalar_lt, i_restock_foo_arable_t, dry_decay_period_p6zt, i_fxg_foo_op6lzt, c_fxg_a_qop6lzt
+        , c_fxg_b_qop6lzt, i_grn_senesce_eos_p6zt, grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, max_germination_p6lzt
+        , length_p6z, n_feed_periods, p6lrzt, p6zt, t_idx, z_idx, len_q)
 
     ## area of green pasture being grazed and growing
     phase_area_p6lrzt = pfun.f1_green_area(resown_rt, pasture_rt, periods_destocked_p6zt, arable_l, i_pasture_coverage_lt)
@@ -424,8 +433,8 @@ def f_pasture(params, r_vals, nv):
     erosion_p6lrzt = pfun.f_erosion(i_lmu_conservation_p6lzt, arable_l, pasture_rt)
 
     ## initialise numpy arrays used only in this method
-    senesce_propn_dgop6lzt      = np.zeros(dgop6lzt, dtype = 'float64')
-    nap_dp6lrzt                 = np.zeros(dp6lrzt,  dtype = 'float64')
+    # senesce_propn_dgop6lzt      = np.zeros(dgop6lzt, dtype = 'float64')
+    nap_qdp6lrzt                 = np.zeros(qdp6lrzt,  dtype = 'float64')
     me_threshold_fp6zt          = np.zeros(fp6zt,    dtype = 'float64')   # the threshold for the nv pools which define the animals feed quality requirements
 
     ## create numpy array of threshold values from the nv dictionary
@@ -436,10 +445,10 @@ def f_pasture(params, r_vals, nv):
 
     ##  Calculate the FOO profile for ungrazed green & dry pastures at the start of each period
     ### Variable is used elsewhere with the assumption that ungrazed is the maximum foo that can be achieved.
-    grn_foo_start_ungrazed_p6lzt, dry_foo_start_ungrazed_p6lzt = pfun.f1_calc_foo_profile(
+    grn_foo_start_ungrazed_qp6lzt, dry_foo_start_ungrazed_qp6lzt = pfun.f1_calc_foo_profile(
         max_germination_p6lzt, dry_decay_period_p6zt, length_p6z[...,na], i_fxg_foo_op6lzt
-        , c_fxg_a_op6lzt, c_fxg_b_op6lzt, i_grn_senesce_eos_p6zt, grn_senesce_startfoo_p6zt
-        , grn_senesce_pgrcons_p6zt)
+        , c_fxg_a_qop6lzt, c_fxg_b_qop6lzt, i_grn_senesce_eos_p6zt, grn_senesce_startfoo_p6zt
+        , grn_senesce_pgrcons_p6zt, len_q)
 
     ### non-arable pasture becomes available to graze at the beginning of the first harvest period
     # harvest_period  = fun.period_allocation(pinp.period['feed_periods']['date'], range(len(pinp.period['feed_periods'])), pinp.period['harv_date']) #use range(len()) to get the row number that harvest occurs has to be row number not index name because it is used to index numpy below
@@ -450,43 +459,42 @@ def f_pasture(params, r_vals, nv):
 
     ## FOO on the non-arable areas in crop paddocks is ungrazed FOO of pasture type 0 (annual) because other pasture types are difficult to establish on a non-arable area.
     ### all senescing pasture from na area on crop paddocks goes into the Low pool (slice 0) because it is rank & low quality
-    nap_dp6lrzt[0, harv_period_z, l_idx[:,na,na], r_idx[:,na], z_idx, 0] = (
-                                             dry_foo_start_ungrazed_p6lzt[harv_period_z, l_idx[:,na], z_idx, 0][:,na,:]
+    nap_qdp6lrzt[:,0,...,0] = (dry_foo_start_ungrazed_qp6lzt[...,na,:,0] * (harv_period_z==index_p6[:,na,na,na])
                                            * (1-arable_l[:, na,na])
                                            * (1-np.sum(pasture_rt[:, na, :], axis=-1)))    # sum pasture proportion across the t axis to get area of crop
 
     ## Pasture growth, consumption of green feed.
-    me_cons_grnha_fgop6lzt, volume_grnha_fgop6lzt, foo_start_grnha_op6lzt, foo_end_grnha_gop6lzt, senesce_period_grnha_gop6lzt \
-    , senesce_eos_grnha_gop6lzt, dmd_sward_grnha_gop6lzt, pgr_grnha_gop6lzt, foo_endprior_grnha_gop6lzt, cons_grnha_t_gop6lzt \
-    , foo_ave_grnha_gop6lzt, dmd_diet_grnha_gop6lzt = pfun.f_grn_pasture(
-        cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_gp6zt, grn_foo_start_ungrazed_p6lzt, foo_grn_reseeding_p6lrzt
+    me_cons_grnha_qfgop6lzt, volume_grnha_qfgop6lzt, foo_start_grnha_qop6lzt, foo_end_grnha_qgop6lzt, senesce_period_grnha_qgop6lzt \
+    , senesce_eos_grnha_qgop6lzt, dmd_sward_grnha_qgop6lzt, pgr_grnha_qgop6lzt, foo_endprior_grnha_qgop6lzt, cons_grnha_t_qgop6lzt \
+    , foo_ave_grnha_qgop6lzt, dmd_diet_grnha_qgop6lzt = pfun.f_grn_pasture(
+        cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_qop6lzt, c_pgr_gi_scalar_gp6zt, grn_foo_start_ungrazed_qp6lzt, foo_grn_reseeding_qp6lrzt
         , i_foo_graze_propn_gt, grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, i_grn_senesce_eos_p6zt
         , i_base_p6zt, i_grn_trampling_p6t, i_grn_dig_p6lzt, i_grn_dmd_range_p6zt, i_pasture_stage_p6zt
         , i_legume_zt, i_hr_scalar_zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_greenfeed_exists_p6zt
-        , length_p6z, nv_is_not_confinement_f)
-    volume_grnha_fgop6lzt = volume_grnha_fgop6lzt / (1 + sen.sap['pi'])
+        , length_p6z, nv_is_not_confinement_f, len_q)
+    volume_grnha_qfgop6lzt = volume_grnha_qfgop6lzt / (1 + sen.sap['pi'])
 
     ##livestock methane emissions linked to the consumption of green pasture - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
-        stock_ch4_grnpas_gop6lzt = efun.f_stock_ch4_feed_nir(cons_grnha_t_gop6lzt*1000, dmd_diet_grnha_gop6lzt)
+        stock_ch4_grnpas_qgop6lzt = efun.f_stock_ch4_feed_nir(cons_grnha_t_qgop6lzt*1000, dmd_diet_grnha_qgop6lzt)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
-        grn_md_grnha_gop6lzt = fsfun.f1_dmd_to_md(dmd_diet_grnha_gop6lzt)
-        stock_ch4_grnpas_gop6lzt = efun.f_stock_ch4_feed_bc(cons_grnha_t_gop6lzt*1000, grn_md_grnha_gop6lzt)
+        grn_md_grnha_qgop6lzt = fsfun.f1_dmd_to_md(dmd_diet_grnha_qgop6lzt)
+        stock_ch4_grnpas_qgop6lzt = efun.f_stock_ch4_feed_bc(cons_grnha_t_qgop6lzt*1000, grn_md_grnha_qgop6lzt)
 
     ##livestock nitrous oxide emissions linked to the consumption of green pasture - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
-        stock_n2o_grnpas_gop6lzt = efun.f_stock_n2o_feed_nir(cons_grnha_t_gop6lzt*1000, dmd_diet_grnha_gop6lzt, i_grn_cp_p6zt[:,na,:,:])
+        stock_n2o_grnpas_qgop6lzt = efun.f_stock_n2o_feed_nir(cons_grnha_t_qgop6lzt*1000, dmd_diet_grnha_qgop6lzt, i_grn_cp_p6zt[:,na,:,:])
 
     ##residue nitrous oxide emissions - two separate calls because consumption doesnt reduce below ground biomass emissions (it does reduce future growth but doesnt the existing below ground biomass does not change)
-    grnpas_n2o_residue_growth_gop6lzt = efun.f_pas_residue_n2o_nir(pgr_grnha_gop6lzt, RBG_t, NCAG_t, NCBG_t)
-    grnpas_n2o_residue_cons_gop6lzt = efun.f_pas_residue_n2o_nir(- cons_grnha_t_gop6lzt*1000, RBG_t, NCAG_t, NCBG_t)
-    grnpas_n2o_residue_gop6lzt = grnpas_n2o_residue_growth_gop6lzt + grnpas_n2o_residue_cons_gop6lzt
+    grnpas_n2o_residue_growth_qgop6lzt = efun.f_pas_residue_n2o_nir(pgr_grnha_qgop6lzt, RBG_t, NCAG_t, NCBG_t)
+    grnpas_n2o_residue_cons_qgop6lzt = efun.f_pas_residue_n2o_nir(- cons_grnha_t_qgop6lzt*1000, RBG_t, NCAG_t, NCBG_t)
+    grnpas_n2o_residue_qgop6lzt = grnpas_n2o_residue_growth_qgop6lzt + grnpas_n2o_residue_cons_qgop6lzt
 
     ##residue nitrous oxide emissions from consumption of 1t or growth of 1kg of pasture
     ## used for grn germination, dry pas consumption, nap production and consumption
     pas_n2o_residue_cons_t = efun.f_pas_residue_n2o_nir(-1000, RBG_t, NCAG_t, NCBG_t)
     pas_n2o_residue_growth_t = efun.f_pas_residue_n2o_nir(1, RBG_t, NCAG_t, NCBG_t)
-    n2o_pas_residue_v_phase_growth_dp6lrzt = pas_n2o_residue_growth_t * (nap_dp6lrzt + germination_p6lrzt + np.maximum(0, foo_grn_reseeding_p6lrzt))  #max so that any foo removed at destocking is treated like it has been decayed because it gets sprayed out.
+    n2o_pas_residue_v_phase_growth_qp6lrzt = pas_n2o_residue_growth_t * (np.sum(nap_qdp6lrzt, axis=1) + germination_p6lrzt + np.maximum(0, foo_grn_reseeding_qp6lrzt))  #max so that any foo removed at destocking is treated like it has been decayed because it gets sprayed out.
 
     ##adjust dmd of dry feed post growing season - this doesnt do anything for perennials that are growing the whole yr.
     ##For annual pastures the dmd of dry feed is calculated based on the days since senescence.
@@ -512,8 +520,8 @@ def f_pasture(params, r_vals, nv):
                            * mask_dryfeed_exists_p6zt)
 
     ## Senescence of green feed into the dry pool.
-    senesce_grnha_dgop6lzt = pfun.f1_senescence(senesce_period_grnha_gop6lzt, senesce_eos_grnha_gop6lzt, dry_decay_period_p6zt
-                                              , dmd_sward_grnha_gop6lzt, i_grn_dmd_senesce_redn_p6zt, dry_dmd_dp6zt
+    senesce_grnha_qdgop6lzt = pfun.f1_senescence(senesce_period_grnha_qgop6lzt, senesce_eos_grnha_qgop6lzt, dry_decay_period_p6zt
+                                              , dmd_sward_grnha_qgop6lzt, i_grn_dmd_senesce_redn_p6zt, dry_dmd_dp6zt
                                               , mask_greenfeed_exists_p6zt)
 
 
@@ -591,31 +599,31 @@ def f_pasture(params, r_vals, nv):
     poc_con_p6lz = poc_con_p6lz * mask_fp_z8var_p6z[:,na,:]
     poc_md_fp6z = poc_md_fp6z * mask_fp_z8var_p6z
     dry_removal_t_p6zt = dry_removal_t_p6zt * mask_fp_z8var_p6zt
-    foo_dry_reseeding_dp6lrzt = foo_dry_reseeding_dp6lrzt * mask_fp_z8var_p6lrzt
-    foo_grn_reseeding_p6lrzt = foo_grn_reseeding_p6lrzt * mask_fp_z8var_p6lrzt
+    foo_dry_reseeding_qdp6lrzt = foo_dry_reseeding_qdp6lrzt * mask_fp_z8var_p6lrzt
+    foo_grn_reseeding_qp6lrzt = foo_grn_reseeding_qp6lrzt * mask_fp_z8var_p6lrzt
     phase_area_p6lrzt = phase_area_p6lrzt * mask_fp_z8var_p6lrzt
     dry_transfer_prov_t_p6zt = dry_transfer_prov_t_p6zt * mask_fp_z8var_p6zt
     dry_transfer_req_t_p6zt = dry_transfer_req_t_p6zt * mask_fp_z8var_p6zt
     germination_p6lrzt = germination_p6lrzt * mask_fp_z8var_p6lrzt
     foo_removed_pas_reduce_p7p6lrzt = foo_removed_pas_reduce_p7p6lrzt * mask_fp_z8var_p6lrzt
     foo_added_annual_increase_p7p6lrzt = foo_added_annual_increase_p7p6lrzt * mask_fp_z8var_p6lrzt
-    nap_dp6lrzt = nap_dp6lrzt * mask_fp_z8var_p6lrzt
-    foo_start_grnha_op6lzt = foo_start_grnha_op6lzt * mask_fp_z8var_p6lzt
-    foo_end_grnha_gop6lzt = foo_end_grnha_gop6lzt * mask_fp_z8var_p6lzt
-    me_cons_grnha_fgop6lzt = me_cons_grnha_fgop6lzt * mask_fp_z8var_p6lzt
+    nap_qdp6lrzt = nap_qdp6lrzt * mask_fp_z8var_p6lrzt
+    foo_start_grnha_qop6lzt = foo_start_grnha_qop6lzt * mask_fp_z8var_p6lzt
+    foo_end_grnha_qgop6lzt = foo_end_grnha_qgop6lzt * mask_fp_z8var_p6lzt
+    me_cons_grnha_qfgop6lzt = me_cons_grnha_qfgop6lzt * mask_fp_z8var_p6lzt
     dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * mask_fp_z8var_p6zt
-    volume_grnha_fgop6lzt = volume_grnha_fgop6lzt * mask_fp_z8var_p6lzt
+    volume_grnha_qfgop6lzt = volume_grnha_qfgop6lzt * mask_fp_z8var_p6lzt
     dry_volume_t_fdp6zt = dry_volume_t_fdp6zt * mask_fp_z8var_p6zt
-    senesce_grnha_dgop6lzt = senesce_grnha_dgop6lzt * mask_fp_z8var_p6lzt
+    senesce_grnha_qdgop6lzt = senesce_grnha_qdgop6lzt * mask_fp_z8var_p6lzt
     poc_vol_fp6z = poc_vol_fp6z * mask_fp_z8var_p6z
-    stock_ch4_grnpas_gop6lzt = stock_ch4_grnpas_gop6lzt * mask_fp_z8var_p6lzt
-    stock_n2o_grnpas_gop6lzt = stock_n2o_grnpas_gop6lzt * mask_fp_z8var_p6lzt
+    stock_ch4_grnpas_qgop6lzt = stock_ch4_grnpas_qgop6lzt * mask_fp_z8var_p6lzt
+    stock_n2o_grnpas_qgop6lzt = stock_n2o_grnpas_qgop6lzt * mask_fp_z8var_p6lzt
     stock_ch4_drypas_dp6zt = stock_ch4_drypas_dp6zt * mask_fp_z8var_p6zt
     stock_n2o_drypas_dp6zt = stock_n2o_drypas_dp6zt * mask_fp_z8var_p6zt
     stock_ch4_poc_p6z = stock_ch4_poc_p6z * mask_fp_z8var_p6z
     stock_n2o_poc_p6z = stock_n2o_poc_p6z * mask_fp_z8var_p6z
-    grnpas_n2o_residue_gop6lzt = grnpas_n2o_residue_gop6lzt * mask_fp_z8var_p6lzt
-    n2o_pas_residue_v_phase_growth_dp6lrzt = n2o_pas_residue_v_phase_growth_dp6lrzt * mask_fp_z8var_p6lrzt
+    grnpas_n2o_residue_qgop6lzt = grnpas_n2o_residue_qgop6lzt * mask_fp_z8var_p6lzt
+    n2o_pas_residue_v_phase_growth_qp6lrzt = n2o_pas_residue_v_phase_growth_qp6lrzt * mask_fp_z8var_p6lrzt
 
 
     #############################################
@@ -624,26 +632,27 @@ def f_pasture(params, r_vals, nv):
     ##p7 allocation
     alloc_p7p6z = zfun.f1_z_period_alloc(date_start_p6z[na,:,:], length_p6z[na,:,:], z_pos=-1)
     alloc_p7p6lrzt = alloc_p7p6z[:,:,na,na,:,na]
-    alloc_p7dp6lrzt = alloc_p7p6z[:,na,:,na,na,:,na]
+    alloc_p7qp6lrzt = alloc_p7p6z[:,na,:,na,na,:,na]
+    alloc_p7qdp6lrzt = alloc_p7p6z[:,na,na,:,na,na,:,na]
 
     ##apply allocation
     erosion_p7p6lrzt = erosion_p6lrzt * alloc_p7p6lrzt
-    foo_dry_reseeding_p7dp6lrzt = foo_dry_reseeding_dp6lrzt * alloc_p7dp6lrzt
-    foo_grn_reseeding_p7p6lrzt = foo_grn_reseeding_p6lrzt * alloc_p7p6lrzt
+    foo_dry_reseeding_p7qdp6lrzt = foo_dry_reseeding_qdp6lrzt * alloc_p7qdp6lrzt
+    foo_grn_reseeding_p7qp6lrzt = foo_grn_reseeding_qp6lrzt * alloc_p7qp6lrzt
     phase_area_p7p6lrzt = phase_area_p6lrzt * alloc_p7p6lrzt
     germination_p7p6lrzt = germination_p6lrzt * alloc_p7p6lrzt
-    nap_p7dp6lrzt = nap_dp6lrzt * alloc_p7dp6lrzt
+    nap_p7qdp6lrzt = nap_qdp6lrzt * alloc_p7qdp6lrzt
 
 
     #####################
     #calc co2e params   #
     #####################
-    co2e_grnpas_gop6lzt = (stock_ch4_grnpas_gop6lzt * uinp.emissions['i_ch4_gwp_factor'] 
-                           + (stock_n2o_grnpas_gop6lzt + grnpas_n2o_residue_gop6lzt) * uinp.emissions['i_n2o_gwp_factor'])
+    co2e_grnpas_qgop6lzt = (stock_ch4_grnpas_qgop6lzt * uinp.emissions['i_ch4_gwp_factor']
+                           + (stock_n2o_grnpas_qgop6lzt + grnpas_n2o_residue_qgop6lzt) * uinp.emissions['i_n2o_gwp_factor'])
     co2e_drypas_cons_dp6zt = (stock_ch4_drypas_dp6zt * uinp.emissions['i_ch4_gwp_factor']
                               + (stock_n2o_drypas_dp6zt + pas_n2o_residue_cons_t) * uinp.emissions['i_n2o_gwp_factor'])
     co2e_poc_p6z = stock_ch4_poc_p6z * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_poc_p6z * uinp.emissions['i_n2o_gwp_factor']
-    co2e_pas_residue_v_phase_growth_dp6lrzt = n2o_pas_residue_v_phase_growth_dp6lrzt * uinp.emissions['i_n2o_gwp_factor']
+    co2e_pas_residue_v_phase_growth_qp6lrzt = n2o_pas_residue_v_phase_growth_qp6lrzt * uinp.emissions['i_n2o_gwp_factor']
 
 
     ###########
@@ -665,8 +674,8 @@ def f_pasture(params, r_vals, nv):
 
     params['p_dry_removal_t_p6zt'] = fun.f1_make_pyomo_dict(dry_removal_t_p6zt, arrays_p6zt)
 
-    params['p_foo_dry_reseeding_p7dp6lrzt'] = fun.f1_make_pyomo_dict(foo_dry_reseeding_p7dp6lrzt, arrays_p7dp6lrzt)
-    params['p_foo_grn_reseeding_p7p6lrzt'] = fun.f1_make_pyomo_dict(foo_grn_reseeding_p7p6lrzt, arrays_p7p6lrzt)
+    params['p_foo_dry_reseeding_p7qdp6lrzt'] = fun.f1_make_pyomo_dict(foo_dry_reseeding_p7qdp6lrzt, arrays_p7qdp6lrzt)
+    params['p_foo_grn_reseeding_p7qp6lrzt'] = fun.f1_make_pyomo_dict(foo_grn_reseeding_p7qp6lrzt, arrays_p7qp6lrzt)
 
     params['p_phase_area_p7p6lrzt'] = fun.f1_make_pyomo_dict(phase_area_p7p6lrzt, arrays_p7p6lrzt)
 
@@ -680,21 +689,21 @@ def f_pasture(params, r_vals, nv):
 
     params['p_foo_added_annual_increase_p7p6lrzt'] = fun.f1_make_pyomo_dict(foo_added_annual_increase_p7p6lrzt, arrays_p7p6lrzt)
 
-    params['p_nap_p7dp6lrzt'] = fun.f1_make_pyomo_dict(nap_p7dp6lrzt, arrays_p7dp6lrzt)
+    params['p_nap_p7qdp6lrzt'] = fun.f1_make_pyomo_dict(nap_p7qdp6lrzt, arrays_p7qdp6lrzt)
 
-    params['p_foo_start_grnha_op6lzt'] = fun.f1_make_pyomo_dict(foo_start_grnha_op6lzt, arrays_op6lzt)
+    params['p_foo_start_grnha_qop6lzt'] = fun.f1_make_pyomo_dict(foo_start_grnha_qop6lzt, arrays_qop6lzt)
 
-    params['p_foo_end_grnha_gop6lzt'] = fun.f1_make_pyomo_dict(foo_end_grnha_gop6lzt, arrays_gop6lzt)
+    params['p_foo_end_grnha_qgop6lzt'] = fun.f1_make_pyomo_dict(foo_end_grnha_qgop6lzt, arrays_qgop6lzt)
 
-    params['p_me_cons_grnha_fgop6lzt'] = fun.f1_make_pyomo_dict(me_cons_grnha_fgop6lzt, arrays_fgop6lzt)
+    params['p_me_cons_grnha_qfgop6lzt'] = fun.f1_make_pyomo_dict(me_cons_grnha_qfgop6lzt, arrays_qfgop6lzt)
 
     params['p_dry_mecons_t_fdp6zt'] = fun.f1_make_pyomo_dict(dry_mecons_t_fdp6zt, arrays_fdp6zt)
 
-    params['p_volume_grnha_fgop6lzt'] = fun.f1_make_pyomo_dict(volume_grnha_fgop6lzt, arrays_fgop6lzt)
+    params['p_volume_grnha_qfgop6lzt'] = fun.f1_make_pyomo_dict(volume_grnha_qfgop6lzt, arrays_qfgop6lzt)
 
     params['p_dry_volume_t_fdp6zt'] = fun.f1_make_pyomo_dict(dry_volume_t_fdp6zt, arrays_fdp6zt)
 
-    params['p_senesce_grnha_dgop6lzt'] = fun.f1_make_pyomo_dict(senesce_grnha_dgop6lzt, arrays_dgop6lzt)
+    params['p_senesce_grnha_qdgop6lzt'] = fun.f1_make_pyomo_dict(senesce_grnha_qdgop6lzt, arrays_qdgop6lzt)
 
     params['p_poc_vol_fp6z'] = fun.f1_make_pyomo_dict(poc_vol_fp6z, arrays_fp6z)
 
@@ -702,10 +711,10 @@ def f_pasture(params, r_vals, nv):
 
     params['p_poc_md_fp6z'] = fun.f1_make_pyomo_dict(poc_md_fp6z, arrays_fp6z)
 
-    params['p_co2e_grnpas_gop6lzt'] = fun.f1_make_pyomo_dict(co2e_grnpas_gop6lzt, arrays_gop6lzt)
+    params['p_co2e_grnpas_qgop6lzt'] = fun.f1_make_pyomo_dict(co2e_grnpas_qgop6lzt, arrays_qgop6lzt)
     params['p_co2e_drypas_cons_dp6zt'] = fun.f1_make_pyomo_dict(co2e_drypas_cons_dp6zt, arrays_dp6zt)
     params['p_co2e_poc_p6z'] = fun.f1_make_pyomo_dict(co2e_poc_p6z, arrays_p6z8)
-    params['p_co2e_pas_residue_v_phase_growth_dp6lrzt'] = fun.f1_make_pyomo_dict(co2e_pas_residue_v_phase_growth_dp6lrzt, arrays_dp6lrzt)
+    params['p_co2e_pas_residue_v_phase_growth_qp6lrzt'] = fun.f1_make_pyomo_dict(co2e_pas_residue_v_phase_growth_qp6lrzt, arrays_qp6lrzt)
 
 
     ###########
@@ -731,29 +740,29 @@ def f_pasture(params, r_vals, nv):
     fun.f1_make_r_val(r_vals,pasture_rt,'pasture_area_rt')
     fun.f1_make_r_val(r_vals,pastures,'keys_pastures')
     fun.f1_make_r_val(r_vals,length_p6z,'days_p6z',mask_fp_z8var_p6z,z_pos=-1)
-    fun.f1_make_r_val(r_vals,pgr_grnha_gop6lzt,'pgr_grnha_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
-    fun.f1_make_r_val(r_vals,foo_endprior_grnha_gop6lzt,'foo_end_grnha_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)#Green FOO prior to eos senescence
-    fun.f1_make_r_val(r_vals,foo_start_grnha_op6lzt,'foo_start_grnha_op6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,pgr_grnha_qgop6lzt,'pgr_grnha_qgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,foo_endprior_grnha_qgop6lzt,'foo_end_grnha_qgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)#Green FOO prior to eos senescence
+    fun.f1_make_r_val(r_vals,foo_start_grnha_qop6lzt,'foo_start_grnha_qop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
     fun.f1_make_r_val(r_vals,i_foo_graze_propn_gt,'i_foo_graze_propn_gt')
-    fun.f1_make_r_val(r_vals,cons_grnha_t_gop6lzt,'cons_grnha_t_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
-    fun.f1_make_r_val(r_vals,me_cons_grnha_fgop6lzt,'me_cons_grnha_fgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
-    fun.f1_make_r_val(r_vals,fun.f_divide(me_cons_grnha_fgop6lzt, volume_grnha_fgop6lzt),'nv_grnha_fgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,cons_grnha_t_qgop6lzt,'cons_grnha_t_qgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,me_cons_grnha_qfgop6lzt,'me_cons_grnha_qfgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,fun.f_divide(me_cons_grnha_qfgop6lzt, volume_grnha_qfgop6lzt),'nv_grnha_qfgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
     fun.f1_make_r_val(r_vals,fun.f_divide(dry_mecons_t_fdp6zt, dry_volume_t_fdp6zt),'nv_dry_fdp6zt',mask_fp_z8var_p6zt,z_pos=-2)
-    fun.f1_make_r_val(r_vals,foo_ave_grnha_gop6lzt,'foo_ave_grnha_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
-    fun.f1_make_r_val(r_vals,dmd_diet_grnha_gop6lzt,'dmd_diet_grnha_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,foo_ave_grnha_qgop6lzt,'foo_ave_grnha_qgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,dmd_diet_grnha_qgop6lzt,'dmd_diet_grnha_qgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
     fun.f1_make_r_val(r_vals,dry_foo_dp6zt,'dry_foo_dp6zt',mask_fp_z8var_p6zt,z_pos=-2)
     fun.f1_make_r_val(r_vals,dry_dmd_dp6zt,'dry_dmd_dp6zt',mask_fp_z8var_p6zt,z_pos=-2)
     fun.f1_make_r_val(r_vals,dry_mecons_t_fdp6zt,'dry_mecons_t_fdp6zt',mask_fp_z8var_p6zt,z_pos=-2)
     fun.f1_make_r_val(r_vals,poc_md_fp6z,'poc_md_fp6z',mask_fp_z8var_p6z,z_pos=-1)
     ###emissions
-    fun.f1_make_r_val(r_vals,stock_ch4_grnpas_gop6lzt,'stock_ch4_grnpas_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
-    fun.f1_make_r_val(r_vals,stock_n2o_grnpas_gop6lzt,'stock_n2o_grnpas_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,stock_ch4_grnpas_qgop6lzt,'stock_ch4_grnpas_qgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,stock_n2o_grnpas_qgop6lzt,'stock_n2o_grnpas_qgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
     fun.f1_make_r_val(r_vals,stock_ch4_drypas_dp6zt,'stock_ch4_drypas_dp6zt',mask_fp_z8var_p6zt,z_pos=-2)
     fun.f1_make_r_val(r_vals,stock_n2o_drypas_dp6zt,'stock_n2o_drypas_dp6zt',mask_fp_z8var_p6zt,z_pos=-2)
     fun.f1_make_r_val(r_vals,stock_ch4_poc_p6z,'stock_ch4_poc_p6z',mask_fp_z8var_p6z,z_pos=-1)
     fun.f1_make_r_val(r_vals,stock_n2o_poc_p6z,'stock_n2o_poc_p6z',mask_fp_z8var_p6z,z_pos=-1)
     fun.f1_make_r_val(r_vals,pas_n2o_residue_cons_t,'pas_n2o_residue_cons_t')
-    fun.f1_make_r_val(r_vals,grnpas_n2o_residue_gop6lzt,'grnpas_n2o_residue_gop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
-    fun.f1_make_r_val(r_vals,np.swapaxes(n2o_pas_residue_v_phase_growth_dp6lrzt,2,4),'n2o_pas_residue_v_phase_growth_dp6zrlt',mask_fp_z8var_p6z[:,:,na,na,na],z_pos=-4)
+    fun.f1_make_r_val(r_vals,grnpas_n2o_residue_qgop6lzt,'grnpas_n2o_residue_qgop6lzt',mask_fp_z8var_p6lzt,z_pos=-2)
+    fun.f1_make_r_val(r_vals,np.swapaxes(n2o_pas_residue_v_phase_growth_qp6lrzt,2,4),'n2o_pas_residue_v_phase_growth_qp6zrlt',mask_fp_z8var_p6z[:,:,na,na,na],z_pos=-4)
 
 

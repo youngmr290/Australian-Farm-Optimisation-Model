@@ -33,13 +33,10 @@ from . import CropGrazingPyomo as cgzpy
 from . import SaltbushPyomo as slppy
 from . import relativeFile
 
-def coremodel_all(trial_name, model, method, nv, print_debug_output):
+def coremodel_all(trial_name, model, method, nv, print_debug_output, lp_vars):
     '''
     Wraps all of the core model into a function so it can be run multiple times in a loop
 
-    Returns
-    -------
-    None.
 
     '''
     ##################
@@ -57,8 +54,6 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output):
     f_con_labour_sheep_manager(model)
     # stubble & nap consumption at harvest
     f_con_harv_stub_nap_cons(model)
-    # # stubble
-    # f_con_cropresidue_a(model)
     # sow landuse
     f_con_phasesow(model)
     # harvest and make hay
@@ -83,6 +78,12 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output):
     f_con_dep(model)
     f_con_asset(model)
     f_con_minroe(model)
+
+
+    ###this last constraint is for the MP model to constrain the starting point
+    if sinp.structuralsa['model_is_MP']:
+        f_con_MP(model, lp_vars)
+
 
     #############
     # objective #
@@ -315,11 +316,19 @@ def f_con_labour_sheep_manager(model):
 
 def f_con_harv_stub_nap_cons(model):
     '''
-    Constrains the ME from stubble and non arable pasture in the feed period that harvest occurs. To consume ME from
-    stubble and non arable pasture sheep must also consume a proportion (depending on when harvest occurs within
-    the feed period) of their total intake from pasture. This stops sheep consuming all their energy intake
-    for a given period from stubble and non arable pasture when they don’t become available until after harvest
-    (the logic behind this is explained in the stubble section of this document).
+    Stubble and non-arable pasture may become available part way through a feed period, this means sheep could
+    fill their entire energy requirement for that feed period solely with stubble and non-arable pasture.
+    This is unreasonable because stubble can only be grazed after harvest.
+    To solve this a constraint is implemented which forces a
+    proportion (depending on when harvest occurs in the feed period) of the sheep
+    energy intake to be consumed from pasture.
+
+    The constraint is built so that consumption of any stubble requires a certain amount of pasture consumed.
+    However, if one crop is harvested before another, consuming stubble from the latter crop still
+    requires a certain amount of pasture to be consumed. This is a slight limitation because in reality
+    the sheep may have been consuming crop A stubble. However consuming crop A stubble doesn't provide
+    the ability to consume crop B stubble.
+
     '''
     def harv_stub_nap_cons(model,q,s,p6,z):
         if any(model.p_nap_prop[p6,z] or model.p_harv_prop[p6,z,k] for k in model.s_crops) and pe.value(model.p_wyear_inc_qs[q, s]):
@@ -334,32 +343,6 @@ def f_con_harv_stub_nap_cons(model):
     model.con_harv_stub_nap_cons = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods,model.s_season_types,rule=harv_stub_nap_cons,
                                                  doc='limit stubble and nap consumption in the period harvest occurs')
 
-
-# def f_con_cropresidue_a(model):
-#     '''
-#     Constrains the amount of stubble required to consume 1t of category A to no more than the total amount of
-#     stubble produced from each rotation.
-#     '''
-#     ##has to have p7 axis and transfer because penalties occur at seeding time and have to transfer as seasons are unclustered (same as yield)
-#     def cropresidue_a(model,q,s,p7,k,z9):
-#         l_p7 = list(model.s_season_periods)
-#         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
-#         p7_end = l_p7[-1]
-#         if pe.value(model.p_wyear_inc_qs[q,s]):
-#             return (-sum(model.v_phase_area[q,s,p7,z9,r,l] * model.p_rot_stubble[r,k,l,p7,z9]
-#                          for r in model.s_phases for l in model.s_lmus
-#                          if pe.value(model.p_rot_stubble[r,k,l,p7,z9]) != 0)
-#                     + macpy.f_cropresidue_penalty(model,q,s,p7,k,z9) + cgzpy.f_grazecrop_cropresidue_penalty(model,q,s,p7,k,z9)
-#                     + sum(model.v_stub_harv[q,s,p6,z9,k] * 1000 * model.p_a_p6_p7[p7,p6,z9] for p6 in model.s_feed_periods)
-#                     - model.v_stub_debit[q,s,p7,k,z9] *1000 * (p7 != p7_end) #cant debit in the final period otherwise unlimited stubble.
-#
-#                     + sum(model.v_stub_debit[q,s,p7_prev,k,z8] * 1000 * model.p_parentz_provwithin_phase[p7_prev,z8,z9]
-#                           for z8 in model.s_season_types) <= 0)
-#         else:
-#             return pe.Param.Skip
-#
-#     model.con_cropresidue_a = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, rule=cropresidue_a,
-#                                         doc='Total stubble at harvest. Provides Cat A at harvest.')
 
 
 def f_con_phasesow(model):
@@ -545,20 +528,20 @@ def f_con_product_transfer(model):
 def f1_grain_income(model,q,s,p7,z,c1):
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
     return sum(
-            model.v_sell_product[q,s,p7,z,k,s2,g] * model.p_grain_price[p7,z,g,k,s2,c1] - model.v_buy_product[q,s,p7,z,k,s2,g] * model.p_buy_grain_price[
-            p7,z,g,k,s2,c1] for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
+            model.v_sell_product[q,s,p7,z,k,s2,g] * model.p_grain_price[q,p7,z,g,k,s2,c1] - model.v_buy_product[q,s,p7,z,k,s2,g] * model.p_buy_grain_price[
+            q,p7,z,g,k,s2,c1] for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
 
 def f1_grain_wc(model,q,s,c0,p7,z):
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
     return sum(
-        model.v_sell_product[q,s,p7,z,k,s2,g] * model.p_grain_wc[c0,p7,z,g,k,s2] - model.v_buy_product[q,s,p7,z,k,s2,g] * model.p_buy_grain_wc[
-            c0,p7,z,g,k,s2] for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
+        model.v_sell_product[q,s,p7,z,k,s2,g] * model.p_grain_wc[q,c0,p7,z,g,k,s2] - model.v_buy_product[q,s,p7,z,k,s2,g] * model.p_buy_grain_wc[
+            q,c0,p7,z,g,k,s2] for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
 
 def f1_sup_minroe(model,q,s,p7,z):
     ##cost of grain for livestock enterprise. Note grain purchased cost more because of transport fees than grain transferred from crop enterprise.
     return sum((sum(model.v_sup_con[q,s,z,k,g,f,p6] for f in model.s_feed_pools for p6 in model.s_feed_periods)
-                - model.v_buy_product[q,s,p7,z,k,s2,g]) * sum(model.p_grain_price[p7,z,g,k,s2,c1] * model.p_prob_c1[c1] for c1 in model.s_c1)
-               + model.v_buy_product[q,s,p7,z,k,s2,g] * sum(model.p_buy_grain_price[p7,z,g,k,s2,c1]  * model.p_prob_c1[c1] for c1 in model.s_c1)
+                - model.v_buy_product[q,s,p7,z,k,s2,g]) * sum(model.p_grain_price[q,p7,z,g,k,s2,c1] * model.p_prob_c1[c1] for c1 in model.s_c1)
+               + model.v_buy_product[q,s,p7,z,k,s2,g] * sum(model.p_buy_grain_price[q,p7,z,g,k,s2,c1]  * model.p_prob_c1[c1] for c1 in model.s_c1)
                for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
 
 def f_con_poc_available(model):
@@ -585,7 +568,7 @@ def f_con_link_understory_saltbush_consumption(model):
     def link_us_sb(model,q,s,z,p6,f,l):
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p6z[p6,z]) and pinp.general['pas_inc_t'][3]:
             return - slppy.f_saltbush_selection(model,q,s,z,p6,f,l) \
-                   + sum(model.v_greenpas_ha[q, s, f, g, o, p6, l, z, 'understory'] * model.p_volume_grnha[f, g, o, p6, l, z, 'understory'] * model.p_sb_selectivity_zp6[z,p6]
+                   + sum(model.v_greenpas_ha[q, s, f, g, o, p6, l, z, 'understory'] * model.p_volume_grnha[q,f, g, o, p6, l, z, 'understory'] * model.p_sb_selectivity_zp6[z,p6]
                         for g in model.s_grazing_int for o in model.s_foo_levels) \
                    + sum(model.v_drypas_consumed[q, s, f, d, p6, z, l, 'understory'] * model.p_dry_volume_t[f, d, p6, z, 'understory'] * model.p_sb_selectivity_zp6[z,p6]
                          for d in model.s_dry_groups) == 0
@@ -681,7 +664,7 @@ def f_con_cashflow(model):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return ((-f1_grain_income(model,q,s,p7,z9,c1) + phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9)
-                    + macpy.f_mach_cost(model,q,s,p7,z9) + suppy.f_sup_cost(model,q,s,p7,z9) + model.p_overhead_cost[p7,z9] + slppy.f_saltbush_cost(model,q,s,z9,p7)
+                    + macpy.f_mach_cost(model,q,s,p7,z9) + suppy.f_sup_feeding_cost(model,q,s,p7,z9) + model.p_overhead_cost[p7,z9] + slppy.f_saltbush_cost(model,q,s,z9,p7)
                     - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1)
                     - model.v_debit[q,s,c1,p7,z9] + model.v_credit[q,s,c1,p7,z9])
                     + sum((model.v_debit[q,s,c1,p7_prev,z8] - model.v_credit[q,s,c1,p7_prev,z8]) * model.p_parentz_provwithin_season[p7_prev,z8,z9] * ((p7!=p7_start)*1)  #end cashflow doesnot provide start cashflow else unbounded.
@@ -751,7 +734,21 @@ def f_con_totalcap_between(model):
     '''
     def total_cap_between(model,q,s9,c0,p7,z9):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
-        q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
+        l_q = list(model.s_sequence_year_between_con)
+        ###adjust q_prev for multi-period model
+        if sinp.structuralsa['model_is_MP']:
+            ####yr0 is SE so q_prev is q. Note dont need to use lp_var in this between constraint because it is not a production constraint.
+            if q == l_q[0]:
+                q_prev = q
+            ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
+            elif q == l_q[-1]:
+                q = l_q[l_q.index(q) - 1]
+                q_prev = q
+            else:
+                q_prev = l_q[l_q.index(q) - 1]
+        else:
+            q_prev = l_q[l_q.index(q) - 1]
+
         if pe.value(model.p_mask_childz_between_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and uinp.finance['i_working_capital_constraint_included']:
             return (-f1_grain_wc(model,q,s9,c0,p7,z9) + phspy.f_rotation_wc(model,q,s9,c0,p7,z9) + labpy.f_labour_wc(model,q,s9,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s9,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s9,c0,p7,z9) + suppy.f_sup_wc(model,q,s9,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
@@ -765,7 +762,7 @@ def f_con_totalcap_between(model):
                           for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)) <= 0
         else:
             return pe.Constraint.Skip
-    model.con_totalcap_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=total_cap_between,
+    model.con_totalcap_between = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=total_cap_between,
                                        doc='working capital transfer between years')
 
 
@@ -815,7 +812,7 @@ def f_con_minroe(model):
         p7_start = l_p7[0]
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return ((phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9) + macpy.f_mach_cost(model,q,s,p7,z9)
-                     + suppy.f_sup_cost(model,q,s,p7,z9) + stkpy.f_stock_cost(model,q,s,p7,z9) + slppy.f_saltbush_cost(model,q,s,z9,p7)
+                     + suppy.f_sup_feeding_cost(model,q,s,p7,z9) + stkpy.f_stock_cost(model,q,s,p7,z9) + slppy.f_saltbush_cost(model,q,s,z9,p7)
                      + f1_sup_minroe(model,q,s,p7,z9))
                     * fin.f1_min_roe()
                     - model.v_minroe[q,s,p7,z9]
@@ -881,14 +878,14 @@ def f_objective(model):
     # rather than the spread between years as traditionally done.
 
     ##terminal wealth transfer constraint - combine cashflow with depreciation, MINROE and asset value
-    variables = model.component_objects(pe.Var,active=True)
     p7_end = list(model.s_season_periods)[-1]
     def terminal_wealth(model,q,s,z,c1):
+        variables = model.component_objects(pe.Var,active=True) #this has to get called for each constraint (something to do with generator objects)
         if pe.value(model.p_wyear_inc_qs[q,s]):
             return (model.v_terminal_wealth[q,s,z,c1] - model.v_credit[q,s,c1,p7_end,z] + model.v_debit[q,s,c1,p7_end,z] # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
                     + model.v_dep[q,s,p7_end,z] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z]
                     - model.v_tradevalue[q, s, p7_end, z]
-                    + 0.00001 * sum(sum(v[idx] for idx in v) for v in variables
+                    + 0.00001 * sum(sum(v[idx] for idx in v if idx[0]==q) for v in variables #only sum for given q (this is required for the MP model otherwise the variable bnd on the first year doesnt work because len q affect v_terminal wealth).
                                        if v._rule_bounds._initializer.val[0] is not None and v._rule_bounds._initializer.val[0]>=0)) <=0 #all variables with positive bounds (ie variables that can be negative e.g. terminal_wealth are excluded) put a small neg number into objective. This stop cplex selecting variables that don't contribute to the objective (cplex selects variables to remove slack on constraints).
         else:                                                                                                  #note; _rule_bounds.val[0] is the lower bound of each variable
             return pe.Constraint.Skip
@@ -944,6 +941,171 @@ def f_objective(model):
                for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types
                if pe.value(model.p_wyear_inc_qs[q,s]))
 
+def f_con_MP(model, lp_vars):
+    ''''
+    These constraints are to bound the variable levels in the first node of the first year in the MP model. This
+    is when farm conditions have changed but management has not yet reacted. Therefore, key production management is
+    bound to be as per normal (based on the Initial MP run).
+    '''
+    len_p7 = len(model.s_season_periods)
+
+    def MP_rotation_q0_lower(model,q,s,p7,z,r,l):
+        ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
+        ## give 1% flex on the bnd to allow for any rounding.
+        if q == 'q0' and len_p7>1:
+            return (model.v_phase_area[q,s,p7,z,r,l] <=
+                    lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 1.01)
+        else:
+            return pe.Constraint.Skip
+    model.con_MP_rotation_q0_lower = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
+                                                   model.s_season_types, model.s_phases, model.s_lmus, rule=MP_rotation_q0_lower,
+                                            doc='phase area bnd for node 1 in the MP model')
+
+    def MP_rotation_q0_upper(model,q,s,p7,z,r,l):
+        ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
+        ## give 1% flex on the bnd to allow for any rounding.
+        if q == 'q0' and len_p7>1:
+            return (model.v_phase_area[q,s,p7,z,r,l] >=
+                    lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 0.99)
+        else:
+            return pe.Constraint.Skip
+    model.con_MP_rotation_q0_upper = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
+                                                   model.s_season_types, model.s_phases, model.s_lmus, rule=MP_rotation_q0_upper,
+                                            doc='phase area bnd for node 1 in the MP model')
+
+    def MP_dams_sale_lower(model, q, s, k2, t1, v1, a, z, i, y1, g1):
+        ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
+        ## bnd sale and not mated animals so the model can't choose to not mate then sell at the second node.
+        ## therefore give 5% flex on the bnd to allow for mort.
+        if q == 'q0' and len_p7>1 and (t1=='t0' or t1=='t1' or k2=='NM-0') and model.p_dvp_is_node1_vzg1[v1, z, g1]:
+            return (sum(model.v_dams[q, s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
+                       for n1 in model.s_nut_dams for w1 in model.s_lw_dams) <=
+                    sum(lp_vars[str('v_dams')]['q0', s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
+                        for n1 in model.s_nut_dams for w1 in model.s_lw_dams)*1.05)
+        else:
+            return pe.Constraint.Skip
+    model.con_MP_dams_sale_lower = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams,
+                                            model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol,
+                                            model.s_gen_merit_dams, model.s_groups_dams, rule=MP_dams_sale_lower,
+                                            doc='dams numbers bnd for node 1 in the MP model')
+
+    def MP_dams_sale_upper(model, q, s, k2, t1, v1, a, z, i, y1, g1):
+        ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
+        ## bnd sale and not mated animals so the model can't choose to not mate then sell at the second node.
+        ## therefore give 5% flex on the bnd to allow for mort.
+        if q == 'q0' and len_p7>1 and (t1=='t0' or t1=='t1' or k2=='NM-0') and model.p_dvp_is_node1_vzg1[v1, z, g1]:
+            return (sum(model.v_dams[q, s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
+                       for n1 in model.s_nut_dams for w1 in model.s_lw_dams) >=
+                    sum(lp_vars[str('v_dams')]['q0', s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
+                        for n1 in model.s_nut_dams for w1 in model.s_lw_dams)*0.95)
+        else:
+           return pe.Constraint.Skip
+    model.con_MP_dams_sale_upper = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams,
+                                            model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol,
+                                            model.s_gen_merit_dams, model.s_groups_dams, rule=MP_dams_sale_upper,
+                                            doc='dams numbers bnd for node 1 in the MP model')
+
+    ##need to have upper and lower bnd here for mortality. If we force lighter animal it might die more therefore cant sell exactly the same as normal.
+    def MP_offs_sale_lower(model, q, s, k3, k5, t3, v3, z, i, a, x, y3, g3):
+        ##bnd the first node in q[1] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
+        if q == 'q0' and len_p7>1 and t3!='t0' and model.p_dvp_is_node1_k3vzxg3[k3,v3,z,x,g3]:
+            return (sum(model.v_offs[q, s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
+                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs) <=
+                    sum(lp_vars[str('v_offs')]['q0', s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
+                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs)*1.01)
+        else:
+            return pe.Constraint.Skip
+    model.con_MP_offs_sale_lower = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs,
+                                            model.s_k5_birth_offs, model.s_sale_offs,
+                                            model.s_dvp_offs, model.s_season_types, model.s_tol, model.s_wean_times,
+                                            model.s_gender, model.s_gen_merit_offs,
+                                            model.s_groups_offs, rule=MP_offs_sale_lower,
+                                            doc='offs numbers bnd for node 1 in the MP model')
+
+    def MP_offs_sale_upper(model, q, s, k3, k5, t3, v3, z, i, a, x, y3, g3):
+        ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
+        if q == 'q0' and len_p7>1 and t3!='t0' and model.p_dvp_is_node1_k3vzxg3[k3,v3,z,x,g3]:
+            return (sum(model.v_offs[q, s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
+                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs) >=
+                    sum(lp_vars[str('v_offs')]['q0', s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
+                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs)*0.99)
+        else:
+            return pe.Constraint.Skip
+    model.con_MP_offs_sale_upper = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs,
+                                            model.s_k5_birth_offs, model.s_sale_offs,
+                                            model.s_dvp_offs, model.s_season_types, model.s_tol, model.s_wean_times,
+                                            model.s_gender, model.s_gen_merit_offs,
+                                            model.s_groups_offs, rule=MP_offs_sale_upper,
+                                            doc='offs numbers bnd for node 1 in the MP model')
+
+    def MP_prog_bound(model, q, s, k3, k5, t2, z, i, a, x, g2):
+        ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
+        ##doesnt need upper and lower because there is no LW bnd for prog.
+        if q == 'q0' and len_p7>1 and t2=='t0' and model.p_dvp_is_node1_k3zg2[k3,z,g2]:
+            return (sum(model.v_prog[q,s,k3, k5, t2, w2, z, i, a, x, g2] for w2 in model.s_lw_prog) ==
+                    sum(lp_vars[str('v_prog')]['q0',s,k3, k5, t2, w2, z, i, a, x, g2] for w2 in model.s_lw_prog))
+        else:
+            return pe.Constraint.Skip
+    model.con_MP_prog_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs,
+                                            model.s_k5_birth_offs, model.s_sale_prog,
+                                            model.s_season_types, model.s_tol, model.s_wean_times,
+                                            model.s_gender, model.s_groups_prog, rule=MP_prog_bound,
+                                            doc='prog numbers bnd for node 1 in the MP model')
+
+
+    ##origional version (it worked but model seemed to sometime not solve because to degenerate):
+    # #Unfortunately there was a case when == constraint made the model infeasible (maybe a rounding error). So now there is an upper and lower bnd on each variable.
+    # i = 0
+    # list_v = []
+    # list_s = []
+    # list_idx = []
+    # list_bnd = []
+    # for v in model.component_objects(pe.Var, active=True):
+    #     for s in v:
+    #         # print(v,s)
+    #         list_idx.append(i)
+    #         list_v.append(v)
+    #         list_s.append(s)
+    #         ###make it so that all q in mp model look at q0 from lp_vars (because lp vars are from SE model that only has q[0])
+    #         s_adjusted = ("q0",) + s[1:]
+    #         list_bnd.append(lp_vars[str(v)][s_adjusted])
+    #         i = i + 1
+    #
+    # def MP_upper(model, idx):
+    #     v = list_v[idx]
+    #     s = list_s[idx]
+    #     q = s[0]
+    #     if q == 'q0' and (str(v)=='v_dams'  or str(v)=='v_offs' or str(v)=='v_phase_area' or
+    #                                           str(v)=='v_greenpas_ha' or str(v)=='v_drypas_transfer' or
+    #                                           str(v)=='v_tonnes_sb_transfer' or str(v)=='v_stub_transfer'): #only need to constrain variables that transfer from q_prev
+    #         bnd = list_bnd[idx]
+    #         return v[s] >= bnd * 0.99 #minus 1 to give the model a tiny bit of wriggle room for rounding issues
+    #     ###bnd rotation variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
+    #     elif q == 'q0' and len_p7>1 and str(v) == "v_phase_area" and s[2] == 'zm0':
+    #         bnd = list_bnd[idx]
+    #         return v[s] >= bnd * 0.99 #minus 1 to give the model a tiny bit of wriggle room for rounding issues
+    #     else:
+    #         return pe.Constraint.Skip
+    #
+    # # model.con_MP_upper = pe.Constraint(list_idx, rule=MP_upper)
+    #
+    # def MP_lower(model, idx):
+    #     v = list_v[idx]
+    #     s = list_s[idx]
+    #     q = s[0]
+    #     if q == 'q0' and (str(v)=='v_dams'  or str(v)=='v_offs' or str(v)=='v_phase_area' or
+    #                                           str(v)=='v_greenpas_ha' or str(v)=='v_drypas_transfer' or
+    #                                           str(v)=='v_tonnes_sb_transfer' or str(v)=='v_stub_transfer'): #only need to constrain variables that transfer from q_prev
+    #         bnd = list_bnd[idx]
+    #         return v[s] <= bnd * 1.01 #plus 1 to give the model a tiny bit of wriggle room for rounding issues
+    #     ###bnd rotation variables in p7[0] (unless only one p7 period because that means the management can change in p7[0])
+    #     elif q == 'q0' and len_p7>1 and str(v) == "v_phase_area" and s[2] == 'zm0':
+    #         bnd = list_bnd[idx]
+    #         return v[s] <= bnd * 1.01 #plus 1 to give the model a tiny bit of wriggle room for rounding issues
+    #     else:
+    #         return pe.Constraint.Skip
+    #
+    # # model.con_MP_lower = pe.Constraint(list_idx, rule=MP_lower)
 
 
 

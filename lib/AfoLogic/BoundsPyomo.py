@@ -63,8 +63,9 @@ def f1_boundarypyomo_local(params, model):
     bnd_propn_dams_mated_w_inc = propn_mated_inc and w_set_inc #include bnd_propn_mated with a w set.
     bnd_sale_twice_drys_inc = fun.f_sa(False, sen.sav['bnd_sale_twice_dry_inc'], 5) #proportion of drys sold (can be sold at either sale opp)
     bnd_dry_retained_inc = fun.f_sa(False, np.any(pinp.sheep['i_dry_retained_forced_o']), 5) #force the retention of drys in t[0] (t[1] is handled in the generator.
-    sr_bound_inc = np.any(sen.sav['bnd_sr_t'] != '-') #controls sr bound
-    total_pasture_bound_inc = sen.sav['bnd_total_pas_area_percent'] != '-'  #bound on total pasture (hence also total crop)
+    sr_bound_inc = np.any(sen.sav['bnd_sr_Qt'] != '-') #controls sr bound
+    lw_bound_inc = sen.sav['bnd_lw_change'] != '-' #controls lw bound
+    total_pasture_bound_inc = np.any(sen.sav['bnd_total_pas_area_percent'] != '-') #bound on total pasture (hence also total crop)
     legume_area_bound_inc = sen.sav['bnd_total_legume_area_percent'] != '-'  #bound on total legume
     pasture_lmu_bound_inc = np.any(sen.sav['bnd_pas_area_l'] != '-')
     landuse_bound_inc = np.any(sen.sav['bnd_landuse_area_klz'] != '-') #bound on area of each landuse (which is the sum of all the phases for that landuse)
@@ -617,7 +618,7 @@ def f1_boundarypyomo_local(params, model):
                 '''Force the model so that the drys can only be sold when the other ewes are sold (essentially forcing the retention of drys).
                    The number of drys sold must be less than the sum of the other k2 slices'''
                 #todo add birth timing to p_prop_dry_t0_dams when gbal is activated
-                if pe.value(model.p_wyear_inc_qs[q, s]) and any(model.p_mask_dams['00-0','t0',v,w,z,g1] for w in model.s_lw_dams)!=0 and model.p_drys_retained[v,z,g1]!=0:
+                if pe.value(model.p_wyear_inc_qs[q, s]) and any(model.p_mask_dams['00-0','t0',v,w,z,g1]!=0 for w in model.s_lw_dams) and model.p_drys_retained[v,z,g1]!=0:
                     return sum(model.v_dams[q,s,'00-0','t0',v,a,n,w,z,i,y,g1]
                                for a in model.s_wean_times for n in model.s_nut_dams for w in model.s_lw_dams for y in model.s_gen_merit_dams
                                if pe.value(model.p_mask_dams['00-0','t0',v,w,z,g1]) == 1
@@ -636,18 +637,17 @@ def f1_boundarypyomo_local(params, model):
         ###build bound
         if sr_bound_inc:
             ###initilise
-            pasture_dse_carry = {} #populate straight into dict
-            ### set bound - carry cap of each ha of each pasture
-            for t, pasture in enumerate(sinp.general['pastures'][pinp.general['pas_inc_t']]):
-                pasture_dse_carry[pasture] = pinp.sheep['i_sr_constraint_t'][t]
-            ###param - propn of each fp used in the SR
+            len_q = sinp.structuralsa['i_len_q']  # number of years in MP model
+            keys_q = np.array(['q%s' % i for i in range(len_q)])
+            bnd_sr_qt = fun.f_sa(np.array([99999]), sen.sav['bnd_sr_Qt'][0:len_q, pinp.general['pas_inc_t']], 5)  # 99999 is arbitrary default value which mean skip constraint
+            bnd_sr_qt = fun.f1_make_pyomo_dict(bnd_sr_qt, [keys_q, model.s_pastures])
             ###constraint
             l_p7 = list(model.s_season_periods)
             p7_end_gs0 = l_p7[pinp.general['i_gs_p7_end'][0]]  # p7 period from growing season 0.
             def SR_bound(model, q, s):
-                if pe.value(model.p_wyear_inc_qs[q, s]) and (sum(model.p_wg_propn_p6z[p6,z] * model.p_a_p6_p7[p7,p6,z] * model.p_season_seq_prob_qszp7[q,s,z,p7]
+                if pe.value(model.p_wyear_inc_qs[q, s]) and any(bnd_sr_qt[q,t]!=99999 for t in model.s_pastures) and (sum(model.p_wg_propn_p6z[p6,z] * model.p_a_p6_p7[p7,p6,z] * model.p_season_seq_prob_qszp7[q,s,z,p7]
                                     for p6 in model.s_feed_periods for p7 in model.s_season_periods for z in model.s_season_types)>0):
-                    rhs_dse = sum(model.v_phase_area[q, s, p7_end_gs0, z, r, l] * model.p_pasture_area[r, t] * pasture_dse_carry[t]
+                    rhs_dse = sum(model.v_phase_area[q, s, p7_end_gs0, z, r, l] * model.p_pasture_area[r, t] * bnd_sr_qt[q,t]
                                   * model.p_wg_propn_p6z[p6, z] * model.p_a_p6_p7[p7, p6, z] * model.p_season_seq_prob_qszp7[q, s, z, p7]
                                   for p6 in model.s_feed_periods for p7 in model.s_season_periods
                                   for r in model.s_phases for l in model.s_lmus for t in model.s_pastures for z in model.s_season_types)
@@ -669,12 +669,56 @@ def f1_boundarypyomo_local(params, model):
             model.con_SR_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, rule=SR_bound,
                                                 doc='stocking rate bound for each feed period')
 
+        ##LW - target difference in LW compared to the base w (nut 0) at the end of p7[0]. Used in MP model.
+        ###build bound
+        if lw_bound_inc:
+            ###initilise
+            model.p_lw_diff_from_target_k2tva1nwziyg1 = pe.Param(model.s_k2_birth_dams, model.s_sale_dams,
+                                        model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
+                                        model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
+                                        model.s_groups_dams,
+                                        initialize=params['stock']['p_lw_diff_from_target_k2tva1nwziyg1'], default=0.0, mutable=False,
+                                        doc='')
+            model.p_lw_diff_from_target_k3k5tvnwziaxyg3 = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs,
+                                        model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+                                        model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender,
+                                        model.s_gen_merit_offs, model.s_groups_offs,
+                                        initialize=params['stock']['p_lw_diff_from_target_k3k5tvnwziaxyg3'], default=0.0, mutable=False,
+                                        doc='')
+            ###constraint
+            def lw_dams_bound(model,q,s,k2,t1,v1,a,z,i,y1,g1):
+                ##note 1: the lw_diff param is 0 unless dvp is end of node 1.
+                ##note 2: constraint is only active in q[0] at the end of node 0.
+                if pe.value(model.p_wyear_inc_qs[q, s]) and q=='q0' and any(pe.value(model.p_lw_diff_from_target_k2tva1nwziyg1[k2,t1,v1,a,n1,w1,z,i,y1,g1])!=0 for n1 in model.s_nut_dams for w1 in model.s_lw_dams):
+                    return sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lw_diff_from_target_k2tva1nwziyg1[k2,t1,v1,a,n1,w1,z,i,y1,g1]
+                               for n1 in model.s_nut_dams for w1 in model.s_lw_dams
+                               if pe.value(model.p_lw_diff_from_target_k2tva1nwziyg1[k2,t1,v1,a,n1,w1,z,i,y1,g1])!=0) == 0
+                else:
+                    return pe.Constraint.Skip
+            model.con_lw_dams_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_sale_dams,
+                                                    model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
+                                                    model.s_groups_dams, rule=lw_dams_bound,
+                                                    doc='target difference in LW compared to the base w (nut 0)')
+
+            def lw_offs_bound(model,q,s,k3,k5,t3,v3,z,i,a,x,y3,g3):
+                ##note 1: the lw_diff param is 0 unless dvp is end of node 0.
+                ##note 2: constraint is only active in q[0] at the end of node 0.
+                if pe.value(model.p_wyear_inc_qs[q, s]) and q=='q0' and any(pe.value(model.p_lw_diff_from_target_k3k5tvnwziaxyg3[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0 for n3 in model.s_nut_offs for w3 in model.s_lw_offs):
+                    return sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3] * model.p_lw_diff_from_target_k3k5tvnwziaxyg3[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                               for n3 in model.s_nut_offs for w3 in model.s_lw_offs
+                               if pe.value(model.p_lw_diff_from_target_k3k5tvnwziaxyg3[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0) == 0
+                else:
+                    return pe.Constraint.Skip
+            model.con_lw_offs_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs,
+                                                    model.s_dvp_offs, model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs,
+                                                    model.s_groups_offs, rule=lw_offs_bound,
+                                                    doc='target difference in LW compared to the base w (nut 0)')
 
         ##landuse bound
         ###build bound if turned on
         if landuse_bound_inc:
             ###setbound using % of farm area
-            area_bound_klz = fun.f_sa(np.array([99999]), sen.sav['bnd_landuse_area_klz'], 5)  # 99999 is arbitrary default value which mean skip constraint
+            area_bound_klz = fun.f_sa(np.array([99999]), sen.sav['bnd_landuse_area_klz'][pinp.all_landuse_mask_k,:,:], 5)  # 99999 is arbitrary default value which mean skip constraint
             arrays = [model.s_landuses, model.s_lmus, model.s_season_types]
             index_klz = fun.cartesian_product_simple_transpose(arrays)
             tup_klz = tuple(map(tuple, index_klz))
@@ -694,19 +738,21 @@ def f1_boundarypyomo_local(params, model):
         ###build bound if turned on
         if crop_area_bound_inc:
             ###setbound using % of farm area
-            crop_area_percent_k1 = fun.f_sa(np.array([99999]), sen.sav['bnd_crop_area_percent'], 5)  # 99999 is arbitrary default value which mean skip constraint
-            crop_area_bound_k1 = np.full_like(crop_area_percent_k1,99999)
-            crop_area_bound_k1[crop_area_percent_k1!=99999] = (crop_area_percent_k1 * sum(model.p_area[l] for l in model.s_lmus))[crop_area_percent_k1!=99999]
+            len_q = sinp.structuralsa['i_len_q']  # number of years in MP model
+            keys_q = np.array(['q%s' % i for i in range(len_q)])
+            crop_area_percent_qk1 = fun.f_sa(np.array([99999]), sen.sav['bnd_crop_area_percent'][0:len_q, pinp.crop_landuse_mask_k1], 5)  # 99999 is arbitrary default value which mean skip constraint
+            crop_area_bound_qk1 = np.full_like(crop_area_percent_qk1,99999)
+            crop_area_bound_qk1[crop_area_percent_qk1!=99999] = (crop_area_percent_qk1 * sum(model.p_area[l] for l in model.s_lmus))[crop_area_percent_qk1!=99999]
             ###setbound using ha of farm area
-            crop_area_bound_k1 = fun.f_sa(crop_area_bound_k1, sen.sav['bnd_crop_area'], 5)
-            crop_area_bound_k1 = dict(zip(model.s_crops, crop_area_bound_k1))
+            crop_area_bound_qk1 = fun.f_sa(crop_area_bound_qk1, sen.sav['bnd_crop_area'][0:len_q, pinp.crop_landuse_mask_k1], 5)
+            crop_area_bound_qk1 = fun.f1_make_pyomo_dict(crop_area_bound_qk1, [keys_q, model.s_crops])
             ###constraint
             l_p7 = list(model.s_season_periods)
             def k1_bound(model, q, s, p7, k1, z):
-                if p7 == l_p7[-1] and crop_area_bound_k1[k1]!=99999 and pe.value(model.p_wyear_inc_qs[q, s]):  #bound will not be built if param == 99999
+                if p7 == l_p7[-1] and crop_area_bound_qk1[q,k1]!=99999 and pe.value(model.p_wyear_inc_qs[q, s]):  #bound will not be built if param == 99999
                     return(
                            sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_landuse_area[r, k1] for r in model.s_phases for l in model.s_lmus)
-                           == crop_area_bound_k1[k1])
+                           == crop_area_bound_qk1[q,k1])
                 else:
                     return pe.Constraint.Skip
             model.con_crop_area_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, rule=k1_bound, doc='bound on total pasture area')
@@ -730,15 +776,18 @@ def f1_boundarypyomo_local(params, model):
         ##total pasture area - hence also total crop area
         ###build bound if turned on
         if total_pasture_bound_inc:
-            ###setbound
-            total_pas_area_percent = sen.sav['bnd_total_pas_area_percent']
+            ###setbound  - 99999 is arbitrary default value which mean skip constraint
+            len_q = sinp.structuralsa['i_len_q']  # number of years in MP model
+            keys_q = np.array(['q%s' % i for i in range(len_q)])
+            total_pas_area_percent_q = fun.f_sa(np.array([99999]), sen.sav['bnd_total_pas_area_percent'][0:len_q], 5)
+            total_pas_area_percent_q = dict(zip(keys_q, total_pas_area_percent_q))
             ###constraint
             l_p7 = list(model.s_season_periods)
             def pas_bound(model, q, s, p7, z):
-                if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]):
+                if p7 == l_p7[-1] and total_pas_area_percent_q[q] != 99999 and pe.value(model.p_wyear_inc_qs[q, s]):
                     return (sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_pasture_area[r,t]
                                 for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
-                            == sum(model.p_area[l] for l in model.s_lmus) * total_pas_area_percent)
+                            == sum(model.p_area[l] for l in model.s_lmus) * total_pas_area_percent_q[q])
                 else:
                     return pe.Constraint.Skip
             model.con_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, rule=pas_bound,doc='bound on total pasture area')
@@ -781,22 +830,25 @@ def f1_boundarypyomo_local(params, model):
 
 
         if emissions_bnd_inc:
-            def emissions(model,q,s):
+            def emissions(model):
                 '''
                 Constrains total farm co2e emissions.
 
+                p7 axis required due to season clustering.
+
                 Note this constraint could be modified to constrain emission intensity or to constrain emissions from each enterprise.
                 '''
-                if pe.value(model.p_wyear_inc_qs[q, s]) and model.p_co2e_limit>0:
+                if model.p_co2e_limit>0:
                     return sum((sum((suppy.f_sup_emissions(model,q,s,p6,z) + cgzpy.f_grazecrop_emissions(model,q,s,p6,z)
                                      + stubpy.f_cropresidue_consumption_emissions(model,q,s,p6,z) + slppy.f_saltbush_emissions(model,q,s,z,p6)
                                      + paspy.f_pas_emissions(model,q,s,p6,z))*model.p_a_p6_p7[p7,p6,z] for p6 in model.s_feed_periods)
                                 + stkpy.f_stock_emissions(model,q,s,p7,z) + stubpy.f_cropresidue_production_emissions(model,q,s,p7,z)
                                 + phspy.f_rot_emissions(model, q, s, p7, z) + macpy.f_seeding_harv_fuel_emissions(model, q, s, p7, z)) * model.p_season_seq_prob_qszp7[q,s,z,p7]
-                                for z in model.s_season_types for p7 in model.s_season_periods if pe.value(model.p_mask_season_p7z[p7,z]) != 0) <= uinp.emissions['co2e_limit']
+                                for q in model.s_sequence_year for s in model.s_sequence
+                                for z in model.s_season_types for p7 in model.s_season_periods if pe.value(model.p_season_seq_prob_qszp7[q,s,z,p7]) != 0) <= uinp.emissions['co2e_limit']
                 else:
                     return pe.Constraint.Skip
-            model.con_emissions = pe.Constraint(model.s_sequence_year, model.s_sequence,rule=emissions,doc='co2e emissions')
+            model.con_emissions = pe.Constraint(rule=emissions,doc='co2e emissions')
 
 
 

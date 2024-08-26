@@ -10,6 +10,7 @@ import numpy as np
 #AFO modules
 from . import RotationPhases as rps
 from . import PropertyInputs as pinp
+from . import StructuralInputs as sinp
 
 def rotation_precalcs(params, report):
     '''
@@ -26,7 +27,7 @@ def rotation_precalcs(params, report):
     rps.f_rot_hist_params(params)
     rps.f_rot_hist4_params(params)
 
-def f1_rotationpyomo(params, model):
+def f1_rotationpyomo(params, model, MP_lp_vars):
     ''' Builds pyomo variables, parameters and constraints'''
 
     #############
@@ -83,11 +84,11 @@ def f1_rotationpyomo(params, model):
     ###################
     #call constraints #
     ###################
-    f_con_history_between(params, model)
+    f_con_history_between(params, model, MP_lp_vars)
     f_con_history_within(params, model)
     f_phase_history4_within(model)
     f_phase_link_within(model)
-    f_phase_link_between(model)
+    f_phase_link_between(model, MP_lp_vars)
     f_con_area(model)
     f_con_max_crop_area(model)
     # f_con_dry_link(model)
@@ -105,7 +106,7 @@ def f1_rotationpyomo(params, model):
 ##rotation constraints are usually the same each loop. but if the lmu mask changes they need to be built again
 ##thus they are just built each loop. Maybe this could be changed if running lots of rotations.
 
-def f_con_history_between(params, model):
+def f_con_history_between(params, model, MP_lp_vars):
     '''
     Creates the constraint between history provided at the end of the year and the history required at the beginning
     of the year for each rotation phase on each LMU.
@@ -126,10 +127,26 @@ def f_con_history_between(params, model):
     def rot_history_between(model,q,s9,p7,l,h,z9):
         l_p7 = list(model.s_season_periods)
         p7_end_gs1 = l_p7[pinp.general['i_gs_p7_end'][1]] #p7 period from growing season 1. This provides the history.
-        l_q = list(model.s_sequence_year)
-        q_prev = l_q[l_q.index(q) - 1]
+        l_q = list(model.s_sequence_year_between_con)
+        ###adjust q_prev for multi-period model
+        if sinp.structuralsa['model_is_MP']:
+            ####yr0 is SE so q_prev is q
+            if q == l_q[0]:
+                q_prev = q
+                v_phase_area_hist = MP_lp_vars[str('v_phase_area')] #q[0] is provided by the MP set up run.
+            ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
+            elif q == l_q[-1]:
+                q = l_q[l_q.index(q) - 1]
+                q_prev = q
+                v_phase_area_hist = model.v_phase_area
+            else:
+                q_prev = l_q[l_q.index(q) - 1]
+                v_phase_area_hist = model.v_phase_area
+        else:
+            q_prev = l_q[l_q.index(q) - 1]
+            v_phase_area_hist = model.v_phase_area
         if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_season_p7z[p7,z9]) and pe.value(model.p_inc_hist_gs1_con[p7,z9]) and params['hist_used'][h]:
-            return sum(model.v_phase_area[q_prev,s8,p7_end_gs1,z8,r,l]*model.p_hist_prov[r,h]
+            return sum(v_phase_area_hist[q_prev,s8,p7_end_gs1,z8,r,l] * model.p_hist_prov[r,h]
                        * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
                        for r in model.s_phases for s8 in model.s_sequence for z8 in model.s_season_types
                        if ((r,)+(h,)) in params['hist_prov'].keys()) \
@@ -137,7 +154,7 @@ def f_con_history_between(params, model):
                        if ((r,)+(h,)) in params['hist_req'].keys())<=0
         else:
             return pe.Constraint.Skip
-    model.con_rot_history_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_history_between, doc='rotation phases constraint')
+    model.con_rot_history_between = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_history_between, doc='rotation phases constraint')
 
 def f_con_history_within(params, model):
     '''
@@ -155,10 +172,8 @@ def f_con_history_within(params, model):
     def rot_history_within(model,q,s9,p7,l,h,z9):
         l_p7 = list(model.s_season_periods)
         p7_end_gs0 = l_p7[pinp.general['i_gs_p7_end'][0]] #p7 period from growing season 0. This prov the history.
-        l_q = list(model.s_sequence_year)
-        q_prev = l_q[l_q.index(q) - 1]
         if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_season_p7z[p7,z9]) and model.p_inc_hist_gs0_con[p7,z9]:
-            return sum(model.v_phase_area[q_prev,s9,p7_end_gs0,z8,r,l]*model.p_hist_prov[r,h]
+            return sum(model.v_phase_area[q,s9,p7_end_gs0,z8,r,l]*model.p_hist_prov[r,h]
                        * model.p_ancestorz_provwithinz_phase[p7_end_gs0,z8,z9]
                        for r in model.s_phases for z8 in model.s_season_types
                        if ((r,)+(h,)) in params['hist_prov'].keys()) \
@@ -218,7 +233,7 @@ def f_phase_link_within(model):
             return pe.Constraint.Skip
     model.con_phase_link_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=phase_link_within, doc='rotation phases constraint')
 
-def f_phase_link_between(model):
+def f_phase_link_between(model, MP_lp_vars):
     '''
     This is the between year version of above. This is required because in the late breaks the phase from the previous
     year needs to carry over so that dry pasture and stubble can exist.
@@ -226,19 +241,37 @@ def f_phase_link_between(model):
     def phase_link_between(model,q,s9,p7,l,r,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
-        q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
+        l_q = list(model.s_sequence_year_between_con)
+        ###adjust q_prev for multi-period model
+        if sinp.structuralsa['model_is_MP']:
+            ####yr0 is SE so q_prev is q
+            if q == l_q[0]:
+                q_prev = q
+                v_phase_area_hist = MP_lp_vars[str('v_phase_area')]  # q[0] is provided by the MP set up run.
+            ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
+            elif q == l_q[-1]:
+                q = l_q[l_q.index(q) - 1]
+                q_prev = q
+                v_phase_area_hist = model.v_phase_area
+            else:
+                q_prev = l_q[l_q.index(q) - 1]
+                v_phase_area_hist = model.v_phase_area
+        else:
+            q_prev = l_q[l_q.index(q) - 1]
+            v_phase_area_hist = model.v_phase_area
+
         if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_childz_between_phase[p7,z9]):
             return model.v_phase_area[q,s9,p7,z9,r,l]  \
                    - model.v_phase_change_increase[q,s9,p7,z9,r,l] * model.p_phase_can_increase[p7,z9,r] \
                    + model.v_phase_change_reduce[q,s9,p7,z9,r,l] * model.p_phase_can_reduce[r,p7,z9] \
-                   - sum(model.v_phase_area[q_prev,s8,p7_prev,z8,r,l]
+                   - sum(v_phase_area_hist[q_prev,s8,p7_prev,z8,r,l]
                          * model.p_parentz_provbetween_phase[p7_prev, z8, z9]
                          * (model.p_sequence_prov_qs8zs9[q_prev, s8, z8, s9] + model.p_endstart_prov_qsz[q_prev, s8, z8])
                             for s8 in model.s_sequence for z8 in model.s_season_types) * model.p_phase_area_transfers[p7_prev,z9,r] \
                    == 0 #end of the previous yr is controlled by between constraint
         else:
             return pe.Constraint.Skip
-    model.con_phase_link_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=phase_link_between, doc='rotation phases constraint')
+    model.con_phase_link_between = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=phase_link_between, doc='rotation phases constraint')
 
 
 # def f_con_dry_link(model):

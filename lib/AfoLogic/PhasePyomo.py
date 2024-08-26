@@ -76,7 +76,7 @@ def f1_croppyomo_local(params, model):
                                              model.s_phases, initialize=params['increment_rot_wc'],
                                              default=0, mutable=False, doc='total wc for 1 unit of rotation')
 
-    model.p_rotation_biomass = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_season_types, model.s_season_periods,
+    model.p_rotation_biomass = pe.Param(model.s_sequence_year, model.s_phases, model.s_crops, model.s_lmus, model.s_season_types, model.s_season_periods,
                                       initialize=params['rot_biomass'], default = 0.0, mutable=False, doc='biomass production for all crops for 1 unit of rotation')
 
     model.p_biomass2product = pe.Param(model.s_crops, model.s_biomass_uses, initialize=params['biomass2product_ks2'],
@@ -84,10 +84,10 @@ def f1_croppyomo_local(params, model):
 
     model.p_grainpool_proportion = pe.Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
     
-    model.p_grain_price = pe.Param(model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops,
+    model.p_grain_price = pe.Param(model.s_sequence_year, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops,
                                    model.s_biomass_uses, model.s_c1, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
     
-    model.p_grain_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools,
+    model.p_grain_wc = pe.Param(model.s_sequence_year, model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools,
                                 model.s_crops, model.s_biomass_uses, initialize=params['grain_wc'],default = 0.0, doc='farm gate wc per tonne of each grain')
     
     model.p_phasesow_req = pe.Param(model.s_phases, model.s_landuses, model.s_lmus, initialize=params['phase_sow_req'], default = 0.0, doc='ha of sow activity required by each rot phase')
@@ -122,8 +122,8 @@ def f_rotation_biomass(model,q,s,p7,k,l,z):
 
     Used in global constraint (con_biomass_transfer). See CorePyomo
     '''
-    return sum(model.p_rotation_biomass[r,k,l,z,p7]*model.v_phase_area[q,s,p7,z,r,l]
-               for r in model.s_phases if pe.value(model.p_rotation_biomass[r,k,l,z,p7]) != 0)
+    return sum(model.p_rotation_biomass[q,r,k,l,z,p7]*model.v_phase_area[q,s,p7,z,r,l]
+               for r in model.s_phases if pe.value(model.p_rotation_biomass[q,r,k,l,z,p7]) != 0)
 
 
 ##############

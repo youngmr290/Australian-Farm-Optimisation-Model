@@ -280,10 +280,10 @@ def f_perm_cost(params, r_vals):
     '''
 
     ##cost allocation
-    labour_start_c0 = per.f_cashflow_date() + 182 #fixed costs are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr)
+    labour_start = np.array([182]) #fixed costs are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr)
     ###call allocation/interset function - needs to be numpy
     ### no enterprise is passed because fixed cost are for both enterprise and thus the interest is the average of both enterprises
-    labour_cost_allocation_p7z, labour_wc_allocation_c0p7z = fin.f_cashflow_allocation(labour_start_c0[:,na], z_pos=-1, c0_inc=True)
+    labour_cost_allocation_p7z, labour_wc_allocation_c0p7z = fin.f_cashflow_allocation(labour_start, z_pos=-1)
 
     ###perm
     perm_cost = (uinp.price['permanent_cost'] + uinp.price['permanent_cost'] * uinp.price['permanent_super'] \

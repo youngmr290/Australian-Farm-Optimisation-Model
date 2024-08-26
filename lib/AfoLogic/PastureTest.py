@@ -41,7 +41,7 @@ r_vals={}
 ###############
 #User control #
 ###############
-trial = 31   #23 is quick test
+trial = 31   #quick test
 
 ######
 #Run #

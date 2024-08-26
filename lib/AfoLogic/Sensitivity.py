@@ -55,6 +55,7 @@ def create_sa():
     len_R = 5000 #just use a big number - it is cut down later (this is because the length of r is not known because it can be affected by SA)
     len_s = pinp.sheep['i_s_len'] #s = shear
     len_s7 = len(uinp.sheep['i_salep_price_max_s7']) #s7 = sale grid
+    len_t = len(pinp.general['pas_inc_t'])
     len_t1 = pinp.sheep['i_n_dam_sales'] + len_g0
     len_t2 = pinp.sheep['i_t2_len']
     if sinp.structuralsa['i_offs_sale_method'] == 1:
@@ -63,6 +64,8 @@ def create_sa():
         len_t3 = pinp.sheep['i_t3_len']
     len_P = 500  #Capital P because it is an (over) estimate to initialise the p axes that will be sliced when len_p is known.
     len_p6 = len(pinp.period['i_fp_idx'])
+    len_P7 = 10 #number of season node - use a big number because len_p7 can be adjusted by SA (if using MP model)
+    len_Q = 20 #number of years in MP model - use a big number because len_q can be adjusted by SA
     len_V = 50  #Capital V because it is an (over) estimate to initialise the v axes that will be sliced when len_v is known.
     len_max_W1 = 3125 #number of nut options (i_nut_spread_n1 ** n_fvp) (this used to be calculated but the max possible was too big. This now assumes max n=5 and max fvp =5) #the max number of options for each starting w if all n and fvps included.
     len_max_W3 = 3125 #number of nut options (i_nut_spread_n3 ** n_fvp) (this used to be calculated but the max possible was too big. This now assumes max n=5 and max fvp =5) #the max number of options for each starting w if all n and fvps included.
@@ -88,8 +91,11 @@ def create_sa():
     sav['steady_state']      = '-'                  #SA to alter if the model is steady state
     sav['mask_z']      = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)   #SA to alter which seasons are included
     sav['prob_z']      = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)   #SA to alter which seasons are included
+    sav['date_node_p7']      = np.full(2, '-', dtype=object) #SA to alter p7 period dates (for MP model). Len 2 because p7 has two periods in the MP model. Note the node periods need to line up with p5 and p6 periods
     sav['inc_node_periods']      = '-'              #SA to alter if season nodes are included in the steady state model (note they are always included in the dsp version this only effects if they are included in steady state)
+    sav['node_is_fvp'] = np.full(len_P7, '-', dtype=object) #SA to alter if season nodes are used as FVPs. This is generally True in the MP model.
     sav['seq_len']      = '-'                     #SA to alter the length of the season sequence in the SQ model
+    sav['model_is_MP']      = '-'                 #SA to control when the MP framework is used.
     sav['rev_update']      = '-'                  #SA to alter if the trial is being used to create rev std values
     sav['rev_number']      = '-'                  #SA to alter rev number - rev number is appended to the std rev value pkl file and can be used to select which rev is used as std for a given trial.
     sav['rev_trait_scenario'] = np.full_like(sinp.structuralsa['i_rev_trait_scenario'], '-', dtype=object) #SA value for which traits are to be held constant in REV analysis.
@@ -157,6 +163,9 @@ def create_sa():
     sav['sale_ffcfw_max'] = np.full(len_s7, '-', dtype=object)        #max weight for sale in grid
     ##SAM
     sam['grainp_k'] = np.ones(len_k, dtype='float64')   # SA multiplier for grain prices for each crop
+    sam['q_grain_price_scalar_Qk'] = np.ones((len_Q, len_k), dtype='float64')   # SAM for grain price with q axis
+    sam['q_wool_price_scalar_Q'] = np.ones(len_Q, dtype='float64')   # SAM for wool price with q axis
+    sam['q_meat_price_scalar_Q'] = np.ones(len_Q, dtype='float64')   # SAM for meat price with q axis
     sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron
     sam['salep_max_s7'] = np.ones(len_s7, dtype='float64')        #max sale price in grid
     sam['salep_month_adjust_s7s9p4'] = np.ones(uinp.sheep['i_salep_months_priceadj_s7s9p4'].shape, dtype='float64')      #monthly sale price
@@ -243,6 +252,7 @@ def create_sa():
     sav['cropgraze_propn_area_grazed_kl'] = np.full((len_k, len_l), '-', dtype=object)  #control proportion of crop area that can be grazed.
     sav['cropgraze_yield_penalty_k'] = np.full((len_k), '-', dtype=object)  #Reduction in yield per kg of crop consumed (if grazed early in the growing season after the crop is established).
     ##SAM
+    sam['cropgraze_yield_penalty'] = 1.0   # SA multiplier for the cropgraze yield penalty
     ##SAP
     ##SAA
     ##SAT
@@ -279,6 +289,7 @@ def create_sa():
     sav['lime_cost'] = '-'  #cost ($/ha) of lime
     sav['liming_freq'] = '-'  #number of years between applications
     ##SAM
+    sam['q_crop_yield_scalar_Qk'] = np.ones((len_Q, len_k), dtype='float64')  # SAM for grain price with q axis
     sam['crop_yield_k'] = np.ones(len_k, dtype='float64')    # SA multiplier for all rotation yield
     sam['crop_fert_kn'] = np.ones((len_k, len_n), dtype='float64') #SA multiplier on crop fertiliser
     sam['pas_fert_kn'] = np.ones((len_pas_k, len_n), dtype='float64') #SA multiplier on pas fertiliser
@@ -300,7 +311,9 @@ def create_sa():
     ##SAV
     sav['poc_inc'] = '-'  #control if poc is included
     sav['pas_inc_t'] = np.full_like(pinp.general['pas_inc_t'], '-', dtype=object) #SA value for pastures included mask
-    
+    ##SAM
+    sam['q_pgr_scalar_Qp6'] = np.ones((len_Q, len_p6), dtype='float64')   # SAM for pgr with q axis
+
     for pasture in sinp.general['pastures'][pinp.general['i_pastures_exist']]:
         ##SAV
         ##SAM
@@ -365,10 +378,12 @@ def create_sa():
     sav['n_fs_dams'] = '-'      #nut options dams
     sav['n_fs_offs'] = '-'      #nut options offs
     sav['n_initial_lw_dams'] = '-'      #number of initial lws dams - note with the current code this can only be 2 or 3
+    sav['n_initial_lw_offs'] = '-'      #number of initial lws offs - note with the current code this can only be 2 or 3
     sav['adjp_lw_initial_w1'] = np.full(sinp.structuralsa['i_adjp_lw_initial_w1'].shape, '-', dtype=object)      #initial lw adjustment dams
     sav['adjp_cfw_initial_w1'] = np.full(sinp.structuralsa['i_adjp_cfw_initial_w1'].shape, '-', dtype=object)    #initial cfw adjustment dams
     sav['adjp_fd_initial_w1'] = np.full(sinp.structuralsa['i_adjp_fd_initial_w1'].shape, '-', dtype=object)      #initial fd adjustment dams
     sav['adjp_fl_initial_w1'] = np.full(sinp.structuralsa['i_adjp_fl_initial_w1'].shape, '-', dtype=object)      #initial fl adjustment dams
+    sav['condense_at_seasonstart'] = '-'  # SA to alter if condensing occurs at season start. Default is False except in the MP model when this can be set to True so that core fvps can be masked out and just just the season nodes for fvps.
     sav['user_fvp_date_dams_iu'] = np.full(sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['user_fvp_date_dams_yiu'] = np.full((len_y,)+sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['mask_fvp_dams'] = np.full(sinp.structuralsa['i_fvp_mask_dams'].shape, '-', dtype=object)      #SA to mask optional fvps.
@@ -476,10 +491,10 @@ def create_sa():
     ##SAV
     sav['bnd_slp_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of slp on each lmu
     sav['bnd_sb_consumption_p6'] = np.full(len(pinp.period['i_fp_idx']), '-', dtype=object)  #upper bnd on the amount of sb consumed
-    sav['bnd_crop_area'] = np.full(len_k, '-', dtype=object)  #crop area for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
-    sav['bnd_crop_area_percent'] = np.full(len_k, '-', dtype=object)  #crop area percent of farm area. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
+    sav['bnd_crop_area'] = np.full((len_Q, len_k), '-', dtype=object)  #crop area for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
+    sav['bnd_crop_area_percent'] = np.full((len_Q, len_k), '-', dtype=object)  #crop area percent of farm area. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
     sav['bnd_total_legume_area_percent'] = '-'  #Control the total percent of legume area on farm.
-    sav['bnd_biomass_graze_k1'] = np.full(len_k, '-', dtype=object)  #biomass graze area for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
+    sav['bnd_biomass_graze_k1'] = np.full((len_Q, len_k), '-', dtype=object)  #biomass graze area for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
     sav['bnd_total_pas_area_percent'] = '-'  #Control the total percent of pasture area on farm.
     sav['bnd_pas_area_l'] = np.full(len_l, '-', dtype=object)  #pasture area by lmu for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
     sav['bnd_landuse_area_klz'] = np.full((len_k, len_l, len_z), '-', dtype=object)  #landuse area by lmu and z. if all values are '-' the bnd won't be used
@@ -507,7 +522,8 @@ def create_sa():
     sav['bnd_up_off_inc'] = '-'   #control if off upper bound is on.
     sav['bnd_up_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #max number of offs
     sav['bnd_up_prog_tdxg2'] = np.full((len_t2,) + (len_d,) + (len_x,) + (len_g2,), '-', dtype=object)   #max number of offs
-    sav['bnd_sr_t'] = np.full(pinp.sheep['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
+    sav['bnd_sr_Qt'] = np.full((len_Q, len_t), '-', dtype=object)   #SA to fix stocking rate
+    sav['bnd_lw_change'] = '-'   #target difference in LW compared to the base w (nut 0). Used in MP model. A positive value means animals must be heavier than the base w slice at the end of the first node. A negitive value means the animals must be lighter. This bnd is only active in q[1].
     sav['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
     sav['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
     sav['bnd_min_sale_age_female_g1'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a dam can be sold - BBT offspring can be sold but BBT dams can't (because they are BB)

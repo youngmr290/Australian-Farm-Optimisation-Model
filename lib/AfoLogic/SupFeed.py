@@ -61,10 +61,10 @@ def f_buy_grain_price(r_vals):
 
     '''
     ##purchase price from neighbour is farm gate price plus transaction and transport
-    farmgate_price_ks2gc1_z = phs.f_farmgate_grain_price()
+    farmgate_price_ks2gc1_qz = phs.f_farmgate_grain_price()
     cartage=uinp.price['sup_cartage']
     transaction_fee=uinp.price['sup_transaction']
-    buy_price_ks2gc1_z = farmgate_price_ks2gc1_z + cartage + transaction_fee
+    buy_price_ks2gc1_qz = farmgate_price_ks2gc1_qz + cartage + transaction_fee
 
     ##allocate farm gate grain price for each cashflow period and calc interest
     start = np.array([pinp.crop['i_grain_income_date']])
@@ -85,14 +85,16 @@ def f_buy_grain_price(r_vals):
     # grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
     # buy_grain_price =  price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
     # buy_grain_price_wc =  price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
-
-    buy_grain_price_ks2gc1_p7z =  buy_price_ks2gc1_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
-    buy_grain_price_wc_ks2gc1_c0p7z =  buy_price_ks2gc1_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
+    buy_price_ks2gc1q_z = buy_price_ks2gc1_qz.stack(0)
+    buy_grain_price_ks2gc1q_p7z =  buy_price_ks2gc1q_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
+    buy_grain_price_ks2gc1_qp7z = buy_grain_price_ks2gc1q_p7z.unstack(-1).reorder_levels([2, 0, 1], axis=1)
+    buy_grain_price_wc_ks2gc1q_c0p7z =  buy_price_ks2gc1q_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
+    buy_grain_price_wc_ks2gc1_qc0p7z = buy_grain_price_wc_ks2gc1q_c0p7z.unstack(-1).reorder_levels([3, 0, 1, 2], axis=1)
 
     ##average c1 axis for wc and report
     c1_prob = uinp.price_variation['prob_c1']
-    buy_grain_price_wc_ks2g_c0p7z = buy_grain_price_wc_ks2gc1_c0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
-    r_buy_grain_price_ks2g_p7z = buy_grain_price_ks2gc1_p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
+    buy_grain_price_wc_ks2g_qc0p7z = buy_grain_price_wc_ks2gc1_qc0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
+    r_buy_grain_price_ks2g_qp7z = buy_grain_price_ks2gc1_qp7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
 
     ##buy grain period - purchased grain can only provide into the grain transfer constraint in the phase period when it is purchased (otherwise it will get free grain)
     alloc_p7z = zfun.f1_z_period_alloc(start[na], z_pos=-1)
@@ -104,10 +106,10 @@ def f_buy_grain_price(r_vals):
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, r_buy_grain_price_ks2g_p7z, 'buy_grain_price', mask_season_p7z, z_pos=-1)
-    return buy_grain_price_ks2gc1_p7z.unstack([2,0,1,3]).sort_index(), buy_grain_price_wc_ks2g_c0p7z.unstack([2,0,1]).sort_index(), buy_grain_prov_p7z
+    fun.f1_make_r_val(r_vals, r_buy_grain_price_ks2g_qp7z, 'buy_grain_price', mask_season_p7z, z_pos=-1)
+    return buy_grain_price_ks2gc1_qp7z.unstack([2,0,1,3]).sort_index(), buy_grain_price_wc_ks2g_qc0p7z.unstack([2,0,1]).sort_index(), buy_grain_prov_p7z
 
-def f_sup_cost(r_vals, nv):
+def f_sup_feeding_cost(r_vals, nv):
     '''
 
     Machinery, storage and depreciation costs incurred to feed 1t of supplement.
@@ -412,7 +414,7 @@ def f_sup_labour(nv):
     ##convert to hr/m3 for lupins and hr/bale for hay
     grain_density= uinp.supfeed['grain_density'].T.reset_index() #reindex so it can be combined with different grains
     grain_density=grain_density.set_index(['index','silo type']).squeeze()
-    empty_df[('grain','empty rate lupins')]=1/(empty_df[('grain','empty rate lupins')]*60*60/1000/grain_density.loc['l','grain']) #convert from kg/sec lupins to hr/m3 (which is the same for all grains). First convert kg/sec to t/hr then divide by density
+    empty_df[('grain','empty rate lupins')]=1/(empty_df[('grain','empty rate lupins')]*60*60/1000/0.72) #convert from kg/sec lupins (density of lupins is 0.72 - this has to be hard coded incase lupins are masked out of the land uses) to hr/m3 (which is the same for all grains). First convert kg/sec to t/hr then divide by density
     empty_df[('hay','empty rate')]=empty_df[('hay','empty rate')]/60 #convert min/bale to hr/bale
     ##combine time to fill and empty then convert to per tonne for each grain
     empty_df=empty_df.droplevel(1, axis=1)
@@ -421,7 +423,7 @@ def f_sup_labour(nv):
     ##calc time between paddocks
     ###convert lupin rate fed to mj/hd/d
     feedrate=pinp.supfeed['feed_rate']
-    mj=feedrate['feed rate']/1000000*uinp.supfeed['sup_md_vol'].loc['energy', 'l'] #divide by 1000000 because convert g to tonnes because energy is in mj/tonne
+    mj=feedrate['feed rate']/1000000*13300 #13300 is energy of 1t lupins. Divide by 1000000 because convert g to tonnes because energy is in mj/tonne
     ###determine how many mj are feed to each paddock each time feeding occurs ie total mj per week divided by frequency of feeding per week
     mj_mob_per_trip = mj * feedrate['mob size'] * 7 / pinp.supfeed['feed_freq']
     ###time per mj. this is just the time to drive between two paddocks divided by the mj fed
@@ -559,7 +561,7 @@ def f1_sup_selectivity():
 
 ##collates all the params
 def f_sup_params(params,r_vals, nv):
-    total_sup_cost, total_sup_wc, storage_dep, storage_asset, confinement_dep, co2e_fuel_fk = f_sup_cost(r_vals, nv)
+    total_sup_cost, total_sup_wc, storage_dep, storage_asset, confinement_dep, co2e_fuel_fk = f_sup_feeding_cost(r_vals, nv)
     vol_tonne, md_tonne = f_sup_md_vol(r_vals, nv)
     co2e_sup_consumption_fk = f_sup_emissions(r_vals, nv)
     sup_labour = f_sup_labour(nv)

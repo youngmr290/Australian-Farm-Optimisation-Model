@@ -272,13 +272,22 @@ def f_property_inp_sa(pinp_defaults):
     ##have to import it here since sen.py imports this module
     from . import Sensitivity as sen
 
+    ##special sav to change node dates for MP model
+    if np.any(sen.sav['date_node_p7']!='-'):
+        ###slice p7 so that inputs match new p7 definition
+        len_p7 = len(sen.sav['date_node_p7'])
+        general['i_date_node_zm'] = general['i_date_node_zm'][:,0:len_p7] #slice p7
+        general['i_phase_can_increase_kp7'] = general['i_phase_can_increase_kp7'][:,0:len_p7]
+        general['i_phase_can_reduce_kp7'] = general['i_phase_can_reduce_kp7'][:,0:len_p7]
+        general['i_node_is_fvp'] = general['i_node_is_fvp'][0:len_p7]
+        ###update node dates
+        general['i_date_node_zm'][...] = sen.sav['date_node_p7']
+
     ##general
     ###sav
-    general['steady_state'] = fun.f_sa(general['steady_state'], sen.sav['steady_state'], 5)
     general['i_mask_z'] = fun.f_sa(general['i_mask_z'], sen.sav['mask_z'], 5)
     general['i_season_propn_z'] = fun.f_sa(general['i_season_propn_z'], sen.sav['prob_z'], 5)
-    general['i_inc_node_periods'] = fun.f_sa(general['i_inc_node_periods'], sen.sav['inc_node_periods'], 5)
-    general['i_len_q'] = fun.f_sa(general['i_len_q'], sen.sav['seq_len'], 5)
+    general['i_node_is_fvp'] = fun.f_sa(general['i_node_is_fvp'], sen.sav['node_is_fvp'][0:len(general['i_node_is_fvp'])], 5)
     labour['max_managers'] = fun.f_sa(labour['max_managers'], sen.sav['manager_ub'], 5)
     labour['min_managers'] = fun.f_sa(labour['min_managers'], sen.sav['manager_lo'], 5)
     labour['max_perm'] = fun.f_sa(labour['max_perm'], sen.sav['perm_ub'], 5)
@@ -367,7 +376,9 @@ def f_property_inp_sa(pinp_defaults):
     ###sav
     cropgraze['i_cropgrazing_inc'] = fun.f_sa(cropgraze['i_cropgrazing_inc'], sen.sav['cropgrazing_inc'], 5)
     cropgraze['i_cropgraze_propn_area_grazed_kl'] = fun.f_sa(cropgraze['i_cropgraze_propn_area_grazed_kl'], sen.sav['cropgraze_propn_area_grazed_kl'], 5)
+    cropgraze['i_cropgraze_yield_reduction_k'] = fun.f_sa(cropgraze['i_cropgraze_yield_reduction_k'], sen.sav['cropgraze_yield_penalty_k'], 5)
     ###sam
+    cropgraze['i_cropgraze_yield_reduction_k'] = fun.f_sa(cropgraze['i_cropgraze_yield_reduction_k'], sen.sam['cropgraze_yield_penalty'])
     ###sap
     ###saa
     ###sat
@@ -446,7 +457,6 @@ def f_property_inp_sa(pinp_defaults):
     sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.sav['r2_isk2g1'],5)
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.sav['r1_izg3'],5)
     sheep['ia_r2_ik0g3'] = fun.f_sa(sheep['ia_r2_ik0g3'], sen.sav['r2_ik0g3'],5)
-    sheep['i_sr_constraint_t'] = fun.f_sa(sheep['i_sr_constraint_t'].astype(float), sen.sav['bnd_sr_t'],5)
     feedsupply['i_feedsupply_adj_options_r2p'] = fun.f_sa(feedsupply['i_feedsupply_adj_options_r2p'], sen.sav['feedsupply_adj_r2p'], 5)   #SAV before SAA allows the Property.xl inputs to be overwritten with 0 and then add SAA values from exp.xl
 
     ###sam
@@ -463,7 +473,7 @@ def f_property_inp_sa(pinp_defaults):
     ###sat
     ###sar
 
-    ##mask out unrequired nodes dates - nodes are removed if there are double ups or if a season is not identified at the node (and node is not used as fvp)
+    ##mask out unrequired nodes dates - nodes are removed if there are double ups (note this used to remove nodes where no season was identified but there are cases when we want a node but no identification eg EWW)
     ## includes the masked out season in the test below. This is to remove randomness if comparing with a different season mask. If a season is removed we dont want the number of node periods to change.
     ## has to be here because if affects two inputs so cant put it in f_season_periods.
     ###test for duplicate
@@ -471,13 +481,10 @@ def f_property_inp_sa(pinp_defaults):
     for m in range(general['i_date_node_zm'].shape[1]):  # maybe there is a way to do this without a loop.
         duplicate_mask_m.append(np.all(np.any(general['i_date_node_zm'][:,m:m+1] == general['i_date_node_zm'][:,0:m],axis=1,keepdims=True)))
     duplicate_mask_m = np.logical_not(duplicate_mask_m)
-    ###test if any season is identified at the node
-    mask_zm = np.logical_or(general['i_date_initiate_z'][:,na]==general['i_date_node_zm'], general['i_node_is_fvp'])
-    mask_m = np.any(mask_zm, axis=0)
-    mask_m = np.logical_and(duplicate_mask_m, mask_m)
+    mask_m = duplicate_mask_m
     ###if steady state and nodes are not included then mask out node period (except p7[0])
-    if np.logical_not(general['i_inc_node_periods']) and (
-            general['steady_state'] or np.count_nonzero(general['i_mask_z']) == 1):
+    if np.logical_not(sinp.structuralsa['i_inc_node_periods']) and (
+            sinp.structuralsa['steady_state'] or np.count_nonzero(general['i_mask_z']) == 1):
         mask_m[1:] = False
     ###mask inputs
     general['i_date_node_zm'] = general['i_date_node_zm'][:,mask_m]

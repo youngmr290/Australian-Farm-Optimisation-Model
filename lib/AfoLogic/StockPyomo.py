@@ -12,7 +12,7 @@ import numpy as np
 
 #AFO modules
 from . import StockGenerator as sgen
-from . import PropertyInputs as pinp
+from . import StructuralInputs as sinp
 
 
 def stock_precalcs(params, r_vals, nv, pkl_fs_info, pkl_fs):
@@ -20,7 +20,7 @@ def stock_precalcs(params, r_vals, nv, pkl_fs_info, pkl_fs):
 
 
 
-def f1_stockpyomo_local(params, model):
+def f1_stockpyomo_local(params, model, MP_lp_vars):
 
     ##these sets require info from the stock module
     model.s_wean_times = pe.Set(initialize=params['a_idx'], doc='weaning options')
@@ -155,59 +155,59 @@ def f1_stockpyomo_local(params, model):
                                default=0.0, mutable=False, doc='pi offs')
 
     ##cashflow
-    model.p_cashflow_sire = pe.Param(model.s_c1, model.s_season_periods, model.s_season_types, model.s_groups_sire, initialize=params['p_cashflow_sire'],
+    model.p_cashflow_sire = pe.Param(model.s_c1, model.s_season_periods, model.s_sequence_year, model.s_season_types, model.s_groups_sire, initialize=params['p_cashflow_sire'],
                                   default=0.0, mutable=False, doc='cashflow sire')
-    model.p_cashflow_dams = pe.Param(model.s_k2_birth_dams, model.s_c1, model.s_season_periods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
+    model.p_cashflow_dams = pe.Param(model.s_c1, model.s_season_periods, model.s_sequence_year, model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
                                   model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
                                   initialize=params['p_cashflow_dams'], default=0.0, mutable=False, doc='cashflow dams')
-    model.p_cashflow_prog = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_c1, model.s_season_periods, model.s_sale_prog, model.s_lw_prog,
+    model.p_cashflow_prog = pe.Param(model.s_c1, model.s_season_periods, model.s_sequence_year, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog,
                                      model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_groups_dams,
                                   initialize=params['p_cashflow_prog'], default=0.0, mutable=False, doc='cashflow prog - made up from just sale value')
-    model.p_cashflow_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_c1, model.s_season_periods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+    model.p_cashflow_offs = pe.Param(model.s_c1, model.s_season_periods, model.s_sequence_year, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
                              model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
                              initialize=params['p_cashflow_offs'], default=0.0, mutable=False, doc='cashflow offs')
 
     ##working capital
-    model.p_wc_sire = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_groups_sire, initialize=params['p_wc_sire'],
+    model.p_wc_sire = pe.Param(model.s_enterprises, model.s_season_periods, model.s_sequence_year, model.s_season_types, model.s_groups_sire, initialize=params['p_wc_sire'],
                                   default=0.0, mutable=False, doc='wc sire')
-    model.p_wc_dams = pe.Param(model.s_k2_birth_dams, model.s_enterprises, model.s_season_periods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
+    model.p_wc_dams = pe.Param(model.s_enterprises, model.s_season_periods, model.s_sequence_year, model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
                                   model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
                                   initialize=params['p_wc_dams'], default=0.0, mutable=False, doc='wc dams')
-    model.p_wc_prog = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_enterprises, model.s_season_periods, model.s_sale_prog, model.s_lw_prog,
+    model.p_wc_prog = pe.Param(model.s_enterprises, model.s_season_periods, model.s_sequence_year, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog,
                                      model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_groups_dams,
                                   initialize=params['p_wc_prog'], default=0.0, mutable=False, doc='wc prog - made up from just sale value')
-    model.p_wc_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_enterprises, model.s_season_periods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+    model.p_wc_offs = pe.Param(model.s_enterprises, model.s_season_periods, model.s_sequence_year, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
                              model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
                              initialize=params['p_wc_offs'], default=0.0, mutable=False, doc='wc offs')
 
     ##cost - minroe
     model.p_cost_sire = pe.Param(model.s_season_periods, model.s_season_types, model.s_groups_sire, initialize=params['p_cost_sire'],
                                   default=0.0, mutable=False, doc='husbandry cost sire')
-    model.p_cost_dams = pe.Param(model.s_k2_birth_dams, model.s_season_periods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
+    model.p_cost_dams = pe.Param(model.s_season_periods, model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
                                   model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
                                   initialize=params['p_cost_dams'], default=0.0, mutable=False, doc='husbandry cost dams')
-    model.p_cost_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_season_periods,
+    model.p_cost_offs = pe.Param(model.s_season_periods, model.s_k3_damage_offs, model.s_k5_birth_offs,
                                  model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
                                  model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
                                  initialize=params['p_cost_offs'], default=0.0, mutable=False, doc='husbandry cost offs')
 
     ##trade value stock - end of season minus start of season
-    model.p_tradevalue_sire = pe.Param(model.s_season_periods, model.s_season_types, model.s_groups_sire, initialize=params['p_tradevalue_p7zg0'],
+    model.p_tradevalue_sire = pe.Param(model.s_season_periods, model.s_sequence_year, model.s_season_types, model.s_groups_sire, initialize=params['p_tradevalue_p7qzg0'],
                                   default=0.0, mutable=False, doc='Trade value of sire - value at season start/end')
-    model.p_tradevalue_dams = pe.Param(model.s_k2_birth_dams, model.s_season_periods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
+    model.p_tradevalue_dams = pe.Param(model.s_season_periods, model.s_sequence_year, model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
                                   model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
-                                  initialize=params['p_tradevalue_k2p7tva1nwziyg1'], default=0.0, mutable=False, doc='Trade value of dams - value at season start/end')
-    model.p_tradevalue_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_season_periods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+                                  initialize=params['p_tradevalue_p7qk2tva1nwziyg1'], default=0.0, mutable=False, doc='Trade value of dams - value at season start/end')
+    model.p_tradevalue_offs = pe.Param(model.s_season_periods, model.s_sequence_year, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
                                  model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
-                                 initialize=params['p_tradevalue_k3k5p7tvnwziaxyg3'], default=0.0, mutable=False, doc='Trade value of offs - value at season start/end')
+                                 initialize=params['p_tradevalue_p7qk3k5tvnwziaxyg3'], default=0.0, mutable=False, doc='Trade value of offs - value at season start/end')
 
     ##asset value stock
-    model.p_asset_sire = pe.Param(model.s_season_periods, model.s_season_types, model.s_groups_sire, initialize=params['p_assetvalue_sire'],
+    model.p_asset_sire = pe.Param(model.s_season_periods, model.s_sequence_year, model.s_season_types, model.s_groups_sire, initialize=params['p_assetvalue_sire'],
                                   default=0.0, mutable=False, doc='Asset value of sire')
-    model.p_asset_dams = pe.Param(model.s_k2_birth_dams, model.s_season_periods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
+    model.p_asset_dams = pe.Param(model.s_season_periods, model.s_sequence_year, model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
                                   model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
                                   initialize=params['p_assetvalue_dams'], default=0.0, mutable=False, doc='Asset value of dams')
-    model.p_asset_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_season_periods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+    model.p_asset_offs = pe.Param(model.s_season_periods, model.s_sequence_year, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
                                  model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
                                  initialize=params['p_assetvalue_offs'], default=0.0, mutable=False, doc='Asset value of offs')
 
@@ -266,13 +266,13 @@ def f1_stockpyomo_local(params, model):
     model.p_co2e_p7zg0 = pe.Param(model.s_season_periods, model.s_season_types, model.s_groups_sire,
                                 initialize=params['p_co2e_p7zg0'],
                                   default=0.0, mutable=False, doc='co2e sire (includes entric fermentation, manure, fuel)')
-    model.p_co2e_k2p7tva1nwziyg1 = pe.Param(model.s_k2_birth_dams, model.s_season_periods, model.s_sale_dams, model.s_dvp_dams,
+    model.p_co2e_p7k2tva1nwziyg1 = pe.Param(model.s_season_periods, model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams,
                                model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types,
-                               model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_co2e_k2p7tva1nwziyg1'],
+                               model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_co2e_p7k2tva1nwziyg1'],
                                 default=0.0, mutable=False, doc='co2e dams (includes entric fermentation, manure, fuel)')
-    model.p_co2e_k3k5p7tvnwziaxyg3 = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_season_periods, model.s_sale_offs,
+    model.p_co2e_p7k3k5tvnwziaxyg3 = pe.Param(model.s_season_periods, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs,
                                model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_wean_times,
-                               model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, initialize=params['p_co2e_k3k5p7tvnwziaxyg3'],
+                               model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, initialize=params['p_co2e_p7k3k5tvnwziaxyg3'],
                                 default=0.0, mutable=False, doc='co2e offs (includes entric fermentation, manure, fuel)')
 
 
@@ -324,6 +324,18 @@ def f1_stockpyomo_local(params, model):
                                                   initialize=params['p_mask_childz_between_offs'], default=0.0,
                                                   mutable=False, doc='mask child season require params')
 
+    ##multiperiod
+    model.p_dvp_is_node1_vzg1 = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
+                                         initialize=params['p_dvp_is_node1_vzg1'], default=0.0,
+                                         mutable=False, doc='mask which dam dvps are in the first season period.')
+    model.p_dvp_is_node1_k3vzxg3 = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_season_types,
+                                            model.s_gender, model.s_groups_offs, initialize=params['p_dvp_is_node1_k3vzxg3'], default=0.0,
+                                                  mutable=False, doc='mask which offs dvps are in the first season period.')
+    model.p_dvp_is_node1_k3zg2 = pe.Param(model.s_k3_damage_offs, model.s_season_types, model.s_groups_prog, initialize=params['p_dvp_is_node1_k3zg2'], default=0.0,
+                                                  mutable=False, doc='mask if weaning occurs in the first season period.')
+
+
+
     ##write param to text file.
     # textbuffer = StringIO()
     # model.p_numbers_prov_dams.pprint(textbuffer)
@@ -362,9 +374,9 @@ def f1_stockpyomo_local(params, model):
 
     ##call local constraint functions
     f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs)
-    f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs)
+    f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs, MP_lp_vars)
     f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9)
-    f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9)
+    f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9, MP_lp_vars)
     f_con_progR(model)
     f_con_prog2damsR(model,l_v1)
     f_con_prog2offsR(model,l_v3)
@@ -428,14 +440,31 @@ def f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9
     end_con_offwithinR=time.time()
     # print('con_offwithinR: ',end_con_offR - start_con_offR)
 
-def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs):
+def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs, MP_lp_vars):
     '''
     Between year numbers/transfers of offspring to offspring in the following decision variable period.
 
     '''
     def offbetweenR(model,q,s9,k3,k5,v3,a,z9,i,x,y3,g3,w9):
         v3_prev = l_v3[l_v3.index(v3) - 1]  #used to get the activity number from the last period
-        q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]  #used to get the activity number from the last period
+        l_q = list(model.s_sequence_year_between_con) #used to get the activity number from the last period
+        ###adjust q_prev for multi-period model
+        if sinp.structuralsa['model_is_MP']:
+            ####yr0 is SE so q_prev is q
+            if q == l_q[0]:
+                q_prev = q
+                v_offs_hist = MP_lp_vars[str('v_offs')]  # q[0] is provided by the MP set up run.
+            ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
+            elif q == l_q[-1]:
+                q = l_q[l_q.index(q) - 1]
+                q_prev = q
+                v_offs_hist = model.v_offs
+            else:
+                q_prev = l_q[l_q.index(q) - 1]
+                v_offs_hist = model.v_offs
+        else:
+            q_prev = l_q[l_q.index(q) - 1]
+            v_offs_hist = model.v_offs
         ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys e.g. k28
         ###get the index number - required so numpy array can be indexed
         t_k3 = l_k3.index(k3)
@@ -452,7 +481,7 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
             ###note: don't need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
             ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
             return sum(model.v_offs[q,s9,k3,k5,t3,v3,n3,w8,z9,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]
-                       - sum(model.v_offs[q_prev,s8,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
+                       - sum(v_offs_hist[q_prev,s8,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
                              * model.p_parentz_provbetween_offs[k3,v3_prev,z8,x,g3,z9]
                              * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
                              for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
@@ -462,7 +491,7 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
         else:
             return pe.Constraint.Skip
     start_con_offbetweenR=time.time()
-    model.con_offbetweenR = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gender,
+    model.con_offbetweenR = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gender,
                                    model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_offs, rule=offbetweenR, doc='transfer off to off from last dvp to current dvp.')
     end_con_offbetweenR=time.time()
     # print('con_offbetweenR: ',end_con_offR - start_con_offR)
@@ -512,7 +541,7 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
     end_con_damR=time.time()
     print('con_damwithinR: ',end_con_damR-start_con_damR)
 
-def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9):
+def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9, MP_lp_vars):
     '''
     Between year numbers/transfers of
 
@@ -524,7 +553,25 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
     '''
     def dambetweenR(model,q,s9,k29,v1,a,z9,i,y1,g9,w9):
         v1_prev = l_v1[l_v1.index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
-        q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
+        l_q = list(model.s_sequence_year_between_con)
+        ###adjust q_prev for multi-period model
+        if sinp.structuralsa['model_is_MP']:
+            ####yr0 is SE so q_prev is q
+            if q == l_q[0]:
+                q_prev = q
+                v_dams_hist = MP_lp_vars[str('v_dams')]  # q[0] is provided by the MP set up run.
+            ####the final year is provided by both the previous year and itself (the final year is in equilibrium). Therefore the final year needs two constraints. This is achieved by making the q set 1 year longer than the modeled period (len_MP + 1). Then adjusting q and q_prev for the final q so that the final year is also in equilibrium.
+            elif q == l_q[-1]:
+                q = l_q[l_q.index(q) - 1]
+                q_prev = q
+                v_dams_hist = model.v_dams
+            else:
+                q_prev = l_q[l_q.index(q) - 1]
+                v_dams_hist = model.v_dams
+        else:
+            q_prev = l_q[l_q.index(q) - 1]
+            v_dams_hist = model.v_dams
+
         ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys e.g. k28
         ###get the index number - required so numpy array can be indexed
         t_k29 = l_k29.index(k29)
@@ -542,7 +589,7 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
             ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
             return sum(model.v_dams[q,s9,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
                        - model.v_dams[q,s9,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
-                       - sum(model.v_dams[q_prev,s8,k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
+                       - sum(v_dams_hist[q_prev,s8,k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
                              * model.p_parentz_provbetween_dams[k28,v1_prev,z8,g1,z9]
                              * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
                              for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
@@ -555,7 +602,7 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
         else:
             return pe.Constraint.Skip
     start_con_damR=time.time()
-    model.con_dam_betweenR = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
+    model.con_dam_betweenR = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
                                    model.s_groups_dams, model.s_lw_dams, rule=dambetweenR, doc='sason start - transfer dam to dam from last dvp to current dvp.')
     end_con_damR=time.time()
     print('con_dambetweenR: ',end_con_damR-start_con_damR)
@@ -706,16 +753,16 @@ def f_con_stock_trade_profit(model):
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last period
         p7_start = l_p7[0]
         if pe.value(model.p_wyear_inc_qs[q, s]):
-            stock = sum(model.v_sire[q, s, g0] * model.p_tradevalue_sire[p7, z, g0] for g0 in model.s_groups_sire) \
-                    + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_tradevalue_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]
+            stock = sum(model.v_sire[q, s, g0] * model.p_tradevalue_sire[p7, q, z, g0] for g0 in model.s_groups_sire) \
+                    + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_tradevalue_dams[p7,q,k2,t1,v1,a,n1,w1,z,i,y1,g1]
                               for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                               for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                              if pe.value(model.p_tradevalue_dams[k2, p7, t1, v1, a, n1, w1, z, i, y1, g1]) != 0)
-                          + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3] * model.p_tradevalue_offs[k3,k5,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                              if pe.value(model.p_tradevalue_dams[p7, q, k2, t1, v1, a, n1, w1, z, i, y1, g1]) != 0)
+                          + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3] * model.p_tradevalue_offs[p7,q,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]
                                 for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs
                                 for v3 in model.s_dvp_offs for n3 in model.s_nut_offs for w3 in model.s_lw_offs
                                 for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                                if pe.value(model.p_tradevalue_offs[k3, k5, p7, t3, v3, n3, w3, z, i, a, x, y3, g3]) != 0)
+                                if pe.value(model.p_tradevalue_offs[p7, q, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]) != 0)
                           for a in model.s_wean_times for i in model.s_tol)
             return model.v_tradevalue[q, s, p7, z] - stock \
                    - sum(model.v_tradevalue[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z]
@@ -787,18 +834,18 @@ def f_stock_cashflow(model,q,s,p7,z,c1):
 
     infrastructure = model.p_rm_stockinfra_fix[p7,z]
     #todo v_prog requires a y axis
-    stock = sum(model.v_sire[q,s,g0] * model.p_cashflow_sire[c1,p7,z,g0] for g0 in model.s_groups_sire) \
-           + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cashflow_dams[k2,c1,p7,t1,v1,a,n1,w1,z,i,y1,g1]
+    stock = sum(model.v_sire[q,s,g0] * model.p_cashflow_sire[c1,p7,q,z,g0] for g0 in model.s_groups_sire) \
+           + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cashflow_dams[c1,p7,q,k2,t1,v1,a,n1,w1,z,i,y1,g1]
                       for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                       for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                     if pe.value(model.p_cashflow_dams[k2,c1,p7,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
-                + sum(model.v_prog[q,s,k3, k5, t2, w2, z, i, a, x, g2] * model.p_cashflow_prog[k3, k5, c1,p7, t2, w2, z, i, a, x, g2]
+                     if pe.value(model.p_cashflow_dams[c1,p7,q,k2,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
+                + sum(model.v_prog[q,s,k3, k5, t2, w2, z, i, a, x, g2] * model.p_cashflow_prog[c1,p7, q, k3, k5, t2, w2, z, i, a, x, g2]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t2 in model.s_sale_prog for w2 in model.s_lw_prog
-                      for x in model.s_gender for g2 in model.s_groups_prog if model.p_cashflow_prog[k3, k5, c1,p7, t2, w2, z, i, a, x, g2] != 0)
-                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_cashflow_offs[k3,k5,c1,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                      for x in model.s_gender for g2 in model.s_groups_prog if model.p_cashflow_prog[c1,p7, q, k3, k5, t2, w2, z, i, a, x, g2] != 0)
+                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_cashflow_offs[c1,p7,q,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if pe.value(model.p_cashflow_offs[k3,k5,c1,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
+                      if pe.value(model.p_cashflow_offs[c1,p7,q,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
     purchases = sum(model.v_sire[q,s,g0] * model.p_cost_purch_sire[p7,z,g0] for g0 in model.s_groups_sire)
     return stock - infrastructure - purchases
@@ -817,18 +864,18 @@ def f_stock_wc(model,q,s,c0,p7,z):
     '''
 
     infrastructure = model.p_rm_stockinfra_fix_wc[c0,p7,z]
-    stock = sum(model.v_sire[q,s,g0] * model.p_wc_sire[c0,p7,z,g0] for g0 in model.s_groups_sire) \
-           + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_wc_dams[k2,c0,p7,t1,v1,a,n1,w1,z,i,y1,g1]
+    stock = sum(model.v_sire[q,s,g0] * model.p_wc_sire[c0,p7,q,z,g0] for g0 in model.s_groups_sire) \
+           + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_wc_dams[c0,p7,q,k2,t1,v1,a,n1,w1,z,i,y1,g1]
                       for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                       for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                     if pe.value(model.p_wc_dams[k2,c0,p7,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
-                + sum(model.v_prog[q,s,k3, k5, t2, w2, z, i, a, x, g2] * model.p_wc_prog[k3, k5, c0,p7, t2, w2, z, i, a, x, g2]
+                     if pe.value(model.p_wc_dams[c0,p7,q,k2,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
+                + sum(model.v_prog[q,s,k3, k5, t2, w2, z, i, a, x, g2] * model.p_wc_prog[c0,p7, q,k3, k5, t2, w2, z, i, a, x, g2]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t2 in model.s_sale_prog for w2 in model.s_lw_prog
-                      for x in model.s_gender for g2 in model.s_groups_prog if model.p_wc_prog[k3, k5, c0,p7, t2, w2, z, i, a, x, g2] != 0)
-                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_wc_offs[k3,k5,c0,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                      for x in model.s_gender for g2 in model.s_groups_prog if model.p_wc_prog[c0,p7, q,k3, k5, t2, w2, z, i, a, x, g2] != 0)
+                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_wc_offs[c0,p7,q,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if pe.value(model.p_wc_offs[k3,k5,c0,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
+                      if pe.value(model.p_wc_offs[c0,p7,q,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
     purchases = sum(model.v_sire[q,s,g0] * model.p_wc_purch_sire[c0,p7,z,g0] for g0 in model.s_groups_sire)
     return stock - infrastructure - purchases
@@ -849,14 +896,14 @@ def f_stock_cost(model,q,s,p7,z):
 
     infrastructure = model.p_rm_stockinfra_fix[p7,z]
     stock = sum(model.v_sire[q,s,g0] * model.p_cost_sire[p7,z,g0] for g0 in model.s_groups_sire) \
-            + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cost_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]
+            + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cost_dams[p7,k2,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                      if pe.value(model.p_cost_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
-                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_cost_offs[k3,k5,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                      if pe.value(model.p_cost_dams[p7,k2,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
+                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_cost_offs[p7,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if pe.value(model.p_cost_offs[k3,k5,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
+                      if pe.value(model.p_cost_offs[p7,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
     purchases = sum(model.v_sire[q,s,g0] * model.p_cost_purch_sire[p7,z,g0]
                     for g0 in model.s_groups_sire)
@@ -871,15 +918,15 @@ def f_stock_asset(model,q,s,p7,z):
     '''
 
     infrastructure = sum(model.p_asset_stockinfra[p7,h1] for h1 in model.s_infrastructure)
-    stock = sum(model.v_sire[q,s,g0] * model.p_asset_sire[p7,z,g0] for g0 in model.s_groups_sire) \
-            + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_asset_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]
+    stock = sum(model.v_sire[q,s,g0] * model.p_asset_sire[p7,q,z,g0] for g0 in model.s_groups_sire) \
+            + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_asset_dams[p7,q,k2,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                      if pe.value(model.p_asset_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
-                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_asset_offs[k3,k5,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                      if pe.value(model.p_asset_dams[p7,q,k2,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
+                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_asset_offs[p7,q,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if pe.value(model.p_asset_offs[k3,k5,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
+                      if pe.value(model.p_asset_offs[p7,q,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
     # purchases = sum(sum(model.v_purchase_dams[q,s,v1,w1,i,g1] * sum(model.p_cost_purch_dam[v1,w1,i,g1,c] for c in model.s_season_periods) for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
     #                 +sum(model.v_purchase_offs[q,s,v3,w3,i,g3] * sum(model.p_cost_purch_offs[v3,w3,i,g3,c] for c in model.s_season_periods) for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)
@@ -952,14 +999,14 @@ def f_stock_emissions(model,q,s,p7,z):
     '''
 
     return sum(model.v_sire[q,s,g0] * model.p_co2e_p7zg0[p7,z,g0] for g0 in model.s_groups_sire)\
-           + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_pi_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]
+           + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_co2e_p7k2tva1nwziyg1[p7,k2,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                     if pe.value(model.p_pi_dams[k2,p7,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
-                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_pi_offs[k3,k5,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                     if pe.value(model.p_co2e_p7k2tva1nwziyg1[p7,k2,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
+                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_co2e_p7k3k5tvnwziaxyg3[p7,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if pe.value(model.p_pi_offs[k3,k5,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
+                      if pe.value(model.p_co2e_p7k3k5tvnwziaxyg3[p7,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
 
 
