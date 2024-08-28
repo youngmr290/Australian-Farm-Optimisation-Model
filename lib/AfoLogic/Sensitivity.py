@@ -115,9 +115,10 @@ def create_sa():
     sav['non_cropable_area_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
     sav['lmu_arable_propn_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
     ##SAM
-    sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to remove it)
+    sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to revert the code)
     ##SAP
     ##SAA
+    saa['random'] = 1.0   # SA addition used to tweak any random variable when debugging or checking something (after being used it is best to revert the code )
     ##SAT
     ##SAR
 
@@ -309,7 +310,7 @@ def create_sa():
     sav['pas_inc_t'] = np.full_like(pinp.general['pas_inc_t'], '-', dtype=object) #SA value for pastures included mask
     ##SAM
     sam['q_pgr_scalar_Qp6'] = np.ones((len_Q, len_p6), dtype='float64')   # SAM for pgr with q axis
-    
+
     for pasture in sinp.general['pastures'][pinp.general['i_pastures_exist']]:
         ##SAV
         ##SAM
@@ -350,6 +351,9 @@ def create_sa():
     sav['onhand_mort_p_inc'] = '-'  #SA to store onhand report values
     sav['mort_inc'] = '-'  #SA to store mort report values
     sav['feedbud_inc'] = '-'  #SA to store feed budget report values
+    sav['force_ebg_scalar'] = False  #SA to force scaling of energy components to ebg (active if components are the REV target traits)
+    sav['age_max'] = '-'  #SA on length of the generator for dams (years)
+    sav['age_max_offs'] = '-'    #SA on length of the generator for offspring (years)
     sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared
     sav['eqn_used_g0_q1p7'] = np.full(uinp.sheep['i_eqn_used_g0_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
     sav['eqn_used_g1_q1p7'] = np.full(uinp.sheep['i_eqn_used_g1_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
@@ -405,13 +409,14 @@ def create_sa():
     sam['pi_yatf'] = 1.0                              #Potential intake of yatf
     sam['LTW_dams'] = 1.0                       #adjust impact of life time wool fleece effects
     sam['LTW_offs'] = 1.0                       #adjust impact of life time wool fleece effects
+    sam['rev_pi_scalar'] = 1.0                      #Proportion to scale PI if MEI is scaled by REV adjustments
     sam['pi_post_adult'] = 1.0                        #Post loop potential intake of adults (zf2==1)
     sam['pi_post_yatf'] = 1.0                        #Post loop potential intake of yatf
     sam['chill'] = 1.0                        #intermediate sam on chill.
     sam['rr_og1'] = np.ones(pinp.sheep['i_scan_og1'].shape, dtype='float64')    # reproductive rate by age. Use shape that has og1
     sam['wean_redn_ol0g2'] = np.ones((len_o, len_l0, len_g2), dtype='float64')  #Adjust the number of yatf transferred at weaning - this is a high level sa, it impacts within a calculation not on an input
     ##SAP
-    sap['evg_adult'] = 0.0               #energy content of liveweight gain - this is a high level sa, it impacts within a calculation not on an input and is only implemented on adults
+    sap['evg'] = 0.0               #energy content of liveweight gain - this is a high level sa, it impacts within a calculation not on an input. It was only implemented on adults now all animals
     sap['mortalityb'] = 0.0        #Scale the calculated base mortality (for all animals) - this is a high level sa, it impacts within a calculation not on an input
     sap['kg_post_adult'] = 0.0           #Post loop energy efficiency of adults (zf2==1)
     sap['kg_post_yatf'] = 0.0           #Post loop energy efficiency of yatf
@@ -444,7 +449,15 @@ def create_sa():
     #####################
     ##SAV
     sav['srw_c2'] = np.full(uinp.parameters['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
-    sav['cl0_c2'] = np.full(uinp.parameters['i_cl0_c2'].shape, '-', dtype=object)  #SA value for litter size genotype params.
+    sav['sfw_c2'] = np.full(uinp.parameters['i_sfw_c2'].shape, '-', dtype=object)  #std fleece weight genotype params
+    sav['sfd_c2'] = np.full(uinp.parameters['i_sfd_c2'].shape, '-', dtype=object)  #std fibre diameter genotype params
+    sav['ci_c2'] = np.full(uinp.parameters['i_ci_c2'].shape, '-', dtype=object)  #intake params for genotypes
+    sav['cl_c2'] = np.full(uinp.parameters['i_cl_c2'].shape, '-', dtype=object)  #lactation params for genotypes.
+    sav['cw_c2'] = np.full(uinp.parameters['i_cw_c2'].shape, '-', dtype=object)  #wool growth params for genotypes
+    sav['cg_c2'] = np.full(uinp.parameters['i_cg_c2'].shape, '-', dtype=object)  #weight gain params for genotypes.
+    sav['cd_c2'] = np.full(uinp.parameters['i_cd_c2'].shape, '-', dtype=object)  #mortality params for genotypes.
+    sav['cl0_c2'] = np.full(uinp.parameters['i_cl0_c2'].shape, '-', dtype=object)  #litter size genotype params for genotypes.
+    sav['cu2_c2'] = np.full(uinp.parameters['i_cu2_c2'].shape, '-', dtype=object)  #lamb survival params for genotypes.
     ##SAM
     sam['ci_c2'] = np.ones(uinp.parameters['i_ci_c2'].shape, dtype='float64')  #intake params for genotypes
     sam['cl_c1c2'] = np.ones(uinp.parameters['i_cl_c2'].shape, dtype='float64')  #lactation params for genotypes
@@ -458,6 +471,7 @@ def create_sa():
     ##SAP
     ##SAA
     saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
+    saa['srw_c2'] = 0.0                     #std reference weight genotype params
     saa['cg_c2'] = np.zeros(uinp.parameters['i_cg_c2'].shape, dtype='float64')  #SA value for weight gain params.
     saa['ck_c2'] = np.zeros(uinp.parameters['i_ck_c2'].shape, dtype='float64')  #SA value for energy efficiency params.
     saa['cl0_c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype='float64')  #SA value for litter size genotype params.
@@ -476,12 +490,13 @@ def create_sa():
     ##SAV
     sav['bnd_slp_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of slp on each lmu
     sav['bnd_sb_consumption_p6'] = np.full(len(pinp.period['i_fp_idx']), '-', dtype=object)  #upper bnd on the amount of sb consumed
-    sav['bnd_crop_area'] = np.full((len_Q, len_k), '-', dtype=object)  #crop area for bound. if all values are '-' the bnd wont be used (there is not bnd_inc control for this one)
-    sav['bnd_crop_area_percent'] = np.full((len_Q, len_k), '-', dtype=object)  #crop area percent of farm area. if all values are '-' the bnd wont be used (there is not bnd_inc control for this one)
+    sav['bnd_crop_area'] = np.full((len_Q, len_k), '-', dtype=object)  #crop area for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
+    sav['bnd_crop_area_percent'] = np.full((len_Q, len_k), '-', dtype=object)  #crop area percent of farm area. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
     sav['bnd_total_legume_area_percent'] = '-'  #Control the total percent of legume area on farm.
+    sav['bnd_biomass_graze_k1'] = np.full((len_Q, len_k), '-', dtype=object)  #biomass graze area for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
     sav['bnd_total_pas_area_percent'] = np.full(len_Q, '-', dtype=object)  #Control the total percent of pasture area on farm.
-    sav['bnd_pas_area_l'] = np.full(len_l, '-', dtype=object)  #pasture area by lmu for bound. if all values are '-' the bnd wont be used (there is not bnd_inc control for this one)
-    sav['bnd_landuse_area_klz'] = np.full((len_k, len_l, len_z), '-', dtype=object)  #landuse area by lmu and z. if all values are '-' the bnd wont be used
+    sav['bnd_pas_area_l'] = np.full(len_l, '-', dtype=object)  #pasture area by lmu for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
+    sav['bnd_landuse_area_klz'] = np.full((len_k, len_l, len_z), '-', dtype=object)  #landuse area by lmu and z. if all values are '-' the bnd won't be used
     sav['bnd_sup_per_dse'] = '-'   #SA to control the supplement per dse (kg/dse)
     sav['bnd_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated
     sav['est_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #estimated proportion of dams mated - used when bnd_propn is default "-"
