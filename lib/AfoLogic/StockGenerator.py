@@ -9199,6 +9199,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                             index_k3k5tva1e1b1nwzida0e0b0xyg3, a_k5cluster_da0e0b0xyg3,
                                             index_k5tva1e1b1nwzida0e0b0xyg3, numbers_start_tva1e1b1nwzida0e0b0xyg3,
                                             mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
+    sale_ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs',
+                                            sale_ffcfw_tva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3,
+                                            index_k3k5tva1e1b1nwzida0e0b0xyg3, a_k5cluster_da0e0b0xyg3,
+                                            index_k5tva1e1b1nwzida0e0b0xyg3, numbers_start_tva1e1b1nwzida0e0b0xyg3,
+                                            mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     ##sale value - needed for reporting
     r_salevalue_p7qtva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire',r_salevalue_p7qtva1e1b1nwzida0e0b0xyg0,
@@ -10727,6 +10732,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fun.f1_make_r_val(r_vals,sale_ffcfw_s7k2tva1e1b1nwzida0e0b0xyg1,'sale_ffcfw_s7k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, s7k2tva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals,sale_ffcfw_prog_s7k3k5tva1e1b1nwzida0e0b0xyg2,'sale_ffcfw_s7k3k5twziaxyg2',None,z_pos, s7k3k5twziaxyg2_shape) #no v axis so dont need to uncluster z
     fun.f1_make_r_val(r_vals,sale_ffcfw_s7k3k5tva1e1b1nwzida0e0b0xyg3,'sale_ffcfw_s7k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, s7k3k5tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,sale_ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3,'sale_ffcfw_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
 
     ###mei and pi
     fun.f1_make_r_val(r_vals,mei_p6ftva1e1b1nwzida0e0b0xyg0,'mei_sire_p6fzg0',mask_fp_z8var_p6tva1e1b1nwzida0e0b0xyg[:,na,...],z_pos, p6fzg0_shape)

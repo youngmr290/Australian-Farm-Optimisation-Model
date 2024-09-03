@@ -262,7 +262,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         arith = f_update_default_controls(user_controls, 'salevalue_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'salevalue_dams', 'index', [5])
         cols = f_update_default_controls(user_controls, 'salevalue_dams', 'cols', [3, 0, 4])  # k2, p7, t
-        axis_slice = f_update_default_controls(user_controls, 'salevalue_dams', 'axis_slice', {})
+        axis_slice = f_update_default_controls(user_controls, 'salevalue_dams', 'axis_slice', {4:[0,2,1]}) #only sale slice
         reports["salevalue_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_salevalue_offs', 'Run']:
@@ -275,7 +275,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         arith = f_update_default_controls(user_controls, 'salevalue_offs', 'arith', 1)
         index = f_update_default_controls(user_controls, 'salevalue_offs', 'index', [5])
         cols = f_update_default_controls(user_controls, 'salevalue_offs', 'cols', [3, 0, 4])  # k3, p7, t
-        axis_slice = f_update_default_controls(user_controls, 'salevalue_offs', 'axis_slice', {})
+        axis_slice = f_update_default_controls(user_controls, 'salevalue_offs', 'axis_slice', {5:[1,None,1]}) #only sale slice
         reports["salevalue_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_salevalue_prog', 'Run']:
@@ -1182,6 +1182,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["legume"] = rfun.f_lupin_analysis(lp_vars,r_vals,"Summary")
     if report_run.loc['run_cropgraze', 'Run']:
         reports["cropgrazing"] = rfun.f_cropgrazing_analysis(lp_vars,r_vals,"Summary")
+    if report_run.loc['run_flk_structure', 'Run']:
+        reports["flk_structure"] = rfun.f_saleage_analysis(lp_vars,r_vals,"Summary")
     return reports
 
 

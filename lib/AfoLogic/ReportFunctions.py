@@ -3107,6 +3107,81 @@ def f_cropgrazing_analysis(lp_vars, r_vals, trial):
 
     return summary_df
 
+def f_saleage_analysis(lp_vars, r_vals, trial):
+    '''Returns a simple 1 row summary of the trial (season results are averaged)'''
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'SR', 'Ewes mated', 'Sale weight', 'Sale value', 'Sheep sales ($/WgHa)', 'Wool sales ($/WgHa)', 'Feed cost ($/WgHa)'])
+    ##profit - no minroe and asset
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0))
+    ##stocking rate
+    sr = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
+    summary_df.loc[trial, 'SR'] = round(sr, 1)
+    ##total dams mated
+    type = 'stock'
+    prod = 'dvp_is_mating_vzig1'
+    na_prod = [0,1,2,3,5,6,7,10]
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    keys = 'dams_keys_qsk2tvanwziy1g1'
+    arith = 2
+    index = []
+    cols = []
+    axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
+    dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
+    ##ave wether sale price
+    type = 'stock'
+    prod = 'salevalue_p7qk3k5tvnwziaxyg3'
+    na_prod = [2]  # s
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = [0]  # p7
+    keys = 'offs_keys_p7qsk3k5tvnwziaxyg3'
+    arith = 1
+    index = []
+    cols = []
+    axis_slice = {5:[1,None,1]} #only sale slices
+    ave_salevalue_offs = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                             na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc[trial, 'Sale value'] = round(ave_salevalue_offs.squeeze(), 0)
+    ##ave wether sale weight
+    type = 'stock'
+    prod = 'sale_ffcfw_k3k5tvnwziaxyg3'
+    na_prod = [0, 1]  # q,s
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = []
+    keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+    arith = 1
+    index = []
+    cols = []
+    axis_slice = {4:[1,None,1]} #only sale slices
+    ave_saleweight_offs = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                       na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc[trial, 'Sale weight'] = round(ave_saleweight_offs.squeeze(), 0)
+    ##pasture area
+    pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
+    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+    total_pas_are = np.sum(pas_area_qsz * z_prob_qsz.ravel())
+    ##sheep $$
+    stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qszp7 = f_stock_cash_summary(lp_vars, r_vals)
+    ##sale income
+    stocksale = np.sum(stocksale_qszp7 * z_prob_qsz[...,na])
+    stocksale_per_wgha = stocksale/total_pas_are
+    summary_df.loc[trial, 'Sheep sales ($/WgHa)'] = round(stocksale_per_wgha, 0)
+    ##wool income
+    woolsale = np.sum(wool_qszp7 * z_prob_qsz[...,na])
+    woolsale_per_wgha = woolsale/total_pas_are
+    summary_df.loc[trial, 'Wool sales ($/WgHa)'] = round(woolsale_per_wgha, 0)
+    ##feed cost
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+    z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
+    feedcost_qsz = supcost_qsz_p7.sum(axis=1)
+    feedcost = feedcost_qsz.mul(z_prob_qsz, axis=0).sum(axis=0)
+    feedcost_per_wgha = feedcost/total_pas_are
+    summary_df.loc[trial, 'Feed cost ($/WgHa)'] = round(feedcost_per_wgha, 0)
+
+    return summary_df
+
 ############################
 # functions for numpy arrays#
 ############################
