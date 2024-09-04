@@ -27,6 +27,7 @@ import functions from other modules
 # import datetime as dt
 # import pandas as pd
 import numpy as np
+# np.seterr(all='raise')   #uncomment this line to be able to debug any numpy floating point warnings
 import pickle as pkl
 #import matplotlib.pyplot as plt
 import time
@@ -382,9 +383,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     o_ebg_tpsire = np.zeros(tpg0, dtype =dtype)
     ###arrays for report variables
     r_ebw_tpsire = np.zeros(tpg0, dtype =dtype)
+    r_wbe_tpsire = np.zeros(tpg0, dtype =dtype)
     r_fat_tpsire = np.zeros(tpg0, dtype =dtype)
     r_muscle_tpsire = np.zeros(tpg0, dtype =dtype)
     r_viscera_tpsire = np.zeros(tpg0, dtype =dtype)
+    r_lean_tpsire = np.zeros(tpg0, dtype=dtype)
     r_salegrid_c1tpa1e1b1nwzida0e0b0xyg0 = np.zeros(c1tpg0, dtype =dtype)
 
     ##dams
@@ -433,6 +436,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     r_fat_tpdams = np.zeros(tpg1, dtype =dtype)
     r_muscle_tpdams = np.zeros(tpg1, dtype =dtype)
     r_viscera_tpdams = np.zeros(tpg1, dtype =dtype)
+    r_lean_tpdams = np.zeros(tpg1, dtype =dtype)
     r_w_f_tpdams =  np.zeros(tpg1, dtype = dtype)
     r_salegrid_c1tpa1e1b1nwzida0e0b0xyg1 = np.zeros(c1tpg1, dtype =dtype)
 
@@ -468,9 +472,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     r_wean_ebw_tpyatf = np.zeros(tpg2, dtype =dtype)
     r_ebg_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_evg_tpyatf = np.zeros(tpg2, dtype = dtype)
+    r_wbe_tpyatf = np.zeros(tpg2, dtype =dtype)
     r_fat_tpyatf = np.zeros(tpg2, dtype =dtype)
     r_muscle_tpyatf = np.zeros(tpg2, dtype =dtype)
     r_viscera_tpyatf = np.zeros(tpg2, dtype =dtype)
+    r_lean_tpyatf = np.zeros(tpg2, dtype =dtype)
     r_mem_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_mei_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_mei_solid_tpyatf = np.zeros(tpg2, dtype = dtype)
@@ -522,6 +528,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     r_fat_tpoffs = np.zeros(tpg3, dtype =dtype)
     r_muscle_tpoffs = np.zeros(tpg3, dtype =dtype)
     r_viscera_tpoffs = np.zeros(tpg3, dtype =dtype)
+    r_lean_tpoffs = np.zeros(tpg3, dtype =dtype)
     r_salegrid_c1tpa1e1b1nwzida0e0b0xyg3 = np.zeros(c1tpg3, dtype =dtype)
 
 
@@ -3738,9 +3745,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             new_sire = dw_sire
                             mew_sire = dw_sire + hp_dw_sire
                         if eqn_compare:
-                            r_compare17_q0q2tpsire[eqn_system, 0, :, p, ...] = d_cfw_sire    # temp0  using the fibre_cs values because fibre_nfs is not used
-                            r_compare17_q0q2tpsire[eqn_system, 1, :, p, ...] = d_fd_sire     # temp1  using the fibre_cs values because fibre_nfs is not used
-                            r_compare17_q0q2tpsire[eqn_system, 2, :, p, ...] = new_sire      # temp4  using the fibre_cs values because fibre_nfs is not used
+                            r_compare17_q0q2tpsire[eqn_system, 0, :, p, ...] = temp0    # temp0  using the fibre_cs values because fibre_nfs is not used
+                            r_compare17_q0q2tpsire[eqn_system, 1, :, p, ...] = temp1     # temp1  using the fibre_cs values because fibre_nfs is not used
+                            r_compare17_q0q2tpsire[eqn_system, 2, :, p, ...] = temp4      # temp4  using the fibre_cs values because fibre_nfs is not used
 
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
@@ -3762,9 +3769,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             new_dams = dw_dams
                             mew_dams = dw_dams + hp_dw_dams
                         if eqn_compare:
-                            r_compare17_q0q2tpdams[eqn_system, 0, :, p, ...] = d_cfw_dams    # temp0  using the fibre_cs values because fibre_nfs is not used
-                            r_compare17_q0q2tpdams[eqn_system, 1, :, p, ...] = d_fd_dams     # temp1  using the fibre_cs values because fibre_nfs is not used
-                            r_compare17_q0q2tpdams[eqn_system, 2, :, p, ...] = new_dams      # temp4  using the fibre_cs values because fibre_nfs is not used
+                            r_compare17_q0q2tpdams[eqn_system, 0, :, p, ...] = temp0    # temp0  using the fibre_cs values because fibre_nfs is not used
+                            r_compare17_q0q2tpdams[eqn_system, 1, :, p, ...] = temp1     # temp1  using the fibre_cs values because fibre_nfs is not used
+                            r_compare17_q0q2tpdams[eqn_system, 2, :, p, ...] = temp4      # temp4  using the fibre_cs values because fibre_nfs is not used
 
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
@@ -3785,9 +3792,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             new_offs = dw_offs
                             mew_offs = dw_offs + hp_dw_offs
                         if eqn_compare:
-                            r_compare17_q0q2tpoffs[eqn_system, 0, :, p, ...] = d_cfw_offs    # temp0  using the fibre_cs values because fibre_nfs is not used
-                            r_compare17_q0q2tpoffs[eqn_system, 1, :, p, ...] = d_fd_offs     # temp1  using the fibre_cs values because fibre_nfs is not used
-                            r_compare17_q0q2tpoffs[eqn_system, 2, :, p, ...] = new_offs      # temp4  using the fibre_cs values because fibre_nfs is not used
+                            r_compare17_q0q2tpoffs[eqn_system, 0, :, p, ...] = temp0    # temp0  using the fibre_cs values because fibre_nfs is not used
+                            r_compare17_q0q2tpoffs[eqn_system, 1, :, p, ...] = temp1     # temp1  using the fibre_cs values because fibre_nfs is not used
+                            r_compare17_q0q2tpoffs[eqn_system, 2, :, p, ...] = temp4      # temp4  using the fibre_cs values because fibre_nfs is not used
 
 
                 ##total heat production (excluding chill) & energy to offset chilling
@@ -4041,7 +4048,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_fat_sire = temp2
                             d_muscle_sire = temp3
                             d_viscera_sire = temp4
-                            mei_sire = temp5
+                            pi_sire = pi_sire * (1 + fun.f_divide(temp5, mei_sire))  #scale pi by the variation in mei that results from REV changes.
+                            mei_sire = mei_sire + temp5
+                            mei_solid_sire = mei_solid_sire + temp5
                             surplus_energy_sire = temp7
                             mem_sire = temp9  #will overwrite the CSIRO version if NFS system is being used.
                         if eqn_compare:
@@ -4052,6 +4061,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             r_compare7_q0q2tpsire[eqn_system, 4, :, p, ...] = temp3
                             r_compare7_q0q2tpsire[eqn_system, 5, :, p, ...] = temp4
                             r_compare7_q0q2tpsire[eqn_system, 6, :, p, ...] = temp0
+                        temp0 = sfun.f1_level_nfs(mei_sire, hp_maint_sire)   #todo hp_maint is not the same as level of intake for RE == 0 because it include hp associated with the current level of intake (hp_mei)
+                        if eqn_used:
+                            level_sire = temp0
+                        temp0, temp1 = sfun.f_templc(cc_sire, ffcfw_start_sire, rc_start_sire, sl_start_sire, hp_total_sire
+                                                   , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                                                   , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                                   , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
+                        if eqn_used:
+                            temp_lc_sire = temp0  #temp1 not required here
+
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -4075,9 +4094,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_fat_dams = temp2
                             d_muscle_dams = temp3
                             d_viscera_dams = temp4
-                            mei_dams = temp5
+                            pi_dams = pi_dams * (1 + fun.f_divide(temp5, mei_dams) * sen.sam['rev_pi_scalar'])  #scale pi by the variation in mei that results from REV changes.
+                            mei_dams = mei_dams + temp5
+                            mei_solid_dams = mei_solid_dams + temp5
                             surplus_energy_dams = temp7
-                            mem_dams = temp9  #will overwrite the CSIRO version if NFS system is being used. Only used for post-loop SA.
+                            mem_dams = temp9  #will overwrite the CSIRO version if GFS system is being used. Only used for post-loop SA.
+                        temp0 = sfun.f1_level_nfs(mei_dams, hp_maint_dams)
+                        if eqn_used:
+                            level_dams = temp0
+                        temp0, temp1 = sfun.f_templc(cc_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams, hp_total_dams
+                                                     , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                                                     , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                                     , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
+                        if eqn_used:
+                            temp_lc_dams = temp0  #temp1 not required here
+
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -4097,7 +4128,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_fat_offs = temp2
                             d_muscle_offs = temp3
                             d_viscera_offs = temp4
-                            mei_offs = temp5
+                            pi_offs = pi_offs * (1 + fun.f_divide(temp5, mei_offs))  #scale pi by the variation in mei that results from REV changes.
+                            mei_offs = mei_offs + temp5
+                            mei_solid_offs = mei_solid_offs + temp5
                             surplus_energy_offs = temp7
                             mem_offs = temp9  #will overwrite the CSIRO version if NFS system is being used.
                         if eqn_compare:
@@ -4108,6 +4141,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             r_compare7_q0q2tpoffs[eqn_system, 4, :, p, ...] = temp3
                             r_compare7_q0q2tpoffs[eqn_system, 5, :, p, ...] = temp4
                             r_compare7_q0q2tpoffs[eqn_system, 6, :, p, ...] = temp0
+                        temp0 = sfun.f1_level_nfs(mei_offs, hp_maint_offs)
+                        if eqn_used:
+                            level_offs = temp0
+                        temp0, temp1 = sfun.f_templc(cc_offs, ffcfw_start_offs, rc_start_offs, sl_start_offs, hp_total_offs
+                                                     , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                                                     , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                                     , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
+                        if eqn_used:
+                            temp_lc_offs = temp0  #temp1 not required here
 
                 eqn_system = 2 # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -4127,7 +4169,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_fat_sire = temp2
                             d_muscle_sire = temp3
                             d_viscera_sire = temp4
-                            mei_sire = temp5
+                            pi_sire = pi_sire * (1 + fun.f_divide(temp5, mei_sire))  #scale pi by the variation in mei that results from REV changes.
+                            mei_sire = mei_sire + temp5
+                            mei_solid_sire = mei_solid_sire + temp5
                             surplus_energy_sire = temp7
                             mem_sire = temp9 #will overwrite the CSIRO version if NFS system is being used.
                         if eqn_compare:
@@ -4171,7 +4215,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_fat_dams = temp2
                             d_muscle_dams = temp3
                             d_viscera_dams = temp4
-                            mei_dams = temp5
+                            pi_dams = pi_dams * (1 + fun.f_divide(temp5, mei_dams))  #scale pi by the variation in mei that results from REV changes.
+                            mei_dams = mei_dams + temp5
+                            mei_solid_dams = mei_solid_dams + temp5
                             surplus_energy_dams = temp7
                             mem_dams = temp9 #will overwrite the CSIRO version if NFS system is being used. Only used for post-loop SA.
                         if eqn_compare:
@@ -4213,7 +4259,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_fat_offs = temp2
                             d_muscle_offs = temp3
                             d_viscera_offs = temp4
-                            mei_offs = temp5
+                            pi_offs = pi_offs * (1 + fun.f_divide(temp5, mei_offs))  #scale pi by the variation in mei that results from REV changes.
+                            mei_offs = mei_offs + temp5
+                            mei_solid_offs = mei_solid_offs + temp5
                             surplus_energy_offs = temp7
                             mem_offs = temp9 #will overwrite the CSIRO version if NFS system is being used.
                         if eqn_compare:
@@ -4776,9 +4824,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                        , kg_fodd_yatf, mei_propn_herb_yatf)
                     if eqn_used:
                         kg_yatf = temp0  #efficiency from the CSIRO equations (for post calc SA)
-                    temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_yatf, rc_start_yatf, mei_yatf
-                                        , meme_yatf, mew_yatf, new_yatf, zf1_yatf, zf2_yatf, kg_yatf, kf_yatf, kp_yatf
-                                        , heat_loss_yatfm0p1, rev_trait_values['yatf'][p])
+                    temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_yatf
+                                        , rc_start_yatf, mei_yatf, meme_yatf, mew_yatf, new_yatf, zf1_yatf, zf2_yatf
+                                        , kg_yatf, kf_yatf, kp_yatf, heat_loss_yatfm0p1, rev_trait_values['yatf'][p])
                     hp_total_yatf = temp6
                     kg_yatf = temp8  #efficiency resulting from the NFS equations (for r_compare)
                     if eqn_used:
@@ -4787,7 +4835,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         d_fat_yatf = temp2
                         d_muscle_yatf = temp3
                         d_viscera_yatf = temp4
-                        mei_yatf = temp5
+                        pi_yatf = pi_yatf * (1 + fun.f_divide(temp5, mei_yatf))  #scale pi by the variation in mei that results from REV changes.
+                        mei_yatf = mei_yatf + temp5
+                        mei_solid_yatf = mei_solid_yatf + temp5
                         surplus_energy_yatf = temp7
                         mem_yatf = temp9  #will overwrite the CSIRO version if NFS system is being used.
                     if eqn_compare:
@@ -4798,6 +4848,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         r_compare7_q0q2tpyatf[eqn_system, 4, :, p, ...] = temp3
                         r_compare7_q0q2tpyatf[eqn_system, 5, :, p, ...] = temp4
                         r_compare7_q0q2tpyatf[eqn_system, 6, :, p, ...] = temp0
+                    temp0 = sfun.f1_level_nfs(mei_yatf, hp_maint_yatf)
+                    if eqn_used:
+                        level_yatf = temp0
+                    temp0, temp1 = sfun.f_templc(cc_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, hp_total_yatf
+                                                 , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                                                 , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                                 , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
+                    if eqn_used:
+                        temp_lc_yatf = temp0  #temp1 not required here
 
             eqn_system = 2 # New Feeding Standards = 2
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -4816,7 +4875,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         d_fat_yatf = temp2
                         d_muscle_yatf = temp3
                         d_viscera_yatf = temp4
-                        mei_yatf = temp5
+                        pi_yatf = pi_yatf * (1 + fun.f_divide(temp5, mei_yatf))  #scale pi by the variation in mei that results from REV changes.
+                        mei_yatf = mei_yatf + temp5
+                        mei_solid_yatf = mei_solid_yatf + temp5
                         surplus_energy_yatf = temp7
                         mem_yatf = temp9 #will overwrite the CSIRO version if NFS system is being used.
                     if eqn_compare:
@@ -5475,6 +5536,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ww_sire = fat_sire * (1 - cg_sire[26, ...]) + muscle_sire * (1 - cg_sire[27, ...]) + viscera_sire * (1 - cg_sire[28, ...])
                 ##Weight of gutfill (end)
                 gw_sire = ffcfw_sire - ebw_sire
+                ##Whole body energy (calculated from fat, muscle and viscera weight, not including conceptus and wool)
+                wbe_sire = sfun.f_wbe_mu(cg_sire, fat_sire, muscle_sire, viscera_sire)
                 ##Clean fleece weight (end)
                 cfw_sire = cfw_start_sire + d_cfw_sire * days_period_pa1e1b1nwzida0e0b0xyg0[p] * cfw_propn_yg0
                 ##Greasy fleece weight (end)
@@ -5566,6 +5629,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ww_yatf = fat_yatf * (1 - cg_yatf[26, ...]) + muscle_yatf * (1 - cg_yatf[27, ...]) + viscera_yatf * (1 - cg_yatf[28, ...])
                 ##Weight of gutfill (end)
                 gw_yatf = ffcfw_yatf - ebw_yatf
+                ##Whole body energy (calculated from fat, muscle and viscera weight, not including conceptus and wool)
+                wbe_yatf = sfun.f_wbe_mu(cg_yatf, fat_yatf, muscle_yatf, viscera_yatf)
                 ##Clean fleece weight (end)
                 cfw_yatf = cfw_start_yatf + d_cfw_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p] * cfw_propn_yg2
                 ##Greasy fleece weight (end)
@@ -5682,9 +5747,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
                 ###store report variables for dams - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
                 r_ebw_tpsire[:,p] = ebw_sire
+                r_wbe_tpsire[:,p] = wbe_sire
                 r_fat_tpsire[:, p] = fat_sire
                 r_muscle_tpsire[:, p] = muscle_sire
                 r_viscera_tpsire[:, p] = viscera_sire
+                r_lean_tpsire[:, p] = muscle_sire + viscera_sire
                 o_nw_start_tpsire[:,p] = nw_start_sire
 
             ###dams
@@ -5797,6 +5864,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 r_fat_tpdams[:, p] = fat_dams
                 r_muscle_tpdams[:, p] = muscle_dams
                 r_viscera_tpdams[:, p] = viscera_dams
+                r_lean_tpdams[:, p] = muscle_dams + viscera_dams
                 r_w_f_tpdams[:,p] = w_f_dams
 
 
@@ -5874,9 +5942,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 r_ebw_start_tpyatf[:,p] = ebw_start_yatf * (days_period_pa1e1b1nwzida0e0b0xyg2[p,...] > 0)
                 r_ebg_tpyatf[:,p] = ebg_yatf
                 r_evg_tpyatf[:,p] = evg_yatf
+                r_wbe_tpyatf[:, p] = wbe_yatf
                 r_fat_tpyatf[:, p] = fat_yatf
                 r_muscle_tpyatf[:, p] = muscle_yatf
                 r_viscera_tpyatf[:, p] = viscera_yatf
+                r_lean_tpyatf[:, p] = muscle_yatf + viscera_yatf
                 r_mp2_tpyatf[:,p] = mp2_yatf
                 r_mem_tpyatf[:,p] = mem_yatf
                 r_mei_tpyatf[:,p] = mei_yatf
@@ -5980,6 +6050,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 r_fat_tpoffs[:, p] = fat_offs
                 r_muscle_tpoffs[:, p] = muscle_offs
                 r_viscera_tpoffs[:, p] = viscera_offs
+                r_lean_tpoffs[:, p] = muscle_offs + viscera_offs
 
             ################
             #stubble resets#
@@ -8133,6 +8204,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     r_fd_hd_tvg3 = sfun.f1_p2v(o_fd_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
                                period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
 
+    ##ebw at start of the DVP - not accounting for mortality
+    r_ebw_tvg1 = sfun.f1_p2v(r_ebw_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_ebw_tvg3 = sfun.f1_p2v(r_ebw_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
+
     ##wbe at start of the DVP - not accounting for mortality
     r_wbe_tvg1 = sfun.f1_p2v(r_wbe_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     r_wbe_tvg3 = sfun.f1_p2v(r_wbe_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
@@ -8151,6 +8226,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     r_viscera_tvg1 = sfun.f1_p2v(r_viscera_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     r_viscera_tvg2 = sfun.f1_p2v(r_viscera_tpyatf, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     r_viscera_tvg3 = sfun.f1_p2v(r_viscera_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
+
+    ##lean at start of the DVP - not accounting for mortality
+    r_lean_tvg1 = sfun.f1_p2v(r_lean_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_lean_tvg2 = sfun.f1_p2v(r_lean_tpyatf, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_lean_tvg3 = sfun.f1_p2v(r_lean_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
+
+    ##feeding value of diet  #todo convert this to nv during period rather than single period
+    r_nv_tvg1 = sfun.f1_p2v(nv_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_nv_tvg3 = sfun.f1_p2v(nv_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
 
     ##nfoet scanning
     r_nfoet_scan_tvg1 = sfun.f1_p2v(nfoet_b1nwzida0e0b0xyg, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_tpdams,
@@ -9322,6 +9406,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                           mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3
                                                                                   * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
+    ##ebw - empty body weight at start of DVP, no account for mortality
+    r_ebw_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', r_ebw_tvg1,
+                                                                      a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                      index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                      mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
+    r_ebw_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', r_ebw_tvg3, a_k3cluster_da0e0b0xyg3,
+                                                                        index_k3k5tva1e1b1nwzida0e0b0xyg3,
+                                                                        a_k5cluster_da0e0b0xyg3,
+                                                                        index_k5tva1e1b1nwzida0e0b0xyg3,
+                                                                        mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3
+                                                                                * mask_z8var_va1e1b1nwzida0e0b0xyg3)
+
     ##wbe - wholebody energy at start of DVP, no account for mortality
     r_wbe_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',r_wbe_tvg1,
                                                                         a_k2cluster_va1e1b1nwzida0e0b0xyg1,
@@ -9360,6 +9456,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     r_viscera_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs',r_viscera_tvg3,a_k3cluster_da0e0b0xyg3
                                       , index_k3k5tva1e1b1nwzida0e0b0xyg3, a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3
                                       , mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
+
+    ##nv - feeding value of dams & offs
+    r_nv_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', r_nv_tvg1,
+                                                                      a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                      index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                      mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
+    r_nv_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', r_nv_tvg3, a_k3cluster_da0e0b0xyg3,
+                                                                        index_k3k5tva1e1b1nwzida0e0b0xyg3,
+                                                                        a_k5cluster_da0e0b0xyg3,
+                                                                        index_k5tva1e1b1nwzida0e0b0xyg3,
+                                                                        mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3
+                                                                                * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     #############################################
     #weaning %, scan % and lamb survival reports#
@@ -9411,39 +9519,51 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                             , np.sum(numbers_start_tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1),
                                                                      axis = (e1_pos, b1_pos), keepdims=True))
 
-    ##ffcfw for select p - to keep the report small it doesn't have full p axis
+    ##select p - to keep the report small it doesn't have full p axis
     period_is_report_p = fun.f_sa(np.array([False]), sen.sav['period_is_report_p'], 5)
     period_is_report_p = period_is_report_p[0:len_p]
 
-    ##ffcfw in select p slices to reduce size.
-    r_ebw_dams_k2tvPdams = (r_ebw_tpdams[:, na, period_is_report_p, ...]
-                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
-                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
-                                 == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+    ##ebw in select p slices to reduce size.
+    r_ebw_k2tvPdams = (r_ebw_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
 
     ##wbe in select p slices to reduce size.
-    r_wbe_dams_k2tvPdams = (r_wbe_tpdams[:, na, period_is_report_p, ...]
-                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
-                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
-                                 == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+    r_wbe_k2tvPdams = (r_wbe_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
 
     ##fat in select p slices to reduce size.
-    r_fat_dams_k2tvPdams = (r_fat_tpdams[:, na, period_is_report_p, ...]
-                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
-                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
-                                 == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+    r_fat_k2tvPdams = (r_fat_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
 
     ##muscle in select p slices to reduce size.
-    r_muscle_dams_k2tvPdams = (r_muscle_tpdams[:, na, period_is_report_p, ...]
-                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
-                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
-                                 == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+    r_muscle_k2tvPdams = (r_muscle_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
 
     ##viscera in select p slices to reduce size.
-    r_viscera_dams_k2tvPdams = (r_viscera_tpdams[:, na, period_is_report_p, ...]
-                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
-                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
-                                 == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+    r_viscera_k2tvPdams = (r_viscera_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+
+    ##lean in select p slices to reduce size.
+    r_lean_k2tvPdams = (r_lean_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+
+    ##nv in select p slices to reduce size.
+    r_nv_k2tvPdams = (nv_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
 
     ##############
     #big reports #
@@ -9489,24 +9609,24 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ###lw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesn't affect lw
     if sinp.rep['i_store_lw_rep']:
-        r_lw_sire_tpsire = o_lw_tpsire
-        r_lw_dams_k2Tvpdams = (o_lw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_lw_offs_k3k5Tvpoffs = (o_lw_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-                                 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
-                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
+        r_lw_tpsire = o_lw_tpsire
+        r_lw_k2Tvpdams = (o_lw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_lw_k3k5Tvpoffs = (o_lw_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                            * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                            * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
 
     ##ebw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesn't affect ebw
     #todo Add variables similar to ebw to allow reporting of the component weights (fat, muscle & viscera) with a 'cut' p axis
     if sinp.rep['i_store_ebw_rep']:
-        r_ebw_sire_tpsire = r_ebw_tpsire
-        r_ebw_dams_k2Tvpdams = (r_ebw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_ebw_yatf_k2Tvpyatf = (r_ebw_start_tpyatf[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_ebw_offs_k3k5Tvpoffs = (r_ebw_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-                                 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
-                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
+        r_ebw_tpsire = r_ebw_tpsire
+        r_ebw_k2Tvpdams = (r_ebw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_ebw_k2Tvpyatf = (r_ebw_start_tpyatf[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_ebw_k3k5Tvpoffs = (r_ebw_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
     ####calculate ffcfw_prog for all trials. It is a small variable because it has singleton p axis
     r_ebw_prog_k3k5tva1e1b1nwzida0e0b0xyg2 = ebw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 \
                                              * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3) \
@@ -9514,40 +9634,55 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##NV - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
     if sinp.rep['i_store_nv_rep']:
-        r_nv_sire_pg = nv_tpsire
-        r_nv_dams_k2Tvpg = (nv_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_nv_offs_k3k5Tvpg = (nv_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-                               * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
-                               * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
-        r_mei_dams_k2Tvpg = (o_mei_solid_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_pi_dams_k2Tvpg = (o_pi_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_nv_psire = nv_tpsire
+        r_nv_k2Tvpdams = (nv_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_nv_k3k5Tvpoffs = (nv_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                            * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                            * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
+        r_mei_k2Tvpdams = (o_mei_solid_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_pi_k2Tvpdams = (o_pi_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+
+    ##WBE - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
+    if sinp.rep['i_store_wbe_rep']:
+        r_wbe_psire = r_wbe_tpsire
+        r_wbe_k2Tvpdams = (r_wbe_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_wbe_k2Tvpyatf = (r_wbe_tpyatf[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_wbe_k3k5Tvpoffs = (r_wbe_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
+        r_fat_k2Tvpdams = (r_fat_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_lean_k2Tvpdams = (r_lean_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                            * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
 
     ##cs - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
     if sinp.rep['i_store_cs_rep']:
         cs_tpg0 = sfun.f1_condition_score(o_rc_start_tpsire, cn_sire.astype(dtype))
         cs_tpg1 = sfun.f1_condition_score(o_rc_start_tpdams, cn_dams.astype(dtype))
         cs_tpg3 = sfun.f1_condition_score(o_rc_start_tpoffs, cn_offs.astype(dtype))
-        r_cs_sire_pg = cs_tpg0
-        r_cs_dams_k2Tvpg = (cs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_cs_offs_k3k5Tvpg = (cs_tpg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-                               * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
-                               * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
+        r_cs_psire = cs_tpg0
+        r_cs_k2Tvpdams = (cs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_cs_k3k5Tvpoffs = (cs_tpg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                            * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                            * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
 
     ##fs - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
     if sinp.rep['i_store_fs_rep']:
         fs_tpg0 = sfun.f1_fat_score(o_rc_start_tpsire, cn_sire.astype(dtype))
         fs_tpg1 = sfun.f1_fat_score(o_rc_start_tpdams, cn_dams.astype(dtype))
         fs_tpg3 = sfun.f1_fat_score(o_rc_start_tpoffs, cn_offs.astype(dtype))
-        r_fs_sire_pg = fs_tpg0
-        r_fs_dams_k2Tvpg = (fs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_fs_offs_k3k5Tvpg = (fs_tpg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-                               * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
-                               * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
+        r_fs_psire = fs_tpg0
+        r_fs_k2Tvpdams = (fs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_fs_k3k5Tvpoffs = (fs_tpg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                            * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                            * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
 
     ###############
     ## report dse #
@@ -10688,6 +10823,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fun.f1_make_r_val(r_vals,dvp_start_va1e1b1nwzida0e0b0xyg3 % 364,'dvp_start_vzdxg3', shape=vzdxg3_shape) #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
     fun.f1_make_r_val(r_vals,r_repro_dates_roe1g1 % 364,'r_repro_dates_roe1g1', shape=roe1g1_shape) #mod 364 so that all dates are from the start of the yr (makes it easier to compare in the report)
 
+    ###ebw - this uses generator t axis (thus it can be singleton but it is always broadcastable with normal t)
+    fun.f1_make_r_val(r_vals,r_ebw_k2tva1e1b1nwzida0e0b0xyg1,'ebw_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_ebw_k3k5tva1e1b1nwzida0e0b0xyg3,'ebw_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5Tvnwziaxyg3_shape)
+
     ###wbe - this uses generator t axis (thus it can be singleton but it is always broadcastable with normal t)
     fun.f1_make_r_val(r_vals,r_wbe_k2tva1e1b1nwzida0e0b0xyg1,'wbe_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals,r_wbe_k3k5tva1e1b1nwzida0e0b0xyg3,'wbe_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5Tvnwziaxyg3_shape)
@@ -10703,6 +10842,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###viscera - this uses generator t axis (thus it can be singleton but it is always broadcastable with normal t)
     fun.f1_make_r_val(r_vals,r_viscera_k2tva1e1b1nwzida0e0b0xyg1,'viscera_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals,r_viscera_k3k5tva1e1b1nwzida0e0b0xyg3,'viscera_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5Tvnwziaxyg3_shape)
+
+    ###nv - this uses generator t axis (thus it can be singleton but it is always broadcastable with normal t)
+    fun.f1_make_r_val(r_vals,r_nv_k2tva1e1b1nwzida0e0b0xyg1,'nv_k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, k2Tva1nwziyg1_shape)
+    fun.f1_make_r_val(r_vals,r_nv_k3k5tva1e1b1nwzida0e0b0xyg3,'nv_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5Tvnwziaxyg3_shape)
 
     ###cfw
     fun.f1_make_r_val(r_vals,r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0,'cfw_hdmob_zg0', shape=zg0_shape) #no mask needed since no active period axis
@@ -10812,23 +10955,27 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fun.f1_make_r_val(r_vals,nfoet_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1)),'mask_b1b9_preg_b1nwziygb9')
 
     ###ebw with only a few p slices
-    fun.f1_make_r_val(r_vals, r_ebw_dams_k2tvPdams, 'ebw_dams_k2tvPa1e1b1nw8ziyg1',
+    fun.f1_make_r_val(r_vals, r_ebw_k2tvPdams, 'ebw_dams_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
 
     ###WBE with only a few p slices
-    fun.f1_make_r_val(r_vals, r_wbe_dams_k2tvPdams, 'wbe_dams_k2tvPa1e1b1nw8ziyg1',
+    fun.f1_make_r_val(r_vals, r_wbe_k2tvPdams, 'wbe_dams_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
 
     ###Fat with only a few p slices
-    fun.f1_make_r_val(r_vals, r_fat_dams_k2tvPdams, 'fat_dams_k2tvPa1e1b1nw8ziyg1',
+    fun.f1_make_r_val(r_vals, r_fat_k2tvPdams, 'fat_dams_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
 
     ###Muscle with only a few p slices
-    fun.f1_make_r_val(r_vals, r_muscle_dams_k2tvPdams, 'muscle_dams_k2tvPa1e1b1nw8ziyg1',
+    fun.f1_make_r_val(r_vals, r_muscle_k2tvPdams, 'muscle_dams_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
 
     ###Viscera with only a few p slices
-    fun.f1_make_r_val(r_vals, r_viscera_dams_k2tvPdams, 'viscera_dams_k2tvPa1e1b1nw8ziyg1',
+    fun.f1_make_r_val(r_vals, r_viscera_k2tvPdams, 'viscera_dams_k2tvPa1e1b1nw8ziyg1',
+                      mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
+
+    ###nv with only a few p slices
+    fun.f1_make_r_val(r_vals, r_nv_k2tvPdams, 'nv_dams_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
 
     ###mort - uses b axis instead of k for extra detail when scan=0
@@ -10888,41 +11035,50 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ###lw - with p, e, b
     if sinp.rep['i_store_lw_rep']:
-        fun.f1_make_r_val(r_vals,r_lw_sire_tpsire,'lw_sire_pzg0',shape=pzg0_shape) #no v axis to mask
-        fun.f1_make_r_val(r_vals,r_lw_dams_k2Tvpdams,'lw_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
-        fun.f1_make_r_val(r_vals,r_lw_offs_k3k5Tvpoffs,'lw_offs_k3k5vpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_lw_tpsire,'lw_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_lw_k2Tvpdams,'lw_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_lw_k3k5Tvpoffs,'lw_offs_k3k5vpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
 
     ###ebw - with p, e, b
     #todo add the component weights here too
     if sinp.rep['i_store_ebw_rep']:
-        fun.f1_make_r_val(r_vals,r_ebw_sire_tpsire,'ebw_sire_pzg0',shape=pzg0_shape) #no v axis to mask
-        fun.f1_make_r_val(r_vals,r_ebw_dams_k2Tvpdams,'ebw_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
-        fun.f1_make_r_val(r_vals,r_ebw_yatf_k2Tvpyatf,'ebw_yatf_k2Tvpa1e1b1nw8zixyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwzixyg1_shape)
+        fun.f1_make_r_val(r_vals,r_ebw_tpsire,'ebw_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_ebw_k2Tvpdams,'ebw_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_ebw_k2Tvpyatf,'ebw_yatf_k2Tvpa1e1b1nw8zixyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwzixyg1_shape)
         # fun.f1_make_r_val(r_vals,r_ebw_prog_k3k5tva1e1b1nwzida0e0b0xyg2,'ebw_prog_k3k5wzida0e0b0xyg2', shape=k3k5wzida0e0b0xyg2_shape) #no v axis to mask
-        fun.f1_make_r_val(r_vals,r_ebw_offs_k3k5Tvpoffs,'ebw_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_ebw_k3k5Tvpoffs,'ebw_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
     ####make prog r_val for all trials. It is a small variable because it has singleton p axis
     fun.f1_make_r_val(r_vals,r_ebw_prog_k3k5tva1e1b1nwzida0e0b0xyg2,'ebw_prog_k3k5wzida0e0b0xyg2', shape=k3k5wzida0e0b0xyg2_shape) #no v axis to mask
 
     ###NV - with p, e, b
     if sinp.rep['i_store_nv_rep']:
-        fun.f1_make_r_val(r_vals,r_nv_sire_pg,'nv_sire_pzg0',shape=pzg0_shape) #no v axis to mask
-        fun.f1_make_r_val(r_vals,r_nv_dams_k2Tvpg,'nv_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
-        fun.f1_make_r_val(r_vals,r_nv_offs_k3k5Tvpg,'nv_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_nv_psire,'nv_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_nv_k2Tvpdams,'nv_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_nv_k3k5Tvpoffs,'nv_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
 
-        fun.f1_make_r_val(r_vals,r_mei_dams_k2Tvpg,'mei_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
-        fun.f1_make_r_val(r_vals,r_pi_dams_k2Tvpg,'pi_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_mei_k2Tvpdams,'mei_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_pi_k2Tvpdams,'pi_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+
+    ###WBE - with p, e, b
+    if sinp.rep['i_store_wbe_rep']:
+        fun.f1_make_r_val(r_vals,r_wbe_psire,'wbe_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_wbe_k2Tvpdams,'wbe_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_wbe_k2Tvpyatf,'wbe_yatf_k2Tvpa1e1b1nw8zixyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwzixyg1_shape)
+        fun.f1_make_r_val(r_vals,r_wbe_k3k5Tvpoffs,'wbe_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_fat_k2Tvpdams,'fat_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_lean_k2Tvpdams,'lean_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
 
     ###condition score - with p, e, b
     if sinp.rep['i_store_cs_rep']:
-        fun.f1_make_r_val(r_vals,r_cs_sire_pg,'cs_sire_pzg0',shape=pzg0_shape) #no v axis to mask
-        fun.f1_make_r_val(r_vals,r_cs_dams_k2Tvpg,'cs_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
-        fun.f1_make_r_val(r_vals,r_cs_offs_k3k5Tvpg,'cs_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_cs_psire,'cs_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_cs_k2Tvpdams,'cs_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_cs_k3k5Tvpoffs,'cs_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
 
     ###fat score - with p, e, b
     if sinp.rep['i_store_fs_rep']:
-        fun.f1_make_r_val(r_vals,r_fs_sire_pg,'fs_sire_pzg0',shape=pzg0_shape) #no v axis to mask
-        fun.f1_make_r_val(r_vals,r_fs_dams_k2Tvpg,'fs_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
-        fun.f1_make_r_val(r_vals,r_fs_offs_k3k5Tvpg,'fs_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_fs_psire,'fs_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_fs_k2Tvpdams,'fs_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_fs_k3k5Tvpoffs,'fs_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
 
 
 
@@ -11005,7 +11161,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         ##First define information about the array and the Excel file
         ###The array name and the slices to report are defined inside the try: except (in case they don't exist)
         ###One worksheet is created for each variable reported. To add more variables (or slices) include extra arrays, f_numpy2df() and .to_excel()
-        excel_filename = f'Wether_pm{1000*cg_offs[32,0,0]:.0f}_eo{1000*cg_offs[34,0,0]:.0f}.xlsx'
+        excel_filename = f'CompareMU.xlsx'    #f'Wether_pm{1000*cg_offs[32,0,0]:.0f}_eo{1000*cg_offs[34,0,0]:.0f}.xlsx'
         sheetname7_0 = 'mem'    #in NFS this includes HAF whereas HAF above the maintenance level of feeding is not included in CFS
         sheetname7_1 = 'hptotal'
         sheetname7_2 = 'kg'
@@ -11047,269 +11203,269 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         ##Slice the r_compare array and return the equation systems and p axes.
         try:  #Catch error when the variable doesn't exist, which for r_compare occurs if eqn_compare is false for a trial
             ##comment out either dams or offs because only one can be save to Excel unless array names and df names are expanded.
-            # array7_0a = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_0b = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_0c = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_1a = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_1b = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_1c = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_2a = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_2b = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_2c = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_3a = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_3b = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_3c = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_4a = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_4b = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_4c = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_5a = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_5b = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_5c = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_6a = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_6b = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array7_6c = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array9_1a = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array9_1b = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array9_1c = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array9_2a = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array9_2b = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array9_2c = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array17_2a = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array17_2b = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array17_2c = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array18_1a = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array18_1b = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array18_1c = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array18_2a = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array18_2b = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # array18_2c = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            # arrayA = o_mei_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            # arrayB = r_md_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            # arrayC = nv_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
-            # arrayD = r_ebw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            # arrayE = r_wbe_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            # arrayF = r_fat_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            # arrayG = r_muscle_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            # arrayH = r_viscera_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            # arrayI = r_w_f_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            # arrayJ = o_cfw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
-            #
-            # ##calculations for the extra sheets
-            # array_calc7_3a = sfun.f1_weight2energy(cg_dams, array7_3a, 0)
-            # array_calc7_3b = sfun.f1_weight2energy(cg_dams, array7_3b, 0)
-            # array_calc7_3c = sfun.f1_weight2energy(cg_dams, array7_3c, 0)
-            # array_calc7_4a = sfun.f1_weight2energy(cg_dams, array7_4a, 1)
-            # array_calc7_4b = sfun.f1_weight2energy(cg_dams, array7_4b, 1)
-            # array_calc7_4c = sfun.f1_weight2energy(cg_dams, array7_4c, 1)
-            # array_calc7_5a = sfun.f1_weight2energy(cg_dams, array7_5a, 2)
-            # array_calc7_5b = sfun.f1_weight2energy(cg_dams, array7_5b, 2)
-            # array_calc7_5c = sfun.f1_weight2energy(cg_dams, array7_5c, 2)
-            # ###retained energy = df + dm + dv + dc + dw + dl
-            # array_calc7_6a = array_calc7_3a + array_calc7_4a + array_calc7_5a + array9_1a + array17_2a + array18_1a
-            # array_calc7_6b = array_calc7_3b + array_calc7_4b + array_calc7_5b + array9_1b + array17_2b + array18_1b
-            # array_calc7_6c = array_calc7_3c + array_calc7_4c + array_calc7_5c + array9_1c + array17_2c + array18_1c
-            # array_calcF = sfun.f1_weight2energy(cg_dams, arrayF, 0)
-            # array_calcG = sfun.f1_weight2energy(cg_dams, arrayG, 1)
-            # array_calcH = sfun.f1_weight2energy(cg_dams, arrayH, 2)
-
-            ## Assign Offspring values to the array variables
-            array7_0a = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array7_0b = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array7_0c = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array7_1a = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array7_1b = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array7_1c = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array7_2a = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array7_2b = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array7_2c = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array7_3a = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array7_3b = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array7_3c = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array7_4a = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array7_4b = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array7_4c = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array7_5a = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array7_5b = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array7_5c = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array7_6a = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array7_6b = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array7_6c = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array9_1a = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array9_1b = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array9_1c = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array9_2a = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array9_2b = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array9_2c = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array17_2a = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array17_2b = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array17_2c = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array18_1a = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array18_1b = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array18_1c = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            array18_2a = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            array18_2b = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            array18_2c = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            arrayA = o_mei_solid_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
-            arrayB = r_md_solid_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
-            arrayC = nv_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
-            arrayD = r_ebw_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            arrayE = r_wbe_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            arrayF = r_fat_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            arrayG = r_muscle_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            arrayH = r_viscera_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            arrayI = r_w_f_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
-            arrayJ = o_cfw_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            array7_0a = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_0b = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_0c = r_compare7_q0q2tpdams[:, 0, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_1a = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_1b = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_1c = r_compare7_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_2a = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_2b = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_2c = r_compare7_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_3a = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_3b = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_3c = r_compare7_q0q2tpdams[:, 3, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_4a = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_4b = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_4c = r_compare7_q0q2tpdams[:, 4, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_5a = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_5b = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_5c = r_compare7_q0q2tpdams[:, 5, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_6a = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_6b = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_6c = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array9_1a = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array9_1b = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array9_1c = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array9_2a = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array9_2b = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array9_2c = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array17_2a = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array17_2b = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array17_2c = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array18_1a = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array18_1b = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array18_1c = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array18_2a = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array18_2b = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array18_2c = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            arrayA = o_mei_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
+            arrayB = r_md_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
+            arrayC = nv_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
+            arrayD = r_ebw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            arrayE = r_wbe_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            arrayF = r_fat_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            arrayG = r_muscle_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            arrayH = r_viscera_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            arrayI = r_w_f_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
+            arrayJ = o_cfw_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # have used (dry, single & twin) in place of q0
 
             ##calculations for the extra sheets
-            array_calc7_3a = sfun.f1_weight2energy(cg_offs, array7_3a, 0)
-            array_calc7_3b = sfun.f1_weight2energy(cg_offs, array7_3b, 0)
-            array_calc7_3c = sfun.f1_weight2energy(cg_offs, array7_3c, 0)
-            array_calc7_4a = sfun.f1_weight2energy(cg_offs, array7_4a, 1)
-            array_calc7_4b = sfun.f1_weight2energy(cg_offs, array7_4b, 1)
-            array_calc7_4c = sfun.f1_weight2energy(cg_offs, array7_4c, 1)
-            array_calc7_5a = sfun.f1_weight2energy(cg_offs, array7_5a, 2)
-            array_calc7_5b = sfun.f1_weight2energy(cg_offs, array7_5b, 2)
-            array_calc7_5c = sfun.f1_weight2energy(cg_offs, array7_5c, 2)
+            array_calc7_3a = sfun.f1_weight_energy_conversion(cg_dams, 0, weight=array7_3a)
+            array_calc7_3b = sfun.f1_weight_energy_conversion(cg_dams, 0, weight=array7_3b)
+            array_calc7_3c = sfun.f1_weight_energy_conversion(cg_dams, 0, weight=array7_3c)
+            array_calc7_4a = sfun.f1_weight_energy_conversion(cg_dams, 1, weight=array7_4a)
+            array_calc7_4b = sfun.f1_weight_energy_conversion(cg_dams, 1, weight=array7_4b)
+            array_calc7_4c = sfun.f1_weight_energy_conversion(cg_dams, 1, weight=array7_4c)
+            array_calc7_5a = sfun.f1_weight_energy_conversion(cg_dams, 2, weight=array7_5a)
+            array_calc7_5b = sfun.f1_weight_energy_conversion(cg_dams, 2, weight=array7_5b)
+            array_calc7_5c = sfun.f1_weight_energy_conversion(cg_dams, 2, weight=array7_5c)
             ###retained energy = df + dm + dv + dc + dw + dl
             array_calc7_6a = array_calc7_3a + array_calc7_4a + array_calc7_5a + array9_1a + array17_2a + array18_1a
             array_calc7_6b = array_calc7_3b + array_calc7_4b + array_calc7_5b + array9_1b + array17_2b + array18_1b
             array_calc7_6c = array_calc7_3c + array_calc7_4c + array_calc7_5c + array9_1c + array17_2c + array18_1c
-            array_calcF = sfun.f1_weight2energy(cg_offs, arrayF, 0)
-            array_calcG = sfun.f1_weight2energy(cg_offs, arrayG, 1)
-            array_calcH = sfun.f1_weight2energy(cg_offs, arrayH, 2)
+            array_calcF = sfun.f1_weight_energy_conversion(cg_dams, 0, weight=arrayF)
+            array_calcG = sfun.f1_weight_energy_conversion(cg_dams, 1, weight=arrayG)
+            array_calcH = sfun.f1_weight_energy_conversion(cg_dams, 2, weight=arrayH)
+
+            ## Assign Offspring values to the array variables
+            # array7_0a = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_0b = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_0c = r_compare7_q0q2tpoffs[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_1a = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_1b = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_1c = r_compare7_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_2a = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_2b = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_2c = r_compare7_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_3a = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_3b = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_3c = r_compare7_q0q2tpoffs[:, 3, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_4a = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_4b = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_4c = r_compare7_q0q2tpoffs[:, 4, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_5a = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_5b = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_5c = r_compare7_q0q2tpoffs[:, 5, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_6a = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_6b = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_6c = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array9_1a = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array9_1b = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array9_1c = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array9_2a = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array9_2b = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array9_2c = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array17_2a = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array17_2b = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array17_2c = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array18_1a = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array18_1b = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array18_1c = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array18_2a = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array18_2b = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array18_2c = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # arrayA = o_mei_solid_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
+            # arrayB = r_md_solid_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
+            # arrayC = nv_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
+            # arrayD = r_ebw_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            # arrayE = r_wbe_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            # arrayF = r_fat_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            # arrayG = r_muscle_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            # arrayH = r_viscera_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            # arrayI = r_w_f_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            # arrayJ = o_cfw_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # have used (single, twin & triplet) in place of q0
+            #
+            # ##calculations for the extra sheets
+            # array_calc7_3a = sfun.f1_weight_energy_conversion(cg_offs, 0, weight=array7_3a)
+            # array_calc7_3b = sfun.f1_weight_energy_conversion(cg_offs, 0, weight=array7_3b)
+            # array_calc7_3c = sfun.f1_weight_energy_conversion(cg_offs, 0, weight=array7_3c)
+            # array_calc7_4a = sfun.f1_weight_energy_conversion(cg_offs, 1, weight=array7_4a)
+            # array_calc7_4b = sfun.f1_weight_energy_conversion(cg_offs, 1, weight=array7_4b)
+            # array_calc7_4c = sfun.f1_weight_energy_conversion(cg_offs, 1, weight=array7_4c)
+            # array_calc7_5a = sfun.f1_weight_energy_conversion(cg_offs, 2, weight=array7_5a)
+            # array_calc7_5b = sfun.f1_weight_energy_conversion(cg_offs, 2, weight=array7_5b)
+            # array_calc7_5c = sfun.f1_weight_energy_conversion(cg_offs, 2, weight=array7_5c)
+            # ###retained energy = df + dm + dv + dc + dw + dl
+            # array_calc7_6a = array_calc7_3a + array_calc7_4a + array_calc7_5a + array9_1a + array17_2a + array18_1a
+            # array_calc7_6b = array_calc7_3b + array_calc7_4b + array_calc7_5b + array9_1b + array17_2b + array18_1b
+            # array_calc7_6c = array_calc7_3c + array_calc7_4c + array_calc7_5c + array9_1c + array17_2c + array18_1c
+            # array_calcF = sfun.f1_weight_energy_conversion(cg_offs, 0, weight=arrayF)
+            # array_calcG = sfun.f1_weight_energy_conversion(cg_offs, 1, weight=arrayG)
+            # array_calcH = sfun.f1_weight_energy_conversion(cg_offs, 2, weight=arrayH)
 
 
         except: #do not write the trial if any of the variables don't exist
             print('Error when setting up the variables for saving in Excel - check the variables exist and are sliced appropriately')
         else:  #Carry out this code if array was successfully created
             ##comment out either dams or offs because only one can be save to Excel unless array names and df names are expanded.
-            # df7_0a = rfun.f_numpy2df(array7_0a, keys_q0p, [1], [0])
-            # df7_0b = rfun.f_numpy2df(array7_0b, keys_q0p, [1], [0])
-            # df7_0c = rfun.f_numpy2df(array7_0c, keys_q0p, [1], [0])
-            # df7_1a = rfun.f_numpy2df(array7_1a, keys_q0p, [1], [0])
-            # df7_1b = rfun.f_numpy2df(array7_1b, keys_q0p, [1], [0])
-            # df7_1c = rfun.f_numpy2df(array7_1c, keys_q0p, [1], [0])
-            # df7_2a = rfun.f_numpy2df(array7_2a, keys_q0p, [1], [0])
-            # df7_2b = rfun.f_numpy2df(array7_2b, keys_q0p, [1], [0])
-            # df7_2c = rfun.f_numpy2df(array7_2c, keys_q0p, [1], [0])
-            # df7_3a = rfun.f_numpy2df(array7_3a, keys_q0p, [1], [0])
-            # df7_3b = rfun.f_numpy2df(array7_3b, keys_q0p, [1], [0])
-            # df7_3c = rfun.f_numpy2df(array7_3c, keys_q0p, [1], [0])
-            # df7_4a = rfun.f_numpy2df(array7_4a, keys_q0p, [1], [0])
-            # df7_4b = rfun.f_numpy2df(array7_4b, keys_q0p, [1], [0])
-            # df7_4c = rfun.f_numpy2df(array7_4c, keys_q0p, [1], [0])
-            # df7_5a = rfun.f_numpy2df(array7_5a, keys_q0p, [1], [0])
-            # df7_5b = rfun.f_numpy2df(array7_5b, keys_q0p, [1], [0])
-            # df7_5c = rfun.f_numpy2df(array7_5c, keys_q0p, [1], [0])
-            # df7_6a = rfun.f_numpy2df(array7_6a, keys_q0p, [1], [0])
-            # df7_6b = rfun.f_numpy2df(array7_6b, keys_q0p, [1], [0])
-            # df7_6c = rfun.f_numpy2df(array7_6c, keys_q0p, [1], [0])
-            # df9_1a = rfun.f_numpy2df(array9_1a, keys_q0p, [1], [0])
-            # df9_1b = rfun.f_numpy2df(array9_1b, keys_q0p, [1], [0])
-            # df9_1c = rfun.f_numpy2df(array9_1c, keys_q0p, [1], [0])
-            # df9_2a = rfun.f_numpy2df(array9_2a, keys_q0p, [1], [0])
-            # df9_2b = rfun.f_numpy2df(array9_2b, keys_q0p, [1], [0])
-            # df9_2c = rfun.f_numpy2df(array9_2c, keys_q0p, [1], [0])
-            # df17_2a = rfun.f_numpy2df(array17_2a, keys_q0p, [1], [0])
-            # df17_2b = rfun.f_numpy2df(array17_2b, keys_q0p, [1], [0])
-            # df17_2c = rfun.f_numpy2df(array17_2c, keys_q0p, [1], [0])
-            # df18_1a = rfun.f_numpy2df(array18_1a, keys_q0p, [1], [0])
-            # df18_1b = rfun.f_numpy2df(array18_1b, keys_q0p, [1], [0])
-            # df18_1c = rfun.f_numpy2df(array18_1c, keys_q0p, [1], [0])
-            # df18_2a = rfun.f_numpy2df(array18_2a, keys_q0p, [1], [0])
-            # df18_2b = rfun.f_numpy2df(array18_2b, keys_q0p, [1], [0])
-            # df18_2c = rfun.f_numpy2df(array18_2c, keys_q0p, [1], [0])
-            # dfA = rfun.f_numpy2df(arrayA, keys_bp, [1], [0])
-            # dfB = rfun.f_numpy2df(arrayB, keys_bp, [1], [0])
-            # dfC = rfun.f_numpy2df(arrayC, keys_bp, [1], [0])
-            # dfD = rfun.f_numpy2df(arrayD, keys_bp, [1], [0])
-            # dfE = rfun.f_numpy2df(arrayE, keys_bp, [1], [0])
-            # dfF = rfun.f_numpy2df(arrayF, keys_bp, [1], [0])
-            # dfG = rfun.f_numpy2df(arrayG, keys_bp, [1], [0])
-            # dfH = rfun.f_numpy2df(arrayH, keys_bp, [1], [0])
-            # dfI = rfun.f_numpy2df(arrayI, keys_bp, [1], [0])
-            # dfJ = rfun.f_numpy2df(arrayJ, keys_bp, [1], [0])
-            #
-            # ## the extra calculation arrays
-            # df_calc7_3a = rfun.f_numpy2df(array_calc7_3a, keys_q0p, [1], [0])
-            # df_calc7_3b = rfun.f_numpy2df(array_calc7_3b, keys_q0p, [1], [0])
-            # df_calc7_3c = rfun.f_numpy2df(array_calc7_3c, keys_q0p, [1], [0])
-            # df_calc7_4a = rfun.f_numpy2df(array_calc7_4a, keys_q0p, [1], [0])
-            # df_calc7_4b = rfun.f_numpy2df(array_calc7_4b, keys_q0p, [1], [0])
-            # df_calc7_4c = rfun.f_numpy2df(array_calc7_4c, keys_q0p, [1], [0])
-            # df_calc7_5a = rfun.f_numpy2df(array_calc7_5a, keys_q0p, [1], [0])
-            # df_calc7_5b = rfun.f_numpy2df(array_calc7_5b, keys_q0p, [1], [0])
-            # df_calc7_5c = rfun.f_numpy2df(array_calc7_5c, keys_q0p, [1], [0])
-            # df_calc7_6a = rfun.f_numpy2df(array_calc7_6a, keys_q0p, [1], [0])
-            # df_calc7_6b = rfun.f_numpy2df(array_calc7_6b, keys_q0p, [1], [0])
-            # df_calc7_6c = rfun.f_numpy2df(array_calc7_6c, keys_q0p, [1], [0])
-            # df_calcF = rfun.f_numpy2df(array_calcF, keys_bp, [1], [0])
-            # df_calcG = rfun.f_numpy2df(array_calcG, keys_bp, [1], [0])
-            # df_calcH = rfun.f_numpy2df(array_calcH, keys_bp, [1], [0])
-
-            df7_0a = rfun.f_numpy2df(array7_0a, keys_q0p3, [1], [0])
-            df7_0b = rfun.f_numpy2df(array7_0b, keys_q0p3, [1], [0])
-            df7_0c = rfun.f_numpy2df(array7_0c, keys_q0p3, [1], [0])
-            df7_1a = rfun.f_numpy2df(array7_1a, keys_q0p3, [1], [0])
-            df7_1b = rfun.f_numpy2df(array7_1b, keys_q0p3, [1], [0])
-            df7_1c = rfun.f_numpy2df(array7_1c, keys_q0p3, [1], [0])
-            df7_2a = rfun.f_numpy2df(array7_2a, keys_q0p3, [1], [0])
-            df7_2b = rfun.f_numpy2df(array7_2b, keys_q0p3, [1], [0])
-            df7_2c = rfun.f_numpy2df(array7_2c, keys_q0p3, [1], [0])
-            df7_3a = rfun.f_numpy2df(array7_3a, keys_q0p3, [1], [0])
-            df7_3b = rfun.f_numpy2df(array7_3b, keys_q0p3, [1], [0])
-            df7_3c = rfun.f_numpy2df(array7_3c, keys_q0p3, [1], [0])
-            df7_4a = rfun.f_numpy2df(array7_4a, keys_q0p3, [1], [0])
-            df7_4b = rfun.f_numpy2df(array7_4b, keys_q0p3, [1], [0])
-            df7_4c = rfun.f_numpy2df(array7_4c, keys_q0p3, [1], [0])
-            df7_5a = rfun.f_numpy2df(array7_5a, keys_q0p3, [1], [0])
-            df7_5b = rfun.f_numpy2df(array7_5b, keys_q0p3, [1], [0])
-            df7_5c = rfun.f_numpy2df(array7_5c, keys_q0p3, [1], [0])
-            df7_6a = rfun.f_numpy2df(array7_6a, keys_q0p3, [1], [0])
-            df7_6b = rfun.f_numpy2df(array7_6b, keys_q0p3, [1], [0])
-            df7_6c = rfun.f_numpy2df(array7_6c, keys_q0p3, [1], [0])
-            df9_1a = rfun.f_numpy2df(array9_1a, keys_q0p3, [1], [0])
-            df9_1b = rfun.f_numpy2df(array9_1b, keys_q0p3, [1], [0])
-            df9_1c = rfun.f_numpy2df(array9_1c, keys_q0p3, [1], [0])
-            df9_2a = rfun.f_numpy2df(array9_2a, keys_q0p3, [1], [0])
-            df9_2b = rfun.f_numpy2df(array9_2b, keys_q0p3, [1], [0])
-            df9_2c = rfun.f_numpy2df(array9_2c, keys_q0p3, [1], [0])
-            df17_2a = rfun.f_numpy2df(array17_2a, keys_q0p3, [1], [0])
-            df17_2b = rfun.f_numpy2df(array17_2b, keys_q0p3, [1], [0])
-            df17_2c = rfun.f_numpy2df(array17_2c, keys_q0p3, [1], [0])
-            df18_1a = rfun.f_numpy2df(array18_1a, keys_q0p3, [1], [0])
-            df18_1b = rfun.f_numpy2df(array18_1b, keys_q0p3, [1], [0])
-            df18_1c = rfun.f_numpy2df(array18_1c, keys_q0p3, [1], [0])
-            df18_2a = rfun.f_numpy2df(array18_2a, keys_q0p3, [1], [0])
-            df18_2b = rfun.f_numpy2df(array18_2b, keys_q0p3, [1], [0])
-            df18_2c = rfun.f_numpy2df(array18_2c, keys_q0p3, [1], [0])
-            dfA = rfun.f_numpy2df(arrayA, keys_bp3, [1], [0])
-            dfB = rfun.f_numpy2df(arrayB, keys_bp3, [1], [0])
-            dfC = rfun.f_numpy2df(arrayC, keys_bp3, [1], [0])
-            dfD = rfun.f_numpy2df(arrayD, keys_bp3, [1], [0])
-            dfE = rfun.f_numpy2df(arrayE, keys_bp3, [1], [0])
-            dfF = rfun.f_numpy2df(arrayF, keys_bp3, [1], [0])
-            dfG = rfun.f_numpy2df(arrayG, keys_bp3, [1], [0])
-            dfH = rfun.f_numpy2df(arrayH, keys_bp3, [1], [0])
-            dfI = rfun.f_numpy2df(arrayI, keys_bp3, [1], [0])
-            dfJ = rfun.f_numpy2df(arrayJ, keys_bp3, [1], [0])
+            df7_0a = rfun.f_numpy2df(array7_0a, keys_q0p, [1], [0])
+            df7_0b = rfun.f_numpy2df(array7_0b, keys_q0p, [1], [0])
+            df7_0c = rfun.f_numpy2df(array7_0c, keys_q0p, [1], [0])
+            df7_1a = rfun.f_numpy2df(array7_1a, keys_q0p, [1], [0])
+            df7_1b = rfun.f_numpy2df(array7_1b, keys_q0p, [1], [0])
+            df7_1c = rfun.f_numpy2df(array7_1c, keys_q0p, [1], [0])
+            df7_2a = rfun.f_numpy2df(array7_2a, keys_q0p, [1], [0])
+            df7_2b = rfun.f_numpy2df(array7_2b, keys_q0p, [1], [0])
+            df7_2c = rfun.f_numpy2df(array7_2c, keys_q0p, [1], [0])
+            df7_3a = rfun.f_numpy2df(array7_3a, keys_q0p, [1], [0])
+            df7_3b = rfun.f_numpy2df(array7_3b, keys_q0p, [1], [0])
+            df7_3c = rfun.f_numpy2df(array7_3c, keys_q0p, [1], [0])
+            df7_4a = rfun.f_numpy2df(array7_4a, keys_q0p, [1], [0])
+            df7_4b = rfun.f_numpy2df(array7_4b, keys_q0p, [1], [0])
+            df7_4c = rfun.f_numpy2df(array7_4c, keys_q0p, [1], [0])
+            df7_5a = rfun.f_numpy2df(array7_5a, keys_q0p, [1], [0])
+            df7_5b = rfun.f_numpy2df(array7_5b, keys_q0p, [1], [0])
+            df7_5c = rfun.f_numpy2df(array7_5c, keys_q0p, [1], [0])
+            df7_6a = rfun.f_numpy2df(array7_6a, keys_q0p, [1], [0])
+            df7_6b = rfun.f_numpy2df(array7_6b, keys_q0p, [1], [0])
+            df7_6c = rfun.f_numpy2df(array7_6c, keys_q0p, [1], [0])
+            df9_1a = rfun.f_numpy2df(array9_1a, keys_q0p, [1], [0])
+            df9_1b = rfun.f_numpy2df(array9_1b, keys_q0p, [1], [0])
+            df9_1c = rfun.f_numpy2df(array9_1c, keys_q0p, [1], [0])
+            df9_2a = rfun.f_numpy2df(array9_2a, keys_q0p, [1], [0])
+            df9_2b = rfun.f_numpy2df(array9_2b, keys_q0p, [1], [0])
+            df9_2c = rfun.f_numpy2df(array9_2c, keys_q0p, [1], [0])
+            df17_2a = rfun.f_numpy2df(array17_2a, keys_q0p, [1], [0])
+            df17_2b = rfun.f_numpy2df(array17_2b, keys_q0p, [1], [0])
+            df17_2c = rfun.f_numpy2df(array17_2c, keys_q0p, [1], [0])
+            df18_1a = rfun.f_numpy2df(array18_1a, keys_q0p, [1], [0])
+            df18_1b = rfun.f_numpy2df(array18_1b, keys_q0p, [1], [0])
+            df18_1c = rfun.f_numpy2df(array18_1c, keys_q0p, [1], [0])
+            df18_2a = rfun.f_numpy2df(array18_2a, keys_q0p, [1], [0])
+            df18_2b = rfun.f_numpy2df(array18_2b, keys_q0p, [1], [0])
+            df18_2c = rfun.f_numpy2df(array18_2c, keys_q0p, [1], [0])
+            dfA = rfun.f_numpy2df(arrayA, keys_bp, [1], [0])
+            dfB = rfun.f_numpy2df(arrayB, keys_bp, [1], [0])
+            dfC = rfun.f_numpy2df(arrayC, keys_bp, [1], [0])
+            dfD = rfun.f_numpy2df(arrayD, keys_bp, [1], [0])
+            dfE = rfun.f_numpy2df(arrayE, keys_bp, [1], [0])
+            dfF = rfun.f_numpy2df(arrayF, keys_bp, [1], [0])
+            dfG = rfun.f_numpy2df(arrayG, keys_bp, [1], [0])
+            dfH = rfun.f_numpy2df(arrayH, keys_bp, [1], [0])
+            dfI = rfun.f_numpy2df(arrayI, keys_bp, [1], [0])
+            dfJ = rfun.f_numpy2df(arrayJ, keys_bp, [1], [0])
 
             ## the extra calculation arrays
-            df_calc7_3a = rfun.f_numpy2df(array_calc7_3a, keys_q0p3, [1], [0])
-            df_calc7_3b = rfun.f_numpy2df(array_calc7_3b, keys_q0p3, [1], [0])
-            df_calc7_3c = rfun.f_numpy2df(array_calc7_3c, keys_q0p3, [1], [0])
-            df_calc7_4a = rfun.f_numpy2df(array_calc7_4a, keys_q0p3, [1], [0])
-            df_calc7_4b = rfun.f_numpy2df(array_calc7_4b, keys_q0p3, [1], [0])
-            df_calc7_4c = rfun.f_numpy2df(array_calc7_4c, keys_q0p3, [1], [0])
-            df_calc7_5a = rfun.f_numpy2df(array_calc7_5a, keys_q0p3, [1], [0])
-            df_calc7_5b = rfun.f_numpy2df(array_calc7_5b, keys_q0p3, [1], [0])
-            df_calc7_5c = rfun.f_numpy2df(array_calc7_5c, keys_q0p3, [1], [0])
-            df_calc7_6a = rfun.f_numpy2df(array_calc7_6a, keys_q0p3, [1], [0])
-            df_calc7_6b = rfun.f_numpy2df(array_calc7_6b, keys_q0p3, [1], [0])
-            df_calc7_6c = rfun.f_numpy2df(array_calc7_6c, keys_q0p3, [1], [0])
-            df_calcF = rfun.f_numpy2df(array_calcF, keys_bp3, [1], [0])
-            df_calcG = rfun.f_numpy2df(array_calcG, keys_bp3, [1], [0])
-            df_calcH = rfun.f_numpy2df(array_calcH, keys_bp3, [1], [0])
+            df_calc7_3a = rfun.f_numpy2df(array_calc7_3a, keys_q0p, [1], [0])
+            df_calc7_3b = rfun.f_numpy2df(array_calc7_3b, keys_q0p, [1], [0])
+            df_calc7_3c = rfun.f_numpy2df(array_calc7_3c, keys_q0p, [1], [0])
+            df_calc7_4a = rfun.f_numpy2df(array_calc7_4a, keys_q0p, [1], [0])
+            df_calc7_4b = rfun.f_numpy2df(array_calc7_4b, keys_q0p, [1], [0])
+            df_calc7_4c = rfun.f_numpy2df(array_calc7_4c, keys_q0p, [1], [0])
+            df_calc7_5a = rfun.f_numpy2df(array_calc7_5a, keys_q0p, [1], [0])
+            df_calc7_5b = rfun.f_numpy2df(array_calc7_5b, keys_q0p, [1], [0])
+            df_calc7_5c = rfun.f_numpy2df(array_calc7_5c, keys_q0p, [1], [0])
+            df_calc7_6a = rfun.f_numpy2df(array_calc7_6a, keys_q0p, [1], [0])
+            df_calc7_6b = rfun.f_numpy2df(array_calc7_6b, keys_q0p, [1], [0])
+            df_calc7_6c = rfun.f_numpy2df(array_calc7_6c, keys_q0p, [1], [0])
+            df_calcF = rfun.f_numpy2df(array_calcF, keys_bp, [1], [0])
+            df_calcG = rfun.f_numpy2df(array_calcG, keys_bp, [1], [0])
+            df_calcH = rfun.f_numpy2df(array_calcH, keys_bp, [1], [0])
+
+            # df7_0a = rfun.f_numpy2df(array7_0a, keys_q0p3, [1], [0])
+            # df7_0b = rfun.f_numpy2df(array7_0b, keys_q0p3, [1], [0])
+            # df7_0c = rfun.f_numpy2df(array7_0c, keys_q0p3, [1], [0])
+            # df7_1a = rfun.f_numpy2df(array7_1a, keys_q0p3, [1], [0])
+            # df7_1b = rfun.f_numpy2df(array7_1b, keys_q0p3, [1], [0])
+            # df7_1c = rfun.f_numpy2df(array7_1c, keys_q0p3, [1], [0])
+            # df7_2a = rfun.f_numpy2df(array7_2a, keys_q0p3, [1], [0])
+            # df7_2b = rfun.f_numpy2df(array7_2b, keys_q0p3, [1], [0])
+            # df7_2c = rfun.f_numpy2df(array7_2c, keys_q0p3, [1], [0])
+            # df7_3a = rfun.f_numpy2df(array7_3a, keys_q0p3, [1], [0])
+            # df7_3b = rfun.f_numpy2df(array7_3b, keys_q0p3, [1], [0])
+            # df7_3c = rfun.f_numpy2df(array7_3c, keys_q0p3, [1], [0])
+            # df7_4a = rfun.f_numpy2df(array7_4a, keys_q0p3, [1], [0])
+            # df7_4b = rfun.f_numpy2df(array7_4b, keys_q0p3, [1], [0])
+            # df7_4c = rfun.f_numpy2df(array7_4c, keys_q0p3, [1], [0])
+            # df7_5a = rfun.f_numpy2df(array7_5a, keys_q0p3, [1], [0])
+            # df7_5b = rfun.f_numpy2df(array7_5b, keys_q0p3, [1], [0])
+            # df7_5c = rfun.f_numpy2df(array7_5c, keys_q0p3, [1], [0])
+            # df7_6a = rfun.f_numpy2df(array7_6a, keys_q0p3, [1], [0])
+            # df7_6b = rfun.f_numpy2df(array7_6b, keys_q0p3, [1], [0])
+            # df7_6c = rfun.f_numpy2df(array7_6c, keys_q0p3, [1], [0])
+            # df9_1a = rfun.f_numpy2df(array9_1a, keys_q0p3, [1], [0])
+            # df9_1b = rfun.f_numpy2df(array9_1b, keys_q0p3, [1], [0])
+            # df9_1c = rfun.f_numpy2df(array9_1c, keys_q0p3, [1], [0])
+            # df9_2a = rfun.f_numpy2df(array9_2a, keys_q0p3, [1], [0])
+            # df9_2b = rfun.f_numpy2df(array9_2b, keys_q0p3, [1], [0])
+            # df9_2c = rfun.f_numpy2df(array9_2c, keys_q0p3, [1], [0])
+            # df17_2a = rfun.f_numpy2df(array17_2a, keys_q0p3, [1], [0])
+            # df17_2b = rfun.f_numpy2df(array17_2b, keys_q0p3, [1], [0])
+            # df17_2c = rfun.f_numpy2df(array17_2c, keys_q0p3, [1], [0])
+            # df18_1a = rfun.f_numpy2df(array18_1a, keys_q0p3, [1], [0])
+            # df18_1b = rfun.f_numpy2df(array18_1b, keys_q0p3, [1], [0])
+            # df18_1c = rfun.f_numpy2df(array18_1c, keys_q0p3, [1], [0])
+            # df18_2a = rfun.f_numpy2df(array18_2a, keys_q0p3, [1], [0])
+            # df18_2b = rfun.f_numpy2df(array18_2b, keys_q0p3, [1], [0])
+            # df18_2c = rfun.f_numpy2df(array18_2c, keys_q0p3, [1], [0])
+            # dfA = rfun.f_numpy2df(arrayA, keys_bp3, [1], [0])
+            # dfB = rfun.f_numpy2df(arrayB, keys_bp3, [1], [0])
+            # dfC = rfun.f_numpy2df(arrayC, keys_bp3, [1], [0])
+            # dfD = rfun.f_numpy2df(arrayD, keys_bp3, [1], [0])
+            # dfE = rfun.f_numpy2df(arrayE, keys_bp3, [1], [0])
+            # dfF = rfun.f_numpy2df(arrayF, keys_bp3, [1], [0])
+            # dfG = rfun.f_numpy2df(arrayG, keys_bp3, [1], [0])
+            # dfH = rfun.f_numpy2df(arrayH, keys_bp3, [1], [0])
+            # dfI = rfun.f_numpy2df(arrayI, keys_bp3, [1], [0])
+            # dfJ = rfun.f_numpy2df(arrayJ, keys_bp3, [1], [0])
+            #
+            # ## the extra calculation arrays
+            # df_calc7_3a = rfun.f_numpy2df(array_calc7_3a, keys_q0p3, [1], [0])
+            # df_calc7_3b = rfun.f_numpy2df(array_calc7_3b, keys_q0p3, [1], [0])
+            # df_calc7_3c = rfun.f_numpy2df(array_calc7_3c, keys_q0p3, [1], [0])
+            # df_calc7_4a = rfun.f_numpy2df(array_calc7_4a, keys_q0p3, [1], [0])
+            # df_calc7_4b = rfun.f_numpy2df(array_calc7_4b, keys_q0p3, [1], [0])
+            # df_calc7_4c = rfun.f_numpy2df(array_calc7_4c, keys_q0p3, [1], [0])
+            # df_calc7_5a = rfun.f_numpy2df(array_calc7_5a, keys_q0p3, [1], [0])
+            # df_calc7_5b = rfun.f_numpy2df(array_calc7_5b, keys_q0p3, [1], [0])
+            # df_calc7_5c = rfun.f_numpy2df(array_calc7_5c, keys_q0p3, [1], [0])
+            # df_calc7_6a = rfun.f_numpy2df(array_calc7_6a, keys_q0p3, [1], [0])
+            # df_calc7_6b = rfun.f_numpy2df(array_calc7_6b, keys_q0p3, [1], [0])
+            # df_calc7_6c = rfun.f_numpy2df(array_calc7_6c, keys_q0p3, [1], [0])
+            # df_calcF = rfun.f_numpy2df(array_calcF, keys_bp3, [1], [0])
+            # df_calcG = rfun.f_numpy2df(array_calcG, keys_bp3, [1], [0])
+            # df_calcH = rfun.f_numpy2df(array_calcH, keys_bp3, [1], [0])
 
             print("Writing to Excel")
             ##first check that Excel is not open (Microsoft puts a lock on files, so they can't be updated from elsewhere while open)
