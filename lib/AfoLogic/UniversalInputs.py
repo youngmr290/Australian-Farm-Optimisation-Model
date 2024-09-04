@@ -267,6 +267,18 @@ def f_universal_inp_sa(uinp_defaults):
         price_variation['prob_c1'] = pd.Series(price_variation['prob_c1'].sum(), index=price_variation['prob_c1'].index[0:1])
         price_variation['len_c1'] = len(price_variation['prob_c1'])
 
+    ##REV sensitivity on parameters (c2 genotype sensitivity)
+    ###SAV, SAM, SAA - these have to be converted to float so that the blank column becomes nan rather that None
+    #todo this is a copy of the 'normal' SA. Requires age stage info
+    ##LW REV using SRW
+    parameters['i_srw_c2'] = fun.f_rev_sa(parameters['i_srw_c2'].astype(float), sen.saa['rev_srw_c2'], 2) #genotype srw
+    ##EVG REV using cg[8 & 9]
+    parameters['i_cg_c2'] = fun.f_rev_sa(parameters['i_cg_c2'].astype(float), sen.saa['rev_cg_c2'], 2) #genotype growth params
+    ##CFW REV using SAM[sfw]
+    parameters['i_sfw_c2'] = fun.f_rev_sa(parameters['i_sfw_c2'].astype(float),sen.sam['rev_sfw_c2'])
+    ##FD REV using sfd
+    parameters['i_sfd_c2'] = fun.f_rev_sa(parameters['i_sfd_c2'].astype(float), sen.saa['rev_sfd_c2'], 2)
+
 
 def f1_mask_landuse():
     ##price

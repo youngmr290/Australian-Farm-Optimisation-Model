@@ -1612,6 +1612,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                         , condition=mask_dams_inc_g1, axis=g_pos)#add axes between g & b1, and b1 & p
     saa_mortalityx_pa1e1b1nwzida0e0b0xyg = np.take_along_axis(saa_mortalityx_oa1e1b1nwzida0e0b0xyg,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    saa_mortalityx_pa1e1b1nwzida0e0b0xyg = fun.f_rev_sa(saa_mortalityx_pa1e1b1nwzida0e0b0xyg, rev_mortalityx_og1)
     ##mort birth
     saa_mortalitye_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(sen.saa['mortalitye_ol0g1'][:,sinp.stock['a_nfoet_b1'],:]
                                                         , b1_pos, right_pos=g_pos, left_pos2=p_pos, right_pos2=b1_pos
@@ -1647,11 +1648,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                     axis=g_pos, condition2=mask_o_dams, axis2=p_pos)
     saa_littersize_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(saa_littersize_oa1e1b1nwzida0e0b0xyg1,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    saa_littersize_pa1e1b1nwzida0e0b0xyg1 = fun.f_rev_sa(saa_littersize_pa1e1b1nwzida0e0b0xyg1, rev_littersize_og1)
     ##conception
     saa_conception_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(sen.saa['conception_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
                                                     axis=g_pos, condition2=mask_o_dams, axis2=p_pos)
     saa_conception_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(saa_conception_oa1e1b1nwzida0e0b0xyg1,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    saa_conception_pa1e1b1nwzida0e0b0xyg1 = fun.f_rev_sa(saa_conception_pa1e1b1nwzida0e0b0xyg1, rev_conception_og1)
     ##preg_increment
     saa_preg_increment_oa1e1b1nwzida0e0b0xyg = fun.f_expand(sen.saa['preg_increment_ol0g1'][:,sinp.stock['a_nfoet_b1'],:]
                                                         , b1_pos, right_pos=g_pos, left_pos2=p_pos, right_pos2=b1_pos
@@ -5181,7 +5184,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     temp0 = sfun.f_mortality_base_cs(cd_sire, cg_sire, rc_start_sire, cv_weight_sire, ebg_sire
                                                      , sd_ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['sire'][p]
-                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'])
+                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
                     if eqn_used:
                         mortality_sire = temp0
                     if eqn_compare:
@@ -5192,7 +5195,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     temp0 = sfun.f_mortality_base_cs(cd_dams, cg_dams, rc_start_dams, cv_weight_dams, ebg_dams
                                                      , sd_ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['dams'][p]
-                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'])
+                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
                     if eqn_used:
                         mortality_dams = temp0
                     if eqn_compare:
@@ -5202,7 +5205,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0 = sfun.f_mortality_base_cs(cd_yatf, cg_yatf, rc_start_yatf, cv_weight_yatf, ebg_yatf
                                                      , sd_ebg_yatf, d_nw_max_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p]
-                                                     , rev_trait_values['yatf'][p], sen.sap['mortalityb'], sen.saa['mortalityb'])
+                                                     , rev_trait_values['yatf'][p], sen.sap['mortalityb']
+                                                     , sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
                     if eqn_used:
                         mortality_yatf = temp0
                     if eqn_compare:
@@ -5213,7 +5217,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     temp0 = sfun.f_mortality_base_cs(cd_offs, cg_offs, rc_start_offs, cv_weight_offs, ebg_offs
                                                      , sd_ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg3[p], rev_trait_values['offs'][p]
-                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'])
+                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
                     if eqn_used:
                         mortality_offs = temp0
                     if eqn_compare:
@@ -5226,7 +5230,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     temp0 = sfun.f_mortality_base_mu(cd_sire, cg_sire, rc_start_sire, cv_weight_sire, ebg_sire
                                                      , sd_ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['sire'][p]
-                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'])
+                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
                     if eqn_used:
                         mortality_sire = temp0
                     if eqn_compare:
@@ -5237,7 +5241,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     temp0 = sfun.f_mortality_base_mu(cd_dams, cg_dams, rc_start_dams, cv_weight_dams, ebg_dams
                                                      , sd_ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['dams'][p]
-                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'])
+                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
                     if eqn_used:
                         mortality_dams = temp0
                     if eqn_compare:
@@ -5247,7 +5251,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0 = sfun.f_mortality_base_mu(cd_yatf, cg_yatf, rc_start_yatf, cv_weight_yatf, ebg_yatf
                                                      , sd_ebg_yatf, d_nw_max_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p]
-                                                     , rev_trait_values['yatf'][p], sen.sap['mortalityb'], sen.saa['mortalityb'])
+                                                     , rev_trait_values['yatf'][p], sen.sap['mortalityb']
+                                                     , sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
                     if eqn_used:
                         mortality_yatf = temp0
                     if eqn_compare:
@@ -5258,7 +5263,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     temp0 = sfun.f_mortality_base_mu(cd_offs, cg_offs, rc_start_offs, cv_weight_offs, ebg_offs
                                                      , sd_ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg3[p], rev_trait_values['offs'][p]
-                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'])
+                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
                     if eqn_used:
                         mortality_offs = temp0
                     if eqn_compare:
@@ -5617,6 +5622,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 sl_sire = (fl_sire - fl_shear_yg0) * cw_sire[15, ...]
                 ##Staple strength if shorn(end)
                 ss_sire = fd_min_sire**2 / fd_sire **2 * cw_sire[16, ...] + sen.saa['ss']
+                ss_sire = fun.f_rev_sa(rev_ss)
                 ##Process the SS REV: if SS is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
                 ss_sire = sfun.f1_rev_update('ss', ss_sire, rev_trait_values['sire'][p])
 
@@ -5662,6 +5668,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 sl_dams = (fl_dams - fl_shear_yg1) * cw_dams[15, ...]
                 ##Staple strength if shorn(end)
                 ss_dams = fd_min_dams ** 2 / fd_dams ** 2 * cw_dams[16, ...] + sen.saa['ss']
+                ss_dams = fun.f_rev_sa(rev_ss)
                 ##Process the SS REV: if SS is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
                 ss_dams = sfun.f1_rev_update('ss', ss_dams, rev_trait_values['dams'][p])
                 ##Energy in the foetus
@@ -5710,6 +5717,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 sl_yatf = (fl_yatf - fl_shear_yg2) * cw_yatf[15, ...]
                 ##Staple strength if shorn(end)
                 ss_yatf = fun.f_divide(fd_min_yatf ** 2 , fd_yatf ** 2 * cw_yatf[16, ...]) + sen.saa['ss']
+                ss_yatf = fun.f_rev_sa(rev_ss)
                 ##Process the SS REV: if SS is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
                 ss_yatf = sfun.f1_rev_update('ss', ss_yatf, rev_trait_values['yatf'][p])
 
@@ -5756,6 +5764,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 sl_offs = (fl_offs - fl_shear_yg3) * cw_offs[15, ...]
                 ##Staple strength if shorn(end)
                 ss_offs = fd_min_offs ** 2 / fd_offs ** 2 * cw_offs[16, ...] + sen.saa['ss']
+                ss_offs = fun.f_rev_sa(rev_ss)
                 ##Process the SS REV: if SS is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
                 ss_offs = sfun.f1_rev_update('ss', ss_offs, rev_trait_values['offs'][p])
 
