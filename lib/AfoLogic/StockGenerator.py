@@ -447,9 +447,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     o_ebg_tpsire = np.zeros(tpg0, dtype =dtype)
     ###arrays for report variables
     r_ebw_tpsire = np.zeros(tpg0, dtype =dtype)
+    r_wbe_tpsire = np.zeros(tpg0, dtype =dtype)
     r_fat_tpsire = np.zeros(tpg0, dtype =dtype)
     r_muscle_tpsire = np.zeros(tpg0, dtype =dtype)
     r_viscera_tpsire = np.zeros(tpg0, dtype =dtype)
+    r_lean_tpsire = np.zeros(tpg0, dtype=dtype)
     r_salegrid_c1tpa1e1b1nwzida0e0b0xyg0 = np.zeros(c1tpg0, dtype =dtype)
 
     ##dams
@@ -498,6 +500,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     r_fat_tpdams = np.zeros(tpg1, dtype =dtype)
     r_muscle_tpdams = np.zeros(tpg1, dtype =dtype)
     r_viscera_tpdams = np.zeros(tpg1, dtype =dtype)
+    r_lean_tpdams = np.zeros(tpg1, dtype =dtype)
     r_w_f_tpdams =  np.zeros(tpg1, dtype = dtype)
     r_salegrid_c1tpa1e1b1nwzida0e0b0xyg1 = np.zeros(c1tpg1, dtype =dtype)
 
@@ -533,9 +536,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     r_wean_ebw_tpyatf = np.zeros(tpg2, dtype =dtype)
     r_ebg_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_evg_tpyatf = np.zeros(tpg2, dtype = dtype)
+    r_wbe_tpyatf = np.zeros(tpg2, dtype =dtype)
     r_fat_tpyatf = np.zeros(tpg2, dtype =dtype)
     r_muscle_tpyatf = np.zeros(tpg2, dtype =dtype)
     r_viscera_tpyatf = np.zeros(tpg2, dtype =dtype)
+    r_lean_tpyatf = np.zeros(tpg2, dtype =dtype)
     r_mem_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_mei_tpyatf = np.zeros(tpg2, dtype = dtype)
     r_mei_solid_tpyatf = np.zeros(tpg2, dtype = dtype)
@@ -587,6 +592,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     r_fat_tpoffs = np.zeros(tpg3, dtype =dtype)
     r_muscle_tpoffs = np.zeros(tpg3, dtype =dtype)
     r_viscera_tpoffs = np.zeros(tpg3, dtype =dtype)
+    r_lean_tpoffs = np.zeros(tpg3, dtype =dtype)
     r_salegrid_c1tpa1e1b1nwzida0e0b0xyg3 = np.zeros(c1tpg3, dtype =dtype)
 
 
@@ -5593,6 +5599,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ww_sire = fat_sire * (1 - cg_sire[26, ...]) + muscle_sire * (1 - cg_sire[27, ...]) + viscera_sire * (1 - cg_sire[28, ...])
                 ##Weight of gutfill (end)
                 gw_sire = ffcfw_sire - ebw_sire
+                ##Whole body energy (calculated from fat, muscle and viscera weight, not including conceptus and wool)
+                wbe_sire = sfun.f_wbe_mu(cg_sire, fat_sire, muscle_sire, viscera_sire)
                 ##Clean fleece weight (end)
                 cfw_sire = cfw_start_sire + d_cfw_sire * days_period_pa1e1b1nwzida0e0b0xyg0[p] * cfw_propn_yg0
                 ##Greasy fleece weight (end)
@@ -5684,6 +5692,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ww_yatf = fat_yatf * (1 - cg_yatf[26, ...]) + muscle_yatf * (1 - cg_yatf[27, ...]) + viscera_yatf * (1 - cg_yatf[28, ...])
                 ##Weight of gutfill (end)
                 gw_yatf = ffcfw_yatf - ebw_yatf
+                ##Whole body energy (calculated from fat, muscle and viscera weight, not including conceptus and wool)
+                wbe_yatf = sfun.f_wbe_mu(cg_yatf, fat_yatf, muscle_yatf, viscera_yatf)
                 ##Clean fleece weight (end)
                 cfw_yatf = cfw_start_yatf + d_cfw_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p] * cfw_propn_yg2
                 ##Greasy fleece weight (end)
@@ -5800,9 +5810,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                 ###store report variables for dams - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
                 r_ebw_tpsire[:,p] = ebw_sire
+                r_wbe_tpsire[:,p] = wbe_sire
                 r_fat_tpsire[:, p] = fat_sire
                 r_muscle_tpsire[:, p] = muscle_sire
                 r_viscera_tpsire[:, p] = viscera_sire
+                r_lean_tpsire[:, p] = muscle_sire + viscera_sire
                 o_nw_start_tpsire[:,p] = nw_start_sire
 
             ###dams
@@ -5915,6 +5927,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 r_fat_tpdams[:, p] = fat_dams
                 r_muscle_tpdams[:, p] = muscle_dams
                 r_viscera_tpdams[:, p] = viscera_dams
+                r_lean_tpdams[:, p] = muscle_dams + viscera_dams
                 r_w_f_tpdams[:,p] = w_f_dams
 
 
@@ -5992,9 +6005,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 r_ebw_start_tpyatf[:,p] = ebw_start_yatf * (days_period_pa1e1b1nwzida0e0b0xyg2[p,...] > 0)
                 r_ebg_tpyatf[:,p] = ebg_yatf
                 r_evg_tpyatf[:,p] = evg_yatf
+                r_wbe_tpyatf[:, p] = wbe_yatf
                 r_fat_tpyatf[:, p] = fat_yatf
                 r_muscle_tpyatf[:, p] = muscle_yatf
                 r_viscera_tpyatf[:, p] = viscera_yatf
+                r_lean_tpyatf[:, p] = muscle_yatf + viscera_yatf
                 r_mp2_tpyatf[:,p] = mp2_yatf
                 r_mem_tpyatf[:,p] = mem_yatf
                 r_mei_tpyatf[:,p] = mei_yatf
@@ -6098,6 +6113,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 r_fat_tpoffs[:, p] = fat_offs
                 r_muscle_tpoffs[:, p] = muscle_offs
                 r_viscera_tpoffs[:, p] = viscera_offs
+                r_lean_tpoffs[:, p] = muscle_offs + viscera_offs
 
             ################
             #stubble resets#
@@ -8432,6 +8448,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     r_viscera_tvg2 = sfun.f1_p2v(r_viscera_tpyatf, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     r_viscera_tvg3 = sfun.f1_p2v(r_viscera_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
 
+    ##lean at start of the DVP - not accounting for mortality
+    r_lean_tvg1 = sfun.f1_p2v(r_lean_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_lean_tvg2 = sfun.f1_p2v(r_lean_tpyatf, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_lean_tvg3 = sfun.f1_p2v(r_lean_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
+
     ##feeding value of diet  #todo convert this to nv during period rather than single period
     r_nv_tvg1 = sfun.f1_p2v(nv_tpdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     r_nv_tvg3 = sfun.f1_p2v(nv_tpoffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
@@ -9716,40 +9737,46 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     period_is_report_p = period_is_report_p[0:len_p]
 
     ##ebw in select p slices to reduce size.
-    r_ebw_dams_k2tvPdams = (r_ebw_tpdams[:, na, period_is_report_p, ...]
-                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
-                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
-                                 == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+    r_ebw_k2tvPdams = (r_ebw_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
 
     ##wbe in select p slices to reduce size.
-    r_wbe_dams_k2tvPdams = (r_wbe_tpdams[:, na, period_is_report_p, ...]
-                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
-                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
-                                 == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+    r_wbe_k2tvPdams = (r_wbe_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
 
     ##fat in select p slices to reduce size.
-    r_fat_dams_k2tvPdams = (r_fat_tpdams[:, na, period_is_report_p, ...]
-                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
-                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
-                                 == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+    r_fat_k2tvPdams = (r_fat_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
 
     ##muscle in select p slices to reduce size.
-    r_muscle_dams_k2tvPdams = (r_muscle_tpdams[:, na, period_is_report_p, ...]
-                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
-                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
-                                 == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+    r_muscle_k2tvPdams = (r_muscle_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
 
     ##viscera in select p slices to reduce size.
-    r_viscera_dams_k2tvPdams = (r_viscera_tpdams[:, na, period_is_report_p, ...]
-                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
-                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
-                                 == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+    r_viscera_k2tvPdams = (r_viscera_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+
+    ##lean in select p slices to reduce size.
+    r_lean_k2tvPdams = (r_lean_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
 
     ##nv in select p slices to reduce size.
-    r_nv_dams_k2tvPdams = (nv_tpdams[:, na, period_is_report_p, ...]
-                              * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
-                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
-                                 == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+    r_nv_k2tvPdams = (nv_tpdams[:, na, period_is_report_p, ...]
+                         * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
+                         * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
 
     ##############
     #big reports #
@@ -9795,24 +9822,24 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ###lw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesn't affect lw
     if sinp.rep['i_store_lw_rep']:
-        r_lw_sire_tpsire = o_lw_tpsire
-        r_lw_dams_k2Tvpdams = (o_lw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_lw_offs_k3k5Tvpoffs = (o_lw_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-                                 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
-                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
+        r_lw_tpsire = o_lw_tpsire
+        r_lw_k2Tvpdams = (o_lw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_lw_k3k5Tvpoffs = (o_lw_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                            * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                            * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
 
     ##ebw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesn't affect ebw
     #todo Add variables similar to ebw to allow reporting of the component weights (fat, muscle & viscera) with a 'cut' p axis
     if sinp.rep['i_store_ebw_rep']:
-        r_ebw_sire_tpsire = r_ebw_tpsire
-        r_ebw_dams_k2Tvpdams = (r_ebw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_ebw_yatf_k2Tvpyatf = (r_ebw_start_tpyatf[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_ebw_offs_k3k5Tvpoffs = (r_ebw_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-                                 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
-                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
+        r_ebw_tpsire = r_ebw_tpsire
+        r_ebw_k2Tvpdams = (r_ebw_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_ebw_k2Tvpyatf = (r_ebw_start_tpyatf[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_ebw_k3k5Tvpoffs = (r_ebw_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
     ####calculate ffcfw_prog for all trials. It is a small variable because it has singleton p axis
     r_ebw_prog_k3k5tva1e1b1nwzida0e0b0xyg2 = ebw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 \
                                              * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3) \
@@ -9820,40 +9847,55 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##NV - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
     if sinp.rep['i_store_nv_rep']:
-        r_nv_sire_pg = nv_tpsire
-        r_nv_dams_k2Tvpg = (nv_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_nv_offs_k3k5Tvpg = (nv_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-                               * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
-                               * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
-        r_mei_dams_k2Tvpg = (o_mei_solid_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_pi_dams_k2Tvpg = (o_pi_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_nv_psire = nv_tpsire
+        r_nv_k2Tvpdams = (nv_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_nv_k3k5Tvpoffs = (nv_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                            * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                            * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
+        r_mei_k2Tvpdams = (o_mei_solid_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_pi_k2Tvpdams = (o_pi_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+
+    ##WBE - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
+    if sinp.rep['i_store_wbe_rep']:
+        r_wbe_psire = r_wbe_tpsire
+        r_wbe_k2Tvpdams = (r_wbe_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_wbe_k2Tvpyatf = (r_wbe_tpyatf[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_wbe_k3k5Tvpoffs = (r_wbe_tpoffs[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
+        r_fat_k2Tvpdams = (r_fat_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_lean_k2Tvpdams = (r_lean_tpdams[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                            * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
 
     ##cs - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
     if sinp.rep['i_store_cs_rep']:
         cs_tpg0 = sfun.f1_condition_score(o_rc_start_tpsire, cn_sire.astype(dtype))
         cs_tpg1 = sfun.f1_condition_score(o_rc_start_tpdams, cn_dams.astype(dtype))
         cs_tpg3 = sfun.f1_condition_score(o_rc_start_tpoffs, cn_offs.astype(dtype))
-        r_cs_sire_pg = cs_tpg0
-        r_cs_dams_k2Tvpg = (cs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_cs_offs_k3k5Tvpg = (cs_tpg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-                               * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
-                               * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
+        r_cs_psire = cs_tpg0
+        r_cs_k2Tvpdams = (cs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_cs_k3k5Tvpoffs = (cs_tpg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                            * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                            * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
 
     ##fs - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
     if sinp.rep['i_store_fs_rep']:
         fs_tpg0 = sfun.f1_fat_score(o_rc_start_tpsire, cn_sire.astype(dtype))
         fs_tpg1 = sfun.f1_fat_score(o_rc_start_tpdams, cn_dams.astype(dtype))
         fs_tpg3 = sfun.f1_fat_score(o_rc_start_tpoffs, cn_offs.astype(dtype))
-        r_fs_sire_pg = fs_tpg0
-        r_fs_dams_k2Tvpg = (fs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_fs_offs_k3k5Tvpg = (fs_tpg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-                               * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
-                               * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
+        r_fs_psire = fs_tpg0
+        r_fs_k2Tvpdams = (fs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_fs_k3k5Tvpoffs = (fs_tpg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                            * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                            * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
 
     ###############
     ## report dse #
@@ -11124,27 +11166,27 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     fun.f1_make_r_val(r_vals,nfoet_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1)),'mask_b1b9_preg_b1nwziygb9')
 
     ###ebw with only a few p slices
-    fun.f1_make_r_val(r_vals, r_ebw_dams_k2tvPdams, 'ebw_dams_k2tvPa1e1b1nw8ziyg1',
+    fun.f1_make_r_val(r_vals, r_ebw_k2tvPdams, 'ebw_dams_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
 
     ###WBE with only a few p slices
-    fun.f1_make_r_val(r_vals, r_wbe_dams_k2tvPdams, 'wbe_dams_k2tvPa1e1b1nw8ziyg1',
+    fun.f1_make_r_val(r_vals, r_wbe_k2tvPdams, 'wbe_dams_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
 
     ###Fat with only a few p slices
-    fun.f1_make_r_val(r_vals, r_fat_dams_k2tvPdams, 'fat_dams_k2tvPa1e1b1nw8ziyg1',
+    fun.f1_make_r_val(r_vals, r_fat_k2tvPdams, 'fat_dams_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
 
     ###Muscle with only a few p slices
-    fun.f1_make_r_val(r_vals, r_muscle_dams_k2tvPdams, 'muscle_dams_k2tvPa1e1b1nw8ziyg1',
+    fun.f1_make_r_val(r_vals, r_muscle_k2tvPdams, 'muscle_dams_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
 
     ###Viscera with only a few p slices
-    fun.f1_make_r_val(r_vals, r_viscera_dams_k2tvPdams, 'viscera_dams_k2tvPa1e1b1nw8ziyg1',
+    fun.f1_make_r_val(r_vals, r_viscera_k2tvPdams, 'viscera_dams_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
 
     ###nv with only a few p slices
-    fun.f1_make_r_val(r_vals, r_nv_dams_k2tvPdams, 'nv_dams_k2tvPa1e1b1nw8ziyg1',
+    fun.f1_make_r_val(r_vals, r_nv_k2tvPdams, 'nv_dams_k2tvPa1e1b1nw8ziyg1',
                       mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...], z_pos, k2TvPa1e1b1nwziyg1_shape)
 
     ###mort - uses b axis instead of k for extra detail when scan=0
@@ -11204,41 +11246,50 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ###lw - with p, e, b
     if sinp.rep['i_store_lw_rep']:
-        fun.f1_make_r_val(r_vals,r_lw_sire_tpsire,'lw_sire_pzg0',shape=pzg0_shape) #no v axis to mask
-        fun.f1_make_r_val(r_vals,r_lw_dams_k2Tvpdams,'lw_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
-        fun.f1_make_r_val(r_vals,r_lw_offs_k3k5Tvpoffs,'lw_offs_k3k5vpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_lw_tpsire,'lw_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_lw_k2Tvpdams,'lw_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_lw_k3k5Tvpoffs,'lw_offs_k3k5vpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
 
     ###ebw - with p, e, b
     #todo add the component weights here too
     if sinp.rep['i_store_ebw_rep']:
-        fun.f1_make_r_val(r_vals,r_ebw_sire_tpsire,'ebw_sire_pzg0',shape=pzg0_shape) #no v axis to mask
-        fun.f1_make_r_val(r_vals,r_ebw_dams_k2Tvpdams,'ebw_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
-        fun.f1_make_r_val(r_vals,r_ebw_yatf_k2Tvpyatf,'ebw_yatf_k2Tvpa1e1b1nw8zixyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwzixyg1_shape)
+        fun.f1_make_r_val(r_vals,r_ebw_tpsire,'ebw_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_ebw_k2Tvpdams,'ebw_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_ebw_k2Tvpyatf,'ebw_yatf_k2Tvpa1e1b1nw8zixyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwzixyg1_shape)
         # fun.f1_make_r_val(r_vals,r_ebw_prog_k3k5tva1e1b1nwzida0e0b0xyg2,'ebw_prog_k3k5wzida0e0b0xyg2', shape=k3k5wzida0e0b0xyg2_shape) #no v axis to mask
-        fun.f1_make_r_val(r_vals,r_ebw_offs_k3k5Tvpoffs,'ebw_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_ebw_k3k5Tvpoffs,'ebw_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
     ####make prog r_val for all trials. It is a small variable because it has singleton p axis
     fun.f1_make_r_val(r_vals,r_ebw_prog_k3k5tva1e1b1nwzida0e0b0xyg2,'ebw_prog_k3k5wzida0e0b0xyg2', shape=k3k5wzida0e0b0xyg2_shape) #no v axis to mask
 
     ###NV - with p, e, b
     if sinp.rep['i_store_nv_rep']:
-        fun.f1_make_r_val(r_vals,r_nv_sire_pg,'nv_sire_pzg0',shape=pzg0_shape) #no v axis to mask
-        fun.f1_make_r_val(r_vals,r_nv_dams_k2Tvpg,'nv_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
-        fun.f1_make_r_val(r_vals,r_nv_offs_k3k5Tvpg,'nv_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_nv_psire,'nv_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_nv_k2Tvpdams,'nv_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_nv_k3k5Tvpoffs,'nv_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
 
-        fun.f1_make_r_val(r_vals,r_mei_dams_k2Tvpg,'mei_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
-        fun.f1_make_r_val(r_vals,r_pi_dams_k2Tvpg,'pi_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_mei_k2Tvpdams,'mei_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_pi_k2Tvpdams,'pi_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+
+    ###WBE - with p, e, b
+    if sinp.rep['i_store_wbe_rep']:
+        fun.f1_make_r_val(r_vals,r_wbe_psire,'wbe_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_wbe_k2Tvpdams,'wbe_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_wbe_k2Tvpyatf,'wbe_yatf_k2Tvpa1e1b1nw8zixyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwzixyg1_shape)
+        fun.f1_make_r_val(r_vals,r_wbe_k3k5Tvpoffs,'wbe_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_fat_k2Tvpdams,'fat_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_lean_k2Tvpdams,'lean_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
 
     ###condition score - with p, e, b
     if sinp.rep['i_store_cs_rep']:
-        fun.f1_make_r_val(r_vals,r_cs_sire_pg,'cs_sire_pzg0',shape=pzg0_shape) #no v axis to mask
-        fun.f1_make_r_val(r_vals,r_cs_dams_k2Tvpg,'cs_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
-        fun.f1_make_r_val(r_vals,r_cs_offs_k3k5Tvpg,'cs_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_cs_psire,'cs_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_cs_k2Tvpdams,'cs_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_cs_k3k5Tvpoffs,'cs_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
 
     ###fat score - with p, e, b
     if sinp.rep['i_store_fs_rep']:
-        fun.f1_make_r_val(r_vals,r_fs_sire_pg,'fs_sire_pzg0',shape=pzg0_shape) #no v axis to mask
-        fun.f1_make_r_val(r_vals,r_fs_dams_k2Tvpg,'fs_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
-        fun.f1_make_r_val(r_vals,r_fs_offs_k3k5Tvpg,'fs_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
+        fun.f1_make_r_val(r_vals,r_fs_psire,'fs_sire_pzg0',shape=pzg0_shape) #no v axis to mask
+        fun.f1_make_r_val(r_vals,r_fs_k2Tvpdams,'fs_dams_k2Tvpa1e1b1nw8ziyg1', mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],z_pos,k2Tvpa1e1b1nwziyg1_shape)
+        fun.f1_make_r_val(r_vals,r_fs_k3k5Tvpoffs,'fs_offs_k3k5Tvpnw8zida0e0b0xyg3', mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],z_pos,k3k5Tvpnwzidae0b0xyg3_shape)
 
 
 

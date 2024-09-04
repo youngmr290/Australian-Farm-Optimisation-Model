@@ -349,6 +349,7 @@ def create_sa():
     sav['nv_inc'] = '-'    #SA to store NV report values
     sav['lw_inc'] = '-'     #SA to store LW report values
     sav['ebw_inc'] = '-'  #SA to store EBW report values
+    sav['wbe_inc'] = '-'  #SA to store EBW report values
     sav['cs_inc'] = '-'  #SA to store condition score report values
     sav['fs_inc'] = '-'  #SA to store fat score report values
     sav['onhand_mort_p_inc'] = '-'  #SA to store onhand report values
