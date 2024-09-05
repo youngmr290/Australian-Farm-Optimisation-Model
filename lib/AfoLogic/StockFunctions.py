@@ -688,6 +688,32 @@ def f1_feedsupply_adjust(attempts,feedsupply,itn):
     return np.minimum(20, feedsupply_new) #stop nv going above 20
 
 
+def f1_rev_sa(value, sa, age, sa_type):
+    '''
+    Function to apply a sensitivity for a specific age stage (subsection of generator periods).
+    This is used for REVs.
+    '''
+    target_age_stage = fun.f_sa(0, sen.sav['rev_age_stage'], 5) #default is 0 which means apply the rev to all age stages
+    age = fun.f_dynamic_slice(age, axis=sinp.stock['i_e1_pos'], start=0, stop=1, axis2=sinp.stock['i_e0_pos'], start2=0, stop2=1)   #slice age for e[0] (keep dims) - just means age stage is based on first drop.
+    a_startage_agestage = sinp.structuralsa['i_rev_age_stage'][0] #start age of each age stage.
+    a_endage_agestage = sinp.structuralsa['i_rev_age_stage'][1] #start age of each age stage.
+    age_start = a_startage_agestage[target_age_stage]
+    age_end = a_endage_agestage[target_age_stage]
+    perid_is_agestage = np.logical_and(age >= age_start, age <= age_end)
+
+    ##apply the sensitivity
+    t_value = value.copy() #make a copy to ensure the origional value doesnt get updated
+    t_value = fun.f_sa(t_value, sa, sa_type)
+
+    ###this is done so that the p axis doesnt get activated if the rev_sa is not used.
+    if np.all(t_value==value): #if adjusted value is the same as the initial value then no sa was applied.
+        return value
+    else:
+        ##update ONLY for periods that are within the age stage of interest
+        value = fun.f_update(value, t_value, perid_is_agestage)
+    return value
+
+
 def f1_rev_update(trait_name, trait_value, rev_trait_value):
     trait_idx = sinp.structuralsa['i_rev_trait_name'].tolist().index(trait_name)
     scenario = sinp.structuralsa['i_rev_trait_scenario'][trait_idx]
@@ -2429,8 +2455,25 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
                is the same for single and twin bearing ewes.
             b. f_mortality_pregtox_cs - currently this is just 0 it needs to be built.
 '''
-def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max, days_period, rev_trait_value
+def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max, days_period, age, rev_trait_value
                         , sap_mortalityb, saa_mortalityb, saa_rev_mortalityb):
+    '''
+
+    :param cd:
+    :param cg:
+    :param rc_start:
+    :param cv_weight:
+    :param ebg_start:
+    :param sd_ebg:
+    :param d_nw_max:
+    :param days_period:
+    :param age: age of animal mid period (used to determine the age stage of the animal for rev)
+    :param rev_trait_value:
+    :param sap_mortalityb:
+    :param saa_mortalityb:
+    :param saa_rev_mortalityb:
+    :return:
+    '''
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### the mortality rate increases in a quadratic function for lower RC & greater disparity between EBG and normal gain
     ###distribution on ebg & rc_start, calculate mort and then average (axis =-1,-2)
@@ -2447,7 +2490,7 @@ def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
     mortalityb = fun.f_sa(mortalityb, saa_mortalityb * (mortalityb > 0), sa_type=2, value_min=0) # don't apply the saa if mortality == 0
-    mortalityb = fun.rev_sa(mortality_b, saa_rev_mortalityb)
+    mortalityb = f1_rev_sa(mortalityb, saa_rev_mortalityb, age, sa_type=2)
     ##Process the Mortality REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     mortalityb = f1_rev_update('mortality', mortalityb, rev_trait_value)
     return mortalityb
