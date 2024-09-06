@@ -494,13 +494,13 @@ def create_sa():
     sav['rev_age_stage']      = '-'                  #SA to set the age range that the rev sensitivities get applied.
 
     ##SAM
-    sam['rev_sfw'] = 1.0   #std fleece weight genotype params
+    sam['rev_cfw'] = 1.0   #std fleece weight genotype params
     sam['rev_pi_scalar'] = 1.0                      #Proportion to scale PI if MEI is scaled by REV adjustments
     ##SAP
     ##SAA
-    saa['rev_sfd'] = 0.0                     #std fibre diameter genotype params
+    saa['rev_fd'] = 0.0                     #std fibre diameter genotype params
     saa['rev_srw'] = 0.0                     #std reference weight genotype params
-    saa['rev_cg_c1'] = np.zeros(uinp.parameters['i_cg_c2'].shape[0], dtype='float64')  #SA value for weight gain params.
+    saa['rev_evg'] = 0.0  #SA value for weight gain params.
     saa['rev_ss'] = 0.0                    #staple strength (adjust SS in sgen end of period)
     saa['rev_mortalityb'] = 0.0      #Adjust the base mortality - this is a high level sa, it impacts within a calculation not on an input
     saa['rev_mortalityx_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype='float64')  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input

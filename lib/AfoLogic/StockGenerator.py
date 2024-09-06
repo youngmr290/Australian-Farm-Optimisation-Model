@@ -3676,8 +3676,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                            , mei_sire, mew_min_pa1e1b1nwzida0e0b0xyg0[p]
                                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...],  sfd_a0e0b0xyg0, wge_pa1e1b1nwzida0e0b0xyg0[p_srw]
                                            , af_wool_pa1e1b1nwzida0e0b0xyg0[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg0[p, ...]
-                                           , kw_yg0, days_period_pa1e1b1nwzida0e0b0xyg0[p], sfw_ltwadj_g0, sfd_ltwadj_g0
-                                           , rev_trait_values['sire'][p])
+                                           , kw_yg0, days_period_pa1e1b1nwzida0e0b0xyg0[p], age_pa1e1b1nwzida0e0b0xyg0[p]
+                                           , sfw_ltwadj_g0, sfd_ltwadj_g0 , rev_trait_values['sire'][p])
                         if eqn_used:
                             d_cfw_sire = temp0
                             d_fd_sire = temp1
@@ -3699,7 +3699,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                            , mei_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p]
                                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_a0e0b0xyg1, wge_pa1e1b1nwzida0e0b0xyg1[p_srw]
                                            , af_wool_pa1e1b1nwzida0e0b0xyg1[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg1[p, ...]
-                                           , kw_yg1, days_period_pa1e1b1nwzida0e0b0xyg1[p]
+                                           , kw_yg1, days_period_pa1e1b1nwzida0e0b0xyg1[p], age_pa1e1b1nwzida0e0b0xyg1[p]
                                            , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                            , rev_trait_values['dams'][p]
                                            , mec_dams, mel_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
@@ -3725,7 +3725,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                            , mei_offs, mew_min_pa1e1b1nwzida0e0b0xyg3[p]
                                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...], sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw]
                                            , af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
-                                           , kw_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p]
+                                           , kw_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p], age_pa1e1b1nwzida0e0b0xyg3[p]
                                            , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
                                            , rev_trait_values['offs'][p])
                         if eqn_used:
@@ -3751,8 +3751,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                            , mei_sire, mew_min_pa1e1b1nwzida0e0b0xyg0[p]
                                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...],  sfd_a0e0b0xyg0, wge_pa1e1b1nwzida0e0b0xyg0[p_srw]
                                            , af_wool_pa1e1b1nwzida0e0b0xyg0[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg0[p, ...]
-                                           , days_period_pa1e1b1nwzida0e0b0xyg0[p], sfw_ltwadj_g0, sfd_ltwadj_g0
-                                           , rev_trait_values['sire'][p])
+                                           , days_period_pa1e1b1nwzida0e0b0xyg0[p], age_pa1e1b1nwzida0e0b0xyg0[p]
+                                           , sfw_ltwadj_g0, sfd_ltwadj_g0 , rev_trait_values['sire'][p])
                         if eqn_used:
                             d_cfw_sire = temp0
                             d_fd_sire = temp1
@@ -3774,7 +3774,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                            , mei_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p]
                                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_a0e0b0xyg1, wge_pa1e1b1nwzida0e0b0xyg1[p_srw]
                                            , af_wool_pa1e1b1nwzida0e0b0xyg1[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg1[p, ...]
-                                           , days_period_pa1e1b1nwzida0e0b0xyg1[p]
+                                           , days_period_pa1e1b1nwzida0e0b0xyg1[p], age_pa1e1b1nwzida0e0b0xyg1[p]
                                            , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                            , rev_trait_values['dams'][p]
                                            , mec_dams, mel_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
@@ -3800,7 +3800,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                            , mei_offs, mew_min_pa1e1b1nwzida0e0b0xyg3[p]
                                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...], sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw]
                                            , af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
-                                           , days_period_pa1e1b1nwzida0e0b0xyg3[p]
+                                           , days_period_pa1e1b1nwzida0e0b0xyg3[p], age_pa1e1b1nwzida0e0b0xyg3[p]
                                            , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
                                            , rev_trait_values['offs'][p])
                         if eqn_used:
@@ -3826,7 +3826,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                             , mew_min_pa1e1b1nwzida0e0b0xyg0[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                             , sfd_a0e0b0xyg0, wge_pa1e1b1nwzida0e0b0xyg0[p_srw], af_wool_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                             , dlf_wool_pa1e1b1nwzida0e0b0xyg0[p, ...], days_period_pa1e1b1nwzida0e0b0xyg0[p]
-                                            , sfw_ltwadj_g0, sfd_ltwadj_g0, rev_trait_values['sire'][p])
+                                            , age_pa1e1b1nwzida0e0b0xyg0[p], sfw_ltwadj_g0, sfd_ltwadj_g0, rev_trait_values['sire'][p])
                         if eqn_used:
                             d_cfw_sire = temp0
                             d_fd_sire = temp1
@@ -3848,7 +3848,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                             , mew_min_pa1e1b1nwzida0e0b0xyg1[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                             , sfd_a0e0b0xyg1, wge_pa1e1b1nwzida0e0b0xyg1[p_srw], af_wool_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                             , dlf_wool_pa1e1b1nwzida0e0b0xyg1[p, ...], days_period_pa1e1b1nwzida0e0b0xyg1[p]
-                                            , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...]
+                                            , age_pa1e1b1nwzida0e0b0xyg1[p], sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                             , rev_trait_values['dams'][p], dc_dams, hp_dc_dams, dl_dams, hp_dl_dams
                                             , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
@@ -3872,7 +3872,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                             , mew_min_pa1e1b1nwzida0e0b0xyg3[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                             , sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw], af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                             , dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], days_period_pa1e1b1nwzida0e0b0xyg3[p]
-                                            , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
+                                            , age_pa1e1b1nwzida0e0b0xyg3[p], sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
                                             , rev_trait_values['offs'][p])
                         if eqn_used:
                             d_cfw_offs = temp0
@@ -4129,7 +4129,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             kg_sire = temp0  #efficiency from the CSIRO equations (for post calc SA)
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_sire, rc_start_sire, mei_sire
                                 , meme_sire, mew_sire, new_sire, zf1_sire, zf2_sire, kg_sire, kf_sire, kp_sire
-                                ,heat_loss_sirem0p1, rev_trait_values['sire'][p])
+                                ,heat_loss_sirem0p1, age_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['sire'][p])
                         #use NFS version of hp_total in f_templc_nfs() even if only comparing the NFS equation system
                         hp_total_sire = temp6
                         kg_sire = temp8  #efficiency resulting from the NFS equations (for r_compare)
@@ -4175,7 +4175,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             kg_dams = temp0  #efficiency from the CSIRO equations (for post calc SA)  #todo doesn't seem to go anywhere
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_dams, rc_start_dams, mei_dams
                                 , meme_dams, mew_dams, new_dams, zf1_dams, zf2_dams, kg_dams, kf_dams, kp_dams
-                                , heat_loss_damsm0p1, rev_trait_values['dams'][p], mec_dams, nec_dams, mel_dams
+                                , heat_loss_damsm0p1, age_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['dams'][p], mec_dams, nec_dams, mel_dams
                                 , nel_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         hp_total_dams = temp6
                         kg_dams = temp8  #efficiency resulting from the NFS equations (for r_compare)
@@ -4210,7 +4210,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             kg_offs = temp0  #efficiency from the CSIRO equations (for post calc SA)
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_offs, rc_start_offs, mei_offs
                                 , meme_offs, mew_offs, new_offs, zf1_offs, zf2_offs, kg_offs, kf_offs, kp_offs
-                                , heat_loss_offsm0p1, rev_trait_values['offs'][p])
+                                , heat_loss_offsm0p1, age_pa1e1b1nwzida0e0b0xyg3[p], rev_trait_values['offs'][p])
                         hp_total_offs = temp6
                         kg_offs = temp8  #efficiency resulting from the NFS equations (for r_compare)
                         if eqn_used:
@@ -4752,8 +4752,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                    , d_cfw_ave_pa1e1b1nwzida0e0b0xyg2[p, ...], sfd_pa1e1b1nwzida0e0b0xyg2[p]
                                    , wge_pa1e1b1nwzida0e0b0xyg2[p], af_wool_pa1e1b1nwzida0e0b0xyg2[p, ...]
                                    , dlf_wool_pa1e1b1nwzida0e0b0xyg2[p, ...], kw_yg2
-                                   , days_period_pa1e1b1nwzida0e0b0xyg2[p], sfw_ltwadj_g2, sfd_ltwadj_g2
-                                   , rev_trait_values['yatf'][p])
+                                   , days_period_pa1e1b1nwzida0e0b0xyg2[p], age_pa1e1b1nwzida0e0b0xyg2[p]
+                                   , sfw_ltwadj_g2, sfd_ltwadj_g2, rev_trait_values['yatf'][p])
 
                     if eqn_used:
                         d_cfw_yatf = temp0
@@ -4780,8 +4780,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                    , d_cfw_ave_pa1e1b1nwzida0e0b0xyg2[p, ...], sfd_pa1e1b1nwzida0e0b0xyg2[p]
                                    , wge_pa1e1b1nwzida0e0b0xyg2[p], af_wool_pa1e1b1nwzida0e0b0xyg2[p, ...]
                                    , dlf_wool_pa1e1b1nwzida0e0b0xyg2[p, ...]
-                                   , days_period_pa1e1b1nwzida0e0b0xyg2[p], sfw_ltwadj_g2, sfd_ltwadj_g2
-                                   , rev_trait_values['yatf'][p])
+                                   , days_period_pa1e1b1nwzida0e0b0xyg2[p], age_pa1e1b1nwzida0e0b0xyg2[p]
+                                   , sfw_ltwadj_g2, sfd_ltwadj_g2, rev_trait_values['yatf'][p])
 
                     if eqn_used:
                         d_cfw_yatf = temp0
@@ -4807,8 +4807,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                     , mew_min_pa1e1b1nwzida0e0b0xyg2[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg2[p, ...]
                                     , sfd_pa1e1b1nwzida0e0b0xyg2[p], wge_pa1e1b1nwzida0e0b0xyg2[p]
                                     , af_wool_pa1e1b1nwzida0e0b0xyg2[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg2[p, ...]
-                                    , days_period_pa1e1b1nwzida0e0b0xyg2[p], sfw_ltwadj_g2, sfd_ltwadj_g2
-                                    , rev_trait_values['yatf'][p])
+                                    , days_period_pa1e1b1nwzida0e0b0xyg2[p], age_pa1e1b1nwzida0e0b0xyg2[p]
+                                    , sfw_ltwadj_g2, sfd_ltwadj_g2, rev_trait_values['yatf'][p])
 
                     if eqn_used:
                         d_cfw_yatf = temp0
@@ -4917,7 +4917,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         kg_yatf = temp0  #efficiency from the CSIRO equations (for post calc SA)
                     temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_yatf
                                         , rc_start_yatf, mei_yatf, meme_yatf, mew_yatf, new_yatf, zf1_yatf, zf2_yatf
-                                        , kg_yatf, kf_yatf, kp_yatf, heat_loss_yatfm0p1, rev_trait_values['yatf'][p])
+                                        , kg_yatf, kf_yatf, kp_yatf, heat_loss_yatfm0p1, age_pa1e1b1nwzida0e0b0xyg2[p], rev_trait_values['yatf'][p])
                     hp_total_yatf = temp6
                     kg_yatf = temp8  #efficiency resulting from the NFS equations (for r_compare)
                     if eqn_used:
