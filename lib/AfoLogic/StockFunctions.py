@@ -1312,6 +1312,7 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
     ##Wool growth (protein weight-as shorn i.e. not DM) if there was no lag
     d_cfw_nolag_g = cw_g[8, ...] * wge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
+    d_cfw_nolag_g = f_rev_sa(d_cfw_nolag_g, rev_cfw())
     ##Process the CFW REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_cfw_nolag_g = f1_rev_update('cfw', d_cfw_nolag_g, rev_trait_value)
     ##Wool growth (protein weight as shorn) with lag and updated history
@@ -1622,7 +1623,9 @@ def f_lwc_mu(cg, rc_start, mei_initial, meme, mew, new, zf1, zf2, kge, kf, kp, h
     ### Note: level is calculated elsewhere (differently) for use in Blaxter & Clapperton equations
     level = mei_initial / (mei_initial - surplus_energy) - 1
     ##Energy Value of gain as calculated.
-    evg = cg[8, ...] - zf1 * (cg[9, ...] - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
+    cg8 = f_revsa(cg[8], rev_evg)
+    cg9 = f_revsa(cg[8], rev_evg)
+    evg = cg8 - zf1 * (cg9 - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
     ## SA on EVG based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
     evg = fun.f_sa(evg, sen.sap['evg'], 1)     # * zf2, 1)
     ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
