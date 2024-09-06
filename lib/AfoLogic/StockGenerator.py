@@ -4076,7 +4076,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_fat_sire = temp2
                             d_muscle_sire = temp3
                             d_viscera_sire = temp4
-                            pi_sire = pi_sire * (1 + fun.f_divide(temp5, mei_sire))  #scale pi by the variation in mei that results from REV changes.
+                            pi_sire = pi_sire * (1 + fun.f_divide(temp5, mei_sire) * sen.sam['rev_pi_scalar'])  #scale pi by the variation in mei that results from REV changes.
                             mei_sire = mei_sire + temp5
                             mei_solid_sire = mei_solid_sire + temp5
                             surplus_energy_sire = temp7
@@ -4130,6 +4130,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         temp0 = sfun.f1_level_nfs(mei_dams, hp_maint_dams)
                         if eqn_used:
                             level_dams = temp0
+                        ## calculate lower critical temp because it impacts PI in the next period
                         temp0, temp1 = sfun.f_templc(cc_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams, hp_total_dams
                                                      , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                      , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
@@ -4156,7 +4157,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_fat_offs = temp2
                             d_muscle_offs = temp3
                             d_viscera_offs = temp4
-                            pi_offs = pi_offs * (1 + fun.f_divide(temp5, mei_offs))  #scale pi by the variation in mei that results from REV changes.
+                            pi_offs = pi_offs * (1 + fun.f_divide(temp5, mei_offs) * sen.sam['rev_pi_scalar'])  #scale pi by the variation in mei that results from REV changes.
                             mei_offs = mei_offs + temp5
                             mei_solid_offs = mei_solid_offs + temp5
                             surplus_energy_offs = temp7
@@ -4197,7 +4198,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_fat_sire = temp2
                             d_muscle_sire = temp3
                             d_viscera_sire = temp4
-                            pi_sire = pi_sire * (1 + fun.f_divide(temp5, mei_sire))  #scale pi by the variation in mei that results from REV changes.
+                            pi_sire = pi_sire * (1 + fun.f_divide(temp5, mei_sire) * sen.sam['rev_pi_scalar'])  #scale pi by the variation in mei that results from REV changes.
                             mei_sire = mei_sire + temp5
                             mei_solid_sire = mei_solid_sire + temp5
                             surplus_energy_sire = temp7
@@ -4243,7 +4244,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_fat_dams = temp2
                             d_muscle_dams = temp3
                             d_viscera_dams = temp4
-                            pi_dams = pi_dams * (1 + fun.f_divide(temp5, mei_dams))  #scale pi by the variation in mei that results from REV changes.
+                            pi_dams = pi_dams * (1 + fun.f_divide(temp5, mei_dams) * sen.sam['rev_pi_scalar'])  #scale pi by the variation in mei that results from REV changes.
                             mei_dams = mei_dams + temp5
                             mei_solid_dams = mei_solid_dams + temp5
                             surplus_energy_dams = temp7
@@ -4288,7 +4289,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             d_fat_offs = temp2
                             d_muscle_offs = temp3
                             d_viscera_offs = temp4
-                            pi_offs = pi_offs * (1 + fun.f_divide(temp5, mei_offs))  #scale pi by the variation in mei that results from REV changes.
+                            pi_offs = pi_offs * (1 + fun.f_divide(temp5, mei_offs) * sen.sam['rev_pi_scalar'])  #scale pi by the variation in mei that results from REV changes.
                             mei_offs = mei_offs + temp5
                             mei_solid_offs = mei_solid_offs + temp5
                             surplus_energy_offs = temp7
@@ -4864,7 +4865,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         d_fat_yatf = temp2
                         d_muscle_yatf = temp3
                         d_viscera_yatf = temp4
-                        pi_yatf = pi_yatf * (1 + fun.f_divide(temp5, mei_yatf))  #scale pi by the variation in mei that results from REV changes.
+                        pi_yatf = pi_yatf * (1 + fun.f_divide(temp5, mei_yatf) * sen.sam['rev_pi_scalar'])  #scale pi by the variation in mei that results from REV changes.
                         mei_yatf = mei_yatf + temp5
                         mei_solid_yatf = mei_solid_yatf + temp5
                         surplus_energy_yatf = temp7
@@ -4904,7 +4905,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         d_fat_yatf = temp2
                         d_muscle_yatf = temp3
                         d_viscera_yatf = temp4
-                        pi_yatf = pi_yatf * (1 + fun.f_divide(temp5, mei_yatf))  #scale pi by the variation in mei that results from REV changes.
+                        pi_yatf = pi_yatf * (1 + fun.f_divide(temp5, mei_yatf) * sen.sam['rev_pi_scalar'])  #scale pi by the variation in mei that results from REV changes.
                         mei_yatf = mei_yatf + temp5
                         mei_solid_yatf = mei_solid_yatf + temp5
                         surplus_energy_yatf = temp7
