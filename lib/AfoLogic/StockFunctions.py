@@ -1295,7 +1295,7 @@ def f_milk_nfs(cl, ck, srw, relsize_start, rc_birth_start, mei, hp_maint, mew_mi
 
 
 def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, mew_min_g, d_cfw_ave_g
-            , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g,  kw_yg, days_period_g, sfw_ltwadj_g, sfd_ltwadj_g
+            , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g,  kw_yg, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
             , rev_trait_value, mec_g1=0, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##The CSIRO equations are predicting clean fleece weight (Pw in documentation) as shorn (not DM) because calculating GFW = Pw / yield
     ##Energy content of wool is specified as MJ/kg of greasy wool as shorn (although the doc says the parameter is clean)
@@ -1312,6 +1312,7 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
     ##Wool growth (protein weight-as shorn i.e. not DM) if there was no lag
     d_cfw_nolag_g = cw_g[8, ...] * wge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
+    d_cfw_nolag_g = f1_rev_sa(d_cfw_nolag_g, sen.sam['rev_cfw'], age, sa_type=0)
     ##Process the CFW REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_cfw_nolag_g = f1_rev_update('cfw', d_cfw_nolag_g, rev_trait_value)
     ##Wool growth (protein weight as shorn) with lag and updated history
@@ -1322,6 +1323,7 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     mew_g = new_g / kw_yg #can be negative because mem assumes 4g of clean wool is grown. If less is grown then mew 'returns' the energy.
     ##Fibre diameter for the days growth (um)
     d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
+    d_fd_g = f1_rev_sa(d_fd_g, sen.saa['rev_fd'], age, sa_type=2)
     ##Process the FD REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_fd_g = f1_rev_update('fd', d_fd_g, rev_trait_value)
     ##Surface Area (m2)
@@ -1332,7 +1334,7 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
 
 
 def f_fibre_mu(cw_g, cc_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, mew_min_g, d_cfw_ave_g
-            , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g, days_period_g, sfw_ltwadj_g, sfd_ltwadj_g
+            , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
             , rev_trait_value, mec_g1=0, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##Wool growth is a copy of CSIRO but with different calculation of energy stored and heat production
     ##Energy content of wool is specified as MJ/kg of wool base (following Young 2024)
@@ -1349,6 +1351,7 @@ def f_fibre_mu(cw_g, cc_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_s
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
     ##Wool growth (wool base - dry clean fibre) if there was no lag
     d_wb_nolag_g = cw_g[8, ...] * wbge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
+    d_wb_nolag_g = f1_rev_sa(d_wb_nolag_g, sen.sam['rev_cfw'], age, sa_type=0)
     ##Process the CFW REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_wb_nolag_g = f1_rev_update('cfw', d_wb_nolag_g, rev_trait_value)
     ##Wool growth (protein weight as shorn) with lag and updated history (needs to be stored as CFW for r_compare)
@@ -1363,6 +1366,7 @@ def f_fibre_mu(cw_g, cc_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_s
     d_cfw_g = d_wb_g * cw_g[22, ...]
     ##Fibre diameter for the days growth (um)
     d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
+    d_fd_g = f1_rev_sa(d_fd_g, sen.saa['rev_fd'], age, sa_type=2)
     ##Process the FD REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_fd_g = f1_rev_update('fd', d_fd_g, rev_trait_value)
     ##Surface Area (m2)
@@ -1373,7 +1377,7 @@ def f_fibre_mu(cw_g, cc_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_s
 
 
 def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, mew_min_g, d_cfw_ave_g
-            , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g, days_period_g, sfw_ltwadj_g, sfd_ltwadj_g
+            , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
             , rev_trait_value, dc_g1=0, hp_dc_g1=0, dl_g1=0, hp_dl_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##Wool growth is a copy of CSIRO but with different calculation of energy stored and heat production
     ##There is some discrepancy in Hutton's equations because the energy content is for protein DM (not as shorn)
@@ -1392,6 +1396,7 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
                                                                 + (dl_g1 + hp_dl_g1) * lact_propn_g1))
     ##Wool growth (protein weight-as shorn i.e. not DM) if there was no lag
     d_cfw_nolag_g = cw_g[8, ...] * wge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
+    d_cfw_nolag_g = f1_rev_sa(d_cfw_nolag_g, sen.sam['rev_cfw'], age, sa_type=0)
     ##Process the CFW REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_cfw_nolag_g = f1_rev_update('cfw', d_cfw_nolag_g, rev_trait_value)
     ##Wool growth (protein weight as shorn) with lag and updated history
@@ -1403,6 +1408,7 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
     hp_dw_g = dw_g * ck_g[21, ...]    #using bm rather than bw because using bw for f_fibre_mu()
     ##Fibre diameter for the days growth
     d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
+    d_fd_g = f1_rev_sa(d_fd_g, sen.saa['rev_fd'], age, sa_type=2)
     ##Process the FD REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_fd_g = f1_rev_update('fd', d_fd_g, rev_trait_value)
     ##Surface Area
@@ -1610,7 +1616,7 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
 
-def f_lwc_mu(cg, rc_start, mei_initial, meme, mew, new, zf1, zf2, kge, kf, kp, heat_loss_m0p1, rev_trait_value
+def f_lwc_mu(cg, rc_start, mei_initial, meme, mew, new, zf1, zf2, kge, kf, kp, heat_loss_m0p1, age, rev_trait_value
              , mec = 0, nec = 0, mel = 0, nel = 0, gest_propn = 0, lact_propn = 0):
     #Calculate LW change from energy surplus to maintenance. Uses energy & efficiency approach like CSIRO
     #but separates kf & kp and calculates proportion of fat & protein from mass and energy balance.
@@ -1622,7 +1628,9 @@ def f_lwc_mu(cg, rc_start, mei_initial, meme, mew, new, zf1, zf2, kge, kf, kp, h
     ### Note: level is calculated elsewhere (differently) for use in Blaxter & Clapperton equations
     level = mei_initial / (mei_initial - surplus_energy) - 1
     ##Energy Value of gain as calculated.
-    evg = cg[8, ...] - zf1 * (cg[9, ...] - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
+    cg8 = f1_rev_sa(cg[8], sen.saa['rev_evg'], age, sa_type=2)
+    cg9 = f1_rev_sa(cg[9], sen.saa['rev_evg'], age, sa_type=2)
+    evg = cg8 - zf1 * (cg9 - cg[10, ...] * (level - 1)) + zf2 * cg[11, ...] * (rc_start - 1)
     ## SA on EVG based on zf2. zf2 increases from 0 to 1 as z increases from 0.9 to 0.97
     evg = fun.f_sa(evg, sen.sap['evg'], 1)     # * zf2, 1)
     ##Process the EVG REV: if EVG is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
