@@ -4059,7 +4059,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        surplus_energy_sire = mei_sire - meme_sire + mew_sire
+                        surplus_energy_sire = mei_sire - (meme_sire + mew_sire)
                         temp0 = sfun.f1_kg(ck_sire, surplus_energy_sire < 0, km_sire, kg_supp_sire, mei_propn_supp_sire
                                        , kg_fodd_sire, mei_propn_herb_sire)
                         if eqn_used:
@@ -4102,7 +4102,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        surplus_energy_dams = (mei_dams - meme_dams + mew_dams
+                        surplus_energy_dams = mei_dams - (meme_dams + mew_dams
                                                + mec_dams * gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                                + mel_dams * lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         temp0 = sfun.f1_kg(ck_dams, surplus_energy_dams < 0, km_dams, kg_supp_dams, mei_propn_supp_dams
@@ -4140,7 +4140,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        surplus_energy_offs = mei_offs - meme_offs + mew_offs
+                        surplus_energy_offs = mei_offs - (meme_offs + mew_offs)
                         temp0 = sfun.f1_kg(ck_offs, surplus_energy_offs < 0, km_offs, kg_supp_offs, mei_propn_supp_offs
                                            , kg_fodd_offs, mei_propn_herb_offs)
                         if eqn_used:
@@ -4260,6 +4260,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         temp0 = sfun.f1_level_nfs(mei_dams, hp_maint_dams)
                         if eqn_used:
                             level_dams = temp0
+                        ## calculate lower critical temp because it impacts PI in the next period
                         temp0, temp1 = sfun.f_templc(cc_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams, hp_total_dams
                                                    , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                    , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
@@ -4847,7 +4848,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    surplus_energy_yatf = mei_yatf - meme_yatf + mew_yatf
+                    surplus_energy_yatf = mei_yatf - (meme_yatf + mew_yatf)
                     temp0 = sfun.f1_kg(ck_yatf, surplus_energy_yatf < 0, km_yatf, kg_supp_yatf, mei_propn_supp_yatf
                                        , kg_fodd_yatf, mei_propn_herb_yatf)
                     if eqn_used:

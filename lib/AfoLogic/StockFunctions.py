@@ -1636,7 +1636,7 @@ def f_lwc_mu(cg, rc_start, mei_initial, meme, mew, new, zf1, zf2, kge, kf, kp, h
     #but separates kf & kp and calculates proportion of fat & protein from mass and energy balance.
 
     ##Energy intake that is surplus to maintaining maternal body energy. Surplus is available for maternal body gain
-    surplus_energy = mei_initial - meme + mec * gest_propn + mel * lact_propn + mew
+    surplus_energy = mei_initial - (meme + mec * gest_propn + mel * lact_propn + mew)
     below_maintenance = surplus_energy < 0
     ##Level of feeding relative to level that would maintain maternal body tissue (maint = 0)
     ### Note: level is calculated elsewhere (differently) for use in Blaxter & Clapperton equations
