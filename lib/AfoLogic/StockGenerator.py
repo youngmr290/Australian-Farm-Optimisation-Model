@@ -1862,7 +1862,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     kw_yg3 = ck_offs[17,...]
 
     ##Efficiency for conceptus (for CSIRO feeding standards)
-    kc_yg1 = ck_dams[8,...]
+    kc_cs_yg1 = ck_dams[8,...]
 
 
     ####################
@@ -3379,18 +3379,18 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ##energy
                 ###Calculate efficiency factors for all equation groups because they are used for SA.
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] > 0):
-                    km_sire, kg_fodd_sire, kg_supp_sire, temp3, kf_sire, kp_sire = sfun.f1_efficiency(ck_sire
+                    km_cs_sire, kg_fodd_cs_sire, kg_supp_cs_sire, temp3, kf_cs_sire, kp_cs_sire = sfun.f1_efficiency_cs(ck_sire
                                                                     , md_solid_sire, pinp.sheep['i_md_supp']
                                                                     , md_herb_sire, lgf_eff_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p, ...], sam_kg=sam_kg_sire)
                     #temp3 is not used for sires
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
-                    km_dams, kg_fodd_dams, kg_supp_dams, kl_dams, kf_dams, kp_dams = sfun.f1_efficiency(ck_dams
+                    km_cs_dams, kg_fodd_cs_dams, kg_supp_cs_dams, kl_cs_dams, kf_cs_dams, kp_cs_dams = sfun.f1_efficiency_cs(ck_dams
                                                                     , md_solid_dams, pinp.sheep['i_md_supp']
                                                                     , md_herb_dams, lgf_eff_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p, ...], sam_kg=sam_kg_dams)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
-                    km_offs, kg_fodd_offs, kg_supp_offs, temp3, kf_offs, kp_offs = sfun.f1_efficiency(ck_offs
+                    km_cs_offs, kg_fodd_cs_offs, kg_supp_cs_offs, temp3, kf_cs_offs, kp_cs_offs = sfun.f1_efficiency_cs(ck_offs
                                                                     , md_solid_offs, pinp.sheep['i_md_supp']
                                                                     , md_herb_offs, lgf_eff_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p, ...], sam_kg=sam_kg_offs)
@@ -3406,7 +3406,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2 = sfun.f_energy_cs(cx_sire[:,0:1,...], cm_sire, lw_start_sire, ffcfw_start_sire
                                                         , mr_age_pa1e1b1nwzida0e0b0xyg0[p], mei_sire, omer_historycs_start_p3g0
-                                                        , days_period_pa1e1b1nwzida0e0b0xyg0[p], km_sire, pinp.sheep['i_steepness']
+                                                        , days_period_pa1e1b1nwzida0e0b0xyg0[p], km_cs_sire, pinp.sheep['i_steepness']
                                                         , densityw_pa1e1b1nwzida0e0b0xyg0[p], foo_sire, confinementw_tpa1e1b1nwzida0e0b0xyg0[:,p]
                                                         , intake_f_sire, dmd_sire, sam_mr = sam_mr_sire)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
@@ -3422,7 +3422,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0, temp1, temp2 = sfun.f_energy_cs(cx_dams[:,1:2,...], cm_dams, lw_start_dams, ffcfw_start_dams
                                                         , mr_age_pa1e1b1nwzida0e0b0xyg1[p], mei_dams, omer_historycs_start_p3g1
-                                                        , days_period_pa1e1b1nwzida0e0b0xyg1[p], km_dams, pinp.sheep['i_steepness']
+                                                        , days_period_pa1e1b1nwzida0e0b0xyg1[p], km_cs_dams, pinp.sheep['i_steepness']
                                                         , densityw_pa1e1b1nwzida0e0b0xyg1[p], foo_dams, confinementw_tpa1e1b1nwzida0e0b0xyg1[:,p]
                                                         , intake_f_dams, dmd_dams, sam_mr = sam_mr_dams)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
@@ -3438,7 +3438,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         temp0, temp1, temp2 = sfun.f_energy_cs(cx_offs[:,mask_x,...], cm_offs, lw_start_offs, ffcfw_start_offs
                                                         , mr_age_pa1e1b1nwzida0e0b0xyg3[p], mei_offs, omer_historycs_start_p3g3
-                                                        , days_period_pa1e1b1nwzida0e0b0xyg3[p], km_offs, pinp.sheep['i_steepness']
+                                                        , days_period_pa1e1b1nwzida0e0b0xyg3[p], km_cs_offs, pinp.sheep['i_steepness']
                                                         , densityw_pa1e1b1nwzida0e0b0xyg3[p], foo_offs, confinementw_tpa1e1b1nwzida0e0b0xyg3[:,p]
                                                         , intake_f_offs, dmd_offs, sam_mr = sam_mr_offs)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
@@ -3457,7 +3457,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         lean_weight = muscle_start_sire + viscera_start_sire
                         temp0, temp1, temp2 = sfun.f_energy_mu(cx_sire[:,0:1,...], cm_sire, lw_start_sire, lean_weight
                                                         , mr_agegraham_pa1e1b1nwzida0e0b0xyg0[p], mei_sire, omer_historymu_start_p3g0
-                                                        , days_period_pa1e1b1nwzida0e0b0xyg0[p], km_sire, pinp.sheep['i_steepness']
+                                                        , days_period_pa1e1b1nwzida0e0b0xyg0[p], km_cs_sire, pinp.sheep['i_steepness']
                                                         , densityw_pa1e1b1nwzida0e0b0xyg0[p], foo_sire, confinementw_tpa1e1b1nwzida0e0b0xyg0[:,p]
                                                         , intake_f_sire, dmd_sire, sam_mr = sam_mr_sire)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
@@ -3474,7 +3474,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         lean_weight = muscle_start_dams + viscera_start_dams
                         temp0, temp1, temp2 = sfun.f_energy_mu(cx_dams[:,1:2,...], cm_dams, lw_start_dams, lean_weight
                                                         , mr_agegraham_pa1e1b1nwzida0e0b0xyg1[p], mei_dams, omer_historymu_start_p3g1
-                                                        , days_period_pa1e1b1nwzida0e0b0xyg1[p], km_dams, pinp.sheep['i_steepness']
+                                                        , days_period_pa1e1b1nwzida0e0b0xyg1[p], km_cs_dams, pinp.sheep['i_steepness']
                                                         , densityw_pa1e1b1nwzida0e0b0xyg1[p], foo_dams, confinementw_tpa1e1b1nwzida0e0b0xyg1[:,p]
                                                         , intake_f_dams, dmd_dams, sam_mr = sam_mr_dams)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
@@ -3491,7 +3491,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         lean_weight = muscle_start_offs + viscera_start_offs
                         temp0, temp1, temp2 = sfun.f_energy_mu(cx_offs[:,mask_x,...], cm_offs, lw_start_offs, lean_weight
                                                         , mr_agegraham_pa1e1b1nwzida0e0b0xyg3[p], mei_offs, omer_historymu_start_p3g3
-                                                        , days_period_pa1e1b1nwzida0e0b0xyg3[p], km_offs, pinp.sheep['i_steepness']
+                                                        , days_period_pa1e1b1nwzida0e0b0xyg3[p], km_cs_offs, pinp.sheep['i_steepness']
                                                         , densityw_pa1e1b1nwzida0e0b0xyg3[p], foo_offs, confinementw_tpa1e1b1nwzida0e0b0xyg3[:,p]
                                                         , intake_f_offs, dmd_offs, sam_mr = sam_mr_offs)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
@@ -3508,7 +3508,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] >0):
                         temp0, temp1 = sfun.f_energy_nfs(cm_sire, cg_sire, lw_start_sire, fat_start_sire
-                                                         , muscle_start_sire, viscera_start_sire, mei_sire, km_sire
+                                                         , muscle_start_sire, viscera_start_sire, mei_sire, km_cs_sire
                                                          , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg0[p]
                                                          , foo_sire, confinementw_tpa1e1b1nwzida0e0b0xyg0[:, p]
                                                          , intake_f_sire, dmd_sire, sam_mr = sam_mr_sire)
@@ -3521,7 +3521,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] >0):
                         temp0, temp1 = sfun.f_energy_nfs(cm_dams, cg_dams, lw_start_dams, fat_start_dams
-                                                         , muscle_start_dams, viscera_start_dams, mei_dams, km_dams
+                                                         , muscle_start_dams, viscera_start_dams, mei_dams, km_cs_dams
                                                          , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg1[p]
                                                          , foo_dams, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p]
                                                          , intake_f_dams, dmd_dams, sam_mr = sam_mr_dams)
@@ -3535,7 +3535,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] >0):
                         temp0, temp1 = sfun.f_energy_nfs(cm_offs, cg_offs, lw_start_offs, fat_start_offs
-                                                         , muscle_start_offs, viscera_start_offs, mei_offs, km_offs
+                                                         , muscle_start_offs, viscera_start_offs, mei_offs, km_cs_offs
                                                          , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg3[p]
                                                          , foo_offs, confinementw_tpa1e1b1nwzida0e0b0xyg3[:, p]
                                                          , intake_f_offs, dmd_offs, sam_mr = sam_mr_offs)
@@ -3555,7 +3555,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         ##first method is using the nec_cum method
-                        temp0, temp1, temp2, temp3, temp4 = sfun.f_foetus_cs(cb1_dams, cp_dams, kc_yg1
+                        temp0, temp1, temp2, temp3, temp4 = sfun.f_foetus_cs(cb1_dams, cp_dams, kc_cs_yg1
                                         , nfoet_b1nwzida0e0b0xyg, rc_start_dams, w_b_std_y_pa1e1b1nwzida0e0b0xyg1[p_srw]
                                         , w_b_exp_y_dams, w_f_start_dams, nw_f_start_dams
                                         , nwf_age_f_pa1e1b1nwzida0e0b0xyg1[p], guw_age_f_pa1e1b1nwzida0e0b0xyg1[p]
@@ -3618,7 +3618,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , rc_birth_dams, mei_dams, meme_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p], rc_start_dams
                                 , ffcfw75_exp_yatf, lb_start_dams, ldr_start_dams, age_pa1e1b1nwzida0e0b0xyg2[p]
                                 , mp_age_y_pa1e1b1nwzida0e0b0xyg1[p], mp2_age_y_pa1e1b1nwzida0e0b0xyg1[p], x_pos
-                                , days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_dams
+                                , days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_cs_dams
                                 , lact_nut_effect_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['dams'][p])
                         mel_dams = temp1   #Outside the if statement so that this can be used in f_fibre_cs(), f_heat_cs(), f_chill_cs() & f_lwc_cs() if using compare.
                         nel_dams = temp2
@@ -3649,7 +3649,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , rc_birth_dams, mei_dams, hp_maint_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p], rc_start_dams
                                 , ffcfw75_exp_yatf, lb_start_dams, ldr_start_dams, age_pa1e1b1nwzida0e0b0xyg2[p]
                                 , mp_age_y_pa1e1b1nwzida0e0b0xyg1[p], mp2_age_y_pa1e1b1nwzida0e0b0xyg1[p], x_pos
-                                , days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_dams
+                                , days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_cs_dams
                                 , lact_nut_effect_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['dams'][p])
                         dl_dams = temp1   #Outside the if statement so that this can be used in f_fibre_nfs() & f_lwc_nfs() if using compare.
                         hp_dl_dams = temp2
@@ -3897,8 +3897,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0, temp1 = sfun.f_heat_cs(cc_sire, ck_sire, mei_sire, meme_sire, mew_sire, new_sire, km_sire
-                                               , kg_supp_sire, kg_fodd_sire, mei_propn_supp_sire, mei_propn_herb_sire)
+                        temp0, temp1 = sfun.f_heat_cs(cc_sire, ck_sire, mei_sire, meme_sire, mew_sire, new_sire, km_cs_sire
+                                               , kg_supp_cs_sire, kg_fodd_cs_sire, mei_propn_supp_sire, mei_propn_herb_sire)
                         #outside the if statement so that the CSIRO version of hp_total is used in f_chill_cs() when comparing equation systems
                         hp_total_sire = temp0
                         if eqn_used:
@@ -3907,7 +3907,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpsire[eqn_system, 1, :, p, ...] = temp0  # heat production excluding the increment for chill
 
                         temp0, temp1, temp2 = sfun.f_chill_cs(cc_sire, ck_sire, ffcfw_start_sire, rc_start_sire, sl_start_sire, mei_sire
-                                                          , hp_total_sire, meme_sire, mew_sire, km_sire, kg_supp_sire, kg_fodd_sire, mei_propn_supp_sire
+                                                          , hp_total_sire, meme_sire, mew_sire, km_cs_sire, kg_supp_cs_sire, kg_fodd_cs_sire, mei_propn_supp_sire
                                                           , mei_propn_herb_sire, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                           , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
                                                           , index_m0)
@@ -3921,9 +3921,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0, temp1 = sfun.f_heat_cs(cc_dams, ck_dams, mei_dams, meme_dams, mew_dams, new_dams, km_dams
-                                               , kg_supp_dams, kg_fodd_dams, mei_propn_supp_dams, mei_propn_herb_dams
-                                               , guw = guw_dams, kl = kl_dams, mei_propn_milk = mei_propn_milk_dams
+                        temp0, temp1 = sfun.f_heat_cs(cc_dams, ck_dams, mei_dams, meme_dams, mew_dams, new_dams, km_cs_dams
+                                               , kg_supp_cs_dams, kg_fodd_cs_dams, mei_propn_supp_dams, mei_propn_herb_dams
+                                               , guw = guw_dams, kl = kl_cs_dams, mei_propn_milk = mei_propn_milk_dams
                                                , mec = mec_dams, mel = mel_dams, nec = nec_dams, nel = nel_dams
                                                , gest_propn = gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                                , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
@@ -3935,10 +3935,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpdams[eqn_system, 1, :, p, ...] = temp0  # heat production excluding the increment for chill
 
                         temp0, temp1, temp2 = sfun.f_chill_cs(cc_dams, ck_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams, mei_dams
-                                                              , hp_total_dams, meme_dams, mew_dams, km_dams, kg_supp_dams, kg_fodd_dams, mei_propn_supp_dams
+                                                              , hp_total_dams, meme_dams, mew_dams, km_cs_dams, kg_supp_cs_dams, kg_fodd_cs_dams, mei_propn_supp_dams
                                                               , mei_propn_herb_dams, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                               , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
-                                                              , index_m0, kl=kl_dams, mei_propn_milk=mei_propn_milk_dams, mec=mec_dams
+                                                              , index_m0, kl=kl_cs_dams, mei_propn_milk=mei_propn_milk_dams, mec=mec_dams
                                                               , mel=mel_dams, gest_propn=gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                                               , lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         #Use CSIRO version of kg & mem to calculate LWC for CSIRO & MU if comparing equations
@@ -3952,8 +3952,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0, temp1 = sfun.f_heat_cs(cc_offs, ck_offs, mei_offs, meme_offs, mew_offs, new_offs, km_offs
-                                               , kg_supp_offs, kg_fodd_offs, mei_propn_supp_offs, mei_propn_herb_offs)
+                        temp0, temp1 = sfun.f_heat_cs(cc_offs, ck_offs, mei_offs, meme_offs, mew_offs, new_offs, km_cs_offs
+                                               , kg_supp_cs_offs, kg_fodd_cs_offs, mei_propn_supp_offs, mei_propn_herb_offs)
                         #outside the if statement so that the CSIRO version of hp_total is used in f_chill_cs() when comparing equation systems
                         hp_total_offs = temp0
                         if eqn_used:
@@ -3961,7 +3961,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         if eqn_compare:
                             r_compare7_q0q2tpoffs[eqn_system, 1, :, p, ...] = temp0  # heat production excluding the increment for chill
                         temp0, temp1, temp2 = sfun.f_chill_cs(cc_offs, ck_offs, ffcfw_start_offs, rc_start_offs, sl_start_offs, mei_offs
-                                                              , hp_total_offs, meme_offs, mew_offs, km_offs, kg_supp_offs, kg_fodd_offs, mei_propn_supp_offs
+                                                              , hp_total_offs, meme_offs, mew_offs, km_cs_offs, kg_supp_cs_offs, kg_fodd_cs_offs, mei_propn_supp_offs
                                                               , mei_propn_herb_offs, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                               , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
                                                               , index_m0)
@@ -4124,12 +4124,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         surplus_energy_sire = mei_sire - (meme_sire + mew_sire)
-                        temp0 = sfun.f1_kg(ck_sire, surplus_energy_sire < 0, km_sire, kg_supp_sire, mei_propn_supp_sire
-                                       , kg_fodd_sire, mei_propn_herb_sire)
+                        temp0 = sfun.f1_kg(ck_sire, surplus_energy_sire < 0, km_cs_sire, kg_supp_cs_sire, mei_propn_supp_sire
+                                       , kg_fodd_cs_sire, mei_propn_herb_sire)
                         if eqn_used:
                             kg_sire = temp0  #efficiency from the CSIRO equations (for post calc SA)
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_sire, rc_start_sire, mei_sire
-                                , meme_sire, mew_sire, new_sire, zf1_sire, zf2_sire, kg_sire, kf_sire, kp_sire
+                                , meme_sire, mew_sire, new_sire, zf1_sire, zf2_sire, kg_sire, kf_cs_sire, kp_cs_sire
                                 ,heat_loss_sirem0p1, age_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['sire'][p])
                         #use NFS version of hp_total in f_templc_nfs() even if only comparing the NFS equation system
                         hp_total_sire = temp6
@@ -4169,13 +4169,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         surplus_energy_dams = mei_dams - (meme_dams + mew_dams
                                                + mec_dams * gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                                + mel_dams * lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
-                        temp0 = sfun.f1_kg(ck_dams, surplus_energy_dams < 0, km_dams, kg_supp_dams, mei_propn_supp_dams
-                                , kg_fodd_dams, mei_propn_herb_dams, kl = kl_dams, mei_propn_milk = mei_propn_milk_dams
+                        temp0 = sfun.f1_kg(ck_dams, surplus_energy_dams < 0, km_cs_dams, kg_supp_cs_dams, mei_propn_supp_dams
+                                , kg_fodd_cs_dams, mei_propn_herb_dams, kl = kl_cs_dams, mei_propn_milk = mei_propn_milk_dams
                                 , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             kg_dams = temp0  #efficiency from the CSIRO equations (for post calc SA)  #todo doesn't seem to go anywhere
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_dams, rc_start_dams, mei_dams
-                                , meme_dams, mew_dams, new_dams, zf1_dams, zf2_dams, kg_dams, kf_dams, kp_dams
+                                , meme_dams, mew_dams, new_dams, zf1_dams, zf2_dams, kg_dams, kf_cs_dams, kp_cs_dams
                                 , heat_loss_damsm0p1, age_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['dams'][p], mec_dams, nec_dams, mel_dams
                                 , nel_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         hp_total_dams = temp6
@@ -4206,12 +4206,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         surplus_energy_offs = mei_offs - (meme_offs + mew_offs)
-                        temp0 = sfun.f1_kg(ck_offs, surplus_energy_offs < 0, km_offs, kg_supp_offs, mei_propn_supp_offs
-                                           , kg_fodd_offs, mei_propn_herb_offs)
+                        temp0 = sfun.f1_kg(ck_offs, surplus_energy_offs < 0, km_cs_offs, kg_supp_cs_offs, mei_propn_supp_offs
+                                           , kg_fodd_cs_offs, mei_propn_herb_offs)
                         if eqn_used:
                             kg_offs = temp0  #efficiency from the CSIRO equations (for post calc SA)
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_offs, rc_start_offs, mei_offs
-                                , meme_offs, mew_offs, new_offs, zf1_offs, zf2_offs, kg_offs, kf_offs, kp_offs
+                                , meme_offs, mew_offs, new_offs, zf1_offs, zf2_offs, kg_offs, kf_cs_offs, kp_cs_offs
                                 , heat_loss_offsm0p1, age_pa1e1b1nwzida0e0b0xyg3[p], rev_trait_values['offs'][p])
                         hp_total_offs = temp6
                         kg_offs = temp8  #efficiency resulting from the NFS equations (for r_compare)
@@ -4251,7 +4251,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_sire
                                         , ck_sire, muscle_start_sire, viscera_start_sire, muscle_target_b0xyg0, mei_sire
-                                        , km_sire, md_solid_sire, hp_maint_sire, dw_sire, hp_dw_sire, heat_loss_sirem0p1
+                                        , km_cs_sire, md_solid_sire, hp_maint_sire, dw_sire, hp_dw_sire, heat_loss_sirem0p1
                                         , days_period_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['sire'][p])
                         #use NFS version of hp_total in f_templc_nfs() even if only comparing the NFS equation system
                         hp_total_sire = temp6
@@ -4286,8 +4286,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         if eqn_used:
                             temp_lc_sire = temp0  #temp1 not required here
                         #todo consider deleting this code that calculates kg using CSIRO system given kg above
-                        temp0 = sfun.f1_kg(ck_sire, surplus_energy_sire < 0, km_sire, kg_supp_sire, mei_propn_supp_sire
-                                                 , kg_fodd_sire, mei_propn_herb_sire)
+                        temp0 = sfun.f1_kg(ck_sire, surplus_energy_sire < 0, km_cs_sire, kg_supp_cs_sire, mei_propn_supp_sire
+                                                 , kg_fodd_cs_sire, mei_propn_herb_sire)
                         if eqn_used:
                             kg_sire = temp0  #efficiency from the CSIRO equations (for post calc SA)
                     ###dams
@@ -4295,7 +4295,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_dams
                                         , ck_dams, muscle_start_dams, viscera_start_dams, muscle_target_b0xyg1, mei_dams
-                                        , km_dams, md_solid_dams, hp_maint_dams, dw_dams, hp_dw_dams
+                                        , km_cs_dams, md_solid_dams, hp_maint_dams, dw_dams, hp_dw_dams
                                         , heat_loss_damsm0p1, days_period_pa1e1b1nwzida0e0b0xyg1[p]
                                         , rev_trait_values['dams'][p], dc_dams, hp_dc_dams, dl_dams, hp_dl_dams
                                         , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
@@ -4332,8 +4332,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                    , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                         if eqn_used:
                             temp_lc_dams = temp0  #temp1 not required here
-                        temp0 = sfun.f1_kg(ck_dams, surplus_energy_dams < 0, km_dams, kg_supp_dams, mei_propn_supp_dams
-                                , kg_fodd_dams, mei_propn_herb_dams, kl = kl_dams, mei_propn_milk = mei_propn_milk_dams
+                        temp0 = sfun.f1_kg(ck_dams, surplus_energy_dams < 0, km_cs_dams, kg_supp_cs_dams, mei_propn_supp_dams
+                                , kg_fodd_cs_dams, mei_propn_herb_dams, kl = kl_cs_dams, mei_propn_milk = mei_propn_milk_dams
                                 , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             kg_dams = temp0  #efficiency from the CSIRO equations (for post calc SA)  #todo doesn't seem to go anywhere
@@ -4342,7 +4342,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_offs
                                         , ck_offs, muscle_start_offs, viscera_start_offs, muscle_target_b0xyg3, mei_offs
-                                        , km_offs, md_solid_offs, hp_maint_offs, dw_offs, hp_dw_offs, heat_loss_offsm0p1
+                                        , km_cs_offs, md_solid_offs, hp_maint_offs, dw_offs, hp_dw_offs, heat_loss_offsm0p1
                                         , days_period_pa1e1b1nwzida0e0b0xyg3[p], rev_trait_values['offs'][p])
                         #use NFS version of hp_total in f_templc_nfs() even if only comparing the NFS equation system
                         hp_total_offs = temp6
@@ -4376,8 +4376,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                    , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                         if eqn_used:
                             temp_lc_offs = temp0  #temp1 not required here
-                        temp0 = sfun.f1_kg(ck_offs, surplus_energy_offs<0, km_offs, kg_supp_offs, mei_propn_supp_offs
-                                                 , kg_fodd_offs, mei_propn_herb_offs)
+                        temp0 = sfun.f1_kg(ck_offs, surplus_energy_offs<0, km_cs_offs, kg_supp_cs_offs, mei_propn_supp_offs
+                                                 , kg_fodd_cs_offs, mei_propn_herb_offs)
                         if eqn_used:
                             kg_offs = temp0  #efficiency from the CSIRO equations (for post calc SA)
 
@@ -4680,7 +4680,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
             ##energy - yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
-                km_yatf, kg_fodd_yatf, kg_supp_yatf, temp3, kf_yatf, kp_yatf = sfun.f1_efficiency(ck_yatf
+                km_cs_yatf, kg_fodd_cs_yatf, kg_supp_cs_yatf, temp3, kf_cs_yatf, kp_cs_yatf = sfun.f1_efficiency_cs(ck_yatf
                                                                 , md_solid_yatf, pinp.sheep['i_md_supp']
                                                                 , md_herb_yatf, lgf_eff_pa1e1b1nwzida0e0b0xyg2[p]
                                                                 , dlf_eff_pa1e1b1nwzida0e0b0xyg[p], mei_propn_milk_yatf
@@ -4696,7 +4696,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0, temp1, temp2 = sfun.f_energy_cs(cx_yatf[:,mask_x,...], cm_yatf, lw_start_yatf, ffcfw_start_yatf
                                                     , mr_age_pa1e1b1nwzida0e0b0xyg2[p], mei_yatf, omer_historycs_start_p3g2
-                                                    , days_period_pa1e1b1nwzida0e0b0xyg2[p], km_yatf, pinp.sheep['i_steepness']
+                                                    , days_period_pa1e1b1nwzida0e0b0xyg2[p], km_cs_yatf, pinp.sheep['i_steepness']
                                                     , densityw_pa1e1b1nwzida0e0b0xyg2[p], foo_yatf, confinementw_tpa1e1b1nwzida0e0b0xyg1[:,p]
                                                     , intake_f_yatf, dmd_yatf, mei_propn_milk_yatf, sam_mr = sam_mr_yatf)  #same feedsupply as dams
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
@@ -4714,7 +4714,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     lean_weight = muscle_start_yatf + viscera_start_yatf
                     temp0, temp1, temp2 = sfun.f_energy_mu(cx_yatf[:,mask_x,...], cm_yatf, lw_start_yatf, lean_weight
                                                     , mr_agegraham_pa1e1b1nwzida0e0b0xyg2[p], mei_yatf, omer_historymu_start_p3g2
-                                                    , days_period_pa1e1b1nwzida0e0b0xyg2[p], km_yatf, pinp.sheep['i_steepness']
+                                                    , days_period_pa1e1b1nwzida0e0b0xyg2[p], km_cs_yatf, pinp.sheep['i_steepness']
                                                     , densityw_pa1e1b1nwzida0e0b0xyg2[p], foo_yatf, confinementw_tpa1e1b1nwzida0e0b0xyg1[:,p]
                                                     , intake_f_yatf, dmd_yatf, mei_propn_milk_yatf, sam_mr = sam_mr_yatf)  #same feedsupply as dams
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
@@ -4731,7 +4731,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
                     temp0, temp1 = sfun.f_energy_nfs(cm_yatf, cg_yatf, lw_start_yatf, fat_start_yatf
-                                                     , muscle_start_yatf, viscera_start_yatf, mei_yatf, km_yatf
+                                                     , muscle_start_yatf, viscera_start_yatf, mei_yatf, km_cs_yatf
                                                      , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p]
                                                      , foo_yatf, confinementw_tpa1e1b1nwzida0e0b0xyg1[:, p]
                                                      , intake_f_yatf, dmd_yatf, sam_mr = sam_mr_yatf)  #same feedsupply as dams
@@ -4834,8 +4834,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
-                    temp0, temp1 = sfun.f_heat_cs(cc_yatf, ck_yatf, mei_yatf, meme_yatf, mew_yatf, new_yatf, km_yatf
-                                           , kg_supp_yatf, kg_fodd_yatf, mei_propn_supp_yatf, mei_propn_herb_yatf
+                    temp0, temp1 = sfun.f_heat_cs(cc_yatf, ck_yatf, mei_yatf, meme_yatf, mew_yatf, new_yatf, km_cs_yatf
+                                           , kg_supp_cs_yatf, kg_fodd_cs_yatf, mei_propn_supp_yatf, mei_propn_herb_yatf
                                            ,  mei_propn_milk=mei_propn_milk_yatf)
                     #use CSIRO version of hp_total in f_chill_cs() even if only comparing the CSIRO equation system
                     hp_total_yatf = temp0
@@ -4845,7 +4845,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare7_q0q2tpyatf[eqn_system, 1, :, p, ...] = temp0  # storing as the second variable
 
                     temp0, temp1, temp2 = sfun.f_chill_cs(cc_pyatf[:, p, ...], ck_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, mei_yatf
-                                                          , hp_total_yatf, meme_yatf, mew_yatf, km_yatf, kg_supp_yatf, kg_fodd_yatf, mei_propn_supp_yatf
+                                                          , hp_total_yatf, meme_yatf, mew_yatf, km_cs_yatf, kg_supp_cs_yatf, kg_fodd_cs_yatf, mei_propn_supp_yatf
                                                           , mei_propn_herb_yatf, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                           , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
                                                           , index_m0, mei_propn_milk=mei_propn_milk_yatf)
@@ -4914,13 +4914,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     surplus_energy_yatf = mei_yatf - (meme_yatf + mew_yatf)
-                    temp0 = sfun.f1_kg(ck_yatf, surplus_energy_yatf < 0, km_yatf, kg_supp_yatf, mei_propn_supp_yatf
-                                       , kg_fodd_yatf, mei_propn_herb_yatf)
+                    temp0 = sfun.f1_kg(ck_yatf, surplus_energy_yatf < 0, km_cs_yatf, kg_supp_cs_yatf, mei_propn_supp_yatf
+                                       , kg_fodd_cs_yatf, mei_propn_herb_yatf)
                     if eqn_used:
                         kg_yatf = temp0  #efficiency from the CSIRO equations (for post calc SA)
                     temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_yatf
                                         , rc_start_yatf, mei_yatf, meme_yatf, mew_yatf, new_yatf, zf1_yatf, zf2_yatf
-                                        , kg_yatf, kf_yatf, kp_yatf, heat_loss_yatfm0p1, age_pa1e1b1nwzida0e0b0xyg2[p], rev_trait_values['yatf'][p])
+                                        , kg_yatf, kf_cs_yatf, kp_cs_yatf, heat_loss_yatfm0p1, age_pa1e1b1nwzida0e0b0xyg2[p], rev_trait_values['yatf'][p])
                     hp_total_yatf = temp6
                     kg_yatf = temp8  #efficiency resulting from the NFS equations (for r_compare)
                     if eqn_used:
@@ -4958,7 +4958,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_yatf
                                     , ck_yatf, muscle_start_yatf, viscera_start_yatf, muscle_target_b1xyg2, mei_yatf
-                                    , km_yatf, md_solid_yatf, hp_maint_yatf, dw_yatf, hp_dw_yatf, heat_loss_yatfm0p1
+                                    , km_cs_yatf, md_solid_yatf, hp_maint_yatf, dw_yatf, hp_dw_yatf, heat_loss_yatfm0p1
                                     , days_period_pa1e1b1nwzida0e0b0xyg2[p], rev_trait_values['yatf'][p])
                     #use NFS version of hp_total in f_templc_nfs() even if only comparing the NFS equation system
                     hp_total_yatf = temp6
@@ -4992,8 +4992,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                     if eqn_used:
                         temp_lc_yatf = temp0  #temp1 not required here
-                    temp0 = sfun.f1_kg(ck_yatf, surplus_energy_yatf < 0, km_yatf, kg_supp_yatf, mei_propn_supp_yatf
-                                       , kg_fodd_yatf, mei_propn_herb_yatf)
+                    temp0 = sfun.f1_kg(ck_yatf, surplus_energy_yatf < 0, km_cs_yatf, kg_supp_cs_yatf, mei_propn_supp_yatf
+                                       , kg_fodd_cs_yatf, mei_propn_herb_yatf)
                     if eqn_used:
                         kg_yatf = temp0  #efficiency from the CSIRO equations (for post calc SA)
 
