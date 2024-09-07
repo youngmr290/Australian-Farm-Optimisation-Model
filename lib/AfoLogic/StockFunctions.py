@@ -699,10 +699,10 @@ def f1_rev_sa(value, sa, age, sa_type):
     a_endage_agestage = sinp.structuralsa['i_rev_age_stage'][1] #start age of each age stage.
     age_start = a_startage_agestage[target_age_stage]
     age_end = a_endage_agestage[target_age_stage]
-    perid_is_agestage = np.logical_and(age >= age_start, age <= age_end)
+    period_is_agestage = np.logical_and(age >= age_start, age <= age_end)
 
     ##apply the sensitivity
-    t_value = value.copy() #make a copy to ensure the origional value doesnt get updated
+    t_value = value.copy() #make a copy to ensure the original value doesn't get updated
     t_value = fun.f_sa(t_value, sa, sa_type)
 
     ###this is done so that the p axis doesnt get activated if the rev_sa is not used.
@@ -710,7 +710,7 @@ def f1_rev_sa(value, sa, age, sa_type):
         return value
     else:
         ##update ONLY for periods that are within the age stage of interest
-        value = fun.f_update(value, t_value, perid_is_agestage)
+        value = fun.f_update(value, t_value, period_is_agestage)
     return value
 
 
@@ -2366,7 +2366,7 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_rec
                This is calculated each week and the mortality is summed, rather than calculated from the sum of the LW change.
             b. mortality due to dystocia (calculated in f_mortality_progeny_cs). It is assumed that ewe death is associated with a fixed proportion of the lambs deaths from dystocia.
             '''
-def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max, days_period, rev_trait_value
+def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max, days_period, age, rev_trait_value
                         , sap_mortalityb, saa_mortalityb, saa_rev_mortalityb):
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### i.e. increased mortality only for thin animals that are growing slowly (< 20% of normal growth rate)
@@ -2381,7 +2381,7 @@ def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type=1, value_min=0)
     mortalityb = fun.f_sa(mortalityb, saa_mortalityb * (mortalityb > 0), sa_type=2, value_min=0) # don't apply the saa if mortality == 0
-    mortalityb = fun.rev_sa(mortality_b, saa_rev_mortalityb)
+    mortalityb = f1_rev_sa(mortalityb, saa_rev_mortalityb, age, sa_type=2)
     ##Process the Mortality REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     mortalityb = f1_rev_update('mortality', mortalityb, rev_trait_value)
     return mortalityb
