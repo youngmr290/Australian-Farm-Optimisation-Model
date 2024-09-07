@@ -832,7 +832,7 @@ def f_intake(pi, ri, md_herb, confinement, intake_s, i_md_supp, mp2=0):
     return mei, mei_solid, intake_f, md_solid, mei_propn_milk, mei_propn_herb, mei_propn_supp
 
 
-def f1_efficiency(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, mei_propn_milk=0, sam_kg=1):
+def f1_efficiency_cs(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, mei_propn_milk=0, sam_kg=1):
     ##Energy required for maintenance and efficiency of energy use for maintenance & growth
     ###Efficiency for maintenance (note: Blaxter & Boyne showed that km fits better if the coefficients vary with feed type)
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
