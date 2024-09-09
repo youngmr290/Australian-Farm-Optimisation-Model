@@ -1851,7 +1851,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##Efficiency for conceptus (for CSIRO feeding standards)
     kc_cs_yg1 = ck_dams[8,...]
-
+    kc_mu_yg1 = ck_dams[31, ...]
 
     ####################
     #initial conditions#
