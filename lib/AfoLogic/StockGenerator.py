@@ -3551,7 +3551,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         ffcfw75_exp_yatf = np.sum(ffcfw_exp_a1e1b1nwzida0e0b0xyg2p0 ** 0.75, axis=-1) / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg2[p, ...])
 
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_milk_cs(cl_dams, srw_pa1e1b1nwzida0e0b0xyg1[p_srw], relsize_start_dams
-                                , rc_birth_dams, mei_dams, meme_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p], rc_start_dams
+                                , rc_birth_dams, mei_dams, meme_dams, rc_start_dams
                                 , ffcfw75_exp_yatf, lb_start_dams, ldr_start_dams, age_pa1e1b1nwzida0e0b0xyg2[p]
                                 , mp_age_y_pa1e1b1nwzida0e0b0xyg1[p], mp2_age_y_pa1e1b1nwzida0e0b0xyg1[p], x_pos
                                 , days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_cs_dams
@@ -3582,7 +3582,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         ffcfw75_exp_yatf = np.sum(ffcfw_exp_a1e1b1nwzida0e0b0xyg2p0 ** 0.75, axis=-1) / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg2[p, ...])
 
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_milk_nfs(cl_dams, ck_dams, srw_pa1e1b1nwzida0e0b0xyg1[p_srw], relsize_start_dams
-                                , rc_birth_dams, mei_dams, hp_maint_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p], rc_start_dams
+                                , rc_birth_dams, mei_dams, hp_maint_dams, rc_start_dams
                                 , ffcfw75_exp_yatf, lb_start_dams, ldr_start_dams, age_pa1e1b1nwzida0e0b0xyg2[p]
                                 , mp_age_y_pa1e1b1nwzida0e0b0xyg1[p], mp2_age_y_pa1e1b1nwzida0e0b0xyg1[p], x_pos
                                 , days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_cs_dams
