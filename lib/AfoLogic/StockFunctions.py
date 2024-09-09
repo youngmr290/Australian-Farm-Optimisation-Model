@@ -1341,7 +1341,7 @@ def f_milk_nfs(cl, ck, srw, relsize_start, rc_birth_start, mei, hp_maint, rc_sta
     return mp2, dl, hp_dl, ldr, lb
 
 
-def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, mew_min_g, d_cfw_ave_g
+def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, new_min_g, d_cfw_ave_g
             , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g,  kw_yg, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
             , rev_trait_value, mec_g1=0, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##The CSIRO equations are predicting clean fleece weight (Pw in documentation) as shorn (not DM) because calculating GFW = Pw / yield
@@ -1349,7 +1349,7 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     ##adjust wge, cfw_ave, mew_min & sfd for the LTW adjustments (CFW is a scalar and FD is an addition)
     wge_a0e0b0xyg = wge_a0e0b0xyg * sfw_ltwadj_g
     d_cfw_ave_g = d_cfw_ave_g * sfw_ltwadj_g
-    mew_min_g = mew_min_g * sfw_ltwadj_g
+    mew_min_g = new_min_g * sfw_ltwadj_g / kw_yg
     sfd_a0e0b0xyg = sfd_a0e0b0xyg + sfd_ltwadj_g
     ##if passed, adjust wge by sam_pi so the intake sensitivity doesn't alter the wool growth outcome for the genotype
     ###this scaling could be applied to sfw but is applied here so that pi can be altered for a single age group
@@ -1380,7 +1380,7 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     return d_cfw_g, d_fd_g, d_fl_g, d_cfw_history_p2g, mew_g, new_g
 
 
-def f_fibre_mu(cw_g, cc_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, mew_min_g, d_cfw_ave_g
+def f_fibre_mu(cw_g, cc_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, new_min_g, d_cfw_ave_g
             , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
             , rev_trait_value, mec_g1=0, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##Wool growth is a copy of CSIRO but with different calculation of energy stored and heat production
@@ -1388,7 +1388,7 @@ def f_fibre_mu(cw_g, cc_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_s
     ##adjust wge, cfw_ave, mew_min & sfd for the LTW adjustments (CFW is a scalar and FD is an addition)
     wbge_a0e0b0xyg = wge_a0e0b0xyg * sfw_ltwadj_g / cw_g[22, ...]
     d_cfw_ave_g = d_cfw_ave_g * sfw_ltwadj_g
-    mew_min_g = mew_min_g * sfw_ltwadj_g
+    mew_min_g = new_min_g * sfw_ltwadj_g / ck_g[37, ...]
     sfd_a0e0b0xyg = sfd_a0e0b0xyg + sfd_ltwadj_g
     ##if passed, adjust wge by sam_pi so the intake sensitivity doesn't alter the wool growth outcome for the genotype
     ###this scaling could be applied to sfw but is applied here so that pi can be altered for a single age group
@@ -1423,7 +1423,7 @@ def f_fibre_mu(cw_g, cc_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_s
     return d_cfw_g, d_fd_g, d_fl_g, d_cfw_history_p2g, mew_g, new_g
 
 
-def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, mew_min_g, d_cfw_ave_g
+def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, new_min_g, d_cfw_ave_g
             , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
             , rev_trait_value, dc_g1=0, hp_dc_g1=0, dl_g1=0, hp_dl_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##Wool growth is a copy of CSIRO but with different calculation of energy stored and heat production
@@ -1432,7 +1432,7 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
     ## In these calculations the weight of wool is 'as shorn' and the DM content is included in the energy calculations
     wge_a0e0b0xyg = wge_a0e0b0xyg * sfw_ltwadj_g
     d_cfw_ave_g = d_cfw_ave_g * sfw_ltwadj_g
-    mew_min_g = mew_min_g * sfw_ltwadj_g
+    mew_min_g = new_min_g * sfw_ltwadj_g * (1 + ck_g[23, ...])
     sfd_a0e0b0xyg = sfd_a0e0b0xyg + sfd_ltwadj_g
     ##if passed, adjust wge by sam_pi so the intake sensitivity doesn't alter the wool growth outcome for the genotype
     ###this scaling could be applied to sfw but is applied here so that pi can be altered for a single age group
