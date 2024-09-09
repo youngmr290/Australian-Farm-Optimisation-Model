@@ -9180,7 +9180,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ####add s7 axis to sale weight so that emission intensity can be looked at for different meat sales ie emission intensity for lamb
     index_s7tpg = fun.f_expand(np.arange(len(uinp.sheep['i_salegrid_keys'])), p_pos-2)
     sale_ffcfw_s7tva1e1b1nwzida0e0b0xyg1 = sale_ffcfw_tva1e1b1nwzida0e0b0xyg1 * (index_s7tpg == r_salegrid_tva1e1b1nwzida0e0b0xyg1)
-    ffcfw_prog_a0e0b0_s7tva1e1b1nwzida0e0b0xyg2 = ffcfw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 * (index_s7tpg == 0) #saying that all prog are sold in lamb grid (save trying to put the salegrid_yatf variable through the prog transformation)
     sale_ffcfw_s7tva1e1b1nwzida0e0b0xyg3 = sale_ffcfw_tva1e1b1nwzida0e0b0xyg3 * (index_s7tpg == r_salegrid_tva1e1b1nwzida0e0b0xyg3)
     ####dams
     sale_ffcfw_s7k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',sale_ffcfw_s7tva1e1b1nwzida0e0b0xyg1[:,na,...],
@@ -9189,10 +9188,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                             numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
                                                                             mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
     ####prog - t[0] is sale t so set t[1&2] to 0.
-    sale_ffcfw_prog_s7k3k5tva1e1b1nwzida0e0b0xyg2 = sfun.f1_create_production_param('offs',
-                                                                ffcfw_prog_a0e0b0_s7tva1e1b1nwzida0e0b0xyg2[:,na,na,...] * (index_tpa1e1b1nwzida0e0b0xyg2==0),
-                                                                a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3,
-                                                                a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3) #can use off cluster function because same for prog.
+    sale_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(ffcfw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 * (index_tpa1e1b1nwzida0e0b0xyg2==0)
+                                                       * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
+                                                       * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
+                                                       , weights=numbers_start_d_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2
+                                                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
+                                                                 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
+                                                       , axis=(d_pos, b0_pos, e0_pos), keepdims=True) #have to do a weighted average instead of using the cluster function because prog_ffcfw has not been multipled by number
+    sale_ffcfw_prog_s7k3k5tva1e1b1nwzida0e0b0xyg2 = sale_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg2 * (index_s7tpg[:,na,na,...] == 0) #all prog are sold in lamb grid (save trying to put the salegrid_yatf variable through the prog transformation)
     ####offs
     sale_ffcfw_s7k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs',
                                             sale_ffcfw_s7tva1e1b1nwzida0e0b0xyg3[:,na,na,...], a_k3cluster_da0e0b0xyg3,
@@ -10530,7 +10533,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ####std
     zg0_shape = len_z, len_g0
     k2tva1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    k5twzidaxyg2_shape = len_k5, len_t2, len_w_prog, len_z, len_i, len_d, len_a1, len_x, len_g2
+    k3k5twziaxyg2_shape = len_k3, len_k5, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
     k3k5tvnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####std
@@ -10731,6 +10734,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###sale weight for emission intensity report
     fun.f1_make_r_val(r_vals,sale_ffcfw_s7k2tva1e1b1nwzida0e0b0xyg1,'sale_ffcfw_s7k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, s7k2tva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals,sale_ffcfw_prog_s7k3k5tva1e1b1nwzida0e0b0xyg2,'sale_ffcfw_s7k3k5twziaxyg2',None,z_pos, s7k3k5twziaxyg2_shape) #no v axis so dont need to uncluster z
+    fun.f1_make_r_val(r_vals,sale_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg2,'sale_ffcfw_k3k5twziaxyg2',None,z_pos, k3k5twziaxyg2_shape) #no v axis so dont need to uncluster z
     fun.f1_make_r_val(r_vals,sale_ffcfw_s7k3k5tva1e1b1nwzida0e0b0xyg3,'sale_ffcfw_s7k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, s7k3k5tvnwziaxyg3_shape)
     fun.f1_make_r_val(r_vals,sale_ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3,'sale_ffcfw_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
 

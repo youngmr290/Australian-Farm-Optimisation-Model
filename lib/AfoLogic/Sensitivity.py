@@ -396,6 +396,7 @@ def create_sa():
     sav['r2_ik5g3'] = np.full(pinp.sheep['ia_r2_ik5g3'].shape, '-', dtype=object)   #SA to change the selected feed adjustments selected for the k5 axis (BTRT) for offs
     sav['period_is_report_p'] = np.full(500, '-', dtype=object)  #SA to adjust the periods reported in ebw, wbe & fat '_cut' reports
     sav['LTW_loops_increment'] = '-'                  #SA to Increment the number of LTW loops carried out in the code. The base is 2 loops with 0 increment but if using pkl fs or ltw_adj is 0 then base is 0 loops.
+    sav['offs_sale_opportunities'] = '-'              #offspring sale opportunities per dvp (if using method 1)
     ##SAM
     sam['kg_adult'] = 1.0                             #energy efficiency of adults (zf2==1)
     sam['mr_adult'] = 1.0                             #Maintenance requirement of adults (zf2==1)

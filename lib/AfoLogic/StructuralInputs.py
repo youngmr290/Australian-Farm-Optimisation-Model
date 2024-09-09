@@ -95,6 +95,7 @@ def f_structural_inp_sa(sinp_defaults):
     structuralsa['i_dvp_mask_f1'] = fun.f_sa(structuralsa['i_dvp_mask_f1'], sen.sav['fvp_is_dvp_dams'],5)
     structuralsa['i_fvp_mask_offs'] = fun.f_sa(structuralsa['i_fvp_mask_offs'], sen.sav['mask_fvp_offs'],5)
     structuralsa['i_dvp_mask_f3'] = fun.f_sa(structuralsa['i_dvp_mask_f3'], sen.sav['fvp_is_dvp_offs'],5)
+    structuralsa['i_offs_sale_opportunities_per_dvp'] = fun.f_sa(structuralsa['i_offs_sale_opportunities_per_dvp'], sen.sav['offs_sale_opportunities'],5)
     structuralsa['i_rev_update'] = fun.f_sa(structuralsa['i_rev_update'], sen.sav['rev_update'],5)
     structuralsa['i_rev_number'] = fun.f_sa(structuralsa['i_rev_number'], sen.sav['rev_number'],5)
     structuralsa['i_rev_trait_scenario'] = fun.f_sa(structuralsa['i_rev_trait_scenario'], sen.sav['rev_trait_scenario'],5)

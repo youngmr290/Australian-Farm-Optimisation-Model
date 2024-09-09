@@ -3128,6 +3128,7 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
     ##ave wether sale price
+    ###offs
     type = 'stock'
     prod = 'salevalue_p7qk3k5tvnwziaxyg3'
     na_prod = [2]  # s
@@ -3140,8 +3141,22 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     axis_slice = {5:[1,None,1]} #only sale slices
     ave_salevalue_offs = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                              na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    summary_df.loc[trial, 'Sale value'] = round(ave_salevalue_offs.squeeze(), 0)
+    ###prog
+    type = 'stock'
+    prod = 'salevalue_p7qk3k5twzia0xg2'
+    na_prod = [2]  # s
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    na_weights = [0]  # p7
+    keys = 'prog_keys_p7qsk3k5twzia0xg2'
+    arith = 1
+    index = []
+    cols = []
+    axis_slice = {5:[0,1,1]} #only sale slices
+    ave_salevalue_prog = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                       na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc[trial, 'Sale value'] = round(max(ave_salevalue_offs.squeeze(), ave_salevalue_prog.squeeze()), 0) #this assumes that offs are sold as either offs or prog
     ##ave wether sale weight
+    ###offs
     type = 'stock'
     prod = 'sale_ffcfw_k3k5tvnwziaxyg3'
     na_prod = [0, 1]  # q,s
@@ -3154,7 +3169,20 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     axis_slice = {4:[1,None,1]} #only sale slices
     ave_saleweight_offs = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                        na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    summary_df.loc[trial, 'Sale weight'] = round(ave_saleweight_offs.squeeze(), 0)
+    ###prog
+    type = 'stock'
+    prod = 'sale_ffcfw_k3k5twziaxyg2'
+    na_prod = [0, 1]  # q,s
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    na_weights = []
+    keys = 'prog_keys_qsk3k5twzia0xg2'
+    arith = 1
+    index = []
+    cols = []
+    axis_slice = {4:[0,1,1]} #only sale slices
+    ave_saleweight_prog = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                       na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc[trial, 'Sale weight'] = round(max(ave_saleweight_offs.squeeze(), ave_saleweight_prog.squeeze()), 0) #this assumes that offs are sold as either offs or prog
     ##pasture area
     pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
     z_prob_qsz = r_vals['zgen']['z_prob_qsz']
