@@ -420,10 +420,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##sire
     ###array for generator
-    omer_historycs_start_p3g0 = np.zeros(p3g0, dtype = 'float64')
-    omer_historycs_sire = np.zeros(p3g0, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
-    omer_historymu_start_p3g0 = np.zeros(p3g0, dtype = 'float64')
-    omer_historymu_sire = np.zeros(p3g0, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
     d_cfw_history_start_p2g0 = np.zeros(p2g0, dtype = 'float64')
     woolvalue_c1qtpa1e1b1nwzida0e0b0xyg0 = np.zeros((len_c1,)+(len_q,)+tpg0, dtype =dtype)
     salevalue_c1qtpa1e1b1nwzida0e0b0xyg0 = np.zeros((len_c1,)+(len_q,)+tpg0, dtype =dtype)
@@ -456,10 +452,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##dams
     ###array for generator
-    omer_historycs_start_p3g1 = np.zeros(p3g1, dtype = 'float64')
-    omer_historycs_dams = np.zeros(p3g1, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
-    omer_historymu_start_p3g1 = np.zeros(p3g1, dtype = 'float64')
-    omer_historymu_dams = np.zeros(p3g1, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
     d_cfw_history_start_p2g1 = np.zeros(p2g1, dtype = 'float64')
     woolvalue_c1qtpa1e1b1nwzida0e0b0xyg1 = np.zeros((len_c1,)+(len_q,)+(len_t1,)+tpg1[1:], dtype =dtype)
     salevalue_c1qtpa1e1b1nwzida0e0b0xyg1 = np.zeros((len_c1,)+(len_q,)+tpg1, dtype =dtype)
@@ -506,10 +498,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##yatf
     ###array for generator
-    omer_historycs_start_p3g2 = np.zeros(p3g2, dtype = 'float64')
-    omer_historycs_yatf = np.zeros(p3g2, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
-    omer_historymu_start_p3g2 = np.zeros(p3g2, dtype = 'float64')
-    omer_historymu_yatf = np.zeros(p3g2, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
     d_cfw_history_start_p2g2 = np.zeros(p2g2, dtype = 'float64')
     ebw_w_yatf = np.array([0.0])
     w_w_yatf = np.array([0.0])
@@ -556,10 +544,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##offs
     ###array for generator
-    omer_historycs_start_p3g3 = np.zeros(p3g3, dtype = 'float64')
-    omer_historycs_offs = np.zeros(p3g3, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
-    omer_historymu_start_p3g3 = np.zeros(p3g3, dtype = 'float64')
-    omer_historymu_offs = np.zeros(p3g3, dtype = 'float64') #needs to be initialised if using NFS so that it can be condensed
     d_cfw_history_start_p2g3 = np.zeros(p2g3, dtype = 'float64')
     woolvalue_c1qtpa1e1b1nwzida0e0b0xyg3 = np.zeros((len_c1,)+(len_q,)+(len_t3,)+tpg3[1:], dtype =dtype)
     salevalue_c1qtpa1e1b1nwzida0e0b0xyg3 = np.zeros((len_c1,)+(len_q,)+tpg3, dtype =dtype)
@@ -2789,8 +2773,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##sire
         ebw_start_sire = ebw_initial_a1e1b1nwzida0e0b0xyg0
         ebw_max_start_sire = ebw_start_sire
-        omer_historycs_start_p3g0[...] = np.nan
-        omer_historymu_start_p3g0[...] = np.nan
         d_cfw_history_start_p2g0[...] = np.nan
         cfw_start_sire = cfw_initial_wzida0e0b0xyg0
         fd_start_sire = fd_initial_wzida0e0b0xyg0
@@ -2834,8 +2816,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ebw_max_start_dams = ebw_start_dams
         ffcfw_mating_dams = 0.0
         lwc_mating_dams = 0.0
-        omer_historycs_start_p3g1[...] = np.nan
-        omer_historymu_start_p3g1[...] = np.nan
         d_cfw_history_start_p2g1[...] = np.nan
         cfw_start_dams = cfw_initial_wzida0e0b0xyg1
         fd_start_dams = fd_initial_wzida0e0b0xyg1
@@ -2856,8 +2836,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         c_start_dams = np.array([0.0]) #passed as an argument to f_foetus_nfs() so needs to be defined prior to first assignment
 
         ##yatf
-        omer_historycs_start_p3g2[...] = np.nan
-        omer_historymu_start_p3g2[...] = np.nan
         d_cfw_history_start_p2g2[...] = np.nan
         nw_start_yatf = 0.0
         rc_start_yatf = 0.0
@@ -2887,8 +2865,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##offs
         ebw_start_offs = ebw_initial_a1e1b1nwzida0e0b0xyg3
         ebw_max_start_offs = ebw_start_offs
-        omer_historycs_start_p3g3[...] = np.nan
-        omer_historymu_start_p3g3[...] = np.nan
         d_cfw_history_start_p2g3[...] = np.nan
         cfw_start_offs = cfw_initial_wzida0e0b0xyg3
         fd_start_offs = fd_initial_wzida0e0b0xyg3
@@ -3404,14 +3380,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0, temp1, temp2 = sfun.f_energy_cs(cx_sire[:,0:1,...], cm_sire, lw_start_sire, ffcfw_start_sire
-                                                        , mr_age_pa1e1b1nwzida0e0b0xyg0[p], mei_sire, omer_historycs_start_p3g0
-                                                        , days_period_pa1e1b1nwzida0e0b0xyg0[p], km_cs_sire, pinp.sheep['i_steepness']
+                        temp0, temp2 = sfun.f_energy_cs(cx_sire[:,0:1,...], cm_sire, lw_start_sire, ffcfw_start_sire
+                                                        , mr_age_pa1e1b1nwzida0e0b0xyg0[p], mei_sire
+                                                        , km_cs_sire, pinp.sheep['i_steepness']
                                                         , densityw_pa1e1b1nwzida0e0b0xyg0[p], foo_sire, confinementw_tpa1e1b1nwzida0e0b0xyg0[:,p]
                                                         , intake_f_sire, dmd_sire, sam_mr = sam_mr_sire)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                         meme_sire = temp0  #Outside the if statement so that this meme can be used in f_heat_cs() & f_chill_cs() if using compare.
-                        omer_historycs_sire = temp1
                         if eqn_used:
                             hp_maint_sire = temp2   #this is only an approximation because hp_maint from NFS includes HAF for the entire MEI, whereas meme only includes it for MEI for maintenance.
                         if eqn_compare:
@@ -3420,14 +3395,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0, temp1, temp2 = sfun.f_energy_cs(cx_dams[:,1:2,...], cm_dams, lw_start_dams, ffcfw_start_dams
-                                                        , mr_age_pa1e1b1nwzida0e0b0xyg1[p], mei_dams, omer_historycs_start_p3g1
-                                                        , days_period_pa1e1b1nwzida0e0b0xyg1[p], km_cs_dams, pinp.sheep['i_steepness']
+                        temp0, temp2 = sfun.f_energy_cs(cx_dams[:,1:2,...], cm_dams, lw_start_dams, ffcfw_start_dams
+                                                        , mr_age_pa1e1b1nwzida0e0b0xyg1[p], mei_dams
+                                                        , km_cs_dams, pinp.sheep['i_steepness']
                                                         , densityw_pa1e1b1nwzida0e0b0xyg1[p], foo_dams, confinementw_tpa1e1b1nwzida0e0b0xyg1[:,p]
                                                         , intake_f_dams, dmd_dams, sam_mr = sam_mr_dams)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                         meme_dams = temp0   #Outside the if statement so that this meme can be used in f_milk_cs(), f_heat_cs() & f_chill_cs() if using compare.
-                        omer_historycs_dams = temp1
                         if eqn_used:
                             hp_maint_dams = temp2   #this is only an approximation because hp_maint from NFS includes HAF for the entire MEI, whereas meme only includes it for MEI for maintenance.
                         if eqn_compare:
@@ -3436,14 +3410,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0, temp1, temp2 = sfun.f_energy_cs(cx_offs[:,mask_x,...], cm_offs, lw_start_offs, ffcfw_start_offs
-                                                        , mr_age_pa1e1b1nwzida0e0b0xyg3[p], mei_offs, omer_historycs_start_p3g3
-                                                        , days_period_pa1e1b1nwzida0e0b0xyg3[p], km_cs_offs, pinp.sheep['i_steepness']
+                        temp0, temp2 = sfun.f_energy_cs(cx_offs[:,mask_x,...], cm_offs, lw_start_offs, ffcfw_start_offs
+                                                        , mr_age_pa1e1b1nwzida0e0b0xyg3[p], mei_offs
+                                                        , km_cs_offs, pinp.sheep['i_steepness']
                                                         , densityw_pa1e1b1nwzida0e0b0xyg3[p], foo_offs, confinementw_tpa1e1b1nwzida0e0b0xyg3[:,p]
                                                         , intake_f_offs, dmd_offs, sam_mr = sam_mr_offs)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                         meme_offs = temp0  #Outside the if statement so that this meme can be used in f_heat_cs() & f_chill_cs() if using compare.
-                        omer_historycs_offs = temp1
                         if eqn_used:
                             hp_maint_offs = temp2   #this is only an approximation because hp_maint from NFS includes HAF for the entire MEI, whereas meme only includes it for MEI for maintenance.
                         if eqn_compare:
@@ -3455,13 +3428,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         lean_weight = muscle_start_sire + viscera_start_sire
-                        temp0, temp1, temp2 = sfun.f_energy_mu(cx_sire[:,0:1,...], cm_sire, lw_start_sire, lean_weight
-                                                        , mr_agegraham_pa1e1b1nwzida0e0b0xyg0[p], mei_sire, omer_historymu_start_p3g0
-                                                        , days_period_pa1e1b1nwzida0e0b0xyg0[p], km_cs_sire, pinp.sheep['i_steepness']
+                        temp0, temp1 = sfun.f_energy_mu(cx_sire[:,0:1,...], cm_sire, lw_start_sire, lean_weight
+                                                        , mr_agegraham_pa1e1b1nwzida0e0b0xyg0[p], mei_sire
+                                                        , km_mu_sire, pinp.sheep['i_steepness']
                                                         , densityw_pa1e1b1nwzida0e0b0xyg0[p], foo_sire, confinementw_tpa1e1b1nwzida0e0b0xyg0[:,p]
                                                         , intake_f_sire, dmd_sire, sam_mr = sam_mr_sire)
-                        ## these variables need to be stored even if the equation system is not used so that the equations can be compared
-                        omer_historymu_sire = temp1
                         if eqn_used:
                             meme_sire = temp0  #Inside the if statement for MU so that the CFS version of meme can be used in f_heat_cs() & f_chill_cs() if using compare.
                             hp_maint_sire = temp2
@@ -3472,13 +3443,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         lean_weight = muscle_start_dams + viscera_start_dams
-                        temp0, temp1, temp2 = sfun.f_energy_mu(cx_dams[:,1:2,...], cm_dams, lw_start_dams, lean_weight
-                                                        , mr_agegraham_pa1e1b1nwzida0e0b0xyg1[p], mei_dams, omer_historymu_start_p3g1
-                                                        , days_period_pa1e1b1nwzida0e0b0xyg1[p], km_cs_dams, pinp.sheep['i_steepness']
+                        temp0, temp1 = sfun.f_energy_mu(cx_dams[:,1:2,...], cm_dams, lw_start_dams, lean_weight
+                                                        , mr_agegraham_pa1e1b1nwzida0e0b0xyg1[p], mei_dams
+                                                        , km_mu_dams, pinp.sheep['i_steepness']
                                                         , densityw_pa1e1b1nwzida0e0b0xyg1[p], foo_dams, confinementw_tpa1e1b1nwzida0e0b0xyg1[:,p]
                                                         , intake_f_dams, dmd_dams, sam_mr = sam_mr_dams)
-                        ## these variables need to be stored even if the equation system is not used so that the equations can be compared
-                        omer_historymu_dams = temp1
                         if eqn_used:
                             meme_dams = temp0  #Inside the if statement for MU so that the CFS version of meme can be used in f_milk_cs(), f_heat_cs() & f_chill_cs() if using compare.
                             hp_maint_dams = temp2
@@ -3489,13 +3458,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         lean_weight = muscle_start_offs + viscera_start_offs
-                        temp0, temp1, temp2 = sfun.f_energy_mu(cx_offs[:,mask_x,...], cm_offs, lw_start_offs, lean_weight
-                                                        , mr_agegraham_pa1e1b1nwzida0e0b0xyg3[p], mei_offs, omer_historymu_start_p3g3
-                                                        , days_period_pa1e1b1nwzida0e0b0xyg3[p], km_cs_offs, pinp.sheep['i_steepness']
+                        temp0, temp1 = sfun.f_energy_mu(cx_offs[:,mask_x,...], cm_offs, lw_start_offs, lean_weight
+                                                        , mr_agegraham_pa1e1b1nwzida0e0b0xyg3[p], mei_offs
+                                                        , km_mu_offs, pinp.sheep['i_steepness']
                                                         , densityw_pa1e1b1nwzida0e0b0xyg3[p], foo_offs, confinementw_tpa1e1b1nwzida0e0b0xyg3[:,p]
                                                         , intake_f_offs, dmd_offs, sam_mr = sam_mr_offs)
-                        ## these variables need to be stored even if the equation system is not used so that the equations can be compared
-                        omer_historymu_offs = temp1
                         if eqn_used:
                             meme_offs = temp0  #Inside the if statement for MU so that the CFS version of meme can be used in f_heat_cs() & f_chill_cs() if using compare.
                             hp_maint_offs = temp2
@@ -4694,14 +4661,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0, temp1, temp2 = sfun.f_energy_cs(cx_yatf[:,mask_x,...], cm_yatf, lw_start_yatf, ffcfw_start_yatf
-                                                    , mr_age_pa1e1b1nwzida0e0b0xyg2[p], mei_yatf, omer_historycs_start_p3g2
-                                                    , days_period_pa1e1b1nwzida0e0b0xyg2[p], km_cs_yatf, pinp.sheep['i_steepness']
+                    temp0, temp2 = sfun.f_energy_cs(cx_yatf[:,mask_x,...], cm_yatf, lw_start_yatf, ffcfw_start_yatf
+                                                    , mr_age_pa1e1b1nwzida0e0b0xyg2[p], mei_yatf
+                                                    , km_cs_yatf, pinp.sheep['i_steepness']
                                                     , densityw_pa1e1b1nwzida0e0b0xyg2[p], foo_yatf, confinementw_tpa1e1b1nwzida0e0b0xyg1[:,p]
                                                     , intake_f_yatf, dmd_yatf, mei_propn_milk_yatf, sam_mr = sam_mr_yatf)  #same feedsupply as dams
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     meme_yatf = temp0  #Outside the if statement so that this meme can be used in f_heat_cs() & f_chill_cs()
-                    omer_historycs_yatf = temp1
                     if eqn_used:
                         hp_maint_yatf = temp2
                     if eqn_compare:
@@ -4712,13 +4678,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     lean_weight = muscle_start_yatf + viscera_start_yatf
-                    temp0, temp1, temp2 = sfun.f_energy_mu(cx_yatf[:,mask_x,...], cm_yatf, lw_start_yatf, lean_weight
-                                                    , mr_agegraham_pa1e1b1nwzida0e0b0xyg2[p], mei_yatf, omer_historymu_start_p3g2
-                                                    , days_period_pa1e1b1nwzida0e0b0xyg2[p], km_cs_yatf, pinp.sheep['i_steepness']
+                    temp0, temp1 = sfun.f_energy_mu(cx_yatf[:,mask_x,...], cm_yatf, lw_start_yatf, lean_weight
+                                                    , mr_agegraham_pa1e1b1nwzida0e0b0xyg2[p], mei_yatf
+                                                    , km_mu_yatf, pinp.sheep['i_steepness']
                                                     , densityw_pa1e1b1nwzida0e0b0xyg2[p], foo_yatf, confinementw_tpa1e1b1nwzida0e0b0xyg1[:,p]
                                                     , intake_f_yatf, dmd_yatf, mei_propn_milk_yatf, sam_mr = sam_mr_yatf)  #same feedsupply as dams
-                    ## these variables need to be stored even if the equation system is not used so that the equations can be compared
-                    omer_historymu_yatf = temp1
                     if eqn_used:
                         meme_yatf = temp0  #Inside the if statement for MU so that the CFS version of meme can be used in f_heat_cs() & f_chill_cs() if using compare.
                         hp_maint_yatf = temp2
@@ -6203,11 +6167,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###Weight of viscera (condense)
                 viscera_condensed_sire = sfun.f1_condensed(viscera_sire, idx_sorted_w_sire, condense_w_mask_sire
                                         , n_fs_sire, len_w0, n_fvp_periods_sire, False)
-                ###Organ energy requirement (condense)
-                omer_historycs_condensed_p3g0 = sfun.f1_condensed(omer_historycs_sire, idx_sorted_w_sire[na,...], condense_w_mask_sire[na,...]
-                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)  #increment the p slice, note this doesn't impact the p loop - this is required for the next section because we are calculating the production and numbers for the start of the next period.
-                omer_historymu_condensed_p3g0 = sfun.f1_condensed(omer_historymu_sire, idx_sorted_w_sire[na,...], condense_w_mask_sire[na,...]
-                                        , n_fs_sire, len_w0, n_fvp_periods_sire, False)  #increment the p slice, note this doesn't impact the p loop - this is required for the next section because we are calculating the production and numbers for the start of the next period.
                 ###Clean fleece weight (condense)
                 cfw_condensed_sire = sfun.f1_condensed(cfw_sire, idx_sorted_w_sire, condense_w_mask_sire
                                         , n_fs_sire, len_w0, n_fvp_periods_sire, False)
@@ -6254,13 +6213,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 c_condensed_dams = sfun.f1_condensed(c_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'c_dams')
-                ###Organ energy requirement (condense)
-                omer_historycs_condensed_p3g1 = sfun.f1_condensed(omer_historycs_dams, idx_sorted_w_dams[na,...]
-                                        , condense_w_mask_dams[na,...], n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'omer_historycs_dams')
-                omer_historymu_condensed_p3g1 = sfun.f1_condensed(omer_historymu_dams, idx_sorted_w_dams[na,...]
-                                        , condense_w_mask_dams[na,...], n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'omer_historymu_dams')
                 ###Clean fleece weight (condense)
                 cfw_condensed_dams = sfun.f1_condensed(cfw_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
@@ -6369,13 +6321,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 viscera_condensed_yatf = sfun.f1_condensed(viscera_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
                                         , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'viscera_yatf')
-                ###Organ energy requirement (condense)
-                omer_historycs_condensed_p3g2 = sfun.f1_condensed(omer_historycs_yatf, idx_sorted_w_yatf[na,...], condense_w_mask_yatf[na,...]
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'omer_historycs_yatf')
-                omer_historymu_condensed_p3g2 = sfun.f1_condensed(omer_historymu_yatf, idx_sorted_w_yatf[na,...], condense_w_mask_yatf[na,...]
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'omer_historymu_yatf')
                 ###Clean fleece weight (condense)
                 cfw_condensed_yatf = sfun.f1_condensed(cfw_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
                                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
@@ -6430,13 +6375,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 viscera_condensed_offs = sfun.f1_condensed(viscera_offs, idx_sorted_w_offs, condense_w_mask_offs
                                         , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
                                         , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'viscera_offs')
-                ###Organ energy requirement (condense)
-                omer_historycs_condensed_p3g3 = sfun.f1_condensed(omer_historycs_offs, idx_sorted_w_offs[na,...], condense_w_mask_offs[na,...]
-                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'omer_historycs_offs')
-                omer_historymu_condensed_p3g3 = sfun.f1_condensed(omer_historymu_offs, idx_sorted_w_offs[na,...], condense_w_mask_offs[na,...]
-                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'omer_historymu_offs')
                 ###Clean fleece weight (condense)
                 cfw_condensed_offs = sfun.f1_condensed(cfw_offs, idx_sorted_w_offs, condense_w_mask_offs
                                         , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
@@ -6505,13 +6443,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 viscera_start_sire = sfun.f1_period_start_prod(numbers_end_condensed_sire, viscera_condensed_sire, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_sire
                                         , mask_min_wa_lw_w_sire, mask_max_lw_wz_sire, mask_max_wa_lw_w_sire)
-                ###Organ energy requirement (start)
-                omer_historycs_start_p3g0 = sfun.f1_period_start_prod(numbers_end_condensed_sire, omer_historycs_condensed_p3g0
-                                        , prejoin_tup, season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_sire[na,...]
-                                        , mask_min_wa_lw_w_sire[na,...], mask_max_lw_wz_sire[na,...], mask_max_wa_lw_w_sire[na,...])
-                omer_historymu_start_p3g0 = sfun.f1_period_start_prod(numbers_end_condensed_sire, omer_historymu_condensed_p3g0
-                                        , prejoin_tup, season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_sire[na,...]
-                                        , mask_min_wa_lw_w_sire[na,...], mask_max_lw_wz_sire[na,...], mask_max_wa_lw_w_sire[na,...])
                 ###Clean fleece weight (start)
                 cfw_start_sire = sfun.f1_period_start_prod(numbers_end_condensed_sire, cfw_condensed_sire, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_sire
@@ -6601,27 +6532,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
                                         , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                                         , stub_lw_idx=stub_lw_idx_dams, len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
-                ###Organ energy requirement (start)
-                omer_historycs_start_p3g1 = sfun.f1_period_start_prod(numbers_end_condensed_dams
-                                        , omer_historycs_condensed_p3g1, prejoin_tup
-                                        , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams[na,...], mask_min_wa_lw_w_dams[na,...]
-                                        , mask_max_lw_wz_dams[na,...], mask_max_wa_lw_w_dams[na,...], period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
-                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
-                                        , stub_lw_idx=stub_lw_idx_dams[na,...], len_gen_t=len_gen_t1, a_t_g=a_t_g1
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
-                omer_historymu_start_p3g1 = sfun.f1_period_start_prod(numbers_end_condensed_dams
-                                        , omer_historymu_condensed_p3g1, prejoin_tup
-                                        , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams[na,...], mask_min_wa_lw_w_dams[na,...]
-                                        , mask_max_lw_wz_dams[na,...], mask_max_wa_lw_w_dams[na,...], period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1
-                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
-                                        , stub_lw_idx=stub_lw_idx_dams[na,...], len_gen_t=len_gen_t1, a_t_g=a_t_g1
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (start)
                 cfw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, cfw_condensed_dams, prejoin_tup
@@ -6859,15 +6769,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_yatf
                                         , mask_min_wa_lw_w_yatf, mask_max_lw_wz_yatf, mask_max_wa_lw_w_yatf
                                         , len_gen_t=len_gen_t1, a_t_g=a_t_g1 , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
-                ###Organ energy requirement (start)
-                omer_historycs_start_p3g2 = sfun.f1_period_start_prod(numbers_end_condensed_yatf, omer_historycs_condensed_p3g2, prejoin_tup
-                                        , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_yatf[na,...]
-                                        , mask_min_wa_lw_w_yatf[na,...], mask_max_lw_wz_yatf[na,...], mask_max_wa_lw_w_yatf[na,...]
-                                        , len_gen_t=len_gen_t1, a_t_g=a_t_g1 , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
-                omer_historymu_start_p3g2 = sfun.f1_period_start_prod(numbers_end_condensed_yatf, omer_historymu_condensed_p3g2, prejoin_tup
-                                        , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_yatf[na,...]
-                                        , mask_min_wa_lw_w_yatf[na,...], mask_max_lw_wz_yatf[na,...], mask_max_wa_lw_w_yatf[na,...]
-                                        , len_gen_t=len_gen_t1, a_t_g=a_t_g1 , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (start)
                 cfw_start_yatf = sfun.f1_period_start_prod(numbers_end_condensed_yatf, cfw_condensed_yatf, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_yatf
@@ -6935,15 +6836,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 viscera_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, viscera_condensed_offs, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
                                         , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
-                ###Organ energy requirement (start)
-                omer_historycs_start_p3g3 = sfun.f1_period_start_prod(numbers_end_condensed_offs, omer_historycs_condensed_p3g3, prejoin_tup
-                                        , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs[na,...], mask_min_wa_lw_w_offs[na,...]
-                                        , mask_max_lw_wz_offs[na,...], mask_max_wa_lw_w_offs[na,...], stub_lw_idx=stub_lw_idx_offs[na,...], len_gen_t=len_gen_t3, a_t_g=a_t_g3
-                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
-                omer_historymu_start_p3g3 = sfun.f1_period_start_prod(numbers_end_condensed_offs, omer_historymu_condensed_p3g3, prejoin_tup
-                                        , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs[na,...], mask_min_wa_lw_w_offs[na,...]
-                                        , mask_max_lw_wz_offs[na,...], mask_max_wa_lw_w_offs[na,...], stub_lw_idx=stub_lw_idx_offs[na,...], len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Clean fleece weight (start)
                 cfw_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, cfw_condensed_offs, prejoin_tup
