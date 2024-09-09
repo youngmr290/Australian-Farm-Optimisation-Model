@@ -956,15 +956,15 @@ def f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd):
     return egraze
 
 
-def f_energy_cs(cx, cm, lw, ffcfw, mr_age, mei, omer_history_start, days_period, km
-                , i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_mr=1):
+def f_energy_cs(cx, cm, lw, ffcfw, mr_age, mei, km, i_steepness, density, foo, confinement, intake_f, dmd
+                , mei_propn_milk=0, sam_mr=1):
     #Energy required for maintenance and efficiency of energy use for maintenance & growth
     ##Energy required at maint for metabolism
     emetab = cx[10, ...] * cm[2, ...] * ffcfw ** 0.75 * mr_age * (1 + cm[5, ...] * mei_propn_milk)
     ##Energy required for grazing (chewing, ruminating and walking)
     egraze = f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd)
     ##Energy associated with organ activity (organ ME requirement)
-    omer, omer_history = f1_history(omer_history_start, cm[1, ...] * mei, days_period)
+    omer = cm[1, ...] * mei
     ##ME requirement for maintenance (before ECold)
     meme = ((emetab + egraze) / km + omer) * sam_mr
     ##Calculate hp_maint for comparison with the new feeding standards which include HP for MEI above maintenance
@@ -973,27 +973,26 @@ def f_energy_cs(cx, cm, lw, ffcfw, mr_age, mei, omer_history_start, days_period,
     ### HAF for the CFS is for energy intake surplus to maintenance
     hp_mei = bmei * (mei - meme)
     hp_maint = meme + hp_mei
-    return meme, omer_history, hp_maint
+    return meme, hp_maint
 
 
-def f_energy_mu(cx, cm, lw, lean, mr_age, mei, omer_history_start, days_period, km
-                , i_steepness, density, foo, confinement, intake_f, dmd, mei_propn_milk=0, sam_mr=1):
+def f_energy_mu(cx, cm, lw, lean, mr_age, mei, km, i_steepness, density, foo, confinement, intake_f, dmd
+                , mei_propn_milk=0, sam_mr=1):
     #Energy required for maintenance and efficiency of energy use for maintenance & growth
     ##Energy required at maint for metabolism
     emetab = cx[10, ...] * cm[24, ...] * lean * mr_age * (1 + cm[26, ...] * mei_propn_milk)
     ##Energy required for grazing (chewing, ruminating and walking)
     egraze = f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd)
     ##Energy associated with organ activity (organ ME requirement)
-    omer, omer_history = f1_history(omer_history_start, cm[23, ...] * mei, days_period)
-    ##ME requirement for maintenance (before ECold)
-    meme = ((emetab + egraze) / km + omer) * sam_mr
-    ##Calculate hp_maint for comparison with the new feeding standards which include HP for MEI above maintenance
-    ### the heat associated with feeding is the proportion that is not available for maintenance
+    omer = cm[23, ...] * mei
+    ### heat associated with feeding calculated as per Oddy et al. 2024
     bmei = 1 - km
-    ### HAF for the CFS is for energy intake surplus to maintenance
-    hp_mei = bmei * (mei - meme)
-    hp_maint = meme + hp_mei
-    return meme, omer_history, hp_maint
+    hp_mei = bmei * mei
+    meme = (emetab + egraze + omer + hp_mei) * sam_mr
+    ##CSIRO version of ME requirement for maintenance (before ECold)
+    meme_cs = ((emetab + egraze) / km + omer) * sam_mr
+    ##Calculate hp_maint for comparison with the new feeding standards which include HP for MEI above maintenance
+    return meme, meme_cs
 
 
 def f_energy_nfs(cm, cg, lw, fat, muscle, viscera, mei, km, i_steepness, density, foo
@@ -1016,8 +1015,8 @@ def f_energy_nfs(cm, cg, lw, fat, muscle, viscera, mei, km, i_steepness, density
     ##Heat produced by maintenance type functions (before ECold)
     hp_maint = (hp_fasting + hp_mei + hp_graze) * sam_mr
     ##Equivalent of MR from CSIRO feeding standards. Estimate of MEI for RE==0
-    meme = (hp_fasting + hp_graze) / km * sam_mr
-    return hp_maint, meme
+    meme_cs = (hp_fasting + hp_graze) / km * sam_mr
+    return hp_maint, meme_cs
 
 
 def f_foetus_cs(cb1, cp, kc, nfoet, rc_start, w_b_std_y, w_b_exp_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f
