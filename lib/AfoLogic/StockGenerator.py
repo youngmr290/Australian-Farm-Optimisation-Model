@@ -1787,7 +1787,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##Efficiency for conceptus (for CSIRO feeding standards)
     kc_cs_yg1 = ck_dams[8,...]
-
+    kc_mu_yg1 = ck_dams[31, ...]
 
     ####################
     #initial conditions#

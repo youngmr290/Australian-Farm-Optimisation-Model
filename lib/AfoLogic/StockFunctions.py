@@ -1408,7 +1408,7 @@ def f_fibre_mu(cw_g, cc_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_s
     ##Net energy required for wool (above basal growth rate converted to WB)
     new_g = cw_g[0, ...] * (d_wb_g - cw_g[2, ...] * relsize_start_g / cw_g[22, ...])
     ##ME required for wool (above basal growth rate)
-    mew_g = new_g * ck_g[23, ...] #can be negative because mem assumes 4g of clean wool is grown. If less is grown then mew 'returns' the energy.
+    mew_g = new_g / ck_g[37, ...] #can be negative because mem assumes 4g of clean wool is grown. If less is grown then mew 'returns' the energy.
     ##Convert wool base to CFW (using Schlumberger Dry factor)
     d_cfw_g = d_wb_g * cw_g[22, ...]
     ##Fibre diameter for the days growth (um)
@@ -1452,7 +1452,7 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
     ###to be consistent with CSIRO the formula would be cw_g[1, ...] * d_cfw_g / cw_g[3, ...]
     dw_g = cg_g[23, ...] * cw_g[20, ...] * d_cfw_g
     ##Heat production associated with wool growth
-    hp_dw_g = dw_g * ck_g[21, ...]    #using bm rather than bw because using bw for f_fibre_mu()
+    hp_dw_g = dw_g * ck_g[23, ...]
     ##Fibre diameter for the days growth
     d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
     d_fd_g = f1_rev_sa(d_fd_g, sen.saa['rev_fd'], age, sa_type=2)
