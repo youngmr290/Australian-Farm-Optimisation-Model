@@ -1776,10 +1776,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     dlf_wool_pa1e1b1nwzida0e0b0xyg3 = 1 + cw_offs[6,...] * (dl_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p] - 12)
 
     ##Efficiency for wool
-    kw_yg0 = ck_sire[17,...]
-    kw_yg1 = ck_dams[17,...]
-    kw_yg2 = ck_yatf[17,...]
-    kw_yg3 = ck_offs[17,...]
+    kw_cs_yg0 = ck_sire[17,...]
+    kw_cs_yg1 = ck_dams[17,...]
+    kw_cs_yg2 = ck_yatf[17,...]
+    kw_cs_yg3 = ck_offs[17,...]
+    kw_mu_yg0 = ck_sire[37,...]
+    kw_mu_yg1 = ck_dams[37,...]
+    kw_mu_yg2 = ck_yatf[37,...]
+    kw_mu_yg3 = ck_offs[37,...]
 
     ##Efficiency for conceptus (for CSIRO feeding standards)
     kc_cs_yg1 = ck_dams[8,...]
@@ -2178,10 +2182,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ce_day1_f_dams = np.exp(cp_dams[16, ...] - cp_dams[17, ...] * np.exp(-cp_dams[18, 0, ...] * 1)) / 4
 
     ##genotype calc that requires af_wool. ME for minimum wool growth (with no intake, relsize = 1)
-    mew_min_pa1e1b1nwzida0e0b0xyg0 =cw_sire[14, ...] * sfw_a0e0b0xyg0[0, ...] / cw_sire[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg0 * dlf_wool_pa1e1b1nwzida0e0b0xyg0 * cw_sire[1, ...] / kw_yg0
-    mew_min_pa1e1b1nwzida0e0b0xyg1 =cw_dams[14, ...] * sfw_a0e0b0xyg1[0, ...] / cw_dams[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg1 * dlf_wool_pa1e1b1nwzida0e0b0xyg1 * cw_dams[1, ...] / kw_yg1
-    mew_min_pa1e1b1nwzida0e0b0xyg2 =cw_yatf[14, ...] * sfw_pa1e1b1nwzida0e0b0xyg2[0, ...] / cw_yatf[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg2 * dlf_wool_pa1e1b1nwzida0e0b0xyg2 * cw_yatf[1, ...] / kw_yg2
-    mew_min_pa1e1b1nwzida0e0b0xyg3 =cw_offs[14, ...] * sfw_da0e0b0xyg3[0, ...] / cw_offs[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg3 * dlf_wool_pa1e1b1nwzida0e0b0xyg3 * cw_offs[1, ...] / kw_yg3
+    new_min_pa1e1b1nwzida0e0b0xyg0 =cw_sire[14, ...] * sfw_a0e0b0xyg0[0, ...] / cw_sire[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg0 * dlf_wool_pa1e1b1nwzida0e0b0xyg0 * cw_sire[1, ...]
+    new_min_pa1e1b1nwzida0e0b0xyg1 =cw_dams[14, ...] * sfw_a0e0b0xyg1[0, ...] / cw_dams[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg1 * dlf_wool_pa1e1b1nwzida0e0b0xyg1 * cw_dams[1, ...]
+    new_min_pa1e1b1nwzida0e0b0xyg2 =cw_yatf[14, ...] * sfw_pa1e1b1nwzida0e0b0xyg2[0, ...] / cw_yatf[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg2 * dlf_wool_pa1e1b1nwzida0e0b0xyg2 * cw_yatf[1, ...]
+    new_min_pa1e1b1nwzida0e0b0xyg3 =cw_offs[14, ...] * sfw_da0e0b0xyg3[0, ...] / cw_offs[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg3 * dlf_wool_pa1e1b1nwzida0e0b0xyg3 * cw_offs[1, ...]
 
     ##plot above x-axis is p
     # array = srw_age_pa1e1b1nwzida0e0b0xyg2
@@ -3640,10 +3644,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_cs(cw_sire, cc_sire, ffcfw_start_sire
                                            , relsize_start_sire, d_cfw_history_start_p2g0
-                                           , mei_sire, mew_min_pa1e1b1nwzida0e0b0xyg0[p]
+                                           , mei_sire, new_min_pa1e1b1nwzida0e0b0xyg0[p]
                                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...],  sfd_a0e0b0xyg0, wge_pa1e1b1nwzida0e0b0xyg0[p_srw]
                                            , af_wool_pa1e1b1nwzida0e0b0xyg0[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg0[p, ...]
-                                           , kw_yg0, days_period_pa1e1b1nwzida0e0b0xyg0[p], age_pa1e1b1nwzida0e0b0xyg0[p]
+                                           , kw_cs_yg0, days_period_pa1e1b1nwzida0e0b0xyg0[p], age_pa1e1b1nwzida0e0b0xyg0[p]
                                            , sfw_ltwadj_g0, sfd_ltwadj_g0 , rev_trait_values['sire'][p])
                         if eqn_used:
                             d_cfw_sire = temp0
@@ -3663,10 +3667,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_cs(cw_dams, cc_dams, ffcfw_start_dams
                                            , relsize_start_dams, d_cfw_history_start_p2g1
-                                           , mei_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p]
+                                           , mei_dams, new_min_pa1e1b1nwzida0e0b0xyg1[p]
                                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_a0e0b0xyg1, wge_pa1e1b1nwzida0e0b0xyg1[p_srw]
                                            , af_wool_pa1e1b1nwzida0e0b0xyg1[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg1[p, ...]
-                                           , kw_yg1, days_period_pa1e1b1nwzida0e0b0xyg1[p], age_pa1e1b1nwzida0e0b0xyg1[p]
+                                           , kw_cs_yg1, days_period_pa1e1b1nwzida0e0b0xyg1[p], age_pa1e1b1nwzida0e0b0xyg1[p]
                                            , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                            , rev_trait_values['dams'][p]
                                            , mec_dams, mel_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
@@ -3689,10 +3693,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_cs(cw_offs, cc_offs, ffcfw_start_offs
                                            , relsize_start_offs, d_cfw_history_start_p2g3
-                                           , mei_offs, mew_min_pa1e1b1nwzida0e0b0xyg3[p]
+                                           , mei_offs, new_min_pa1e1b1nwzida0e0b0xyg3[p]
                                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...], sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw]
                                            , af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
-                                           , kw_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p], age_pa1e1b1nwzida0e0b0xyg3[p]
+                                           , kw_cs_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p], age_pa1e1b1nwzida0e0b0xyg3[p]
                                            , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
                                            , rev_trait_values['offs'][p])
                         if eqn_used:
@@ -3715,7 +3719,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_mu(cw_sire, cc_sire, ck_sire
                                            , ffcfw_start_sire, relsize_start_sire, d_cfw_history_start_p2g0
-                                           , mei_sire, mew_min_pa1e1b1nwzida0e0b0xyg0[p]
+                                           , mei_sire, new_min_pa1e1b1nwzida0e0b0xyg0[p]
                                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...],  sfd_a0e0b0xyg0, wge_pa1e1b1nwzida0e0b0xyg0[p_srw]
                                            , af_wool_pa1e1b1nwzida0e0b0xyg0[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                            , days_period_pa1e1b1nwzida0e0b0xyg0[p], age_pa1e1b1nwzida0e0b0xyg0[p]
@@ -3738,7 +3742,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_mu(cw_dams, cc_dams, ck_dams
                                            , ffcfw_start_dams, relsize_start_dams, d_cfw_history_start_p2g1
-                                           , mei_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p]
+                                           , mei_dams, new_min_pa1e1b1nwzida0e0b0xyg1[p]
                                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_a0e0b0xyg1, wge_pa1e1b1nwzida0e0b0xyg1[p_srw]
                                            , af_wool_pa1e1b1nwzida0e0b0xyg1[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                            , days_period_pa1e1b1nwzida0e0b0xyg1[p], age_pa1e1b1nwzida0e0b0xyg1[p]
@@ -3764,7 +3768,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_mu(cw_offs, cc_offs, ck_offs
                                            , ffcfw_start_offs, relsize_start_offs, d_cfw_history_start_p2g3
-                                           , mei_offs, mew_min_pa1e1b1nwzida0e0b0xyg3[p]
+                                           , mei_offs, new_min_pa1e1b1nwzida0e0b0xyg3[p]
                                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...], sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw]
                                            , af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                            , days_period_pa1e1b1nwzida0e0b0xyg3[p], age_pa1e1b1nwzida0e0b0xyg3[p]
@@ -3790,7 +3794,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_nfs(cw_sire, cc_sire, cg_sire, ck_sire
                                             , ffcfw_start_sire, relsize_start_sire, d_cfw_history_start_p2g0, mei_sire
-                                            , mew_min_pa1e1b1nwzida0e0b0xyg0[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...]
+                                            , new_min_pa1e1b1nwzida0e0b0xyg0[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                             , sfd_a0e0b0xyg0, wge_pa1e1b1nwzida0e0b0xyg0[p_srw], af_wool_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                             , dlf_wool_pa1e1b1nwzida0e0b0xyg0[p, ...], days_period_pa1e1b1nwzida0e0b0xyg0[p]
                                             , age_pa1e1b1nwzida0e0b0xyg0[p], sfw_ltwadj_g0, sfd_ltwadj_g0, rev_trait_values['sire'][p])
@@ -3812,7 +3816,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_nfs(cw_dams, cc_dams, cg_dams, ck_dams
                                             , ffcfw_start_dams, relsize_start_dams, d_cfw_history_start_p2g1, mei_dams
-                                            , mew_min_pa1e1b1nwzida0e0b0xyg1[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg1[p, ...]
+                                            , new_min_pa1e1b1nwzida0e0b0xyg1[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                             , sfd_a0e0b0xyg1, wge_pa1e1b1nwzida0e0b0xyg1[p_srw], af_wool_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                             , dlf_wool_pa1e1b1nwzida0e0b0xyg1[p, ...], days_period_pa1e1b1nwzida0e0b0xyg1[p]
                                             , age_pa1e1b1nwzida0e0b0xyg1[p], sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...]
@@ -3836,7 +3840,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_nfs(cw_offs, cc_offs, cg_offs, ck_offs
                                             , ffcfw_start_offs, relsize_start_offs, d_cfw_history_start_p2g3, mei_offs
-                                            , mew_min_pa1e1b1nwzida0e0b0xyg3[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...]
+                                            , new_min_pa1e1b1nwzida0e0b0xyg3[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                             , sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw], af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                             , dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], days_period_pa1e1b1nwzida0e0b0xyg3[p]
                                             , age_pa1e1b1nwzida0e0b0xyg3[p], sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
@@ -4686,10 +4690,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_cs(cw_yatf, cc_yatf, ffcfw_start_yatf
                                    , relsize_start_yatf, d_cfw_history_start_p2g2
-                                   , mei_yatf, mew_min_pa1e1b1nwzida0e0b0xyg2[p]
+                                   , mei_yatf, new_min_pa1e1b1nwzida0e0b0xyg2[p]
                                    , d_cfw_ave_pa1e1b1nwzida0e0b0xyg2[p, ...], sfd_pa1e1b1nwzida0e0b0xyg2[p]
                                    , wge_pa1e1b1nwzida0e0b0xyg2[p], af_wool_pa1e1b1nwzida0e0b0xyg2[p, ...]
-                                   , dlf_wool_pa1e1b1nwzida0e0b0xyg2[p, ...], kw_yg2
+                                   , dlf_wool_pa1e1b1nwzida0e0b0xyg2[p, ...], kw_cs_yg2
                                    , days_period_pa1e1b1nwzida0e0b0xyg2[p], age_pa1e1b1nwzida0e0b0xyg2[p]
                                    , sfw_ltwadj_g2, sfd_ltwadj_g2, rev_trait_values['yatf'][p])
 
@@ -4714,7 +4718,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_mu(cw_yatf, cc_yatf, ck_yatf
                                    , ffcfw_start_yatf, relsize_start_yatf, d_cfw_history_start_p2g2
-                                   , mei_yatf, mew_min_pa1e1b1nwzida0e0b0xyg2[p]
+                                   , mei_yatf, new_min_pa1e1b1nwzida0e0b0xyg2[p]
                                    , d_cfw_ave_pa1e1b1nwzida0e0b0xyg2[p, ...], sfd_pa1e1b1nwzida0e0b0xyg2[p]
                                    , wge_pa1e1b1nwzida0e0b0xyg2[p], af_wool_pa1e1b1nwzida0e0b0xyg2[p, ...]
                                    , dlf_wool_pa1e1b1nwzida0e0b0xyg2[p, ...]
@@ -4742,7 +4746,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_fibre_nfs(cw_yatf, cc_yatf, cg_yatf, ck_yatf
                                     ,ffcfw_start_yatf, relsize_start_yatf, d_cfw_history_start_p2g2, mei_yatf
-                                    , mew_min_pa1e1b1nwzida0e0b0xyg2[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg2[p, ...]
+                                    , new_min_pa1e1b1nwzida0e0b0xyg2[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg2[p, ...]
                                     , sfd_pa1e1b1nwzida0e0b0xyg2[p], wge_pa1e1b1nwzida0e0b0xyg2[p]
                                     , af_wool_pa1e1b1nwzida0e0b0xyg2[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg2[p, ...]
                                     , days_period_pa1e1b1nwzida0e0b0xyg2[p], age_pa1e1b1nwzida0e0b0xyg2[p]
