@@ -1237,13 +1237,13 @@ def f_progenyfd_mu(cu1, cg, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_st
     return fd_adj, cf_fd_dams
 
 
-def f_milk_cs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start
+def f_milk_cs(cl, srw, relsize_start, rc_birth_start, mei, meme, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start
            , age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect, rev_trait_value):
     #calculates the energy requirement for lactation for the days lactating. The result is scaled by lact_propn when used
     ##Max milk prodn based on dam rc birth
     mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
     ##Excess ME available for milk	
-    mel_xs = np.maximum(0, (mei - (meme + mew_min * relsize_start))) * cl[5, ...] * kl   #todo is this double counting the mew_min because meme includes an energy allowance for a maintenance level of wool growth
+    mel_xs = np.maximum(0, (mei - meme) * cl[5, ...] * kl)
     ##Excess ME as a ratio of mpmax
     milk_ratio = fun.f_divide(mel_xs, mpmax) #func stops div0 error - and milk ratio is later discarded because days period f = 0
     ##Age or energy factor
@@ -1272,13 +1272,13 @@ def f_milk_cs(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_sta
     return mp2, mel, nel, ldr, lb
 
 
-def f_milk_nfs(cl, ck, srw, relsize_start, rc_birth_start, mei, hp_maint, mew_min, rc_start, ffcfw75_exp_yatf, lb_start
+def f_milk_nfs(cl, ck, srw, relsize_start, rc_birth_start, mei, hp_maint, rc_start, ffcfw75_exp_yatf, lb_start
            , ldr_start, age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect, rev_trait_value):
     #calculates the energy requirement for lactation for the days lactating. The result is scaled by lact_propn when used
     ##Max milk prodn based on dam rc birth
     mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
     ##Excess ME available for milk. CSIRO uses meme which is a lower than hp_maint, therefore using 0.9 instead of using kl
-    mel_xs = np.maximum(0, (mei - (hp_maint + mew_min * relsize_start))) * cl[5, ...] * 0.9  #kl
+    mel_xs = np.maximum(0, (mei - hp_maint) * cl[5, ...] * 0.9)  #kl
     ##Excess ME as a ratio of mpmax
     milk_ratio = fun.f_divide(mel_xs, mpmax) #func stops div0 error - and milk ratio is later discarded because days period f = 0
     ##Age or energy factor
