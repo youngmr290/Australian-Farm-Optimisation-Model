@@ -842,11 +842,16 @@ def f1_efficiency_cs(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, mei_pro
     kg_supp = ck[16, ...] * i_md_supp * sam_kg
     ###Efficiency for growth (fodder) including the sensitivity scalar
     kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb * sam_kg
-    ###Efficiency for gaining fat
-    kf = 1 / (ck[20, ...] + 1) * km
-    ###Efficiency for gaining protein
-    kp = 1 / (ck[21, ...] + 1) * km
-    return km, kg_fodd, kg_supp, kl, kf, kp
+    return km, kg_fodd, kg_supp, kl
+
+
+def f1_efficiency_mu(ck, md_solid, mei_propn_milk=0):
+    ##Energy required for maintenance and efficiency of energy use for maintenance & growth
+    ###Efficiency for maintenance (note: Blaxter & Boyne showed that km fits better if the coefficients vary with feed type)
+    km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
+    ###Efficiency for lactation - dam only
+    kl =  ck[29, ...] + ck[30, ...] * md_solid
+    return km, kl
 
 
 def f1_weight_energy_conversion(cg, option, weight=None, energy=None):
@@ -900,7 +905,7 @@ def f1_adipose_propn(cg, evg):
     adipose_propn = (evg - prot_energy) / (adipose_energy - prot_energy)
     return adipose_propn
 
-def f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
+def f1_kg_cs(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
          , kl = 0, mei_propn_milk = 0, lact_propn = 0):
     '''Parameters
     ----------
@@ -936,6 +941,35 @@ def f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
     ##Compile whole formula
     kg = lact_propn * kg_lact + (1 - lact_propn) * kg_dry
     return kg
+
+
+def f1_kg_mu(ck, belowmaint, fat_propn, mei_propn_milk = 0, sam_kg=1):
+    '''   kg based on the proportion of energy gained as fat with efficiency kf and the proportion gained as protein kp
+    Parameters
+    ----------
+    ck : Numpy array, sim parameters - efficiency of energy use.
+    belowmaint : Numpy array of Boolean, Is the animal class in energy deficit.
+    fat_propn : Numpy array, Proportion of energy change that was fat.
+    mei_propn_milk : Numpy array, Proportion of energy consumed that was from milk.
+
+    Returns
+    -------
+    kg - Efficiency of energy used for growth.
+    '''
+    # ##Set days_lact to numpy array if arg value is 0
+    # lact_propn = np.asarray(lact_propn)
+    ##Extract efficiency of fat gain and loss
+    ###Adjust the efficiencies for the proportion of milk in the diet
+    kf_gain = ck[32, ...] * (1 - mei_propn_milk) * sam_kg + ck[36, ...] * mei_propn_milk
+    kf_lose = ck[33, ...] * (1 - mei_propn_milk) * sam_kg + ck[36, ...] * mei_propn_milk
+    kf = np.where(belowmaint, kf_lose, kf_gain)
+    ##Extract efficiency of protein gain and loss
+    kp_gain = ck[34, ...] * (1 - mei_propn_milk) * sam_kg + ck[36, ...] * mei_propn_milk
+    kp_lose = ck[35, ...] * (1 - mei_propn_milk) * sam_kg + ck[36, ...] * mei_propn_milk
+    kp = np.where(belowmaint, kp_lose, kp_gain)
+    ##kg for solid diet
+    kg = 1 / (fat_propn / kf + (1 - fat_propn)/ kp)
+    return kg, kf, kp
 
 
 def f_egraze(cm, lw, i_steepness, density, foo, confinement, intake_f, dmd):
@@ -1436,7 +1470,7 @@ def f_heat_cs(cc, ck, mei, mem, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, 
     ##Animal is below maintenance
     belowmaint = mei < (mem + mec * gest_propn + mel * lact_propn + mew)
     ##Efficiency for growth (before ECold)
-    kg = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
+    kg = f1_kg_cs(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
     ##Heat production per animal
     ###Net energy of gain in empty body
     neg = kg * (mei - (mem + mec * gest_propn + mel * lact_propn + mew))
@@ -1549,7 +1583,7 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, hp_total, meme, mew
     ##Animal is below maintenance (incl ecold)
     belowmaint = mei < (mem + mec * gest_propn + mel * lact_propn + mew)
     ##Efficiency for growth (inc ECold) - different to 'kge' because belowmaint now includes ecold
-    kg = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
+    kg = f1_kg_cs(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
     return mem, temp_lc, kg
 
 
@@ -1629,8 +1663,8 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
     return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
 
-def f_lwc_mu(cg, rc_start, mei_initial, meme, mew, new, zf1, zf2, kge, kf, kp, heat_loss_m0p1, age, rev_trait_value
-             , mec = 0, nec = 0, mel = 0, nel = 0, gest_propn = 0, lact_propn = 0):
+def f_lwc_mu(cg, ck, rc_start, mei_initial, meme, mew, new, zf1, zf2, heat_loss_m0p1, age, rev_trait_value
+             , mec = 0, nec = 0, mel = 0, nel = 0, gest_propn = 0, lact_propn = 0, mei_propn_milk = 0, sam_kg=1):
     #Calculate LW change from energy surplus to maintenance. Uses energy & efficiency approach like CSIRO
     #but separates kf & kp and calculates proportion of fat & protein from mass and energy balance.
 
@@ -1652,11 +1686,8 @@ def f_lwc_mu(cg, rc_start, mei_initial, meme, mew, new, zf1, zf2, kge, kf, kp, h
     adipose_propn = f1_adipose_propn(cg, evg)
     ## proportion of fat in energy gain (% by energy)
     fat_propn = f1_weight_energy_conversion(cg, 0, weight=adipose_propn) / evg
-    ## proportion of protein in energy gain (% by energy)
-    prot_propn = 1 - fat_propn
-    ## efficiency of surplus energy conversion to retained energy. If losing weight use kg from the args
-    ### based on the proportion of energy gained as fat with efficiency kf and the proportion gained as protein kp
-    kg = np.where(below_maintenance, kge, 1 / (fat_propn / kf + prot_propn/ kp))
+    ## efficiency of surplus energy conversion to retained energy.
+    kg, kf, kp = f1_kg_mu(ck, below_maintenance, fat_propn, mei_propn_milk, sam_kg)
     ##Change in wholebody energy (based on ME) Note: will be negative if losing weight
     wbec = kg * surplus_energy
     ##Calculate the chill increment if heat_loss is greater than heat production
