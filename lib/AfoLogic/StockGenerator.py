@@ -3544,21 +3544,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         ###Expected average metabolic LW of yatf during period
                         ffcfw75_exp_yatf = np.sum(ffcfw_exp_a1e1b1nwzida0e0b0xyg2p0 ** 0.75, axis=-1) / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg2[p, ...])
 
-                        temp0, temp1, temp2, temp3, temp4 = sfun.f_milk_cs(cl_dams, srw_pa1e1b1nwzida0e0b0xyg1[p_srw], relsize_start_dams
-                                , rc_birth_dams, mei_dams, meme_cs_dams, rc_start_dams
+                        temp0, temp1, temp2, temp3 = sfun.f_milk_cs(cl_dams, srw_pa1e1b1nwzida0e0b0xyg1[p_srw]
+                                , relsize_start_dams, rc_birth_dams, mei_dams, meme_cs_dams, rc_start_dams
                                 , ffcfw75_exp_yatf, lb_start_dams, ldr_start_dams, age_pa1e1b1nwzida0e0b0xyg2[p]
                                 , mp_age_y_pa1e1b1nwzida0e0b0xyg1[p], mp2_age_y_pa1e1b1nwzida0e0b0xyg1[p], x_pos
                                 , days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_cs_dams
                                 , lact_nut_effect_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['dams'][p])
                         if eqn_used:
                             mp2_dams = temp0
-                            mel_dams = temp1
-                            nel_dams = temp2
-                            ldr_dams = temp3
-                            lb_dams = temp4
+                            nel_dams = temp1
+                            ldr_dams = temp2
+                            lb_dams = temp3
                             mp2_yatf = fun.f_divide(mp2_dams, nyatf_b1nwzida0e0b0xyg) # 0 if given slice of b1 axis has no yatf
-                            dl_dams = nel_dams   #can comment these lines when using compare so that lwc_nfs is based on dl & hp_dl from NFS
-                            hp_dl_dams = mel_dams - nel_dams   #can comment these lines when using compare so that lwc_nfs is based on dl & hp_dl from NFS
+                            dl_dams = nel_dams   #can comment this line when using compare so that lwc_nfs is based on dl from NFS
                         if eqn_compare:
                             r_compare18_q0q2tpdams[eqn_system, 10, :, p, ...] = temp0
                             r_compare18_q0q2tpdams[eqn_system, 11, :, p, ...] = temp2
@@ -3575,21 +3573,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         ###Expected average metabolic LW of yatf during period
                         ffcfw75_exp_yatf = np.sum(ffcfw_exp_a1e1b1nwzida0e0b0xyg2p0 ** 0.75, axis=-1) / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg2[p, ...])
 
-                        temp0, temp1, temp2, temp3, temp4 = sfun.f_milk_cs(cl_dams, srw_pa1e1b1nwzida0e0b0xyg1[p_srw], relsize_start_dams
+                        temp0, temp1, temp2, temp3 = sfun.f_milk_cs(cl_dams, srw_pa1e1b1nwzida0e0b0xyg1[p_srw], relsize_start_dams
                                 , rc_birth_dams, mei_dams, meme_mu_dams, rc_start_dams
                                 , ffcfw75_exp_yatf, lb_start_dams, ldr_start_dams, age_pa1e1b1nwzida0e0b0xyg2[p]
                                 , mp_age_y_pa1e1b1nwzida0e0b0xyg1[p], mp2_age_y_pa1e1b1nwzida0e0b0xyg1[p], x_pos
-                                , days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_mu_dams
+                                , days_period_pa1e1b1nwzida0e0b0xyg2[p]
                                 , lact_nut_effect_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['dams'][p])
                         if eqn_used:
                             mp2_dams = temp0
-                            mel_dams = temp1
-                            nel_dams = temp2
-                            ldr_dams = temp3
-                            lb_dams = temp4
+                            nel_dams = temp1
+                            ldr_dams = temp2
+                            lb_dams = temp3
                             mp2_yatf = fun.f_divide(mp2_dams, nyatf_b1nwzida0e0b0xyg) # 0 if given slice of b1 axis has no yatf
-                            dl_dams = nel_dams   #can comment these lines when using compare so that lwc_nfs is based on dl & hp_dl from NFS
-                            hp_dl_dams = mel_dams - nel_dams   #can comment these lines when using compare so that lwc_nfs is based on dl & hp_dl from NFS
+                            dl_dams = nel_dams   #can comment this line when using compare so that lwc_nfs is based on dl from NFS
                         if eqn_compare:
                             r_compare18_q0q2tpdams[eqn_system, 10, :, p, ...] = temp0
                             r_compare18_q0q2tpdams[eqn_system, 11, :, p, ...] = temp2
@@ -3606,21 +3602,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         ###Expected average metabolic LW of yatf during period
                         ffcfw75_exp_yatf = np.sum(ffcfw_exp_a1e1b1nwzida0e0b0xyg2p0 ** 0.75, axis=-1) / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg2[p, ...])
 
-                        temp0, temp1, temp2, temp3, temp4 = sfun.f_milk_nfs(cl_dams, ck_dams, srw_pa1e1b1nwzida0e0b0xyg1[p_srw], relsize_start_dams
-                                , rc_birth_dams, mei_dams, hp_maint_nfs_dams, rc_start_dams
+                        temp0, temp1, temp2, temp3 = sfun.f_milk_nfs(cl_dams, srw_pa1e1b1nwzida0e0b0xyg1[p_srw]
+                                , relsize_start_dams, rc_birth_dams, mei_dams, hp_maint_nfs_dams, rc_start_dams
                                 , ffcfw75_exp_yatf, lb_start_dams, ldr_start_dams, age_pa1e1b1nwzida0e0b0xyg2[p]
                                 , mp_age_y_pa1e1b1nwzida0e0b0xyg1[p], mp2_age_y_pa1e1b1nwzida0e0b0xyg1[p], x_pos
-                                , days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_cs_dams
+                                , days_period_pa1e1b1nwzida0e0b0xyg2[p]
                                 , lact_nut_effect_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['dams'][p])
                         if eqn_used:
                             mp2_dams = temp0
                             dl_dams = temp1
-                            hp_dl_dams = temp2
-                            ldr_dams = temp3
-                            lb_dams = temp4
+                            ldr_dams = temp2
+                            lb_dams = temp3
                             mp2_yatf = fun.f_divide(mp2_dams, nyatf_b1nwzida0e0b0xyg) # 0 if given slice of b1 axis has no yatf
-                            nel_dams = dl_dams   #can comment these lines when using compare so that lwc_cs is based on mel from CS
-                            mel_dams = dl_dams + hp_dl_dams   #can comment these lines when using compare so that lwc_cs is based on mel from CS
+                            nel_dams = dl_dams   #can comment this line when using compare so that lwc_cs is based on nel from CS or MU
                         if eqn_compare:
                             r_compare18_q0q2tpdams[eqn_system, 10, :, p, ...] = temp0
                             r_compare18_q0q2tpdams[eqn_system, 11, :, p, ...] = temp1
@@ -3664,7 +3658,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                            , kw_cs_yg1, days_period_pa1e1b1nwzida0e0b0xyg1[p], age_pa1e1b1nwzida0e0b0xyg1[p]
                                            , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                            , rev_trait_values['dams'][p], nec_dams, kc_cs_yg1
-                                           , mel_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
+                                           , nel_dams, kl_cs_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                            , lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             d_cfw_dams = temp0
@@ -3739,7 +3733,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                            , days_period_pa1e1b1nwzida0e0b0xyg1[p], age_pa1e1b1nwzida0e0b0xyg1[p]
                                            , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                            , rev_trait_values['dams'][p], nec_dams, kc_mu_yg1
-                                           , mel_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
+                                           , nel_dams, kl_mu_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                            , lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             d_cfw_dams = temp0
@@ -3812,7 +3806,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                             , dlf_wool_pa1e1b1nwzida0e0b0xyg1[p, ...], days_period_pa1e1b1nwzida0e0b0xyg1[p]
                                             , age_pa1e1b1nwzida0e0b0xyg1[p], sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                             , sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], rev_trait_values['dams'][p]
-                                            , dc_dams, bc_age_f_pa1e1b1nwzida0e0b0xyg1[p], dl_dams, hp_dl_dams
+                                            , dc_dams, bc_age_f_pa1e1b1nwzida0e0b0xyg1[p], dl_dams
                                             , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             d_cfw_dams = temp0
@@ -3884,10 +3878,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0, temp1 = sfun.f_heat_cs(cc_dams, ck_dams, mei_dams, meme_cs_dams, mew_dams, new_dams, km_cs_dams
                                                , kg_supp_cs_dams, kg_fodd_cs_dams, mei_propn_supp_dams, mei_propn_herb_dams
-                                               , guw = guw_dams, kl = kl_cs_dams, mei_propn_milk = mei_propn_milk_dams
-                                               , nec = nec_dams, kc = kc_cs_yg1, mel = mel_dams, nel = nel_dams
-                                               , gest_propn = gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
-                                               , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
+                                               , guw=guw_dams, mei_propn_milk=mei_propn_milk_dams
+                                               , nec=nec_dams, kc=kc_cs_yg1, nel=nel_dams, kl=kl_cs_dams
+                                               , gest_propn=gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
+                                               , lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         hp_total_cs_dams = temp0  #outside the if statement because it is used in the next function call
                         if eqn_used:
                             level_dams = temp1
@@ -3898,8 +3892,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                             , hp_total_cs_dams, meme_cs_dams, mew_dams, km_cs_dams, kg_supp_cs_dams, kg_fodd_cs_dams, mei_propn_supp_dams
                                             , mei_propn_herb_dams, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                             , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp0[p]
-                                            , index_m0, kl=kl_cs_dams, mei_propn_milk=mei_propn_milk_dams
-                                            , nec = nec_dams, kc = kc_cs_yg1, mel=mel_dams
+                                            , index_m0, mei_propn_milk=mei_propn_milk_dams
+                                            , nec=nec_dams, kc=kc_cs_yg1, nel=nel_dams, kl=kl_cs_dams
                                             , gest_propn=gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         #Use CSIRO version of kg & mem in f_lwc_cs() if comparing equations
                         mem_dams = temp0
@@ -4045,7 +4039,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_dams, rc_start_dams, mei_dams
                                 , mem_dams, mew_dams, zf1_dams, zf2_dams, kg_dams, rev_trait_values['dams'][p]
-                                , nec_dams, kc_cs_yg1, mel_dams
+                                , nec_dams, kc_cs_yg1, nel_dams, kl_cs_dams
                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             ebg_dams = temp0
@@ -4125,7 +4119,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_dams
                                 , ck_dams, rc_start_dams, mei_dams, meme_mu_dams, mew_dams, new_dams, zf1_dams, zf2_dams
                                 , heat_loss_damsm0p1, age_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['dams'][p]
-                                , nec_dams, kc_mu_yg1, mel_dams, nel_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
+                                , nec_dams, kc_mu_yg1, nel_dams, kl_mu_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                 , lact_propn_pa1e1b1nwzida0e0b0xyg1[p], sam_kg=sam_kg_dams)
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_mu_dams = temp6
@@ -4235,12 +4229,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_dams
-                                        , ck_dams, muscle_start_dams, viscera_start_dams, muscle_target_b0xyg1, mei_dams
-                                        , km_cs_dams, md_solid_dams, hp_maint_nfs_dams, dw_dams, hp_dw_dams
-                                        , heat_loss_damsm0p1, days_period_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , rev_trait_values['dams'][p], dc_dams, bc_age_f_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , dl_dams, hp_dl_dams
-                                        , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
+                                    , ck_dams, muscle_start_dams, viscera_start_dams, muscle_target_b0xyg1, mei_dams
+                                    , km_cs_dams, md_solid_dams, hp_maint_nfs_dams, dw_dams, hp_dw_dams
+                                    , heat_loss_damsm0p1, days_period_pa1e1b1nwzida0e0b0xyg1[p]
+                                    , rev_trait_values['dams'][p], dc_dams, bc_age_f_pa1e1b1nwzida0e0b0xyg1[p], dl_dams
+                                    , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_nfs_dams = temp6
                         if eqn_used:
