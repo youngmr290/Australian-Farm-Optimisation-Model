@@ -1053,7 +1053,7 @@ def f_energy_nfs(cm, cg, lw, fat, muscle, viscera, mei, km, i_steepness, density
     return hp_maint, meme_cs
 
 
-def f_foetus_cs(cb1, cp, kc, nfoet, rc_start, w_b_std_y, w_b_exp_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f
+def f_foetus_cs(cb1, cp, nfoet, rc_start, w_b_std_y, w_b_exp_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f
                 , dce_age_f, rev_trait_value):
     '''
     :param cb1: Numpy array, sim parameters - parameters altered by LSLN (b1 axis).
@@ -1095,21 +1095,16 @@ def f_foetus_cs(cb1, cp, kc, nfoet, rc_start, w_b_std_y, w_b_exp_y, w_f_start, n
     guw = nfoet * (nw_gu + (w_f - nw_f))
     ##Body condition of the foetus	
     rc_f = fun.f_divide(w_f, nw_f) #func to handle div0 error
-    ##Cumulative ME required for conceptus	
-    # nec_cum = nfoet * rc_f * normale_dgu
     ##NE required for conceptus
     nec = nfoet * rc_f * normale_dgu
     ##Process the foetal energy REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     ###This is only holding the energy requirement constant. CSIRO Birth weight calculation can still vary
     nec = f1_rev_update('foetus', nec, rev_trait_value)
-    # nec = np.maximum(0,fun.f_divide(nec_cum - nec_cum_start, days_period_f))
-    ##ME required for conceptus	
-    mec = nec / kc
-    return w_f, mec, nec, nw_f, guw
+    return w_f, nec, nw_f, guw
 
 
 def f_foetus_nfs(cg, cp, step, c_start, muscle_start, d_muscle, nfoet, w_b_exp_y, w_f_start
-                 , nwf_age_f, guw_age_f, dcdt_age_f, bc, gest_propn, rev_trait_value):
+                 , nwf_age_f, guw_age_f, dcdt_age_f, gest_propn, rev_trait_value):
     '''
 
     :param cg: Numpy array, sim parameters - weight change.
@@ -1154,10 +1149,7 @@ def f_foetus_nfs(cg, cp, step, c_start, muscle_start, d_muscle, nfoet, w_b_exp_y
     nw_f = w_b_exp_y * nwf_age_f
     ##Weight of the gravid uterus (conceptus - mid-period)
     guw = nfoet * (nw_gu + (w_f - nw_f))
-    ##HP associated with conceptus growth
-    # hp_dc = ck[24, ...] * dc   #fixed efficiency during gestation as per SCA(1990)
-    hp_dc = bc * dc   #variable efficiency during gestation
-    return w_f, dc, hp_dc, nw_f, guw
+    return w_f, dc, nw_f, guw
 
 
 def f1_carryforward_u1(cu1, cg, ebg, period_between_joinstartend, period_between_mated90, period_between_d90birth
@@ -1343,7 +1335,7 @@ def f_milk_nfs(cl, ck, srw, relsize_start, rc_birth_start, mei, hp_maint, rc_sta
 
 def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, new_min_g, d_cfw_ave_g
             , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g,  kw_yg, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
-            , rev_trait_value, mec_g1=0, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
+            , rev_trait_value, nec_g1=0, kc_g1=1, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##The CSIRO equations are predicting clean fleece weight (Pw in documentation) as shorn (not DM) because calculating GFW = Pw / yield
     ##Energy content of wool is specified as MJ/kg of greasy wool as shorn (although the doc says the parameter is clean)
     ##adjust wge, cfw_ave, mew_min & sfd for the LTW adjustments (CFW is a scalar and FD is an addition)
@@ -1356,6 +1348,7 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     ###which is required for the GEPEP analysis that is calibrating the adult intake and the fleece weight
     wge_a0e0b0xyg = wge_a0e0b0xyg / sam_pi
     ##ME available for wool growth
+    mec_g1 = nec_g1 / kc_g1
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
     ##Wool growth (protein weight-as shorn i.e. not DM) if there was no lag
     d_cfw_nolag_g = cw_g[8, ...] * wge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
@@ -1382,7 +1375,7 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
 
 def f_fibre_mu(cw_g, cc_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, new_min_g, d_cfw_ave_g
             , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
-            , rev_trait_value, mec_g1=0, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
+            , rev_trait_value, nec_g1=0, kc_g1=1, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##Wool growth is a copy of CSIRO but with different calculation of energy stored and heat production
     ##Energy content of wool is specified as MJ/kg of wool base (following Young 2024)
     ##adjust wge, cfw_ave, mew_min & sfd for the LTW adjustments (CFW is a scalar and FD is an addition)
@@ -1395,6 +1388,7 @@ def f_fibre_mu(cw_g, cc_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_s
     ###which is required for the GEPEP analysis that is calibrating the adult intake and the fleece weight
     wbge_a0e0b0xyg = wbge_a0e0b0xyg / sam_pi
     ##ME available for wool growth
+    mec_g1 = nec_g1 / kc_g1
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
     ##Wool growth (wool base - dry clean fibre) if there was no lag
     d_wb_nolag_g = cw_g[8, ...] * wbge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
@@ -1425,7 +1419,7 @@ def f_fibre_mu(cw_g, cc_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_s
 
 def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, new_min_g, d_cfw_ave_g
             , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
-            , rev_trait_value, dc_g1=0, hp_dc_g1=0, dl_g1=0, hp_dl_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
+            , rev_trait_value, dc_g1=0, bc_g1=0, dl_g1=0, hp_dl_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##Wool growth is a copy of CSIRO but with different calculation of energy stored and heat production
     ##There is some discrepancy in Hutton's equations because the energy content is for protein DM (not as shorn)
     ##adjust wge, cfw_ave, mew_min & sfd for the LTW adjustments (CFW is a scalar and FD is an addition)
@@ -1439,6 +1433,7 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
     ###which is required for the GEPEP analysis that is calibrating the adult intake and the fleece weight
     wge_a0e0b0xyg = wge_a0e0b0xyg / sam_pi
     ##ME available for wool growth
+    hp_dc_g1 = bc_g1 * dc_g1
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - ((dc_g1 + hp_dc_g1) * gest_propn_g1
                                                                 + (dl_g1 + hp_dl_g1) * lact_propn_g1))
     ##Wool growth (protein weight-as shorn i.e. not DM) if there was no lag
@@ -1466,7 +1461,9 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
 
 
 def f_heat_cs(cc, ck, mei, mem, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, mei_propn_herb, guw = 0, kl = 0
-              , mei_propn_milk = 0, mec = 0, mel = 0, nec = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
+              , mei_propn_milk = 0, nec = 0, kc=1, mel = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
+    ##Calculate me for conceptus growth
+    mec = nec / kc
     ##Animal is below maintenance
     belowmaint = mei < (mem + mec * gest_propn + mel * lact_propn + mew)
     ##Efficiency for growth (before ECold)
@@ -1566,7 +1563,9 @@ def f_templc(cc, ffcfw_start, rc_start, sl_start, hp_total, temp_ave, temp_max, 
 
 def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, hp_total, meme, mew, km, kg_supp, kg_fodd, mei_propn_supp
                , mei_propn_herb, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0, kl = 0, mei_propn_milk = 0
-               , mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
+               , nec = 0, kc = 1, mel = 0, gest_propn = 0, lact_propn = 0):
+    ##Calculate me for conceptus growth
+    mec = nec / kc
     ##Body area m2
     area = f1_surface_area(cc, ffcfw_start)
     ##Calculate insulation
@@ -1610,8 +1609,12 @@ def f_heatloss_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp
     return total_heat_loss_m0p1
 
 
-def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
+def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, nec = 0, kc = 1, mel = 0
+             , gest_propn = 0, lact_propn = 0):
     ##Note: The energy components of rev_trait_value are not active in this function. Have to be using f_lwc_nfs
+
+    ##Calculate me for conceptus growth
+    mec = nec / kc
     ## ME requirement to maintain maternal body energy (maintenance). Surplus is available for maternal body gain
     maintenance = mem + mec * gest_propn + mel * lact_propn + mew
     ##Level of feeding (maint = 0). Note: level is calculated elsewhere (differently) for use in Blaxter & Clapperton equations
@@ -1664,10 +1667,12 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, zf1, zf2, kg, rev_trait_value, mec = 0
 
 
 def f_lwc_mu(cg, ck, rc_start, mei_initial, meme, mew, new, zf1, zf2, heat_loss_m0p1, age, rev_trait_value
-             , mec = 0, nec = 0, mel = 0, nel = 0, gest_propn = 0, lact_propn = 0, mei_propn_milk = 0, sam_kg=1):
+             , nec = 0, kc = 1, mel = 0, nel = 0, gest_propn = 0, lact_propn = 0, mei_propn_milk = 0, sam_kg=1):
     #Calculate LW change from energy surplus to maintenance. Uses energy & efficiency approach like CSIRO
     #but separates kf & kp and calculates proportion of fat & protein from mass and energy balance.
 
+    ##Calculate me for conceptus growth
+    mec = nec / kc
     ##Energy intake that is surplus to maintaining maternal body energy. Surplus is available for maternal body gain
     surplus_energy = mei_initial - (meme + mec * gest_propn + mel * lact_propn + mew)
     below_maintenance = surplus_energy < 0
@@ -1768,7 +1773,7 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, meme, mew, new, zf1, zf2, heat_loss_
 
 
 def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_maint, dw, hp_dw, heat_loss_m0p1, step
-              , rev_trait_value, dc=0, hp_dc=0, dl=0, hp_dl=0, gest_propn = 0, lact_propn = 0):
+              , rev_trait_value, dc = 0, bc = 0, dl = 0, hp_dl = 0, gest_propn = 0, lact_propn = 0):
     ##fat gain (MJ/d) is calculated using a formula derived from the Oddy etal 2023 paper (see Generator9:p16-17)
     ###The calculation is multistep because parameter values (bcm & bcf) depend on the sign of dm and df
     ###Steps
@@ -1787,6 +1792,9 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_ma
     ###10. Adjust values from REVs
     ###11. Back calculate MEI if values were changed in step 10
     ###12. Calculate parameters to compare with CSIRO equations
+
+    ## calcualte hp for conceptus growth
+    hp_dc = dc * bc
 
     ##convert km to NFS terminology
     bmei = 1 - km
