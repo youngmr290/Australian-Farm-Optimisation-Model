@@ -3546,9 +3546,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             guw_dams = temp3
                             dc_dams = nec_dams   #can comment these lines when using compare so that lwc_nfs is based on dc & hp_dc from NFS
                         if eqn_compare:
-                            r_compare9_q0q2tpdams[eqn_system, 7, :, p, ...] = temp0
-                            r_compare9_q0q2tpdams[eqn_system, 8, :, p, ...] = temp2
-                            r_compare9_q0q2tpdams[eqn_system, 9, :, p, ...] = temp1 - temp2  #hp_dc = mec - nec
+                            r_compare7_q0q2tpdams[eqn_system, 7, :, p, ...] = temp0
+                            r_compare7_q0q2tpdams[eqn_system, 8, :, p, ...] = temp1
 
                 eqn_system = 1 # Murdoch Uni = 1 (Copy of CSIRO with MU args passed to CSIRO function)
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -3567,9 +3566,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             guw_dams = temp3
                             dc_dams = nec_dams   #can comment these lines when using compare so that lwc_nfs is based on dc & hp_dc from NFS
                         if eqn_compare:
-                            r_compare9_q0q2tpdams[eqn_system, 7, :, p, ...] = temp0
-                            r_compare9_q0q2tpdams[eqn_system, 8, :, p, ...] = temp2
-                            r_compare9_q0q2tpdams[eqn_system, 9, :, p, ...] = temp1 - temp2  #hp_dc = mec - nec
+                            r_compare7_q0q2tpdams[eqn_system, 7, :, p, ...] = temp0
+                            r_compare7_q0q2tpdams[eqn_system, 8, :, p, ...] = temp1
 
                 eqn_system = 2  # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][
@@ -3589,9 +3587,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             guw_dams = temp3
                             nec_dams = dc_dams   #can comment these lines when using compare so that lwc_cs is based on nec from CS
                         if eqn_compare:
-                            r_compare9_q0q2tpdams[eqn_system, 7, :, p, ...] = temp0
-                            r_compare9_q0q2tpdams[eqn_system, 8, :, p, ...] = temp1
-                            r_compare9_q0q2tpdams[eqn_system, 9, :, p, ...] = temp2
+                            r_compare7_q0q2tpdams[eqn_system, 7, :, p, ...] = temp0
+                            r_compare7_q0q2tpdams[eqn_system, 8, :, p, ...] = temp1
 
                 ##milk production
                 #todo perhaps can add days_period * lact_propn >0 to save some time (as per gestation above).
@@ -3622,9 +3619,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             mp2_yatf = fun.f_divide(mp2_dams, nyatf_b1nwzida0e0b0xyg) # 0 if given slice of b1 axis has no yatf
                             dl_dams = nel_dams   #can comment this line when using compare so that lwc_nfs is based on dl from NFS
                         if eqn_compare:
-                            r_compare18_q0q2tpdams[eqn_system, 10, :, p, ...] = temp0
-                            r_compare18_q0q2tpdams[eqn_system, 11, :, p, ...] = temp2
-                            r_compare18_q0q2tpdams[eqn_system, 12, :, p, ...] = temp1 - temp2  #hpdl = mel - nel
+                            r_compare7_q0q2tpdams[eqn_system, 9, :, p, ...] = temp0
+                            r_compare7_q0q2tpdams[eqn_system, 10, :, p, ...] = temp1
 
                 eqn_system = 1  # Murdoch Uni = 1 (Copy of CSIRO with MU args passed to CSIRO function)
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -3651,9 +3647,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             mp2_yatf = fun.f_divide(mp2_dams, nyatf_b1nwzida0e0b0xyg) # 0 if given slice of b1 axis has no yatf
                             dl_dams = nel_dams   #can comment this line when using compare so that lwc_nfs is based on dl from NFS
                         if eqn_compare:
-                            r_compare18_q0q2tpdams[eqn_system, 10, :, p, ...] = temp0
-                            r_compare18_q0q2tpdams[eqn_system, 11, :, p, ...] = temp2
-                            r_compare18_q0q2tpdams[eqn_system, 12, :, p, ...] = temp1 - temp2  #hpdl = mel - nel
+                            r_compare7_q0q2tpdams[eqn_system, 9, :, p, ...] = temp0
+                            r_compare7_q0q2tpdams[eqn_system, 10, :, p, ...] = temp1
 
                 eqn_system = 2  # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -3680,9 +3675,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             mp2_yatf = fun.f_divide(mp2_dams, nyatf_b1nwzida0e0b0xyg) # 0 if given slice of b1 axis has no yatf
                             nel_dams = dl_dams   #can comment this line when using compare so that lwc_cs is based on nel from CS or MU
                         if eqn_compare:
-                            r_compare18_q0q2tpdams[eqn_system, 10, :, p, ...] = temp0
-                            r_compare18_q0q2tpdams[eqn_system, 11, :, p, ...] = temp1
-                            r_compare18_q0q2tpdams[eqn_system, 12, :, p, ...] = temp2
+                            r_compare7_q0q2tpdams[eqn_system, 9, :, p, ...] = temp0
+                            r_compare7_q0q2tpdams[eqn_system, 10, :, p, ...] = temp1
 
 
                 ##wool production
@@ -3705,9 +3699,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             new_sire = temp4
                             dw_sire = new_sire
                         if eqn_compare:
-                            r_compare17_q0q2tpsire[eqn_system, 0, :, p, ...] = temp0
-                            r_compare17_q0q2tpsire[eqn_system, 1, :, p, ...] = temp1
-                            r_compare17_q0q2tpsire[eqn_system, 2, :, p, ...] = temp5
+                            r_compare7_q0q2tpsire[eqn_system, 11, :, p, ...] = temp0
+                            r_compare7_q0q2tpsire[eqn_system, 12, :, p, ...] = temp1
+                            r_compare7_q0q2tpsire[eqn_system, 13, :, p, ...] = temp4
 
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
@@ -3727,9 +3721,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             new_dams = temp4
                             dw_dams = new_dams
                         if eqn_compare:
-                            r_compare17_q0q2tpdams[eqn_system, 0, :, p, ...] = temp0
-                            r_compare17_q0q2tpdams[eqn_system, 1, :, p, ...] = temp1
-                            r_compare17_q0q2tpdams[eqn_system, 2, :, p, ...] = temp5
+                            r_compare7_q0q2tpdams[eqn_system, 11, :, p, ...] = temp0
+                            r_compare7_q0q2tpdams[eqn_system, 12, :, p, ...] = temp1
+                            r_compare7_q0q2tpdams[eqn_system, 13, :, p, ...] = temp4
 
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
@@ -3748,9 +3742,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             new_offs = temp4
                             dw_offs = new_offs
                         if eqn_compare:
-                            r_compare17_q0q2tpoffs[eqn_system, 0, :, p, ...] = temp0
-                            r_compare17_q0q2tpoffs[eqn_system, 1, :, p, ...] = temp1
-                            r_compare17_q0q2tpoffs[eqn_system, 2, :, p, ...] = temp5
+                            r_compare7_q0q2tpoffs[eqn_system, 11, :, p, ...] = temp0
+                            r_compare7_q0q2tpoffs[eqn_system, 12, :, p, ...] = temp1
+                            r_compare7_q0q2tpoffs[eqn_system, 13, :, p, ...] = temp4
 
                 eqn_system = 1 # MU = 1
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -3771,9 +3765,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             new_sire = temp4
                             dw_sire = new_sire
                         if eqn_compare:
-                            r_compare17_q0q2tpsire[eqn_system, 0, :, p, ...] = temp0
-                            r_compare17_q0q2tpsire[eqn_system, 1, :, p, ...] = temp1
-                            r_compare17_q0q2tpsire[eqn_system, 2, :, p, ...] = temp5
+                            r_compare7_q0q2tpsire[eqn_system, 11, :, p, ...] = temp0
+                            r_compare7_q0q2tpsire[eqn_system, 12, :, p, ...] = temp1
+                            r_compare7_q0q2tpsire[eqn_system, 13, :, p, ...] = temp4
 
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
@@ -3795,9 +3789,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             new_dams = temp4
                             dw_dams = new_dams
                         if eqn_compare:
-                            r_compare17_q0q2tpdams[eqn_system, 0, :, p, ...] = temp0
-                            r_compare17_q0q2tpdams[eqn_system, 1, :, p, ...] = temp1
-                            r_compare17_q0q2tpdams[eqn_system, 2, :, p, ...] = temp5
+                            r_compare7_q0q2tpdams[eqn_system, 11, :, p, ...] = temp0
+                            r_compare7_q0q2tpdams[eqn_system, 12, :, p, ...] = temp1
+                            r_compare7_q0q2tpdams[eqn_system, 13, :, p, ...] = temp4
 
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
@@ -3817,9 +3811,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             new_offs = temp4
                             dw_offs = new_offs
                         if eqn_compare:
-                            r_compare17_q0q2tpoffs[eqn_system, 0, :, p, ...] = temp0
-                            r_compare17_q0q2tpoffs[eqn_system, 1, :, p, ...] = temp1
-                            r_compare17_q0q2tpoffs[eqn_system, 2, :, p, ...] = temp5
+                            r_compare7_q0q2tpoffs[eqn_system, 11, :, p, ...] = temp0
+                            r_compare7_q0q2tpoffs[eqn_system, 12, :, p, ...] = temp1
+                            r_compare7_q0q2tpoffs[eqn_system, 13, :, p, ...] = temp4
 
                 eqn_system = 2 # New Feeding Standards = 2
                 if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -3839,9 +3833,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             dw_sire = temp4
                             new_sire = dw_sire
                         if eqn_compare:
-                            r_compare17_q0q2tpsire[eqn_system, 0, :, p, ...] = temp0    # temp0  using the fibre_cs values because fibre_nfs is not used
-                            r_compare17_q0q2tpsire[eqn_system, 1, :, p, ...] = temp1     # temp1  using the fibre_cs values because fibre_nfs is not used
-                            r_compare17_q0q2tpsire[eqn_system, 2, :, p, ...] = temp4      # temp4  using the fibre_cs values because fibre_nfs is not used
+                            r_compare7_q0q2tpsire[eqn_system, 11, :, p, ...] = temp0    # temp0  using the fibre_cs values because fibre_nfs is not used
+                            r_compare7_q0q2tpsire[eqn_system, 12, :, p, ...] = temp1     # temp1  using the fibre_cs values because fibre_nfs is not used
+                            r_compare7_q0q2tpsire[eqn_system, 13, :, p, ...] = temp4      # temp4  using the fibre_cs values because fibre_nfs is not used
 
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
@@ -3862,9 +3856,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             dw_dams = temp4
                             new_dams = dw_dams
                         if eqn_compare:
-                            r_compare17_q0q2tpdams[eqn_system, 0, :, p, ...] = temp0    # temp0  using the fibre_cs values because fibre_nfs is not used
-                            r_compare17_q0q2tpdams[eqn_system, 1, :, p, ...] = temp1     # temp1  using the fibre_cs values because fibre_nfs is not used
-                            r_compare17_q0q2tpdams[eqn_system, 2, :, p, ...] = temp4      # temp4  using the fibre_cs values because fibre_nfs is not used
+                            r_compare7_q0q2tpdams[eqn_system, 11, :, p, ...] = temp0    # temp0  using the fibre_cs values because fibre_nfs is not used
+                            r_compare7_q0q2tpdams[eqn_system, 12, :, p, ...] = temp1     # temp1  using the fibre_cs values because fibre_nfs is not used
+                            r_compare7_q0q2tpdams[eqn_system, 13, :, p, ...] = temp4      # temp4  using the fibre_cs values because fibre_nfs is not used
 
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
@@ -3883,9 +3877,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             dw_offs = temp4
                             new_offs = dw_offs
                         if eqn_compare:
-                            r_compare17_q0q2tpoffs[eqn_system, 0, :, p, ...] = temp0    # temp0  using the fibre_cs values because fibre_nfs is not used
-                            r_compare17_q0q2tpoffs[eqn_system, 1, :, p, ...] = temp1     # temp1  using the fibre_cs values because fibre_nfs is not used
-                            r_compare17_q0q2tpoffs[eqn_system, 2, :, p, ...] = temp4      # temp4  using the fibre_cs values because fibre_nfs is not used
+                            r_compare7_q0q2tpoffs[eqn_system, 11, :, p, ...] = temp0    # temp0  using the fibre_cs values because fibre_nfs is not used
+                            r_compare7_q0q2tpoffs[eqn_system, 12, :, p, ...] = temp1     # temp1  using the fibre_cs values because fibre_nfs is not used
+                            r_compare7_q0q2tpoffs[eqn_system, 13, :, p, ...] = temp4      # temp4  using the fibre_cs values because fibre_nfs is not used
 
 
                 ##total heat production (excluding chill) & energy to offset chilling
@@ -4140,7 +4134,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             kg_sire = temp8
                             mem_sire = temp9   # will overwrite mem calculated using CS equations if using this system
                         if eqn_compare:
-                            r_compare7_q0q2tpsire[eqn_system, 0, :, p, ...] = temp9
+                            # r_compare7_q0q2tpsire[eqn_system, 0, :, p, ...] = temp9  Storing meme cs equivalent
                             r_compare7_q0q2tpsire[eqn_system, 1, :, p, ...] = temp6
                             r_compare7_q0q2tpsire[eqn_system, 2, :, p, ...] = temp8
                             r_compare7_q0q2tpsire[eqn_system, 3, :, p, ...] = temp2
@@ -4179,6 +4173,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             surplus_energy_dams = temp7
                             kg_dams = temp8
                             mem_dams = temp9   # will overwrite mem calculated using CS equations if using this system
+                        if eqn_compare:
+                            # r_compare7_q0q2tpdams[eqn_system, 0, :, p, ...] = temp9  Storing meme cs equivalent
+                            r_compare7_q0q2tpdams[eqn_system, 1, :, p, ...] = temp6
+                            r_compare7_q0q2tpdams[eqn_system, 2, :, p, ...] = temp8
+                            r_compare7_q0q2tpdams[eqn_system, 3, :, p, ...] = temp2
+                            r_compare7_q0q2tpdams[eqn_system, 4, :, p, ...] = temp3
+                            r_compare7_q0q2tpdams[eqn_system, 5, :, p, ...] = temp4
+                            r_compare7_q0q2tpdams[eqn_system, 6, :, p, ...] = temp0
                         temp0 = sfun.f1_level_nfs(mei_dams, hp_maint_nfs_dams)
                         if eqn_used:
                             level_dams = temp0
@@ -4211,7 +4213,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             kg_offs = temp8
                             mem_offs = temp9   # will overwrite mem calculated using CS equations if using this system
                         if eqn_compare:
-                            r_compare7_q0q2tpoffs[eqn_system, 0, :, p, ...] = temp9
+                            # r_compare7_q0q2tpoffs[eqn_system, 0, :, p, ...] = temp9  Storing meme cs equivalent
                             r_compare7_q0q2tpoffs[eqn_system, 1, :, p, ...] = temp6
                             r_compare7_q0q2tpoffs[eqn_system, 2, :, p, ...] = temp8
                             r_compare7_q0q2tpoffs[eqn_system, 3, :, p, ...] = temp2
@@ -4252,7 +4254,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             kg_sire = temp8
                             mem_sire = temp9   # will overwrite mem calculated using CS equations if using this system
                         if eqn_compare:
-                            r_compare7_q0q2tpsire[eqn_system, 0, :, p, ...] = temp9
+                            # r_compare7_q0q2tpsire[eqn_system, 0, :, p, ...] = temp9  Storing meme cs equivalent
                             r_compare7_q0q2tpsire[eqn_system, 1, :, p, ...] = temp6
                             r_compare7_q0q2tpsire[eqn_system, 2, :, p, ...] = temp8
                             r_compare7_q0q2tpsire[eqn_system, 3, :, p, ...] = temp2
@@ -4293,7 +4295,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             kg_dams = temp8
                             mem_dams = temp9   # will overwrite mem calculated using CS equations if using this system
                         if eqn_compare:
-                            r_compare7_q0q2tpdams[eqn_system, 0, :, p, ...] = temp9
+                            # r_compare7_q0q2tpdams[eqn_system, 0, :, p, ...] = temp9  Storing meme cs equivalent
                             r_compare7_q0q2tpdams[eqn_system, 1, :, p, ...] = temp6
                             r_compare7_q0q2tpdams[eqn_system, 2, :, p, ...] = temp8
                             r_compare7_q0q2tpdams[eqn_system, 3, :, p, ...] = temp2
@@ -4333,7 +4335,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             kg_offs = temp8
                             mem_offs = temp9   # will overwrite mem calculated using CS equations if using this system
                         if eqn_compare:
-                            r_compare7_q0q2tpoffs[eqn_system, 0, :, p, ...] = temp9
+                            # r_compare7_q0q2tpoffs[eqn_system, 0, :, p, ...] = temp9  Storing meme cs equivalent
                             r_compare7_q0q2tpoffs[eqn_system, 1, :, p, ...] = temp6
                             r_compare7_q0q2tpoffs[eqn_system, 2, :, p, ...] = temp8
                             r_compare7_q0q2tpoffs[eqn_system, 3, :, p, ...] = temp2
@@ -4734,9 +4736,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         new_yatf = temp4
                         dw_yatf = new_yatf
                     if eqn_compare:
-                        r_compare17_q0q2tpyatf[eqn_system, 0, :, p, ...] = temp0
-                        r_compare17_q0q2tpyatf[eqn_system, 1, :, p, ...] = temp1
-                        r_compare17_q0q2tpyatf[eqn_system, 2, :, p, ...] = temp5
+                        r_compare7_q0q2tpyatf[eqn_system, 11, :, p, ...] = temp0
+                        r_compare7_q0q2tpyatf[eqn_system, 12, :, p, ...] = temp1
+                        r_compare7_q0q2tpyatf[eqn_system, 13, :, p, ...] = temp4
 
             eqn_system = 1  # MU = 1
             if uinp.sheep['i_eqn_exists_q0q1'][
@@ -4759,9 +4761,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         new_yatf = temp4
                         dw_yatf = new_yatf
                     if eqn_compare:
-                        r_compare17_q0q2tpyatf[eqn_system, 0, :, p, ...] = temp0
-                        r_compare17_q0q2tpyatf[eqn_system, 1, :, p, ...] = temp1
-                        r_compare17_q0q2tpyatf[eqn_system, 2, :, p, ...] = temp5
+                        r_compare7_q0q2tpyatf[eqn_system, 11, :, p, ...] = temp0
+                        r_compare7_q0q2tpyatf[eqn_system, 12, :, p, ...] = temp1
+                        r_compare7_q0q2tpyatf[eqn_system, 13, :, p, ...] = temp4
 
             eqn_system = 2  # New Feeding Standards = 2
             if uinp.sheep['i_eqn_exists_q0q1'][
@@ -4784,9 +4786,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         dw_yatf = temp4
                         new_yatf = dw_yatf
                     if eqn_compare:
-                        r_compare17_q0q2tpyatf[eqn_system, 0, :, p, ...] = temp0
-                        r_compare17_q0q2tpyatf[eqn_system, 1, :, p, ...] = temp1
-                        r_compare17_q0q2tpyatf[eqn_system, 2, :, p, ...] = temp4
+                        r_compare7_q0q2tpyatf[eqn_system, 11, :, p, ...] = temp0
+                        r_compare7_q0q2tpyatf[eqn_system, 12, :, p, ...] = temp1
+                        r_compare7_q0q2tpyatf[eqn_system, 13, :, p, ...] = temp4
 
 
             ##total heat production (excluding chill) & energy to offset chilling - yatf
@@ -4893,7 +4895,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         kg_yatf = temp8
                         mem_yatf = temp9
                     if eqn_compare:
-                        r_compare7_q0q2tpyatf[eqn_system, 0, :, p, ...] = temp9
+                        # r_compare7_q0q2tpyatf[eqn_system, 0, :, p, ...] = temp9  Storing meme cs equivalent
                         r_compare7_q0q2tpyatf[eqn_system, 1, :, p, ...] = temp6
                         r_compare7_q0q2tpyatf[eqn_system, 2, :, p, ...] = temp8
                         r_compare7_q0q2tpyatf[eqn_system, 3, :, p, ...] = temp2
@@ -4933,7 +4935,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         kg_yatf = temp8
                         mem_yatf = temp9
                     if eqn_compare:
-                        r_compare7_q0q2tpyatf[eqn_system, 0, :, p, ...] = temp9
+                        # r_compare7_q0q2tpyatf[eqn_system, 0, :, p, ...] = temp9  Storing meme cs equivalent
                         r_compare7_q0q2tpyatf[eqn_system, 1, :, p, ...] = temp6
                         r_compare7_q0q2tpyatf[eqn_system, 2, :, p, ...] = temp8
                         r_compare7_q0q2tpyatf[eqn_system, 3, :, p, ...] = temp2
@@ -11293,11 +11295,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         sheetname7_4 = 'dmuscle'
         sheetname7_5 = 'dviscera'
         sheetname7_6 = 'ebg'
-        sheetname9_1 = 'dc'
-        sheetname9_2 = 'hp_dc'
-        sheetname17_2 = 'dw'
-        sheetname18_1 = 'dl'
-        sheetname18_2 = 'hp_dl'
+        sheetname7_7 = 'wf'
+        sheetname7_8 = 'dc'
+        sheetname7_9 = 'mp2'
+        sheetname7_10 = 'dl'
+        sheetname7_13 = 'dw'
         sheetnameA = 'mei'
         sheetnameB = 'md'
         sheetnameC = 'fv'
@@ -11348,21 +11350,21 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             array7_6a = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             array7_6b = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             array7_6c = r_compare7_q0q2tpdams[:, 6, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array9_1a = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array9_1b = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array9_1c = r_compare9_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array9_2a = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array9_2b = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array9_2c = r_compare9_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array17_2a = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array17_2b = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array17_2c = r_compare17_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array18_1a = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array18_1b = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array18_1c = r_compare18_q0q2tpdams[:, 1, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array18_2a = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array18_2b = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            array18_2c = r_compare18_q0q2tpdams[:, 2, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_7a = r_compare7_q0q2tpdams[:, 7, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_7b = r_compare7_q0q2tpdams[:, 7, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_7c = r_compare7_q0q2tpdams[:, 7, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_8a = r_compare7_q0q2tpdams[:, 8, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_8b = r_compare7_q0q2tpdams[:, 8, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_8c = r_compare7_q0q2tpdams[:, 8, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_9a = r_compare7_q0q2tpdams[:, 9, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_9b = r_compare7_q0q2tpdams[:, 9, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_9c = r_compare7_q0q2tpdams[:, 9, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_10a = r_compare7_q0q2tpdams[:, 10, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_10b = r_compare7_q0q2tpdams[:, 10, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_10c = r_compare7_q0q2tpdams[:, 10, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_13a = r_compare7_q0q2tpdams[:, 13, 2, :, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_13b = r_compare7_q0q2tpdams[:, 13, 2, :, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            array7_13c = r_compare7_q0q2tpdams[:, 13, 2, :, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             arrayA = o_mei_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
             arrayB = r_md_solid_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
             arrayC = nv_tpdams[2, :, 0, 0, 1:4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].T   # b1 axis (dry, single & twin) used in place of q0
@@ -11385,9 +11387,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             array_calc7_5b = sfun.f1_weight_energy_conversion(cg_dams, 2, weight=array7_5b)
             array_calc7_5c = sfun.f1_weight_energy_conversion(cg_dams, 2, weight=array7_5c)
             ###retained energy = df + dm + dv + dc + dw + dl
-            array_calc7_6a = array_calc7_3a + array_calc7_4a + array_calc7_5a + array9_1a + array17_2a + array18_1a
-            array_calc7_6b = array_calc7_3b + array_calc7_4b + array_calc7_5b + array9_1b + array17_2b + array18_1b
-            array_calc7_6c = array_calc7_3c + array_calc7_4c + array_calc7_5c + array9_1c + array17_2c + array18_1c
+            array_calc7_6a = array_calc7_3a + array_calc7_4a + array_calc7_5a + array7_8a + array7_10a + array7_13a
+            array_calc7_6b = array_calc7_3b + array_calc7_4b + array_calc7_5b + array7_8b + array7_10b + array7_13b
+            array_calc7_6c = array_calc7_3c + array_calc7_4c + array_calc7_5c + array7_8c + array7_10c + array7_13c
             array_calcF = sfun.f1_weight_energy_conversion(cg_dams, 0, weight=arrayF)
             array_calcG = sfun.f1_weight_energy_conversion(cg_dams, 1, weight=arrayG)
             array_calcH = sfun.f1_weight_energy_conversion(cg_dams, 2, weight=arrayH)
@@ -11414,21 +11416,21 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             # array7_6a = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
             # array7_6b = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
             # array7_6c = r_compare7_q0q2tpoffs[:, 6, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array9_1a = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array9_1b = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array9_1c = r_compare9_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array9_2a = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array9_2b = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array9_2c = r_compare9_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array17_2a = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array17_2b = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array17_2c = r_compare17_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array18_1a = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array18_1b = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array18_1c = r_compare18_q0q2tpoffs[:, 1, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
-            # array18_2a = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-            # array18_2b = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
-            # array18_2c = r_compare18_q0q2tpoffs[:, 2, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_7a = r_compare9_q0q2tpoffs[:, 7, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_7b = r_compare9_q0q2tpoffs[:, 7, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_7c = r_compare9_q0q2tpoffs[:, 7, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_8a = r_compare9_q0q2tpoffs[:, 8, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_8b = r_compare9_q0q2tpoffs[:, 8, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_8c = r_compare9_q0q2tpoffs[:, 8, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_9a = r_compare17_q0q2tpoffs[:, 9, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_9b = r_compare17_q0q2tpoffs[:, 9, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_9c = r_compare17_q0q2tpoffs[:, 9, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_10a = r_compare18_q0q2tpoffs[:, 10, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_10b = r_compare18_q0q2tpoffs[:, 10, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_10c = r_compare18_q0q2tpoffs[:, 10, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
+            # array7_13a = r_compare18_q0q2tpoffs[:, 13, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+            # array7_13b = r_compare18_q0q2tpoffs[:, 13, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+            # array7_13c = r_compare18_q0q2tpoffs[:, 13, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0]
             # arrayA = o_mei_solid_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
             # arrayB = r_md_solid_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
             # arrayC = nv_tpoffs[0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0:3, 1, 0, 0].T   # b1 axis (single, twin & triplet) used in place of q0
@@ -11451,9 +11453,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             # array_calc7_5b = sfun.f1_weight_energy_conversion(cg_offs, 2, weight=array7_5b)
             # array_calc7_5c = sfun.f1_weight_energy_conversion(cg_offs, 2, weight=array7_5c)
             # ###retained energy = df + dm + dv + dc + dw + dl
-            # array_calc7_6a = array_calc7_3a + array_calc7_4a + array_calc7_5a + array9_1a + array17_2a + array18_1a
-            # array_calc7_6b = array_calc7_3b + array_calc7_4b + array_calc7_5b + array9_1b + array17_2b + array18_1b
-            # array_calc7_6c = array_calc7_3c + array_calc7_4c + array_calc7_5c + array9_1c + array17_2c + array18_1c
+            # array_calc7_6a = array_calc7_3a + array_calc7_4a + array_calc7_5a + array7_8a + array7_10a + array7_13a
+            # array_calc7_6b = array_calc7_3b + array_calc7_4b + array_calc7_5b + array7_8b + array7_10b + array7_13b
+            # array_calc7_6c = array_calc7_3c + array_calc7_4c + array_calc7_5c + array7_8c + array7_10c + array7_13c
             # array_calcF = sfun.f1_weight_energy_conversion(cg_offs, 0, weight=arrayF)
             # array_calcG = sfun.f1_weight_energy_conversion(cg_offs, 1, weight=arrayG)
             # array_calcH = sfun.f1_weight_energy_conversion(cg_offs, 2, weight=arrayH)
@@ -11484,21 +11486,21 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             df7_6a = rfun.f_numpy2df(array7_6a, keys_q0p, [1], [0])
             df7_6b = rfun.f_numpy2df(array7_6b, keys_q0p, [1], [0])
             df7_6c = rfun.f_numpy2df(array7_6c, keys_q0p, [1], [0])
-            df9_1a = rfun.f_numpy2df(array9_1a, keys_q0p, [1], [0])
-            df9_1b = rfun.f_numpy2df(array9_1b, keys_q0p, [1], [0])
-            df9_1c = rfun.f_numpy2df(array9_1c, keys_q0p, [1], [0])
-            df9_2a = rfun.f_numpy2df(array9_2a, keys_q0p, [1], [0])
-            df9_2b = rfun.f_numpy2df(array9_2b, keys_q0p, [1], [0])
-            df9_2c = rfun.f_numpy2df(array9_2c, keys_q0p, [1], [0])
-            df17_2a = rfun.f_numpy2df(array17_2a, keys_q0p, [1], [0])
-            df17_2b = rfun.f_numpy2df(array17_2b, keys_q0p, [1], [0])
-            df17_2c = rfun.f_numpy2df(array17_2c, keys_q0p, [1], [0])
-            df18_1a = rfun.f_numpy2df(array18_1a, keys_q0p, [1], [0])
-            df18_1b = rfun.f_numpy2df(array18_1b, keys_q0p, [1], [0])
-            df18_1c = rfun.f_numpy2df(array18_1c, keys_q0p, [1], [0])
-            df18_2a = rfun.f_numpy2df(array18_2a, keys_q0p, [1], [0])
-            df18_2b = rfun.f_numpy2df(array18_2b, keys_q0p, [1], [0])
-            df18_2c = rfun.f_numpy2df(array18_2c, keys_q0p, [1], [0])
+            df7_7a = rfun.f_numpy2df(array7_7a, keys_q0p, [1], [0])
+            df7_7b = rfun.f_numpy2df(array7_7b, keys_q0p, [1], [0])
+            df7_7c = rfun.f_numpy2df(array7_7c, keys_q0p, [1], [0])
+            df7_8a = rfun.f_numpy2df(array7_8a, keys_q0p, [1], [0])
+            df7_8b = rfun.f_numpy2df(array7_8b, keys_q0p, [1], [0])
+            df7_8c = rfun.f_numpy2df(array7_8c, keys_q0p, [1], [0])
+            df7_9a = rfun.f_numpy2df(array7_9a, keys_q0p, [1], [0])
+            df7_9b = rfun.f_numpy2df(array7_9b, keys_q0p, [1], [0])
+            df7_9c = rfun.f_numpy2df(array7_9c, keys_q0p, [1], [0])
+            df7_10a = rfun.f_numpy2df(array7_10a, keys_q0p, [1], [0])
+            df7_10b = rfun.f_numpy2df(array7_10b, keys_q0p, [1], [0])
+            df7_10c = rfun.f_numpy2df(array7_10c, keys_q0p, [1], [0])
+            df7_13a = rfun.f_numpy2df(array7_13a, keys_q0p, [1], [0])
+            df7_13b = rfun.f_numpy2df(array7_13b, keys_q0p, [1], [0])
+            df7_13c = rfun.f_numpy2df(array7_13c, keys_q0p, [1], [0])
             dfA = rfun.f_numpy2df(arrayA, keys_bp, [1], [0])
             dfB = rfun.f_numpy2df(arrayB, keys_bp, [1], [0])
             dfC = rfun.f_numpy2df(arrayC, keys_bp, [1], [0])
@@ -11548,21 +11550,21 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             # df7_6a = rfun.f_numpy2df(array7_6a, keys_q0p3, [1], [0])
             # df7_6b = rfun.f_numpy2df(array7_6b, keys_q0p3, [1], [0])
             # df7_6c = rfun.f_numpy2df(array7_6c, keys_q0p3, [1], [0])
-            # df9_1a = rfun.f_numpy2df(array9_1a, keys_q0p3, [1], [0])
-            # df9_1b = rfun.f_numpy2df(array9_1b, keys_q0p3, [1], [0])
-            # df9_1c = rfun.f_numpy2df(array9_1c, keys_q0p3, [1], [0])
-            # df9_2a = rfun.f_numpy2df(array9_2a, keys_q0p3, [1], [0])
-            # df9_2b = rfun.f_numpy2df(array9_2b, keys_q0p3, [1], [0])
-            # df9_2c = rfun.f_numpy2df(array9_2c, keys_q0p3, [1], [0])
-            # df17_2a = rfun.f_numpy2df(array17_2a, keys_q0p3, [1], [0])
-            # df17_2b = rfun.f_numpy2df(array17_2b, keys_q0p3, [1], [0])
-            # df17_2c = rfun.f_numpy2df(array17_2c, keys_q0p3, [1], [0])
-            # df18_1a = rfun.f_numpy2df(array18_1a, keys_q0p3, [1], [0])
-            # df18_1b = rfun.f_numpy2df(array18_1b, keys_q0p3, [1], [0])
-            # df18_1c = rfun.f_numpy2df(array18_1c, keys_q0p3, [1], [0])
-            # df18_2a = rfun.f_numpy2df(array18_2a, keys_q0p3, [1], [0])
-            # df18_2b = rfun.f_numpy2df(array18_2b, keys_q0p3, [1], [0])
-            # df18_2c = rfun.f_numpy2df(array18_2c, keys_q0p3, [1], [0])
+            # df7_7a = rfun.f_numpy2df(array7_7a, keys_q0p3, [1], [0])
+            # df7_7b = rfun.f_numpy2df(array7_7b, keys_q0p3, [1], [0])
+            # df7_7c = rfun.f_numpy2df(array7_7c, keys_q0p3, [1], [0])
+            # df7_8a = rfun.f_numpy2df(array7_8a, keys_q0p3, [1], [0])
+            # df7_8b = rfun.f_numpy2df(array7_8b, keys_q0p3, [1], [0])
+            # df7_8c = rfun.f_numpy2df(array7_8c, keys_q0p3, [1], [0])
+            # df7_9a = rfun.f_numpy2df(array7_9a, keys_q0p3, [1], [0])
+            # df7_9b = rfun.f_numpy2df(array7_9b, keys_q0p3, [1], [0])
+            # df7_9c = rfun.f_numpy2df(array7_9c, keys_q0p3, [1], [0])
+            # df7_10a = rfun.f_numpy2df(array7_10a, keys_q0p3, [1], [0])
+            # df7_10b = rfun.f_numpy2df(array7_10b, keys_q0p3, [1], [0])
+            # df7_10c = rfun.f_numpy2df(array7_10c, keys_q0p3, [1], [0])
+            # df7_13a = rfun.f_numpy2df(array7_13a, keys_q0p3, [1], [0])
+            # df7_13b = rfun.f_numpy2df(array7_13b, keys_q0p3, [1], [0])
+            # df7_13c = rfun.f_numpy2df(array7_13c, keys_q0p3, [1], [0])
             # dfA = rfun.f_numpy2df(arrayA, keys_bp3, [1], [0])
             # dfB = rfun.f_numpy2df(arrayB, keys_bp3, [1], [0])
             # dfC = rfun.f_numpy2df(arrayC, keys_bp3, [1], [0])
@@ -11641,21 +11643,21 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             df_calc7_6a.to_excel(writer, sheetname_calc7_6, index=True,startcol=col_a)
             df_calc7_6b.to_excel(writer, sheetname_calc7_6, index=False,startcol=col_b)
             df_calc7_6c.to_excel(writer, sheetname_calc7_6, index=False,startcol=col_c)
-            df9_1a.to_excel(writer, sheetname9_1, index=True,startcol=col_a)
-            df9_1b.to_excel(writer, sheetname9_1, index=False,startcol=col_b)
-            df9_1c.to_excel(writer, sheetname9_1, index=False,startcol=col_c)
-            df9_2a.to_excel(writer, sheetname9_2, index=True,startcol=col_a)
-            df9_2b.to_excel(writer, sheetname9_2, index=False,startcol=col_b)
-            df9_2c.to_excel(writer, sheetname9_2, index=False,startcol=col_c)
-            df17_2a.to_excel(writer, sheetname17_2, index=True,startcol=col_a)
-            df17_2b.to_excel(writer, sheetname17_2, index=False,startcol=col_b)
-            df17_2c.to_excel(writer, sheetname17_2, index=False,startcol=col_c)
-            df18_1a.to_excel(writer, sheetname18_1, index=True,startcol=col_a)
-            df18_1b.to_excel(writer, sheetname18_1, index=False,startcol=col_b)
-            df18_1c.to_excel(writer, sheetname18_1, index=False,startcol=col_c)
-            df18_2a.to_excel(writer, sheetname18_2, index=True,startcol=col_a)
-            df18_2b.to_excel(writer, sheetname18_2, index=False,startcol=col_b)
-            df18_2c.to_excel(writer, sheetname18_2, index=False,startcol=col_c)
+            df7_7a.to_excel(writer, sheetname7_7, index=True,startcol=col_a)
+            df7_7b.to_excel(writer, sheetname7_7, index=False,startcol=col_b)
+            df7_7c.to_excel(writer, sheetname7_7, index=False,startcol=col_c)
+            df7_8a.to_excel(writer, sheetname7_8, index=True,startcol=col_a)
+            df7_8b.to_excel(writer, sheetname7_8, index=False,startcol=col_b)
+            df7_8c.to_excel(writer, sheetname7_8, index=False,startcol=col_c)
+            df7_9a.to_excel(writer, sheetname7_9, index=True,startcol=col_a)
+            df7_9b.to_excel(writer, sheetname7_9, index=False,startcol=col_b)
+            df7_9c.to_excel(writer, sheetname7_9, index=False,startcol=col_c)
+            df7_10a.to_excel(writer, sheetname7_10, index=True,startcol=col_a)
+            df7_10b.to_excel(writer, sheetname7_10, index=False,startcol=col_b)
+            df7_10c.to_excel(writer, sheetname7_10, index=False,startcol=col_c)
+            df7_13a.to_excel(writer, sheetname7_13, index=True,startcol=col_a)
+            df7_13b.to_excel(writer, sheetname7_13, index=False,startcol=col_b)
+            df7_13c.to_excel(writer, sheetname7_13, index=False,startcol=col_c)
             dfA.to_excel(writer, sheetnameA, index=True)
             dfB.to_excel(writer, sheetnameB, index=True)
             dfC.to_excel(writer, sheetnameC, index=True)
