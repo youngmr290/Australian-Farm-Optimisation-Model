@@ -227,6 +227,7 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_cl0_c2'] = fun.f_sa(parameters['i_cl0_c2'].astype(float), sen.sav['cl0_c2'], 5) #genotype litter size params
     ###SAM - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_ci_c2'] = fun.f_sa(parameters['i_ci_c2'].astype(float),sen.sam['ci_c2'])
+    parameters['i_cl_c2'] = fun.f_sa(parameters['i_cl_c2'].astype(float),sen.sam['cl_c1c2'])
     parameters['i_cm_c2'] = fun.f_sa(parameters['i_cm_c2'].astype(float),sen.sam['cm_c2'])
     parameters['i_sfw_c2'] = fun.f_sa(parameters['i_sfw_c2'].astype(float),sen.sam['sfw_c2'])
     parameters['i_muscle_target_c2'] = fun.f_sa(parameters['i_muscle_target_c2'].astype(float), sen.sam['muscle_target_c2'])
