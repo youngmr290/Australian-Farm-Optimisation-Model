@@ -1003,13 +1003,13 @@ def f_energy_cs(cx, cm, lw, ffcfw, mr_age, mei, km, i_steepness, density, foo, c
     omer = cm[1, ...] * mei
     ##ME requirement for maintenance (before ECold)
     meme = ((emetab + egraze) / km + omer) * sam_mr
-    ##Calculate hp_maint for comparison with the new feeding standards which include HP for MEI above maintenance
-    ### the heat associated with feeding is the proportion that is not available for maintenance
-    bmei = 1 - km
-    ### HAF for the CFS is for energy intake surplus to maintenance
-    hp_mei = bmei * (mei - meme)
-    hp_maint = meme + hp_mei
-    return meme, hp_maint
+    # ##Calculate hp_maint for comparison with the new feeding standards which include HP for MEI above maintenance
+    # ### the heat associated with feeding is the proportion that is not available for maintenance
+    # bmei = 1 - km
+    # ### HAF for the CFS is for energy intake surplus to maintenance
+    # hp_mei = bmei * mei
+    # hp_maint = emetab + egraze + omer + hp_mei
+    return meme
 
 
 def f_energy_mu(cx, cm, lw, lean, mr_age, mei, km, i_steepness, density, foo, confinement, intake_f, dmd
