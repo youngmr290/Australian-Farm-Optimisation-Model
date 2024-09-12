@@ -832,26 +832,28 @@ def f_intake(pi, ri, md_herb, confinement, intake_s, i_md_supp, mp2=0):
     return mei, mei_solid, intake_f, md_solid, mei_propn_milk, mei_propn_herb, mei_propn_supp
 
 
-def f1_efficiency_cs(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, mei_propn_milk=0, sam_kg=1):
+def f1_km(ck, md_solid, mei_propn_milk=0):
     ##Energy required for maintenance and efficiency of energy use for maintenance & growth
     ###Efficiency for maintenance (note: Blaxter & Boyne showed that km fits better if the coefficients vary with feed type)
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
+    return km
+
+
+def f1_efficiency_cs(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, sam_kg=1):
+    ##Efficiency of energy use for lactation & growth
     ###Efficiency for lactation - dam only
     kl =  ck[5, ...] + ck[6, ...] * md_solid
     ###Efficiency for growth (supplement) including the sensitivity scalar
     kg_supp = ck[16, ...] * i_md_supp * sam_kg
     ###Efficiency for growth (fodder) including the sensitivity scalar
     kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb * sam_kg
-    return km, kg_fodd, kg_supp, kl
+    return kg_fodd, kg_supp, kl
 
 
-def f1_efficiency_mu(ck, md_solid, mei_propn_milk=0):
-    ##Energy required for maintenance and efficiency of energy use for maintenance & growth
-    ###Efficiency for maintenance (note: Blaxter & Boyne showed that km fits better if the coefficients vary with feed type)
-    km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
-    ###Efficiency for lactation - dam only
+def f1_efficiency_mu(ck, md_solid):
+    ##Efficiency of energy use for lactation (differs from cs version by excluding heat associated with feeding)
     kl =  ck[29, ...] + ck[30, ...] * md_solid
-    return km, kl
+    return kl
 
 
 def f1_weight_energy_conversion(cg, option, weight=None, energy=None):
