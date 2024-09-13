@@ -1543,7 +1543,7 @@ def f_insulation(cc, ffcfw_start, rc_start, sl_start, ws, rain_p1, index_m0):
     ##Insulation of air (2 hourly)
     in_air_m0 = radius[..., na] / (radius[..., na] + sl_start[..., na]) / (cc[7, ..., na] + cc[8, ..., na] * np.sqrt(wind_m0))
     ##Insulation of coat (2 hourly)
-    in_coat_m0 = radius[..., na] * np.log((radius[..., na] + sl_start[..., na]) / radius[..., na]) / (cc[9, ..., na] - cc[10, ..., na] * np.sqrt(wind_m0))
+    in_coat_m0 = radius[..., na] * np.log((radius[..., na] + sl_start[..., na]) / radius[..., na]) * (cc[9, ..., na] - cc[10, ..., na] * np.sqrt(wind_m0))
     ##Insulation of  air + coat (2 hourly)
     in_ext_m0p1 = wetflc_p1[..., na, :] * (in_air_m0[..., na] + in_coat_m0[..., na])
     return in_tissue, in_ext_m0p1
