@@ -1687,11 +1687,12 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, neme, km, hp_mei, new, kw, zf1, zf2,
     mel = nel / kl
     mew = new / kw
     ##Energy intake that is surplus to maintaining maternal body energy. Surplus is available for maternal body gain
-    surplus_energy = mei_initial - (neme + hp_mei + mec * gest_propn + mel * lact_propn + mew)
+    maintenance  = neme + hp_mei + mec * gest_propn + mel * lact_propn + mew
+    surplus_energy = mei_initial - maintenance
     below_maintenance = surplus_energy < 0
     ##Level of feeding relative to level that would maintain maternal body tissue (maint = 0)
     ### Note: level is calculated elsewhere (differently) for use in Blaxter & Clapperton equations
-    level = mei_initial / (mei_initial - surplus_energy) - 1
+    level = mei_initial / maintenance - 1
     ##Energy Value of gain as calculated.
     cg8 = f1_rev_sa(cg[8, ...], sen.saa['rev_evg'], age, sa_type=2)
     cg9 = f1_rev_sa(cg[9, ...], sen.saa['rev_evg'], age, sa_type=2)
@@ -1706,16 +1707,14 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, neme, km, hp_mei, new, kw, zf1, zf2,
     fat_propn = f1_weight_energy_conversion(cg, 0, weight=adipose_propn) / evg
     ## efficiency of surplus energy conversion to retained energy.
     kg, kf, kp = f1_kg_mu(ck, below_maintenance, fat_propn, mei_propn_milk, sam_kg)
-    ##Change in wholebody energy (based on ME) Note: will be negative if losing weight
-    wbec = kg * surplus_energy
+    ##Change in wholebody energy (based on ME) excluding chill. Note: will be negative if losing weight
+    wbece = kg * surplus_energy
     ##Calculate the chill increment if heat_loss is greater than heat production
-    retained_energy = wbec + new + gest_propn * nec + lact_propn * nel
+    retained_energy = wbece + new + gest_propn * nec + lact_propn * nel
     hp_total = mei_initial - retained_energy
     chill_increment = np.average(np.maximum(0, heat_loss_m0p1 - hp_total[..., na, na]), axis = (-1,-2))
-    #hp_total = hp_total + chill_increment
     ## reduce wbec to include the chill increment
-    # mem = meme + chill_increment
-    wbec = wbec - chill_increment   #the chill increment is net energy so scaling by efficiency is not required
+    wbec = wbece - chill_increment   #the chill increment is net energy so scaling by efficiency is not required
     ##Process the WBE REV: if WBE is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     ###Note: If using the wbec REV then consider the fat, muscle & viscera traits (probably exclude them i.e. REV=0)
     wbec = f1_rev_update('wbec', wbec, rev_trait_value)
@@ -1762,29 +1761,40 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, neme, km, hp_mei, new, kw, zf1, zf2,
     ###Step 10d: Update heat production associated with retained energy (metabolisable energy)
     ###Recalculate efficiency for scenarios where REV has altered if below maintenance
     wbec = nefat + nemuscle + neviscera
-    below_maintenance = wbec < 0
-    kg, kf, kp = f1_kg_mu(ck, below_maintenance, fat_propn, mei_propn_milk, sam_kg)
-    ###Calculate me for components
-    mefat = nefat / kf
-    memuscle = nemuscle / kp
-    meviscera = neviscera / kp
+    fat_propn = fun.f_divide(nefat, nefat + nemuscle + neviscera)
+    ###Incorporating chill into the back calculation is done by calculating the wbec that would have been estimated
+    ### in the forward calculation if there was no chill. This variable is called wbece and is used with kge
+    below_maintenance = (wbec + np.average(np.maximum(0,heat_loss_m0p1 - ((neme + new) / km)[..., na, na]), axis=(-1,-2))) < 0
+    kge, kfe, kpe = f1_kg_mu(ck, below_maintenance, fat_propn, mei_propn_milk, sam_kg)
+    wbece_m0p1 = fun.f_update(wbec[..., na, na], (wbec[..., na, na] + heat_loss_m0p1 - ((neme + mew) / km)[..., na, na])
+                                / (1 + 1 / (kge * km))
+                         , ((neme + mew + wbec / kge) / km)[..., na, na] < heat_loss_m0p1)
+    wbece = np.average(wbece_m0p1, axis=(-1,-2))
+    ###Calculate the components if chill wasn't included and the me for components
+    nefate = wbece * fat_propn
+    neproteine = wbece * (1 - fat_propn)
+    nemusclee = (1 - cg[38, ...]) * neproteine
+    neviscerae = cg[38, ...] * neproteine
+    mefate = nefate / kfe
+    memusclee = nemusclee / kpe
+    meviscerae = neviscerae / kpe
 
     ##Step 11: Back calculate MEI & other returned variable from the components as updated by the REVs
     ### total metabolisable energy is divided by km to account for hp_mei
-    metabolisable_energy = (neme + mefat + memuscle + meviscera + mew + gest_propn * mec + lact_propn * mel) / km
-    retained_energy = wbec + new + gest_propn * nec + lact_propn * nel
-    ### MEI is the maximum of metabolisable energy expenditure and retained energy plus heat loss (heat_loss_m0p1) to cover situations when the REVs reduce hp.
-    mei = np.average(np.maximum(metabolisable_energy[...,na, na]
-                                , retained_energy[..., na, na] + heat_loss_m0p1), axis = (-1,-2))
+    mei = (neme + mefate + memusclee + meviscerae + mew + gest_propn * mec + lact_propn * mel) / km
+    # retained_energy = wbece + new + gest_propn * nec + lact_propn * nel
+    # ### MEI is the maximum of metabolisable energy expenditure and retained energy plus heat loss (heat_loss_m0p1) to cover situations when the REVs reduce hp.
+    # mei = np.average(np.maximum(metabolisable_energy[...,na, na]
+    #                             , retained_energy[..., na, na] + heat_loss_m0p1), axis = (-1,-2))
     ###mem: maintenance energy requirement including heat associated with feeding (will be greater than CSIRO equiv mem)
-    mem = mei - (mefat + memuscle + meviscera + mew + gest_propn * mec + lact_propn * mel)
+    mem = mei - (mefate + memusclee + meviscerae + mew + gest_propn * mec + lact_propn * mel)
     ### Calculate adjustment to mei to reflect the changes made by the REVs
     mei_adjustment = mei - mei_initial
 
-    ##Step 12: ReCalculate other parameters that are returned
-    surplus_energy = mefat + memuscle + meviscera
+    ##Step 12: ReCalculate other parameters that are returned (these are based on chill excluded which is consistent with CSIRO)
+    surplus_energy = mefate + memusclee + meviscerae
     ###CSIRO equivalent kg
-    kg_cs = wbec / surplus_energy * km
+    kg_cs = wbece / surplus_energy * km
     hp_total = mei - retained_energy
 
     return ebg, evg, d_fat, d_muscle, d_viscera, mei_adjustment, hp_total, surplus_energy, kg_cs, mem
