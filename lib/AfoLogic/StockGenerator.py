@@ -10305,7 +10305,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     t_period_is_shearing_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
     future_shearing_exists_tva1e1b1nwzida0e0b0xyg3 = np.flip(np.maximum.accumulate(np.flip(t_period_is_shearing_va1e1b1nwzida0e0b0xyg3, axis=p_pos), axis=p_pos), axis=p_pos)
     ###build bnds
-    bnd_lower_offs_tsdxg3 = fun.f_sa(np.array([0],dtype=float), sen.sav['bnd_lo_offs_tsdxg3'], 5)
+    bnd_lower_offs_tsdxg3 = fun.f_sa(np.array([0],dtype=float), sen.sav['bnd_lo_offs_Tsdxg3'][0:len_t3,...], 5) #slice t because length of t axis was unknown at time of initilisation of sav (because len_t3 can be set by sav)
     bnd_lower_offs_tsa1e1b1nwzida0e0b0xyg3 = fun.f_expand(bnd_lower_offs_tsdxg3, left_pos=x_pos, right_pos=-1,
                                                           left_pos2=d_pos, right_pos2=x_pos, left_pos3=p_pos, right_pos3=d_pos,
                                                           condition=mask_d_offs, axis=d_pos, condition2=mask_x, axis2=x_pos, condition3=mask_offs_inc_g3, axis3=-1)
@@ -10321,7 +10321,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     params['p_offs_lobound'] = fun.f1_make_pyomo_dict(bnd_lower_offs_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3tvzxg3)
 
     ##upper bound offs
-    bnd_upper_offs_tsdxg3 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_offs_tsdxg3'], 5) #999999 just an arbitrary high value (can't use np.inf because it becomes nan in the following calcs)
+    bnd_upper_offs_tsdxg3 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_offs_Tsdxg3'][0:len_t3,...], 5) #slice t because length of t axis was unknown at time of initilisation of sav (because len_t3 can be set by sav). 999999 just an arbitrary high value (can't use np.inf because it becomes nan in the following calcs)
     # bnd_upper_offs_tsdxg3[bnd_upper_offs_tsdxg3==999999] = np.inf
     bnd_upper_offs_tsa1e1b1nwzida0e0b0xyg3 = fun.f_expand(bnd_upper_offs_tsdxg3, left_pos=x_pos, right_pos=-1,
                                                           left_pos2=d_pos, right_pos2=x_pos, left_pos3=p_pos, right_pos3=d_pos,

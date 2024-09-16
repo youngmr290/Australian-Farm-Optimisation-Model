@@ -58,10 +58,7 @@ def create_sa():
     len_t = len(pinp.general['pas_inc_t'])
     len_t1 = pinp.sheep['i_n_dam_sales'] + len_g0
     len_t2 = pinp.sheep['i_t2_len']
-    if sinp.structuralsa['i_offs_sale_method'] == 1:
-        len_t3 = sinp.structuralsa['i_offs_sale_opportunities_per_dvp'] + 1  # +1 for retained slice
-    else:
-        len_t3 = pinp.sheep['i_t3_len']
+    len_T3 = 15 #this can get changed with sav so enter a big number and slice in the code.
     len_P = 500  #Capital P because it is an (over) estimate to initialise the p axes that will be sliced when len_p is known.
     len_p6 = len(pinp.period['i_fp_idx'])
     len_P7 = 10 #number of season node - use a big number because len_p7 can be adjusted by SA (if using MP model)
@@ -505,9 +502,9 @@ def create_sa():
     sav['bnd_total_dams_scanned'] = '-'   #total dams scanned (summed over all dvps) - this also controls if bound is on.
     sav['bnd_propn_dam5_retained'] = '-'   #propn of 5yo dams retained - this also controls if bound is on.
     sav['bnd_lo_off_inc'] = '-'   #control if off lower bound is on.
-    sav['bnd_lo_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #min number of offs
+    sav['bnd_lo_offs_Tsdxg3'] = np.full((len_T3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #min number of offs
     sav['bnd_up_off_inc'] = '-'   #control if off upper bound is on.
-    sav['bnd_up_offs_tsdxg3'] = np.full((len_t3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #max number of offs
+    sav['bnd_up_offs_Tsdxg3'] = np.full((len_T3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #max number of offs
     sav['bnd_up_prog_tdxg2'] = np.full((len_t2,) + (len_d,) + (len_x,) + (len_g2,), '-', dtype=object)   #max number of offs
     sav['bnd_sr_Qt'] = np.full((len_Q, len_t), '-', dtype=object)   #SA to fix stocking rate
     sav['bnd_lw_change'] = '-'   #target difference in LW compared to the base w (nut 0). Used in MP model. A positive value means animals must be heavier than the base w slice at the end of the first node. A negitive value means the animals must be lighter. This bnd is only active in q[1].
