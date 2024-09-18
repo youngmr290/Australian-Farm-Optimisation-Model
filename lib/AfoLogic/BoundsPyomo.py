@@ -810,7 +810,7 @@ def f1_boundarypyomo_local(params, model):
 
 
         if emissions_bnd_inc:
-            def emissions(model):
+            def emissions(model,q,s):
                 '''
                 Constrains total farm co2e emissions.
 
@@ -824,7 +824,6 @@ def f1_boundarypyomo_local(params, model):
                                      + paspy.f_pas_emissions(model,q,s,p6,z))*model.p_a_p6_p7[p7,p6,z] for p6 in model.s_feed_periods)
                                 + stkpy.f_stock_emissions(model,q,s,p7,z) + stubpy.f_cropresidue_production_emissions(model,q,s,p7,z)
                                 + phspy.f_rot_emissions(model, q, s, p7, z) + macpy.f_seeding_harv_fuel_emissions(model, q, s, p7, z)) * model.p_season_seq_prob_qszp7[q,s,z,p7]
-                                for q in model.s_sequence_year for s in model.s_sequence
                                 for z in model.s_season_types for p7 in model.s_season_periods if pe.value(model.p_season_seq_prob_qszp7[q,s,z,p7]) != 0) <= uinp.emissions['co2e_limit']
                 else:
                     return pe.Constraint.Skip
