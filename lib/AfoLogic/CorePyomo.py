@@ -154,7 +154,7 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output, lp_vars):
         p7_end = list(model.s_season_periods)[-1]
         utility = pe.value(model.utility)
         profit = pe.value(sum((model.v_terminal_wealth[q,s,z,c1] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z])
-                                       * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
+                                       * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1] * model.p_discount_factor_q[q]
                                        for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1
                                        for z in model.s_season_types if pe.value(model.p_wyear_inc_qs[q,s])))
     except ValueError:
@@ -937,7 +937,7 @@ def f_objective(model):
 
     ##objective function (maximise utility)
     return sum(sum(model.v_utility_points[q,s,z,c1,u] * model.p_utility[u] for u in model.s_utility_points)
-               * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
+               * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1] * model.p_discount_factor_q[q]
                for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types
                if pe.value(model.p_wyear_inc_qs[q,s]))
 
@@ -1155,5 +1155,5 @@ def f_con_MP(model, lp_vars):
     #                          pw_repn='CC')
     #
     # ##objective function (maximise utility)
-    # return sum(model.v_utility[q,s,z,c1] * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
+    # return sum(model.v_utility[q,s,z,c1] * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1] * model.p_discount_factor_q[q]
     #            for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.

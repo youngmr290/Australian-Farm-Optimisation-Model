@@ -3,6 +3,7 @@ import numpy as np
 
 ##import AFO module
 from . import PropertyInputs as pinp
+from . import UniversalInputs as uinp
 from . import StructuralInputs as sinp
 from . import Functions as fun
 from . import SeasonalFunctions as zfun
@@ -98,6 +99,25 @@ def f_season_precalcs(params, r_vals):
     p_wyear_inc_qs = mask_s8vars_qs8  # todo work needed to allow masking ‘sequence of interest’ (which requires a z8 axis).
     p_season_prob_qsz = season_seq_prob_qsz / len_q # Divide by len_q so that the objective value is $/yr rather than $/sequence
 
+    ##alter the probability to represent a 10yr planning horizon and add discount it to count for time value of money
+    ## dont need to adjust season_seq_prob_qszp7 because it doesnt get divided by len_q (it only gets used in bnds)
+    if sinp.structuralsa['model_is_MP']:
+        ###if len_q is less than the length of the planning horizon then add the probabilities to the final year
+        len_planning_horizon = 10
+        planning_years_per_q = np.ones(len_q)
+        planning_years_per_q[-1] = planning_years_per_q[-1] + len_planning_horizon - len_q
+        p_season_prob_qsz = season_seq_prob_qsz / len_planning_horizon * planning_years_per_q[:,na,na]
+
+        ##calc discount factor each year over the planning horizon
+        discount_rate = uinp.finance['i_interest']
+        discount_factor = 1/(1+discount_rate)**np.arange(len_planning_horizon)
+        ###if len_q is less than the length of the planning horizon then add the probabilities to the final year
+        discount_factor_q = discount_factor[0:len_q]
+        discount_factor_q[-1] = discount_factor_q[-1] + sum(discount_factor[len_q:])
+        discount_factor_q = discount_factor_q/planning_years_per_q
+    else:
+        discount_factor_q = np.ones(len_q) #only use a discount factor if MP model.
+
     p_sequence_prov_qs8zs9 = mask_s8vars_qs8[:,:,na,na] * (index_q[:,na,na,na] != (len_q - 1)) * mask_provqs8z8s9_qs8z8s9
     p_endstart_prov_qsz = mask_s8vars_qs8[:,:,na] * (index_q[:,na,na] == (len_q - 1)) * season_seq_prob_qsz
 
@@ -131,6 +151,7 @@ def f_season_precalcs(params, r_vals):
     params['p_parentz_provwithin_season'] = fun.f1_make_pyomo_dict(mask_provwithinz8z9_p7z8z9*1, arrays_p7z8z9)
     params['p_parentz_provbetween_season'] = fun.f1_make_pyomo_dict(mask_provbetweenz8z9_p7z8z9*1, arrays_p7z8z9)
     params['p_wyear_inc_qs'] = fun.f1_make_pyomo_dict(p_wyear_inc_qs*1, arrays_qs)
+    params['p_discount_factor_q'] =  dict(zip(keys_q, discount_factor_q))
     params['p_season_prob_qsz'] = fun.f1_make_pyomo_dict(p_season_prob_qsz, arrays_qsz)
     params['p_season_seq_prob_qszp7'] = fun.f1_make_pyomo_dict(season_seq_prob_qszp7, arrays_qszp7)
     params['p_endstart_prov_qsz'] = fun.f1_make_pyomo_dict(p_endstart_prov_qsz, arrays_qsz)
@@ -141,6 +162,7 @@ def f_season_precalcs(params, r_vals):
     fun.f1_make_r_val(r_vals,keys_s,'keys_s')
     fun.f1_make_r_val(r_vals,keys_z,'keys_z')
     fun.f1_make_r_val(r_vals,keys_p7,'keys_p7')
+    fun.f1_make_r_val(r_vals,discount_factor_q,'discount_factor_q')
     fun.f1_make_r_val(r_vals,p_season_prob_qsz,'z_prob_qsz')
     fun.f1_make_r_val(r_vals,mask_season_p7z,'mask_season_p7z')
     fun.f1_make_r_val(r_vals,p_wyear_inc_qs,'mask_qs')
