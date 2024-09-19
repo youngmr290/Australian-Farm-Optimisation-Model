@@ -3139,6 +3139,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                      , eqn_used_g2_q1p[7, p])
                 ffcfw_max_start_yatf = sfun.f1_ebw2ffcfw(cg_yatf, cn_yatf, ebw_max_start_yatf, srw_pa1e1b1nwzida0e0b0xyg2[p_srw], md_solid_yatf
                                                          , eqn_used_g2_q1p[7, p])
+            else:   #Set weight of yatf to 0 if they didn't exist this period or last period. This masks the energy requirements in the periods that yatf don't exist
+            #     ebw_start_yatf[...] = 0
+            #     ffcfw_start_yatf[...] = 0
+            #     ebw_max_start_yatf[...] = 0
+                ffcfw_max_start_yatf[...] = 0
             ### FFCFW is set to the expected birth weight if period is birth because bw is not calculated until
             ###after milk production is calculated. Note: Only affects milk production for one period
             if np.any(period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
