@@ -2779,7 +2779,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         d_cfw_history_start_p2g2[...] = np.nan
         nw_start_yatf = 0.0
         rc_start_yatf = 0.0
-        ffcfw_start_yatf = w_b_std_y_pa1e1b1nwzida0e0b0xyg1[0] #slice 0 is the same as the first day the animal exists - this is just an estimate, it is updated with the real weight at birth - needed to calc milk production in birth period because milk prod is calculated before yatf weight is updated
+        ffcfw_start_yatf = w_b_std_y_pa1e1b1nwzida0e0b0xyg1[0].copy() #slice 0 is the same as the first day the animal exists - this is just an estimate, it is updated with the real weight at birth - needed to calc milk production in birth period because milk prod is calculated before yatf weight is updated
         ffcfw_max_start_yatf = ffcfw_start_yatf
         mortality_birth_yatf=0.0 #required for dam numbers before progeny born
         cfw_start_yatf = 0.0
@@ -3075,6 +3075,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                      , eqn_used_g2_q1p[7, p])
                 ffcfw_max_start_yatf = sfun.f1_ebw2ffcfw(cg_yatf, cn_yatf, ebw_max_start_yatf, srw_pa1e1b1nwzida0e0b0xyg2[p_srw], md_solid_yatf
                                                          , eqn_used_g2_q1p[7, p])
+            else:   #Set weight of yatf to 0 if they didn't exist this period or last period. This masks the weight in the periods that the yatf don't exist
+                ebw_start_yatf[...] = 0
+                ffcfw_start_yatf[...] = 0
+                ebw_max_start_yatf[...] = 0
+                ffcfw_max_start_yatf[...] =  0
             ### FFCFW is set to the expected birth weight if period is birth because bw is not calculated until
             ###after milk production is calculated. Note: Only affects milk production for one period
             if np.any(period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
