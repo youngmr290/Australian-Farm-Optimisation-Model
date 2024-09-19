@@ -1558,9 +1558,8 @@ def f_templc(cc, ffcfw_start, rc_start, sl_start, hp_total, temp_ave, temp_max, 
     ##Calculate reduction in lower critical temp due to clear skis
     sky_temp_m0p1 = f1_skytemp(cc, temp_ave, temp_max, temp_min, rain_p1, index_m0)
     ##Lower critical temperature (2 hourly)
-    temp_lc_m0p1 = (cc[11, ..., na, na]+ cc[12, ..., na, na]
-                                        - hp_area[..., na, na] * (in_tissue[..., na, na] + in_ext_m0p1)
-                                        + sky_temp_m0p1)
+    temp_lc_m0p1 = (cc[11, ..., na, na] + cc[12, ..., na, na] * in_ext_m0p1 + sky_temp_m0p1
+                    - hp_area[..., na, na] * (in_tissue[..., na, na] + in_ext_m0p1))
     ##Lower critical temperature (period)
     temp_lc = np.average(temp_lc_m0p1, axis = (-1,-2))
     return temp_lc, temp_lc_m0p1
