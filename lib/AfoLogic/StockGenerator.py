@@ -4433,16 +4433,23 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ##yatf birth & dependent start updates
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 ##reset start variables if period is birth
-                ###ffcf weight of yatf
-                ffcfw_start_yatf = fun.f_update(ffcfw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
-                ffcfw_max_start_yatf = fun.f_update(ffcfw_max_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
-                ###ebw of yatf updated with birth information
-                ebw_start_yatf = sfun.f1_ffcfw2ebw(cg_yatf, cn_yatf, ffcfw_start_yatf, srw_pa1e1b1nwzida0e0b0xyg2[p_srw], md_solid_yatf
+                ###ffcf weight of yatf. w_b is calculated for young that are born dead, they are set to 0 here
+                ffcfw_start_yatf = fun.f_update(ffcfw_start_yatf, w_b_yatf * (nyatf_b1nwzida0e0b0xyg > 0)
+                                                , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                ffcfw_max_start_yatf = fun.f_update(ffcfw_max_start_yatf, w_b_yatf * (nyatf_b1nwzida0e0b0xyg > 0)
+                                                    , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                ###ebw of yatf updated with birth information  #todo This probably should only happen when period is birth. Requires a temp var and an f_update()
+                t_ebw_start_yatf = sfun.f1_ffcfw2ebw(cg_yatf, cn_yatf, ffcfw_start_yatf, srw_pa1e1b1nwzida0e0b0xyg2[p_srw], md_solid_yatf
                                                    , eqn_used_g2_q1p[7, p])
-                ebw_max_start_yatf = sfun.f1_ffcfw2ebw(cg_yatf, cn_yatf, ffcfw_max_start_yatf, srw_pa1e1b1nwzida0e0b0xyg2[p_srw], md_solid_yatf
+                ebw_start_yatf = fun.f_update(ebw_start_yatf, t_ebw_start_yatf
+                                              , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                t_ebw_max_start_yatf = sfun.f1_ffcfw2ebw(cg_yatf, cn_yatf, ffcfw_max_start_yatf, srw_pa1e1b1nwzida0e0b0xyg2[p_srw], md_solid_yatf
                                                        , eqn_used_g2_q1p[7, p])
+                ebw_max_start_yatf = fun.f_update(ebw_max_start_yatf, t_ebw_start_yatf
+                                                 , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ###normal weight of yatf
-                nw_start_yatf = fun.f_update(nw_start_yatf, w_b_yatf, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
+                nw_start_yatf = fun.f_update(nw_start_yatf, w_b_yatf * (nyatf_b1nwzida0e0b0xyg > 0)
+                                             , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...])
                 ### convert ebw to component weights and energy
                 # t_fat_start_yatf, t_muscle_start_yatf, t_viscera_start_yatf = sfun.f1_body_composition(cg_yatf, cn_yatf
                 #                                 , cx_yatf[:,mask_x,...], ebw_start_yatf, srw_b1xyg2, md_solid_yatf
@@ -4655,7 +4662,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         d_fd_yatf = temp1
                         d_fl_yatf = temp2
                         d_cfw_history_yatf_p2 = temp3
-                        new_yatf = temp4
+                        new_yatf = temp4 * (nyatf_b1nwzida0e0b0xyg > 0)
                         dw_yatf = new_yatf
                     if eqn_compare:
                         r_compare7_q0q2tpyatf[eqn_system, 11, :, p, ...] = temp0
@@ -4680,7 +4687,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         d_fd_yatf = temp1
                         d_fl_yatf = temp2
                         d_cfw_history_yatf_p2 = temp3
-                        new_yatf = temp4
+                        new_yatf = temp4 * (nyatf_b1nwzida0e0b0xyg > 0)
                         dw_yatf = new_yatf
                     if eqn_compare:
                         r_compare7_q0q2tpyatf[eqn_system, 11, :, p, ...] = temp0
@@ -4705,7 +4712,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         d_fd_yatf = temp1
                         d_fl_yatf = temp2
                         d_cfw_history_yatf_p2 = temp3
-                        dw_yatf = temp4
+                        dw_yatf = temp4 * (nyatf_b1nwzida0e0b0xyg > 0)
                         new_yatf = dw_yatf
                     if eqn_compare:
                         r_compare7_q0q2tpyatf[eqn_system, 11, :, p, ...] = temp0
@@ -5584,7 +5591,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             ###yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 ##EBW (end - empty body weight) - only increment the ebw in b1 slices that include yatf.
-                ebw_yatf = np.maximum(0, ebw_start_yatf + ebg_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p]) * (nyatf_b1nwzida0e0b0xyg > 0)
+                ebw_yatf = np.maximum(0, (ebw_start_yatf + ebg_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p])
+                                      * (nyatf_b1nwzida0e0b0xyg > 0) * (days_period_pa1e1b1nwzida0e0b0xyg2[p] > 0))
                 ##EBW maximum to date
                 ebw_max_yatf = np.maximum(ebw_yatf, ebw_max_start_yatf)
                 ##FFCFW (end)
@@ -5917,7 +5925,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ####use ffcfw_start to get birth weight which is at the start of the period.
                 #### Need a separate variable to o_ffcfw_start_tpyatf because that variable is non-zero all year and this affects the reported birth weight when averaging across the e & b axes
                 #### Store a zero value if yatf don't exist for this slice (e1 or i)
-                r_ebw_start_tpyatf[:,p] = ebw_start_yatf * (days_period_pa1e1b1nwzida0e0b0xyg2[p,...] > 0)
+                r_ebw_start_tpyatf[:,p] = ebw_start_yatf * (days_period_pa1e1b1nwzida0e0b0xyg2[p,...] > 0) * (nyatf_b1nwzida0e0b0xyg > 0)
                 r_ebg_tpyatf[:,p] = ebg_yatf
                 r_evg_tpyatf[:,p] = evg_yatf
                 r_wbe_tpyatf[:, p] = wbe_yatf
