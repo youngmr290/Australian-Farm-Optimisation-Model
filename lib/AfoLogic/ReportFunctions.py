@@ -1731,10 +1731,10 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl.loc[idx[:, :, :, 'Total', '7 obj'], 'Full year'] = season_obj_qsz
 
 
-    ##add the objective of all seasons - these should both be the same if the pnl is being calculated correctly
+    ##add the objective of all seasons - these should both be the same if the pnl is being calculated correctly - these are the only parts that have been discounted (time value of money)
     ###have to calc here after the step above so it doesnt turn to nan
     pnl.loc[idx['Weighted obj - AFO', '', '', '', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
-    pnl.loc[idx['Weighted obj - PNL', '', '', '', ''], 'Full year'] = np.sum(season_obj_qsz * r_vals['zgen']['z_prob_qsz'].ravel() * r_vals['zgen']['discount_factor_q'])
+    pnl.loc[idx['Weighted obj - PNL', '', '', '', ''], 'Full year'] = np.sum(season_obj_qsz * (r_vals['zgen']['z_prob_qsz'] * r_vals['zgen']['discount_factor_q'][:,na,na]).ravel())
 
     ##weight the qsz axis if option 2
     if option==2:
@@ -1743,9 +1743,9 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
         z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
         z_prob_qsz = z_prob_qsz.reindex(pnl.index, axis=0)
         pnl = pnl.mul(z_prob_qsz, axis=0).groupby(level=(-2,-1), axis=0).sum()
-        ###add the objective of all seasons - need to do again because it becomes nan in the step above
+        ###add the objective of all seasons - need to do again because it becomes nan in the step above - these are the only parts that have been discounted (time value of money)
         pnl.loc[idx['Weighted obj - AFO', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
-        pnl.loc[idx['Weighted obj - PNL', ''], 'Full year'] = np.sum(season_obj_qsz * r_vals['zgen']['z_prob_qsz'].ravel() * r_vals['zgen']['discount_factor_q'])
+        pnl.loc[idx['Weighted obj - PNL', ''], 'Full year'] = np.sum(season_obj_qsz * (r_vals['zgen']['z_prob_qsz'] * r_vals['zgen']['discount_factor_q'][:,na,na]).ravel())
 
     ##round numbers in df
     pnl = pnl.astype(float).round(1).fillna(0)  # have to go to float so rounding works
@@ -1834,8 +1834,8 @@ def f_crop_summary(lp_vars, r_vals, option):
 
 def f_profit(lp_vars, r_vals, option=0):
     '''returns profit
-    0- Profit = rev - (exp + dep)
-    1- Risk neutral objective = rev - (exp + minroe + asset_cost +dep).
+    0- Profit = (rev - (exp + dep) * discount_factor)
+    1- Risk neutral objective = (rev - (exp + minroe + asset_cost +dep) * discount_factor).
     2- Utility - this is the same as risk neutral obj if risk aversion is not included
     3- range and stdev of profit
     4- profit by zqs
@@ -1848,8 +1848,8 @@ def f_profit(lp_vars, r_vals, option=0):
     if option == 0:
         return lp_vars['profit']
     elif option==1:
-        minroe = np.sum(minroe_qsp7z[:,:,-1,:] * prob_qsz)  #take end slice of season stages
-        asset_cost = np.sum(asset_cost_qsp7z[:,:,-1,:] * prob_qsz) #take end slice of season stages
+        minroe = np.sum(minroe_qsp7z[:,:,-1,:] * prob_qsz * r_vals['zgen']['discount_factor_q'][:,na,na])  #take end slice of season stages
+        asset_cost = np.sum(asset_cost_qsp7z[:,:,-1,:] * prob_qsz* r_vals['zgen']['discount_factor_q'][:,na,na]) #take end slice of season stages
         return lp_vars['profit'] - minroe - asset_cost
     elif option == 2:
         return lp_vars['utility']

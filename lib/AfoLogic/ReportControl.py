@@ -976,7 +976,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         #todo would be good if this could include germination but doesnt work atm because germ has r axis.
         type = 'pas'
         prod = 'pgr_grnha_qgop6lzt'
-        na_prod = [1,2] #q,s,f
+        na_prod = [1,2] #s,f
         weights = 'greenpas_ha_qsfgop6lzt'
         den_weights = 'days_p6z'
         na_denweights = [1,3]
