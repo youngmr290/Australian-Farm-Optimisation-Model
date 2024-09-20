@@ -4049,7 +4049,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_sire
                                 , ck_sire, rc_start_sire, mei_sire, neme_mu_sire, km_sire, hp_mei_mu_sire, new_sire
                                 , kw_mu_yg0, zf1_sire, zf2_sire, heat_loss_sirem0p1, age_pa1e1b1nwzida0e0b0xyg0[p]
-                                , rev_trait_values['sire'][p], sam_kg=sam_kg_sire)
+                                , rev_trait_values['sire'][p], days_period_pa1e1b1nwzida0e0b0xyg0[p], sam_kg=sam_kg_sire)
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_mu_sire = temp6
                         if eqn_used:
@@ -4062,7 +4062,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             mei_sire = mei_sire + temp5
                             mei_solid_sire = mei_solid_sire + temp5
                             surplus_energy_sire = temp7
-                            kg_sire = temp8
+                            # kg_sire = temp8
                             mem_sire = temp9   # will overwrite mem calculated using CS equations if using this system
                         if eqn_compare:
                             # r_compare7_q0q2tpsire[eqn_system, 0, :, p, ...] = temp9  Storing meme cs equivalent
@@ -4088,10 +4088,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_dams
                                 , ck_dams, rc_start_dams, mei_dams, neme_mu_dams, km_dams, hp_mei_mu_dams, new_dams
                                 , kw_mu_yg1, zf1_dams, zf2_dams, heat_loss_damsm0p1, age_pa1e1b1nwzida0e0b0xyg1[p]
-                                , rev_trait_values['dams'][p], nec_dams, kc_mu_yg1, nel_dams, kl_mu_dams
-                                , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p]
-                                , sam_kg=sam_kg_dams)
-                        #use this version of hp_total in f_templc_nfs() in next function call
+                                , rev_trait_values['dams'][p], days_period_pa1e1b1nwzida0e0b0xyg1[p], nec=nec_dams
+                                , kc=kc_mu_yg1, nel=nel_dams, kl=kl_mu_dams, gest_propn=gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
+                                , lact_propn=lact_propn_pa1e1b1nwzida0e0b0xyg1[p], sam_kg=sam_kg_dams)
+                        #use this version of hp_total in f_templc_nfs() in next function call. It excludes chill increment
                         hp_total_mu_dams = temp6
                         if eqn_used:
                             ebg_dams = temp0
@@ -4103,7 +4103,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             mei_dams = mei_dams + temp5
                             mei_solid_dams = mei_solid_dams + temp5
                             surplus_energy_dams = temp7
-                            kg_dams = temp8
+                            # kg_dams = temp8
                             mem_dams = temp9   # will overwrite mem calculated using CS equations if using this system
                         if eqn_compare:
                             # r_compare7_q0q2tpdams[eqn_system, 0, :, p, ...] = temp9  Storing meme cs equivalent
@@ -4130,7 +4130,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_offs
                                 , ck_offs, rc_start_offs, mei_offs, neme_mu_offs, km_offs, hp_mei_mu_offs, new_offs
                                 , kw_mu_yg3, zf1_offs, zf2_offs, heat_loss_offsm0p1, age_pa1e1b1nwzida0e0b0xyg3[p]
-                                , rev_trait_values['offs'][p], sam_kg=sam_kg_offs)
+                                , rev_trait_values['offs'][p], days_period_pa1e1b1nwzida0e0b0xyg3[p], sam_kg=sam_kg_offs)
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_mu_offs = temp6
                         if eqn_used:
@@ -4143,7 +4143,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             mei_offs = mei_offs + temp5
                             mei_solid_offs = mei_solid_offs + temp5
                             surplus_energy_offs = temp7
-                            kg_offs = temp8
+                            # kg_offs = temp8
                             mem_offs = temp9   # will overwrite mem calculated using CS equations if using this system
                         if eqn_compare:
                             # r_compare7_q0q2tpoffs[eqn_system, 0, :, p, ...] = temp9  Storing meme cs equivalent
@@ -4184,7 +4184,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             mei_sire = mei_sire + temp5
                             mei_solid_sire = mei_solid_sire + temp5
                             surplus_energy_sire = temp7
-                            kg_sire = temp8
+                            # kg_sire = temp8
                             mem_sire = temp9   # will overwrite mem calculated using CS equations if using this system
                         if eqn_compare:
                             # r_compare7_q0q2tpsire[eqn_system, 0, :, p, ...] = temp9  Storing meme cs equivalent
@@ -4225,7 +4225,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             mei_dams = mei_dams + temp5
                             mei_solid_dams = mei_solid_dams + temp5
                             surplus_energy_dams = temp7
-                            kg_dams = temp8
+                            # kg_dams = temp8
                             mem_dams = temp9   # will overwrite mem calculated using CS equations if using this system
                         if eqn_compare:
                             # r_compare7_q0q2tpdams[eqn_system, 0, :, p, ...] = temp9  Storing meme cs equivalent
@@ -4814,7 +4814,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_yatf
                             , ck_yatf, rc_start_yatf, mei_yatf, neme_mu_yatf, km_yatf, hp_mei_mu_yatf, new_yatf
                             , kw_mu_yg2, zf1_yatf, zf2_yatf, heat_loss_yatfm0p1, age_pa1e1b1nwzida0e0b0xyg2[p]
-                            , rev_trait_values['yatf'][p], mei_propn_milk=mei_propn_milk_yatf, sam_kg=sam_kg_yatf)
+                            , rev_trait_values['yatf'][p], days_period_pa1e1b1nwzida0e0b0xyg2[p]
+                            , b_mask=(nyatf_b1nwzida0e0b0xyg>0), mei_propn_milk=mei_propn_milk_yatf, sam_kg=sam_kg_yatf)
                     #use this version of hp_total in f_templc_nfs() in next function call
                     hp_total_mu_yatf = temp6
                     if eqn_used:

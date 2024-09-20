@@ -1676,19 +1676,96 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, rev_trait_value, nec
     return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
 
+def f1_back_calculate_mei(ck, cg, nem_ee, nefat, nemuscle, neviscera, hp_wcl, ne_wcl, km, heat_loss_m0p1
+                          , days_period, b_mask, mei_propn_milk, sam_kg, target=0):
+    """ This function back calculates the mei from the change in net energy of the components.
+    This is required if the level of the traits that require energy are adjusted by the REV
+    function after (forward) calculating the energy traits in f_lwc from mei_initial.
+
+    MEI is the sum of retained energy and heat production. A complicating factor that is not yet well resolved (20 Sep 24)
+    is back calculating the chill increment. This function includes the best attempt yet but it doesn't handle
+    offspring in p43 and there are issues with yatf (p83:84, 135:136 which is birth period when fleece is short)
+    The calling of this function has therefore been disabled when doing REV experiments unless heat_loss is scaled
+    by sam[heat_loss], and this scaling would normally be 0.
+    A workaround to allow the use of the best bet function is to set sam[heat_loss] = 0.999, the function will
+    be called and heat loss will only have been reduced slightly.
+    #todo debug this function more to allow proper use of the REV experiments.
+
+    The best-bet system for incorporating chill into the back calculation is calculating the wbec that would have
+    been estimated in the forward calculation if there was no chill.
+    The variables wbec_ee and kg_ee are calculated iteratively to converge on a value.
+
+    :param ck:
+    :param cg:
+    :param nem_ee:
+    :param nefat:
+    :param nemuscle:
+    :param neviscera:
+    :param ne_wcl:
+    :param hp_wcl:
+    :param km:
+    :param heat_loss_m0p1:
+    :param days_period:
+    :param b_mask:
+    :param mei_propn_milk:
+    :param sam_kg:
+    :param target:
+    :return:
+   """
+
+    ##fat_propn is required to calculate kg_ee
+    fat_propn = fun.f_divide(nefat, nefat + nemuscle + neviscera)
+
+    wbec = nefat + nemuscle + neviscera
+    t_wbec = nefat + nemuscle + neviscera
+    wbec_ee = nefat + nemuscle + neviscera
+    loop = 0
+    ###Iterate the loop calculating chill_increment from the previously calculated wbec. Max iterations of 100
+    while (loop == 0) or not (np.allclose(t_wbec, wbec_ee)) and loop < 100:
+        t_wbec = wbec_ee.copy()  #value at the start of the iteration for comparison
+        below_maintenance_ee = wbec_ee < 0
+        kg_ee, kf_ee, kp_ee = f1_kg_mu(ck, below_maintenance_ee, fat_propn, mei_propn_milk, sam_kg)
+        chill_increment = np.average(
+            np.maximum(0, heat_loss_m0p1 - (nem_ee + hp_wcl + (nem_ee + ne_wcl + hp_wcl) * (1 / km - 1)
+                                            + wbec_ee * (1 / (kg_ee * km) - 1))[..., na, na]), axis=(-1, -2))
+        wbec_ee = (wbec + chill_increment) * (days_period > 0) * b_mask
+        # print(f'loop {loop} devn {np.max(np.absolute(wbec_ee - target))} chill (min max) {np.min(chill_increment)} {np.max(chill_increment)}  max wbec diff min {np.min(wbec_ee - t_wbec)} {np.max(wbec_ee - t_wbec)} kg=1 {np.count_nonzero(np.isclose(kg_ee, 1))} of {np.size(kg_ee)}')
+        loop += 1
+    ###Calculate the components & me of components if chill wasn't included
+    nefat_ee = wbec_ee * fat_propn
+    neprotein_ee = wbec_ee * (1 - fat_propn)
+    nemuscle_ee = (1 - cg[38, ...]) * neprotein_ee
+    neviscera_ee = cg[38, ...] * neprotein_ee
+    mefat_ee = fun.f_divide(nefat_ee, kf_ee)
+    memuscle_ee = fun.f_divide(nemuscle_ee, kp_ee)
+    meviscera_ee = fun.f_divide(neviscera_ee, kp_ee)
+
+    ##Back calculate MEI
+    ### total metabolisable energy is divided by km to account for hp_mei
+    mei = (nem_ee + mefat_ee + memuscle_ee + meviscera_ee + ne_wcl + hp_wcl) / km
+    ##ReCalculate other parameters that are returned (these are based on chill excluded which is consistent with CSIRO)
+    surplus_energy_ee = mefat_ee + memuscle_ee + meviscera_ee
+    retained_energy_ee = nefat_ee + nemuscle_ee + neviscera_ee + ne_wcl
+    hp_total_ee = mei - retained_energy_ee
+
+    return mei, wbec_ee, surplus_energy_ee, hp_total_ee, chill_increment
+
 def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf2, heat_loss_m0p1, age, rev_trait_value
-             , nec = 0, kc = 1, nel = 0, kl = 1, gest_propn = 0, lact_propn = 0, mei_propn_milk = 0, sam_kg=1):
+    , days_period, b_mask = 1, nec = 0, kc = 1, nel = 0, kl = 1, gest_propn = 0, lact_propn = 0, mei_propn_milk = 0, sam_kg=1):
     #Calculate LW change from energy surplus to maintenance. Uses energy & efficiency approach like CSIRO
     #but separates kf & kp and calculates proportion of fat & protein from mass and energy balance.
 
     ##Calculate me for conceptus growth, milk production & wool growth
+    hp_dc = nec * (1 / kc - 1)
+    hp_dl = nel * (1 / kl - 1)
+    hp_dw = new * (1 / kw - 1)
     mec = nec / kc
     mel = nel / kl
     mew = new / kw
     ##Energy intake that is surplus to maintaining maternal body energy. Surplus is available for maternal body gain
     maintenance  = nem_ee + hp_mei + mec * gest_propn + mel * lact_propn + mew
-    surplus_energy = mei_initial - maintenance
-    below_maintenance = surplus_energy < 0
+    surplus_energy_ee = mei_initial - maintenance
+    below_maintenance = surplus_energy_ee < 0
     ##Level of feeding relative to level that would maintain maternal body tissue (maint = 0)
     ### Note: level is calculated elsewhere (differently) for use in Blaxter & Clapperton equations
     level = fun.f_divide(mei_initial, maintenance) - 1
@@ -1707,13 +1784,21 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     ## efficiency of surplus energy conversion to retained energy.
     kg_ee, kf_ee, kp_ee = f1_kg_mu(ck, below_maintenance, fat_propn, mei_propn_milk, sam_kg)
     ##Change in wholebody energy (based on ME) excluding chill. Note: will be negative if losing weight
-    wbec_ee = kg_ee * surplus_energy
+    wbec_ee = kg_ee * surplus_energy_ee
     ##Calculate the chill increment for the 2 hourly periods where heat_loss is greater than heat production
-    retained_energy = wbec_ee + new + gest_propn * nec + lact_propn * nel
-    hp_total_ee = mei_initial - retained_energy
+    retained_energy_ee = wbec_ee + new + gest_propn * nec + lact_propn * nel
+    hp_total_ee = mei_initial - retained_energy_ee
+    ##Alternative calculation of hp_total that is used in f_back_calculate_mei()
+    # hp_total_alt = (nem_ee + hp_dw + hp_dc * gest_propn + hp_dl * lact_propn
+    #                  + (nem_ee + mew + mec * gest_propn + mel * lact_propn) * (1 / km - 1)
+    #                  + wbec_ee * (1 / (kg_ee * km) - 1))
+    ##Test if the 2 calculations are equivalent
+    # if not(np.allclose(hp_total_ee, hp_total_alt)):
+    #     print(f'hp total diff {np.max(hp_total_ee - hp_total_alt):.3f} {np.min(hp_total_ee - hp_total_alt):.3f}')
     chill_increment = np.average(np.maximum(0, heat_loss_m0p1 - hp_total_ee[..., na, na]), axis = (-1,-2))
-    ## reduce wbec to include the chill increment
+    ## include the chill increment by reducing wbec
     wbec_prior = wbec_ee - chill_increment   #the chill increment is net energy so scaling by efficiency is not required
+
     ##Process the WBE REV: if WBE is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
     ###Note: If using the wbec REV then consider the fat, muscle & viscera traits (probably exclude them i.e. REV=0)
     wbec = f1_rev_update('wbec', wbec_prior, rev_trait_value)
@@ -1724,8 +1809,8 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     ##Protein gain (MJ)
     d_lean = ebg_prior * (1 - adipose_propn)
     ##Allocate total protein gain to muscle and viscera using rule of thumb that Viscera is approx 13% of lean weight (10% of total protein energy)
-    d_muscle_prior = (1 - cg[38, ...]) * d_lean
-    d_viscera_prior = cg[38, ...] * d_lean
+    d_muscle_prior = (1 - cg[39, ...]) * d_lean
+    d_viscera_prior = cg[39, ...] * d_lean
 
     ##Step 10: Process the REVs for the energy components and weight change
     ###Step 10a: Process the REVs for the traits: if not the target trait overwrite with value from the dictionary
@@ -1756,45 +1841,31 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     nemuscle = f1_weight_energy_conversion(cg, 1, weight=d_muscle)
     neviscera = f1_weight_energy_conversion(cg, 2, weight=d_viscera)
     ###Step 10d: Update heat production associated with retained energy (metabolisable energy)
-    ###Recalculate efficiency for scenarios where REV has altered if below maintenance
-    wbec = nefat + nemuscle + neviscera
-    fat_propn = fun.f_divide(nefat, nefat + nemuscle + neviscera)
-    ###Incorporating chill into the back calculation is done by calculating the wbec that would have been estimated
-    ### in the forward calculation if there was no chill. This variable is called wbec_ee and is used with kg_ee
-    below_maintenance = (wbec + np.average(np.maximum(0,heat_loss_m0p1 - ((nem_ee + new) / km)[..., na, na]), axis=(-1,-2))) < 0
-    kg_ee, kf_ee, kp_ee = f1_kg_mu(ck, below_maintenance, fat_propn, mei_propn_milk, sam_kg)
-    wbec_ee_m0p1 = fun.f_update(wbec[..., na, na], (wbec[..., na, na] + heat_loss_m0p1 - ((nem_ee + mew) / km)[..., na, na])
-                                / (1 + 1 / (kg_ee * km))[..., na, na]
-                         , ((nem_ee + mew + wbec / kg_ee) / km)[..., na, na] < heat_loss_m0p1)
-    wbec_ee = np.average(wbec_ee_m0p1, axis=(-1,-2))
-    ###Calculate the components if chill wasn't included and the me for components
-    nefat_ee = wbec_ee * fat_propn
-    neprotein_ee = wbec_ee * (1 - fat_propn)
-    nemuscle_ee = (1 - cg[38, ...]) * neprotein_ee
-    neviscera_ee = cg[38, ...] * neprotein_ee
-    mefat_ee = nefat_ee / kf_ee
-    memuscle_ee = nemuscle_ee / kp_ee
-    meviscera_ee = neviscera_ee / kp_ee
+    ##Back calculate MEI if it is required
+    mei_adjustment = 0  #set default value if function isn't called
+    # if True:    #uncomment this line to force the back calculation
+    if not(np.allclose(d_fat_prior, d_fat) and np.allclose(d_muscle_prior, d_muscle)
+           and np.allclose(d_viscera_prior, d_viscera)): #any energy component is altered by the REV adjustments
+        print(f'back calculation called')
+        if sen.sam['heat_loss'] == 1:
+            #The sensitivity on heat_loss has not been activated.
+            raise ValueError('REV trial is being carried out without changing sam[heat_loss]. This causes errors in the back calculation')
+        else:
+            ##Calculate some variables to reduce the args required for f1_back_calculate_mei()
+            hp_wcl = hp_dw + hp_dc * gest_propn + hp_dl * lact_propn
+            ne_wcl = new + nec * gest_propn + nel * lact_propn
 
-    ##Step 11: Back calculate MEI & other returned variable from the components as updated by the REVs
-    ### total metabolisable energy is divided by km to account for hp_mei
-    mei = (nem_ee + mefat_ee + memuscle_ee + meviscera_ee + mew + gest_propn * mec + lact_propn * mel) / km
-    # retained_energy = wbec_ee + new + gest_propn * nec + lact_propn * nel
-    # ### MEI is the maximum of metabolisable energy expenditure and retained energy plus heat loss (heat_loss_m0p1) to cover situations when the REVs reduce hp.
-    # mei = np.average(np.maximum(metabolisable_energy[...,na, na]
-    #                             , retained_energy[..., na, na] + heat_loss_m0p1), axis = (-1,-2))
-    ###mem: maintenance energy requirement including heat associated with feeding (will be greater than CSIRO equiv mem)
-    mem = mei - (mefat_ee + memuscle_ee + meviscera_ee + mew + gest_propn * mec + lact_propn * mel)
-    ### Calculate adjustment to mei to reflect the changes made by the REVs
-    mei_adjustment = mei - mei_initial
+            mei, wbec_ee, surplus_energy_ee, hp_total_ee, chill_increment = f1_back_calculate_mei(ck, cg, nem_ee
+                                            , nefat, nemuscle, neviscera, hp_wcl, ne_wcl, km, heat_loss_m0p1
+                                            , days_period, b_mask, mei_propn_milk, sam_kg)
+            ### Calculate adjustment to mei to reflect the changes made by the REVs
+            mei_adjustment = (mei - mei_initial) * (days_period > 0)
 
-    ##Step 12: ReCalculate other parameters that are returned (these are based on chill excluded which is consistent with CSIRO)
-    surplus_energy = mefat_ee + memuscle_ee + meviscera_ee
-    ###CSIRO equivalent kg
-    kg_cs = fun.f_divide(wbec_ee, surplus_energy) * km
-    hp_total = mei - retained_energy
+    ##Calculate some return variables required independent of whether back calculation is called
+    kg_cs = fun.f_divide(wbec_ee, surplus_energy_ee) * km    ###CSIRO equivalent kg for r_compare
+    mem = nem_ee / km + chill_increment
 
-    return ebg, evg, d_fat, d_muscle, d_viscera, mei_adjustment, hp_total, surplus_energy, kg_cs, mem
+    return ebg, evg, d_fat, d_muscle, d_viscera, mei_adjustment, hp_total_ee, surplus_energy_ee, kg_cs, mem
 
 
 def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_maint, hp_mei, dw, heat_loss_m0p1, step
