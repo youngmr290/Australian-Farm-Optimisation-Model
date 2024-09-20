@@ -10521,8 +10521,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     keys_s3 = np.array(['s%s'%i for i in range(len_s3)])
     keys_p = np.array(['p%s'%i for i in range(len_p)])
     keys_p3 = keys_p[mask_p_offs_p]
-    keys_year_offs =  np.array((['Lambs']+['Year%s'%i for i in range(dvp_is_shear_or_weaning_yvg3.shape[0])[1:]]))
-    keys_year_dams =  np.array((['Lambs']+['Year%s'%i for i in range(dvp_is_mating_or_weaning_yvg1.shape[0])[1:]]))
+    keys_year_offs =  np.array((['Lambs']+['%s yr old'%i for i in range(dvp_is_shear_or_weaning_yvg3.shape[0])[1:]]))
+    keys_year_dams =  np.array((['Lambs']+['%s yr old'%i for i in range(dvp_is_mating_or_weaning_yvg1.shape[0])[1:]]))
 
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_z, keys_g0],'sire_keys_qszg0')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_p6, keys_f, keys_z, keys_g0],'sire_keys_qsp6fzg0')

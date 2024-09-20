@@ -3231,6 +3231,199 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
 
     return summary_df
 
+
+def mp_report(lp_vars, r_vals):
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+    summary_df = pd.DataFrame(index=[], columns=index_qsz)
+
+    ##ewe sale info - this is done first because the summary table uses some info from these calacs
+    ###prog numbers sold
+    type = 'stock'
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    keys = 'prog_keys_qsk3k5twzia0xg2'
+    arith = 2
+    index = [10,9]  # g, gender
+    cols = [0,1,6]  # q,s,z
+    axis_slice = {4:[0,1,1]} #sale suckers
+    numbers_prog_gx_qsz = f_stock_pasture_summary(r_vals, type=type, weights=weights, keys=keys, arith=arith, index=index, cols=cols,
+                                                           axis_slice=axis_slice)
+    ####female prog sold
+    try:
+        female_prog_sold_qsz = numbers_prog_gx_qsz.loc[(['BBB','BBM'],'F'),:].sum(axis=0) #wrapped in try incase BBM are not included in the trial. Note BBT are added with wethers.
+    except KeyError:
+        female_prog_sold_qsz = numbers_prog_gx_qsz.loc[(['BBB'],'F'),:].sum(axis=0)
+    ###dam numbers sale
+    type = 'stock'
+    prod = 'dvp_is_sale_tyvzig1'
+    na_prod = [0,1,2,6,7,8,11]
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    na_weights = [4] #y (year)
+    keys = 'dams_keys_qsk2tyvanwziy1g1'
+    arith = 2
+    index = [0,1,9,4] #q,s,z,y
+    cols = [3,5] #v,t
+    sale_numbers_dams_qszy_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                               na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+    ####dams sold each year
+    sale_numbers_dams_qszy = sale_numbers_dams_qszy_tv.sum(axis=1)
+    sale_numbers_dams_y_qsz = sale_numbers_dams_qszy.unstack().T
+    ####add female prog that were sold
+    sale_numbers_dams_y_qsz.iloc[0] = female_prog_sold_qsz
+
+    ##sale offs numbers
+    type = 'stock'
+    prod = 'dvp_is_sale_tyvzixg3'
+    na_prod = [0, 1, 2, 3, 7, 8, 11, 13]
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = [5]  # y (year)
+    keys = 'offs_keys_qsk3k5tyvnwziaxyg3'
+    arith = 2
+    index = [0,1,9]  # q,s,z
+    cols = [4, 6]  # v,t
+    sale_numbers_offs_qsz_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                                     na_weights=na_weights, keys=keys, arith=arith, index=index,
+                                                     cols=cols)
+    ###age at sale
+    type = 'stock'
+    prod = 'saleage_k3k5tvnwziaxyg3'
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = []
+    keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+    arith = 1
+    index = [4, 5]  # tv
+    cols = []  #
+    saleage_offs_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, weights=weights, na_weights=na_weights,
+                                              keys=keys, arith=arith, index=index, cols=cols)
+    ###add sale age as headers
+    sale_numbers_offs_qsz_tv.columns = np.round(saleage_offs_tv.values.squeeze() / 30, 0).astype(int)  # div 30 to convert to months
+    ###sum cols with same sale age (to stop error when concat the report with other trials because of duplicate col names)
+    sale_numbers_offs_qsz_tv = sale_numbers_offs_qsz_tv.groupby(sale_numbers_offs_qsz_tv.columns, axis=1).sum()
+    sale_numbers_offs_qsz_tv.columns = ['%s mo old' %i for i in sale_numbers_offs_qsz_tv.columns] #add extra info to header name
+    ####add wether and crossy prog that were sold (they need to be included in the number of lambs born)
+    wether_prog_sold_qsz = numbers_prog_gx_qsz.sum(axis=0) - female_prog_sold_qsz
+    sale_numbers_offs_qsz_tv.rename(columns={'0 mo old': 'Weaning'}, inplace=True)
+    sale_numbers_offs_qsz_tv.iloc[:, 0] = wether_prog_sold_qsz
+    sale_numbers_offs_tv_qsz = round(sale_numbers_offs_qsz_tv).T
+
+    ##summary info by q
+    ###profit - no minroe and asset
+    profit_qsz = round(f_profit(lp_vars, r_vals, option=4)).stack()
+    summary_df.loc['Profit',:] = profit_qsz
+    ###pasture %
+    pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
+    pas_percent_qsz = fun.f_divide(pas_area_qsz, r_vals['rot']['total_farm_area']) * 100
+    summary_df.loc['Pas area (%)',:] = np.round(pas_percent_qsz, 0)
+    ###crop %
+    summary_df.loc['Crop area (%)',:] = np.round(100 - pas_percent_qsz)
+    ###stocking rate
+    sr_qsz = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary3=True)
+    summary_df.loc['Stocking rate (DSE/WgHa)',:] = round(sr_qsz.squeeze(), 1)
+    ###supplement
+    total_sup_qsz = f_grain_sup_summary(lp_vars, r_vals, option=1).groupby(level=(0, 1, 2)).sum()
+    summary_df.loc['Total supplement (t)',:] = round(total_sup_qsz.squeeze(), 1)
+    ###sup/dse
+    Sup_DSE_qsz = np.round(fun.f_divide(total_sup_qsz.squeeze() * 1000, (pas_area_qsz * sr_qsz.squeeze())))
+    summary_df.loc['Supplement (kg/DSE)',:] = Sup_DSE_qsz
+    ###total dams mated
+    type = 'stock'
+    prod = 'dvp_is_mating_vzig1'
+    na_prod = [0,1,2,3,5,6,7,10]
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    keys = 'dams_keys_qsk2tvanwziy1g1'
+    arith = 2
+    index = []
+    cols = [0,1,8] #q,s,z
+    axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
+    dams_mated_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc['Ewes mated',:] = round(dams_mated_qsz.squeeze(),0)
+    ###total ewe sales
+    summary_df.loc['Ewe sales',:] = sale_numbers_dams_y_qsz.sum(axis=0)
+    ###total wether sales
+    summary_df.loc['Wether and crossy sales',:] = sale_numbers_offs_qsz_tv.sum(axis=1)
+    ###ave wether sale price
+    ####get offs and prog sale numbers for weighted average
+    type = 'stock'
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+    arith = 2
+    index = []
+    cols = [0,1,8]  #q,s,z
+    axis_slice = {4:[1,None,1]} #only sale slices
+    salenumber_offs_qsz = f_stock_pasture_summary(r_vals, type=type, weights=weights,
+                                             keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    type = 'stock'
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    keys = 'prog_keys_qsk3k5twzia0xg2'
+    arith = 2
+    index = []
+    cols = [0,1,6]  #q,s,z
+    axis_slice = {4:[0,1,1]} #only sale slices
+    salenumber_prog_qsz = f_stock_pasture_summary(r_vals, type=type, weights=weights,
+                                             keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    ####offs
+    type = 'stock'
+    prod = 'salevalue_p7qk3k5tvnwziaxyg3'
+    na_prod = [2]  # s
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = [0]  # p7
+    keys = 'offs_keys_p7qsk3k5tvnwziaxyg3'
+    arith = 1
+    index = []
+    cols = [1,2,9]  #q,s,z
+    axis_slice = {5:[1,None,1]} #only sale slices
+    ave_salevalue_offs_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                             na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    ####prog
+    type = 'stock'
+    prod = 'salevalue_p7qk3k5twzia0xg2'
+    na_prod = [2]  # s
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    na_weights = [0]  # p7
+    keys = 'prog_keys_p7qsk3k5twzia0xg2'
+    arith = 1
+    index = []
+    cols = [1,2,7] #q,s,z
+    axis_slice = {5:[0,1,1]} #only sale slices
+    ave_salevalue_prog_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                       na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc['Ave sale value'] = np.round(fun.f_divide(ave_salevalue_offs_qsz*salenumber_offs_qsz + ave_salevalue_prog_qsz*salenumber_prog_qsz, salenumber_offs_qsz + salenumber_prog_qsz),0).squeeze()
+    ###ave wether sale weight
+    ####offs
+    type = 'stock'
+    prod = 'sale_ffcfw_k3k5tvnwziaxyg3'
+    na_prod = [0, 1]  # q,s
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = []
+    keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+    arith = 1
+    index = []
+    cols = [0,1,8] #qsz
+    axis_slice = {4:[1,None,1]} #only sale slices
+    ave_saleweight_offs_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                       na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    ####prog
+    type = 'stock'
+    prod = 'sale_ffcfw_k3k5twziaxyg2'
+    na_prod = [0, 1]  # q,s
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    na_weights = []
+    keys = 'prog_keys_qsk3k5twzia0xg2'
+    arith = 1
+    index = []
+    cols = [0,1,6] #qsz
+    axis_slice = {4:[0,1,1]} #only sale slices
+    ave_saleweight_prog_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                       na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc['Ave sale weight'] = np.round(fun.f_divide(ave_saleweight_offs_qsz*salenumber_offs_qsz + ave_saleweight_prog_qsz*salenumber_prog_qsz, salenumber_offs_qsz + salenumber_prog_qsz),0).squeeze()
+
+    ##land use area
+    landuse_area_k_qsz = f_area_summary(lp_vars, r_vals, option=4, active_z=True).T
+
+    return summary_df, landuse_area_k_qsz, sale_numbers_offs_tv_qsz, sale_numbers_dams_y_qsz
+
 ############################
 # functions for numpy arrays#
 ############################

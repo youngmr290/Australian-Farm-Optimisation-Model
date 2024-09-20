@@ -127,6 +127,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_legume"] = pd.DataFrame()  # web app analysis
     reports["stacked_cropgrazing"] = pd.DataFrame()  # web app analysis
     reports["stacked_flk_structure"] = pd.DataFrame()  # web app analysis
+    reports["stacked_mp"] = pd.DataFrame()  # web app analysis
 
     return reports
 
@@ -586,6 +587,16 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         cropgrazing = pd.concat([reports["flk_structure"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_flk_structure"] = rfun.f_append_dfs(stacked_reports["stacked_flk_structure"], cropgrazing)
 
+    if report_run.loc['run_mp_summary', 'Run']:
+        mp_summary = pd.concat([reports["mp_summary"],], keys=["Summary"], names=[])  # add extra info about each section of the report
+        mp_landuse_area_k_qsz = pd.concat([reports["mp_landuse_area_k_qsz"],], keys=["Land use area (ha)"], names=[])  # add extra info about each section of the report
+        mp_sale_numbers_offs = pd.concat([reports["mp_sale_numbers_offs"],], keys=["Wether n crossy sales"], names=[])  # add extra info about each section of the report
+        mp_sale_numbers_dams = pd.concat([reports["mp_sale_numbers_dams"],], keys=["Ewe sales"], names=[])  # add extra info about each section of the report
+        ###join all the mp reports together - these are generated in a separated form for the web app
+        mp_report = pd.concat([mp_summary, mp_landuse_area_k_qsz, mp_sale_numbers_offs, mp_sale_numbers_dams], axis=0)
+        mp_report = pd.concat([mp_report], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_mp"] = rfun.f_append_dfs(stacked_reports["stacked_mp"], mp_report)
+
     return stacked_reports
 
 def f_save_reports(report_run, reports, processor):
@@ -847,6 +858,8 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_cropgrazing"], 'cropgrazing_analysis', df_settings, option=xl_display_mode)
     if report_run.loc['run_flk_structure', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_flk_structure"], 'flk_structure_analysis', df_settings, option=xl_display_mode)
+    if report_run.loc['run_mp_summary', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_mp"], 'MP_summary', df_settings, option=xl_display_mode)
 
 
     df_settings.to_excel(writer, 'df_settings')
