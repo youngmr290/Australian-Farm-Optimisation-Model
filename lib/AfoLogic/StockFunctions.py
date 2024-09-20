@@ -1675,6 +1675,23 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, rev_trait_value, nec
     ##Note: in the CSIRO equation system fat, muscle and viscera are just for reporting purposes
     return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
+def f1_scale_components(scalar, ebg, ebg_prior, d_fat, d_muscle, d_viscera):
+    ###Step 10c: If ebg is the target trait, scale the energy traits so that LW change requires energy.
+    ###Scaling adjusts the components, holding body composition constant (Note: the back calc then alters MEI).
+    ###If EBG is the target trait it wouldn't be overwritten by f1_rev_update, therefore equal value before and after
+    ###Note: if ebg is not changed by the SA on the target trait then energy will be scaled but scalar = 1
+    ###Scaling doesn't occur if the EBG is altered by f1_rev_update. This happens if the target trait is one of the
+    ###components traits i.e. REV of the energy traits is calculated with a constant ebg
+    ###An implied assumption: varying the component traits doesn't change animal sale value because ebg is constant.
+    rev_trait_is_ebg = np.allclose(ebg, ebg_prior, equal_nan=True)    #allclose() means ebg==ebg_prior
+    if rev_trait_is_ebg or sen.sav['force_ebg_scalar']:
+        ## If the rev trait is ebg, scale the energy components so that the total mass change of the components == ebg.
+        ###i.e. a change in ebg is valued with fixed body composition (implies wbec is corrected for LW).
+        d_fat = d_fat * scalar
+        d_muscle = d_muscle * scalar
+        d_viscera = d_viscera * scalar
+    return d_fat, d_muscle, d_viscera
+
 
 def f1_back_calculate_mei(ck, cg, nem_ee, nefat, nemuscle, neviscera, hp_wcl, ne_wcl, km, heat_loss_m0p1
                           , days_period, b_mask, mei_propn_milk, sam_kg, target=0):
@@ -1819,23 +1836,10 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     d_muscle = f1_rev_update('muscle', d_muscle_prior, rev_trait_value)
     d_viscera = f1_rev_update('viscera', d_viscera_prior, rev_trait_value)
     ###Step 10b: If required scale the energy components to sum to ebg, so that LW change requires energy.
-    ###Step 10c: If ebg is the target trait, scale the energy traits to sum to ebg, so that LW change requires energy.
-    ###Scaling adjusts the components, holding body composition constant, the back calc then alters MEI.
-    ###If EBG is the target trait it wouldn't be overwritten by f1_rev_update, therefore equal value before and after
-    ###Note: if ebg is not changed by the SA on the target trait then energy will be scaled but scalar = 1
-    ###Scaling doesn't occur if the EBG is altered by f1_rev_update. This happens if the target trait is one of the
-    ###components traits i.e. REV of the energy traits is calculated with a constant ebg
-    ###An implied assumption: varying the component traits doesn't change animal sale value because ebg is constant.
     scalar = fun.f_divide(ebg, d_fat + d_muscle + d_viscera)
     #todo may want to add a SA that excludes ebg_scalar so that ebg REV can be calculated without an energy effect
     if not(np.allclose(scalar, 1)):  #weight of the components or ebg was altered by REV
-        rev_trait_is_ebg = np.allclose(ebg, ebg_prior, equal_nan=True)    #allclose() means ebg==ebg_prior
-        if rev_trait_is_ebg or sen.sav['force_ebg_scalar']:
-            ## If the rev trait is ebg, scale the energy components so that the total mass change of the components == ebg.
-            ###i.e. a change in ebg is valued with fixed body composition (implies wbec is corrected for LW).
-            d_fat = d_fat * scalar
-            d_muscle = d_muscle * scalar
-            d_viscera = d_viscera * scalar
+        d_fat, d_muscle, d_viscera = f1_scale_components(scalar, ebg, ebg_prior, d_fat_prior, d_muscle_prior, d_viscera_prior)
     ###Step 10c: Update energy of fat, muscle & viscera after REV & scaling
     nefat = f1_weight_energy_conversion(cg, 0, weight=d_fat)
     nemuscle = f1_weight_energy_conversion(cg, 1, weight=d_muscle)
