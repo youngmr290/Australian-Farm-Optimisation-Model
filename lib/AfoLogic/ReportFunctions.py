@@ -3154,7 +3154,6 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     axis_slice = {5:[0,1,1]} #only sale slices
     ave_salevalue_prog = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                        na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    summary_df.loc[trial, 'Sale value'] = round(max(ave_salevalue_offs.squeeze(), ave_salevalue_prog.squeeze()), 0) #this assumes that offs are sold as either offs or prog
     ##ave wether sale weight
     ###offs
     type = 'stock'
@@ -3182,7 +3181,29 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     axis_slice = {4:[0,1,1]} #only sale slices
     ave_saleweight_prog = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                        na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-    summary_df.loc[trial, 'Sale weight'] = round(max(ave_saleweight_offs.squeeze(), ave_saleweight_prog.squeeze()), 0) #this assumes that offs are sold as either offs or prog
+    ###calc average sale value and weight of offs and prog
+    ####get offs and prog sale numbers for weighted average
+    type = 'stock'
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+    arith = 2
+    index = []
+    cols = []
+    axis_slice = {4:[1,None,1]} #only sale slices
+    salenumber_offs = f_stock_pasture_summary(r_vals, type=type, weights=weights,
+                                             keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    type = 'stock'
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    keys = 'prog_keys_qsk3k5twzia0xg2'
+    arith = 2
+    index = []
+    cols = []
+    axis_slice = {4:[0,1,1]} #only sale slices
+    salenumber_prog = f_stock_pasture_summary(r_vals, type=type, weights=weights,
+                                             keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc[trial, 'Sale value'] = np.round(fun.f_divide(ave_salevalue_offs*salenumber_offs + ave_salevalue_prog*salenumber_prog, salenumber_offs + salenumber_prog),0)[0,0]
+    summary_df.loc[trial, 'Sale weight'] = np.round(fun.f_divide(ave_saleweight_offs*salenumber_offs + ave_saleweight_prog*salenumber_prog, salenumber_offs + salenumber_prog),0)[0,0]
+
     ##pasture area
     pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
     z_prob_qsz = r_vals['zgen']['z_prob_qsz']
