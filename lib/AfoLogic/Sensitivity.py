@@ -411,7 +411,8 @@ def create_sa():
     sam['LTW_offs'] = 1.0                       #adjust impact of life time wool fleece effects
     sam['pi_post_adult'] = 1.0                        #Post loop potential intake of adults (zf2==1)
     sam['pi_post_yatf'] = 1.0                        #Post loop potential intake of yatf
-    sam['chill'] = 1.0                        #intermediate sam on chill.
+    sam['chill_index'] = 1.0                        #intermediate sam on chill index - impact on lamb survival.
+    sam['heat_loss'] = 1.0                          #intermediate sam on heat loss - impact on energy requirements (set to 0 in REV analyses)
     sam['rr_og1'] = np.ones(pinp.sheep['i_scan_og1'].shape, dtype='float64')    # reproductive rate by age. Use shape that has og1
     sam['wean_redn_ol0g2'] = np.ones((len_o, len_l0, len_g2), dtype='float64')  #Adjust the number of yatf transferred at weaning - this is a high level sa, it impacts within a calculation not on an input
     ##SAP

@@ -2095,7 +2095,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                            * (40 - temp_ave_pa1e1b1nwzida0e0b0xyg[..., na])
                                            + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygp0))
                                            + chill_adj_pa1e1b1nwzida0e0b0xyg1[..., na])
-    chill_index_pa1e1b1nwzida0e0b0xygp0 = fun.f_sa(chill_index_pa1e1b1nwzida0e0b0xygp0, sen.sam['chill'])
+    ##Note: the order of these calculations mean that chill_adj is being scaled by sam[chill_index]
+    chill_index_pa1e1b1nwzida0e0b0xygp0 = fun.f_sa(chill_index_pa1e1b1nwzida0e0b0xygp0, sen.sam['chill_index'])
 
     ##Proportion of SRW with age
     srw_age_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.exp(-cn_sire[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0
