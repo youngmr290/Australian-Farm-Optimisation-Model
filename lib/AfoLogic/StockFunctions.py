@@ -1613,7 +1613,7 @@ def f_heatloss_nfs(cc, ffcfw_start, rc_start, sl_start, temp_ave, temp_max, temp
                                         ,in_tissue[..., na, na] + in_ext_m0p1)
     ##Heat loss to the environment (MJ/d) average for the generator period. This is compared with average heat production.
     ### Note: This is slightly different to CFS because CFS averages the heat loss above heat production each day
-    total_heat_loss_m0p1 =  area[..., na, na] * heat_loss_m0p1
+    total_heat_loss_m0p1 =  fun.f_sa(area[..., na, na] * heat_loss_m0p1, sen.sam['heat_loss'])
     return total_heat_loss_m0p1
 
 
