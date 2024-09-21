@@ -1568,6 +1568,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     age_pa1e1b1nwzida0e0b0xyg1 = (age_start_pa1e1b1nwzida0e0b0xyg1 + age_end_pa1e1b1nwzida0e0b0xyg1 +1) /2
     age_pa1e1b1nwzida0e0b0xyg2 = (age_start_pa1e1b1nwzida0e0b0xyg2 + age_end_pa1e1b1nwzida0e0b0xyg2 +1) /2
     age_pa1e1b1nwzida0e0b0xyg3 = (age_start_pa1e1b1nwzida0e0b0xyg3 + age_end_pa1e1b1nwzida0e0b0xyg3 +1) /2
+    age_cut_pa1e1b1nwzida0e0b0xyg3 = age_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p]
 
     ##days in each period for each animal - can't mask the offs p axis because need full axis so it can be used in the generator (if days_period[p] > 0)
     days_period_pa1e1b1nwzida0e0b0xyg0 = age_end_pa1e1b1nwzida0e0b0xyg0 +1 - age_start_pa1e1b1nwzida0e0b0xyg0
@@ -1679,7 +1680,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     srw_female_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_rev_sa(fun.f_expand(srw_female_yg0, p_pos-1, right_pos=y_pos), sen.saa['rev_srw'], age=age_pa1e1b1nwzida0e0b0xyg0, sa_type=2)
     srw_female_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_rev_sa(fun.f_expand(srw_female_yg1, p_pos-1, right_pos=y_pos), sen.saa['rev_srw'], age=age_pa1e1b1nwzida0e0b0xyg1, sa_type=2)
     srw_female_pa1e1b1nwzida0e0b0xyg2 = sfun.f1_rev_sa(fun.f_expand(srw_female_yg2, p_pos-1, right_pos=y_pos), sen.saa['rev_srw'], age=age_pa1e1b1nwzida0e0b0xyg2, sa_type=2)
-    srw_female_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_rev_sa(fun.f_expand(srw_female_yg3, p_pos-1, right_pos=y_pos), sen.saa['rev_srw'], age=age_pa1e1b1nwzida0e0b0xyg3, sa_type=2)
+    srw_female_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_rev_sa(fun.f_expand(srw_female_yg3, p_pos-1, right_pos=y_pos), sen.saa['rev_srw'], age=age_cut_pa1e1b1nwzida0e0b0xyg3, sa_type=2)
 
     ##calc proportion of dry, singles, twin and triplets based on the genotype as born.
     ###e.g. BBM dams are based on BBB scanning and BBB survival. BBM offspring are based on BBB scanning and BBM survival
@@ -1741,7 +1742,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     srw_a1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(srw_pa1e1b1nwzida0e0b0xyg0, axis=p_pos, weights=age_pa1e1b1nwzida0e0b0xyg0>0) #aveage p for periods when the animal exists
     srw_a1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(srw_pa1e1b1nwzida0e0b0xyg1, axis=p_pos, weights=age_pa1e1b1nwzida0e0b0xyg1>0) #aveage p for periods when the animal exists
     srw_a1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(srw_pa1e1b1nwzida0e0b0xyg2, axis=p_pos, weights=age_pa1e1b1nwzida0e0b0xyg2>0) #aveage p for periods when the animal exists
-    srw_a1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(srw_pa1e1b1nwzida0e0b0xyg3, axis=p_pos, weights=age_pa1e1b1nwzida0e0b0xyg3>0) #aveage p for periods when the animal exists
+    srw_a1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(srw_pa1e1b1nwzida0e0b0xyg3, axis=p_pos, weights=age_cut_pa1e1b1nwzida0e0b0xyg3>0) #aveage p for periods when the animal exists
     muscle_target_b0xyg0 = muscle_target_female_yg0 * np.sum(cb0_sire[11, ...] * btrt_propn_b0xyg0, axis = 0) * cx_sire[11, 0:1, ...]
     muscle_target_b0xyg1 = muscle_target_female_yg1 * np.sum(cb0_dams[11, ...] * btrt_propn_b0xyg1, axis = 0)  * cx_dams[11, 1:2, ...]
     muscle_target_b1xyg2 = muscle_target_female_yg2 * cb1_yatf[11, ...] * cx_yatf[11, mask_x,...]
@@ -3661,7 +3662,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             , relsize_start_offs, d_cfw_history_start_p2g3, mei_offs, new_min_pa1e1b1nwzida0e0b0xyg3[p]
                             , d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p], sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw]
                             , af_wool_pa1e1b1nwzida0e0b0xyg3[p], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p]
-                            , kw_cs_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p], age_pa1e1b1nwzida0e0b0xyg3[p]
+                            , kw_cs_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p], age_cut_pa1e1b1nwzida0e0b0xyg3[p]
                             , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
                             , rev_trait_values['offs'][p])
                         if eqn_used:
@@ -3730,7 +3731,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                            , mei_offs, new_min_pa1e1b1nwzida0e0b0xyg3[p]
                                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...], sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw]
                                            , af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
-                                           , kw_mu_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p], age_pa1e1b1nwzida0e0b0xyg3[p]
+                                           , kw_mu_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p], age_cut_pa1e1b1nwzida0e0b0xyg3[p]
                                            , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
                                            , rev_trait_values['offs'][p])
                         if eqn_used:
@@ -3797,7 +3798,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                             , new_min_pa1e1b1nwzida0e0b0xyg3[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                             , sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw], af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                             , dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], days_period_pa1e1b1nwzida0e0b0xyg3[p]
-                                            , age_pa1e1b1nwzida0e0b0xyg3[p], sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
+                                            , age_cut_pa1e1b1nwzida0e0b0xyg3[p], sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
                                             , rev_trait_values['offs'][p])
                         if eqn_used:
                             d_cfw_offs = temp0
@@ -4129,7 +4130,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_mu(cg_offs
                                 , ck_offs, rc_start_offs, mei_offs, neme_mu_offs, km_offs, hp_mei_mu_offs, new_offs
-                                , kw_mu_yg3, zf1_offs, zf2_offs, heat_loss_offsm0p1, age_pa1e1b1nwzida0e0b0xyg3[p]
+                                , kw_mu_yg3, zf1_offs, zf2_offs, heat_loss_offsm0p1, age_cut_pa1e1b1nwzida0e0b0xyg3[p]
                                 , rev_trait_values['offs'][p], days_period_pa1e1b1nwzida0e0b0xyg3[p], sam_kg=sam_kg_offs)
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_mu_offs = temp6
@@ -5217,7 +5218,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                    temp0 = sfun.f_mortality_weaner_cs(cd_offs, cg_offs, age_pa1e1b1nwzida0e0b0xyg3[p], ebg_offs, sd_ebg_offs
+                    temp0 = sfun.f_mortality_weaner_cs(cd_offs, cg_offs, age_cut_pa1e1b1nwzida0e0b0xyg3[p], ebg_offs, sd_ebg_offs
                                         , d_nw_max_pa1e1b1nwzida0e0b0xyg3[p], days_period_pa1e1b1nwzida0e0b0xyg3[p])
                     if eqn_used:
                         mortality_offs += temp0
@@ -5685,7 +5686,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 sl_offs = (fl_offs - fl_shear_yg3) * cw_offs[15, ...]
                 ##Staple strength if shorn(end)
                 ss_offs = fd_min_offs ** 2 / fd_offs ** 2 * cw_offs[16, ...] + sen.saa['ss']
-                ss_offs = sfun.f1_rev_sa(ss_offs, sen.saa['rev_ss'], age_pa1e1b1nwzida0e0b0xyg3[p], sa_type=2)
+                ss_offs = sfun.f1_rev_sa(ss_offs, sen.saa['rev_ss'], age_cut_pa1e1b1nwzida0e0b0xyg3[p], sa_type=2)
                 ##Process the SS REV: if SS is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
                 ss_offs = sfun.f1_rev_update('ss', ss_offs, rev_trait_values['offs'][p])
 
