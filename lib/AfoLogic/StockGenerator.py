@@ -4266,7 +4266,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             mei_offs = mei_offs + temp5
                             mei_solid_offs = mei_solid_offs + temp5
                             surplus_energy_offs = temp7
-                            kg_offs = temp8
+                            # kg_offs = temp8
                             mem_offs = temp9   # will overwrite mem calculated using CS equations if using this system
                         if eqn_compare:
                             # r_compare7_q0q2tpoffs[eqn_system, 0, :, p, ...] = temp9  Storing meme cs equivalent
