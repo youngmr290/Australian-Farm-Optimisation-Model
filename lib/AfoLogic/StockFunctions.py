@@ -1746,7 +1746,6 @@ def f1_back_calculate_mei(ck, cg, nem_ee, nefat, nemuscle, neviscera, hp_wcl, ne
             np.maximum(0, heat_loss_m0p1 - (nem_ee + hp_wcl + (nem_ee + ne_wcl + hp_wcl) * (1 / km - 1)
                                             + wbec_ee * (1 / (kg_ee * km) - 1))[..., na, na]), axis=(-1, -2))
         wbec_ee = (wbec + chill_increment) * (days_period > 0) * b_mask
-        # print(f'loop {loop} devn {np.max(np.absolute(wbec_ee - target))} chill (min max) {np.min(chill_increment)} {np.max(chill_increment)}  max wbec diff min {np.min(wbec_ee - t_wbec)} {np.max(wbec_ee - t_wbec)} kg=1 {np.count_nonzero(np.isclose(kg_ee, 1))} of {np.size(kg_ee)}')
         loop += 1
     ###Calculate the components & me of components if chill wasn't included
     nefat_ee = wbec_ee * fat_propn
@@ -1839,14 +1838,14 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     scalar = fun.f_divide(ebg, d_fat + d_muscle + d_viscera)
     #todo may want to add a SA that excludes ebg_scalar so that ebg REV can be calculated without an energy effect
     if not(np.allclose(scalar, 1)):  #weight of the components or ebg was altered by REV
-        d_fat, d_muscle, d_viscera = f1_scale_components(scalar, ebg, ebg_prior, d_fat_prior, d_muscle_prior, d_viscera_prior)
+        d_fat, d_muscle, d_viscera = f1_scale_components(scalar, ebg, ebg_prior, d_fat, d_muscle, d_viscera)
     ###Step 10c: Update energy of fat, muscle & viscera after REV & scaling
     nefat = f1_weight_energy_conversion(cg, 0, weight=d_fat)
     nemuscle = f1_weight_energy_conversion(cg, 1, weight=d_muscle)
     neviscera = f1_weight_energy_conversion(cg, 2, weight=d_viscera)
     ###Step 10d: Update heat production associated with retained energy (metabolisable energy)
     ##Back calculate MEI if it is required
-    mei_adjustment = 0  #set default value if function isn't called
+    mei_adjustment = 0  #set default value if back calculation function isn't called
     # if True:    #uncomment this line to force the back calculation
     if not(np.allclose(d_fat_prior, d_fat) and np.allclose(d_muscle_prior, d_muscle)
            and np.allclose(d_viscera_prior, d_viscera)): #any energy component is altered by the REV adjustments
@@ -1874,6 +1873,7 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
 
 def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_maint, hp_mei, dw, heat_loss_m0p1, step
               , rev_trait_value, dc = 0, bc = 0, dl = 0, gest_propn = 0, lact_propn = 0):
+    #todo Connect a back calculation function for nfs (or perhaps change the existing function to work for both mu & nfs)
     ##fat gain (MJ/d) is calculated using a formula derived from the Oddy etal 2023 paper (see Generator9:p16-17)
     ###The calculation is multistep because parameter values (bcm & bcf) depend on the sign of dm and df
     ###Steps
@@ -2006,6 +2006,8 @@ def f_lwc_nfs(cg, ck, muscle, viscera, muscle_target, mei_initial, km, md, hp_ma
         if rev_trait_is_ebg or sen.sav['force_ebg_scalar']:
             ## If the rev trait is ebg, scale the energy components so that the total mass change of the components == ebg.
             ###i.e. a change in ebg is valued with fixed body composition (implies wbec is corrected for LW).
+            #todo Is this going to be a problem when wbec is close to 0
+            # in this scenario df is +ve and dm is negative and the scalar will scale both away from 0
             df = df * scalar
             dm = dm * scalar
             dv = dv * scalar
