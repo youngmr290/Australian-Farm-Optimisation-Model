@@ -1676,13 +1676,14 @@ def f_lwc_cs(cg, rc_start, mei, mem, new, zf1, zf2, kg, kw, rev_trait_value, nec
     return ebg, evg, d_fat, d_muscle, d_viscera, surplus_energy
 
 def f1_scale_components(scalar, ebg, ebg_prior, d_fat, d_muscle, d_viscera):
-    ###Step 10c: If ebg is the target trait, scale the energy traits so that LW change requires energy.
-    ###Scaling adjusts the components, holding body composition constant (Note: the back calc then alters MEI).
-    ###If EBG is the target trait it wouldn't be overwritten by f1_rev_update, therefore equal value before and after
-    ###Note: if ebg is not changed by the SA on the target trait then energy will be scaled but scalar = 1
-    ###Scaling doesn't occur if the EBG is altered by f1_rev_update. This happens if the target trait is one of the
-    ###components traits i.e. REV of the energy traits is calculated with a constant ebg
-    ###An implied assumption: varying the component traits doesn't change animal sale value because ebg is constant.
+    """Step 10c: If ebg is the target trait, scale the energy traits so that LW change requires energy.
+    Scaling adjusts the components, holding body composition constant (Note: the back calc then alters MEI).
+    If EBG is the target trait it wouldn't be overwritten by f1_rev_update, therefore equal value before and after
+    Note: if ebg is not changed by the SA on the target trait then energy will be scaled but scalar = 1
+    Scaling doesn't occur if the EBG is altered by f1_rev_update. This happens if the target trait is one of the
+    components traits i.e. REV of the energy traits is calculated with a constant ebg
+    An implied assumption: varying the component traits doesn't change animal sale value because ebg is constant.
+    """
     rev_trait_is_ebg = np.allclose(ebg, ebg_prior, equal_nan=True)    #allclose() means ebg==ebg_prior
     if rev_trait_is_ebg or sen.sav['force_ebg_scalar']:
         ## If the rev trait is ebg, scale the energy components so that the total mass change of the components == ebg.
@@ -1711,23 +1712,6 @@ def f1_back_calculate_mei(ck, cg, nem_ee, nefat, nemuscle, neviscera, hp_wcl, ne
     The best-bet system for incorporating chill into the back calculation is calculating the wbec that would have
     been estimated in the forward calculation if there was no chill.
     The variables wbec_ee and kg_ee are calculated iteratively to converge on a value.
-
-    :param ck:
-    :param cg:
-    :param nem_ee:
-    :param nefat:
-    :param nemuscle:
-    :param neviscera:
-    :param ne_wcl:
-    :param hp_wcl:
-    :param km:
-    :param heat_loss_m0p1:
-    :param days_period:
-    :param b_mask:
-    :param mei_propn_milk:
-    :param sam_kg:
-    :param target:
-    :return:
    """
 
     ##fat_propn is required to calculate kg_ee
@@ -1846,18 +1830,17 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     ###Step 10d: Update heat production associated with retained energy (metabolisable energy)
     ##Back calculate MEI if it is required
     mei_adjustment = 0  #set default value if back calculation function isn't called
+    rev_affects_energy = not(np.allclose(d_fat_prior, d_fat) and np.allclose(d_muscle_prior, d_muscle)
+           and np.allclose(d_viscera_prior, d_viscera)) #any energy component is altered by the REV adjustments
     # if True:    #uncomment this line to force the back calculation
-    if not(np.allclose(d_fat_prior, d_fat) and np.allclose(d_muscle_prior, d_muscle)
-           and np.allclose(d_viscera_prior, d_viscera)): #any energy component is altered by the REV adjustments
-        print(f'back calculation called')
+    if rev_affects_energy:
         if sen.sam['heat_loss'] == 1:
-            #The sensitivity on heat_loss has not been activated.
+            #The sam on heat_loss has not been activated.
             raise ValueError('REV trial is being carried out without changing sam[heat_loss]. This causes errors in the back calculation')
         else:
             ##Calculate some variables to reduce the args required for f1_back_calculate_mei()
             hp_wcl = hp_dw + hp_dc * gest_propn + hp_dl * lact_propn
             ne_wcl = new + nec * gest_propn + nel * lact_propn
-
             mei, wbec_ee, surplus_energy_ee, hp_total_ee, chill_increment = f1_back_calculate_mei(ck, cg, nem_ee
                                             , nefat, nemuscle, neviscera, hp_wcl, ne_wcl, km, heat_loss_m0p1
                                             , days_period, b_mask, mei_propn_milk, sam_kg)
