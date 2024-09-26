@@ -223,16 +223,17 @@ def f_universal_inp_sa(uinp_defaults):
     ##parameters (c2 genotype sensitivity)
     ###SAV - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_srw_c2'] = fun.f_sa(parameters['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5) #genotype srw
-    parameters['i_sfw_c2'] = fun.f_sa(parameters['i_sfw_c2'].astype(float), sen.sav['sfw_c2'], 5) #genotype srw
-    parameters['i_sfd_c2'] = fun.f_sa(parameters['i_sfd_c2'].astype(float), sen.sav['sfd_c2'], 5) #genotype srw
-    parameters['i_ci_c2'] = fun.f_sa(parameters['i_ci_c2'].astype(float), sen.sav['ci_c1c2'], 5) #propn of twice drys
-    parameters['i_cl_c2'] = fun.f_sa(parameters['i_cl_c2'].astype(float), sen.sav['cl_c1c2'], 5) #propn of twice drys
-    parameters['i_cw_c2'] = fun.f_sa(parameters['i_cw_c2'].astype(float), sen.sav['cw_c1c2'], 5) #propn of twice drys
-    parameters['i_cg_c2'] = fun.f_sa(parameters['i_cg_c2'].astype(float), sen.sav['cg_c1c2'], 5) #propn of twice drys
-    parameters['i_cd_c2'] = fun.f_sa(parameters['i_cd_c2'].astype(float), sen.sav['cd_c1c2'], 5) #propn of twice drys
+    parameters['i_sfw_c2'] = fun.f_sa(parameters['i_sfw_c2'].astype(float), sen.sav['sfw_c2'], 5) #genotype sfw
+    parameters['i_sfd_c2'] = fun.f_sa(parameters['i_sfd_c2'].astype(float), sen.sav['sfd_c2'], 5) #genotype sfd
+    parameters['i_ci_c2'] = fun.f_sa(parameters['i_ci_c2'].astype(float), sen.sav['ci_c1c2'], 5) #potential intake parameters
+    parameters['i_cl_c2'] = fun.f_sa(parameters['i_cl_c2'].astype(float), sen.sav['cl_c1c2'], 5) #lactation parameters
+    parameters['i_cp_c2'] = fun.f_sa(parameters['i_cp_c2'].astype(float), sen.sav['cp_c1c2'], 5) #pregnancy parameters
+    parameters['i_cw_c2'] = fun.f_sa(parameters['i_cw_c2'].astype(float), sen.sav['cw_c1c2'], 5) #wool growth parameters
+    parameters['i_cg_c2'] = fun.f_sa(parameters['i_cg_c2'].astype(float), sen.sav['cg_c1c2'], 5) #growth parameters
+    parameters['i_cd_c2'] = fun.f_sa(parameters['i_cd_c2'].astype(float), sen.sav['cd_c1c2'], 5) #mortaltiuy parameters
     parameters['i_ce_c2'][2,...] = fun.f_sa(parameters['i_ce_c2'][2,...].astype(float), sen.sav['bnd_twice_dry_propn'], 5) #propn of twice drys
     parameters['i_cl0_c2'] = fun.f_sa(parameters['i_cl0_c2'].astype(float), sen.sav['cl0_c1c2'], 5) #genotype litter size params
-    parameters['i_cu2_c2'] = fun.f_sa(parameters['i_cu2_c2'].astype(float), sen.sav['cu2_c1c2'], 5) #genotype litter size params
+    parameters['i_cu2_c2'] = fun.f_sa(parameters['i_cu2_c2'].astype(float), sen.sav['cu2_c1c2'], 5) #Murdoch Uni parameters
     ###SAM - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_ci_c2'] = fun.f_sa(parameters['i_ci_c2'].astype(float),sen.sam['ci_c1c2'])
     parameters['i_cm_c2'] = fun.f_sa(parameters['i_cm_c2'].astype(float),sen.sam['cm_c1c2'])

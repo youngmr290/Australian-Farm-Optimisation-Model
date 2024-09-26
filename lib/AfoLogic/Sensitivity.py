@@ -465,6 +465,7 @@ def create_sa():
     sav['sfd_c2'] = np.full(uinp.parameters['i_sfd_c2'].shape, '-', dtype=object)  #std fibre diameter genotype params
     sav['ci_c1c2'] = np.full(uinp.parameters['i_ci_c2'].shape, '-', dtype=object)  #intake params for genotypes
     sav['cl_c1c2'] = np.full(uinp.parameters['i_cl_c2'].shape, '-', dtype=object)  #lactation params for genotypes.
+    sav['cp_c1c2'] = np.full(uinp.parameters['i_cp_c2'].shape, '-', dtype=object)  #pregnancy params for genotypes.
     sav['cw_c1c2'] = np.full(uinp.parameters['i_cw_c2'].shape, '-', dtype=object)  #wool growth params for genotypes
     sav['cg_c1c2'] = np.full(uinp.parameters['i_cg_c2'].shape, '-', dtype=object)  #weight gain params for genotypes.
     sav['cd_c1c2'] = np.full(uinp.parameters['i_cd_c2'].shape, '-', dtype=object)  #mortality params for genotypes.
