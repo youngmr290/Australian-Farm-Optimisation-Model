@@ -3064,7 +3064,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###Relative condition (start)
                 rc_start_sire = ffcfw_start_sire / nw_start_sire
                 ##Condition score at  start of p
-                cs_start_sire = sfun.f1_condition_score(rc_start_sire, cn_sire)
+                cs_start_sire = sfun.f1_condition_score(cn_sire, rc_start_sire)
                 ###staple length
                 sl_start_sire = fl_start_sire * cw_sire[15,...]
                 ###Relative size (start) - dams & sires
@@ -3098,7 +3098,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###Relative condition (start)
                 rc_start_dams = ffcfw_start_dams / nw_start_dams
                 ##Condition score of the dam at  start of p
-                cs_start_dams = sfun.f1_condition_score(rc_start_dams, cn_dams)
+                cs_start_dams = sfun.f1_condition_score(cn_dams, rc_start_dams)
                 ###Relative condition of dam at parturition - needs to be remembered between loops (milk production) - Loss of potential milk due to consistent under production
                 rc_birth_dams = fun.f_update(rc_birth_start_dams, rc_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
                 ###staple length
@@ -3168,7 +3168,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###Relative condition (start)
                 rc_start_offs = ffcfw_start_offs / nw_start_offs
                 ##Condition score at  start of p
-                cs_start_offs = sfun.f1_condition_score(rc_start_offs, cn_offs)
+                cs_start_offs = sfun.f1_condition_score(cn_offs, rc_start_offs)
                 ###staple length
                 sl_start_offs = fl_start_offs * cw_offs[15,...]
                 ###Relative size (start) - dams & sires
@@ -4414,7 +4414,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ##Relative condition of the dam at mating - required to determine milk production
                 rc_mating_dams = ffcfw_mating_dams / nw_start_dams_e1b1sliced
                 ##Condition score of the dams at mating
-                cs_mating_dams = sfun.f1_condition_score(rc_mating_dams, cn_dams)
+                cs_mating_dams = sfun.f1_condition_score(cn_dams, rc_mating_dams)
                 ##Relative size of the dams at mating
                 relsize_mating_dams = relsize_start_dams_e1b1sliced
 
@@ -4560,7 +4560,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 temp_rc_start_yatf = ffcfw_start_yatf / nw_start_yatf
                 rc_start_yatf = fun.f_update(rc_start_yatf, temp_rc_start_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0)
                 ##Condition score of the dam at  start of p
-                cs_start_yatf = sfun.f1_condition_score(rc_start_yatf, cn_yatf)
+                cs_start_yatf = sfun.f1_condition_score(cn_yatf, rc_start_yatf)
                 ###staple length
                 sl_start_yatf = fl_start_yatf * cw_yatf[15,...]
                 ###Relative size (start) - dams & sires
@@ -7819,7 +7819,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         , age_end_p9a1e1b1nwzida0e0b0xyg0, discount_age_s7tpa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg[...,0:1,:,:], sale_agemax_s7tpa1e1b1nwzida0e0b0xyg0, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg0
-        ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, mask_s7g_s7tpa1e1b1nwzida0e0b0xyg0, dtype)
+        ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, mask_s7g_s7tpa1e1b1nwzida0e0b0xyg0
+        , rev_trait_values['sire'], dtype)
     salevalue_c1qtpa1e1b1nwzida0e0b0xyg1[:,:,:,sale_mask_p1], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg1[:,:,sale_mask_p1] = sfun.f_sale_value(
         cn_dams.astype(dtype), cx_dams[:,1:2,...].astype(dtype), rc_start_dams_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg1
         , dresspercent_adj_yg1, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
@@ -7829,7 +7830,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         , age_end_p9a1e1b1nwzida0e0b0xyg1, discount_age_s7tpa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg[...,1:2,:,:], sale_agemax_s7tpa1e1b1nwzida0e0b0xyg1, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg1
-        ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, mask_s7g_s7tpa1e1b1nwzida0e0b0xyg1, dtype)
+        ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, mask_s7g_s7tpa1e1b1nwzida0e0b0xyg1
+        , rev_trait_values['dams'], dtype)
     salevalue_c1qtp9a1e1b1nwzida0e0b0xyg2, r_salegrid_c1tpa1e1b1nwzida0e0b0xyg2[:,:,sale_mask_p2] = sfun.f_sale_value(                                                #keep it as a condensed p axis
         cn_yatf.astype(dtype), cx_yatf[:,mask_x,...].astype(dtype), rc_start_yatf_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg2
         , dresspercent_adj_yg2, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
@@ -7839,7 +7841,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         , age_end_p9a1e1b1nwzida0e0b0xyg2, discount_age_s7tpa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemax_s7tpa1e1b1nwzida0e0b0xyg2, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg2
-        ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, mask_s7g_s7tpa1e1b1nwzida0e0b0xyg2, dtype)
+        ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, mask_s7g_s7tpa1e1b1nwzida0e0b0xyg2
+        , rev_trait_values['yatf'], dtype)
     salevalue_c1qtpa1e1b1nwzida0e0b0xyg3[:,:,:,sale_mask_p3], r_salegrid_c1tpa1e1b1nwzida0e0b0xyg3[:,:,sale_mask_p3] = sfun.f_sale_value(
         cn_offs, cx_offs[:,mask_x,...].astype(dtype), rc_start_offs_tp9g, ffcfw_tp9a1e1b1nwzida0e0b0xyg3
         , dresspercent_adj_yg3, dresspercent_adj_s6tpa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7tpa1e1b1nwzida0e0b0xyg
@@ -7849,7 +7852,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         , age_end_p9a1e1b1nwzida0e0b0xyg3, discount_age_s7tpa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7tpa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7tpa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemax_s7tpa1e1b1nwzida0e0b0xyg3, sale_agemin_s7tpa1e1b1nwzida0e0b0xyg3
-        ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, mask_s7g_s7tpa1e1b1nwzida0e0b0xyg3, dtype)
+        ,sale_ffcfw_min_s7tpa1e1b1nwzida0e0b0xyg, sale_ffcfw_max_s7tpa1e1b1nwzida0e0b0xyg, mask_s7g_s7tpa1e1b1nwzida0e0b0xyg3
+        , rev_trait_values['offs'], dtype)
 
     ###create salevalue with average c1 - this is used for wc/minroe and reporting because we don't think c1 is needed for them
     salevalue_qtpa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(salevalue_c1qtpa1e1b1nwzida0e0b0xyg0, prob_c1tpg[:,na,...], axis=0)
@@ -9798,9 +9802,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##cs - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
     if sinp.rep['i_store_cs_rep']:
-        cs_tpg0 = sfun.f1_condition_score(o_rc_start_tpsire, cn_sire.astype(dtype))
-        cs_tpg1 = sfun.f1_condition_score(o_rc_start_tpdams, cn_dams.astype(dtype))
-        cs_tpg3 = sfun.f1_condition_score(o_rc_start_tpoffs, cn_offs.astype(dtype))
+        cs_tpg0 = sfun.f1_condition_score(cn_sire.astype(dtype), o_rc_start_tpsire)
+        cs_tpg1 = sfun.f1_condition_score(cn_dams.astype(dtype), o_rc_start_tpdams)
+        cs_tpg3 = sfun.f1_condition_score(cn_offs.astype(dtype), o_rc_start_tpoffs)
         r_cs_psire = cs_tpg0
         r_cs_k2Tvpdams = (cs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
@@ -9810,9 +9814,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##fs - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesn't affect NV
     if sinp.rep['i_store_fs_rep']:
-        fs_tpg0 = sfun.f1_fat_score(o_rc_start_tpsire, cn_sire.astype(dtype))
-        fs_tpg1 = sfun.f1_fat_score(o_rc_start_tpdams, cn_dams.astype(dtype))
-        fs_tpg3 = sfun.f1_fat_score(o_rc_start_tpoffs, cn_offs.astype(dtype))
+        fs_tpg0 = sfun.f1_fat_score(cn_sire.astype(dtype), o_rc_start_tpsire)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
+        fs_tpg1 = sfun.f1_fat_score(cn_dams.astype(dtype), o_rc_start_tpdams)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
+        fs_tpg3 = sfun.f1_fat_score(cn_offs.astype(dtype), o_rc_start_tpoffs)   #Note: these don't include saa[rev_cfat] - difficult to include with rev_trait_values
         r_fs_psire = fs_tpg0
         r_fs_k2Tvpdams = (fs_tpg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
