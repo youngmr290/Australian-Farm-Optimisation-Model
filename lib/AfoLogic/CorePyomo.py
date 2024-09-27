@@ -793,7 +793,7 @@ def f_con_asset(model):
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last period
         p7_start = l_p7[0]
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
-            return (suppy.f_sup_asset(model,q,s,p7,z9) + macpy.f_mach_asset(model,p7) + stkpy.f_stock_asset(model,q,s,p7,z9)) * uinp.finance['opportunity_cost_capital'] \
+            return (suppy.f_sup_asset(model,q,s,p7,z9) + macpy.f_mach_asset(model,p7) + stkpy.f_stock_asset(model,q,s,p7,z9) + 8500000) * uinp.finance['opportunity_cost_capital'] \
                    - model.v_asset_cost[q,s,p7,z9] \
                    + sum(model.v_asset_cost[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
                          for z8 in model.s_season_types) * ((p7!=p7_start)*1) <= 0 #end doesn't carry over
