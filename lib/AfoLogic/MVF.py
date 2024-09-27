@@ -31,6 +31,8 @@ def f_vol():
         ri_qual_q = fsfun.f_rel_intake(1, rq_q, clover_propn)  # base the quality groups on ra = 1
     volume_q = 1 / ri_qual_q
     volume_100mj_q = volume_q / me_q * mvf_me
+    ##Change volume for the last slice = 0, as an estimate of the value of energy akin to an infusion of energy
+    volume_100mj_q[-1] = 0
     ##make vol a dict for pyomo
     keys = pinp.mvf['i_q_idx']
     volume = dict(zip(keys, volume_100mj_q))
