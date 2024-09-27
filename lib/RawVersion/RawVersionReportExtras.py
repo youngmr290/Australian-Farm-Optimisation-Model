@@ -73,6 +73,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_mei_pdams"] = pd.DataFrame()  # metabolisable intake for dams (large array with p, e and b axis)
     reports["stacked_pi_pdams"] = pd.DataFrame()  # potential intake for dams (large array with p, e and b axis)
     reports["stacked_ebw_pyatf"] = pd.DataFrame()  # empty body weight yatf (large array with p, e and b axis)
+    reports["stacked_ebw_cut_yatf"] = pd.DataFrame()  #empty body weight yatf for select p period
     reports["stacked_wbe_pyatf"] = pd.DataFrame()  # wbe profile yatf (large array with p, e and b axis)
     reports["stacked_ebw_prog"] = pd.DataFrame()  # empty body weight prog (with e and b axis)
     reports["stacked_ebw_offs"] = pd.DataFrame()  # empty body weight offs (DVP)
@@ -377,6 +378,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_ebw_pyatf', 'Run']:
         ebw_pyatf = pd.concat([reports["ebw_pyatf"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_ebw_pyatf"] = rfun.f_append_dfs(stacked_reports["stacked_ebw_pyatf"], ebw_pyatf)
+
+    if report_run.loc['run_ebw_cut_yatf', 'Run']:
+        ebw_cut_dams = pd.concat([reports["ebw_cut_yatf"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_ebw_cut_yatf"] = rfun.f_append_dfs(stacked_reports["stacked_ebw_cut_yatf"], ebw_cut_dams)
 
     if report_run.loc['run_wbe_pyatf', 'Run']:
         wbe_pyatf = pd.concat([reports["wbe_pyatf"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -753,6 +758,8 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_pi_pdams"], 'pi_pdams', df_settings, option=xl_display_mode)
     if report_run.loc['run_ebw_pyatf', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ebw_pyatf"], 'ebw_pyatf', df_settings, option=xl_display_mode)
+    if report_run.loc['run_ebw_cut_yatf', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_ebw_cut_yatf"], 'ebw_cut_yatf', df_settings, option=xl_display_mode)
     if report_run.loc['run_wbe_pyatf', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_wbe_pyatf"], 'wbe_pyatf', df_settings, option=xl_display_mode)
     if report_run.loc['run_ebw_prog', 'Run']:

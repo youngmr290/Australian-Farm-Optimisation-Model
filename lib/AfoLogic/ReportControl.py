@@ -817,6 +817,25 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["ebw_pyatf"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
                                  , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys
                                  , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_ebw_cut_yatf', 'Run']:
+        ##ebw for a select number of p periods
+        type = 'stock'
+        prod = 'ebw_yatf_k2tvPa1e1b1nw8zixyg1'
+        na_prod = [0,1] #q,s
+        prod_weights = 'Pe1b1_nyatf_numbers_weights_k2tvPa1e1b1nw8zixyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_prodweights = [0,1] #q,s
+        weights = 'dams_numbers_qsk2tvanwziy1g1'
+        na_weights = [5, 7, 8, 13]                  #p, e1, b1, x
+        den_weights = 'Pe1b1_nyatf_numbers_weights_k2tvPa1e1b1nw8zixyg1' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off-hand)
+        na_denweights = [0,1] #q,s
+        keys = 'yatf_keys_qsk2tvPaebnwzixy1g1'
+        arith = f_update_default_controls(user_controls, 'ebw_cut_yatf', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'ebw_cut_yatf', 'index', [5])      #p
+        cols = f_update_default_controls(user_controls, 'ebw_cut_yatf', 'cols', [8])  #k2, g2, w8, x
+        axis_slice = f_update_default_controls(user_controls, 'ebw_cut_yatf', 'axis_slice', {7: [0,1,1]}) #e[0]
+        reports["ebw_cut_yatf"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights, na_prodweights=na_prodweights
+                                 , weights=weights, na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys
+                                 , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_wbe_pyatf', 'Run']:
         ##Average yatf wbe with p, e & b axis. wbe is not adjusted by mortality (Ie if the light ones all die then the weighting by p should change)
         ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
