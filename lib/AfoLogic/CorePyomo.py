@@ -785,8 +785,8 @@ def f_con_dep(model):
 
 
 def f_con_asset(model):
-    '''Tallies the total asset value to ensure that there is a minimum ROI on farm assets. The asset value multiplied
-    by opportunity cost on capital is then passed to the objective.
+    '''Tallies the total asset value to ensure that there is a minimum ROI on farm assets that are selected.
+    The asset value multiplied by opportunity cost on capital is then passed to the objective.
     '''
     def asset_cost(model,q,s,p7,z9):
         l_p7 = list(model.s_season_periods)
