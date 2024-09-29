@@ -93,6 +93,11 @@ def create_sa():
     sav['node_is_fvp'] = np.full(len_P7, '-', dtype=object) #SA to alter if season nodes are used as FVPs. This is generally True in the MP model.
     sav['seq_len']      = '-'                     #SA to alter the length of the season sequence in the SQ model
     sav['model_is_MP']      = '-'                 #SA to control when the MP framework is used.
+    sav['len_planning_horizon']      = '-'        #length of the planning horizon (only makes a difference if q is active eg in the MP model). This is used to weight q in the MP model.
+    sav['inc_discount_factor']      = '-'         #SA to control if a discount factor (time value of money) is included. Default is false because not required for SE model but this should be set to True for MP model.
+    sav['rev_update']      = '-'                  #SA to alter if the trial is being used to create rev std values
+    sav['rev_number']      = '-'                  #SA to alter rev number - rev number is appended to the std rev value pkl file and can be used to select which rev is used as std for a given trial.
+    sav['rev_trait_scenario'] = np.full_like(sinp.structuralsa['i_rev_trait_scenario'], '-', dtype=object) #SA value for which traits are to be held constant in REV analysis.
     sav['fs_create_pkl']      = '-'                  #SA to control if the trial is being used to create pkl fs
     sav['fs_create_number']      = '-'                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is created for a given trial.
     sav['gen_with_t']      = '-'                  #SA to control if sheep generator is run with active t axis.

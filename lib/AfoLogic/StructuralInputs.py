@@ -79,6 +79,8 @@ def f_structural_inp_sa(sinp_defaults):
     structuralsa['i_inc_node_periods'] = fun.f_sa(structuralsa['i_inc_node_periods'], sen.sav['inc_node_periods'], 5)
     structuralsa['i_len_q'] = fun.f_sa(structuralsa['i_len_q'], sen.sav['seq_len'], 5)
     structuralsa['model_is_MP'] = fun.f_sa(structuralsa['model_is_MP'], sen.sav['model_is_MP'], 5)
+    structuralsa['i_len_planning_horizon'] = fun.f_sa(structuralsa['i_len_planning_horizon'], sen.sav['len_planning_horizon'], 5)
+    structuralsa['i_inc_discount_factor'] = fun.f_sa(structuralsa['i_inc_discount_factor'], sen.sav['inc_discount_factor'], 5)
     structuralsa['i_nut_spread_n1'] = fun.f_sa(structuralsa['i_nut_spread_n1'], sen.sav['nut_spread_n1'],5)
     structuralsa['i_confinement_n1'] = fun.f_sa(structuralsa['i_confinement_n1'], sen.sav['confinement_n1'],5)
     structuralsa['i_nut_spread_n3'] = fun.f_sa(structuralsa['i_nut_spread_n3'], sen.sav['nut_spread_n3'],5)
