@@ -39,7 +39,8 @@ def create_sa():
     len_h5 = pinp.sheep['i_h5_len']
     len_h7 = pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'].shape[-1]
     len_i = pinp.sheep['i_i_len']
-    len_k = len(sinp.general['i_idx_k1'])
+    len_k = len(sinp.general['i_idx_k'])
+    len_crop_k = len(sinp.general['i_idx_k1'])
     len_pas_k = len(sinp.general['i_idx_k2'])
     len_k0 = pinp.sheep['i_k0_len'] #Weaning option
     len_k1 = pinp.sheep['i_k1_len'] #Oestrus cycle
@@ -114,8 +115,10 @@ def create_sa():
     sav['crop_landuse_inc_k1'] = np.full(len(pinp.general['i_crop_landuse_inc_k1']), '-', dtype=object)    #control which crop landuses are included
     sav['pas_landuse_inc_k2'] = np.full(len(pinp.general['i_pas_landuse_inc_k2']), '-', dtype=object)     #control which pasture landuses are included
     sav['lmu_area_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
-    sav['non_cropable_area_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
+    sav['non_cropable_area_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU that cant be cropped
     sav['lmu_arable_propn_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
+    sav['phase_can_increase_kp7'] = np.full((len_k, len_P7), '-', dtype=object)  #SA to control when phases can be increased and reduced (only matters for dual season cropping)
+    sav['phase_can_reduce_kp7'] = np.full((len_k, len_P7), '-', dtype=object)  #SA to control when phases can be decreased and reduced (only matters for dual season cropping)
     ##SAM
     sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to revert the code)
     ##SAP
@@ -147,8 +150,8 @@ def create_sa():
     ########
     ##SAV
     sav['grain_percentile'] = '-'  #grain price percentile
-    sav['grainp_k'] = np.full(len_k, '-', dtype=object)   # SA value for grain prices for each crop for selected percentile (i.e. overwrites calculated price)
-    sav['hayp_k'] = np.full(len_k, '-', dtype=object)   # SA value for baled prices for each crop for selected percentile (i.e. overwrites calculated price)
+    sav['grainp_k'] = np.full(len_crop_k, '-', dtype=object)   # SA value for grain prices for each crop for selected percentile (i.e. overwrites calculated price)
+    sav['hayp_k'] = np.full(len_crop_k, '-', dtype=object)   # SA value for baled prices for each crop for selected percentile (i.e. overwrites calculated price)
     sav['woolp_mpg_percentile'] = '-'               #sa value for the wool price percentile
     sav['woolp_mpg'] = '-'                          # sa value for wool price at std micron for selected percentile (i.e. overwrites calculated price)
     sav['woolp_fdprem_percentile'] = '-'            # sa value for fd premium percentile (premium received by fd compared to std)
@@ -161,8 +164,8 @@ def create_sa():
     sav['sale_ffcfw_min'] = np.full(len_s7, '-', dtype=object)        #min weight for sale in grid
     sav['sale_ffcfw_max'] = np.full(len_s7, '-', dtype=object)        #max weight for sale in grid
     ##SAM
-    sam['grainp_k'] = np.ones(len_k, dtype='float64')   # SA multiplier for grain prices for each crop
-    sam['q_grain_price_scalar_Qk'] = np.ones((len_Q, len_k), dtype='float64')   # SAM for grain price with q axis
+    sam['grainp_k'] = np.ones(len_crop_k, dtype='float64')   # SA multiplier for grain prices for each crop
+    sam['q_grain_price_scalar_Qk'] = np.ones((len_Q, len_crop_k), dtype='float64')   # SAM for grain price with q axis
     sam['q_wool_price_scalar_Q'] = np.ones(len_Q, dtype='float64')   # SAM for wool price with q axis
     sam['q_meat_price_scalar_Q'] = np.ones(len_Q, dtype='float64')   # SAM for meat price with q axis
     sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron
@@ -216,7 +219,7 @@ def create_sa():
         sav['number_seeders', option] = '-'                                 #number of seeders
         sav['seeding_rate_base', option] = '-'                                  #seeding speed of wheat on base LMU (km/hr)
         sav['number_harvesters', option] = '-'                              #number of harvesters
-        sav['harvest_rate', option] = np.full(len_k, '-', dtype=object) #harvesting rate of each crop (t/hr)
+        sav['harvest_rate', option] = np.full(len_crop_k, '-', dtype=object) #harvesting rate of each crop (t/hr)
         sav['spraying_rate', option] = '-'                        #speed (km/hr)
         sav['spreader_cap', option] = '-'                                   #capacity (m3)
         sav['spreader_width', option] = np.full(len_n, '-', dtype=object)   #width for each fert type (m)
@@ -248,8 +251,8 @@ def create_sa():
     ##SAV
     sav['cropgrazing_inc'] = '-'  #control if crop grazing is allowed
     sav['bnd_crop_grazing_intensity'] = '-'  #control the amount of crop consumed per hectare of crop that can be grazed (i.e. doesnt include a crop are if the crop can't be grazed).
-    sav['cropgraze_propn_area_grazed_kl'] = np.full((len_k, len_l), '-', dtype=object)  #control proportion of crop area that can be grazed.
-    sav['cropgraze_yield_penalty_k'] = np.full((len_k), '-', dtype=object)  #Reduction in yield per kg of crop consumed (if grazed early in the growing season after the crop is established).
+    sav['cropgraze_propn_area_grazed_kl'] = np.full((len_crop_k, len_l), '-', dtype=object)  #control proportion of crop area that can be grazed.
+    sav['cropgraze_yield_penalty_k'] = np.full((len_crop_k), '-', dtype=object)  #Reduction in yield per kg of crop consumed (if grazed early in the growing season after the crop is established).
     ##SAM
     sam['cropgraze_yield_penalty'] = 1.0   # SA multiplier for the cropgraze yield penalty
     ##SAP
@@ -282,24 +285,24 @@ def create_sa():
     sav['fert_passes_R_nz'] = np.full((len_R, 4*len_z), '-', dtype=object)    # SA value for pinp fert passses - 4 because there are currently 4 ferts by r - use capital R because rotation len from the web app can be different
     sav['chem_R_nz'] = np.full((len_R, 2*len_z), '-', dtype=object)    # SA value for pinp chem - 2 chem categorys in pinp (herb and fungicide). - use capital R because rotation len from the web app can be different
     sav['chem_passes_R_nz'] = np.full((len_R, len_n1*len_z), '-', dtype=object)    # SA value for pinp chem passes - use capital R because rotation len from the web app can be different
-    sav['lmu_yield_adj_kl'] = np.full((len_k, len_l), '-', dtype=object)    # SA value for yield adjustment by LMU
+    sav['lmu_yield_adj_kl'] = np.full((len_crop_k, len_l), '-', dtype=object)    # SA value for yield adjustment by LMU
     sav['lmu_fert_adj_nl'] = np.full((len_n, len_l), '-', dtype=object)    # SA value for fert adjustment by LMU
     sav['lmu_chem_adj_l'] = np.full(len_l, '-', dtype=object)    # SA value for chem adjustment by LMU
     sav['lime_cost'] = '-'  #cost ($/ha) of lime
     sav['liming_freq'] = '-'  #number of years between applications
     ##SAM
-    sam['q_crop_yield_scalar_Qk'] = np.ones((len_Q, len_k), dtype='float64')  # SAM for grain price with q axis
-    sam['crop_yield_k'] = np.ones(len_k, dtype='float64')    # SA multiplier for all rotation yield
-    sam['crop_fert_kn'] = np.ones((len_k, len_n), dtype='float64') #SA multiplier on crop fertiliser
+    sam['q_crop_yield_scalar_Qk'] = np.ones((len_Q, len_crop_k), dtype='float64')  # SAM for grain price with q axis
+    sam['crop_yield_k'] = np.ones(len_crop_k, dtype='float64')    # SA multiplier for all rotation yield
+    sam['crop_fert_kn'] = np.ones((len_crop_k, len_n), dtype='float64') #SA multiplier on crop fertiliser
     sam['pas_fert_kn'] = np.ones((len_pas_k, len_n), dtype='float64') #SA multiplier on pas fertiliser
-    sam['crop_chem_k'] = np.ones(len_k, dtype='float64') #SA multiplier on crop chem package cost (ie all chem timing are scaled the same)
+    sam['crop_chem_k'] = np.ones(len_crop_k, dtype='float64') #SA multiplier on crop chem package cost (ie all chem timing are scaled the same)
     sam['pas_chem_k'] = np.ones(len_pas_k, dtype='float64') #SA multiplier on pas chem package cost (ie all chem timing are scaled the same)
     sam['sowing_penalty'] = 1.0  #sam on sowing timeliness yield penalty
     ##SAP
     ##SAA
-    saa['crop_fert_passes_kn'] = np.zeros((len_k, len_n), dtype='float64') #SA adder on crop fertiliser passes
+    saa['crop_fert_passes_kn'] = np.zeros((len_crop_k, len_n), dtype='float64') #SA adder on crop fertiliser passes
     saa['pas_fert_passes_kn'] = np.zeros((len_pas_k, len_n), dtype='float64') #SA adder on pas fertiliser passes
-    saa['crop_chem_passes_kn1'] = np.zeros((len_k, len_n1), dtype='float64') #SA adder on crop chem passes
+    saa['crop_chem_passes_kn1'] = np.zeros((len_crop_k, len_n1), dtype='float64') #SA adder on crop chem passes
     saa['pas_chem_passes_kn1'] = np.zeros((len_pas_k, len_n1), dtype='float64') #SA adder on pas chem passes
     ##SAT
     ##SAR
@@ -521,13 +524,13 @@ def create_sa():
     ##SAV
     sav['bnd_slp_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of slp on each lmu
     sav['bnd_sb_consumption_p6'] = np.full(len(pinp.period['i_fp_idx']), '-', dtype=object)  #upper bnd on the amount of sb consumed
-    sav['bnd_crop_area'] = np.full((len_Q, len_k), '-', dtype=object)  #crop area for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
-    sav['bnd_crop_area_percent'] = np.full((len_Q, len_k), '-', dtype=object)  #crop area percent of farm area. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
+    sav['bnd_crop_area'] = np.full((len_Q, len_crop_k), '-', dtype=object)  #crop area for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
+    sav['bnd_crop_area_percent'] = np.full((len_Q, len_crop_k), '-', dtype=object)  #crop area percent of farm area. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
     sav['bnd_total_legume_area_percent'] = '-'  #Control the total percent of legume area on farm.
-    sav['bnd_biomass_graze_k1'] = np.full((len_Q, len_k), '-', dtype=object)  #biomass graze area for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
+    sav['bnd_biomass_graze_k1'] = np.full((len_Q, len_crop_k), '-', dtype=object)  #biomass graze area for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
     sav['bnd_total_pas_area_percent'] = np.full(len_Q, '-', dtype=object)  #Control the total percent of pasture area on farm.
     sav['bnd_pas_area_l'] = np.full(len_l, '-', dtype=object)  #pasture area by lmu for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
-    sav['bnd_landuse_area_klz'] = np.full((len_k, len_l, len_z), '-', dtype=object)  #landuse area by lmu and z. if all values are '-' the bnd won't be used
+    sav['bnd_landuse_area_klz'] = np.full((len_crop_k, len_l, len_z), '-', dtype=object)  #landuse area by lmu and z. if all values are '-' the bnd won't be used
     sav['bnd_sup_per_dse'] = '-'   #SA to control the supplement per dse (kg/dse)
     sav['bnd_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated
     sav['est_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #estimated proportion of dams mated - used when bnd_propn is default "-"
