@@ -2100,13 +2100,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     chill_index_pa1e1b1nwzida0e0b0xygp0 = fun.f_sa(chill_index_pa1e1b1nwzida0e0b0xygp0, sen.sam['chill_index'])
 
     ##Proportion of SRW with age
-    srw_age_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.exp(-cn_sire[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0
+    srw_age_pa1e1b1nwzida0e0b0xyg0 = 1 - fun.f_weighted_average(1 - np.exp(-cn_sire[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0
                             / srw_pa1e1b1nwzida0e0b0xyg0[..., na] ** cn_sire[2, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(-cn_dams[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg1p0
+    srw_age_pa1e1b1nwzida0e0b0xyg1 = 1 - fun.f_weighted_average(1 - np.exp(-cn_dams[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg1p0
                             / srw_pa1e1b1nwzida0e0b0xyg1[..., na] ** cn_dams[2, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.exp(-cn_yatf[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0
+    srw_age_pa1e1b1nwzida0e0b0xyg2 = 1 - fun.f_weighted_average(1 - np.exp(-cn_yatf[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg2p0
                             / srw_pa1e1b1nwzida0e0b0xyg2[..., na] ** cn_yatf[2, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.exp(-cn_offs[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg3p0
+    srw_age_pa1e1b1nwzida0e0b0xyg3 = 1 - fun.f_weighted_average(1 - np.exp(-cn_offs[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg3p0
                             / srw_pa1e1b1nwzida0e0b0xyg3[..., na] ** cn_offs[2, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
 
     #srw_age_pa1e1b1nwzida0e0b0xyg0 = np.nanmean(np.exp(-cn_sire[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0 / srw_b0xyg0[..., na] ** cn_sire[2, ..., na]), axis = -1)
@@ -2344,9 +2344,19 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     w_b_exp_pa1e1b1nwzida0e0b0xyg3 = w_b_std_pa1e1b1nwzida0e0b0xyg3 * ce_offs[15, ...]
 
     ##Normal weight max (if animal is well-fed)
-    nw_max_pa1e1b1nwzida0e0b0xyg0 = srw_pa1e1b1nwzida0e0b0xyg0 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg0) + w_b_exp_pa1e1b1nwzida0e0b0xyg0 * srw_age_pa1e1b1nwzida0e0b0xyg0
-    nw_max_pa1e1b1nwzida0e0b0xyg1 = srw_pa1e1b1nwzida0e0b0xyg1 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg1) + w_b_exp_pa1e1b1nwzida0e0b0xyg1 * srw_age_pa1e1b1nwzida0e0b0xyg1
-    nw_max_pa1e1b1nwzida0e0b0xyg3 = srw_pa1e1b1nwzida0e0b0xyg3 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg3) + w_b_exp_pa1e1b1nwzida0e0b0xyg3 * srw_age_pa1e1b1nwzida0e0b0xyg3
+    ###Use a temporary variable and ensure that nw_max does not reduce, which could occur when SRW is adjusted for REVs at an age stage
+    t_nw_max_pa1e1b1nwzida0e0b0xyg0 = (srw_pa1e1b1nwzida0e0b0xyg0 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg0)
+                                       + w_b_exp_pa1e1b1nwzida0e0b0xyg0 * srw_age_pa1e1b1nwzida0e0b0xyg0)
+    t_nw_max_pa1e1b1nwzida0e0b0xyg0[-1, ...] = 0   #set to 0 prior to roll forward
+    nw_max_pa1e1b1nwzida0e0b0xyg0 = np.maximum(t_nw_max_pa1e1b1nwzida0e0b0xyg0, np.roll(t_nw_max_pa1e1b1nwzida0e0b0xyg0, 1, axis=0))
+    t_nw_max_pa1e1b1nwzida0e0b0xyg1 = (srw_pa1e1b1nwzida0e0b0xyg1 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg1)
+                                       + w_b_exp_pa1e1b1nwzida0e0b0xyg1 * srw_age_pa1e1b1nwzida0e0b0xyg1)
+    t_nw_max_pa1e1b1nwzida0e0b0xyg1[-1, ...] = 0   #set to 0 prior to roll forward
+    nw_max_pa1e1b1nwzida0e0b0xyg1 = np.maximum(t_nw_max_pa1e1b1nwzida0e0b0xyg1, np.roll(t_nw_max_pa1e1b1nwzida0e0b0xyg1, 1, axis=0))
+    t_nw_max_pa1e1b1nwzida0e0b0xyg3 = (srw_pa1e1b1nwzida0e0b0xyg3 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg3)
+                                       + w_b_exp_pa1e1b1nwzida0e0b0xyg3 * srw_age_pa1e1b1nwzida0e0b0xyg3)
+    t_nw_max_pa1e1b1nwzida0e0b0xyg3[-1, ...] = 0   #set to 0 prior to roll forward
+    nw_max_pa1e1b1nwzida0e0b0xyg3 = np.maximum(t_nw_max_pa1e1b1nwzida0e0b0xyg3, np.roll(t_nw_max_pa1e1b1nwzida0e0b0xyg3, 1, axis=0))
 
     ##Change in normal weight max - the last period will be 0 by default but this is okay because nw hits an asymptote so change in will be 0 in the last period.
     d_nw_max_pa1e1b1nwzida0e0b0xyg0 = np.zeros_like(nw_max_pa1e1b1nwzida0e0b0xyg0)
@@ -3062,7 +3072,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###Normal weight (start)
                 nw_start_sire = np.minimum(nw_max_pa1e1b1nwzida0e0b0xyg0[p], np.maximum(nw_start_sire, ffcfw_start_sire + cn_sire[3, ...] * (nw_max_pa1e1b1nwzida0e0b0xyg0[p]  - ffcfw_start_sire)))
                 ###Relative condition (start)
-                rc_start_sire = ffcfw_start_sire / nw_start_sire
+                rc_start_sire = fun.f_divide(ffcfw_start_sire, nw_start_sire)
                 ##Condition score at  start of p
                 cs_start_sire = sfun.f1_condition_score(cn_sire, rc_start_sire)
                 ###staple length
@@ -3096,7 +3106,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###Normal weight (start)
                 nw_start_dams = np.minimum(nw_max_pa1e1b1nwzida0e0b0xyg1[p], np.maximum(nw_start_dams, ffcfw_start_dams + cn_dams[3, ...] * (nw_max_pa1e1b1nwzida0e0b0xyg1[p]  - ffcfw_start_dams)))
                 ###Relative condition (start)
-                rc_start_dams = ffcfw_start_dams / nw_start_dams
+                rc_start_dams = fun.f_divide(ffcfw_start_dams, nw_start_dams)
                 ##Condition score of the dam at  start of p
                 cs_start_dams = sfun.f1_condition_score(cn_dams, rc_start_dams)
                 ###Relative condition of dam at parturition - needs to be remembered between loops (milk production) - Loss of potential milk due to consistent under production
@@ -3166,7 +3176,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###Normal weight (start)
                 nw_start_offs = np.minimum(nw_max_pa1e1b1nwzida0e0b0xyg3[p], np.maximum(nw_start_offs, ffcfw_start_offs + cn_offs[3, ...] * (nw_max_pa1e1b1nwzida0e0b0xyg3[p]  - ffcfw_start_offs)))
                 ###Relative condition (start)
-                rc_start_offs = ffcfw_start_offs / nw_start_offs
+                rc_start_offs = fun.f_divide(ffcfw_start_offs, nw_start_offs)
                 ##Condition score at  start of p
                 cs_start_offs = sfun.f1_condition_score(cn_offs, rc_start_offs)
                 ###staple length
@@ -4557,7 +4567,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###Normal weight (start)
                 nw_start_yatf = np.minimum(nw_max_yatf, np.maximum(nw_start_yatf, ffcfw_start_yatf + cn_yatf[3, ...] * (nw_max_yatf  - ffcfw_start_yatf)))
                 ###Relative condition (start) - use update function so that when 0 days/period we keep the rc of the last period because it is used to calc sale value which is period_is_weaning which has 0 days because sold at beginning.
-                temp_rc_start_yatf = ffcfw_start_yatf / nw_start_yatf
+                temp_rc_start_yatf = fun.f_divide(ffcfw_start_yatf, nw_start_yatf)
                 rc_start_yatf = fun.f_update(rc_start_yatf, temp_rc_start_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0)
                 ##Condition score of the dam at  start of p
                 cs_start_yatf = sfun.f1_condition_score(cn_yatf, rc_start_yatf)
