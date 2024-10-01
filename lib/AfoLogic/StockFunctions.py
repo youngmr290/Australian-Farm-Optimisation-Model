@@ -2509,13 +2509,14 @@ def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     rc_start_p0p0 = fun.f_distribution7(rc_start, cv=cv_weight)[...,na,:]
     mortalityb_p0p0 = (cd[1, ...,na,na] + cd[2, ...,na,na] *
                      np.maximum(0, cd[3, ...,na,na] - rc_start_p0p0) *
-                     ((cd[16, ...,na,na] * d_nw_max[...,na,na]) > (ebg_start_p0p0 * cg[18, ...,na,na]))) * days_period[...,na,na] #mul by days period to convert from mort per day to per period
+                     ((cd[16, ...,na,na] * d_nw_max[...,na,na]) > (ebg_start_p0p0 * cg[18, ...,na,na])))
     ###average p1 axis
     mortalityb = np.mean(mortalityb_p0p0, axis=(-1,-2))
     ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type=1, value_min=0)
     mortalityb = fun.f_sa(mortalityb, saa_mortalityb * (mortalityb > 0), sa_type=2, value_min=0) # don't apply the saa if mortality == 0
     mortalityb = f1_rev_sa(mortalityb, saa_rev_mortalityb, age, sa_type=2)
+    mortalityb *= days_period #mul by days period to convert from mort per day to per period
     ##Process the Mortality REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     mortalityb = f1_rev_update('mortality', mortalityb, rev_trait_value)
     return mortalityb
