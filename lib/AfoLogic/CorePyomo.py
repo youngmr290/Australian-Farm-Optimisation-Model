@@ -952,7 +952,7 @@ def f_con_MP(model, lp_vars):
     def MP_rotation_q0_lower(model,q,s,p7,z,r,l):
         ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
         ## give 1% flex on the bnd to allow for any rounding.
-        if q == 'q0' and len_p7>1:
+        if q == 'q0' and p7 == 'zm0' and len_p7>1:
             return (model.v_phase_area[q,s,p7,z,r,l] <=
                     lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 1.01)
         else:
@@ -964,7 +964,7 @@ def f_con_MP(model, lp_vars):
     def MP_rotation_q0_upper(model,q,s,p7,z,r,l):
         ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
         ## give 1% flex on the bnd to allow for any rounding.
-        if q == 'q0' and len_p7>1:
+        if q == 'q0' and p7 == 'zm0' and len_p7>1:
             return (model.v_phase_area[q,s,p7,z,r,l] >=
                     lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 0.99)
         else:
