@@ -158,7 +158,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
                         # , 'j', 't'])
         yr1 = np.array(['B','O1','W', 'N', 'L', 'F', 'OF'
                , 'A1'
-               , 'S1'])
+               , 'S'])
                # , 'M'
                 # , 'U'
                 # , 'X'
@@ -190,13 +190,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
         #### all cont pasture phases that dont have S in yr0-3 need to be added with S in yr 3 & 4.
         #### posssibly this could be added to generation then use rules to remove unrequired
         cont_annual = np.array([['S', 'A', 'A2', 'A1', 'a']
-                               , ['S', 'A', 'A2', 'A1', 'ar']
-                               , ['S', 'A', 'A2', 'AR', 'a']
-                               , ['S', 'A', 'A2', 'AR', 'ar']
                                , ['A', 'S', 'A2', 'A1', 'a']
-                               , ['A', 'S', 'A2', 'A1', 'ar']
-                               , ['A', 'S', 'A2', 'AR', 'a']
-                               , ['A', 'S', 'A2', 'AR', 'ar']
                                 ])
         phases = np.concatenate((phases, cont_annual))
 
