@@ -2332,6 +2332,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_weaned_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg)
     period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is_between', date_weaned2_pa1e1b1nwzida0e0b0xyg2
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
+    period_between_damwean_firstprejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is_between', date_weaned_ida0e0b0xyg1
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1[0], date_end_pa1e1b1nwzida0e0b0xyg)
     period_is_scan_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_scan_pa1e1b1nwzida0e0b0xyg1
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     period_is_prebirth_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_prebirth_pa1e1b1nwzida0e0b0xyg1
@@ -2438,6 +2440,29 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                           , period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1, scan_management_pa1e1b1nwzida0e0b0xyg1
                           , gbal_management_pa1e1b1nwzida0e0b0xyg1, wean_management_pa1e1b1nwzida0e0b0xyg1
                           , a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, a_t_tpg1, i_g3_inc, mask_p_offs_p, len_p, pkl_fs_info, pkl_fs)
+
+    ##adjust the feedsupply based on user inputs - this is mainly for the web app - it occurs here so that we have access to the period_is_info
+    ##r axis is the repro timing and the d axis is the dam age
+    ###dams - adjust the feedsupply based on reproduction timing and animal age
+    ####turn o to p axis based on pre-joining
+    fs_adj_dam_rpdams = np.take_along_axis(fun.f_expand(sen.saa['feedsupply_adj_dams_ro'], p_pos),a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1[na,...],p_pos)
+    ####mask the periods each repro stage occurs
+    fs_adj_damwean_firstprejoin_pdams = fs_adj_dam_rpdams[0,...] * period_between_damwean_firstprejoin_pa1e1b1nwzida0e0b0xyg1 #adjust fs from the weaning of the dam itself to ewe lamb prejoining
+    fs_adj_prejoin_mating_pdams = fs_adj_dam_rpdams[1,...] * period_isbetween_prejoinmatingend_pa1e1b1nwzida0e0b0xyg1
+    fs_adj_mating_d90_pdams = fs_adj_dam_rpdams[2,...] * period_between_mated90_pa1e1b1nwzida0e0b0xyg1
+    fs_adj_d90_birth_pdams = fs_adj_dam_rpdams[3,...] * period_between_d90birth_pa1e1b1nwzida0e0b0xyg1
+    fs_adj_birth_wean_pdams = fs_adj_dam_rpdams[4,...] * period_between_birthwean_pa1e1b1nwzida0e0b0xyg1
+    fs_adj_wean_prejoin_pdams = fs_adj_dam_rpdams[5,...] * period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1
+    ####adjust the fs - use maximum so to handle if a period is true in multiple period_is_between (dont want to double adjust the fs)
+    feedsupplyw_tpa1e1b1nwzida0e0b0xyg1 = feedsupplyw_tpa1e1b1nwzida0e0b0xyg1 + np.maximum.reduce(np.broadcast_arrays(
+        fs_adj_damwean_firstprejoin_pdams, fs_adj_prejoin_mating_pdams, fs_adj_mating_d90_pdams, fs_adj_d90_birth_pdams, fs_adj_birth_wean_pdams, fs_adj_wean_prejoin_pdams))
+
+    ###offs - adjust fs based on age
+    fs_adj_wean_6mo_poffs = sen.saa['feedsupply_adj_offs_p10'][0] * (age_cut_pa1e1b1nwzida0e0b0xyg3 < 180)
+    fs_adj_6mo_12mo_poffs = sen.saa['feedsupply_adj_offs_p10'][1] * np.logical_and(age_cut_pa1e1b1nwzida0e0b0xyg3 > 180, age_cut_pa1e1b1nwzida0e0b0xyg3 < 360)
+    fs_adj_12mo_poffs = sen.saa['feedsupply_adj_offs_p10'][2] * (age_cut_pa1e1b1nwzida0e0b0xyg3 > 360)
+    ####adjust the fs - use maximum so to handle if a period is true in multiple period_is_between (dont want to double adjust the fs)
+    feedsupplyw_tpa1e1b1nwzida0e0b0xyg3 = feedsupplyw_tpa1e1b1nwzida0e0b0xyg3 + np.maximum.reduce([fs_adj_wean_6mo_poffs + fs_adj_6mo_12mo_poffs + fs_adj_12mo_poffs])
 
     '''if running the gen for stubble generation then the feed supply info above gets overwritten with
     the stubble feed from the trial.'''
