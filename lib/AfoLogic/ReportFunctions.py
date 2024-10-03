@@ -1876,7 +1876,7 @@ def f_profit(lp_vars, r_vals, option=0):
         dep_qsz = dep_qsp7z[:,:,-1,:]
         ###tradevalue
         trade_value_qszp7 = f_stock_cash_summary(lp_vars, r_vals)[-1]
-        trade_value_qsz = trade_value_qszp7[...,-1]
+        trade_value_qsz = np.sum(trade_value_qszp7, axis=-1)
         ###profit for each scenario
         profit_qsc1z = credit_qsc1z - debit_qsc1z + trade_value_qsz[:,:,na,:] - dep_qsz[:,:,na,:] #dep & tradevalue doesnt vary by price scenario
         ###stdev and range
