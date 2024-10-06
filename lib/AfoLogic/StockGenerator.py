@@ -2453,16 +2453,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     fs_adj_d90_birth_pdams = fs_adj_dam_rpdams[3,...] * period_between_d90birth_pa1e1b1nwzida0e0b0xyg1
     fs_adj_birth_wean_pdams = fs_adj_dam_rpdams[4,...] * period_between_birthwean_pa1e1b1nwzida0e0b0xyg1
     fs_adj_wean_prejoin_pdams = fs_adj_dam_rpdams[5,...] * period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1
-    ####adjust the fs - use maximum so to handle if a period is true in multiple period_is_between (dont want to double adjust the fs)
-    feedsupplyw_tpa1e1b1nwzida0e0b0xyg1 = feedsupplyw_tpa1e1b1nwzida0e0b0xyg1 + np.maximum.reduce(np.broadcast_arrays(
+    ####adjust the fs - use maximum/mimimum so to handle if a period is true in multiple period_is_between (dont want to double adjust the fs)
+    positive_adjustment_pdams = np.maximum.reduce(np.broadcast_arrays(np.array([0]),
         fs_adj_damwean_firstprejoin_pdams, fs_adj_prejoin_mating_pdams, fs_adj_mating_d90_pdams, fs_adj_d90_birth_pdams, fs_adj_birth_wean_pdams, fs_adj_wean_prejoin_pdams))
+    negative_adjustment_pdams = np.minimum.reduce(np.broadcast_arrays(np.array([0]),
+        fs_adj_damwean_firstprejoin_pdams, fs_adj_prejoin_mating_pdams, fs_adj_mating_d90_pdams, fs_adj_d90_birth_pdams, fs_adj_birth_wean_pdams, fs_adj_wean_prejoin_pdams))
+    feedsupplyw_tpa1e1b1nwzida0e0b0xyg1 = feedsupplyw_tpa1e1b1nwzida0e0b0xyg1 + positive_adjustment_pdams + negative_adjustment_pdams
 
     ###offs - adjust fs based on age
     fs_adj_wean_6mo_poffs = sen.saa['feedsupply_adj_offs_p10'][0] * (age_cut_pa1e1b1nwzida0e0b0xyg3 < 180)
     fs_adj_6mo_12mo_poffs = sen.saa['feedsupply_adj_offs_p10'][1] * np.logical_and(age_cut_pa1e1b1nwzida0e0b0xyg3 > 180, age_cut_pa1e1b1nwzida0e0b0xyg3 < 360)
     fs_adj_12mo_poffs = sen.saa['feedsupply_adj_offs_p10'][2] * (age_cut_pa1e1b1nwzida0e0b0xyg3 > 360)
-    ####adjust the fs - use maximum so to handle if a period is true in multiple period_is_between (dont want to double adjust the fs)
-    feedsupplyw_tpa1e1b1nwzida0e0b0xyg3 = feedsupplyw_tpa1e1b1nwzida0e0b0xyg3 + np.maximum.reduce([fs_adj_wean_6mo_poffs + fs_adj_6mo_12mo_poffs + fs_adj_12mo_poffs])
+    ####adjust the fs - use maximum/mimimum so to handle if a period is true in multiple period_is_between (dont want to double adjust the fs)
+    positive_adjustment_poffs = np.maximum.reduce(np.broadcast_arrays(np.array([0]), fs_adj_wean_6mo_poffs + fs_adj_6mo_12mo_poffs + fs_adj_12mo_poffs))
+    negative_adjustment_poffs = np.minimum.reduce(np.broadcast_arrays(np.array([0]), fs_adj_wean_6mo_poffs + fs_adj_6mo_12mo_poffs + fs_adj_12mo_poffs))
+    feedsupplyw_tpa1e1b1nwzida0e0b0xyg3 = feedsupplyw_tpa1e1b1nwzida0e0b0xyg3 + positive_adjustment_poffs + negative_adjustment_poffs
 
     '''if running the gen for stubble generation then the feed supply info above gets overwritten with
     the stubble feed from the trial.'''
