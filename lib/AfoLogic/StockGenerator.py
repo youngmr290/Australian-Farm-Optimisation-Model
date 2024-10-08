@@ -8248,8 +8248,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                                                * (nfoet_b1nwzida0e0b0xyg >= 1)) #If scanning for foetal age add 10 to the animals in the second & subsequent cycles that were scanned as pregnant (nfoet_b1 >= 1)
     ### Cluster with a t axis required for k29 which is associated with tvgg9. na to put result in g9 axis
     a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9 = np.take_along_axis(a_k2cluster_va1e1b1nwzida0e0b0xyg1[na], a_g1_tpa1e1b1nwzida0e0b0xyg1, axis=-1)[..., na, :]
-    ### a temporary array that is the cluster at prejoining with not mated (0) and mated (1) along the b1 axis
-    temporary = np.ones_like(a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9)
+    ### a temporary array that is the cluster at prejoining with not mated (0) and mated (2) along the b1 axis
+    temporary = np.ones_like(a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9) + 1
     temporary[:,:,:,:,0,...] = 0
     a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(np.roll(a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9, -1, axis=1), temporary,
                                           (a_g1_tpa1e1b1nwzida0e0b0xyg1[..., na, :] != index_g1g) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na])
