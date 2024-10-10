@@ -94,6 +94,7 @@ def create_sa():
     sav['node_is_fvp'] = np.full(len_P7, '-', dtype=object) #SA to alter if season nodes are used as FVPs. This is generally True in the MP model.
     sav['seq_len']      = '-'                     #SA to alter the length of the season sequence in the SQ model
     sav['model_is_MP']      = '-'                 #SA to control when the MP framework is used.
+    sav['MP_setup_trial_name']      = '-'         #SA to specify the name of the trial that generated the initial position for the MP run.
     sav['len_planning_horizon']      = '-'        #length of the planning horizon (only makes a difference if q is active eg in the MP model). This is used to weight q in the MP model.
     sav['inc_discount_factor']      = '-'         #SA to control if a discount factor (time value of money) is included. Default is false because not required for SE model but this should be set to True for MP model.
     sav['rev_update']      = '-'                  #SA to alter if the trial is being used to create rev std values

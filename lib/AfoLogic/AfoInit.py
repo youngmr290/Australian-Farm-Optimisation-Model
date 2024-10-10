@@ -103,6 +103,9 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     uinp.f1_mask_landuse()
 
     if sinp.structuralsa['model_is_MP']:
+        ###allow user to specify the trial name of the MP setup run
+        if sen.sav['MP_setup_trial_name'] != "-":
+            mp_lp_vars_path = "pkl/pkl_lp_vars_{0}.pkl".format(sen.sav['MP_setup_trial_name'])
         with open(mp_lp_vars_path, "rb") as f:
             MP_lp_vars = pkl.load(f)
     else:
