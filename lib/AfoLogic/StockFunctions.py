@@ -714,9 +714,12 @@ def f1_rev_sa(value, sa, age, sa_type):
     return value
 
 
-def f1_rev_update(trait_name, trait_value, rev_trait_value):
+def f1_rev_update(trait_name, trait_value, rev_trait_value, scenario = '-'):
     trait_idx = sinp.structuralsa['i_rev_trait_name'].tolist().index(trait_name)
-    scenario = sinp.structuralsa['i_rev_trait_scenario'][trait_idx]
+    ###if the scenario wasn't passed as an arg then calculate the scenario from the trial inputs.
+    ###Passing a scenario arg allows the implementation of the REV to vary depending on where it is called from
+    if scenario == "-":
+        scenario = sinp.structuralsa['i_rev_trait_scenario'][trait_idx]
     if scenario != 0:
         if sinp.structuralsa['i_rev_update']:
             rev_trait_value[trait_name][scenario] = trait_value.copy() #have to copy so that traits (e.g. mort) that are added to using += do not also update the rev value
@@ -1752,7 +1755,7 @@ def f1_back_calculate_mei(ck, cg, nem_ee, nefat, nemuscle, neviscera, hp_wcl, ne
     return mei, wbec_ee, surplus_energy_ee, hp_total_ee, chill_increment
 
 def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf2, heat_loss_m0p1, age, rev_trait_value
-    , days_period, b_mask = 1, nec = 0, kc = 1, nel = 0, kl = 1, gest_propn = 0, lact_propn = 0, mei_propn_milk = 0, sam_kg=1):
+    , days_period, b_mask = 1, nec = 0, kc = 1, nel = 0, kl = 1, gest_propn = 0, lact_propn = 0, mei_propn_milk = 0, sam_kg=1, scenario='-'):
     #Calculate LW change from energy surplus to maintenance. Uses energy & efficiency approach like CSIRO
     #but separates kf & kp and calculates proportion of fat & protein from mass and energy balance.
 
@@ -1815,7 +1818,7 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
 
     ##Step 10: Process the REVs for the energy components and weight change
     ###Step 10a: Process the REVs for the traits: if not the target trait overwrite with value from the dictionary
-    ebg = f1_rev_update('lwc', ebg_prior, rev_trait_value)
+    ebg = f1_rev_update('lwc', ebg_prior, rev_trait_value, scenario=scenario)  #allow scenario to be overridden by the calling function from sgen
     d_fat = f1_rev_update('fat', d_fat_prior, rev_trait_value)
     d_muscle = f1_rev_update('muscle', d_muscle_prior, rev_trait_value)
     d_viscera = f1_rev_update('viscera', d_viscera_prior, rev_trait_value)
