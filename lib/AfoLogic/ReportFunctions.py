@@ -1094,19 +1094,19 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
     maskz8_zp6 = r_vals['pas']['mask_fp_z8var_p6z'].T
 
     ##grain fed
-    grain_fed_qszkgvp6 = f_vars2df(lp_vars, 'v_sup_con', maskz8_zp6[:,na,na,na,:], z_pos=-5)
+    grain_fed_qszk3gvp6 = f_vars2df(lp_vars, 'v_sup_con', maskz8_zp6[:,na,na,na,:], z_pos=-5)
 
     if option == 1:
-        grain_fed_qszp6 = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 6)).sum()  # sum feed pool, landuse and grain pool
+        grain_fed_qszp6 = grain_fed_qszk3gvp6.groupby(level=(0, 1, 2, 6)).sum()  # sum feed pool, landuse and grain pool
         return grain_fed_qszp6.to_frame()
 
     if option == 2:
-        grain_fed_qszkp6 = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 3, 6)).sum()  # sum feed pool and grain pool
-        return grain_fed_qszkp6
+        grain_fed_qszk3p6 = grain_fed_qszk3gvp6.groupby(level=(0, 1, 2, 3, 6)).sum()  # sum feed pool and grain pool
+        return grain_fed_qszk3p6
 
     if option == 3:
-        grain_fed_qszkfp6 = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 3, 5, 6)).sum()  # sum grain pool
-        return grain_fed_qszkfp6
+        grain_fed_qszk3fp6 = grain_fed_qszk3gvp6.groupby(level=(0, 1, 2, 3, 5, 6)).sum()  # sum grain pool
+        return grain_fed_qszk3fp6
 
     if option == 4:
         keys_q = r_vals['zgen']['keys_q']
@@ -1115,7 +1115,7 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
         z_prob_qsz = r_vals['zgen']['z_prob_qsz']
         z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
-        grain_fed_qsz = grain_fed_qszkgvp6.groupby(level=(0,1,2)).sum() #sum all axis except season ones (q,s,z)
+        grain_fed_qsz = grain_fed_qszk3gvp6.groupby(level=(0,1,2)).sum() #sum all axis except season ones (q,s,z)
         ###stdev and range
         grain_fed_mean = grain_fed_qsz.mul(z_prob_qsz).sum()
         ma_grain_fed_qsz = np.ma.masked_array(grain_fed_qsz, z_prob_qsz == 0)
@@ -1129,38 +1129,43 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         ##create dict to store grain variables
         grain = {}
         ##prices
-        grains_sale_price_zks2gq_p7 = r_vals['crop']['grain_price'].stack([0,2]).reorder_levels([4,0,1,2,3]).sort_index()
-        grains_buy_price_zks2gq_p7 = r_vals['sup']['buy_grain_price'].stack([0,2]).reorder_levels([4,0,1,2,3]).sort_index()
+        grains_sale_price_zk1s2gq_p7 = r_vals['crop']['grain_price'].stack([0,2]).reorder_levels([4,0,1,2,3]).sort_index()
+        grains_buy_price_zk3s2gq_p7 = r_vals['sup']['buy_grain_price'].stack([0,2]).reorder_levels([4,0,1,2,3]).sort_index()
 
         ##grain purchased
-        grain_purchased_qsp7zks2g = f_vars2df(lp_vars,'v_buy_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
-        grain_purchased_qszks2g = grain_purchased_qsp7zks2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
-        grain_purchased_zks2gqs = grain_purchased_qszks2g.reorder_levels([2,3,4,5,0,1]) .sort_index()#change the order so that reindexing works (new levels being added must be at the end)
+        grain_purchased_qsp7zk3s2g = f_vars2df(lp_vars,'v_buy_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
+        grain_purchased_qszk3s2g = grain_purchased_qsp7zk3s2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
+        grain_purchased_zk3s2gqs = grain_purchased_qszk3s2g.reorder_levels([2,3,4,5,0,1]) .sort_index()#change the order so that reindexing works (new levels being added must be at the end)
 
         ##grain sold
-        grain_sold_qsp7zks2g = f_vars2df(lp_vars,'v_sell_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
-        grain_sold_qszks2g = grain_sold_qsp7zks2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
-        grain_sold_zks2gqs = grain_sold_qszks2g.reorder_levels([2,3,4,5,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
+        grain_sold_qsp7zk1s2g = f_vars2df(lp_vars,'v_sell_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
+        grain_sold_qszk1s2g = grain_sold_qsp7zk1s2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
+        grain_sold_zk1s2gqs = grain_sold_qszk1s2g.reorder_levels([2,3,4,5,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
 
         ##grain fed - s2 axis added because sup feed is allocated to a given s2 slice and therefore the variable doesn't have an active s2 axis
         sup_s2_ks2 = r_vals['sup']['sup_s2_k_s2'].stack()
-        grain_fed_qszkg = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 3, 4)).sum()  # sum feed pool and feed period
-        grain_fed_qszg_ks2 = grain_fed_qszkg.unstack(3).mul(sup_s2_ks2, axis=1, level=0)
-        grain_fed_zks2gqs = grain_fed_qszg_ks2.stack([0,1]).reorder_levels([2,4,5,3,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
+        grain_fed_qszk3g = grain_fed_qszk3gvp6.groupby(level=(0, 1, 2, 3, 4)).sum()  # sum feed pool and feed period
+        grain_fed_qszg_k3s2 = grain_fed_qszk3g.unstack(3).mul(sup_s2_ks2, axis=1, level=0)
+        grain_fed_zk3s2gqs = grain_fed_qszg_k3s2.stack([0,1]).reorder_levels([2,4,5,3,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
 
         ##total grain produced by crop enterprise
-        total_grain_produced_zks2gqs = grain_sold_zks2gqs + grain_fed_zks2gqs - grain_purchased_zks2gqs  # total grain produced by crop enterprise
+        grain_transferred_crop_to_sheep_zk3s2gqs = grain_fed_zk3s2gqs - grain_purchased_zk3s2gqs
+        grain_transferred_crop_to_sheep_zk1s2gqs = grain_transferred_crop_to_sheep_zk3s2gqs.reindex(grain_sold_zk1s2gqs.index).fillna(0)
+        total_grain_produced_zk1s2gqs = grain_sold_zk1s2gqs + grain_transferred_crop_to_sheep_zk1s2gqs  # total grain produced by crop enterprise
         if option==5:
-            return total_grain_produced_zks2gqs
-        grains_sale_price_zks2gqs_p7 = grains_sale_price_zks2gq_p7.reindex(total_grain_produced_zks2gqs.index, axis=0)
-        grains_buy_price_zks2gqs_p7 = grains_buy_price_zks2gq_p7.reindex(total_grain_produced_zks2gqs.index, axis=0)
-        rev_grain_k_p7zqs = grains_sale_price_zks2gqs_p7.mul(total_grain_produced_zks2gqs, axis=0).unstack([0,4,5]).groupby(axis=0, level=0).sum()  # sum grain pool and s2
-        grain['rev_grain_k_p7zqs'] = rev_grain_k_p7zqs
+            return total_grain_produced_zk1s2gqs
+        grains_sale_price_zk1s2gqs_p7 = grains_sale_price_zk1s2gq_p7.reindex(total_grain_produced_zk1s2gqs.index, axis=0)
+        rev_grain_k1_p7zqs = grains_sale_price_zk1s2gqs_p7.mul(total_grain_produced_zk1s2gqs, axis=0).unstack([0,4,5]).groupby(axis=0, level=0).sum()  # sum grain pool and s2
+        grain['rev_grain_k1_p7zqs'] = rev_grain_k1_p7zqs
 
         ##supplementary cost: cost = sale_price * (grain_fed - grain_purchased) + buy_price * grain_purchased
-        sup_exp_zqs_p7 = (grains_sale_price_zks2gqs_p7.mul(grain_fed_zks2gqs - grain_purchased_zks2gqs, axis=0)
-                     + grains_buy_price_zks2gqs_p7.mul(grain_purchased_zks2gqs, axis=0)).groupby(axis=0,level=(0,4,5)).sum()  # sum grain pool & landuse & s2
-        grain['sup_exp_p7zqs'] = sup_exp_zqs_p7.unstack([0,1,2])
+        ###cost of grain transferred from cropping enterprise (this is only the k3 crops that exist in k1 set hence use k1 axis)
+        sup_transferred_exp_zqs_p7 = grains_sale_price_zk1s2gqs_p7.mul(grain_transferred_crop_to_sheep_zk1s2gqs, axis=0).groupby(axis=0, level=(0, 4, 5)).sum()  # sum grain pool & landuse & s2
+        ###cost of purchases
+        grains_buy_price_zk3s2gqs_p7 = grains_buy_price_zk3s2gq_p7.reindex(grain_purchased_zk3s2gqs.index, axis=0)
+        buy_sup_exp_zqs_p7 = grains_buy_price_zk3s2gqs_p7.mul(grain_purchased_zk3s2gqs, axis=0).groupby(axis=0,level=(0,4,5)).sum()  # sum grain pool & landuse & s2
+        total_sup_exp_zqs_p7 = sup_transferred_exp_zqs_p7 + buy_sup_exp_zqs_p7
+        grain['sup_exp_p7zqs'] = total_sup_exp_zqs_p7.unstack([0,1,2])
         return grain
 
 
@@ -1240,11 +1245,11 @@ def f_crop_cash_summary(lp_vars, r_vals, option=0):
     ##revenue. rev = (grain_sold + grain_fed - grain_purchased) * sell_price
     ###read in dict from grain summary
     grain_summary = f_grain_sup_summary(lp_vars, r_vals)
-    rev_grain_k_p7zqs = grain_summary['rev_grain_k_p7zqs']
+    rev_grain_k1_p7zqs = grain_summary['rev_grain_k1_p7zqs']
 
     ##return all if option==0
     if option == 0:
-        return exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k_p7zqs
+        return exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k1_p7zqs
 
 
 def f_stock_cash_summary(lp_vars, r_vals):
@@ -1326,10 +1331,10 @@ def f_stock_cash_summary(lp_vars, r_vals):
     grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
 
     grain_fed_zkfp6qs = grain_fed_qszkfp6.reorder_levels([2,3,4,5,0,1]).sort_index() # change the order so that reindexing works (new levels being added must be at the end)
-    supp_feedstorage_cost_p7zp6kf = r_vals['sup']['total_sup_cost_p7zp6kf']
-    supp_feedstorage_cost_p7_zkfp6qs = supp_feedstorage_cost_p7zp6kf.unstack([1,3,4,2]).reindex(grain_fed_zkfp6qs.index, axis=1)
-    supp_feedstorage_cost_p7_zkfp6qs = supp_feedstorage_cost_p7_zkfp6qs.mul(grain_fed_zkfp6qs, axis=1)
-    supp_feedstorage_cost_p7zqs = supp_feedstorage_cost_p7_zkfp6qs.groupby(axis=1, level=(0,4,5)).sum().stack([0,1,2]) #sum k & p6 & f
+    supp_feedstorage_cost_p7zp6k3f = r_vals['sup']['total_sup_cost_p7zp6k3f']
+    supp_feedstorage_cost_p7_zk3fp6qs = supp_feedstorage_cost_p7zp6k3f.unstack([1,3,4,2]).reindex(grain_fed_zkfp6qs.index, axis=1)
+    supp_feedstorage_cost_p7_zk3fp6qs = supp_feedstorage_cost_p7_zk3fp6qs.mul(grain_fed_zkfp6qs, axis=1)
+    supp_feedstorage_cost_p7zqs = supp_feedstorage_cost_p7_zk3fp6qs.groupby(axis=1, level=(0,4,5)).sum().stack([0,1,2]) #sum k & p6 & f
 
     ##infrastructure
     fixed_infra_cost_p7qsz = r_vals['stock']['rm_stockinfra_fix_p7z'][:,na,na,:] * r_vals['zgen']['mask_qs'][:,:,na]
@@ -1618,7 +1623,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
 
     '''
     ##read stuff from other functions that is used in rev and cost section
-    exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k_p7zqs = f_crop_cash_summary(lp_vars, r_vals, option=0)
+    exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k1_p7zqs = f_crop_cash_summary(lp_vars, r_vals, option=0)
     exp_mach_k_p7zqs, mach_insurance_p7z = f_mach_summary(lp_vars, r_vals)
     stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qszp7 = f_stock_cash_summary(lp_vars, r_vals)
     slp_estab_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='slp', prod='slp_estab_cost_p7z', na_prod=[0,1,4]
@@ -1641,7 +1646,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     len_p7 = len(keys_p7)
     len_z = len(keys_z)
     ###rev
-    rev_grain_p7_qsz = rev_grain_k_p7zqs.sum(axis=0).unstack([2,3,1]).sort_index(axis=1)  # sum landuse axis
+    rev_grain_p7_qsz = rev_grain_k1_p7zqs.sum(axis=0).unstack([2,3,1]).sort_index(axis=1)  # sum landuse axis
     ###exp
     ####machinery
     df_mask_qs = pd.DataFrame(r_vals['zgen']['mask_qs'],keys_q,keys_s).stack()
@@ -1778,17 +1783,17 @@ def f_crop_summary(lp_vars, r_vals, option):
     fodder_percent_qszk = fun.f_divide(biomass_fodder_qszk, total_biomass_qszk) * 100
 
     ##grain harvested
-    total_grain_and_hay_produced_zks2gqs = f_grain_sup_summary(lp_vars, r_vals, option=5)
-    total_grain_and_hay_produced_zks2qs = total_grain_and_hay_produced_zks2gqs.groupby(level=(0,1,2,4,5)).sum() #sum grain pools (note price has already been adjusted for propn of seconds)
-    total_grain_produced_zkqs = total_grain_and_hay_produced_zks2qs.unstack(2).loc[:,'Harv']
-    total_grain_produced_qsz_k1 = total_grain_produced_zkqs.unstack(1).reorder_levels([1,2,0], axis=0)
+    total_grain_and_hay_produced_zk1s2gqs = f_grain_sup_summary(lp_vars, r_vals, option=5)
+    total_grain_and_hay_produced_zk1s2qs = total_grain_and_hay_produced_zk1s2gqs.groupby(level=(0,1,2,4,5)).sum() #sum grain pools (note price has already been adjusted for propn of seconds)
+    total_grain_produced_zk1qs = total_grain_and_hay_produced_zk1s2qs.unstack(2).loc[:,'Harv']
+    total_grain_produced_qsz_k1 = total_grain_produced_zk1qs.unstack(1).reorder_levels([1,2,0], axis=0)
 
     ##grain price
     grain_price_k = r_vals['crop']['farmgate_price'].loc[:,'Harv']
 
     ##hay made
-    total_hay_made_zkqs = total_grain_and_hay_produced_zks2qs.unstack(2).loc[:,'Bale']
-    total_hay_made_qsz_k1 = total_hay_made_zkqs.unstack(1).reorder_levels([1,2,0], axis=0)
+    total_hay_made_zk1qs = total_grain_and_hay_produced_zk1s2qs.unstack(2).loc[:,'Bale']
+    total_hay_made_qsz_k1 = total_hay_made_zk1qs.unstack(1).reorder_levels([1,2,0], axis=0)
 
     ##hay price
     hay_price_k = r_vals['crop']['farmgate_price'].loc[:,'Bale']
@@ -2249,10 +2254,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     sb_mei.columns = ['Saltbush'] # add feed type as header
 
     ###sup
-    sup_md_tonne_fkp6z = r_vals['sup']['md_tonne_fkp6z']
+    sup_md_tonne_fk3p6z = r_vals['sup']['md_tonne_fk3p6z']
     grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
-    sup_mei_qs_fkp6z = grain_fed_qszkfp6.unstack([4,3,5,2]).sort_index(axis=1).mul(sup_md_tonne_fkp6z, axis=1)
-    sup_mei_qszp6f = sup_mei_qs_fkp6z.stack([3,2,0]).sort_index(axis=1).sum(axis=1)
+    sup_mei_qs_fk3p6z = grain_fed_qszkfp6.unstack([4,3,5,2]).sort_index(axis=1).mul(sup_md_tonne_fk3p6z, axis=1)
+    sup_mei_qszp6f = sup_mei_qs_fk3p6z.stack([3,2,0]).sort_index(axis=1).sum(axis=1)
     sup_mei = pd.DataFrame(sup_mei_qszp6f, columns=['Supplement']) # add feed type as header
 
     ##stock mei requirement
@@ -2492,10 +2497,10 @@ def f_emission_summary(lp_vars, r_vals, option=0):
                                               keys=keys, arith=arith, index=index, cols=cols)
 
         ###sup
-        sup_emissions_fk = r_vals['sup']['stock_{0}_sup_fk'.format(e)]
+        sup_emissions_fk3 = r_vals['sup']['stock_{0}_sup_fk3'.format(e)]
         grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
-        sup_emissions_qszp6_fk = grain_fed_qszkfp6.unstack([4,3]).sort_index(axis=1).mul(sup_emissions_fk, axis=1)
-        d['sup_emissions_qsz'] = pd.DataFrame(sup_emissions_qszp6_fk.unstack([3]).sum(axis=1))
+        sup_emissions_qszp6_fk3 = grain_fed_qszkfp6.unstack([4,3]).sort_index(axis=1).mul(sup_emissions_fk3, axis=1)
+        d['sup_emissions_qsz'] = pd.DataFrame(sup_emissions_qszp6_fk3.unstack([3]).sum(axis=1))
 
     ###total livestock emissions
     for i, emission_cat in enumerate(ch4):
@@ -2662,10 +2667,10 @@ def f_emission_summary(lp_vars, r_vals, option=0):
     fuel_co2e_phase_qsz = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                           keys=keys, arith=arith, index=index, cols=cols)
     ###sup
-    fuel_sup_emissions_fk = r_vals['sup']['co2e_sup_fuel_fk']
+    fuel_sup_emissions_fk3 = r_vals['sup']['co2e_sup_fuel_fk3']
     grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
-    fuel_sup_emissions_qszp6_fk = grain_fed_qszkfp6.unstack([4, 3]).sort_index(axis=1).mul(fuel_sup_emissions_fk, axis=1)
-    fuel_co2e_sup_emissions_qsz = pd.DataFrame(fuel_sup_emissions_qszp6_fk.unstack([3]).sum(axis=1))
+    fuel_sup_emissions_qszp6_fk3 = grain_fed_qszkfp6.unstack([4, 3]).sort_index(axis=1).mul(fuel_sup_emissions_fk3, axis=1)
+    fuel_co2e_sup_emissions_qsz = pd.DataFrame(fuel_sup_emissions_qszp6_fk3.unstack([3]).sum(axis=1))
 
     total_fuel_co2e_qsz = (fuel_co2e_seeding_qsz + fuel_co2e_contract_seeding_qsz + fuel_co2e_harv_qsz +
                            fuel_co2e_contract_harv_qsz + fuel_co2e_phase_qsz + fuel_co2e_sup_emissions_qsz)/ 1000 #convert to tonnes. Note it has already been converted to co2e.

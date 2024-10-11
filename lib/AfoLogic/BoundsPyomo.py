@@ -164,7 +164,7 @@ def f1_boundarypyomo_local(params, model):
         if sup_lobound_inc:
             def sup_lo_bound(model, q, s, z):
                 if pe.value(model.p_wyear_inc_qs[q, s]):
-                    return sum(model.v_sup_con[q,s,z,k,g,f,p6] for k in model.s_crops for g in model.s_grain_pools for f in model.s_feed_pools
+                    return sum(model.v_sup_con[q,s,z,k3,g,f,p6] for k3 in model.s_supp_feeds for g in model.s_grain_pools for f in model.s_feed_pools
                     for p6 in model.s_feed_periods) >= 115
                 else:
                     return pe.Constraint.Skip
@@ -179,9 +179,9 @@ def f1_boundarypyomo_local(params, model):
             l_p7 = list(model.s_season_periods)
             def sup_per_dse_bound(model, q, s):
                 if pe.value(model.p_wyear_inc_qs[q, s]):
-                    total_sup = sum(model.v_sup_con[q,s,z,k,g,f,p6]
+                    total_sup = sum(model.v_sup_con[q,s,z,k3,g,f,p6]
                                     * model.p_a_p6_p7[p7,p6,z] * model.p_season_seq_prob_qszp7[q,s,z,p7]
-                                    for k in model.s_crops for g in model.s_grain_pools for f in model.s_feed_pools
+                                    for k3 in model.s_supp_feeds for g in model.s_grain_pools for f in model.s_feed_pools
                                     for p6 in model.s_feed_periods for p7 in model.s_season_periods for z in model.s_season_types)
                     wg_dse = sum((sum(model.v_sire[q,s,g0] * model.p_dse_sire[p6,z,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,z,g0])!=0)
                              + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]

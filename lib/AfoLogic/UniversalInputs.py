@@ -269,15 +269,14 @@ def f_universal_inp_sa(uinp_defaults):
 
 
 def f1_mask_landuse():
-    ##price
+    ##price (note grain_price with k4 axis gets masked later)
     pinp.f1_do_mask_landuse(price, "contract_harv_cost", landuse_axis_type="crop", landuse_axis=0)
-    pinp.f1_do_mask_landuse(price, "grain_price_info", landuse_axis_type="crop", landuse_axis=0)
-    pinp.f1_do_mask_landuse(price, "grain_price", landuse_axis_type="crop", landuse_axis=0)
 
     ##sup feed
-    pinp.f1_do_mask_landuse(supfeed, "sup_md_vol", landuse_axis_type="crop", landuse_axis=1)
-    pinp.f1_do_mask_landuse(supfeed, "grain_density", landuse_axis_type="crop", landuse_axis=1)
-    pinp.f1_do_mask_landuse(supfeed, "i_sup_s2_ks2", landuse_axis_type="crop", landuse_axis=0)
+    supp_mask_k3 = supfeed['i_supp_inc_k3'].squeeze().values
+    supfeed["sup_md_vol"] = supfeed["sup_md_vol"].loc[:, supp_mask_k3]
+    supfeed["grain_density"] = supfeed["grain_density"].loc[:, supp_mask_k3]
+    supfeed["i_sup_s2_ks2"] = supfeed["i_sup_s2_ks2"].loc[supp_mask_k3,:]
 
     ##stub
     pinp.f1_do_mask_landuse(stubble, "i_growth_scalar_k", landuse_axis_type="crop", landuse_axis=0)
@@ -302,4 +301,4 @@ def f1_mask_landuse():
         pinp.f1_do_mask_landuse(mach[option], "seeding_rate_crop_adj", landuse_axis_type="all", landuse_axis=0)
         pinp.f1_do_mask_landuse(mach[option], "harvest_rate", landuse_axis_type="crop", landuse_axis=0)
         pinp.f1_do_mask_landuse(mach[option], "harvest_maint", landuse_axis_type="crop", landuse_axis=0)
-        pinp.f1_do_mask_landuse(mach[option], "sup_feed", landuse_axis_type="crop", landuse_axis=0)
+        mach[option]["sup_feed"] = mach[option]["sup_feed"].loc[supp_mask_k3, :]

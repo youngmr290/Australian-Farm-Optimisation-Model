@@ -42,6 +42,7 @@ def create_sa():
     len_k = len(sinp.general['i_idx_k'])
     len_crop_k = len(sinp.general['i_idx_k1'])
     len_pas_k = len(sinp.general['i_idx_k2'])
+    len_crop_and_sup_k4 = len(uinp.price['grain_price_info'])
     len_k0 = pinp.sheep['i_k0_len'] #Weaning option
     len_k1 = pinp.sheep['i_k1_len'] #Oestrus cycle
     len_k2 = pinp.sheep['i_k2_len'] #LSLN cluster
@@ -151,8 +152,8 @@ def create_sa():
     ########
     ##SAV
     sav['grain_percentile'] = '-'  #grain price percentile
-    sav['grainp_k'] = np.full(len_crop_k, '-', dtype=object)   # SA value for grain prices for each crop for selected percentile (i.e. overwrites calculated price)
-    sav['hayp_k'] = np.full(len_crop_k, '-', dtype=object)   # SA value for baled prices for each crop for selected percentile (i.e. overwrites calculated price)
+    sav['grainp_k'] = np.full(len_crop_and_sup_k4, '-', dtype=object)   # SA value for grain prices for each crop for selected percentile (i.e. overwrites calculated price)
+    sav['hayp_k'] = np.full(len_crop_and_sup_k4, '-', dtype=object)   # SA value for baled prices for each crop for selected percentile (i.e. overwrites calculated price)
     sav['woolp_mpg_percentile'] = '-'               #sa value for the wool price percentile
     sav['woolp_mpg'] = '-'                          # sa value for wool price at std micron for selected percentile (i.e. overwrites calculated price)
     sav['woolp_fdprem_percentile'] = '-'            # sa value for fd premium percentile (premium received by fd compared to std)
@@ -165,8 +166,8 @@ def create_sa():
     sav['sale_ffcfw_min'] = np.full(len_s7, '-', dtype=object)        #min weight for sale in grid
     sav['sale_ffcfw_max'] = np.full(len_s7, '-', dtype=object)        #max weight for sale in grid
     ##SAM
-    sam['grainp_k'] = np.ones(len_crop_k, dtype='float64')   # SA multiplier for grain prices for each crop
-    sam['q_grain_price_scalar_Qk'] = np.ones((len_Q, len_crop_k), dtype='float64')   # SAM for grain price with q axis
+    sam['grainp_k'] = np.ones(len_crop_and_sup_k4, dtype='float64')   # SA multiplier for grain prices for each crop
+    sam['q_grain_price_scalar_Qk'] = np.ones((len_Q, len_crop_and_sup_k4), dtype='float64')   # SAM for grain price with q axis
     sam['q_wool_price_scalar_Q'] = np.ones(len_Q, dtype='float64')   # SAM for wool price with q axis
     sam['q_meat_price_scalar_Q'] = np.ones(len_Q, dtype='float64')   # SAM for meat price with q axis
     sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron

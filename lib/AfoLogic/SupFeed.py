@@ -61,10 +61,10 @@ def f_buy_grain_price(r_vals):
 
     '''
     ##purchase price from neighbour is farm gate price plus transaction and transport
-    farmgate_price_ks2gc1_qz = phs.f_farmgate_grain_price()
+    farmgate_price_k3s2gc1_qz = phs.f_farmgate_grain_price(k_type="k3")
     cartage=uinp.price['sup_cartage']
     transaction_fee=uinp.price['sup_transaction']
-    buy_price_ks2gc1_qz = farmgate_price_ks2gc1_qz + cartage + transaction_fee
+    buy_price_k3s2gc1_qz = farmgate_price_k3s2gc1_qz + cartage + transaction_fee
 
     ##allocate farm gate grain price for each cashflow period and calc interest
     start = np.array([pinp.crop['i_grain_income_date']])
@@ -85,16 +85,16 @@ def f_buy_grain_price(r_vals):
     # grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
     # buy_grain_price =  price_k_g.mul(grain_income_allocation_p7zg,axis=1, level=-1)
     # buy_grain_price_wc =  price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=-1)
-    buy_price_ks2gc1q_z = buy_price_ks2gc1_qz.stack(0)
-    buy_grain_price_ks2gc1q_p7z =  buy_price_ks2gc1q_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
-    buy_grain_price_ks2gc1_qp7z = buy_grain_price_ks2gc1q_p7z.unstack(-1).reorder_levels([2, 0, 1], axis=1)
-    buy_grain_price_wc_ks2gc1q_c0p7z =  buy_price_ks2gc1q_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
-    buy_grain_price_wc_ks2gc1_qc0p7z = buy_grain_price_wc_ks2gc1q_c0p7z.unstack(-1).reorder_levels([3, 0, 1, 2], axis=1)
+    buy_price_k3s2gc1q_z = buy_price_k3s2gc1_qz.stack(0)
+    buy_grain_price_k3s2gc1q_p7z =  buy_price_k3s2gc1q_z.mul(grain_income_allocation_p7z,axis=1, level=-1)
+    buy_grain_price_k3s2gc1_qp7z = buy_grain_price_k3s2gc1q_p7z.unstack(-1).reorder_levels([2, 0, 1], axis=1)
+    buy_grain_price_wc_k3s2gc1q_c0p7z =  buy_price_k3s2gc1q_z.mul(grain_wc_allocation_c0p7z,axis=1, level=-1)
+    buy_grain_price_wc_k3s2gc1_qc0p7z = buy_grain_price_wc_k3s2gc1q_c0p7z.unstack(-1).reorder_levels([3, 0, 1, 2], axis=1)
 
     ##average c1 axis for wc and report
     c1_prob = uinp.price_variation['prob_c1']
-    buy_grain_price_wc_ks2g_qc0p7z = buy_grain_price_wc_ks2gc1_qc0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
-    r_buy_grain_price_ks2g_qp7z = buy_grain_price_ks2gc1_qp7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
+    buy_grain_price_wc_k3s2g_qc0p7z = buy_grain_price_wc_k3s2gc1_qc0p7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
+    r_buy_grain_price_k3s2g_qp7z = buy_grain_price_k3s2gc1_qp7z.mul(c1_prob, axis=0, level=-1).groupby(axis=0, level=[0,1,2]).sum()
 
     ##buy grain period - purchased grain can only provide into the grain transfer constraint in the phase period when it is purchased (otherwise it will get free grain)
     alloc_p7z = zfun.f1_z_period_alloc(start[na], z_pos=-1)
@@ -106,8 +106,8 @@ def f_buy_grain_price(r_vals):
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, r_buy_grain_price_ks2g_qp7z, 'buy_grain_price', mask_season_p7z, z_pos=-1)
-    return buy_grain_price_ks2gc1_qp7z.unstack([2,0,1,3]).sort_index(), buy_grain_price_wc_ks2g_qc0p7z.unstack([2,0,1]).sort_index(), buy_grain_prov_p7z
+    fun.f1_make_r_val(r_vals, r_buy_grain_price_k3s2g_qp7z, 'buy_grain_price', mask_season_p7z, z_pos=-1)
+    return buy_grain_price_k3s2gc1_qp7z.unstack([2,0,1,3]).sort_index(), buy_grain_price_wc_k3s2g_qc0p7z.unstack([2,0,1]).sort_index(), buy_grain_prov_p7z
 
 def f_sup_feeding_cost(r_vals, nv):
     '''
@@ -153,7 +153,7 @@ def f_sup_feeding_cost(r_vals, nv):
     len_nv = nv['len_nv']
     keys_f = np.array(['nv{0}'.format(i) for i in range(nv['len_nv'])])
     keys_p7 = per.f_season_periods(keys=True)
-    keys_k = grain_info.columns
+    keys_k3 = grain_info.columns
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     keys_p6 = pinp.period['i_fp_idx']
@@ -164,8 +164,8 @@ def f_sup_feeding_cost(r_vals, nv):
     # p_name_c = cashflow_df['cash period'].values[:-1]
 
     ##determine cost of feeding in each feed period and cashflow period
-    feeding_cost_k, fuel_used_k = mac.sup_mach_cost()
-    storage_cost_k = grain_info.loc['cost']
+    feeding_cost_k3, fuel_used_k3 = mac.sup_mach_cost()
+    storage_cost_k3 = grain_info.loc['cost']
 
     ##confinement costs
     confinement_infra = pinp.supfeed['i_confinement_infra'].squeeze()
@@ -180,14 +180,14 @@ def f_sup_feeding_cost(r_vals, nv):
     confinement_feeding_cost_factor = uinp.supfeed['i_confinement_feeding_cost_factor'] #cost of feeding for confinement vs in paddock.
     cost_factor_f = fun.f_update(1, confinement_feeding_cost_factor, nv_is_confinement_f)
     cost_factor_f = pd.Series(cost_factor_f, index=keys_f)
-    index_fk = pd.MultiIndex.from_product([keys_f, keys_k])
-    cost_factor_fk = cost_factor_f.reindex(index_fk, level=0)
-    feeding_cost_fk = feeding_cost_k.mul(cost_factor_fk, level=1)
-    fuel_used_fk = fuel_used_k.mul(cost_factor_fk, level=1)
+    index_fk3 = pd.MultiIndex.from_product([keys_f, keys_k3])
+    cost_factor_fk3 = cost_factor_f.reindex(index_fk3, level=0)
+    feeding_cost_fk3 = feeding_cost_k3.mul(cost_factor_fk3, level=1)
+    fuel_used_fk3 = fuel_used_k3.mul(cost_factor_fk3, level=1)
     ###variable confinemnet infra r&m costs only occur for confinement nv pool
     confinement_rm_f = confinement_rm * nv_is_confinement_f
     confinement_rm_f = pd.Series(confinement_rm_f, index=keys_f)
-    feeding_cost_fk = feeding_cost_fk.add(confinement_rm_f, level=0)
+    feeding_cost_fk3 = feeding_cost_fk3.add(confinement_rm_f, level=0)
     ###fixed confinemnet infra depreciation is only incured if confinement is included
     confinement_dep = confinement_dep * nv['confinement_inc']
 
@@ -201,52 +201,52 @@ def f_sup_feeding_cost(r_vals, nv):
     new_index_c0p7zp6 = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6])
     sup_wc_allocation_c0p7zp6 = pd.Series(sup_wc_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)
     ###reindex
-    cols_p7zp6k = pd.MultiIndex.from_product([keys_p7, keys_z, keys_p6, keys_k])
-    sup_cost_allocation_p7zp6k = sup_cost_allocation_p7zp6.reindex(cols_p7zp6k)
-    cols_c0p7zp6k = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6, keys_k])
-    sup_wc_allocation_c0p7zp6k = sup_wc_allocation_c0p7zp6.reindex(cols_c0p7zp6k)
+    cols_p7zp6k3 = pd.MultiIndex.from_product([keys_p7, keys_z, keys_p6, keys_k3])
+    sup_cost_allocation_p7zp6k3 = sup_cost_allocation_p7zp6.reindex(cols_p7zp6k3)
+    cols_c0p7zp6k3 = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6, keys_k3])
+    sup_wc_allocation_c0p7zp6k3 = sup_wc_allocation_c0p7zp6.reindex(cols_c0p7zp6k3)
 
     ##adjust cost for allocation and interest
-    feeding_cost_p7zp6k_f = sup_cost_allocation_p7zp6k.unstack(-1).mul(feeding_cost_fk, axis=1).stack(1)
-    feeding_wc_c0p7zp6k_f = sup_wc_allocation_c0p7zp6k.unstack(-1).mul(feeding_cost_fk, axis=1).stack(1)
-    storage_cost_p7zp6k = sup_cost_allocation_p7zp6k.mul(storage_cost_k, level=3)
-    storage_wc_c0p7zp6k = sup_wc_allocation_c0p7zp6k.mul(storage_cost_k, level=4)
+    feeding_cost_p7zp6k3_f = sup_cost_allocation_p7zp6k3.unstack(-1).mul(feeding_cost_fk3, axis=1).stack(1)
+    feeding_wc_c0p7zp6k3_f = sup_wc_allocation_c0p7zp6k3.unstack(-1).mul(feeding_cost_fk3, axis=1).stack(1)
+    storage_cost_p7zp6k3 = sup_cost_allocation_p7zp6k3.mul(storage_cost_k3, level=3)
+    storage_wc_c0p7zp6k3 = sup_wc_allocation_c0p7zp6k3.mul(storage_cost_k3, level=4)
 
     ##total cost = feeding cost plus storage cost
-    total_sup_cost_p7zp6kf = feeding_cost_p7zp6k_f.add(storage_cost_p7zp6k, axis=0).stack()
-    total_sup_wc_c0p7zp6kf = feeding_wc_c0p7zp6k_f.add(storage_wc_c0p7zp6k, axis=0).stack()
+    total_sup_cost_p7zp6k3f = feeding_cost_p7zp6k3_f.add(storage_cost_p7zp6k3, axis=0).stack()
+    total_sup_wc_c0p7zp6k3f = feeding_wc_c0p7zp6k3_f.add(storage_wc_c0p7zp6k3, axis=0).stack()
 
     ##storage dep
-    storage_dep_k = grain_info.loc['dep']
+    storage_dep_k3 = grain_info.loc['dep']
     ##asset
-    storage_asset_k = grain_info.loc['asset']
+    storage_asset_k3 = grain_info.loc['asset']
     ##allocate both dep and asset to season periods so it can be transferred as seasons unfold
     alloc_p7p6z = zfun.f1_z_period_alloc(start_p6z[na,...], z_pos=-1)
     ###make df
     index_p7p6z = pd.MultiIndex.from_product([keys_p7,keys_p6,keys_z])
     alloc_p7p6z = pd.Series(alloc_p7p6z.ravel(), index=index_p7p6z)
-    index_p7p6zk = pd.MultiIndex.from_product([keys_p7,keys_p6,keys_z,keys_k])
-    alloc_p7p6zk = alloc_p7p6z.reindex(index_p7p6zk)
-    storage_dep_p7p6zk = alloc_p7p6zk.mul(storage_dep_k, level=-1)
-    storage_asset_p7p6zk = alloc_p7p6zk.mul(storage_asset_k, level=-1)
+    index_p7p6zk3 = pd.MultiIndex.from_product([keys_p7,keys_p6,keys_z,keys_k3])
+    alloc_p7p6zk3 = alloc_p7p6z.reindex(index_p7p6zk3)
+    storage_dep_p7p6zk3 = alloc_p7p6zk3.mul(storage_dep_k3, level=-1)
+    storage_asset_p7p6zk3 = alloc_p7p6zk3.mul(storage_asset_k3, level=-1)
 
     ##emissions from fuel used to feed sup
-    co2_fuel_co2e_fk, ch4_fuel_co2e_fk, n2o_fuel_co2e_fk = efun.f_fuel_emissions(fuel_used_fk)
-    co2e_fuel_fk =  co2_fuel_co2e_fk + ch4_fuel_co2e_fk + n2o_fuel_co2e_fk
+    co2_fuel_co2e_fk3, ch4_fuel_co2e_fk3, n2o_fuel_co2e_fk3 = efun.f_fuel_emissions(fuel_used_fk3)
+    co2e_fuel_fk3 =  co2_fuel_co2e_fk3 + ch4_fuel_co2e_fk3 + n2o_fuel_co2e_fk3
     ###build df
-    index_fk = pd.MultiIndex.from_product([keys_f, keys_k])
-    co2e_fuel_fk = pd.Series(co2e_fuel_fk.ravel(), index=index_fk)
+    index_fk3 = pd.MultiIndex.from_product([keys_f, keys_k3])
+    co2e_fuel_fk3 = pd.Series(co2e_fuel_fk3.ravel(), index=index_fk3)
 
     ##store r_vals
     ###make z8 mask - used to uncluster
     date_season_node_p7z = per.f_season_periods()[:-1,...] #slice off end date p7
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     ###store
-    fun.f1_make_r_val(r_vals, total_sup_cost_p7zp6kf, 'total_sup_cost_p7zp6kf', mask_season_p7z[:,:,na,na,na], z_pos=-4)
-    fun.f1_make_r_val(r_vals, co2e_fuel_fk, 'co2e_sup_fuel_fk')
+    fun.f1_make_r_val(r_vals, total_sup_cost_p7zp6k3f, 'total_sup_cost_p7zp6k3f', mask_season_p7z[:,:,na,na,na], z_pos=-4)
+    fun.f1_make_r_val(r_vals, co2e_fuel_fk3, 'co2e_sup_fuel_fk3')
 
     ##return cost, dep and asset value
-    return total_sup_cost_p7zp6kf, total_sup_wc_c0p7zp6kf, storage_dep_p7p6zk, storage_asset_p7p6zk, confinement_dep, co2e_fuel_fk
+    return total_sup_cost_p7zp6k3f, total_sup_wc_c0p7zp6k3f, storage_dep_p7p6zk3, storage_asset_p7p6zk3, confinement_dep, co2e_fuel_fk3
 
 
 def f_sup_md_vol(r_vals, nv):
@@ -278,53 +278,53 @@ def f_sup_md_vol(r_vals, nv):
     #todo review the volume of supplementary feed, especially the max RI==1 and non-inclusion of protein supplementation.
     ##inputs
     sup_md_vol = uinp.supfeed['sup_md_vol']
-    energy_k = sup_md_vol.loc['energy'].values
-    dry_matter_content_k = sup_md_vol.loc['dry matter content'].values
-    prop_consumed_k = sup_md_vol.loc['prop consumed'].values
-    prop_consumed_confinement_k = sup_md_vol.loc['prop consumed confinement'].values
+    energy_k3 = sup_md_vol.loc['energy'].values
+    dry_matter_content_k3 = sup_md_vol.loc['dry matter content'].values
+    prop_consumed_k3 = sup_md_vol.loc['prop consumed'].values
+    prop_consumed_confinement_k3 = sup_md_vol.loc['prop consumed confinement'].values
 
     ##adjust wastage for confinement (no wastage in confinement).
     len_nv = nv['len_nv']
     nv_is_confinement_f = np.full(len_nv, False)
     nv_is_confinement_f[-1] = nv['confinement_inc'] #if confinement is included the last nv pool is confinement.
-    prop_consumed_fk = fun.f_update(prop_consumed_k, prop_consumed_confinement_k, nv_is_confinement_f[:,na])
+    prop_consumed_fk3 = fun.f_update(prop_consumed_k3, prop_consumed_confinement_k3, nv_is_confinement_f[:,na])
 
     ##calc vol
     ###convert md to dmd
-    dmd_k = fsfun.f1_md_to_dmd(energy_k/1000)
+    dmd_k3 = fsfun.f1_md_to_dmd(energy_k3/1000)
     ###calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
-        rq_k = fsfun.f_rq_cs(dmd_k, 0)
+        rq_k3 = fsfun.f_rq_cs(dmd_k3, 0)
     ###use max(1,...) to make it the same as MIDAS - this increases lupin vol slightly from what the equation returns
     ###do not calculate ra (relative availability) because assume that supplement has high availability
     ###Scale supplement volume to 0.8. This value was selected to best fit the substitution rate based on
     ###feed volumes with the substitution rate calculated using the GrazPlan diet selection routine.
-    vol_kg_k = np.maximum(1, 1 / rq_k) * 0.8
+    vol_kg_k3 = np.maximum(1, 1 / rq_k3) * 0.8
     ###convert vol per kg to per tonne fed - have to adjust for the actual dry matter content and wastage
-    vol_tonne_fk = vol_kg_k * 1000 * prop_consumed_fk * dry_matter_content_k
-    vol_tonne_fk = vol_tonne_fk / (1 + sen.sap['pi'])
+    vol_tonne_fk3 = vol_kg_k3 * 1000 * prop_consumed_fk3 * dry_matter_content_k3
+    vol_tonne_fk3 = vol_tonne_fk3 / (1 + sen.sap['pi'])
 
     ##calc ME (note: value in dict is MJ/t of DM, so doesn't need to be multiplied by 1000)
-    md_tonne_fk = energy_k * prop_consumed_fk * dry_matter_content_k
+    md_tonne_fk3 = energy_k3 * prop_consumed_fk3 * dry_matter_content_k3
 
     ##apply season mask
     date_start_p6z = per.f_feed_periods()[:-1]
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z,z_pos=-1,mask=True)
-    vol_tonne_fkp6z = vol_tonne_fk[:,:,na,na] * mask_fp_z8var_p6z
-    md_tonne_fkp6z = md_tonne_fk[:,:,na,na] * mask_fp_z8var_p6z
+    vol_tonne_fk3p6z = vol_tonne_fk3[:,:,na,na] * mask_fp_z8var_p6z
+    md_tonne_fk3p6z = md_tonne_fk3[:,:,na,na] * mask_fp_z8var_p6z
 
     ##build df
     keys_z = zfun.f_keys_z()
     keys_p6 = pinp.period['i_fp_idx']
     keys_f = np.array(['nv{0}'.format(i) for i in range(nv['len_nv'])])
     index = pd.MultiIndex.from_product([keys_f, sup_md_vol.columns, keys_p6, keys_z])
-    vol_tonne_fkp6z = pd.Series(vol_tonne_fkp6z.ravel(), index=index)
-    md_tonne_fkp6z = pd.Series(md_tonne_fkp6z.ravel(), index=index)
+    vol_tonne_fk3p6z = pd.Series(vol_tonne_fk3p6z.ravel(), index=index)
+    md_tonne_fk3p6z = pd.Series(md_tonne_fk3p6z.ravel(), index=index)
 
     ##store r_vals
-    fun.f1_make_r_val(r_vals, md_tonne_fkp6z, 'md_tonne_fkp6z', mask_fp_z8var_p6z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, md_tonne_fk3p6z, 'md_tonne_fk3p6z', mask_fp_z8var_p6z, z_pos=-1)
 
-    return vol_tonne_fkp6z, md_tonne_fkp6z
+    return vol_tonne_fk3p6z, md_tonne_fk3p6z
     
  
 def f_sup_emissions(r_vals, nv):
@@ -338,43 +338,43 @@ def f_sup_emissions(r_vals, nv):
 
     ##inputs
     sup_md_vol = uinp.supfeed['sup_md_vol']
-    md_k = sup_md_vol.loc['energy'].values #MJ/kg DM
-    dmd_k = fsfun.f1_md_to_dmd(md_k / 1000)
-    dry_matter_content_k = sup_md_vol.loc['dry matter content'].values
-    cp_k = sup_md_vol.loc['cp'].values
-    prop_consumed_k = sup_md_vol.loc['prop consumed'].values
-    prop_consumed_confinement_k = sup_md_vol.loc['prop consumed confinement'].values
+    md_k3 = sup_md_vol.loc['energy'].values #MJ/kg DM
+    dmd_k3 = fsfun.f1_md_to_dmd(md_k3 / 1000)
+    dry_matter_content_k3 = sup_md_vol.loc['dry matter content'].values
+    cp_k3 = sup_md_vol.loc['cp'].values
+    prop_consumed_k3 = sup_md_vol.loc['prop consumed'].values
+    prop_consumed_confinement_k3 = sup_md_vol.loc['prop consumed confinement'].values
     ###adjust wastage for confinement (less wastage in confinement).
     len_nv = nv['len_nv']
     nv_is_confinement_f = np.full(len_nv, False)
     nv_is_confinement_f[-1] = nv['confinement_inc'] #if confinement is included the last nv pool is confinement.
-    prop_consumed_fk = fun.f_update(prop_consumed_k, prop_consumed_confinement_k, nv_is_confinement_f[:,na])
+    prop_consumed_fk3 = fun.f_update(prop_consumed_k3, prop_consumed_confinement_k3, nv_is_confinement_f[:,na])
 
 
     ##livestock methane emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 0:  # National Greenhouse Gas Inventory Report
-        stock_ch4_sup_fk = efun.f_stock_ch4_feed_nir(1000 * dry_matter_content_k * prop_consumed_fk, dmd_k)
+        stock_ch4_sup_fk3 = efun.f_stock_ch4_feed_nir(1000 * dry_matter_content_k3 * prop_consumed_fk3, dmd_k3)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][12, 0] == 1:  #Baxter and Claperton
-        stock_ch4_sup_fk = efun.f_stock_ch4_feed_bc(1000 * dry_matter_content_k * prop_consumed_fk, md_k / 1000) #div 1000 to convert to kg
+        stock_ch4_sup_fk3 = efun.f_stock_ch4_feed_bc(1000 * dry_matter_content_k3 * prop_consumed_fk3, md_k3 / 1000) #div 1000 to convert to kg
 
     ##livestock nitrous oxide emissions linked to the consumption of 1t of saltbush - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][13, 0] == 0:  # National Greenhouse Gas Inventory Report
-        stock_n2o_sup_fk = efun.f_stock_n2o_feed_nir(1000 * dry_matter_content_k * prop_consumed_fk, dmd_k, cp_k)
+        stock_n2o_sup_fk3 = efun.f_stock_n2o_feed_nir(1000 * dry_matter_content_k3 * prop_consumed_fk3, dmd_k3, cp_k3)
 
-    co2e_sup_fk = stock_ch4_sup_fk * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_sup_fk * uinp.emissions['i_n2o_gwp_factor']
+    co2e_sup_fk3 = stock_ch4_sup_fk3 * uinp.emissions['i_ch4_gwp_factor'] + stock_n2o_sup_fk3 * uinp.emissions['i_n2o_gwp_factor']
 
     ##build df
     keys_f = np.array(['nv{0}'.format(i) for i in range(nv['len_nv'])])
-    index_fk = pd.MultiIndex.from_product([keys_f, sup_md_vol.columns])
-    co2e_sup_fk = pd.Series(co2e_sup_fk.ravel(), index=index_fk)
-    stock_n2o_sup_fk = pd.Series(stock_n2o_sup_fk.ravel(), index=index_fk)
-    stock_ch4_sup_fk = pd.Series(stock_ch4_sup_fk.ravel(), index=index_fk)
+    index_fk3 = pd.MultiIndex.from_product([keys_f, sup_md_vol.columns])
+    co2e_sup_fk3 = pd.Series(co2e_sup_fk3.ravel(), index=index_fk3)
+    stock_n2o_sup_fk3 = pd.Series(stock_n2o_sup_fk3.ravel(), index=index_fk3)
+    stock_ch4_sup_fk3 = pd.Series(stock_ch4_sup_fk3.ravel(), index=index_fk3)
 
     ##store report vals
-    fun.f1_make_r_val(r_vals,stock_n2o_sup_fk,'stock_n2o_sup_fk')
-    fun.f1_make_r_val(r_vals,stock_ch4_sup_fk,'stock_ch4_sup_fk')
+    fun.f1_make_r_val(r_vals,stock_n2o_sup_fk3,'stock_n2o_sup_fk3')
+    fun.f1_make_r_val(r_vals,stock_ch4_sup_fk3,'stock_ch4_sup_fk3')
 
-    return co2e_sup_fk
+    return co2e_sup_fk3
 
 def f_sup_labour(nv):
     '''
@@ -450,9 +450,9 @@ def f_sup_labour(nv):
     alloc_p5zp8 = np.moveaxis(alloc_p8p5z,0,-1)
 
     ##combine allocation with the labour time
-    total_time_p8k = total_time.values
-    total_time_p5zp8k = alloc_p5zp8[...,na] * total_time_p8k
-    total_time_p5zk = np.sum(total_time_p5zp8k, axis=-2)
+    total_time_p8k3 = total_time.values
+    total_time_p5zp8k3 = alloc_p5zp8[...,na] * total_time_p8k3
+    total_time_p5zk3 = np.sum(total_time_p5zp8k3, axis=-2)
 
     ##link feed periods to labour periods, ie determine the proportion of each feed period in each labour period so the time taken to sup feed can be divided up accordingly
     start_p6z = per.f_feed_periods()[:-1,:]
@@ -461,7 +461,7 @@ def f_sup_labour(nv):
     alloc_p5p6z = fun.f_range_allocation_np(lp_dates_p5z.values[:,na,:], start_p6z, length_p6z, shape=shape_p5p6z)[:-1]
 
     ##allocate time to labour period for each feed period - get the time taken in each labour period to feed 1t of feed in each feed period
-    total_time_p5p6zk = total_time_p5zk[:,na,...] * alloc_p5p6z[...,na]
+    total_time_p5p6zk3 = total_time_p5zk3[:,na,...] * alloc_p5p6z[...,na]
 
     ##adjust feeding labour for confinement.
     len_nv = nv['len_nv']
@@ -469,22 +469,22 @@ def f_sup_labour(nv):
     nv_is_confinement_f[-1] = nv['confinement_inc'] #if confinement is included the last nv pool is confinement.
     confinement_feeding_cost_factor = uinp.supfeed['i_confinement_feeding_labour_factor'] #cost of feeding for confinement vs in paddock.
     cost_factor_f = fun.f_update(1, confinement_feeding_cost_factor, nv_is_confinement_f)
-    total_time_p5p6zkf = total_time_p5p6zk[...,na] * cost_factor_f
+    total_time_p5p6zk3f = total_time_p5p6zk3[...,na] * cost_factor_f
 
     ##apply season mask
     date_start_p6z = per.f_feed_periods()[:-1]
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
-    total_time_p5p6zkf = total_time_p5p6zkf * mask_fp_z8var_p6z[...,na,na]
+    total_time_p5p6zk3f = total_time_p5p6zk3f * mask_fp_z8var_p6z[...,na,na]
 
     ##build df
     keys_z = zfun.f_keys_z()
     keys_p5 = lp_dates_p5z.index[:-1]
     keys_p6 = pinp.period['i_fp_idx']
-    keys_k = sinp.general['i_idx_k1']
+    keys_k3 = uinp.supfeed['grain_density'].columns
     keys_f = np.array(['nv{0}'.format(i) for i in range(nv['len_nv'])])
-    index = pd.MultiIndex.from_product([keys_p5, keys_p6, keys_z, keys_k, keys_f])
-    total_time_p5p6zkf = pd.Series(total_time_p5p6zkf.ravel(), index=index)
-    return total_time_p5p6zkf
+    index = pd.MultiIndex.from_product([keys_p5, keys_p6, keys_z, keys_k3, keys_f])
+    total_time_p5p6zk3f = pd.Series(total_time_p5p6zk3f.ravel(), index=index)
+    return total_time_p5p6zk3f
 
 
 def f1_a_p6_p7():
@@ -514,9 +514,9 @@ def f1_sup_s2_ks2(r_vals):
     only be sold. This is not a big limitation because the model can just sell the barley hay and purchase some oat hay
     to feed.
     '''
-    sup_s2_k_s2 = uinp.supfeed['i_sup_s2_ks2']
-    fun.f1_make_r_val(r_vals, sup_s2_k_s2, 'sup_s2_k_s2')
-    return sup_s2_k_s2.stack()
+    sup_s2_k3_s2 = uinp.supfeed['i_sup_s2_ks2']
+    fun.f1_make_r_val(r_vals, sup_s2_k3_s2, 'sup_s2_k_s2')
+    return sup_s2_k3_s2.stack()
 
 
 def f1_sup_selectivity():
