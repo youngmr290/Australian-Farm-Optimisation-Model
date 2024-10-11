@@ -1775,7 +1775,7 @@ def f_crop_summary(lp_vars, r_vals, option):
     total_biomass_qszk = v_use_biomass_qszks2.sum(axis=-1)
     graz_idx = list(r_vals['stub']['keys_s2']).index("Graz")
     biomass_fodder_qszk = v_use_biomass_qszks2[:,:,:,:,graz_idx]
-    fodder_percent_qszk = fun.f_divide(biomass_fodder_qszk, total_biomass_qszk)
+    fodder_percent_qszk = fun.f_divide(biomass_fodder_qszk, total_biomass_qszk) * 100
 
     ##grain harvested
     total_grain_and_hay_produced_zks2gqs = f_grain_sup_summary(lp_vars, r_vals, option=5)
