@@ -2816,7 +2816,7 @@ def f_grazing_summary(lp_vars, r_vals):
     greenpas_ha_qsgop6lzt = np.sum(greenpas_ha_qsfgop6lzt, axis=2)
 
     ##combine everything
-    graze_info_iqsgop6lzt = np.stack(np.broadcast_arrays(greenpas_ha_qsgop6lzt, foo_start_grnha_qop6lzt[na,na], foo_ave_grnha_qsp6lzt[:,:,na,na,...]), axis=0)
+    graze_info_iqsgop6lzt = np.stack(np.broadcast_arrays(greenpas_ha_qsgop6lzt, foo_start_grnha_qop6lzt[:,na,na,...], foo_ave_grnha_qsp6lzt[:,:,na,na,...]), axis=0)
 
     ##make df
     keys_g = r_vals['pas']['keys_g']
