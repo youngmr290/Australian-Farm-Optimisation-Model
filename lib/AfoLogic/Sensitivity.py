@@ -506,6 +506,7 @@ def create_sa():
     sav['rev_update']      = '-'                  #SA to alter if the trial is being used to create rev std values
     sav['rev_number']      = '-'                  #SA to alter rev number - rev number is appended to the std rev value pkl file and can be used to select which rev is used as std for a given trial.
     sav['rev_trait_scenario'] = np.full_like(sinp.structuralsa['i_rev_trait_scenario'], '-', dtype=object) #SA value for which traits are to be held constant in REV analysis.
+    sav['rev_ebg_yatf_scenario']      = '-'       #SA to override the scenario for ebg_yatf. Used to fix problems with distribution at weaning changing.
     sav['rev_age_stage']      = '-'                  #SA to set the age range that the rev sensitivities get applied.
 
     ##SAM
