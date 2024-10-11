@@ -1517,8 +1517,8 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False, summa
     ##user can change this if they want to report different axis. Keys must be a list and axis must be tuple. Check names below to get the axis positions.
     sire_preserve_ax = (0, 1, 2 ,3)
     sire_key = [keys_q, keys_s, keys_p6, keys_z]
-    dams_preserve_ax = (0, 1, 3, 9)
-    dams_key = [keys_q, keys_s, keys_p6, keys_z]
+    dams_preserve_ax = (0, 1, 3, 5, 9)
+    dams_key = [keys_q, keys_s, keys_p6, keys_v1, keys_z]
     offs_preserve_ax = (0, 1, 4, 9)
     offs_key = [keys_q, keys_s, keys_p6, keys_z]
 
