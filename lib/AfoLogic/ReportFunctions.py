@@ -3277,6 +3277,7 @@ def mp_report(lp_vars, r_vals):
     sale_numbers_dams_y_qsz = sale_numbers_dams_qszy.unstack().T
     ####add female prog that were sold
     sale_numbers_dams_y_qsz.iloc[0] = female_prog_sold_qsz
+    sale_numbers_dams_y_qsz = round(sale_numbers_dams_y_qsz, 0)
 
     ##sale offs numbers
     type = 'stock'
@@ -3347,7 +3348,7 @@ def mp_report(lp_vars, r_vals):
     ###total ewe sales
     summary_df.loc['Ewe sales',:] = sale_numbers_dams_y_qsz.sum(axis=0)
     ###total wether sales
-    summary_df.loc['Wether and crossy sales',:] = sale_numbers_offs_qsz_tv.sum(axis=1)
+    summary_df.loc['Wether and crossy sales',:] = round(sale_numbers_offs_qsz_tv.sum(axis=1), 0)
     ###ave wether sale price
     ####get offs and prog sale numbers for weighted average
     type = 'stock'
