@@ -10347,24 +10347,26 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     params['p_dams_lobound'] = fun.f1_make_pyomo_dict(bnd_lower_dams_tva1e1b1nwzida0e0b0xyg1, arrays_tvzg1)
 
     ##upper bound dams
-    ### this bound can be defined with either tog1 axes or tvg1 axes in exp.xl. Uncomment the relevant code to align with exp.xl
+    ### this bound can be defined with either tog1 axes or tvg1 axes in exp.xl. Use the relevant one in exp.xl
     ### Note: if using the V axis, be aware of changes that might add slices to the v axis (season nodes, or new DVPs) that will alter the outcome of the bound defined in exp.xl
-    # bnd_upper_dams_tog1 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_dams_tog1'], 5) #999999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
-    # bnd_upper_dams_tog1[bnd_upper_dams_tog1==999999] = np.inf
-    # bnd_upper_dams_toa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_upper_dams_tog1, left_pos=p_pos, right_pos=-1,
-    #                                                 condition=mask_t1, axis=p_pos-1, condition2=mask_o_dams, axis2=p_pos, condition3=mask_dams_inc_g1, axis3=-1)
-    # bnd_upper_dams_tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(bnd_upper_dams_toa1e1b1nwzida0e0b0xyg1,
-    #                                                             a_prev_o_va1e1b1nwzida0e0b0xyg1[na,:,:,0:1,...], #take e[0] because o is not effected by e
-    #                                                             axis=p_pos)  # increments at prejoining
-    bnd_upper_dams_tVg1 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_dams_tVg1'], 5) #999999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
-    bnd_upper_dams_tVg1[bnd_upper_dams_tVg1==999999] = np.inf
-    bnd_upper_dams_tVa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_upper_dams_tVg1, left_pos=p_pos, right_pos=-1,
-                                                    condition=mask_t1, axis=p_pos-1, condition2=mask_dams_inc_g1, axis2=-1)
-    bnd_upper_dams_tVa1e1b1nwzida0e0b0xyg1 = bnd_upper_dams_tVa1e1b1nwzida0e0b0xyg1 * (index_zidaebxyg==index_zidaebxyg) #need to activate z axis because z is active if you use the upbound method above.
-    ### slice the approximated V axis created in Sensitivity.py to the correct length
-    bnd_upper_dams_tva1e1b1nwzida0e0b0xyg1 = bnd_upper_dams_tVa1e1b1nwzida0e0b0xyg1[:, 0:len_v1, ...]
-    arrays_tvzg1 = [keys_t1, keys_v1, keys_z, keys_g1]
-    params['p_dams_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_dams_tva1e1b1nwzida0e0b0xyg1, arrays_tvzg1)
+    if (sen.sav['bnd_up_dams_K2tog1']!="-").any():
+        bnd_upper_dams_k2tog1 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_dams_K2tog1'][:len_k2,...], 5) #999999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
+        bnd_upper_dams_k2tog1[bnd_upper_dams_k2tog1==999999] = np.inf
+        bnd_upper_dams_k2toa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_upper_dams_k2tog1, left_pos=p_pos, right_pos=-1,
+                                                        condition=mask_t1, axis=p_pos-1, condition2=mask_o_dams, axis2=p_pos, condition3=mask_dams_inc_g1, axis3=-1)
+        bnd_upper_dams_k2tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(bnd_upper_dams_k2toa1e1b1nwzida0e0b0xyg1,
+                                                                    a_prev_o_va1e1b1nwzida0e0b0xyg1[na,na,:,:,0:1,...], #take e[0] because o is not effected by e
+                                                                    axis=p_pos)  # increments at prejoining
+    else:
+        bnd_upper_dams_k2tVg1 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_dams_K2tVg1'][:len_k2,...], 5) #999999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
+        bnd_upper_dams_k2tVg1[bnd_upper_dams_k2tVg1==999999] = np.inf
+        bnd_upper_dams_k2tVa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_upper_dams_k2tVg1, left_pos=p_pos, right_pos=-1,
+                                                        condition=mask_t1, axis=p_pos-1, condition2=mask_dams_inc_g1, axis2=-1)
+        bnd_upper_dams_k2tVa1e1b1nwzida0e0b0xyg1 = bnd_upper_dams_k2tVa1e1b1nwzida0e0b0xyg1 * (index_zidaebxyg==index_zidaebxyg) #need to activate z axis because z is active if you use the upbound method above.
+        ### slice the approximated V axis created in Sensitivity.py to the correct length
+        bnd_upper_dams_k2tva1e1b1nwzida0e0b0xyg1 = bnd_upper_dams_k2tVa1e1b1nwzida0e0b0xyg1[:, :, 0:len_v1, ...]
+    arrays_k2tvzg1 = [keys_k2, keys_t1, keys_v1, keys_z, keys_g1]
+    params['p_dams_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_dams_k2tva1e1b1nwzida0e0b0xyg1, arrays_k2tvzg1)
 
     ##proportion of dams mated. inf means the model can optimise the proportion because inf is used to skip the constraint.
     prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn

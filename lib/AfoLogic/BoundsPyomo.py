@@ -51,7 +51,7 @@ def f1_boundarypyomo_local(params, model):
     crop_grazing_intensity_bnd_inc = sen.sav['bnd_crop_grazing_intensity'] != '-'
     total_dams_eqbound_inc = sen.sav['bnd_total_dams'] != '-' #bound the total number of dams at prejoining
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_dam_inc'], 5) #lower bound dams
-    dams_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_dam_inc'], 5) #upper bound on dams
+    dams_upbound_inc = (sen.sav['bnd_up_dams_K2tog1']!="-").any() or (sen.sav['bnd_up_dams_K2tVg1']!="-").any()  #upper bound on dams
     offs_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_off_inc'], 5) #lower bound offs
     offs_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_off_inc'], 5) #upper bound on offs
     prog_upbound_inc = any(value != 999999 for value in params['stock']['p_prog_upbound'].values()) #upper bound on prog
@@ -305,7 +305,7 @@ def f1_boundarypyomo_local(params, model):
                 c) update param creation in sgen (param index will need the set added/removed)
             '''
             ##set bound using SAV
-            model.p_dams_upbound = pe.Param(model.s_sale_dams, model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
+            model.p_dams_upbound = pe.Param(model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
                                             default=0, initialize=params['stock']['p_dams_upbound'])
 
             ##manual set the bound - usually done using SAV but this is just a quick and dirty method for debugging
@@ -319,17 +319,17 @@ def f1_boundarypyomo_local(params, model):
             # dams_upbound = dict(zip(tup_tvzg, dams_upbound))
 
             ###constraint
-            def f_dam_upbound(model, q, s, t, v, z, g1):
-                if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_dams_upbound[t,v,z,g1]!=np.inf
-                    and any(model.p_mask_dams[k2,t,v,w8,z,g1] != 0 for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams)):
-                    return sum(model.v_dams[q,s,k28,t,v,a,n,w8,z,i,y,g1] for k28 in model.s_k2_birth_dams
+            def f_dam_upbound(model, q, s, k2, t, v, z, g1):
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_dams_upbound[k2,t,v,z,g1]!=np.inf
+                    and any(model.p_mask_dams[k2,t,v,w8,z,g1] != 0 for w8 in model.s_lw_dams)):
+                    return sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1]
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
-                               if pe.value(model.p_mask_dams[k28,t,v,w8,z,g1]) == 1 #if removes the masked out dams so they don't show up in .lp output.
-                               ) <= model.p_dams_upbound[t,v,z,g1]
+                               if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1 #if removes the masked out dams so they don't show up in .lp output.
+                               ) <= model.p_dams_upbound[k2,t,v,z,g1]
                 else:
                     return pe.Constraint.Skip
-            model.con_dams_upbound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_dams
+            model.con_dams_upbound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_sale_dams
                                                    , model.s_dvp_dams, model.s_season_types, model.s_groups_dams
                                                    , rule=f_dam_upbound, doc='max number of dams_tv')
 

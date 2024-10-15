@@ -551,9 +551,8 @@ def create_sa():
     sav['bnd_lo_dam_inc'] = '-'   #control if dam lower bound is on.
     sav['bnd_lo_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1,), '-', dtype=object)   #min number of dams
     sav['bnd_lo_dams_tVg1'] = np.full((len_t1,) + (len_V,) + (len_g1,), '-', dtype=object)   #min number of dams
-    sav['bnd_up_dam_inc'] = '-'   #control if dam upper bound is on.
-    sav['bnd_up_dams_tog1'] = np.full((len_t1,) + (len_d,) + (len_g1,), '-', dtype=object)   #max number of dams
-    sav['bnd_up_dams_tVg1'] = np.full((len_t1,) + (len_V,) + (len_g1,), '-', dtype=object)   #max number of dams
+    sav['bnd_up_dams_K2tog1'] = np.full((20, len_t1, len_d, len_g1,), '-', dtype=object)   #max number of dams
+    sav['bnd_up_dams_K2tVg1'] = np.full((20, len_t1, len_V, len_g1,), '-', dtype=object)   #max number of dams
     sav['bnd_total_dams_scanned'] = '-'   #total dams scanned (summed over all dvps) - this also controls if bound is on.
     sav['bnd_propn_dam5_retained'] = '-'   #propn of 5yo dams retained - this also controls if bound is on.
     sav['bnd_lo_off_inc'] = '-'   #control if off lower bound is on.
