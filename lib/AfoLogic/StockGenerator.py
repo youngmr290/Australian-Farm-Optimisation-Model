@@ -892,7 +892,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     idx_sida0e0b0xyg1 = fun.f_next_prev_association(date_end_P, date_shear_sida0e0b0xyg1,0, 'left')#shearing occurs at the end of the next/current generator period therefore 0 offset
     date_shear_sa1e1b1nwzida0e0b0xyg1 = fun.f_expand(date_end_P[idx_sida0e0b0xyg1], p_pos, right_pos=i_pos)  #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes)
     ###off - shearing can't occur as yatf because then need to shear all lambs (ie no scope to not shear the lambs that are going to be fed up and sold) because the offs decision variables for feeding are not linked to the yatf (which are in the dam decision variables)
-    date_shear_sida0e0b0xyg3 = np.maximum(date_born1st_ida0e0b0xyg3 + age_wean1st_ida0e0b0xyg3, date_shear_sida0e0b0xyg3) #shearing must be after weaning. This makes the d axis active because weaning has an active d.
     idx_sida0e0b0xyg3 = fun.f_next_prev_association(offs_date_end_P, date_shear_sida0e0b0xyg3,0, 'left')#shearing occurs at the end of the next/current generator period therefore 0 offset
     date_shear_sa1e1b1nwzida0e0b0xyg3 = fun.f_expand(offs_date_end_P[idx_sida0e0b0xyg3], p_pos, right_pos=i_pos) #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
 
