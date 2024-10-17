@@ -650,7 +650,7 @@ def f_summary(lp_vars, r_vals, trial):
     arith = 2
     index = []
     cols = []
-    axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
+    axis_slice = {2:[1,None,1], 3:[2,None,1]} #slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
     ##pasture %
@@ -2979,7 +2979,7 @@ def f_pasture_area_analysis(lp_vars, r_vals, trial):
     arith = 2
     index = []
     cols = []
-    axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
+    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc[trial, 'Ewes mated'] = dams_mated.squeeze()
     ##pasture %
@@ -3013,7 +3013,7 @@ def f_stocking_rate_analysis(lp_vars, r_vals, trial):
     arith = 2
     index = []
     cols = []
-    axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
+    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
     ##pasture area
@@ -3129,7 +3129,7 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     arith = 2
     index = []
     cols = []
-    axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
+    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
     ##ave wether sale price
@@ -3342,7 +3342,7 @@ def mp_report(lp_vars, r_vals):
     arith = 2
     index = []
     cols = [0,1,8] #q,s,z
-    axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
+    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc['Ewes mated',:] = round(dams_mated_qsz.squeeze(),0)
     ###total ewe sales
