@@ -262,6 +262,15 @@ def f1_boundarypyomo_local(params, model):
             model.p_dams_lobound = pe.Param(model.s_sale_dams, model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
                                             default=0, initialize=params['stock']['p_dams_lobound'])
 
+            ##if True this puts the lo_bnd across each starting weight - this is used in the fs optimisation to ensure each starting w has numbers and gets an optimum fs.
+            ## This can make the model infeasible.
+            if sen.sav['lobnd_across_startw']:
+                model.s_startw_dams = pe.Set(initialize=params['stock']['startw_idx_dams'], doc='Standard LW patterns dams')
+                model.p_dams_w_is_startw_ws = pe.Param(model.s_lw_dams, model.s_startw_dams, default=0, initialize=params['stock']['p_dams_w_is_startw_ws'])
+            else:
+                model.s_startw_dams = pe.Set(initialize=['all_w'], doc='Standard LW patterns dams')
+                model.p_dams_w_is_startw_ws = pe.Param(model.s_lw_dams, model.s_startw_dams, default=1, initialize=1)
+
             ##manual set the bound - usually done using SAV but this is just a quick and dirty method for debugging
             # arrays = [model.s_sale_dams, model.s_dvp_dams, model.s_lw_dams, model.s_season_types, model.s_groups_dams]   #more sets can be added here to customise the bound
             # index_tvwzg = fun.cartesian_product_simple_transpose(arrays)
@@ -275,18 +284,18 @@ def f1_boundarypyomo_local(params, model):
             # dams_lobound = dict(zip(tup_tvwzg, dams_lobound))
 
             ###constraint
-            def f_dam_lobound(model, q, s, t, v, z, g1):
+            def f_dam_lobound(model, q, s, k2, t, v, ws, z, g1):
                 if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_dams_lobound[t,v,z,g1]!=0
-                    and any(model.p_mask_dams[k2,t,v,w8,z,g1] != 0 for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams)):
-                    return sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1] for k2 in model.s_k2_birth_dams
+                    and any(model.p_mask_dams[k2,t,v,w8,z,g1] != 0 for w8 in model.s_lw_dams)):
+                    return sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1]
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
-                               if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1
+                               if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1 and pe.value(model.p_dams_w_is_startw_ws[w8,ws])==1
                                ) >= model.p_dams_lobound[t,v,z,g1]
                 else:
                     return pe.Constraint.Skip
-            model.con_dams_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_dams
-                                                   , model.s_dvp_dams, model.s_season_types, model.s_groups_dams
+            model.con_dams_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_sale_dams
+                                                   , model.s_dvp_dams, model.s_startw_dams, model.s_season_types, model.s_groups_dams
                                                    , rule=f_dam_lobound, doc='min number of dams')
 
         ##dams upper bound
@@ -352,6 +361,15 @@ def f1_boundarypyomo_local(params, model):
             model.p_offs_lobound = pe.Param(model.s_k3_damage_offs, model.s_sale_offs, model.s_dvp_offs, model.s_season_types, model.s_gender,
                                             model.s_groups_offs, default=0, initialize=params['stock']['p_offs_lobound'])
 
+            ##if True this puts the lo_bnd across each starting weight - this is used in the fs optimisation to ensure each starting w has numbers and gets an optimum fs.
+            ## This can make the model infeasible.
+            if sen.sav['lobnd_across_startw']:
+                model.s_startw_offs = pe.Set(initialize=params['stock']['startw_idx_offs'], doc='Standard LW patterns offs')
+                model.p_offs_w_is_startw_ws = pe.Param(model.s_lw_offs, model.s_startw_offs, default=0, initialize=params['stock']['p_offs_w_is_startw_ws'])
+            else:
+                model.s_startw_offs = pe.Set(initialize=['all_w'], doc='Standard LW patterns offs')
+                model.p_offs_w_is_startw_ws = pe.Param(model.s_lw_offs, model.s_startw_offs, default=1, initialize=1)
+
             ##manual set the bound - usually done using SAV but this is just a quick and dirty method for debugging
             ###keys to build arrays for the specified slices
             # arrays = [model.s_sale_offs, model.s_dvp_offs, model.s_lw_offs,model.s_season_types, model.s_gender, model.s_groups_offs]   #more sets can be added here to customise the bound
@@ -368,18 +386,19 @@ def f1_boundarypyomo_local(params, model):
             # offs_lowbound = dict(zip(tup_tvwzxg, offs_lowbound))
 
             ###constraint
-            def f_off_lobound(model, q, s, k3, t, v, z, x, g3):
+            def f_off_lobound(model, q, s, k3, k5, t, v, ws, z, x, g3):
                 if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_offs_lobound[k3,t,v,z,x,g3]!=0\
                         and any(model.p_mask_offs[k3,v,w8,z,x,g3] != 0 for w8 in model.s_lw_offs)):
                     return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3]
-                               for k5 in model.s_k5_birth_offs for a in model.s_wean_times for n3 in model.s_nut_offs
+                               for a in model.s_wean_times for n3 in model.s_nut_offs
                                for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
-                               if pe.value(model.p_mask_offs[k3,v,w8,z,x,g3]) == 1
+                               if pe.value(model.p_mask_offs[k3,v,w8,z,x,g3]) == 1 and pe.value(model.p_offs_w_is_startw_ws[w8,ws])==1
                                ) >= model.p_offs_lobound[k3,t,v,z,x,g3]
                 else:
                     return pe.Constraint.Skip
-            model.con_offs_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_sale_offs
-                                                   , model.s_dvp_offs, model.s_season_types, model.s_gender, model.s_groups_offs
+            model.con_offs_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs
+                                                   , model.s_k5_birth_offs, model.s_sale_offs, model.s_dvp_offs
+                                                   , model.s_startw_offs, model.s_season_types, model.s_gender, model.s_groups_offs
                                                    , rule=f_off_lobound, doc='min number of offs')
 
         ##offs upper bound

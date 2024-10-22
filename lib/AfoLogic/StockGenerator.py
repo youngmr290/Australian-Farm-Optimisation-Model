@@ -640,6 +640,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         ###birth control
         date_born1st_oa1e1b1nwzida0e0b0xyg2[...] = stubble['lambing_date']
 
+    ###association between start w and full w
+    a_wstart_w1 = np.floor(index_w1 / len_nut_dams).astype(int) #identify the start w slice (nut 0) for each w
+    a_wstart_w3 = np.floor(index_w3 / len_nut_offs).astype(int) #identify the start w slice (nut 0) for each w
+
     ############################
     ### sim param arrays       # '''csiro params '''
     ############################
@@ -9928,7 +9932,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     params['y_idx_sire'] = keys_y0
     params['dvp_idx_dams'] = keys_v1
     params['w_idx_dams'] = keys_lw1
+    params['startw_idx_dams'] = keys_lw1[0:w_start_len1]
     params['w_idx_offs'] = keys_lw3
+    params['startw_idx_offs'] = keys_lw3[0:w_start_len3]
     params['g_idx_dams'] = keys_g1
     params['g_idx_yatf'] = keys_g2
     params['k2_idx_dams'] = keys_k2
@@ -10345,6 +10351,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     arrays_tvzg1 = [keys_t1, keys_v1, keys_z, keys_g1]
     params['p_dams_lobound'] = fun.f1_make_pyomo_dict(bnd_lower_dams_tva1e1b1nwzida0e0b0xyg1, arrays_tvzg1)
 
+    ###for fs optimisation lo bnd is across starting w - create param that links starting w with w
+    params['p_dams_w_is_startw_ws'] = fun.f1_make_pyomo_dict(np.arange(w_start_len1)[na,:]==a_wstart_w1[:,na], [keys_lw1, keys_lw1[0:w_start_len1]])
+
     ##upper bound dams
     ### this bound can be defined with either tog1 axes or tvg1 axes in exp.xl. Use the relevant one in exp.xl
     ### Note: if using the V axis, be aware of changes that might add slices to the v axis (season nodes, or new DVPs) that will alter the outcome of the bound defined in exp.xl
@@ -10407,6 +10416,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     params['p_scan_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==scan_vtype1] #get the dvp keys which are scan (same for all animals hence take slice 0)
 
     ##lower bound offs
+    ###for fs optimisation lo bnd is across starting w - create param that links starting w with w
+    params['p_offs_w_is_startw_ws'] = fun.f1_make_pyomo_dict(np.arange(w_start_len3)[na,:]==a_wstart_w3[:,na], [keys_lw3, keys_lw3[0:w_start_len3]])
     ###build a mask which indicates if there is a future shearing
     t_period_is_shearing_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
     future_shearing_exists_tva1e1b1nwzida0e0b0xyg3 = np.flip(np.maximum.accumulate(np.flip(t_period_is_shearing_va1e1b1nwzida0e0b0xyg3, axis=p_pos), axis=p_pos), axis=p_pos)
@@ -10496,8 +10507,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             user_lw_change_k2tva1e1b1nszida0e0b0xyg1 = np.maximum(user_lw_change, np.min(lw_diff_from_base_k2tva1e1b1nswzida0e0b0xyg1, axis=w_pos))
             user_lw_change_k3k5tva1e1b1nszida0e0b0xyg3 = np.maximum(user_lw_change, np.min(lw_diff_from_base_k3k5tva1e1b1nswzida0e0b0xyg3, axis=w_pos))
         ####expand start w axis back to the full w axis
-        a_wstart_w1 = np.floor(index_w1 / len_nut_dams).astype(int) #identify the start w slice (nut 0) for each w
-        a_wstart_w3 = np.floor(index_w3 / len_nut_offs).astype(int) #identify the start w slice (nut 0) for each w
         user_lw_change_k2tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(user_lw_change_k2tva1e1b1nszida0e0b0xyg1, a_wstart_w1[na,na,na,na,na,na,na,:,na,na,na,na,na,na,na,na,na], axis=w_pos)
         user_lw_change_k3k5tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(user_lw_change_k3k5tva1e1b1nszida0e0b0xyg3, a_wstart_w3[na,na,na,na,na,na,na,na,:,na,na,na,na,na,na,na,na,na], axis=w_pos)
         ###make the param for the bnd - difference between target lw change and lw change of each w slice (this gets bnd to 0)
