@@ -106,7 +106,6 @@ def create_sa():
     sav['gen_with_t']      = '-'                  #SA to control if sheep generator is run with active t axis.
     sav['fs_use_pkl']      = '-'                  #SA to control if the pkl fs is used or the excel input fs is used.
     sav['fs_use_number']      = '-'                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is used for a given trial.
-    sav['use_pkl_condensed_start_condition'] = '-'  #SA to control if the pkl values are used for the start animal at condensing
     sav['r2adjust_inc']      = '-'              #SA to control if the r2 feedsupply adjustment from Excel is included.
     sav['inc_c1_variation'] = '-'               #control if price variation is on. This only effects result if risk aversion is included.
     sav['inc_risk_aversion'] = '-'              #control if risk aversion is included. Default is not included (ie utility=profit).
