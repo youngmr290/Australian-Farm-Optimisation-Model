@@ -450,7 +450,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ### each slice of w has a combination of nutrition levels during the nutrition cycle and that is specified in the association a_n_pw
     ### if generating from pkl then there is a starting weight axis which has to be reshaped to the full w.
     ###Note: if start w len is different in the current trial compared to the pkl fs then the pkl feedsupply is sliced for start weight [0]. Thus all start weights get the same FS.
-    if sinp.structuralsa['i_fs_use_pkl'] and (sinp.structuralsa['i_w_start_len1']==feedsupply_std_stpa1e1b1nwzida0e0b0xyg1.shape[w_pos]):
+    if sinp.structuralsa['i_fs_use_pkl'] and (sinp.structuralsa['i_w_start_len1']==feedsupply_std_stpa1e1b1nwzida0e0b0xyg1.shape[0]):
         ###dams
         len_w1 = a_n_pa1e1b1nwzida0e0b0xyg1.shape[w_pos]
         l_nut1 = int(len_w1/sinp.structuralsa['i_w_start_len1'])#number of nutrition patterns
