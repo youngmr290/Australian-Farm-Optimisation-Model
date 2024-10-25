@@ -30,6 +30,8 @@ def create_sa():
     trial SA.'''
     ##len - mostly SA arrays can be initialised using the shape of the array they will be applied to.
     ## the length below need to be the full axis length before masking.
+    len_b0 = np.count_nonzero(sinp.stock['i_mask_b0_b1'])
+    len_b1 = len(sinp.stock['i_mask_b0_b1'])
     len_d = len(pinp.sheep['i_d_idx'])
     len_g0 = sinp.stock['i_mask_g0g3'].shape[0]
     len_g1 = sinp.stock['i_mask_g1g3'].shape[0]
@@ -347,8 +349,8 @@ def create_sa():
     ###stock feedsupply
     sav['feedsupply_adj_r2p'] = np.full_like(pinp.feedsupply['i_feedsupply_adj_options_r2p'], '-', dtype=object)  # SA value for feedsupply adjustment.
     sav['dams_confinement_P'] = np.full(len_P, '-', dtype=object)  # SA to control the gen periods dams are in confimentment - this gets applied in FeedSupplyStock.py. Note, this will overwrite pkl so if using pkl to optimise confinement you most likely don’t want to use this SAV.
-    sav['target_lwc_dams_P'] = np.full(len_P, '-', dtype=object)  # SA to set lw target
-    sav['target_lwc_offs_P'] = np.full(len_P, '-', dtype=object)  # SA to set lw target
+    sav['target_ebg_dams_Pb'] = np.full((len_P, len_b1), '-', dtype=object)  # SA to set lw target
+    sav['target_ebg_offs_Pb'] = np.full((len_P, len_b0), '-', dtype=object)  # SA to set lw target
     ###stock others
     sav['nv_inc'] = '-'    #SA to store NV report values
     sav['lw_inc'] = '-'     #SA to store LW report values

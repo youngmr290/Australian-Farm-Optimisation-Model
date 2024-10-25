@@ -654,14 +654,15 @@ def f1_feedsupply_adjust(attempts,feedsupply,itn):
     ##which feedsupplies can be calculated using binary method - must have a negative and positive error
     binary_mask = np.nanmin(attempts[...,1], axis=-1)/np.nanmax(attempts[...,1], axis=-1) < 0 #axis -1 is the itn axis ie take the min and max error from the previous iterations
     if np.any(binary_mask):
+        index_itn = np.arange(attempts.shape[-2])
         ##calc new feedsupply binary - take half of the two feedsupplies that have resulted in the error closest to 0. Only adds the binary result to slices that have a negative and a positive value (done using the mask created above)
         ###feedsupply with negative error that is closest to 0 - this is a little complex because applying a max function to a masked array
         mask_attempts = np.ma.masked_array(attempts[...,1],np.logical_or(attempts[...,1]>0, np.isnan(attempts[...,1]))) #np.ma has a true and false the other way around (e.g. false means keep data) therefore the <> sign is opposite to what you want
-        neg_bool = np.ma.getdata(np.nanmax(mask_attempts, axis=-1, keepdims=True)==attempts[...,1]) #returns a mask that states the error that is negative but closest to 0
+        neg_bool = np.argmax(mask_attempts, axis=-1, keepdims=True)==index_itn #returns a mask that states the error that is negative but closest to 0
         neg_bool = neg_bool * binary_mask[...,na] #this just makes sure the neg mask only has a true in the same slice as the pos array (so it can be applied to the feed supply array below)
         ###feedsupply with positive error that is closest to 0 - this is a little complex because applying a max function to a masked array
         mask_attempts= np.ma.masked_array(attempts[...,1],np.logical_or(attempts[...,1]<0, np.isnan(attempts[...,1]))) #np.ma has a true and false the other way around (e.g. false means keep data) therefore the <> sign is opposite to what you want
-        pos_bool=np.ma.getdata(np.nanmin(mask_attempts, axis=-1,keepdims=True)==attempts[...,1]) #returns a maks that states the error that is negative but closest to 0
+        pos_bool = np.argmin(mask_attempts, axis=-1, keepdims=True)==index_itn #returns a maks that states the error that is negative but closest to 0
         pos_bool = pos_bool * binary_mask[...,na] #this just makes sure the pos mask only has a true in the same place as the neg mask.
         ##calc feedsupply
         feedsupply_new[binary_mask] = (attempts[...,0][neg_bool] + attempts[...,0][pos_bool])/2
@@ -685,7 +686,7 @@ def f1_feedsupply_adjust(attempts,feedsupply,itn):
                 slope[i] = stats.linregress(x[:itn+1],y[:itn+1])[0] #slice 0 to get slope
     ####change in feedsupply = error / slope. It is assumed that the most recent itn has the most accurate feedsupply
     feedsupply_new[~binary_mask] = feedsupply[~binary_mask] + ((2 * -attempts[...,itn,1]) / slope)[~binary_mask] # x 2 to overshoot then switch to binary.
-    return np.minimum(20, feedsupply_new) #stop nv going above 20
+    return np.maximum(1.5, np.minimum(20, feedsupply_new)) #stop nv going above 20
 
 
 def f1_rev_sa(value, sa, age, sa_type):
