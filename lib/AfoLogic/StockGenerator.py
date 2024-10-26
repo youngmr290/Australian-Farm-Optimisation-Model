@@ -895,7 +895,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###dam
     idx_sida0e0b0xyg1 = fun.f_next_prev_association(date_end_P, date_shear_sida0e0b0xyg1,0, 'left')#shearing occurs at the end of the next/current generator period therefore 0 offset
     date_shear_sa1e1b1nwzida0e0b0xyg1 = fun.f_expand(date_end_P[idx_sida0e0b0xyg1], p_pos, right_pos=i_pos)  #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes)
-    ###off - shearing can't occur as yatf because then need to shear all lambs (ie no scope to not shear the lambs that are going to be fed up and sold) because the offs decision variables for feeding are not linked to the yatf (which are in the dam decision variables)
+    ###off - shearing can't occur prior to weaning as yatf because this would require shearing all lambs whether destination is as a dam or an off. If shearing date is prior to weaning then the youngest age group are not shorn and are carried through for 12 months.
     idx_sida0e0b0xyg3 = fun.f_next_prev_association(offs_date_end_P, date_shear_sida0e0b0xyg3,0, 'left')#shearing occurs at the end of the next/current generator period therefore 0 offset
     date_shear_sa1e1b1nwzida0e0b0xyg3 = fun.f_expand(offs_date_end_P[idx_sida0e0b0xyg3], p_pos, right_pos=i_pos) #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
 
@@ -6787,13 +6787,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                            , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
 
             ##adjust FS based on condensed animal
-            ##the optimal feedsupply is generated for a given start weight. However in the trial where the optimal FS is used the start animal can change because the FS is different.
-            ##The code below compares the start animal when the FS was generated with the current start animal and selects the correct FS.
-            ##I.e if the current start animal is 50kgs but the start weights when the FS was generated was 45kg and 55kg the optimal fs for the current start animal will be 50% of the pkl fs for each start weight.
+            ##the optimal feedsupply is generated for a given start weight. However, in the trial where the pkl'd optimal FS is used the start animal may be different because of any SA applied.
+            ##The code below compares the start animal when the FS was created with the current start animal and selects a weighted average of the pkl FS based on starting weight.
+            ##e.g. if the current start animal is 50kgs but the pkl start weights are 45kg and 55kg, the optimal fs for the current start animal will be 50% of the pkl fs for each start weight.
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
                 if sinp.structuralsa['i_fs_use_pkl']:
                     ###update the fs startw allocation - at period_is_condense
-                    if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]):
+                    if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]): #using p+1 because this is being calculated at the end of the loop for next period.
                         ###slice the w axis just for the starting w slices.
                         pkl_ebw_condensed_dams = pkl_condensed_values['dams'][p]['ebw_dams']
                         pkl_ebw_condensed_dams = fun.f_dynamic_slice(pkl_ebw_condensed_dams, w_pos, start=0, stop=None,
