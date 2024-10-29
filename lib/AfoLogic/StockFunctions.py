@@ -686,7 +686,7 @@ def f1_feedsupply_adjust(attempts,feedsupply,itn):
                 slope[i] = stats.linregress(x[:itn+1],y[:itn+1])[0] #slice 0 to get slope
     ####change in feedsupply = error / slope. It is assumed that the most recent itn has the most accurate feedsupply
     feedsupply_new[~binary_mask] = feedsupply[~binary_mask] + ((2 * -attempts[...,itn,1]) / slope)[~binary_mask] # x 2 to overshoot then switch to binary.
-    return np.maximum(1.5, np.minimum(20, feedsupply_new)) #stop nv going above 20
+    return np.maximum(1.5, np.minimum(14, feedsupply_new)) #stop nv going above 14 because that is the best sheep can get from lupins
 
 
 def f1_rev_sa(value, sa, age, sa_type):
