@@ -260,7 +260,7 @@ def f_seed_time_lmus():
     '''
     ##mask lmu input
     base_seeding_rate = uinp.mach[pinp.mach['option']]['seeding_rate_base']
-    seeding_rate_lmu_adj = pinp.mach['seeding_rate_lmu_adj'].squeeze()
+    seeding_rate_lmu_adj = pinp.mach['seeding_rate_lmu_adj'].squeeze(axis=1)
 
     ##adjust for lmu
     rate_l = base_seeding_rate * seeding_rate_lmu_adj
@@ -399,7 +399,7 @@ def f_seeding_cost(r_vals):
     '''
     ##Total cost seeding on each lmu $/ha.
     seeding_cost_l = tractor_cost_seeding() + maint_cost_seeder()
-    seeding_cost_l = seeding_cost_l.squeeze()
+    seeding_cost_l = seeding_cost_l.squeeze(axis=1)
 
     ##gets the cost allocation (includes interest)
     seeding_cost_allocation_p7zp5, seeding_wc_allocation_c0p7zp5 = f1_seed_cost_alloc()
@@ -1203,7 +1203,7 @@ def f_seeding_harv_fuel_emissions(r_vals):
     total_co2e_fuel_harv = co2_harv_fuel_co2e + ch4_harv_fuel_co2e + n2o_harv_fuel_co2e
 
     ##v_seeding_machdays and v_contractseeding_ha
-    seeding_fuel_ha_l = fuel_use_seeding().squeeze()
+    seeding_fuel_ha_l = fuel_use_seeding().squeeze(axis=1)
     ###convert to emissions
     co2_seeding_fuel_co2e_l, ch4_seeding_fuel_co2e_l, n2o_seeding_fuel_co2e_l = efun.f_fuel_emissions(seeding_fuel_ha_l)
     total_co2e_fuel_seeding_l = co2_seeding_fuel_co2e_l + ch4_seeding_fuel_co2e_l + n2o_seeding_fuel_co2e_l
