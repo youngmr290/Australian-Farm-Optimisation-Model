@@ -9779,6 +9779,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###create p7 allocation
     alloc_p7k2tva1e1b1nwzida0e0b0xyg1 = zfun.f1_z_period_alloc(dvp_start_k2tva1e1b1nwzida0e0b0xyg1[na, ...], z_pos=z_pos)
     alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3 = zfun.f1_z_period_alloc(dvp_start_k3k5tva1e1b1nwzida0e0b0xyg3[na, ...], z_pos=z_pos)
+    ####prog are a bit different since no v axis - therefore based off date weaned.
+    period_is_wean_d_pa1e1b1nwzida0e0b0xyg2 = period_is_wean_pa1e1b1nwzida0e0b0xyg2 *  (a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2==index_da0e0b0xyg)
+    period_is_wean_d_p7tva1e1b1nwzida0e0b0xyg2 = np.sum(alloc_p7tpa1e1b1nwzida0e0b0xyg * period_is_wean_d_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], axis=p_pos, keepdims=True)  #weaning doesnt differ by e
+    wean_alloc_p7k3k5tva1e1b1nwzida0e0b0xyg2 = np.sum(period_is_wean_d_p7tva1e1b1nwzida0e0b0xyg2[:,na,na,...] * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3)
+                                                      , axis=d_pos, keepdims=True) > 0
 
     ##add p7 axis to dams and offs
     ###dams
@@ -10723,6 +10728,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###shearing or weaning offs - with a y (year axis)
     tyvzixg3_shape = len_t3, len(keys_year_offs), len_v3, len_z, len_i, len_x, len_g3
     fun.f1_make_r_val(r_vals,dvp_is_sale_tyvg3,'dvp_is_sale_tyvzixg3', shape=tyvzixg3_shape)
+
+    ##link between p7 and v - used as denom weights in some reports if you dont want to report p7
+    ###dams
+    p7k2vzig1_shape = len_p7, len_k2, len_v1, len_z, len_i, len_g1
+    fun.f1_make_r_val(r_vals,alloc_p7k2tva1e1b1nwzida0e0b0xyg1,'alloc_p7k2vzig1', shape=p7k2vzig1_shape)
+    ###yatf - needs a little extra because p7 was added when there was still a p7 axis
+    p7k3_shape = len_p7, len_k3
+    fun.f1_make_r_val(r_vals,wean_alloc_p7k3k5tva1e1b1nwzida0e0b0xyg2,'wean_alloc_p7k3', shape=p7k3_shape)
+    ###offs
+    p7k3vzixg3_shape = len_p7, len_k3, len_v3, len_z, len_i, len_x, len_g3
+    fun.f1_make_r_val(r_vals,alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3,'alloc_p7k3vzixg3', shape=p7k3vzixg3_shape)
 
     ###z8 masks for unclustering lp_vars
     fun.f1_make_r_val(r_vals,mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:],'maskz8_k2tvanwziy1g1') #slice off unused axis

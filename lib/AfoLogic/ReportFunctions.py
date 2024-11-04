@@ -3139,26 +3139,32 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     na_prod = [2]  # s
     weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
     na_weights = [0]  # p7
+    den_weights = 'alloc_p7k3vzixg3' #this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+    na_denweights = [1,2,4,5,7,8,11,13]  # q,s,k5,t,n.w,a,y
     keys = 'offs_keys_p7qsk3k5tvnwziaxyg3'
     arith = 1
     index = []
     cols = []
     axis_slice = {5:[1,None,1]} #only sale slices
     ave_salevalue_offs = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
-                                             na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+                                                 na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights,
+                                                 keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     ###prog
     type = 'stock'
     prod = 'salevalue_p7qk3k5twzia0xg2'
     na_prod = [2]  # s
     weights = 'prog_numbers_qsk3k5twzia0xg2'
     na_weights = [0]  # p7
+    den_weights = 'wean_alloc_p7k3'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+    na_denweights = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11]  # q,s,k5,t,w,z,i,a0,x,g2
     keys = 'prog_keys_p7qsk3k5twzia0xg2'
     arith = 1
     index = []
     cols = []
     axis_slice = {5:[0,1,1]} #only sale slices
     ave_salevalue_prog = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
-                                       na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+                                                 na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights,
+                                                 keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     ##ave wether sale weight
     ###offs
     type = 'stock'
@@ -3375,26 +3381,32 @@ def mp_report(lp_vars, r_vals):
     na_prod = [2]  # s
     weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
     na_weights = [0]  # p7
+    den_weights = 'alloc_p7k3vzixg3' #this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+    na_denweights = [1,2,4,5,7,8,11,13]  # q,s,k5,t,n.w,a,y
     keys = 'offs_keys_p7qsk3k5tvnwziaxyg3'
     arith = 1
     index = []
     cols = [1,2,9]  #q,s,z
     axis_slice = {5:[1,None,1]} #only sale slices
     ave_salevalue_offs_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
-                                             na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+                                                     na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights,
+                                                     keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     ####prog
     type = 'stock'
     prod = 'salevalue_p7qk3k5twzia0xg2'
     na_prod = [2]  # s
     weights = 'prog_numbers_qsk3k5twzia0xg2'
     na_weights = [0]  # p7
+    den_weights = 'wean_alloc_p7k3'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+    na_denweights = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11]  # q,s,k5,t,w,z,i,a0,x,g2
     keys = 'prog_keys_p7qsk3k5twzia0xg2'
     arith = 1
     index = []
     cols = [1,2,7] #q,s,z
     axis_slice = {5:[0,1,1]} #only sale slices
     ave_salevalue_prog_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
-                                       na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+                                                     na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights,
+                                                     keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc['Ave sale value'] = np.round(fun.f_divide(ave_salevalue_offs_qsz*salenumber_offs_qsz + ave_salevalue_prog_qsz*salenumber_prog_qsz, salenumber_offs_qsz + salenumber_prog_qsz),0).squeeze()
     ###ave wether sale weight
     ####offs

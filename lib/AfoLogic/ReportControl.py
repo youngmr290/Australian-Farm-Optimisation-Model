@@ -258,39 +258,48 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         na_prod = [2]  # s
         weights = 'dams_numbers_qsk2tvanwziy1g1'
         na_weights = [0]  #p7
+        den_weights = 'alloc_p7k2vzig1'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+        na_denweights = [1, 2, 4, 6, 7, 8, 11]  # q,s,t,a,n.w,y
         keys = 'dams_keys_p7qsk2tvanwziy1g1'
         arith = f_update_default_controls(user_controls, 'salevalue_dams', 'arith', 1)
         index = f_update_default_controls(user_controls, 'salevalue_dams', 'index', [5])
         cols = f_update_default_controls(user_controls, 'salevalue_dams', 'cols', [3, 0, 4])  # k2, p7, t
         axis_slice = f_update_default_controls(user_controls, 'salevalue_dams', 'axis_slice', {4:[0,2,1]}) #only sale slice
         reports["salevalue_dams"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
-                               na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+                                                                 na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights,
+                                                                 keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_salevalue_offs', 'Run']:
         type = 'stock'
         prod = 'salevalue_p7qk3k5tvnwziaxyg3'
         na_prod = [2]  # s
         weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
         na_weights = [0]  #p7
+        den_weights = 'alloc_p7k3vzixg3'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+        na_denweights = [1, 2, 4, 5, 7, 8, 11, 13]  # q,s,k5,t,n.w,a,y
         keys = 'offs_keys_p7qsk3k5tvnwziaxyg3'
         arith = f_update_default_controls(user_controls, 'salevalue_offs', 'arith', 1)
         index = f_update_default_controls(user_controls, 'salevalue_offs', 'index', [5])
         cols = f_update_default_controls(user_controls, 'salevalue_offs', 'cols', [3, 0, 4])  # k3, p7, t
         axis_slice = f_update_default_controls(user_controls, 'salevalue_offs', 'axis_slice', {5:[1,None,1]}) #only sale slice
         reports["salevalue_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
-                               na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+                                                                 na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights,
+                                                                 keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_salevalue_prog', 'Run']:
         type = 'stock'
         prod = 'salevalue_p7qk3k5twzia0xg2'
         na_prod = [2]  # s
         weights = 'prog_numbers_qsk3k5twzia0xg2'
         na_weights = [0]  #p7
+        den_weights = 'wean_alloc_p7k3'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+        na_denweights = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11]  # q,s,k5,t,w,z,i,a0,x,g2
         keys = 'prog_keys_p7qsk3k5twzia0xg2'
         arith = f_update_default_controls(user_controls, 'salevalue_prog', 'arith', 1)
         index = f_update_default_controls(user_controls, 'salevalue_prog', 'index', [6]) #w
         cols = f_update_default_controls(user_controls, 'salevalue_prog', 'cols', [0, 11, 5])    #cashflow period, g2, t
         axis_slice = f_update_default_controls(user_controls, 'salevalue_prog', 'axis_slice', {})
         reports["salevalue_prog"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
-                               na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+                                                                 na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights,
+                                                                 keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_woolvalue_dams', 'Run']:
         type = 'stock'
         prod = 'woolvalue_p7qk2tva1nwziyg1'
