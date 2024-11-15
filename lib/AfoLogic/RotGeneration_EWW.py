@@ -146,7 +146,7 @@ customised_rotations = False
 def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
     print('Running rotation generator', end=' ')
     if not user_crop_rot:
-        yr0 = np.array(['b', 'w',  'l', 'z','r','of'#,'od', 'o','f', 'h'- not included in v1 to speed calibration process
+        yr0 = np.array(['b', 'w',  'l', 'z','r','of'#,'lf', 'od', 'o','f', 'h'- not included in v1 to speed calibration process
                        , 'bd','wd','rd','zd'
                        , 'a'
                        ,'s'])#, 'm'
@@ -154,7 +154,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
                         # , 'x', 'xr'
                         # , 'j', 't', 'jr', 'tr'])
         yr1 = np.array([
-               'B','W', 'N', 'L', 'OF'#'F',,'O1'
+               'B','W', 'N', 'L1', 'OF'#'F',,'O1', 'LF'
                , 'A1'
                , 'S'])
                # , 'M'
