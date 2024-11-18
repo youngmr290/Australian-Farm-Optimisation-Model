@@ -4222,7 +4222,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_sire
                                 , ck_sire, muscle_start_sire, viscera_start_sire, muscle_target_b0xyg0, mei_sire
-                                , km_sire, md_solid_sire, hp_maint_nfs_sire, dw_sire, heat_loss_sirem0p1
+                                , km_sire, md_solid_sire, hp_maint_nfs_sire, hp_mei_nfs_sire, dw_sire, heat_loss_sirem0p1
                                 , days_period_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['sire'][p])
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_nfs_sire = temp6
@@ -4247,7 +4247,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             r_compare7_q0q2tpsire[eqn_system, 5, :, p, ...] = temp4
                             r_compare7_q0q2tpsire[eqn_system, 6, :, p, ...] = temp0
 
-                        temp0 = sfun.f1_level_nfs(mei_sire, hp_maint_nfs_sire)   #todo hp_maint is not the same as level of intake for RE == 0 because it include hp associated with the current level of intake (hp_mei)
+                        temp0 = sfun.f1_level_nfs(mei_sire, hp_maint_nfs_sire, km_sire)   #todo hp_maint is not the same as level of intake for RE == 0 because it include hp associated with the current level of intake (hp_mei)
                         if eqn_used:
                             level_sire = temp0
                         temp0, temp1 = sfun.f_templc(cc_sire, ffcfw_start_sire, rc_start_sire, sl_start_sire, hp_total_nfs_sire
@@ -4261,7 +4261,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_dams
                                 , ck_dams, muscle_start_dams, viscera_start_dams, muscle_target_b0xyg1, mei_dams
-                                , km_dams, md_solid_dams, hp_maint_nfs_dams, dw_dams
+                                , km_dams, md_solid_dams, hp_maint_nfs_dams, hp_mei_nfs_dams, dw_dams
                                 , heat_loss_damsm0p1, days_period_pa1e1b1nwzida0e0b0xyg1[p]
                                 , rev_trait_values['dams'][p], dc_dams, bc_age_f_pa1e1b1nwzida0e0b0xyg1[p], dl_dams
                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
@@ -4288,7 +4288,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             r_compare7_q0q2tpdams[eqn_system, 5, :, p, ...] = temp4
                             r_compare7_q0q2tpdams[eqn_system, 6, :, p, ...] = temp0
 
-                        temp0 = sfun.f1_level_nfs(mei_dams, hp_maint_nfs_dams)
+                        temp0 = sfun.f1_level_nfs(mei_dams, hp_maint_nfs_dams, km_dams)
                         if eqn_used:
                             level_dams = temp0
                         ## calculate lower critical temp because it impacts PI in the next period
@@ -4303,7 +4303,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_offs
                                 , ck_offs, muscle_start_offs, viscera_start_offs, muscle_target_b0xyg3, mei_offs
-                                , km_offs, md_solid_offs, hp_maint_nfs_offs, dw_offs, heat_loss_offsm0p1
+                                , km_offs, md_solid_offs, hp_maint_nfs_offs, hp_mei_nfs_offs, dw_offs, heat_loss_offsm0p1
                                 , days_period_pa1e1b1nwzida0e0b0xyg3[p], rev_trait_values['offs'][p])
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_nfs_offs = temp6
@@ -4328,7 +4328,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             r_compare7_q0q2tpoffs[eqn_system, 5, :, p, ...] = temp4
                             r_compare7_q0q2tpoffs[eqn_system, 6, :, p, ...] = temp0
 
-                        temp0 = sfun.f1_level_nfs(mei_offs, hp_maint_nfs_offs)
+                        temp0 = sfun.f1_level_nfs(mei_offs, hp_maint_nfs_offs, km_offs)
                         if eqn_used:
                             level_offs = temp0
                         temp0, temp1 = sfun.f_templc(cc_offs, ffcfw_start_offs, rc_start_offs, sl_start_offs, hp_total_nfs_offs
@@ -4920,7 +4920,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_yatf
                             , ck_yatf, muscle_start_yatf, viscera_start_yatf, muscle_target_b1xyg2, mei_yatf
-                            , km_yatf, md_solid_yatf, hp_maint_nfs_yatf, dw_yatf, heat_loss_yatfm0p1
+                            , km_yatf, md_solid_yatf, hp_maint_nfs_yatf, hp_mei_nfs_yatf, dw_yatf, heat_loss_yatfm0p1
                             , days_period_pa1e1b1nwzida0e0b0xyg2[p], rev_trait_values['yatf'][p])
                     #use this version of hp_total in f_templc_nfs() in next function call
                     hp_total_nfs_yatf = temp6
@@ -4945,7 +4945,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         r_compare7_q0q2tpyatf[eqn_system, 5, :, p, ...] = temp4
                         r_compare7_q0q2tpyatf[eqn_system, 6, :, p, ...] = temp0
 
-                    temp0 = sfun.f1_level_nfs(mei_yatf, hp_maint_nfs_yatf)
+                    temp0 = sfun.f1_level_nfs(mei_yatf, hp_maint_nfs_yatf, km_yatf)
                     if eqn_used:
                         level_yatf = temp0
                     temp0, temp1 = sfun.f_templc(cc_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, hp_total_nfs_yatf
