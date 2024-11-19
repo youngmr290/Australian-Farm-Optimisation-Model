@@ -182,14 +182,15 @@ def f_landuse_sets():
                     , 'X'
                     , 'T', 'J'} #all landuses
     landuse['C1']={'C1','B','O','O1','W', 'N', 'K', 'L', 'LF', 'MS', 'F', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'lf', 'ms', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
-    landuse['P']={'P','K','L', 'LF', 'F', 'f','i', 'k', 'l', 'lf', 'v'} #pulses
-    landuse['E']={'E','B','O','O1','W', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd'} #cereals
+    landuse['P']={'P','K','L', 'F', 'f','i', 'k', 'l', 'v'} #pulses - doesnt include LF because that provide different germination than other cereals and because LF is reported as fodder not pulse.
+    landuse['E']={'E','B','O','O1','W', 'b', 'bd', 'h', 'o', 'od', 'w', 'wd'} #cereals - doesnt include OF because that provide different germination than other cereals and because OF is reported as fodder not cereal.
     landuse['Ag0']={'a', 'a2', 's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
     landuse['Ag1']={'A', 'Ag1', 'A1', 'a'} #all non-spraytopped annual sets that can exist in yr1. This also include 'A' to handle cases when A1 is not used (A1 not required unless differentiating S and A in yr1).
     landuse['Ag2']={'Ag2', 'A', 'A2', 'A1'
                     , 'S', 'S1'
                     , 'M'} #all annual sets that can exist in yr2
     landuse['Sg1']={'Sg1', 'S','S1', 's'} #all spraytopped annual sets that can exist in yr1
+    landuse['fodders'] = {'OF', 'of', 'LF', 'lf'} #fodders for reporting
 
     ##dry sown crops, used in phase.py for seeding param (not used for building rotations)
     landuse['dry_sown'] = {'bd', 'od', 'wd', 'zd','rd'}
