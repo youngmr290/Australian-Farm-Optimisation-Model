@@ -504,6 +504,8 @@ def f_fert_passes():
     fert_passes_rkz_n = fert_passes_rk_zn.stack(level=0)
     lime_passes_yearly = pinp.crop['i_lime_freq'] #proportion of lime application each year (cost is allocated equally across each year of rotation)
     fixed_fert_passes_rkz_n = pd.DataFrame(lime_passes_yearly, index=fert_passes_rkz_n.index, columns=['lime'], dtype=float)
+    ###set fixed fert to 0 for PNC phases
+    fixed_fert_passes_rkz_n.loc[(slice(None), 'a2', slice(None))] = 0
     fert_passes_rkz_n = pd.concat([fert_passes_rkz_n, fixed_fert_passes_rkz_n], axis=1).groupby(axis=1, level=0).sum()
 
     ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks don't get crop (see function docs))
@@ -647,6 +649,8 @@ def f_fert_cost(r_vals):
     base_fert_rkz_n = base_fert_rk_zn.stack(level=0)
     lime_cost_yearly = pinp.crop['i_lime'] * pinp.crop['i_lime_freq'] #workout the cost of liming each year (cost is allocated equally across each year of rotation)
     fixed_fert_rkz_n = pd.DataFrame(lime_cost_yearly, index=base_fert_rkz_n.index, columns=['lime'], dtype=float)
+    ###set fixed fert to 0 for PNC phases
+    fixed_fert_rkz_n.loc[(slice(None), 'a2', slice(None))] = 0
     base_fert_rkz_n = pd.concat([base_fert_rkz_n, fixed_fert_rkz_n], axis=1).groupby(axis=1, level=0).sum()
 
     ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
