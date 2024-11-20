@@ -370,9 +370,13 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     keys_q = np.array(['q%s' % i for i in range(len_q)])
     q_crop_yield_scalar_q_k = pd.DataFrame(sen.sam['q_crop_yield_scalar_Qk'][0:len_q, pinp.crop_landuse_mask_k1],
                                             index=keys_q, columns=keys_k)  # have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
-    biomass_rlp7z_qk = biomass_rkl_p7z.stack([0,1]).unstack(1).mul(q_crop_yield_scalar_q_k.stack(), axis=1, level=1)
-    biomass_rlp7zqk = biomass_rlp7z_qk.stack([0,1])
-    biomass_qrklzp7 = biomass_rlp7zqk.reorder_levels([4,0,5,1,3,2])
+    ###mul - bit convoluted because we dont want r and k on different axes because that increase array size a lot.
+    biomass_rk_p7zl = biomass_rkl_p7z.unstack(2)
+    q_crop_yield_scalar_rkq = q_crop_yield_scalar_q_k.reindex(biomass_rk_p7zl.index, axis=1).fillna(1).unstack()
+    biomass_rkq_p7zl = biomass_rk_p7zl.reindex(q_crop_yield_scalar_rkq.index, axis=0)
+    biomass_rkq_p7zl = biomass_rkq_p7zl.mul(q_crop_yield_scalar_rkq, axis=0)
+    biomass_rkqp7zl = biomass_rkq_p7zl.stack([0,1,2])
+    biomass_qrklzp7 = biomass_rkqp7zl.reorder_levels([2,0,1,5,4,3])
 
     if for_insurance or for_stub:
         ###use q[0] (average yield) because that saves a bit of complexity without losing much accuracy.

@@ -692,7 +692,7 @@ def f_harvest_cost(r_vals):
     fuel_oil_cost_hr = fuel_cost_hr + oil_cost_hr
     ##return fuel and oil cost plus r & m ($/hr)
     cost_harv = fuel_oil_cost_hr + uinp.mach[pinp.mach['option']]['harvest_maint']
-    harv_cost_k = cost_harv.squeeze()
+    harv_cost_k = cost_harv.squeeze(axis=1)
     
     ##reindex with lmu so alloc can be mul with harv_cost
     keys_p7 = per.f_season_periods(keys=True)
@@ -774,7 +774,7 @@ def f_contract_harvest_cost(r_vals):
     harv_cost_allocation_p7zp5, harv_wc_allocation_c0p7zp5 = f1_harv_cost_alloc()
 
     ##contract harv cost
-    contract_harv_cost_k = uinp.price['contract_harv_cost'].squeeze() #contract harvesting cost for each crop ($/hr)
+    contract_harv_cost_k = uinp.price['contract_harv_cost'].squeeze(axis=1) #contract harvesting cost for each crop ($/hr)
     
     ##reindex with lmu so alloc can be mul with harv_cost
     keys_p7 = per.f_season_periods(keys=True)

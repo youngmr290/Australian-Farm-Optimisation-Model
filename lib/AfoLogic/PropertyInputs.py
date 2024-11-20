@@ -680,6 +680,8 @@ def f1_mask_landuse():
     global pas_landuse_mask_k2
     global all_landuse_mask_k
     crop_landuse_mask_k1 = np.logical_and(general['i_crop_landuse_exists_k1'], general['i_crop_landuse_inc_k1'])
+    if not any(crop_landuse_mask_k1):
+        crop_landuse_mask_k1[0] =True #need at least one active crop so that code works. Note this crop is still excluded in the rotations.
     pas_landuse_mask_k2 = np.logical_and(general['i_pas_landuse_exists_k2'], general['i_pas_landuse_inc_k2'])
     ###create the k mask for the full land use array. Needs to be ordered correctly
     ####concat the crop and pasture mask
