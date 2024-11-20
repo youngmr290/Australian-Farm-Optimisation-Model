@@ -172,7 +172,7 @@ def f_landuse_sets():
                     , 'u'
                     , 'x'
                     , 'j', 't'
-                    , 'G', 'Y', 'B','O','O1','W', 'N', 'K', 'L', 'LF', 'F', 'OF'
+                    , 'G', 'Y', 'B','O','O1','W', 'N', 'K', 'L','L1', 'LF', 'F', 'OF'
                     , 'A', 'A1', 'A2'
                     , 'S', 'S1'
                     , 'SP'
@@ -181,8 +181,8 @@ def f_landuse_sets():
                     , 'U'
                     , 'X'
                     , 'T', 'J'} #all landuses
-    landuse['C1']={'C1','B','O','O1','W', 'N', 'K', 'L', 'LF', 'MS', 'F', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'lf', 'ms', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
-    landuse['P']={'P','K','L', 'F', 'f','i', 'k', 'l', 'v'} #pulses - doesnt include LF because that provide different germination than other cereals and because LF is reported as fodder not pulse.
+    landuse['C1']={'C1','B','O','O1','W', 'N', 'K', 'L','L1', 'LF', 'MS', 'F', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'lf', 'ms', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
+    landuse['P']={'P','K','L','L1', 'F', 'f','i', 'k', 'l', 'v'} #pulses - doesnt include LF because that provide different germination than other cereals and because LF is reported as fodder not pulse.
     landuse['E']={'E','B','O','O1','W', 'b', 'bd', 'h', 'o', 'od', 'w', 'wd'} #cereals - doesnt include OF because that provide different germination than other cereals and because OF is reported as fodder not cereal.
     landuse['Ag0']={'a', 'a2', 's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
     landuse['Ag1']={'A', 'Ag1', 'A1', 'a'} #all non-spraytopped annual sets that can exist in yr1. This also include 'A' to handle cases when A1 is not used (A1 not required unless differentiating S and A in yr1).
@@ -217,7 +217,7 @@ def f_landuse_sets():
     landuse['O']={'O', 'O1', 'OF', 'h', 'o', 'od', 'of'} #oats
     landuse['OF']={'OF', 'of'} #oats fodder
     landuse['F']={'F', 'f'} #faba
-    landuse['L1']={'L', 'l'} #lupin #yr1 doesnt include fodder
+    landuse['L1']={'L1', 'l'} #lupin #yr1 doesnt include fodder
     landuse['L']={'L', 'L1', 'l', 'LF', 'lf'} #lupin
     landuse['LF']={'LF', 'lf'} #lupin
     landuse['S']={'s', 'S','S1'} #spray topped pasture yr1
@@ -227,7 +227,7 @@ def f_landuse_sets():
     landuse['U']={'u', 'U','x', 'X'} #lucerne
     landuse['X']={'x', 'X'} #lucerne
     landuse['Y']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'lf', 'ms', 'v', 'z', 'zd', 'r', 'rd'
-                    , 'Y', 'B','O','W', 'N', 'K', 'L', 'LF', 'MS', 'F', 'OF'} #anything not pasture
+                    , 'Y', 'B','O','W', 'N', 'K', 'L','L1', 'LF', 'MS', 'F', 'OF'} #anything not pasture
 
     landuse['a']={'a'}
     landuse['b']={'b'}
