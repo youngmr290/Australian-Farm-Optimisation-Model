@@ -5,6 +5,7 @@ import time
 import os.path
 import pickle as pkl
 import warnings
+import sys
 
 from ..AfoLogic import Functions as fun
 from ..AfoLogic import PropertyInputs as pinp
@@ -12,6 +13,7 @@ from ..AfoLogic import StructuralInputs as sinp
 from ..AfoLogic import FeedSupplyStock as fsstk
 from ..AfoLogic import relativeFile
 from lib.RawVersion import LoadExcelInputs as dxl
+from ..AfoLogic import ReportFunctions as rfun
 
 def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info):
     ##check Output folders exist for outputs. If not create.
@@ -134,3 +136,37 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
             writer.close()
         except PermissionError:
             warnings.warn("Warning: Rotation.xlsx open therefore can't save new copy")
+
+    ############################################################################################################################################################################################
+    ############################################################################################################################################################################################
+    #Store results used for model validation before merging to master.
+    ############################################################################################################################################################################################
+    ############################################################################################################################################################################################
+    try:
+        exp_group = int(sys.argv[1])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
+    except:  # in case no arg passed to python
+        exp_group = "Default"
+
+    if exp_group==2:
+        ##current trial results - averaged z and q axis
+        rfun.f_var_reshape(lp_vars, r_vals)  # this func defines a global variable called d_vars
+        trial_sum = pd.concat(rfun.mp_report(lp_vars,r_vals, option=2))
+
+        ##set index to trial name
+        trial_name = trial_name.replace(" ", "")[0:15]
+        trial_sum.columns =[trial_name]
+        trial_sum = trial_sum
+
+        ##read in current results and update if trial is one of the validation trials
+        try:
+            validation_df = pd.read_fwf('AFO Test.txt', index_col=0)
+            validation_df[trial_name] = trial_sum
+        except FileNotFoundError:
+            validation_df = trial_sum
+
+        ##save
+        with open('AFO Test.txt', 'w') as f:
+            f.write(validation_df.to_string())
+
+
+

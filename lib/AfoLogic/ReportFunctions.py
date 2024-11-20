@@ -3243,7 +3243,7 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     return summary_df
 
 
-def mp_report(lp_vars, r_vals):
+def mp_report(lp_vars, r_vals, option=1):
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
@@ -3439,6 +3439,15 @@ def mp_report(lp_vars, r_vals):
 
     ##land use area
     landuse_area_k_qsz = f_area_summary(lp_vars, r_vals, option=4, active_z=True).T
+
+    ##weight qsz if required (this is used for testing AFO)
+    if option == 2:
+        z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+        z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
+        summary_df = pd.DataFrame(summary_df.mul(z_prob_qsz, axis=1).sum(axis=1))
+        landuse_area_k_qsz = pd.DataFrame(landuse_area_k_qsz.mul(z_prob_qsz, axis=1).sum(axis=1))
+        sale_numbers_offs_tv_qsz = pd.DataFrame(sale_numbers_offs_tv_qsz.mul(z_prob_qsz, axis=1).sum(axis=1))
+        sale_numbers_dams_y_qsz = pd.DataFrame(sale_numbers_dams_y_qsz.mul(z_prob_qsz, axis=1).sum(axis=1))
 
     return summary_df, landuse_area_k_qsz, sale_numbers_offs_tv_qsz, sale_numbers_dams_y_qsz
 
