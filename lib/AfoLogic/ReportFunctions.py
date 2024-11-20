@@ -3155,8 +3155,8 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     na_prod = [2]  # s
     weights = 'prog_numbers_qsk3k5twzia0xg2'
     na_weights = [0]  # p7
-    den_weights = 'wean_alloc_p7k3'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
-    na_denweights = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11]  # q,s,k5,t,w,z,i,a0,x,g2
+    den_weights = 'wean_alloc_p7k3zg2'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+    na_denweights = [1, 2, 4, 5, 6, 8, 9, 10]  # q,s,k5,t,w,z,i,a0,x
     keys = 'prog_keys_p7qsk3k5twzia0xg2'
     arith = 1
     index = []
@@ -3397,8 +3397,8 @@ def mp_report(lp_vars, r_vals):
     na_prod = [2]  # s
     weights = 'prog_numbers_qsk3k5twzia0xg2'
     na_weights = [0]  # p7
-    den_weights = 'wean_alloc_p7k3'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
-    na_denweights = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11]  # q,s,k5,t,w,z,i,a0,x,g2
+    den_weights = 'wean_alloc_p7k3zg2'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+    na_denweights = [1, 2, 4, 5, 6, 8, 9, 10]  # q,s,k5,t,w,i,a0,x
     keys = 'prog_keys_p7qsk3k5twzia0xg2'
     arith = 1
     index = []
