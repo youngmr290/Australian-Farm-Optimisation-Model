@@ -154,7 +154,7 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output, lp_vars):
         p7_end = list(model.s_season_periods)[-1]
         utility = pe.value(model.utility)
         profit = pe.value(sum((model.v_terminal_wealth[q,s,z,c1] + model.v_minroe[q,s,p7_end,z] + model.v_asset_cost[q,s,p7_end,z])
-                                       * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
+                                       * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1] * model.p_discount_factor_q[q]
                                        for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1
                                        for z in model.s_season_types if pe.value(model.p_wyear_inc_qs[q,s])))
     except ValueError:
@@ -502,47 +502,48 @@ def f_con_product_transfer(model):
     ## be in different p7 to harvest
 
     ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint.
-    def product_transfer(model,q,s,p7,g,k,s2,z9):
+    def product_transfer(model,q,s,p7,g,k4,s2,z9):
         l_p7 = list(model.s_season_periods)
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
         p7_start = l_p7[0]
         p7_end = l_p7[-1]
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
-            return -phspy.f_rotation_product(model,q,s,p7,g,k,s2,z9) \
-                   + sum(model.v_sup_con[q,s,z9,k,g,f,p6] * model.p_sup_s2[k,s2] * model.p_a_p6_p7[p7,p6,z9] * 1000
-                         for f in model.s_feed_pools for p6 in model.s_feed_periods) \
-                   - model.v_product_debit[q,s,p7,z9,k,s2,g] * 1000 * ((p7 != p7_end)*1) \
-                   + model.v_product_credit[q,s,p7,z9,k,s2,g] * 1000 \
-                   + sum((model.v_product_debit[q,s,p7_prev,z8,k,s2,g] * 1000 - model.v_product_credit[q,s,p7_prev,z8,k,s2,g]
+            return ((-phspy.f_rotation_product(model,q,s,p7,g,k4,s2,z9) if k4 in model.s_crops else 0) \
+                   + (sum(model.v_sup_con[q,s,z9,k4,g,f,p6] * model.p_sup_s2[k4,s2] * model.p_a_p6_p7[p7,p6,z9] * 1000
+                         for f in model.s_feed_pools for p6 in model.s_feed_periods) if k4 in model.s_supp_feeds else 0) \
+                   - model.v_product_debit[q,s,p7,z9,k4,s2,g] * 1000 * ((p7 != p7_end)*1) \
+                   + model.v_product_credit[q,s,p7,z9,k4,s2,g] * 1000 \
+                   + sum((model.v_product_debit[q,s,p7_prev,z8,k4,s2,g] * 1000 - model.v_product_credit[q,s,p7_prev,z8,k4,s2,g]
                           * 1000 * ((p7 != p7_start)*1)) * model.p_parentz_provwithin_phase[p7_prev,z8,z9
                          ]   # p7!=p7[0] to stop grain transfer from last yr to current yr else unbounded solution.
                          for z8 in model.s_season_types) \
-                   - model.v_buy_product[q,s,p7,z9,k,s2,g] * model.p_buy_product_prov[p7,z9] * 1000 + model.v_sell_product[q,s,p7,z9,k,s2,g] * 1000 <= 0
+                   - (model.v_buy_product[q,s,p7,z9,k4,s2,g] * model.p_buy_product_prov[p7,z9] * 1000 if k4 in model.s_supp_feeds else 0)
+                   + (model.v_sell_product[q,s,p7,z9,k4,s2,g] * 1000 if k4 in model.s_crops else 0) <= 0)
         else:
             return pe.Constraint.Skip
     model.con_product_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_grain_pools,
-                                               model.s_crops,model.s_biomass_uses,model.s_season_types,rule=product_transfer,
+                                               model.s_crops_and_supp, model.s_biomass_uses, model.s_season_types, rule=product_transfer,
                                              doc='constrain grain transfer between rotation and sup feeding')
 
 
 def f1_grain_income(model,q,s,p7,z,c1):
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
-    return sum(
-            model.v_sell_product[q,s,p7,z,k,s2,g] * model.p_grain_price[q,p7,z,g,k,s2,c1] - model.v_buy_product[q,s,p7,z,k,s2,g] * model.p_buy_grain_price[
-            q,p7,z,g,k,s2,c1] for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
+    return sum(sum(model.v_sell_product[q,s,p7,z,k1,s2,g] * model.p_grain_price[q,p7,z,g,k1,s2,c1] for k1 in model.s_crops)
+               - sum(model.v_buy_product[q,s,p7,z,k3,s2,g] * model.p_buy_grain_price[q,p7,z,g,k3,s2,c1] for k3 in model.s_supp_feeds)
+               for s2 in model.s_biomass_uses for g in model.s_grain_pools)
 
 def f1_grain_wc(model,q,s,c0,p7,z):
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
-    return sum(
-        model.v_sell_product[q,s,p7,z,k,s2,g] * model.p_grain_wc[q,c0,p7,z,g,k,s2] - model.v_buy_product[q,s,p7,z,k,s2,g] * model.p_buy_grain_wc[
-            q,c0,p7,z,g,k,s2] for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
+    return sum(sum(model.v_sell_product[q,s,p7,z,k1,s2,g] * model.p_grain_wc[q,c0,p7,z,g,k1,s2] for k1 in model.s_crops)
+               - sum(model.v_buy_product[q,s,p7,z,k3,s2,g] * model.p_buy_grain_wc[q,c0,p7,z,g,k3,s2] for k3 in model.s_supp_feeds)
+               for s2 in model.s_biomass_uses for g in model.s_grain_pools)
 
 def f1_sup_minroe(model,q,s,p7,z):
     ##cost of grain for livestock enterprise. Note grain purchased cost more because of transport fees than grain transferred from crop enterprise.
-    return sum((sum(model.v_sup_con[q,s,z,k,g,f,p6] for f in model.s_feed_pools for p6 in model.s_feed_periods)
-                - model.v_buy_product[q,s,p7,z,k,s2,g]) * sum(model.p_grain_price[q,p7,z,g,k,s2,c1] * model.p_prob_c1[c1] for c1 in model.s_c1)
-               + model.v_buy_product[q,s,p7,z,k,s2,g] * sum(model.p_buy_grain_price[q,p7,z,g,k,s2,c1]  * model.p_prob_c1[c1] for c1 in model.s_c1)
-               for k in model.s_crops for s2 in model.s_biomass_uses for g in model.s_grain_pools)
+    return sum(((sum(model.v_sup_con[q,s,z,k3,g,f,p6] for f in model.s_feed_pools for p6 in model.s_feed_periods)
+                 - model.v_buy_product[q,s,p7,z,k3,s2,g]) * sum(model.p_grain_price[q,p7,z,g,k3,s2,c1] * model.p_prob_c1[c1] for c1 in model.s_c1) if k3 in model.s_crops else 0)
+               + model.v_buy_product[q,s,p7,z,k3,s2,g] * sum(model.p_buy_grain_price[q,p7,z,g,k3,s2,c1]  * model.p_prob_c1[c1] for c1 in model.s_c1)
+               for k3 in model.s_supp_feeds for s2 in model.s_biomass_uses for g in model.s_grain_pools)
 
 def f_con_poc_available(model):
     '''
@@ -937,7 +938,7 @@ def f_objective(model):
 
     ##objective function (maximise utility)
     return sum(sum(model.v_utility_points[q,s,z,c1,u] * model.p_utility[u] for u in model.s_utility_points)
-               * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
+               * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1] * model.p_discount_factor_q[q]
                for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types
                if pe.value(model.p_wyear_inc_qs[q,s]))
 
@@ -952,7 +953,7 @@ def f_con_MP(model, lp_vars):
     def MP_rotation_q0_lower(model,q,s,p7,z,r,l):
         ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
         ## give 1% flex on the bnd to allow for any rounding.
-        if q == 'q0' and len_p7>1:
+        if q == 'q0' and p7 == 'zm0' and len_p7>1:
             return (model.v_phase_area[q,s,p7,z,r,l] <=
                     lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 1.01)
         else:
@@ -964,7 +965,7 @@ def f_con_MP(model, lp_vars):
     def MP_rotation_q0_upper(model,q,s,p7,z,r,l):
         ##bnd the first node in q[0] (this is when farm conditions have changed but management has not changed) (unless only one p7 period because that means the management can change in p7[0])
         ## give 1% flex on the bnd to allow for any rounding.
-        if q == 'q0' and len_p7>1:
+        if q == 'q0' and p7 == 'zm0' and len_p7>1:
             return (model.v_phase_area[q,s,p7,z,r,l] >=
                     lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 0.99)
         else:
@@ -1155,5 +1156,5 @@ def f_con_MP(model, lp_vars):
     #                          pw_repn='CC')
     #
     # ##objective function (maximise utility)
-    # return sum(model.v_utility[q,s,z,c1] * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1]
+    # return sum(model.v_utility[q,s,z,c1] * model.p_season_prob_qsz[q,s,z] * model.p_prob_c1[c1] * model.p_discount_factor_q[q]
     #            for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.

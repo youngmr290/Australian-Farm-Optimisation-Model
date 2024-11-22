@@ -654,14 +654,15 @@ def f1_feedsupply_adjust(attempts,feedsupply,itn):
     ##which feedsupplies can be calculated using binary method - must have a negative and positive error
     binary_mask = np.nanmin(attempts[...,1], axis=-1)/np.nanmax(attempts[...,1], axis=-1) < 0 #axis -1 is the itn axis ie take the min and max error from the previous iterations
     if np.any(binary_mask):
+        index_itn = np.arange(attempts.shape[-2])
         ##calc new feedsupply binary - take half of the two feedsupplies that have resulted in the error closest to 0. Only adds the binary result to slices that have a negative and a positive value (done using the mask created above)
         ###feedsupply with negative error that is closest to 0 - this is a little complex because applying a max function to a masked array
         mask_attempts = np.ma.masked_array(attempts[...,1],np.logical_or(attempts[...,1]>0, np.isnan(attempts[...,1]))) #np.ma has a true and false the other way around (e.g. false means keep data) therefore the <> sign is opposite to what you want
-        neg_bool = np.ma.getdata(np.nanmax(mask_attempts, axis=-1, keepdims=True)==attempts[...,1]) #returns a mask that states the error that is negative but closest to 0
+        neg_bool = np.argmax(mask_attempts, axis=-1, keepdims=True)==index_itn #returns a mask that states the error that is negative but closest to 0
         neg_bool = neg_bool * binary_mask[...,na] #this just makes sure the neg mask only has a true in the same slice as the pos array (so it can be applied to the feed supply array below)
         ###feedsupply with positive error that is closest to 0 - this is a little complex because applying a max function to a masked array
         mask_attempts= np.ma.masked_array(attempts[...,1],np.logical_or(attempts[...,1]<0, np.isnan(attempts[...,1]))) #np.ma has a true and false the other way around (e.g. false means keep data) therefore the <> sign is opposite to what you want
-        pos_bool=np.ma.getdata(np.nanmin(mask_attempts, axis=-1,keepdims=True)==attempts[...,1]) #returns a maks that states the error that is negative but closest to 0
+        pos_bool = np.argmin(mask_attempts, axis=-1, keepdims=True)==index_itn #returns a maks that states the error that is negative but closest to 0
         pos_bool = pos_bool * binary_mask[...,na] #this just makes sure the pos mask only has a true in the same place as the neg mask.
         ##calc feedsupply
         feedsupply_new[binary_mask] = (attempts[...,0][neg_bool] + attempts[...,0][pos_bool])/2
@@ -685,7 +686,7 @@ def f1_feedsupply_adjust(attempts,feedsupply,itn):
                 slope[i] = stats.linregress(x[:itn+1],y[:itn+1])[0] #slice 0 to get slope
     ####change in feedsupply = error / slope. It is assumed that the most recent itn has the most accurate feedsupply
     feedsupply_new[~binary_mask] = feedsupply[~binary_mask] + ((2 * -attempts[...,itn,1]) / slope)[~binary_mask] # x 2 to overshoot then switch to binary.
-    return np.minimum(20, feedsupply_new) #stop nv going above 20
+    return np.maximum(1.5, np.minimum(14, feedsupply_new)) #stop nv going above 14 because that is the best sheep can get from lupins
 
 
 def f1_rev_sa(value, sa, age, sa_type):
@@ -2891,7 +2892,7 @@ def f1_season_wa(numbers, var, season, mask_min_lw_wz, mask_min_wa_lw_w, mask_ma
     return var
 
 
-def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, period_is_condense, mask_gen_condensed_used=None, pkl_condensed_value=None, param_name=None):
+def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, period_is_condense):
     """
     Condense variable to x common points along the w axis when period_is_condense.
     Currently this function only handle 2 or 3 initial liveweights. The order of the returned W axis is M, H, L for 3 initial lws or H, L for 2 initial lws.
@@ -3007,24 +3008,6 @@ def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period,
                 sl[sinp.stock['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
                 temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, sinp.stock['i_w_pos']) #if you get an error here it probably means no animals had mort less than 10%
 
-        ###update and use pkl condensed var
-        ###Every trial creates a new pkl that is identified using the fs pkl number. Some trials use stored values and then essentially just create a copy. This is done so that the same fs numbers can be used.
-        ###Note: can't create with w_start_len==2 and use for w_start_len==3 or visa versa (don't think this can happen with fs anyway so shouldn't be a problem).
-        ###see google doc (randomness section) for more info.
-        if param_name is not None:
-            if sinp.structuralsa['i_use_pkl_condensed_start_condition']:
-                ####store t length before updating
-                t_pos = sinp.stock['i_p_pos'] #t is in p pos because p has been sliced
-                i_t_len = temporary.shape[t_pos]
-                ####update temporary with pickled value
-                temporary_pkl = pkl_condensed_value[param_name]
-                ####handle when the current trial has a different number of w slices or t slices than the create trial
-                temporary_pkl = f1_adjust_pkl_condensed_axis_len(temporary_pkl, i_w_len, i_t_len)
-                ###update temporary_pkl with temporary for desired w slices - high w and low w are not updated by pkl if
-                ### the condensed animal calculated above has lower or higher weight (because we don't want weight to vanish. this also handles cases when the fs is altered)
-                temporary = fun.f_update(temporary_pkl, temporary, mask_gen_condensed_used)
-            pkl_condensed_value[param_name] = temporary.copy()  # have to copy so that traits (e.g. mort) that are added to using += do not also update the value (not sure the copy is required here but have left it in since it was required for the rev)
-
         ###Update if the period is condense (shearing for offs and prejoining for dams)
         var = fun.f_update(var, temporary, period_is_condense)
     return var
@@ -3043,34 +3026,6 @@ def f1_adjust_pkl_condensed_axis_len(temporary, i_w_len, i_t_len):
     if i_t_len>temporary.shape[t_pos]:
         temporary = np.concatenate([temporary]*i_t_len, axis=t_pos) #won't work if pkl trial had t axis but current trial doesn't - to handle this would require passing in the a_t_g association.
     return temporary
-
-def f1_gen_condensed_used(ffcfw, idx_sorted_w, condense_w_mask, n_fs, len_w, len_t, n_fvps_percondense
-                          , period_is_condense_pa1e1b1nwzida0e0b0xyg, adjp_lw_initial_wzida0e0b0xyg, pkl_condensed_value, param_name):
-    ###When using the pkl condensed values there may be cases when they do not have enough spread (e.g.
-    ### the generated condensed animal is heavier than the pkl condensed animal this would result in weight vanishing in the distribution)
-    ### in these cases the pkl condense values are overwritten by the generated condensed values.
-    #### controls if the generated condensed values are used. False means pkl_condensed_values are used.
-    w_pos = sinp.stock['i_w_pos']
-    mask_gen_condensed_used = True #if it is not period is condense or pkl_condensed_values are not being used then this doesnt get used so just return True.
-    if sinp.structuralsa['i_use_pkl_condensed_start_condition'] and np.any(
-            period_is_condense_pa1e1b1nwzida0e0b0xyg):
-        #####determine which w slices are the heaviest animal
-        max_w_slices = np.isclose(adjp_lw_initial_wzida0e0b0xyg, np.max(adjp_lw_initial_wzida0e0b0xyg, axis=w_pos, keepdims=True))
-        #####determine which w slices are the lightest animal
-        min_w_slices = np.isclose(adjp_lw_initial_wzida0e0b0xyg, np.min(adjp_lw_initial_wzida0e0b0xyg, axis=w_pos, keepdims=True))
-
-        #####calculate condensed lw (without using condensed pkl values).
-        ffcfw_condensed = f1_condensed(ffcfw, idx_sorted_w, condense_w_mask, n_fs, len_w, n_fvps_percondense
-                                             , period_is_condense_pa1e1b1nwzida0e0b0xyg)  # condensed lw at the end of the period
-        #####get pkl condensed weight and handle when the current trial has a different number of w slices or t slices than the create trial
-        pkl_ffcfw_condensed = f1_adjust_pkl_condensed_axis_len(pkl_condensed_value[param_name], len_w, len_t)
-        #####calculate if the slices of the pickled values are to be updated with more extreme values from the generator
-        update_high_with_gen = np.max(ffcfw_condensed, axis=w_pos, keepdims=True) > np.max(pkl_ffcfw_condensed, axis=w_pos, keepdims=True)
-        update_low_with_gen = np.min(ffcfw_condensed, axis=w_pos, keepdims=True) < np.min(pkl_ffcfw_condensed, axis=w_pos, keepdims=True)
-        #####create mask that controls if the generated condensed values are used. False means pkl_condensed_values are used
-        mask_gen_condensed_used = np.logical_or(np.logical_and(update_high_with_gen, max_w_slices),
-                                                     np.logical_and(update_low_with_gen, min_w_slices))
-    return mask_gen_condensed_used
 
 def f1_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0
                         , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False, prevperiod_is_wean=False
@@ -3134,7 +3089,7 @@ def f1_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf
             temporary[:, :, 0:1, 0:1, ...] = np.maximum(0.00001, np.sum(temporary, axis=(sinp.stock['i_e1_pos'], sinp.stock['i_b1_pos']),
                                                                      keepdims=True) * (1 - mated_propn))
             ### the numbers in the other mated slices other than NM get scaled by the proportion mated
-            temporary[:, :, :, 1:, ...] = np.maximum(0, temporary[:, :, :, 1:, ...] * mated_propn)
+            temporary[:, :, :, 1:, ...] = np.maximum(0.00001, temporary[:, :, :, 1:, ...] * mated_propn)
             ###update numbers with the temporary calculations if it is the end of mating
             numbers = fun.f_update(numbers, temporary, period_is_matingend)
         ###d) birth (account for birth status and if drys are retained)
@@ -4213,7 +4168,7 @@ def f1_cum_sum_dvp(arr,dvp_pointer,axis=0,shift=0):
     return final
 
 
-def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w8=None, dvp_type_next_tvgw=0, vtype=0): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
+def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w8=None, dvp_type_next_tvgw=0, vtype=0, for_feedsupply=False): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
     """Distribute animals between periods when the animals are changing on the period junction. This change can
     be either 1. condensing at prejoining when animals are 'condensed' from the final number of LW profiles back to
     the initial number or 2. averaging animals at season start when weights at the end of all the seasons are
@@ -4337,10 +4292,11 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     ### the light animals are transferred such that total LW remains the same prior to and after the distribution.
     ### therefore the number of animals is reduced during the transfer by the ratio: source wt / lowest destination wt.
     ### to transfer the full number of the light animals the minimum destination weight will need to be altered.
-    ratio_w8gw = fun.f_divide(ffcfw_source_w8g, np.min(ffcfw_dest_wgw9, axis=-1), dtype=dtype)[...,na]
-    ### where the ratio is below 1 it is applied to the nearest w9 slice
-    mask_w8gw9 = (ratio_w8gw < 1) * (nearestw9_idx_w8g[...,na] == index_w9)
-    distribution_nearest_w8gw9 = fun.f_update(distribution_nearest_w8gw9, ratio_w8gw, mask_w8gw9)
+    if not for_feedsupply: #for feedsupply distribution the light animals get allocated to the low condensed weight.
+        ratio_w8gw = fun.f_divide(ffcfw_source_w8g, np.min(ffcfw_dest_wgw9, axis=-1), dtype=dtype)[...,na]
+        ### where the ratio is below 1 it is applied to the nearest w9 slice
+        mask_w8gw9 = (ratio_w8gw < 1) * (nearestw9_idx_w8g[...,na] == index_w9)
+        distribution_nearest_w8gw9 = fun.f_update(distribution_nearest_w8gw9, ratio_w8gw, mask_w8gw9)
 
     ## Combine the values into the return variable
     ### clip (0 to 1) to handle the special case where source weight > the maximum destination weight

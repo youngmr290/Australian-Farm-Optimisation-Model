@@ -338,8 +338,18 @@ def f_pasture(params, r_vals, nv):
     NCBG_t = uinp.emissions['i_NCBG_t'][pinp.general['pas_inc_t']]  # nitrogen content of below-ground crop residue
 
     ##scale pasture production for q (sequence year) for MP model. version 1: all pasture types scaled the same.
+    ##this pgr sam has a p6 and q which is good for raw version but too complicated to explain in the web app because a user might have node[0] in spring so if they changed pgr in p6[2] q[0] they would actually be changing the following calendar year. A simpler method is below.
     q_pgr_scalar_qp6 = sen.sam['q_pgr_scalar_Qp6'][0:len_q,:]  # have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
     i_fxg_pgr_qop6lzt = i_fxg_pgr_qop6lzt * q_pgr_scalar_qp6[:,na,:,na,na,na]
+
+    ##scale pasture production for the current year from node[0] to the end of the growing season. version 1: all pasture types scaled the same.
+    ## this only adjusts p6 periods that occur after node 1 (ie when external condition change). Therefore it doesnt carry over to the following calendar year if node1 occurs at the end of the current calendar year (note q[0] can be in tow calendar years)
+    q_pgr_scalar = sen.sam['q_pgr_scalar']
+    date_season_node1_z = per.f_season_periods()[0, :]
+    q_pgr_sam_mask_p6z = date_start_p6z >= date_season_node1_z
+    q_pgr_scalar_p6z = np.ones((n_feed_periods, n_season_types))
+    q_pgr_scalar_p6z[q_pgr_sam_mask_p6z] = q_pgr_scalar
+    i_fxg_pgr_qop6lzt = i_fxg_pgr_qop6lzt * q_pgr_scalar_qp6[:, na, :, na, na, na] * q_pgr_scalar_p6z[:, na, :, na]
 
     ##create dry and green pasture exists mask
     ##in the late brk season dry feed can occur in fp0&1.

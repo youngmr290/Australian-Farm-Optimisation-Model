@@ -104,6 +104,13 @@ def sets(model, nv):
     ##types of crops
     model.s_crops = Set(initialize=sinp.general['i_idx_k1'], doc='crop types')
 
+    ##types of supp (this is just a subset of the crop index - this is required so that crops which are masked out can still be fed as supp - potentially this would allow us to add pellets as a sup)
+    supp_inc_k = uinp.supfeed['i_supp_inc_k3'].squeeze().values
+    keys_supp_k = uinp.supfeed['i_supp_inc_k3'].columns[supp_inc_k]
+    model.s_supp_feeds = Set(initialize=keys_supp_k, doc='supplementary feed options types')
+
+    ##s_crops_and_supp
+    model.s_crops_and_supp = model.s_crops.union(model.s_supp_feeds)
 
     ##all crops and each pasture landuse e.g. t, tr
     model.s_landuses = Set(initialize=sinp.general['i_idx_k'], doc='landuses')

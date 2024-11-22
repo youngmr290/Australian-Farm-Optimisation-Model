@@ -288,6 +288,8 @@ def f_property_inp_sa(pinp_defaults):
     general['i_mask_z'] = fun.f_sa(general['i_mask_z'], sen.sav['mask_z'], 5)
     general['i_season_propn_z'] = fun.f_sa(general['i_season_propn_z'], sen.sav['prob_z'], 5)
     general['i_node_is_fvp'] = fun.f_sa(general['i_node_is_fvp'], sen.sav['node_is_fvp'][0:len(general['i_node_is_fvp'])], 5)
+    general['i_phase_can_increase_kp7'] = fun.f_sa(general['i_phase_can_increase_kp7'], sen.sav['phase_can_increase_kp7'][:,0:len(general['i_node_is_fvp'])], 5)
+    general['i_phase_can_reduce_kp7'] = fun.f_sa(general['i_phase_can_reduce_kp7'], sen.sav['phase_can_reduce_kp7'][:,0:len(general['i_node_is_fvp'])], 5)
     labour['max_managers'] = fun.f_sa(labour['max_managers'], sen.sav['manager_ub'], 5)
     labour['min_managers'] = fun.f_sa(labour['min_managers'], sen.sav['manager_lo'], 5)
     labour['max_perm'] = fun.f_sa(labour['max_perm'], sen.sav['perm_ub'], 5)
@@ -678,6 +680,8 @@ def f1_mask_landuse():
     global pas_landuse_mask_k2
     global all_landuse_mask_k
     crop_landuse_mask_k1 = np.logical_and(general['i_crop_landuse_exists_k1'], general['i_crop_landuse_inc_k1'])
+    if not any(crop_landuse_mask_k1):
+        crop_landuse_mask_k1[0] =True #need at least one active crop so that code works. Note this crop is still excluded in the rotations.
     pas_landuse_mask_k2 = np.logical_and(general['i_pas_landuse_exists_k2'], general['i_pas_landuse_inc_k2'])
     ###create the k mask for the full land use array. Needs to be ordered correctly
     ####concat the crop and pasture mask

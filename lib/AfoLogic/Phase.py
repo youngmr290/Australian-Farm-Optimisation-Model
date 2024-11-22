@@ -98,7 +98,7 @@ def f1_sim_inputs(sheet=None, index=None, header=None):
 #price                 #
 ########################
 
-def f_farmgate_grain_price(r_vals={}):
+def f_farmgate_grain_price(k_type, r_vals={}):
     '''
 
     Calculates the grain price received by the farmer.
@@ -117,11 +117,26 @@ def f_farmgate_grain_price(r_vals={}):
 
     '''
     ##inputs
+    len_q = sinp.structuralsa['i_len_q']  # number of years in MP model
     grain_price_info_df = uinp.price['grain_price_info'] #grain info
     percentile_price_k_s2p = uinp.price['grain_price'] #grain price for 5 different percentiles
     grain_price_percentile = uinp.price['grain_price_percentile'] #price percentile to use
-    grain_price_scalar_c1_z = zfun.f_seasonal_inp(uinp.price_variation['grain_price_scalar_c1z']
-                                                 ,numpy=False, axis=1, level=0)
+    grain_price_scalar_c1_z = zfun.f_seasonal_inp(uinp.price_variation['grain_price_scalar_c1z'],numpy=False, axis=1, level=0)
+    ##k masks
+    if k_type=="k1":
+        mask_k4 = grain_price_info_df["is_crop"].values #this is mask_k1_is_k4
+        mask_k = pinp.crop_landuse_mask_k1 #this is mask_k1
+    if k_type=="k3":
+        mask_k4 = grain_price_info_df["is_supp"].values  #ís_supp_k4
+        mask_k = uinp.supfeed['i_supp_inc_k3'].squeeze().values  #supp_inc_k3
+
+    ##apply masks
+    grain_price_info_df = grain_price_info_df.iloc[mask_k4,:].iloc[mask_k,:] #grain info
+    percentile_price_k_s2p = percentile_price_k_s2p.iloc[mask_k4,:].iloc[mask_k,:] #grain price for 5 different percentiles
+    sav_grainp_k= sen.sav['grainp_k'][mask_k4][mask_k]
+    sav_hayp_k = sen.sav['hayp_k'][mask_k4][mask_k]
+    sam_grainp_k = sen.sam['grainp_k'][mask_k4][mask_k]
+    sam_q_grain_price_scalar_qk = sen.sam['q_grain_price_scalar_Qk'][0:len_q, mask_k4][:,mask_k]
 
     ##extrapolate price for the selected percentile (can go beyond the data input range)
     percentile_price_ks2_p = percentile_price_k_s2p.stack(0)
@@ -132,10 +147,10 @@ def f_farmgate_grain_price(r_vals={}):
 
     ##apply price SAV and SAM (SAV first)
     grain_price_firsts_k_s2 = grain_price_firsts_ks2.unstack()
-    grain_price_firsts_k_s2.loc[:,'Harv'] = fun.f_sa(grain_price_firsts_k_s2.loc[:,'Harv'], sen.sav['grainp_k'][pinp.crop_landuse_mask_k1], 5)
-    grain_price_firsts_k_s2.loc[:,'Bale'] = fun.f_sa(grain_price_firsts_k_s2.loc[:,'Bale'], sen.sav['hayp_k'][pinp.crop_landuse_mask_k1], 5)
+    grain_price_firsts_k_s2.loc[:,'Harv'] = fun.f_sa(grain_price_firsts_k_s2.loc[:,'Harv'], sav_grainp_k, 5)
+    grain_price_firsts_k_s2.loc[:,'Bale'] = fun.f_sa(grain_price_firsts_k_s2.loc[:,'Bale'], sav_hayp_k, 5)
     ###apply sam with k axis
-    grain_price_firsts_k_s2 = fun.f_sa(grain_price_firsts_k_s2, sen.sam['grainp_k'][pinp.crop_landuse_mask_k1,na], 0)
+    grain_price_firsts_k_s2 = fun.f_sa(grain_price_firsts_k_s2, sam_grainp_k, 0, pandas=True, axis=0)
     grain_price_firsts_ks2 = grain_price_firsts_k_s2.stack()
 
     ##seconds price
@@ -148,8 +163,8 @@ def f_farmgate_grain_price(r_vals={}):
     price_df['seconds'] = grain_price_seconds_ks2
 
     ##calc grain price before selling cost - for crop_summary report
-    propn_firsts_k = uinp.price['grain_price_info'][['prop_firsts']].squeeze()
-    propn_seconds_k = uinp.price['grain_price_info'][['prop_seconds']].squeeze()
+    propn_firsts_k = grain_price_info_df[['prop_firsts']].squeeze()
+    propn_seconds_k = grain_price_info_df[['prop_seconds']].squeeze()
     ave_price_ks2 = grain_price_firsts_ks2.mul(propn_firsts_k, level=0) + grain_price_seconds_ks2.mul(propn_seconds_k.squeeze(), level=0)
     fun.f1_make_r_val(r_vals,ave_price_ks2.unstack(),'farmgate_price')
 
@@ -170,10 +185,9 @@ def f_farmgate_grain_price(r_vals={}):
     farmgate_price_ks2gc1_z = farmgate_price_ks2g_c1z.stack(0)
 
     ##add q axis
-    len_q = sinp.structuralsa['i_len_q'] #number of years in MP model
     keys_q = np.array(['q%s' % i for i in range(len_q)])
-    keys_k1 = sinp.general['i_idx_k1']
-    q_grain_price_scalar_q_k = pd.DataFrame(sen.sam['q_grain_price_scalar_Qk'][0:len_q,pinp.crop_landuse_mask_k1], index = keys_q, columns=keys_k1) #have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
+    keys_k = grain_price_info_df.index
+    q_grain_price_scalar_q_k = pd.DataFrame(sam_q_grain_price_scalar_qk, index = keys_q, columns=keys_k) #have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
     farmgate_price_s2gc1z_qk = farmgate_price_ks2gc1_z.stack().unstack(0).mul(q_grain_price_scalar_q_k.stack(), axis=1, level=1)
     farmgate_price_ks2gc1_qz = farmgate_price_s2gc1z_qk.stack(1).unstack(-2).reorder_levels([-1,0,1,2], axis=0)
     ##return
@@ -189,7 +203,7 @@ def f_grain_price(r_vals):
 
     '''
     ##get grain price - accounts for tolls and other fees
-    farmgate_price_ks2gc1_qz=f_farmgate_grain_price(r_vals)
+    farmgate_price_ks2gc1_qz=f_farmgate_grain_price(k_type="k1", r_vals=r_vals)
 
     ##allocate farm gate grain price for each cashflow period and calc interest
     start = np.array([pinp.crop['i_grain_income_date']])
@@ -356,9 +370,13 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     keys_q = np.array(['q%s' % i for i in range(len_q)])
     q_crop_yield_scalar_q_k = pd.DataFrame(sen.sam['q_crop_yield_scalar_Qk'][0:len_q, pinp.crop_landuse_mask_k1],
                                             index=keys_q, columns=keys_k)  # have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
-    biomass_rlp7z_qk = biomass_rkl_p7z.stack([0,1]).unstack(1).mul(q_crop_yield_scalar_q_k.stack(), axis=1, level=1)
-    biomass_rlp7zqk = biomass_rlp7z_qk.stack([0,1])
-    biomass_qrklzp7 = biomass_rlp7zqk.reorder_levels([4,0,5,1,3,2])
+    ###mul - bit convoluted because we dont want r and k on different axes because that increase array size a lot.
+    biomass_rk_p7zl = biomass_rkl_p7z.unstack(2)
+    q_crop_yield_scalar_rkq = q_crop_yield_scalar_q_k.reindex(biomass_rk_p7zl.index, axis=1).fillna(1).unstack()
+    biomass_rkq_p7zl = biomass_rk_p7zl.reindex(q_crop_yield_scalar_rkq.index, axis=0)
+    biomass_rkq_p7zl = biomass_rkq_p7zl.mul(q_crop_yield_scalar_rkq, axis=0)
+    biomass_rkqp7zl = biomass_rkq_p7zl.stack([0,1,2])
+    biomass_qrklzp7 = biomass_rkqp7zl.reorder_levels([2,0,1,5,4,3])
 
     if for_insurance or for_stub:
         ###use q[0] (average yield) because that saves a bit of complexity without losing much accuracy.
@@ -413,7 +431,9 @@ def f_grain_pool_proportions():
     quality grain (firsts) to market and retain the lower quality grain (seconds) for livestock feed.
 
     '''
-    prop = uinp.price['grain_price_info'][['prop_firsts','prop_seconds']]
+    grain_price_info_df = uinp.price['grain_price_info']
+    mask_k4 = grain_price_info_df["is_crop"].values  # this is mask_k1_is_k4
+    prop = grain_price_info_df[['prop_firsts','prop_seconds']].iloc[mask_k4, :].iloc[pinp.crop_landuse_mask_k1,:]
     prop.columns = sinp.general['grain_pools']
     return prop.stack()
 
@@ -484,6 +504,8 @@ def f_fert_passes():
     fert_passes_rkz_n = fert_passes_rk_zn.stack(level=0)
     lime_passes_yearly = pinp.crop['i_lime_freq'] #proportion of lime application each year (cost is allocated equally across each year of rotation)
     fixed_fert_passes_rkz_n = pd.DataFrame(lime_passes_yearly, index=fert_passes_rkz_n.index, columns=['lime'], dtype=float)
+    ###set fixed fert to 0 for PNC phases
+    fixed_fert_passes_rkz_n.loc[(slice(None), 'a2', slice(None))] = 0
     fert_passes_rkz_n = pd.concat([fert_passes_rkz_n, fixed_fert_passes_rkz_n], axis=1).groupby(axis=1, level=0).sum()
 
     ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks don't get crop (see function docs))
@@ -627,6 +649,8 @@ def f_fert_cost(r_vals):
     base_fert_rkz_n = base_fert_rk_zn.stack(level=0)
     lime_cost_yearly = pinp.crop['i_lime'] * pinp.crop['i_lime_freq'] #workout the cost of liming each year (cost is allocated equally across each year of rotation)
     fixed_fert_rkz_n = pd.DataFrame(lime_cost_yearly, index=base_fert_rkz_n.index, columns=['lime'], dtype=float)
+    ###set fixed fert to 0 for PNC phases
+    fixed_fert_rkz_n.loc[(slice(None), 'a2', slice(None))] = 0
     base_fert_rkz_n = pd.concat([base_fert_rkz_n, fixed_fert_rkz_n], axis=1).groupby(axis=1, level=0).sum()
 
     ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)
@@ -1103,7 +1127,7 @@ def f_insurance(r_vals):
     '''
     ##weight c1 to get average price
     c1_prob = uinp.price_variation['prob_c1']
-    farmgate_price_ks2gc1_qz = f_farmgate_grain_price()
+    farmgate_price_ks2gc1_qz = f_farmgate_grain_price(k_type="k1")
     farmgate_price_ks2g_qz = farmgate_price_ks2gc1_qz.mul(c1_prob,axis=0,level=-1).groupby(axis=0,level=[0,1,2]).sum()
     ##combine each grain pool to get average price
     grain_pool_proportions_kg = f_grain_pool_proportions()
@@ -1111,7 +1135,10 @@ def f_insurance(r_vals):
     farmgate_price_kg_zs2 = farmgate_price_ks2g_qz.stack(1).iloc[:,0].unstack([-1,1])
     ave_price_k_zs2 = farmgate_price_kg_zs2.mul(grain_pool_proportions_kg, axis=0).groupby(axis=0, level=0).sum()
     ##calc insurance cost per tonne
-    insurance_k_zs2 = ave_price_k_zs2.mul(uinp.price['grain_price_info']['insurance']/100, axis=0)  #div by 100 because insurance is a percent
+    grain_price_info_df = uinp.price['grain_price_info']
+    mask_k4 = grain_price_info_df["is_crop"].values  # this is mask_k1_is_k4
+    insurance_k1 = grain_price_info_df['insurance'].iloc[mask_k4].iloc[pinp.crop_landuse_mask_k1]
+    insurance_k_zs2 = ave_price_k_zs2.mul(insurance_k1/100, axis=0)  #div by 100 because insurance is a percent
     insurance_ks2z = insurance_k_zs2.stack([1,0])
     ##calc phase product for each s2 option then select the s2 slice with maximum insurance cost (maximum because that would most likely be the expected s2 option)
     biomass_rklz = f_rot_biomass(for_insurance=True)

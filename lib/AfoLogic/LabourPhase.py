@@ -344,7 +344,7 @@ def f1_labcrop_params(params,r_vals):
     variable_crop_monitor, increment_variable_crop_monitor, fixed_crop_monitor = f_crop_monitoring()
 
     ##add params which are inputs
-    params['harvest_helper'] = pinp.labour['harvest_helper'].squeeze().to_dict()
+    params['harvest_helper'] = pinp.labour['harvest_helper'].squeeze(axis=1).to_dict()
     params['daily_seed_hours'] = pinp.mach['daily_seed_hours']
     params['seeding_helper'] = pinp.labour['seeding_helper']
     params['prep_labour'] = prep_labour.to_dict()

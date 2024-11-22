@@ -47,3 +47,5 @@ process can be used to get the source code.
 #. Clone AFO repository (this essentially downloads all the AFO source code onto your local device).
 
     - In the git terminal: ``git clone https://github.com/youngmr290/Australian-Farm-Optimising-Model.git``
+
+#. If code changes are made, please create a pull request (via GitHub online) so that we can merge your changes into the master branch.

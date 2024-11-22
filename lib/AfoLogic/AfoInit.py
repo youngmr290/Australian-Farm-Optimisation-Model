@@ -59,7 +59,7 @@ from . import SaltbushPyomo as slppy
 #########################
 
 def exp(solver_method, user_data, property, trial_name, trial_description, sinp_defaults, uinp_defaults, pinp_defaults,
-        d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output, a_lmuregion_lmufarmer=None):
+        d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output, a_lmuregion_lmufarmer=None, mp_lp_vars_path='pkl/pkl_lp_vars_MP Initial position.pkl'):
 
     ##can use logger to get status on multiprocessing
     # logger.info('Received {}'.format(row))
@@ -103,8 +103,10 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     uinp.f1_mask_landuse()
 
     if sinp.structuralsa['model_is_MP']:
-        import pickle as pkl
-        with open('pkl/pkl_lp_vars_{0}.pkl'.format("MP Initial position"), "rb") as f:
+        ###allow user to specify the trial name of the MP setup run
+        if sen.sav['MP_setup_trial_name'] != "-":
+            mp_lp_vars_path = "pkl/pkl_lp_vars_{0}.pkl".format(sen.sav['MP_setup_trial_name'])
+        with open(mp_lp_vars_path, "rb") as f:
             MP_lp_vars = pkl.load(f)
     else:
         MP_lp_vars = {}

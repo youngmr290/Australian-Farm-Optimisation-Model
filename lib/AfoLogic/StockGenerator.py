@@ -704,6 +704,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ###birth control
         date_born1st_oa1e1b1nwzida0e0b0xyg2[...] = stubble['lambing_date']
 
+    ###association between start w and full w
+    a_wstart_w1 = np.floor(index_w1 / len_nut_dams).astype(int) #identify the start w slice (nut 0) for each w
+    a_wstart_w3 = np.floor(index_w3 / len_nut_offs).astype(int) #identify the start w slice (nut 0) for each w
+
     ############################
     ### sim param arrays       # '''csiro params '''
     ############################
@@ -955,8 +959,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ###dam
     idx_sida0e0b0xyg1 = fun.f_next_prev_association(date_end_P, date_shear_sida0e0b0xyg1,0, 'left')#shearing occurs at the end of the next/current generator period therefore 0 offset
     date_shear_sa1e1b1nwzida0e0b0xyg1 = fun.f_expand(date_end_P[idx_sida0e0b0xyg1], p_pos, right_pos=i_pos)  #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes)
-    ###off - shearing can't occur as yatf because then need to shear all lambs (ie no scope to not shear the lambs that are going to be fed up and sold) because the offs decision variables for feeding are not linked to the yatf (which are in the dam decision variables)
-    date_shear_sida0e0b0xyg3 = np.maximum(date_born1st_ida0e0b0xyg3 + age_wean1st_ida0e0b0xyg3, date_shear_sida0e0b0xyg3) #shearing must be after weaning. This makes the d axis active because weaning has an active d.
+    ###off - shearing can't occur prior to weaning as yatf because this would require shearing all lambs whether destination is as a dam or an off. If shearing date is prior to weaning then the youngest age group are not shorn and are carried through for 12 months.
     idx_sida0e0b0xyg3 = fun.f_next_prev_association(offs_date_end_P, date_shear_sida0e0b0xyg3,0, 'left')#shearing occurs at the end of the next/current generator period therefore 0 offset
     date_shear_sa1e1b1nwzida0e0b0xyg3 = fun.f_expand(offs_date_end_P[idx_sida0e0b0xyg3], p_pos, right_pos=i_pos) #use P so that it handles cases where look-up date is after the end of the generator (only really an issue for arrays with o, s & d axes but done to all for consistency)
 
@@ -2016,6 +2019,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     initial_a1e1b1nwzida0e0b0xyg = fun.f_expand(initial_a1, a1_pos)
     ###Distribution of initial numbers across the b1 axis
     initial_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['i_initial_b1'], b1_pos)
+    prejoin_initial_repro_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['i_prejoin_initial_repro_b1'], b1_pos)
     ###Distribution of initial numbers across the y-axis
     initial_yg0 = fun.f_expand(uinp.parameters['i_initial_y0'], y_pos, condition = uinp.parameters['i_mask_y0'], axis = y_pos)
     initial_yg1 = fun.f_expand(uinp.parameters['i_initial_y1'], y_pos, condition = uinp.parameters['i_mask_y1'], axis = y_pos)
@@ -2037,8 +2041,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ###sire
     numbers_initial_zida0e0b0xyg0 = initial_yg0
     ###dams
-    numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1 = initial_a1e1b1nwzida0e0b0xyg * initial_e1b1nwzida0e0b0xyg * initial_b1nwzida0e0b0xyg
-    numbers_initial_a1e1b1nwzida0e0b0xyg1 = numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1 * initial_yg1
+    numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1 = initial_a1e1b1nwzida0e0b0xyg * initial_e1b1nwzida0e0b0xyg * prejoin_initial_repro_b1nwzida0e0b0xyg
+    numbers_initial_a1e1b1nwzida0e0b0xyg1 = initial_a1e1b1nwzida0e0b0xyg * initial_e1b1nwzida0e0b0xyg * initial_b1nwzida0e0b0xyg * initial_yg1
     ###offs
     ####Initial proportion of offspring if clustered.
     ####These proportions are used if the offspring are clustered
@@ -2406,6 +2410,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_weaned_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg)
     period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is_between', date_weaned2_pa1e1b1nwzida0e0b0xyg2
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
+    period_between_damwean_firstprejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is_between', date_weaned_ida0e0b0xyg1
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1[0], date_end_pa1e1b1nwzida0e0b0xyg)
     period_is_scan_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_scan_pa1e1b1nwzida0e0b0xyg1
                         , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     period_is_prebirth_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', date_prebirth_pa1e1b1nwzida0e0b0xyg1
@@ -2512,6 +2518,34 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                           , period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1, scan_management_pa1e1b1nwzida0e0b0xyg1
                           , gbal_management_pa1e1b1nwzida0e0b0xyg1, wean_management_pa1e1b1nwzida0e0b0xyg1
                           , a_n_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg3, a_t_tpg1, i_g3_inc, mask_p_offs_p, len_p, pkl_fs_info, pkl_fs)
+
+    ##adjust the feedsupply based on user inputs - this is mainly for the web app - it occurs here so that we have access to the period_is_info
+    ##r axis is the repro timing and the d axis is the dam age
+    ###dams - adjust the feedsupply based on reproduction timing and animal age
+    ####turn o to p axis based on pre-joining
+    fs_adj_dam_rpdams = np.take_along_axis(fun.f_expand(sen.saa['feedsupply_adj_dams_ro'], p_pos),a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1[na,...],p_pos)
+    ####mask the periods each repro stage occurs
+    fs_adj_damwean_firstprejoin_pdams = fs_adj_dam_rpdams[0,...] * period_between_damwean_firstprejoin_pa1e1b1nwzida0e0b0xyg1 #adjust fs from the weaning of the dam itself to ewe lamb prejoining
+    fs_adj_prejoin_mating_pdams = fs_adj_dam_rpdams[1,...] * period_isbetween_prejoinmatingend_pa1e1b1nwzida0e0b0xyg1
+    fs_adj_mating_d90_pdams = fs_adj_dam_rpdams[2,...] * period_between_mated90_pa1e1b1nwzida0e0b0xyg1
+    fs_adj_d90_birth_pdams = fs_adj_dam_rpdams[3,...] * period_between_d90birth_pa1e1b1nwzida0e0b0xyg1
+    fs_adj_birth_wean_pdams = fs_adj_dam_rpdams[4,...] * period_between_birthwean_pa1e1b1nwzida0e0b0xyg1
+    fs_adj_wean_prejoin_pdams = fs_adj_dam_rpdams[5,...] * period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1
+    ####adjust the fs - use maximum/mimimum so to handle if a period is true in multiple period_is_between (dont want to double adjust the fs)
+    positive_adjustment_pdams = np.maximum.reduce(np.broadcast_arrays(np.array([0]),
+        fs_adj_damwean_firstprejoin_pdams, fs_adj_prejoin_mating_pdams, fs_adj_mating_d90_pdams, fs_adj_d90_birth_pdams, fs_adj_birth_wean_pdams, fs_adj_wean_prejoin_pdams))
+    negative_adjustment_pdams = np.minimum.reduce(np.broadcast_arrays(np.array([0]),
+        fs_adj_damwean_firstprejoin_pdams, fs_adj_prejoin_mating_pdams, fs_adj_mating_d90_pdams, fs_adj_d90_birth_pdams, fs_adj_birth_wean_pdams, fs_adj_wean_prejoin_pdams))
+    feedsupplyw_tpa1e1b1nwzida0e0b0xyg1 = feedsupplyw_tpa1e1b1nwzida0e0b0xyg1 + positive_adjustment_pdams + negative_adjustment_pdams
+
+    ###offs - adjust fs based on age
+    fs_adj_wean_6mo_poffs = sen.saa['feedsupply_adj_offs_p10'][0] * (age_cut_pa1e1b1nwzida0e0b0xyg3 < 180)
+    fs_adj_6mo_12mo_poffs = sen.saa['feedsupply_adj_offs_p10'][1] * np.logical_and(age_cut_pa1e1b1nwzida0e0b0xyg3 > 180, age_cut_pa1e1b1nwzida0e0b0xyg3 < 360)
+    fs_adj_12mo_poffs = sen.saa['feedsupply_adj_offs_p10'][2] * (age_cut_pa1e1b1nwzida0e0b0xyg3 > 360)
+    ####adjust the fs - use maximum/mimimum so to handle if a period is true in multiple period_is_between (dont want to double adjust the fs)
+    positive_adjustment_poffs = np.maximum.reduce(np.broadcast_arrays(np.array([0]), fs_adj_wean_6mo_poffs + fs_adj_6mo_12mo_poffs + fs_adj_12mo_poffs))
+    negative_adjustment_poffs = np.minimum.reduce(np.broadcast_arrays(np.array([0]), fs_adj_wean_6mo_poffs + fs_adj_6mo_12mo_poffs + fs_adj_12mo_poffs))
+    feedsupplyw_tpa1e1b1nwzida0e0b0xyg3 = feedsupplyw_tpa1e1b1nwzida0e0b0xyg3 + positive_adjustment_poffs + negative_adjustment_poffs
 
     '''if running the gen for stubble generation then the feed supply info above gets overwritten with
     the stubble feed from the trial.'''
@@ -2850,6 +2884,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         o_mortality_dams[...] = 0 #have to reset when doing the ltw loop because it is used to back date numbers
         d_muscle_dams = np.array([0.0]) #passed as an argument to f_foetus_nfs() so needs to be defined prior to first assignment
         c_start_dams = np.array([0.0]) #passed as an argument to f_foetus_nfs() so needs to be defined prior to first assignment
+        fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9 = fun.f_expand(a_wstart_w1[:, na] == np.arange(w_start_len1),
+                                                                   w_pos - 1, right_pos=-1, left_pos2=p_pos-2,right_pos2=w_pos - 1) #create default fs allocation - default means 1:1. This gets updated at period_is_condense.
 
         ##yatf
         d_cfw_history_start_p2g2[...] = np.nan
@@ -2894,6 +2930,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         numbers_start_offs = numbers_initial_ida0e0b0xyg3
         numbers_start_condense_offs = numbers_initial_ida0e0b0xyg3 #just need a default because this is processed using update function.
         md_solid_offs = np.array([12.0])  # need a start value to convert ebw_initial to ffcfw
+        fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = fun.f_expand(a_wstart_w3[:, na] == np.arange(w_start_len3),
+                                                                   w_pos - 1, right_pos=-1, left_pos2=p_pos-2,right_pos2=w_pos - 1) #create default fs allocation - default means 1:1. This gets updated at period_is_condense.
+
 
         '''if generating for stubble then overwrite some initial params to align with paddock trial.
            ffcfw and other initial values are overwritten above'''
@@ -2959,7 +2998,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
         ##load in and create condensed start dict - used to standardise the starting animal at condensing time.
         ###load condensed start info from previous trial if being used in this trial.
-        if sinp.structuralsa['i_use_pkl_condensed_start_condition']:
+        if sinp.structuralsa['i_fs_use_pkl']:
             pkl_condensed_values = pkl_fs['pkl_condensed_values']
         ###create empty to store condensed start info for current trial - this is only stored at the end if fs is stored.
         else:
@@ -3209,9 +3248,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
             ###initial info
             ####set lw target - None is default which means lw target is not used.
-            if not 'target_lwc_dams' in locals(): #only required once.
-                target_lwc_dams = fun.f_sa(np.full(len_p, 9999.), sen.sav['target_lwc_dams_P'][0:len_p], 5)
-                target_lwc_offs = fun.f_sa(np.full(len_p, 9999.), sen.sav['target_lwc_offs_P'][0:len_p], 5)
+            if not 'target_ebg_pb1dams' in locals(): #only required once.
+                target_ebg_dams_pb = fun.f_sa(np.full((len_p, len_b1), 9999.), sen.sav['target_ebg_dams_Pb'][0:len_p], 5)
+                target_ebg_offs_pb = fun.f_sa(np.full((len_p, len_b0), 9999.), sen.sav['target_ebg_offs_Pb'][0:len_p], 5)
+                target_ebg_pb1dams = fun.f_expand(target_ebg_dams_pb, b1_pos)
+                target_ebg_pb0offs = fun.f_expand(target_ebg_offs_pb, b0_pos)
                 epsilon = 0.050 #within 50g of target
                 n_max_itn = sinp.stock['i_feedsupply_itn_max']
             shape = feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, 0].shape + (n_max_itn,) + (2,) #slice 0 to remove the p axis
@@ -4245,7 +4286,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_sire
                                 , ck_sire, muscle_start_sire, viscera_start_sire, muscle_target_b0xyg0, mei_sire
-                                , km_sire, md_solid_sire, hp_maint_nfs_sire, dw_sire, heat_loss_sirem0p1
+                                , km_sire, md_solid_sire, hp_maint_nfs_sire, hp_mei_nfs_sire, dw_sire, heat_loss_sirem0p1
                                 , days_period_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['sire'][p])
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_nfs_sire = temp6
@@ -4270,7 +4311,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpsire[eqn_system, 5, :, p, ...] = temp4
                             r_compare7_q0q2tpsire[eqn_system, 6, :, p, ...] = temp0
 
-                        temp0 = sfun.f1_level_nfs(mei_sire, hp_maint_nfs_sire)   #todo hp_maint is not the same as level of intake for RE == 0 because it include hp associated with the current level of intake (hp_mei)
+                        temp0 = sfun.f1_level_nfs(mei_sire, hp_maint_nfs_sire, km_sire)   #todo hp_maint is not the same as level of intake for RE == 0 because it include hp associated with the current level of intake (hp_mei)
                         if eqn_used:
                             level_sire = temp0
                         temp0, temp1 = sfun.f_templc(cc_sire, ffcfw_start_sire, rc_start_sire, sl_start_sire, hp_total_nfs_sire
@@ -4284,7 +4325,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_dams
                                 , ck_dams, muscle_start_dams, viscera_start_dams, muscle_target_b0xyg1, mei_dams
-                                , km_dams, md_solid_dams, hp_maint_nfs_dams, dw_dams
+                                , km_dams, md_solid_dams, hp_maint_nfs_dams, hp_mei_nfs_dams, dw_dams
                                 , heat_loss_damsm0p1, days_period_pa1e1b1nwzida0e0b0xyg1[p]
                                 , rev_trait_values['dams'][p], dc_dams, bc_age_f_pa1e1b1nwzida0e0b0xyg1[p], dl_dams
                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
@@ -4311,7 +4352,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpdams[eqn_system, 5, :, p, ...] = temp4
                             r_compare7_q0q2tpdams[eqn_system, 6, :, p, ...] = temp0
 
-                        temp0 = sfun.f1_level_nfs(mei_dams, hp_maint_nfs_dams)
+                        temp0 = sfun.f1_level_nfs(mei_dams, hp_maint_nfs_dams, km_dams)
                         if eqn_used:
                             level_dams = temp0
                         ## calculate lower critical temp because it impacts PI in the next period
@@ -4326,7 +4367,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_offs
                                 , ck_offs, muscle_start_offs, viscera_start_offs, muscle_target_b0xyg3, mei_offs
-                                , km_offs, md_solid_offs, hp_maint_nfs_offs, dw_offs, heat_loss_offsm0p1
+                                , km_offs, md_solid_offs, hp_maint_nfs_offs, hp_mei_nfs_offs, dw_offs, heat_loss_offsm0p1
                                 , days_period_pa1e1b1nwzida0e0b0xyg3[p], rev_trait_values['offs'][p])
                         #use this version of hp_total in f_templc_nfs() in next function call
                         hp_total_nfs_offs = temp6
@@ -4351,7 +4392,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             r_compare7_q0q2tpoffs[eqn_system, 5, :, p, ...] = temp4
                             r_compare7_q0q2tpoffs[eqn_system, 6, :, p, ...] = temp0
 
-                        temp0 = sfun.f1_level_nfs(mei_offs, hp_maint_nfs_offs)
+                        temp0 = sfun.f1_level_nfs(mei_offs, hp_maint_nfs_offs, km_offs)
                         if eqn_used:
                             level_offs = temp0
                         temp0, temp1 = sfun.f_templc(cc_offs, ffcfw_start_offs, rc_start_offs, sl_start_offs, hp_total_nfs_offs
@@ -4362,43 +4403,54 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             temp_lc_offs = temp0  #temp1 not required here
 
                 ###if there is a target then adjust feedsupply, if not break out of feedsupply loop
-                if target_lwc_dams[p] == 9999 and target_lwc_offs[p] == 9999:
+                if np.all(target_ebg_pb1dams[p] == 9999) and np.all(target_ebg_pb0offs[p] == 9999):
                     break
-                print('fs target iteration: ', itn)
-                if target_lwc_dams[p] != 9999 and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p]>0):
-                    ###calc error
-                    #todo lwc_dams = sfun.f1_ebg2lwc(cg_dams, cn_dams, ebg_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p], ebw_start_dams, srw_pa1e1b1nwzida0e0b0xyg1[p_srw], md_solid_dams, eqn_used_g1_q1p[7, p])
-                    error = (ebg_dams * cg_dams[18, ...] * days_period_pa1e1b1nwzida0e0b0xyg1[p]) - target_lwc_dams[p] * (days_period_pa1e1b1nwzida0e0b0xyg1[p]>0) #if 0 days in period then target is 0
+                else:
+                    dams_fs_target_done = False
+                    offs_fs_target_done = False
+                # print('fs target iteration: ', itn)
+                if np.any(target_ebg_pb1dams[p] != 9999) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p]>0):
+                    ###calc error - base on w[0] (active w axis can confuse the fs because high starting w needs much higher diet to get same lwc)
+                    error_dams = (fun.f_dynamic_slice(ebg_dams, w_pos, 0, 1) * days_period_pa1e1b1nwzida0e0b0xyg1[p]) - target_ebg_pb1dams[p] * (days_period_pa1e1b1nwzida0e0b0xyg1[p]>0) #if 0 days in period then target is 0
                     ###store in attempts array - build new array assign old array and then add current itn results - done like this to handle the shape changing and because we don't know what shape feedsupply and error are before this loop starts
                     attempts_dams[...,itn,0] = feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p]
-                    attempts_dams[...,itn,1] = error
+                    attempts_dams[...,itn,1] = error_dams
                     ###is error within tolerance
-                    if np.all(np.abs(error) <= epsilon):
-                        break   #todo does this break out of the offspring loop if the dams are within the limits of epsilon?
+                    if np.all(np.abs(error_dams) <= epsilon):
+                        dams_fs_target_done = True
                     ###max attempts reached
                     elif itn == n_max_itn-1: #minus 1 because range() and hence itn starts from 0
+                        dams_fs_target_done = True
                         ####select best feed supply option
                         best_idx = np.argmin(np.abs(attempts_dams[...,1]),axis=-1)
                         feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p] = np.take_along_axis(attempts_dams[...,0], best_idx[...,na], axis=-1)[...,0] #get rid of singleton itn axis
-                        break  #todo does this break out of the loop so the best offspring feedsupply isn't selected from the options calculated
-                    feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p:p+1] = sfun.f1_feedsupply_adjust(attempts_dams,feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p],itn)
-                if target_lwc_offs[p] != 9999 and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p]>0):
-                    ###calc error
-                    error = (ebg_offs * cg_offs[18, ...] * days_period_pa1e1b1nwzida0e0b0xyg3[p]) - target_lwc_offs[p] * (days_period_pa1e1b1nwzida0e0b0xyg3[p]>0) #if 0 days in period then target is 0
+                    else:
+                        dams_fs_target_done = False
+                        feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p] = sfun.f1_feedsupply_adjust(attempts_dams,feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:,p],itn)
+
+                if np.any(target_ebg_pb0offs[p] != 9999) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p]>0):
+                    ###calc error - base on w[0] (active w axis can confuse the fs because high starting w needs much higher diet to get same lwc)
+                    error_offs = (fun.f_dynamic_slice(ebg_offs, w_pos, 0, 1) * days_period_pa1e1b1nwzida0e0b0xyg3[p]) - target_ebg_pb0offs[p] * (days_period_pa1e1b1nwzida0e0b0xyg3[p]>0) #if 0 days in period then target is 0
                     ###store in attempts array - build new array assign old array and then add current itn results - done like this to handle the shape changing and because we don't know what shape feedsupply and error are before this loop starts
                     attempts_offs[...,itn,0] = feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p]
-                    attempts_offs[...,itn,1] = error
+                    attempts_offs[...,itn,1] = error_offs
                     ###is error within tolerance
-                    if np.all(np.abs(error) <= epsilon):
-                        break
+                    if np.all(np.abs(error_offs) <= epsilon):
+                        offs_fs_target_done = True
                     ###max attempts reached
                     elif itn == n_max_itn-1: #minus 1 because range() and hence itn starts from 0
+                        offs_fs_target_done = True
                         ####select best feed supply option
                         best_idx = np.argmin(np.abs(attempts_offs[...,1]),axis=-1)
                         feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p] = np.take_along_axis(attempts_offs[...,0], best_idx[...,na], axis=-1)[...,0] #get rid of singleton itn axis
-                        break
-                    feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p] = sfun.f1_feedsupply_adjust(attempts_offs,feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p],itn)
+                    else:
+                        offs_fs_target_done = False
+                        feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p] = sfun.f1_feedsupply_adjust(attempts_offs,feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:,p],itn)
                 itn+=1
+
+                ###end target fs loops
+                if (dams_fs_target_done or np.all(target_ebg_pb1dams[p] == 9999)) and (offs_fs_target_done or np.all(target_ebg_pb0offs[p] == 9999)):
+                        break
 
             ##dam weight at a given time during period - used for special events like mating, birth & weaning.
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -4932,7 +4984,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9 = sfun.f_lwc_nfs(cg_yatf
                             , ck_yatf, muscle_start_yatf, viscera_start_yatf, muscle_target_b1xyg2, mei_yatf
-                            , km_yatf, md_solid_yatf, hp_maint_nfs_yatf, dw_yatf, heat_loss_yatfm0p1
+                            , km_yatf, md_solid_yatf, hp_maint_nfs_yatf, hp_mei_nfs_yatf, dw_yatf, heat_loss_yatfm0p1
                             , days_period_pa1e1b1nwzida0e0b0xyg2[p], rev_trait_values['yatf'][p])
                     #use this version of hp_total in f_templc_nfs() in next function call
                     hp_total_nfs_yatf = temp6
@@ -4957,7 +5009,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         r_compare7_q0q2tpyatf[eqn_system, 5, :, p, ...] = temp4
                         r_compare7_q0q2tpyatf[eqn_system, 6, :, p, ...] = temp0
 
-                    temp0 = sfun.f1_level_nfs(mei_yatf, hp_maint_nfs_yatf)
+                    temp0 = sfun.f1_level_nfs(mei_yatf, hp_maint_nfs_yatf, km_yatf)
                     if eqn_used:
                         level_yatf = temp0
                     temp0, temp1 = sfun.f_templc(cc_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, hp_total_nfs_yatf
@@ -5853,16 +5905,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###sorted index of w. used for condensing.
                 idx_sorted_w_dams = np.argsort(ffcfw_dams * condense_w_mask_dams, axis=w_pos)
 
-                ###When using the pkl condensed values there may be cases when they do not have enough spread (e.g.
-                ### the generated condensed animal is heavier than the pkl condensed animal this would result in weight vanishing in the distribution)
-                ### in these cases the pkl condense values are overwritten by the generated condensed values.
-                #### controls if the generated condensed values are used. False means pkl_condensed_values are used.
-                mask_gen_condensed_used_dams = sfun.f1_gen_condensed_used(ffcfw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                                                  , n_fs_dams, len_w1, len_t1, n_fvps_percondense_dams
-                                                                  , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                                                  , adjp_lw_initial_wzida0e0b0xyg1
-                                                                  , pkl_condensed_values['dams'][p], 'o_ffcfw_dams')
-                    
                 ###mask with a true for the z and w slices with the lightest animal
                 mask_min_lw_wz_dams = np.isclose(ffcfw_dams, np.min(ffcfw_dams, axis=(w_pos, z_pos), keepdims=True)) #use isclose in case small rounding error in lw
                 ###mask with a true for the w slice with the lightest animal after taking the weighted average across z
@@ -5900,8 +5942,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                         , mask_max_lw_wz_dams, mask_max_wa_lw_w_dams, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
                 o_ffcfw_lw_dist_tpdams[:,p] = sfun.f1_condensed(ffcfw_season_tdams, idx_sorted_w_dams, condense_w_mask_dams
                                                               , n_fs_dams, len_w1, n_fvps_percondense_dams
-                                                              , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                                              , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'o_ffcfw_dams')  #condensed lw at the end of the period
+                                                              , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])  #condensed lw at the end of the period
                 o_nw_start_tpdams[:,p] = nw_start_dams
                 numbers_join_dams = fun.f_update(numbers_join_dams, numbers_start_dams, period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
                 o_numbers_join_tpdams[:,p] = numbers_join_dams #store the numbers at joining until next
@@ -5969,16 +6010,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                 ###sorted index of w. used for condensing.
                 idx_sorted_w_yatf = np.argsort(ffcfw_yatf * condense_w_mask_yatf, axis=w_pos)
-                
-                ###When using the pkl condensed values there may be cases when they do not have enough spread (e.g.
-                ### the generated condensed animal is heavier than the pkl condensed animal this would result in weight vanishing in the distribution)
-                ### in these cases the pkl condense values are overwritten by the generated condensed values.
-                #### controls if the generated condensed values are used. False means pkl_condensed_values are used.
-                mask_gen_condensed_used_yatf = sfun.f1_gen_condensed_used(ffcfw_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                                                  , n_fs_dams, len_w2, len_t2, n_fvps_percondense_dams
-                                                                  , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                                                  , adjp_lw_initial_wzida0e0b0xyg1 #use dams because yatf are initial dams
-                                                                  , pkl_condensed_values['yatf'][p], 'o_ffcfw_yatf')
 
                 ###mask with a true for the z and w slices with the lightest animal
                 mask_min_lw_wz_yatf = np.isclose(ffcfw_yatf, np.min(ffcfw_yatf, axis=(w_pos, z_pos), keepdims=True)) #use isclose in case small rounding error in lw
@@ -6064,16 +6095,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###sorted index of w. used for condensing.
                 idx_sorted_w_offs = np.argsort(ffcfw_offs * condense_w_mask_offs, axis=w_pos) #set animal
 
-                ###When using the pkl condensed values there may be cases when they do not have enough spread (e.g.
-                ### the generated condensed animal is heavier than the pkl condensed animal this would result in weight vanishing in the distribution)
-                ### in these cases the pkl condense values are overwritten by the generated condensed values.
-                #### controls if the generated condensed values are used. False means pkl_condensed_values are used.
-                mask_gen_condensed_used_offs = sfun.f1_gen_condensed_used(ffcfw_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                                                  , n_fs_offs, len_w3, len_t3, n_fvps_percondense_offs
-                                                                  , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                                                  , adjp_lw_initial_wzida0e0b0xyg3
-                                                                  , pkl_condensed_values['offs'][p], 'o_ffcfw_offs')
-
                 ###mask with a true for f1_season_wa and f_start_prod to identify w & z slices with the lightest animal
                 mask_min_lw_wz_offs = np.isclose(ffcfw_offs, np.min(ffcfw_offs, axis=(w_pos, z_pos), keepdims=True)) #use isclose in case small rounding error in lw
                 ###mask with a true for the w slice with the lightest animal after taking the weighted average across z
@@ -6096,8 +6117,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                                , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
                 o_ffcfw_lw_dist_tpoffs[:,p] = sfun.f1_condensed(ffcfw_season_toffs, idx_sorted_w_offs, condense_w_mask_offs
                                                               , n_fs_offs, len_w3, n_fvps_percondense_offs
-                                                              , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                                              , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'o_ffcfw_offs')  #condensed lw at the end of the period before fvp0
+                                                              , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])  #condensed lw at the end of the period before fvp0
                 o_nw_start_tpoffs[:,p] = nw_start_offs
                 o_mortality_offs[:,p] = mortality_offs
                 o_lw_tpoffs[:,p] = lw_offs
@@ -6194,214 +6214,163 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 ###EBW (condense - empty body weight)
                 ebw_condensed_dams = sfun.f1_condensed(ebw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'ebw_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_condensed_dams = sfun.f1_condensed(nw_start_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'nw_start_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###EBW maximum to date
                 ebw_max_condensed_dams = sfun.f1_condensed(ebw_max_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'ebw_max_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of fat (condense)
                 fat_condensed_dams = sfun.f1_condensed(fat_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'fat_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of muscle (condense)
                 muscle_condensed_dams = sfun.f1_condensed(muscle_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'muscle_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of viscera (condense)
                 viscera_condensed_dams = sfun.f1_condensed(viscera_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'viscera_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Energy in the foetus (condense)
                 c_condensed_dams = sfun.f1_condensed(c_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'c_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (condense)
                 cfw_condensed_dams = sfun.f1_condensed(cfw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'cfw_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (condense)
                 d_cfw_history_condensed_p2g1 = sfun.f1_condensed(d_cfw_history_dams_p2, idx_sorted_w_dams[na,...]
-                                        , condense_w_mask_dams[na,...], n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'d_cfw_history_dams_p2')
+                                        , condense_w_mask_dams[na,...], n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Fibre length since shearing (condense)
                 fl_condensed_dams = sfun.f1_condensed(fl_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'fl_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Average FD since shearing (condense)
                 fd_condensed_dams = sfun.f1_condensed(fd_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'fd_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Minimum FD since shearing (condense)
                 fd_min_condensed_dams = sfun.f1_condensed(fd_min_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'fd_min_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Lagged DR (lactation deficit)
                 ldr_condensed_dams = sfun.f1_condensed(ldr_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'ldr_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Loss of potential milk due to consistent under production
                 lb_condensed_dams = sfun.f1_condensed(lb_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'lb_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Loss of potential milk due to consistent under production
                 rc_birth_condensed_dams = sfun.f1_condensed(rc_birth_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'rc_birth_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of foetus (condense)
                 w_f_condensed_dams = sfun.f1_condensed(w_f_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'w_f_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of gravid uterus (condense)
                 guw_condensed_dams = sfun.f1_condensed(guw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'guw_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Normal weight of foetus (condense)
                 nw_f_condensed_dams = sfun.f1_condensed(nw_f_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'nw_f_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Birth weight carryover (running tally of foetal weight diff)
                 cf_w_b_condensed_dams = sfun.f1_condensed(cf_w_b_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'cf_w_b_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###LTW CFW carryover (running tally of CFW diff)
                 cf_cfwltw_condensed_dams = sfun.f1_condensed(cf_cfwltw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'cf_cfwltw_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###LTW FD carryover (running tally of FD diff)
                 cf_fdltw_condensed_dams = sfun.f1_condensed(cf_fdltw_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'cf_fdltw_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ##dams LTW CFW (total adjustment, calculated at birth)
                 cfw_ltwadj_condensed_dams = sfun.f1_condensed(cfw_ltwadj_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'cfw_ltwadj_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ##dams LTW FD (total adjustment, calculated at birth)
                 fd_ltwadj_condensed_dams = sfun.f1_condensed(fd_ltwadj_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p], 'fd_ltwadj_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 # ###Carry forward conception
                 # cf_conception_condensed_dams = sfun.f1_condensed(cf_conception_dams
                 #                         , idx_sorted_w_dams, condense_w_mask_dams
-                #                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                #                         , pkl_condensed_values['dams'][p],'cf_conception_dams'))
+                #                         , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]))
                 ###Weaning weight carryover (running tally of weaning weight diff)
                 cf_w_w_condensed_dams = sfun.f1_condensed(cf_w_w_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'cf_w_w_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Condition score change carryover (running tally of dam CS change in late pregnancy)
                 cf_csc_condensed_dams = sfun.f1_condensed(cf_csc_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'cf_csc_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Average FOO during lactation (for weaning weight calculation)
                 foo_lact_ave_condensed = sfun.f1_condensed(foo_lact_ave, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_dams, pkl_condensed_values['dams'][p],'foo_lact_ave')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
 
             ###yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 ###EBW (condense - fleece free conceptus free)
                 ebw_condensed_yatf = sfun.f1_condensed(ebw_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'ebw_yatf')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_condensed_yatf = sfun.f1_condensed(nw_start_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'nw_start_yatf')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###EBW maximum to date
                 ebw_max_condensed_yatf = sfun.f1_condensed(ebw_max_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'ebw_max_yatf')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of fat (condense)
                 fat_condensed_yatf = sfun.f1_condensed(fat_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'fat_yatf')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of muscle (condense)
                 muscle_condensed_yatf = sfun.f1_condensed(muscle_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'muscle_yatf')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Weight of viscera (condense)
                 viscera_condensed_yatf = sfun.f1_condensed(viscera_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'viscera_yatf')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (condense)
                 cfw_condensed_yatf = sfun.f1_condensed(cfw_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'cfw_yatf')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (condense)
                 d_cfw_history_condensed_p2g2 = sfun.f1_condensed(d_cfw_history_yatf_p2, idx_sorted_w_yatf[na,...], condense_w_mask_yatf[na,...]
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'d_cfw_history_yatf_p2')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Fibre length since shearing (condense)
                 fl_condensed_yatf = sfun.f1_condensed(fl_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'fl_yatf')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Average FD since shearing (condense)
                 fd_condensed_yatf = sfun.f1_condensed(fd_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'fd_yatf')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Minimum FD since shearing (condense)
                 fd_min_condensed_yatf = sfun.f1_condensed(fd_min_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'fd_min_yatf')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ##yatf birth weight
                 w_b_condensed_yatf = sfun.f1_condensed(w_b_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'w_b_yatf')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ##yatf wean weight
                 ebw_w_condensed_yatf = sfun.f1_condensed(ebw_w_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , mask_gen_condensed_used_yatf, pkl_condensed_values['yatf'][p],'ebw_w_yatf')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
             ###offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                 ###EBW (condense - empty body weight)
                 ebw_condensed_offs = sfun.f1_condensed(ebw_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'ebw_offs')
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_condensed_offs = sfun.f1_condensed(nw_start_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'nw_start_offs')
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###FFCFW maximum to date
                 ebw_max_condensed_offs = sfun.f1_condensed(ebw_max_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'ebw_max_offs')
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Weight of fat (condense)
                 fat_condensed_offs = sfun.f1_condensed(fat_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'fat_offs')
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Weight of muscle (condense)
                 muscle_condensed_offs = sfun.f1_condensed(muscle_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'muscle_offs')
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Weight of viscera (condense)
                 viscera_condensed_offs = sfun.f1_condensed(viscera_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'viscera_offs')
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Clean fleece weight (condense)
                 cfw_condensed_offs = sfun.f1_condensed(cfw_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'cfw_offs')
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Clean fleece weight (condense)
                 d_cfw_history_condensed_p2g3 = sfun.f1_condensed(d_cfw_history_offs_p2, idx_sorted_w_offs[na,...], condense_w_mask_offs[na,...]
-                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'d_cfw_history_offs_p2')
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Fibre length since shearing (condense)
                 fl_condensed_offs = sfun.f1_condensed(fl_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'fl_offs')
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Average FD since shearing (condense)
                 fd_condensed_offs = sfun.f1_condensed(fd_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'fd_offs')
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Minimum FD since shearing (condense)
                 fd_min_condensed_offs = sfun.f1_condensed(fd_min_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , mask_gen_condensed_used_offs, pkl_condensed_values['offs'][p],'fd_min_offs')
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
 
             ##condense end numbers - have to condense the numbers before calc start production, but need to condense production using non-condensed end numbers
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
@@ -6410,18 +6379,15 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 numbers_end_condensed_dams = sfun.f1_condensed(numbers_end_dams, idx_sorted_w_dams, condense_w_mask_dams
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , pkl_condensed_values['dams'][p],'numbers_end_dams')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 numbers_end_condensed_yatf = sfun.f1_condensed(numbers_end_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
-                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]
-                                        , pkl_condensed_values['yatf'][p],'numbers_end_yatf')
+                                        , n_fs_dams, len_w1, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] > 0):
                 numbers_end_condensed_offs = sfun.f1_condensed(numbers_end_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]
-                                        , pkl_condensed_values['offs'][p],'numbers_end_offs')
+                                        , n_fs_offs, len_w3, n_fvps_percondense_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
 
             ##start production - this requires condensed end numbers
             ###sire
@@ -6909,6 +6875,62 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
                 numbers_start_condense_offs = fun.f_update(numbers_start_condense_offs, numbers_start_offs
                                                            , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
+
+            ##adjust FS based on condensed animal
+            ##the optimal feedsupply is generated for a given start weight. However, in the trial where the pkl'd optimal FS is used the start animal may be different because of any SA applied.
+            ##The code below compares the start animal when the FS was created with the current start animal and selects a weighted average of the pkl FS based on starting weight.
+            ##e.g. if the current start animal is 50kgs but the pkl start weights are 45kg and 55kg, the optimal fs for the current start animal will be 50% of the pkl fs for each start weight.
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
+                if sinp.structuralsa['i_fs_use_pkl']:
+                    ###update the fs startw allocation - at period_is_condense
+                    if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]): #using p+1 because this is being calculated at the end of the loop for next period.
+                        ###slice the w axis just for the starting w slices.
+                        pkl_ebw_condensed_dams = pkl_condensed_values['dams'][p]['ebw_dams']
+                        pkl_ebw_condensed_dams = fun.f_dynamic_slice(pkl_ebw_condensed_dams, w_pos, start=0, stop=None,
+                                                                     step=int(pkl_ebw_condensed_dams.shape[w_pos] / w_start_len1))
+                        t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9 = sfun.f1_lw_distribution(pkl_ebw_condensed_dams,
+                                                                                                ebw_condensed_dams,
+                                                                                                for_feedsupply=True)
+                        fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9 = fun.f_update(fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9,
+                                                                                   t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9,
+                                                                                   period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1,...,na])
+                    ###adjust the fs - every period
+                    ####add start w axis
+                    temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1s = np.moveaxis(fun.f_split_axis(feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, p + 1, ...], w_start_len1, w_pos), w_pos - 1, -1)
+                    fs_w_allocation_s8ta1e1b1nw8zida0e0b0xyg1s9 = np.moveaxis(fun.f_split_axis(fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg1s9, w_start_len1, w_pos - 1), w_pos - 2, 0)
+                    temp_feedsupplyw_s8ta1e1b1nwzida0e0b0xyg1 = np.sum(temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1s * fs_w_allocation_s8ta1e1b1nw8zida0e0b0xyg1s9, axis=-1)
+                    ####remove start w axis
+                    temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1 = fun.f_merge_axis(temp_feedsupplyw_s8ta1e1b1nwzida0e0b0xyg1, 0, w_pos)
+                    feedsupplyw_tpa1e1b1nwzida0e0b0xyg1[:, p + 1, ...] = temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg1
+                ###save the condensed ebw for the next trial
+                if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1]) and sinp.structuralsa['i_fs_create_pkl']:
+                    pkl_condensed_values['dams'][p]['ebw_dams'] = ebw_condensed_dams
+
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
+                if sinp.structuralsa['i_fs_use_pkl']:
+                    ###update the fs startw allocation - at period_is_condense
+                    if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]):
+                        ###slice the w axis just for the starting w slices.
+                        pkl_ebw_condensed_offs = pkl_condensed_values['offs'][p]['ebw_offs']
+                        pkl_ebw_condensed_offs = fun.f_dynamic_slice(pkl_ebw_condensed_offs, w_pos, start=0, stop=None,
+                                                                     step=int(pkl_ebw_condensed_offs.shape[w_pos] / w_start_len3))
+                        t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = sfun.f1_lw_distribution(pkl_ebw_condensed_offs,
+                                                                                                ebw_condensed_offs,
+                                                                                                for_feedsupply=True)
+                        fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9 = fun.f_update(fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9,
+                                                                                   t_fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9,
+                                                                                   period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1,...,na])
+                    ###adjust the fs - evey period
+                    ####add start w axis
+                    temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg3s = np.moveaxis(fun.f_split_axis(feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:, p + 1, ...], w_start_len3, w_pos), w_pos - 1, -1)
+                    fs_w_allocation_s8ta1e1b1nw8zida0e0b0xyg3s9 = np.moveaxis(fun.f_split_axis(fs_w_reallocation_ta1e1b1nw8zida0e0b0xyg3s9, w_start_len3, w_pos - 1), w_pos - 2, 0)
+                    temp_feedsupplyw_s8ta1e1b1nwzida0e0b0xyg3 = np.sum(temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg3s * fs_w_allocation_s8ta1e1b1nw8zida0e0b0xyg3s9, axis=-1)
+                    ####remove start w axis
+                    temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg3 = fun.f_merge_axis(temp_feedsupplyw_s8ta1e1b1nwzida0e0b0xyg3, 0, w_pos)
+                    feedsupplyw_tpa1e1b1nwzida0e0b0xyg3[:, p + 1, ...] = temp_feedsupplyw_ta1e1b1nwzida0e0b0xyg3
+                if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1]) and sinp.structuralsa['i_fs_create_pkl']:
+                    pkl_condensed_values['offs'][p]['ebw_offs'] = ebw_condensed_offs
+
             ##This is the end of the p loop
 
         ## Calculate LTW sfw multiplier & sfd addition then repeat the generator loops with updated LTW adjuster
@@ -8452,8 +8474,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                                                * (nfoet_b1nwzida0e0b0xyg >= 1)) #If scanning for foetal age add 10 to the animals in the second & subsequent cycles that were scanned as pregnant (nfoet_b1 >= 1)
     ### Cluster with a t axis required for k29 which is associated with tvgg9. na to put result in g9 axis
     a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9 = np.take_along_axis(a_k2cluster_va1e1b1nwzida0e0b0xyg1[na], a_g1_tpa1e1b1nwzida0e0b0xyg1, axis=-1)[..., na, :]
-    ### a temporary array that is the cluster at prejoining with not mated (0) and mated (1) along the b1 axis
-    temporary = np.ones_like(a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9)
+    ### a temporary array that is the cluster at prejoining with not mated (0) and mated (2) along the b1 axis
+    temporary = np.ones_like(a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9) + 1
     temporary[:,:,:,:,0,...] = 0
     a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(np.roll(a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9, -1, axis=1), temporary,
                                           (a_g1_tpa1e1b1nwzida0e0b0xyg1[..., na, :] != index_g1g) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na])
@@ -9144,12 +9166,25 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ####Only different from the total because it excludes those providing to the same period
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = (numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9
                                                             - numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9)
-    ###combine nm and 00 cluster for the numbers provided to the prejoining period (so matrix can optimise choice of joining or not)
+    ###at prejoining make all k28 animals provide k29[nm] - except the first prejoining (ewe lamb) if fs is being optimised. This is because we want to make sure the feedsupply for b[2] (b11) in dvp[0] represents an animal that is expected to be mated.
+    trail_is_fs_optimisation = sinp.structuralsa['i_fs_create_pkl']
+    dvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1 == prejoining_oa1e1b1nwzida0e0b0xyg1[0]
+    nextdvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1 = np.roll(dvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1, shift=-1, axis=0)
     temporary = np.sum(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary,
-                                                                        dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:, :, :, 0:1, ..., na,na] == prejoin_vtype1)  #take slice 0 of e (for prejoining all e slices are the same)
-    ###combine nm and 00 cluster (so matrix can optimise choice of joining or not). DVP type of destination is always 0 for the "provide this period" so don't need to test
-    numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = np.sum(numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
+                                                                        np.logical_and(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == prejoin_vtype1,
+                                                                                       np.logical_not(np.logical_and(nextdvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1,
+                                                                                                                     trail_is_fs_optimisation)))[:, :, :, 0:1, ..., na,na])  # take slice 0 of e (for prejoining all e slices are the same)
+
+
+
+    ###at prejoining make all k28 animals provide k29[nm] - except the first prejoining (ewe lamb) if fs is being optimised. This is because we want to make sure the feedsupply for b[2] (b11) in dvp[0] represents an animal that is expected to be mated.
+    temporary = np.sum(numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
+    numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary,
+                                                                            np.logical_and(dvp_type_va1e1b1nwzida0e0b0xyg1 == prejoin_vtype1,
+                                                                                           np.logical_not(np.logical_and(dvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1,
+                                                                                                                         trail_is_fs_optimisation)))[:, :, 0:1, ..., na,na])  #take slice 0 of e (for prejoining all e slices are the same)
+
     ###combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
     #todo can't just sum across the 'a' slice (decision variable), to allow a0 to provide a1 we will need another 'a' axis (see google doc) - fix this in version 2
     # temporary = np.sum(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=a1_pos-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
@@ -9179,10 +9214,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,:,:,b1:b1+1,...] == index_k2tva1e1b1nwzida0e0b0xyg1))[...,na,na]
                                                                        , axis = (e1_pos-2), keepdims=True)
     numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = (numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9>0) *1 #*1 to change to float instead of bool
-    ####combine nm and 00 cluster for prejoining to scanning
+    ####at prejoining make all k28 animals require from k29[nm] - except the first prejoining (ewe lamb) if fs is being optimised. This is because we want to make sure the feedsupply for b[2] (b11) in dvp[0] represents an animal that is expected to be mated.
     temporary = np.sum(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
     numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary,
-                                                                        dvp_type_va1e1b1nwzida0e0b0xyg1[:, :, 0:1, ..., na,na] == prejoin_vtype1)  #take slice 0 of e (for prejoining all e slices are the same)
+                                                                        np.logical_and(dvp_type_va1e1b1nwzida0e0b0xyg1 == prejoin_vtype1,
+                                                                                       np.logical_not(np.logical_and(dvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1,
+                                                                                                                     trail_is_fs_optimisation)))[:, :, 0:1, ..., na,na])  #take slice 0 of e (for prejoining all e slices are the same)
+
     ####combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
     #todo can't just sum across the 'a' slice (decision variable), to allow a0 to provide a1 we will need another 'a' axis (see google doc)
     # temporary = np.sum(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=a1_pos-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
@@ -9385,7 +9423,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     for d in range(len_d): #loop on b1 to reduce memory
         numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 += 1 * np.sum(np.any(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9 * mask_z8var_va1e1b1nwzida0e0b0xyg1[...,na], axis=e1_pos-1, keepdims=True)[0, ...,na,:]
                                                                         * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,:,0:1,...,na,na]  # mask based on the t axis for dvp0
-                                                                        * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0) #only NM slice requires prog
                                                                         * (index_g1[...,na]==index_g1)[...,na]
                                                                         * btrt_propn_b0xyg1[...,na,na].astype(dtype)   #todo this would be better if it had a d axis in this calculation so that propn of DST could vary by age of the dam e.g. if replacing flock with more prog from young ewes there would be more single prog making up the starting animal.
                                                                         * e0_propn_ida0e0b0xyg[...,na,na].astype(dtype)
@@ -9425,7 +9462,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ####add s7 axis to sale weight so that emission intensity can be looked at for different meat sales ie emission intensity for lamb
     index_s7tpg = fun.f_expand(np.arange(len(uinp.sheep['i_salegrid_keys'])), p_pos-2)
     sale_ffcfw_s7tva1e1b1nwzida0e0b0xyg1 = sale_ffcfw_tva1e1b1nwzida0e0b0xyg1 * (index_s7tpg == r_salegrid_tva1e1b1nwzida0e0b0xyg1)
-    ffcfw_prog_a0e0b0_s7tva1e1b1nwzida0e0b0xyg2 = ffcfw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 * (index_s7tpg == 0) #saying that all prog are sold in lamb grid (save trying to put the salegrid_yatf variable through the prog transformation)
     sale_ffcfw_s7tva1e1b1nwzida0e0b0xyg3 = sale_ffcfw_tva1e1b1nwzida0e0b0xyg3 * (index_s7tpg == r_salegrid_tva1e1b1nwzida0e0b0xyg3)
     ####dams
     sale_ffcfw_s7k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams',sale_ffcfw_s7tva1e1b1nwzida0e0b0xyg1[:,na,...],
@@ -9434,13 +9470,22 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                                             numbers_start_vg=numbers_start_tva1e1b1nwzida0e0b0xyg1,
                                                                             mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
     ####prog - t[0] is sale t so set t[1&2] to 0.
-    sale_ffcfw_prog_s7k3k5tva1e1b1nwzida0e0b0xyg2 = sfun.f1_create_production_param('offs',
-                                                                ffcfw_prog_a0e0b0_s7tva1e1b1nwzida0e0b0xyg2[:,na,na,...] * (index_tpa1e1b1nwzida0e0b0xyg2==0),
-                                                                a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3,
-                                                                a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3) #can use off cluster function because same for prog.
+    sale_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(ffcfw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 * (index_tpa1e1b1nwzida0e0b0xyg2==0)
+                                                       * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
+                                                       * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
+                                                       , weights=numbers_start_d_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2
+                                                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
+                                                                 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
+                                                       , axis=(d_pos, b0_pos, e0_pos), keepdims=True) #have to do a weighted average instead of using the cluster function because prog_ffcfw has not been multipled by number
+    sale_ffcfw_prog_s7k3k5tva1e1b1nwzida0e0b0xyg2 = sale_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg2 * (index_s7tpg[:,na,na,...] == 0) #all prog are sold in lamb grid (save trying to put the salegrid_yatf variable through the prog transformation)
     ####offs
     sale_ffcfw_s7k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs',
                                             sale_ffcfw_s7tva1e1b1nwzida0e0b0xyg3[:,na,na,...], a_k3cluster_da0e0b0xyg3,
+                                            index_k3k5tva1e1b1nwzida0e0b0xyg3, a_k5cluster_da0e0b0xyg3,
+                                            index_k5tva1e1b1nwzida0e0b0xyg3, numbers_start_tva1e1b1nwzida0e0b0xyg3,
+                                            mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
+    sale_ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs',
+                                            sale_ffcfw_tva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3,
                                             index_k3k5tva1e1b1nwzida0e0b0xyg3, a_k5cluster_da0e0b0xyg3,
                                             index_k5tva1e1b1nwzida0e0b0xyg3, numbers_start_tva1e1b1nwzida0e0b0xyg3,
                                             mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
@@ -9973,6 +10018,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ###create p7 allocation
     alloc_p7k2tva1e1b1nwzida0e0b0xyg1 = zfun.f1_z_period_alloc(dvp_start_k2tva1e1b1nwzida0e0b0xyg1[na, ...], z_pos=z_pos)
     alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3 = zfun.f1_z_period_alloc(dvp_start_k3k5tva1e1b1nwzida0e0b0xyg3[na, ...], z_pos=z_pos)
+    ####prog are a bit different since no v axis - therefore based off date weaned.
+    period_is_wean_d_pa1e1b1nwzida0e0b0xyg2 = period_is_wean_pa1e1b1nwzida0e0b0xyg2 *  (a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2==index_da0e0b0xyg)
+    period_is_wean_d_p7tva1e1b1nwzida0e0b0xyg2 = np.sum(alloc_p7tpa1e1b1nwzida0e0b0xyg * period_is_wean_d_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], axis=p_pos, keepdims=True)  #weaning doesnt differ by e
+    wean_alloc_p7k3k5tva1e1b1nwzida0e0b0xyg2 = np.sum(period_is_wean_d_p7tva1e1b1nwzida0e0b0xyg2[:,na,na,...] * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3)
+                                                      , axis=d_pos, keepdims=True) > 0
 
     ##add p7 axis to dams and offs
     ###dams
@@ -10114,7 +10164,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     params['y_idx_sire'] = keys_y0
     params['dvp_idx_dams'] = keys_v1
     params['w_idx_dams'] = keys_lw1
+    params['startw_idx_dams'] = keys_lw1[0:w_start_len1]
     params['w_idx_offs'] = keys_lw3
+    params['startw_idx_offs'] = keys_lw3[0:w_start_len3]
     params['g_idx_dams'] = keys_g1
     params['g_idx_yatf'] = keys_g2
     params['k2_idx_dams'] = keys_k2
@@ -10531,29 +10583,34 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     arrays_tvzg1 = [keys_t1, keys_v1, keys_z, keys_g1]
     params['p_dams_lobound'] = fun.f1_make_pyomo_dict(bnd_lower_dams_tva1e1b1nwzida0e0b0xyg1, arrays_tvzg1)
 
+    ###for fs optimisation lo bnd is across starting w - create param that links starting w with w
+    params['p_dams_w_is_startw_ws'] = fun.f1_make_pyomo_dict(np.arange(w_start_len1)[na,:]==a_wstart_w1[:,na], [keys_lw1, keys_lw1[0:w_start_len1]])
+
     ##upper bound dams
-    ### this bound can be defined with either tog1 axes or tvg1 axes in exp.xl. Uncomment the relevant code to align with exp.xl
+    ### this bound can be defined with either tog1 axes or tvg1 axes in exp.xl. Use the relevant one in exp.xl
     ### Note: if using the V axis, be aware of changes that might add slices to the v axis (season nodes, or new DVPs) that will alter the outcome of the bound defined in exp.xl
-    # bnd_upper_dams_tog1 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_dams_tog1'], 5) #999999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
-    # bnd_upper_dams_tog1[bnd_upper_dams_tog1==999999] = np.inf
-    # bnd_upper_dams_toa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_upper_dams_tog1, left_pos=p_pos, right_pos=-1,
-    #                                                 condition=mask_t1, axis=p_pos-1, condition2=mask_o_dams, axis2=p_pos, condition3=mask_dams_inc_g1, axis3=-1)
-    # bnd_upper_dams_tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(bnd_upper_dams_toa1e1b1nwzida0e0b0xyg1,
-    #                                                             a_prev_o_va1e1b1nwzida0e0b0xyg1[na,:,:,0:1,...], #take e[0] because o is not effected by e
-    #                                                             axis=p_pos)  # increments at prejoining
-    bnd_upper_dams_tVg1 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_dams_tVg1'], 5) #999999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
-    bnd_upper_dams_tVg1[bnd_upper_dams_tVg1==999999] = np.inf
-    bnd_upper_dams_tVa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_upper_dams_tVg1, left_pos=p_pos, right_pos=-1,
-                                                    condition=mask_t1, axis=p_pos-1, condition2=mask_dams_inc_g1, axis2=-1)
-    bnd_upper_dams_tVa1e1b1nwzida0e0b0xyg1 = bnd_upper_dams_tVa1e1b1nwzida0e0b0xyg1 * (index_zidaebxyg==index_zidaebxyg) #need to activate z axis because z is active if you use the upbound method above.
-    ### slice the approximated V axis created in Sensitivity.py to the correct length
-    bnd_upper_dams_tva1e1b1nwzida0e0b0xyg1 = bnd_upper_dams_tVa1e1b1nwzida0e0b0xyg1[:, 0:len_v1, ...]
-    arrays_tvzg1 = [keys_t1, keys_v1, keys_z, keys_g1]
-    params['p_dams_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_dams_tva1e1b1nwzida0e0b0xyg1, arrays_tvzg1)
+    if (sen.sav['bnd_up_dams_K2tog1']!="-").any():
+        bnd_upper_dams_k2tog1 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_dams_K2tog1'][:len_k2,...], 5) #999999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
+        bnd_upper_dams_k2tog1[bnd_upper_dams_k2tog1==999999] = np.inf
+        bnd_upper_dams_k2toa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_upper_dams_k2tog1, left_pos=p_pos, right_pos=-1,
+                                                        condition=mask_t1, axis=p_pos-1, condition2=mask_o_dams, axis2=p_pos, condition3=mask_dams_inc_g1, axis3=-1)
+        bnd_upper_dams_k2tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(bnd_upper_dams_k2toa1e1b1nwzida0e0b0xyg1,
+                                                                    a_prev_o_va1e1b1nwzida0e0b0xyg1[na,na,:,:,0:1,...], #take e[0] because o is not effected by e
+                                                                    axis=p_pos)  # increments at prejoining
+    else:
+        bnd_upper_dams_k2tVg1 = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_up_dams_K2tVg1'][:len_k2,...], 5) #999999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
+        bnd_upper_dams_k2tVg1[bnd_upper_dams_k2tVg1==999999] = np.inf
+        bnd_upper_dams_k2tVa1e1b1nwzida0e0b0xyg1 = fun.f_expand(bnd_upper_dams_k2tVg1, left_pos=p_pos, right_pos=-1,
+                                                        condition=mask_t1, axis=p_pos-1, condition2=mask_dams_inc_g1, axis2=-1)
+        bnd_upper_dams_k2tVa1e1b1nwzida0e0b0xyg1 = bnd_upper_dams_k2tVa1e1b1nwzida0e0b0xyg1 * (index_zidaebxyg==index_zidaebxyg) #need to activate z axis because z is active if you use the upbound method above.
+        ### slice the approximated V axis created in Sensitivity.py to the correct length
+        bnd_upper_dams_k2tva1e1b1nwzida0e0b0xyg1 = bnd_upper_dams_k2tVa1e1b1nwzida0e0b0xyg1[:, :, 0:len_v1, ...]
+    arrays_k2tvzg1 = [keys_k2, keys_t1, keys_v1, keys_z, keys_g1]
+    params['p_dams_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_dams_k2tva1e1b1nwzida0e0b0xyg1, arrays_k2tvzg1)
 
     ##proportion of dams mated. inf means the model can optimise the proportion because inf is used to skip the constraint.
     prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
-    prop_dams_mated_va1e1b1nwzida0e0b0xyg1[np.logical_not(dvp_is_mating)] = np.inf
+    prop_dams_mated_va1e1b1nwzida0e0b0xyg1[np.logical_not(dvp_is_scan)] = np.inf #use scan dvp so that ewes sold at prejoin are not counted (there can be ewes sold at the begining of the dvp)
     #prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = fun.f_update(prop_dams_mated_va1e1b1nwzida0e0b0xyg1, dvp_is_mating==0, np.inf)
     arrays_vzg1 = [keys_v1, keys_z, keys_g1]
     params['p_prop_dams_mated'] = fun.f1_make_pyomo_dict(prop_dams_mated_va1e1b1nwzida0e0b0xyg1, arrays_vzg1)
@@ -10591,6 +10648,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     params['p_scan_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==scan_vtype1] #get the dvp keys which are scan (same for all animals hence take slice 0)
 
     ##lower bound offs
+    ###for fs optimisation lo bnd is across starting w - create param that links starting w with w
+    params['p_offs_w_is_startw_ws'] = fun.f1_make_pyomo_dict(np.arange(w_start_len3)[na,:]==a_wstart_w3[:,na], [keys_lw3, keys_lw3[0:w_start_len3]])
     ###build a mask which indicates if there is a future shearing
     t_period_is_shearing_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(period_is_mainshearing_pa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3)
     future_shearing_exists_tva1e1b1nwzida0e0b0xyg3 = np.flip(np.maximum.accumulate(np.flip(t_period_is_shearing_va1e1b1nwzida0e0b0xyg3, axis=p_pos), axis=p_pos), axis=p_pos)
@@ -10680,8 +10739,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             user_lw_change_k2tva1e1b1nszida0e0b0xyg1 = np.maximum(user_lw_change, np.min(lw_diff_from_base_k2tva1e1b1nswzida0e0b0xyg1, axis=w_pos))
             user_lw_change_k3k5tva1e1b1nszida0e0b0xyg3 = np.maximum(user_lw_change, np.min(lw_diff_from_base_k3k5tva1e1b1nswzida0e0b0xyg3, axis=w_pos))
         ####expand start w axis back to the full w axis
-        a_wstart_w1 = np.floor(index_w1 / len_nut_dams).astype(int) #identify the start w slice (nut 0) for each w
-        a_wstart_w3 = np.floor(index_w3 / len_nut_offs).astype(int) #identify the start w slice (nut 0) for each w
         user_lw_change_k2tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(user_lw_change_k2tva1e1b1nszida0e0b0xyg1, a_wstart_w1[na,na,na,na,na,na,na,:,na,na,na,na,na,na,na,na,na], axis=w_pos)
         user_lw_change_k3k5tva1e1b1nwzida0e0b0xyg3 = np.take_along_axis(user_lw_change_k3k5tva1e1b1nszida0e0b0xyg3, a_wstart_w3[na,na,na,na,na,na,na,na,:,na,na,na,na,na,na,na,na,na], axis=w_pos)
         ###make the param for the bnd - difference between target lw change and lw change of each w slice (this gets bnd to 0)
@@ -10752,8 +10809,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     keys_s3 = np.array(['s%s'%i for i in range(len_s3)])
     keys_p = np.array(['p%s'%i for i in range(len_p)])
     keys_p3 = keys_p[mask_p_offs_p]
-    keys_year_offs =  np.array((['Lambs']+['Year%s'%i for i in range(dvp_is_shear_or_weaning_yvg3.shape[0])[1:]]))
-    keys_year_dams =  np.array((['Lambs']+['Year%s'%i for i in range(dvp_is_mating_or_weaning_yvg1.shape[0])[1:]]))
+    keys_year_offs =  np.array((['Lambs']+['%s yr old'%i for i in range(dvp_is_shear_or_weaning_yvg3.shape[0])[1:]]))
+    keys_year_dams =  np.array((['Lambs']+['%s yr old'%i for i in range(dvp_is_mating_or_weaning_yvg1.shape[0])[1:]]))
 
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_z, keys_g0],'sire_keys_qszg0')
     fun.f1_make_r_val(r_vals,[keys_q, keys_s, keys_p6, keys_f, keys_z, keys_g0],'sire_keys_qsp6fzg0')
@@ -10825,7 +10882,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ####std
     zg0_shape = len_z, len_g0
     k2tva1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    k5twzidaxyg2_shape = len_k5, len_t2, len_w_prog, len_z, len_i, len_d, len_a1, len_x, len_g2
+    k3k5twziaxyg2_shape = len_k3, len_k5, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
     k3k5tvnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####std
@@ -10914,6 +10971,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ###shearing or weaning offs - with a y (year axis)
     tyvzixg3_shape = len_t3, len(keys_year_offs), len_v3, len_z, len_i, len_x, len_g3
     fun.f1_make_r_val(r_vals,dvp_is_sale_tyvg3,'dvp_is_sale_tyvzixg3', shape=tyvzixg3_shape)
+
+    ##link between p7 and v - used as denom weights in some reports if you dont want to report p7
+    ###dams
+    p7k2vzig1_shape = len_p7, len_k2, len_v1, len_z, len_i, len_g1
+    fun.f1_make_r_val(r_vals,alloc_p7k2tva1e1b1nwzida0e0b0xyg1,'alloc_p7k2vzig1', shape=p7k2vzig1_shape)
+    ###yatf - needs link between p7 and weaning
+    p7k3zg2_shape = len_p7, len_k3, len_z, len_g2
+    fun.f1_make_r_val(r_vals,wean_alloc_p7k3k5tva1e1b1nwzida0e0b0xyg2,'wean_alloc_p7k3zg2', shape=p7k3zg2_shape)
+    ###offs
+    p7k3vzixg3_shape = len_p7, len_k3, len_v3, len_z, len_i, len_x, len_g3
+    fun.f1_make_r_val(r_vals,alloc_p7k3k5tva1e1b1nwzida0e0b0xyg3,'alloc_p7k3vzixg3', shape=p7k3vzixg3_shape)
 
     ###z8 masks for unclustering lp_vars
     fun.f1_make_r_val(r_vals,mask_z8var_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:],'maskz8_k2tvanwziy1g1') #slice off unused axis
@@ -11036,7 +11104,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ###sale weight for emission intensity report
     fun.f1_make_r_val(r_vals,sale_ffcfw_s7k2tva1e1b1nwzida0e0b0xyg1,'sale_ffcfw_s7k2tva1nwziyg1',mask_z8var_k2tva1e1b1nwzida0e0b0xyg1,z_pos, s7k2tva1nwziyg1_shape)
     fun.f1_make_r_val(r_vals,sale_ffcfw_prog_s7k3k5tva1e1b1nwzida0e0b0xyg2,'sale_ffcfw_s7k3k5twziaxyg2',None,z_pos, s7k3k5twziaxyg2_shape) #no v axis so dont need to uncluster z
+    fun.f1_make_r_val(r_vals,sale_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg2,'sale_ffcfw_k3k5twziaxyg2',None,z_pos, k3k5twziaxyg2_shape) #no v axis so dont need to uncluster z
     fun.f1_make_r_val(r_vals,sale_ffcfw_s7k3k5tva1e1b1nwzida0e0b0xyg3,'sale_ffcfw_s7k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, s7k3k5tvnwziaxyg3_shape)
+    fun.f1_make_r_val(r_vals,sale_ffcfw_k3k5tva1e1b1nwzida0e0b0xyg3,'sale_ffcfw_k3k5tvnwziaxyg3',mask_z8var_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos, k3k5tvnwziaxyg3_shape)
 
     ###mei and pi
     fun.f1_make_r_val(r_vals,mei_p6ftva1e1b1nwzida0e0b0xyg0,'mei_sire_p6fzg0',mask_fp_z8var_p6tva1e1b1nwzida0e0b0xyg[:,na,...],z_pos, p6fzg0_shape)

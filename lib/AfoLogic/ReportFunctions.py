@@ -650,7 +650,7 @@ def f_summary(lp_vars, r_vals, trial):
     arith = 2
     index = []
     cols = []
-    axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
+    axis_slice = {2:[1,None,1], 3:[2,None,1]} #slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
     ##pasture %
@@ -1094,19 +1094,19 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
     maskz8_zp6 = r_vals['pas']['mask_fp_z8var_p6z'].T
 
     ##grain fed
-    grain_fed_qszkgvp6 = f_vars2df(lp_vars, 'v_sup_con', maskz8_zp6[:,na,na,na,:], z_pos=-5)
+    grain_fed_qszk3gvp6 = f_vars2df(lp_vars, 'v_sup_con', maskz8_zp6[:,na,na,na,:], z_pos=-5)
 
     if option == 1:
-        grain_fed_qszp6 = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 6)).sum()  # sum feed pool, landuse and grain pool
+        grain_fed_qszp6 = grain_fed_qszk3gvp6.groupby(level=(0, 1, 2, 6)).sum()  # sum feed pool, landuse and grain pool
         return grain_fed_qszp6.to_frame()
 
     if option == 2:
-        grain_fed_qszkp6 = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 3, 6)).sum()  # sum feed pool and grain pool
-        return grain_fed_qszkp6
+        grain_fed_qszk3p6 = grain_fed_qszk3gvp6.groupby(level=(0, 1, 2, 3, 6)).sum()  # sum feed pool and grain pool
+        return grain_fed_qszk3p6
 
     if option == 3:
-        grain_fed_qszkfp6 = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 3, 5, 6)).sum()  # sum grain pool
-        return grain_fed_qszkfp6
+        grain_fed_qszk3fp6 = grain_fed_qszk3gvp6.groupby(level=(0, 1, 2, 3, 5, 6)).sum()  # sum grain pool
+        return grain_fed_qszk3fp6
 
     if option == 4:
         keys_q = r_vals['zgen']['keys_q']
@@ -1115,7 +1115,7 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
         z_prob_qsz = r_vals['zgen']['z_prob_qsz']
         z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
-        grain_fed_qsz = grain_fed_qszkgvp6.groupby(level=(0,1,2)).sum() #sum all axis except season ones (q,s,z)
+        grain_fed_qsz = grain_fed_qszk3gvp6.groupby(level=(0,1,2)).sum() #sum all axis except season ones (q,s,z)
         ###stdev and range
         grain_fed_mean = grain_fed_qsz.mul(z_prob_qsz).sum()
         ma_grain_fed_qsz = np.ma.masked_array(grain_fed_qsz, z_prob_qsz == 0)
@@ -1129,38 +1129,43 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         ##create dict to store grain variables
         grain = {}
         ##prices
-        grains_sale_price_zks2gq_p7 = r_vals['crop']['grain_price'].stack([0,2]).reorder_levels([4,0,1,2,3]).sort_index()
-        grains_buy_price_zks2gq_p7 = r_vals['sup']['buy_grain_price'].stack([0,2]).reorder_levels([4,0,1,2,3]).sort_index()
+        grains_sale_price_zk1s2gq_p7 = r_vals['crop']['grain_price'].stack([0,2]).reorder_levels([4,0,1,2,3]).sort_index()
+        grains_buy_price_zk3s2gq_p7 = r_vals['sup']['buy_grain_price'].stack([0,2]).reorder_levels([4,0,1,2,3]).sort_index()
 
         ##grain purchased
-        grain_purchased_qsp7zks2g = f_vars2df(lp_vars,'v_buy_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
-        grain_purchased_qszks2g = grain_purchased_qsp7zks2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
-        grain_purchased_zks2gqs = grain_purchased_qszks2g.reorder_levels([2,3,4,5,0,1]) .sort_index()#change the order so that reindexing works (new levels being added must be at the end)
+        grain_purchased_qsp7zk3s2g = f_vars2df(lp_vars,'v_buy_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
+        grain_purchased_qszk3s2g = grain_purchased_qsp7zk3s2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
+        grain_purchased_zk3s2gqs = grain_purchased_qszk3s2g.reorder_levels([2,3,4,5,0,1]) .sort_index()#change the order so that reindexing works (new levels being added must be at the end)
 
         ##grain sold
-        grain_sold_qsp7zks2g = f_vars2df(lp_vars,'v_sell_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
-        grain_sold_qszks2g = grain_sold_qsp7zks2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
-        grain_sold_zks2gqs = grain_sold_qszks2g.reorder_levels([2,3,4,5,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
+        grain_sold_qsp7zk1s2g = f_vars2df(lp_vars,'v_sell_product', mask_season_p7z[:,:,na,na,na], z_pos=-4)
+        grain_sold_qszk1s2g = grain_sold_qsp7zk1s2g.groupby(level=(0,1,3,4,5,6)).sum()  # sum p7
+        grain_sold_zk1s2gqs = grain_sold_qszk1s2g.reorder_levels([2,3,4,5,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
 
         ##grain fed - s2 axis added because sup feed is allocated to a given s2 slice and therefore the variable doesn't have an active s2 axis
         sup_s2_ks2 = r_vals['sup']['sup_s2_k_s2'].stack()
-        grain_fed_qszkg = grain_fed_qszkgvp6.groupby(level=(0, 1, 2, 3, 4)).sum()  # sum feed pool and feed period
-        grain_fed_qszg_ks2 = grain_fed_qszkg.unstack(3).mul(sup_s2_ks2, axis=1, level=0)
-        grain_fed_zks2gqs = grain_fed_qszg_ks2.stack([0,1]).reorder_levels([2,4,5,3,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
+        grain_fed_qszk3g = grain_fed_qszk3gvp6.groupby(level=(0, 1, 2, 3, 4)).sum()  # sum feed pool and feed period
+        grain_fed_qszg_k3s2 = grain_fed_qszk3g.unstack(3).mul(sup_s2_ks2, axis=1, level=0)
+        grain_fed_zk3s2gqs = grain_fed_qszg_k3s2.stack([0,1]).reorder_levels([2,4,5,3,0,1]).sort_index() #change the order so that reindexing works (new levels being added must be at the end)
 
         ##total grain produced by crop enterprise
-        total_grain_produced_zks2gqs = grain_sold_zks2gqs + grain_fed_zks2gqs - grain_purchased_zks2gqs  # total grain produced by crop enterprise
+        grain_transferred_crop_to_sheep_zk3s2gqs = grain_fed_zk3s2gqs - grain_purchased_zk3s2gqs
+        grain_transferred_crop_to_sheep_zk1s2gqs = grain_transferred_crop_to_sheep_zk3s2gqs.reindex(grain_sold_zk1s2gqs.index).fillna(0)
+        total_grain_produced_zk1s2gqs = grain_sold_zk1s2gqs + grain_transferred_crop_to_sheep_zk1s2gqs  # total grain produced by crop enterprise
         if option==5:
-            return total_grain_produced_zks2gqs
-        grains_sale_price_zks2gqs_p7 = grains_sale_price_zks2gq_p7.reindex(total_grain_produced_zks2gqs.index, axis=0)
-        grains_buy_price_zks2gqs_p7 = grains_buy_price_zks2gq_p7.reindex(total_grain_produced_zks2gqs.index, axis=0)
-        rev_grain_k_p7zqs = grains_sale_price_zks2gqs_p7.mul(total_grain_produced_zks2gqs, axis=0).unstack([0,4,5]).groupby(axis=0, level=0).sum()  # sum grain pool and s2
-        grain['rev_grain_k_p7zqs'] = rev_grain_k_p7zqs
+            return total_grain_produced_zk1s2gqs
+        grains_sale_price_zk1s2gqs_p7 = grains_sale_price_zk1s2gq_p7.reindex(total_grain_produced_zk1s2gqs.index, axis=0)
+        rev_grain_k1_p7zqs = grains_sale_price_zk1s2gqs_p7.mul(total_grain_produced_zk1s2gqs, axis=0).unstack([0,4,5]).groupby(axis=0, level=0).sum()  # sum grain pool and s2
+        grain['rev_grain_k1_p7zqs'] = rev_grain_k1_p7zqs
 
         ##supplementary cost: cost = sale_price * (grain_fed - grain_purchased) + buy_price * grain_purchased
-        sup_exp_zqs_p7 = (grains_sale_price_zks2gqs_p7.mul(grain_fed_zks2gqs - grain_purchased_zks2gqs, axis=0)
-                     + grains_buy_price_zks2gqs_p7.mul(grain_purchased_zks2gqs, axis=0)).groupby(axis=0,level=(0,4,5)).sum()  # sum grain pool & landuse & s2
-        grain['sup_exp_p7zqs'] = sup_exp_zqs_p7.unstack([0,1,2])
+        ###cost of grain transferred from cropping enterprise (this is only the k3 crops that exist in k1 set hence use k1 axis)
+        sup_transferred_exp_zqs_p7 = grains_sale_price_zk1s2gqs_p7.mul(grain_transferred_crop_to_sheep_zk1s2gqs, axis=0).groupby(axis=0, level=(0, 4, 5)).sum()  # sum grain pool & landuse & s2
+        ###cost of purchases
+        grains_buy_price_zk3s2gqs_p7 = grains_buy_price_zk3s2gq_p7.reindex(grain_purchased_zk3s2gqs.index, axis=0)
+        buy_sup_exp_zqs_p7 = grains_buy_price_zk3s2gqs_p7.mul(grain_purchased_zk3s2gqs, axis=0).groupby(axis=0,level=(0,4,5)).sum()  # sum grain pool & landuse & s2
+        total_sup_exp_zqs_p7 = sup_transferred_exp_zqs_p7 + buy_sup_exp_zqs_p7
+        grain['sup_exp_p7zqs'] = total_sup_exp_zqs_p7.unstack([0,1,2])
         return grain
 
 
@@ -1240,11 +1245,11 @@ def f_crop_cash_summary(lp_vars, r_vals, option=0):
     ##revenue. rev = (grain_sold + grain_fed - grain_purchased) * sell_price
     ###read in dict from grain summary
     grain_summary = f_grain_sup_summary(lp_vars, r_vals)
-    rev_grain_k_p7zqs = grain_summary['rev_grain_k_p7zqs']
+    rev_grain_k1_p7zqs = grain_summary['rev_grain_k1_p7zqs']
 
     ##return all if option==0
     if option == 0:
-        return exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k_p7zqs
+        return exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k1_p7zqs
 
 
 def f_stock_cash_summary(lp_vars, r_vals):
@@ -1326,10 +1331,10 @@ def f_stock_cash_summary(lp_vars, r_vals):
     grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
 
     grain_fed_zkfp6qs = grain_fed_qszkfp6.reorder_levels([2,3,4,5,0,1]).sort_index() # change the order so that reindexing works (new levels being added must be at the end)
-    supp_feedstorage_cost_p7zp6kf = r_vals['sup']['total_sup_cost_p7zp6kf']
-    supp_feedstorage_cost_p7_zkfp6qs = supp_feedstorage_cost_p7zp6kf.unstack([1,3,4,2]).reindex(grain_fed_zkfp6qs.index, axis=1)
-    supp_feedstorage_cost_p7_zkfp6qs = supp_feedstorage_cost_p7_zkfp6qs.mul(grain_fed_zkfp6qs, axis=1)
-    supp_feedstorage_cost_p7zqs = supp_feedstorage_cost_p7_zkfp6qs.groupby(axis=1, level=(0,4,5)).sum().stack([0,1,2]) #sum k & p6 & f
+    supp_feedstorage_cost_p7zp6k3f = r_vals['sup']['total_sup_cost_p7zp6k3f']
+    supp_feedstorage_cost_p7_zk3fp6qs = supp_feedstorage_cost_p7zp6k3f.unstack([1,3,4,2]).reindex(grain_fed_zkfp6qs.index, axis=1)
+    supp_feedstorage_cost_p7_zk3fp6qs = supp_feedstorage_cost_p7_zk3fp6qs.mul(grain_fed_zkfp6qs, axis=1)
+    supp_feedstorage_cost_p7zqs = supp_feedstorage_cost_p7_zk3fp6qs.groupby(axis=1, level=(0,4,5)).sum().stack([0,1,2]) #sum k & p6 & f
 
     ##infrastructure
     fixed_infra_cost_p7qsz = r_vals['stock']['rm_stockinfra_fix_p7z'][:,na,na,:] * r_vals['zgen']['mask_qs'][:,:,na]
@@ -1618,7 +1623,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
 
     '''
     ##read stuff from other functions that is used in rev and cost section
-    exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k_p7zqs = f_crop_cash_summary(lp_vars, r_vals, option=0)
+    exp_fert_k_p7zqs, exp_chem_k_p7zqs, misc_exp_k_p7zqs, rev_grain_k1_p7zqs = f_crop_cash_summary(lp_vars, r_vals, option=0)
     exp_mach_k_p7zqs, mach_insurance_p7z = f_mach_summary(lp_vars, r_vals)
     stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qszp7 = f_stock_cash_summary(lp_vars, r_vals)
     slp_estab_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='slp', prod='slp_estab_cost_p7z', na_prod=[0,1,4]
@@ -1641,7 +1646,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     len_p7 = len(keys_p7)
     len_z = len(keys_z)
     ###rev
-    rev_grain_p7_qsz = rev_grain_k_p7zqs.sum(axis=0).unstack([2,3,1]).sort_index(axis=1)  # sum landuse axis
+    rev_grain_p7_qsz = rev_grain_k1_p7zqs.sum(axis=0).unstack([2,3,1]).sort_index(axis=1)  # sum landuse axis
     ###exp
     ####machinery
     df_mask_qs = pd.DataFrame(r_vals['zgen']['mask_qs'],keys_q,keys_s).stack()
@@ -1731,10 +1736,10 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl.loc[idx[:, :, :, 'Total', '7 obj'], 'Full year'] = season_obj_qsz
 
 
-    ##add the objective of all seasons - these should both be the same if the pnl is being calculated correctly
+    ##add the objective of all seasons - these should both be the same if the pnl is being calculated correctly - these are the only parts that have been discounted (time value of money)
     ###have to calc here after the step above so it doesnt turn to nan
     pnl.loc[idx['Weighted obj - AFO', '', '', '', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
-    pnl.loc[idx['Weighted obj - PNL', '', '', '', ''], 'Full year'] = np.sum(season_obj_qsz * r_vals['zgen']['z_prob_qsz'].ravel())
+    pnl.loc[idx['Weighted obj - PNL', '', '', '', ''], 'Full year'] = np.sum(season_obj_qsz * (r_vals['zgen']['z_prob_qsz'] * r_vals['zgen']['discount_factor_q'][:,na,na]).ravel())
 
     ##weight the qsz axis if option 2
     if option==2:
@@ -1743,9 +1748,9 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
         z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
         z_prob_qsz = z_prob_qsz.reindex(pnl.index, axis=0)
         pnl = pnl.mul(z_prob_qsz, axis=0).groupby(level=(-2,-1), axis=0).sum()
-        ###add the objective of all seasons - need to do again because it becomes nan in the step above
+        ###add the objective of all seasons - need to do again because it becomes nan in the step above - these are the only parts that have been discounted (time value of money)
         pnl.loc[idx['Weighted obj - AFO', ''], 'Full year'] = f_profit(lp_vars, r_vals, option=1)
-        pnl.loc[idx['Weighted obj - PNL', ''], 'Full year'] = np.sum(season_obj_qsz * r_vals['zgen']['z_prob_qsz'].ravel())
+        pnl.loc[idx['Weighted obj - PNL', ''], 'Full year'] = np.sum(season_obj_qsz * (r_vals['zgen']['z_prob_qsz'] * r_vals['zgen']['discount_factor_q'][:,na,na]).ravel())
 
     ##round numbers in df
     pnl = pnl.astype(float).round(1).fillna(0)  # have to go to float so rounding works
@@ -1775,20 +1780,20 @@ def f_crop_summary(lp_vars, r_vals, option):
     total_biomass_qszk = v_use_biomass_qszks2.sum(axis=-1)
     graz_idx = list(r_vals['stub']['keys_s2']).index("Graz")
     biomass_fodder_qszk = v_use_biomass_qszks2[:,:,:,:,graz_idx]
-    fodder_percent_qszk = fun.f_divide(biomass_fodder_qszk, total_biomass_qszk)
+    fodder_percent_qszk = fun.f_divide(biomass_fodder_qszk, total_biomass_qszk) * 100
 
     ##grain harvested
-    total_grain_and_hay_produced_zks2gqs = f_grain_sup_summary(lp_vars, r_vals, option=5)
-    total_grain_and_hay_produced_zks2qs = total_grain_and_hay_produced_zks2gqs.groupby(level=(0,1,2,4,5)).sum() #sum grain pools (note price has already been adjusted for propn of seconds)
-    total_grain_produced_zkqs = total_grain_and_hay_produced_zks2qs.unstack(2).loc[:,'Harv']
-    total_grain_produced_qsz_k1 = total_grain_produced_zkqs.unstack(1).reorder_levels([1,2,0], axis=0)
+    total_grain_and_hay_produced_zk1s2gqs = f_grain_sup_summary(lp_vars, r_vals, option=5)
+    total_grain_and_hay_produced_zk1s2qs = total_grain_and_hay_produced_zk1s2gqs.groupby(level=(0,1,2,4,5)).sum() #sum grain pools (note price has already been adjusted for propn of seconds)
+    total_grain_produced_zk1qs = total_grain_and_hay_produced_zk1s2qs.unstack(2).loc[:,'Harv']
+    total_grain_produced_qsz_k1 = total_grain_produced_zk1qs.unstack(1).reorder_levels([1,2,0], axis=0)
 
     ##grain price
     grain_price_k = r_vals['crop']['farmgate_price'].loc[:,'Harv']
 
     ##hay made
-    total_hay_made_zkqs = total_grain_and_hay_produced_zks2qs.unstack(2).loc[:,'Bale']
-    total_hay_made_qsz_k1 = total_hay_made_zkqs.unstack(1).reorder_levels([1,2,0], axis=0)
+    total_hay_made_zk1qs = total_grain_and_hay_produced_zk1s2qs.unstack(2).loc[:,'Bale']
+    total_hay_made_qsz_k1 = total_hay_made_zk1qs.unstack(1).reorder_levels([1,2,0], axis=0)
 
     ##hay price
     hay_price_k = r_vals['crop']['farmgate_price'].loc[:,'Bale']
@@ -1834,8 +1839,8 @@ def f_crop_summary(lp_vars, r_vals, option):
 
 def f_profit(lp_vars, r_vals, option=0):
     '''returns profit
-    0- Profit = rev - (exp + dep)
-    1- Risk neutral objective = rev - (exp + minroe + asset_cost +dep).
+    0- Profit = (rev - (exp + dep) * discount_factor)
+    1- Risk neutral objective = (rev - (exp + minroe + asset_cost +dep) * discount_factor).
     2- Utility - this is the same as risk neutral obj if risk aversion is not included
     3- range and stdev of profit
     4- profit by zqs
@@ -1848,8 +1853,8 @@ def f_profit(lp_vars, r_vals, option=0):
     if option == 0:
         return lp_vars['profit']
     elif option==1:
-        minroe = np.sum(minroe_qsp7z[:,:,-1,:] * prob_qsz)  #take end slice of season stages
-        asset_cost = np.sum(asset_cost_qsp7z[:,:,-1,:] * prob_qsz) #take end slice of season stages
+        minroe = np.sum(minroe_qsp7z[:,:,-1,:] * prob_qsz * r_vals['zgen']['discount_factor_q'][:,na,na])  #take end slice of season stages
+        asset_cost = np.sum(asset_cost_qsp7z[:,:,-1,:] * prob_qsz* r_vals['zgen']['discount_factor_q'][:,na,na]) #take end slice of season stages
         return lp_vars['profit'] - minroe - asset_cost
     elif option == 2:
         return lp_vars['utility']
@@ -1876,7 +1881,7 @@ def f_profit(lp_vars, r_vals, option=0):
         dep_qsz = dep_qsp7z[:,:,-1,:]
         ###tradevalue
         trade_value_qszp7 = f_stock_cash_summary(lp_vars, r_vals)[-1]
-        trade_value_qsz = trade_value_qszp7[...,-1]
+        trade_value_qsz = np.sum(trade_value_qszp7, axis=-1)
         ###profit for each scenario
         profit_qsc1z = credit_qsc1z - debit_qsc1z + trade_value_qsz[:,:,na,:] - dep_qsz[:,:,na,:] #dep & tradevalue doesnt vary by price scenario
         ###stdev and range
@@ -2249,10 +2254,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     sb_mei.columns = ['Saltbush'] # add feed type as header
 
     ###sup
-    sup_md_tonne_fkp6z = r_vals['sup']['md_tonne_fkp6z']
+    sup_md_tonne_fk3p6z = r_vals['sup']['md_tonne_fk3p6z']
     grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
-    sup_mei_qs_fkp6z = grain_fed_qszkfp6.unstack([4,3,5,2]).sort_index(axis=1).mul(sup_md_tonne_fkp6z, axis=1)
-    sup_mei_qszp6f = sup_mei_qs_fkp6z.stack([3,2,0]).sort_index(axis=1).sum(axis=1)
+    sup_mei_qs_fk3p6z = grain_fed_qszkfp6.unstack([4,3,5,2]).sort_index(axis=1).mul(sup_md_tonne_fk3p6z, axis=1)
+    sup_mei_qszp6f = sup_mei_qs_fk3p6z.stack([3,2,0]).sort_index(axis=1).sum(axis=1)
     sup_mei = pd.DataFrame(sup_mei_qszp6f, columns=['Supplement']) # add feed type as header
 
     ##stock mei requirement
@@ -2492,10 +2497,10 @@ def f_emission_summary(lp_vars, r_vals, option=0):
                                               keys=keys, arith=arith, index=index, cols=cols)
 
         ###sup
-        sup_emissions_fk = r_vals['sup']['stock_{0}_sup_fk'.format(e)]
+        sup_emissions_fk3 = r_vals['sup']['stock_{0}_sup_fk3'.format(e)]
         grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
-        sup_emissions_qszp6_fk = grain_fed_qszkfp6.unstack([4,3]).sort_index(axis=1).mul(sup_emissions_fk, axis=1)
-        d['sup_emissions_qsz'] = pd.DataFrame(sup_emissions_qszp6_fk.unstack([3]).sum(axis=1))
+        sup_emissions_qszp6_fk3 = grain_fed_qszkfp6.unstack([4,3]).sort_index(axis=1).mul(sup_emissions_fk3, axis=1)
+        d['sup_emissions_qsz'] = pd.DataFrame(sup_emissions_qszp6_fk3.unstack([3]).sum(axis=1))
 
     ###total livestock emissions
     for i, emission_cat in enumerate(ch4):
@@ -2662,10 +2667,10 @@ def f_emission_summary(lp_vars, r_vals, option=0):
     fuel_co2e_phase_qsz = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                           keys=keys, arith=arith, index=index, cols=cols)
     ###sup
-    fuel_sup_emissions_fk = r_vals['sup']['co2e_sup_fuel_fk']
+    fuel_sup_emissions_fk3 = r_vals['sup']['co2e_sup_fuel_fk3']
     grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
-    fuel_sup_emissions_qszp6_fk = grain_fed_qszkfp6.unstack([4, 3]).sort_index(axis=1).mul(fuel_sup_emissions_fk, axis=1)
-    fuel_co2e_sup_emissions_qsz = pd.DataFrame(fuel_sup_emissions_qszp6_fk.unstack([3]).sum(axis=1))
+    fuel_sup_emissions_qszp6_fk3 = grain_fed_qszkfp6.unstack([4, 3]).sort_index(axis=1).mul(fuel_sup_emissions_fk3, axis=1)
+    fuel_co2e_sup_emissions_qsz = pd.DataFrame(fuel_sup_emissions_qszp6_fk3.unstack([3]).sum(axis=1))
 
     total_fuel_co2e_qsz = (fuel_co2e_seeding_qsz + fuel_co2e_contract_seeding_qsz + fuel_co2e_harv_qsz +
                            fuel_co2e_contract_harv_qsz + fuel_co2e_phase_qsz + fuel_co2e_sup_emissions_qsz)/ 1000 #convert to tonnes. Note it has already been converted to co2e.
@@ -2816,7 +2821,7 @@ def f_grazing_summary(lp_vars, r_vals):
     greenpas_ha_qsgop6lzt = np.sum(greenpas_ha_qsfgop6lzt, axis=2)
 
     ##combine everything
-    graze_info_iqsgop6lzt = np.stack(np.broadcast_arrays(greenpas_ha_qsgop6lzt, foo_start_grnha_qop6lzt[na,na], foo_ave_grnha_qsp6lzt[:,:,na,na,...]), axis=0)
+    graze_info_iqsgop6lzt = np.stack(np.broadcast_arrays(greenpas_ha_qsgop6lzt, foo_start_grnha_qop6lzt[:,na,na,...], foo_ave_grnha_qsp6lzt[:,:,na,na,...]), axis=0)
 
     ##make df
     keys_g = r_vals['pas']['keys_g']
@@ -2974,7 +2979,7 @@ def f_pasture_area_analysis(lp_vars, r_vals, trial):
     arith = 2
     index = []
     cols = []
-    axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
+    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc[trial, 'Ewes mated'] = dams_mated.squeeze()
     ##pasture %
@@ -3008,7 +3013,7 @@ def f_stocking_rate_analysis(lp_vars, r_vals, trial):
     arith = 2
     index = []
     cols = []
-    axis_slice = {2:[1,None,1]} #slice off the not mate k1 slice (we only want mated dams)
+    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
     ##pasture area
@@ -3106,6 +3111,345 @@ def f_cropgrazing_analysis(lp_vars, r_vals, trial):
     summary_df.loc[trial, 'Crop grazing intensity (kg/ha)'] = round(GI)
 
     return summary_df
+
+def f_saleage_analysis(lp_vars, r_vals, trial):
+    '''Returns a simple 1 row summary of the trial (season results are averaged)'''
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'SR', 'Ewes mated', 'Sale weight', 'Sale value', 'Sheep sales ($/WgHa)', 'Wool sales ($/WgHa)', 'Feed cost ($/WgHa)'])
+    ##profit - no minroe and asset
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0))
+    ##stocking rate
+    sr = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
+    summary_df.loc[trial, 'SR'] = round(sr, 1)
+    ##total dams mated
+    type = 'stock'
+    prod = 'dvp_is_mating_vzig1'
+    na_prod = [0,1,2,3,5,6,7,10]
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    keys = 'dams_keys_qsk2tvanwziy1g1'
+    arith = 2
+    index = []
+    cols = []
+    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
+    dams_mated = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc[trial, 'Ewes mated'] = round(dams_mated.squeeze(),0)
+    ##ave wether sale price
+    ###offs
+    type = 'stock'
+    prod = 'salevalue_p7qk3k5tvnwziaxyg3'
+    na_prod = [2]  # s
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = [0]  # p7
+    den_weights = 'alloc_p7k3vzixg3' #this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+    na_denweights = [1,2,4,5,7,8,11,13]  # q,s,k5,t,n.w,a,y
+    keys = 'offs_keys_p7qsk3k5tvnwziaxyg3'
+    arith = 1
+    index = []
+    cols = []
+    axis_slice = {5:[1,None,1]} #only sale slices
+    ave_salevalue_offs = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                                 na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights,
+                                                 keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    ###prog
+    type = 'stock'
+    prod = 'salevalue_p7qk3k5twzia0xg2'
+    na_prod = [2]  # s
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    na_weights = [0]  # p7
+    den_weights = 'wean_alloc_p7k3zg2'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+    na_denweights = [1, 2, 4, 5, 6, 8, 9, 10]  # q,s,k5,t,w,z,i,a0,x
+    keys = 'prog_keys_p7qsk3k5twzia0xg2'
+    arith = 1
+    index = []
+    cols = []
+    axis_slice = {5:[0,1,1]} #only sale slices
+    ave_salevalue_prog = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                                 na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights,
+                                                 keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    ##ave wether sale weight
+    ###offs
+    type = 'stock'
+    prod = 'sale_ffcfw_k3k5tvnwziaxyg3'
+    na_prod = [0, 1]  # q,s
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = []
+    keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+    arith = 1
+    index = []
+    cols = []
+    axis_slice = {4:[1,None,1]} #only sale slices
+    ave_saleweight_offs = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                       na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    ###prog
+    type = 'stock'
+    prod = 'sale_ffcfw_k3k5twziaxyg2'
+    na_prod = [0, 1]  # q,s
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    na_weights = []
+    keys = 'prog_keys_qsk3k5twzia0xg2'
+    arith = 1
+    index = []
+    cols = []
+    axis_slice = {4:[0,1,1]} #only sale slices
+    ave_saleweight_prog = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                       na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    ###calc average sale value and weight of offs and prog
+    ####get offs and prog sale numbers for weighted average
+    type = 'stock'
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+    arith = 2
+    index = []
+    cols = []
+    axis_slice = {4:[1,None,1]} #only sale slices
+    salenumber_offs = f_stock_pasture_summary(r_vals, type=type, weights=weights,
+                                             keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    type = 'stock'
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    keys = 'prog_keys_qsk3k5twzia0xg2'
+    arith = 2
+    index = []
+    cols = []
+    axis_slice = {4:[0,1,1]} #only sale slices
+    salenumber_prog = f_stock_pasture_summary(r_vals, type=type, weights=weights,
+                                             keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc[trial, 'Sale value'] = np.round(fun.f_divide(ave_salevalue_offs*salenumber_offs + ave_salevalue_prog*salenumber_prog, salenumber_offs + salenumber_prog),0)[0,0]
+    summary_df.loc[trial, 'Sale weight'] = np.round(fun.f_divide(ave_saleweight_offs*salenumber_offs + ave_saleweight_prog*salenumber_prog, salenumber_offs + salenumber_prog),0)[0,0]
+
+    ##pasture area
+    pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
+    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+    total_pas_are = np.sum(pas_area_qsz * z_prob_qsz.ravel())
+    ##sheep $$
+    stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qszp7 = f_stock_cash_summary(lp_vars, r_vals)
+    ##sale income
+    stocksale = np.sum(stocksale_qszp7 * z_prob_qsz[...,na])
+    stocksale_per_wgha = stocksale/total_pas_are
+    summary_df.loc[trial, 'Sheep sales ($/WgHa)'] = round(stocksale_per_wgha, 0)
+    ##wool income
+    woolsale = np.sum(wool_qszp7 * z_prob_qsz[...,na])
+    woolsale_per_wgha = woolsale/total_pas_are
+    summary_df.loc[trial, 'Wool sales ($/WgHa)'] = round(woolsale_per_wgha, 0)
+    ##feed cost
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+    z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
+    feedcost_qsz = supcost_qsz_p7.sum(axis=1)
+    feedcost = feedcost_qsz.mul(z_prob_qsz, axis=0).sum(axis=0)
+    feedcost_per_wgha = feedcost/total_pas_are
+    summary_df.loc[trial, 'Feed cost ($/WgHa)'] = round(feedcost_per_wgha, 0)
+
+    return summary_df
+
+
+def mp_report(lp_vars, r_vals, option=1):
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
+    summary_df = pd.DataFrame(index=[], columns=index_qsz)
+
+    ##ewe sale info - this is done first because the summary table uses some info from these calacs
+    ###prog numbers sold
+    type = 'stock'
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    keys = 'prog_keys_qsk3k5twzia0xg2'
+    arith = 2
+    index = [10,9]  # g, gender
+    cols = [0,1,6]  # q,s,z
+    axis_slice = {4:[0,1,1]} #sale suckers
+    numbers_prog_gx_qsz = f_stock_pasture_summary(r_vals, type=type, weights=weights, keys=keys, arith=arith, index=index, cols=cols,
+                                                           axis_slice=axis_slice)
+    ####female prog sold
+    try:
+        female_prog_sold_qsz = numbers_prog_gx_qsz.loc[(['BBB','BBM'],'F'),:].sum(axis=0) #wrapped in try incase BBM are not included in the trial. Note BBT are added with wethers.
+    except KeyError:
+        female_prog_sold_qsz = numbers_prog_gx_qsz.loc[(['BBB'],'F'),:].sum(axis=0)
+    ###dam numbers sale
+    type = 'stock'
+    prod = 'dvp_is_sale_tyvzig1'
+    na_prod = [0,1,2,6,7,8,11]
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    na_weights = [4] #y (year)
+    keys = 'dams_keys_qsk2tyvanwziy1g1'
+    arith = 2
+    index = [0,1,9,4] #q,s,z,y
+    cols = [3,5] #v,t
+    sale_numbers_dams_qszy_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                               na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+    ####dams sold each year
+    sale_numbers_dams_qszy = sale_numbers_dams_qszy_tv.sum(axis=1)
+    sale_numbers_dams_y_qsz = sale_numbers_dams_qszy.unstack().T
+    ####add female prog that were sold
+    sale_numbers_dams_y_qsz.iloc[0] = female_prog_sold_qsz
+    sale_numbers_dams_y_qsz = round(sale_numbers_dams_y_qsz, 0)
+
+    ##sale offs numbers
+    type = 'stock'
+    prod = 'dvp_is_sale_tyvzixg3'
+    na_prod = [0, 1, 2, 3, 7, 8, 11, 13]
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = [5]  # y (year)
+    keys = 'offs_keys_qsk3k5tyvnwziaxyg3'
+    arith = 2
+    index = [0,1,9]  # q,s,z
+    cols = [4, 6]  # v,t
+    sale_numbers_offs_qsz_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                                     na_weights=na_weights, keys=keys, arith=arith, index=index,
+                                                     cols=cols)
+    ###age at sale
+    type = 'stock'
+    prod = 'saleage_k3k5tvnwziaxyg3'
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = []
+    keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+    arith = 1
+    index = [4, 5]  # tv
+    cols = []  #
+    saleage_offs_tv = f_stock_pasture_summary(r_vals, type=type, prod=prod, weights=weights, na_weights=na_weights,
+                                              keys=keys, arith=arith, index=index, cols=cols)
+    ###add sale age as headers
+    sale_numbers_offs_qsz_tv.columns = np.round(saleage_offs_tv.values.squeeze() / 30, 0).astype(int)  # div 30 to convert to months
+    ###sum cols with same sale age (to stop error when concat the report with other trials because of duplicate col names)
+    sale_numbers_offs_qsz_tv = sale_numbers_offs_qsz_tv.groupby(sale_numbers_offs_qsz_tv.columns, axis=1).sum()
+    sale_numbers_offs_qsz_tv.columns = ['%s mo old' %i for i in sale_numbers_offs_qsz_tv.columns] #add extra info to header name
+    ####add wether and crossy prog that were sold (they need to be included in the number of lambs born)
+    wether_prog_sold_qsz = numbers_prog_gx_qsz.sum(axis=0) - female_prog_sold_qsz
+    sale_numbers_offs_qsz_tv.rename(columns={'0 mo old': 'Weaning'}, inplace=True)
+    sale_numbers_offs_qsz_tv.iloc[:, 0] = wether_prog_sold_qsz
+    sale_numbers_offs_tv_qsz = round(sale_numbers_offs_qsz_tv).T
+
+    ##summary info by q
+    ###profit - no minroe and asset
+    profit_qsz = round(f_profit(lp_vars, r_vals, option=4)).stack()
+    summary_df.loc['Profit',:] = profit_qsz
+    ###pasture %
+    pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
+    pas_percent_qsz = fun.f_divide(pas_area_qsz, r_vals['rot']['total_farm_area']) * 100
+    summary_df.loc['Pas area (%)',:] = np.round(pas_percent_qsz, 0)
+    ###crop %
+    summary_df.loc['Crop area (%)',:] = np.round(100 - pas_percent_qsz)
+    ###stocking rate
+    sr_qsz = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary3=True)
+    summary_df.loc['Stocking rate (DSE/WgHa)',:] = round(sr_qsz.squeeze(), 1)
+    ###supplement
+    total_sup_qsz = f_grain_sup_summary(lp_vars, r_vals, option=1).groupby(level=(0, 1, 2)).sum()
+    summary_df.loc['Total supplement (t)',:] = round(total_sup_qsz.squeeze(), 1)
+    ###sup/dse
+    Sup_DSE_qsz = np.round(fun.f_divide(total_sup_qsz.squeeze() * 1000, (pas_area_qsz * sr_qsz.squeeze())))
+    summary_df.loc['Supplement (kg/DSE)',:] = Sup_DSE_qsz
+    ###total dams mated
+    type = 'stock'
+    prod = 'dvp_is_mating_vzig1'
+    na_prod = [0,1,2,3,5,6,7,10]
+    weights = 'dams_numbers_qsk2tvanwziy1g1'
+    keys = 'dams_keys_qsk2tvanwziy1g1'
+    arith = 2
+    index = []
+    cols = [0,1,8] #q,s,z
+    axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
+    dams_mated_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc['Ewes mated',:] = round(dams_mated_qsz.squeeze(),0)
+    ###total ewe sales
+    summary_df.loc['Ewe sales',:] = sale_numbers_dams_y_qsz.sum(axis=0)
+    ###total wether sales
+    summary_df.loc['Wether and crossy sales',:] = round(sale_numbers_offs_qsz_tv.sum(axis=1), 0)
+    ###ave wether sale price
+    ####get offs and prog sale numbers for weighted average
+    type = 'stock'
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+    arith = 2
+    index = []
+    cols = [0,1,8]  #q,s,z
+    axis_slice = {4:[1,None,1]} #only sale slices
+    salenumber_offs_qsz = f_stock_pasture_summary(r_vals, type=type, weights=weights,
+                                             keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    type = 'stock'
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    keys = 'prog_keys_qsk3k5twzia0xg2'
+    arith = 2
+    index = []
+    cols = [0,1,6]  #q,s,z
+    axis_slice = {4:[0,1,1]} #only sale slices
+    salenumber_prog_qsz = f_stock_pasture_summary(r_vals, type=type, weights=weights,
+                                             keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    ####offs
+    type = 'stock'
+    prod = 'salevalue_p7qk3k5tvnwziaxyg3'
+    na_prod = [2]  # s
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = [0]  # p7
+    den_weights = 'alloc_p7k3vzixg3' #this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+    na_denweights = [1,2,4,5,7,8,11,13]  # q,s,k5,t,n.w,a,y
+    keys = 'offs_keys_p7qsk3k5tvnwziaxyg3'
+    arith = 1
+    index = []
+    cols = [1,2,9]  #q,s,z
+    axis_slice = {5:[1,None,1]} #only sale slices
+    ave_salevalue_offs_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                                     na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights,
+                                                     keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    ####prog
+    type = 'stock'
+    prod = 'salevalue_p7qk3k5twzia0xg2'
+    na_prod = [2]  # s
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    na_weights = [0]  # p7
+    den_weights = 'wean_alloc_p7k3zg2'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+    na_denweights = [1, 2, 4, 5, 6, 8, 9, 10]  # q,s,k5,t,w,i,a0,x
+    keys = 'prog_keys_p7qsk3k5twzia0xg2'
+    arith = 1
+    index = []
+    cols = [1,2,7] #q,s,z
+    axis_slice = {5:[0,1,1]} #only sale slices
+    ave_salevalue_prog_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                                     na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights,
+                                                     keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc['Ave sale value'] = np.round(fun.f_divide(ave_salevalue_offs_qsz*salenumber_offs_qsz + ave_salevalue_prog_qsz*salenumber_prog_qsz, salenumber_offs_qsz + salenumber_prog_qsz),0).squeeze()
+    ###ave wether sale weight
+    ####offs
+    type = 'stock'
+    prod = 'sale_ffcfw_k3k5tvnwziaxyg3'
+    na_prod = [0, 1]  # q,s
+    weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+    na_weights = []
+    keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+    arith = 1
+    index = []
+    cols = [0,1,8] #qsz
+    axis_slice = {4:[1,None,1]} #only sale slices
+    ave_saleweight_offs_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                       na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    ####prog
+    type = 'stock'
+    prod = 'sale_ffcfw_k3k5twziaxyg2'
+    na_prod = [0, 1]  # q,s
+    weights = 'prog_numbers_qsk3k5twzia0xg2'
+    na_weights = []
+    keys = 'prog_keys_qsk3k5twzia0xg2'
+    arith = 1
+    index = []
+    cols = [0,1,6] #qsz
+    axis_slice = {4:[0,1,1]} #only sale slices
+    ave_saleweight_prog_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                                       na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    summary_df.loc['Ave sale weight'] = np.round(fun.f_divide(ave_saleweight_offs_qsz*salenumber_offs_qsz + ave_saleweight_prog_qsz*salenumber_prog_qsz, salenumber_offs_qsz + salenumber_prog_qsz),0).squeeze()
+
+    ##land use area
+    landuse_area_k_qsz = f_area_summary(lp_vars, r_vals, option=4, active_z=True).T
+
+    ##weight qsz if required (this is used for testing AFO)
+    if option == 2:
+        z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+        z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
+        summary_df = pd.DataFrame(summary_df.mul(z_prob_qsz, axis=1).sum(axis=1))
+        landuse_area_k_qsz = pd.DataFrame(landuse_area_k_qsz.mul(z_prob_qsz, axis=1).sum(axis=1))
+        sale_numbers_offs_tv_qsz = pd.DataFrame(sale_numbers_offs_tv_qsz.mul(z_prob_qsz, axis=1).sum(axis=1))
+        sale_numbers_dams_y_qsz = pd.DataFrame(sale_numbers_dams_y_qsz.mul(z_prob_qsz, axis=1).sum(axis=1))
+
+    return summary_df, landuse_area_k_qsz, sale_numbers_offs_tv_qsz, sale_numbers_dams_y_qsz
 
 ############################
 # functions for numpy arrays#

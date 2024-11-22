@@ -32,6 +32,8 @@ def f1_seasonpyomo_local(params, model):
                                             default=0.0, mutable=False, doc='mask child season require in each node between years')
     model.p_wyear_inc_qs = pe.Param(model.s_sequence_year, model.s_sequence, initialize=params['p_wyear_inc_qs'], default=0.0,
                                     mutable=False, doc='weather year included in sequence')
+    model.p_discount_factor_q = pe.Param(model.s_sequence_year, initialize=params['p_discount_factor_q'],
+                                       default=0.0, mutable=False, doc='discount factor for time value of money')
     model.p_season_prob_qsz = pe.Param(model.s_sequence_year, model.s_sequence, model.s_season_types, initialize=params['p_season_prob_qsz'],
                                        default=0.0, mutable=False, doc='sequence probability')
     model.p_season_seq_prob_qszp7 = pe.Param(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_season_periods, initialize=params['p_season_seq_prob_qszp7'],

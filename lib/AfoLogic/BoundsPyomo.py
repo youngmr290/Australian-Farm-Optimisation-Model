@@ -51,7 +51,7 @@ def f1_boundarypyomo_local(params, model):
     crop_grazing_intensity_bnd_inc = sen.sav['bnd_crop_grazing_intensity'] != '-'
     total_dams_eqbound_inc = sen.sav['bnd_total_dams'] != '-' #bound the total number of dams at prejoining
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_dam_inc'], 5) #lower bound dams
-    dams_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_dam_inc'], 5) #upper bound on dams
+    dams_upbound_inc = (sen.sav['bnd_up_dams_K2tog1']!="-").any() or (sen.sav['bnd_up_dams_K2tVg1']!="-").any()  #upper bound on dams
     offs_lobound_inc = fun.f_sa(False, sen.sav['bnd_lo_off_inc'], 5) #lower bound offs
     offs_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_off_inc'], 5) #upper bound on offs
     prog_upbound_inc = any(value != 999999 for value in params['stock']['p_prog_upbound'].values()) #upper bound on prog
@@ -65,11 +65,11 @@ def f1_boundarypyomo_local(params, model):
     bnd_dry_retained_inc = fun.f_sa(False, np.any(pinp.sheep['i_dry_retained_forced_o']), 5) #force the retention of drys in t[0] (t[1] is handled in the generator.
     sr_bound_inc = np.any(sen.sav['bnd_sr_Qt'] != '-') #controls sr bound
     lw_bound_inc = sen.sav['bnd_lw_change'] != '-' #controls lw bound
-    total_pasture_bound_inc = np.any(sen.sav['bnd_total_pas_area_percent'] != '-') #bound on total pasture (hence also total crop)
+    total_pasture_bound_inc = np.any(sen.sav['bnd_total_pas_area_percent_q'] != '-') #bound on total pasture (hence also total crop)
     legume_area_bound_inc = sen.sav['bnd_total_legume_area_percent'] != '-'  #bound on total legume
     pasture_lmu_bound_inc = np.any(sen.sav['bnd_pas_area_l'] != '-')
     landuse_bound_inc = np.any(sen.sav['bnd_landuse_area_klz'] != '-') #bound on area of each landuse (which is the sum of all the phases for that landuse)
-    crop_area_bound_inc = np.any(sen.sav['bnd_crop_area'] != '-') or np.any(sen.sav['bnd_crop_area_percent'] != '-')  # controls if crop area bnd is included.(which is the sum of all the phases for that crop)
+    crop_area_bound_inc = np.any(sen.sav['bnd_crop_area_qk1'] != '-') or np.any(sen.sav['bnd_crop_area_percent_qk1'] != '-')  # controls if crop area bnd is included.(which is the sum of all the phases for that crop)
     biomass_graze_bound_inc = np.any(sen.sav['bnd_biomass_graze_k1'] != '-')   # controls if biomass grazed bnd is included.(which is the proportion of crop biomass that is grazed)
     #todo need to make this input below in uinp. Then test the constraint works as expected.
     emissions_bnd_inc = False#uinp.emissions['co2e_limit']>0  # controls if total farm emissions are constrained.
@@ -165,7 +165,7 @@ def f1_boundarypyomo_local(params, model):
         if sup_lobound_inc:
             def sup_lo_bound(model, q, s, z):
                 if pe.value(model.p_wyear_inc_qs[q, s]):
-                    return sum(model.v_sup_con[q,s,z,k,g,f,p6] for k in model.s_crops for g in model.s_grain_pools for f in model.s_feed_pools
+                    return sum(model.v_sup_con[q,s,z,k3,g,f,p6] for k3 in model.s_supp_feeds for g in model.s_grain_pools for f in model.s_feed_pools
                     for p6 in model.s_feed_periods) >= 115
                 else:
                     return pe.Constraint.Skip
@@ -180,9 +180,9 @@ def f1_boundarypyomo_local(params, model):
             l_p7 = list(model.s_season_periods)
             def sup_per_dse_bound(model, q, s):
                 if pe.value(model.p_wyear_inc_qs[q, s]):
-                    total_sup = sum(model.v_sup_con[q,s,z,k,g,f,p6]
+                    total_sup = sum(model.v_sup_con[q,s,z,k3,g,f,p6]
                                     * model.p_a_p6_p7[p7,p6,z] * model.p_season_seq_prob_qszp7[q,s,z,p7]
-                                    for k in model.s_crops for g in model.s_grain_pools for f in model.s_feed_pools
+                                    for k3 in model.s_supp_feeds for g in model.s_grain_pools for f in model.s_feed_pools
                                     for p6 in model.s_feed_periods for p7 in model.s_season_periods for z in model.s_season_types)
                     wg_dse = sum((sum(model.v_sire[q,s,g0] * model.p_dse_sire[p6,z,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,z,g0])!=0)
                              + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]
@@ -262,6 +262,15 @@ def f1_boundarypyomo_local(params, model):
             model.p_dams_lobound = pe.Param(model.s_sale_dams, model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
                                             default=0, initialize=params['stock']['p_dams_lobound'])
 
+            ##if True this puts the lo_bnd across each starting weight - this is used in the fs optimisation to ensure each starting w has numbers and gets an optimum fs.
+            ## This can make the model infeasible.
+            if sen.sav['lobnd_across_startw']:
+                model.s_startw_dams = pe.Set(initialize=params['stock']['startw_idx_dams'], doc='Standard LW patterns dams')
+                model.p_dams_w_is_startw_ws = pe.Param(model.s_lw_dams, model.s_startw_dams, default=0, initialize=params['stock']['p_dams_w_is_startw_ws'])
+            else:
+                model.s_startw_dams = pe.Set(initialize=['all_w'], doc='Standard LW patterns dams')
+                model.p_dams_w_is_startw_ws = pe.Param(model.s_lw_dams, model.s_startw_dams, default=1, initialize=1)
+
             ##manual set the bound - usually done using SAV but this is just a quick and dirty method for debugging
             # arrays = [model.s_sale_dams, model.s_dvp_dams, model.s_lw_dams, model.s_season_types, model.s_groups_dams]   #more sets can be added here to customise the bound
             # index_tvwzg = fun.cartesian_product_simple_transpose(arrays)
@@ -275,18 +284,18 @@ def f1_boundarypyomo_local(params, model):
             # dams_lobound = dict(zip(tup_tvwzg, dams_lobound))
 
             ###constraint
-            def f_dam_lobound(model, q, s, t, v, z, g1):
+            def f_dam_lobound(model, q, s, k2, t, v, ws, z, g1):
                 if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_dams_lobound[t,v,z,g1]!=0
-                    and any(model.p_mask_dams[k2,t,v,w8,z,g1] != 0 for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams)):
-                    return sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1] for k2 in model.s_k2_birth_dams
+                    and any(model.p_mask_dams[k2,t,v,w8,z,g1] != 0 for w8 in model.s_lw_dams)):
+                    return sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1]
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
-                               if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1
+                               if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1 and pe.value(model.p_dams_w_is_startw_ws[w8,ws])==1
                                ) >= model.p_dams_lobound[t,v,z,g1]
                 else:
                     return pe.Constraint.Skip
-            model.con_dams_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_dams
-                                                   , model.s_dvp_dams, model.s_season_types, model.s_groups_dams
+            model.con_dams_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_sale_dams
+                                                   , model.s_dvp_dams, model.s_startw_dams, model.s_season_types, model.s_groups_dams
                                                    , rule=f_dam_lobound, doc='min number of dams')
 
         ##dams upper bound
@@ -305,7 +314,7 @@ def f1_boundarypyomo_local(params, model):
                 c) update param creation in sgen (param index will need the set added/removed)
             '''
             ##set bound using SAV
-            model.p_dams_upbound = pe.Param(model.s_sale_dams, model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
+            model.p_dams_upbound = pe.Param(model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
                                             default=0, initialize=params['stock']['p_dams_upbound'])
 
             ##manual set the bound - usually done using SAV but this is just a quick and dirty method for debugging
@@ -319,17 +328,17 @@ def f1_boundarypyomo_local(params, model):
             # dams_upbound = dict(zip(tup_tvzg, dams_upbound))
 
             ###constraint
-            def f_dam_upbound(model, q, s, t, v, z, g1):
-                if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_dams_upbound[t,v,z,g1]!=np.inf
-                    and any(model.p_mask_dams[k2,t,v,w8,z,g1] != 0 for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams)):
-                    return sum(model.v_dams[q,s,k28,t,v,a,n,w8,z,i,y,g1] for k28 in model.s_k2_birth_dams
+            def f_dam_upbound(model, q, s, k2, t, v, z, g1):
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_dams_upbound[k2,t,v,z,g1]!=np.inf
+                    and any(model.p_mask_dams[k2,t,v,w8,z,g1] != 0 for w8 in model.s_lw_dams)):
+                    return sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1]
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
-                               if pe.value(model.p_mask_dams[k28,t,v,w8,z,g1]) == 1 #if removes the masked out dams so they don't show up in .lp output.
-                               ) <= model.p_dams_upbound[t,v,z,g1]
+                               if pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 1 #if removes the masked out dams so they don't show up in .lp output.
+                               ) <= model.p_dams_upbound[k2,t,v,z,g1]
                 else:
                     return pe.Constraint.Skip
-            model.con_dams_upbound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_sale_dams
+            model.con_dams_upbound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_sale_dams
                                                    , model.s_dvp_dams, model.s_season_types, model.s_groups_dams
                                                    , rule=f_dam_upbound, doc='max number of dams_tv')
 
@@ -352,6 +361,15 @@ def f1_boundarypyomo_local(params, model):
             model.p_offs_lobound = pe.Param(model.s_k3_damage_offs, model.s_sale_offs, model.s_dvp_offs, model.s_season_types, model.s_gender,
                                             model.s_groups_offs, default=0, initialize=params['stock']['p_offs_lobound'])
 
+            ##if True this puts the lo_bnd across each starting weight - this is used in the fs optimisation to ensure each starting w has numbers and gets an optimum fs.
+            ## This can make the model infeasible.
+            if sen.sav['lobnd_across_startw']:
+                model.s_startw_offs = pe.Set(initialize=params['stock']['startw_idx_offs'], doc='Standard LW patterns offs')
+                model.p_offs_w_is_startw_ws = pe.Param(model.s_lw_offs, model.s_startw_offs, default=0, initialize=params['stock']['p_offs_w_is_startw_ws'])
+            else:
+                model.s_startw_offs = pe.Set(initialize=['all_w'], doc='Standard LW patterns offs')
+                model.p_offs_w_is_startw_ws = pe.Param(model.s_lw_offs, model.s_startw_offs, default=1, initialize=1)
+
             ##manual set the bound - usually done using SAV but this is just a quick and dirty method for debugging
             ###keys to build arrays for the specified slices
             # arrays = [model.s_sale_offs, model.s_dvp_offs, model.s_lw_offs,model.s_season_types, model.s_gender, model.s_groups_offs]   #more sets can be added here to customise the bound
@@ -368,18 +386,19 @@ def f1_boundarypyomo_local(params, model):
             # offs_lowbound = dict(zip(tup_tvwzxg, offs_lowbound))
 
             ###constraint
-            def f_off_lobound(model, q, s, k3, t, v, z, x, g3):
+            def f_off_lobound(model, q, s, k3, k5, t, v, ws, z, x, g3):
                 if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_offs_lobound[k3,t,v,z,x,g3]!=0\
                         and any(model.p_mask_offs[k3,v,w8,z,x,g3] != 0 for w8 in model.s_lw_offs)):
                     return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3]
-                               for k5 in model.s_k5_birth_offs for a in model.s_wean_times for n3 in model.s_nut_offs
+                               for a in model.s_wean_times for n3 in model.s_nut_offs
                                for w8 in model.s_lw_offs for i in model.s_tol for y3 in model.s_gen_merit_offs
-                               if pe.value(model.p_mask_offs[k3,v,w8,z,x,g3]) == 1
+                               if pe.value(model.p_mask_offs[k3,v,w8,z,x,g3]) == 1 and pe.value(model.p_offs_w_is_startw_ws[w8,ws])==1
                                ) >= model.p_offs_lobound[k3,t,v,z,x,g3]
                 else:
                     return pe.Constraint.Skip
-            model.con_offs_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_sale_offs
-                                                   , model.s_dvp_offs, model.s_season_types, model.s_gender, model.s_groups_offs
+            model.con_offs_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs
+                                                   , model.s_k5_birth_offs, model.s_sale_offs, model.s_dvp_offs
+                                                   , model.s_startw_offs, model.s_season_types, model.s_gender, model.s_groups_offs
                                                    , rule=f_off_lobound, doc='min number of offs')
 
         ##offs upper bound
@@ -740,11 +759,11 @@ def f1_boundarypyomo_local(params, model):
             ###setbound using % of farm area
             len_q = sinp.structuralsa['i_len_q']  # number of years in MP model
             keys_q = np.array(['q%s' % i for i in range(len_q)])
-            crop_area_percent_qk1 = fun.f_sa(np.array([99999]), sen.sav['bnd_crop_area_percent'][0:len_q, pinp.crop_landuse_mask_k1], 5)  # 99999 is arbitrary default value which mean skip constraint
+            crop_area_percent_qk1 = fun.f_sa(np.array([99999]), sen.sav['bnd_crop_area_percent_qk1'][0:len_q, pinp.crop_landuse_mask_k1], 5)  # 99999 is arbitrary default value which mean skip constraint
             crop_area_bound_qk1 = np.full_like(crop_area_percent_qk1,99999)
             crop_area_bound_qk1[crop_area_percent_qk1!=99999] = (crop_area_percent_qk1 * sum(model.p_area[l] for l in model.s_lmus))[crop_area_percent_qk1!=99999]
             ###setbound using ha of farm area
-            crop_area_bound_qk1 = fun.f_sa(crop_area_bound_qk1, sen.sav['bnd_crop_area'][0:len_q, pinp.crop_landuse_mask_k1], 5)
+            crop_area_bound_qk1 = fun.f_sa(crop_area_bound_qk1, sen.sav['bnd_crop_area_qk1'][0:len_q, pinp.crop_landuse_mask_k1], 5)
             crop_area_bound_qk1 = fun.f1_make_pyomo_dict(crop_area_bound_qk1, [keys_q, model.s_crops])
             ###constraint
             l_p7 = list(model.s_season_periods)
@@ -779,7 +798,7 @@ def f1_boundarypyomo_local(params, model):
             ###setbound  - 99999 is arbitrary default value which mean skip constraint
             len_q = sinp.structuralsa['i_len_q']  # number of years in MP model
             keys_q = np.array(['q%s' % i for i in range(len_q)])
-            total_pas_area_percent_q = fun.f_sa(np.array([99999]), sen.sav['bnd_total_pas_area_percent'][0:len_q], 5)
+            total_pas_area_percent_q = fun.f_sa(np.array([99999]), sen.sav['bnd_total_pas_area_percent_q'][0:len_q], 5)
             total_pas_area_percent_q = dict(zip(keys_q, total_pas_area_percent_q))
             ###constraint
             l_p7 = list(model.s_season_periods)
@@ -815,7 +834,7 @@ def f1_boundarypyomo_local(params, model):
         ###build bound if turned on
         if biomass_graze_bound_inc:
             ###setbound using ha of farm area
-            biomass_graze_bound_k1 = fun.f_sa(np.array([99999]), sen.sav['bnd_biomass_graze_k1'], 5)  # 99999 is arbitrary default value which mean skip constraint
+            biomass_graze_bound_k1 = fun.f_sa(np.array([99999]), sen.sav['bnd_biomass_graze_k1'][pinp.crop_landuse_mask_k1], 5)  # 99999 is arbitrary default value which mean skip constraint
             biomass_graze_bound_k1 = dict(zip(model.s_crops, biomass_graze_bound_k1))
 
             def k1_graze_bound(model, q, s, k1, z):
@@ -830,7 +849,7 @@ def f1_boundarypyomo_local(params, model):
 
 
         if emissions_bnd_inc:
-            def emissions(model):
+            def emissions(model,q,s):
                 '''
                 Constrains total farm co2e emissions.
 
@@ -844,7 +863,6 @@ def f1_boundarypyomo_local(params, model):
                                      + paspy.f_pas_emissions(model,q,s,p6,z))*model.p_a_p6_p7[p7,p6,z] for p6 in model.s_feed_periods)
                                 + stkpy.f_stock_emissions(model,q,s,p7,z) + stubpy.f_cropresidue_production_emissions(model,q,s,p7,z)
                                 + phspy.f_rot_emissions(model, q, s, p7, z) + macpy.f_seeding_harv_fuel_emissions(model, q, s, p7, z)) * model.p_season_seq_prob_qszp7[q,s,z,p7]
-                                for q in model.s_sequence_year for s in model.s_sequence
                                 for z in model.s_season_types for p7 in model.s_season_periods if pe.value(model.p_season_seq_prob_qszp7[q,s,z,p7]) != 0) <= uinp.emissions['co2e_limit']
                 else:
                     return pe.Constraint.Skip

@@ -195,7 +195,7 @@ def f_landuses_phases(params,r_vals):
     fun.f1_make_r_val(r_vals,sinp.landuse['E'],'all_cereals')
     fun.f1_make_r_val(r_vals,sinp.landuse['N'],'all_canolas')
     fun.f1_make_r_val(r_vals,sinp.landuse['P'],'all_pulses')
-    fun.f1_make_r_val(r_vals,sinp.landuse['OF'],'fodder') #strategical fodder
+    fun.f1_make_r_val(r_vals,sinp.landuse['fodders'],'fodder') #strategical fodder
 
 
 def f_rot_lmu_params(params, r_vals):

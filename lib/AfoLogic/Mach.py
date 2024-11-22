@@ -260,7 +260,7 @@ def f_seed_time_lmus():
     '''
     ##mask lmu input
     base_seeding_rate = uinp.mach[pinp.mach['option']]['seeding_rate_base']
-    seeding_rate_lmu_adj = pinp.mach['seeding_rate_lmu_adj'].squeeze()
+    seeding_rate_lmu_adj = pinp.mach['seeding_rate_lmu_adj'].squeeze(axis=1)
 
     ##adjust for lmu
     rate_l = base_seeding_rate * seeding_rate_lmu_adj
@@ -399,7 +399,7 @@ def f_seeding_cost(r_vals):
     '''
     ##Total cost seeding on each lmu $/ha.
     seeding_cost_l = tractor_cost_seeding() + maint_cost_seeder()
-    seeding_cost_l = seeding_cost_l.squeeze()
+    seeding_cost_l = seeding_cost_l.squeeze(axis=1)
 
     ##gets the cost allocation (includes interest)
     seeding_cost_allocation_p7zp5, seeding_wc_allocation_c0p7zp5 = f1_seed_cost_alloc()
@@ -692,7 +692,7 @@ def f_harvest_cost(r_vals):
     fuel_oil_cost_hr = fuel_cost_hr + oil_cost_hr
     ##return fuel and oil cost plus r & m ($/hr)
     cost_harv = fuel_oil_cost_hr + uinp.mach[pinp.mach['option']]['harvest_maint']
-    harv_cost_k = cost_harv.squeeze()
+    harv_cost_k = cost_harv.squeeze(axis=1)
     
     ##reindex with lmu so alloc can be mul with harv_cost
     keys_p7 = per.f_season_periods(keys=True)
@@ -774,7 +774,7 @@ def f_contract_harvest_cost(r_vals):
     harv_cost_allocation_p7zp5, harv_wc_allocation_c0p7zp5 = f1_harv_cost_alloc()
 
     ##contract harv cost
-    contract_harv_cost_k = uinp.price['contract_harv_cost'].squeeze() #contract harvesting cost for each crop ($/hr)
+    contract_harv_cost_k = uinp.price['contract_harv_cost'].squeeze(axis=1) #contract harvesting cost for each crop ($/hr)
     
     ##reindex with lmu so alloc can be mul with harv_cost
     keys_p7 = per.f_season_periods(keys=True)
@@ -1203,7 +1203,7 @@ def f_seeding_harv_fuel_emissions(r_vals):
     total_co2e_fuel_harv = co2_harv_fuel_co2e + ch4_harv_fuel_co2e + n2o_harv_fuel_co2e
 
     ##v_seeding_machdays and v_contractseeding_ha
-    seeding_fuel_ha_l = fuel_use_seeding().squeeze()
+    seeding_fuel_ha_l = fuel_use_seeding().squeeze(axis=1)
     ###convert to emissions
     co2_seeding_fuel_co2e_l, ch4_seeding_fuel_co2e_l, n2o_seeding_fuel_co2e_l = efun.f_fuel_emissions(seeding_fuel_ha_l)
     total_co2e_fuel_seeding_l = co2_seeding_fuel_co2e_l + ch4_seeding_fuel_co2e_l + n2o_seeding_fuel_co2e_l
