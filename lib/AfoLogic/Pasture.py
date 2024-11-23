@@ -396,7 +396,11 @@ def f_pasture(params, r_vals, nv):
     ## proportion of start foo that senesces during the period, different formula than excel
     grn_senesce_startfoo_p6zt = 1 - ((1 - i_grn_senesce_daily_p6zt) **  length_p6z[...,na])
 
-    ## change of senescence over the period due to growth and consumption
+    ##average proportion of growth senescenced per period.
+    ## The first days growth decays for all the days and the last days growth only decays for 1 day (or maybe 0 days). The assumption is that a fixed percentage of the growth is consumed on the day it is grown.
+    ## geometric series (https://en.wikipedia.org/wiki/Geometric_series) is used to calculate the foo at the end of the period after scenescense. Our geometric sum is starting from i=1 (not i=0) therefore subtract ar^0. Therefore the formula is a(((1-r^(n+1))/(1-r))-1) where r = (1-senesce).
+    ## Then need to convert from final foo to scenescensed foo, then calculate average the scenescense per period.
+    ## Formula is based on 1kg/da of growth.
     grn_senesce_pgrcons_p6zt = 1 - fun.f_divide(((1 -(1 - i_grn_senesce_daily_p6zt) ** (length_p6z[...,na]+1))
                                    / i_grn_senesce_daily_p6zt-1), length_p6z[...,na])
 
