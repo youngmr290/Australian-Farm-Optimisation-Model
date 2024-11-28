@@ -309,6 +309,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
 
         pnc=np.array([['G','G','G','Ag1','a2']
                      ,['G','G','G','Sg1','a2']
+                     ,['G', 'G', 'G', 'U', 'a2']  # can only have multiple Lucerne
                      ,['G','G','Ag2','N','a2']
                      ,['G','G','Ag2','E','a2']
                      ,['G','G','Ag2','OF','a2']
@@ -375,6 +376,7 @@ def f_rot_gen(user_crop_rot=False): #by default it runs the full rotation list
         ###initilise these so that rot generator can be checked (want to make sure each rotation provides a history other than pnc)
         pnc=np.array([['G','G','G','Ag1','a2']
                      ,['G','G','G','Sg1','a2']
+                     ,['G', 'G', 'G', 'U', 'a2']  # can only have multiple Lucerne
                      ,['G','G','Ag2','N','a2']
                      ,['G','G','Ag2','E','a2']
                      ,['G','G','Ag2','OF','a2']
