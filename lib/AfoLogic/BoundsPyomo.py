@@ -40,6 +40,7 @@ note:
 def f1_boundarypyomo_local(params, model):
     lmu_mask = pinp.lmu_mask
     mask_r = pinp.rot_mask_r
+    z_mask = pinp.general['i_mask_z']
 
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
@@ -737,7 +738,7 @@ def f1_boundarypyomo_local(params, model):
         ###build bound if turned on
         if landuse_bound_inc:
             ###setbound using % of farm area
-            area_bound_klz = fun.f_sa(np.array([99999]), sen.sav['bnd_landuse_area_klz'][pinp.all_landuse_mask_k,:,:], 5)  # 99999 is arbitrary default value which mean skip constraint
+            area_bound_klz = fun.f_sa(np.array([99999]), sen.sav['bnd_landuse_area_klz'][pinp.all_landuse_mask_k,:,:][:,lmu_mask,:][:,:,z_mask], 5)  # 99999 is arbitrary default value which mean skip constraint
             arrays = [model.s_landuses, model.s_lmus, model.s_season_types]
             index_klz = fun.cartesian_product_simple_transpose(arrays)
             tup_klz = tuple(map(tuple, index_klz))

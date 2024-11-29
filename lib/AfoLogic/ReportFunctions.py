@@ -3339,6 +3339,14 @@ def mp_report(lp_vars, r_vals, option=1):
     ###sup/dse
     Sup_DSE_qsz = np.round(fun.f_divide(total_sup_qsz.squeeze() * 1000, (pas_area_qsz * sr_qsz.squeeze())))
     summary_df.loc['Supplement (kg/DSE)',:] = Sup_DSE_qsz
+    ##propn fodder
+    v_use_biomass_qsp7zkls2 = d_vars['base']['v_use_biomass_qsp7zkls2']  # use base vars because z is being reported
+    v_use_biomass_qszs2 = v_use_biomass_qsp7zkls2.sum(axis=(2,4,5))
+    total_biomass_qsz = v_use_biomass_qszs2.sum(axis=-1)
+    graz_idx = list(r_vals['stub']['keys_s2']).index("Graz")
+    biomass_fodder_qsz = v_use_biomass_qszs2[:,:,:,graz_idx]
+    fodder_percent_qsz = fun.f_divide(biomass_fodder_qsz, total_biomass_qsz) * 100
+    summary_df.loc['Fodder (%)',:] = fodder_percent_qsz.ravel()
     ###total dams mated
     type = 'stock'
     prod = 'dvp_is_mating_vzig1'
@@ -3449,7 +3457,7 @@ def mp_report(lp_vars, r_vals, option=1):
         sale_numbers_offs_tv_qsz = pd.DataFrame(sale_numbers_offs_tv_qsz.mul(z_prob_qsz, axis=1).sum(axis=1))
         sale_numbers_dams_y_qsz = pd.DataFrame(sale_numbers_dams_y_qsz.mul(z_prob_qsz, axis=1).sum(axis=1))
 
-    return summary_df, landuse_area_k_qsz, sale_numbers_offs_tv_qsz, sale_numbers_dams_y_qsz
+    return summary_df, landuse_area_k_qsz, sale_numbers_dams_y_qsz, sale_numbers_offs_tv_qsz
 
 ############################
 # functions for numpy arrays#

@@ -152,14 +152,17 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
         rfun.f_var_reshape(lp_vars, r_vals)  # this func defines a global variable called d_vars
         trial_sum = pd.concat(rfun.mp_report(lp_vars,r_vals, option=2))
 
-        ##set index to trial name
+        ##set header to trial name
         trial_name = trial_name.replace(" ", "")[0:15]
-        trial_sum.columns =[trial_name]
-        trial_sum = trial_sum
+        trial_sum.columns = [trial_name]
 
         ##read in current results and update if trial is one of the validation trials
         try:
             validation_df = pd.read_fwf('AFO Test.txt', index_col=0)
+            ###update index incase something new has been added (this mainly occurs for wether sale ages)
+            new_idx = validation_df.index.union(trial_sum.index, False)
+            validation_df = validation_df.reindex(new_idx)
+            ###add or update current trial
             validation_df[trial_name] = trial_sum
         except FileNotFoundError:
             validation_df = trial_sum
