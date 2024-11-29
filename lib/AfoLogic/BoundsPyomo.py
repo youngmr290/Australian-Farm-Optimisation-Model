@@ -70,6 +70,7 @@ def f1_boundarypyomo_local(params, model):
     legume_area_bound_inc = sen.sav['bnd_total_legume_area_percent'] != '-'  #bound on total legume
     pasture_lmu_bound_inc = np.any(sen.sav['bnd_pas_area_l'] != '-')
     landuse_bound_inc = np.any(sen.sav['bnd_landuse_area_klz'] != '-') #bound on area of each landuse (which is the sum of all the phases for that landuse)
+    cont_phase_bound_inc = np.any(sen.sav['max_yr_cont_k'] != '-') #bound on area of each landuse (which is the sum of all the phases for that landuse)
     crop_area_bound_inc = np.any(sen.sav['bnd_crop_area_qk1'] != '-') or np.any(sen.sav['bnd_crop_area_percent_qk1'] != '-')  # controls if crop area bnd is included.(which is the sum of all the phases for that crop)
     biomass_graze_bound_inc = np.any(sen.sav['bnd_biomass_graze_k1'] != '-')   # controls if biomass grazed bnd is included.(which is the proportion of crop biomass that is grazed)
     #todo need to make this input below in uinp. Then test the constraint works as expected.
@@ -829,6 +830,23 @@ def f1_boundarypyomo_local(params, model):
                     return pe.Constraint.Skip
             model.con_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_lmus, rule=pas_bound,doc='bound pasture area by lmu')
 
+
+        ##bound to limit the number of years of cont lucerne (Nov24 inputs are based on 5yrs of lucerne)
+        if cont_phase_bound_inc:
+            ###propn of each landuse that can be in a cont phase
+            max_yr_cont_k = fun.f_sa(np.array([99999]), sen.sav['max_yr_cont_k'][pinp.all_landuse_mask_k], 5)  # 99999 is arbitrary default value which mean skip constraint
+            p_cont_freq = sinp.general['phase_len']/max_yr_cont_k
+            p_cont_freq_k = dict(zip(model.s_landuses, p_cont_freq))
+            ###constraint
+            l_p7 = list(model.s_season_periods)
+            def cont_phase_bound(model, q, s, p7, k, l, z):
+                if p7 == l_p7[-1] and p_cont_freq_k[k]>0.001 and pe.value(model.p_wyear_inc_qs[q, s]):
+                    return(sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_phase_continuous_r[r] * model.p_landuse_area[r, k] for r in model.s_phases)
+                           == p_cont_freq_k[k] * sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_landuse_area[r, k] for r in model.s_phases))
+                else:
+                    return pe.Constraint.Skip
+            model.con_cont_phase_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
+                                                    model.s_landuses, model.s_lmus, model.s_season_types, rule=cont_phase_bound, doc='bound on number of years continuous phase can exist for')
 
         ##biomass grazed bound - proportion of the biomass that is produced that is grazed
         ###This could be expanded to handle a sav with a s2 axis. Currently, it only controls the proportion grazed (s2[1])

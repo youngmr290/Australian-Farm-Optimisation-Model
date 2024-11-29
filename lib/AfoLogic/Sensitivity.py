@@ -540,6 +540,7 @@ def create_sa():
     sav['bnd_total_pas_area_percent_q'] = np.full(len_Q, '-', dtype=object)  #Control the total percent of pasture area on farm.
     sav['bnd_pas_area_l'] = np.full(len_l, '-', dtype=object)  #pasture area by lmu for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
     sav['bnd_landuse_area_klz'] = np.full((len_k, len_l, len_z), '-', dtype=object)  #landuse area by lmu and z. if all values are '-' the bnd won't be used
+    sav['max_yr_cont_k'] = np.full(len_k, '-', dtype=object)  #max number of years for cont phase for each crop - used to cap the number of years of cont lucerne in web app.
     sav['bnd_sup_per_dse'] = '-'   #SA to control the supplement per dse (kg/dse)
     sav['bnd_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated
     sav['est_propn_dams_mated_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #estimated proportion of dams mated - used when bnd_propn is default "-"

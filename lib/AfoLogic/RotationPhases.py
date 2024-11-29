@@ -333,6 +333,14 @@ def f_rot_hist_params(params):
     params['hist_prov'] = rot_prov.squeeze().to_dict()
     params['hist_req'] = rot_req.squeeze().to_dict()
 
+    ##create array to specify if a phase is continuous
+    ###check if phase provides and requires same history
+    phase_prov_and_req_hist = pd.Series(np.any(np.array(rot_prov.index)==np.array(rot_req.index)[:,na], axis=1), index=rot_req.index)
+    ###make sure phase requires and provides all histories (required because of the general PNC histories)
+    phase_is_continuous = (phase_prov_and_req_hist.groupby(level=0).mean() == 1) * 1
+    params['p_phase_continuous_r'] = phase_is_continuous.to_dict()
+
+
     ##create constraint mask - this is required when some rotations have been masked out (e.g unprofitbale rotation) - when rot are masked out it can result in nothing requiring a history therefore meaning the constraint needs to be skipped
     phases_r = pinp.phases_r.index #list of phases after the rot mask has been applied
     masked_rot_req = rot_req[rot_req.index.get_level_values(0).isin(phases_r)] #mask out the removed rotations from req param
