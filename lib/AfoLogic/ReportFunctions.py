@@ -3347,6 +3347,17 @@ def mp_report(lp_vars, r_vals, option=1):
     biomass_fodder_qsz = v_use_biomass_qszs2[:,:,:,graz_idx]
     fodder_percent_qsz = fun.f_divide(biomass_fodder_qsz, total_biomass_qsz) * 100
     summary_df.loc['Fodder (%)',:] = fodder_percent_qsz.ravel()
+    ##crop grazing
+    prod = np.array([1])
+    type = 'crpgrz'
+    weights = 'crop_consumed_qsfkp6p5zl'
+    keys = 'keys_qsfkp6p5zl'
+    arith = 2
+    index = []
+    cols = [0, 1, 6]  # q,s,z
+    cropgrazed_qsz = f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
+                                                      keys=keys, arith=arith, index=index, cols=cols)
+    summary_df.loc['Grn Crop (t)', :] = round(cropgrazed_qsz.squeeze(),0)
     ###total dams mated
     type = 'stock'
     prod = 'dvp_is_mating_vzig1'
