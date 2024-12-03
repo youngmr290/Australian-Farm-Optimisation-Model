@@ -33,7 +33,7 @@ from . import CropGrazingPyomo as cgzpy
 from . import SaltbushPyomo as slppy
 from . import relativeFile
 
-def coremodel_all(trial_name, model, method, nv, print_debug_output, lp_vars):
+def coremodel_all(trial_name, model, method, nv, print_debug_output, MP_lp_vars):
     '''
     Wraps all of the core model into a function so it can be run multiple times in a loop
 
@@ -82,7 +82,7 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output, lp_vars):
 
     ###this last constraint is for the MP model to constrain the starting point
     if sinp.structuralsa['model_is_MP']:
-        f_con_MP(model, lp_vars)
+        f_con_MP(model, MP_lp_vars)
 
 
     #############
@@ -942,7 +942,7 @@ def f_objective(model):
                for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types
                if pe.value(model.p_wyear_inc_qs[q,s]))
 
-def f_con_MP(model, lp_vars):
+def f_con_MP(model, MP_lp_vars):
     ''''
     These constraints are to bound the variable levels in the first node of the first year in the MP model. This
     is when farm conditions have changed but management has not yet reacted. Therefore, key production management is
@@ -955,7 +955,7 @@ def f_con_MP(model, lp_vars):
         ## give 1% flex on the bnd to allow for any rounding.
         if q == 'q0' and p7 == 'zm0' and len_p7>1:
             return (model.v_phase_area[q,s,p7,z,r,l] <=
-                    lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 1.01)
+                    MP_lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 1.01)
         else:
             return pe.Constraint.Skip
     model.con_MP_rotation_q0_lower = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
@@ -967,7 +967,7 @@ def f_con_MP(model, lp_vars):
         ## give 1% flex on the bnd to allow for any rounding.
         if q == 'q0' and p7 == 'zm0' and len_p7>1:
             return (model.v_phase_area[q,s,p7,z,r,l] >=
-                    lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 0.99)
+                    MP_lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 0.99)
         else:
             return pe.Constraint.Skip
     model.con_MP_rotation_q0_upper = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
@@ -981,7 +981,7 @@ def f_con_MP(model, lp_vars):
         if q == 'q0' and len_p7>1 and (t1=='t0' or t1=='t1' or k2=='NM-0') and model.p_dvp_is_node1_vzg1[v1, z, g1]:
             return (sum(model.v_dams[q, s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
                        for n1 in model.s_nut_dams for w1 in model.s_lw_dams) <=
-                    sum(lp_vars[str('v_dams')]['q0', s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
+                    sum(MP_lp_vars[str('v_dams')]['q0', s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
                         for n1 in model.s_nut_dams for w1 in model.s_lw_dams)*1.05)
         else:
             return pe.Constraint.Skip
@@ -997,7 +997,7 @@ def f_con_MP(model, lp_vars):
         if q == 'q0' and len_p7>1 and (t1=='t0' or t1=='t1' or k2=='NM-0') and model.p_dvp_is_node1_vzg1[v1, z, g1]:
             return (sum(model.v_dams[q, s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
                        for n1 in model.s_nut_dams for w1 in model.s_lw_dams) >=
-                    sum(lp_vars[str('v_dams')]['q0', s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
+                    sum(MP_lp_vars[str('v_dams')]['q0', s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
                         for n1 in model.s_nut_dams for w1 in model.s_lw_dams)*0.95)
         else:
            return pe.Constraint.Skip
@@ -1012,7 +1012,7 @@ def f_con_MP(model, lp_vars):
         if q == 'q0' and len_p7>1 and t3!='t0' and model.p_dvp_is_node1_k3vzxg3[k3,v3,z,x,g3]:
             return (sum(model.v_offs[q, s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
                        for n3 in model.s_nut_offs for w3 in model.s_lw_offs) <=
-                    sum(lp_vars[str('v_offs')]['q0', s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
+                    sum(MP_lp_vars[str('v_offs')]['q0', s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
                        for n3 in model.s_nut_offs for w3 in model.s_lw_offs)*1.01)
         else:
             return pe.Constraint.Skip
@@ -1028,7 +1028,7 @@ def f_con_MP(model, lp_vars):
         if q == 'q0' and len_p7>1 and t3!='t0' and model.p_dvp_is_node1_k3vzxg3[k3,v3,z,x,g3]:
             return (sum(model.v_offs[q, s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
                        for n3 in model.s_nut_offs for w3 in model.s_lw_offs) >=
-                    sum(lp_vars[str('v_offs')]['q0', s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
+                    sum(MP_lp_vars[str('v_offs')]['q0', s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
                        for n3 in model.s_nut_offs for w3 in model.s_lw_offs)*0.99)
         else:
             return pe.Constraint.Skip
@@ -1044,7 +1044,7 @@ def f_con_MP(model, lp_vars):
         ##doesnt need upper and lower because there is no LW bnd for prog.
         if q == 'q0' and len_p7>1 and t2=='t0' and model.p_dvp_is_node1_k3zg2[k3,z,g2]:
             return (sum(model.v_prog[q,s,k3, k5, t2, w2, z, i, a, x, g2] for w2 in model.s_lw_prog) ==
-                    sum(lp_vars[str('v_prog')]['q0',s,k3, k5, t2, w2, z, i, a, x, g2] for w2 in model.s_lw_prog))
+                    sum(MP_lp_vars[str('v_prog')]['q0',s,k3, k5, t2, w2, z, i, a, x, g2] for w2 in model.s_lw_prog))
         else:
             return pe.Constraint.Skip
     model.con_MP_prog_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs,
@@ -1067,9 +1067,9 @@ def f_con_MP(model, lp_vars):
     #         list_idx.append(i)
     #         list_v.append(v)
     #         list_s.append(s)
-    #         ###make it so that all q in mp model look at q0 from lp_vars (because lp vars are from SE model that only has q[0])
+    #         ###make it so that all q in mp model look at q0 from MP_lp_vars (because lp vars are from SE model that only has q[0])
     #         s_adjusted = ("q0",) + s[1:]
-    #         list_bnd.append(lp_vars[str(v)][s_adjusted])
+    #         list_bnd.append(MP_lp_vars[str(v)][s_adjusted])
     #         i = i + 1
     #
     # def MP_upper(model, idx):
