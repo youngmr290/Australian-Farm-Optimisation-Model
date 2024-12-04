@@ -3346,7 +3346,7 @@ def mp_report(lp_vars, r_vals, option=1):
     graz_idx = list(r_vals['stub']['keys_s2']).index("Graz")
     biomass_fodder_qsz = v_use_biomass_qszs2[:,:,:,graz_idx]
     fodder_percent_qsz = fun.f_divide(biomass_fodder_qsz, total_biomass_qsz) * 100
-    summary_df.loc['Fodder (%)',:] = fodder_percent_qsz.ravel()
+    summary_df.loc['Fodder (%)',:] = fodder_percent_qsz.ravel().round()
     ##crop grazing
     prod = np.array([1])
     type = 'crpgrz'
