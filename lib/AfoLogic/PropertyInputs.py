@@ -827,6 +827,12 @@ def f1_phases(d_rot_info):
     phases_r_not_masked = phases_r #save version without mask so that rot generator doesnt get run everytime the landuse mask changes.
     phases_r = phases_r.loc[rot_mask_r,:]
     seeding_freq_r = seeding_freq_r[rot_mask_r]
+    rot_req_not_masked = rot_req
+    rot_prov_not_masked = rot_prov
+    mask_req = rot_req[0].isin(phases_r.index)
+    rot_req = rot_req.loc[mask_req,:]
+    mask_prov = rot_prov[0].isin(phases_r.index)
+    rot_prov = rot_prov.loc[mask_prov,:]
 
-    return {"phases_r": phases_r_not_masked, "rot_req": rot_req, "rot_prov": rot_prov, "s_rotcon1": s_rotcon1}
+    return {"phases_r": phases_r_not_masked, "rot_req": rot_req_not_masked, "rot_prov": rot_prov_not_masked, "s_rotcon1": s_rotcon1}
 
