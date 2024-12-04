@@ -248,7 +248,7 @@ def f1_boundarypyomo_local(params, model):
         ##dam lo bound. (the sheep in a given yr equal total for all dvp divided by the number of dvps in 1 yr)
         if dams_lobound_inc:
             '''
-            Lower bound dams.
+            Lower bound on the number of dams.
             
             The constraint sets can be changed for different analysis (this is preferred rather than creating 
             a new lobound because that keeps this module smaller and easier to navigate etc).
@@ -303,7 +303,7 @@ def f1_boundarypyomo_local(params, model):
         ##dams upper bound
         if dams_upbound_inc:
             '''
-            Upper bound dams.
+            Upper bound on the number of dams.
 
             The constraint sets can be changed for different analysis (this is preferred rather than creating 
             a new lobound because that keeps this module smaller and easier to navigate etc).
@@ -347,7 +347,7 @@ def f1_boundarypyomo_local(params, model):
         ##offs lo bound
         if offs_lobound_inc:
             '''
-            Lower bound offs.
+            Lower bound on the number of offs.
 
             The constraint sets can be changed for different analysis (this is preferred rather than creating 
             a new lobound because that keeps this module smaller and easier to navigate etc).
@@ -406,7 +406,7 @@ def f1_boundarypyomo_local(params, model):
         ##offs upper bound
         if offs_upbound_inc:
             '''
-            Upper bound offs.
+            Upper bound on the number of offs.
 
             The constraint sets can be changed for different analysis (this is preferred rather than creating 
             a new upbound because that keeps this module smaller and easier to navigate etc).
