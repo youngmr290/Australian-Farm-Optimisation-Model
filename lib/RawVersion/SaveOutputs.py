@@ -45,42 +45,43 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
     fun.write_variablesummary(model, exp_data.index[row][3], profit, 1, property_id=pinp.general['i_property_id'])
 
     ##check if user wants full solution
-    if exp_data.index[row][1] == True and not trial_infeasible:
+    if exp_data.index[row][1] == True:
         ##make lp file
         model.write('Output/%s.lp' %trial_name,io_options={'symbolic_solver_labels':True})  #file name has to have capital
 
-        ##This writes variable summary for full solution (same file as the temporary version created above)
-        fun.write_variablesummary(model, exp_data.index[row][3], profit, property_id=pinp.general['i_property_id'])
+        if not trial_infeasible:
+            ##This writes variable summary for full solution (same file as the temporary version created above)
+            fun.write_variablesummary(model, exp_data.index[row][3], profit, property_id=pinp.general['i_property_id'])
 
-        ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
-        with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
-            f.write("My description of the instance!\n")
-            model.display(ostream=f)
+            ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
+            with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
+                f.write("My description of the instance!\n")
+                model.display(ostream=f)
 
-        ##write rc, duals and slacks to txt file. Duals are slow to write so that option must be turn on
-        write_duals = True
-        with open('Output/Rc Slacks and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
-            f.write('RC\n')
-            for v in model.component_objects(pe.Var, active=True):
-                f.write("Variable %s\n" %v)
-                for index in v:
-                    try: #in case variable has no index
-                        print("      ", index, model.rc[v[index]], file=f)
-                    except: pass
-            f.write('Slacks (no entry means no slack)\n')  # this can be used in search to find the start of this in the txt file
-            for c in model.component_objects(pe.Constraint,active=True):
-                f.write("Constraint %s\n" % c)
-                for index in c:
-                    if c[index].lslack() != 0 and c[index].lslack() != np.inf:
-                        print("  L   ",index,c[index].lslack(),file=f)
-                    if c[index].uslack() != 0 and c[index].lslack() != np.inf:
-                        print("  U   ",index,c[index].uslack(),file=f)
-            if write_duals:
-                f.write('Dual\n')   #this can be used in search to find the start of this in the txt file
-                for c in model.component_objects(pe.Constraint, active=True):
-                    f.write("Constraint %s\n" %c)
+            ##write rc, duals and slacks to txt file. Duals are slow to write so that option must be turn on
+            write_duals = True
+            with open('Output/Rc Slacks and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
+                f.write('RC\n')
+                for v in model.component_objects(pe.Var, active=True):
+                    f.write("Variable %s\n" %v)
+                    for index in v:
+                        try: #in case variable has no index
+                            print("      ", index, model.rc[v[index]], file=f)
+                        except: pass
+                f.write('Slacks (no entry means no slack)\n')  # this can be used in search to find the start of this in the txt file
+                for c in model.component_objects(pe.Constraint,active=True):
+                    f.write("Constraint %s\n" % c)
                     for index in c:
-                        print("      ", index, model.dual[c[index]], file=f)
+                        if c[index].lslack() != 0 and c[index].lslack() != np.inf:
+                            print("  L   ",index,c[index].lslack(),file=f)
+                        if c[index].uslack() != 0 and c[index].lslack() != np.inf:
+                            print("  U   ",index,c[index].uslack(),file=f)
+                if write_duals:
+                    f.write('Dual\n')   #this can be used in search to find the start of this in the txt file
+                    for c in model.component_objects(pe.Constraint, active=True):
+                        f.write("Constraint %s\n" %c)
+                        for index in c:
+                            print("      ", index, model.dual[c[index]], file=f)
 
     ##pickle lp info
     pkl_lp_vars_path = relativeFile.find(__file__, "../../pkl", "pkl_lp_vars_{0}.pkl".format(trial_name))
