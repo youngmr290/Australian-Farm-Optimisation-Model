@@ -7887,20 +7887,27 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##convert p6 to p - this reduces the final array size to save memory (otherwise final array would have p and p6 axis)
     nv_cutoff_upper_ftpzg = np.sum(nv_cutoff_upper_p6ftpzg * (a_p6_pa1e1b1nwzida0e0b0xyg==index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...]), axis=0)
     nv_cutoff_lower_ftpzg = np.sum(nv_cutoff_lower_p6ftpzg * (a_p6_pa1e1b1nwzida0e0b0xyg==index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...]), axis=0)
-    nv_cutoffs_sd_ftpzg = np.sum(nv_cutoffs_sd_p6ftpzg * (a_p6_pa1e1b1nwzida0e0b0xyg==index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...]), axis=0)
 
     ##So that no animals are excluded the lowest cutoff[0] is set to -np.inf and the highest cutoff (excluding confinement pool) is set to np.inf
     nv_cutoff_lower_ftpzg[0, ...] = -np.inf
     nv_cutoff_upper_ftpzg[n_non_confinement_pools - 1, ...] = np.inf
 
     ##allocate each sheep class to a nv group
-    ###Calculate a proportion of the mei & pi that goes in each pool
-    nv_propn_ftpsire = fun.f_norm_cdf(nv_cutoff_upper_ftpzg, nv_tpsire, sd=nv_cutoffs_sd_ftpzg).astype(dtype) \
-                       - fun.f_norm_cdf(nv_cutoff_lower_ftpzg, nv_tpsire, sd=nv_cutoffs_sd_ftpzg).astype(dtype)
-    nv_propn_ftpdams = fun.f_norm_cdf(nv_cutoff_upper_ftpzg, nv_tpdams, sd=nv_cutoffs_sd_ftpzg).astype(dtype)  \
-                       - fun.f_norm_cdf(nv_cutoff_lower_ftpzg, nv_tpdams, sd=nv_cutoffs_sd_ftpzg).astype(dtype)
-    nv_propn_ftpoffs = fun.f_norm_cdf(nv_cutoff_upper_ftpzg[:,:,mask_p_offs_p,...], nv_tpoffs, sd=nv_cutoffs_sd_ftpzg[:,:,mask_p_offs_p,...]).astype(dtype)  \
-                       - fun.f_norm_cdf(nv_cutoff_lower_ftpzg[:,:,mask_p_offs_p,...], nv_tpoffs, sd=nv_cutoffs_sd_ftpzg[:,:,mask_p_offs_p,...]).astype(dtype)
+    # ###Calculate a proportion of the mei & pi that goes in each pool - using normal distribution
+    # nv_cutoffs_sd_ftpzg = np.sum(nv_cutoffs_sd_p6ftpzg * (a_p6_pa1e1b1nwzida0e0b0xyg==index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...]), axis=0)
+    # nv_propn_ftpsire = fun.f_norm_cdf(nv_cutoff_upper_ftpzg, nv_tpsire, sd=nv_cutoffs_sd_ftpzg).astype(dtype) \
+    #                    - fun.f_norm_cdf(nv_cutoff_lower_ftpzg, nv_tpsire, sd=nv_cutoffs_sd_ftpzg).astype(dtype)
+    # nv_propn_ftpdams = fun.f_norm_cdf(nv_cutoff_upper_ftpzg, nv_tpdams, sd=nv_cutoffs_sd_ftpzg).astype(dtype)  \
+    #                    - fun.f_norm_cdf(nv_cutoff_lower_ftpzg, nv_tpdams, sd=nv_cutoffs_sd_ftpzg).astype(dtype)
+    # nv_propn_ftpoffs = fun.f_norm_cdf(nv_cutoff_upper_ftpzg[:,:,mask_p_offs_p,...], nv_tpoffs, sd=nv_cutoffs_sd_ftpzg[:,:,mask_p_offs_p,...]).astype(dtype)  \
+    #                    - fun.f_norm_cdf(nv_cutoff_lower_ftpzg[:,:,mask_p_offs_p,...], nv_tpoffs, sd=nv_cutoffs_sd_ftpzg[:,:,mask_p_offs_p,...]).astype(dtype)
+
+    ###allocate animals to nv pool (this is a simplier method than above - it is used to make the reports cleaner to look at because animal only gets allocated to one nv pool)
+    nv_propn_ftpsire = np.logical_and(nv_tpsire < nv_cutoff_upper_ftpzg, nv_tpsire >= nv_cutoff_lower_ftpzg) * 1
+    nv_propn_ftpdams = np.logical_and(nv_tpdams < nv_cutoff_upper_ftpzg, nv_tpdams >= nv_cutoff_lower_ftpzg) * 1
+    nv_propn_ftpoffs = np.logical_and(nv_tpoffs < nv_cutoff_upper_ftpzg[:,:,mask_p_offs_p,...], nv_tpoffs >= nv_cutoff_lower_ftpzg[:,:,mask_p_offs_p,...]) * 1
+
+
     ###adjust the calculated proportions for the confinement pool. If in confinement then:
     ####set all the slices to 0
     nv_propn_ftpsire = fun.f_update(nv_propn_ftpsire, 0.0, confinementw_tpa1e1b1nwzida0e0b0xyg0)
