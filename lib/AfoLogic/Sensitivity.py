@@ -469,6 +469,7 @@ def create_sa():
     sav['cw_c1c2'] = np.full(uinp.parameters['i_cw_c2'].shape, '-', dtype=object)  #wool growth params for genotypes
     sav['cg_c1c2'] = np.full(uinp.parameters['i_cg_c2'].shape, '-', dtype=object)  #weight gain params for genotypes.
     sav['cd_c1c2'] = np.full(uinp.parameters['i_cd_c2'].shape, '-', dtype=object)  #mortality params for genotypes.
+    sav['ck_c1c2'] = np.full(uinp.parameters['i_ck_c2'].shape, '-', dtype=object)  #energy efficiency params.
     sav['cl0_c1c2'] = np.full(uinp.parameters['i_cl0_c2'].shape, '-', dtype=object)  #litter size genotype params for genotypes.
     sav['cu2_c1c2'] = np.full(uinp.parameters['i_cu2_c2'].shape, '-', dtype=object)  #lamb survival params for genotypes.
     ##SAM
