@@ -2351,16 +2351,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ###Use a temporary variable and ensure that nw_max does not reduce, which could occur when SRW is adjusted for REVs at an age stage
     t_nw_max_pa1e1b1nwzida0e0b0xyg0 = (srw_pa1e1b1nwzida0e0b0xyg0 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg0)
                                        + w_b_exp_pa1e1b1nwzida0e0b0xyg0 * srw_age_pa1e1b1nwzida0e0b0xyg0)
-    t_nw_max_pa1e1b1nwzida0e0b0xyg0[-1, ...] = 0   #set to 0 prior to roll forward
-    nw_max_pa1e1b1nwzida0e0b0xyg0 = np.maximum(t_nw_max_pa1e1b1nwzida0e0b0xyg0, np.roll(t_nw_max_pa1e1b1nwzida0e0b0xyg0, 1, axis=0))
+    nw_max_pa1e1b1nwzida0e0b0xyg0 = np.maximum.accumulate(t_nw_max_pa1e1b1nwzida0e0b0xyg0, axis=0)
     t_nw_max_pa1e1b1nwzida0e0b0xyg1 = (srw_pa1e1b1nwzida0e0b0xyg1 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg1)
                                        + w_b_exp_pa1e1b1nwzida0e0b0xyg1 * srw_age_pa1e1b1nwzida0e0b0xyg1)
-    t_nw_max_pa1e1b1nwzida0e0b0xyg1[-1, ...] = 0   #set to 0 prior to roll forward
-    nw_max_pa1e1b1nwzida0e0b0xyg1 = np.maximum(t_nw_max_pa1e1b1nwzida0e0b0xyg1, np.roll(t_nw_max_pa1e1b1nwzida0e0b0xyg1, 1, axis=0))
+    nw_max_pa1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(t_nw_max_pa1e1b1nwzida0e0b0xyg1, axis=0)
     t_nw_max_pa1e1b1nwzida0e0b0xyg3 = (srw_pa1e1b1nwzida0e0b0xyg3 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg3)
                                        + w_b_exp_pa1e1b1nwzida0e0b0xyg3 * srw_age_pa1e1b1nwzida0e0b0xyg3)
-    t_nw_max_pa1e1b1nwzida0e0b0xyg3[-1, ...] = 0   #set to 0 prior to roll forward
-    nw_max_pa1e1b1nwzida0e0b0xyg3 = np.maximum(t_nw_max_pa1e1b1nwzida0e0b0xyg3, np.roll(t_nw_max_pa1e1b1nwzida0e0b0xyg3, 1, axis=0))
+    nw_max_pa1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate(t_nw_max_pa1e1b1nwzida0e0b0xyg3, axis=0)
 
     ##Change in normal weight max - the last period will be 0 by default but this is okay because nw hits an asymptote so change in will be 0 in the last period.
     d_nw_max_pa1e1b1nwzida0e0b0xyg0 = np.zeros_like(nw_max_pa1e1b1nwzida0e0b0xyg0)
@@ -4607,10 +4604,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                 ##Yatf dependent start values
                 ###Normal weight max (if animal is well-fed) - yatf
-                nw_max_yatf	= srw_pa1e1b1nwzida0e0b0xyg2[p_srw] * (1 - srw_age_pa1e1b1nwzida0e0b0xyg2[p]) + w_b_yatf * srw_age_pa1e1b1nwzida0e0b0xyg2[p]
+                nw_max_yatf	= (srw_pa1e1b1nwzida0e0b0xyg2[p_srw] * (1 - srw_age_pa1e1b1nwzida0e0b0xyg2[p])
+                                  + w_b_yatf * srw_age_pa1e1b1nwzida0e0b0xyg2[p])
                 ##Dependent start: Change in normal weight max - yatf
                 ###nw_max = srw - (srw - bw) * srw_age[p] so d_nw_max = (srw - (srw-bw) * srw_age[p]) - (srw - (srw - bw) * srw_age[p-1]) and that simplifies to d_nw_max = (srw_age[p-1] - srw_age[p]) * (srw-bw)
-                d_nw_max_yatf = fun.f_divide((srw_age_pa1e1b1nwzida0e0b0xyg2[p-1, ...] - srw_age_pa1e1b1nwzida0e0b0xyg2[p, ...]) * (srw_pa1e1b1nwzida0e0b0xyg2[p_srw] - w_b_yatf)
+                d_nw_max_yatf = fun.f_divide((srw_age_pa1e1b1nwzida0e0b0xyg2[p-1, ...] - srw_age_pa1e1b1nwzida0e0b0xyg2[p, ...])
+                                             * (srw_pa1e1b1nwzida0e0b0xyg2[p_srw] - w_b_yatf)
                                              , days_period_pa1e1b1nwzida0e0b0xyg2[p])
                 ###GFW (start)
                 gfw_start_yatf = cfw_start_yatf / cw_yatf[3, ...]
