@@ -1537,6 +1537,11 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False, summa
         dams_preserve_ax = (1, 2, 9)
         offs_preserve_ax = (1, 2, 9)
 
+    if summary3: #for summary3 DSE needs to be calculated with q, s, p6 & z
+        sire_preserve_ax = (0, 1, 2 ,3)
+        dams_preserve_ax = (0, 1, 3, 9)
+        offs_preserve_ax = (0, 1, 4, 9)
+
     stock_vars = d_vars['base'] #change this if z is not preserved
 
     if method == 0:
