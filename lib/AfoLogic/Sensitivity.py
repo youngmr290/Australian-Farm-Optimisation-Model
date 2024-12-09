@@ -98,12 +98,12 @@ def create_sa():
     sav['seq_len']      = '-'                     #SA to alter the length of the season sequence in the SQ model
     sav['model_is_MP']      = '-'                 #SA to control when the MP framework is used.
     sav['MP_setup_trial_name']      = '-'         #SA to specify the name of the trial that generated the initial position for the MP run.
-    sav['len_planning_horizon']      = '-'        #length of the planning horizon (only makes a difference if q is active eg in the MP model). This is used to weight q in the MP model.
+    sav['len_planning_horizon']      = '-'        #length of the planning horizon (only makes a difference if q is active e.g. in the MP model). This is used to weight q in the MP model.
     sav['inc_discount_factor']      = '-'         #SA to control if a discount factor (time value of money) is included. Default is false because not required for SE model but this should be set to True for MP model.
     sav['fs_create_pkl']      = '-'                  #SA to control if the trial is being used to create pkl fs
     sav['fs_create_number']      = '-'                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is created for a given trial.
     sav['gen_with_t']      = '-'                  #SA to control if sheep generator is run with active t axis.
-    sav['fs_use_pkl']      = '-'                  #SA to control if the pkl fs is used or the excel input fs is used.
+    sav['fs_use_pkl']      = '-'                  #SA to control if the pkl fs is used or the Excel input fs is used.
     sav['fs_use_number']      = '-'                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is used for a given trial.
     sav['r2adjust_inc']      = '-'              #SA to control if the r2 feedsupply adjustment from Excel is included.
     sav['inc_c1_variation'] = '-'               #control if price variation is on. This only effects result if risk aversion is included.
@@ -206,7 +206,7 @@ def create_sa():
     sav['seeding_eff'] = '-'               #propn of seeding time when the seeder is not moving i.e. due to refilling.
     sav['seeding_delays'] = '-'               #propn of the seeding period when seeding cannot occur due to bad weather
     sav['daily_harvest_hours'] = '-'               #number of hours harvester can run for each day.
-    sav['harv_eff'] = '-'               #propn of seeding time when the harv is not moving (e.g prep/greaseing harvester, moving paddocks, testing grain moisture, etc)
+    sav['harv_eff'] = '-'               #propn of seeding time when the harv is not moving (e.g. prep/greasing harvester, moving paddocks, testing grain moisture, etc.)
     sav['harv_delays'] = '-'               #propn of the harv period when harv cannot occur due to bad weather
     sav['spray_eff'] = '-'               #propn of spraying time when sprayer is not working e.g. filling up.
     sav['variable_dep_hr_seeding'] = '-'               #variable depn of seeding gear per machine hour of seeding
@@ -250,7 +250,7 @@ def create_sa():
     ##############
     ##SAV
     sav['cropgrazing_inc'] = '-'  #control if crop grazing is allowed
-    sav['bnd_crop_grazing_intensity'] = '-'  #control the amount of crop consumed per hectare of crop that can be grazed (i.e. doesnt include a crop are if the crop can't be grazed).
+    sav['bnd_crop_grazing_intensity'] = '-'  #control the amount of crop consumed per hectare of crop that can be grazed (i.e. doesn't include a crop are if the crop can't be grazed).
     sav['cropgraze_propn_area_grazed_kl'] = np.full((len_crop_k, len_l), '-', dtype=object)  #control proportion of crop area that can be grazed.
     sav['cropgraze_yield_penalty_k'] = np.full((len_crop_k), '-', dtype=object)  #Reduction in yield per kg of crop consumed (if grazed early in the growing season after the crop is established).
     ##SAM
@@ -282,8 +282,8 @@ def create_sa():
     sav['sowing_freq_R'] = np.full(len_R, '-', dtype=object)    # SA value for pinp sowing frequency - use capital R because rotation len from the web app can be different
     sav['yield_Rz'] = np.full((len_R, len_z), '-', dtype=object)    # SA value for pinp grain/hay yield - use capital R because rotation len from the web app can be different
     sav['fert_R_nz'] = np.full((len_R, 4*len_z), '-', dtype=object)    # SA value for pinp fert - 4 because there are currently 4 ferts by r - use capital R because rotation len from the web app can be different
-    sav['fert_passes_R_nz'] = np.full((len_R, 4*len_z), '-', dtype=object)    # SA value for pinp fert passses - 4 because there are currently 4 ferts by r - use capital R because rotation len from the web app can be different
-    sav['chem_R_nz'] = np.full((len_R, 2*len_z), '-', dtype=object)    # SA value for pinp chem - 2 chem categorys in pinp (herb and fungicide). - use capital R because rotation len from the web app can be different
+    sav['fert_passes_R_nz'] = np.full((len_R, 4*len_z), '-', dtype=object)    # SA value for pinp fert passes - 4 because there are currently 4 ferts by r - use capital R because rotation len from the web app can be different
+    sav['chem_R_nz'] = np.full((len_R, 2*len_z), '-', dtype=object)    # SA value for pinp chem - 2 chem categories in pinp (herb and fungicide). - use capital R because rotation len from the web app can be different
     sav['chem_passes_R_nz'] = np.full((len_R, len_n1*len_z), '-', dtype=object)    # SA value for pinp chem passes - use capital R because rotation len from the web app can be different
     sav['lmu_yield_adj_kl'] = np.full((len_crop_k, len_l), '-', dtype=object)    # SA value for yield adjustment by LMU
     sav['lmu_fert_adj_nl'] = np.full((len_n, len_l), '-', dtype=object)    # SA value for fert adjustment by LMU
@@ -345,7 +345,7 @@ def create_sa():
     ##SAV
     ###stock feedsupply
     sav['feedsupply_adj_r2p'] = np.full_like(pinp.feedsupply['i_feedsupply_adj_options_r2p'], '-', dtype=object)  # SA value for feedsupply adjustment.
-    sav['dams_confinement_P'] = np.full(len_P, '-', dtype=object)  # SA to control the gen periods dams are in confimentment - this gets applied in FeedSupplyStock.py. Note, this will overwrite pkl so if using pkl to optimise confinement you most likely don’t want to use this SAV.
+    sav['dams_confinement_P'] = np.full(len_P, '-', dtype=object)  # SA to control the gen periods dams are in confinement - this gets applied in FeedSupplyStock.py. Note, this will overwrite pkl so if using pkl to optimise confinement you most likely don’t want to use this SAV.
     sav['target_ebg_dams_Pb'] = np.full((len_P, len_b1), '-', dtype=object)  # SA to set lw target
     sav['target_ebg_offs_Pb'] = np.full((len_P, len_b0), '-', dtype=object)  # SA to set lw target
     ###stock others
@@ -387,7 +387,7 @@ def create_sa():
     sav['adjp_cfw_initial_w1'] = np.full(sinp.structuralsa['i_adjp_cfw_initial_w1'].shape, '-', dtype=object)    #initial cfw adjustment dams
     sav['adjp_fd_initial_w1'] = np.full(sinp.structuralsa['i_adjp_fd_initial_w1'].shape, '-', dtype=object)      #initial fd adjustment dams
     sav['adjp_fl_initial_w1'] = np.full(sinp.structuralsa['i_adjp_fl_initial_w1'].shape, '-', dtype=object)      #initial fl adjustment dams
-    sav['condense_at_seasonstart'] = '-'  # SA to alter if condensing occurs at season start. Default is False except in the MP model when this can be set to True so that core fvps can be masked out and just just the season nodes for fvps.
+    sav['condense_at_seasonstart'] = '-'  # SA to alter if condensing occurs at season start. Default is False except in the MP model when this can be set to True so that core fvps can be masked out and just the season nodes for fvps.
     sav['user_fvp_date_dams_iu'] = np.full(sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['user_fvp_date_dams_yiu'] = np.full((len_y,)+sinp.structuralsa['i_dams_user_fvp_date_iu'].shape, '-', dtype=object)      #SA to control user fvp dates.
     sav['mask_fvp_dams'] = np.full(sinp.structuralsa['i_fvp_mask_dams'].shape, '-', dtype=object)      #SA to mask optional fvps.
@@ -414,8 +414,8 @@ def create_sa():
     sam['kg_yatf'] = 1.0                              #energy efficiency of yatf
     sam['mr_yatf'] = 1.0                              #Maintenance requirement of yatf
     sam['pi_yatf'] = 1.0                              #Potential intake of yatf
-    sam['LTW_dams'] = 1.0                       #adjust impact of life time wool fleece effects
-    sam['LTW_offs'] = 1.0                       #adjust impact of life time wool fleece effects
+    sam['LTW_dams'] = 1.0                       #adjust impact of lifetime wool fleece effects
+    sam['LTW_offs'] = 1.0                       #adjust impact of lifetime wool fleece effects
     sam['pi_post_adult'] = 1.0                        #Post loop potential intake of adults (zf2==1)
     sam['pi_post_yatf'] = 1.0                        #Post loop potential intake of yatf
     sam['chill_index'] = 1.0                        #intermediate sam on chill index - impact on lamb survival.
@@ -441,10 +441,10 @@ def create_sa():
     saa['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype='float64')  #SA value for feedsupply.
     saa['feedsupply_adj_r2p'] = np.zeros(pinp.feedsupply['i_feedsupply_adj_options_r2p'].shape, dtype='float64')  #SA value for feedsupply adjustment.
     saa['littersize_og1'] = np.zeros((len_o, len_g1), dtype='float64')   #sa to the litter size this changes the propn of singles/twins and trips whilst keeping propn empty the same.
-    saa['conception_og1'] = np.zeros((len_o, len_g1), dtype='float64')   #sa to adjust the proportion of ewes that are empty whilst keepping litter size (number of lambs / pregnant ewes) the same
+    saa['conception_og1'] = np.zeros((len_o, len_g1), dtype='float64')   #sa to adjust the proportion of ewes that are empty whilst keeping litter size (number of lambs / pregnant ewes) the same
     saa['preg_increment_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype='float64')   #sa to adjust the conception of an individual b1 slice at conception, so that the value of an extra lamb conceived of a given birth type can be calculated. a value of 1 would transfer all available animals into the target slice
     saa['mortalityx_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype='float64')  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
-    saa['mortalitye_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype='float64')  #Scale the calculated dam mortality at birth. 0.1 (10%) would increase the (perinatal) mortality of progeny at birth by 10 percentage points eg if mortality was 20% it would increase to 30%. - this is a high level sa, it impacts within a calculation not on an input
+    saa['mortalitye_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype='float64')  #Scale the calculated dam mortality at birth. 0.1 (10%) would increase the (perinatal) mortality of progeny at birth by 10 percentage points e.g. if mortality was 20% it would increase to 30%. - this is a high level sa, it impacts within a calculation not on an input
     saa['rr_age_og1'] = np.zeros(pinp.sheep['i_scan_og1'].shape, dtype='float64')    # reproductive rate by age. Use shape that has og1
     saa['wean_wt'] = 0.0         #weaning weight adjustment of yatf. Note: WWt changes without any change in MEI
     saa['mortalityb'] = 0.0      #Adjust the base mortality - this is a high level sa, it impacts within a calculation not on an input
@@ -486,8 +486,8 @@ def create_sa():
     saa['cg_c1c2'] = np.zeros(uinp.parameters['i_cg_c2'].shape, dtype='float64')  #SA value for weight gain params.
     saa['ck_c1c2'] = np.zeros(uinp.parameters['i_ck_c2'].shape, dtype='float64')  #SA value for energy efficiency params.
     saa['cl0_c1c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype='float64')  #SA value for litter size genotype params.
-    saa['scan_std_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
-    saa['nlb_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
+    saa['scan_std_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
+    saa['nlb_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
     saa['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
     saa['ss'] = 0.0                    #staple strength (adjust SS in sgen end of period)
 
@@ -498,7 +498,7 @@ def create_sa():
     #####################
     ##REV               #
     #####################
-    ##Note the REV specific SA's get applied for the specified age stage (if you dont care about age stage you can use any SA with the REV)
+    ##Note the REV specific SA's get applied for the specified age stage (if you don't care about age stage you can use any SA with the REV)
 
     ##SAV
     sav['distribute_w0_only']      = False        #SA to distribute all animals to w[0]. For use with REV trials to simplify holding Wt constant.
@@ -521,7 +521,7 @@ def create_sa():
     saa['rev_mortalityb'] = 0.0      #Adjust the base mortality - this is a high level sa, it impacts within a calculation not on an input
     saa['rev_mortalityx_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype='float64')  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
     saa['rev_littersize_og1'] = np.zeros((len_o, len_g1), dtype='float64')  # sa to the litter size this changes the propn of singles/twins and trips whilst keeping propn empty the same.
-    saa['rev_conception_og1'] = np.zeros((len_o, len_g1), dtype='float64')  # sa to adjust the proportion of ewes that are empty whilst keepping litter size (number of lambs / pregnant ewes) the same
+    saa['rev_conception_og1'] = np.zeros((len_o, len_g1), dtype='float64')  # sa to adjust the proportion of ewes that are empty whilst keeping litter size (number of lambs / pregnant ewes) the same
 
     ##SAT
     ##SAR
@@ -564,7 +564,7 @@ def create_sa():
     sav['bnd_up_offs_Tsdxg3'] = np.full((len_T3,) + (len_s,) + (len_d,) + (len_x,) + (len_g3,), '-', dtype=object)   #max number of offs
     sav['bnd_up_prog_tdxg2'] = np.full((len_t2,) + (len_d,) + (len_x,) + (len_g2,), '-', dtype=object)   #max number of offs
     sav['bnd_sr_Qt'] = np.full((len_Q, len_t), '-', dtype=object)   #SA to fix stocking rate
-    sav['bnd_lw_change'] = '-'   #target difference in LW compared to the base w (nut 0). Used in MP model. A positive value means animals must be heavier than the base w slice at the end of the first node. A negitive value means the animals must be lighter. This bnd is only active in q[1].
+    sav['bnd_lw_change'] = '-'   #target difference in LW compared to the base w (nut 0). Used in MP model. A positive value means animals must be heavier than the base w slice at the end of the first node. A negative value means the animals must be lighter. This bnd is only active in q[1].
     sav['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
     sav['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
     sav['bnd_min_sale_age_female_g1'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a dam can be sold - BBT offspring can be sold but BBT dams can't (because they are BB)
