@@ -4180,8 +4180,8 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     lowest and highest destination weights.
 
     If the weight is above the highest destination weight then the weight is rounded down & the extra weight is
-    effectively lost. If the weight is below the lowest weight then that animal is not transferred to the next
-    period and the animal is effectively lost.
+    effectively lost. If the weight is below the lowest weight then only a proportion of that animal is transferred
+    to the next period. This retains the same total LW but some animals are effectively lost.
 
     When the distribution is for condensing/pre-joining the destination weights are ffcfw_end for the condensed slices (w9).
     This is the condensed values of ffcfw_end (of this DVP) rather than ffcfw_start (of the next DVP) because ffcfw_start
@@ -4300,11 +4300,16 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
 
     ## Combine the values into the return variable
     ### clip (0 to 1) to handle the special case where source weight > the maximum destination weight
-    distribution_w8gw9 = np.clip(distribution_nearest_w8gw9 + distribution_nextnearest_w8gw9,0,1)
+    t_distribution_w8gw9 = np.clip(distribution_nearest_w8gw9 + distribution_nextnearest_w8gw9,0,1)
     # distribution_error = np.any(np.sum(distribution_w8gw9, axis=-1)>1)
 
+    ##If calculating REVs then set the distribution so that animals are only distributed to w9[0]
+    if sen.sav['distribute_w0_only']:
+        t_distribution_w8gw9[...] = 0
+        t_distribution_w8gw9[..., 0] = 1
+
     ##Set defaults for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
-    distribution_w8gw9 = fun.f_update(distribution_w8gw9, np.array([1],dtype='float32'), dvp_type_next_tvgw!=vtype) #make '1' a numpy array so it can be float32 to make f_update more data efficient.
+    distribution_w8gw9 = fun.f_update(t_distribution_w8gw9, np.array([1],dtype='float32'), dvp_type_next_tvgw!=vtype) #make '1' a numpy array so it can be float32 to make f_update more data efficient.
     return distribution_w8gw9
 
 
