@@ -3281,6 +3281,7 @@ def mp_report(lp_vars, r_vals, option=1):
     ####dams sold each year
     sale_numbers_dams_qszy = sale_numbers_dams_qszy_tv.sum(axis=1)
     sale_numbers_dams_y_qsz = sale_numbers_dams_qszy.unstack().T
+    sale_numbers_dams_y_qsz = sale_numbers_dams_y_qsz.reindex(sale_numbers_dams_qszy.index.unique(-1)) #put "lambs" back at the top of the y axis.
     ####add female prog that were sold
     sale_numbers_dams_y_qsz.iloc[0] = female_prog_sold_qsz
     sale_numbers_dams_y_qsz = round(sale_numbers_dams_y_qsz, 0)
