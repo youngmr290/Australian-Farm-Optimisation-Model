@@ -1754,9 +1754,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##Standard birth weight.
     ### Does not include the gender scalar on SRW because std BW is related to the female SRW of the genotype
     ### Does not include the BTRT scalar of the dam i.e. assuming that the BTRT adjustment of dam SRW doesn't affect her progeny
-    w_b_std_pa1e1b1nwzida0e0b0xyg0 = srw_female_pa1e1b1nwzida0e0b0xyg0 * np.sum(cb0_sire[15, ...] * btrt_propn_b0xyg0, axis = b0_pos, keepdims=True) * cx_sire[15, 0:1, ...]
-    w_b_std_pa1e1b1nwzida0e0b0xyg1 = srw_female_pa1e1b1nwzida0e0b0xyg1 * np.sum(cb0_dams[15, ...] * btrt_propn_b0xyg1, axis = b0_pos, keepdims=True) * cx_dams[15, 1:2, ...]
-    w_b_std_pa1e1b1nwzida0e0b0xyg3 = srw_female_pa1e1b1nwzida0e0b0xyg3 * cb0_offs[15, ...] * cx_offs[15, mask_x,...]
+    ### SRW for g0, g1 & g3 excludes the age stage adjustment from rev_srw with a p axis (so BW is held constant - small error for whole of life age stage)
+    w_b_std_b0xyg0 = srw_female_yg0 * np.sum(cb0_sire[15, ...] * btrt_propn_b0xyg0, axis = b0_pos, keepdims=True) * cx_sire[15, 0:1, ...]
+    w_b_std_b0xyg1 = srw_female_yg1 * np.sum(cb0_dams[15, ...] * btrt_propn_b0xyg1, axis = b0_pos, keepdims=True) * cx_dams[15, 1:2, ...]
+    w_b_std_b0xyg3 = srw_female_yg3 * cb0_offs[15, ...] * cx_offs[15, mask_x,...]
     ##fetal param - normal birthweight young - used as target birthweight during pregnancy if sheep fed well. Therefore, average gender effect.
     w_b_std_y_pa1e1b1nwzida0e0b0xyg1 = srw_female_pa1e1b1nwzida0e0b0xyg2 * cb1_yatf[15, ...] * cp_yatf[15, ...] #gender not considered until actual birth therefore no cx
     ##wool growth efficiency
@@ -2245,11 +2246,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     d_cfw_ave_pa1e1b1nwzida0e0b0xyg3 = sfw_da0e0b0xyg3 * af_wool_pa1e1b1nwzida0e0b0xyg3 / 364
 
     ##Expected relative size
-    relsize_exp_pa1e1b1nwzida0e0b0xyg0  = 1 - (1 - w_b_std_pa1e1b1nwzida0e0b0xyg0 / srw_pa1e1b1nwzida0e0b0xyg0) * np.exp(-cn_sire[1, ...]
+    relsize_exp_pa1e1b1nwzida0e0b0xyg0  = 1 - (1 - w_b_std_b0xyg0 / srw_pa1e1b1nwzida0e0b0xyg0) * np.exp(-cn_sire[1, ...]
                                                 * agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 / (srw_pa1e1b1nwzida0e0b0xyg0**cn_sire[2, ...]))
-    relsize_exp_pa1e1b1nwzida0e0b0xyg1  = 1 - (1 - w_b_std_pa1e1b1nwzida0e0b0xyg1 / srw_pa1e1b1nwzida0e0b0xyg1) * np.exp(-cn_dams[1, ...]
+    relsize_exp_pa1e1b1nwzida0e0b0xyg1  = 1 - (1 - w_b_std_b0xyg1 / srw_pa1e1b1nwzida0e0b0xyg1) * np.exp(-cn_dams[1, ...]
                                                 * agedam_lamb1st_a1e1b1nwzida0e0b0xyg1 / (srw_pa1e1b1nwzida0e0b0xyg1**cn_dams[2, ...]))
-    relsize_exp_pa1e1b1nwzida0e0b0xyg3  = 1 - (1 - w_b_std_pa1e1b1nwzida0e0b0xyg3 / srw_pa1e1b1nwzida0e0b0xyg3) * np.exp(-cn_offs[1, ...]
+    relsize_exp_pa1e1b1nwzida0e0b0xyg3  = 1 - (1 - w_b_std_b0xyg3 / srw_pa1e1b1nwzida0e0b0xyg3) * np.exp(-cn_offs[1, ...]
                                                 * agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 / (srw_pa1e1b1nwzida0e0b0xyg3**cn_offs[2, ...]))
 
     ##Adjust the tissue insulation parameter (cc[3]) for yatf 30 days or younger.
@@ -2279,20 +2280,20 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ce_offs = ce_cpa1e1b1nwzida0e0b0xyg3 #rename to keep consistent
 
     ##birth weight expected - includes relsize factor
-    w_b_exp_pa1e1b1nwzida0e0b0xyg0 = w_b_std_pa1e1b1nwzida0e0b0xyg0 * np.sum(ce_sire[15, ...] * agedam_propn_da0e0b0xyg0, axis = d_pos, keepdims = True)
-    w_b_exp_pa1e1b1nwzida0e0b0xyg1 = w_b_std_pa1e1b1nwzida0e0b0xyg1 * np.sum(ce_dams[15, ...] * agedam_propn_da0e0b0xyg1, axis = d_pos, keepdims = True)
-    w_b_exp_pa1e1b1nwzida0e0b0xyg3 = w_b_std_pa1e1b1nwzida0e0b0xyg3 * ce_offs[15, ...]
+    w_b_exp_da0e0b0xyg0 = w_b_std_b0xyg0 * np.sum(ce_sire[15, ...] * agedam_propn_da0e0b0xyg0, axis = d_pos, keepdims = True)
+    w_b_exp_da0e0b0xyg1 = w_b_std_b0xyg1 * np.sum(ce_dams[15, ...] * agedam_propn_da0e0b0xyg1, axis = d_pos, keepdims = True)
+    w_b_exp_da0e0b0xyg3 = w_b_std_b0xyg3 * ce_offs[15, ...]
 
     ##Normal weight max (if animal is well-fed)
     ###Use a temporary variable and ensure that nw_max does not reduce, which could occur when SRW is adjusted for REVs at an age stage
     t_nw_max_pa1e1b1nwzida0e0b0xyg0 = (srw_pa1e1b1nwzida0e0b0xyg0 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg0)
-                                       + w_b_exp_pa1e1b1nwzida0e0b0xyg0 * srw_age_pa1e1b1nwzida0e0b0xyg0)
+                                       + w_b_exp_da0e0b0xyg0 * srw_age_pa1e1b1nwzida0e0b0xyg0)
     nw_max_pa1e1b1nwzida0e0b0xyg0 = np.maximum.accumulate(t_nw_max_pa1e1b1nwzida0e0b0xyg0, axis=0)
     t_nw_max_pa1e1b1nwzida0e0b0xyg1 = (srw_pa1e1b1nwzida0e0b0xyg1 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg1)
-                                       + w_b_exp_pa1e1b1nwzida0e0b0xyg1 * srw_age_pa1e1b1nwzida0e0b0xyg1)
+                                       + w_b_exp_da0e0b0xyg1 * srw_age_pa1e1b1nwzida0e0b0xyg1)
     nw_max_pa1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(t_nw_max_pa1e1b1nwzida0e0b0xyg1, axis=0)
     t_nw_max_pa1e1b1nwzida0e0b0xyg3 = (srw_pa1e1b1nwzida0e0b0xyg3 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg3)
-                                       + w_b_exp_pa1e1b1nwzida0e0b0xyg3 * srw_age_pa1e1b1nwzida0e0b0xyg3)
+                                       + w_b_exp_da0e0b0xyg3 * srw_age_pa1e1b1nwzida0e0b0xyg3)
     nw_max_pa1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate(t_nw_max_pa1e1b1nwzida0e0b0xyg3, axis=0)
 
     ##Change in normal weight max - the last period will be 0 by default but this is okay because nw hits an asymptote so change in will be 0 in the last period.
