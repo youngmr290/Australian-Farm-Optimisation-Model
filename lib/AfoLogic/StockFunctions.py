@@ -1099,15 +1099,17 @@ def f_foetus_cs(cb1, cp, nfoet, rc_start, w_b_std_y, w_b_exp_y, w_f_start, nw_f_
     ##foetus weight (end of period)	
     w_f = w_f_start + d_w_f
     #todo could add the REV function on w_f here. Only problem might be that relsize_start will change if WBE is increased & ffcfw_dams is higher
-    ##Weight of the gravid uterus (conceptus - mid-period)
-    guw = nfoet * (nw_gu + (w_f - nw_f))
-    ##Body condition of the foetus	
+    ##Body condition of the foetus
     rc_f = fun.f_divide(w_f, nw_f) #func to handle div0 error
     ##NE required for conceptus
-    nec = nfoet * rc_f * normale_dgu
+    nec_prior = nfoet * rc_f * normale_dgu
     ##Process the foetal energy REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     ###This is only holding the energy requirement constant. CSIRO Birth weight calculation can still vary
-    nec = f1_rev_update('foetus', nec, rev_trait_value)
+    nec = f1_rev_update('foetus', nec_prior, rev_trait_value)
+    ##Scale w_f if nec was changed by f1_rev_update()
+    w_f = w_f * fun.f_divide(nec, nec_prior)
+    ##Weight of the gravid uterus (conceptus - mid-period)
+    guw = nfoet * (nw_gu + (w_f - nw_f))
     return w_f, nec, nw_f, guw
 
 
@@ -1133,6 +1135,10 @@ def f_foetus_nfs(cg, cp, step, c_start, muscle_start, d_muscle, nfoet, w_b_exp_y
     :return:
     '''
     #calculates the energy requirement for gestation for the days gestating. The result is scaled by gest_propn when used
+    ##Normal weight of individual conceptus (mid-period)
+    nw_gu = w_b_exp_y * guw_age_f
+    ##Normal weight of foetus (mid-period - dam calcs)
+    nw_f = w_b_exp_y * nwf_age_f
     ## Conceptus growth scalar based on muscle growth in the previous period
     dm = f1_weight_energy_conversion(cg, 1, weight=d_muscle)
     m_start = f1_weight_energy_conversion(cg, 1, weight=muscle_start)
@@ -1146,15 +1152,11 @@ def f_foetus_nfs(cg, cp, step, c_start, muscle_start, d_muscle, nfoet, w_b_exp_y
     dc = c_start * dce_propn
     ##Process the foetal energy REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     dc = f1_rev_update('foetus', dc, rev_trait_value)
-    ##Normal weight of individual conceptus (mid-period)
-    nw_gu = w_b_exp_y * guw_age_f
     ##change in foetus weight Note:dc is conceptus so divide by n_foet to get change per foetus
     #d_w_f = d_nw_f *(1 + np.minimum(cfpreg, cfpreg * cb1[14, ...]))
     d_w_f = fun.f_divide(dc, nfoet, option=0) / (cp[8, ...] * cp[5, ...])   #option=0 returns 0 for n_foet==0
     ##foetus weight (end of period)
     w_f = w_f_start + d_w_f * step
-    ##Normal weight of foetus (mid-period - dam calcs)
-    nw_f = w_b_exp_y * nwf_age_f
     ##Weight of the gravid uterus (conceptus - mid-period)
     guw = nfoet * (nw_gu + (w_f - nw_f))
     return w_f, dc, nw_f, guw
