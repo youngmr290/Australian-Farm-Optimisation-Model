@@ -3250,22 +3250,31 @@ def mp_report(lp_vars, r_vals, option=1):
     index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
     summary_df = pd.DataFrame(index=[], columns=index_qsz)
 
-    ##ewe sale info - this is done first because the summary table uses some info from these calacs
+    ##ewe sale info - this is done first because the summary table uses some info from these calcs
     ###prog numbers sold
     type = 'stock'
     weights = 'prog_numbers_qsk3k5twzia0xg2'
     keys = 'prog_keys_qsk3k5twzia0xg2'
     arith = 2
-    index = [10,9]  # g, gender
+    index = [4,10,9]  # g, gender
     cols = [0,1,6]  # q,s,z
-    axis_slice = {4:[0,1,1]} #sale suckers
-    numbers_prog_gx_qsz = f_stock_pasture_summary(r_vals, type=type, weights=weights, keys=keys, arith=arith, index=index, cols=cols,
-                                                           axis_slice=axis_slice)
-    ####female prog sold
-    try:
-        female_prog_sold_qsz = numbers_prog_gx_qsz.loc[(['BBB','BBM'],'F'),:].sum(axis=0) #wrapped in try incase BBM are not included in the trial. Note BBT are added with wethers.
+    numbers_prog_tgx_qsz = f_stock_pasture_summary(r_vals, type=type, weights=weights, keys=keys, arith=arith, index=index, cols=cols)
+
+    ####total prog weaned
+    numbers_prog_weaned_qsz = numbers_prog_tgx_qsz.sum(axis=0)
+    ####total prog sold
+    numbers_prog_sold_qsz = numbers_prog_tgx_qsz.loc['t0', :].sum(axis=0)
+
+    ####female prog weaned
+    try:#wrapped in try incase BBM are not included in the trial. Note BBT are added with wethers.
+        female_prog_t_qsz = numbers_prog_tgx_qsz.loc[(slice(None),['BBB','BBM'],'F'),:].groupby(axis=0, level=0).sum()
     except KeyError:
-        female_prog_sold_qsz = numbers_prog_gx_qsz.loc[(['BBB'],'F'),:].sum(axis=0)
+        female_prog_t_qsz = numbers_prog_tgx_qsz.loc[(slice(None),['BBB'],'F'),:].groupby(axis=0, level=0).sum()
+
+    ####prog sold
+    female_prog_sold_qsz = female_prog_t_qsz.loc['t0', :]
+    wether_prog_sold_qsz = numbers_prog_sold_qsz - female_prog_sold_qsz
+
     ###dam numbers sale
     type = 'stock'
     prod = 'dvp_is_sale_tyvzig1'
@@ -3316,7 +3325,6 @@ def mp_report(lp_vars, r_vals, option=1):
     sale_numbers_offs_qsz_tv = sale_numbers_offs_qsz_tv.groupby(sale_numbers_offs_qsz_tv.columns, axis=1).sum()
     sale_numbers_offs_qsz_tv.columns = ['%s mo old' %i for i in sale_numbers_offs_qsz_tv.columns] #add extra info to header name
     ####add wether and crossy prog that were sold (they need to be included in the number of lambs born)
-    wether_prog_sold_qsz = numbers_prog_gx_qsz.sum(axis=0) - female_prog_sold_qsz
     sale_numbers_offs_qsz_tv.rename(columns={'0 mo old': 'Weaning'}, inplace=True)
     sale_numbers_offs_qsz_tv.iloc[:, 0] = wether_prog_sold_qsz
     sale_numbers_offs_tv_qsz = round(sale_numbers_offs_qsz_tv).T
@@ -3371,6 +3379,8 @@ def mp_report(lp_vars, r_vals, option=1):
     axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc['Ewes mated',:] = round(dams_mated_qsz.squeeze(),0)
+    ###prog weaned
+    summary_df.loc['Lambs weaned',:] = round(numbers_prog_weaned_qsz,0)
     ###total ewe sales
     summary_df.loc['Ewe sales',:] = sale_numbers_dams_y_qsz.sum(axis=0)
     ###total wether sales
