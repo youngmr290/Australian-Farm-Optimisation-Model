@@ -1845,18 +1845,19 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     dlf_wool_pa1e1b1nwzida0e0b0xyg3 = 1 + cw_offs[6,...] * (dl_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p] - 12)
 
     ##Efficiency for wool
+    ##Note: MU feeding standards are calculated later because they are a partial efficiency (PE). PEw = kw / km
     kw_cs_yg0 = ck_sire[17,...]
     kw_cs_yg1 = ck_dams[17,...]
     kw_cs_yg2 = ck_yatf[17,...]
     kw_cs_yg3 = ck_offs[17,...]
-    kw_mu_yg0 = ck_sire[37,...]
-    kw_mu_yg1 = ck_dams[37,...]
-    kw_mu_yg2 = ck_yatf[37,...]
-    kw_mu_yg3 = ck_offs[37,...]
+    # kw_mu_yg0 = ck_sire[37,...]
+    # kw_mu_yg1 = ck_dams[37,...]
+    # kw_mu_yg2 = ck_yatf[37,...]
+    # kw_mu_yg3 = ck_offs[37,...]
 
-    ##Efficiency for conceptus (for CSIRO feeding standards)
+    ##Efficiency for conceptus (for CSIRO feeding standards). MU calculated later
     kc_cs_yg1 = ck_dams[8,...]
-    kc_mu_yg1 = ck_dams[31, ...]
+    # kc_mu_yg1 = ck_dams[31, ...]
 
     ####################
     #initial conditions#
@@ -3419,20 +3420,27 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     kg_fodd_cs_sire, kg_supp_cs_sire, temp3 = sfun.f1_efficiency_cs(ck_sire, md_solid_sire
                                         , pinp.sheep['i_md_supp'], md_herb_sire, lgf_eff_pa1e1b1nwzida0e0b0xyg0[p]
                                         , dlf_eff_pa1e1b1nwzida0e0b0xyg[p], sam_kg=sam_kg_sire)
-                    #temp3 = sfun.f1_efficiency_mu(ck_sire, md_solid_sire)
+                    ##Calculate partial efficiency (PE) for wool & conceptus for MU functions
+                    ##The variables are called kc & kw but are PE and used where HAF above maintenance has been calculated
+                    temp3, kw_mu_yg0 = sfun.f1_efficiency_mu(ck_sire, md_solid_sire, km_sire)
                     #kl (temp3) is not used for sires
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
                     km_dams = sfun.f1_km(ck_dams, md_solid_dams)
                     kg_fodd_cs_dams, kg_supp_cs_dams, kl_cs_dams = sfun.f1_efficiency_cs(ck_dams, md_solid_dams
                                         , pinp.sheep['i_md_supp'], md_herb_dams, lgf_eff_pa1e1b1nwzida0e0b0xyg1[p]
                                         , dlf_eff_pa1e1b1nwzida0e0b0xyg[p], sam_kg=sam_kg_dams)
-                    kl_mu_dams = sfun.f1_efficiency_mu(ck_dams, md_solid_dams)
+                    ##Calculate partial efficiency (PE) for wool & conceptus for MU functions
+                    ##The variables are called kc & kw but are PE and used where HAF above maintenance has been calculated
+                    kl_mu_dams, kw_mu_yg1 = sfun.f1_efficiency_mu(ck_dams, md_solid_dams, km_dams)
+                    kc_mu_yg1 = kc_cs_yg1 / km_dams
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
                     km_offs = sfun.f1_km(ck_offs, md_solid_offs)
                     kg_fodd_cs_offs, kg_supp_cs_offs, temp3 = sfun.f1_efficiency_cs(ck_offs, md_solid_offs
                                         , pinp.sheep['i_md_supp'], md_herb_offs, lgf_eff_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                         , dlf_eff_pa1e1b1nwzida0e0b0xyg[p, ...], sam_kg=sam_kg_offs)
-                    #temp3 = sfun.f1_efficiency_mu(ck_offs, md_solid_offs)
+                    ##Calculate partial efficiency (PE) for wool & conceptus for MU functions
+                    ##The variables are called kc & kw but are PE and used where HAF above maintenance has been calculated
+                    temp3, kw_mu_yg3 = sfun.f1_efficiency_mu(ck_offs, md_solid_offs, km_offs)
                     #kl (temp3) is not used for offspring
 
 
@@ -4723,7 +4731,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 kg_fodd_cs_yatf, kg_supp_cs_yatf, temp3 = sfun.f1_efficiency_cs(ck_yatf, md_solid_yatf
                                         , pinp.sheep['i_md_supp'], md_herb_yatf, lgf_eff_pa1e1b1nwzida0e0b0xyg2[p]
                                         , dlf_eff_pa1e1b1nwzida0e0b0xyg[p], sam_kg=sam_kg_yatf)  #same feedsupply as dams
-                # temp3 = sfun.f1_efficiency_mu(ck_yatf, md_solid_yatf)
+                ##Calculate partial efficiency (PE) for wool & conceptus for MU functions
+                ##The variables are called kc & kw but are PE and used where HAF above maintenance has been calculated
+                temp3, kw_mu_yg2 = sfun.f1_efficiency_mu(ck_yatf, md_solid_yatf, km_yatf)
                 # kl (temp3) is not used for yatf
 
 

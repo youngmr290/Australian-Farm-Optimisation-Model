@@ -854,10 +854,13 @@ def f1_efficiency_cs(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, sam_kg=
     return kg_fodd, kg_supp, kl
 
 
-def f1_efficiency_mu(ck, md_solid):
-    ##Efficiency of energy use for lactation (differs from cs version by excluding heat associated with feeding)
-    kl =  ck[29, ...] + ck[30, ...] * md_solid
-    return kl
+def f1_efficiency_mu(ck, md_solid, km):
+    ##Partial efficiency of energy use. This differs from CS version because HAF above maintenance is included in MR
+    ##Lactation
+    kl =  (ck[5, ...] + ck[6, ...] * md_solid) / km
+    ##Wool growth
+    kw =  (ck[37, ...] + ck[38, ...] * md_solid) / km
+    return kl, kw
 
 
 def f1_weight_energy_conversion(cg, option, weight=None, energy=None):
@@ -1395,9 +1398,9 @@ def f_fibre_mu(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     ###which is required for the GEPEP analysis that is calibrating the adult intake and the fleece weight
     wbge_a0e0b0xyg = wbge_a0e0b0xyg / sam_pi
     ##ME available for wool growth
-    mec_g1 = nec_g1 / kc_g1
-    mel_g1 = nel_g1 / kl_g1
-    mew_min_g = new_min_g / kw_g
+    mec_g1 = fun.f_divide(nec_g1, kc_g1)
+    mel_g1 = fun.f_divide(nel_g1, kl_g1)
+    mew_min_g = fun.f_divide(new_min_g, kw_g)
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
     ##Wool growth (wool base - clean dry fibre) if there was no lag
     d_wb_nolag_g = cw_g[8, ...] * wbge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
@@ -1765,12 +1768,12 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     #but separates kf & kp and calculates proportion of fat & protein from mass and energy balance.
 
     ##Calculate me for conceptus growth, milk production & wool growth
-    hp_dc = nec * (1 / kc - 1)
-    hp_dl = nel * (1 / kl - 1)
-    hp_dw = new * (1 / kw - 1)
-    mec = nec / kc
-    mel = nel / kl
-    mew = new / kw
+    hp_dc = nec * (fun.f_divide(1, kc) - 1)
+    hp_dl = nel * (fun.f_divide(1, kl) - 1)
+    hp_dw = new * (fun.f_divide(1, kw) - 1)
+    mec = fun.f_divide(nec, kc)
+    mel = fun.f_divide(nel, kl)
+    mew = fun.f_divide(new, kw)
     ##Energy intake that is surplus to maintaining maternal body energy. Surplus is available for maternal body gain
     maintenance  = nem_ee + hp_mei + mec * gest_propn + mel * lact_propn + mew
     surplus_energy_ee = mei_initial - maintenance
