@@ -1414,8 +1414,8 @@ def f_fibre_mu(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     ##Net energy required for wool (above basal growth rate converted to WB)
     ###can be negative because mem assumes 4g of clean wool is grown. If less is grown then new 'returns' the energy.
     new_g = cw_g[0, ...] * (d_wb_g - cw_g[2, ...] * relsize_start_g / cw_g[22, ...])
-    ##Process the random REV on new to hold energy constant for wool growth
-    new_g = f1_rev_update('random', new_g, rev_trait_value)
+    # ##Process the random REV on new to hold energy constant for wool growth
+    # new_g = f1_rev_update('random', new_g, rev_trait_value)
     ##Convert wool base to CFW (using Schlumberger Dry factor)
     d_cfw_g = d_wb_g * cw_g[22, ...]
     ##Fibre diameter for the days growth (um)
