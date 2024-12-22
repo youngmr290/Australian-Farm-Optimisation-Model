@@ -286,7 +286,7 @@ def f1_boundarypyomo_local(params, model):
             # dams_lobound = dict(zip(tup_tvwzg, dams_lobound))
 
             ###constraint
-            def f_dam_lobound(model, q, s, k2, t, v, ws, z, g1):
+            def f_dam_lobound(model, q, s, k2, t, v, ws, z, g1):    #(v == "dv02" or v == "dv03" or v == "dv04") and
                 if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_dams_lobound[t,v,z,g1]!=0
                     and any(model.p_mask_dams[k2,t,v,w8,z,g1] != 0 for w8 in model.s_lw_dams)):
                     return sum(model.v_dams[q,s,k2,t,v,a,n,w8,z,i,y,g1]
@@ -389,7 +389,7 @@ def f1_boundarypyomo_local(params, model):
 
             ###constraint
             def f_off_lobound(model, q, s, k3, k5, t, v, ws, z, x, g3):
-                if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_offs_lobound[k3,t,v,z,x,g3]!=0\
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and model.p_offs_lobound[k3,t,v,z,x,g3]!=0
                         and any(model.p_mask_offs[k3,v,w8,z,x,g3] != 0 for w8 in model.s_lw_offs)):
                     return sum(model.v_offs[q,s,k3,k5,t,v,n3,w8,z,i,a,x,y3,g3]
                                for a in model.s_wean_times for n3 in model.s_nut_offs

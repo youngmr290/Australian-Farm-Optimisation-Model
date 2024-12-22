@@ -771,7 +771,7 @@ def f_con_stock_trade_profit(model):
             return pe.Constraint.Skip
     model.con_stock_trade_profit = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
                                                  model.s_season_types, rule=stock_trade_profit,
-                                                 doc='Requirement for infrastructure (based on number of times yarded and shearing activity)')
+                                                 doc='Requirement for infrastructure (based on number of times yarded and shearing activity)')  #todo is this a bad doc string? What happened to the infrastructure requirement?
 
     end_cons=time.time()
     # print('time stock con: ', end_cons-end_params)
