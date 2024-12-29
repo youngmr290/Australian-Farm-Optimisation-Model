@@ -258,6 +258,9 @@ def f_universal_inp_sa(uinp_defaults):
     ###SAA - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_scan_std_c2'] = fun.f_sa(parameters['i_scan_std_c2'].astype(float)
                                            , sen.saa['rr'] * (parameters['i_scan_std_c2'] > 0), 2)  #no change if original value was zero
+    parameters['i_lss_std_c2'] = fun.f_sa(parameters['i_lss_std_c2'].astype(float), sen.saa['lss'], 2)
+    parameters['i_lstw_std_c2'] = fun.f_sa(parameters['i_lstw_std_c2'].astype(float), sen.saa['lstw'], 2)
+    parameters['i_lstr_std_c2'] = fun.f_sa(parameters['i_lstr_std_c2'].astype(float), sen.saa['lstr'], 2)
 
     ##average c1 axis if price variation is not included
     general['i_c1_variation_included'] = fun.f_sa(general['i_c1_variation_included'], sen.sav['inc_c1_variation'], 5)

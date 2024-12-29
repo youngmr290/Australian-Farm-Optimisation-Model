@@ -504,6 +504,9 @@ def create_sa():
     saa['nlb_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
     saa['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
     saa['ss'] = 0.0                    #staple strength (adjust SS in sgen end of period)
+    saa['lss'] = 0.0                    #lamb survival of singles. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['lstw'] = 0.0                    #lamb survival of twins. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['lstr'] = 0.0                    #lamb survival of triplets. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
 
     ##SAT
     sat['cb0_c2'] = np.zeros(uinp.parameters['i_cb0_c2'].shape, dtype='float64')  #BTRT params for genotypes
