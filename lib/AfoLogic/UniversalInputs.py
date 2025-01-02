@@ -237,6 +237,7 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_ce_c2'][2,...] = fun.f_sa(parameters['i_ce_c2'][2,...].astype(float), sen.sav['bnd_twice_dry_propn'], 5) #propn of twice drys
     ###SAM - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_ci_c2'] = fun.f_sa(parameters['i_ci_c2'].astype(float),sen.sam['ci_c1c2'])
+    parameters['i_cl_c2'] = fun.f_sa(parameters['i_cl_c2'].astype(float),sen.sam['cl_c1c2'])    #lactation parameters
     parameters['i_cm_c2'] = fun.f_sa(parameters['i_cm_c2'].astype(float),sen.sam['cm_c1c2'])
     parameters['i_sfw_c2'] = fun.f_sa(parameters['i_sfw_c2'].astype(float),sen.sam['sfw_c2'])
     parameters['i_muscle_target_c2'] = fun.f_sa(parameters['i_muscle_target_c2'].astype(float), sen.sam['muscle_target_c2'])
