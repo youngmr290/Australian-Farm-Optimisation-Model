@@ -75,20 +75,20 @@ def f_run_required(exp_data1, l_pinp):
     and the fact that a user can opt not to run a trial even if it is out of date so the run requirement must be tracked
     have any sa cols been added or removed, are the values the same, has the py code changed since last run?
 
-    This function is also used by report.py to calculate if reports are being generated without of date data.
+    This function is also used by report.py to calculate if reports are being generated with out-of-date data.
 
     To trigger trial re-run delete pkl_r_vals{trial_name}.pkl.
     '''
     ##add run cols to be populated - this gets updated during this function and stored for next time.
-    ## This tracks if a trial needs to be run but doesnt get run.
+    ## This tracks if a trial needs to be run but doesn't get run.
     exp_data1['run_req'] = False
 
-    ##try and read in exp from last run - if it doesnt exist then all trials require running.p
-    try: #in case pkl_exp doesn't exist, if it doesnt exist then all trials require running
+    ##try and read in exp from last run - if it doesn't exist then all trials require running.p
+    try: #in case pkl_exp doesn't exist, if it doesn't exist then all trials require running
         with open('pkl/pkl_exp.pkl',"rb") as f:
             prev_exp = pkl.load(f)
     except FileNotFoundError:
-        exp_data1['run_req']=True #if prev exp doesnt exist then that means all trials require running.
+        exp_data1['run_req']=True #if prev pkl_exp doesn't exist then that means all trials require running.
         return exp_data1
 
     ##calc if any code has been changed since AFO was last run
