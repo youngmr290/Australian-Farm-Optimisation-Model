@@ -1577,6 +1577,8 @@ def f_templc(cc, ffcfw_start, rc_start, sl_start, hp_total, temp_ave, temp_max, 
 def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, hp_total, meme, new, km, kg_supp, kg_fodd, kw, mei_propn_supp
                , mei_propn_herb, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0, mei_propn_milk = 0
                , nec = 0, kc = 1, nel = 0, kl = 1, gest_propn = 0, lact_propn = 0):
+    '''Calculate the impact of heat loss to the environment on the ME required for maintenance.
+    CSIRO calculation uses lower critical temperature'''
 
     ##Calculate me for conceptus growth, milk production & wool growth
     mec = nec / kc
@@ -2494,6 +2496,47 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_rec
     return n_sires
 
 
+def f_chill_adjust(numbers_b1, dse_per_hd, nfoet_b1, scan):
+    '''Calculate the adjustment of chill across the b1 axis based on differential allocation of single-,
+    twin- and triplet-bearing dams to lambing paddocks.
+    Assumes that the order of priority for allocation to sheltered paddocks is based on largest litter size.
+    Differential allocation is dependent on the dams being scanned for multiples or litter size
+    The sheltered paddocks are assumed to be 50% of the total DSE for the pregnant ewes. The dams are allocated
+    to the sheltered paddocks starting with the higher litter sizes.
+    Differential nutrition of dams in late pregnancy is not accounted for in these calculations. The adjustment
+    of chill index for each litter size assumes the numbers of the other litter sizes with the same nutrition
+    profile (w slice).'''
+    #todo the function could be improved by including the DSE of dry ewes and the estimated proportion sold at scanning
+
+    chill_adjust_b1 = np.array([0.0])   #default value to return
+    if scan > 1:
+        e1_pos = sinp.stock['i_e1_pos']
+        b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
+        a_prepost_b1 = fun.f_expand(sinp.stock['ia_prepost_b1'], b1_pos)
+        ##Differential allocation requires comparing litter size for the dams (nfoet_b1) relative to the target group (nfoet_b9)
+        nfoet_b9 = np.swapaxes(nfoet_b1[..., na], -1, b1_pos - 1)
+        ##variation in chill from the average for sheltered and exposed paddocks
+        variation = pinp.sheep['i_chill_adj']
+        ##calculate the number of animals in each b1 slice that can be allocated to sheltered paddocks based on DSEs
+        n_dse = np.sum(numbers_b1, axis=e1_pos, keepdims=True) * dse_per_hd * (nfoet_b1 > 0)   #only do the calculations for the pregnant dams
+        ###adjust n_dse for scan level. Add the triplet numbers to the twin slice if scan = 2 and set triplets to 0.
+        ### Note: this will need tweaking to include empty ewes and scan = 1. Maybe a np.cumsum(reversed b1) would work
+        n_dse_adjusted = (n_dse + np.roll(n_dse * (nfoet_b1 > scan), -1, axis = b1_pos)) * (nfoet_b1 <= scan)
+        ##Allocate the number of DSE available in the sheltered paddocks based on higher priority animals
+        total_shelter_dse = 0.5 * np.sum(n_dse_adjusted, axis=b1_pos, keepdims=True)
+        higher_priority_dse_b9 = np.sum(n_dse_adjusted[..., na] * (nfoet_b1[..., na] > nfoet_b9), axis=b1_pos-1, keepdims=True)
+        ###move the b9 axis back to the b1 position and index the singleton b9 to remove
+        higher_priority_dse = np.swapaxes(higher_priority_dse_b9, -1, b1_pos-1)[..., 0]
+        dse_sheltered = np.clip(total_shelter_dse - higher_priority_dse, 0, n_dse)
+        propn_sheltered = fun.f_divide(dse_sheltered, n_dse)   # f_divide because n_dse can be 0
+        ###Allocate proportion sheltered to the higher litter sizes if scanning at a lower level, then take_along for the GBAL slices
+        propn_sheltered = np.maximum.accumulate(propn_sheltered, axis = b1_pos) * (n_dse > 0)
+        propn_sheltered = np.take_along_axis(propn_sheltered, a_prepost_b1[na,na,na,...], axis=b1_pos)
+        ##The dams that are in the sheltered paddocks have reduced chill and non-sheltered have an increase in chill.
+        chill_adjust_b1 = -(variation * propn_sheltered) + (variation * (1 - propn_sheltered))
+    return chill_adjust_b1
+
+
 ##################
 #Mortality CSIRO #
 ##################
@@ -2580,8 +2623,8 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     '''Progeny losses due to large progeny or slow birth process (dystocia)
 
     Dystocia definition is a difficult birth that leads to brain damage, which can be due to physical trauma
-    but also lack of oxygen. The difficult birth can be a larger single lamb but it is also quite prevalent
-    in twins not due to large lambs but due to a slow birth because the ewe is lacking energy to push.
+    but also lack of oxygen. The difficult birth can be a larger single lamb, however, it is also quite prevalent
+    in twins due to a slow birth because the ewe is lacking energy to push.
     '''
     ###distribution on w_b & rc_birth - add distribution to ebg_start_p1 and then average (axis =-1)
     w_b_p1p2 = fun.f_distribution7(w_b, cv=cv_weight)[...,na]
