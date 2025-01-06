@@ -410,6 +410,8 @@ def create_sa():
     sav['LTW_loops_increment'] = '-'                  #SA to Increment the number of LTW loops carried out in the code. The base is 2 loops with 0 increment but if using pkl fs or ltw_adj is 0 then base is 0 loops.
     sav['offs_sale_opportunities'] = '-'              #offspring sale opportunities per dvp (if using method 1)
     sav['chill_variation'] = '-'                      #The variation below and above the average for sheltered and exposed paddocks.
+    sav['mobsize_lambing'] = '-'    #SA to change the average mobsize of dams at lambing
+    sav['mobsize_scalar_l0'] = np.full(len_l0, '-', dtype=object)                                   #SA to change the relative mob size based on litter size during period_between_birthwean
     ##SAM
     sam['kg_adult'] = 1.0                             #energy efficiency of adults (zf2==1)
     sam['mr_adult'] = 1.0                             #Maintenance requirement of adults (zf2==1)
