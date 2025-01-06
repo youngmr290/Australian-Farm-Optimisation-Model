@@ -1466,7 +1466,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##mob size
     mobsize_pa1e1b1nwzida0e0b0xyg0 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg0, a_p6_pa1e1b1nwzida0e0b0xyg,0)
-    mobsize_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg1,a_p6_pa1e1b1nwzida0e0b0xyg,0)
+    t_mobsize_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg1,a_p6_pa1e1b1nwzida0e0b0xyg,0)
     mobsize_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg3, a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], 0)
 
     ##select which equation is used for the sheep sim functions for each period
@@ -2429,6 +2429,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ############################
     ### ewe mob size calcs     #
     ############################
+    # ## Apply the intermediate sav on mobsize in the period between birth and weaning - temporarily shifted to separate husbandry and mortality
+    # t_mobsize_lambing = fun.f_sa(mobsize_pa1e1b1nwzida0e0b0xyg1, sen.sav['mobsize_lambing'], 5)
+    # mobsize_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(mobsize_pa1e1b1nwzida0e0b0xyg1, t_mobsize_lambing
+    #                                               , period_between_birthwean_pa1e1b1nwzida0e0b0xyg1)
     ### scale the mob size along the b axis with allowance for scanning to identify the litter size
     ### association between axis for input (based on litter size) and scanning during period from birth to weaning when mob size is adjusted
     a_l_pa1e1b1nwzida0e0b0xyg1 = np.minimum(nfoet_b1nwzida0e0b0xyg, scan_management_pa1e1b1nwzida0e0b0xyg1) * period_between_birthwean_pa1e1b1nwzida0e0b0xyg1
@@ -2437,11 +2441,18 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     mobsize_scalar_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mobsize_scalar_b1, a_l_pa1e1b1nwzida0e0b0xyg1, b1_pos)
     ### adjust scalar for the expected proportion of each litter size so that the resulting average mob size == the input
     #### This calculation means that this input can't be used to fudge the average mobsize.
-    #### A constant average mob size means that the mob based husbandry cost does not change.
+    #### A constant average mob size means that the mob based husbandry cost does not change because should have a constant number of mobs.
     mobsize_scalar_pa1e1b1nwzida0e0b0xyg1 = mobsize_scalar_pa1e1b1nwzida0e0b0xyg1 * np.sum(lsln_propn_b1nwzida0e0b0xyg1
                                                     / mobsize_scalar_pa1e1b1nwzida0e0b0xyg1, axis=b1_pos, keepdims=True)
-    ### scale the dam mob size
-    mobsize_pa1e1b1nwzida0e0b0xyg1 = mobsize_pa1e1b1nwzida0e0b0xyg1 * mobsize_scalar_pa1e1b1nwzida0e0b0xyg1
+    ### scale the dam mob size for husbandry
+    mobsize_pa1e1b1nwzida0e0b0xyg1 = t_mobsize_pa1e1b1nwzida0e0b0xyg1 * mobsize_scalar_pa1e1b1nwzida0e0b0xyg1
+
+    ## Apply the intermediate sav on mobsize in the period between birth and weaning
+    #todo Debug the labour required that is linked to mobsize at lambing. Mob size is having too much effect on
+    # labour requirements. Shift this code back to the top of this section (20 lines earlier)
+    t_mobsize_lambing = fun.f_sa(t_mobsize_pa1e1b1nwzida0e0b0xyg1, sen.sav['mobsize_lambing'], 5)
+    mobsize_mortality_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(t_mobsize_pa1e1b1nwzida0e0b0xyg1, t_mobsize_lambing
+                                                            , period_between_birthwean_pa1e1b1nwzida0e0b0xyg1)
 
     ############################
     ### feed supply calcs      #
@@ -5440,7 +5451,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     chill_index_p0 = chill_index_pa1e1b1nwzida0e0b0xygp0[p] + chill_adj_b1nwzida0e0b0xyg1[..., na]
                     temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_pyatf[:,p,...]
                                     , w_b_yatf, w_b_ltw_std_yatf, cv_bw_yatf
-                                    , foo_yatf, chill_index_p0, mobsize_pa1e1b1nwzida0e0b0xyg1[p]
+                                    , foo_yatf, chill_index_p0, mobsize_mortality_pa1e1b1nwzida0e0b0xyg1[p]
                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
                                     , sap_mortalityp_pa1e1b1nwzida0e0b0xyg2[p], saa_mortalityx_pa1e1b1nwzida0e0b0xyg1[p])  ##code for absolute BW
                     # temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_pyatf[:,p,...]
