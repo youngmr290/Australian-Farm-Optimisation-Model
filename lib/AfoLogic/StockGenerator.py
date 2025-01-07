@@ -1786,14 +1786,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     kw_cs_yg1 = ck_dams[17,...]
     kw_cs_yg2 = ck_yatf[17,...]
     kw_cs_yg3 = ck_offs[17,...]
-    # kw_mu_yg0 = ck_sire[37,...]
-    # kw_mu_yg1 = ck_dams[37,...]
-    # kw_mu_yg2 = ck_yatf[37,...]
-    # kw_mu_yg3 = ck_offs[37,...]
 
     ##Efficiency for conceptus (for CSIRO feeding standards). MU calculated later
     kc_cs_yg1 = ck_dams[8,...]
-    # kc_mu_yg1 = ck_dams[31, ...]
 
     ####################
     #initial conditions#

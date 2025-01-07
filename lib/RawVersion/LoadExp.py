@@ -203,8 +203,6 @@ def f_load_experiment_data(force_run):
                      * np.nan_to_num(np.array(exp_data.index.get_level_values(1))) #check if full solution required
                      * np.logical_or(force_run, np.array(exp_data1['run_req']))) #check if run required
     print(f'Number of full solutions: {n_full_sol:.0f}')
-    # exp_location = relativeFile.findExcel("exp.xlsx")
-    # print(f'exp.xls last saved: {datetime.fromtimestamp(round(os.path.getmtime(exp_location)))}')
 
     return exp_data, exp_data1, dataset, trial_pinp, total_trials
 

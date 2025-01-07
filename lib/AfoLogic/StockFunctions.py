@@ -1132,7 +1132,7 @@ def f_foetus_nfs(cg, cp, step, c_start, muscle_start, d_muscle, nfoet, w_b_exp_y
     :param nwf_age_f: multiplier of BW to generate the normal weight of the foetus by age
     :param guw_age_f: multiplier of BW to generate the normal weight of the conceptus by age (gravid uterus)
     :param dcdt_age_f: multiplier of conceptus energy content to generate the increase in energy content by age
-    :param bc: parameter for hp from gaining conceptus weight (like kc except accounts for HAF)
+    :param bc: parameter for hp from gaining conceptus weight (like kc except accounts for HAF (heat associated with feeding))
     :param gest_propn: Numpy array, optional, Proportion of the period that the dam is gestating. The default is 0.
     :param rev_trait_value: Dictionary of the production levels for the sheep class and period
     :return:
