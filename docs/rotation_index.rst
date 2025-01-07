@@ -164,14 +164,18 @@ sequences are removed. See RotGeneration_ for the full list of rules.
      - Chickpea
    * - l
      - Lupins
+   * - lf
+     - Legume fodder
    * - m
      - Annual (manipulated in winter)
+   * - ms
+     - Mixed species crop
    * - o
      - Oats
    * - od
      - Dry sown Oats
    * - of
-     - Oats fodder crop
+     - Cereal fodder
    * - r
      - Canola (RoundUp Ready)
    * - rd

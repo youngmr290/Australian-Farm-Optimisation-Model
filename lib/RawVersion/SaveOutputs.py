@@ -5,6 +5,7 @@ import time
 import os.path
 import pickle as pkl
 import warnings
+import sys
 
 from ..AfoLogic import Functions as fun
 from ..AfoLogic import PropertyInputs as pinp
@@ -12,6 +13,7 @@ from ..AfoLogic import StructuralInputs as sinp
 from ..AfoLogic import FeedSupplyStock as fsstk
 from ..AfoLogic import relativeFile
 from lib.RawVersion import LoadExcelInputs as dxl
+from ..AfoLogic import ReportFunctions as rfun
 
 def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info):
     ##check Output folders exist for outputs. If not create.
@@ -43,42 +45,43 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
     fun.write_variablesummary(model, exp_data.index[row][3], profit, 1, property_id=pinp.general['i_property_id'])
 
     ##check if user wants full solution
-    if exp_data.index[row][1] == True and not trial_infeasible:
+    if exp_data.index[row][1] == True:
         ##make lp file
         model.write('Output/%s.lp' %trial_name,io_options={'symbolic_solver_labels':True})  #file name has to have capital
 
-        ##This writes variable summary for full solution (same file as the temporary version created above)
-        fun.write_variablesummary(model, exp_data.index[row][3], profit, property_id=pinp.general['i_property_id'])
+        if not trial_infeasible:
+            ##This writes variable summary for full solution (same file as the temporary version created above)
+            fun.write_variablesummary(model, exp_data.index[row][3], profit, property_id=pinp.general['i_property_id'])
 
-        ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
-        with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
-            f.write("My description of the instance!\n")
-            model.display(ostream=f)
+            ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
+            with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
+                f.write("My description of the instance!\n")
+                model.display(ostream=f)
 
-        ##write rc, duals and slacks to txt file. Duals are slow to write so that option must be turn on
-        write_duals = True
-        with open('Output/Rc Slacks and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
-            f.write('RC\n')
-            for v in model.component_objects(pe.Var, active=True):
-                f.write("Variable %s\n" %v)
-                for index in v:
-                    try: #in case variable has no index
-                        print("      ", index, model.rc[v[index]], file=f)
-                    except: pass
-            f.write('Slacks (no entry means no slack)\n')  # this can be used in search to find the start of this in the txt file
-            for c in model.component_objects(pe.Constraint,active=True):
-                f.write("Constraint %s\n" % c)
-                for index in c:
-                    if c[index].lslack() != 0 and c[index].lslack() != np.inf:
-                        print("  L   ",index,c[index].lslack(),file=f)
-                    if c[index].uslack() != 0 and c[index].lslack() != np.inf:
-                        print("  U   ",index,c[index].uslack(),file=f)
-            if write_duals:
-                f.write('Dual\n')   #this can be used in search to find the start of this in the txt file
-                for c in model.component_objects(pe.Constraint, active=True):
-                    f.write("Constraint %s\n" %c)
+            ##write rc, duals and slacks to txt file. Duals are slow to write so that option must be turn on
+            write_duals = True
+            with open('Output/Rc Slacks and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
+                f.write('RC\n')
+                for v in model.component_objects(pe.Var, active=True):
+                    f.write("Variable %s\n" %v)
+                    for index in v:
+                        try: #in case variable has no index
+                            print("      ", index, model.rc[v[index]], file=f)
+                        except: pass
+                f.write('Slacks (no entry means no slack)\n')  # this can be used in search to find the start of this in the txt file
+                for c in model.component_objects(pe.Constraint,active=True):
+                    f.write("Constraint %s\n" % c)
                     for index in c:
-                        print("      ", index, model.dual[c[index]], file=f)
+                        if c[index].lslack() != 0 and c[index].lslack() != np.inf:
+                            print("  L   ",index,c[index].lslack(),file=f)
+                        if c[index].uslack() != 0 and c[index].lslack() != np.inf:
+                            print("  U   ",index,c[index].uslack(),file=f)
+                if write_duals:
+                    f.write('Dual\n')   #this can be used in search to find the start of this in the txt file
+                    for c in model.component_objects(pe.Constraint, active=True):
+                        f.write("Constraint %s\n" %c)
+                        for index in c:
+                            print("      ", index, model.dual[c[index]], file=f)
 
     ##pickle lp info
     pkl_lp_vars_path = relativeFile.find(__file__, "../../pkl", "pkl_lp_vars_{0}.pkl".format(trial_name))
@@ -134,3 +137,40 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
             writer.close()
         except PermissionError:
             warnings.warn("Warning: Rotation.xlsx open therefore can't save new copy")
+
+    ############################################################################################################################################################################################
+    ############################################################################################################################################################################################
+    #Store results used for model validation before merging to master.
+    ############################################################################################################################################################################################
+    ############################################################################################################################################################################################
+    try:
+        exp_group = int(sys.argv[1])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
+    except:  # in case no arg passed to python
+        exp_group = "Default"
+
+    if exp_group==2:
+        ##current trial results - averaged z and q axis
+        rfun.f_var_reshape(lp_vars, r_vals)  # this func defines a global variable called d_vars
+        trial_sum = pd.concat(rfun.mp_report(lp_vars,r_vals, option=2))
+
+        ##set header to trial name
+        trial_name = trial_name.replace(" ", "")[0:15]
+        trial_sum.columns = [trial_name]
+
+        ##read in current results and update if trial is one of the validation trials
+        try:
+            validation_df = pd.read_fwf('AFO Test.txt', index_col=0)
+            ###update index incase something new has been added (this mainly occurs for wether sale ages)
+            new_idx = validation_df.index.union(trial_sum.index, False)
+            validation_df = validation_df.reindex(new_idx)
+            ###add or update current trial
+            validation_df[trial_name] = trial_sum
+        except FileNotFoundError:
+            validation_df = trial_sum
+
+        ##save
+        with open('AFO Test.txt', 'w') as f:
+            f.write(validation_df.to_string())
+
+
+

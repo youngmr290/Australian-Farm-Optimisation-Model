@@ -40,6 +40,7 @@ note:
 def f1_boundarypyomo_local(params, model):
     lmu_mask = pinp.lmu_mask
     mask_r = pinp.rot_mask_r
+    z_mask = pinp.general['i_mask_z']
 
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
@@ -69,6 +70,7 @@ def f1_boundarypyomo_local(params, model):
     legume_area_bound_inc = sen.sav['bnd_total_legume_area_percent'] != '-'  #bound on total legume
     pasture_lmu_bound_inc = np.any(sen.sav['bnd_pas_area_l'] != '-')
     landuse_bound_inc = np.any(sen.sav['bnd_landuse_area_klz'] != '-') #bound on area of each landuse (which is the sum of all the phases for that landuse)
+    cont_phase_bound_inc = np.any(sen.sav['max_yr_cont_k'] != '-') #bound to limit the number of years of a contunuous rotation
     crop_area_bound_inc = np.any(sen.sav['bnd_crop_area_qk1'] != '-') or np.any(sen.sav['bnd_crop_area_percent_qk1'] != '-')  # controls if crop area bnd is included.(which is the sum of all the phases for that crop)
     biomass_graze_bound_inc = np.any(sen.sav['bnd_biomass_graze_k1'] != '-')   # controls if biomass grazed bnd is included.(which is the proportion of crop biomass that is grazed)
     #todo need to make this input below in uinp. Then test the constraint works as expected.
@@ -246,7 +248,7 @@ def f1_boundarypyomo_local(params, model):
         ##dam lo bound. (the sheep in a given yr equal total for all dvp divided by the number of dvps in 1 yr)
         if dams_lobound_inc:
             '''
-            Lower bound dams.
+            Lower bound on the number of dams.
             
             The constraint sets can be changed for different analysis (this is preferred rather than creating 
             a new lobound because that keeps this module smaller and easier to navigate etc).
@@ -301,7 +303,7 @@ def f1_boundarypyomo_local(params, model):
         ##dams upper bound
         if dams_upbound_inc:
             '''
-            Upper bound dams.
+            Upper bound on the number of dams.
 
             The constraint sets can be changed for different analysis (this is preferred rather than creating 
             a new lobound because that keeps this module smaller and easier to navigate etc).
@@ -345,7 +347,7 @@ def f1_boundarypyomo_local(params, model):
         ##offs lo bound
         if offs_lobound_inc:
             '''
-            Lower bound offs.
+            Lower bound on the number of offs.
 
             The constraint sets can be changed for different analysis (this is preferred rather than creating 
             a new lobound because that keeps this module smaller and easier to navigate etc).
@@ -404,7 +406,7 @@ def f1_boundarypyomo_local(params, model):
         ##offs upper bound
         if offs_upbound_inc:
             '''
-            Upper bound offs.
+            Upper bound on the number of offs.
 
             The constraint sets can be changed for different analysis (this is preferred rather than creating 
             a new upbound because that keeps this module smaller and easier to navigate etc).
@@ -737,7 +739,7 @@ def f1_boundarypyomo_local(params, model):
         ###build bound if turned on
         if landuse_bound_inc:
             ###setbound using % of farm area
-            area_bound_klz = fun.f_sa(np.array([99999]), sen.sav['bnd_landuse_area_klz'][pinp.all_landuse_mask_k,:,:], 5)  # 99999 is arbitrary default value which mean skip constraint
+            area_bound_klz = fun.f_sa(np.array([99999]), sen.sav['bnd_landuse_area_klz'][pinp.all_landuse_mask_k,:,:][:,lmu_mask,:][:,:,z_mask], 5)  # 99999 is arbitrary default value which mean skip constraint
             arrays = [model.s_landuses, model.s_lmus, model.s_season_types]
             index_klz = fun.cartesian_product_simple_transpose(arrays)
             tup_klz = tuple(map(tuple, index_klz))
@@ -829,12 +831,29 @@ def f1_boundarypyomo_local(params, model):
             model.con_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_lmus, rule=pas_bound,doc='bound pasture area by lmu')
 
 
+        ##bound to limit the number of years of cont lucerne (Nov24 inputs are based on 5yrs of lucerne)
+        if cont_phase_bound_inc:
+            ###propn of each landuse that can be in a cont phase
+            max_yr_cont_k = fun.f_sa(np.array([99999]), sen.sav['max_yr_cont_k'][pinp.all_landuse_mask_k], 5)  # 99999 is arbitrary default value which mean skip constraint
+            p_cont_freq = sinp.general['phase_len']/max_yr_cont_k
+            p_cont_freq_k = dict(zip(model.s_landuses, p_cont_freq))
+            ###constraint
+            l_p7 = list(model.s_season_periods)
+            def cont_phase_bound(model, q, s, p7, k, l, z):
+                if p7 == l_p7[-1] and p_cont_freq_k[k]>0.001 and pe.value(model.p_wyear_inc_qs[q, s]):
+                    return(sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_phase_continuous_r[r] * model.p_landuse_area[r, k] for r in model.s_phases)
+                           == p_cont_freq_k[k] * sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_landuse_area[r, k] for r in model.s_phases))
+                else:
+                    return pe.Constraint.Skip
+            model.con_cont_phase_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
+                                                    model.s_landuses, model.s_lmus, model.s_season_types, rule=cont_phase_bound, doc='bound on number of years continuous phase can exist for')
+
         ##biomass grazed bound - proportion of the biomass that is produced that is grazed
         ###This could be expanded to handle a sav with a s2 axis. Currently, it only controls the proportion grazed (s2[1])
         ###build bound if turned on
         if biomass_graze_bound_inc:
             ###setbound using ha of farm area
-            biomass_graze_bound_k1 = fun.f_sa(np.array([99999]), sen.sav['bnd_biomass_graze_k1'], 5)  # 99999 is arbitrary default value which mean skip constraint
+            biomass_graze_bound_k1 = fun.f_sa(np.array([99999]), sen.sav['bnd_biomass_graze_k1'][pinp.crop_landuse_mask_k1], 5)  # 99999 is arbitrary default value which mean skip constraint
             biomass_graze_bound_k1 = dict(zip(model.s_crops, biomass_graze_bound_k1))
 
             def k1_graze_bound(model, q, s, k1, z):

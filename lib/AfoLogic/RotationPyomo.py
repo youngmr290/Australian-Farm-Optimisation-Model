@@ -48,6 +48,7 @@ def f1_rotationpyomo(params, model, MP_lp_vars):
     model.p_area = pe.Param(model.s_lmus, initialize=params['lmu_area'], doc='available area on farm for each soil')
     model.p_not_cropable_area_l = pe.Param(model.s_lmus, initialize=params['p_not_cropable_area_l'], doc='area of paddocks that are never cropped on each LMU.')
     model.p_landuse_area = pe.Param(model.s_phases, model.s_landuses, initialize=params['phases_rk'], default=0, doc='landuse in each phase')
+    model.p_phase_continuous_r = pe.Param(model.s_phases, initialize=params['p_phase_continuous_r'], default=0, doc='bool array to flag if phase is continuous')
     model.p_inc_hist_gs0_con = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['p_inc_hist_gs0_con_p7z']
                                         , default=0, doc='does the history constraint exist in current p7 - used to skip the hist constraint when season has started but hasnt broken')
     model.p_inc_hist_gs1_con = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['p_inc_hist_gs1_con_p7z']

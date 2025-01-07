@@ -1537,6 +1537,11 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False, summa
         dams_preserve_ax = (1, 2, 9)
         offs_preserve_ax = (1, 2, 9)
 
+    if summary3: #for summary3 DSE needs to be calculated with q, s, p6 & z
+        sire_preserve_ax = (0, 1, 2 ,3)
+        dams_preserve_ax = (0, 1, 3, 9)
+        offs_preserve_ax = (0, 1, 4, 9)
+
     stock_vars = d_vars['base'] #change this if z is not preserved
 
     if method == 0:
@@ -3155,8 +3160,8 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     na_prod = [2]  # s
     weights = 'prog_numbers_qsk3k5twzia0xg2'
     na_weights = [0]  # p7
-    den_weights = 'wean_alloc_p7k3'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
-    na_denweights = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11]  # q,s,k5,t,w,z,i,a0,x,g2
+    den_weights = 'wean_alloc_p7k3zg2'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+    na_denweights = [1, 2, 4, 5, 6, 8, 9, 10]  # q,s,k5,t,w,z,i,a0,x
     keys = 'prog_keys_p7qsk3k5twzia0xg2'
     arith = 1
     index = []
@@ -3243,29 +3248,38 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     return summary_df
 
 
-def mp_report(lp_vars, r_vals):
+def mp_report(lp_vars, r_vals, option=1):
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
     index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
     summary_df = pd.DataFrame(index=[], columns=index_qsz)
 
-    ##ewe sale info - this is done first because the summary table uses some info from these calacs
+    ##ewe sale info - this is done first because the summary table uses some info from these calcs
     ###prog numbers sold
     type = 'stock'
     weights = 'prog_numbers_qsk3k5twzia0xg2'
     keys = 'prog_keys_qsk3k5twzia0xg2'
     arith = 2
-    index = [10,9]  # g, gender
+    index = [4,10,9]  # g, gender
     cols = [0,1,6]  # q,s,z
-    axis_slice = {4:[0,1,1]} #sale suckers
-    numbers_prog_gx_qsz = f_stock_pasture_summary(r_vals, type=type, weights=weights, keys=keys, arith=arith, index=index, cols=cols,
-                                                           axis_slice=axis_slice)
-    ####female prog sold
-    try:
-        female_prog_sold_qsz = numbers_prog_gx_qsz.loc[(['BBB','BBM'],'F'),:].sum(axis=0) #wrapped in try incase BBM are not included in the trial. Note BBT are added with wethers.
+    numbers_prog_tgx_qsz = f_stock_pasture_summary(r_vals, type=type, weights=weights, keys=keys, arith=arith, index=index, cols=cols)
+
+    ####total prog weaned
+    numbers_prog_weaned_qsz = numbers_prog_tgx_qsz.sum(axis=0)
+    ####total prog sold
+    numbers_prog_sold_qsz = numbers_prog_tgx_qsz.loc['t0', :].sum(axis=0)
+
+    ####female prog weaned
+    try:#wrapped in try incase BBM are not included in the trial. Note BBT are added with wethers.
+        female_prog_t_qsz = numbers_prog_tgx_qsz.loc[(slice(None),['BBB','BBM'],'F'),:].groupby(axis=0, level=0).sum()
     except KeyError:
-        female_prog_sold_qsz = numbers_prog_gx_qsz.loc[(['BBB'],'F'),:].sum(axis=0)
+        female_prog_t_qsz = numbers_prog_tgx_qsz.loc[(slice(None),['BBB'],'F'),:].groupby(axis=0, level=0).sum()
+
+    ####prog sold
+    female_prog_sold_qsz = female_prog_t_qsz.loc['t0', :]
+    wether_prog_sold_qsz = numbers_prog_sold_qsz - female_prog_sold_qsz
+
     ###dam numbers sale
     type = 'stock'
     prod = 'dvp_is_sale_tyvzig1'
@@ -3281,6 +3295,7 @@ def mp_report(lp_vars, r_vals):
     ####dams sold each year
     sale_numbers_dams_qszy = sale_numbers_dams_qszy_tv.sum(axis=1)
     sale_numbers_dams_y_qsz = sale_numbers_dams_qszy.unstack().T
+    sale_numbers_dams_y_qsz = sale_numbers_dams_y_qsz.reindex(sale_numbers_dams_qszy.index.unique(-1)) #put "lambs" back at the top of the y axis.
     ####add female prog that were sold
     sale_numbers_dams_y_qsz.iloc[0] = female_prog_sold_qsz
     sale_numbers_dams_y_qsz = round(sale_numbers_dams_y_qsz, 0)
@@ -3315,7 +3330,6 @@ def mp_report(lp_vars, r_vals):
     sale_numbers_offs_qsz_tv = sale_numbers_offs_qsz_tv.groupby(sale_numbers_offs_qsz_tv.columns, axis=1).sum()
     sale_numbers_offs_qsz_tv.columns = ['%s mo old' %i for i in sale_numbers_offs_qsz_tv.columns] #add extra info to header name
     ####add wether and crossy prog that were sold (they need to be included in the number of lambs born)
-    wether_prog_sold_qsz = numbers_prog_gx_qsz.sum(axis=0) - female_prog_sold_qsz
     sale_numbers_offs_qsz_tv.rename(columns={'0 mo old': 'Weaning'}, inplace=True)
     sale_numbers_offs_qsz_tv.iloc[:, 0] = wether_prog_sold_qsz
     sale_numbers_offs_tv_qsz = round(sale_numbers_offs_qsz_tv).T
@@ -3339,6 +3353,25 @@ def mp_report(lp_vars, r_vals):
     ###sup/dse
     Sup_DSE_qsz = np.round(fun.f_divide(total_sup_qsz.squeeze() * 1000, (pas_area_qsz * sr_qsz.squeeze())))
     summary_df.loc['Supplement (kg/DSE)',:] = Sup_DSE_qsz
+    ##propn fodder
+    v_use_biomass_qsp7zkls2 = d_vars['base']['v_use_biomass_qsp7zkls2']  # use base vars because z is being reported
+    v_use_biomass_qszs2 = v_use_biomass_qsp7zkls2.sum(axis=(2,4,5))
+    total_biomass_qsz = v_use_biomass_qszs2.sum(axis=-1)
+    graz_idx = list(r_vals['stub']['keys_s2']).index("Graz")
+    biomass_fodder_qsz = v_use_biomass_qszs2[:,:,:,graz_idx]
+    fodder_percent_qsz = fun.f_divide(biomass_fodder_qsz, total_biomass_qsz) * 100
+    summary_df.loc['Fodder (%)',:] = fodder_percent_qsz.ravel().round()
+    ##crop grazing
+    prod = np.array([1])
+    type = 'crpgrz'
+    weights = 'crop_consumed_qsfkp6p5zl'
+    keys = 'keys_qsfkp6p5zl'
+    arith = 2
+    index = []
+    cols = [0, 1, 6]  # q,s,z
+    cropgrazed_qsz = f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
+                                                      keys=keys, arith=arith, index=index, cols=cols)
+    summary_df.loc['Grn Crop (t)', :] = round(cropgrazed_qsz.squeeze(),0)
     ###total dams mated
     type = 'stock'
     prod = 'dvp_is_mating_vzig1'
@@ -3351,6 +3384,8 @@ def mp_report(lp_vars, r_vals):
     axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc['Ewes mated',:] = round(dams_mated_qsz.squeeze(),0)
+    ###prog weaned
+    summary_df.loc['Lambs weaned',:] = round(numbers_prog_weaned_qsz,0)
     ###total ewe sales
     summary_df.loc['Ewe sales',:] = sale_numbers_dams_y_qsz.sum(axis=0)
     ###total wether sales
@@ -3397,8 +3432,8 @@ def mp_report(lp_vars, r_vals):
     na_prod = [2]  # s
     weights = 'prog_numbers_qsk3k5twzia0xg2'
     na_weights = [0]  # p7
-    den_weights = 'wean_alloc_p7k3'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
-    na_denweights = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11]  # q,s,k5,t,w,z,i,a0,x,g2
+    den_weights = 'wean_alloc_p7k3zg2'  # this is required to add p7 axis to numbers (otherwise there are numbers in all p7 for a given v)
+    na_denweights = [1, 2, 4, 5, 6, 8, 9, 10]  # q,s,k5,t,w,i,a0,x
     keys = 'prog_keys_p7qsk3k5twzia0xg2'
     arith = 1
     index = []
@@ -3440,7 +3475,16 @@ def mp_report(lp_vars, r_vals):
     ##land use area
     landuse_area_k_qsz = f_area_summary(lp_vars, r_vals, option=4, active_z=True).T
 
-    return summary_df, landuse_area_k_qsz, sale_numbers_offs_tv_qsz, sale_numbers_dams_y_qsz
+    ##weight qsz if required (this is used for testing AFO)
+    if option == 2:
+        z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+        z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
+        summary_df = pd.DataFrame(summary_df.mul(z_prob_qsz, axis=1).sum(axis=1))
+        landuse_area_k_qsz = pd.DataFrame(landuse_area_k_qsz.mul(z_prob_qsz, axis=1).sum(axis=1))
+        sale_numbers_offs_tv_qsz = pd.DataFrame(sale_numbers_offs_tv_qsz.mul(z_prob_qsz, axis=1).sum(axis=1))
+        sale_numbers_dams_y_qsz = pd.DataFrame(sale_numbers_dams_y_qsz.mul(z_prob_qsz, axis=1).sum(axis=1))
+
+    return summary_df, landuse_area_k_qsz, sale_numbers_dams_y_qsz, sale_numbers_offs_tv_qsz
 
 ############################
 # functions for numpy arrays#

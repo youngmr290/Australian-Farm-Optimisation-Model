@@ -854,10 +854,13 @@ def f1_efficiency_cs(ck, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, sam_kg=
     return kg_fodd, kg_supp, kl
 
 
-def f1_efficiency_mu(ck, md_solid):
-    ##Efficiency of energy use for lactation (differs from cs version by excluding heat associated with feeding)
-    kl =  ck[29, ...] + ck[30, ...] * md_solid
-    return kl
+def f1_efficiency_mu(ck, md_solid, km):
+    ##Partial efficiency of energy use. This differs from CS version because HAF above maintenance is included in MR
+    ##Lactation
+    kl =  (ck[5, ...] + ck[6, ...] * md_solid) / km
+    ##Wool growth
+    kw =  (ck[37, ...] + ck[38, ...] * md_solid) / km
+    return kl, kw
 
 
 def f1_weight_energy_conversion(cg, option, weight=None, energy=None):
@@ -1099,15 +1102,17 @@ def f_foetus_cs(cb1, cp, nfoet, rc_start, w_b_std_y, w_b_exp_y, w_f_start, nw_f_
     ##foetus weight (end of period)	
     w_f = w_f_start + d_w_f
     #todo could add the REV function on w_f here. Only problem might be that relsize_start will change if WBE is increased & ffcfw_dams is higher
-    ##Weight of the gravid uterus (conceptus - mid-period)
-    guw = nfoet * (nw_gu + (w_f - nw_f))
-    ##Body condition of the foetus	
+    ##Body condition of the foetus
     rc_f = fun.f_divide(w_f, nw_f) #func to handle div0 error
     ##NE required for conceptus
-    nec = nfoet * rc_f * normale_dgu
+    nec_prior = nfoet * rc_f * normale_dgu
     ##Process the foetal energy REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     ###This is only holding the energy requirement constant. CSIRO Birth weight calculation can still vary
-    nec = f1_rev_update('foetus', nec, rev_trait_value)
+    nec = f1_rev_update('foetus', nec_prior, rev_trait_value)
+    ##Scale w_f if nec was changed by f1_rev_update()
+    w_f = w_f * fun.f_divide(nec, nec_prior)
+    ##Weight of the gravid uterus (conceptus - mid-period)
+    guw = nfoet * (nw_gu + (w_f - nw_f))
     return w_f, nec, nw_f, guw
 
 
@@ -1127,12 +1132,16 @@ def f_foetus_nfs(cg, cp, step, c_start, muscle_start, d_muscle, nfoet, w_b_exp_y
     :param nwf_age_f: multiplier of BW to generate the normal weight of the foetus by age
     :param guw_age_f: multiplier of BW to generate the normal weight of the conceptus by age (gravid uterus)
     :param dcdt_age_f: multiplier of conceptus energy content to generate the increase in energy content by age
-    :param bc: parameter for hp from gaining conceptus weight (like kc except accounts for HAF)
+    :param bc: parameter for hp from gaining conceptus weight (like kc except accounts for HAF (heat associated with feeding))
     :param gest_propn: Numpy array, optional, Proportion of the period that the dam is gestating. The default is 0.
     :param rev_trait_value: Dictionary of the production levels for the sheep class and period
     :return:
     '''
     #calculates the energy requirement for gestation for the days gestating. The result is scaled by gest_propn when used
+    ##Normal weight of individual conceptus (mid-period)
+    nw_gu = w_b_exp_y * guw_age_f
+    ##Normal weight of foetus (mid-period - dam calcs)
+    nw_f = w_b_exp_y * nwf_age_f
     ## Conceptus growth scalar based on muscle growth in the previous period
     dm = f1_weight_energy_conversion(cg, 1, weight=d_muscle)
     m_start = f1_weight_energy_conversion(cg, 1, weight=muscle_start)
@@ -1146,15 +1155,11 @@ def f_foetus_nfs(cg, cp, step, c_start, muscle_start, d_muscle, nfoet, w_b_exp_y
     dc = c_start * dce_propn
     ##Process the foetal energy REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     dc = f1_rev_update('foetus', dc, rev_trait_value)
-    ##Normal weight of individual conceptus (mid-period)
-    nw_gu = w_b_exp_y * guw_age_f
     ##change in foetus weight Note:dc is conceptus so divide by n_foet to get change per foetus
     #d_w_f = d_nw_f *(1 + np.minimum(cfpreg, cfpreg * cb1[14, ...]))
     d_w_f = fun.f_divide(dc, nfoet, option=0) / (cp[8, ...] * cp[5, ...])   #option=0 returns 0 for n_foet==0
     ##foetus weight (end of period)
     w_f = w_f_start + d_w_f * step
-    ##Normal weight of foetus (mid-period - dam calcs)
-    nw_f = w_b_exp_y * nwf_age_f
     ##Weight of the gravid uterus (conceptus - mid-period)
     guw = nfoet * (nw_gu + (w_f - nw_f))
     return w_f, dc, nw_f, guw
@@ -1393,9 +1398,9 @@ def f_fibre_mu(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     ###which is required for the GEPEP analysis that is calibrating the adult intake and the fleece weight
     wbge_a0e0b0xyg = wbge_a0e0b0xyg / sam_pi
     ##ME available for wool growth
-    mec_g1 = nec_g1 / kc_g1
-    mel_g1 = nel_g1 / kl_g1
-    mew_min_g = new_min_g / kw_g
+    mec_g1 = fun.f_divide(nec_g1, kc_g1)
+    mel_g1 = fun.f_divide(nel_g1, kl_g1)
+    mew_min_g = fun.f_divide(new_min_g, kw_g)
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
     ##Wool growth (wool base - clean dry fibre) if there was no lag
     d_wb_nolag_g = cw_g[8, ...] * wbge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
@@ -1761,12 +1766,12 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     #but separates kf & kp and calculates proportion of fat & protein from mass and energy balance.
 
     ##Calculate me for conceptus growth, milk production & wool growth
-    hp_dc = nec * (1 / kc - 1)
-    hp_dl = nel * (1 / kl - 1)
-    hp_dw = new * (1 / kw - 1)
-    mec = nec / kc
-    mel = nel / kl
-    mew = new / kw
+    hp_dc = nec * (fun.f_divide(1, kc) - 1)
+    hp_dl = nel * (fun.f_divide(1, kl) - 1)
+    hp_dw = new * (fun.f_divide(1, kw) - 1)
+    mec = fun.f_divide(nec, kc)
+    mel = fun.f_divide(nel, kl)
+    mew = fun.f_divide(new, kw)
     ##Energy intake that is surplus to maintaining maternal body energy. Surplus is available for maternal body gain
     maintenance  = nem_ee + hp_mei + mec * gest_propn + mel * lact_propn + mew
     surplus_energy_ee = mei_initial - maintenance
@@ -4178,8 +4183,8 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
     lowest and highest destination weights.
 
     If the weight is above the highest destination weight then the weight is rounded down & the extra weight is
-    effectively lost. If the weight is below the lowest weight then that animal is not transferred to the next
-    period and the animal is effectively lost.
+    effectively lost. If the weight is below the lowest weight then only a proportion of that animal is transferred
+    to the next period. This retains the same total LW but some animals are effectively lost.
 
     When the distribution is for condensing/pre-joining the destination weights are ffcfw_end for the condensed slices (w9).
     This is the condensed values of ffcfw_end (of this DVP) rather than ffcfw_start (of the next DVP) because ffcfw_start
@@ -4298,11 +4303,16 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, mask_dest_wg=1, index_w
 
     ## Combine the values into the return variable
     ### clip (0 to 1) to handle the special case where source weight > the maximum destination weight
-    distribution_w8gw9 = np.clip(distribution_nearest_w8gw9 + distribution_nextnearest_w8gw9,0,1)
+    t_distribution_w8gw9 = np.clip(distribution_nearest_w8gw9 + distribution_nextnearest_w8gw9,0,1)
     # distribution_error = np.any(np.sum(distribution_w8gw9, axis=-1)>1)
 
+    ##If calculating REVs then set the distribution so that animals are only distributed to w9[0]
+    if sen.sav['distribute_w0_only']:
+        t_distribution_w8gw9[...] = 0
+        t_distribution_w8gw9[..., 0] = 1
+
     ##Set defaults for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
-    distribution_w8gw9 = fun.f_update(distribution_w8gw9, np.array([1],dtype='float32'), dvp_type_next_tvgw!=vtype) #make '1' a numpy array so it can be float32 to make f_update more data efficient.
+    distribution_w8gw9 = fun.f_update(t_distribution_w8gw9, np.array([1],dtype='float32'), dvp_type_next_tvgw!=vtype) #make '1' a numpy array so it can be float32 to make f_update more data efficient.
     return distribution_w8gw9
 
 
