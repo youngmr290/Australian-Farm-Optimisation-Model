@@ -2444,8 +2444,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     #### A constant average mob size means that the mob based husbandry cost does not change because should have a constant number of mobs.
     mobsize_scalar_pa1e1b1nwzida0e0b0xyg1 = mobsize_scalar_pa1e1b1nwzida0e0b0xyg1 * np.sum(lsln_propn_b1nwzida0e0b0xyg1
                                                     / mobsize_scalar_pa1e1b1nwzida0e0b0xyg1, axis=b1_pos, keepdims=True)
-    ### scale the dam mob size for husbandry
-    mobsize_pa1e1b1nwzida0e0b0xyg1 = t_mobsize_pa1e1b1nwzida0e0b0xyg1 * mobsize_scalar_pa1e1b1nwzida0e0b0xyg1
+    ### scale the dam mob size for husbandry (exclude the mobsize scalar until after labour is debugged)
+    mobsize_pa1e1b1nwzida0e0b0xyg1 = t_mobsize_pa1e1b1nwzida0e0b0xyg1 #  * mobsize_scalar_pa1e1b1nwzida0e0b0xyg1
 
     ## Apply the intermediate sav on mobsize in the period between birth and weaning
     #todo Debug the labour required that is linked to mobsize at lambing. Mob size is having too much effect on
@@ -2453,7 +2453,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     t_mobsize_lambing = fun.f_sa(t_mobsize_pa1e1b1nwzida0e0b0xyg1, sen.sav['mobsize_lambing'], 5)
     mobsize_mortality_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(t_mobsize_pa1e1b1nwzida0e0b0xyg1, t_mobsize_lambing
                                                             , period_between_birthwean_pa1e1b1nwzida0e0b0xyg1)
-
+    mobsize_mortality_pa1e1b1nwzida0e0b0xyg1 = mobsize_mortality_pa1e1b1nwzida0e0b0xyg1 * mobsize_scalar_pa1e1b1nwzida0e0b0xyg1
     ############################
     ### feed supply calcs      #
     ############################
