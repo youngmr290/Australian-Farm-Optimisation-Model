@@ -70,7 +70,7 @@ def f1_boundarypyomo_local(params, model):
     legume_area_bound_inc = sen.sav['bnd_total_legume_area_percent'] != '-'  #bound on total legume
     pasture_lmu_bound_inc = np.any(sen.sav['bnd_pas_area_l'] != '-')
     landuse_bound_inc = np.any(sen.sav['bnd_landuse_area_klz'] != '-') #bound on area of each landuse (which is the sum of all the phases for that landuse)
-    cont_phase_bound_inc = np.any(sen.sav['max_yr_cont_k'] != '-') #bound on area of each landuse (which is the sum of all the phases for that landuse)
+    cont_phase_bound_inc = np.any(sen.sav['max_yr_cont_k'] != '-') #bound to limit the number of years of a contunuous rotation
     crop_area_bound_inc = np.any(sen.sav['bnd_crop_area_qk1'] != '-') or np.any(sen.sav['bnd_crop_area_percent_qk1'] != '-')  # controls if crop area bnd is included.(which is the sum of all the phases for that crop)
     biomass_graze_bound_inc = np.any(sen.sav['bnd_biomass_graze_k1'] != '-')   # controls if biomass grazed bnd is included.(which is the proportion of crop biomass that is grazed)
     #todo need to make this input below in uinp. Then test the constraint works as expected.
