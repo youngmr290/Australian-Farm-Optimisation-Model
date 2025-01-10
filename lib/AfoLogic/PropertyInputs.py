@@ -261,7 +261,7 @@ def f_property_inp_sa(pinp_defaults):
 
     Applies sensitivity adjustment to each input. After the sensitivities are applied, when using the DSP model, inputs
     with a feed period index are expanded to account for additional feed periods that are added due to season nodes.
-    This function gets called at the beginning of each loop in the exp.py module
+    This function gets called at the beginning of each loop in the RunAfoRaw_Multi.py module
 
     SA order is: sav, sam, sap, saa, sat, sar.
     So that multiple SA can be applied to one input.

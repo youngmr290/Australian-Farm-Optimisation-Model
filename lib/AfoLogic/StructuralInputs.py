@@ -66,7 +66,7 @@ def f_structural_inp_sa(sinp_defaults):
     Applies sensitivity adjustment to relevant inputs. Note only inputs in StructuralSA sheet can have sensitivities applied.
     After the sensitivities are applied, when using the DSP model, inputs with a feed period index are expanded to
     account for additional feed periods that are added due to season nodes.
-    This function gets called at the beginning of each loop in the exp.py module
+    This function gets called at the beginning of each loop in the RunAfoRaw_Multi.py module
 
     :return: None.
 

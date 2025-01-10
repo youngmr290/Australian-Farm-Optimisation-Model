@@ -11577,7 +11577,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         from . import PlotViewer as pv  # import here so that read the docs doesn't try to import plotviewer
         print('Interact with the graph generator using the PlotViewer spreadsheet, kill each plot to continue')
     scan_spreadsheet = plots   # argument passed to the StockGen function. True if called from SheepTest
-    # scan_spreadsheet = True    #make line active to generate plots when called from exp.py
+    # scan_spreadsheet = True    #make line active to generate plots when called from RunAfoRaw_Multi.py
     while scan_spreadsheet:
         try:
             yvar1, yvar2, xlabels, wvar, xvar, axes, dimensions, verticals = pv.read_spreadsheet()
