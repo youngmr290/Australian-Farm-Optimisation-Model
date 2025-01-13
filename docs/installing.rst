@@ -35,7 +35,7 @@ requirements however only the most commonly used method is documented below.
 
     - go to the file location where AFO is: ``cd /path/to/AFO``
     - create the environment: ``python -m venv venv`` 
-    - activate the environment: ``venv\Scripts\activate.bat``
+    - activate the environment: ``venv\Scripts\activate.bat`` (note sometimes the ".bat" extension is not required. Once successfull the terminal should show (venv) at the start.)
     - install the relevant packages: ``pip install -r requirements.txt``
 
 #. Now you should be able to run AFO. Remember if you are running via VSCode or Pycharm make sure you set the Python interpreter inside this new environment.
