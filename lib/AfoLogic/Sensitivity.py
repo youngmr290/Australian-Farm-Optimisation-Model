@@ -448,6 +448,9 @@ def create_sa():
     saa['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype='float64')  #SA value for feedsupply.
     saa['feedsupply_adj_r2p'] = np.zeros(pinp.feedsupply['i_feedsupply_adj_options_r2p'].shape, dtype='float64')  #SA value for feedsupply adjustment.
     saa['chill_index'] = 0.0                        #intermediate saa on chill index. Impacts lamb survival only, no effect on ME requirements.
+    saa['chill_single'] = 0.0                       #intermediate saa on shill index of singles.  Impacts lamb survival only, no effect on ME requirements.
+    saa['chill_twin'] = 0.0                         #intermediate saa on shill index of twins.  Impacts lamb survival only, no effect on ME requirements.
+    saa['chill_triplet'] = 0.0                      #intermediate saa on shill index of triplets.  Impacts lamb survival only, no effect on ME requirements.
     saa['littersize_og1'] = np.zeros((len_o, len_g1), dtype='float64')   #sa to the litter size this changes the propn of singles/twins and trips whilst keeping propn empty the same.
     saa['conception_og1'] = np.zeros((len_o, len_g1), dtype='float64')   #sa to adjust the proportion of ewes that are empty whilst keeping litter size (number of lambs / pregnant ewes) the same
     saa['preg_increment_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype='float64')   #sa to adjust the conception of an individual b1 slice at conception, so that the value of an extra lamb conceived of a given birth type can be calculated. a value of 1 would transfer all available animals into the target slice

@@ -2047,7 +2047,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                            # + chill_adj_pa1e1b1nwzida0e0b0xyg1[..., na])
     ##Note: the order of these calculations mean that chill_adj is being scaled by sam[chill_index]
     chill_index_pa1e1b1nwzida0e0b0xygp0 = fun.f_sa(chill_index_pa1e1b1nwzida0e0b0xygp0, sen.sam['chill_index'])
-    chill_index_pa1e1b1nwzida0e0b0xygp0 = fun.f_sa(chill_index_pa1e1b1nwzida0e0b0xygp0, sen.saa['chill_index'], 2)
+    ##Add the change in chill for singles, twins and triplets. this is a temporary addition only because it doesn't include the interaction with scanning level
+    saa_chill = (sen.saa['chill_index'] + sen.saa['chill_single'] * (nfoet_b1nwzida0e0b0xyg == 1)
+                 + sen.saa['chill_twin'] * (nfoet_b1nwzida0e0b0xyg == 2)
+                 + sen.saa['chill_triplet'] * (nfoet_b1nwzida0e0b0xyg == 3))
+    chill_index_pa1e1b1nwzida0e0b0xygp0 = fun.f_sa(chill_index_pa1e1b1nwzida0e0b0xygp0, saa_chill[..., na], 2)
 
     ##Proportion of SRW with age
     srw_age_pa1e1b1nwzida0e0b0xyg0 = 1 - fun.f_weighted_average(1 - np.exp(-cn_sire[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0
