@@ -5446,8 +5446,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
                     ##Calculate the adjustment to chill based on litter size and differential allocation to sheltered paddocks
                     ###Note: Not active if not scanned to identify multiples or litter size.
-                    chill_adj_b1nwzida0e0b0xyg1 = sfun.f_chill_adjust(numbers_start_dams, dse_per_dam
-                                                    , nfoet_b1nwzida0e0b0xyg, scan_option_pa1e1b1nwzida0e0b0xyg1[p])
+                    chill_adj_b1nwzida0e0b0xyg1 = sfun.f_chill_adjust(numbers_start_dams * period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
+                                                    , dse_per_dam, nfoet_b1nwzida0e0b0xyg, scan_option_pa1e1b1nwzida0e0b0xyg1[p])
                     chill_index_p0 = chill_index_pa1e1b1nwzida0e0b0xygp0[p] + chill_adj_b1nwzida0e0b0xyg1[..., na]
                     temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_pyatf[:,p,...]
                                     , w_b_yatf, w_b_ltw_std_yatf, cv_bw_yatf
