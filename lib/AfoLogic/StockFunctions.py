@@ -2527,8 +2527,8 @@ def f_chill_adjust(numbers_b1, dse_per_hd, nfoet_b1, scan):
         higher_priority_dse_b9 = np.sum(n_dse_adjusted[..., na] * (nfoet_b1[..., na] > nfoet_b9), axis=b1_pos-1, keepdims=True)
         ###move the b9 axis back to the b1 position and index the singleton b9 to remove
         higher_priority_dse = np.swapaxes(higher_priority_dse_b9, -1, b1_pos-1)[..., 0]
-        dse_sheltered = np.clip(total_shelter_dse - higher_priority_dse, 0, n_dse)
-        propn_sheltered = fun.f_divide(dse_sheltered, n_dse)   # f_divide because n_dse can be 0
+        dse_sheltered = np.clip(total_shelter_dse - higher_priority_dse, 0, n_dse_adjusted)
+        propn_sheltered = fun.f_divide(dse_sheltered, n_dse_adjusted)   # f_divide because n_dse can be 0
         ###Allocate proportion sheltered to the higher litter sizes if scanning at a lower level, then take_along for the GBAL slices
         propn_sheltered = np.maximum.accumulate(propn_sheltered, axis = b1_pos) * (n_dse > 0)
         propn_sheltered = np.take_along_axis(propn_sheltered, a_prepost_b1[na,na,na,...], axis=b1_pos)
