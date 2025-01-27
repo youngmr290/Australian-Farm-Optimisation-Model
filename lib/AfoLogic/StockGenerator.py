@@ -600,6 +600,14 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     est_prop_dams_mated_og1 = fun.f_sa(np.array([1],dtype=float), sen.sav['est_propn_dams_mated_og1'], 5) #if an estimate is not specified then use 100% is mated.
     est_prop_dams_mated_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(est_prop_dams_mated_og1, left_pos=p_pos, right_pos=-1
                                                          , condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
+    ##minimum propn of single dams sold (bound) - default is 0.
+    min_prop_singles_sold_og1 = fun.f_sa(np.array([0],dtype=float), sen.sav['min_propn_singles_sold_og1'], 5)
+    min_prop_singles_sold_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(min_prop_singles_sold_og1, left_pos=p_pos, right_pos=-1
+                                                         , condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
+    ##minimum propn of twin dams sold (bound) - default is 0.
+    min_prop_twins_sold_og1 = fun.f_sa(np.array([0],dtype=float), sen.sav['min_propn_twins_sold_og1'], 5)
+    min_prop_twins_sold_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(min_prop_twins_sold_og1, left_pos=p_pos, right_pos=-1
+                                                         , condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
 
     ##Shearing date - set to be on the last day of a generator period
     ###sire
@@ -10474,6 +10482,22 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     params['p_prop_twice_dry_dams'] = fun.f1_make_pyomo_dict(prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1, arrays_vziyg1)
     params['p_prejoin_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==prejoin_vtype1] #get the dvp keys which are prejoining (same for all animals hence take slice 0)
     params['p_scan_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==scan_vtype1] #get the dvp keys which are scan (same for all animals hence take slice 0)
+
+    ##minimum proportion of singles that are sold
+    ###convert to p axis
+    min_prop_singles_sold_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(min_prop_singles_sold_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, axis=0) #increments at prejoining
+    ###convert to v axis
+    min_prop_singles_sold_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(min_prop_singles_sold_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact sale propn
+    ###create param
+    params['p_min_prop_single_dams_sold'] = fun.f1_make_pyomo_dict(min_prop_singles_sold_va1e1b1nwzida0e0b0xyg1, arrays_vziyg1)
+
+    ##minimum proportion of twins that are sold
+    ###convert to p axis
+    min_prop_twins_sold_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(min_prop_twins_sold_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, axis=0) #increments at prejoining
+    ###convert to v axis
+    min_prop_twins_sold_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(min_prop_twins_sold_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact sale propn
+    ###create param
+    params['p_min_prop_twin_dams_sold'] = fun.f1_make_pyomo_dict(min_prop_twins_sold_va1e1b1nwzida0e0b0xyg1, arrays_vziyg1)
 
     ##lower bound offs
     ###for fs optimisation lo bnd is across starting w - create param that links starting w with w

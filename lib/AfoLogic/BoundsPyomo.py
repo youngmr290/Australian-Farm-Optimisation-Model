@@ -63,6 +63,8 @@ def f1_boundarypyomo_local(params, model):
     bnd_propn_dams_mated_inc = propn_mated_inc and not(w_set_inc) #include bnd_propn_mated without a w set.
     bnd_propn_dams_mated_w_inc = propn_mated_inc and w_set_inc #include bnd_propn_mated with a w set.
     bnd_sale_twice_drys_inc = fun.f_sa(False, sen.sav['bnd_sale_twice_dry_inc'], 5) #proportion of drys sold (can be sold at either sale opp)
+    bnd_propn_singles_inc = np.any(sen.sav['min_propn_singles_sold_og1'] != '-') #include bound on the minimum proportion of singles sold
+    bnd_propn_twins_inc = np.any(sen.sav['min_propn_twins_sold_og1'] != '-') #include bound on the minimum proportion of twins sold
     bnd_dry_retained_inc = fun.f_sa(False, np.any(pinp.sheep['i_dry_retained_forced_o']), 5) #force the retention of drys in t[0] (t[1] is handled in the generator.
     sr_bound_inc = np.any(sen.sav['bnd_sr_Qt'] != '-') #controls sr bound
     lw_bound_inc = sen.sav['bnd_lw_change'] != '-' #controls lw bound
@@ -623,6 +625,99 @@ def f1_boundarypyomo_local(params, model):
                                                       , model.s_lw_dams, model.s_season_types, model.s_tol
                                                       , model.s_gen_merit_dams, model.s_groups_dams, rule=f_propn_drys_sold
                                                       , doc='proportion of dry dams sold each year')
+
+        ##bound to fix a proportion of single (& twin) ewes to be sold. To represent the sale of dry ewes without
+        ### having to uncluster the b axis. The extra proportion of dams to sell (above empty ewes) is a sav[p_min_prop_single-dams_sold].
+        ###build bound if turned on
+        if bnd_propn_singles_inc:
+            '''Constraint forces at least x percent of the single/twin dams to be sold. They have to be sold  
+             before the next prejoining.
+             The idea is to represent selling ewes that fail to rear a lamb without having to uncluster the b axis.
+
+             The assumption is that the dams that GBAL is the same across the w slices because the same propn  
+             must be sold from each w slice.
+
+             This constraint is representing retaining dams that didn't GBAL, except that difference in post weaning LWC aren't represented in the sale animals.'''
+            ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
+            model.p_min_prop_single_dams_sold = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_tol,
+                                                   model.s_gen_merit_dams,
+                                                   model.s_groups_dams, default=0,
+                                                   initialize=params['stock']['p_min_prop_single_dams_sold'])
+
+            l_v1 = list(model.s_dvp_dams)
+            scan_v = list(params['stock']['p_scan_v_dams'])
+            prejoin_v = list(params['stock']['p_prejoin_v_dams'])[1:]  #remove the start dvp, it is not true pre-join.
+            next_prejoin_v = prejoin_v[1:]  #dvp before following prejoining
+
+            ###constraint
+            def f_propn_singles_sold(model, q, s, v, w, z, i, y, g1):
+                '''A maximum proportion of single ewes can be retained, hence forcing sale of the remainder'''
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and v in scan_v[:-1] and model.p_min_prop_single_dams_sold[v, z, i, y, g1] != 0
+                        and any(model.p_mask_dams['11-0', t, v, w, z, g1] == 1 for t in model.s_sale_dams)):  #use 11 numbers at scanning. Don't want to include the last prejoining dvp because there is no sale limit in the last year.
+                    idx_scan = scan_v.index(v)  #which prejoining is the current v
+                    idx_v_next_prejoin = next_prejoin_v[idx_scan]  #the sale must be before the following prejoining
+                    v_sale = l_v1[l_v1.index(idx_v_next_prejoin) - 1]
+                    return sum(model.v_dams[q, s, '11-0', 't2', v_sale, a, n, w, z, i, y, g1]
+                               for a in model.s_wean_times for n in model.s_nut_dams
+                               if pe.value(model.p_mask_dams['11-0', 't2', v_sale, w, z, g1]) == 1
+                               ) <= sum(model.v_dams[q, s, '11-0', t, v, a, n, w, z, i, y, g1] for t in model.s_sale_dams
+                        for a in model.s_wean_times for n in model.s_nut_dams
+                        if pe.value(model.p_mask_dams['11-0', t, v, w, z, g1]) == 1
+                        ) * (1 - model.p_min_prop_single_dams_sold[v, z, i, y, g1])
+                else:
+                    return pe.Constraint.Skip
+
+            model.con_propn_singles_sold = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dvp_dams
+                                                      , model.s_lw_dams, model.s_season_types, model.s_tol
+                                                      , model.s_gen_merit_dams, model.s_groups_dams, rule=f_propn_singles_sold
+                                                      , doc='proportion of single dams sold each year')
+
+
+        ##bound to fix a proportion of single (& twin) ewes to be sold. To represent the sale of dry ewes without
+        ### having to uncluster the b axis. The extra proportion of dams to sell (above empty ewes) is a sav[p_min_prop_single-dams_sold].
+        ###build bound if turned on
+        if bnd_propn_twins_inc:
+            '''Constraint forces at least x percent of the single/twin dams to be sold. They have to be sold  
+             before the next prejoining.
+             The idea is to represent selling ewes that fail to rear a lamb without having to uncluster the b axis.
+
+             The assumption is that the dams that GBAL is the same across the w slices because the same propn  
+             must be sold from each w slice.
+
+             This constraint is representing retaining dams that didn't GBAL, except that difference in post weaning LWC aren't represented in the sale animals.'''
+            ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
+            model.p_min_prop_twin_dams_sold = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_tol,
+                                                   model.s_gen_merit_dams,
+                                                   model.s_groups_dams, default=0,
+                                                   initialize=params['stock']['p_min_prop_twin_dams_sold'])
+
+            l_v1 = list(model.s_dvp_dams)
+            scan_v = list(params['stock']['p_scan_v_dams'])
+            prejoin_v = list(params['stock']['p_prejoin_v_dams'])[1:]  #remove the start dvp, it is not true pre-join.
+            next_prejoin_v = prejoin_v[1:]  #dvp before following prejoining
+
+            ###constraint
+            def f_propn_twins_sold(model, q, s, v, w, z, i, y, g1):
+                '''A maximum proportion of twin ewes can be retained, hence forcing sale of the remainder'''
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and v in scan_v[:-1] and model.p_min_prop_twin_dams_sold[v, z, i, y, g1] != 0
+                        and any(model.p_mask_dams['22-0', t, v, w, z, g1] == 1 for t in model.s_sale_dams)):  #use 11 numbers at scanning. Don't want to include the last prejoining dvp because there is no sale limit in the last year.
+                    idx_scan = scan_v.index(v)  #which prejoining is the current v
+                    idx_v_next_prejoin = next_prejoin_v[idx_scan]  #the sale must be before the following prejoining
+                    v_sale = l_v1[l_v1.index(idx_v_next_prejoin) - 1]
+                    return sum(model.v_dams[q, s, '22-0', 't2', v_sale, a, n, w, z, i, y, g1]
+                               for a in model.s_wean_times for n in model.s_nut_dams
+                               if pe.value(model.p_mask_dams['22-0', 't2', v_sale, w, z, g1]) == 1
+                               ) <= sum(model.v_dams[q, s, '22-0', t, v, a, n, w, z, i, y, g1] for t in model.s_sale_dams
+                        for a in model.s_wean_times for n in model.s_nut_dams
+                        if pe.value(model.p_mask_dams['22-0', t, v, w, z, g1]) == 1
+                        ) * (1 - model.p_min_prop_twin_dams_sold[v, z, i, y, g1])
+                else:
+                    return pe.Constraint.Skip
+
+            model.con_propn_twins_sold = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dvp_dams
+                                                      , model.s_lw_dams, model.s_season_types, model.s_tol
+                                                      , model.s_gen_merit_dams, model.s_groups_dams, rule=f_propn_twins_sold
+                                                      , doc='proportion of twin dams sold each year')
 
         ##bound to force the retention of drys until the dvp when other ewes are sold.
         # The bound is only for t[0] (sale at shearing) t[1] (sale at scanning) is handled in the generator.
