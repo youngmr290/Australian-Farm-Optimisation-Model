@@ -313,6 +313,7 @@ def create_sa():
     ##SAV
     sav['poc_inc'] = '-'  #control if poc is included
     sav['pas_inc_t'] = np.full_like(pinp.general['pas_inc_t'], '-', dtype=object) #SA value for pastures included mask
+    sav['bnd_pas_area_percent_t'] = np.full(len_t, '-', dtype=object)  # SA to set the area of each pasture type.
     ##SAM
     sam['q_pgr_scalar_Qp6'] = np.ones((len_Q, len_p6), dtype='float64')   # SAM for pgr with q axis
     sam['q_pgr_scalar'] = 1   # SAM for pgr from node[0] to the end of the GS (for mp model in the web app)
