@@ -265,8 +265,17 @@ def create_sa():
     ####################
     ##SAV
     sav['slp_inc'] = '-'  #control if salt land pasture is included
+    sav['saltbush_estab_cost'] = '-'  #initial establishment costs of saltbush
+    sav['understory_estab_cost'] = '-'  #initial establishment costs of understory
+    sav['saltbush_success'] = '-'  #success of establishment
+    sav['understory_success'] = '-'  #success of establishment
+    sav['saltbush_life'] = '-'  #life span of saltbush (before it needs to be re-established)
+    sav['understory_life'] = '-'  #life span of understory (before it needs to be re-established)
+    sav['sb_omd'] = '-'  #organic matter digestibility of saltbush
+    sav['sb_expected_yearly_growth'] = '-'  #typical yearly growth of saltbush (kg/ha/yr). This scales the input. It means a user can basically do a SAM without knowing the base input which is good for web app.
     ##SAM
     sam['sb_growth'] = 1.0   # SA multiplier for the growth of saltbush on slp (applies to all lmus and fp)
+    sam['sb_growth_l'] = np.ones(len_l, dtype='float64')  # SA multiplier for the growth of saltbush on each lmu
     ##SAP
     ##SAA
     ##SAT

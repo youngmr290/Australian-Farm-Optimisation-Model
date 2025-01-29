@@ -388,8 +388,16 @@ def f_property_inp_sa(pinp_defaults):
 
     ##salt land pasture
     ###sav
+    saltbush['i_saltbush_estab_cost'] = fun.f_sa(saltbush['i_saltbush_estab_cost'], sen.sav['saltbush_estab_cost'], 5)
+    saltbush['i_understory_estab_cost'] = fun.f_sa(saltbush['i_understory_estab_cost'], sen.sav['understory_estab_cost'], 5)
+    saltbush['i_saltbush_success'] = fun.f_sa(saltbush['i_saltbush_success'], sen.sav['saltbush_success'], 5)
+    saltbush['i_understory_success'] = fun.f_sa(saltbush['i_understory_success'], sen.sav['understory_success'], 5)
+    saltbush['i_saltbush_life'] = fun.f_sa(saltbush['i_saltbush_life'], sen.sav['saltbush_life'], 5)
+    saltbush['i_understory_life'] = fun.f_sa(saltbush['i_understory_life'], sen.sav['understory_life'], 5)
+    saltbush['i_sb_omd'] = fun.f_sa(saltbush['i_sb_omd'], sen.sav['sb_omd'], 5)
     ###sam
     saltbush['i_sb_expected_growth_zp6'] = fun.f_sa(saltbush['i_sb_expected_growth_zp6'], sen.sam['sb_growth'])
+    saltbush['i_sb_lmu_scalar'] = fun.f_sa(saltbush['i_sb_lmu_scalar'], sen.sam['sb_growth_l'])
     ###sap
     ###saa
     ###sat

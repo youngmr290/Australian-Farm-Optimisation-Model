@@ -38,6 +38,7 @@ from . import FeedsupplyFunctions as fsfun
 from . import SeasonalFunctions as zfun
 from . import EmissionFunctions as efun
 from . import Finance as fin
+from . import Sensitivity as sen
 
 na = np.newaxis
 
@@ -83,6 +84,7 @@ def f_saltbush_precalcs(params, r_vals, nv):
     ##inputs
     sb_expected_foo_zp6 = zfun.f_seasonal_inp(pinp.saltbush['i_sb_expected_foo_zp6'], numpy=True, axis=0) #g/stem
     sb_expected_growth_zp6 = zfun.f_seasonal_inp(pinp.saltbush['i_sb_expected_growth_zp6'], numpy=True, axis=0) #g/stem/day
+    sav_sb_expected_growth = sen.sav['sb_expected_yearly_growth'] #kg/ha/yr
     sb_growth_reduction_zp6 = zfun.f_seasonal_inp(pinp.saltbush['i_sb_growth_reduction_zp6'], numpy=True, axis=0) #% per day
     sb_stems_per_ha = pinp.saltbush['i_sbstemspha'] #saltbush stems/ha
     sb_lmu_scalar_l = pinp.saltbush['i_sb_lmu_scalar']
@@ -98,6 +100,11 @@ def f_saltbush_precalcs(params, r_vals, nv):
     ## but it is reasonable. See google doc for a method to improve this.
     max_growth_per_bush_zp6 = sb_expected_growth_zp6 + sb_expected_foo_zp6 * sb_growth_reduction_zp6 #g/stem/d
     max_growth_per_ha_zp6 = (max_growth_per_bush_zp6/1000) * len_zp6 * sb_stems_per_ha #kg/ha/period
+    ###scale growth based on user sav (this is basically the sam as doing a SAM however it is better for web app because the user doesnt need to see the base input).
+    ###a misrepresentation can occur if the user enters an expected growth that was calculated with a different grazing pattern to the AFO inputs (e.g. the afo inputs for typical foo and growth assume one grazing per year. If the user grazes more regularly the scalar may over estimate growth).
+    default_expected_yearly_growth_z = np.sum((sb_expected_growth_zp6/1000) * len_zp6 * sb_stems_per_ha, axis=1)
+    growth_scalar_z = fun.f_sa(default_expected_yearly_growth_z, sav_sb_expected_growth, 5) / default_expected_yearly_growth_z
+    max_growth_per_ha_zp6 = max_growth_per_ha_zp6 * growth_scalar_z[:,na]
 
     ##Adjust growth for average saltbush production over life of stand
     sb_ave_prodn = pinp.saltbush['i_sb_ave_prodn'] #potential of production achieved in each year
