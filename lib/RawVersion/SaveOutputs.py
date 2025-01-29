@@ -89,7 +89,7 @@ def f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasi
         pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
 
     ##call function to store optimal feedsupply - do this before r_vals since completion of r_vals trigger successful completion.
-    ###Note: A feed supply optimisation can not be carried out with Exp1.py because the trials aren't carried out sequentially
+    ###Note: A feed supply optimisation can not be carried out with RunAfoRaw_Multi.py because the trials aren't carried out sequentially
     pkl_fs = fsstk.f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info)
     ##store fs if trial is fs_create
     if sinp.structuralsa['i_fs_create_pkl']:

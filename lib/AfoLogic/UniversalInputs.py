@@ -122,7 +122,7 @@ def f_select_n_reset_uinp(uinp_defaults):
 def f_universal_inp_sa(uinp_defaults):
     '''
     Applies sensitivity adjustment to each input.
-    This function gets called at the beginning of each loop in the exp.py module.
+    This function gets called at the beginning of each loop in the RunAfoRaw_Multi.py module.
 
     SA order is: sav, sam, sap, saa, sat, sar.
     So that multiple SA can be applied to one input.

@@ -91,7 +91,7 @@ Reporting
 How to use
 ^^^^^^^^^^
 Running the reports is much like running the model (see section on running), simply just run
-ReportControl.py inplace of Exp.py. As with running the core model, an argument can be passed into the
+ReportControl.py inplace of RunAfoRaw_Multi.py. As with running the core model, an argument can be passed into the
 script when running via the terminal which controls which experiment to report. ReportControl.py calls the
 necessary report functions in ReportFunctions.py. For more information on the process to add reports and information regarding the existing
 reports see below.

@@ -265,8 +265,17 @@ def create_sa():
     ####################
     ##SAV
     sav['slp_inc'] = '-'  #control if salt land pasture is included
+    sav['saltbush_estab_cost'] = '-'  #initial establishment costs of saltbush
+    sav['understory_estab_cost'] = '-'  #initial establishment costs of understory
+    sav['saltbush_success'] = '-'  #success of establishment
+    sav['understory_success'] = '-'  #success of establishment
+    sav['saltbush_life'] = '-'  #life span of saltbush (before it needs to be re-established)
+    sav['understory_life'] = '-'  #life span of understory (before it needs to be re-established)
+    sav['sb_omd'] = '-'  #organic matter digestibility of saltbush
+    sav['sb_expected_yearly_growth'] = '-'  #typical yearly growth of saltbush (kg/ha/yr). This scales the input. It means a user can basically do a SAM without knowing the base input which is good for web app.
     ##SAM
     sam['sb_growth'] = 1.0   # SA multiplier for the growth of saltbush on slp (applies to all lmus and fp)
+    sam['sb_growth_l'] = np.ones(len_l, dtype='float64')  # SA multiplier for the growth of saltbush on each lmu
     ##SAP
     ##SAA
     ##SAT
@@ -313,6 +322,7 @@ def create_sa():
     ##SAV
     sav['poc_inc'] = '-'  #control if poc is included
     sav['pas_inc_t'] = np.full_like(pinp.general['pas_inc_t'], '-', dtype=object) #SA value for pastures included mask
+    sav['bnd_pas_area_percent_t'] = np.full(len_t, '-', dtype=object)  # SA to set the area of each pasture type.
     ##SAM
     sam['q_pgr_scalar_Qp6'] = np.ones((len_Q, len_p6), dtype='float64')   # SAM for pgr with q axis
     sam['q_pgr_scalar'] = 1   # SAM for pgr from node[0] to the end of the GS (for mp model in the web app)
