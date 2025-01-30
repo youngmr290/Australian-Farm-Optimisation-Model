@@ -745,6 +745,8 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
         ###conver to numpy if pandas so f_update works corrrectly (so dtype is handled correctly)
         if isinstance(value, pd.DataFrame):
             value.iloc[:,:] = f_update(value.values, sa, sa != '-') #sa has to be object or this give FutureWarning
+        elif isinstance(value, pd.Series):
+            value.iloc[:] = f_update(value.values, sa, sa != '-') #sa has to be object or this give FutureWarning
         else:
             value = f_update(value, sa, sa != '-') #sa has to be object or this give FutureWarning
 
