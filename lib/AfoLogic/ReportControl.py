@@ -1424,6 +1424,12 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["cropgrazing"] = rfun.f_cropgrazing_analysis(lp_vars,r_vals,"Summary")
     if report_run.loc['run_flk_structure', 'Run']:
         reports["flk_structure"] = rfun.f_saleage_analysis(lp_vars,r_vals,"Summary")
+    if report_run.loc['run_slp', 'Run']:
+        reports["slp"] = rfun.f_slp_area_analysis(lp_vars,r_vals,"Summary")
+    if report_run.loc['run_fodder', 'Run']:
+        reports["fodder"] = rfun.f_fodder_analysis(lp_vars,r_vals,"Summary")
+    if report_run.loc['run_perennial', 'Run']:
+        reports["perennial"] = rfun.f_perennial_analysis(lp_vars,r_vals,"Summary")
     if report_run.loc['run_mp_summary', 'Run']:
         summary_df, landuse_area_k_qsz, sale_numbers_dams_y_qsz, sale_numbers_offs_tv_qsz = rfun.mp_report(lp_vars,r_vals)
         reports["mp_summary"] = summary_df

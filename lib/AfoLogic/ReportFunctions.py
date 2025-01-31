@@ -3247,6 +3247,73 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
 
     return summary_df
 
+def f_slp_area_analysis(lp_vars, r_vals, trial):
+    '''Returns a simple 1 row summary of the trial (season results are averaged)'''
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'SLP area', 'SR', 'Pas %', 'Sup/DSE'])
+    ##profit - no minroe and asset
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
+    ##slp area
+    slp_area = np.sum(d_vars['qsz_weighted']['v_slp_ha_qszl'])
+    summary_df.loc[trial, 'SLP area'] = round(slp_area,0)
+    ##stocking rate
+    sr = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
+    summary_df.loc[trial, 'SR'] = round(sr, 1)
+    ##pasture %
+    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+    ##supplement
+    total_sup = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
+    pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
+    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+    total_pas_are = np.sum(pas_area_qsz * z_prob_qsz.ravel())
+    summary_df.loc[trial, 'Sup/DSE'] = round(fun.f_divide_float(total_sup * 1000, (total_pas_are * sr)))
+    return summary_df
+
+
+def f_fodder_analysis(lp_vars, r_vals, trial):
+    '''Returns a simple 1 row summary of the trial (season results are averaged)'''
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Cereal fodder area', 'Legume fodder area', 'SR', 'Pas %', 'Sup/DSE'])
+    ##profit - no minroe and asset
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
+    ##fodder area
+    landuse_area_k = f_area_summary(lp_vars, r_vals, option=4, active_z=False).squeeze()
+    summary_df.loc[trial, 'Cereal fodder area'] = round(fun.f1_get_value(landuse_area_k, "of"),0)
+    summary_df.loc[trial, 'Legume fodder area'] = round(fun.f1_get_value(landuse_area_k, "lf"),0)
+    ##stocking rate
+    sr = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
+    summary_df.loc[trial, 'SR'] = round(sr, 1)
+    ##pasture %
+    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+    ##supplement
+    total_sup = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
+    pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
+    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+    total_pas_are = np.sum(pas_area_qsz * z_prob_qsz.ravel())
+    summary_df.loc[trial, 'Sup/DSE'] = round(fun.f_divide_float(total_sup * 1000, (total_pas_are * sr)))
+    return summary_df
+
+
+def f_perennial_analysis(lp_vars, r_vals, trial):
+    '''Returns a simple 1 row summary of the trial (season results are averaged)'''
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Perennial pas area', 'Total Pas %', 'SR', 'Sup/DSE'])
+    ##profit - no minroe and asset
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
+    ##perennial area
+    perennial_pas_landuses = r_vals['rot']['perennial_pas']  # landuse sets
+    landuse_area_k = f_area_summary(lp_vars, r_vals, option=4, active_z=False).squeeze()
+    summary_df.loc[trial, 'Perennial pas area'] = round(fun.f1_get_value(landuse_area_k, perennial_pas_landuses), 0)
+    ##pasture %
+    summary_df.loc[trial, 'Total Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+    ##stocking rate
+    sr = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
+    summary_df.loc[trial, 'SR'] = round(sr, 1)
+    ##supplement
+    total_sup = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
+    pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
+    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+    total_pas_are = np.sum(pas_area_qsz * z_prob_qsz.ravel())
+    summary_df.loc[trial, 'Sup/DSE'] = round(fun.f_divide_float(total_sup * 1000, (total_pas_are * sr)))
+    return summary_df
+
 
 def mp_report(lp_vars, r_vals, option=1):
     keys_q = r_vals['zgen']['keys_q']
