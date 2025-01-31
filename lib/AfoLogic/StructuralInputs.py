@@ -153,6 +153,7 @@ def f_landuse_sets():
     landuse['All']=general['i_idx_k'] #used in reporting and bounds and as index in precalc modules
     landuse['C']=general['i_idx_k1'] #all crops, used in stubble and mach (not used for rotations)
     landuse['All_pas']=general['i_idx_k2'] #used in reporting
+    landuse['perennial_pas']={'u', 'uc', 'x', 'xc', 'j','jc', 't','tc'} #used in reporting
 
     ##next set is used in pasture.py for mobilisation of below ground reserves and phase area
     landuse['pasture_sets']={'annual': {'a', 'a2'

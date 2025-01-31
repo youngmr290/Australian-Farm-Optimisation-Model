@@ -129,6 +129,8 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_cropgrazing"] = pd.DataFrame()  # web app analysis
     reports["stacked_flk_structure"] = pd.DataFrame()  # web app analysis
     reports["stacked_slp"] = pd.DataFrame()  # web app analysis
+    reports["stacked_fodder"] = pd.DataFrame()  # web app analysis
+    reports["stacked_perennial"] = pd.DataFrame()  # web app analysis
     reports["stacked_mp"] = pd.DataFrame()  # web app analysis
 
     return reports
@@ -597,6 +599,14 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         slp = pd.concat([reports["slp"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_slp"] = rfun.f_append_dfs(stacked_reports["stacked_slp"], slp)
 
+    if report_run.loc['run_fodder', 'Run']:
+        fodder = pd.concat([reports["fodder"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_fodder"] = rfun.f_append_dfs(stacked_reports["stacked_fodder"], fodder)
+
+    if report_run.loc['run_perennial', 'Run']:
+        perennial = pd.concat([reports["perennial"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_perennial"] = rfun.f_append_dfs(stacked_reports["stacked_perennial"], perennial)
+
     if report_run.loc['run_mp_summary', 'Run']:
         mp_summary = pd.concat([reports["mp_summary"],], keys=["Summary"], names=[])  # add extra info about each section of the report
         mp_landuse_area_k_qsz = pd.concat([reports["mp_landuse_area_k_qsz"],], keys=["Land use area (ha)"], names=[])  # add extra info about each section of the report
@@ -872,6 +882,10 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_flk_structure"], 'flk_structure_analysis', df_settings, option=xl_display_mode)
     if report_run.loc['run_slp', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_slp"], 'slp_analysis', df_settings, option=xl_display_mode)
+    if report_run.loc['run_fodder', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_fodder"], 'fodder_analysis', df_settings, option=xl_display_mode)
+    if report_run.loc['run_perennial', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_perennial"], 'perennial_analysis', df_settings, option=xl_display_mode)
     if report_run.loc['run_mp_summary', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_mp"], 'MP_summary', df_settings, option=xl_display_mode)
 

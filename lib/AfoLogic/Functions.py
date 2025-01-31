@@ -505,6 +505,25 @@ def f_produce_df(data, rows, columns, row_names=None, column_names=None):
         col_index = pd.MultiIndex.from_product(columns, names=column_names)
     return pd.DataFrame(data, index=row_index, columns=col_index)
 
+def f1_get_value(series, key):
+    """
+    Retrieve the value(s) associated with a given key or keys in a Series.
+    If multiple keys are provided, their corresponding values are summed.
+
+    Parameters:
+    series (pd.Series): A Series with keys as the index.
+    key (any or list or set): A single key, or multiple keys in a list or set to search in the Series index.
+
+    Returns:
+    int or float: The sum of the values associated with the key(s) if found, otherwise 0.
+    """
+    # Normalize input to a list for consistency
+    if not isinstance(key, (list, set)):
+        key = [key]
+
+    # Use isin and sum only matching values
+    return series.loc[series.index.isin(key)].sum()
+
 def f_back_transform(x):
     ''' Back transform a value using a derivation of exp(x) / (1 + exp(x))'''
     return 1 / (1 + np.exp(-x))
