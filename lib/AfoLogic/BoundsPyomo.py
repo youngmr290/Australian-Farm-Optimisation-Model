@@ -768,13 +768,15 @@ def f1_boundarypyomo_local(params, model):
             ###setbound using ha of farm area
             crop_area_bound_qk1 = fun.f_sa(crop_area_bound_qk1, sen.sav['bnd_crop_area_qk1'][0:len_q, pinp.crop_landuse_mask_k1], 5)
             crop_area_bound_qk1 = fun.f1_make_pyomo_dict(crop_area_bound_qk1, [keys_q, model.s_crops])
+            model.p_crop_area_bound_qk1 = pe.Param(model.s_sequence_year, model.s_crops, default=0, initialize=crop_area_bound_qk1)
+
             ###constraint
             l_p7 = list(model.s_season_periods)
             def k1_bound(model, q, s, p7, k1, z):
-                if p7 == l_p7[-1] and crop_area_bound_qk1[q,k1]!=99999 and pe.value(model.p_wyear_inc_qs[q, s]):  #bound will not be built if param == 99999
+                if p7 == l_p7[-1] and model.p_crop_area_bound_qk1[q,k1]!=99999 and pe.value(model.p_wyear_inc_qs[q, s]):  #bound will not be built if param == 99999
                     return(
                            sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_landuse_area[r, k1] for r in model.s_phases for l in model.s_lmus)
-                           == crop_area_bound_qk1[q,k1])
+                           == model.p_crop_area_bound_qk1[q,k1])
                 else:
                     return pe.Constraint.Skip
             model.con_crop_area_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, rule=k1_bound, doc='bound on total pasture area')
