@@ -192,6 +192,36 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     profit, obj, trial_infeasible = core.coremodel_all(trial_name, model, solver_method, nv, print_debug_output, MP_lp_vars)
     print(f'{trial_description}, time for corepyomo: {time.time() - pyomocalc_end:.2f} finished at {time.ctime()}')
 
+
+    ##build lp_vars
+    variables=model.component_objects(pe.Var, active=True)
+    temp_lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
+    MP_lp_vars = temp_lp_vars
+
+    model2 = pe.ConcreteModel() #create pyomo model - done each loop because memory was being leaked when just deleting and re adding the components.
+    crtmod.sets(model2, nv) #certain sets have to be updated each iteration of exp - has to be first since other modules use the sets
+    zgenpy.f1_seasonpyomo_local(params['zgen'], model2) #has to be first since builds params used in other modules
+    rotpy.f1_rotationpyomo(params['rot'], model2, MP_lp_vars)
+    phspy.f1_croppyomo_local(params['crop'], model2)
+    macpy.f1_machpyomo_local(params['mach'], model2)
+    finpy.f1_finpyomo_local(params['fin'], model2)
+    lfixpy.f1_labfxpyomo_local(params['labfx'], model2)
+    labpy.f1_labpyomo_local(params['lab'], model2)
+    lphspy.f1_labcrppyomo_local(params['crplab'], model2)
+    paspy.f1_paspyomo_local(params['pas'], model2, MP_lp_vars)
+    suppy.f1_suppyomo_local(params['sup'], model2)
+    cgzpy.f1_cropgrazepyomo_local(params['crpgrz'], model2)
+    slppy.f1_saltbushpyomo_local(params['slp'], model2, MP_lp_vars)
+    stubpy.f1_stubpyomo_local(params['stub'], model2, MP_lp_vars)
+    spy.f1_stockpyomo_local(params['stock'], model2, MP_lp_vars)
+    mvf.f1_mvf_pyomo(model2)
+    ###bounds-this must be done last because it uses sets built in some of the other modules
+    bndpy.f1_boundarypyomo_local(params, model2)
+    pyomocalc_end = time.time()
+    print(f'{trial_description}, time for localpyomo: {pyomocalc_end - pyomocalc_start:.2f} finished at {time.ctime()}')
+    profit, obj, trial_infeasible = core.coremodel_all(trial_name, model, solver_method, nv, print_debug_output, MP_lp_vars)
+    print(f'{trial_description}, time for corepyomo: {time.time() - pyomocalc_end:.2f} finished at {time.ctime()}')
+
     ##build lp_vars
     variables=model.component_objects(pe.Var, active=True)
     lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object

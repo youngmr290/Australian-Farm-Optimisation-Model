@@ -55,7 +55,7 @@ def sets(model, nv):
     ##season sequence set 2 - used in the between constrains for the MP model. An extra element is added to the set so that the final year has two constraints.
     ###in the MP model this set is increased
     if sinp.structuralsa['model_is_MP']:
-        t_len_q = len_q+1
+        t_len_q = len_q
     else:
         t_len_q = len_q
     model.s_sequence_year_between_con = Set(initialize=np.array(['q%s' % i for i in range(t_len_q)]), doc='season sequences used for the between constraints')
