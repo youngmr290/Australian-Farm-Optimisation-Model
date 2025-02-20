@@ -192,11 +192,15 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     profit, obj, trial_infeasible = core.coremodel_all(trial_name, model, solver_method, nv, print_debug_output, MP_lp_vars)
     print(f'{trial_description}, time for corepyomo: {time.time() - pyomocalc_end:.2f} finished at {time.ctime()}')
 
-
+    print(set([(k[0],k[1],k[2],k[5]) for k in model.con_rot_history_between.keys()]))
+    print(set([(k[0],k[1],k[2],k[5]) for k in model.con_phase_link_between.keys()]))
+    print(set([(k[0],k[1],k[2],k[4]) for k in model.con_greenpas_between.keys()]))
+    print(set([(k[0],k[1],k[3],k[4]) for k in model.con_drypas_between.keys()]))
+    
     ##build lp_vars
-    variables=model.component_objects(pe.Var, active=True)
-    temp_lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
-    MP_lp_vars = temp_lp_vars
+    # variables=model.component_objects(pe.Var, active=True)
+    # temp_lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
+    # MP_lp_vars = temp_lp_vars
 
     model2 = pe.ConcreteModel() #create pyomo model - done each loop because memory was being leaked when just deleting and re adding the components.
     crtmod.sets(model2, nv) #certain sets have to be updated each iteration of exp - has to be first since other modules use the sets
@@ -217,10 +221,47 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     mvf.f1_mvf_pyomo(model2)
     ###bounds-this must be done last because it uses sets built in some of the other modules
     bndpy.f1_boundarypyomo_local(params, model2)
+
+    print(list(model2.s_season_types))
+    rotpy.parametrize_phase_link_between(model2, list(model2.s_season_types)[0], MP_lp_vars)
+    paspy.parametrize_con_greenpas_between(model2, list(model2.s_season_types)[0], MP_lp_vars)
+    paspy.parametrize_con_drypas_between(model2, list(model2.s_season_types)[0], MP_lp_vars)
+    stubpy.parametrize_con_cropresidue_between(model2, list(model2.s_season_types)[0], MP_lp_vars)
+    slppy.parametrize_con_saltbush_between(model2, list(model2.s_season_types)[0], MP_lp_vars)
+    spy.parametrize_con_off_betweenR(model2, params['stock'], list(model2.s_season_types)[0], MP_lp_vars)
+    spy.parametrize_con_dam_betweenR(model2, params['stock'], list(model2.s_season_types)[0], MP_lp_vars)
     pyomocalc_end = time.time()
     print(f'{trial_description}, time for localpyomo: {pyomocalc_end - pyomocalc_start:.2f} finished at {time.ctime()}')
-    profit, obj, trial_infeasible = core.coremodel_all(trial_name, model, solver_method, nv, print_debug_output, MP_lp_vars)
+    profit, obj, trial_infeasible = core.coremodel_all(trial_name, model2, solver_method, nv, print_debug_output, MP_lp_vars)
     print(f'{trial_description}, time for corepyomo: {time.time() - pyomocalc_end:.2f} finished at {time.ctime()}')
+
+    for z8 in list(model2.s_season_types)[1:]:
+        rotpy.parametrize_phase_link_between(model2, z8, MP_lp_vars)
+        paspy.parametrize_con_greenpas_between(model2, z8, MP_lp_vars)
+        paspy.parametrize_con_drypas_between(model2, z8, MP_lp_vars)
+        stubpy.parametrize_con_cropresidue_between(model2, z8, MP_lp_vars)
+        slppy.parametrize_con_saltbush_between(model2, z8, MP_lp_vars)
+        spy.parametrize_con_off_betweenR(model2, params['stock'], z8, MP_lp_vars)
+        spy.parametrize_con_dam_betweenR(model2, params['stock'], z8, MP_lp_vars)
+
+        solver = pe.SolverFactory('cplex', executable='/opt/ibm/ILOG/CPLEX_Studio2211/cplex/bin/x86-64_linux/cplex')
+        solver_result = solver.solve(model2, warmstart=True, tee=True)
+
+        try:  # to handle infeasible (there is no profit component when infeasible)
+            p7_end = list(model2.s_season_periods)[-1]
+            utility = pe.value(model2.utility)
+            profit = pe.value(sum((model2.v_terminal_wealth[q,s,z,c1] + model2.v_minroe[q,s,p7_end,z] + model2.v_asset_cost[q,s,p7_end,z])
+                                        * model2.p_season_prob_qsz[q,s,z] * model2.p_prob_c1[c1] * model2.p_discount_factor_q[q]
+                                        for q in model2.s_sequence_year for s in model2.s_sequence for c1 in model2.s_c1
+                                        for z in model2.s_season_types if pe.value(model2.p_wyear_inc_qs[q,s])))
+        except ValueError:
+            utility = 0
+            profit = 0
+
+        ##this prints trial name, overall profit and feasibility for each trial
+        print(f'\nDisplaying profit and obj for season type: {z8}')
+        print(f'Profit: {profit}   Obj: {utility}')
+        print('-' * 60)
 
     ##build lp_vars
     variables=model.component_objects(pe.Var, active=True)

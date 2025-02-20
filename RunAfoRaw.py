@@ -14,7 +14,7 @@ from lib.RawVersion import SaveOutputs as out
 ##controls #
 ############
 force_run = True #set to True if you want to force all trials to run even if they are up to date.
-solver_method = 'HiGHS'
+solver_method = 'CPLEX' #'HiGHS'
 print_debug_output = False
 
 ########################################

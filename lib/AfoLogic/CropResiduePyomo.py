@@ -153,21 +153,55 @@ def f_con_cropresidue_between(model, MP_lp_vars):
             v_stub_transfer_hist = model.v_stub_transfer
 
         if pe.value(model.p_mask_childz_between_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_stub_transfer_req[p6,z9,k]): #p_stub_transfer_req included to remove constraints when stubble doesn't exist
-            return  - sum(v_stub_transfer_hist[q_prev,s8,z8,p6_prev,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
-                          * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
-                          * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
-                          for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)  \
-                    - sum(model.v_use_biomass[q,s9,p7,z9,k,l,s2] * 1000 * model.p_a_p6_p7[p7,p6,z9] * model.p_biomass2residue[k,s2]
+            return - sum(model.v_use_biomass[q,s9,p7,z9,k,l,s2] * 1000 * model.p_a_p6_p7[p7,p6,z9] * model.p_biomass2residue[k,s2]
                           for p7 in model.s_season_periods for l in model.s_lmus) * model.p_a_prov[p6,z9,k,sc,s2] \
                     + model.v_stub_transfer[q,s9,z9,p6,k,sc,s2] * model.p_stub_transfer_req[p6,z9,k] \
                     + sum(-model.v_stub_con[q,s9,z9,p6,f,k,sc_prev,s2] * model.p_bc_prov[k,sc_prev,s2]
                           + model.v_stub_con[q,s9,z9,p6,f,k,sc,s2] * model.p_bc_req[k,sc,s2]
-                          for f in model.s_feed_pools) <=0
+                          for f in model.s_feed_pools) <= sum(v_stub_transfer_hist[q_prev,s8,z8,p6_prev,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
+                          * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
+                          * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
+                          for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
         else:
             return pe.Constraint.Skip
     model.con_cropresidue_between = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_feed_periods, model.s_season_types,
                                               model.s_crops, model.s_stub_cat, model.s_biomass_uses, rule=cropresidue_transfer_between, doc='stubble transfer between feed periods and stubble transfer between categories.')
 
+
+def parametrize_con_cropresidue_between(model, z8, MP_lp_vars):
+    ''' Links the consumption of a given category with the provision of another category, or the transfer of
+    stubble to the following period. E.g. category A consumption provides category B. Category B can either be
+    consumed (hence providing category C) or transferred to the following period.
+    '''
+    ##stubble transfer from category to category and period to period
+    ##s2 required because cat propn can vary across s2
+    v_stub_transfer_hist = MP_lp_vars[str('v_stub_transfer')]
+    l_fp = list(model.s_feed_periods)
+    p6 = l_fp[0]
+    p6_prev = l_fp[-1]
+    # q_prev = q
+    for q in model.s_sequence_year_between_con:
+        for s9 in model.s_sequence:
+            # for p6 in model.s_feed_periods:
+            for z9 in model.s_season_types:
+                for k in model.s_crops:
+                    for sc in model.s_stub_cat:
+                        for s2 in model.s_biomass_uses:
+                            sc_prev = list(model.s_stub_cat)[list(model.s_stub_cat).index(sc)-1]
+                            # p6_prev = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6)-1]
+                            q_prev = q
+                            if pe.value(model.p_mask_childz_between_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_stub_transfer_req[p6,z9,k]): #p_stub_transfer_req included to remove constraints when stubble doesn't exist
+                                weighted_rhs = sum(v_stub_transfer_hist[q_prev,s8,z8_,p6_prev,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8_,k]
+                                            * model.p_parentz_provbetween_fp[p6_prev,z8_,z9]
+                                            * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8_,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8_])
+                                            for z8_ in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
+                                new_rhs = sum(v_stub_transfer_hist[q_prev,s8,z8,p6_prev,k,sc,s2] * model.p_stub_transfer_prov[p6_prev,z8,k]
+                                            * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
+                                            for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
+                                # print(f"Changing rhs from {weighted_rhs} to {new_rhs}")
+                                # print(model.con_cropresidue_between[q,s9,p6,z9,k,sc,s2].body)
+                                model.con_cropresidue_between[q,s9,p6,z9,k,sc,s2].set_value(model.con_cropresidue_between[q,s9,p6,z9,k,sc,s2].body <= new_rhs)
+    
 
 ###################
 #constraint global#

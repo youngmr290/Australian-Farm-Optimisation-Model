@@ -240,15 +240,46 @@ def f_con_greenpas_between(model, MP_lp_vars):
                           - model.p_foo_added_annual_increase[p7,p6,l,r,z9,t] * model.p_phase_can_increase[p7,z9,r] * model.v_phase_change_increase[q,s9,p7,z9,r,l]
                           for r in model.s_phases for p7 in model.s_season_periods)            \
                    + sum(model.v_greenpas_ha[q,s9,f,g,o,p6,l,z9,t] * model.p_foo_start_grnha[q,o,p6,l,z9,t]   \
-                         - sum(v_greenpas_ha_hist[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_foo_end_grnha[q_prev,g,o,p6_prev,l,z8,t]
+                         for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels) <= sum(v_greenpas_ha_hist[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_foo_end_grnha[q_prev,g,o,p6_prev,l,z8,t]
                                * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
                                * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
-                               for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
-                         for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
+                               for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
         else:
             return pe.Constraint.Skip
     #todo the greenpas (FOO) and pasarea (ha) could be replaced by a grnha constraint that passes area and foo together. Needs a FooB (base level) and reseeding foo removal and addition associated with the reseeding rotation phases
     model.con_greenpas_between = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = greenpas, doc='Between seasons - green pasture of each type available on each soil type in each feed period')
+
+
+def parametrize_con_greenpas_between(model, z8, MP_lp_vars):
+    '''
+    Constrain the green pasture available on each soil type in each feed period between a given season.
+    Determined by rotation selection (germination and resowing), growth and consumption on each
+    hectare of pasture landuse.
+    '''
+    ##convert feed period set to a list so it can be indexed
+    l_fp = list(model.s_feed_periods)
+    v_greenpas_ha_hist = MP_lp_vars[str('v_greenpas_ha')]
+    p6 = l_fp[0]
+    p6_prev = l_fp[-1]
+    for q in model.s_sequence_year_between_con:
+        for s9 in model.s_sequence:
+            # for p6 in model.s_feed_periods:
+            for l in model.s_lmus:
+                for z9 in model.s_season_types:
+                    for t in model.s_pastures:
+                        # p6_prev = l_fp[l_fp.index(p6) - 1] #need the activity level from last feed period
+                        q_prev = q
+                        if pe.value(model.p_mask_childz_between_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and any(model.p_foo_start_grnha[q,o,p6,l,z9,t] for o in model.s_foo_levels):
+                            weighted_rhs = sum(v_greenpas_ha_hist[q_prev,s8,f,g,o,p6_prev,l,z8_,t] * model.p_foo_end_grnha[q_prev,g,o,p6_prev,l,z8_,t]
+                                            * model.p_parentz_provbetween_fp[p6_prev,z8_,z9]
+                                            * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8_,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8_])
+                                            for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels for z8_ in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
+                            
+                            new_rhs = sum(v_greenpas_ha_hist[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_foo_end_grnha[q_prev,g,o,p6_prev,l,z8,t]
+                                            * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
+                                            for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
+                            model.con_greenpas_between[q,s9,p6,l,z9,t].set_value(model.con_greenpas_between[q,s9,p6,l,z9,t].body <= new_rhs)
+
 
 def f_con_drypas_within(model):
     '''
@@ -315,21 +346,69 @@ def f_con_drypas_between(model, MP_lp_vars):
         if pe.value(model.p_mask_childz_between_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and (model.p_dry_removal_t[p6,z9,t] != 0 or model.p_dry_transfer_req_t[p6,z9,t] != 0):
             return sum(model.v_phase_area[q,s9,p7,z9,r,l] * model.p_foo_dry_reseeding[p7,q,d,p6,l,r,z9,t]
                        for r in model.s_phases for p7 in model.s_season_periods)   \
-                 + sum(-sum(v_greenpas_ha_hist[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_senesce_grnha[q,d,g,o,p6_prev,l,z8,t]
+                 + sum(model.v_drypas_consumed[q,s9,f,d,p6,z9,l,t] * model.p_dry_removal_t[p6,z9,t] for f in model.s_feed_pools) \
+                 + model.v_drypas_transfer[q,s9,d,p6,z9,l,t] * model.p_dry_transfer_req_t[p6,z9,t] <= sum(v_greenpas_ha_hist[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_senesce_grnha[q,d,g,o,p6_prev,l,z8,t]
                             * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
                             * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
-                            for z8 in model.s_season_types for s8 in model.s_sequence for g in model.s_grazing_int
-                            for o in model.s_foo_levels if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
-                       + model.v_drypas_consumed[q,s9,f,d,p6,z9,l,t] * model.p_dry_removal_t[p6,z9,t] for f in model.s_feed_pools) \
-                 - sum(v_drypas_transfer_hist[q_prev,s8,d,p6_prev,z8,l,t] * model.p_dry_transfer_prov_t[p6_prev,z8,t]
+                            for f in model.s_feed_pools for z8 in model.s_season_types for s8 in model.s_sequence for g in model.s_grazing_int
+                            for o in model.s_foo_levels if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0) \
+                 + sum(v_drypas_transfer_hist[q_prev,s8,d,p6_prev,z8,l,t] * model.p_dry_transfer_prov_t[p6_prev,z8,t]
                        * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
                        * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
-                       for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0) \
-                 + model.v_drypas_transfer[q,s9,d,p6,z9,l,t] * model.p_dry_transfer_req_t[p6,z9,t] <=0
+                       for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
         else:
             return pe.Constraint.Skip
     model.con_drypas_between = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_dry_groups, model.s_feed_periods,
                                              model.s_season_types, model.s_lmus, model.s_pastures, rule = drypas_between, doc='Between seasons: High and low quality dry pasture of each type available in each period')
+
+
+def parametrize_con_drypas_between(model, z8, MP_lp_vars):
+    '''
+    Constrains the high and low quality dry pasture available in each period. Determined by senesced green pasture
+    in the current period, dry pasture transferred from previous period and livestock consumption. Pasture decay and
+    trampling are factored into the consumption and transfer activities (e.g. the transfer activity removes 1000kg
+    from the previous period and provides 1000 - decay - trampling kg into the current period).
+
+    '''
+    ##convert feed period set to a list so it can be indexed
+    l_fp = list(model.s_feed_periods)
+    p6 = l_fp[0]
+    p6_prev = l_fp[-1]
+    for q in model.s_sequence_year_between_con:
+        for s9 in model.s_sequence:
+            for d in model.s_dry_groups:
+                # for p6 in model.s_feed_periods:
+                for z9 in model.s_season_types:
+                    for l in model.s_lmus:
+                        for t in model.s_pastures:
+                            # p6_prev = l_fp[l_fp.index(p6) - 1] #need the activity level from last feed period
+                            q_prev = q
+                            v_drypas_transfer_hist = MP_lp_vars[str('v_drypas_transfer')]  # q[0] is provided by the MP set up run.
+                            v_greenpas_ha_hist = MP_lp_vars[str('v_greenpas_ha')]  # q[0] is provided by the MP set up run.
+                            ###adjust q_prev for multi-period model
+                            if pe.value(model.p_mask_childz_between_fp[p6,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and (model.p_dry_removal_t[p6,z9,t] != 0 or model.p_dry_transfer_req_t[p6,z9,t] != 0):
+                                weighted_rhs = sum(v_greenpas_ha_hist[q_prev,s8,f,g,o,p6_prev,l,z8_,t] * model.p_senesce_grnha[q,d,g,o,p6_prev,l,z8_,t]
+                                                * model.p_parentz_provbetween_fp[p6_prev,z8_,z9]
+                                                * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8_,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8_])
+                                                for f in model.s_feed_pools for z8_ in model.s_season_types for s8 in model.s_sequence for g in model.s_grazing_int
+                                                for o in model.s_foo_levels if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0) \
+                                    + sum(v_drypas_transfer_hist[q_prev,s8,d,p6_prev,z8_,l,t] * model.p_dry_transfer_prov_t[p6_prev,z8_,t]
+                                        * model.p_parentz_provbetween_fp[p6_prev,z8_,z9]
+                                        * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8_,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8_])
+                                        for z8_ in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
+                                new_rhs = sum(v_greenpas_ha_hist[q_prev,s8,f,g,o,p6_prev,l,z8,t] * model.p_senesce_grnha[q,d,g,o,p6_prev,l,z8,t]
+                                                * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
+                                                for f in model.s_feed_pools for s8 in model.s_sequence for g in model.s_grazing_int
+                                                for o in model.s_foo_levels if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0) \
+                                    + sum(v_drypas_transfer_hist[q_prev,s8,d,p6_prev,z8,l,t] * model.p_dry_transfer_prov_t[p6_prev,z8,t]
+                                        * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
+                                        for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
+                                
+                                # print(f"Changing rhs from {weighted_rhs} to {new_rhs}")
+                                # print(model.con_drypas_between[q,s9,d,p6,z9,l,t].body)
+                                model.con_drypas_between[q,s9,d,p6,z9,l,t].set_value(model.con_drypas_between[q,s9,d,p6,z9,l,t].body <= new_rhs)
+                                
+
 
 def f_con_nappas(model):
     '''

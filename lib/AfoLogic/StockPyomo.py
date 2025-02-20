@@ -440,6 +440,70 @@ def f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9
     end_con_offwithinR=time.time()
     # print('con_offwithinR: ',end_con_offR - start_con_offR)
 
+def parametrize_con_off_betweenR(model, params, z8, MP_lp_vars):
+    '''
+    Between year numbers/transfers of offspring to offspring in the following decision variable period.
+
+    '''
+    l_k29 = list(model.s_k2_birth_dams)
+    l_v1 = list(model.s_dvp_dams)
+    l_a = list(model.s_wean_times)
+    l_z = list(model.s_season_types)
+    l_i = list(model.s_tol)
+    l_x = list(model.s_gender)
+    l_y1 = list(model.s_gen_merit_dams)
+    l_g9 = list(model.s_groups_dams)
+    l_w9 = list(model.s_lw_dams)
+    l_k3 = list(model.s_k3_damage_offs)
+    l_k5 = list(model.s_k5_birth_offs)
+    l_v3 = list(model.s_dvp_offs)
+    l_g3 = list(model.s_groups_offs)
+    l_w9_offs = list(model.s_lw_offs)
+
+    v_offs_hist = MP_lp_vars[str('v_offs')]
+    v3_prev = l_v3[-1]
+    v3 = l_v3[0]
+    t_v3 = 0
+    # q_prev = q
+
+    for q in model.s_sequence_year_between_con:
+        for s9 in model.s_sequence:
+            for t_k3,k3 in enumerate(l_k3):
+                for t_k5,k5 in enumerate(l_k5):
+                    # for t_v3, v3 in enumerate(l_v3):
+                    for a in model.s_wean_times:
+                        for t_z, z9 in enumerate(l_z):
+                            for t_i,i in enumerate(model.s_tol):
+                                for t_x, x in enumerate(l_x):
+                                    for y3 in model.s_gen_merit_dams:
+                                        for t_g3, g3 in enumerate(l_g3):
+                                            for t_w9, w9 in enumerate(l_w9_offs):
+                                                # v3_prev = l_v3[l_v3.index(v3) - 1]  #used to get the activity number from the last period
+                                                q_prev = q
+                                                if np.any(params['numbers_req_numpyversion_k3k5vw8zixg3w9'][t_k3,t_k5,t_v3,:,t_z,t_i,t_x,t_g3,t_w9]) \
+                                                and pe.value(model.p_mask_childz_between_offs[k3,v3,z9,x,g3]) \
+                                                and pe.value(model.p_wyear_inc_qs[q,s9]):
+                                                    ###note: don't need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
+                                                    ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
+                                                    weighted_rhs = sum(sum(v_offs_hist[q_prev,s8,k3,k5,t3,v3_prev,n3,w8,z8_,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8_,i,a,x,y3,g3,w9]
+                                                        * model.p_parentz_provbetween_offs[k3,v3_prev,z8_,x,g3,z9]
+                                                        * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8_,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8_])
+                                                        for z8_ in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
+                                                        for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
+                                                        if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
+                                                        or any(pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8_,i,a,x,y3,g3,w9]) != 0 for z8_ in model.s_season_types)) #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
+                                                    new_rhs = sum(sum(v_offs_hist[q_prev,s8,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
+                                                        * model.p_parentz_provbetween_offs[k3,v3_prev,z8,x,g3,z9]
+                                                        for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
+                                                        for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
+                                                        if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
+                                                        or any(pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8_,i,a,x,y3,g3,w9]) != 0 for z8_ in model.s_season_types)) #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
+                                                    if abs(weighted_rhs - new_rhs) > 0.0001:
+                                                        print(v3, v3_prev)
+                                                        print(f"Changing rhs from {weighted_rhs} to {new_rhs}")
+                                                        print(model.con_offbetweenR[q,s9,k3,k5,v3,a,z9,i,x,y3,g3,w9].body)
+                                                    model.con_offbetweenR[q,s9,k3,k5,v3,a,z9,i,x,y3,g3,w9].set_value(model.con_offbetweenR[q,s9,k3,k5,v3,a,z9,i,x,y3,g3,w9].body <= new_rhs)
+
 def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs, MP_lp_vars):
     '''
     Between year numbers/transfers of offspring to offspring in the following decision variable period.
@@ -481,13 +545,15 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
             ###note: don't need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
             ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
             return sum(model.v_offs[q,s9,k3,k5,t3,v3,n3,w8,z9,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]
-                       - sum(v_offs_hist[q_prev,s8,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
+                       for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
+                       if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
+                       or any(pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]) != 0 for z8 in model.s_season_types)) == sum(sum(v_offs_hist[q_prev,s8,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
                              * model.p_parentz_provbetween_offs[k3,v3_prev,z8,x,g3,z9]
                              * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
                              for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
-                       for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
-                       if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
-                       or any(pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]) != 0 for z8 in model.s_season_types)) ==0 #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
+                             for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
+                             if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
+                             or any(pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]) != 0 for z8 in model.s_season_types)) #need to use both in the if statement (even though it is slower) because there are situations e.g. dvp4 (prejoining) where prov will have a value and req will not.
         else:
             return pe.Constraint.Skip
     start_con_offbetweenR=time.time()
@@ -589,16 +655,20 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
             ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
             return sum(model.v_dams[q,s9,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
                        - model.v_dams[q,s9,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
-                       - sum(v_dams_hist[q_prev,s8,k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
-                             * model.p_parentz_provbetween_dams[k28,v1_prev,z8,g1,z9]
-                             * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
-                             for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
                        for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
                        for w8 in model.s_lw_dams for g1 in model.s_groups_dams
                        if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
                        or any(pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0 for z8 in model.s_season_types)#need to use z8 because at season start all z's provide the initiating z's.
                        or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
-                       ) ==0
+                       ) == sum(sum(v_dams_hist[q_prev,s8,k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
+                             * model.p_parentz_provbetween_dams[k28,v1_prev,z8,g1,z9]
+                             * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
+                             for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
+                        for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
+                       for w8 in model.s_lw_dams for g1 in model.s_groups_dams
+                       if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
+                       or any(pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0 for z8 in model.s_season_types)#need to use z8 because at season start all z's provide the initiating z's.
+                       or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0)
         else:
             return pe.Constraint.Skip
     start_con_damR=time.time()
@@ -606,6 +676,73 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
                                    model.s_groups_dams, model.s_lw_dams, rule=dambetweenR, doc='sason start - transfer dam to dam from last dvp to current dvp.')
     end_con_damR=time.time()
     print('con_dambetweenR: ',end_con_damR-start_con_damR)
+
+def parametrize_con_dam_betweenR(model, params, z8, MP_lp_vars):
+    '''
+    Between year numbers/transfers of
+
+    a) Dams to dams in the current decision variable period (only selected when a dam is changing its sire
+       group e.g. BBB to BBT).
+    b) Dams to dams in the following decision variable period.
+
+    Note: this constraint is only active when season start is included as a dvp (e.g. not always active in steady state model).
+    '''
+    l_k29 = list(model.s_k2_birth_dams)
+    l_v1 = list(model.s_dvp_dams)
+    l_a = list(model.s_wean_times)
+    l_z = list(model.s_season_types)
+    l_i = list(model.s_tol)
+    l_y1 = list(model.s_gen_merit_dams)
+    l_g9 = list(model.s_groups_dams)
+    l_w9 = list(model.s_lw_dams)
+
+    v_dams_hist = MP_lp_vars[str('v_dams')]
+    v1_prev = l_v1[-1]
+    v1 = l_v1[0]
+    t_v1 = 0
+    # q_prev = q
+
+    for q in model.s_sequence_year_between_con:
+        for s9 in model.s_sequence:
+            for t_k29,k29 in enumerate(l_k29):
+                    # for t_v1, v1 in enumerate(l_v1):
+                    for t_a,a in enumerate(l_a):
+                        for t_z, z9 in enumerate(l_z):
+                            for t_i,i in enumerate(l_i):
+                                    for t_y1,y1 in enumerate(l_y1):
+                                        for t_g9, g9 in enumerate(l_g9):
+                                            for t_w9, w9 in enumerate(l_w9):
+                                                # v1_prev = l_v1[l_v1.index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
+                                                q_prev = q
+                                                if np.any(params['numbers_req_numpyversion_k2k2tva1nw8ziyg1g9w9'][:,t_k29,:,t_v1,t_a,:,:,t_z,t_i,t_y1,:,t_g9,t_w9])\
+                                                and any(pe.value(model.p_mask_childz_between_dams[k28,v1,z9,g1]) for k28 in model.s_k2_birth_dams for g1 in model.s_groups_dams)\
+                                                and pe.value(model.p_wyear_inc_qs[q,s9]):
+                                                    ###note: don't need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
+                                                    ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
+                                                    weighted_rhs = sum(sum(v_dams_hist[q_prev,s8,k28,t1,v1_prev,a,n1,w8,z8_,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8_,i,y1,g1,g9,w9]
+                                                            * model.p_parentz_provbetween_dams[k28,v1_prev,z8_,g1,z9]
+                                                            * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8_,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8_])
+                                                            for z8_ in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
+                                                        for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
+                                                    for w8 in model.s_lw_dams for g1 in model.s_groups_dams
+                                                    if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
+                                                    or any(pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8_, i, y1, g1, g9, w9]) != 0 for z8_ in model.s_season_types)#need to use z8 because at season start all z's provide the initiating z's.
+                                                    or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0)
+
+                                                    new_rhs = sum(sum(v_dams_hist[q_prev,s8,k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
+                                                            * model.p_parentz_provbetween_dams[k28,v1_prev,z8,g1,z9]
+                                                            for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
+                                                        for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
+                                                    for w8 in model.s_lw_dams for g1 in model.s_groups_dams
+                                                    if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
+                                                    or any(pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8_, i, y1, g1, g9, w9]) != 0 for z8_ in model.s_season_types)#need to use z8 because at season start all z's provide the initiating z's.
+                                                    or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0)
+                                                    if abs(weighted_rhs - new_rhs) > 0.0001:
+                                                        print(v1, v1_prev)
+                                                        print(f"Changing rhs from {weighted_rhs} to {new_rhs}")
+                                                        print(model.con_dam_betweenR[q,s9,k29,v1,a,z9,i,y1,g9,w9].body)
+                                                    model.con_dam_betweenR[q,s9,k29,v1,a,z9,i,y1,g9,w9].set_value(model.con_dam_betweenR[q,s9,k29,v1,a,z9,i,y1,g9,w9].body == new_rhs)
+
 
 def f_con_progR(model):
     '''

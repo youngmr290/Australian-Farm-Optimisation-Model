@@ -84,7 +84,6 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output, MP_lp_vars)
     if sinp.structuralsa['model_is_MP']:
         f_con_MP(model, MP_lp_vars)
 
-
     #############
     # objective #
     #############
@@ -120,9 +119,9 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output, MP_lp_vars)
     model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
     # model.slack = pe.Suffix(direction=pe.Suffix.IMPORT)
     ##solve - solver choice is passed in as an argument so the user can change it. -
-    if method=="CPLEX" and not shutil.which("cplex") == None:
+    if method=="CPLEX":# and not shutil.which("cplex") == None:
         ##solve with cplex if it exists
-        solver = pe.SolverFactory('cplex')
+        solver = pe.SolverFactory('cplex', executable='/opt/ibm/ILOG/CPLEX_Studio2211/cplex/bin/x86-64_linux/cplex')
         solver_result = solver.solve(model, warmstart=True, tee=True)  # tee=True for solver output - may be useful for troubleshooting, currently warmstart doesnt do anything (could only get it to work for MIP)
     elif method=="glpk":
         ##solve with glpk to see options enter glpsol --help into command prompt.

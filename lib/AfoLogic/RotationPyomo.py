@@ -147,6 +147,8 @@ def f_con_history_between(params, model, MP_lp_vars):
             q_prev = l_q[l_q.index(q) - 1]
             v_phase_area_hist = model.v_phase_area
         if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_season_p7z[p7,z9]) and pe.value(model.p_inc_hist_gs1_con[p7,z9]) and params['hist_used'][h]:
+            # k = [k for k in v_phase_area_hist.keys()][0]
+            # print((q_prev, p7_end_gs1), (q, p7, z9), [(v_phase_area_hist[q_prev,s8,p7_end_gs1,z8,r,l],model.p_sequence_prov_qs8zs9[q_prev, s8, z8, s9],model.p_endstart_prov_qsz[q_prev, s8, z8],z8) for s8 in model.s_sequence for z8 in model.s_season_types for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys() and model.p_hist_prov[r,h] < 0.0])
             return sum(v_phase_area_hist[q_prev,s8,p7_end_gs1,z8,r,l] * model.p_hist_prov[r,h]
                        * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
                        for r in model.s_phases for s8 in model.s_sequence for z8 in model.s_season_types
@@ -235,6 +237,7 @@ def f_phase_link_within(model):
     model.con_phase_link_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=phase_link_within, doc='rotation phases constraint')
 
 def f_phase_link_between(model, MP_lp_vars):
+    # print("\n\n\n")
     '''
     This is the between year version of above. This is required because in the late breaks the phase from the previous
     year needs to carry over so that dry pasture and stubble can exist.
@@ -262,18 +265,49 @@ def f_phase_link_between(model, MP_lp_vars):
             v_phase_area_hist = model.v_phase_area
 
         if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_childz_between_phase[p7,z9]):
+            # k = [k for k in v_phase_area_hist.keys()][0]
+            # print((q_prev, p7_prev), (q, p7, z9), [(v_phase_area_hist[q_prev,s8,p7_prev,z8,r,l],model.p_sequence_prov_qs8zs9[q_prev, s8, z8, s9],model.p_endstart_prov_qsz[q_prev, s8, z8],z8) for s8 in model.s_sequence for z8 in model.s_season_types])
             return model.v_phase_area[q,s9,p7,z9,r,l]  \
                    - model.v_phase_change_increase[q,s9,p7,z9,r,l] * model.p_phase_can_increase[p7,z9,r] \
                    + model.v_phase_change_reduce[q,s9,p7,z9,r,l] * model.p_phase_can_reduce[r,p7,z9] \
-                   - sum(v_phase_area_hist[q_prev,s8,p7_prev,z8,r,l]
+                   == sum(v_phase_area_hist[q_prev,s8,p7_prev,z8,r,l]
                          * model.p_parentz_provbetween_phase[p7_prev, z8, z9]
                          * (model.p_sequence_prov_qs8zs9[q_prev, s8, z8, s9] + model.p_endstart_prov_qsz[q_prev, s8, z8])
-                            for s8 in model.s_sequence for z8 in model.s_season_types) * model.p_phase_area_transfers[p7_prev,z9,r] \
-                   == 0 #end of the previous yr is controlled by between constraint
+                            for s8 in model.s_sequence for z8 in model.s_season_types) * model.p_phase_area_transfers[p7_prev,z9,r] #end of the previous yr is controlled by between constraint
         else:
             return pe.Constraint.Skip
     model.con_phase_link_between = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=phase_link_between, doc='rotation phases constraint')
 
+
+def parametrize_phase_link_between(model, z8, MP_lp_vars):
+    '''
+    Set the right hand side of the phase link between constraint according to a particular season type of last year.
+    '''
+    v_phase_area_hist = MP_lp_vars[str('v_phase_area')]
+    l_p7 = list(model.s_season_periods)
+    p7 = l_p7[0]
+    p7_prev = l_p7[-1]
+    for q in model.s_sequence_year_between_con:
+        for s9 in model.s_sequence:
+            # for p7 in model.s_season_periods:
+            for l in model.s_lmus:
+                for r in model.s_phases:
+                    for z9 in model.s_season_types:
+                        
+                        # p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last feed period
+                        # l_q = list(model.s_sequence_year_between_con)
+                            # q[0] is provided by the MP set up run.
+                        q_prev = q
+
+                        if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_childz_between_phase[p7,z9]):
+                            new_rhs = sum(v_phase_area_hist[q_prev,s8,p7_prev,z8,r,l]
+                                        * model.p_parentz_provbetween_phase[p7_prev, z8, z9]
+                                            for s8 in model.s_sequence)
+                            weighted_rhs = sum(v_phase_area_hist[q_prev,s8,p7_prev,z8_,r,l]
+                                        * model.p_parentz_provbetween_phase[p7_prev, z8, z9]
+                                        * (model.p_sequence_prov_qs8zs9[q_prev, s8, z8_, s9] + model.p_endstart_prov_qsz[q_prev, s8, z8_])
+                                            for s8 in model.s_sequence for z8_ in model.s_season_types)
+                            model.con_phase_link_between[q,s9,p7,l,r,z9].set_value(model.con_phase_link_between[q,s9,p7,l,r,z9].body == new_rhs*model.p_phase_area_transfers[p7_prev,z9,r])
 
 # def f_con_dry_link(model):
 #     '''

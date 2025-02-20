@@ -161,19 +161,48 @@ def f_con_saltbush_between(model, MP_lp_vars):
 
         if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_childz_between_fp[p6,z9]) and pinp.general['pas_inc_t'][3]:
             return - model.v_slp_ha[q,s9,z9,l] * model.p_max_growth_per_ha[z9,p6,l]  \
-                   - sum(v_tonnes_sb_transfer_hist[q_prev,s8,z8,p6_prev,l] * model.p_sb_transfer_provide[z8,p6_prev]
+                   + sum(model.v_tonnes_sb_consumed[q,s9,z9,p6,f,l] * 1000 for f in model.s_feed_pools)     \
+                   + model.v_tonnes_sb_transfer[q,s9,z9,p6,l] * 1000 <= sum(v_tonnes_sb_transfer_hist[q_prev,s8,z8,p6_prev,l] * model.p_sb_transfer_provide[z8,p6_prev]
                          * model.p_parentz_provbetween_fp[p6_prev,z8,z9]
                          * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8])
-                         for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)  \
-                   + sum(model.v_tonnes_sb_consumed[q,s9,z9,p6,f,l] * 1000 for f in model.s_feed_pools)     \
-                   + model.v_tonnes_sb_transfer[q,s9,z9,p6,l] * 1000 <=0
+                         for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
         else:
             return pe.Constraint.Skip
     model.con_saltbush_between = pe.Constraint(model.s_sequence_year_between_con, model.s_sequence, model.s_season_types, model.s_feed_periods, model.s_lmus,
                                               rule=saltbush_foo, doc='between seasons - saltbush feed available in each feed period')
 
 
+def parametrize_con_saltbush_between(model, z8, MP_lp_vars):
+    '''
+    Constrain the saltbush feed available on each soil type in each feed period between a given season.
+    Saltbush can be eaten or transferred to the next period.
+    '''
+    ##convert feed period set to a list so it can be indexed
+    l_fp = list(model.s_feed_periods)
+    v_tonnes_sb_transfer_hist = MP_lp_vars[str('v_tonnes_sb_transfer')]
+    l_fp = list(model.s_feed_periods)
+    p6 = l_fp[0]
+    p6_prev = l_fp[-1]
+    # q_prev = q
+    for q in model.s_sequence_year_between_con:
+        for s9 in model.s_sequence:
+            for z9 in model.s_season_types:
+                # for p6 in model.s_feed_periods:
+                    # p6_prev = l_fp[l_fp.index(p6) - 1]
+                q_prev = q
 
+                if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_childz_between_fp[p6,z9]) and pinp.general['pas_inc_t'][3]:
+                    weighted_rhs = sum(v_tonnes_sb_transfer_hist[q_prev,s8,z8_,p6_prev,l] * model.p_sb_transfer_provide[z8_,p6_prev]
+                        * model.p_parentz_provbetween_fp[p6_prev,z8_,z9]
+                        * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8_,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8_])
+                        for z8_ in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
+                    new_rhs = sum(v_tonnes_sb_transfer_hist[q_prev,s8,z8_,p6_prev,l] * model.p_sb_transfer_provide[z8_,p6_prev]
+                        * model.p_parentz_provbetween_fp[p6_prev,z8_,z9]
+                        * (model.p_sequence_prov_qs8zs9[q_prev,s8,z8_,s9] + model.p_endstart_prov_qsz[q_prev,s8,z8_])
+                        for z8_ in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q_prev,s8])!=0)
+                    print(f"Changing rhs from {weighted_rhs} to {new_rhs}")
+                    print(model.con_saltbush_between[q,s9,z9,p6].body)
+                    model.con_saltbush_between[q,s9,z9,p6].set_value(model.con_saltbush_between[q,s9,z9,p6].body <= new_rhs)
 ###################################
 #functions for core pyomo         #
 ###################################
