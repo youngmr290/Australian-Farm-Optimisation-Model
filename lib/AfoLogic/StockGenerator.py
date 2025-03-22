@@ -5211,7 +5211,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0 = sfun.f_mortality_base_cs(cd_sire, cg_sire, rc_start_sire, cv_weight_sire, ebg_sire
                                                      , sd_ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg0[p], age_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['sire'][p]
-                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
+                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.sam['rev_mortalityb'])
                     if eqn_used:
                         mortality_sire = temp0
                     if eqn_compare:
@@ -5222,7 +5222,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0 = sfun.f_mortality_base_cs(cd_dams, cg_dams, rc_start_dams, cv_weight_dams, ebg_dams
                                                      , sd_ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg1[p], age_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['dams'][p]
-                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
+                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.sam['rev_mortalityb'])
                     if eqn_used:
                         mortality_dams = temp0
                     if eqn_compare:
@@ -5233,7 +5233,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0 = sfun.f_mortality_base_cs(cd_yatf, cg_yatf, rc_start_yatf, cv_weight_yatf, ebg_yatf
                                                      , sd_ebg_yatf, d_nw_max_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p]
                                                      , age_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['yatf'][p], sen.sap['mortalityb']
-                                                     , sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
+                                                     , sen.saa['mortalityb'], sen.sam['rev_mortalityb'])
                     if eqn_used:
                         mortality_yatf = temp0
                     if eqn_compare:
@@ -5244,7 +5244,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0 = sfun.f_mortality_base_cs(cd_offs, cg_offs, rc_start_offs, cv_weight_offs, ebg_offs
                                                      , sd_ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg3[p], age_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['offs'][p]
-                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
+                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.sam['rev_mortalityb'])
                     if eqn_used:
                         mortality_offs = temp0
                     if eqn_compare:
@@ -5257,7 +5257,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0 = sfun.f_mortality_base_mu(cd_sire, cg_sire, rc_start_sire, cv_weight_sire, ebg_sire
                                                      , sd_ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg0[p], age_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['sire'][p]
-                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
+                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.sam['rev_mortalityb'])
                     if eqn_used:
                         mortality_sire = temp0
                     if eqn_compare:
@@ -5268,7 +5268,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0 = sfun.f_mortality_base_mu(cd_dams, cg_dams, rc_start_dams, cv_weight_dams, ebg_dams
                                                      , sd_ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg1[p], age_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['dams'][p]
-                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
+                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.sam['rev_mortalityb'])
                     if eqn_used:
                         mortality_dams = temp0
                     if eqn_compare:
@@ -5279,7 +5279,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0 = sfun.f_mortality_base_mu(cd_yatf, cg_yatf, rc_start_yatf, cv_weight_yatf, ebg_yatf
                                                      , sd_ebg_yatf, d_nw_max_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p]
                                                      , age_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['yatf'][p], sen.sap['mortalityb']
-                                                     , sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
+                                                     , sen.saa['mortalityb'], sen.sam['rev_mortalityb'])
                     if eqn_used:
                         mortality_yatf = temp0
                     if eqn_compare:
@@ -5290,7 +5290,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0 = sfun.f_mortality_base_mu(cd_offs, cg_offs, rc_start_offs, cv_weight_offs, ebg_offs
                                                      , sd_ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg3[p], age_pa1e1b1nwzida0e0b0xyg0[p], rev_trait_values['offs'][p]
-                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.saa['rev_mortalityb'])
+                                                     , sen.sap['mortalityb'], sen.saa['mortalityb'], sen.sam['rev_mortalityb'])
                     if eqn_used:
                         mortality_offs = temp0
                     if eqn_compare:

@@ -2553,7 +2553,7 @@ def f_chill_adjust(numbers_b1, dse_per_hd, nfoet_b1, scan):
             b. mortality due to dystocia (calculated in f_mortality_progeny_cs). It is assumed that ewe death is associated with a fixed proportion of the lambs deaths from dystocia.
             '''
 def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max, days_period, age, rev_trait_value
-                        , sap_mortalityb, saa_mortalityb, saa_rev_mortalityb):
+                        , sap_mortalityb, saa_mortalityb, sam_rev_mortalityb):
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### i.e. increased mortality only for thin animals that are growing slowly (< 20% of normal growth rate)
     ###distribution on ebg & rc_start, calculate mort and then average (axis =-1,-2)
@@ -2567,7 +2567,7 @@ def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type=1, value_min=0)
     mortalityb = fun.f_sa(mortalityb, saa_mortalityb * (mortalityb > 0), sa_type=2, value_min=0) # don't apply the saa if mortality == 0
-    mortalityb = f1_rev_sa(mortalityb, saa_rev_mortalityb, age, sa_type=2)
+    mortalityb = f1_rev_sa(mortalityb, sam_rev_mortalityb, age, sa_type=0)
     mortalityb *= days_period #mul by days period to convert from mort per day to per period
     ##Process the Mortality REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     mortalityb = f1_rev_update('mortality', mortalityb, rev_trait_value)
@@ -2665,7 +2665,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
             b. f_mortality_pregtox_cs - currently this is just 0 it needs to be built.
 '''
 def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max, days_period, age, rev_trait_value
-                        , sap_mortalityb, saa_mortalityb, saa_rev_mortalityb):
+                        , sap_mortalityb, saa_mortalityb, sam_rev_mortalityb):
     '''
 
     :param cd:
@@ -2680,7 +2680,7 @@ def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     :param rev_trait_value:
     :param sap_mortalityb:
     :param saa_mortalityb:
-    :param saa_rev_mortalityb:
+    :param sam_rev_mortalityb:
     :return:
     '''
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
@@ -2699,7 +2699,7 @@ def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
     mortalityb = fun.f_sa(mortalityb, saa_mortalityb * (mortalityb > 0), sa_type=2, value_min=0) # don't apply the saa if mortality == 0
-    mortalityb = f1_rev_sa(mortalityb, saa_rev_mortalityb, age, sa_type=2)
+    mortalityb = f1_rev_sa(mortalityb, sam_rev_mortalityb, age, sa_type=0)
     ##Process the Mortality REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     mortalityb = f1_rev_update('mortality', mortalityb, rev_trait_value)
     return mortalityb

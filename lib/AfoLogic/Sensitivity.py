@@ -525,6 +525,7 @@ def create_sa():
     ##SAM
     sam['rev_cfw'] = 1.0   #std fleece weight genotype params
     sam['rev_pi_scalar'] = 1.0                      #Proportion to scale PI if MEI is scaled by REV adjustments
+    sam['rev_mortalityb'] = 1.0      #Scale the base mortality - this is a high level sa, it impacts within a calculation not on an input
     ##SAP
     ##SAA
     saa['rev_fd'] = 0.0                     #std fibre diameter genotype params
@@ -532,7 +533,6 @@ def create_sa():
     saa['rev_evg'] = 0.0                    #SA value for weight gain params.
     saa['rev_ss'] = 0.0                     #staple strength (adjust SS in sgen end of period)
     saa['rev_cfat'] = 0.0                   #carcase fat (adjust GR depth at sale time)
-    saa['rev_mortalityb'] = 0.0      #Adjust the base mortality - this is a high level sa, it impacts within a calculation not on an input
     saa['rev_mortalityx_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype='float64')  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
     saa['rev_littersize_og1'] = np.zeros((len_o, len_g1), dtype='float64')  # sa to the litter size this changes the propn of singles/twins and trips whilst keeping propn empty the same.
     saa['rev_conception_og1'] = np.zeros((len_o, len_g1), dtype='float64')  # sa to adjust the proportion of ewes that are empty whilst keeping litter size (number of lambs / pregnant ewes) the same
