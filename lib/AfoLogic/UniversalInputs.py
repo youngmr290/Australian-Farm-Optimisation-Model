@@ -206,6 +206,7 @@ def f_universal_inp_sa(uinp_defaults):
     sheep['i_salep_percentile'] = fun.f_sa(sheep['i_salep_percentile'], sen.sav['salep_percentile'], 5) #Value for percentile for all sale grids
     sheep['i_sale_ffcfw_min'] = fun.f_sa(sheep['i_sale_ffcfw_min'], sen.sav['sale_ffcfw_min'], 5) #Value for min ffcfw for each grid
     sheep['i_sale_ffcfw_max'] = fun.f_sa(sheep['i_sale_ffcfw_max'], sen.sav['sale_ffcfw_max'], 5) #Value for max ffcfw for each grid
+    sheep['i_mobsize_scalar_l0'] = fun.f_sa(sheep['i_mobsize_scalar_l0'], sen.sav['mobsize_scalar_l0'], 5) #Relative mobsize at lambing across the b1 axis
     ###SAM
     sheep['i_husb_operations_contract_cost_h2'] = fun.f_sa(sheep['i_husb_operations_contract_cost_h2'],sen.sam['husb_cost_h2'])
     sheep['i_husb_operations_muster_propn_h2'] = fun.f_sa(sheep['i_husb_operations_muster_propn_h2'], sen.sam['husb_mustering_h2'])
@@ -237,6 +238,7 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_ce_c2'][2,...] = fun.f_sa(parameters['i_ce_c2'][2,...].astype(float), sen.sav['bnd_twice_dry_propn'], 5) #propn of twice drys
     ###SAM - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_ci_c2'] = fun.f_sa(parameters['i_ci_c2'].astype(float),sen.sam['ci_c1c2'])
+    parameters['i_cl_c2'] = fun.f_sa(parameters['i_cl_c2'].astype(float),sen.sam['cl_c1c2'])    #lactation parameters
     parameters['i_cm_c2'] = fun.f_sa(parameters['i_cm_c2'].astype(float),sen.sam['cm_c1c2'])
     parameters['i_sfw_c2'] = fun.f_sa(parameters['i_sfw_c2'].astype(float),sen.sam['sfw_c2'])
     parameters['i_muscle_target_c2'] = fun.f_sa(parameters['i_muscle_target_c2'].astype(float), sen.sam['muscle_target_c2'])
@@ -258,6 +260,9 @@ def f_universal_inp_sa(uinp_defaults):
     ###SAA - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_scan_std_c2'] = fun.f_sa(parameters['i_scan_std_c2'].astype(float)
                                            , sen.saa['rr'] * (parameters['i_scan_std_c2'] > 0), 2)  #no change if original value was zero
+    parameters['i_lss_std_c2'] = fun.f_sa(parameters['i_lss_std_c2'].astype(float), sen.saa['lss'], 2)
+    parameters['i_lstw_std_c2'] = fun.f_sa(parameters['i_lstw_std_c2'].astype(float), sen.saa['lstw'], 2)
+    parameters['i_lstr_std_c2'] = fun.f_sa(parameters['i_lstr_std_c2'].astype(float), sen.saa['lstr'], 2)
 
     ##average c1 axis if price variation is not included
     general['i_c1_variation_included'] = fun.f_sa(general['i_c1_variation_included'], sen.sav['inc_c1_variation'], 5)
