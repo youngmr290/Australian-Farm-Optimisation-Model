@@ -24,6 +24,7 @@ import sys
 from . import Functions as fun
 from . import StructuralInputs as sinp
 from . import relativeFile
+from Inputs import TreePropertyInputs as tinp
 
 na = np.newaxis
 
@@ -172,6 +173,7 @@ def f_select_n_reset_pinp(property, pinp_defaults):
     global feedsupply
     global mvf
     global pasture_inputs
+    global tree
     general = copy.deepcopy(pinp_defaults[property]['general_inp'])
     labour = copy.deepcopy(pinp_defaults[property]['labour_inp'])
     crop = copy.deepcopy(pinp_defaults[property]['crop_inp'])
@@ -187,6 +189,7 @@ def f_select_n_reset_pinp(property, pinp_defaults):
     feedsupply = copy.deepcopy(pinp_defaults[property]['feedsupply_inp'])
     mvf = copy.deepcopy(pinp_defaults[property]['mvf_inp'])
     pasture_inputs = copy.deepcopy(pinp_defaults[property]['pasture_inp'])
+    tree = copy.deepcopy(tinp.region_tree_inputs[property])
 
 
 ########################
@@ -251,6 +254,11 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
     fun.f1_lmuregion_to_lmufarmer(mach, "seeding_fuel_lmu_adj", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(mach, "tillage_maint_lmu_adj", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(mach, "seeding_rate_lmu_adj", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    
+    ##tree
+    fun.f1_lmuregion_to_lmufarmer(tree, "tree_fert_soil_scalar", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(tree, "area_trees_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(tree, "lmu_growth_scalar_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
 
 
 #######################
@@ -654,6 +662,11 @@ def f1_mask_lmu():
     f1_do_mask_lmu(mach, "seeding_fuel_lmu_adj", lmu_axis=0)
     f1_do_mask_lmu(mach, "tillage_maint_lmu_adj", lmu_axis=0)
     f1_do_mask_lmu(mach, "seeding_rate_lmu_adj", lmu_axis=0)
+    
+    ##tree
+    f1_do_mask_lmu(tree, "tree_fert_soil_scalar", lmu_axis=0)
+    f1_do_mask_lmu(tree, "area_trees_l", lmu_axis=0)
+    f1_do_mask_lmu(tree, "lmu_growth_scalar_l", lmu_axis=0)
 
 def f1_do_mask_landuse(dict, key, landuse_axis_type, landuse_axis):
     '''

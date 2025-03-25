@@ -20,6 +20,7 @@ import os.path
 
 from . import Functions as fun
 from . import PropertyInputs as pinp
+from Inputs import TreeUniversalInputs as tinp
 
 
 def f_reshape_uinp_defaults(uinp_defaults):
@@ -102,6 +103,7 @@ def f_select_n_reset_uinp(uinp_defaults):
     global pastparameters
     global mach
     global price_variation
+    global tree
     general = copy.deepcopy(uinp_defaults["general_inp"])
     price = copy.deepcopy(uinp_defaults["price_inp"])
     finance = copy.deepcopy(uinp_defaults["finance_inp"])
@@ -115,6 +117,7 @@ def f_select_n_reset_uinp(uinp_defaults):
     pastparameters = copy.deepcopy(uinp_defaults["pastparameters_inp"])
     mach = copy.deepcopy(uinp_defaults["machine_options_dict_inp"])
     price_variation = copy.deepcopy(uinp_defaults["price_variation_inp"])
+    tree = copy.deepcopy(tinp.tree_inputs)
 
 #######################
 #apply SA             #

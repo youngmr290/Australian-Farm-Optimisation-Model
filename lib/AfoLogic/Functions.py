@@ -622,6 +622,67 @@ def f_solve_cubic_for_logistic_multidim(a, b, c, d):
     cut_off01 = np.log(x_roots)   #todo an error here is most likely due to incorrect specification of the b1[24 or 25] parameters in Universal.xlsx or RR == 0 or LS == 1.0
     return cut_off01
 
+def f_logistic_integral(x, L, k, x0, offset):
+    """
+    Indefinite integral of the logistic function:
+        Y(x) = offset + (L - offset) / [1 + exp(-k*(x - x0))]
+    
+    The antiderivative is:
+        F(x) = offset*x + (L - offset)/k * ln(1 + exp(k*(x - x0))) + C
+    
+    Parameters
+    ----------
+    x : float or array-like
+        The x-value(s) at which to evaluate the antiderivative.
+    L : float
+        Upper plateau of the logistic.
+    k : float
+        Steepness of the logistic transition.
+    x0 : float
+        Midpoint (x-value where logistic is halfway between offset and L).
+    offset : float
+        Lower plateau of the logistic.
+    
+    Returns
+    -------
+    F(x) : float or array-like
+        Value of the indefinite integral at x (up to a constant).
+    """
+    return offset*x + (L - offset)/k * np.log(1 + np.exp(k*(x - x0)))
+
+def f_integral_gauss_tail(x, Y_normal, a, b, c, p, q):
+    """
+    Indefinite integral (antiderivative) of the model:
+      Y(x) = Y_normal + a*exp(-((x-b)/c)**2) - p/(x+q).
+    
+    The result is:
+      Y_normal*x + a*(sqrt(pi)/2)*c*erf((x-b)/c) - p*ln|x+q| + C
+    
+    Parameters
+    ----------
+    x : float or array-like
+        The x-value(s) at which to evaluate the antiderivative.
+    Y_normal : float
+        Baseline offset.
+    a : float
+        Amplitude of the Gaussian term.
+    b : float
+        Center of the Gaussian term.
+    c : float
+        Width of the Gaussian term.
+    p : float
+        Coefficient for the rational term.
+    q : float
+        Shift for the rational term.
+    
+    Returns
+    -------
+    F(x) : float or array-like
+        The indefinite integral evaluated at x (up to a constant).
+    """
+    return (Y_normal * x 
+            + a * (np.sqrt(np.pi)/2) * c * erf((x - b)/c)
+            - p * np.log(np.abs(x + q)))
 
 def f_dynamic_slice(arr, axis, start, stop, step=1, axis2=None, start2=None, stop2=None, step2=1):
     ##check if arr is int - this is the case for the first loop because arr may be initialised as 0

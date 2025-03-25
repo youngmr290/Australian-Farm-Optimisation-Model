@@ -1,97 +1,37 @@
+'''
+
+Trees are represented differently in AFO than other land uses. The area of trees on each LMU is a user input. 
+This means the area of trees can not be optimised. Optimising the area of trees is complicated because of the
+interactions between trees and adjacent paddocks. This means trees can't be represented as a single variable 
+because increasing the area of trees needs to be linked to the production of other landuses on the LMU.
+To optimise the area of trees would require duplicating all the land uses. 
+For example there would need to be a wheat land use and a wheat with trees land use.
 
 
 
-def f1_tree_shape():
-    area_trees = 10 #area of trees themselves
-    number_of_belts = 5
-    belt_spacing = 100
-    tree_rows = 2
-    row_width = 2
-    propn_paddock_adj = 1
-    lmu_area=100
-
-    propn_lmu_trees #proportion of paddocks within LMU that have tree belts
+'''
 
 
-    tree_width = (tree_rows + 1) * row_width #plus 1 to account for spacing on either edge of plantation.
-    tree_length = area_trees * 10000 / tree_width / number_of_belts
 
-    #can i make a simple plot of the expected tree layout based on this info???? GPT??
 
-    #assuming that all belts within the LMU are same distance apart or they are far enough apart to realise all costs/benefits
-    #assuming square LMU
-    #if trees belts are closer together than the interaction distance this would mean final belt should have more impact - this will be ignored.
-    import matplotlib.pyplot as plt
+import numpy_financial as npf
+import numpy as np
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 
-    # Create figure and axis
-    fig, ax = plt.subplots(figsize=(14, 5))  # Further increased figure width
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 
-    # Define section boundaries
-    sections = {
-        "Open paddock": (0, 20),  # Left Open paddock
-        "Competition zone": (20, 28),  # Left Competition zone
-        "Belt": (28, 38),  # Tree belt
-        "Competition zone (Right)": (38, 46),  # Right Competition zone
-        "Open paddock (Right)": (46, 66)  # Right Open paddock
-    }
+from . import UniversalInputs as uinp
+from . import PropertyInputs as pinp
+from . import Finance as fin
+from . import Functions as fun
 
-    # Add section labels
-    for section, (start, end) in sections.items():
-        ax.text((start + end) / 2, 8, section.replace(" (Right)", ""), ha='center', fontsize=14, fontweight='bold',
-                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
 
-    # Draw vertical dashed lines to separate sections
-    for start, end in sections.values():
-        ax.axvline(x=start, color='black', linestyle="dashed")
+na=np.newaxis
 
-    # # Add "No crop zone" labels in both Competition Zones
-    # for x_pos in [24, 42]:  # Left and right competition zones
-    #     ax.annotate("No crop\nzone", xy=(x_pos, 7), xytext=(x_pos, 8.5),
-    #                 ha='center', fontsize=12, arrowprops=dict(arrowstyle='->'))
-
-    # Add distance labels
-    # ax.text(10, 0.5, "Up to 20m", ha='center', fontsize=12)
-    # ax.text(24, 0.5, "8 to 8m", ha='center', fontsize=12)
-    # ax.text(33, 0.5, "5-10m", ha='center', fontsize=12)
-    # ax.text(42, 0.5, "8 to 8m", ha='center', fontsize=12)
-    # ax.text(56, 0.5, "Up to 20m", ha='center', fontsize=12)
-
-    # Draw trees in the belt section (Two sets of two trees, 2m apart)
-    tree_positions = [[32, 5], [34, 5], [32, 3], [34, 3]]
-    for group in tree_positions:
-        ax.scatter(group[0], group[1], s=600, color="green", label="Tree")
-
-    # Add inter-row space labels
-    ax.text(33, 6, "Inter-row space", ha='center', fontsize=12, fontweight='bold')
-    ax.text(33, 5.5, "|---|", ha='center', fontsize=14, fontweight='bold')  # Indicator below the label
-
-    # Add within-row space labels
-    ax.text(33, 4, "Within-row space", ha='center', fontsize=12, fontweight='bold')
-    ax.text(34, 3.5, "|---|", ha='center', fontsize=18, rotation=90)
-
-    # Add buffer space labels
-    ax.text(33, 2.5, "Side buffer", ha='center', fontsize=12, fontweight='bold')
-    ax.text(36, 2.5, "|---|", ha='center', fontsize=18)
-
-    # Add "No crop zone" labels in both Competition Zones
-    # for x_pos in [24, 42]:  # Left and right competition zones
-    ax.annotate("Wind direction", xy=(50, 9), xytext=(33, 9),
-                ha='center', fontsize=12, arrowprops=dict(arrowstyle='->'))
-
-    # # Add y-axis label
-    # ax.text(-5, 5, "0 to 10m", ha='center', fontsize=12, rotation=90)
-
-    # Adjust axes
-    ax.set_ylim(0, 10)
-    ax.set_xlim(0, 66)
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.axis('off')
-
-    # Show figure
-    plt.show()
-
-    return tree_length, tree_width
 
 def f_costs():
     '''
@@ -103,122 +43,399 @@ def f_costs():
         - Costs for auditing and administration.
 
     Note, the opportunity cost of the land that is affected by the trees is considered in the other functions.
+    Note 2, labour is a cost rather than being hooked up to the labour constraints because it is only a once off thing (and may be completed by contractors).
     '''
 
-    #i think there will be certain if statemtns in here eg if the farmer is worried about carbon credits then there will be an auditing cost.
+    # Retrieve selected plantation structure
+    config = uinp.tree[f"plantation_structure_{uinp.tree['controls']['plantation_structure']}"]
+    include_harvesting = uinp.tree["controls"]["include_harvesting"]
+    
+    # Calculate the effective width (total area used by tree rows, including side buffers)
+    effective_width = (config["number_of_rows"] - 1) * config["between_row_spacing"] + 2 * config["side_buffer"]
 
-    #will need to add an input thta is expected date costs are incured (probs near the start of the gs).
+    # Calculate planting density (plants per hectare)
+    planting_density = 10000 / effective_width / config["within_row_spacing"] * config["number_of_rows"]  # plants per hectare
+    
+    # Get LMU data as NumPy arrays
+    tree_area_l = pinp.tree["area_trees_l"]
+    lmu_fert_scalar_l = pinp.tree["tree_fert_soil_scalar"]
 
-    #labour will be hooked up correctly???? maybe only for the maint
+    # Establishment costs (Year 1)
+    initial_costs = uinp.tree["initial_costs"]
+    establishment_costs_l = (
+        initial_costs["site_prep"]["ripping_mounding"] +
+        initial_costs["site_prep"]["initial_weed_control"] +
+        (initial_costs["site_prep"]["fertiliser_base"] +
+        initial_costs["site_prep"]["fertiliser_extra_if_harvested"] * include_harvesting) * lmu_fert_scalar_l +
+        initial_costs["planting"]["seedlings"] * planting_density +
+        (planting_density / initial_costs["planting"]["planting_rate"]) * (initial_costs["planting"]["farmer_labour_planting"] + initial_costs["planting"]["planting_equipment"])
+    )
+    
+    # Maintenance costs (Year 2 and beyond)
+    yr_1 = uinp.tree["yr_1_costs"]
+    yr1_costs_l = yr_1["weed_control"] + (yr_1["fertiliser_base"] + yr_1["fertiliser_extra_if_harvested"] * include_harvesting) * lmu_fert_scalar_l
+    
+    # Long-term maintenance (Years 3-100)
+    yrs_2_to_100 = uinp.tree["yrs_2_to_100"]
+    yrs_2_to_100_costs_l = yrs_2_to_100["weed_control"] + (yrs_2_to_100["fertiliser_base"] + yrs_2_to_100["fertiliser_extra_if_harvested"] * include_harvesting) * lmu_fert_scalar_l
+    
+    # Compute total costs using NumPy sum (faster than Python sum)**
+    total_establishment_costs = np.sum(establishment_costs_l * tree_area_l)
+    total_yr1_costs = np.sum(yr1_costs_l * tree_area_l)
+    total_yrs_2_to_100_costs = np.sum(yrs_2_to_100_costs_l * tree_area_l)
+    
+    # Discounted present value of future maintenance costs 
+    discount_rate  = uinp.finance['i_interest']
+    num_years = 100  # Total number of years
 
-    return
-
+    # Construct cash flow array
+    total_cash_flows = [-total_establishment_costs, -total_yr1_costs] + [-total_yrs_2_to_100_costs] * (num_years - 1)
+    
+    # Compute NPV 
+    npv = npf.npv(discount_rate, total_cash_flows)
+    
+    # Compute annualized cost as an annuity
+    annual_payment = npv * (discount_rate / (1 - (1 + discount_rate) ** -num_years))
+    
+    #allocate to p7
+    cost_allocation_p7z, wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([uinp.tree["cost_date"]]), z_pos=-1)
+    tree_estab_cost_p7z = annual_payment * cost_allocation_p7z
+    tree_estab_wc_c0p7z = annual_payment * wc_allocation_c0p7z
+    return tree_estab_cost_p7z, tree_estab_wc_c0p7z
+    
+    
 def f_crop_production_scalar():
     '''
     This function calculates an average yield scalar based on the costs (resources competition)
     and benefits (wind protection) of tree plantations.
 
-    The logic used in the function is based on the assumption that the land adjacent to the
-    trees is the same LMU as the trees and is wide enough to realise all the costs/benefits of the trees.
+    The function calculates the average relative production between belts by evaluating the
+    indefinite integral of the logistic yield function between belts. The definite integral (area under the curve)
+    between belts is then calculated to determine the average relative production between belts.
+    
+    Only one side of the tree belt receives the benefits
+    of wind protection while both sides receive the resource costs.
 
+    The logic used in the function is based on the assumption that the trees are evenly distributed across the LMU and 
+    all the costs/benefits of the trees are realised in the LMU where the trees are planted.
+    Meaning the costs and benefits are equally distributed over all the rotations on the LMU. 
+    This assumption would be incorrect if for example the trees were in a permanant pasture paddock and other parts of the LMU were cropped.
+    
+    We are also assuming that the belts are far enough apart that the resource competition on the right of one belt is not felt on the left of the next belt.
     '''
-    area_trees = 10
-    tree_rows = 2
-    row_width = 2
-    propn_paddock_adj = 1
-    lmu_area=100
+    # Get plantation configuration based on the plantation structure control setting
+    plantation_structure = uinp.tree["controls"]["plantation_structure"]
+    plantation_config = uinp.tree[f"plantation_structure_{plantation_structure}"]
+
+    # Extract configuration values
+    distance_between_belts = plantation_config["distance_between_belts"]  # meters between tree belts
+    number_of_belts = plantation_config["number_of_belts"]
+    propn_trees_adjacent = plantation_config["propn_paddock_adj"]  # Proportion of trees adjacent to usable paddock
+
+    # Get area of trees (in hectares) as a numpy array
+    tree_area_l = pinp.tree["area_trees_l"]
+
+    # Calculate the effective width of the tree rows (including side buffers)
+    effective_width = ((plantation_config["number_of_rows"] - 1) * plantation_config["between_row_spacing"] +
+                    2 * plantation_config["side_buffer"])
+
+    # Calculate the length of each belt (in meters)
+    belt_length_l = (tree_area_l * 10000) / (effective_width * number_of_belts) # Convert tree area from hectares to m² (1 ha = 10,000 m²)
+
+    # Calculate LMU area available for production (excluding area with trees)
+    lmu_area_without_trees_l = pinp.general['i_lmu_area'] - tree_area_l
+
+    # Calculate the land area on the protected side of the tree belts
+    protected_side_area_l = (belt_length_l * number_of_belts * distance_between_belts * propn_trees_adjacent) / 10000 # Convert m² to hectares
+
+    # Calculate the fraction of the available LMU area (excluding tree area) that is on the protected side
+    propn_lmu_protected_l = np.minimum(1, protected_side_area_l  / lmu_area_without_trees_l) # Ensure the fraction is not greater than 1 (cant shelter more than 100% of lmu)   
+
+    # Assuming symmetry, the fraction on the non-protected side of trees is the same
+    propn_lmu_nonprotected_l = propn_lmu_protected_l
+
+    #########################################
+    # Production on the PROTECTED side
+    #########################################
+
+    # Logistic parameters for the protected side (benefiting from wind protection and incurring resource competition)
+    protected_side_params = uinp.tree["protected_side_production_logistic_params"]
+    L_fit_protected = protected_side_params["L"]
+    k_fit_protected = protected_side_params["k"]
+    x0_fit_protected = protected_side_params["x0"]
+    offset_fit_protected = protected_side_params["offset"]
+
+    # Evaluate the indefinite logistic integral at 0 and at the distance between belts
+    F0_protected = fun.f_logistic_integral(0, L_fit_protected, k_fit_protected, x0_fit_protected, offset_fit_protected)
+    Fx_protected = fun.f_logistic_integral(distance_between_belts, L_fit_protected, k_fit_protected, x0_fit_protected, offset_fit_protected)
+
+    # Compute the relative production adjustment over the belt width
+    relative_production_adj_protected = (Fx_protected - F0_protected) / distance_between_belts
+
+    # Average relative production across LMU due to resource competition on the protected side of belts
+    relative_production_average_protected_l = (propn_lmu_protected_l * relative_production_adj_protected +
+                                            (1 - propn_lmu_protected_l) * 1)
+
+    #########################################
+    # Production on the NON-PROTECTED side
+    #########################################
+    #note - assuming the belts are far enough apart that the resource competition is not felt on the other side of the tree belt.
+
+    # Logistic parameters for the non-protected side (receiving only resource competition costs)
+    nonprotected_side_params = uinp.tree["nonprotected_side_production_logistic_params"]
+    L_fit_nonprotected = nonprotected_side_params["L"]
+    k_fit_nonprotected = nonprotected_side_params["k"]
+    x0_fit_nonprotected = nonprotected_side_params["x0"]
+    offset_fit_nonprotected = nonprotected_side_params["offset"]
+
+    # Evaluate the indefinite logistic integral for non-protected side
+    F0_nonprotected = fun.f_logistic_integral(0, L_fit_nonprotected, k_fit_nonprotected, x0_fit_nonprotected, offset_fit_nonprotected)
+    Fx_nonprotected = fun.f_logistic_integral(distance_between_belts, L_fit_nonprotected, k_fit_nonprotected, x0_fit_nonprotected, offset_fit_nonprotected)
+
+    # Compute the relative production adjustment over the belt width for the non-protected side
+    relative_production_adj_nonprotected = (Fx_nonprotected - F0_nonprotected) / distance_between_belts
+
+    # Average relative production across LMU due to resource competition on the non-protected side of belts
+    relative_production_average_nonprotected_l = (propn_lmu_nonprotected_l * relative_production_adj_nonprotected +
+                                                (1 - propn_lmu_nonprotected_l) * 1)
+    
+    # overall average production scalar
+    average_production_scalar_l = relative_production_average_protected_l * relative_production_average_nonprotected_l
+    
+    return average_production_scalar_l
 
 
-    tree_width = (tree_rows + 1) * row_width #plus 1 to account for spacing on either edge of plantation.
-    tree_length = area_trees * 10000 / tree_width
 
-    ##assumes the LMU is a rectangle where the length is equal to the length of the tree plantation.
-    ## The shape of the LMU doesnt matter assuming that on farm the land adjacent to the LMU is wide enough
-    ## to realise all the costs/benefits of the trees.
-    lmu_width = lmu_area * 10000 / (tree_length * propn_paddock_adj)
-
-
-    ##calc yield scalar
-    #todo pass lmu_width into the yield by distance from trees function.
-
-    #todo how to represent that belt spacing will impact production function because of water competition on both side of trees.
-    #have a yield scalar for 0 - -x m from trees and one for 0 - x m
-    #data needs to come from plantation with wide spread belts or a single belt so as not to double count
-
-
-
-    #todo graph out these functions
-
-
-
-
-
-
-
-
-def f_windspeed_adj():
+def f_microclimate_adj():
     '''
-    This function calculates the average windspeed in paddocks adjacent to trees. Used to calculate livestock chill.
+    This function accounts for microclimate effects of trees. The function
+    calculates a windspeed scalar in paddocks adjacent to trees. The scalar is used to adjust the calculation of livestock chill.
 
-    This assumes that livestock do not seek shelter. or should this retun a windspeed function
+    This assumes that livestock do not seek shelter. 
     Assumes that benefits of shelter only exist in the paddock adjacent to trees
 
-
+    Chill is a non-linear function (and WS by distance from trees funcion). 
+    Therefore, an improvement would be to report the microclimate adjusters for different parts of the paddock.
 
     '''
+    # Get plantation configuration based on the plantation structure control setting
+    plantation_structure = uinp.tree["controls"]["plantation_structure"]
+    plantation_config = uinp.tree[f"plantation_structure_{plantation_structure}"]
 
-    #inputs are the coeficients to the windspeed function (windspeed by distance from trees)
-    #some how need to adjust for tree configuration. either by scalar or having inputs for several tree configs then just slicing based on the user inputted shape.
+    # Extract configuration values
+    distance_between_belts = plantation_config["distance_between_belts"]  # meters between tree belts or to the edge of the paddock
+    number_of_belts = plantation_config["number_of_belts"]
+    propn_trees_adjacent = plantation_config["propn_paddock_adj"]  # Proportion of trees adjacent to usable paddock
 
-    #lLook at the ws inputs and decide if it is worth having more c slices to represent distance from trees.
-    # if not then make a note that could expand the axis to consider ws close and further away from trees in the same paddock.
-    # only required if the chill function is not linear which it isnt.
-    #this will complicate the livestock side of it a bit with the b1 allocation because cant allocate sheep to the sheltered part of a paddock.
+    # Get total area of trees - don't need to differentiate between LMUs
+    tree_area = np.sum(pinp.tree["area_trees_l"]) 
 
-    width_paddock = 200 #width of paddock adjacent to trees #todo or this could be distance between tree belts...
+    # Calculate the effective width of the tree rows (including side buffers)
+    effective_width = ((plantation_config["number_of_rows"] - 1) * plantation_config["between_row_spacing"] +
+                    2 * plantation_config["side_buffer"])
 
-    ##calc ws scalar
-    #todo pass lmu_width into the ws by distance from trees function.
+    # Calculate the length of each belt (in meters)
+    belt_length = (tree_area * 10000) / (effective_width * number_of_belts) # Convert tree area from hectares to m² (1 ha = 10,000 m²)
 
-    ##calc temp scalar
-    #todo pass lmu_width into the ws by distance from trees function.
+    # Calculate the land area on the protected side of the tree belts
+    protected_area = (belt_length * number_of_belts * distance_between_belts * propn_trees_adjacent) / 10000 # Convert m² to hectares
+
+    #########################################
+    # WS adjuster on the PROTECTED side
+    #########################################
+
+    # Logistic parameters for the protected side (benefiting from wind protection and incurring resource competition)
+    ws_logistic_params = uinp.tree["ws_logistic_params"]
+    L_fit_ws = ws_logistic_params["L"]
+    k_fit_ws = ws_logistic_params["k"]
+    x0_fit_ws = ws_logistic_params["x0"]
+    offset_fit_ws = ws_logistic_params["offset"]
+
+    # Evaluate the indefinite logistic integral at 0 and at the distance between belts
+    F0_ws = fun.f_logistic_integral(0, L_fit_ws, k_fit_ws, x0_fit_ws, offset_fit_ws)
+    Fx_ws = fun.f_logistic_integral(distance_between_belts, L_fit_ws, k_fit_ws, x0_fit_ws, offset_fit_ws)
+
+    # Compute the relative production adjustment over the belt width
+    relative_ws_adj = (Fx_ws - F0_ws) / distance_between_belts
 
 
+    #########################################
+    # Temp adjuster on the PROTECTED side
+    #########################################
 
-    #todo ask dad about adjusting temp. Just adjust max temp i guess???
-    tree_length, tree_width = f1_tree_shape()
+    # Logistic parameters for the protected side (benefiting from wind protection and incurring resource competition)
+    temp_logistic_params = uinp.tree["temp_logistic_params"]
+    L_fit_temp = temp_logistic_params["L"]
+    k_fit_temp = temp_logistic_params["k"]
+    x0_fit_temp = temp_logistic_params["x0"]
+    offset_fit_temp = temp_logistic_params["offset"]
 
+    # Evaluate the indefinite logistic integral at 0 and at the distance between belts
+    F0_temp = fun.f_logistic_integral(0, L_fit_temp, k_fit_temp, x0_fit_temp, offset_fit_temp)
+    Fx_temp = fun.f_logistic_integral(distance_between_belts, L_fit_temp, k_fit_temp, x0_fit_temp, offset_fit_temp)
 
+    # Compute the relative production adjustment over the belt width
+    relative_temp_adj = (Fx_temp - F0_temp) / distance_between_belts
 
-
-    #width of paddock with trees
-
-
-    #average windspeed in paddock with trees
+    return relative_ws_adj, relative_temp_adj, protected_area
 
 
 
 def f_harvestable_biomass():
     '''
-
+    Calculate the income generated from harvesting tree biomass for biofuel.
     '''
-    #get growth/yr then convert to $/yr then probably discount? (hard part about discounting is assuming that the sale price wont rise)
+    project_duration = uinp.tree["controls"]["project_duration"]  # Total number of years
+    harvested = uinp.tree["controls"]["include_harvesting"]
+    biomass_harvesting = uinp.tree["biomass_harvesting"]
+    biomass_price = uinp.tree["biomass_price"]
 
-    #need to see if this changes a lot between year to see if we need a yr axis on the input
+    #biomass income and costs per ha
+    if harvested:
+        # income
+        biomass_harvested_y = uinp.tree["biomass_harvested_y"][0:project_duration]
+        regional_growth_scalar = pinp.tree["regional_growth_scalar"]
+        lmu_growth_scalar_l = pinp.tree["lmu_growth_scalar_l"]
+        biomass_harvested_yl = biomass_harvested_y[:,na] * regional_growth_scalar * lmu_growth_scalar_l
+        biomass_income_yl = biomass_harvested_yl * biomass_price
+        # costs per tonne
+        harv_cost = biomass_harvesting["contract_costs"] / biomass_harvesting["harvest_rate"] #$/t
+        transport_cost = biomass_harvesting["transport_cost"] * biomass_harvesting["transport_distance"] #$/t
+        # costs per hectare
+        costs_yl = biomass_harvested_yl * (harv_cost + transport_cost)
+    else:
+        biomass_income_yl = np.zeros([project_duration,1])
+        costs_yl = np.zeros([project_duration,1])
+        
+    # Construct cash flow array
+    tree_area_l = pinp.tree["area_trees_l"] 
+    total_cash_flows_yl = (biomass_income_yl - costs_yl) * tree_area_l
+    total_cash_flows_y = np.sum(total_cash_flows_yl, axis=-1)
 
-    #see if can develop growth scalars for different shaped plantations.
-
-
+    # Compute NPV 
+    discount_rate  = uinp.finance['i_interest']
+    npv = npf.npv(discount_rate, total_cash_flows_y)
+    
+    # Compute annualized cost as an annuity
+    annual_payment = npv * (discount_rate / (1 - (1 + discount_rate) ** -project_duration))
+    
+    #allocate to p7
+    cash_allocation_p7z, wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([uinp.tree["cost_date"]]), z_pos=-1)
+    tree_biomass_cashflow_p7z = annual_payment * cash_allocation_p7z
+    tree_biomass_cashflow_wc_c0p7z = annual_payment * wc_allocation_c0p7z
+    return tree_biomass_cashflow_p7z, tree_biomass_cashflow_wc_c0p7z
+  
+  
+  
 
 
 def f_sequestration():
     '''
     Carbon sequestration from trees
+    
+    Note: This is assuming that the financial values in MIDAS are in real terms
+    & will remain constant. In other words the opportunity cost of forgone
+    agricultural production will be the same every yr in real terms.
+    Hence the carbon price is also specfied in real terms.
+    
+    #TODO: check the info below if we use this method.
+    To translate future income from sequestration into a form compatible with the steady state conditions of MIDAS, predictions of future sequestration (minus deductions for emissions) are multiplied by the projected C price in the yr of sequestration to give an estimate of sequestration payments in future years.
+    These payments are then summed & discounted (ie turned into a NPV), & then annualised over the time sequestering land use occurs for (assumed to be 100 yrs due to permanency req'ments), giving the equivalent annual income for C sequestration that would be expected on a steady-state basis.
+    However, MIDAS is setup to use a biophysical metric (kg CO2-e) to account for sequestration benefits rather than a financial metric ($ for sequestration per ha). Therefore, on the RH side of this Table, the financial annualised payments for sequestration are converted into an equivalent biophysical annual rate
+    of sequestration, such that using this resultant biophysical metric has the same effect economically (i.e., when the model is run) as if the financial metric for sequestration benefits had been used instead. This biophysical annual rate of sequestration is what ultimately goes into the MPS.
+
+
     '''
 
-
+    #plantation duration and risk buffer
     #need to conside fuel emissions
 
     #maybe need to consider time value of money like in MIDAS (ask dad about this)
 
-    #consider tree plantatin shape on this.
+    #estimate with FULLCAM
+    
+   #comments from midas - need to update 
+    # This is the default estimate of sequestration in study region as predicted by the Aust. Gov's National Carbon Accounting Toolbox (NCAT) FullCAM model (ver 3.55) for unharvested mallee plantings grown in block configuration with rows 4 m apart, and 2m between each tree along a row. 
+    # As trees are planted in block plantings (as opposed to belts with areas agriculture production), the detrimental effect of tree competition on agricultural production is ignored.
+    # Sequestration has been estimated according to CFI methodologies where the carbon contained in living below- & above-ground biomass plus litter & debris is counted toward sequestration.
+    # CFI permanency rules (as of 2013 at least) req sequestered carbon to be stored for 100 years after credits are first claimed. Subsequent claims made for the same project do not ‘reset’ the 100-year count, meaning that carbon sequestered later needs to only be stored for progressively less time. There is no penalty if sequestration is released after this 100 yr period. Therefore sequestration has been estimated assuming the plantings will be maintained for 100 yrs and all sequestration during this period will be claimed.
+
+    
+    
+def f_biodiversity():
+    '''
+    Calculate the value of biodiversity credits from tree plantation.
+    
+    Assumption is that no biodiversity credits are avaliable if biomass is harvested.
+    '''
+    #TODO need to work out how payment structure works. If it is a propn per yr then need to discount
+    #TODO how does plantation duration impact biodiversity credits???
+    project_duration = uinp.tree["controls"]["project_duration"]  # Total number of years
+    harvested = uinp.tree["controls"]["include_harvesting"]
+    biodiversity_included = uinp.tree["controls"]["include_biodiversity_credit"]
+    biodiversity_costs = uinp.tree["biodiversity_costs"]
+    plantation_structure = uinp.tree["controls"]["plantation_structure"]
+    plantation_config = uinp.tree[f"plantation_structure_{plantation_structure}"]
+
+    costs_y = np.zeros(project_duration)
+    biodiversity_credits_y = np.zeros(project_duration)
+    
+    #credits and costs per ha
+    if biodiversity_included and not harvested:
+        biodiversity_credits_y[0] = plantation_config["biodiversity_credits"]  #all credits recieved at the start of the project
+        costs_y[0] = biodiversity_costs["setup"]
+        costs_y[1:] = biodiversity_costs["annual_monitoring"] 
+
+    # Compute the total value (dollars)
+    tree_area = np.sum(pinp.tree["area_trees_l"]) 
+    market_price_per_credit = uinp.tree["biodiversity_credit_price"]
+    total_credit_value_y = biodiversity_credits_y * tree_area * market_price_per_credit
+    
+    # total costs accosiated with accessing biodiversity credits
+    total_costs_y = costs_y * tree_area
+    
+    # Compute NPV 
+    discount_rate  = uinp.finance['i_interest']
+    total_cash_flows_y = total_credit_value_y - total_costs_y
+    npv = npf.npv(discount_rate, total_cash_flows_y)
+    
+    # Compute annualized cost as an annuity
+    annual_payment = npv * (discount_rate / (1 - (1 + discount_rate) ** -project_duration))
+    
+    #allocate to p7
+    cash_allocation_p7z, wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([uinp.tree["cost_date"]]), z_pos=-1)
+    tree_biodiversity_cashflow_p7z = annual_payment * cash_allocation_p7z
+    tree_biodiversity_cashflow_wc_c0p7z = annual_payment * wc_allocation_c0p7z
+    
+    return tree_biodiversity_cashflow_p7z, tree_biodiversity_cashflow_wc_c0p7z
+    
+    
+    
+def f_tree_cashflow(r_vals, params):
+    '''
+    This function calculates the cashflow for the tree plantation enterprise.
+    '''
+    # Establishment & maint costs
+    tree_estab_cost_p7z, tree_estab_wc_c0p7z = f_costs()
+    
+    # Income from harvest
+    f_harvestable_biomass()
+    
+    # Income from carbon sequestration
+    f_sequestration()
+    
+    # Income from biodiversity
+    f_biodiversity()
+    
+    # Calculate total cashflow
+    tree_cashflow_p7z = tree_estab_cost_p7z
+    return tree_cashflow_p7z
+    
+    
+      
+##collates all the params
+def f_trees(params,r_vals):
+    f_crop_production_scalar()
+    f_microclimate_adj()
+    f_tree_cashflow(r_vals, params)
+    #deepflow - maybe this is a table by land use by LMU. Then just tally in pyomo.
