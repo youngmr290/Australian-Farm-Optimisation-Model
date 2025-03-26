@@ -21,7 +21,7 @@ region_tree_inputs = {
         "lmu_growth_scalar_l": np.array([0.69, 0.98, 1.02, 1, 0.96, 0.81, 0.81, 0.56, np.nan]),
     },
     "GSW": {
-        "area_trees_l": np.array([0, 0, 10, 0, 0, 0, 0, 0, 0]),
+        "area_trees_l": np.array([0, 0, 0, 0, 0, 0, 0, 0, 0]),
         "tree_fert_soil_scalar": np.array([0.62, 0.62, 0.77, 1, 1, np.nan, np.nan, np.nan, np.nan]),
         #growth scalar for region
         "regional_growth_scalar": 1,

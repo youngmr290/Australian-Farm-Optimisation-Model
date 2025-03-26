@@ -49,6 +49,7 @@ from . import StockFunctions as sfun
 from . import EmissionFunctions as efun
 from . import Periods as per
 from . import Exceptions as exc
+from . import Trees as tre
 
 
 # np.seterr(all='raise')
@@ -1489,13 +1490,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     sire_propn_pa1e1b1nwzida0e0b0xyg1g0=sire_propn_pa1e1b1nwzida0e0b0xyg1[..., na] * (a_g0_g1[:,na] == sire_include_idx) #add g0 axis
 
     ##weather
-    ws_pa1e1b1nwzida0e0b0xyg = ws_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
-    rain_pa1e1b1nwzida0e0b0xygp0 = rain_p4a1e1b1nwzida0e0b0xygp0[a_p4_p]
-    temp_ave_pa1e1b1nwzida0e0b0xyg= temp_ave_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
-    temp_max_pa1e1b1nwzida0e0b0xyg= temp_max_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
-    temp_min_pa1e1b1nwzida0e0b0xyg= temp_min_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
-
-
     ws_pa1e1b1nwzida0e0b0xyg = ws_p4a1e1b1nwzida0e0b0xyg[a_p4_p] * (1-a_p4dp_pg) \
                                + ws_p4a1e1b1nwzida0e0b0xyg[(a_p4_p + 1) % 12] * a_p4dp_pg
     rain_pa1e1b1nwzida0e0b0xygp0 = rain_p4a1e1b1nwzida0e0b0xygp0[a_p4_p] * (1-a_p4dp_pg[...,na]) \
@@ -1506,6 +1500,31 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                + temp_max_p4a1e1b1nwzida0e0b0xyg[(a_p4_p + 1) % 12] * a_p4dp_pg
     temp_min_pa1e1b1nwzida0e0b0xyg= temp_min_p4a1e1b1nwzida0e0b0xyg[a_p4_p] * (1-a_p4dp_pg) \
                                + temp_min_p4a1e1b1nwzida0e0b0xyg[(a_p4_p + 1) % 12] * a_p4dp_pg
+
+
+
+    ##ws scalar due to tree belts - best paddocks allocated to multiple bearing ewes
+    #TODO could be hooked up for SLP and existing paddocks that are more sheltered due to bush or other reasons
+    relative_ws_adj, relative_temp_adj, protected_area = tre.f_microclimate_adj()
+    relative_ws_c = np.array([1, relative_ws_adj])
+    propn_section_grazed_cp4 = pinp.sheep['i_propn_section_grazed_p4c'].T
+    propn_pasture = pinp.sheep['i_propn_pas']
+    relative_stocking_rate_c = pinp.sheep['i_relative_stocking_rate_c']
+    
+    total_area_pas = np.sum(pinp.general['i_lmu_area']) * propn_pasture #estimate of total pasutre area in ha
+    
+    area_pas_tree = protected_area #pasutre area that is protected by trees
+    area_pas_normal = max(0, total_area_pas - area_pas_tree) #pasutre area that is not protected by trees
+    area_c = np.array([area_pas_normal, area_pas_tree])
+    
+    total_relative_carry_capacity_cp4 = area_c[:,na] * relative_stocking_rate_c[:,na] * propn_section_grazed_cp4
+    propn_carry_capacity_cp4 = total_relative_carry_capacity_cp4 / np.sum(total_relative_carry_capacity_cp4, axis = 0, keepdims = True)
+    shelter_rank_c = np.argsort(relative_ws_c) #ranking of the c slices based on the ws
+
+    #expand p4 axis
+    propn_carry_capacity_cp4g = fun.f_expand(propn_carry_capacity_cp4, p_pos)
+    propn_carry_capacity_cpg = propn_carry_capacity_cp4g[:,a_p4_p,:] * (1-a_p4dp_pg) \
+                               + propn_carry_capacity_cp4g[:,(a_p4_p + 1) % 12,:] * a_p4dp_pg
 
     ##feed variation
     # fvp_type_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg1,a_fvp_pa1e1b1nwzida0e0b0xyg1,0)
@@ -2042,15 +2061,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     pimi_pa1e1b1nwzida0e0b0xyg1p0 = age_y_adj_pa1e1b1nwzida0e0b0xyg1p0 / ci_dams[8, ..., na]
     ##Age of lamb relative to peak lactation-with minor axis
     lmm_pa1e1b1nwzida0e0b0xyg1p0 = (age_p0_pa1e1b1nwzida0e0b0xyg2p0 + cl_dams[1, ..., na]) / cl_dams[2, ..., na]
-    ##Chill index for lamb survival (differential allocation to lambing paddocks is included inside the p loop)
-    #todo consider adding p1p2 axes for chill for ws & temp_ave.
-    chill_index_pa1e1b1nwzida0e0b0xygp0 = (481 + (11.7 + 3.1 * ws_pa1e1b1nwzida0e0b0xyg[..., na] ** 0.5)
-                                           * (40 - temp_ave_pa1e1b1nwzida0e0b0xyg[..., na])
-                                           + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygp0)))
-                                           # + chill_adj_pa1e1b1nwzida0e0b0xyg1[..., na])
-    ##Note: the order of these calculations mean that chill_adj is being scaled by sam[chill_index]
-    chill_index_pa1e1b1nwzida0e0b0xygp0 = fun.f_sa(chill_index_pa1e1b1nwzida0e0b0xygp0, sen.sam['chill_index'])
-    chill_index_pa1e1b1nwzida0e0b0xygp0 = fun.f_sa(chill_index_pa1e1b1nwzida0e0b0xygp0, sen.saa['chill_index'], 2)
 
     ##Proportion of SRW with age
     srw_age_pa1e1b1nwzida0e0b0xyg0 = 1 - fun.f_weighted_average(1 - np.exp(-cn_sire[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0
@@ -3136,7 +3146,26 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 c_day1 = w_b_exp_y_dams * nfoet_b1nwzida0e0b0xyg * ce_day1_f_dams
                 #### allocate the weight if it is prejoining (for f_foetus_nfs())
                 c_start_dams = fun.f_update(c_start_dams, c_day1, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
+                
+                ###windspeed
+                ws_adj_a1e1b1nwzida0e0b0xyg1 = sfun.f_ws_adjust(relative_ws_c, numbers_start_dams, dse_per_dam, nfoet_b1nwzida0e0b0xyg, 
+                                                                scan_management_pa1e1b1nwzida0e0b0xyg1[p], propn_carry_capacity_cpg[:,p,...],
+                                                                shelter_rank_c)
+                ws_a1e1b1nwzida0e0b0xyg1 = ws_pa1e1b1nwzida0e0b0xyg[p] * ws_adj_a1e1b1nwzida0e0b0xyg1
+                
+                
+                ##Chill index for lamb survival (differential allocation to lambing paddocks is included inside the p loop)
+                #todo consider adding p1p2 axes for chill for ws & temp_ave.
+                chill_index_a1e1b1nwzida0e0b0xyg1p0 = (481 + (11.7 + 3.1 * ws_a1e1b1nwzida0e0b0xyg1[..., na] ** 0.5)
+                                                    * (40 - temp_ave_pa1e1b1nwzida0e0b0xyg[p,..., na])
+                                                    + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygp0[p])))
+                                                    # + chill_adj_pa1e1b1nwzida0e0b0xyg1[..., na])
+                ##Note: the order of these calculations mean that chill_adj is being scaled by sam[chill_index]
+                chill_index_a1e1b1nwzida0e0b0xyg1p0 = fun.f_sa(chill_index_a1e1b1nwzida0e0b0xyg1p0, sen.sam['chill_index'])
+                chill_index_a1e1b1nwzida0e0b0xyg1p0 = fun.f_sa(chill_index_a1e1b1nwzida0e0b0xyg1p0, sen.saa['chill_index'], 2)
 
+                
+                
             ##yatf
             ##note1: most yatf dependent variables are calculated later in the code
             ### ffcfw_yatf is done here because it is used in the dam calculations for milk production
@@ -3938,7 +3967,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                 , sl_start_dams, mei_dams, hp_total_cs_dams, meme_cs_dams, new_dams, km_dams
                                 , kg_supp_cs_dams, kg_fodd_cs_dams, kw_cs_yg1, mei_propn_supp_dams, mei_propn_herb_dams
                                 , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                 , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0, mei_propn_milk=mei_propn_milk_dams
                                 , nec=nec_dams, kc=kc_cs_yg1, nel=nel_dams, kl=kl_cs_dams
                                 , gest_propn=gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
@@ -3996,7 +4025,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
                         temp0 = sfun.f_heatloss_nfs(cc_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams
                                                 , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                                 , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                         ## heat_loss needs to be stored even if the equation system is not used so that the equations can be compared
                         heat_loss_damsm0p1 = temp0
@@ -4038,7 +4067,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0 = sfun.f_heatloss_nfs(cc_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams
                                                  , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                 , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                                 , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                                  , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                         ## heat_loss needs to be stored even if the equation system is not used so that the equations can be compared
                         heat_loss_damsm0p1 = temp0
@@ -4199,7 +4228,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         ## calculate lower critical temp because it impacts PI in the next period
                         temp0, temp1 = sfun.f_templc(cc_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams
                                 , hp_total_mu_dams, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                 , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                         if eqn_used:
                             temp_lc_dams = temp0  #temp1 not required here
@@ -4322,7 +4351,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         ## calculate lower critical temp because it impacts PI in the next period
                         temp0, temp1 = sfun.f_templc(cc_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams, hp_total_nfs_dams
                                                    , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                   , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                                   , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                                    , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                         if eqn_used:
                             temp_lc_dams = temp0  #temp1 not required here
@@ -4840,7 +4869,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             , sl_start_yatf, mei_yatf, hp_total_cs_yatf, meme_cs_yatf, new_yatf, km_yatf
                             , kg_supp_cs_yatf, kg_fodd_cs_yatf, kw_cs_yg2, mei_propn_supp_yatf, mei_propn_herb_yatf
                             , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                             , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0, mei_propn_milk=mei_propn_milk_yatf)
                     #Use CSIRO version of kg & mem in f_lwc_cs() if comparing equations. They are overwritten later if MU or NFS is the eqn_system
                     mem_yatf = temp0
@@ -4857,7 +4886,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
                     temp0 = sfun.f_heatloss_nfs(cc_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf
                                                 , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                                 , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     heat_loss_yatfm0p1 = temp0
@@ -4871,7 +4900,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
                     temp0 = sfun.f_heatloss_nfs(cc_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf
                                              , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                             , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                             , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                              , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     heat_loss_yatfm0p1 = temp0
@@ -4941,7 +4970,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         level_yatf = temp0
                     temp0, temp1 = sfun.f_templc(cc_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf
                             , hp_total_mu_yatf, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                             , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                     if eqn_used:
                         temp_lc_yatf = temp0  #temp1 not required here
@@ -4982,7 +5011,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         level_yatf = temp0
                     temp0, temp1 = sfun.f_templc(cc_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, hp_total_nfs_yatf
                                                , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                               , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                               , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                                , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                     if eqn_used:
                         temp_lc_yatf = temp0  #temp1 not required here
@@ -5424,14 +5453,15 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)   # equation used is based on the yatf system
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    ##Calculate the adjustment to chill based on litter size and differential allocation to sheltered paddocks
-                    ###Note: Not active if not scanned to identify multiples or litter size.
-                    chill_adj_b1nwzida0e0b0xyg1 = sfun.f_chill_adjust(numbers_start_dams, dse_per_dam
-                                                    , nfoet_b1nwzida0e0b0xyg, scan_option_pa1e1b1nwzida0e0b0xyg1[p])
-                    chill_index_p0 = chill_index_pa1e1b1nwzida0e0b0xygp0[p] + chill_adj_b1nwzida0e0b0xyg1[..., na]
+                    # #Calculate the adjustment to chill based on litter size and differential allocation to sheltered paddocks
+                    # ##Note: Not active if not scanned to identify multiples or litter size.
+                    # TODO remove adj from here.
+                    # chill_adj_b1nwzida0e0b0xyg1 = sfun.f_chill_adjust(numbers_start_dams, dse_per_dam
+                    #                                 , nfoet_b1nwzida0e0b0xyg, scan_option_pa1e1b1nwzida0e0b0xyg1[p])
+                    # chill_index_p0 = chill_index_a1e1b1nwzida0e0b0xyg1p0 + chill_adj_b1nwzida0e0b0xyg1[..., na]
                     temp0, temp1, temp2 = sfun.f_mortality_progeny_cs(cd_yatf, cb1_yatf, w_b_yatf, rc_start_dams, cv_bw_yatf
                                     , w_b_exp_y_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
-                                    , chill_index_p0, nfoet_b1nwzida0e0b0xyg
+                                    , chill_index_a1e1b1nwzida0e0b0xyg1p0, nfoet_b1nwzida0e0b0xyg
                                     , rev_trait_values['yatf'][p], sap_mortalityp_pa1e1b1nwzida0e0b0xyg2[p]
                                     , saa_mortalityx_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
@@ -5452,19 +5482,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                     , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
-                    ##Calculate the adjustment to chill based on litter size and differential allocation to sheltered paddocks
-                    ###Note: Not active if not scanned to identify multiples or litter size.
-                    chill_adj_b1nwzida0e0b0xyg1 = sfun.f_chill_adjust(numbers_start_dams * period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
-                                                    , dse_per_dam, nfoet_b1nwzida0e0b0xyg, scan_option_pa1e1b1nwzida0e0b0xyg1[p])
-                    chill_index_p0 = chill_index_pa1e1b1nwzida0e0b0xygp0[p] + chill_adj_b1nwzida0e0b0xyg1[..., na]
+                    # ##Calculate the adjustment to chill based on litter size and differential allocation to sheltered paddocks
+                    # ###Note: Not active if not scanned to identify multiples or litter size.
+                    # chill_adj_b1nwzida0e0b0xyg1 = sfun.f_chill_adjust(numbers_start_dams * period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
+                    #                                 , dse_per_dam, nfoet_b1nwzida0e0b0xyg, scan_option_pa1e1b1nwzida0e0b0xyg1[p])
+                    # chill_index_p0 = chill_index_a1e1b1nwzida0e0b0xyg1p0 + chill_adj_b1nwzida0e0b0xyg1[..., na]
                     temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_pyatf[:,p,...]
                                     , w_b_yatf, w_b_ltw_std_yatf, cv_bw_yatf
-                                    , foo_yatf, chill_index_p0, mobsize_mortality_pa1e1b1nwzida0e0b0xyg1[p]
+                                    , foo_yatf, chill_index_a1e1b1nwzida0e0b0xyg1p0, mobsize_mortality_pa1e1b1nwzida0e0b0xyg1[p]
                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
                                     , sap_mortalityp_pa1e1b1nwzida0e0b0xyg2[p], saa_mortalityx_pa1e1b1nwzida0e0b0xyg1[p])  ##code for absolute BW
                     # temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_pyatf[:,p,...]
                     #                 , w_b_yatf / srw_female_yg2, w_b_ltw_std_yatf / srw_female_yg2, cv_bw_yatf
-                    #                 , foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygp0[p], mobsize_pa1e1b1nwzida0e0b0xyg1[p]
+                    #                 , foo_yatf, chill_index_a1e1b1nwzida0e0b0xyg1p0[p], mobsize_pa1e1b1nwzida0e0b0xyg1[p]
                     #                 , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
                     #                 , sap_mortalityp_pa1e1b1nwzida0e0b0xyg2[p], saa_mortalityx_pa1e1b1nwzida0e0b0xyg1[p])   ##code for BW/SRW
                     if eqn_used:

@@ -450,7 +450,7 @@ def f_property_inp_sa(pinp_defaults):
 
     ##sheep
     ###SAV
-    sheep['i_chill_adj'] = fun.f_sa(sheep['i_chill_adj'], sen.sav['chill_variation'], 5)
+    # sheep['i_chill_adj'] = fun.f_sa(sheep['i_chill_adj'], sen.sav['chill_variation'], 5)
     sheep['i_date_shear_sixg0'] = fun.f_sa(sheep['i_date_shear_sixg0'], sen.sav['date_shear_isxg0'], 5)
     sheep['i_date_shear_sixg1'] = fun.f_sa(sheep['i_date_shear_sixg1'], sen.sav['date_shear_isxg1'], 5)
     sheep['i_date_shear_sixg3'] = fun.f_sa(sheep['i_date_shear_sixg3'], sen.sav['date_shear_isxg3'], 5)
