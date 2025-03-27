@@ -104,7 +104,7 @@ def f_costs():
     return tree_estab_cost_p7z, tree_estab_wc_c0p7z
     
     
-def f_crop_production_scalar():
+def f_adjacent_land_production_scalar():
     '''
     This function calculates an average yield scalar based on the costs (resources competition)
     and benefits (wind protection) of tree plantations.
@@ -122,6 +122,7 @@ def f_crop_production_scalar():
     This assumption would be incorrect if for example the trees were in a permanant pasture paddock and other parts of the LMU were cropped.
     
     We are also assuming that the belts are far enough apart that the resource competition on the right of one belt is not felt on the left of the next belt.
+    Furthermore, the current representation assumes trees have the same relative production impact on crop and pasture.
     '''
     # Get plantation configuration based on the plantation structure control setting
     plantation_structure = uinp.tree["controls"]["plantation_structure"]
@@ -435,7 +436,6 @@ def f_tree_cashflow(r_vals, params):
       
 ##collates all the params
 def f_trees(params,r_vals):
-    f_crop_production_scalar()
     f_microclimate_adj()
     f_tree_cashflow(r_vals, params)
     #deepflow - maybe this is a table by land use by LMU. Then just tally in pyomo.

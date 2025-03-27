@@ -23,6 +23,7 @@ from . import EmissionFunctions as efun
 from . import Periods as per
 from . import Sensitivity as sen
 from . import PastureFunctions as pfun
+from . import Trees as tree
 
 #1. todo add labour required for feed budgeting. Inputs are currently in the sheep sheet of Property.xls (would be best if this can be built in phase_labour module)
 #2. todo Will need to add the foo reduction in the current year for manipulated pasture and a germination reduction in the following year.
@@ -337,6 +338,10 @@ def f_pasture(params, r_vals, nv):
     NCAG_t = uinp.emissions['i_NCAG_t'][pinp.general['pas_inc_t']]  # nitrogen content of above-ground crop residue
     NCBG_t = uinp.emissions['i_NCBG_t'][pinp.general['pas_inc_t']]  # nitrogen content of below-ground crop residue
 
+    ##scale pasture production based on adjacent tree plantings
+    tree_production_scalar_l = tree.f_adjacent_land_production_scalar()
+    i_fxg_pgr_qop6lzt = i_fxg_pgr_qop6lzt * tree_production_scalar_l[:,na,na]
+    
     ##scale pasture production for q (sequence year) for MP model. version 1: all pasture types scaled the same.
     ##this pgr sam has a p6 and q which is good for raw version but too complicated to explain in the web app because a user might have node[0] in spring so if they changed pgr in p6[2] q[0] they would actually be changing the following calendar year. A simpler method is below.
     q_pgr_scalar_qp6 = sen.sam['q_pgr_scalar_Qp6'][0:len_q,:]  # have to slice len_q because SAM was initiliased with a big number (because q is unknown because it can be changed by SA)
