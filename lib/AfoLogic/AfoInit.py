@@ -52,6 +52,7 @@ from . import CropGrazingPyomo as cgzpy
 from . import SeasonPyomo as zgenpy
 from . import FeedSupplyStock as fsstk
 from . import SaltbushPyomo as slppy
+from . import TreePyomo as treepy
 
 
 #########################
@@ -124,6 +125,7 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     params['lab']={}
     params['crplab']={}
     params['sup']={}
+    params['tree']={}
     params['stock']={}
     params['slp']={}
     params['stub']={}
@@ -140,6 +142,7 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     r_vals['lab']={}
     r_vals['crplab']={}
     r_vals['sup']={}
+    r_vals['tree']={}
     r_vals['stock']={}
     r_vals['slp']={}
     r_vals['stub']={}
@@ -158,6 +161,7 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     labpy.lab_precalcs(params['lab'],r_vals['lab'])
     lphspy.crplab_precalcs(params['crplab'],r_vals['crplab'])
     spy.stock_precalcs(params['stock'],r_vals['stock'],nv,pkl_fs_info, pkl_fs)
+    treepy.tree_precalcs(params['tree'],r_vals['tree'])
     suppy.sup_precalcs(params['sup'],r_vals['sup'], nv) #sup must be after stock because it uses nv dict which is populated in stock.py
     cgzpy.cropgraze_precalcs(params['crpgrz'],r_vals['crpgrz'], nv) #cropgraze must be after stock because it uses nv dict which is populated in stock.py
     slppy.saltbush_precalcs(params['slp'],r_vals['slp'], nv) #saltbush must be after stock because it uses nv dict which is populated in stock.py
@@ -180,6 +184,7 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     lphspy.f1_labcrppyomo_local(params['crplab'], model)
     paspy.f1_paspyomo_local(params['pas'], model, MP_lp_vars)
     suppy.f1_suppyomo_local(params['sup'], model)
+    treepy.f1_treepyomo_local(params['tree'], model)
     cgzpy.f1_cropgrazepyomo_local(params['crpgrz'], model)
     slppy.f1_saltbushpyomo_local(params['slp'], model, MP_lp_vars)
     stubpy.f1_stubpyomo_local(params['stub'], model, MP_lp_vars)

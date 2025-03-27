@@ -109,6 +109,26 @@ tree_inputs = {
         "setup": 40, #$/ha
         "annual_monitoring": 25, #$/ha
     },
+    "fuel_used": {
+        "initial": 40, # l/ha for site prep, spraying, fertilising and planting
+        "yr1": 8,# l/ha for spraying & fertilising
+        "yr2_to_100": 0, # l/ha for spraying & fertilising
+    },
+    "risk_of_reversal_buffer": 0.05, # a reserve pool of ACCUs withheld to cover risks like fire, drought, or non-compliance. Basically this is a propn of the estimiated ACCUs not converted to income for the farmer. 
+    #Kg of CO2/ha sequestered in each yr from FullCAM. Slice 1 represents the end of yr1.    
+    "annual_sequestration": np.array([ 
+        0, 220, 2494, 4767, 6051, 6491, 6564, 6234, 5904, 5427,
+        4950, 4547, 4107, 3704, 3374, 3007, 2677, 2494, 2237, 2090,
+        1944, 1760, 1613, 1503, 1467, 1283, 1247, 1173, 1100, 1027,
+        953, 917, 843, 843, 807, 697, 733, 660, 623, 623,
+        550, 550, 513, 513, 477, 477, 440, 440, 403, 367,
+        403, 367, 367, 330, 330, 330, 293, 293, 293, 293,
+        257, 257, 293, 220, 257, 220, 220, 220, 220, 183,
+        220, 220, 147, 220, 183, 147, 220, 183, 147, 147,
+        147, 183, 147, 147, 110, 183, 110, 110, 183, 110,
+        147, 110, 110, 110, 110, 147, 110, 73, 147, 73,
+        110
+    ]),
     ###############
     # Biomass harvesting
     ###############
@@ -143,6 +163,7 @@ tree_inputs = {
     ###############
     # Prices
     ###############
+    "carbon_price": 40,  # $/t co2e
     "biodiversity_credit_price": 200,  # $/credit
     "biomass_price": 50,  # $/t
 }
