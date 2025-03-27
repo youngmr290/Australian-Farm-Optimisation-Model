@@ -1513,7 +1513,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     
     total_area_pas = np.sum(pinp.general['i_lmu_area']) * propn_pasture #estimate of total pasutre area in ha
     
-    area_pas_tree = protected_area #pasutre area that is protected by trees
+    area_pas_tree = protected_area * propn_pasture #pasutre area that is protected by trees - assume that trees are evenly distributed over lmu therefore not all the protected area is pasture
     area_pas_normal = max(0, total_area_pas - area_pas_tree) #pasutre area that is not protected by trees
     area_c = np.array([area_pas_normal, area_pas_tree])
     
