@@ -394,6 +394,14 @@ def f_property_inp_sa(pinp_defaults):
     ###sat
     ###sar
 
+    ##trees
+    ###sav
+    tree['estimated_area_trees_l'] = fun.f_sa(tree['estimated_area_trees_l'], sen.sav['estimated_area_trees_l'], 5)
+    ###sap
+    ###saa
+    ###sat
+    ###sar
+
     ##salt land pasture
     ###sav
     saltbush['i_saltbush_estab_cost'] = fun.f_sa(saltbush['i_saltbush_estab_cost'], sen.sav['saltbush_estab_cost'], 5)
@@ -665,7 +673,7 @@ def f1_mask_lmu():
     
     ##tree
     f1_do_mask_lmu(tree, "tree_fert_soil_scalar", lmu_axis=0)
-    f1_do_mask_lmu(tree, "area_trees_l", lmu_axis=0)
+    f1_do_mask_lmu(tree, "estimated_area_trees_l", lmu_axis=0)
     f1_do_mask_lmu(tree, "lmu_growth_scalar_l", lmu_axis=0)
 
 def f1_do_mask_landuse(dict, key, landuse_axis_type, landuse_axis):

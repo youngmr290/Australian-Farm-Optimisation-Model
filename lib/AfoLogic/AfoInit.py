@@ -160,8 +160,8 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     lfixpy.labfx_precalcs(params['labfx'],r_vals['labfx'])
     labpy.lab_precalcs(params['lab'],r_vals['lab'])
     lphspy.crplab_precalcs(params['crplab'],r_vals['crplab'])
-    spy.stock_precalcs(params['stock'],r_vals['stock'],nv,pkl_fs_info, pkl_fs)
     treepy.tree_precalcs(params['tree'],r_vals['tree'])
+    spy.stock_precalcs(params['stock'],r_vals['stock'],nv,pkl_fs_info, pkl_fs)
     suppy.sup_precalcs(params['sup'],r_vals['sup'], nv) #sup must be after stock because it uses nv dict which is populated in stock.py
     cgzpy.cropgraze_precalcs(params['crpgrz'],r_vals['crpgrz'], nv) #cropgraze must be after stock because it uses nv dict which is populated in stock.py
     slppy.saltbush_precalcs(params['slp'],r_vals['slp'], nv) #saltbush must be after stock because it uses nv dict which is populated in stock.py
@@ -176,6 +176,7 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     crtmod.sets(model, nv) #certain sets have to be updated each iteration of exp - has to be first since other modules use the sets
     zgenpy.f1_seasonpyomo_local(params['zgen'], model) #has to be first since builds params used in other modules
     rotpy.f1_rotationpyomo(params['rot'], model, MP_lp_vars)
+    treepy.f1_treepyomo_local(params['tree'], model)
     phspy.f1_croppyomo_local(params['crop'], model)
     macpy.f1_machpyomo_local(params['mach'], model)
     finpy.f1_finpyomo_local(params['fin'], model)
@@ -184,7 +185,6 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     lphspy.f1_labcrppyomo_local(params['crplab'], model)
     paspy.f1_paspyomo_local(params['pas'], model, MP_lp_vars)
     suppy.f1_suppyomo_local(params['sup'], model)
-    treepy.f1_treepyomo_local(params['tree'], model)
     cgzpy.f1_cropgrazepyomo_local(params['crpgrz'], model)
     slppy.f1_saltbushpyomo_local(params['slp'], model, MP_lp_vars)
     stubpy.f1_stubpyomo_local(params['stub'], model, MP_lp_vars)

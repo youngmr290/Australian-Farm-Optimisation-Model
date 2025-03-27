@@ -45,6 +45,7 @@ def f1_boundarypyomo_local(params, model):
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
     rot_lobound_inc = np.any(sen.sav['rot_lobound_rl'] != '-')  #controls rot bound
+    tree_area_inc = np.any(sen.sav['bnd_tree_area_l'][lmu_mask] != '-') #control the area of salt land pasture
     slp_area_inc = np.any(sen.sav['bnd_slp_area_l'][lmu_mask] != '-') #control the area of salt land pasture
     sb_upbound_inc = np.any(sen.sav['bnd_sb_consumption_p6'] != '-') #upper bound on the quantity of saltbush consumed
     sup_lobound_inc = False #controls sup feed bound
@@ -131,6 +132,23 @@ def f1_boundarypyomo_local(params, model):
                     return pe.Constraint.Skip
             model.con_rotation_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_phases, model.s_lmus, model.s_season_types, rule=rot_lo_bound,
                                                     doc='lo bound for the number of each phase')
+
+
+        ##tree area
+        if tree_area_inc:
+            ###set the bound
+            tree_area_bnd_l = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_tree_area_l'][lmu_mask], 5) #999999 is arbitrary default value which mean skip constraint
+            ###ravel and zip bound and dict
+            tree_area = dict(zip(model.s_lmus, tree_area_bnd_l))
+            ###constraint
+            l_p7 = list(model.s_season_periods)
+            def tree_area_bound(model, l):
+                if tree_area[l] != 999999:
+                    return model.v_tree_area_l[l] == tree_area[l]
+                else:
+                    return pe.Constraint.Skip
+            model.con_tree_area_bound = pe.Constraint(model.s_lmus, rule=tree_area_bound,
+                                                    doc='bound for the area of tree plantations on each lmu')
 
 
         ##salt land pasture area

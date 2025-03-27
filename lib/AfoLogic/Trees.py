@@ -32,6 +32,7 @@ from . import Functions as fun
 from . import SeasonalFunctions as zfun
 from . import Periods as per
 from . import EmissionFunctions as efun
+from . import Sensitivity as sen
 
 
 na=np.newaxis
@@ -56,7 +57,6 @@ def f_costs(r_vals, mask_season_p7z):
     planting_density = 10000 / effective_width / config["within_row_spacing"] * config["number_of_rows"]  # plants per hectare
     
     # Get LMU data as NumPy arrays
-    tree_area_l = pinp.tree["area_trees_l"]
     lmu_fert_scalar_l = pinp.tree["tree_fert_soil_scalar"]
 
     # Establishment costs (Year 1)
@@ -78,33 +78,31 @@ def f_costs(r_vals, mask_season_p7z):
     yrs_2_to_100 = uinp.tree["yrs_2_to_100"]
     yrs_2_to_100_costs_l = yrs_2_to_100["weed_control"] + (yrs_2_to_100["fertiliser_base"] + yrs_2_to_100["fertiliser_extra_if_harvested"] * include_harvesting) * lmu_fert_scalar_l
     
-    # Compute total costs using NumPy sum (faster than Python sum)**
-    total_establishment_costs = np.sum(establishment_costs_l * tree_area_l)
-    total_yr1_costs = np.sum(yr1_costs_l * tree_area_l)
-    total_yrs_2_to_100_costs = np.sum(yrs_2_to_100_costs_l * tree_area_l)
-    
-    # Discounted present value of future maintenance costs 
+    # Discounted present value of future maintenance costs
     discount_rate  = uinp.finance['i_interest']
-    num_years = 100  # Total number of years
+    num_years = uinp.tree["controls"]["project_duration"]  # Total number of years
 
     # Construct cash flow array
-    total_cash_flows = [total_establishment_costs, total_yr1_costs] + [total_yrs_2_to_100_costs] * (num_years - 1)
-    
+    # Build a list of arrays first
+    cost_rows = [establishment_costs_l, yr1_costs_l,] + [yrs_2_to_100_costs_l] * (num_years - 1)
+    # Stack them into a 2D array (shape: [num_years, n])
+    total_cash_flows_yl = np.vstack(cost_rows)
+
     # Compute NPV 
-    npv = npf.npv(discount_rate, total_cash_flows)
+    npv_l = fun.f_npv_nd(total_cash_flows_yl, discount_rate)
     
     # Compute annualized cost as an annuity
-    annual_payment = npv * (discount_rate / (1 - (1 + discount_rate) ** -num_years))
+    annual_payment_l = npv_l * (discount_rate / (1 - (1 + discount_rate) ** -num_years))
     
     #allocate to p7
     cost_allocation_p7z, wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([uinp.tree["cost_date"]]), z_pos=-1)
-    tree_estab_cost_p7z = annual_payment * cost_allocation_p7z
-    tree_estab_wc_c0p7z = annual_payment * wc_allocation_c0p7z
+    tree_estab_cost_p7zl = annual_payment_l * cost_allocation_p7z[...,na]
+    tree_estab_wc_c0p7zl = annual_payment_l * wc_allocation_c0p7z[...,na]
     
     ##store r_vals
-    fun.f1_make_r_val(r_vals, tree_estab_cost_p7z, 'tree_estab_cost_p7z', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, tree_estab_cost_p7zl, 'tree_estab_cost_p7zl', mask_season_p7z[...,na], z_pos=-2)
     
-    return tree_estab_cost_p7z, tree_estab_wc_c0p7z
+    return tree_estab_cost_p7zl, tree_estab_wc_c0p7zl
     
     
 def f_adjacent_land_production_scalar():
@@ -136,18 +134,17 @@ def f_adjacent_land_production_scalar():
     number_of_belts = plantation_config["number_of_belts"]
     propn_trees_adjacent = plantation_config["propn_paddock_adj"]  # Proportion of trees adjacent to usable paddock
 
-    # Get area of trees (in hectares) as a numpy array
-    tree_area_l = pinp.tree["area_trees_l"]
-
+    # Get area of trees (in hectares) as a numpy array - use estimated area unless tree area bnd is active.
+    est_tree_area_l = fun.f_sa(pinp.tree["estimated_area_trees_l"], sen.sav['bnd_tree_area_l'][pinp.lmu_mask], 5)
     # Calculate the effective width of the tree rows (including side buffers)
     effective_width = ((plantation_config["number_of_rows"] - 1) * plantation_config["between_row_spacing"] +
                     2 * plantation_config["side_buffer"])
 
     # Calculate the length of each belt (in meters)
-    belt_length_l = (tree_area_l * 10000) / (effective_width * number_of_belts) # Convert tree area from hectares to m² (1 ha = 10,000 m²)
+    belt_length_l = (est_tree_area_l * 10000) / (effective_width * number_of_belts) # Convert tree area from hectares to m² (1 ha = 10,000 m²)
 
     # Calculate LMU area available for production (excluding area with trees)
-    lmu_area_without_trees_l = pinp.general['i_lmu_area'] - tree_area_l
+    lmu_area_without_trees_l = pinp.general['i_lmu_area'] - est_tree_area_l
 
     # Calculate the land area on the protected side of the tree belts
     protected_side_area_l = (belt_length_l * number_of_belts * distance_between_belts * propn_trees_adjacent) / 10000 # Convert m² to hectares
@@ -231,15 +228,16 @@ def f_microclimate_adj():
     number_of_belts = plantation_config["number_of_belts"]
     propn_trees_adjacent = plantation_config["propn_paddock_adj"]  # Proportion of trees adjacent to usable paddock
 
-    # Get total area of trees - don't need to differentiate between LMUs
-    tree_area = np.sum(pinp.tree["area_trees_l"]) 
+    # Get total area of trees - don't need to differentiate between LMUs because ws impacts are same for all lmu
+    est_tree_area_l = fun.f_sa(pinp.tree["estimated_area_trees_l"], sen.sav['bnd_tree_area_l'][pinp.lmu_mask], 5)
+    est_tree_area = np.sum(est_tree_area_l)
 
     # Calculate the effective width of the tree rows (including side buffers)
     effective_width = ((plantation_config["number_of_rows"] - 1) * plantation_config["between_row_spacing"] +
                     2 * plantation_config["side_buffer"])
 
     # Calculate the length of each belt (in meters)
-    belt_length = (tree_area * 10000) / (effective_width * number_of_belts) # Convert tree area from hectares to m² (1 ha = 10,000 m²)
+    belt_length = (est_tree_area * 10000) / (effective_width * number_of_belts) # Convert tree area from hectares to m² (1 ha = 10,000 m²)
 
     # Calculate the land area on the protected side of the tree belts
     protected_area = (belt_length * number_of_belts * distance_between_belts * propn_trees_adjacent) / 10000 # Convert m² to hectares
@@ -287,7 +285,7 @@ def f_microclimate_adj():
 
 def f_harvestable_biomass(r_vals, mask_season_p7z):
     '''
-    Calculate the income generated from harvesting tree biomass for bio-fuel. The main costs are:
+    Calculate the income per hectare generated from harvesting tree biomass for bio-fuel. The main costs are:
 
         - Costs for harvest and on-farm transport
         - Road transport to the bio-energy plant
@@ -314,33 +312,28 @@ def f_harvestable_biomass(r_vals, mask_season_p7z):
         biomass_income_yl = np.zeros([project_duration,1])
         costs_yl = np.zeros([project_duration,1])
         
-    # Construct cash flow array
-    tree_area_l = pinp.tree["area_trees_l"] 
-    total_income_y = np.sum(biomass_income_yl * tree_area_l, axis=-1)
-    total_costs_y = np.sum(costs_yl * tree_area_l, axis=-1)
-
     # Compute NPV 
     discount_rate  = uinp.finance['i_interest']
-    npv_income = npf.npv(discount_rate, total_income_y)
-    npv_cost = npf.npv(discount_rate, total_costs_y)
+    npv_income_l = fun.f_npv_nd(biomass_income_yl, discount_rate)
+    npv_cost_l = fun.f_npv_nd(costs_yl, discount_rate)
     
     # Compute annualized cost as an annuity
-    annual_income = npv_income * (discount_rate / (1 - (1 + discount_rate) ** -project_duration))
-    annual_cost = npv_cost * (discount_rate / (1 - (1 + discount_rate) ** -project_duration))
-    annual_cashflow = annual_income - annual_cost
+    annual_income_l = npv_income_l * (discount_rate / (1 - (1 + discount_rate) ** -project_duration))
+    annual_cost_l = npv_cost_l * (discount_rate / (1 - (1 + discount_rate) ** -project_duration))
+    annual_cashflow_l = annual_income_l - annual_cost_l
     
     #allocate to p7
     cash_allocation_p7z, wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([uinp.tree["cost_date"]]), z_pos=-1)
-    tree_biomass_income_p7z = annual_income * cash_allocation_p7z
-    tree_biomass_cost_p7z = annual_cost * cash_allocation_p7z
-    tree_biomass_cashflow_p7z = annual_cashflow * cash_allocation_p7z
-    tree_biomass_wc_c0p7z = annual_cashflow * wc_allocation_c0p7z
+    tree_biomass_income_p7zl = annual_income_l * cash_allocation_p7z[...,na]
+    tree_biomass_cost_p7zl = annual_cost_l * cash_allocation_p7z[...,na]
+    tree_biomass_cashflow_p7zl = annual_cashflow_l * cash_allocation_p7z[...,na]
+    tree_biomass_wc_c0p7zl = annual_cashflow_l * wc_allocation_c0p7z[...,na]
     
     ##store r_vals
-    fun.f1_make_r_val(r_vals, tree_biomass_income_p7z, 'tree_biomass_income_p7z', mask_season_p7z, z_pos=-1)
-    fun.f1_make_r_val(r_vals, tree_biomass_cost_p7z, 'tree_biomass_cost_p7z', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, tree_biomass_income_p7zl, 'tree_biomass_income_p7zl', mask_season_p7z[...,na], z_pos=-1)
+    fun.f1_make_r_val(r_vals, tree_biomass_cost_p7zl, 'tree_biomass_cost_p7zl', mask_season_p7z[...,na], z_pos=-1)
   
-    return tree_biomass_cashflow_p7z, tree_biomass_wc_c0p7z
+    return tree_biomass_cashflow_p7zl, tree_biomass_wc_c0p7zl
   
   
   
@@ -348,7 +341,7 @@ def f_harvestable_biomass(r_vals, mask_season_p7z):
 
 def f_sequestration(r_vals, mask_season_p7z):
     '''
-    Calculates the annualised carbon sequestration cashflow and average biophysical sequestration for tree plantings over a project duration,
+    Calculates the annualised carbon sequestration cashflow and average biophysical sequestration for 1 hectare of tree plantings over a project duration,
     accounting for growth rates, fuel-related emissions, and carbon credit price.
 
     The function handles non-linear carbon sequestration by:
@@ -399,6 +392,7 @@ def f_sequestration(r_vals, mask_season_p7z):
     ##calc average sequestration per year for GHG report
     annual_sequestration_l = np.mean(annual_sequestration_yl, axis=0)
     co2e_fuel = np.mean(co2e_fuel_y, axis=0)
+    co2e_sold_l = (annual_sequestration_l - co2e_fuel) * include_carbon_credit
     
     #sequestration income and costs per ha
     costs_y = np.zeros(project_duration+1)
@@ -413,47 +407,37 @@ def f_sequestration(r_vals, mask_season_p7z):
         sequestration_income_yl = net_co2e_yl * 0
         costs_y = np.zeros([project_duration])
         
-    ##calc totals for all tree area
-    tree_area_l = pinp.tree["area_trees_l"] 
-    
-    total_annual_sequestration = np.sum(annual_sequestration_l * tree_area_l, axis=-1)
-    total_co2e_fuel = np.sum(co2e_fuel * tree_area_l, axis=-1)
-    co2e_sold = (total_annual_sequestration - total_co2e_fuel) * include_carbon_credit
-    
-    total_income_y = np.sum(sequestration_income_yl * tree_area_l, axis=-1)
-    total_costs_y = np.sum(costs_y[:,na] * tree_area_l, axis=-1)
-
     # Compute NPV 
     discount_rate  = uinp.finance['i_interest']
-    npv_income = npf.npv(discount_rate, total_income_y)
-    npv_cost = npf.npv(discount_rate, total_costs_y)
-    
+    npv_income_l = fun.f_npv_nd(sequestration_income_yl, discount_rate)
+    npv_cost = fun.f_npv_nd(costs_y, discount_rate)
+
     # Compute annualized cost as an annuity
-    annual_income = npv_income * (discount_rate / (1 - (1 + discount_rate) ** -project_duration))
+    annual_income_l = npv_income_l * (discount_rate / (1 - (1 + discount_rate) ** -project_duration))
     annual_cost = npv_cost * (discount_rate / (1 - (1 + discount_rate) ** -project_duration))
-    annual_cashflow = annual_income - annual_cost
+    annual_cashflow_l = annual_income_l - annual_cost
     
     #allocate to p7
     cash_allocation_p7z, wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([uinp.tree["cost_date"]]), z_pos=-1)
-    tree_sequestration_income_p7z = annual_income * cash_allocation_p7z
+    tree_sequestration_income_p7zl = annual_income_l * cash_allocation_p7z[...,na]
     tree_sequestration_cost_p7z = annual_cost * cash_allocation_p7z
-    tree_sequestration_cashflow_p7z = annual_cashflow * cash_allocation_p7z
-    tree_sequestration_wc_c0p7z = annual_cashflow * wc_allocation_c0p7z
+    tree_sequestration_cashflow_p7zl = annual_cashflow_l * cash_allocation_p7z[...,na]
+    tree_sequestration_wc_c0p7zl = annual_cashflow_l * wc_allocation_c0p7z[...,na]
     
     ##store r_vals
-    fun.f1_make_r_val(r_vals, tree_sequestration_income_p7z, 'tree_sequestration_income_p7z', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, tree_sequestration_income_p7zl, 'tree_sequestration_income_p7zl', mask_season_p7z[...,na], z_pos=-1)
     fun.f1_make_r_val(r_vals, tree_sequestration_cost_p7z, 'tree_sequestration_cost_p7z', mask_season_p7z, z_pos=-1)
 
-    fun.f1_make_r_val(r_vals, total_annual_sequestration, 'tree_co2_sequestration')
-    fun.f1_make_r_val(r_vals, co2e_sold, 'tree_co2e_sold')
-    fun.f1_make_r_val(r_vals, np.mean(total_co2e_fuel), 'tree_co2e_fuel')
+    fun.f1_make_r_val(r_vals, annual_sequestration_l, 'tree_co2_sequestration_l')
+    fun.f1_make_r_val(r_vals, co2e_sold_l, 'tree_co2e_sold_l')
+    fun.f1_make_r_val(r_vals, np.mean(co2e_fuel), 'tree_co2e_fuel')
 
-    return tree_sequestration_cashflow_p7z, tree_sequestration_wc_c0p7z
+    return tree_sequestration_cashflow_p7zl, tree_sequestration_wc_c0p7zl
     
     
 def f_biodiversity(r_vals, mask_season_p7z):
     '''
-    Calculate the value of biodiversity credits from tree plantation.
+    Calculate the value of biodiversity credits from tree plantation per hectare.
     
     Assumption is that no biodiversity credits are avaliable if biomass is harvested.
     '''
@@ -476,16 +460,12 @@ def f_biodiversity(r_vals, mask_season_p7z):
         costs_y[1:] = biodiversity_costs["annual_monitoring"] 
 
     # Compute the total value (dollars)
-    tree_area = np.sum(pinp.tree["area_trees_l"]) 
     market_price_per_credit = uinp.tree["biodiversity_credit_price"]
-    total_credit_value_y = biodiversity_credits_y * tree_area * market_price_per_credit
-    
-    # total costs accosiated with accessing biodiversity credits
-    total_costs_y = costs_y * tree_area
+    total_credit_value_y = biodiversity_credits_y * market_price_per_credit
     
     discount_rate  = uinp.finance['i_interest']
     npv_income = npf.npv(discount_rate, total_credit_value_y)
-    npv_cost = npf.npv(discount_rate, total_costs_y)
+    npv_cost = npf.npv(discount_rate, costs_y)
     
     # Compute annualized cost as an annuity
     annual_income = npv_income * (discount_rate / (1 - (1 + discount_rate) ** -project_duration))
@@ -517,38 +497,39 @@ def f1_tree_cashflow(r_vals):
     mask_season_p7z = zfun.f_season_transfer_mask(date_season_node_p7z,z_pos=-1,mask=True)
     
     # Establishment & maint costs
-    tree_estab_cost_p7z, tree_estab_wc_c0p7z = f_costs(r_vals, mask_season_p7z)
+    tree_estab_cost_p7zl, tree_estab_wc_c0p7zl = f_costs(r_vals, mask_season_p7z)
     
     # Income from harvest
-    tree_biomass_cashflow_p7z, tree_biomass_wc_c0p7z = f_harvestable_biomass(r_vals, mask_season_p7z)
+    tree_biomass_cashflow_p7zl, tree_biomass_wc_c0p7zl = f_harvestable_biomass(r_vals, mask_season_p7z)
     
     # Income from carbon sequestration
-    tree_sequestration_cashflow_p7z, tree_sequestration_wc_c0p7z = f_sequestration(r_vals, mask_season_p7z)
+    tree_sequestration_cashflow_p7zl, tree_sequestration_wc_c0p7zl = f_sequestration(r_vals, mask_season_p7z)
     
     # Income from biodiversity
     tree_biodiversity_cashflow_p7z, tree_biodiversity_wc_c0p7z = f_biodiversity(r_vals, mask_season_p7z)
     
     # Calculate total cashflow / wc
-    tree_cashflow_p7z = -tree_estab_cost_p7z + tree_biomass_cashflow_p7z + tree_sequestration_cashflow_p7z + tree_biodiversity_cashflow_p7z
-    tree_wc_c0p7z = -tree_estab_wc_c0p7z + tree_biomass_wc_c0p7z + tree_sequestration_wc_c0p7z + tree_biodiversity_wc_c0p7z
+    tree_cashflow_p7zl = -tree_estab_cost_p7zl + tree_biomass_cashflow_p7zl + tree_sequestration_cashflow_p7zl + tree_biodiversity_cashflow_p7z[...,na]
+    tree_wc_c0p7zl = -tree_estab_wc_c0p7zl + tree_biomass_wc_c0p7zl + tree_sequestration_wc_c0p7zl + tree_biodiversity_wc_c0p7z[...,na]
     
-    return tree_cashflow_p7z, tree_wc_c0p7z
+    return tree_cashflow_p7zl, tree_wc_c0p7zl
     
     
       
 ##collates all the params
 def f1_trees(params,r_vals):
     '''collates all the params'''
-    tree_cashflow_p7z, tree_wc_c0p7z = f1_tree_cashflow(r_vals)
+    tree_cashflow_p7zl, tree_wc_c0p7zl = f1_tree_cashflow(r_vals)
     
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
+    keys_l = pinp.general['i_lmu_idx']
 
-    arrays_p7z = [keys_p7, keys_z]
-    arrays_c0p7z = [keys_c0, keys_p7, keys_z]
+    arrays_p7zl = [keys_p7, keys_z, keys_l]
+    arrays_c0p7zl = [keys_c0, keys_p7, keys_z, keys_l]
     
-    params['p_tree_cashflow_p7z'] = fun.f1_make_pyomo_dict(tree_cashflow_p7z, arrays_p7z)
-    params['p_tree_wc_c0p7z'] = fun.f1_make_pyomo_dict(tree_wc_c0p7z, arrays_c0p7z)
+    params['p_tree_cashflow_p7zl'] = fun.f1_make_pyomo_dict(tree_cashflow_p7zl, arrays_p7zl)
+    params['p_tree_wc_c0p7zl'] = fun.f1_make_pyomo_dict(tree_wc_c0p7zl, arrays_c0p7zl)
     
     

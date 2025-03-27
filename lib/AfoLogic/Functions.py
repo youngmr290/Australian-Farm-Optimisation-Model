@@ -393,6 +393,36 @@ def f_norm_cdf(x, mu, cv=0.2, sd=None):
 #    prob = 1 / (np.exp(-358 / 23 * xstd + 111 * np.arctan(37 / 294 * xstd)) + 1)
     return prob
 
+
+def f_npv_nd(cashflows, discount_rate, axis=0):
+    """
+    Calculate the Net Present Value (NPV) along a specified axis for an N-dimensional array.
+
+    Parameters:
+        cashflows (np.ndarray): N-dimensional array of cashflows.
+        discount_rate (float): Discount rate (e.g., 0.05 for 5%).
+        axis (int): Axis along which time varies (default is 0).
+
+    Returns:
+        np.ndarray: Array of NPVs with the time axis reduced.
+    """
+    cashflows = np.asarray(cashflows)
+    num_periods = cashflows.shape[axis]
+
+    # Create discount factors
+    years = np.arange(num_periods)
+    discount_factors = 1 / (1 + discount_rate) ** years
+
+    # Reshape discount_factors to broadcast along the correct axis
+    shape = [1] * cashflows.ndim
+    shape[axis] = num_periods
+    discount_factors = discount_factors.reshape(shape)
+
+    # Apply discounting and sum along the specified axis
+    discounted = cashflows * discount_factors
+    return np.sum(discounted, axis=axis)
+
+
 def f_distribution7(mean, sd=None, cv=None):
     '''
     ##create a distribution around the mean for a variable that can be applied in any non-linear relationships

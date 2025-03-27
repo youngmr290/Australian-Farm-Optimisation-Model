@@ -22,7 +22,6 @@ def f1_treepyomo_local(params, model):
     ############
     # variable #
     ############
-    #TODO need to hook this up later. Then have bnd so that we can correctly represent the tree interactions with adjacent land.
     model.v_tree_area_l = pe.Var(model.s_lmus, bounds=(0,None),
                                doc='hectares of trees on each land management unit')
 
@@ -31,10 +30,10 @@ def f1_treepyomo_local(params, model):
     ######### 
 
     ##cost
-    model.p_tree_cashflow_p7z = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['p_tree_cashflow_p7z'], default = 0.0, mutable=True, doc='net cashflow from tree plantations')
+    model.p_tree_cashflow_p7zl = pe.Param(model.s_season_periods, model.s_season_types, model.s_lmus, initialize=params['p_tree_cashflow_p7zl'], default = 0.0, mutable=True, doc='net cashflow from tree plantations')
     
     ##wc
-    model.p_tree_wc_c0p7z = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize=params['p_tree_wc_c0p7z'], default = 0.0, mutable=True, doc='net working capital gain/loss from tree plantation')
+    model.p_tree_wc_c0p7zl = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_lmus, initialize=params['p_tree_wc_c0p7zl'], default = 0.0, mutable=True, doc='net working capital gain/loss from tree plantation')
 
 
 
@@ -50,7 +49,7 @@ def f_tree_cashflow(model,p7,z):
     Used in global constraint (con_profit). See CorePyomo
     '''
 
-    return model.p_tree_cashflow_p7z[p7,z]
+    return sum(model.p_tree_cashflow_p7zl[p7,z,l] * model.v_tree_area_l[l] for l in model.s_lmus)
 
 def f_tree_wc(model,c0,p7,z):
     '''
@@ -59,4 +58,4 @@ def f_tree_wc(model,c0,p7,z):
     Used in global constraint (con_workingcap). See CorePyomo
     '''
 
-    return model.p_tree_wc_c0p7z[c0,p7,z]
+    return sum(model.p_tree_wc_c0p7zl[c0,p7,z,l] * model.v_tree_area_l[l] for l in model.s_lmus)

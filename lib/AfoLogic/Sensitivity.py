@@ -261,10 +261,20 @@ def create_sa():
     ##SAR
 
     ####################
+    #Trees             #
+    ####################
+    ##SAV
+    sav['estimated_area_trees_l'] = np.full(len_l, '-', dtype=object)  #control estimated area of trees on each lmu
+    ##SAM
+    ##SAP
+    ##SAA
+    ##SAT
+    ##SAR
+
+    ####################
     #Salt land pasture #
     ####################
     ##SAV
-    sav['slp_inc'] = '-'  #control if salt land pasture is included
     sav['saltbush_estab_cost'] = '-'  #initial establishment costs of saltbush
     sav['understory_estab_cost'] = '-'  #initial establishment costs of understory
     sav['saltbush_success'] = '-'  #success of establishment
@@ -552,6 +562,7 @@ def create_sa():
     ##########
     ##SAV
     sav['bnd_slp_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of slp on each lmu
+    sav['bnd_tree_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of trees on each lmu
     sav['bnd_sb_consumption_p6'] = np.full(len(pinp.period['i_fp_idx']), '-', dtype=object)  #upper bnd on the amount of sb consumed
     sav['bnd_crop_area_qk1'] = np.full((len_Q, len_crop_k), '-', dtype=object)  #crop area for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
     sav['bnd_crop_area_percent_qk1'] = np.full((len_Q, len_crop_k), '-', dtype=object)  #crop area percent of farm area. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
