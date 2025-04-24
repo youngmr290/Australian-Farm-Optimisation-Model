@@ -550,12 +550,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     scan_da0e0b0xyg3 = fun.f_expand(pinp.sheep['i_scan_og1'], d_pos, right_pos=g_pos, condition=mask_dams_inc_g1, axis=g_pos,
                                    condition2=mask_d_offs, axis2=d_pos) #need axis up to p so that p association can be applied
 
-    # ##Chill adjustment based on litter size and scanning. Note: adjusted later so only active if scanning - an alternatve method has been implemented
-    # #todo the scaling across the b1 axis could be improved by including scan_std for the flock & std DSE/hd (replicating the calculations in the PregScanning exp.xl)
-    # #This could account for the number of dams re-allocated based on min(DSE of multiples in exposed, DSE of singles in sheltered)
-    # # The current calculation is all multiples allocated to sheltered paddocks and all singles to exposed paddocks.
-    # chill_adj_b1nwzida0e0b0xyg1 = pinp.sheep['i_chill_adj'] * fun.f_expand(sinp.stock['i_chill_adj_b1'], b1_pos)
-
     ##post weaning management
     wean_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_wean_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
                                               axis=g_pos, condition2=mask_o_dams, axis2=p_pos) #need axis up to p so that p association can be applied
@@ -1427,9 +1421,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     gbal_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(gbal_oa1e1b1nwzida0e0b0xyg1, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     scan_option_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 
-    # ##adjust the chill to represent differential paddock allocation if scanned for multiples or greater - alternative method has been implemented
-    # chill_adj_pa1e1b1nwzida0e0b0xyg1 = chill_adj_b1nwzida0e0b0xyg1 * (scan_option_pa1e1b1nwzida0e0b0xyg1 >= 2)
-    #
     ##drys management, actual value for the Bounds and an estimate for the generator (don't use bound to control generator otherwise introduce randomness)
     dry_retained_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_retained_oa1e1b1nwzida0e0b0xyg1
                                                              , a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
@@ -3154,7 +3145,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ws_a1e1b1nwzida0e0b0xyg1 = ws_pa1e1b1nwzida0e0b0xyg[p] * ws_adj_a1e1b1nwzida0e0b0xyg1
                 
                 
-                ##Chill index for lamb survival (differential allocation to lambing paddocks is included inside the p loop)
+                ##Chill index for lamb survival (has to be calculated inside the p loops to account for differential allocation to sheltered paddocks which needs to know numbers_b1)
                 #todo consider adding p1p2 axes for chill for ws & temp_ave.
                 chill_index_a1e1b1nwzida0e0b0xyg1p0 = (481 + (11.7 + 3.1 * ws_a1e1b1nwzida0e0b0xyg1[..., na] ** 0.5)
                                                     * (40 - temp_ave_pa1e1b1nwzida0e0b0xyg[p,..., na])
@@ -5453,12 +5444,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)   # equation used is based on the yatf system
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    # #Calculate the adjustment to chill based on litter size and differential allocation to sheltered paddocks
-                    # ##Note: Not active if not scanned to identify multiples or litter size.
-                    # TODO remove adj from here.
-                    # chill_adj_b1nwzida0e0b0xyg1 = sfun.f_chill_adjust(numbers_start_dams, dse_per_dam
-                    #                                 , nfoet_b1nwzida0e0b0xyg, scan_option_pa1e1b1nwzida0e0b0xyg1[p])
-                    # chill_index_p0 = chill_index_a1e1b1nwzida0e0b0xyg1p0 + chill_adj_b1nwzida0e0b0xyg1[..., na]
                     temp0, temp1, temp2 = sfun.f_mortality_progeny_cs(cd_yatf, cb1_yatf, w_b_yatf, rc_start_dams, cv_bw_yatf
                                     , w_b_exp_y_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
                                     , chill_index_a1e1b1nwzida0e0b0xyg1p0, nfoet_b1nwzida0e0b0xyg
@@ -5482,11 +5467,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                     , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
-                    # ##Calculate the adjustment to chill based on litter size and differential allocation to sheltered paddocks
-                    # ###Note: Not active if not scanned to identify multiples or litter size.
-                    # chill_adj_b1nwzida0e0b0xyg1 = sfun.f_chill_adjust(numbers_start_dams * period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
-                    #                                 , dse_per_dam, nfoet_b1nwzida0e0b0xyg, scan_option_pa1e1b1nwzida0e0b0xyg1[p])
-                    # chill_index_p0 = chill_index_a1e1b1nwzida0e0b0xyg1p0 + chill_adj_b1nwzida0e0b0xyg1[..., na]
                     temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_pyatf[:,p,...]
                                     , w_b_yatf, w_b_ltw_std_yatf, cv_bw_yatf
                                     , foo_yatf, chill_index_a1e1b1nwzida0e0b0xyg1p0, mobsize_mortality_pa1e1b1nwzida0e0b0xyg1[p]
