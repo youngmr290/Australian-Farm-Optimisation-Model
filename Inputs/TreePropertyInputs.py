@@ -27,5 +27,13 @@ region_tree_inputs = {
         "regional_growth_scalar": 1,
         # tree growth scalar for LMU0 to LMU8
         "lmu_growth_scalar_l": np.array([0.62, 0.62, 0.77, 1, 1, np.nan, np.nan, np.nan, np.nan]),
+    },
+    "SWV": {
+        "estimated_area_trees_l": np.array([0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        "tree_fert_soil_scalar": np.array([1, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]),
+        #growth scalar for region
+        "regional_growth_scalar": 1,
+        # tree growth scalar for LMU0 to LMU8
+        "lmu_growth_scalar_l": np.array([1, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]),
     }
 }
