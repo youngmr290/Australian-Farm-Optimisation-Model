@@ -148,7 +148,7 @@ if test_stock:
     stock.generator(params, r_vals, nv)
     time_list.append(timer()) ; time_was.append("Stock complete")
 if test_trees:
-    trees.f_trees(params, r_vals)
+    trees.f1_trees(params, r_vals)
     time_list.append(timer()) ; time_was.append("Trees complete")
 
 #report the timer results
