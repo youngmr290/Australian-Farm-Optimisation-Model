@@ -2558,7 +2558,7 @@ def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_car
     indx_rank = fun.f_expand(np.arange(np.max(rank_b1) + 1), -len(dse_b1.shape)-1)
     propn_total_dse_ranked_rb1 = propn_total_dse_b1 * (rank_b1 == indx_rank)
 
-    section_allocation_ctab1g = np.zeros((len(shelter_rank_c),) + propn_total_dse_b1.shape)
+    section_allocation_ctab1g = np.zeros((len(shelter_rank_c),) + propn_total_dse_ranked_rb1.shape[1:])
 
     # Loop over each shelter.
     for c_rank in shelter_rank_c:
@@ -2572,14 +2572,14 @@ def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_car
 
             # Calculate how much has already been allocated for these sheep types.
             # If multiple b1 slices are active, they have the same allocation. Therefore take average of b1 for included slices.
-            currently_allocated = np.average(np.sum(section_allocation_ctab1g, axis=0), axis=b1_pos, weights=t_propn_total_dse_b1 > 0)
+            currently_allocated = fun.f_weighted_average(np.sum(section_allocation_ctab1g, axis=0), weights=t_propn_total_dse_b1 > 0, axis=b1_pos, keepdims=True)
 
             # Calculate the new allocation:
             # The allocation is the minimum between what remains to be allocated (1 - currently_allocated)
             # and the fraction of the carrying capacity available for this section,
             # divided by the total sheep proportion for this rank slice.
             new_alloc = np.minimum(1 - currently_allocated,
-                                   propn_carry_capacity / np.sum(t_propn_total_dse_b1, axis=b1_pos, keepdims=True))
+                                   fun.f_divide(propn_carry_capacity, np.sum(t_propn_total_dse_b1, axis=b1_pos, keepdims=True)))
 
             # Update the allocation for the current section (c_rank) and for the active sheep types.
             t_new_alloc = np.broadcast_to(new_alloc, t_propn_total_dse_b1.shape)
