@@ -412,6 +412,8 @@ def f_var_reshape(lp_vars, r_vals):
     ##v_phase residue
     d_keys['keys_qsp7p6zrlt'] = [keys_q, keys_s, keys_p7, keys_p6, keys_z, keys_r, keys_l, keys_t]
     d_keys['keys_qsp7zrl'] = [keys_q, keys_s, keys_p7, keys_z, keys_r, keys_l]
+    ##trees
+    d_keys['keys_l'] = [keys_l]
 
 
     #########
@@ -552,6 +554,11 @@ def f_var_reshape(lp_vars, r_vals):
     v_phase_change_increase_qsp7zrl = f_vars2np(lp_vars, 'v_phase_change_increase', qsp7zrl, mask_season_p7z[:, :, na, na], z_pos=-3)
     d_vars['base']['v_phase_change_increase_qsp7zrl'] = v_phase_change_increase_qsp7zrl
     d_vars['qsz_weighted']['v_phase_change_increase_qsp7zrl'] = v_phase_change_increase_qsp7zrl * prob_qsz[:,:,na,:,na,na]
+
+    ##trees
+    v_tree_area_l = f_vars2np(lp_vars, 'v_tree_area_l', len_l)
+    d_vars['base']['v_tree_area_l'] = v_tree_area_l
+    d_vars['qsz_weighted']['v_tree_area_l'] = v_tree_area_l #doesnt need to be weight by qsz because doesnt vary
 
 
 
@@ -1489,6 +1496,38 @@ def f_overhead_summary(r_vals):
     exp_fix_c = r_vals['fin']['overheads']
     return exp_fix_c
 
+def f_tree_summary(r_vals):
+    ##costs
+    tree_sequestration_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_sequestration_cost_p7z', na_prod=[0, 1, 4]
+                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
+                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
+    tree_biodiversity_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biodiversity_cost_p7z', na_prod=[0, 1, 4]
+                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
+                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
+    tree_biomass_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biomass_cost_p7zl', na_prod=[0, 1]
+                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
+                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
+    tree_estab_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_estab_cost_p7zl', na_prod=[0, 1]
+                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
+                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
+
+    total_cost_qsz_p7 = tree_sequestration_cost_qsz_p7 + tree_biodiversity_cost_qsz_p7 + tree_biomass_cost_qsz_p7 + tree_estab_cost_qsz_p7
+
+    ##income
+    tree_sequestration_income_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_sequestration_income_p7zl', na_prod=[0, 1]
+                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
+                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
+    tree_biodiversity_income_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biodiversity_income_p7z', na_prod=[0, 1, 4]
+                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
+                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
+    tree_biomass_income_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biomass_income_p7zl', na_prod=[0, 1]
+                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
+                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
+
+    total_income_qsz_p7 = tree_sequestration_income_qsz_p7 + tree_biodiversity_income_qsz_p7 + tree_biomass_income_qsz_p7
+
+    return total_cost_qsz_p7, total_income_qsz_p7
+
 def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False, summary3=False):
     '''
     DSE calculation.
@@ -1634,6 +1673,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     slp_estab_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='slp', prod='slp_estab_cost_p7z', na_prod=[0,1,4]
                                              , weights='v_slp_ha_qszl', na_weights=[2]
                                              , keys='keys_qsp7zl', arith=2, index=[0,1,3], cols=[2])
+    tree_cost_qsz_p7, tree_income_qsz_p7 = f_tree_summary(r_vals)
     labour_p7qsz = f_labour_summary(lp_vars, r_vals, option=0)
     exp_fix_p7_z = f_overhead_summary(r_vals).unstack()
     dep_qsp7z = f_dep_summary(lp_vars, r_vals)
@@ -1682,8 +1722,8 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
 
     ##create p/l dataframe
     idx = pd.IndexSlice
-    subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue (net of selling costs and freight)']
-    subtype_exp = ['crop', 'pasture', 'salt land pasture', 'stock husb and infra', 'stock sup', 'stock purchase', 'machinery', 'labour', 'fixed', 'Total expenses']
+    subtype_rev = ['grain', 'sheep sales', 'wool', 'trees', 'Total Revenue (net of selling costs and freight)']
+    subtype_exp = ['crop', 'pasture', 'salt land pasture', 'trees', 'stock husb and infra', 'stock sup', 'stock purchase', 'machinery', 'labour', 'fixed', 'Total expenses']
     subtype_tot = ['1 EBITDA', '2 depreciation', '3 asset value change', '4 profit', '5 opportunity_cost', '6 minRoe', '7 obj'] #numbered to keep them in the correct order
     pnl_rev_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Revenue'], subtype_rev], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
     pnl_exp_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, ['Expense'], subtype_exp], names=['Sequence_year', 'Sequence', 'Season', 'Type', 'Subtype'])
@@ -1701,12 +1741,14 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl.loc[idx[:, :, :,'Revenue','grain'],:] = rev_grain_p7_qsz.T.reindex(pnl_cols, axis=1).values #reindex because  has been sorted alphabetically
     pnl.loc[idx[:, :, :, 'Revenue', 'sheep sales'], :] = stocksale_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Revenue', 'wool'], :] = wool_qszp7.reshape(-1, len_p7)
+    pnl.loc[idx[:, :, :, 'Revenue', 'trees'], :] = tree_income_qsz_p7.values
     pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue (net of selling costs and freight)'], :] = pnl.loc[pnl.index.get_level_values(3) == 'Revenue'].groupby(axis=0,level=(0,1,2)).sum().values
 
     ##expenses - add to p/l table each as a new row
     pnl.loc[idx[:, :, :, 'Expense', 'crop'], :] = crop_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'pasture'], :] = pas_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'salt land pasture'], :] = slp_estab_cost_qsz_p7.add(slp_p7_qsz.T).values
+    pnl.loc[idx[:, :, :, 'Expense', 'trees'], :] = tree_cost_qsz_p7.values
     pnl.loc[idx[:, :, :, 'Expense', 'stock husb and infra'], :] = husbcost_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Expense', 'stock sup'], :] = supcost_qsz_p7.values
     pnl.loc[idx[:, :, :, 'Expense', 'stock purchase'], :] = purchasecost_qszp7.reshape(-1, len_p7)
@@ -1987,7 +2029,7 @@ def f_stock_pasture_summary(r_vals, build_df=True, keys=None, type=None, index=[
     # else:
     #     prod = np.array([prod])     #this was adding another axis if an array was passed in
     ###set prod and weights to 0 if very small number (otherwise it can show up in report when it shouldn't)
-    prod[np.isclose(prod, 0)] = 0
+    prod = np.where(np.isclose(prod, 0), 0, prod) #handles cases where prod is not an array
 
     ##initialise prod_weight array from either r_vals or default value
     if isinstance(prod_weights, str):
@@ -2677,8 +2719,20 @@ def f_emission_summary(lp_vars, r_vals, option=0):
     fuel_sup_emissions_qszp6_fk3 = grain_fed_qszkfp6.unstack([4, 3]).sort_index(axis=1).mul(fuel_sup_emissions_fk3, axis=1)
     fuel_co2e_sup_emissions_qsz = pd.DataFrame(fuel_sup_emissions_qszp6_fk3.unstack([3]).sum(axis=1))
 
+    ##planting and maintaining trees
+    type = 'tree'
+    prod = 'tree_co2e_fuel'
+    na_prod = [0]  #l
+    weights = 'v_tree_area_l'
+    keys = 'keys_l'
+    index = []  #none
+    cols = []
+    fuel_co2e_tree_emissions = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols).squeeze()
+
     total_fuel_co2e_qsz = (fuel_co2e_seeding_qsz + fuel_co2e_contract_seeding_qsz + fuel_co2e_harv_qsz +
-                           fuel_co2e_contract_harv_qsz + fuel_co2e_phase_qsz + fuel_co2e_sup_emissions_qsz)/ 1000 #convert to tonnes. Note it has already been converted to co2e.
+                           fuel_co2e_contract_harv_qsz + fuel_co2e_phase_qsz + fuel_co2e_sup_emissions_qsz +
+                           fuel_co2e_tree_emissions)/ 1000 #convert to tonnes. Note it has already been converted to co2e.
 
     ##Fertiliser
     type = 'crop'
@@ -2691,6 +2745,35 @@ def f_emission_summary(lp_vars, r_vals, option=0):
     fert_co2e_qsz = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                           keys=keys, arith=arith, index=index, cols=cols)
     fert_co2e_qsz = fert_co2e_qsz/1000 #convert to tonnes
+
+    ##trees
+    type = 'tree'
+    prod = 'tree_co2_sequestration_l'
+    weights = 'v_tree_area_l'
+    keys = 'keys_l'
+    index = []  #none
+    cols = []
+    annual_sequestration = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols).squeeze()
+    annual_sequestration = annual_sequestration/ 1000  # convert to tonnes
+
+    ##carbon sold
+    type = 'tree'
+    prod = 'tree_co2e_sold_l'
+    weights = 'v_tree_area_l'
+    keys = 'keys_l'
+    index = []  #none
+    cols = []
+    tree_co2e_sold = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                          keys=keys, arith=arith, index=index, cols=cols).squeeze()
+    tree_co2e_sold = tree_co2e_sold/ 1000  # convert to tonnes
+    ###add qsz axis
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    keys_qsz = [keys_q, keys_s, keys_z]
+    annual_sequestration_qsz = pd.Series(annual_sequestration, index=keys_qsz)
+    tree_co2e_sold_qsz = pd.Series(tree_co2e_sold, index=keys_qsz)
 
     ##calc info for intensity calcs
     ###wool production
@@ -2777,7 +2860,10 @@ def f_emission_summary(lp_vars, r_vals, option=0):
                                                    keys=keys, arith=arith, index=index, cols=cols)
 
     ##tally farm emissions
-    total_farm_co2e_qsz = total_liveco2e_qsz + total_residue_co2e_qsz + n2o_pas_residue_co2e_qsz + total_fuel_co2e_qsz + fert_co2e_qsz
+    total_farm_co2e_qsz = (total_liveco2e_qsz + total_residue_co2e_qsz + n2o_pas_residue_co2e_qsz + total_fuel_co2e_qsz + fert_co2e_qsz
+                           - annual_sequestration + tree_co2e_sold) #if sequestered carbon is sold it can't offset a farms footprint
+
+
 
     ##make final df
     emissions_qsz = pd.concat([total_farm_co2e_qsz,
@@ -2786,14 +2872,18 @@ def f_emission_summary(lp_vars, r_vals, option=0):
                                n2o_pas_residue_co2e_qsz, n2o_pas_residue_co2e_qsz,
                                total_fuel_co2e_qsz,
                                fert_co2e_qsz,
+                               annual_sequestration_qsz,
+                               tree_co2e_sold_qsz,
                                crop_production_qsz,
                                total_clean_wool_qsz, total_meat_qsz_s7], axis=1)
-    emissions_qsz.columns = ['Total Farm co2e (t)',
-                             'Total Livestock co2e (t)', 'Livestock Methane co2e (t)', 'Livestock Nitrous Oxide co2e (t)',
-                             'Total Crop Residue co2e (t)', 'Crop Residue Methane co2e (t)', 'Crop Residue Nitrous Oxide co2e (t)',
-                             'Total Pas Residue co2e (t)', 'Pasture Residue Nitrous Oxide co2e (t)',
-                             'Total Fuel co2e (t)',
-                             'Total Fertiliser co2e (t)',
+    emissions_qsz.columns = ['Total Farm CO2e (t)',
+                             'Total Livestock CO2e (t)', 'Livestock Methane co2e (t)', 'Livestock Nitrous Oxide co2e (t)',
+                             'Total Crop Residue CO2e (t)', 'Crop Residue Methane co2e (t)', 'Crop Residue Nitrous Oxide co2e (t)',
+                             'Total Pas Residue CO2e (t)', 'Pasture Residue Nitrous Oxide co2e (t)',
+                             'Total Fuel CO2e (t)',
+                             'Total Fertiliser CO2e (t)',
+                             'Total Sequestered CO2e (t)',
+                             'Total Sold CO2e (t)',
                              'Crop yield (t)',
                              'Clean Wool Sold (kg)']+meat_cols
     ##weighted average of z axis if required.
@@ -2805,7 +2895,7 @@ def f_emission_summary(lp_vars, r_vals, option=0):
         z_prob_qsz = r_vals['zgen']['z_prob_qsz']
         z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
         emissions_qsz = pd.DataFrame(emissions_qsz.mul(z_prob_qsz, axis=0).sum(axis=0)).T
-    return emissions_qsz
+    return emissions_qsz.round(1)
 
 
 def f_grazing_summary(lp_vars, r_vals):
@@ -3247,6 +3337,73 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
 
     return summary_df
 
+def f_slp_area_analysis(lp_vars, r_vals, trial):
+    '''Returns a simple 1 row summary of the trial (season results are averaged)'''
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'SLP area', 'SR', 'Pas %', 'Sup/DSE'])
+    ##profit - no minroe and asset
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
+    ##slp area
+    slp_area = np.sum(d_vars['qsz_weighted']['v_slp_ha_qszl'])
+    summary_df.loc[trial, 'SLP area'] = round(slp_area,0)
+    ##stocking rate
+    sr = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
+    summary_df.loc[trial, 'SR'] = round(sr, 1)
+    ##pasture %
+    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+    ##supplement
+    total_sup = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
+    pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
+    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+    total_pas_are = np.sum(pas_area_qsz * z_prob_qsz.ravel())
+    summary_df.loc[trial, 'Sup/DSE'] = round(fun.f_divide_float(total_sup * 1000, (total_pas_are * sr)))
+    return summary_df
+
+
+def f_fodder_analysis(lp_vars, r_vals, trial):
+    '''Returns a simple 1 row summary of the trial (season results are averaged)'''
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Cereal fodder area', 'Legume fodder area', 'SR', 'Pas %', 'Sup/DSE'])
+    ##profit - no minroe and asset
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
+    ##fodder area
+    landuse_area_k = f_area_summary(lp_vars, r_vals, option=4, active_z=False).squeeze()
+    summary_df.loc[trial, 'Cereal fodder area'] = round(fun.f1_get_value(landuse_area_k, "of"),0)
+    summary_df.loc[trial, 'Legume fodder area'] = round(fun.f1_get_value(landuse_area_k, "lf"),0)
+    ##stocking rate
+    sr = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
+    summary_df.loc[trial, 'SR'] = round(sr, 1)
+    ##pasture %
+    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+    ##supplement
+    total_sup = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
+    pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
+    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+    total_pas_are = np.sum(pas_area_qsz * z_prob_qsz.ravel())
+    summary_df.loc[trial, 'Sup/DSE'] = round(fun.f_divide_float(total_sup * 1000, (total_pas_are * sr)))
+    return summary_df
+
+
+def f_perennial_analysis(lp_vars, r_vals, trial):
+    '''Returns a simple 1 row summary of the trial (season results are averaged)'''
+    summary_df = pd.DataFrame(index=[trial], columns=['Profit', 'Perennial pas area', 'Total Pas %', 'SR', 'Sup/DSE'])
+    ##profit - no minroe and asset
+    summary_df.loc[trial, 'Profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
+    ##perennial area
+    perennial_pas_landuses = r_vals['rot']['perennial_pas']  # landuse sets
+    landuse_area_k = f_area_summary(lp_vars, r_vals, option=4, active_z=False).squeeze()
+    summary_df.loc[trial, 'Perennial pas area'] = round(fun.f1_get_value(landuse_area_k, perennial_pas_landuses), 0)
+    ##pasture %
+    summary_df.loc[trial, 'Total Pas %'] = f_area_summary(lp_vars, r_vals, option=5)[0]
+    ##stocking rate
+    sr = f_dse(lp_vars, r_vals, method=r_vals['stock']['dse_type'], per_ha=True, summary1=True)[0]
+    summary_df.loc[trial, 'SR'] = round(sr, 1)
+    ##supplement
+    total_sup = f_grain_sup_summary(lp_vars,r_vals,option=4)[0]
+    pas_area_qsz = f_area_summary(lp_vars, r_vals, option=1)
+    z_prob_qsz = r_vals['zgen']['z_prob_qsz']
+    total_pas_are = np.sum(pas_area_qsz * z_prob_qsz.ravel())
+    summary_df.loc[trial, 'Sup/DSE'] = round(fun.f_divide_float(total_sup * 1000, (total_pas_are * sr)))
+    return summary_df
+
 
 def mp_report(lp_vars, r_vals, option=1):
     keys_q = r_vals['zgen']['keys_q']
@@ -3255,22 +3412,31 @@ def mp_report(lp_vars, r_vals, option=1):
     index_qsz = pd.MultiIndex.from_product([keys_q, keys_s, keys_z])
     summary_df = pd.DataFrame(index=[], columns=index_qsz)
 
-    ##ewe sale info - this is done first because the summary table uses some info from these calacs
+    ##ewe sale info - this is done first because the summary table uses some info from these calcs
     ###prog numbers sold
     type = 'stock'
     weights = 'prog_numbers_qsk3k5twzia0xg2'
     keys = 'prog_keys_qsk3k5twzia0xg2'
     arith = 2
-    index = [10,9]  # g, gender
+    index = [4,10,9]  # g, gender
     cols = [0,1,6]  # q,s,z
-    axis_slice = {4:[0,1,1]} #sale suckers
-    numbers_prog_gx_qsz = f_stock_pasture_summary(r_vals, type=type, weights=weights, keys=keys, arith=arith, index=index, cols=cols,
-                                                           axis_slice=axis_slice)
-    ####female prog sold
-    try:
-        female_prog_sold_qsz = numbers_prog_gx_qsz.loc[(['BBB','BBM'],'F'),:].sum(axis=0) #wrapped in try incase BBM are not included in the trial. Note BBT are added with wethers.
+    numbers_prog_tgx_qsz = f_stock_pasture_summary(r_vals, type=type, weights=weights, keys=keys, arith=arith, index=index, cols=cols)
+
+    ####total prog weaned
+    numbers_prog_weaned_qsz = numbers_prog_tgx_qsz.sum(axis=0)
+    ####total prog sold
+    numbers_prog_sold_qsz = numbers_prog_tgx_qsz.loc['t0', :].sum(axis=0)
+
+    ####female prog weaned
+    try:#wrapped in try incase BBM are not included in the trial. Note BBT are added with wethers.
+        female_prog_t_qsz = numbers_prog_tgx_qsz.loc[(slice(None),['BBB','BBM'],'F'),:].groupby(axis=0, level=0).sum()
     except KeyError:
-        female_prog_sold_qsz = numbers_prog_gx_qsz.loc[(['BBB'],'F'),:].sum(axis=0)
+        female_prog_t_qsz = numbers_prog_tgx_qsz.loc[(slice(None),['BBB'],'F'),:].groupby(axis=0, level=0).sum()
+
+    ####prog sold
+    female_prog_sold_qsz = female_prog_t_qsz.loc['t0', :]
+    wether_prog_sold_qsz = numbers_prog_sold_qsz - female_prog_sold_qsz
+
     ###dam numbers sale
     type = 'stock'
     prod = 'dvp_is_sale_tyvzig1'
@@ -3286,6 +3452,7 @@ def mp_report(lp_vars, r_vals, option=1):
     ####dams sold each year
     sale_numbers_dams_qszy = sale_numbers_dams_qszy_tv.sum(axis=1)
     sale_numbers_dams_y_qsz = sale_numbers_dams_qszy.unstack().T
+    sale_numbers_dams_y_qsz = sale_numbers_dams_y_qsz.reindex(sale_numbers_dams_qszy.index.unique(-1)) #put "lambs" back at the top of the y axis.
     ####add female prog that were sold
     sale_numbers_dams_y_qsz.iloc[0] = female_prog_sold_qsz
     sale_numbers_dams_y_qsz = round(sale_numbers_dams_y_qsz, 0)
@@ -3320,7 +3487,6 @@ def mp_report(lp_vars, r_vals, option=1):
     sale_numbers_offs_qsz_tv = sale_numbers_offs_qsz_tv.groupby(sale_numbers_offs_qsz_tv.columns, axis=1).sum()
     sale_numbers_offs_qsz_tv.columns = ['%s mo old' %i for i in sale_numbers_offs_qsz_tv.columns] #add extra info to header name
     ####add wether and crossy prog that were sold (they need to be included in the number of lambs born)
-    wether_prog_sold_qsz = numbers_prog_gx_qsz.sum(axis=0) - female_prog_sold_qsz
     sale_numbers_offs_qsz_tv.rename(columns={'0 mo old': 'Weaning'}, inplace=True)
     sale_numbers_offs_qsz_tv.iloc[:, 0] = wether_prog_sold_qsz
     sale_numbers_offs_tv_qsz = round(sale_numbers_offs_qsz_tv).T
@@ -3351,7 +3517,18 @@ def mp_report(lp_vars, r_vals, option=1):
     graz_idx = list(r_vals['stub']['keys_s2']).index("Graz")
     biomass_fodder_qsz = v_use_biomass_qszs2[:,:,:,graz_idx]
     fodder_percent_qsz = fun.f_divide(biomass_fodder_qsz, total_biomass_qsz) * 100
-    summary_df.loc['Fodder (%)',:] = fodder_percent_qsz.ravel()
+    summary_df.loc['Fodder (%)',:] = fodder_percent_qsz.ravel().round()
+    ##crop grazing
+    prod = np.array([1])
+    type = 'crpgrz'
+    weights = 'crop_consumed_qsfkp6p5zl'
+    keys = 'keys_qsfkp6p5zl'
+    arith = 2
+    index = []
+    cols = [0, 1, 6]  # q,s,z
+    cropgrazed_qsz = f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
+                                                      keys=keys, arith=arith, index=index, cols=cols)
+    summary_df.loc['Grn Crop (t)', :] = round(cropgrazed_qsz.squeeze(),0)
     ###total dams mated
     type = 'stock'
     prod = 'dvp_is_mating_vzig1'
@@ -3364,6 +3541,8 @@ def mp_report(lp_vars, r_vals, option=1):
     axis_slice = {2: [1, None, 1], 3: [2, None, 1]}  # slice off the not mate k1 slice (we only want mated dams) and slice off the sold animals so we dont count dams that are sold at prejoining (there is a sale opp at the start of dvp).
     dams_mated_qsz = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     summary_df.loc['Ewes mated',:] = round(dams_mated_qsz.squeeze(),0)
+    ###prog weaned
+    summary_df.loc['Lambs weaned',:] = round(numbers_prog_weaned_qsz,0)
     ###total ewe sales
     summary_df.loc['Ewe sales',:] = sale_numbers_dams_y_qsz.sum(axis=0)
     ###total wether sales

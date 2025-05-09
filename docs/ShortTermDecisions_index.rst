@@ -2,9 +2,9 @@ Short-term decisions and the impact of current business position on future decis
 =========================================================================================
 To make AFO more useful for individual farm optimisation and short term decision making
 the multi-period framework was developed. The multi-period version of AFO represents the
-starting position of an actual farm with the optimisation over the period of the sequence.
-The final year of the sequence is treated as a single year equilibrium. This final year
-equilibrium ensures that selling all the assets in the final year is not the optimum solution.
+starting position of an actual farm and optimises its management over the following years.
+The final year of the sequence is treated as a single year equilibrium to
+ensure that selling all the assets in the final year is not the optimum solution.
 The MP framework is a repurposed version of the season sequence mode.
 
 The multi-period framework allows users to examine short term decisions such as not mating a class

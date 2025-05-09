@@ -81,6 +81,7 @@ from . import Mach as mac
 from . import RotationPhases as rps
 from . import Sensitivity as sen
 from . import relativeFile
+from . import Trees as tree
 
 ####################
 #general functions #
@@ -330,6 +331,7 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
         fun.f1_make_r_val(r_vals, base_yields_k_z, 'base_yields_k_z')
 
     ##collate other info
+    tree_production_scalar_l = tree.f_adjacent_land_production_scalar()
     biomass_lmus_scalar_k_l = pinp.crop['yield_by_lmu'] #soil yield factor
     soil_production_scalar_zl = zfun.f_seasonal_inp(pinp.crop['i_soil_production_z_l'].T,numpy=False).unstack() #soil scalar by weather-year (to account for the fact that the relative performance of a soil is weather related)
     arable_l = pd.Series(pinp.general['arable'], pinp.general['i_lmu_idx']) #read in arable area df
@@ -348,8 +350,8 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     ###calc biomass from grain harvested
     base_biomass_rkz = grain_yields_rkz.div(harvest_index_k, level=1)
 
-    ##calculate biomass - base biomass * arable area * harv_propn * frost * lmu factor - seeding rate
-    biomass_lmus_scalar_kz_l = biomass_lmus_scalar_k_l.mul(soil_production_scalar_zl, axis=1, level=1).stack(0)
+    ##calculate biomass - base biomass * arable area * harv_propn * frost * lmu factor * tree_prod_scalar - seeding rate
+    biomass_lmus_scalar_kz_l = biomass_lmus_scalar_k_l.mul(soil_production_scalar_zl, axis=1, level=1).stack(0) * tree_production_scalar_l
     biomass_arable_by_soil_kz_l = biomass_lmus_scalar_kz_l.mul(arable_l) #mul arable area to the lmu factor (easy because dfs have the same axis's).
     biomass_rkz_l=biomass_arable_by_soil_kz_l.unstack().reindex(base_biomass_rkz.unstack().index, axis=0, level=1).stack().mul(base_biomass_rkz,axis=0).fillna(0) #reindes and mul with base biomass
     biomass_rkl_z = biomass_rkz_l.stack().unstack(2)
@@ -505,7 +507,10 @@ def f_fert_passes():
     lime_passes_yearly = pinp.crop['i_lime_freq'] #proportion of lime application each year (cost is allocated equally across each year of rotation)
     fixed_fert_passes_rkz_n = pd.DataFrame(lime_passes_yearly, index=fert_passes_rkz_n.index, columns=['lime'], dtype=float)
     ###set fixed fert to 0 for PNC phases
-    fixed_fert_passes_rkz_n.loc[(slice(None), 'a2', slice(None))] = 0
+    try: #incase 'a2' land use is mask out
+        fixed_fert_passes_rkz_n.loc[(slice(None), 'a2', slice(None))] = 0
+    except KeyError:
+        pass
     fert_passes_rkz_n = pd.concat([fert_passes_rkz_n, fixed_fert_passes_rkz_n], axis=1).groupby(axis=1, level=0).sum()
 
     ##calculate fertiliser on non arable pasture paddocks (non-arable crop paddocks don't get crop (see function docs))
@@ -650,7 +655,10 @@ def f_fert_cost(r_vals):
     lime_cost_yearly = pinp.crop['i_lime'] * pinp.crop['i_lime_freq'] #workout the cost of liming each year (cost is allocated equally across each year of rotation)
     fixed_fert_rkz_n = pd.DataFrame(lime_cost_yearly, index=base_fert_rkz_n.index, columns=['lime'], dtype=float)
     ###set fixed fert to 0 for PNC phases
-    fixed_fert_rkz_n.loc[(slice(None), 'a2', slice(None))] = 0
+    try: #incase 'a2' land use is mask out
+        fixed_fert_rkz_n.loc[(slice(None), 'a2', slice(None))] = 0
+    except KeyError:
+        pass
     base_fert_rkz_n = pd.concat([base_fert_rkz_n, fixed_fert_rkz_n], axis=1).groupby(axis=1, level=0).sum()
 
     ##apply sam with k & n axis - without unstacking k (need to keep r & k paired to reduce size)

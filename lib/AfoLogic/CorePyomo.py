@@ -31,9 +31,10 @@ from . import Sensitivity as sen
 from . import Finance as fin
 from . import CropGrazingPyomo as cgzpy
 from . import SaltbushPyomo as slppy
+from . import TreePyomo as treepy
 from . import relativeFile
 
-def coremodel_all(trial_name, model, method, nv, print_debug_output, lp_vars):
+def coremodel_all(trial_name, model, method, nv, print_debug_output, MP_lp_vars):
     '''
     Wraps all of the core model into a function so it can be run multiple times in a loop
 
@@ -82,7 +83,7 @@ def coremodel_all(trial_name, model, method, nv, print_debug_output, lp_vars):
 
     ###this last constraint is for the MP model to constrain the starting point
     if sinp.structuralsa['model_is_MP']:
-        f_con_MP(model, lp_vars)
+        f_con_MP(model, MP_lp_vars)
 
 
     #############
@@ -666,7 +667,7 @@ def f_con_cashflow(model):
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return ((-f1_grain_income(model,q,s,p7,z9,c1) + phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9)
                     + macpy.f_mach_cost(model,q,s,p7,z9) + suppy.f_sup_feeding_cost(model,q,s,p7,z9) + model.p_overhead_cost[p7,z9] + slppy.f_saltbush_cost(model,q,s,z9,p7)
-                    - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1)
+                    - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1) - treepy.f_tree_cashflow(model,p7,z9)
                     - model.v_debit[q,s,c1,p7,z9] + model.v_credit[q,s,c1,p7,z9])
                     + sum((model.v_debit[q,s,c1,p7_prev,z8] - model.v_credit[q,s,c1,p7_prev,z8]) * model.p_parentz_provwithin_season[p7_prev,z8,z9] * ((p7!=p7_start)*1)  #end cashflow doesnot provide start cashflow else unbounded.
                           for z8 in model.s_season_types)) <= 0
@@ -709,7 +710,7 @@ def f_con_totalcap_within(model):
         if pe.value(model.p_mask_childz_within_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s]) and uinp.finance['i_working_capital_constraint_included']:
             return (-f1_grain_wc(model,q,s,c0,p7,z9) + phspy.f_rotation_wc(model,q,s,c0,p7,z9) + labpy.f_labour_wc(model,q,s,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s,c0,p7,z9) + suppy.f_sup_wc(model,q,s,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
-                    - stkpy.f_stock_wc(model,q,s,c0,p7,z9) + f1_start_asset_value(model,q,s,p7,z9)
+                    - stkpy.f_stock_wc(model,q,s,c0,p7,z9) - treepy.f_tree_wc(model,c0,p7,z9) + f1_start_asset_value(model,q,s,p7,z9)
                     - model.v_wc_debit[q,s,c0,p7,z9]
                     + model.v_wc_credit[q,s,c0,p7,z9]
                     + sum((model.v_wc_debit[q,s,c0,p7_prev,z8] - model.v_wc_credit[q,s,c0,p7_prev,z8]) #end working capital doesnot provide start else unbounded constraint.
@@ -753,7 +754,7 @@ def f_con_totalcap_between(model):
         if pe.value(model.p_mask_childz_between_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and uinp.finance['i_working_capital_constraint_included']:
             return (-f1_grain_wc(model,q,s9,c0,p7,z9) + phspy.f_rotation_wc(model,q,s9,c0,p7,z9) + labpy.f_labour_wc(model,q,s9,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s9,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s9,c0,p7,z9) + suppy.f_sup_wc(model,q,s9,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
-                    - stkpy.f_stock_wc(model,q,s9,c0,p7,z9) + f1_start_asset_value(model,q,s9,p7,z9)
+                    - stkpy.f_stock_wc(model,q,s9,c0,p7,z9) - treepy.f_tree_wc(model,c0,p7,z9) + f1_start_asset_value(model,q,s9,p7,z9)
                     - model.v_wc_debit[q,s9,c0,p7,z9]
                     + model.v_wc_credit[q,s9,c0,p7,z9]
                     + sum(sum((model.v_debit[q_prev,s8,c1,p7_prev,z8] - model.v_credit[q_prev,s8,c1,p7_prev,z8]) * model.p_prob_c1[c1]
@@ -942,7 +943,7 @@ def f_objective(model):
                for q in model.s_sequence_year for s in model.s_sequence for c1 in model.s_c1 for z in model.s_season_types
                if pe.value(model.p_wyear_inc_qs[q,s]))
 
-def f_con_MP(model, lp_vars):
+def f_con_MP(model, MP_lp_vars):
     ''''
     These constraints are to bound the variable levels in the first node of the first year in the MP model. This
     is when farm conditions have changed but management has not yet reacted. Therefore, key production management is
@@ -955,7 +956,7 @@ def f_con_MP(model, lp_vars):
         ## give 1% flex on the bnd to allow for any rounding.
         if q == 'q0' and p7 == 'zm0' and len_p7>1:
             return (model.v_phase_area[q,s,p7,z,r,l] <=
-                    lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 1.01)
+                    MP_lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 1.01)
         else:
             return pe.Constraint.Skip
     model.con_MP_rotation_q0_lower = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
@@ -967,7 +968,7 @@ def f_con_MP(model, lp_vars):
         ## give 1% flex on the bnd to allow for any rounding.
         if q == 'q0' and p7 == 'zm0' and len_p7>1:
             return (model.v_phase_area[q,s,p7,z,r,l] >=
-                    lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 0.99)
+                    MP_lp_vars[str('v_phase_area')]['q0',s,p7,z,r,l] * 0.99)
         else:
             return pe.Constraint.Skip
     model.con_MP_rotation_q0_upper = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
@@ -981,7 +982,7 @@ def f_con_MP(model, lp_vars):
         if q == 'q0' and len_p7>1 and (t1=='t0' or t1=='t1' or k2=='NM-0') and model.p_dvp_is_node1_vzg1[v1, z, g1]:
             return (sum(model.v_dams[q, s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
                        for n1 in model.s_nut_dams for w1 in model.s_lw_dams) <=
-                    sum(lp_vars[str('v_dams')]['q0', s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
+                    sum(MP_lp_vars[str('v_dams')]['q0', s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
                         for n1 in model.s_nut_dams for w1 in model.s_lw_dams)*1.05)
         else:
             return pe.Constraint.Skip
@@ -997,7 +998,7 @@ def f_con_MP(model, lp_vars):
         if q == 'q0' and len_p7>1 and (t1=='t0' or t1=='t1' or k2=='NM-0') and model.p_dvp_is_node1_vzg1[v1, z, g1]:
             return (sum(model.v_dams[q, s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
                        for n1 in model.s_nut_dams for w1 in model.s_lw_dams) >=
-                    sum(lp_vars[str('v_dams')]['q0', s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
+                    sum(MP_lp_vars[str('v_dams')]['q0', s, k2, t1, v1, a, n1, w1, z, i, y1, g1]
                         for n1 in model.s_nut_dams for w1 in model.s_lw_dams)*0.95)
         else:
            return pe.Constraint.Skip
@@ -1012,7 +1013,7 @@ def f_con_MP(model, lp_vars):
         if q == 'q0' and len_p7>1 and t3!='t0' and model.p_dvp_is_node1_k3vzxg3[k3,v3,z,x,g3]:
             return (sum(model.v_offs[q, s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
                        for n3 in model.s_nut_offs for w3 in model.s_lw_offs) <=
-                    sum(lp_vars[str('v_offs')]['q0', s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
+                    sum(MP_lp_vars[str('v_offs')]['q0', s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
                        for n3 in model.s_nut_offs for w3 in model.s_lw_offs)*1.01)
         else:
             return pe.Constraint.Skip
@@ -1028,7 +1029,7 @@ def f_con_MP(model, lp_vars):
         if q == 'q0' and len_p7>1 and t3!='t0' and model.p_dvp_is_node1_k3vzxg3[k3,v3,z,x,g3]:
             return (sum(model.v_offs[q, s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
                        for n3 in model.s_nut_offs for w3 in model.s_lw_offs) >=
-                    sum(lp_vars[str('v_offs')]['q0', s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
+                    sum(MP_lp_vars[str('v_offs')]['q0', s, k3, k5, t3, v3, n3, w3, z, i, a, x, y3, g3]
                        for n3 in model.s_nut_offs for w3 in model.s_lw_offs)*0.99)
         else:
             return pe.Constraint.Skip
@@ -1044,7 +1045,7 @@ def f_con_MP(model, lp_vars):
         ##doesnt need upper and lower because there is no LW bnd for prog.
         if q == 'q0' and len_p7>1 and t2=='t0' and model.p_dvp_is_node1_k3zg2[k3,z,g2]:
             return (sum(model.v_prog[q,s,k3, k5, t2, w2, z, i, a, x, g2] for w2 in model.s_lw_prog) ==
-                    sum(lp_vars[str('v_prog')]['q0',s,k3, k5, t2, w2, z, i, a, x, g2] for w2 in model.s_lw_prog))
+                    sum(MP_lp_vars[str('v_prog')]['q0',s,k3, k5, t2, w2, z, i, a, x, g2] for w2 in model.s_lw_prog))
         else:
             return pe.Constraint.Skip
     model.con_MP_prog_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs,
@@ -1067,9 +1068,9 @@ def f_con_MP(model, lp_vars):
     #         list_idx.append(i)
     #         list_v.append(v)
     #         list_s.append(s)
-    #         ###make it so that all q in mp model look at q0 from lp_vars (because lp vars are from SE model that only has q[0])
+    #         ###make it so that all q in mp model look at q0 from MP_lp_vars (because lp vars are from SE model that only has q[0])
     #         s_adjusted = ("q0",) + s[1:]
-    #         list_bnd.append(lp_vars[str(v)][s_adjusted])
+    #         list_bnd.append(MP_lp_vars[str(v)][s_adjusted])
     #         i = i + 1
     #
     # def MP_upper(model, idx):

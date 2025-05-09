@@ -196,6 +196,7 @@ def f_landuses_phases(params,r_vals):
     fun.f1_make_r_val(r_vals,sinp.landuse['N'],'all_canolas')
     fun.f1_make_r_val(r_vals,sinp.landuse['P'],'all_pulses')
     fun.f1_make_r_val(r_vals,sinp.landuse['fodders'],'fodder') #strategical fodder
+    fun.f1_make_r_val(r_vals,sinp.landuse['perennial_pas'],'perennial_pas') #strategical fodder
 
 
 def f_rot_lmu_params(params, r_vals):
@@ -332,6 +333,14 @@ def f_rot_hist_params(params):
     rot_prov = pinp.rot_prov.set_index([0,1])
     params['hist_prov'] = rot_prov.squeeze().to_dict()
     params['hist_req'] = rot_req.squeeze().to_dict()
+
+    ##create array to specify if a phase is continuous
+    ###check if phase provides and requires same history
+    phase_prov_and_req_hist = pd.Series(np.any(np.array(rot_prov.index)==np.array(rot_req.index)[:,na], axis=1), index=rot_req.index)
+    ###make sure phase requires and provides all histories (required because of the general PNC histories)
+    phase_is_continuous = (phase_prov_and_req_hist.groupby(level=0).mean() == 1) * 1
+    params['p_phase_continuous_r'] = phase_is_continuous.to_dict()
+
 
     ##create constraint mask - this is required when some rotations have been masked out (e.g unprofitbale rotation) - when rot are masked out it can result in nothing requiring a history therefore meaning the constraint needs to be skipped
     phases_r = pinp.phases_r.index #list of phases after the rot mask has been applied

@@ -40,7 +40,7 @@ variable to maximise the profit. From here the user can create
 any number of different reports.
 
 Execution flow:
-    #. Exp1.py is run
+    #. RunAfoRaw_Multi.py is run
     #. Inputs and exp.xlsx read
     #. Determine which trials require running. Trials are only run if set to True in exp.xlsx and the trial
        is out of date (code has changed, inputs have changed or the sensitivity values for that trial have

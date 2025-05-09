@@ -1132,7 +1132,7 @@ def f_foetus_nfs(cg, cp, step, c_start, muscle_start, d_muscle, nfoet, w_b_exp_y
     :param nwf_age_f: multiplier of BW to generate the normal weight of the foetus by age
     :param guw_age_f: multiplier of BW to generate the normal weight of the conceptus by age (gravid uterus)
     :param dcdt_age_f: multiplier of conceptus energy content to generate the increase in energy content by age
-    :param bc: parameter for hp from gaining conceptus weight (like kc except accounts for HAF)
+    :param bc: parameter for hp from gaining conceptus weight (like kc except accounts for HAF (heat associated with feeding))
     :param gest_propn: Numpy array, optional, Proportion of the period that the dam is gestating. The default is 0.
     :param rev_trait_value: Dictionary of the production levels for the sheep class and period
     :return:
@@ -1579,6 +1579,8 @@ def f_templc(cc, ffcfw_start, rc_start, sl_start, hp_total, temp_ave, temp_max, 
 def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, hp_total, meme, new, km, kg_supp, kg_fodd, kw, mei_propn_supp
                , mei_propn_herb, temp_ave, temp_max, temp_min, ws, rain_p1, index_m0, mei_propn_milk = 0
                , nec = 0, kc = 1, nel = 0, kl = 1, gest_propn = 0, lact_propn = 0):
+    '''Calculate the impact of heat loss to the environment on the ME required for maintenance.
+    CSIRO calculation uses lower critical temperature'''
 
     ##Calculate me for conceptus growth, milk production & wool growth
     mec = nec / kc
@@ -2496,6 +2498,108 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_rec
     return n_sires
 
 
+# def f_chill_adjust(numbers_b1, dse_per_hd, nfoet_b1, scan):
+#     '''Calculate the adjustment of chill across the b1 axis based on differential allocation of single-,
+#     twin- and triplet-bearing dams to lambing paddocks.
+#     Assumes that the order of priority for allocation to sheltered paddocks is based on largest litter size.
+#     Differential allocation is dependent on the dams being scanned for multiples or litter size
+#     The sheltered paddocks are assumed to be 50% of the total DSE for the pregnant ewes. The dams are allocated
+#     to the sheltered paddocks starting with the higher litter sizes.
+#     Differential nutrition of dams in late pregnancy is not accounted for in these calculations. The adjustment
+#     of chill index for each litter size assumes the numbers of the other litter sizes with the same nutrition
+#     profile (w slice).'''
+#     #todo the function could be improved by including the DSE of dry ewes and the estimated proportion sold at scanning
+
+#     chill_adjust_b1 = np.array([0.0])   #default value to return
+#     if scan > 1:
+#         e1_pos = sinp.stock['i_e1_pos']
+#         b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
+#         a_prepost_b1 = fun.f_expand(sinp.stock['ia_prepost_b1'], b1_pos)
+#         ##Differential allocation requires comparing litter size for the dams (nfoet_b1) relative to the target group (nfoet_b9)
+#         nfoet_b9 = np.swapaxes(nfoet_b1[..., na], -1, b1_pos - 1)
+#         ##variation in chill from the average for sheltered and exposed paddocks
+#         variation = pinp.sheep['i_chill_adj']
+#         ##calculate the number of animals in each b1 slice that can be allocated to sheltered paddocks based on DSEs
+#         n_dse = np.sum(numbers_b1, axis=e1_pos, keepdims=True) * dse_per_hd * (nfoet_b1 > 0)   #only do the calculations for the pregnant dams
+#         ###adjust n_dse for scan level. Add the triplet numbers to the twin slice if scan = 2 and set triplets to 0.
+#         ### Note: this will need tweaking to include empty ewes and scan = 1. Maybe a np.cumsum(reversed b1) would work
+#         n_dse_adjusted = (n_dse + np.roll(n_dse * (nfoet_b1 > scan), -1, axis = b1_pos)) * (nfoet_b1 <= scan)
+#         ##Allocate the number of DSE available in the sheltered paddocks based on higher priority animals
+#         total_shelter_dse = 0.5 * np.sum(n_dse_adjusted, axis=b1_pos, keepdims=True)
+#         higher_priority_dse_b9 = np.sum(n_dse_adjusted[..., na] * (nfoet_b1[..., na] > nfoet_b9), axis=b1_pos-1, keepdims=True)
+#         ###move the b9 axis back to the b1 position and index the singleton b9 to remove
+#         higher_priority_dse = np.swapaxes(higher_priority_dse_b9, -1, b1_pos-1)[..., 0]
+#         dse_sheltered = np.clip(total_shelter_dse - higher_priority_dse, 0, n_dse_adjusted)
+#         propn_sheltered = fun.f_divide(dse_sheltered, n_dse_adjusted)   # f_divide because n_dse can be 0
+#         ###Allocate proportion sheltered to the higher litter sizes if scanning at a lower level, then take_along for the GBAL slices
+#         propn_sheltered = np.maximum.accumulate(propn_sheltered, axis = b1_pos) * (n_dse > 0)
+#         propn_sheltered = np.take_along_axis(propn_sheltered, a_prepost_b1[na,na,na,...], axis=b1_pos)
+#         ##The dams that are in the sheltered paddocks have reduced chill and non-sheltered have an increase in chill.
+#         chill_adjust_b1 = -(variation * propn_sheltered) + (variation * (1 - propn_sheltered))
+#     return chill_adjust_b1
+
+
+def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_carrying_capacity_c, shelter_rank_c):
+    '''Calculate the adjustment of wind speed across the b1 axis based on differential allocation of single-,
+    twin- and triplet-bearing dams to sheltered paddocks.
+
+    Assumes that the order of priority for allocation to sheltered paddocks is based on largest litter size.
+    Differential allocation is dependent on the dams being scanned for multiples or litter size.
+
+    Assumes the offspring are in separate paddocks and not competing for sheltered paddocks.
+
+    Note: This code will not work for scanning for foetal age (Scan == 4). With Scan4 it is necessary to consider if
+    the sheltered paddocks can be utilised for each lambing cycle.
+
+    '''
+
+    # propn of total dse
+    e1_pos = sinp.stock['i_e1_pos']
+    b1_pos = sinp.stock['i_b1_pos']
+    rank_b1 = np.minimum(nfoet_b1, scan[:,0:1,...]) #slice e axis - scan management is the same across e and we don't want e axis in the allocation steps below.
+    rank_b1 = np.max(rank_b1, axis=b1_pos, keepdims=True) - rank_b1  # rank 0 is the highest priority
+    dse_b1 = np.sum(numbers_b1, axis=e1_pos, keepdims=True) * dse_per_hd
+    propn_total_dse_b1 = fun.f_divide(dse_b1, np.sum(dse_b1, axis=b1_pos, keepdims=True))
+    indx_rank = fun.f_expand(np.arange(np.max(rank_b1) + 1), -len(dse_b1.shape)-1)
+    propn_total_dse_ranked_rb1 = propn_total_dse_b1 * (rank_b1 == indx_rank)
+
+    section_allocation_ctab1g = np.zeros((len(shelter_rank_c),) + propn_total_dse_ranked_rb1.shape[1:])
+
+    # Loop over each shelter.
+    for c_rank in shelter_rank_c:
+        # Get the available carrying capacity for the current section (using c_rank as an index).
+        propn_carry_capacity = propn_carrying_capacity_c[c_rank]
+
+        # Loop over each rank slice of the r axis.
+        for b1_rank in range(propn_total_dse_ranked_rb1.shape[0]):
+            # Get the proportion of total DSE made up from each class of sheep in the b1 axis for the current sheep rank.
+            t_propn_total_dse_b1 = propn_total_dse_ranked_rb1[b1_rank, ...]
+
+            # Calculate how much has already been allocated for these sheep types.
+            # If multiple b1 slices are active, they have the same allocation. Therefore, take average of b1 for included slices.
+            currently_allocated = fun.f_weighted_average(np.sum(section_allocation_ctab1g, axis=0), weights=t_propn_total_dse_b1 > 0, axis=b1_pos, keepdims=True)
+
+            # Calculate the new allocation:
+            # The allocation is the minimum between what remains to be allocated (1 - currently_allocated)
+            # and the fraction of the carrying capacity available for this section,
+            # divided by the total sheep proportion for this rank slice.
+            new_alloc = np.minimum(1 - currently_allocated,
+                                   fun.f_divide(propn_carry_capacity, np.sum(t_propn_total_dse_b1, axis=b1_pos, keepdims=True)))
+
+            # Update the allocation for the current section (c_rank) and for the active sheep types.
+            t_new_alloc = np.broadcast_to(new_alloc, t_propn_total_dse_b1.shape)
+            section_allocation_ctab1g[c_rank, t_propn_total_dse_b1 > 0, ...] = t_new_alloc[t_propn_total_dse_b1 > 0]
+
+            # Reduce the available carrying capacity by the amount allocated (weighted by the sheep proportion).
+            propn_carry_capacity = propn_carry_capacity - np.sum(t_propn_total_dse_b1, axis=b1_pos, keepdims=True) * new_alloc
+
+    # return the ave windspeed for each class of stock
+    relative_ws_c = fun.f_expand(relative_ws_c, -len(section_allocation_ctab1g.shape))
+    relative_ws_tab1g = np.sum(relative_ws_c * section_allocation_ctab1g, axis=0)
+    relative_ws_tab1g[np.sum(section_allocation_ctab1g, axis=0)==0] = 1 #animals that aren't allocated (ie with no numbers_start) are allocated to normal paddocks(not that it really matters but looks better when debugging)
+    return relative_ws_tab1g
+
+
 ##################
 #Mortality CSIRO #
 ##################
@@ -2582,8 +2686,8 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     '''Progeny losses due to large progeny or slow birth process (dystocia)
 
     Dystocia definition is a difficult birth that leads to brain damage, which can be due to physical trauma
-    but also lack of oxygen. The difficult birth can be a larger single lamb but it is also quite prevalent
-    in twins not due to large lambs but due to a slow birth because the ewe is lacking energy to push.
+    but also lack of oxygen. The difficult birth can be a larger single lamb, however, it is also quite prevalent
+    in twins due to a slow birth because the ewe is lacking energy to push.
     '''
     ###distribution on w_b & rc_birth - add distribution to ebg_start_p1 and then average (axis =-1)
     w_b_p1p2 = fun.f_distribution7(w_b, cv=cv_weight)[...,na]

@@ -393,6 +393,36 @@ def f_norm_cdf(x, mu, cv=0.2, sd=None):
 #    prob = 1 / (np.exp(-358 / 23 * xstd + 111 * np.arctan(37 / 294 * xstd)) + 1)
     return prob
 
+
+def f_npv_nd(cashflows, discount_rate, axis=0):
+    """
+    Calculate the Net Present Value (NPV) along a specified axis for an N-dimensional array.
+
+    Parameters:
+        cashflows (np.ndarray): N-dimensional array of cashflows.
+        discount_rate (float): Discount rate (e.g., 0.05 for 5%).
+        axis (int): Axis along which time varies (default is 0).
+
+    Returns:
+        np.ndarray: Array of NPVs with the time axis reduced.
+    """
+    cashflows = np.asarray(cashflows)
+    num_periods = cashflows.shape[axis]
+
+    # Create discount factors
+    years = np.arange(num_periods)
+    discount_factors = 1 / (1 + discount_rate) ** years
+
+    # Reshape discount_factors to broadcast along the correct axis
+    shape = [1] * cashflows.ndim
+    shape[axis] = num_periods
+    discount_factors = discount_factors.reshape(shape)
+
+    # Apply discounting and sum along the specified axis
+    discounted = cashflows * discount_factors
+    return np.sum(discounted, axis=axis)
+
+
 def f_distribution7(mean, sd=None, cv=None):
     '''
     ##create a distribution around the mean for a variable that can be applied in any non-linear relationships
@@ -505,6 +535,25 @@ def f_produce_df(data, rows, columns, row_names=None, column_names=None):
         col_index = pd.MultiIndex.from_product(columns, names=column_names)
     return pd.DataFrame(data, index=row_index, columns=col_index)
 
+def f1_get_value(series, key):
+    """
+    Retrieve the value(s) associated with a given key or keys in a Series.
+    If multiple keys are provided, their corresponding values are summed.
+
+    Parameters:
+    series (pd.Series): A Series with keys as the index.
+    key (any or list or set): A single key, or multiple keys in a list or set to search in the Series index.
+
+    Returns:
+    int or float: The sum of the values associated with the key(s) if found, otherwise 0.
+    """
+    # Normalize input to a list for consistency
+    if not isinstance(key, (list, set)):
+        key = [key]
+
+    # Use isin and sum only matching values
+    return series.loc[series.index.isin(key)].sum()
+
 def f_back_transform(x):
     ''' Back transform a value using a derivation of exp(x) / (1 + exp(x))'''
     return 1 / (1 + np.exp(-x))
@@ -603,6 +652,67 @@ def f_solve_cubic_for_logistic_multidim(a, b, c, d):
     cut_off01 = np.log(x_roots)   #todo an error here is most likely due to incorrect specification of the b1[24 or 25] parameters in Universal.xlsx or RR == 0 or LS == 1.0
     return cut_off01
 
+def f_logistic_integral(x, L, k, x0, offset):
+    """
+    Indefinite integral of the logistic function:
+        Y(x) = offset + (L - offset) / [1 + exp(-k*(x - x0))]
+    
+    The antiderivative is:
+        F(x) = offset*x + (L - offset)/k * ln(1 + exp(k*(x - x0))) + C
+    
+    Parameters
+    ----------
+    x : float or array-like
+        The x-value(s) at which to evaluate the antiderivative.
+    L : float
+        Upper plateau of the logistic.
+    k : float
+        Steepness of the logistic transition.
+    x0 : float
+        Midpoint (x-value where logistic is halfway between offset and L).
+    offset : float
+        Lower plateau of the logistic.
+    
+    Returns
+    -------
+    F(x) : float or array-like
+        Value of the indefinite integral at x (up to a constant).
+    """
+    return offset*x + (L - offset)/k * np.log(1 + np.exp(k*(x - x0)))
+
+def f_integral_gauss_tail(x, Y_normal, a, b, c, p, q):
+    """
+    Indefinite integral (antiderivative) of the model:
+      Y(x) = Y_normal + a*exp(-((x-b)/c)**2) - p/(x+q).
+    
+    The result is:
+      Y_normal*x + a*(sqrt(pi)/2)*c*erf((x-b)/c) - p*ln|x+q| + C
+    
+    Parameters
+    ----------
+    x : float or array-like
+        The x-value(s) at which to evaluate the antiderivative.
+    Y_normal : float
+        Baseline offset.
+    a : float
+        Amplitude of the Gaussian term.
+    b : float
+        Center of the Gaussian term.
+    c : float
+        Width of the Gaussian term.
+    p : float
+        Coefficient for the rational term.
+    q : float
+        Shift for the rational term.
+    
+    Returns
+    -------
+    F(x) : float or array-like
+        The indefinite integral evaluated at x (up to a constant).
+    """
+    return (Y_normal * x 
+            + a * (np.sqrt(np.pi)/2) * c * erf((x - b)/c)
+            - p * np.log(np.abs(x + q)))
 
 def f_dynamic_slice(arr, axis, start, stop, step=1, axis2=None, start2=None, stop2=None, step2=1):
     ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
@@ -733,18 +843,27 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
             value = np.maximum(value_min, value + (target - value).mul(sa, axis=axis))
         else:
             value  = np.maximum(value_min, value + (target - value) * sa)
-    ##Type 4 is sar (sensitivity range. sa=-1 returns 0, sa=1 returns 1)
+    ##Type 4 is sar (sensitivity range. sa=-1 returns value_min, sa=0 returns value, sa=1 returns target)
+    ### Note: sa less than -1 or sa greater than +1 continues beyond the range on the same slope
     elif sa_type == 4:
-         value = np.maximum(0, np.minimum(1, value * (1 - np.abs(sa)) + np.maximum(0, sa)))
+        if pandas:
+            #todo add Pandas code to replace the target with value_min where sa<0 (see numpy code below)
+            value = value + (target - value).mul(sa.abs(), axis=axis)
+        else:
+            #if the sa is less than zero then swap the target value and use the absolute value of sa
+            f_update(target, value_min, sa < 0)
+            value = value + (target - value) * np.abs(sa)
     ##Type 5 is sav (return the SA value, '-' is no change)
     elif sa_type == 5:
         try:
             sa=sa.copy()#have to copy the np arrays so that the original sa is not changed
         except:
             pass
-        ###conver to numpy if pandas so f_update works corrrectly (so dtype is handled correctly)
+        ###convert to numpy if pandas so f_update works correctly (so dtype is handled correctly)
         if isinstance(value, pd.DataFrame):
             value.iloc[:,:] = f_update(value.values, sa, sa != '-') #sa has to be object or this give FutureWarning
+        elif isinstance(value, pd.Series):
+            value.iloc[:] = f_update(value.values, sa, sa != '-') #sa has to be object or this give FutureWarning
         else:
             value = f_update(value, sa, sa != '-') #sa has to be object or this give FutureWarning
 
@@ -774,7 +893,7 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
             elif dic == 'sat':
                 sat[(key1,key2)][indices] = value   # last entry in exp.xlsx is used
             elif dic == 'sar':
-                sar[(key1,key2)][indices] = value   # last entry in exp.xlsx is used, could be changed to accumulate
+                sar[(key1,key2)][indices] = sar[(key1,key2)][indices] + value  # if there are multiple instances of the same SA in exp.xlsx they accumulate
             elif dic == 'sav':
                 try:
                     if value != "-": #SAV entries with '-' do not update the SAV. This means that if slices of a SAV overlap in Exp.xl the last non '-' is the value used.
@@ -797,7 +916,7 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
             elif dic == 'sat':
                 sat[key1][indices] = value
             elif dic == 'sar':
-                sar[key1][indices] = value
+                sar[key1][indices] = sar[key1][indices] + value  # if there are multiple instances of the same SA in exp.xlsx they accumulate
             elif dic == 'sav':
                 try:
                     if value != "-": #SAV entries with '-' do not update the SAV. This means that if slices of a SAV overlap in Exp.xl the last non '-' is the value used.
@@ -824,7 +943,7 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
                 sat[(key1,key2)] = value
             elif dic == 'sar':
                 sar[(key1, key2)]  # checks the keys exist. Not required for SA that have indicies.
-                sar[(key1, key2)] = value
+                sar[(key1, key2)] = sar[(key1,key2)] + value
             elif dic == 'sav':
                 sav[(key1, key2)]  # checks the keys exist. Not required for SA that have indicies.
                 try:
@@ -852,7 +971,7 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
                 sat[key1] = value
             elif dic == 'sar':
                 sar[key1]  # checks the keys exist. Not required for SA that have indicies.
-                sar[key1] = value
+                sar[key1] = sar[key1] + value
             elif dic == 'sav':
                 sav[key1]  # checks the keys exist. Not required for SA that have indicies.
                 try:

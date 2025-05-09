@@ -45,6 +45,7 @@ def f1_boundarypyomo_local(params, model):
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
     rot_lobound_inc = np.any(sen.sav['rot_lobound_rl'] != '-')  #controls rot bound
+    tree_area_inc = np.any(sen.sav['bnd_tree_area_l'][lmu_mask] != '-') #control the area of salt land pasture
     slp_area_inc = np.any(sen.sav['bnd_slp_area_l'][lmu_mask] != '-') #control the area of salt land pasture
     sb_upbound_inc = np.any(sen.sav['bnd_sb_consumption_p6'] != '-') #upper bound on the quantity of saltbush consumed
     sup_lobound_inc = False #controls sup feed bound
@@ -63,13 +64,17 @@ def f1_boundarypyomo_local(params, model):
     bnd_propn_dams_mated_inc = propn_mated_inc and not(w_set_inc) #include bnd_propn_mated without a w set.
     bnd_propn_dams_mated_w_inc = propn_mated_inc and w_set_inc #include bnd_propn_mated with a w set.
     bnd_sale_twice_drys_inc = fun.f_sa(False, sen.sav['bnd_sale_twice_dry_inc'], 5) #proportion of drys sold (can be sold at either sale opp)
+    bnd_propn_singles_inc = np.any(sen.sav['min_propn_singles_sold_og1'] != '-') #include bound on the minimum proportion of singles sold
+    bnd_propn_twins_inc = np.any(sen.sav['min_propn_twins_sold_og1'] != '-') #include bound on the minimum proportion of twins sold
     bnd_dry_retained_inc = fun.f_sa(False, np.any(pinp.sheep['i_dry_retained_forced_o']), 5) #force the retention of drys in t[0] (t[1] is handled in the generator.
     sr_bound_inc = np.any(sen.sav['bnd_sr_Qt'] != '-') #controls sr bound
     lw_bound_inc = sen.sav['bnd_lw_change'] != '-' #controls lw bound
     total_pasture_bound_inc = np.any(sen.sav['bnd_total_pas_area_percent_q'] != '-') #bound on total pasture (hence also total crop)
+    pasture_bound_inc = np.any(sen.sav['bnd_pas_area_percent_t'] != '-') #bound area of each pasture type
     legume_area_bound_inc = sen.sav['bnd_total_legume_area_percent'] != '-'  #bound on total legume
     pasture_lmu_bound_inc = np.any(sen.sav['bnd_pas_area_l'] != '-')
     landuse_bound_inc = np.any(sen.sav['bnd_landuse_area_klz'] != '-') #bound on area of each landuse (which is the sum of all the phases for that landuse)
+    cont_phase_bound_inc = np.any(sen.sav['max_yr_cont_k'] != '-') #bound to limit the number of years of a contunuous rotation
     crop_area_bound_inc = np.any(sen.sav['bnd_crop_area_qk1'] != '-') or np.any(sen.sav['bnd_crop_area_percent_qk1'] != '-')  # controls if crop area bnd is included.(which is the sum of all the phases for that crop)
     biomass_graze_bound_inc = np.any(sen.sav['bnd_biomass_graze_k1'] != '-')   # controls if biomass grazed bnd is included.(which is the proportion of crop biomass that is grazed)
     #todo need to make this input below in uinp. Then test the constraint works as expected.
@@ -127,6 +132,23 @@ def f1_boundarypyomo_local(params, model):
                     return pe.Constraint.Skip
             model.con_rotation_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_phases, model.s_lmus, model.s_season_types, rule=rot_lo_bound,
                                                     doc='lo bound for the number of each phase')
+
+
+        ##tree area
+        if tree_area_inc:
+            ###set the bound
+            tree_area_bnd_l = fun.f_sa(np.array([999999],dtype=float), sen.sav['bnd_tree_area_l'][lmu_mask], 5) #999999 is arbitrary default value which mean skip constraint
+            ###ravel and zip bound and dict
+            tree_area = dict(zip(model.s_lmus, tree_area_bnd_l))
+            ###constraint
+            l_p7 = list(model.s_season_periods)
+            def tree_area_bound(model, l):
+                if tree_area[l] != 999999:
+                    return model.v_tree_area_l[l] == tree_area[l]
+                else:
+                    return pe.Constraint.Skip
+            model.con_tree_area_bound = pe.Constraint(model.s_lmus, rule=tree_area_bound,
+                                                    doc='bound for the area of tree plantations on each lmu')
 
 
         ##salt land pasture area
@@ -623,6 +645,99 @@ def f1_boundarypyomo_local(params, model):
                                                       , model.s_gen_merit_dams, model.s_groups_dams, rule=f_propn_drys_sold
                                                       , doc='proportion of dry dams sold each year')
 
+        ##bound to fix a proportion of single (& twin) ewes to be sold. To represent the sale of dry ewes without
+        ### having to uncluster the b axis. The extra proportion of dams to sell (above empty ewes) is a sav[p_min_prop_single-dams_sold].
+        ###build bound if turned on
+        if bnd_propn_singles_inc:
+            '''Constraint forces at least x percent of the single/twin dams to be sold. They have to be sold  
+             before the next prejoining.
+             The idea is to represent selling ewes that fail to rear a lamb without having to uncluster the b axis.
+
+             The assumption is that the dams that GBAL is the same across the w slices because the same propn  
+             must be sold from each w slice.
+
+             This constraint is representing retaining dams that didn't GBAL, except that difference in post weaning LWC aren't represented in the sale animals.'''
+            ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
+            model.p_min_prop_single_dams_sold = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_tol,
+                                                   model.s_gen_merit_dams,
+                                                   model.s_groups_dams, default=0,
+                                                   initialize=params['stock']['p_min_prop_single_dams_sold'])
+
+            l_v1 = list(model.s_dvp_dams)
+            scan_v = list(params['stock']['p_scan_v_dams'])
+            prejoin_v = list(params['stock']['p_prejoin_v_dams'])[1:]  #remove the start dvp, it is not true pre-join.
+            next_prejoin_v = prejoin_v[1:]  #dvp before following prejoining
+
+            ###constraint
+            def f_propn_singles_sold(model, q, s, v, w, z, i, y, g1):
+                '''A maximum proportion of single ewes can be retained, hence forcing sale of the remainder'''
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and v in scan_v[:-1] and model.p_min_prop_single_dams_sold[v, z, i, y, g1] != 0
+                        and any(model.p_mask_dams['11-0', t, v, w, z, g1] == 1 for t in model.s_sale_dams)):  #use 11 numbers at scanning. Don't want to include the last prejoining dvp because there is no sale limit in the last year.
+                    idx_scan = scan_v.index(v)  #which prejoining is the current v
+                    idx_v_next_prejoin = next_prejoin_v[idx_scan]  #the sale must be before the following prejoining
+                    v_sale = l_v1[l_v1.index(idx_v_next_prejoin) - 1]
+                    return sum(model.v_dams[q, s, '11-0', 't2', v_sale, a, n, w, z, i, y, g1]
+                               for a in model.s_wean_times for n in model.s_nut_dams
+                               if pe.value(model.p_mask_dams['11-0', 't2', v_sale, w, z, g1]) == 1
+                               ) <= sum(model.v_dams[q, s, '11-0', t, v, a, n, w, z, i, y, g1] for t in model.s_sale_dams
+                        for a in model.s_wean_times for n in model.s_nut_dams
+                        if pe.value(model.p_mask_dams['11-0', t, v, w, z, g1]) == 1
+                        ) * (1 - model.p_min_prop_single_dams_sold[v, z, i, y, g1])
+                else:
+                    return pe.Constraint.Skip
+
+            model.con_propn_singles_sold = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dvp_dams
+                                                      , model.s_lw_dams, model.s_season_types, model.s_tol
+                                                      , model.s_gen_merit_dams, model.s_groups_dams, rule=f_propn_singles_sold
+                                                      , doc='proportion of single dams sold each year')
+
+
+        ##bound to fix a proportion of single (& twin) ewes to be sold. To represent the sale of dry ewes without
+        ### having to uncluster the b axis. The extra proportion of dams to sell (above empty ewes) is a sav[p_min_prop_single-dams_sold].
+        ###build bound if turned on
+        if bnd_propn_twins_inc:
+            '''Constraint forces at least x percent of the single/twin dams to be sold. They have to be sold  
+             before the next prejoining.
+             The idea is to represent selling ewes that fail to rear a lamb without having to uncluster the b axis.
+
+             The assumption is that the dams that GBAL is the same across the w slices because the same propn  
+             must be sold from each w slice.
+
+             This constraint is representing retaining dams that didn't GBAL, except that difference in post weaning LWC aren't represented in the sale animals.'''
+            ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
+            model.p_min_prop_twin_dams_sold = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_tol,
+                                                   model.s_gen_merit_dams,
+                                                   model.s_groups_dams, default=0,
+                                                   initialize=params['stock']['p_min_prop_twin_dams_sold'])
+
+            l_v1 = list(model.s_dvp_dams)
+            scan_v = list(params['stock']['p_scan_v_dams'])
+            prejoin_v = list(params['stock']['p_prejoin_v_dams'])[1:]  #remove the start dvp, it is not true pre-join.
+            next_prejoin_v = prejoin_v[1:]  #dvp before following prejoining
+
+            ###constraint
+            def f_propn_twins_sold(model, q, s, v, w, z, i, y, g1):
+                '''A maximum proportion of twin ewes can be retained, hence forcing sale of the remainder'''
+                if (pe.value(model.p_wyear_inc_qs[q, s]) and v in scan_v[:-1] and model.p_min_prop_twin_dams_sold[v, z, i, y, g1] != 0
+                        and any(model.p_mask_dams['22-0', t, v, w, z, g1] == 1 for t in model.s_sale_dams)):  #use 11 numbers at scanning. Don't want to include the last prejoining dvp because there is no sale limit in the last year.
+                    idx_scan = scan_v.index(v)  #which prejoining is the current v
+                    idx_v_next_prejoin = next_prejoin_v[idx_scan]  #the sale must be before the following prejoining
+                    v_sale = l_v1[l_v1.index(idx_v_next_prejoin) - 1]
+                    return sum(model.v_dams[q, s, '22-0', 't2', v_sale, a, n, w, z, i, y, g1]
+                               for a in model.s_wean_times for n in model.s_nut_dams
+                               if pe.value(model.p_mask_dams['22-0', 't2', v_sale, w, z, g1]) == 1
+                               ) <= sum(model.v_dams[q, s, '22-0', t, v, a, n, w, z, i, y, g1] for t in model.s_sale_dams
+                        for a in model.s_wean_times for n in model.s_nut_dams
+                        if pe.value(model.p_mask_dams['22-0', t, v, w, z, g1]) == 1
+                        ) * (1 - model.p_min_prop_twin_dams_sold[v, z, i, y, g1])
+                else:
+                    return pe.Constraint.Skip
+
+            model.con_propn_twins_sold = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dvp_dams
+                                                      , model.s_lw_dams, model.s_season_types, model.s_tol
+                                                      , model.s_gen_merit_dams, model.s_groups_dams, rule=f_propn_twins_sold
+                                                      , doc='proportion of twin dams sold each year')
+
         ##bound to force the retention of drys until the dvp when other ewes are sold.
         # The bound is only for t[0] (sale at shearing) t[1] (sale at scanning) is handled in the generator.
         if bnd_dry_retained_inc:
@@ -766,13 +881,15 @@ def f1_boundarypyomo_local(params, model):
             ###setbound using ha of farm area
             crop_area_bound_qk1 = fun.f_sa(crop_area_bound_qk1, sen.sav['bnd_crop_area_qk1'][0:len_q, pinp.crop_landuse_mask_k1], 5)
             crop_area_bound_qk1 = fun.f1_make_pyomo_dict(crop_area_bound_qk1, [keys_q, model.s_crops])
+            model.p_crop_area_bound_qk1 = pe.Param(model.s_sequence_year, model.s_crops, default=0, initialize=crop_area_bound_qk1)
+
             ###constraint
             l_p7 = list(model.s_season_periods)
             def k1_bound(model, q, s, p7, k1, z):
-                if p7 == l_p7[-1] and crop_area_bound_qk1[q,k1]!=99999 and pe.value(model.p_wyear_inc_qs[q, s]):  #bound will not be built if param == 99999
+                if p7 == l_p7[-1] and model.p_crop_area_bound_qk1[q,k1]!=99999 and pe.value(model.p_wyear_inc_qs[q, s]):  #bound will not be built if param == 99999
                     return(
                            sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_landuse_area[r, k1] for r in model.s_phases for l in model.s_lmus)
-                           == crop_area_bound_qk1[q,k1])
+                           == model.p_crop_area_bound_qk1[q,k1])
                 else:
                     return pe.Constraint.Skip
             model.con_crop_area_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_crops, model.s_season_types, rule=k1_bound, doc='bound on total pasture area')
@@ -803,14 +920,32 @@ def f1_boundarypyomo_local(params, model):
             total_pas_area_percent_q = dict(zip(keys_q, total_pas_area_percent_q))
             ###constraint
             l_p7 = list(model.s_season_periods)
-            def pas_bound(model, q, s, p7, z):
+            def total_pas_bound(model, q, s, p7, z):
                 if p7 == l_p7[-1] and total_pas_area_percent_q[q] != 99999 and pe.value(model.p_wyear_inc_qs[q, s]):
                     return (sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_pasture_area[r,t]
                                 for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
                             == sum(model.p_area[l] for l in model.s_lmus) * total_pas_area_percent_q[q])
                 else:
                     return pe.Constraint.Skip
-            model.con_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, rule=pas_bound,doc='bound on total pasture area')
+            model.con_total_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, rule=total_pas_bound,doc='bound on total pasture area')
+
+        ##bnd area of each pasture
+        if pasture_bound_inc:
+            ###setbound  - 99999 is arbitrary default value which mean skip constraint
+            pas_area_percent_t = fun.f_sa(np.array([99999]), sen.sav['bnd_pas_area_percent_t'][pinp.general['pas_inc_t']], 5)
+            keys_t = sinp.general['pastures'][pinp.general['pas_inc_t']]
+            pas_area_percent_t = dict(zip(keys_t, pas_area_percent_t))
+            ###constraint
+            l_p7 = list(model.s_season_periods)
+            def pas_bound(model, q, s, p7, z, t):
+                if p7 == l_p7[-1] and pas_area_percent_t[t] != 99999 and pe.value(model.p_wyear_inc_qs[q, s]):
+                    return (sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_pasture_area[r,t]
+                                for r in model.s_phases for l in model.s_lmus)
+                            == sum(model.p_area[l] for l in model.s_lmus) * pas_area_percent_t[t])
+                else:
+                    return pe.Constraint.Skip
+            model.con_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
+                                                model.s_season_types, model.s_pastures, rule=pas_bound,doc='bound on each pasture area')
 
         ##pasture area by lmu
         ###build bound if turned on
@@ -829,6 +964,23 @@ def f1_boundarypyomo_local(params, model):
                     return pe.Constraint.Skip
             model.con_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, model.s_lmus, rule=pas_bound,doc='bound pasture area by lmu')
 
+
+        ##bound to limit the number of years of cont lucerne (Nov24 inputs are based on 5yrs of lucerne)
+        if cont_phase_bound_inc:
+            ###propn of each landuse that can be in a cont phase
+            max_yr_cont_k = fun.f_sa(np.array([99999]), sen.sav['max_yr_cont_k'][pinp.all_landuse_mask_k], 5)  # 99999 is arbitrary default value which mean skip constraint
+            p_cont_freq = sinp.general['phase_len']/max_yr_cont_k
+            p_cont_freq_k = dict(zip(model.s_landuses, p_cont_freq))
+            ###constraint
+            l_p7 = list(model.s_season_periods)
+            def cont_phase_bound(model, q, s, p7, k, l, z):
+                if p7 == l_p7[-1] and p_cont_freq_k[k]>0.001 and pe.value(model.p_wyear_inc_qs[q, s]):
+                    return(sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_phase_continuous_r[r] * model.p_landuse_area[r, k] for r in model.s_phases)
+                           == p_cont_freq_k[k] * sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_landuse_area[r, k] for r in model.s_phases))
+                else:
+                    return pe.Constraint.Skip
+            model.con_cont_phase_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods,
+                                                    model.s_landuses, model.s_lmus, model.s_season_types, rule=cont_phase_bound, doc='bound on number of years continuous phase can exist for')
 
         ##biomass grazed bound - proportion of the biomass that is produced that is grazed
         ###This could be expanded to handle a sav with a s2 axis. Currently, it only controls the proportion grazed (s2[1])

@@ -1011,7 +1011,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         #axes are qsk2tvaeb9nwziy1g1      b9 axis is shortened b axis: [0,1,2,3]
         option = f_update_default_controls(user_controls, 'lamb_survival', 'option', 0)
         index = f_update_default_controls(user_controls, 'lamb_survival', 'index', [4])  #v
-        cols = f_update_default_controls(user_controls, 'lamb_survival', 'cols', [13,11,0,1,10,7])    #g,i,q,s,z & b9 #report must include the b axis otherwise an error is caused because the axis added after the arith.
+        cols = f_update_default_controls(user_controls, 'lamb_survival', 'cols', [7])    #b9 #report must include the b axis otherwise an error is caused because the axis added after the arith.
         axis_slice = f_update_default_controls(user_controls, 'lamb_survival', 'axis_slice', {})
         reports["lamb_survival"] = rfun.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                              , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -1036,8 +1036,8 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     if report_run.loc['run_dry_propn', 'Run']:
         #axes are qsk2tvanwziy1g1
         option = f_update_default_controls(user_controls, 'dry_propn', 'option', 3)
-        index = f_update_default_controls(user_controls, 'dry_propn', 'index', [4])  #v
-        cols = f_update_default_controls(user_controls, 'dry_propn', 'cols', [11,9,0,1,8])   #g,i,q,s & z (needs t in report if no lp_vars)
+        index = f_update_default_controls(user_controls, 'dry_propn', 'index', [])
+        cols = f_update_default_controls(user_controls, 'dry_propn', 'cols', [])   # (needs t in report if no lp_vars)
         axis_slice = f_update_default_controls(user_controls, 'dry_propn', 'axis_slice', {})
         reports["dry_propn"] = rfun.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols
                                          , axis_slice=axis_slice, lp_vars_inc=lp_vars_inc)
@@ -1424,6 +1424,12 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["cropgrazing"] = rfun.f_cropgrazing_analysis(lp_vars,r_vals,"Summary")
     if report_run.loc['run_flk_structure', 'Run']:
         reports["flk_structure"] = rfun.f_saleage_analysis(lp_vars,r_vals,"Summary")
+    if report_run.loc['run_slp', 'Run']:
+        reports["slp"] = rfun.f_slp_area_analysis(lp_vars,r_vals,"Summary")
+    if report_run.loc['run_fodder', 'Run']:
+        reports["fodder"] = rfun.f_fodder_analysis(lp_vars,r_vals,"Summary")
+    if report_run.loc['run_perennial', 'Run']:
+        reports["perennial"] = rfun.f_perennial_analysis(lp_vars,r_vals,"Summary")
     if report_run.loc['run_mp_summary', 'Run']:
         summary_df, landuse_area_k_qsz, sale_numbers_dams_y_qsz, sale_numbers_offs_tv_qsz = rfun.mp_report(lp_vars,r_vals)
         reports["mp_summary"] = summary_df

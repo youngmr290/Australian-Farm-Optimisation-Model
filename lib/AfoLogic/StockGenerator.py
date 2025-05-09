@@ -49,6 +49,7 @@ from . import StockFunctions as sfun
 from . import EmissionFunctions as efun
 from . import Periods as per
 from . import Exceptions as exc
+from . import Trees as tre
 
 
 # np.seterr(all='raise')
@@ -613,12 +614,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     scan_da0e0b0xyg3 = fun.f_expand(pinp.sheep['i_scan_og1'], d_pos, right_pos=g_pos, condition=mask_dams_inc_g1, axis=g_pos,
                                    condition2=mask_d_offs, axis2=d_pos) #need axis up to p so that p association can be applied
 
-    ##Chill adjustment based on litter size and scanning. Note: adjusted later so only active if scanning
-    #todo the scaling across the b1 axis could be improved by including scan_std for the flock & std DSE/hd (replicating the calculations in the PregScanning exp.xl)
-    #This could account for the number of dams re-allocated based on min(DSE of multiples in exposed, DSE of singles in sheltered)
-    # The current calculation is all multiples allocated to sheltered paddocks and all singles to exposed paddocks.
-    chill_adj_b1nwzida0e0b0xyg1 = pinp.sheep['i_chill_adj'] * fun.f_expand(sinp.stock['i_chill_adj_b1'], b1_pos)
-
     ##post weaning management
     wean_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_wean_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
                                               axis=g_pos, condition2=mask_o_dams, axis2=p_pos) #need axis up to p so that p association can be applied
@@ -663,6 +658,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##estimated propn of dams mated (generator)
     est_prop_dams_mated_og1 = fun.f_sa(np.array([1],dtype=float), sen.sav['est_propn_dams_mated_og1'], 5) #if an estimate is not specified then use 100% is mated.
     est_prop_dams_mated_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(est_prop_dams_mated_og1, left_pos=p_pos, right_pos=-1
+                                                         , condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
+    ##minimum propn of single dams sold (bound) - default is 0.
+    min_prop_singles_sold_og1 = fun.f_sa(np.array([0],dtype=float), sen.sav['min_propn_singles_sold_og1'], 5)
+    min_prop_singles_sold_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(min_prop_singles_sold_og1, left_pos=p_pos, right_pos=-1
+                                                         , condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
+    ##minimum propn of twin dams sold (bound) - default is 0.
+    min_prop_twins_sold_og1 = fun.f_sa(np.array([0],dtype=float), sen.sav['min_propn_twins_sold_og1'], 5)
+    min_prop_twins_sold_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(min_prop_twins_sold_og1, left_pos=p_pos, right_pos=-1
                                                          , condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
 
     ##Shearing date - set to be on the last day of a generator period
@@ -826,6 +829,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ###################################
     ###group independent / feed info  #
     ###################################
+    ##Standard value for number of DSE/hd for dams
+    ###Convert the standard DSE/hd input with p6 axis to DSE/hd in the feed limiting period.
+    dse_group_d = np.sum(pinp.sheep['i_dse_group'] * pinp.sheep['i_wg_propn_p6'][na, :], axis=-1, keepdims=False)
+    dse_group_dnwzida0e0b0xyg = fun.f_expand(dse_group_d, b1_pos)
+    ### convert the DSE from the input classes to the b1 axis
+    a_dams_dsegroup_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['ia_dams_dsegroup_b1'], b1_pos)
+    dse_per_dam = np.take_along_axis(dse_group_dnwzida0e0b0xyg, a_dams_dsegroup_b1nwzida0e0b0xyg, axis=0)
     ##association between b0 and b1
     a_b0_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['ia_b0_b1'],b1_pos)
     ##nfoet expanded
@@ -1475,9 +1485,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     gbal_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(gbal_oa1e1b1nwzida0e0b0xyg1, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     scan_option_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 
-    ##adjust the chill to represent differential paddock allocation if scanned for multiples or greater
-    chill_adj_pa1e1b1nwzida0e0b0xyg1 = chill_adj_b1nwzida0e0b0xyg1 * (scan_option_pa1e1b1nwzida0e0b0xyg1 >= 2)
-
     ##drys management, actual value for the Bounds and an estimate for the generator (don't use bound to control generator otherwise introduce randomness)
     dry_retained_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_retained_oa1e1b1nwzida0e0b0xyg1
                                                              , a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
@@ -1523,7 +1530,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ##mob size
     mobsize_pa1e1b1nwzida0e0b0xyg0 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg0, a_p6_pa1e1b1nwzida0e0b0xyg,0)
-    mobsize_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg1,a_p6_pa1e1b1nwzida0e0b0xyg,0)
+    t_mobsize_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg1,a_p6_pa1e1b1nwzida0e0b0xyg,0)
     mobsize_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg3, a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], 0)
 
     ##select which equation is used for the sheep sim functions for each period
@@ -1538,13 +1545,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     sire_propn_pa1e1b1nwzida0e0b0xyg1g0=sire_propn_pa1e1b1nwzida0e0b0xyg1[..., na] * (a_g0_g1[:,na] == sire_include_idx) #add g0 axis
 
     ##weather
-    ws_pa1e1b1nwzida0e0b0xyg = ws_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
-    rain_pa1e1b1nwzida0e0b0xygp0 = rain_p4a1e1b1nwzida0e0b0xygp0[a_p4_p]
-    temp_ave_pa1e1b1nwzida0e0b0xyg= temp_ave_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
-    temp_max_pa1e1b1nwzida0e0b0xyg= temp_max_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
-    temp_min_pa1e1b1nwzida0e0b0xyg= temp_min_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
-
-
     ws_pa1e1b1nwzida0e0b0xyg = ws_p4a1e1b1nwzida0e0b0xyg[a_p4_p] * (1-a_p4dp_pg) \
                                + ws_p4a1e1b1nwzida0e0b0xyg[(a_p4_p + 1) % 12] * a_p4dp_pg
     rain_pa1e1b1nwzida0e0b0xygp0 = rain_p4a1e1b1nwzida0e0b0xygp0[a_p4_p] * (1-a_p4dp_pg[...,na]) \
@@ -1555,6 +1555,31 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                + temp_max_p4a1e1b1nwzida0e0b0xyg[(a_p4_p + 1) % 12] * a_p4dp_pg
     temp_min_pa1e1b1nwzida0e0b0xyg= temp_min_p4a1e1b1nwzida0e0b0xyg[a_p4_p] * (1-a_p4dp_pg) \
                                + temp_min_p4a1e1b1nwzida0e0b0xyg[(a_p4_p + 1) % 12] * a_p4dp_pg
+
+
+
+    ##ws scalar due to tree belts - best paddocks allocated to multiple bearing ewes
+    #TODO could be hooked up for SLP and existing paddocks that are more sheltered due to bush or other reasons
+    relative_ws_adj, relative_temp_adj, protected_area = tre.f_microclimate_adj()
+    relative_ws_c = np.array([1, relative_ws_adj])
+    propn_section_grazed_cp4 = pinp.sheep['i_propn_section_grazed_p4c'].T
+    propn_pasture = pinp.sheep['i_propn_pas']
+    relative_stocking_rate_c = pinp.sheep['i_relative_stocking_rate_c']
+
+    total_area_pas = np.sum(pinp.general['i_lmu_area']) * propn_pasture #estimate of total pasutre area in ha
+
+    area_pas_tree = protected_area * propn_pasture #pasutre area that is protected by trees - assume that trees are evenly distributed over lmu therefore not all the protected area is pasture
+    area_pas_normal = max(0, total_area_pas - area_pas_tree) #pasutre area that is not protected by trees
+    area_c = np.array([area_pas_normal, area_pas_tree])
+
+    total_relative_carry_capacity_cp4 = area_c[:,na] * relative_stocking_rate_c[:,na] * propn_section_grazed_cp4
+    propn_carry_capacity_cp4 = total_relative_carry_capacity_cp4 / np.sum(total_relative_carry_capacity_cp4, axis = 0, keepdims = True)
+    shelter_rank_c = np.argsort(relative_ws_c) #ranking of the c slices based on the ws
+
+    #expand p4 axis
+    propn_carry_capacity_cp4g = fun.f_expand(propn_carry_capacity_cp4, p_pos)
+    propn_carry_capacity_cpg = propn_carry_capacity_cp4g[:,a_p4_p,:] * (1-a_p4dp_pg) \
+                               + propn_carry_capacity_cp4g[:,(a_p4_p + 1) % 12,:] * a_p4dp_pg
 
     ##feed variation
     # fvp_type_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg1,a_fvp_pa1e1b1nwzida0e0b0xyg1,0)
@@ -1850,14 +1875,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     kw_cs_yg1 = ck_dams[17,...]
     kw_cs_yg2 = ck_yatf[17,...]
     kw_cs_yg3 = ck_offs[17,...]
-    # kw_mu_yg0 = ck_sire[37,...]
-    # kw_mu_yg1 = ck_dams[37,...]
-    # kw_mu_yg2 = ck_yatf[37,...]
-    # kw_mu_yg3 = ck_offs[37,...]
 
     ##Efficiency for conceptus (for CSIRO feeding standards). MU calculated later
     kc_cs_yg1 = ck_dams[8,...]
-    # kc_mu_yg1 = ck_dams[31, ...]
 
     ####################
     #initial conditions#
@@ -2096,14 +2116,6 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     pimi_pa1e1b1nwzida0e0b0xyg1p0 = age_y_adj_pa1e1b1nwzida0e0b0xyg1p0 / ci_dams[8, ..., na]
     ##Age of lamb relative to peak lactation-with minor axis
     lmm_pa1e1b1nwzida0e0b0xyg1p0 = (age_p0_pa1e1b1nwzida0e0b0xyg2p0 + cl_dams[1, ..., na]) / cl_dams[2, ..., na]
-    ##Chill index for lamb survival
-    #todo consider adding p1p2p3 axes for chill for rain, ws & temp_ave.
-    chill_index_pa1e1b1nwzida0e0b0xygp0 = (481 + (11.7 + 3.1 * ws_pa1e1b1nwzida0e0b0xyg[..., na] ** 0.5)
-                                           * (40 - temp_ave_pa1e1b1nwzida0e0b0xyg[..., na])
-                                           + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygp0))
-                                           + chill_adj_pa1e1b1nwzida0e0b0xyg1[..., na])
-    ##Note: the order of these calculations mean that chill_adj is being scaled by sam[chill_index]
-    chill_index_pa1e1b1nwzida0e0b0xygp0 = fun.f_sa(chill_index_pa1e1b1nwzida0e0b0xygp0, sen.sam['chill_index'])
 
     ##Proportion of SRW with age
     srw_age_pa1e1b1nwzida0e0b0xyg0 = 1 - fun.f_weighted_average(1 - np.exp(-cn_sire[1, ..., na] * age_p0_pa1e1b1nwzida0e0b0xyg0p0
@@ -2490,6 +2502,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ############################
     ### ewe mob size calcs     #
     ############################
+    # ## Apply the intermediate sav on mobsize in the period between birth and weaning - temporarily shifted to separate husbandry and mortality
+    # t_mobsize_lambing = fun.f_sa(mobsize_pa1e1b1nwzida0e0b0xyg1, sen.sav['mobsize_lambing'], 5)
+    # mobsize_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(mobsize_pa1e1b1nwzida0e0b0xyg1, t_mobsize_lambing
+    #                                               , period_between_birthwean_pa1e1b1nwzida0e0b0xyg1)
     ### scale the mob size along the b axis with allowance for scanning to identify the litter size
     ### association between axis for input (based on litter size) and scanning during period from birth to weaning when mob size is adjusted
     a_l_pa1e1b1nwzida0e0b0xyg1 = np.minimum(nfoet_b1nwzida0e0b0xyg, scan_management_pa1e1b1nwzida0e0b0xyg1) * period_between_birthwean_pa1e1b1nwzida0e0b0xyg1
@@ -2498,12 +2514,19 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     mobsize_scalar_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mobsize_scalar_b1, a_l_pa1e1b1nwzida0e0b0xyg1, b1_pos)
     ### adjust scalar for the expected proportion of each litter size so that the resulting average mob size == the input
     #### This calculation means that this input can't be used to fudge the average mobsize.
-    #### A constant average mob size means that the mob based husbandry cost does not change.
+    #### A constant average mob size means that the mob based husbandry cost does not change because should have a constant number of mobs.
     mobsize_scalar_pa1e1b1nwzida0e0b0xyg1 = mobsize_scalar_pa1e1b1nwzida0e0b0xyg1 * np.sum(lsln_propn_b1nwzida0e0b0xyg1
                                                     / mobsize_scalar_pa1e1b1nwzida0e0b0xyg1, axis=b1_pos, keepdims=True)
-    ### scale the dam mob size
-    mobsize_pa1e1b1nwzida0e0b0xyg1 = mobsize_pa1e1b1nwzida0e0b0xyg1 * mobsize_scalar_pa1e1b1nwzida0e0b0xyg1
+    ### scale the dam mob size for husbandry (exclude the mobsize scalar until after labour is debugged)
+    mobsize_pa1e1b1nwzida0e0b0xyg1 = t_mobsize_pa1e1b1nwzida0e0b0xyg1 #  * mobsize_scalar_pa1e1b1nwzida0e0b0xyg1
 
+    ## Apply the intermediate sav on mobsize in the period between birth and weaning
+    #todo Debug the labour required that is linked to mobsize at lambing. Mob size is having too much effect on
+    # labour requirements. Shift this code back to the top of this section (20 lines earlier)
+    t_mobsize_lambing = fun.f_sa(t_mobsize_pa1e1b1nwzida0e0b0xyg1, sen.sav['mobsize_lambing'], 5)
+    mobsize_mortality_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(t_mobsize_pa1e1b1nwzida0e0b0xyg1, t_mobsize_lambing
+                                                            , period_between_birthwean_pa1e1b1nwzida0e0b0xyg1)
+    mobsize_mortality_pa1e1b1nwzida0e0b0xyg1 = mobsize_mortality_pa1e1b1nwzida0e0b0xyg1 * mobsize_scalar_pa1e1b1nwzida0e0b0xyg1
     ############################
     ### feed supply calcs      #
     ############################
@@ -3178,6 +3201,25 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 c_day1 = w_b_exp_y_dams * nfoet_b1nwzida0e0b0xyg * ce_day1_f_dams
                 #### allocate the weight if it is prejoining (for f_foetus_nfs())
                 c_start_dams = fun.f_update(c_start_dams, c_day1, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
+
+                ###windspeed
+                ws_adj_a1e1b1nwzida0e0b0xyg1 = sfun.f_ws_adjust(relative_ws_c, numbers_start_dams, dse_per_dam, nfoet_b1nwzida0e0b0xyg,
+                                                                scan_management_pa1e1b1nwzida0e0b0xyg1[p], propn_carry_capacity_cpg[:,p,...],
+                                                                shelter_rank_c)
+                ws_a1e1b1nwzida0e0b0xyg1 = ws_pa1e1b1nwzida0e0b0xyg[p] * ws_adj_a1e1b1nwzida0e0b0xyg1
+
+
+                ##Chill index for lamb survival (has to be calculated inside the p loops to account for differential allocation to sheltered paddocks which needs to know numbers_b1)
+                #todo consider adding p1p2 axes for chill for ws & temp_ave.
+                chill_index_a1e1b1nwzida0e0b0xyg1p0 = (481 + (11.7 + 3.1 * ws_a1e1b1nwzida0e0b0xyg1[..., na] ** 0.5)
+                                                    * (40 - temp_ave_pa1e1b1nwzida0e0b0xyg[p,..., na])
+                                                    + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygp0[p])))
+                                                    # + chill_adj_pa1e1b1nwzida0e0b0xyg1[..., na])
+                ##Note: the order of these calculations mean that chill_adj is being scaled by sam[chill_index]
+                chill_index_a1e1b1nwzida0e0b0xyg1p0 = fun.f_sa(chill_index_a1e1b1nwzida0e0b0xyg1p0, sen.sam['chill_index'])
+                chill_index_a1e1b1nwzida0e0b0xyg1p0 = fun.f_sa(chill_index_a1e1b1nwzida0e0b0xyg1p0, sen.saa['chill_index'], 2)
+
+
 
             ##yatf
             ##note1: most yatf dependent variables are calculated later in the code
@@ -3980,7 +4022,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                 , sl_start_dams, mei_dams, hp_total_cs_dams, meme_cs_dams, new_dams, km_dams
                                 , kg_supp_cs_dams, kg_fodd_cs_dams, kw_cs_yg1, mei_propn_supp_dams, mei_propn_herb_dams
                                 , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                 , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0, mei_propn_milk=mei_propn_milk_dams
                                 , nec=nec_dams, kc=kc_cs_yg1, nel=nel_dams, kl=kl_cs_dams
                                 , gest_propn=gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
@@ -4038,7 +4080,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
                         temp0 = sfun.f_heatloss_nfs(cc_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams
                                                 , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                                 , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                         ## heat_loss needs to be stored even if the equation system is not used so that the equations can be compared
                         heat_loss_damsm0p1 = temp0
@@ -4080,7 +4122,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0 = sfun.f_heatloss_nfs(cc_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams
                                                  , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                 , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                                 , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                                  , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                         ## heat_loss needs to be stored even if the equation system is not used so that the equations can be compared
                         heat_loss_damsm0p1 = temp0
@@ -4241,7 +4283,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         ## calculate lower critical temp because it impacts PI in the next period
                         temp0, temp1 = sfun.f_templc(cc_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams
                                 , hp_total_mu_dams, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                 , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                         if eqn_used:
                             temp_lc_dams = temp0  #temp1 not required here
@@ -4364,7 +4406,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         ## calculate lower critical temp because it impacts PI in the next period
                         temp0, temp1 = sfun.f_templc(cc_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams, hp_total_nfs_dams
                                                    , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                   , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                                   , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                                    , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                         if eqn_used:
                             temp_lc_dams = temp0  #temp1 not required here
@@ -4882,7 +4924,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                             , sl_start_yatf, mei_yatf, hp_total_cs_yatf, meme_cs_yatf, new_yatf, km_yatf
                             , kg_supp_cs_yatf, kg_fodd_cs_yatf, kw_cs_yg2, mei_propn_supp_yatf, mei_propn_herb_yatf
                             , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                             , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0, mei_propn_milk=mei_propn_milk_yatf)
                     #Use CSIRO version of kg & mem in f_lwc_cs() if comparing equations. They are overwritten later if MU or NFS is the eqn_system
                     mem_yatf = temp0
@@ -4899,7 +4941,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
                     temp0 = sfun.f_heatloss_nfs(cc_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf
                                                 , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                                , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                                 , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     heat_loss_yatfm0p1 = temp0
@@ -4913,7 +4955,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
                     temp0 = sfun.f_heatloss_nfs(cc_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf
                                              , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                             , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                             , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                              , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     heat_loss_yatfm0p1 = temp0
@@ -4983,7 +5025,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         level_yatf = temp0
                     temp0, temp1 = sfun.f_templc(cc_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf
                             , hp_total_mu_yatf, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                             , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                     if eqn_used:
                         temp_lc_yatf = temp0  #temp1 not required here
@@ -5024,7 +5066,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                         level_yatf = temp0
                     temp0, temp1 = sfun.f_templc(cc_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, hp_total_nfs_yatf
                                                , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                               , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p]
+                                               , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_a1e1b1nwzida0e0b0xyg1
                                                , rain_pa1e1b1nwzida0e0b0xygp0[p], index_m0)
                     if eqn_used:
                         temp_lc_yatf = temp0  #temp1 not required here
@@ -5468,7 +5510,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0, temp1, temp2 = sfun.f_mortality_progeny_cs(cd_yatf, cb1_yatf, w_b_yatf, rc_start_dams, cv_bw_yatf
                                     , w_b_exp_y_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
-                                    , chill_index_pa1e1b1nwzida0e0b0xygp0[p], nfoet_b1nwzida0e0b0xyg
+                                    , chill_index_a1e1b1nwzida0e0b0xyg1p0, nfoet_b1nwzida0e0b0xyg
                                     , rev_trait_values['yatf'][p], sap_mortalityp_pa1e1b1nwzida0e0b0xyg2[p]
                                     , saa_mortalityx_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
@@ -5491,12 +5533,12 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
                     temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_pyatf[:,p,...]
                                     , w_b_yatf, w_b_ltw_std_yatf, cv_bw_yatf
-                                    , foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygp0[p], mobsize_pa1e1b1nwzida0e0b0xyg1[p]
+                                    , foo_yatf, chill_index_a1e1b1nwzida0e0b0xyg1p0, mobsize_mortality_pa1e1b1nwzida0e0b0xyg1[p]
                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
                                     , sap_mortalityp_pa1e1b1nwzida0e0b0xyg2[p], saa_mortalityx_pa1e1b1nwzida0e0b0xyg1[p])  ##code for absolute BW
                     # temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_pyatf[:,p,...]
                     #                 , w_b_yatf / srw_female_yg2, w_b_ltw_std_yatf / srw_female_yg2, cv_bw_yatf
-                    #                 , foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygp0[p], mobsize_pa1e1b1nwzida0e0b0xyg1[p]
+                    #                 , foo_yatf, chill_index_a1e1b1nwzida0e0b0xyg1p0[p], mobsize_pa1e1b1nwzida0e0b0xyg1[p]
                     #                 , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
                     #                 , sap_mortalityp_pa1e1b1nwzida0e0b0xyg2[p], saa_mortalityx_pa1e1b1nwzida0e0b0xyg1[p])   ##code for BW/SRW
                     if eqn_used:
@@ -6020,7 +6062,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
                 ###sorted index of w. used for condensing.
                 idx_sorted_w_yatf = np.argsort(ffcfw_yatf * condense_w_mask_yatf, axis=w_pos)
-
+                
                 ###mask with a true for the z and w slices with the lightest animal
                 mask_min_lw_wz_yatf = np.isclose(ffcfw_yatf, np.min(ffcfw_yatf, axis=(w_pos, z_pos), keepdims=True)) #use isclose in case small rounding error in lw
                 ###mask with a true for the w slice with the lightest animal after taking the weighted average across z
@@ -8119,20 +8161,27 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##convert p6 to p - this reduces the final array size to save memory (otherwise final array would have p and p6 axis)
     nv_cutoff_upper_ftpzg = np.sum(nv_cutoff_upper_p6ftpzg * (a_p6_pa1e1b1nwzida0e0b0xyg==index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...]), axis=0)
     nv_cutoff_lower_ftpzg = np.sum(nv_cutoff_lower_p6ftpzg * (a_p6_pa1e1b1nwzida0e0b0xyg==index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...]), axis=0)
-    nv_cutoffs_sd_ftpzg = np.sum(nv_cutoffs_sd_p6ftpzg * (a_p6_pa1e1b1nwzida0e0b0xyg==index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...]), axis=0)
 
     ##So that no animals are excluded the lowest cutoff[0] is set to -np.inf and the highest cutoff (excluding confinement pool) is set to np.inf
     nv_cutoff_lower_ftpzg[0, ...] = -np.inf
     nv_cutoff_upper_ftpzg[n_non_confinement_pools - 1, ...] = np.inf
 
     ##allocate each sheep class to a nv group
-    ###Calculate a proportion of the mei & pi that goes in each pool
-    nv_propn_ftpsire = fun.f_norm_cdf(nv_cutoff_upper_ftpzg, nv_tpsire, sd=nv_cutoffs_sd_ftpzg).astype(dtype) \
-                       - fun.f_norm_cdf(nv_cutoff_lower_ftpzg, nv_tpsire, sd=nv_cutoffs_sd_ftpzg).astype(dtype)
-    nv_propn_ftpdams = fun.f_norm_cdf(nv_cutoff_upper_ftpzg, nv_tpdams, sd=nv_cutoffs_sd_ftpzg).astype(dtype)  \
-                       - fun.f_norm_cdf(nv_cutoff_lower_ftpzg, nv_tpdams, sd=nv_cutoffs_sd_ftpzg).astype(dtype)
-    nv_propn_ftpoffs = fun.f_norm_cdf(nv_cutoff_upper_ftpzg[:,:,mask_p_offs_p,...], nv_tpoffs, sd=nv_cutoffs_sd_ftpzg[:,:,mask_p_offs_p,...]).astype(dtype)  \
-                       - fun.f_norm_cdf(nv_cutoff_lower_ftpzg[:,:,mask_p_offs_p,...], nv_tpoffs, sd=nv_cutoffs_sd_ftpzg[:,:,mask_p_offs_p,...]).astype(dtype)
+    # ###Calculate a proportion of the mei & pi that goes in each pool - using normal distribution
+    # nv_cutoffs_sd_ftpzg = np.sum(nv_cutoffs_sd_p6ftpzg * (a_p6_pa1e1b1nwzida0e0b0xyg==index_p6tpa1e1b1nwzida0e0b0xyg[:,na,...]), axis=0)
+    # nv_propn_ftpsire = fun.f_norm_cdf(nv_cutoff_upper_ftpzg, nv_tpsire, sd=nv_cutoffs_sd_ftpzg).astype(dtype) \
+    #                    - fun.f_norm_cdf(nv_cutoff_lower_ftpzg, nv_tpsire, sd=nv_cutoffs_sd_ftpzg).astype(dtype)
+    # nv_propn_ftpdams = fun.f_norm_cdf(nv_cutoff_upper_ftpzg, nv_tpdams, sd=nv_cutoffs_sd_ftpzg).astype(dtype)  \
+    #                    - fun.f_norm_cdf(nv_cutoff_lower_ftpzg, nv_tpdams, sd=nv_cutoffs_sd_ftpzg).astype(dtype)
+    # nv_propn_ftpoffs = fun.f_norm_cdf(nv_cutoff_upper_ftpzg[:,:,mask_p_offs_p,...], nv_tpoffs, sd=nv_cutoffs_sd_ftpzg[:,:,mask_p_offs_p,...]).astype(dtype)  \
+    #                    - fun.f_norm_cdf(nv_cutoff_lower_ftpzg[:,:,mask_p_offs_p,...], nv_tpoffs, sd=nv_cutoffs_sd_ftpzg[:,:,mask_p_offs_p,...]).astype(dtype)
+
+    ###allocate animals to nv pool (this is a simplier method than above - it is used to make the reports cleaner to look at because animal only gets allocated to one nv pool)
+    nv_propn_ftpsire = np.logical_and(nv_tpsire < nv_cutoff_upper_ftpzg, nv_tpsire >= nv_cutoff_lower_ftpzg) * 1
+    nv_propn_ftpdams = np.logical_and(nv_tpdams < nv_cutoff_upper_ftpzg, nv_tpdams >= nv_cutoff_lower_ftpzg) * 1
+    nv_propn_ftpoffs = np.logical_and(nv_tpoffs < nv_cutoff_upper_ftpzg[:,:,mask_p_offs_p,...], nv_tpoffs >= nv_cutoff_lower_ftpzg[:,:,mask_p_offs_p,...]) * 1
+
+
     ###adjust the calculated proportions for the confinement pool. If in confinement then:
     ####set all the slices to 0
     nv_propn_ftpsire = fun.f_update(nv_propn_ftpsire, 0.0, confinementw_tpa1e1b1nwzida0e0b0xyg0)
@@ -9914,9 +9963,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     ###DSE based on SRW or nw (select code below - to switch between SRW & NW requires changing the sire value in pinp)
     ####account for b1 axis effect on dse & select the dse group (note sire and offs don't have b1 axis so simple slice)
-    dse_group_dp6tva1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_dse_group'], z_pos, left_pos2=p_pos - 2, right_pos2=z_pos)
+    dse_group_dp6tva1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_dse_group_dp6z'], z_pos, left_pos2=p_pos - 2, right_pos2=z_pos)
     dse_group_dp6tva1e1b1nwzida0e0b0xyg = zfun.f_seasonal_inp(dse_group_dp6tva1e1b1nwzida0e0b0xyg, numpy=True, axis=z_pos)
-    a_dams_dsegroup_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['ia_dams_dsegroup_b1'], b1_pos)
+    # a_dams_dsegroup_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['ia_dams_dsegroup_b1'], b1_pos)
 
     #### DSE bsed on NW - Using nw doesn't account for the extra MEI of the young growing animals
     #### cumulative total of metabolic nw (unw) over the periods that exist in each p6 (with p6 axis)
@@ -10656,6 +10705,22 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     params['p_prop_twice_dry_dams'] = fun.f1_make_pyomo_dict(prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1, arrays_vziyg1)
     params['p_prejoin_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==prejoin_vtype1] #get the dvp keys which are prejoining (same for all animals hence take slice 0)
     params['p_scan_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==scan_vtype1] #get the dvp keys which are scan (same for all animals hence take slice 0)
+
+    ##minimum proportion of singles that are sold
+    ###convert to p axis
+    min_prop_singles_sold_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(min_prop_singles_sold_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, axis=0) #increments at prejoining
+    ###convert to v axis
+    min_prop_singles_sold_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(min_prop_singles_sold_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact sale propn
+    ###create param
+    params['p_min_prop_single_dams_sold'] = fun.f1_make_pyomo_dict(min_prop_singles_sold_va1e1b1nwzida0e0b0xyg1, arrays_vziyg1)
+
+    ##minimum proportion of twins that are sold
+    ###convert to p axis
+    min_prop_twins_sold_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(min_prop_twins_sold_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, axis=0) #increments at prejoining
+    ###convert to v axis
+    min_prop_twins_sold_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(min_prop_twins_sold_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact sale propn
+    ###create param
+    params['p_min_prop_twin_dams_sold'] = fun.f1_make_pyomo_dict(min_prop_twins_sold_va1e1b1nwzida0e0b0xyg1, arrays_vziyg1)
 
     ##lower bound offs
     ###for fs optimisation lo bnd is across starting w - create param that links starting w with w
@@ -11797,7 +11862,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         from . import PlotViewer as pv  # import here so that read the docs doesn't try to import plotviewer
         print('Interact with the graph generator using the PlotViewer spreadsheet, kill each plot to continue')
     scan_spreadsheet = plots   # argument passed to the StockGen function. True if called from SheepTest
-    # scan_spreadsheet = True    #make line active to generate plots when called from exp.py
+    # scan_spreadsheet = True    #make line active to generate plots when called from RunAfoRaw_Multi.py
     while scan_spreadsheet:
         try:
             yvar1, yvar2, xlabels, wvar, xvar, axes, dimensions, verticals = pv.read_spreadsheet()

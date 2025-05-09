@@ -66,7 +66,7 @@ def f_structural_inp_sa(sinp_defaults):
     Applies sensitivity adjustment to relevant inputs. Note only inputs in StructuralSA sheet can have sensitivities applied.
     After the sensitivities are applied, when using the DSP model, inputs with a feed period index are expanded to
     account for additional feed periods that are added due to season nodes.
-    This function gets called at the beginning of each loop in the exp.py module
+    This function gets called at the beginning of each loop in the RunAfoRaw_Multi.py module
 
     :return: None.
 
@@ -155,6 +155,7 @@ def f_landuse_sets():
     landuse['All']=general['i_idx_k'] #used in reporting and bounds and as index in precalc modules
     landuse['C']=general['i_idx_k1'] #all crops, used in stubble and mach (not used for rotations)
     landuse['All_pas']=general['i_idx_k2'] #used in reporting
+    landuse['perennial_pas']={'u', 'uc', 'x', 'xc', 'j','jc', 't','tc'} #used in reporting
 
     ##next set is used in pasture.py for mobilisation of below ground reserves and phase area
     landuse['pasture_sets']={'annual': {'a', 'a2'
