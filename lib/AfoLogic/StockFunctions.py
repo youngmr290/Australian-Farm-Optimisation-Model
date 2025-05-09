@@ -2544,14 +2544,17 @@ def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_car
     Assumes that the order of priority for allocation to sheltered paddocks is based on largest litter size.
     Differential allocation is dependent on the dams being scanned for multiples or litter size.
 
-    Assumes the offspring are not allocated to sheltered paddocks.
+    Assumes the offspring are in separate paddocks and not competing for sheltered paddocks.
+
+    Note: This code will not work for scanning for foetal age (Scan == 4). With Scan4 it is necessary to consider if
+    the sheltered paddocks can be utilised for each lambing cycle.
 
     '''
 
     # propn of total dse
     e1_pos = sinp.stock['i_e1_pos']
     b1_pos = sinp.stock['i_b1_pos']
-    rank_b1 = np.minimum(nfoet_b1, scan[:,0:1,...]) #slice e axis - scan management is the same across e and we dont want e axis in the allocation steps below.
+    rank_b1 = np.minimum(nfoet_b1, scan[:,0:1,...]) #slice e axis - scan management is the same across e and we don't want e axis in the allocation steps below.
     rank_b1 = np.max(rank_b1, axis=b1_pos, keepdims=True) - rank_b1  # rank 0 is the highest priority
     dse_b1 = np.sum(numbers_b1, axis=e1_pos, keepdims=True) * dse_per_hd
     propn_total_dse_b1 = fun.f_divide(dse_b1, np.sum(dse_b1, axis=b1_pos, keepdims=True))
@@ -2571,7 +2574,7 @@ def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_car
             t_propn_total_dse_b1 = propn_total_dse_ranked_rb1[b1_rank, ...]
 
             # Calculate how much has already been allocated for these sheep types.
-            # If multiple b1 slices are active, they have the same allocation. Therefore take average of b1 for included slices.
+            # If multiple b1 slices are active, they have the same allocation. Therefore, take average of b1 for included slices.
             currently_allocated = fun.f_weighted_average(np.sum(section_allocation_ctab1g, axis=0), weights=t_propn_total_dse_b1 > 0, axis=b1_pos, keepdims=True)
 
             # Calculate the new allocation:
@@ -2591,7 +2594,7 @@ def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_car
     # return the ave windspeed for each class of stock
     relative_ws_c = fun.f_expand(relative_ws_c, -len(section_allocation_ctab1g.shape))
     relative_ws_tab1g = np.sum(relative_ws_c * section_allocation_ctab1g, axis=0)
-    relative_ws_tab1g[np.sum(section_allocation_ctab1g, axis=0)==0] = 1 #animals that arent allocated (ie with no numbers_start) are allocated to normal paddocks(not that it really matters but looks better when debugging)
+    relative_ws_tab1g[np.sum(section_allocation_ctab1g, axis=0)==0] = 1 #animals that aren't allocated (ie with no numbers_start) are allocated to normal paddocks(not that it really matters but looks better when debugging)
     return relative_ws_tab1g
 
 
