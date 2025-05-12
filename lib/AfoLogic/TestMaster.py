@@ -36,7 +36,7 @@ r_vals={}
 ###############
 #User control #
 ###############
-trial = 31   #31 is quick test
+trial = 12   #31 is quick test
 test_pas = False
 test_sup = False
 test_slp = False

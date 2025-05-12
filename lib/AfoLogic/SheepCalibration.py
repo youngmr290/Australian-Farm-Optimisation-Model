@@ -53,7 +53,7 @@ try:
     trial = 0    #If an experiment was passed as an argument then take the first trial in the experiment
 except (IndexError, ValueError) as e:  #in case no arg passed to python specify a trial number
     ## the trial number is value in Col A of target trial in exp.xls. Default is QT (trial 31) but can point to any trial
-    trial = 31   #31 is QT
+    trial = 12   #12 is QT
 
 ######
 #Run #

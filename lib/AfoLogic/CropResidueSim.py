@@ -77,7 +77,7 @@ if __name__=="__main__":
     ###############
     #User control #
     ###############
-    trial = 31   #Count the number of rows (starting at 0) offset from the Default trial
+    trial = 12   #12 = QT. Count the number of rows (starting at 0) offset from the Default trial i.e. the value in Column A
 
     ######
     #Run #
