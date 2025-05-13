@@ -24,6 +24,7 @@ import sys
 from . import Functions as fun
 from . import StructuralInputs as sinp
 from . import relativeFile
+from Inputs import TreePropertyInputs as tinp
 
 na = np.newaxis
 
@@ -172,6 +173,7 @@ def f_select_n_reset_pinp(property, pinp_defaults):
     global feedsupply
     global mvf
     global pasture_inputs
+    global tree
     general = copy.deepcopy(pinp_defaults[property]['general_inp'])
     labour = copy.deepcopy(pinp_defaults[property]['labour_inp'])
     crop = copy.deepcopy(pinp_defaults[property]['crop_inp'])
@@ -187,6 +189,7 @@ def f_select_n_reset_pinp(property, pinp_defaults):
     feedsupply = copy.deepcopy(pinp_defaults[property]['feedsupply_inp'])
     mvf = copy.deepcopy(pinp_defaults[property]['mvf_inp'])
     pasture_inputs = copy.deepcopy(pinp_defaults[property]['pasture_inp'])
+    tree = copy.deepcopy(tinp.region_tree_inputs[property])
 
 
 ########################
@@ -251,6 +254,11 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
     fun.f1_lmuregion_to_lmufarmer(mach, "seeding_fuel_lmu_adj", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(mach, "tillage_maint_lmu_adj", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(mach, "seeding_rate_lmu_adj", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    
+    ##tree
+    fun.f1_lmuregion_to_lmufarmer(tree, "tree_fert_soil_scalar", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(tree, "area_trees_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(tree, "lmu_growth_scalar_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
 
 
 #######################
@@ -386,6 +394,14 @@ def f_property_inp_sa(pinp_defaults):
     ###sat
     ###sar
 
+    ##trees
+    ###sav
+    tree['estimated_area_trees_l'] = fun.f_sa(tree['estimated_area_trees_l'], sen.sav['estimated_area_trees_l'], 5)
+    ###sap
+    ###saa
+    ###sat
+    ###sar
+
     ##salt land pasture
     ###sav
     saltbush['i_saltbush_estab_cost'] = fun.f_sa(saltbush['i_saltbush_estab_cost'], sen.sav['saltbush_estab_cost'], 5)
@@ -442,6 +458,7 @@ def f_property_inp_sa(pinp_defaults):
 
     ##sheep
     ###SAV
+    # sheep['i_chill_adj'] = fun.f_sa(sheep['i_chill_adj'], sen.sav['chill_variation'], 5)
     sheep['i_date_shear_sixg0'] = fun.f_sa(sheep['i_date_shear_sixg0'], sen.sav['date_shear_isxg0'], 5)
     sheep['i_date_shear_sixg1'] = fun.f_sa(sheep['i_date_shear_sixg1'], sen.sav['date_shear_isxg1'], 5)
     sheep['i_date_shear_sixg3'] = fun.f_sa(sheep['i_date_shear_sixg3'], sen.sav['date_shear_isxg3'], 5)
@@ -482,6 +499,8 @@ def f_property_inp_sa(pinp_defaults):
     feedsupply['i_feedsupply_adj_options_r2p'] = fun.f_sa(feedsupply['i_feedsupply_adj_options_r2p'], sen.saa['feedsupply_adj_r2p'], 2)
     ###sat
     ###sar
+    feedsupply['i_feedsupply_options_r1j2p'] = fun.f_sa(feedsupply['i_feedsupply_options_r1j2p']
+                                                , sen.sar['feedsupply_r1jp'], 4, value_min = 0.0, target = 13.0)
 
     ##mask out unrequired nodes dates - nodes are removed if there are double ups (note this used to remove nodes where no season was identified but there are cases when we want a node but no identification eg EWW)
     ## includes the masked out season in the test below. This is to remove randomness if comparing with a different season mask. If a season is removed we dont want the number of node periods to change.
@@ -530,7 +549,7 @@ def f1_expand_p6():
     sheep['i_mobsize_sire_zp6i'] = np.take_along_axis(sheep['i_mobsize_sire_zp6i'], a_p6std_zp6[...,na], axis=1)
     sheep['i_mobsize_dams_zp6i'] = np.take_along_axis(sheep['i_mobsize_dams_zp6i'], a_p6std_zp6[...,na], axis=1)
     sheep['i_mobsize_offs_zp6i'] = np.take_along_axis(sheep['i_mobsize_offs_zp6i'], a_p6std_zp6[...,na], axis=1)
-    sheep['i_dse_group'] = np.take_along_axis(sheep['i_dse_group'][:,:,na], a_p6std_p6z[na,:,:], axis=1)
+    sheep['i_dse_group_dp6z'] = np.take_along_axis(sheep['i_dse_group'][:,:,na], a_p6std_p6z[na,:,:], axis=1)
     sheep['i_wg_propn_p6z'] = np.take_along_axis(sheep['i_wg_propn_p6'][:,na], a_p6std_p6z, axis=0)
 
     ####crop grazing
@@ -653,6 +672,11 @@ def f1_mask_lmu():
     f1_do_mask_lmu(mach, "seeding_fuel_lmu_adj", lmu_axis=0)
     f1_do_mask_lmu(mach, "tillage_maint_lmu_adj", lmu_axis=0)
     f1_do_mask_lmu(mach, "seeding_rate_lmu_adj", lmu_axis=0)
+    
+    ##tree
+    f1_do_mask_lmu(tree, "tree_fert_soil_scalar", lmu_axis=0)
+    f1_do_mask_lmu(tree, "estimated_area_trees_l", lmu_axis=0)
+    f1_do_mask_lmu(tree, "lmu_growth_scalar_l", lmu_axis=0)
 
 def f1_do_mask_landuse(dict, key, landuse_axis_type, landuse_axis):
     '''

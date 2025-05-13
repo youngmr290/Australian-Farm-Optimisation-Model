@@ -261,10 +261,20 @@ def create_sa():
     ##SAR
 
     ####################
+    #Trees             #
+    ####################
+    ##SAV
+    sav['estimated_area_trees_l'] = np.full(len_l, '-', dtype=object)  #control estimated area of trees on each lmu
+    ##SAM
+    ##SAP
+    ##SAA
+    ##SAT
+    ##SAR
+
+    ####################
     #Salt land pasture #
     ####################
     ##SAV
-    sav['slp_inc'] = '-'  #control if salt land pasture is included
     sav['saltbush_estab_cost'] = '-'  #initial establishment costs of saltbush
     sav['understory_estab_cost'] = '-'  #initial establishment costs of understory
     sav['saltbush_success'] = '-'  #success of establishment
@@ -419,6 +429,9 @@ def create_sa():
     sav['period_is_report_p'] = np.full(500, '-', dtype=object)  #SA to adjust the periods reported in ebw, wbe & fat '_cut' reports
     sav['LTW_loops_increment'] = '-'                  #SA to Increment the number of LTW loops carried out in the code. The base is 2 loops with 0 increment but if using pkl fs or ltw_adj is 0 then base is 0 loops.
     sav['offs_sale_opportunities'] = '-'              #offspring sale opportunities per dvp (if using method 1)
+    sav['chill_variation'] = '-'                      #The variation below and above the average for sheltered and exposed paddocks.
+    sav['mobsize_lambing'] = '-'    #SA to change the average mobsize of dams at lambing
+    sav['mobsize_scalar_l0'] = np.full(len_l0, '-', dtype=object)                                   #SA to change the relative mob size based on litter size during period_between_birthwean
     ##SAM
     sam['kg_adult'] = 1.0                             #energy efficiency of adults (zf2==1)
     sam['mr_adult'] = 1.0                             #Maintenance requirement of adults (zf2==1)
@@ -432,7 +445,7 @@ def create_sa():
     sam['LTW_offs'] = 1.0                       #adjust impact of lifetime wool fleece effects
     sam['pi_post_adult'] = 1.0                        #Post loop potential intake of adults (zf2==1)
     sam['pi_post_yatf'] = 1.0                        #Post loop potential intake of yatf
-    sam['chill_index'] = 1.0                        #intermediate sam on chill index - impact on lamb survival.
+    sam['chill_index'] = 1.0                        #intermediate sam on chill index. Impacts lamb survival only, no effect on ME requirements.
     sam['heat_loss'] = 1.0                          #intermediate sam on heat loss - impact on energy requirements (set to 0 in REV analyses)
     sam['rr_og1'] = np.ones(pinp.sheep['i_scan_og1'].shape, dtype='float64')    # reproductive rate by age. Use shape that has og1
     sam['wean_redn_ol0g2'] = np.ones((len_o, len_l0, len_g2), dtype='float64')  #Adjust the number of yatf transferred at weaning - this is a high level sa, it impacts within a calculation not on an input
@@ -454,6 +467,7 @@ def create_sa():
     saa['date_born1st_iog'] = np.zeros(pinp.sheep['i_date_born1st_iog2'].shape, dtype=int)  #SA to adjust lambing date (used for ewe lambs).
     saa['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype='float64')  #SA value for feedsupply.
     saa['feedsupply_adj_r2p'] = np.zeros(pinp.feedsupply['i_feedsupply_adj_options_r2p'].shape, dtype='float64')  #SA value for feedsupply adjustment.
+    saa['chill_index'] = 0.0                        #intermediate saa on chill index. Impacts lamb survival only, no effect on ME requirements.
     saa['littersize_og1'] = np.zeros((len_o, len_g1), dtype='float64')   #sa to the litter size this changes the propn of singles/twins and trips whilst keeping propn empty the same.
     saa['conception_og1'] = np.zeros((len_o, len_g1), dtype='float64')   #sa to adjust the proportion of ewes that are empty whilst keeping litter size (number of lambs / pregnant ewes) the same
     saa['preg_increment_ol0g1'] = np.zeros((len_o, len_l0, len_g1), dtype='float64')   #sa to adjust the conception of an individual b1 slice at conception, so that the value of an extra lamb conceived of a given birth type can be calculated. a value of 1 would transfer all available animals into the target slice
@@ -466,6 +480,7 @@ def create_sa():
     saa['feedsupply_adj_offs_p10'] = np.zeros((3), dtype='float64') #user offs fs adjuster - used in web app (simplified version of feedsupply_adj_r2p)
     ##SAT
     ##SAR
+    sar['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype='float64')  #SA value for feedsupply.
 
     #####################
     ##stock parameters  #
@@ -504,6 +519,9 @@ def create_sa():
     saa['nlb_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT.
     saa['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
     saa['ss'] = 0.0                    #staple strength (adjust SS in sgen end of period)
+    saa['lss'] = 0.0                    #lamb survival of singles. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['lstw'] = 0.0                    #lamb survival of twins. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
+    saa['lstr'] = 0.0                    #lamb survival of triplets. This SA alters the BTRT of the initial animals, it does not alter the calculation of lamb mortality. Therefore, both need to be used.
 
     ##SAT
     sat['cb0_c2'] = np.zeros(uinp.parameters['i_cb0_c2'].shape, dtype='float64')  #BTRT params for genotypes
@@ -545,6 +563,7 @@ def create_sa():
     ##########
     ##SAV
     sav['bnd_slp_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of slp on each lmu
+    sav['bnd_tree_area_l'] = np.full(len_l, '-', dtype=object)  #control the area of trees on each lmu
     sav['bnd_sb_consumption_p6'] = np.full(len(pinp.period['i_fp_idx']), '-', dtype=object)  #upper bnd on the amount of sb consumed
     sav['bnd_crop_area_qk1'] = np.full((len_Q, len_crop_k), '-', dtype=object)  #crop area for bound. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
     sav['bnd_crop_area_percent_qk1'] = np.full((len_Q, len_crop_k), '-', dtype=object)  #crop area percent of farm area. if all values are '-' the bnd won't be used (there is not bnd_inc control for this one)
@@ -564,6 +583,8 @@ def create_sa():
     sav['est_drys_retained_birth_o'] = np.full(pinp.sheep['i_drys_retained_birth_est_o'].shape, '-', dtype=object)   #Estimate of the propn of drys sold at birth
     sav['bnd_sale_twice_dry_inc'] = '-'   #SA to include the bound which forces twice dry dams to be sold
     sav['bnd_twice_dry_propn'] = '-'   #SA to change twice dry dam proportion
+    sav['min_propn_singles_sold_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to control the proportion of singles sold (used to approximate sale of dry ewes)
+    sav['min_propn_twins_sold_og1'] = np.full((len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to control the proportion of twins sold (used to approximate sale of dry ewes)
     sav['bnd_total_dams'] = '-'   #control the total number of dams at prejoining
     sav['lobnd_across_startw'] = False   #control if dam and offs lower bound is across start w (default is False, use True in fs optimisation so each start w is forced to have numbers).
     sav['bnd_lo_dam_inc'] = '-'   #control if dam lower bound is on.

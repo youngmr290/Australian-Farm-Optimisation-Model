@@ -31,6 +31,7 @@ from . import Sensitivity as sen
 from . import Finance as fin
 from . import CropGrazingPyomo as cgzpy
 from . import SaltbushPyomo as slppy
+from . import TreePyomo as treepy
 from . import relativeFile
 
 def coremodel_all(trial_name, model, method, nv, print_debug_output, MP_lp_vars):
@@ -666,7 +667,7 @@ def f_con_cashflow(model):
         if pe.value(model.p_wyear_inc_qs[q, s]) and pe.value(model.p_mask_season_p7z[p7,z9]):
             return ((-f1_grain_income(model,q,s,p7,z9,c1) + phspy.f_rotation_cost(model,q,s,p7,z9) + labpy.f_labour_cost(model,q,s,p7,z9)
                     + macpy.f_mach_cost(model,q,s,p7,z9) + suppy.f_sup_feeding_cost(model,q,s,p7,z9) + model.p_overhead_cost[p7,z9] + slppy.f_saltbush_cost(model,q,s,z9,p7)
-                    - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1)
+                    - stkpy.f_stock_cashflow(model,q,s,p7,z9,c1) - treepy.f_tree_cashflow(model,p7,z9)
                     - model.v_debit[q,s,c1,p7,z9] + model.v_credit[q,s,c1,p7,z9])
                     + sum((model.v_debit[q,s,c1,p7_prev,z8] - model.v_credit[q,s,c1,p7_prev,z8]) * model.p_parentz_provwithin_season[p7_prev,z8,z9] * ((p7!=p7_start)*1)  #end cashflow doesnot provide start cashflow else unbounded.
                           for z8 in model.s_season_types)) <= 0
@@ -709,7 +710,7 @@ def f_con_totalcap_within(model):
         if pe.value(model.p_mask_childz_within_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s]) and uinp.finance['i_working_capital_constraint_included']:
             return (-f1_grain_wc(model,q,s,c0,p7,z9) + phspy.f_rotation_wc(model,q,s,c0,p7,z9) + labpy.f_labour_wc(model,q,s,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s,c0,p7,z9) + suppy.f_sup_wc(model,q,s,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
-                    - stkpy.f_stock_wc(model,q,s,c0,p7,z9) + f1_start_asset_value(model,q,s,p7,z9)
+                    - stkpy.f_stock_wc(model,q,s,c0,p7,z9) - treepy.f_tree_wc(model,c0,p7,z9) + f1_start_asset_value(model,q,s,p7,z9)
                     - model.v_wc_debit[q,s,c0,p7,z9]
                     + model.v_wc_credit[q,s,c0,p7,z9]
                     + sum((model.v_wc_debit[q,s,c0,p7_prev,z8] - model.v_wc_credit[q,s,c0,p7_prev,z8]) #end working capital doesnot provide start else unbounded constraint.
@@ -753,7 +754,7 @@ def f_con_totalcap_between(model):
         if pe.value(model.p_mask_childz_between_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]) and uinp.finance['i_working_capital_constraint_included']:
             return (-f1_grain_wc(model,q,s9,c0,p7,z9) + phspy.f_rotation_wc(model,q,s9,c0,p7,z9) + labpy.f_labour_wc(model,q,s9,c0,p7,z9) + slppy.f_saltbush_wc(model,q,s9,z9,c0,p7)
                     + macpy.f_mach_wc(model,q,s9,c0,p7,z9) + suppy.f_sup_wc(model,q,s9,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
-                    - stkpy.f_stock_wc(model,q,s9,c0,p7,z9) + f1_start_asset_value(model,q,s9,p7,z9)
+                    - stkpy.f_stock_wc(model,q,s9,c0,p7,z9) - treepy.f_tree_wc(model,c0,p7,z9) + f1_start_asset_value(model,q,s9,p7,z9)
                     - model.v_wc_debit[q,s9,c0,p7,z9]
                     + model.v_wc_credit[q,s9,c0,p7,z9]
                     + sum(sum((model.v_debit[q_prev,s8,c1,p7_prev,z8] - model.v_credit[q_prev,s8,c1,p7_prev,z8]) * model.p_prob_c1[c1]

@@ -459,7 +459,7 @@ def f_fuel_emissions(diesel_used):
     For some reason in this function, ef also converts to co2e.
 
     :param diesel_used: L of diesel used by one unit of a given decision variable.
-    :return:
+    :return: kg of co2e
     '''
 
     co2e_ef_diesel_co2 = uinp.emissions['i_ef_diesel_co2']  # Scope 1 Emission Factor CO2-e / L

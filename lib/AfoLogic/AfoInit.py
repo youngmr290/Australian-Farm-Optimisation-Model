@@ -52,6 +52,7 @@ from . import CropGrazingPyomo as cgzpy
 from . import SeasonPyomo as zgenpy
 from . import FeedSupplyStock as fsstk
 from . import SaltbushPyomo as slppy
+from . import TreePyomo as treepy
 
 
 #########################
@@ -124,6 +125,7 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     params['lab']={}
     params['crplab']={}
     params['sup']={}
+    params['tree']={}
     params['stock']={}
     params['slp']={}
     params['stub']={}
@@ -140,6 +142,7 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     r_vals['lab']={}
     r_vals['crplab']={}
     r_vals['sup']={}
+    r_vals['tree']={}
     r_vals['stock']={}
     r_vals['slp']={}
     r_vals['stub']={}
@@ -157,6 +160,7 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     lfixpy.labfx_precalcs(params['labfx'],r_vals['labfx'])
     labpy.lab_precalcs(params['lab'],r_vals['lab'])
     lphspy.crplab_precalcs(params['crplab'],r_vals['crplab'])
+    treepy.tree_precalcs(params['tree'],r_vals['tree'])
     spy.stock_precalcs(params['stock'],r_vals['stock'],nv,pkl_fs_info, pkl_fs)
     suppy.sup_precalcs(params['sup'],r_vals['sup'], nv) #sup must be after stock because it uses nv dict which is populated in stock.py
     cgzpy.cropgraze_precalcs(params['crpgrz'],r_vals['crpgrz'], nv) #cropgraze must be after stock because it uses nv dict which is populated in stock.py
@@ -172,6 +176,7 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     crtmod.sets(model, nv) #certain sets have to be updated each iteration of exp - has to be first since other modules use the sets
     zgenpy.f1_seasonpyomo_local(params['zgen'], model) #has to be first since builds params used in other modules
     rotpy.f1_rotationpyomo(params['rot'], model, MP_lp_vars)
+    treepy.f1_treepyomo_local(params['tree'], model)
     phspy.f1_croppyomo_local(params['crop'], model)
     macpy.f1_machpyomo_local(params['mach'], model)
     finpy.f1_finpyomo_local(params['fin'], model)
