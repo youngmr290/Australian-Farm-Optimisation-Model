@@ -20,7 +20,10 @@ import os.path
 
 from . import Functions as fun
 from . import PropertyInputs as pinp
-from Inputs import TreeUniversalInputs as tinp
+try:
+    from Inputs import TreeUniversalInputs as tinp #raw version
+except ImportError:
+    from module.afo.Inputs import TreeUniversalInputs as tinp  # Web app case
 
 
 def f_reshape_uinp_defaults(uinp_defaults):

@@ -24,7 +24,10 @@ import sys
 from . import Functions as fun
 from . import StructuralInputs as sinp
 from . import relativeFile
-from Inputs import TreePropertyInputs as tinp
+try:
+    from Inputs import TreePropertyInputs as tinp  # Local case
+except ImportError:
+    from module.afo.Inputs import TreePropertyInputs as tinp  # Web app case
 
 na = np.newaxis
 
@@ -257,7 +260,7 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
     
     ##tree
     fun.f1_lmuregion_to_lmufarmer(tree, "tree_fert_soil_scalar", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
-    fun.f1_lmuregion_to_lmufarmer(tree, "area_trees_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(tree, "estimated_area_trees_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(tree, "lmu_growth_scalar_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
 
 

@@ -2214,7 +2214,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     weights = 'greenpas_ha_qsfgop6lzt'
     keys = 'keys_qsfgop6lzt'
     arith = 2
-    index = [0,1,7,5,2] #[q,s,z,p6,nv]
+    if nv_option==0:
+        index = [0,1,7,5,2] #[q,s,z,p6,nv]
+    else:
+        index = [0,1,7,5] #[q,s,z,p6]
     cols = [8] #t
     grn_mei = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                          keys=keys, arith=arith, index=index, cols=cols)
@@ -2227,7 +2230,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     weights = 'poc_consumed_qsfp6lz'
     keys = 'keys_qsfp6lz'
     arith = 2
-    index = [0,1,5,3,2] #[q,s,z,p6,nv]
+    if nv_option == 0:
+        index = [0,1,5,3,2] #[q,s,z,p6,nv]
+    else:
+        index = [0,1,5,3] #[q,s,z,p6]
     cols = []
     poc_mei = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                          keys=keys, arith=arith, index=index, cols=cols)
@@ -2240,7 +2246,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     weights = 'drypas_consumed_qsfdp6zlt'
     keys = 'keys_qsfdp6zlt'
     arith = 2
-    index = [0,1,5,4,2] #[q,s,z,p6,nv]
+    if nv_option==0:
+        index = [0,1,5,4,2] #[q,s,z,p6,nv]
+    else:
+        index = [0,1,5,4] #[q,s,z,p6]
     cols = [7] #t
     dry_mei = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                          keys=keys, arith=arith, index=index, cols=cols)
@@ -2253,7 +2262,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     weights = 'nap_consumed_qsfdp6zt'
     keys = 'keys_qsfdp6zt'
     arith = 2
-    index = [0,1,5,4,2] #[q,s,z,p6,nv]
+    if nv_option==0:
+        index = [0,1,5,4,2] #[q,s,z,p6,nv]
+    else:
+        index = [0,1,5,4] #[q,s,z,p6]
     cols = []
     nap_mei = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                          keys=keys, arith=arith, index=index, cols=cols)
@@ -2266,7 +2278,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     weights = 'stub_qszp6fks1s2'
     keys = 'keys_qszp6fks1s2'
     arith = 2
-    index = [0, 1, 2, 3, 4]  # q,s,z,p6,nv
+    if nv_option==0:
+        index = [0, 1, 2, 3, 4]  # q,s,z,p6,nv
+    else:
+        index = [0, 1, 2, 3]  # q,s,z,p6
     cols = residue_cols
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
@@ -2281,7 +2296,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     weights = 'crop_consumed_qsfkp6p5zl'
     keys = 'keys_qsfkp6p5zl'
     arith = 2
-    index = [0, 1, 6, 4, 2]  # q,s,z,p6,nv
+    if nv_option==0:
+        index = [0, 1, 6, 4, 2]  # q,s,z,p6,nv
+    else:
+        index = [0, 1, 6, 4]  # q,s,z,p6
     cols = []
     crop_mei = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                           keys=keys, arith=arith, index=index, cols=cols)
@@ -2294,7 +2312,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     weights = 'v_tonnes_sb_consumed_qszp6fl'
     keys = 'keys_qszp6fl'
     arith = 2
-    index = [0, 1, 2, 3, 4]  # q,s,z,p6,nv
+    if nv_option==0:
+        index = [0, 1, 2, 3, 4]  # q,s,z,p6,nv
+    else:
+        index = [0, 1, 2, 3]  # q,s,z,p6
     cols = []
     sb_mei = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                           keys=keys, arith=arith, index=index, cols=cols)
@@ -2305,6 +2326,8 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
     sup_mei_qs_fk3p6z = grain_fed_qszkfp6.unstack([4,3,5,2]).sort_index(axis=1).mul(sup_md_tonne_fk3p6z, axis=1)
     sup_mei_qszp6f = sup_mei_qs_fk3p6z.stack([3,2,0]).sort_index(axis=1).sum(axis=1)
+    if nv_option==1:
+        sup_mei_qszp6f = sup_mei_qszp6f.unstack().sum(axis=1)
     sup_mei = pd.DataFrame(sup_mei_qszp6f, columns=['Supplement']) # add feed type as header
 
     ##stock mei requirement
@@ -2322,7 +2345,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     den_weights = 'stock_days_p6fzg0'
     na_denweights = [0, 1]  # q,s
     keys = 'sire_keys_qsp6fzg0'
-    index = [0, 1, 4, 2, 3]  # [q,s,z,p6,nv]
+    if nv_option==0:
+        index = [0, 1, 4, 2, 3]  # [q,s,z,p6,nv]
+    else:
+        index = [0, 1, 4, 2]  # [q,s,z,p6]
     cols = []
     mei_sire = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                                  na_weights=na_weights, den_weights=den_weights,
@@ -2339,7 +2365,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     den_weights = 'stock_days_k2p6ftova1nwziyg1'
     na_denweights = [0, 1]  # q,s, o
     keys = 'dams_keys_qsk2p6ftovanwziy1g1'
-    index = [0, 1, 11, 3, 4]  # [q,s,z,p6,nv]
+    if nv_option==0:
+        index = [0, 1, 11, 3, 4]  # [q,s,z,p6,nv]
+    else:
+        index = [0, 1, 11, 3]  # [q,s,z,p6]
     cols = dams_cols
     mei_dams = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                                  na_weights=na_weights, den_weights=den_weights,
@@ -2356,7 +2385,10 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     den_weights = 'stock_days_k3k5p6ftsvnwziaxyg3'
     na_denweights = [0, 1]  # q,s
     keys = 'offs_keys_qsk3k5p6ftsvnwziaxyg3'
-    index = [0, 1, 11, 4, 5]  # [q,s,z,p6,nv]
+    if nv_option==0:
+        index = [0, 1, 11, 4, 5]  # [q,s,z,p6,nv]
+    else:
+        index = [0, 1, 11, 4]  # [q,s,z,p6]
     cols = offs_cols
     mei_offs = f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                                  na_weights=na_weights, den_weights=den_weights,
@@ -2380,20 +2412,20 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     feed_budget_supply = pd.concat(arrays[0:8], axis=1).round(1) #round so that little numbers don't cause issues
     feed_budget_req = pd.concat(arrays[8:], axis=1).round(1) #round so that little numbers don't cause issues
 
-    ###if option 0 - calc propn of mei from each feed source
+    ###if option 0 - calc propn of mei from each feed source (has to be done after summing nv axis)
     if option==0:
         feed_budget_supply = feed_budget_supply.div(feed_budget_supply.sum(axis=1), axis=0).fillna(0)
-    else:
+    else:##calc total MEI per day
         days_zp6 = pd.DataFrame(r_vals['pas']['days_p6z'], index=r_vals['pas']['keys_p6'], columns=r_vals['zgen']['keys_z']).T.stack()
-        feed_budget_supply = feed_budget_supply.unstack([0,1,-1]).div(days_zp6, axis=0).stack([-3,-2,-1]).reorder_levels([2,3,0,1,4])
-        feed_budget_req = feed_budget_req.unstack([0,1,-1]).div(days_zp6, axis=0).stack([-3,-2,-1]).reorder_levels([2,3,0,1,4])
+        if nv_option==0:
+            feed_budget_supply = feed_budget_supply.unstack([0,1,-1]).div(days_zp6, axis=0).stack([-3,-2,-1]).reorder_levels([2,3,0,1,4])
+            feed_budget_req = feed_budget_req.unstack([0,1,-1]).div(days_zp6, axis=0).stack([-3,-2,-1]).reorder_levels([2,3,0,1,4])
+        else:
+            feed_budget_supply = feed_budget_supply.unstack([0,1]).div(days_zp6, axis=0).stack([-2,-1]).reorder_levels([2,3,0,1])
+            feed_budget_req = feed_budget_req.unstack([0,1]).div(days_zp6, axis=0).stack([-2,-1]).reorder_levels([2,3,0,1])
 
     ###add stock mei requirement
     feed_budget = pd.concat([feed_budget_supply, feed_budget_req], axis=1)
-
-    ##sum nv axis if nv_option is 1
-    if nv_option==1:
-        feed_budget = feed_budget.groupby(axis=0, level=(0,1,2,3)).sum()
 
     ##add fp date to index
     keys_p6 = r_vals['pas']['keys_p6']
