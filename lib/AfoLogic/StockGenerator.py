@@ -90,14 +90,14 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##Comment any coefficients that aren't being calibrated
         n_coeff = len(coefficients_c)
         n_traits = len(calibration_weights_p)
-        i=0
+        i = 0
         uinp.parameters['i_sfw_c2'][2] = coefficients_c[i]           #cfw
         i += 1
         uinp.parameters['i_sfd_c2'][2]  = coefficients_c[i]          #fd
-        i += 1
-        uinp.parameters['i_cw_c2'][16, 2] = coefficients_c[i]        #SS
-        i += 1
-        uinp.parameters['i_cw_c2'][11, 2] = coefficients_c[i]        #SL
+        # i += 1
+        # uinp.parameters['i_cw_c2'][16, 2] = coefficients_c[i]        #SS
+        # i += 1
+        # uinp.parameters['i_cw_c2'][11, 2] = coefficients_c[i]        #SL
         i += 1
         uinp.parameters['i_cl0_c2'][25, 0, 2] = coefficients_c[i]   #% preg (Con)
         i += 1
@@ -105,21 +105,73 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         i += 1
         uinp.parameters['i_cu2_c2'][8, -1, 2] = coefficients_c[i]    #Lamb survival (ERA)
         i += 1
-        uinp.parameters['i_srw_c2'][2] = coefficients_c[i]           #Adult LW
-        i += 1
-        uinp.parameters['i_ci_c2'][1, 2] = coefficients_c[i]         #Intake
-        i += 1
-        # cg[9] calculated from the deviation in cg[8]
-        uinp.parameters['i_cg_c2'][9, 2] += (coefficients_c[i] - uinp.parameters['i_cg_c2'][8, 2])
-        uinp.parameters['i_cg_c2'][8, 2] = coefficients_c[i]         #Fatness EVG
+        uinp.parameters['i_srw_c2'][2] = coefficients_c[i]           #SRW
+        # i += 1
+        # uinp.parameters['i_ci_c2'][1, 2] = coefficients_c[i]         #Potential Intake
+        # i += 1
+        # # cg[9] calculated from the deviation in cg[8]
+        # uinp.parameters['i_cg_c2'][9, 2] += (coefficients_c[i] - uinp.parameters['i_cg_c2'][8, 2])
+        # uinp.parameters['i_cg_c2'][8, 2] = coefficients_c[i]         #Fatness (EVG)
         i += 1
         uinp.parameters['i_cd_c2'][1, 2] = coefficients_c[i]        #Basal mortality
         i += 1
         uinp.parameters['i_cl_c2'][0, 2] = coefficients_c[i]        #Wwt, by milk production and intake scalar
+
+        ##Build and apply sar variable based on the next 44 coefficients
+        indicelist = [(slice(3, 4, None), slice(None, None, None), slice(38, 57, None))    #00   Ewes
+                    , (slice(3, 4, None), slice(None, None, None), slice(57, 64, None))    #01
+                    , (slice(3, 4, None), slice(None, None, None), slice(64, 71, None))    #02
+                    , (slice(3, 4, None), slice(None, None, None), slice(71, 91, None))    #03
+                    , (slice(3, 4, None), slice(None, None, None), slice(91, 100, None))    #04
+                    , (slice(3, 4, None), slice(None, None, None), slice(100, 116, None))    #05
+                    , (slice(3, 4, None), slice(None, None, None), slice(116, 124, None))    #06
+                    , (slice(3, 4, None), slice(None, None, None), slice(124, 139, None))    #07
+                    , (slice(3, 4, None), slice(None, None, None), slice(139, 154, None))    #08
+                    , (slice(3, 4, None), slice(None, None, None), slice(154, 161, None))    #09
+                    , (slice(3, 4, None), slice(None, None, None), slice(161, 173, None))    #10
+                    , (slice(3, 4, None), slice(None, None, None), slice(173, 181, None))    #11
+                    , (slice(3, 4, None), slice(None, None, None), slice(181, 196, None))    #12
+                    , (slice(3, 4, None), slice(None, None, None), slice(196, 213, None))    #13
+                    , (slice(3, 4, None), slice(None, None, None), slice(213, 226, None))    #14
+                    , (slice(3, 4, None), slice(None, None, None), slice(226, 233, None))    #15
+                    , (slice(3, 4, None), slice(None, None, None), slice(233, 248, None))    #16
+                    , (slice(3, 4, None), slice(None, None, None), slice(248, 259, None))    #17
+                    , (slice(3, 4, None), slice(None, None, None), slice(259, 265, None))    #18
+                    , (slice(3, 4, None), slice(None, None, None), slice(265, 278, None))    #19
+                    , (slice(3, 4, None), slice(None, None, None), slice(278, 299, None))    #20
+                    , (slice(3, 4, None), slice(None, None, None), slice(299, 311, None))    #21
+                    , (slice(3, 4, None), slice(None, None, None), slice(311, 326, None))    #22
+                    , (slice(3, 4, None), slice(None, None, None), slice(326, 329, None))    #23
+                    , (slice(3, 4, None), slice(None, None, None), slice(329, 334, None))    #24
+                    , (slice(3, 4, None), slice(None, None, None), slice(334, 338, None))    #25
+                    , (slice(3, 4, None), slice(None, None, None), slice(338, 352, None))    #26
+                    , (slice(3, 4, None), slice(None, None, None), slice(352, 363, None))    #27
+                    , (slice(4, 5, None), slice(None, None, None), slice(39, 56, None))    #29   Wethers
+                    , (slice(4, 5, None), slice(None, None, None), slice(56, 60, None))    #30
+                    , (slice(4, 5, None), slice(None, None, None), slice(60, 64, None))    #31
+                    , (slice(4, 5, None), slice(None, None, None), slice(64, 69, None))    #32
+                    , (slice(4, 5, None), slice(None, None, None), slice(69, 77, None))    #33
+                    , (slice(4, 5, None), slice(None, None, None), slice(77, 81, None))    #34
+                    , (slice(4, 5, None), slice(None, None, None), slice(81, 85, None))    #35
+                    , (slice(4, 5, None), slice(None, None, None), slice(85, 89, None))    #36
+                    , (slice(4, 5, None), slice(None, None, None), slice(89, 94, None))    #37
+                    , (slice(4, 5, None), slice(None, None, None), slice(94, 100, None))    #38
+                    , (slice(4, 5, None), slice(None, None, None), slice(100, 102, None))    #39
+                    , (slice(4, 5, None), slice(None, None, None), slice(102, 115, None))    #40
+                    , (slice(4, 5, None), slice(None, None, None), slice(115, 128, None))    #41
+                    , (slice(4, 5, None), slice(None, None, None), slice(128, 159, None))    #42
+                    ]
+        sen.sar['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype='float64')
+        for indices in indicelist:
+            i += 1
+            sen.sar['feedsupply_r1jp'][indices] = sen.sar['feedsupply_r1jp'][indices] + coefficients_c[i]
+        pinp.feedsupply['i_feedsupply_options_r1j2p'] = fun.f_sa(pinp.feedsupply['i_feedsupply_options_r1j2p']
+                                                    , sen.sar['feedsupply_r1jp'], 4, value_min=0.0, target=13.0)
+
     else:
         n_coeff = 12
         coefficients_c = np.zeros(n_coeff)
-        i=0
+        i = 0
         coefficients_c[i] = uinp.parameters['i_sfw_c2'][2]           #cfw
         i += 1
         coefficients_c[i] = uinp.parameters['i_sfd_c2'][2]          #fd
@@ -7150,10 +7202,10 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         calibration_values_p[i] = o_cfw_tpdams[0,204,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #CFW of single ewes at 3.5yo
         i += 1
         calibration_values_p[i] = o_fd_tpdams[0,204,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #FD of single ewes at 3.5yo
-        i += 1
-        calibration_values_p[i] = o_ss_tpdams[0,204,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #SS of single ewes at 3.5yo
-        i += 1
-        calibration_values_p[i] = o_sl_tpdams[0,204,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #SL of single ewes at 3.5yo
+        # i += 1
+        # calibration_values_p[i] = o_ss_tpdams[0,204,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #SS of single ewes at 3.5yo
+        # i += 1
+        # calibration_values_p[i] = o_sl_tpdams[0,204,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #SL of single ewes at 3.5yo
         i += 1
         ##proportion of preg is 1 - (number of dry (b[1]) divided by the number dry and pregnant (b[1:5]))
         preg_2yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,108,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
@@ -7191,19 +7243,104 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
                                    , o_numbers_start_tpdams[0,285,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
         twin_surv = (twin_surv_2yo + twin_surv_3yo + twin_surv_4yo + twin_surv_5yo) / 4
         calibration_values_p[i] = twin_surv     #single lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
-        i += 1
-        calibration_values_p[i] = o_ffcfw_tpdams[0,211,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
-        i += 1
-        calibration_values_p[i] = fun.f_divide(r_fat_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0]
-                                             , r_ebw_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0])  #% of fat for the wethers 30mo BTRT 11, first cycle, from 3yo
+        # i += 1
+        # calibration_values_p[i] = o_ffcfw_tpdams[0,211,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
+        # i += 1
+        # calibration_values_p[i] = fun.f_divide(r_fat_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0]
+        #                                      , r_ebw_tpoffs[0,159,0,0,0,0,0,0,0,3,0,0,0,1,0,0])  #% of fat for the wethers 30mo BTRT 11, first cycle, from 3yo
         i += 1
         calibration_values_p[i] = fun.f_divide(np.sum(o_numbers_start_tpdams[0,308,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
                                              , np.sum(o_numbers_start_tpdams[0,100,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
         i += 1
         calibration_values_p[i] = o_wean_w_tpyatf[0,196,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Weaning weight of 1st cycle single born ewes
-        ##Calculate the objective value based on sum of squares of the relative error (error as a proportion of the SD of the target trait)
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 38, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  #Ewe LW targets
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 57, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 64, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 71, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 91, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 116, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 124, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 139, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 154, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 161, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 173, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 181, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 196, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 213, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 226, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 233, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 248, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 259, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 265, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 278, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 299, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 311, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 326, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 329, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 334, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 338, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0, 352, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpoffs[0, 39, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]  #Wether LW targets
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpoffs[0, 56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpoffs[0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpoffs[0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpoffs[0, 69, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpoffs[0, 77, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpoffs[0, 81, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpoffs[0, 85, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpoffs[0, 89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpoffs[0, 94, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpoffs[0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpoffs[0, 102, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpoffs[0, 115, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpoffs[0, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0]
+
         ### Handle the multi-trait calibration using an a-priori method
         ###Option 1 A linear scalarising method, based on a subjective weight divided by the SD of the target trait range (calibration weights)
+        ###Calculate the objective value based on sum of squares of the relative error (error as a proportion of the SD of the target trait)
         calibration_objective = np.sum(((calibration_values_p - calibration_targets_p) * calibration_weights_p) ** 2)
 
         # ###Option 2 A Chebyshev scalarisation. The weighting is the inverse of the coefficient increasing weight on small coefficients
