@@ -2380,7 +2380,7 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     feed_budget_supply = pd.concat(arrays[0:8], axis=1).round(1) #round so that little numbers don't cause issues
     feed_budget_req = pd.concat(arrays[8:], axis=1).round(1) #round so that little numbers don't cause issues
 
-    ###if option 1 - calc propn of mei from each feed source
+    ###if option 0 - calc propn of mei from each feed source
     if option==0:
         feed_budget_supply = feed_budget_supply.div(feed_budget_supply.sum(axis=1), axis=0).fillna(0)
     else:
