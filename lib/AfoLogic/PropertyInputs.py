@@ -499,6 +499,8 @@ def f_property_inp_sa(pinp_defaults):
     feedsupply['i_feedsupply_adj_options_r2p'] = fun.f_sa(feedsupply['i_feedsupply_adj_options_r2p'], sen.saa['feedsupply_adj_r2p'], 2)
     ###sat
     ###sar
+    feedsupply['i_feedsupply_options_r1j2p'] = fun.f_sa(feedsupply['i_feedsupply_options_r1j2p']
+                                                , sen.sar['feedsupply_r1jp'], 4, value_min = 0.0, target = 13.0)
 
     ##mask out unrequired nodes dates - nodes are removed if there are double ups (note this used to remove nodes where no season was identified but there are cases when we want a node but no identification eg EWW)
     ## includes the masked out season in the test below. This is to remove randomness if comparing with a different season mask. If a season is removed we dont want the number of node periods to change.

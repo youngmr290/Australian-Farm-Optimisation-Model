@@ -843,16 +843,23 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
             value = np.maximum(value_min, value + (target - value).mul(sa, axis=axis))
         else:
             value  = np.maximum(value_min, value + (target - value) * sa)
-    ##Type 4 is sar (sensitivity range. sa=-1 returns 0, sa=1 returns 1)
+    ##Type 4 is sar (sensitivity range. sa=-1 returns value_min, sa=0 returns value, sa=1 returns target)
+    ### Note: sa less than -1 or sa greater than +1 continues beyond the range on the same slope
     elif sa_type == 4:
-         value = np.maximum(0, np.minimum(1, value * (1 - np.abs(sa)) + np.maximum(0, sa)))
+        if pandas:
+            #todo add Pandas code to replace the target with value_min where sa<0 (see numpy code below)
+            value = value + (target - value).mul(sa.abs(), axis=axis)
+        else:
+            #if the sa is less than zero then swap the target value and use the absolute value of sa
+            f_update(target, value_min, sa < 0)
+            value = value + (target - value) * np.abs(sa)
     ##Type 5 is sav (return the SA value, '-' is no change)
     elif sa_type == 5:
         try:
             sa=sa.copy()#have to copy the np arrays so that the original sa is not changed
         except:
             pass
-        ###conver to numpy if pandas so f_update works corrrectly (so dtype is handled correctly)
+        ###convert to numpy if pandas so f_update works correctly (so dtype is handled correctly)
         if isinstance(value, pd.DataFrame):
             value.iloc[:,:] = f_update(value.values, sa, sa != '-') #sa has to be object or this give FutureWarning
         elif isinstance(value, pd.Series):
@@ -886,7 +893,7 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
             elif dic == 'sat':
                 sat[(key1,key2)][indices] = value   # last entry in exp.xlsx is used
             elif dic == 'sar':
-                sar[(key1,key2)][indices] = value   # last entry in exp.xlsx is used, could be changed to accumulate
+                sar[(key1,key2)][indices] = sar[(key1,key2)][indices] + value  # if there are multiple instances of the same SA in exp.xlsx they accumulate
             elif dic == 'sav':
                 try:
                     if value != "-": #SAV entries with '-' do not update the SAV. This means that if slices of a SAV overlap in Exp.xl the last non '-' is the value used.
@@ -909,7 +916,7 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
             elif dic == 'sat':
                 sat[key1][indices] = value
             elif dic == 'sar':
-                sar[key1][indices] = value
+                sar[key1][indices] = sar[key1][indices] + value  # if there are multiple instances of the same SA in exp.xlsx they accumulate
             elif dic == 'sav':
                 try:
                     if value != "-": #SAV entries with '-' do not update the SAV. This means that if slices of a SAV overlap in Exp.xl the last non '-' is the value used.
@@ -936,7 +943,7 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
                 sat[(key1,key2)] = value
             elif dic == 'sar':
                 sar[(key1, key2)]  # checks the keys exist. Not required for SA that have indicies.
-                sar[(key1, key2)] = value
+                sar[(key1, key2)] = sar[(key1,key2)] + value
             elif dic == 'sav':
                 sav[(key1, key2)]  # checks the keys exist. Not required for SA that have indicies.
                 try:
@@ -964,7 +971,7 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
                 sat[key1] = value
             elif dic == 'sar':
                 sar[key1]  # checks the keys exist. Not required for SA that have indicies.
-                sar[key1] = value
+                sar[key1] = sar[key1] + value
             elif dic == 'sav':
                 sav[key1]  # checks the keys exist. Not required for SA that have indicies.
                 try:
