@@ -8,7 +8,7 @@ Multi-process the teams if there are sufficient teams to occupy the computer res
 If not, use multiple workers. The maximum useful number of workers is the size of the selection population
 Multiprocessing teams should be more efficient because it can use 'immediate' updating
 
-sys.argv: Experiment number (will use the first trial in the experiment). If blank uses QT (trial 31)
+sys.argv: Experiment number (will use the first trial in the experiment). If blank uses QT (trial 12)
           Number of multi processes. If blank will not process but will use workers
 """
 
