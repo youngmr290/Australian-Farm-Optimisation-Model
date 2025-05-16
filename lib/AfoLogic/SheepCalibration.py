@@ -4,7 +4,7 @@ Created on Thu Feb 13 09:35:26 2020
 
 @author: John
 
-Multi-process the teams if there are sufficient teams to occupy the computer resource
+Multiprocess the teams if there are sufficient teams to occupy the computer resource
 If not, use multiple workers. The maximum useful number of workers is the size of the selection population
 Multiprocessing teams should be more efficient because it can use 'immediate' updating
 
@@ -42,8 +42,6 @@ from lib.AfoLogic import StockGenerator as sgen
 from lib.AfoLogic import relativeFile
 
 
-params={}   #an empty dictionary used in sgen.generator to store the parameters for the LP model. Not used in calibration
-r_vals={}   #an empty dictionary used in sgen.generator to store the report values calculated in sgen.generator. Not used in calibration
 
 ###############
 #User control #
@@ -131,6 +129,8 @@ bnd_lo_tc = bnd_lo_tc.values
 bnd_up_tc = bnd_up_tc.values
 
 ##sgen args
+params={}   #an empty dictionary used in sgen.generator to store the parameters for the LP model. Not used in calibration
+r_vals={}   #an empty dictionary used in sgen.generator to store the report values calculated in sgen.generator. Not used in calibration
 nv={}
 pkl_fs_info={}
 pkl_fs={}
@@ -145,7 +145,7 @@ message_t = np.empty(n_teams, dtype = object)
 
 ##loop through teams and save output
 
-def f_run_calibration(t,coefficients_dict, success_dict, wsmse_dict, message_dict):
+def f_run_calibration(t, coefficients_dict, success_dict, wsmse_dict, message_dict):
     ## weightings for the calibration objective function
     ### these are defined for all teams and don't vary
     calibration_weights = weights_p
