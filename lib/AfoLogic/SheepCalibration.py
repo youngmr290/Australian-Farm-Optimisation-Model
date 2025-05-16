@@ -9,7 +9,7 @@ If not, use multiple workers. The maximum useful number of workers is the size o
 Multiprocessing teams should be more efficient because it can use 'immediate' updating
 
 sys.argv: Experiment number (will use the first trial in the experiment). If blank uses QT (trial 12)
-          Number of multi processes. If blank will not process but will use workers
+          Number of multi processes. If blank will not multiprocess but will use workers
 """
 
 
@@ -42,8 +42,8 @@ from lib.AfoLogic import StockGenerator as sgen
 from lib.AfoLogic import relativeFile
 
 
-params={}
-r_vals={}
+params={}   #an empty dictionary used in sgen.generator to store the parameters for the LP model. Not used in calibration
+r_vals={}   #an empty dictionary used in sgen.generator to store the report values calculated in sgen.generator. Not used in calibration
 
 ###############
 #User control #
@@ -159,11 +159,11 @@ def f_run_calibration(t,coefficients_dict, success_dict, wsmse_dict, message_dic
     ##Set some of the control variables (that might want to be tweaked later)
     maxiter = 1000  #1000      The maximum number of iterations. # calls = (maxiter + 1) * selection population
     popsize = 5     #15        The selection population is (popsize * n coefficients)
-    tol = 0.01       #0.01      The optimisation relative tolerance
+    tol = 0.1       #0.01      The optimisation relative tolerance
     disp = True     #False     Display the result each iteration
     polish = True   #True      After the differential evolution carry out some further refining
     workers = 1     #10        Must be equal to 1 if multiprocessing the teams
-    updating = 'immediate'  #  Use deferred if workers > 1 to suppress warning
+    updating = 'immediate'  #  Use deferred if workers > 1 to suppress warning. Immediate is more efficient if multiprocessing teams with 1 worker
 
     ## call the optimise routine
     result = spo.differential_evolution(sgen.generator, bounds
@@ -176,9 +176,12 @@ def f_run_calibration(t,coefficients_dict, success_dict, wsmse_dict, message_dic
     message_dict[t] = result.message
     print(f"Team {t} coefficients are {result.x} obj: {result.fun} evaluations {result.nfev}")
 
+##loop through teams and save output. Method is controlled by the n_processes from arg passed to SheepCalibration.py
+### Either loop using multiprocessing with teams as an arg calling f_run_calibration. Note: only 1 worker & 'immediate' updating
+### or loop through teams and call differential_evolution directly with workers>1 & 'deferred' updating. Use this if only 1 team
 teams = list(range(n_teams))
 if __name__ == '__main__':
-    if n_processes != 1:    # read as a string so need to convert to int
+    if n_processes != 1:
         print (f"multiprocess across {n_processes} teams")
         manager = multiprocessing.Manager()
         coefficients_dict = manager.dict()
@@ -218,7 +221,7 @@ if __name__ == '__main__':
             ##Set some of the control variables (that might want to be tweaked later)
             maxiter = 1000  #1000      The maximum number of iterations. # calls = (maxiter + 1) * selection population
             popsize = 6  #15        The selection population is (popsize * n coefficients)
-            tol = 0.01  #0.01      The optimisation relative tolerance
+            tol = 0.1  #0.01      The optimisation relative tolerance
             disp = True  #False     Display the result each iteration
             polish = True  #True      After the differential evolution carry out some further refining
             population = popsize * n_coef
