@@ -90,8 +90,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     genotype = 2    #2 is GEPEP CFS
     if gepep:
         ##Comment any coefficients that aren't being calibrated
-        n_coeff = len(coefficients_c)
-        n_traits = len(calibration_weights_p)
+        n_coeff = coefficients_c.size
+        n_traits = calibration_weights_p.size
         i = 0
         uinp.parameters['i_sfw_c2'][genotype] = coefficients_c[i]           #sfw
         i += 1
@@ -110,8 +110,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         SRW_coeff = i   #This pointer is used in the printout (line 7355) and removes need for manual updating.
         uinp.parameters['i_srw_c2'][genotype] = coefficients_c[i]           #SRW
         i += 1
-        uinp.parameters['i_ci_c2'][1, genotype] = coefficients_c[i]         #Potential Intake
-        i += 1
+        # uinp.parameters['i_ci_c2'][1, genotype] = coefficients_c[i]         #Potential Intake
+        # i += 1
         # # cg[9] calculated from the deviation in cg[8]
         # uinp.parameters['i_cg_c2'][9, genotype] += (coefficients_c[i] - uinp.parameters['i_cg_c2'][8, genotype])
         # uinp.parameters['i_cg_c2'][8, genotype] = coefficients_c[i]         #Fatness (EVG)
