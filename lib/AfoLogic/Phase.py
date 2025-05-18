@@ -721,6 +721,7 @@ def f_fert_cost(r_vals):
     fun.f1_make_r_val(r_vals, fert_app_cost_rl_p7z, 'fert_app_cost', mask_season_p7z, z_pos=-1)
     fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(fert_app_cost_rl_p7z.stack([0,1]).sort_index()
                                                           ,p7_pos=-2,z_pos=-1), 'fert_app_cost_increment', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, fert_time_rzl_n, 'fert_time_rzl_n')
     return fert_cost_total, fert_wc_total
 
 
@@ -1007,7 +1008,8 @@ def f_chem_cost(r_vals):
     phase_chem_wc_rl_c0p7z = phase_chem_wc_rl_c0p7nz.mul(chem_wc_allocation_z_c0p7n.unstack(), axis=1).groupby(axis=1, level=(0,1,3)).sum()  # sum the cost of all the chem
 
     ##application cost - only a per ha component
-    chem_app_cost_rzl_n = f1_spraying_time().unstack() * mac.spraying_cost_hr()
+    time_ha_rzl_n = f1_spraying_time().unstack()
+    chem_app_cost_rzl_n = time_ha_rzl_n * mac.spraying_cost_hr()
     ###adjust of interest and p7 period
     chem_app_cost_rzl_p7n = chem_app_cost_rzl_n.reindex(chem_cost_allocation_z_p7n.columns, axis=1, level=1)
     chem_app_cost_rl_p7nz = chem_app_cost_rzl_p7n.unstack(1)
@@ -1033,6 +1035,7 @@ def f_chem_cost(r_vals):
     fun.f1_make_r_val(r_vals, chem_app_cost_rl_p7z, 'chem_app_cost_ha', mask_season_p7z, z_pos=-1)
     fun.f1_make_r_val(r_vals, rps.f_v_phase_increment_adj(chem_app_cost_rl_p7z.stack([0,1]).sort_index()
                                                           ,p7_pos=-2,z_pos=-1), 'chem_app_cost_ha_increment', mask_season_p7z, z_pos=-1)
+    fun.f1_make_r_val(r_vals, time_ha_rzl_n, 'chem_time_ha_rzl_n')
     return total_cost, total_wc
 
 
@@ -1189,7 +1192,7 @@ def f_insurance(r_vals):
 # variable spraying and spreading depreciation     #
 ###################################################
 
-def f_spraying_spreading_dep():
+def f_spraying_spreading_dep(r_vals):
     '''
     Average variable dep for seeding $/ha.
 
@@ -1199,7 +1202,7 @@ def f_spraying_spreading_dep():
     ##spraying
     ###variable depn rate is input as a percent depn in all spray gear per machine hour (%/machine hr).
     spray_dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_spraying']
-    ####convert from rotor hours to harvest activity hours
+    ####convert from rotor hours to spray activity hours
     spray_dep_rate_per_hr = spray_dep_rate_per_hr / (1 + pinp.mach['spray_eff'])
     ###determine dep per hour - equal to crop gear value x depn %
     spray_gear_clearing_value = mac.f_spray_gear_clearing_value()
@@ -1227,7 +1230,7 @@ def f_spraying_spreading_dep():
     ##spreading
     ###variable depn rate is input as a percent depn in all spreading gear per machine hour (%/machine hr).
     spread_dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_spreading']
-    ####convert from rotor hours to harvest activity hours
+    ####dont adjust for eff because there will be loader dep for filling up.
     ###determine dep per hour - equal to crop gear value x depn %
     spread_gear_clearing_value = mac.f_spread_gear_clearing_value()
     spread_dep_hourly = spread_gear_clearing_value * spread_dep_rate_per_hr
@@ -1258,6 +1261,12 @@ def f_spraying_spreading_dep():
     ## however the interest is calculated as if the cost was incurred at the normal time (this is because interest
     ## is calculated for each separate cost in the functions above).
     increment_spreader_sprayer_dep_p7zlr = rps.f_v_phase_increment_adj(spreader_sprayer_dep_p7zlr,p7_pos=-4,z_pos=-3)
+
+
+    ##rvals
+    fun.f1_make_r_val(r_vals, spray_dep_hourly, 'spray_dep_hourly')
+    fun.f1_make_r_val(r_vals, spread_dep_hourly, 'spread_dep_hourly')
+
 
     return spreader_sprayer_dep_p7zlr, increment_spreader_sprayer_dep_p7zlr
 
@@ -1503,7 +1512,7 @@ def f_sow_prov():
 ##collates all the params
 def f1_crop_params(params,r_vals):
     cost, increment_cost, wc, increment_wc = f1_rot_cost(r_vals)
-    spreader_sprayer_dep_p7zlr, increment_spreader_sprayer_dep_p7zlr = f_spraying_spreading_dep()
+    spreader_sprayer_dep_p7zlr, increment_spreader_sprayer_dep_p7zlr = f_spraying_spreading_dep(r_vals)
     biomass = f_rot_biomass(r_vals=r_vals)
     biomass2product_ks2 = f_biomass2product(r_vals)
     propn = f_grain_pool_proportions()

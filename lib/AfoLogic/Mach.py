@@ -1041,21 +1041,22 @@ def f_total_clearing_value():
 
 
 #total value of crop gear x dep rate x number of crop gear
-def f_fix_dep():
+def f_fix_dep(r_vals):
     '''Fixed depreciation on machinery
 
     Fixed depreciation captures obsolescence costs and is incurred every year independent of equipment uses.
     It is simply calculated based on the total clearing sale value of equipment and the fixed rate of depreciation.
     '''
-    fixed_dep = f_total_clearing_value() * uinp.finance['fixed_dep']
-    return fixed_dep
+    fixed_dep_p7 = f_total_clearing_value() * uinp.finance['fixed_dep']
+    fun.f1_make_r_val(r_vals, fixed_dep_p7, 'fixed_dep_p7')
+    return fixed_dep_p7
 
 
 ####################################
 #variable seeding depreciation     #
 ####################################
 
-def f_seeding_dep():
+def f_seeding_dep(r_vals):
     '''
     Average variable dep for seeding $/ha.
 
@@ -1077,7 +1078,7 @@ def f_seeding_dep():
     seeding_gear_clearing_value = f_seeding_gear_clearing_value()
     dep_hourly = seeding_gear_clearing_value * dep_rate_per_hr
 
-    ##convert to dep per ha for each soil type - equals cost per hr x seeding rate per hr
+    ##convert to dep per ha for each soil type - equals cost per hr x seeding rate (hrs per ha)
     rate_direct_drill_k_l = f_seed_time_lmus()
     dep_ha_kl = dep_hourly * rate_direct_drill_k_l.stack()
 
@@ -1098,6 +1099,12 @@ def f_seeding_dep():
 
     ##allocate dep to p7
     rate_direct_drill_p7p5zkl = alloc_p7p5zkl.unstack([-2, -1]).mul(dep_ha_kl, axis=1).stack([0,1])
+
+    ##r_vals store
+    fun.f1_make_r_val(r_vals, dep_ha_kl, 'seeding_dep_ha_kl')
+    fun.f1_make_r_val(r_vals, uinp.mach[pinp.mach['option']]['number_of_seeders'], 'number_seeding_gear')
+
+
     return rate_direct_drill_p7p5zkl
 
 
@@ -1105,7 +1112,7 @@ def f_seeding_dep():
 #variable harvest depreciation     #
 ####################################
 
-def f_harvest_dep():
+def f_harvest_dep(r_vals):
     '''
     Average variable dep for harvesting $/hr.
 
@@ -1133,6 +1140,10 @@ def f_harvest_dep():
     keys_p7 = per.f_season_periods(keys=True)
     index_p7p5z = pd.MultiIndex.from_product([keys_p7,keys_p5,keys_z])
     alloc_p7p5z = pd.Series(alloc_p7p5z.ravel(), index=index_p7p5z)
+
+    ##store r_vals
+    fun.f1_make_r_val(r_vals, dep_hourly, 'harv_dep_hourly')
+    fun.f1_make_r_val(r_vals, uinp.mach[pinp.mach['option']]['number_of_harvesters'], 'number_of_harvesters')
 
     return alloc_p7p5z * dep_hourly
 
@@ -1238,10 +1249,10 @@ def f_mach_params(params,r_vals):
     biomass_penalty = f_sowing_timeliness_penalty(r_vals)
     # stubble_penalty = f_stubble_penalty()
     poc_grazing_days = f_poc_grazing_days().stack()
-    fixed_dep = f_fix_dep()
-    harv_dep = f_harvest_dep()
+    fixed_dep = f_fix_dep(r_vals)
+    harv_dep = f_harvest_dep(r_vals)
     seeding_gear_clearing_value = f_seeding_gear_clearing_value()
-    seeding_dep = f_seeding_dep()
+    seeding_dep = f_seeding_dep(r_vals)
     insurance_cost, insurance_wc = f_insurance(r_vals)
     mach_asset_value = f_total_clearing_value()
     total_co2e_fuel_seeding_l, total_co2e_fuel_harv = f_seeding_harv_fuel_emissions(r_vals)

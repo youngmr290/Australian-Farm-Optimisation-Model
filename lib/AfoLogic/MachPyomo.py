@@ -307,11 +307,11 @@ def f_seeding_harv_dep(model,q,s,p7,z):
 
     #fixed dep = total sale value of equipment x fixed rate of dep, number of crop fear accounted for before this step
     fixed_dep = model.p_fixed_dep[p7]
-    #cost per ha seeding dep x (number of days seeding / number seeders) x ha per day. Need to divide by the number of headers because v_seeding_machdays is the total seeding time but if there is two seeders each seeder only does half the hours and therefore has less dep.
+    #cost per ha seeding dep x (number of days seeding / number seeders) x ha per day. Need to divide by the number of headers because v_seeding_machdays is the total seeding time but if there is two seeders each seeder only does half the hours and therefore has less dep (because dep rate includes the value of all seeders).
     seeding_depreciation = sum(model.p_seeding_dep[p7,p5,z,k,l] * (model.v_seeding_machdays[q,s,z,p5,k,l] / model.p_number_seeding_gear) * model.p_seeding_rate[k,l]
                                for l in model.s_lmus for p5 in  model.s_labperiods for k in model.s_landuses
                                if model.p_number_seeding_gear>0)
-    #cost of harv dep = hourly dep x (early and late harv hours / number headers). Need to divide by the number of headers because v_harv_hours is the total harvest hours but if there is two headers each header only does half the hours and therefore has less dep.
+    #cost of harv dep = hourly dep x (early and late harv hours / number headers). Need to divide by the number of headers because v_harv_hours is the total harvest hours but if there is two headers each header only does half the hours and therefore has less dep (because dep rate includes the value of all headers).
     harv_dep = sum(model.p_harv_dep[p7,p5,z] * (model.v_harv_hours[q,s,z,p5,k] / model.p_number_harv_gear)
                    for k in model.s_crops for p5 in model.s_labperiods if model.p_number_harv_gear>0)
     return seeding_depreciation + fixed_dep + harv_dep
