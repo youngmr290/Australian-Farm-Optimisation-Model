@@ -22,7 +22,10 @@ import multiprocessing as mp
 import os
 import sys
 import multiprocessing
+import time
 
+#report the clock time that the experiment was started
+print(f'Calibration commenced at: {time.ctime()}')
 
 time_list = [] ; time_was = []
 time_list.append(timer()) ; time_was.append("start")
@@ -48,7 +51,7 @@ from lib.AfoLogic import relativeFile
 ###############
 try:
     exp_number = int(sys.argv[1])  #reads in as string so need to convert to int, the script path is the first value hence take the second.
-    trial = 0    #If an experiment was passed as an argument then take the first trial in the experiment
+    trial = 2    #If an experiment was passed as an argument then take the specified trial in the experiment
 except (IndexError, ValueError) as e:  #in case no arg passed to python specify a trial number
     ## the trial number is value in Col A of target trial in exp.xls. Default is QT (trial 31) but can point to any trial
     trial = 12   #12 is QT
@@ -157,9 +160,9 @@ def f_run_calibration(t, coefficients_dict, success_dict, wsmse_dict, message_di
     bestbet = bestbet_tc[t]
 
     ##Set some of the control variables (that might want to be tweaked later)
-    maxiter = 1000  #1000      The maximum number of iterations. # calls = (maxiter + 1) * selection population
+    maxiter = 400  #1000      The maximum number of iterations. # calls = (maxiter + 1) * selection population
     popsize = 5     #15        The selection population is (popsize * n coefficients)
-    tol = 0.1       #0.01      The optimisation relative tolerance
+    tol = 0.01       #0.01      The optimisation relative tolerance
     disp = True     #False     Display the result each iteration
     polish = True   #True      After the differential evolution carry out some further refining
     workers = 1     #10        Must be equal to 1 if multiprocessing the teams
@@ -219,9 +222,9 @@ if __name__ == '__main__':
             bestbet = bestbet_tc[t]
 
             ##Set some of the control variables (that might want to be tweaked later)
-            maxiter = 1000  #1000      The maximum number of iterations. # calls = (maxiter + 1) * selection population
+            maxiter = 400  #1000      The maximum number of iterations. # calls = (maxiter + 1) * selection population
             popsize = 6  #15        The selection population is (popsize * n coefficients)
-            tol = 0.1  #0.01      The optimisation relative tolerance
+            tol = 0.01  #0.01      The optimisation relative tolerance
             disp = True  #False     Display the result each iteration
             polish = True  #True      After the differential evolution carry out some further refining
             population = popsize * n_coef

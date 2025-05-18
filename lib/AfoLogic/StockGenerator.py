@@ -87,7 +87,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##GEPEP coefficients #
     ######################
     ##set the genotype to calibrate. This is the genotype in Universal.xlsx
-    genotype = 1    #1 is Med1 (medium wool Merino)
+    genotype = 2    #2 is GEPEP CFS
     if gepep:
         ##Comment any coefficients that aren't being calibrated
         n_coeff = len(coefficients_c)
@@ -110,8 +110,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         SRW_coeff = i   #This pointer is used in the printout (line 7355) and removes need for manual updating.
         uinp.parameters['i_srw_c2'][genotype] = coefficients_c[i]           #SRW
         i += 1
-        # uinp.parameters['i_ci_c2'][1, genotype] = coefficients_c[i]         #Potential Intake
-        # i += 1
+        uinp.parameters['i_ci_c2'][1, genotype] = coefficients_c[i]         #Potential Intake
+        i += 1
         # # cg[9] calculated from the deviation in cg[8]
         # uinp.parameters['i_cg_c2'][9, genotype] += (coefficients_c[i] - uinp.parameters['i_cg_c2'][8, genotype])
         # uinp.parameters['i_cg_c2'][8, genotype] = coefficients_c[i]         #Fatness (EVG)
@@ -7389,7 +7389,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         return calibration_objective
 
     else:
-        ##print the calibration variables
+        ##print the calibration variables when running AFO - used as a record of the calibration so comment out for main runs.
         j=0
         print(f"CFW {o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]} with ({coefficients_c[j]})")  #CFW of single ewes at 3.5yo
         j += 1
@@ -7436,9 +7436,9 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         twin_surv = (twin_surv_2yo + twin_surv_3yo + twin_surv_4yo + twin_surv_5yo) / 4
         print(f"Twin survival {twin_surv} with ({coefficients_c[j]})")  #twin lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
         j += 1
-        # j += 1  #comment this out if calibrating with SRW
+        # j += 1  #comment out this increment if calibrating with SRW
         print(f"Dam weight 3yo joining {o_ffcfw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]} with ({coefficients_c[j]})")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
-        j += 1   #comment this out if calibrating with PI
+        j += 1   #comment out this increment if calibrating with PI
         j += 1
         fat_propn = fun.f_divide(r_fat_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
                                , r_ebw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for the wethers 30mo BTRT 11,first cycle,from 3yo
