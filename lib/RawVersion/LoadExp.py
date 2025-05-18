@@ -42,7 +42,7 @@ def f_read_exp():
 
     ##read excel
     exp_location = relativeFile.findExcel("exp.xlsx")
-    print(f', last saved: {datetime.fromtimestamp(round(os.path.getmtime(exp_location)))}', end=' ', flush=True)
+    print(f'exp.xls last saved: {datetime.fromtimestamp(round(os.path.getmtime(exp_location)))}', end=' ', flush=True)
     exp_data = pd.read_excel(exp_location, index_col=None, header=[0,1,2,3], engine='openpyxl')
 
     ##determine trials which are in specified experiment group. If no group passed in then all trials will be included in the experiment.
