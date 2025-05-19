@@ -175,13 +175,22 @@ def f_universal_inp_sa(uinp_defaults):
         mach[option]['clearing_value'].loc[:,'value'] = fun.f_sa(np.array(mach[option]['clearing_value'].loc[:,'value']), sen.sav[('clearing_value',option)], 5) #use np so f_update does the dtype correctly
         mach[option]['number_of_seeders'] = fun.f_sa(mach[option]['number_of_seeders'], sen.sav[('number_seeders',option)], 5)
         mach[option]['seeding_rate_base'] = fun.f_sa(mach[option]['seeding_rate_base'], sen.sav[('seeding_rate_base',option)], 5)
+        mach[option]['fuel_seeding'] = fun.f_sa(mach[option]['fuel_seeding'], sen.sav[('seeding_fuel_use',option)], 5)
+        mach[option]['tillage_maint'] = fun.f_sa(mach[option]['tillage_maint'], sen.sav[('seeding_rm',option)], 5)
         mach[option]['number_of_harvesters'] = fun.f_sa(mach[option]['number_of_harvesters'], sen.sav[('number_harvesters',option)], 5)
         mach[option]['harvest_rate'].iloc[:,0] = fun.f_sa(np.array(mach[option]['harvest_rate'].iloc[:,0]), sen.sav[('harvest_rate',option)], 5) #use np so f_update does the dtype correctly
+        mach[option]['harv_fuel_consumption'] = fun.f_sa(mach[option]['harv_fuel_consumption'], sen.sav[('harvester_fuel_use',option)], 5)
+        mach[option]['harvest_maint'] = fun.f_sa(mach[option]['harvest_maint'], sen.sav[('harvester_rm',option)], 5)
+        mach[option]['truck_chaser_rm'] = fun.f_sa(mach[option]['truck_chaser_rm'], sen.sav[('truck_n_chaser_rm',option)], 5)
         mach[option]['spraying_rate'] = fun.f_sa(mach[option]['spraying_rate'], sen.sav[('spraying_rate',option)], 5)
+        mach[option]['sprayer_fuel_consumption'] = fun.f_sa(mach[option]['sprayer_fuel_consumption'], sen.sav[('spraying_fuel',option)], 5)
+        mach[option]['sprayer_maint'] = fun.f_sa(mach[option]['sprayer_maint'], sen.sav[('spraying_rm',option)], 5)
         mach[option]['spreader_cap'] = fun.f_sa(mach[option]['spreader_cap'], sen.sav[('spreader_cap',option)], 5)
         mach[option]['spreader_width'].iloc[:,0] = fun.f_sa(np.array(mach[option]['spreader_width'].iloc[:,0]), sen.sav[('spreader_width',option)], 5) #use np so f_update does the dtype correctly
         mach[option]['spreader_speed'] = fun.f_sa(mach[option]['spreader_speed'], sen.sav[('spreading_speed',option)], 5)
         mach[option]['spreader_eff'] = fun.f_sa(mach[option]['spreader_eff'], sen.sav[('spreading_eff',option)], 5)
+        mach[option]['spreader_fuel'] = fun.f_sa(mach[option]['spreader_fuel'], sen.sav[('spreading_fuel',option)], 5)
+        mach[option]['spreader_maint'] = fun.f_sa(mach[option]['spreader_maint'], sen.sav[('spreading_rm',option)], 5)
         ###sam
         ###sap
         ###saa

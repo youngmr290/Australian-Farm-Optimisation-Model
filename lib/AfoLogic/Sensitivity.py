@@ -218,13 +218,23 @@ def create_sa():
         sav['clearing_value', option] = np.full(len(uinp.mach[option]['clearing_value']), '-', dtype=object) #clearing sale value of each item of machinery
         sav['number_seeders', option] = '-'                                 #number of seeders
         sav['seeding_rate_base', option] = '-'                                  #seeding speed of wheat on base LMU (km/hr)
+        sav['seeding_fuel_use', option] = '-'                                  #seeding fuel (L/mach hr)
+        sav['seeding_rm', option] = '-'                                  #seeding r&m (tractor and seeder)
         sav['number_harvesters', option] = '-'                              #number of harvesters
         sav['harvest_rate', option] = np.full(len_crop_k, '-', dtype=object) #harvesting rate of each crop (t/hr)
+        sav['harvester_fuel_use', option] = '-'                              #fuel (L/mach hr)
+        sav['harvester_rm', option] = '-'                              #r&m (harvester)
+        sav['truck_n_chaser_rm', option] = '-'                              #r&m (harvestering extras)
         sav['spraying_rate', option] = '-'                        #speed (km/hr)
+        sav['spraying_fuel', option] = '-'                        #(L/mach hr)
+        sav['spraying_rm', option] = '-'                        #r&m ($/mach hr)
         sav['spreader_cap', option] = '-'                                   #capacity (m3)
         sav['spreader_width', option] = np.full(len_n, '-', dtype=object)   #width for each fert type (m)
         sav['spreading_speed', option] = '-'                                #speed (km/hr)
         sav['spreading_eff', option] = '-'                                  #paddock efficiency of harvesting (accounts for overlap)
+        sav['spreading_fuel', option] = '-'                        #(L/activity hr)
+        sav['spreading_rm', option] = '-'                        #r&m ($/activity hr)
+
     ##SAM
     ##SAP
     ##SAA
