@@ -1202,8 +1202,8 @@ def f_spraying_spreading_dep(r_vals):
     ##spraying
     ###variable depn rate is input as a percent depn in all spray gear per machine hour (%/machine hr).
     spray_dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_spraying']
-    ####convert from rotor hours to spray activity hours
-    spray_dep_rate_per_hr = spray_dep_rate_per_hr / (1 + pinp.mach['spray_eff'])
+    ####convert from rotor hours to spray activity hours (no dep when filling up)
+    spray_dep_rate_per_hr = spray_dep_rate_per_hr * (1 - pinp.mach['spray_downtime_frac'])
     ###determine dep per hour - equal to crop gear value x depn %
     spray_gear_clearing_value = mac.f_spray_gear_clearing_value()
     spray_dep_hourly = spray_gear_clearing_value * spray_dep_rate_per_hr
@@ -1230,7 +1230,6 @@ def f_spraying_spreading_dep(r_vals):
     ##spreading
     ###variable depn rate is input as a percent depn in all spreading gear per machine hour (%/machine hr).
     spread_dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_spreading']
-    ####dont adjust for eff because there will be loader dep for filling up.
     ###determine dep per hour - equal to crop gear value x depn %
     spread_gear_clearing_value = mac.f_spread_gear_clearing_value()
     spread_dep_hourly = spread_gear_clearing_value * spread_dep_rate_per_hr

@@ -203,12 +203,12 @@ def create_sa():
     ##SAV
     sav['mach_option'] = '-'                    #control which machine compliment is used
     sav['daily_seed_hours'] = '-'               #number of hours seeder can run for each day.
-    sav['seeding_eff'] = '-'               #propn of seeding time when the seeder is not moving i.e. due to refilling.
+    sav['seeding_downtime_frac'] = '-'               #propn of seeding time when the seeder is not moving i.e. due to refilling.
     sav['seeding_delays'] = '-'               #propn of the seeding period when seeding cannot occur due to bad weather
     sav['daily_harvest_hours'] = '-'               #number of hours harvester can run for each day.
-    sav['harv_eff'] = '-'               #propn of seeding time when the harv is not moving (e.g. prep/greasing harvester, moving paddocks, testing grain moisture, etc.)
+    sav['harv_downtime_frac'] = '-'               #propn of seeding time when the harv is not moving (e.g. prep/greasing harvester, moving paddocks, testing grain moisture, etc.)
     sav['harv_delays'] = '-'               #propn of the harv period when harv cannot occur due to bad weather
-    sav['spray_eff'] = '-'               #propn of spraying time when sprayer is not working e.g. filling up.
+    sav['spray_downtime_frac'] = '-'               #propn of spraying time when sprayer is not working e.g. filling up.
     sav['variable_dep_hr_seeding'] = '-'               #variable depn of seeding gear per machine hour of seeding
     sav['variable_dep_hr_harv'] = '-'               #variable depn of harvest gear per machine hour of harvest
     sav['variable_dep_hr_spraying'] = '-'               #variable depn of sprayer gear per machine hour of spraying

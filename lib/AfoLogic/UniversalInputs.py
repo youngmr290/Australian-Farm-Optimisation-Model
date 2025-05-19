@@ -313,5 +313,5 @@ def f1_mask_landuse():
         ###sav
         pinp.f1_do_mask_landuse(mach[option], "seeding_rate_crop_adj", landuse_axis_type="all", landuse_axis=0)
         pinp.f1_do_mask_landuse(mach[option], "harvest_rate", landuse_axis_type="crop", landuse_axis=0)
-        pinp.f1_do_mask_landuse(mach[option], "harvest_maint", landuse_axis_type="crop", landuse_axis=0)
+        pinp.f1_do_mask_landuse(mach[option], "harvest_maint_scalar", landuse_axis_type="crop", landuse_axis=0)
         mach[option]["sup_feed"] = mach[option]["sup_feed"].loc[supp_mask_k3, :]

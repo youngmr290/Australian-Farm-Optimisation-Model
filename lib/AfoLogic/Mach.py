@@ -274,7 +274,7 @@ def f_seed_time_lmus():
     rate_direct_drill_k_l = 1 / rate_direct_drill_k_l
 
     ##adjust for the time when seed is not being put in the ground due to moving paddocks or filling up.
-    rate_direct_drill_k_l = rate_direct_drill_k_l / (1 - pinp.mach['seeding_eff'])
+    rate_direct_drill_k_l = rate_direct_drill_k_l / (1 - pinp.mach['seeding_downtime_frac'])
 
     return rate_direct_drill_k_l
 
@@ -310,45 +310,13 @@ def fuel_use_seeding():
     '''
     ##mask lmu input
     seeding_fuel_lmu_adj = pinp.mach['seeding_fuel_lmu_adj']
-    ##determine fuel use on base lmu (draft x tractor factor)
-    base_lmu_seeding_fuel = uinp.mach[pinp.mach['option']]['draft_seeding'] * uinp.mach[pinp.mach['option']]['fuel_adj_tractor']
+    ##determine fuel use on base lmu (l/ha)
+    base_lmu_seeding_fuel = uinp.mach[pinp.mach['option']]['fuel_seeding'] / uinp.mach[pinp.mach['option']]['seeding_rate_base']
     ##determine fuel use on all soils by adjusting s5 fuel use with input adjustment factors
     df_seeding_fuel_lmu = base_lmu_seeding_fuel * seeding_fuel_lmu_adj
     #second multiply base cost by adj, to produce df with seeding fuel use for each lmu (L/ha)
     return df_seeding_fuel_lmu 
     
-def tractor_cost_seeding():
-    '''
-    Cost of running a tractor for seeding.
-
-    Tractor costs includes fuel, oil, grease and r&m. Oil, grease, repairs and maintenance are calculated
-    as a factor of fuel cost (see fuel used function for calculation of fuel used for seeding).
-
-    '''
-    fuel_used= fuel_use_seeding() 
-    ##Tractor r&m during seeding for each lmu
-    r_m_cost = fuel_used * fuel_price() * uinp.mach[pinp.mach['option']]['repair_maint_factor_tractor']
-    ##determine the $ cost of tractor fuel 
-    tractor_fuel_cost = fuel_used * fuel_price()
-    ##determine the $ cost of tractor oil and grease for seeding
-    tractor_oil_cost = fuel_used * fuel_price() * uinp.mach[pinp.mach['option']]['oil_grease_factor_tractor']
-    return r_m_cost + tractor_fuel_cost + tractor_oil_cost
-
-
-def maint_cost_seeder():
-    '''
-    Cost to repair and maintain air seeder ($/ha).
-
-    The seeder cost can vary depending on the LMU because different soil types wear out the cropping
-    gear at different rates. The cost inputs are set for the base LMU and then adjusted by a
-    user defined LMU factor.
-    '''
-    ##mask lmu input
-    tillage_maint_lmu_adj = pinp.mach['tillage_maint_lmu_adj']
-    ##equals r&m on base lmu x lmu adj factor
-    tillage_lmu_df = uinp.mach[pinp.mach['option']]['tillage_maint'] * tillage_maint_lmu_adj
-    return  tillage_lmu_df
-
 def f1_seed_cost_alloc():
     '''
     Labour period allocation for seeding costs.
@@ -391,14 +359,23 @@ def f1_seed_cost_alloc():
 
 def f_seeding_cost(r_vals):
     '''
-    Combines all the machinery costs required to seed 1 hectare of each crop and allocates the cost
-    to a cashflow period.
+    Machinery costs required to seed 1 hectare of each crop on each LMU ($/ha).
 
-    Total machinery cost of seeding includes tractor costs (see tractor_cost_seeding) and
-    seeder maintenance (see maint_cost_seeder).
+    Cost is broken into fuel cost and repairs and maintenance cost. Repairs and maintenance includes both the tractor and the seeder.
+    It is entered as an input for the base soil type and then adjusted for different crops and and soils by a user defined scalar.
+
     '''
+    ##fuel cost ($/ha)
+    fuel_cost_l = fuel_use_seeding() * fuel_price()
+
+    ##seeder r&m ($/ha)
+    base_rm = uinp.mach[pinp.mach['option']]['tillage_maint'] /  uinp.mach[pinp.mach['option']]['seeding_rate_base']
+    tillage_maint_lmu_adj = pinp.mach['tillage_maint_lmu_adj']
+    ##equals r&m on base lmu x lmu adj factor
+    rm_cost_l = base_rm * tillage_maint_lmu_adj
+
     ##Total cost seeding on each lmu $/ha.
-    seeding_cost_l = tractor_cost_seeding() + maint_cost_seeder()
+    seeding_cost_l = fuel_cost_l + rm_cost_l
     seeding_cost_l = seeding_cost_l.squeeze(axis=1)
 
     ##gets the cost allocation (includes interest)
@@ -613,7 +590,7 @@ def f_harv_rate_period():
     harv_occur = pd.Series(harv_occur_p7pkz.ravel(), index=index_p7pkz)
 
     ##Grain harvested per harvest activity hr (t/hr) for each crop. The efficiency adjustment factor converts from harvest rate per rotor hour to harvest rate per activity hour.
-    harv_rate = uinp.mach[pinp.mach['option']]['harvest_rate'].squeeze() * (1 - pinp.mach['harv_eff'])
+    harv_rate = uinp.mach[pinp.mach['option']]['harvest_rate'].squeeze() * (1 - pinp.mach['harv_downtime_frac'])
 
     ##combine harv rate and harv_occur
     harv_rate_period = harv_occur.mul(harv_rate, level=2)
@@ -685,14 +662,17 @@ def f_harvest_cost(r_vals):
     ##cost
     ##fuel used L/hr - same for each crop
     fuel_used = uinp.mach[pinp.mach['option']]['harv_fuel_consumption']
-    ##determine cost of fuel and oil and grease $/ha
     fuel_cost_hr = fuel_used * fuel_price()
-    oil_cost_hr = fuel_used * uinp.mach[pinp.mach['option']]['oil_grease_factor_harv'] * fuel_price()
-    ##determine fuel and oil cost per hr
-    fuel_oil_cost_hr = fuel_cost_hr + oil_cost_hr
+    ##harvester r&m $/hr
+    cost_harv_rm = uinp.mach[pinp.mach['option']]['harvest_maint']
+    harvest_maint_scalar_k = uinp.mach[pinp.mach['option']]['harvest_maint_scalar']
+    rm_cost_harv_k = harvest_maint_scalar_k * cost_harv_rm
+    ##cost (fuel + r&m)
+    cost_harv = (fuel_cost_hr + rm_cost_harv_k) * (1 - pinp.mach['harv_downtime_frac']) #convert from $/rotor hr to $/activity hr.
+    ##cost of other machinery linked to harvest - this is input in $/ activity hour. It does not need to be adjusted by harv downtime.
+    truck_chaser_rm = uinp.mach[pinp.mach['option']]['truck_chaser_rm']
     ##return fuel and oil cost plus r & m ($/hr)
-    cost_harv = fuel_oil_cost_hr + uinp.mach[pinp.mach['option']]['harvest_maint']
-    harv_cost_k = cost_harv.squeeze(axis=1)
+    harv_cost_k = (cost_harv + truck_chaser_rm).squeeze(axis=1)
     
     ##reindex with lmu so alloc can be mul with harv_cost
     keys_p7 = per.f_season_periods(keys=True)
@@ -863,10 +843,8 @@ def f_stubble_cost_ha():
     '''
     ##tractor costs = fuel + r&m + oil&grease
     tractor_fuel = uinp.mach[pinp.mach['option']]['stubble_fuel_consumption']*fuel_price()
-    tractor_rm = uinp.mach[pinp.mach['option']]['stubble_fuel_consumption']*fuel_price() * uinp.mach[pinp.mach['option']]['repair_maint_factor_tractor']
-    tractor_oilgrease = uinp.mach[pinp.mach['option']]['stubble_fuel_consumption']*fuel_price() * uinp.mach[pinp.mach['option']]['oil_grease_factor_tractor']
-    ##cost/hr= tractor costs + stubble rake(r&m) 
-    cost = tractor_fuel + tractor_rm + tractor_oilgrease + uinp.mach[pinp.mach['option']]['stubble_maint']
+    ##cost/hs= fuel costs + r&m
+    cost = tractor_fuel + uinp.mach[pinp.mach['option']]['stubble_maint']
     return cost
 #cc=stubble_cost_ha()
 
@@ -933,12 +911,10 @@ def spreader_cost_hr():
 
     Used to determine both fertiliser application cost per hour and per ha.
     '''
-    ##tractor costs = fuel + r&m + oil&grease
+    ##tractor fuel cost
     tractor_fuel = uinp.mach[pinp.mach['option']]['spreader_fuel']*fuel_price()
-    tractor_rm = uinp.mach[pinp.mach['option']]['spreader_fuel']*fuel_price() * uinp.mach[pinp.mach['option']]['repair_maint_factor_tractor']
-    tractor_oilgrease = uinp.mach[pinp.mach['option']]['spreader_fuel']*fuel_price() * uinp.mach[pinp.mach['option']]['oil_grease_factor_tractor']
-    ##cost/hr= tractor costs + spreader(r&m) 
-    cost = tractor_fuel + tractor_rm + tractor_oilgrease + uinp.mach[pinp.mach['option']]['spreader_maint']
+    ##cost/hr= tractor costs + spreader(r&m)
+    cost = tractor_fuel + uinp.mach[pinp.mach['option']]['spreader_maint']
     return cost
 
 #######################################################################################################################################################
@@ -963,8 +939,8 @@ def spray_time_ha():
     spraying_rate = uinp.mach[pinp.mach['option']]['spraying_rate']
     ##convert to hr/ha
     spraying_rate = 1 / spraying_rate
-    ##adjust for time spent filling up
-    spraying_rate = spraying_rate * (1+pinp.mach['spray_eff'])
+    ##adjust for time spent filling up (mach hr/ha to activity hr/ha)
+    spraying_rate = spraying_rate / (1-pinp.mach['spray_downtime_frac'])
     return spraying_rate
 
    
@@ -988,12 +964,10 @@ def spraying_cost_hr():
     '''
     ##tractor costs = fuel + r&m + oil&grease
     tractor_fuel = uinp.mach[pinp.mach['option']]['sprayer_fuel_consumption']*fuel_price()
-    tractor_rm = uinp.mach[pinp.mach['option']]['sprayer_fuel_consumption']*fuel_price() * uinp.mach[pinp.mach['option']]['repair_maint_factor_tractor']
-    tractor_oilgrease = uinp.mach[pinp.mach['option']]['sprayer_fuel_consumption']*fuel_price() * uinp.mach[pinp.mach['option']]['oil_grease_factor_tractor']
     ##cost/machine hr= tractor costs + sprayer(r&m)
-    cost = tractor_fuel + tractor_rm + tractor_oilgrease + uinp.mach[pinp.mach['option']]['sprayer_maint']
+    cost = tractor_fuel + uinp.mach[pinp.mach['option']]['sprayer_maint']
     ##convert to cost per spraying activity hr
-    cost = cost / (1+pinp.mach['spray_eff'])
+    cost = cost * (1 - pinp.mach['spray_downtime_frac'])
     return cost
 
 
@@ -1072,7 +1046,7 @@ def f_seeding_dep(r_vals):
     ##variable depn rate is input as a percent depn in all harvest gear per machine hour (%/machine hr).
     dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_seeding']
     ###convert from rotor hours to harvest activity hours
-    dep_rate_per_hr = dep_rate_per_hr / (1 + pinp.mach['seeding_eff'])
+    dep_rate_per_hr = dep_rate_per_hr * (1 - pinp.mach['seeding_downtime_frac'])
 
     ##determine dep per hour - equal to crop gear value x depn %
     seeding_gear_clearing_value = f_seeding_gear_clearing_value()
@@ -1114,7 +1088,7 @@ def f_seeding_dep(r_vals):
 
 def f_harvest_dep(r_vals):
     '''
-    Average variable dep for harvesting $/hr.
+    Average variable dep for harvesting $/activity hr.
 
     Variable depreciation is use depreciation and is dependent on the number of hours the equipment is used.
     The harvest activity is represented in hours so the variable depreciation is simply the rate of depreciation
@@ -1124,7 +1098,7 @@ def f_harvest_dep(r_vals):
     ##variable depn rate is input as a percent depn in all harvest gear per rotor hour (%/rotor hr).
     dep_rate_per_hr = uinp.mach_general['i_variable_dep_hr_harv']
     ###convert from rotor hours to harvest activity hours
-    dep_rate_per_hr = dep_rate_per_hr / (1 + pinp.mach['harv_eff'])
+    dep_rate_per_hr = dep_rate_per_hr * (1 - pinp.mach['harv_downtime_frac'])
 
     ##determine dep per hour - equal to harv gear value x dep %
     dep_hourly = harvest_gear_clearing_value() * dep_rate_per_hr
