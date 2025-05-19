@@ -1050,10 +1050,10 @@ def f_mach_summary(lp_vars, r_vals, option=0):
         subtype = ['Total harvest costs', 'Owner harvest costs', 'Owner harvest hours', 'Contract costs', 'Contract harvest hours',
                    'Total seeding costs', 'Owner seeding costs', 'Owner seeding days', 'Contract costs', 'Contract seeded hectares',
                    'Total spreading and spraying costs', 'Spreading hours', 'Spraying hours',
-                   'Variable depreciation', 'Fixed depreciation']
+                   'Variable depreciation', 'Fixed depreciation',
+                   'Insurance', 'Total']
         mach_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, subtype], names=['Sequence_year', 'Sequence', 'Season', 'Subtype'])
         mach = pd.DataFrame(index=mach_index, columns=["item"])  # need to initialise df with multiindex so rows can be added
-        # pnl = pnl.sort_index() #have to sort to stop performance warning
 
         ##spraying and spreading time - doesnt require phase_increment. Just calculate based on the existing rotations in p7[-1]. Will need updating if dual cropping.
         rot_area_qs_rzl = rot_area_qszrl_p7.iloc[:,-1].unstack([3,2,4]) # slice p7[-1]
@@ -1075,6 +1075,10 @@ def f_mach_summary(lp_vars, r_vals, option=0):
         seeding_ha_qsz_kl = seeding_ha_qszk_l.unstack(-1).reorder_levels([1, 0], axis=1).reindex(seeding_dep_ha_kl.index, axis=1)
         seeder_dep_qsz = seeding_ha_qsz_kl.mul(seeding_dep_ha_kl, axis=1).sum(axis=1)  / r_vals['mach']['number_of_harvesters']
 
+        ###insurance
+        mach_insurance_z = mach_insurance_p7z.unstack(0).sum(axis=1)
+        mach_insurance_qsz = mach_insurance_z.reindex(pd.MultiIndex.from_product([keys_q, keys_s, keys_z], names=["q", "s", "z"]),level=-1)
+
         ###harv summary
         mach.loc[idx[:, :, :, 'Total harvest costs'],:] = harvest_cost_zkqs_p7.sum(axis=1).groupby(axis=0,level=(0,2,3)).sum().reorder_levels([1, 2, 0]) #sum p7, k and reorder
         mach.loc[idx[:, :, :, 'Owner harvest costs'],:] = own_harvest_cost_zp5kqs_p7.sum(axis=1).groupby(axis=0,level=(0,3,4)).sum().reorder_levels([1, 2, 0]) #sum p7, p5, k and reorder
@@ -1094,6 +1098,21 @@ def f_mach_summary(lp_vars, r_vals, option=0):
         ###dep
         mach.loc[idx[:, :, :, 'Variable depreciation'],:] = spray_dep_qsz + spread_dep_qsz + harv_dep_qsz + seeder_dep_qsz
         mach.loc[idx[:, :, :, 'Fixed depreciation'],:] = r_vals['mach']['fixed_dep_p7'].sum()
+        ###insurance
+        mach.loc[idx[:, :, :, 'Insurance'],:] = mach_insurance_qsz
+        # ###total
+        # total_cost_items = [
+        #     'Total harvest costs',
+        #     'Total seeding costs',
+        #     'Total spreading and spraying costs',
+        #     'Variable depreciation',
+        #     'Fixed depreciation',
+        #     'Insurance'
+        # ]
+        # # Filter rows where the last level matches any of the cost items
+        # filtered = mach.loc[idx[:, :, :, total_cost_items], :]
+        # mach.loc[idx[:, :, :, 'Total'], :] = filtered.groupby(level=[0, 1, 2]).sum()
+
         return mach.round(0).astype(int)
 
 def f_available_cropgrazing(r_vals):
