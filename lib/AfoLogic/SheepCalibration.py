@@ -144,11 +144,12 @@ stubble=False
 coefficients_tc = np.zeros((n_teams,n_coef))
 success_t = np.zeros(n_teams, dtype=bool)
 wsmse_t = np.zeros(n_teams)
+nit_t = np.zeros(n_teams)
 message_t = np.empty(n_teams, dtype = object)
 
 ##loop through teams and save output
 
-def f_run_calibration(t, coefficients_dict, success_dict, wsmse_dict, message_dict):
+def f_run_calibration(t, coefficients_dict, success_dict, wsmse_dict, nit_dict, message_dict):
     ## weightings for the calibration objective function
     ### these are defined for all teams and don't vary
     calibration_weights = weights_p
@@ -162,9 +163,9 @@ def f_run_calibration(t, coefficients_dict, success_dict, wsmse_dict, message_di
     ##Set some of the control variables (that might want to be tweaked later)
     maxiter = 400  #1000      The maximum number of iterations. # calls = (maxiter + 1) * selection population
     popsize = 5     #15        The selection population is (popsize * n coefficients)
-    tol = 0.01       #0.01      The optimisation relative tolerance
+    tol = 0.1       #0.01      The optimisation relative tolerance
     disp = True     #False     Display the result each iteration
-    polish = True   #True      After the differential evolution carry out some further refining
+    polish = False   #True      After the differential evolution carry out some further refining
     workers = 1     #10        Must be equal to 1 if multiprocessing the teams
     updating = 'immediate'  #  Use deferred if workers > 1 to suppress warning. Immediate is more efficient if multiprocessing teams with 1 worker
 
@@ -176,6 +177,7 @@ def f_run_calibration(t, coefficients_dict, success_dict, wsmse_dict, message_di
     coefficients_dict[t] = result.x
     success_dict[t] = result.success
     wsmse_dict[t] = result.fun
+    nit_dict[t] = result.nit
     message_dict[t] = result.message
     print(f"Team {t} coefficients are {result.x} obj: {result.fun} evaluations {result.nfev}")
 
@@ -190,6 +192,7 @@ if __name__ == '__main__':
         coefficients_dict = manager.dict()
         success_dict = manager.dict()
         wsmse_dict = manager.dict()
+        nit_dict = manager.dict()
         message_dict = manager.dict()
         from functools import partial
         ##start multiprocessing
@@ -199,7 +202,7 @@ if __name__ == '__main__':
         with multiprocessing.Pool(processes=agents) as pool:
             # results = pool.map(f_run_calibration, teams, return_dict, chunksize=1)
             results = pool.map(partial(f_run_calibration, coefficients_dict=coefficients_dict, success_dict=success_dict
-                                       , wsmse_dict=wsmse_dict, message_dict=message_dict), teams, chunksize=1)
+                                       , wsmse_dict=wsmse_dict, nit_dict=nit_dict, message_dict=message_dict), teams, chunksize=1)
 
         ##save output by trial - just so that user can check (this is not for AFO)
         ### Set up the dataframes
@@ -207,6 +210,7 @@ if __name__ == '__main__':
         coefficients_tc = np.array(coefficients_dict.values())
         success_t = np.array(success_dict.values())
         wsmse_t = np.array(wsmse_dict.values())
+        nit_t = np.array(nit_dict.values())
         message_t = np.array(message_dict.values())
 
     else:
@@ -224,9 +228,9 @@ if __name__ == '__main__':
             ##Set some of the control variables (that might want to be tweaked later)
             maxiter = 400  #1000      The maximum number of iterations. # calls = (maxiter + 1) * selection population
             popsize = 6  #15        The selection population is (popsize * n coefficients)
-            tol = 0.01  #0.01      The optimisation relative tolerance
+            tol = 0.1  #0.01      The optimisation relative tolerance
             disp = True  #False     Display the result each iteration
-            polish = True  #True      After the differential evolution carry out some further refining
+            polish = False  #True      After the differential evolution carry out some further refining
             population = popsize * n_coef
             max_workers = 15  #1         The number of multi-processes, while calculating the population. Relate to size of population
             workers = min(multiprocessing.cpu_count(), population, max_workers)
@@ -246,6 +250,7 @@ if __name__ == '__main__':
             coefficients_tc[t, :] = result.x
             success_t[t] = result.success
             wsmse_t[t] = result.fun
+            nit_t[t] = result.nit
             message_t[t] = result.message
             time_list.append(timer()); time_was.append(t)
             print(f"Team {t} coefficients are {result.x} obj: {result.fun} evaluations {result.nfev} {time_list[-1] - time_list[-2]:0.4f}secs")
@@ -253,6 +258,7 @@ if __name__ == '__main__':
     coefficients = pd.DataFrame(coefficients_tc, index=keys_t, columns=keys_c)
     success = pd.DataFrame(success_t, index=keys_t, columns=["Optimal"])
     wsmse  = pd.DataFrame(wsmse_t, index=keys_t, columns=["WSMSE"])
+    nit = pd.DataFrame(nit_t, index=keys_t, columns=["Iterations"])
     message = pd.DataFrame(message_t, index=keys_t, columns=["Message"])
 
     ### Write to Excel
@@ -261,7 +267,8 @@ if __name__ == '__main__':
     coefficients.to_excel(writer,"result", index=True, header=True, startrow=0, startcol=1)
     success.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+2)
     wsmse.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+3)
-    message.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+4)
+    nit.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+4)
+    message.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+5)
     writer.close()
 
     time_list.append(timer()) ; time_was.append("end")
