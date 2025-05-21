@@ -1851,9 +1851,6 @@ def f_lwc_mu(cg, ck, rc_start, mei_initial, nem_ee, km, hp_mei, new, kw, zf1, zf
     if rev_affects_energy:
         if sen.sam['heat_loss'] == 1:
             #The sam on heat_loss has not been activated.
-            print (np.allclose(evg_prior, evg), np.allclose(wbec_prior, wbec)
-            , np.allclose(d_fat_prior, d_fat), np.allclose(d_muscle_prior, d_muscle)
-            , np.allclose(d_viscera_prior, d_viscera))
             raise ValueError('REV trial is being carried out without changing sam[heat_loss]. This causes errors in the back calculation')
         else:
             ##Calculate some variables to reduce the args required for f1_back_calculate_mei()
