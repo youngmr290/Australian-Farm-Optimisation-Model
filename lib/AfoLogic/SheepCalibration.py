@@ -227,7 +227,7 @@ if __name__ == '__main__':
 
             ##Set some of the control variables (that might want to be tweaked later)
             maxiter = 400  #1000      The maximum number of iterations. # calls = (maxiter + 1) * selection population
-            popsize = 6  #15        The selection population is (popsize * n coefficients)
+            popsize = 5  #15        The selection population is (popsize * n coefficients)
             tol = 0.01  #0.01      The optimisation relative tolerance
             disp = True  #False     Display the result each iteration
             polish = False  #True      After the differential evolution carry out some further refining
