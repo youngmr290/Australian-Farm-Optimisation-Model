@@ -51,7 +51,7 @@ from lib.AfoLogic import relativeFile
 ###############
 try:
     exp_number = int(sys.argv[1])  #reads in as string so need to convert to int, the script path is the first value hence take the second.
-    trial = 2    #If an experiment was passed as an argument then take the specified trial in the experiment
+    trial = 0    #If an experiment was passed as an argument then take the specified trial in the experiment
 except (IndexError, ValueError) as e:  #in case no arg passed to python specify a trial number
     ## the trial number is value in Col A of target trial in exp.xls. Default is QT (trial 31) but can point to any trial
     trial = 12   #12 is QT

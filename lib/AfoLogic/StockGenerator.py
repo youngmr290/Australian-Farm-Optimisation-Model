@@ -87,7 +87,7 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ##GEPEP coefficients #
     ######################
     ##set the genotype to calibrate. This is the genotype in Universal.xlsx
-    genotype = 3    #2 is GEPEP CFS
+    genotype = pinp.sheep['a_c2_c0'][0]    #2 is CFS for MLP & GEPEP traditional, 3 is GFS for GEPEP
     if gepep:
         ##Comment any coefficients that aren't being calibrated
         n_coeff = coefficients_c.size
