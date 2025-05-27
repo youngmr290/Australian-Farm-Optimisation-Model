@@ -262,6 +262,7 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
     fun.f1_lmuregion_to_lmufarmer(tree, "tree_fert_soil_scalar", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(tree, "estimated_area_trees_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(tree, "lmu_growth_scalar_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(tree, "lmu_carbon_scalar_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
 
 
 #######################
@@ -680,6 +681,7 @@ def f1_mask_lmu():
     f1_do_mask_lmu(tree, "tree_fert_soil_scalar", lmu_axis=0)
     f1_do_mask_lmu(tree, "estimated_area_trees_l", lmu_axis=0)
     f1_do_mask_lmu(tree, "lmu_growth_scalar_l", lmu_axis=0)
+    f1_do_mask_lmu(tree, "lmu_carbon_scalar_l", lmu_axis=0)
 
 def f1_do_mask_landuse(dict, key, landuse_axis_type, landuse_axis):
     '''

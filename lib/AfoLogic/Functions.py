@@ -680,39 +680,46 @@ def f_logistic_integral(x, L, k, x0, offset):
     """
     return offset*x + (L - offset)/k * np.log(1 + np.exp(k*(x - x0)))
 
-def f_integral_gauss_tail(x, Y_normal, a, b, c, p, q):
+def f_combined_integral(x, offset, k, x0, a, mu, sigma, x_max):
     """
-    Indefinite integral (antiderivative) of the model:
-      Y(x) = Y_normal + a*exp(-((x-b)/c)**2) - p/(x+q).
-    
-    The result is:
-      Y_normal*x + a*(sqrt(pi)/2)*c*erf((x-b)/c) - p*ln|x+q| + C
-    
+    Compute the indefinite integral of a custom function that combines:
+      - a logistic component (representing gradual increase from offset to 1), and
+      - a Gaussian "bump" (representing a temporary overshoot above 1),
+      adjusted so that the tail returns to 1 at large distances.
+
+    The function being integrated is:
+        f(x) = offset + (1 - offset) / (1 + exp(-k * (x - x0))) + a * exp(-((x - mu)/sigma)^2) - a * exp(-((x_max - mu)/sigma)^2)
+
     Parameters
     ----------
-    x : float or array-like
-        The x-value(s) at which to evaluate the antiderivative.
-    Y_normal : float
-        Baseline offset.
+    x : float or np.ndarray
+        The x-value(s) at which to evaluate the indefinite integral.
+    offset : float
+        The base value of the logistic function at x → -∞.
+    k : float
+        The steepness of the logistic curve.
+    x0 : float
+        The inflection point (center) of the logistic curve.
     a : float
-        Amplitude of the Gaussian term.
-    b : float
-        Center of the Gaussian term.
-    c : float
-        Width of the Gaussian term.
-    p : float
-        Coefficient for the rational term.
-    q : float
-        Shift for the rational term.
-    
+        The amplitude of the Gaussian bump.
+    mu : float
+        The center of the Gaussian bump.
+    sigma : float
+        The standard deviation (spread) of the Gaussian bump.
+    x_max : float
+        The x-location used to anchor the tail of the bump to return the function to 1.
+
     Returns
     -------
-    F(x) : float or array-like
-        The indefinite integral evaluated at x (up to a constant).
+    float or np.ndarray
+        The value of the indefinite integral at x.
     """
-    return (Y_normal * x 
-            + a * (np.sqrt(np.pi)/2) * c * erf((x - b)/c)
-            - p * np.log(np.abs(x + q)))
+    from scipy.special import erf
+    logistic_int = offset * x + (1 - offset) / k * np.log(1 + np.exp(k * (x - x0)))
+    bump_int = a * (np.sqrt(np.pi) / 2) * sigma * erf((x - mu) / sigma)
+    bump_tail = a * np.exp(-((x_max - mu) / sigma) ** 2) * x
+    return logistic_int + bump_int - bump_tail
+
 
 def f_dynamic_slice(arr, axis, start, stop, step=1, axis2=None, start2=None, stop2=None, step2=1):
     ##check if arr is int - this is the case for the first loop because arr may be initialised as 0

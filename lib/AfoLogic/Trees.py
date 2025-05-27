@@ -45,6 +45,7 @@ def f_costs(r_vals, mask_season_p7z):
     Note, the opportunity cost of the land that is affected by the trees is considered in the other functions.
     Note 2, labour is a cost rather than being hooked up to the labour constraints because it is only a once off thing (and may be completed by contractors).
     '''
+    #TODO maybe need to add a fixed cost for learning etc. It would be less if going through a broker.
 
     # Retrieve selected plantation structure
     config = uinp.tree[f"plantation_structure_{uinp.tree['controls']['plantation_structure']}"]
@@ -54,8 +55,12 @@ def f_costs(r_vals, mask_season_p7z):
     effective_width = (config["number_of_rows"] - 1) * config["between_row_spacing"] + 2 * config["side_buffer"]
 
     # Calculate planting density (plants per hectare)
-    planting_density = 10000 / effective_width / config["within_row_spacing"] * config["number_of_rows"]  # plants per hectare
-    
+    planting_density = 10000 / effective_width / config["within_row_spacing"] * config["number_of_rows"]  # trees per hectare
+    # add shrubs (assume same price as trees)
+    planting_density = planting_density + config["shrub_density"]  # plants per hectare
+    # adjust for mortality - dead trees are replanted (or just plant at slightly higher rate to allow for mortality)
+    planting_density = planting_density / (1 - uinp.tree["initial_costs"]["planting"]["mortality"])
+
     # Get LMU data as NumPy arrays
     lmu_fert_scalar_l = pinp.tree["tree_fert_soil_scalar"]
 
@@ -159,16 +164,19 @@ def f_adjacent_land_production_scalar():
     # Production on the PROTECTED side
     #########################################
 
-    # Logistic parameters for the protected side (benefiting from wind protection and incurring resource competition)
-    protected_side_params = uinp.tree["protected_side_production_logistic_params"]
-    L_fit_protected = protected_side_params["L"]
+    # parameters for the protected side (benefiting from wind protection and incurring resource competition)
+    protected_side_params = plantation_config["protected_side_production_logistic_params"]
+    offset_fit_protected = protected_side_params["offset"]
     k_fit_protected = protected_side_params["k"]
     x0_fit_protected = protected_side_params["x0"]
-    offset_fit_protected = protected_side_params["offset"]
+    a_fit_protected = protected_side_params["a"]
+    mu_fit_protected = protected_side_params["mu"]
+    sigma_fit_protected = protected_side_params["sigma"]
 
     # Evaluate the indefinite logistic integral at 0 and at the distance between belts
-    F0_protected = fun.f_logistic_integral(0, L_fit_protected, k_fit_protected, x0_fit_protected, offset_fit_protected)
-    Fx_protected = fun.f_logistic_integral(distance_between_belts, L_fit_protected, k_fit_protected, x0_fit_protected, offset_fit_protected)
+    x_max = distance_between_belts  # max distance you’re integrating to
+    F0_protected = fun.f_combined_integral(0, offset_fit_protected, k_fit_protected, x0_fit_protected, a_fit_protected, mu_fit_protected, sigma_fit_protected, x_max)
+    Fx_protected = fun.f_combined_integral(distance_between_belts, offset_fit_protected, k_fit_protected, x0_fit_protected, a_fit_protected, mu_fit_protected, sigma_fit_protected, x_max)
 
     # Compute the relative production adjustment over the belt width
     relative_production_adj_protected = (Fx_protected - F0_protected) / distance_between_belts
@@ -183,7 +191,7 @@ def f_adjacent_land_production_scalar():
     #note - assuming the belts are far enough apart that the resource competition is not felt on the other side of the tree belt.
 
     # Logistic parameters for the non-protected side (receiving only resource competition costs)
-    nonprotected_side_params = uinp.tree["nonprotected_side_production_logistic_params"]
+    nonprotected_side_params = plantation_config["nonprotected_side_production_logistic_params"]
     L_fit_nonprotected = nonprotected_side_params["L"]
     k_fit_nonprotected = nonprotected_side_params["k"]
     x0_fit_nonprotected = nonprotected_side_params["x0"]
@@ -247,7 +255,7 @@ def f_microclimate_adj():
     #########################################
 
     # Logistic parameters for the protected side (benefiting from wind protection and incurring resource competition)
-    ws_logistic_params = uinp.tree["ws_logistic_params"]
+    ws_logistic_params = plantation_config["ws_logistic_params"]
     L_fit_ws = ws_logistic_params["L"]
     k_fit_ws = ws_logistic_params["k"]
     x0_fit_ws = ws_logistic_params["x0"]
@@ -264,20 +272,21 @@ def f_microclimate_adj():
     #########################################
     # Temp adjuster on the PROTECTED side
     #########################################
+    #todo this is not hooked up yet - need data to parameterise the logistic function.
 
     # Logistic parameters for the protected side (benefiting from wind protection and incurring resource competition)
-    temp_logistic_params = uinp.tree["temp_logistic_params"]
+    temp_logistic_params = plantation_config["temp_logistic_params"]
     L_fit_temp = temp_logistic_params["L"]
     k_fit_temp = temp_logistic_params["k"]
     x0_fit_temp = temp_logistic_params["x0"]
     offset_fit_temp = temp_logistic_params["offset"]
 
     # Evaluate the indefinite logistic integral at 0 and at the distance between belts
-    F0_temp = fun.f_logistic_integral(0, L_fit_temp, k_fit_temp, x0_fit_temp, offset_fit_temp)
-    Fx_temp = fun.f_logistic_integral(distance_between_belts, L_fit_temp, k_fit_temp, x0_fit_temp, offset_fit_temp)
+    # F0_temp = fun.f_logistic_integral(0, L_fit_temp, k_fit_temp, x0_fit_temp, offset_fit_temp)
+    # Fx_temp = fun.f_logistic_integral(distance_between_belts, L_fit_temp, k_fit_temp, x0_fit_temp, offset_fit_temp)
 
     # Compute the relative production adjustment over the belt width
-    relative_temp_adj = (Fx_temp - F0_temp) / distance_between_belts
+    relative_temp_adj = 1 #(Fx_temp - F0_temp) / distance_between_belts
 
     return relative_ws_adj, relative_temp_adj, protected_area
 
@@ -294,11 +303,13 @@ def f_harvestable_biomass(r_vals, mask_season_p7z):
     harvested = uinp.tree["controls"]["include_harvesting"]
     biomass_harvesting = uinp.tree["biomass_harvesting"]
     biomass_price = uinp.tree["biomass_price"]
+    plantation_structure = uinp.tree["controls"]["plantation_structure"]
+    plantation_config = uinp.tree[f"plantation_structure_{plantation_structure}"]
 
     #biomass income and costs per ha
     if harvested:
         # income
-        biomass_harvested_y = uinp.tree["biomass_harvested_y"][0:project_duration]
+        biomass_harvested_y = plantation_config["biomass_harvested_y"][0:project_duration+1] #project_duration + 1 because the first slice is t0, slice 1 is really yr 1.
         regional_growth_scalar = pinp.tree["regional_growth_scalar"]
         lmu_growth_scalar_l = pinp.tree["lmu_growth_scalar_l"]
         biomass_harvested_yl = biomass_harvested_y[:,na] * regional_growth_scalar * lmu_growth_scalar_l
@@ -309,8 +320,8 @@ def f_harvestable_biomass(r_vals, mask_season_p7z):
         # costs per hectare
         costs_yl = biomass_harvested_yl * (harv_cost + transport_cost)
     else:
-        biomass_income_yl = np.zeros([project_duration,1])
-        costs_yl = np.zeros([project_duration,1])
+        biomass_income_yl = np.zeros([project_duration+1, 1]) #project_duration + 1 because the first slice is t0, slice 1 is really yr 1.
+        costs_yl = np.zeros([project_duration+1, 1]) #project_duration + 1 because the first slice is t0, slice 1 is really yr 1.
         
     # Compute NPV 
     discount_rate  = uinp.finance['i_interest']
@@ -348,7 +359,7 @@ def f_sequestration(r_vals, mask_season_p7z):
     - Estimating net CO₂e sequestered each year after accounting for fuel-related emissions.
     - Converting each year's net sequestration into a dollar value using a real carbon price.
     - Discounting these cashflows over the project duration and annualising them to align with steady-state economic conditions.
-    - Separately calculating the average annual net CO₂e sequestered (in tonnes/ha/year) for biophysical reporting in AFO.
+    - Separately calculating the average annual net CO₂e sequestered (in kg/ha/year) for biophysical reporting in AFO.
 
     This distinction ensures the financial benefit is derived from time-weighted cashflows, while the biophysical metric reflects
     the average sequestration rate. These are **not interchangeable**, since sequestration is not constant over time.
@@ -363,22 +374,21 @@ def f_sequestration(r_vals, mask_season_p7z):
     '''
 
     
-    #TODO the seq input needs to be a bit more detailed to account for different tree configurations and harvesting.
-    # and region and lmu scalar....
-    # and add the duration discount...
+    #TODO Do i need to add a discount in the ACCU's for 25 year projects?
     
     project_duration = uinp.tree["controls"]["project_duration"]  # Total number of years
     include_carbon_credit = uinp.tree["controls"]["include_carbon_credit"]
     carbon_price = uinp.tree["carbon_price"]
     sequestration_costs = uinp.tree["sequestration_costs"]
+    plantation_structure = uinp.tree["controls"]["plantation_structure"]
+    plantation_config = uinp.tree[f"plantation_structure_{plantation_structure}"]
     
     ##calc net annual sequestration per hectare
-    #TODO check how does sequestration change based on soil and region? Is it the same as biomass or do we need different scalars?
     regional_growth_scalar = pinp.tree["regional_growth_scalar"]
-    lmu_growth_scalar_l = pinp.tree["lmu_growth_scalar_l"]
+    lmu_carbon_scalar_l = pinp.tree["lmu_carbon_scalar_l"]
     risk_of_reversal_buffer = uinp.tree["risk_of_reversal_buffer"]
-    annual_sequestration_yl = (uinp.tree["annual_sequestration"][0:project_duration+1,na] * (1-risk_of_reversal_buffer) 
-                               * regional_growth_scalar * lmu_growth_scalar_l) # project_duration + 1 because the first slice is t0 slice 1 is really yr 1.
+    annual_sequestration_yl = (plantation_config["annual_sequestration"][0:project_duration+1,na] * (1-risk_of_reversal_buffer)
+                               * regional_growth_scalar * lmu_carbon_scalar_l) # project_duration + 1 because the first slice is t0, slice 1 is really yr 1.
     
     fuel_used_initial = uinp.tree["fuel_used"]["initial"]
     fuel_used_yr1 = uinp.tree["fuel_used"]["yr1"]
@@ -391,7 +401,7 @@ def f_sequestration(r_vals, mask_season_p7z):
     
     ##calc average sequestration per year for GHG report
     annual_sequestration_l = np.mean(annual_sequestration_yl, axis=0)
-    co2e_fuel = np.mean(co2e_fuel_y, axis=0)
+    co2e_fuel = np.mean(co2e_fuel_y[1:], axis=0) #dont include slice 0 in the average since slice 0 is not a real year. It just exists to account for initial costs etc.
     co2e_sold_l = (annual_sequestration_l - co2e_fuel) * include_carbon_credit
     
     #sequestration income and costs per ha
@@ -405,7 +415,7 @@ def f_sequestration(r_vals, mask_season_p7z):
 
     else:
         sequestration_income_yl = net_co2e_yl * 0
-        costs_y = np.zeros([project_duration])
+        costs_y = np.zeros([project_duration+1])
         
     # Compute NPV 
     discount_rate  = uinp.finance['i_interest']
@@ -439,12 +449,9 @@ def f_biodiversity(r_vals, mask_season_p7z):
     '''
     Calculate the value of biodiversity credits from tree plantation per hectare.
     
-    Assumption is that no biodiversity credits are avaliable if biomass is harvested.
+    Assumption 1 - Biodiversity credits are paid for upfront.
     '''
-    #TODO need to work out how payment structure works. If it is a propn per yr then need to discount
-    #TODO how does plantation duration impact biodiversity credits???
     project_duration = uinp.tree["controls"]["project_duration"]  # Total number of years
-    harvested = uinp.tree["controls"]["include_harvesting"]
     biodiversity_included = uinp.tree["controls"]["include_biodiversity_credit"]
     biodiversity_costs = uinp.tree["biodiversity_costs"]
     plantation_structure = uinp.tree["controls"]["plantation_structure"]
@@ -454,7 +461,7 @@ def f_biodiversity(r_vals, mask_season_p7z):
     biodiversity_credits_y = np.zeros(project_duration)
     
     #credits and costs per ha
-    if biodiversity_included and not harvested:
+    if biodiversity_included and plantation_config["biodiversity_credits"]>0:
         biodiversity_credits_y[0] = plantation_config["biodiversity_credits"]  #all credits recieved at the start of the project
         costs_y[0] = biodiversity_costs["setup"]
         costs_y[1:] = biodiversity_costs["annual_monitoring"] 

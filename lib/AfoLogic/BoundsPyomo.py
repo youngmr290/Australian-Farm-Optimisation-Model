@@ -1010,6 +1010,7 @@ def f1_boundarypyomo_local(params, model):
 
                 Note this constraint could be modified to constrain emission intensity or to constrain emissions from each enterprise.
                 '''
+                #TODO - need to add trees and carbon sold if carbon is sold it doesnt reduce farm footprint.
                 if model.p_co2e_limit>0:
                     return sum((sum((suppy.f_sup_emissions(model,q,s,p6,z) + cgzpy.f_grazecrop_emissions(model,q,s,p6,z)
                                      + stubpy.f_cropresidue_consumption_emissions(model,q,s,p6,z) + slppy.f_saltbush_emissions(model,q,s,z,p6)
