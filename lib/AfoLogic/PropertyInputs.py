@@ -24,7 +24,10 @@ import sys
 from . import Functions as fun
 from . import StructuralInputs as sinp
 from . import relativeFile
-from Inputs import TreePropertyInputs as tinp
+try:
+    from Inputs import TreePropertyInputs as tinp  # Local case
+except ImportError:
+    from module.afo.Inputs import TreePropertyInputs as tinp  # Web app case
 
 na = np.newaxis
 
@@ -257,7 +260,7 @@ def f_farmer_lmu_adj(a_lmuregion_lmufarmer):
     
     ##tree
     fun.f1_lmuregion_to_lmufarmer(tree, "tree_fert_soil_scalar", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
-    fun.f1_lmuregion_to_lmufarmer(tree, "area_trees_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
+    fun.f1_lmuregion_to_lmufarmer(tree, "estimated_area_trees_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
     fun.f1_lmuregion_to_lmufarmer(tree, "lmu_growth_scalar_l", a_lmuregion_lmufarmer, lmu_axis=0, lmu_flag=lmu_flag)
 
 
@@ -370,12 +373,12 @@ def f_property_inp_sa(pinp_defaults):
     ###sav
     mach['option'] = fun.f_sa(mach['option'], sen.sav['mach_option'], 5)
     mach['daily_seed_hours'] = fun.f_sa(mach['daily_seed_hours'], sen.sav['daily_seed_hours'], 5)
-    mach['seeding_eff'] = fun.f_sa(mach['seeding_eff'], sen.sav['seeding_eff'], 5)
+    mach['seeding_downtime_frac'] = fun.f_sa(mach['seeding_downtime_frac'], sen.sav['seeding_downtime_frac'], 5)
     mach['seeding_delays'] = fun.f_sa(mach['seeding_delays'], sen.sav['seeding_delays'], 5)
     mach['daily_harvest_hours'] = fun.f_sa(mach['daily_harvest_hours'], sen.sav['daily_harvest_hours'], 5)
-    mach['harv_eff'] = fun.f_sa(mach['harv_eff'], sen.sav['harv_eff'], 5)
+    mach['harv_downtime_frac'] = fun.f_sa(mach['harv_downtime_frac'], sen.sav['harv_downtime_frac'], 5)
     mach['harv_delays'] = fun.f_sa(mach['harv_delays'], sen.sav['harv_delays'], 5)
-    mach['spray_eff'] = fun.f_sa(mach['spray_eff'], sen.sav['spray_eff'], 5)
+    mach['spray_downtime_frac'] = fun.f_sa(mach['spray_downtime_frac'], sen.sav['spray_downtime_frac'], 5)
     ###sam
     ###sap
     ###saa

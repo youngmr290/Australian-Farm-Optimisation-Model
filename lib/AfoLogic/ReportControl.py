@@ -106,6 +106,9 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
     if report_run.loc['run_pnl', 'Run']:
         option = f_update_default_controls(user_controls, 'pnl', 'option', 2) #1 = report q, s, & z. 2 = weighted average of q, s, & z
         reports["pnl"] = rfun.f_profitloss_table(lp_vars, r_vals, option=option)
+    if report_run.loc['run_mach', 'Run']:
+        option = f_update_default_controls(user_controls, 'mach_summary', 'option', 4)
+        reports["mach"] = rfun.f_mach_summary(lp_vars, r_vals, option=option)
     if report_run.loc['run_wc', 'Run']:
         reports["wc"] = rfun.f_wc_summary(lp_vars, r_vals)
     if report_run.loc['run_biomass_penalty', 'Run']:
@@ -121,7 +124,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         reports["profitarea"] = profitarea
     if report_run.loc['run_feedbudget', 'Run']:
         option = f_update_default_controls(user_controls, 'feed', 'option', 0)  #0 mei/hd/day & propn from each source, 1 total mei/d
-        nv_option = f_update_default_controls(user_controls, 'feed', 'nv_option', 0)   #0 Separate NV pool, NV pool summed.
+        nv_option = f_update_default_controls(user_controls, 'feed', 'nv_option', 1)   #0 Separate NV pool, NV pool summed.
         residue_cols = f_update_default_controls(user_controls, 'feed', 'residue_cols', [])
         dams_cols = f_update_default_controls(user_controls, 'feed', 'dams_cols', [2]) #k
         offs_cols = f_update_default_controls(user_controls, 'feed', 'offs_cols', []) #shear opp
