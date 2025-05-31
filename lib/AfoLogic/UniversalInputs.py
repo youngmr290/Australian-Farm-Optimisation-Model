@@ -241,6 +241,7 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_srw_c2'] = fun.f_sa(parameters['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5) #genotype srw
     parameters['i_sfw_c2'] = fun.f_sa(parameters['i_sfw_c2'].astype(float), sen.sav['sfw_c2'], 5) #genotype sfw
     parameters['i_sfd_c2'] = fun.f_sa(parameters['i_sfd_c2'].astype(float), sen.sav['sfd_c2'], 5) #genotype sfd
+    parameters['i_cn_c2'] = fun.f_sa(parameters['i_cn_c2'].astype(float), sen.sav['cn_c1c2'], 5) #normal growth parameters
     parameters['i_ci_c2'] = fun.f_sa(parameters['i_ci_c2'].astype(float), sen.sav['ci_c1c2'], 5) #potential intake parameters
     parameters['i_cl_c2'] = fun.f_sa(parameters['i_cl_c2'].astype(float), sen.sav['cl_c1c2'], 5) #lactation parameters
     parameters['i_cp_c2'] = fun.f_sa(parameters['i_cp_c2'].astype(float), sen.sav['cp_c1c2'], 5) #pregnancy parameters
