@@ -92,34 +92,34 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##Comment any coefficients that aren't being calibrated
         n_coeff = coefficients_c.size
         n_traits = calibration_weights_p.size
-        i = 0
-        uinp.parameters['i_sfw_c2'][genotype] = coefficients_c[i]           #sfw
-        i += 1
-        uinp.parameters['i_sfd_c2'][genotype]  = coefficients_c[i]          #sfd
-        i += 1
-        # uinp.parameters['i_cw_c2'][16, genotype] = coefficients_c[i]        #iSS
-        # i += 1
-        uinp.parameters['i_cw_c2'][11, genotype] = coefficients_c[i]        #Density
-        i += 1
-        uinp.parameters['i_cl0_c2'][25, 0, genotype] = coefficients_c[i]   #% preg (Con)
-        i += 1
-        uinp.parameters['i_cl0_c2'][25, 1, genotype] = coefficients_c[i]    #Litter size
-        i += 1
-        uinp.parameters['i_cu2_c2'][8, -1, genotype] = coefficients_c[i]    #Lamb survival (ERA)
-        i += 1
-        SRW_coeff = i   #This pointer is used in the printout (line 7355) and removes need for manual updating.
-        uinp.parameters['i_srw_c2'][genotype] = coefficients_c[i]           #SRW
-        i += 1
-        uinp.parameters['i_ci_c2'][1, genotype] = coefficients_c[i]         #Potential Intake
-        i += 1
+        j = 0
+        uinp.parameters['i_sfw_c2'][genotype] = coefficients_c[j]           #sfw
+        j += 1
+        uinp.parameters['i_sfd_c2'][genotype]  = coefficients_c[j]          #sfd
+        j += 1
+        # uinp.parameters['i_cw_c2'][16, genotype] = coefficients_c[j]        #iSS
+        # j += 1
+        uinp.parameters['i_cw_c2'][11, genotype] = coefficients_c[j]        #Density
+        j += 1
+        uinp.parameters['i_cl0_c2'][25, 0, genotype] = coefficients_c[j]   #% preg (Con)
+        j += 1
+        uinp.parameters['i_cl0_c2'][25, 1, genotype] = coefficients_c[j]    #Litter size
+        j += 1
+        uinp.parameters['i_cu2_c2'][8, -1, genotype] = coefficients_c[j]    #Lamb survival (ERA)
+        j += 1
+        SRW_coeff = j   #This pointer is used in the printout (line 7355) and removes need for manual updating.
+        uinp.parameters['i_srw_c2'][genotype] = coefficients_c[j]           #SRW
+        j += 1
+        uinp.parameters['i_ci_c2'][1, genotype] = coefficients_c[j]         #Potential Intake
+        j += 1
         # cg[9] calculated from the deviation in cg[8]
-        uinp.parameters['i_cg_c2'][9, genotype] += (coefficients_c[i] - uinp.parameters['i_cg_c2'][8, genotype])
-        uinp.parameters['i_cg_c2'][8, genotype] = coefficients_c[i]         #Fatness (EVG)
-        i += 1
-        uinp.parameters['i_cd_c2'][1, genotype] = coefficients_c[i]        #Basal mortality
-        i += 1
-        uinp.parameters['i_cl_c2'][0, genotype] = coefficients_c[i]        #Wwt, by milk production and intake scalar
-        i += 1
+        uinp.parameters['i_cg_c2'][9, genotype] += (coefficients_c[j] - uinp.parameters['i_cg_c2'][8, genotype])
+        uinp.parameters['i_cg_c2'][8, genotype] = coefficients_c[j]         #Fatness (EVG)
+        j += 1
+        uinp.parameters['i_cd_c2'][1, genotype] = coefficients_c[j]        #Basal mortality
+        j += 1
+        uinp.parameters['i_cl_c2'][0, genotype] = coefficients_c[j]        #Wwt, by milk production and intake scalar
+        j += 1
 
         # ##Build and apply sar variable based on the next 44 coefficients
         # indicelist = [(slice(3, 4, None), slice(None, None, None), slice(40, 57, None))    #00   Ewes
@@ -196,11 +196,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         coefficients_c[j] = uinp.parameters['i_ci_c2'][1, genotype]         #Intake
         j += 1
         # cg[9] calculated from the deviation in cg[8]
-        coefficients_c[i] = uinp.parameters['i_cg_c2'][8, genotype]         #Fatness EVG
-        i += 1
-        coefficients_c[i] = uinp.parameters['i_cd_c2'][1, genotype]        #Basal mortality
-        i += 1
-        coefficients_c[i] = uinp.parameters['i_cl_c2'][0, genotype]        #Wwt, by milk production and intake scalar
+        coefficients_c[j] = uinp.parameters['i_cg_c2'][8, genotype]         #Fatness EVG
+        j += 1
+        coefficients_c[j] = uinp.parameters['i_cd_c2'][1, genotype]        #Basal mortality
+        j += 1
+        coefficients_c[j] = uinp.parameters['i_cl_c2'][0, genotype]        #Wwt, by milk production and intake scalar
 
 
     ######################
