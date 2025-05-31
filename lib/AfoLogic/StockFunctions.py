@@ -1343,7 +1343,7 @@ def f_milk_nfs(cl, srw, relsize_start, rc_birth_start, mei, hp_maint, rc_start, 
 
 
 def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, new_min_g, d_cfw_ave_g
-            , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g, kw_g, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
+            , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_cfw_g, af_fd_g, dlf_wool_g, kw_g, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
             , rev_trait_value, nec_g1=0, kc_g1=1, nel_g1=0, kl_g1=1, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##The CSIRO equations are predicting clean fleece weight (Pw in doc) as shorn (not DM) - calculating GFW = Pw / yield
     ##Energy content of wool is specified as MJ/kg of greasy wool as shorn (although the doc says the parameter is clean)
@@ -1362,7 +1362,7 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     mew_min_g = new_min_g / kw_g
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
     ##Wool growth (protein weight-as shorn i.e. not DM) if there was no lag
-    d_cfw_nolag_g = cw_g[8, ...] * wge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
+    d_cfw_nolag_g = cw_g[8, ...] * wge_a0e0b0xyg * af_cfw_g * dlf_wool_g * mew_xs_g
     d_cfw_nolag_g = f1_rev_sa(d_cfw_nolag_g, sen.sam['rev_cfw'], age, sa_type=0)
     ##Process the CFW REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_cfw_nolag_g = f1_rev_update('cfw', d_cfw_nolag_g, rev_trait_value)
@@ -1372,7 +1372,10 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     ###can be negative because mem assumes 4g of clean wool is grown. If less is grown then new 'returns' the energy.
     new_g = cw_g[1, ...] * (d_cfw_g - cw_g[2, ...] * relsize_start_g) / cw_g[3, ...]
     ##Fibre diameter for the days growth (um)
-    d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
+    ###Average daily CFW is scaled by af_fd which is the age factor related to number of follicles.
+    ###When af_cfw & af_fd are the same the FD doesn't change with age.
+    ### af3 is not include in af_fd so FD does vary related to the variation in CFW of the hogget age animals.
+    d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g * af_fd_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
     d_fd_g = f1_rev_sa(d_fd_g, sen.saa['rev_fd'], age, sa_type=2)
     ##Process the FD REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_fd_g = f1_rev_update('fd', d_fd_g, rev_trait_value)
@@ -1384,7 +1387,7 @@ def f_fibre_cs(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
 
 
 def f_fibre_mu(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, new_min_g, d_cfw_ave_g
-            , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g, kw_g, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
+            , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_cfw_g, af_fd_g, dlf_wool_g, kw_g, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
             , rev_trait_value, nec_g1=0, kc_g1=1, nel_g1=0, kl_g1=1, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##Wool growth is a copy of CSIRO but with different calculation of energy stored and heat production
     ##Energy content of wool is specified as MJ/kg of wool base (following Young 2024)
@@ -1403,7 +1406,7 @@ def f_fibre_mu(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     mew_min_g = fun.f_divide(new_min_g, kw_g)
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
     ##Wool growth (wool base - clean dry fibre) if there was no lag
-    d_wb_nolag_g = cw_g[8, ...] * wbge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
+    d_wb_nolag_g = cw_g[8, ...] * wbge_a0e0b0xyg * af_cfw_g * dlf_wool_g * mew_xs_g
     d_wb_nolag_g = f1_rev_sa(d_wb_nolag_g, sen.sam['rev_cfw'], age, sa_type=0)
     ##Process the CFW REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_wb_nolag_g = f1_rev_update('cfw', d_wb_nolag_g, rev_trait_value)
@@ -1419,7 +1422,10 @@ def f_fibre_mu(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
     ##Convert wool base to CFW (using Schlumberger Dry factor)
     d_cfw_g = d_wb_g * cw_g[22, ...]
     ##Fibre diameter for the days growth (um)
-    d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
+    ###Average daily CFW is scaled by af_fd which is the age factor related to number of follicles.
+    ###When af_cfw & af_fd are the same the FD doesn't change with age.
+    ### af3 is not include in af_fd so FD does vary related to the variation in CFW of the hogget age animals.
+    d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g * af_fd_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
     d_fd_g = f1_rev_sa(d_fd_g, sen.saa['rev_fd'], age, sa_type=2)
     ##Process the FD REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_fd_g = f1_rev_update('fd', d_fd_g, rev_trait_value)
@@ -1431,7 +1437,7 @@ def f_fibre_mu(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p
 
 
 def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, new_min_g, d_cfw_ave_g
-            , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
+            , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_cfw_g, af_fd_g, dlf_wool_g, days_period_g, age, sfw_ltwadj_g, sfd_ltwadj_g
             , rev_trait_value, dc_g1=0, bc_g1=0, dl_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##Wool growth is a copy of CSIRO but with different calculation of energy stored and heat production
     ##There is some discrepancy in Hutton's equations because the energy content is for protein DM (not as shorn)
@@ -1452,7 +1458,7 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - ((dc_g1 + hp_dc_g1) * gest_propn_g1
                                                                 + (dl_g1 + hp_dl_g1) * lact_propn_g1))
     ##Wool growth (protein weight-as shorn i.e. not DM) if there was no lag
-    d_cfw_nolag_g = cw_g[8, ...] * wge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
+    d_cfw_nolag_g = cw_g[8, ...] * wge_a0e0b0xyg * af_cfw_g * dlf_wool_g * mew_xs_g
     d_cfw_nolag_g = f1_rev_sa(d_cfw_nolag_g, sen.sam['rev_cfw'], age, sa_type=0)
     ##Process the CFW REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_cfw_nolag_g = f1_rev_update('cfw', d_cfw_nolag_g, rev_trait_value)
@@ -1462,7 +1468,10 @@ def f_fibre_nfs(cw_g, cc_g, cg_g, ck_g, ffcfw_start_g, relsize_start_g, d_cfw_hi
     ###to be consistent with CSIRO the formula would be cw_g[1, ...] * d_cfw_g / cw_g[3, ...]
     dw_g = cg_g[23, ...] * cw_g[20, ...] * d_cfw_g
     ##Fibre diameter for the days growth
-    d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
+    ###Average daily CFW is scaled by af_fd which is the age factor related to number of follicles.
+    ###When af_cfw & af_fd are the same the FD doesn't change with age.
+    ### af3 is not include in af_fd so FD does vary related to the variation in CFW of the hogget age animals.
+    d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g * af_fd_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
     d_fd_g = f1_rev_sa(d_fd_g, sen.saa['rev_fd'], age, sa_type=2)
     ##Process the FD REV: either save the trait value to the dictionary or overwrite trait value with value from the dictionary
     d_fd_g = f1_rev_update('fd', d_fd_g, rev_trait_value)
