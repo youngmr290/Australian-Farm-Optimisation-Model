@@ -1,3 +1,4 @@
+import pandas as pd
 import time
 
 #report the clock time that the experiment was started
@@ -29,11 +30,17 @@ cat_propn_s1_ks2 = dxl.f_load_stubble()
 ##run AFO #
 ###########
 start_loops_time = time.time()    #This excludes the time for reading the inputs and is used to calculate remaining time
+calibration={}   # or None if not required
 
 run = 0  # counter to work out average time per loop
 for row in dataset:
     ##start timer for each loop
     start_trial_time = time.time()
+    if calibration == None:
+        calibration_row = None
+    else:
+        calibration[row]={}  #create row key inside calibration dictionary
+        calibration_row = calibration[row]
 
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][3]
@@ -54,13 +61,14 @@ for row in dataset:
     ##run AFO
     model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info = (
         afo.exp(solver_method, user_sa, property, trial_name, trial_description, sinp_defaults, uinp_defaults,
-                pinp_defaults, d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output))
+                pinp_defaults, d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output, calibration=calibration_row))
 
     ##tally trials run for print statements
     run += 1
 
     ##save AFO outputs
-    out.f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info)
+    if calibration == None:
+        out.f_save_trial_outputs(exp_data, row, trial_name, model, profit, trial_infeasible, lp_vars, r_vals, pkl_fs_info, d_rot_info)
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run
@@ -72,10 +80,14 @@ for row in dataset:
     print(
         f'{trial_description}, Expected finish time: \033[1m{time.ctime(finish_time_expected)}\033[0m (at {time.ctime()})')
 
-
-
+if calibration != None:
+    traits_to_save = pd.DataFrame({row: values["output"] for row, values in calibration.items()}).T
+    writer = pd.ExcelWriter("Output/TraitValues.xlsx", engine='xlsxwriter')
+    traits_to_save.to_excel(writer, sheet_name='Traits', index=True, header=False)
+    writer.close()
 
 end = time.time()
+
 print(f'Experiment completed at: {time.ctime()}, total trials completed: {run}')
 try:
     print(f'average time taken for each loop: {(end - start_time) / run:.2f}')  # average time since start of experiment (including reading inputs)

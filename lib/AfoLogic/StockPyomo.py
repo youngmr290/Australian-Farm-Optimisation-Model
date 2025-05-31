@@ -15,8 +15,8 @@ from . import StockGenerator as sgen
 from . import StructuralInputs as sinp
 
 
-def stock_precalcs(params, r_vals, nv, pkl_fs_info, pkl_fs):
-    sgen.generator(params=params, r_vals=r_vals, nv=nv, pkl_fs_info=pkl_fs_info, pkl_fs=pkl_fs)
+def stock_precalcs(params, r_vals, nv, pkl_fs_info, pkl_fs, calibration=None):
+    sgen.generator(params=params, r_vals=r_vals, nv=nv, pkl_fs_info=pkl_fs_info, pkl_fs=pkl_fs, calibration=calibration)
 
 
 

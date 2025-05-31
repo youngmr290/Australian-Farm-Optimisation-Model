@@ -105,8 +105,8 @@ d_rot_info = pinp.f1_phases(d_rot_info)
 targets_tp = pd.read_excel(relativeFile.findExcel("GEPEP_calibration.xlsx"), sheet_name="Targets",index_col=[0],header=[0], engine='openpyxl')
 weights_p = pd.read_excel(relativeFile.findExcel("GEPEP_calibration.xlsx"), sheet_name="Weights",index_col=[0],header=[0], engine='openpyxl')
 bestbet_tc = pd.read_excel(relativeFile.findExcel("GEPEP_calibration.xlsx"), sheet_name="BestBet",index_col=[0],header=[0], engine='openpyxl')
-bnd_lo_tc = pd.read_excel(relativeFile.findExcel("GEPEP_calibration.xlsx"), sheet_name="Low",index_col=[0],header=[0], engine='openpyxl')
-bnd_up_tc = pd.read_excel(relativeFile.findExcel("GEPEP_calibration.xlsx"), sheet_name="High",index_col=[0],header=[0], engine='openpyxl')
+df_bnd_lo_tc = pd.read_excel(relativeFile.findExcel("GEPEP_calibration.xlsx"), sheet_name="Low",index_col=[0],header=[0], engine='openpyxl')
+df_bnd_up_tc = pd.read_excel(relativeFile.findExcel("GEPEP_calibration.xlsx"), sheet_name="High",index_col=[0],header=[0], engine='openpyxl')
 
 keys_t = targets_tp.index
 keys_c = bestbet_tc.columns
@@ -128,8 +128,8 @@ n_processes = min(multiprocessing.cpu_count(),n_teams, maximum_processes)
 targets_tp = targets_tp.values
 weights_p = weights_p.values
 bestbet_tc = bestbet_tc.values
-bnd_lo_tc = bnd_lo_tc.values
-bnd_up_tc = bnd_up_tc.values
+bnd_lo_tc = df_bnd_lo_tc.values
+bnd_up_tc = df_bnd_up_tc.values
 
 ##sgen args
 params={}   #an empty dictionary used in sgen.generator to store the parameters for the LP model. Not used in calibration
@@ -271,6 +271,9 @@ if __name__ == '__main__':
     wsmse.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+3)
     nit.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+4)
     message.to_excel(writer,"result", index=False, header=True, startrow=0, startcol=n_coef+5)
+    df_bnd_lo_tc.to_excel(writer,"Low", index=True, header=True, startrow=0, startcol=1)
+    df_bnd_up_tc.to_excel(writer,"High", index=True, header=True, startrow=0, startcol=1)
+
     writer.close()
 
     time_list.append(timer()) ; time_was.append("end")

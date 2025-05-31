@@ -59,8 +59,9 @@ from . import TreePyomo as treepy
 #Exp loop               #
 #########################
 
-def exp(solver_method, user_data, property, trial_name, trial_description, sinp_defaults, uinp_defaults, pinp_defaults,
-        d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output, a_lmuregion_lmufarmer=None, mp_lp_vars_path='pkl/pkl_lp_vars_MP Initial position.pkl'):
+def exp(solver_method, user_data, property, trial_name, trial_description, sinp_defaults, uinp_defaults, pinp_defaults
+        , d_rot_info, cat_propn_s1_ks2, pkl_fs, print_debug_output, calibration=None, a_lmuregion_lmufarmer=None
+        , mp_lp_vars_path='pkl/pkl_lp_vars_MP Initial position.pkl'):
 
     ##can use logger to get status on multiprocessing
     # logger.info('Received {}'.format(row))
@@ -89,7 +90,10 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     pinp.f1_expand_p6()
 
     ##check the rotations and inputs align - this means rotation method can be controlled using a SA
-    d_rot_info = pinp.f1_phases(d_rot_info)
+    try:
+        d_rot_info = pinp.f1_phases(d_rot_info)
+    except:
+        pass
 
     ##preform inputs tests
     inptest.f_input_logic_test()
@@ -152,6 +156,9 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
 
     ##call precalcs
     precalc_start = time.time()
+    spy.stock_precalcs(params['stock'],r_vals['stock'],nv,pkl_fs_info, pkl_fs, calibration)
+    if calibration != None:
+        return 0, 0, 0, 0, 0, 0, 0
     zgenpy.season_precalcs(params['zgen'],r_vals['zgen'])
     rotpy.rotation_precalcs(params['rot'],r_vals['rot'])
     phspy.crop_precalcs(params['crop'],r_vals['crop'])
@@ -161,7 +168,6 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     labpy.lab_precalcs(params['lab'],r_vals['lab'])
     lphspy.crplab_precalcs(params['crplab'],r_vals['crplab'])
     treepy.tree_precalcs(params['tree'],r_vals['tree'])
-    spy.stock_precalcs(params['stock'],r_vals['stock'],nv,pkl_fs_info, pkl_fs)
     suppy.sup_precalcs(params['sup'],r_vals['sup'], nv) #sup must be after stock because it uses nv dict which is populated in stock.py
     cgzpy.cropgraze_precalcs(params['crpgrz'],r_vals['crpgrz'], nv) #cropgraze must be after stock because it uses nv dict which is populated in stock.py
     slppy.saltbush_precalcs(params['slp'],r_vals['slp'], nv) #saltbush must be after stock because it uses nv dict which is populated in stock.py

@@ -67,7 +67,7 @@ from . import Trees as tre
 # from memory_profiler import profile
 # @profile
 def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pkl_fs={}, stubble=None
-              , gepep=None, calibration_weights_p=None, calibration_targets_p=None, plots = False):
+              , gepep=None, calibration_weights_p=None, calibration_targets_p=None, calibration=None, plots = False):
     """
     A function to wrap the generator and post-processing that can be called by SheepPyomo.
 
@@ -174,26 +174,27 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
     else:
         n_coeff = 12
+        n_traits = 11
         coefficients_c = np.zeros(n_coeff)
-        i = 0
-        coefficients_c[i] = uinp.parameters['i_sfw_c2'][genotype]           #cfw
-        i += 1
-        coefficients_c[i] = uinp.parameters['i_sfd_c2'][genotype]          #fd
-        i += 1
-        coefficients_c[i] = uinp.parameters['i_cw_c2'][16, genotype]        #SS
-        i += 1
-        coefficients_c[i] = uinp.parameters['i_cw_c2'][11, genotype]        #SL
-        i += 1
-        coefficients_c[i] = uinp.parameters['i_cl0_c2'][25, 0, genotype]   #% preg (Con)
-        i += 1
-        coefficients_c[i] = uinp.parameters['i_cl0_c2'][25, 1, genotype]    #Litter size
-        i += 1
-        coefficients_c[i] = uinp.parameters['i_cu2_c2'][8, -1, genotype]    #Lamb survival (ERA)
-        i += 1
-        coefficients_c[i] = uinp.parameters['i_srw_c2'][genotype]           #Adult LW
-        i += 1
-        coefficients_c[i] = uinp.parameters['i_ci_c2'][1, genotype]         #Intake
-        i += 1
+        j = 0
+        coefficients_c[j] = uinp.parameters['i_sfw_c2'][genotype]           #cfw
+        j += 1
+        coefficients_c[j] = uinp.parameters['i_sfd_c2'][genotype]          #fd
+        j += 1
+        coefficients_c[j] = uinp.parameters['i_cw_c2'][16, genotype]        #SS
+        j += 1
+        coefficients_c[j] = uinp.parameters['i_cw_c2'][11, genotype]        #SL
+        j += 1
+        coefficients_c[j] = uinp.parameters['i_cl0_c2'][25, 0, genotype]   #% preg (Con)
+        j += 1
+        coefficients_c[j] = uinp.parameters['i_cl0_c2'][25, 1, genotype]    #Litter size
+        j += 1
+        coefficients_c[j] = uinp.parameters['i_cu2_c2'][8, -1, genotype]    #Lamb survival (ERA)
+        j += 1
+        coefficients_c[j] = uinp.parameters['i_srw_c2'][genotype]           #Adult LW
+        j += 1
+        coefficients_c[j] = uinp.parameters['i_ci_c2'][1, genotype]         #Intake
+        j += 1
         # cg[9] calculated from the deviation in cg[8]
         coefficients_c[i] = uinp.parameters['i_cg_c2'][8, genotype]         #Fatness EVG
         i += 1
@@ -7435,66 +7436,93 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         return calibration_objective
 
     else:
-        ##print the calibration variables when running AFO - used as a record of the calibration so comment out for main runs.
-        j=0
-        print(f"CFW {o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]} with ({coefficients_c[j]})")  #CFW of single ewes at 3.5yo
-        j += 1
-        print(f"FD {o_fd_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]} with ({coefficients_c[j]})")  #FD of single ewes at 3.5yo
-        j += 1
-        print(f"SS {o_ss_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]} with ({coefficients_c[j]})")  #SS of single ewes at 3.5yo
-        j += 1
-        print(f"SL {o_sl_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]} with ({coefficients_c[j]})")  #SL of single ewes at 3.5yo
-        j += 1
-        ##proportion of preg is 1- (number of dry (b[1]) divided by the number dry and pregnant (b[1:5]))
-        preg_2yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,111,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                             np.sum(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        preg_3yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,163,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                             np.sum(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        preg_4yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,215,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                             np.sum(o_numbers_start_tpdams[0,215,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        preg_5yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,267,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
-                             np.sum(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
-        propn_preg = (preg_2yo + preg_3yo + preg_4yo + preg_5yo) / 4
-        print(f"% Preg {propn_preg} with ({coefficients_c[j]})")  #% preg of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
-        j += 1
-        ##Litter size is sum of the ewes weighted by # foetuses (np.dot with arange(4)) divided by pregnant ewes
-        ls_2yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                            , np.sum(o_numbers_start_tpdams[0,111,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        ls_3yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                            , np.sum(o_numbers_start_tpdams[0,163,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        ls_4yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,215,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                            , np.sum(o_numbers_start_tpdams[0,215,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        ls_5yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
-                            , np.sum(o_numbers_start_tpdams[0,267,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
-        litter_size = (ls_2yo + ls_3yo + ls_4yo + ls_5yo) / 4
-        print(f"Litter Size {litter_size} with ({coefficients_c[j]})")  #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
-        j += 1
-        ##twin survival is square root of the number of ewe with twins (BT22) after lambing / number before lambing
-        ##Square root is simpler to calculate than summing BTRT 22 * 2 & 21 * 1
-        twin_surv_2yo = fun.f_divide(o_numbers_start_tpdams[0,136,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                   , o_numbers_start_tpdams[0,132,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        twin_surv_3yo = fun.f_divide(o_numbers_start_tpdams[0,188,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                   , o_numbers_start_tpdams[0,184,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        twin_surv_4yo = fun.f_divide(o_numbers_start_tpdams[0,240,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                   , o_numbers_start_tpdams[0,236,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        twin_surv_5yo = fun.f_divide(o_numbers_start_tpdams[0,292,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
-                                   , o_numbers_start_tpdams[0,288,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
-        twin_surv = (twin_surv_2yo + twin_surv_3yo + twin_surv_4yo + twin_surv_5yo) / 4
-        print(f"Twin survival {twin_surv} with ({coefficients_c[j]})")  #twin lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
-        j += 1
-        j += 1  #comment out this increment if calibrating with SRW
-        print(f"Dam weight 3yo joining {o_ffcfw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]} with ({coefficients_c[j]})")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
-        # j += 1   #comment out this increment if calibrating with PI
-        j += 1
-        fat_propn = fun.f_divide(r_fat_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-                               , r_ebw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for the wethers 30mo BTRT 11,first cycle,from 3yo
-        print(f"Proportion fat {fat_propn} with ({coefficients_c[j]})")
-        j += 1
-        dam_mort = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])  #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
-                              , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
-        print(f"Dam survival Y-A5 {dam_mort} with ({coefficients_c[j]})")
-        j += 1
-        print(f"Wean weight {o_wean_w_tpyatf[0,199,0,0,2,0,0,0,0,0,0,0,0,0,0,0]} with ({coefficients_c[j]})")  #Weaning weight of 1st cycle singles from 3yos
+        if calibration == {}:
+            ##print the calibration variables when running AFO - used as a record of the calibration so comment out for main runs.
+            calibration_values_p = np.zeros(n_traits)
+            i = 0
+            calibration_values_p[i] = o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #CFW of single ewes at 3.5yo
+            i += 1
+            calibration_values_p[i] = o_fd_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #FD of single ewes at 3.5yo
+            i += 1
+            calibration_values_p[i] = o_ss_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #SS of single ewes at 3.5yo
+            i += 1
+            calibration_values_p[i] = o_sl_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #SL of single ewes at 3.5yo
+            i += 1
+            ##proportion of preg is 1 - (number of dry (b[1]) divided by the number dry and pregnant (b[1:5]))
+            preg_2yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,111,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                                 np.sum(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+            preg_3yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,163,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                                 np.sum(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+            preg_4yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,215,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                                 np.sum(o_numbers_start_tpdams[0,215,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+            preg_5yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,267,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                                 np.sum(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0]))
+            propn_preg = (preg_2yo + preg_3yo + preg_4yo + preg_5yo) / 4
+            calibration_values_p[i] = propn_preg     #% preg of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
+            i += 1
+            ##Litter size is sum of the ewes weighted by # foetuses (np.dot with arange(4)) divided by pregnant ewes
+            ls_2yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,111,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
+                                , np.sum(o_numbers_start_tpdams[0,111,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
+            ls_3yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,163,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
+                                , np.sum(o_numbers_start_tpdams[0,163,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
+            ls_4yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,215,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
+                                , np.sum(o_numbers_start_tpdams[0,215,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
+            ls_5yo = fun.f_divide(np.dot(o_numbers_start_tpdams[0,267,0,0,1:5,0,0,0,0,0,0,0,0,0,0,0], np.arange(4))
+                                , np.sum(o_numbers_start_tpdams[0,267,0,0,2:5,0,0,0,0,0,0,0,0,0,0,0]))
+            litter_size = (ls_2yo + ls_3yo + ls_4yo + ls_5yo) / 4
+            calibration_values_p[i] = litter_size     #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
+            i += 1
+            ##twin survival is square root of the number of ewe with twins (BT22) after lambing / number before lambing
+            ##Square root is simpler to calculate than summing BTRT 22 * 2 & 21 * 1, but this will need to change if the assumption on survival of twins being independent is relaxed
+            twin_surv_2yo = fun.f_divide(o_numbers_start_tpdams[0,136,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
+                                       , o_numbers_start_tpdams[0,132,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
+            twin_surv_3yo = fun.f_divide(o_numbers_start_tpdams[0,188,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
+                                       , o_numbers_start_tpdams[0,184,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
+            twin_surv_4yo = fun.f_divide(o_numbers_start_tpdams[0,240,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
+                                       , o_numbers_start_tpdams[0,236,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
+            twin_surv_5yo = fun.f_divide(o_numbers_start_tpdams[0,292,0,0,3,0,0,0,0,0,0,0,0,0,0,0]
+                                       , o_numbers_start_tpdams[0,288,0,0,3,0,0,0,0,0,0,0,0,0,0,0])**0.5
+            twin_surv = (twin_surv_2yo + twin_surv_3yo + twin_surv_4yo + twin_surv_5yo) / 4
+            calibration_values_p[i] = twin_surv     #single lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
+            i += 1
+            calibration_values_p[i] = o_ffcfw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
+            i += 1
+            calibration_values_p[i] = fun.f_divide(r_fat_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
+                                                 , r_ebw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for the dams at 3yo joining
+            i += 1
+            calibration_values_p[i] = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
+                                                 , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
+            i += 1
+            calibration_values_p[i] = o_wean_w_tpyatf[0,199,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Weaning weight of 1st cycle single born ewes
+            i += 1
+
+            i=0; j=0
+            print(f"CFW {calibration_values_p[i]} with ({coefficients_c[j]})")  #CFW of single ewes at 3.5yo
+            i += 1; j += 1
+            print(f"FD {calibration_values_p[i]} with ({coefficients_c[j]})")  #FD of single ewes at 3.5yo
+            i += 1; j += 1
+            print(f"SS {calibration_values_p[i]} with ({coefficients_c[j]})")  #SS of single ewes at 3.5yo
+            i += 1; j += 1
+            print(f"SL {calibration_values_p[i]} with ({coefficients_c[j]})")  #SL of single ewes at 3.5yo
+            i += 1; j += 1
+            print(f"% Preg {calibration_values_p[i]} with ({coefficients_c[j]})")  #% preg of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
+            i += 1; j += 1
+            print(f"Litter Size {calibration_values_p[i]} with ({coefficients_c[j]})")  #% litter size of adult ewes average across 2, 3, 4 & 5yo at joining 1st cycle
+            i += 1; j += 1
+            print(f"Twin survival {calibration_values_p[i]} with ({coefficients_c[j]})")  #twin lamb survival of adult ewes average across 2, 3, 4 & 5yo 1st cycle
+            i += 1; j += 1
+            # j += 1  #comment out this increment if calibrating with SRW
+            print(f"Dam weight 3yo joining {calibration_values_p[i]} with ({coefficients_c[j]})")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
+            j += 1   #comment out this increment if calibrating with PI
+            i += 1; j += 1
+            print(f"Proportion fat {calibration_values_p[i]} with ({coefficients_c[j]})")
+            i += 1; j += 1
+            print(f"Dam survival Y-A5 {calibration_values_p[i]} with ({coefficients_c[j]})")
+            i += 1; j += 1
+            print(f"Wean weight {calibration_values_p[i]} with ({coefficients_c[j]})")  #Weaning weight of 1st cycle singles from 3yos
+
+            calibration["output"] = calibration_values_p
+            return
 
     ###########################
     #post processing inputs  #
