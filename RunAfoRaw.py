@@ -85,6 +85,7 @@ if calibration != None:
     writer = pd.ExcelWriter("Output/TraitValues.xlsx", engine='xlsxwriter')
     traits_to_save.to_excel(writer, sheet_name='Traits', index=True, header=False)
     writer.close()
+    print(f'Trait values written to Excel. Note: Optimisation is not being carried out')
 
 end = time.time()
 
