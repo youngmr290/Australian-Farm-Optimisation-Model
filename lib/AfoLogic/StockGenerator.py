@@ -95,7 +95,11 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         j = 0
         uinp.parameters['i_sfw_c2'][genotype] = coefficients_c[j]           #sfw
         j += 1
+        uinp.parameters['i_cw_c2'][25, genotype] = coefficients_c[j]        #ycfw scalar
+        j += 1
         uinp.parameters['i_sfd_c2'][genotype]  = coefficients_c[j]          #sfd
+        j += 1
+        uinp.parameters['i_cw_c2'][26, genotype] = coefficients_c[j]        #yfd scalar
         j += 1
         # uinp.parameters['i_cw_c2'][16, genotype] = coefficients_c[j]        #iSS
         # j += 1
@@ -110,15 +114,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         SRW_coeff = j   #This pointer is used in the printout (line 7355) and removes need for manual updating.
         uinp.parameters['i_srw_c2'][genotype] = coefficients_c[j]           #SRW
         j += 1
-        uinp.parameters['i_ci_c2'][1, genotype] = coefficients_c[j]         #Potential Intake
-        j += 1
-        # cg[9] calculated from the deviation in cg[8]
-        uinp.parameters['i_cg_c2'][9, genotype] += (coefficients_c[j] - uinp.parameters['i_cg_c2'][8, genotype])
-        uinp.parameters['i_cg_c2'][8, genotype] = coefficients_c[j]         #Fatness (EVG)
-        j += 1
+        # uinp.parameters['i_ci_c2'][1, genotype] = coefficients_c[j]         #Potential Intake
+        # j += 1
+        # # cg[9] calculated from the deviation in cg[8]
+        # uinp.parameters['i_cg_c2'][9, genotype] += (coefficients_c[j] - uinp.parameters['i_cg_c2'][8, genotype])
+        # uinp.parameters['i_cg_c2'][8, genotype] = coefficients_c[j]         #Fatness (EVG)
+        # j += 1
         uinp.parameters['i_cd_c2'][1, genotype] = coefficients_c[j]        #Basal mortality
         j += 1
         uinp.parameters['i_cl_c2'][0, genotype] = coefficients_c[j]        #Wwt, by milk production and intake scalar
+        j += 1
+        uinp.parameters['i_cn_c2'][1, genotype] = coefficients_c[j]        #YWT, normal growth curve coefficient
         j += 1
 
         # ##Build and apply sar variable based on the next 44 coefficients
@@ -173,13 +179,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         #                                             , sen.sar['feedsupply_r1jp'], 4, value_min=0.0, target=13.0)
 
     else:
-        n_coeff = 12
-        n_traits = 11
+        n_coeff = 15
+        n_traits = 14
         coefficients_c = np.zeros(n_coeff)
         j = 0
         coefficients_c[j] = uinp.parameters['i_sfw_c2'][genotype]           #cfw
         j += 1
+        coefficients_c[j] = uinp.parameters['i_cw_c2'][25, genotype]        #ycfw scalar
+        j += 1
         coefficients_c[j] = uinp.parameters['i_sfd_c2'][genotype]          #fd
+        j += 1
+        coefficients_c[j] = uinp.parameters['i_cw_c2'][26, genotype]        #yfd scalar
         j += 1
         coefficients_c[j] = uinp.parameters['i_cw_c2'][16, genotype]        #SS
         j += 1
@@ -201,6 +211,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         coefficients_c[j] = uinp.parameters['i_cd_c2'][1, genotype]        #Basal mortality
         j += 1
         coefficients_c[j] = uinp.parameters['i_cl_c2'][0, genotype]        #Wwt, by milk production and intake scalar
+        j += 1
+        coefficients_c[j] = uinp.parameters['i_cn_c2'][1, genotype]        #YWT, normal growth curve coefficient
 
 
     ######################
@@ -2221,37 +2233,45 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
     ###This variable (coefficient cw[25]) can be used to alter production of YCFW relative to ACFW
     t_slope = (1 - cw_sire[25, ..., na])/(cw_sire[24, ..., na] - cw_sire[23, ..., na])
     af3_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.clip(cw_sire[25, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg0p0 - cw_sire[23, ..., na]), cw_sire[25, ..., na], 1)
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg0p0 - cw_sire[23, ..., na])
+                                                , np.minimum(1, cw_sire[25, ..., na]), np.maximum(1, cw_sire[25, ..., na]))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
     t_slope = (1 - cw_dams[25, ..., na])/(cw_dams[24, ..., na] - cw_dams[23, ..., na])
     af3_wool_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.clip(cw_dams[25, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg1p0 - cw_dams[23, ..., na]), cw_dams[25, ..., na], 1)
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg1p0 - cw_dams[23, ..., na])
+                                                , np.minimum(1, cw_dams[25, ..., na]), np.maximum(1, cw_dams[25, ..., na]))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
     t_slope = (1 - cw_yatf[25, ..., na])/(cw_yatf[24, ..., na] - cw_yatf[23, ..., na])
     af3_wool_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.clip(cw_yatf[25, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg2p0 - cw_yatf[23, ..., na]), cw_yatf[25, ..., na], 1)
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg2p0 - cw_yatf[23, ..., na])
+                                                , np.minimum(1, cw_yatf[25, ..., na]), np.maximum(1, cw_yatf[25, ..., na]))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
     t_slope = (1 - cw_offs[25, ..., na])/(cw_offs[24, ..., na] - cw_offs[23, ..., na])
     af3_wool_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.clip(cw_offs[25, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg3p0 - cw_offs[23, ..., na]), cw_offs[25, ..., na], 1)
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg3p0 - cw_offs[23, ..., na])
+                                                , np.minimum(1, cw_offs[25, ..., na]), np.maximum(1, cw_offs[25, ..., na]))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
     ##age factor wool part 4 - reduces average CFW for animals below a threshold age. Alters the FD of hoggets
     ###Coefficient cw[26] used to calibrate YFD separate from YCFW.
     t_slope = (1 - cw_sire[26, ..., na])/(cw_sire[24, ..., na] - cw_sire[23, ..., na])
     af4_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.clip(cw_sire[26, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg0p0 - cw_sire[23, ..., na]), cw_sire[26, ..., na], 1)
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg0p0 - cw_sire[23, ..., na])
+                                                , np.minimum(1, cw_sire[26, ..., na]), np.maximum(1, cw_sire[26, ..., na]))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
     t_slope = (1 - cw_dams[26, ..., na])/(cw_dams[24, ..., na] - cw_dams[23, ..., na])
     af4_wool_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.clip(cw_dams[26, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg1p0 - cw_dams[23, ..., na]), cw_dams[26, ..., na], 1)
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg1p0 - cw_dams[23, ..., na])
+                                                , np.minimum(1, cw_dams[26, ..., na]), np.maximum(1, cw_dams[26, ..., na]))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
     t_slope = (1 - cw_yatf[26, ..., na])/(cw_yatf[24, ..., na] - cw_yatf[23, ..., na])
     af4_wool_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.clip(cw_yatf[26, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg2p0 - cw_yatf[23, ..., na]), cw_yatf[26, ..., na], 1)
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg2p0 - cw_yatf[23, ..., na])
+                                                , np.minimum(1, cw_yatf[26, ..., na]), np.maximum(1, cw_yatf[26, ..., na]))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
     t_slope = (1 - cw_offs[26, ..., na])/(cw_offs[24, ..., na] - cw_offs[23, ..., na])
     af4_wool_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.clip(cw_offs[26, ..., na] + t_slope
-                                                * (age_p0_pa1e1b1nwzida0e0b0xyg3p0 - cw_offs[23, ..., na]), cw_offs[26, ..., na], 1)
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg3p0 - cw_offs[23, ..., na])
+                                                , np.minimum(1, cw_offs[26, ..., na]), np.maximum(1, cw_offs[26, ..., na]))
                                                 , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
     ##overall age factor for CFW - reduction for young animals and older animals
     ###change in CFW is affected by all the age factors
@@ -7250,13 +7270,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         ##Comment any traits that don't have target values
         calibration_values_p = np.zeros_like(calibration_targets_p)
         i = 0
-        calibration_values_p[i] = o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #CFW of single ewes at 3.5yo
+        calibration_values_p[i] = o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #ACFW of single ewes at 3.5yo
         i += 1
-        calibration_values_p[i] = o_fd_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #FD of single ewes at 3.5yo
+        calibration_values_p[i] = o_cfw_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #YCFW of NM ewes at 1.5yo
         i += 1
-        # calibration_values_p[i] = o_ss_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #SS of single ewes at 3.5yo
+        calibration_values_p[i] = o_fd_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #AFD of single ewes at 3.5yo
+        i += 1
+        calibration_values_p[i] = o_fd_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #YFD of NM ewes at 1.5yo
+        i += 1
+        # calibration_values_p[i] = o_ss_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #ASS of single ewes at 3.5yo
         # i += 1
-        calibration_values_p[i] = o_sl_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #SL of single ewes at 3.5yo
+        calibration_values_p[i] = o_sl_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #ASL of single ewes at 3.5yo
         i += 1
         ##proportion of preg is 1 - (number of dry (b[1]) divided by the number dry and pregnant (b[1:5]))
         preg_2yo = 1 - fun.f_divide(o_numbers_start_tpdams[0,111,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
@@ -7297,13 +7321,15 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         i += 1
         calibration_values_p[i] = o_ffcfw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
         i += 1
-        calibration_values_p[i] = fun.f_divide(r_fat_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
-                                             , r_ebw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for the dams at 3yo joining
-        i += 1
+        # calibration_values_p[i] = fun.f_divide(r_fat_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0]
+        #                                      , r_ebw_tpdams[0,215,0,0,2,0,0,0,0,0,0,0,0,0,0,0])  #% of fat for the dams at 3yo joining
+        # i += 1
         calibration_values_p[i] = fun.f_divide(np.sum(o_numbers_start_tpdams[0,312,0,:,:,0,0,0,0,0,0,0,0,0,0,0])           #Cumulative mortality of ewes from yearling shearing to 5.5yo BTRT 11
                                              , np.sum(o_numbers_start_tpdams[0,104,0,:,:,0,0,0,0,0,0,0,0,0,0,0]))
         i += 1
         calibration_values_p[i] = o_wean_w_tpyatf[0,199,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Weaning weight of 1st cycle single born ewes
+        i += 1
+        calibration_values_p[i] = o_ffcfw_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Yearling weight of ewes at 1.5yo prior to prejoining, NM in previous year
         i += 1
         # calibration_values_p[i] = o_ffcfw_tpdams[0, 57, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  #Ewe LW targets
         # i += 1
@@ -7402,9 +7428,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
 
         print(f"obj: {calibration_objective} trait & (coefficient) Team SRW:{coefficients_c[SRW_coeff]}")
         i = 0; j = 0
-        print(f"CFW this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #CFW of single ewes at 3.5yo
+        print(f"ACFW this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #ACFW of single ewes at 3.5yo
         i += 1; j += 1
-        print(f"FD this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #FD of single ewes at 3.5yo
+        print(f"YCFW this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #YCFW of NM ewes at 1.5yo
+        i += 1; j += 1
+        print(f"AFD this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #AFD of single ewes at 3.5yo
+        i += 1; j += 1
+        print(f"YFD this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #YFD of NM ewes at 1.5yo
         i += 1; j += 1
         # print(f"SS this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #SS of single ewes at 3.5yo
         # i += 1; j += 1
@@ -7419,11 +7449,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         if n_coeff > n_traits: j += 1   # n_coeff > n_traits means that SRW was passed as a fixed trait so skip in the reporting
         print(f"Dam weight 3yo joining this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #Adult weight of ewes at 3.5yo prior to prejoining BTRT 11 in previous year
         i += 1; j += 1
-        print(f"Proportion fat this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")
-        i += 1; j += 1
+        # print(f"Proportion fat this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")
+        # i += 1; j += 1
         print(f"Dam survival Y-A5 this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")
         i += 1; j += 1
         print(f"Wean weight this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #Weaning weight of 1st cycle singles
+        i += 1; j += 1
+        print(f"Yearling weight this {calibration_values_p[i]} with ({coefficients_c[j]}) target {calibration_targets_p[i]}")  #Yearling weight of ewes at 1.5yo prior to prejoining, NM in previous year
         # i += 1; j += 1
         # print("LW targets Ewes (value, sar, target)")
         # for k in range(28):
@@ -7440,9 +7472,13 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             ##print the calibration variables when running AFO - used as a record of the calibration so comment out for main runs.
             calibration_values_p = np.zeros(n_traits)
             i = 0
-            calibration_values_p[i] = o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #CFW of single ewes at 3.5yo
+            calibration_values_p[i] = o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #ACFW of single ewes at 3.5yo
             i += 1
-            calibration_values_p[i] = o_fd_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #FD of single ewes at 3.5yo
+            calibration_values_p[i] = o_cfw_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]   #YCFW of NM ewes at 1.5yo
+            i += 1
+            calibration_values_p[i] = o_fd_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #AFD of single ewes at 3.5yo
+            i += 1
+            calibration_values_p[i] = o_fd_tpdams[0,106,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #YFD of NM ewes at 1.5yo
             i += 1
             calibration_values_p[i] = o_ss_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #SS of single ewes at 3.5yo
             i += 1
@@ -7495,11 +7531,17 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             i += 1
             calibration_values_p[i] = o_wean_w_tpyatf[0,199,0,0,2,0,0,0,0,0,0,0,0,0,0,0]    #Weaning weight of 1st cycle single born ewes
             i += 1
+            calibration_values_p[i] = o_ffcfw_tpdams[0,85,0,0,0,0,0,0,0,0,0,0,0,0,0,0]    #Yearling weight of ewes at 1.5yo prior to prejoining, NM in previous year
+            i += 1
 
             i=0; j=0
-            print(f"CFW {calibration_values_p[i]} with ({coefficients_c[j]})")  #CFW of single ewes at 3.5yo
+            print(f"ACFW {calibration_values_p[i]} with ({coefficients_c[j]})")  #ACFW of single ewes at 3.5yo
             i += 1; j += 1
-            print(f"FD {calibration_values_p[i]} with ({coefficients_c[j]})")  #FD of single ewes at 3.5yo
+            print(f"YCFW {calibration_values_p[i]} with ({coefficients_c[j]})")  #YCFW of NM ewes at 1.5yo
+            i += 1; j += 1
+            print(f"AFD {calibration_values_p[i]} with ({coefficients_c[j]})")  #AFD of single ewes at 3.5yo
+            i += 1; j += 1
+            print(f"YFD {calibration_values_p[i]} with ({coefficients_c[j]})")  #YFD of NM ewes at 3.5yo
             i += 1; j += 1
             print(f"SS {calibration_values_p[i]} with ({coefficients_c[j]})")  #SS of single ewes at 3.5yo
             i += 1; j += 1
@@ -7520,6 +7562,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
             print(f"Dam survival Y-A5 {calibration_values_p[i]} with ({coefficients_c[j]})")
             i += 1; j += 1
             print(f"Wean weight {calibration_values_p[i]} with ({coefficients_c[j]})")  #Weaning weight of 1st cycle singles from 3yos
+            i += 1; j += 1
+            print(f"Yearling weight {calibration_values_p[i]} with ({coefficients_c[j]})")  #Yearling weight of ewes at 1.5yo prior to prejoining, NM in previous year
 
             calibration["output"] = calibration_values_p
             return
