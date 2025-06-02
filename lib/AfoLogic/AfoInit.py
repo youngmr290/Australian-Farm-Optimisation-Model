@@ -175,8 +175,8 @@ def exp(solver_method, user_data, property, trial_name, trial_description, sinp_
     model = pe.ConcreteModel() #create pyomo model - done each loop because memory was being leaked when just deleting and re adding the components.
     crtmod.sets(model, nv) #certain sets have to be updated each iteration of exp - has to be first since other modules use the sets
     zgenpy.f1_seasonpyomo_local(params['zgen'], model) #has to be first since builds params used in other modules
+    treepy.f1_treepyomo_local(params['tree'], model) #has to be before rotation since v_tree_area_l is used in area con
     rotpy.f1_rotationpyomo(params['rot'], model, MP_lp_vars)
-    treepy.f1_treepyomo_local(params['tree'], model)
     phspy.f1_croppyomo_local(params['crop'], model)
     macpy.f1_machpyomo_local(params['mach'], model)
     finpy.f1_finpyomo_local(params['fin'], model)

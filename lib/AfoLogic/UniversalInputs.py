@@ -209,6 +209,20 @@ def f_universal_inp_sa(uinp_defaults):
     ###sat
     ###sar
 
+    ##trees
+    ###sav
+    tree["controls"]['plantation_structure'] = fun.f_sa(tree["controls"]['plantation_structure'], sen.sav['plantation_structure'], 5)
+    tree["controls"]['include_livestock_shelter'] = fun.f_sa(tree["controls"]['include_livestock_shelter'], sen.sav['include_livestock_shelter'], 5)
+    tree["controls"]['include_adjacent_pad_interaction'] = fun.f_sa(tree["controls"]['include_adjacent_pad_interaction'], sen.sav['include_adjacent_pad_interaction'], 5)
+    tree["controls"]['include_carbon_credit'] = fun.f_sa(tree["controls"]['include_carbon_credit'], sen.sav['include_carbon_credit'], 5)
+    tree["controls"]['include_biodiversity_credit'] = fun.f_sa(tree["controls"]['include_biodiversity_credit'], sen.sav['include_biodiversity_credit'], 5)
+    tree["controls"]['include_harvesting'] = fun.f_sa(tree["controls"]['include_harvesting'], sen.sav['include_harvesting'], 5)
+    ###sam
+    ###sap
+    ###saa
+    ###sat
+    ###sar
+
     ##sheep
     ###SAV
     sheep['i_eqn_compare'] = fun.f_sa(sheep['i_eqn_compare'], sen.sav['eqn_compare'], 5)  #determines if both equation systems are being run and compared
