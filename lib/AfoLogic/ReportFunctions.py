@@ -1051,7 +1051,7 @@ def f_mach_summary(lp_vars, r_vals, option=0):
                    'Total seeding costs', 'Owner seeding costs', 'Owner seeding days', 'Contract costs', 'Contract seeded hectares',
                    'Total spreading and spraying costs', 'Spreading hours', 'Spraying hours',
                    'Variable depreciation', 'Fixed depreciation',
-                   'Insurance', 'Total']
+                   'Insurance']
         mach_index = pd.MultiIndex.from_product([keys_q, keys_s, keys_z, subtype], names=['Sequence_year', 'Sequence', 'Season', 'Subtype'])
         mach = pd.DataFrame(index=mach_index, columns=["item"])  # need to initialise df with multiindex so rows can be added
 
