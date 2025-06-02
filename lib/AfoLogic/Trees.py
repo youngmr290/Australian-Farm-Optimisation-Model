@@ -210,7 +210,9 @@ def f_adjacent_land_production_scalar():
     
     # overall average production scalar
     average_production_scalar_l = relative_production_average_protected_l * relative_production_average_nonprotected_l
-    
+    if uinp.tree["controls"]["include_adjacent_pad_interaction"]==0:
+        average_production_scalar_l[...] = 1
+
     return average_production_scalar_l
 
 
@@ -227,68 +229,71 @@ def f_microclimate_adj():
     Therefore, an improvement would be to report the microclimate adjusters for different parts of the paddock.
 
     '''
-    # Get plantation configuration based on the plantation structure control setting
-    plantation_structure = uinp.tree["controls"]["plantation_structure"]
-    plantation_config = uinp.tree[f"plantation_structure_{plantation_structure}"]
+    if uinp.tree["controls"]["include_livestock_shelter"]==0:
+        return 1, 1, 1
+    else:
+        # Get plantation configuration based on the plantation structure control setting
+        plantation_structure = uinp.tree["controls"]["plantation_structure"]
+        plantation_config = uinp.tree[f"plantation_structure_{plantation_structure}"]
 
-    # Extract configuration values
-    distance_between_belts = plantation_config["distance_between_belts"]  # meters between tree belts or to the edge of the paddock
-    number_of_belts = plantation_config["number_of_belts"]
-    propn_trees_adjacent = plantation_config["propn_paddock_adj"]  # Proportion of trees adjacent to usable paddock
+        # Extract configuration values
+        distance_between_belts = plantation_config["distance_between_belts"]  # meters between tree belts or to the edge of the paddock
+        number_of_belts = plantation_config["number_of_belts"]
+        propn_trees_adjacent = plantation_config["propn_paddock_adj"]  # Proportion of trees adjacent to usable paddock
 
-    # Get total area of trees - don't need to differentiate between LMUs because ws impacts are same for all lmu
-    est_tree_area_l = fun.f_sa(pinp.tree["estimated_area_trees_l"], sen.sav['bnd_tree_area_l'][pinp.lmu_mask], 5)
-    est_tree_area = np.sum(est_tree_area_l)
+        # Get total area of trees - don't need to differentiate between LMUs because ws impacts are same for all lmu
+        est_tree_area_l = fun.f_sa(pinp.tree["estimated_area_trees_l"], sen.sav['bnd_tree_area_l'][pinp.lmu_mask], 5)
+        est_tree_area = np.sum(est_tree_area_l)
 
-    # Calculate the effective width of the tree rows (including side buffers)
-    effective_width = ((plantation_config["number_of_rows"] - 1) * plantation_config["between_row_spacing"] +
-                    2 * plantation_config["side_buffer"])
+        # Calculate the effective width of the tree rows (including side buffers)
+        effective_width = ((plantation_config["number_of_rows"] - 1) * plantation_config["between_row_spacing"] +
+                        2 * plantation_config["side_buffer"])
 
-    # Calculate the length of each belt (in meters)
-    belt_length = (est_tree_area * 10000) / (effective_width * number_of_belts) # Convert tree area from hectares to m² (1 ha = 10,000 m²)
+        # Calculate the length of each belt (in meters)
+        belt_length = (est_tree_area * 10000) / (effective_width * number_of_belts) # Convert tree area from hectares to m² (1 ha = 10,000 m²)
 
-    # Calculate the land area on the protected side of the tree belts
-    protected_area = (belt_length * number_of_belts * distance_between_belts * propn_trees_adjacent) / 10000 # Convert m² to hectares
+        # Calculate the land area on the protected side of the tree belts
+        protected_area = (belt_length * number_of_belts * distance_between_belts * propn_trees_adjacent) / 10000 # Convert m² to hectares
 
-    #########################################
-    # WS adjuster on the PROTECTED side
-    #########################################
+        #########################################
+        # WS adjuster on the PROTECTED side
+        #########################################
 
-    # Logistic parameters for the protected side (benefiting from wind protection and incurring resource competition)
-    ws_logistic_params = plantation_config["ws_logistic_params"]
-    L_fit_ws = ws_logistic_params["L"]
-    k_fit_ws = ws_logistic_params["k"]
-    x0_fit_ws = ws_logistic_params["x0"]
-    offset_fit_ws = ws_logistic_params["offset"]
+        # Logistic parameters for the protected side (benefiting from wind protection and incurring resource competition)
+        ws_logistic_params = plantation_config["ws_logistic_params"]
+        L_fit_ws = ws_logistic_params["L"]
+        k_fit_ws = ws_logistic_params["k"]
+        x0_fit_ws = ws_logistic_params["x0"]
+        offset_fit_ws = ws_logistic_params["offset"]
 
-    # Evaluate the indefinite logistic integral at 0 and at the distance between belts
-    F0_ws = fun.f_logistic_integral(0, L_fit_ws, k_fit_ws, x0_fit_ws, offset_fit_ws)
-    Fx_ws = fun.f_logistic_integral(distance_between_belts, L_fit_ws, k_fit_ws, x0_fit_ws, offset_fit_ws)
+        # Evaluate the indefinite logistic integral at 0 and at the distance between belts
+        F0_ws = fun.f_logistic_integral(0, L_fit_ws, k_fit_ws, x0_fit_ws, offset_fit_ws)
+        Fx_ws = fun.f_logistic_integral(distance_between_belts, L_fit_ws, k_fit_ws, x0_fit_ws, offset_fit_ws)
 
-    # Compute the relative production adjustment over the belt width
-    relative_ws_adj = (Fx_ws - F0_ws) / distance_between_belts
+        # Compute the relative production adjustment over the belt width
+        relative_ws_adj = (Fx_ws - F0_ws) / distance_between_belts
 
 
-    #########################################
-    # Temp adjuster on the PROTECTED side
-    #########################################
-    #todo this is not hooked up yet - need data to parameterise the logistic function.
+        #########################################
+        # Temp adjuster on the PROTECTED side
+        #########################################
+        #todo this is not hooked up yet - need data to parameterise the logistic function.
 
-    # Logistic parameters for the protected side (benefiting from wind protection and incurring resource competition)
-    temp_logistic_params = plantation_config["temp_logistic_params"]
-    L_fit_temp = temp_logistic_params["L"]
-    k_fit_temp = temp_logistic_params["k"]
-    x0_fit_temp = temp_logistic_params["x0"]
-    offset_fit_temp = temp_logistic_params["offset"]
+        # Logistic parameters for the protected side (benefiting from wind protection and incurring resource competition)
+        temp_logistic_params = plantation_config["temp_logistic_params"]
+        L_fit_temp = temp_logistic_params["L"]
+        k_fit_temp = temp_logistic_params["k"]
+        x0_fit_temp = temp_logistic_params["x0"]
+        offset_fit_temp = temp_logistic_params["offset"]
 
-    # Evaluate the indefinite logistic integral at 0 and at the distance between belts
-    # F0_temp = fun.f_logistic_integral(0, L_fit_temp, k_fit_temp, x0_fit_temp, offset_fit_temp)
-    # Fx_temp = fun.f_logistic_integral(distance_between_belts, L_fit_temp, k_fit_temp, x0_fit_temp, offset_fit_temp)
+        # Evaluate the indefinite logistic integral at 0 and at the distance between belts
+        # F0_temp = fun.f_logistic_integral(0, L_fit_temp, k_fit_temp, x0_fit_temp, offset_fit_temp)
+        # Fx_temp = fun.f_logistic_integral(distance_between_belts, L_fit_temp, k_fit_temp, x0_fit_temp, offset_fit_temp)
 
-    # Compute the relative production adjustment over the belt width
-    relative_temp_adj = 1 #(Fx_temp - F0_temp) / distance_between_belts
+        # Compute the relative production adjustment over the belt width
+        relative_temp_adj = 1 #(Fx_temp - F0_temp) / distance_between_belts
 
-    return relative_ws_adj, relative_temp_adj, protected_area
+        return relative_ws_adj, relative_temp_adj, protected_area
 
 
 

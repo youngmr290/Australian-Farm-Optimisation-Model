@@ -275,6 +275,12 @@ def create_sa():
     ####################
     ##SAV
     sav['estimated_area_trees_l'] = np.full(len_l, '-', dtype=object)  #control estimated area of trees on each lmu
+    sav['plantation_structure'] = '-'  #control tree config
+    sav['include_livestock_shelter'] = '-'  #control inclusion of shelter
+    sav['include_adjacent_pad_interaction'] = '-'  #control inclusion of paddock interactions.
+    sav['include_carbon_credit'] = '-'  #control inclusion of carbon credits
+    sav['include_biodiversity_credit'] = '-'  #control inclusion of bio credits
+    sav['include_harvesting'] = '-'  #control inclusion of harvesting
     ##SAM
     ##SAP
     ##SAA

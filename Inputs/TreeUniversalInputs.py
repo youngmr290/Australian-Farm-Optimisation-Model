@@ -8,6 +8,8 @@ tree_inputs = {
     "controls": {
         "project_duration": 25,  # years
         "plantation_structure": 0,  # choose option from below
+        "include_livestock_shelter": 1,  # 0 = no, 1 = yes
+        "include_adjacent_pad_interaction": 1,  # 0 = no, 1 = yes
         "include_carbon_credit": 1,  # 0 = no, 1 = yes
         "include_biodiversity_credit": 1,  # 0 = no, 1 = yes
         "include_harvesting": 1,  # 0 = no, 1 = yes
