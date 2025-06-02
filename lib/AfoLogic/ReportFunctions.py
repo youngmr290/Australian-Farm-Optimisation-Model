@@ -1047,8 +1047,8 @@ def f_mach_summary(lp_vars, r_vals, option=0):
         keys_s = r_vals['zgen']['keys_s']
         keys_z = r_vals['zgen']['keys_z']
         idx = pd.IndexSlice
-        subtype = ['Total harvest costs', 'Owner harvest costs', 'Owner harvest hours', 'Contract costs', 'Contract harvest hours',
-                   'Total seeding costs', 'Owner seeding costs', 'Owner seeding days', 'Contract costs', 'Contract seeded hectares',
+        subtype = ['Total harvest costs', 'Owner harvest costs', 'Owner harvest hours', 'Contract harvest costs', 'Contract harvest hours',
+                   'Total seeding costs', 'Owner seeding costs', 'Owner seeding days', 'Contract seeding costs', 'Contract seeded hectares',
                    'Total spreading and spraying costs', 'Spreading hours', 'Spraying hours',
                    'Variable depreciation', 'Fixed depreciation',
                    'Insurance']
