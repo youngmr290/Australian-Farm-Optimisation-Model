@@ -1083,13 +1083,13 @@ def f_mach_summary(lp_vars, r_vals, option=0):
         mach.loc[idx[:, :, :, 'Total harvest costs'],:] = harvest_cost_zkqs_p7.sum(axis=1).groupby(axis=0,level=(0,2,3)).sum().reorder_levels([1, 2, 0]) #sum p7, k and reorder
         mach.loc[idx[:, :, :, 'Owner harvest costs'],:] = own_harvest_cost_zp5kqs_p7.sum(axis=1).groupby(axis=0,level=(0,3,4)).sum().reorder_levels([1, 2, 0]) #sum p7, p5, k and reorder
         mach.loc[idx[:, :, :, 'Owner harvest hours'],:] = harv_hours_qsz
-        mach.loc[idx[:, :, :, 'Contract costs'],:] = contract_harvest_cost_zp5kqs_p7.sum(axis=1).groupby(axis=0,level=(0,3,4)).sum().reorder_levels([1, 2, 0]) #sum p7, p5, k and reorder
+        mach.loc[idx[:, :, :, 'Contract harvest costs'],:] = contract_harvest_cost_zp5kqs_p7.sum(axis=1).groupby(axis=0,level=(0,3,4)).sum().reorder_levels([1, 2, 0]) #sum p7, p5, k and reorder
         mach.loc[idx[:, :, :, 'Contract harvest hours'],:] = contractharv_hours_zp5kqs.groupby(axis=0,level=(0,3,4)).sum().reorder_levels([1, 2, 0]) #sum p5, k and reorder
         ###seeding summary
         mach.loc[idx[:, :, :, 'Total seeding costs'],:] = seeding_cost_zkqs_p7.sum(axis=1).groupby(axis=0,level=(0,2,3)).sum().reorder_levels([1, 2, 0]) #sum p7, k and reorder
         mach.loc[idx[:, :, :, 'Owner seeding costs'],:] = seeding_cost_own_zkqs_p7.sum(axis=1).groupby(axis=0,level=(0,2,3)).sum().reorder_levels([1, 2, 0]) #sum p7, k and reorder
         mach.loc[idx[:, :, :, 'Owner seeding days'],:] = seeding_days_qszp5_kl.sum(axis=1).groupby(axis=0,level=(0,1,2)).sum() #sum k, l, p5
-        mach.loc[idx[:, :, :, 'Contract costs'],:] = seeding_cost_contract_zkqs_p7.sum(axis=1).groupby(axis=0,level=(0,2,3)).sum().reorder_levels([1, 2, 0]) #sum p7, k and reorder
+        mach.loc[idx[:, :, :, 'Contract seeding costs'],:] = seeding_cost_contract_zkqs_p7.sum(axis=1).groupby(axis=0,level=(0,2,3)).sum().reorder_levels([1, 2, 0]) #sum p7, k and reorder
         mach.loc[idx[:, :, :, 'Contract seeded hectares'],:] = contractseeding_ha_zp5kqs.groupby(axis=0,level=(0,3,4)).sum().reorder_levels([1, 2, 0]) #sum p5, k and reorder
         ###spreading and sprarying
         mach.loc[idx[:, :, :, 'Total spreading and spraying costs'],:] = fertchem_cost_zkqs_p7.sum(axis=1).groupby(axis=0,level=(0,2,3)).sum().reorder_levels([1, 2, 0]) #sum p7, k and reorder
