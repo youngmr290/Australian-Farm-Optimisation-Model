@@ -953,15 +953,14 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
                 sar[(key1, key2)] = sar[(key1,key2)] + value
             elif dic == 'sav':
                 sav[(key1, key2)]  # checks the keys exist. Not required for SA that have indicies.
-                try:
-                    if value != "-": #SAV entries with '-' do not update the SAV. This means that if slices of a SAV overlap in Exp.xl the last non '-' is the value used.
-                        update_sav=True
-                    else:
-                        update_sav=False
-                except ValueError:   #try and except required for web app because "value" is an array (so the if statement causes error).
-                    update_sav=True
-                if update_sav:
-                    sav[(key1,key2)] = value
+                if np.isscalar(sav[(key1,key2)]) and np.isscalar(value):
+                    sav[(key1,key2)] = value if value != '-' else sav[(key1,key2)]
+                elif isinstance(sav[(key1,key2)], np.ndarray) and np.isscalar(value):
+                    if value != '-':
+                        sav[(key1,key2)][...] = value
+                else: #required for web app because "value" is an array
+                    sliced_sav = sav[(key1,key2)][tuple(slice(0, s) for s in value.shape)] #have to slice to handle cases where sen is initiated with large number
+                    sav[(key1,key2)] = np.where(value != '-', value, sliced_sav)
         ##if just key1 exists
         else:
             if dic == 'sam':
@@ -981,15 +980,14 @@ def f_update_sen(user_sa, sam, saa, sap, sar, sat, sav):
                 sar[key1] = sar[key1] + value
             elif dic == 'sav':
                 sav[key1]  # checks the keys exist. Not required for SA that have indicies.
-                try:
-                    if value != "-": #SAV entries with '-' do not update the SAV. This means that if slices of a SAV overlap in Exp.xl the last non '-' is the value used.
-                        update_sav=True
-                    else:
-                        update_sav=False
-                except ValueError:   #try and except required for web app because "value" is an array (so the if statement causes error).
-                    update_sav=True
-                if update_sav:
-                    sav[key1] = value
+                if np.isscalar(sav[key1]) and np.isscalar(value):
+                    sav[key1] = value if value != '-' else sav[key1]
+                elif isinstance(sav[key1], np.ndarray) and np.isscalar(value):
+                    if value != '-':
+                        sav[key1][...] = value
+                else: #required for web app because "value" is an array
+                    sliced_sav = sav[key1][tuple(slice(0, s) for s in value.shape)] #have to slice to handle cases where sen is initiated with large number
+                    sav[key1] = np.where(value != '-', value, sliced_sav)
 
 def f1_make_r_val(r_vals, param, name, maskz8=None, z_pos=0, shape=None):
     '''
