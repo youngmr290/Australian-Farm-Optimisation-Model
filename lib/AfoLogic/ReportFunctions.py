@@ -3439,11 +3439,11 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     stocksale_qszp7, wool_qszp7, husbcost_qszp7, supcost_qsz_p7, purchasecost_qszp7, trade_value_qszp7 = f_stock_cash_summary(lp_vars, r_vals)
     ##sale income
     stocksale = np.sum(stocksale_qszp7 * z_prob_qsz[...,na])
-    stocksale_per_wgha = stocksale/total_pas_are
+    stocksale_per_wgha = stocksale / total_pas_are if total_pas_are != 0 else 0
     summary_df.loc[trial, 'Sheep sales ($/WgHa)'] = round(stocksale_per_wgha, 0)
     ##wool income
     woolsale = np.sum(wool_qszp7 * z_prob_qsz[...,na])
-    woolsale_per_wgha = woolsale/total_pas_are
+    woolsale_per_wgha = woolsale / total_pas_are if total_pas_are != 0 else 0
     summary_df.loc[trial, 'Wool sales ($/WgHa)'] = round(woolsale_per_wgha, 0)
     ##feed cost
     keys_q = r_vals['zgen']['keys_q']
@@ -3453,7 +3453,7 @@ def f_saleage_analysis(lp_vars, r_vals, trial):
     z_prob_qsz = pd.Series(z_prob_qsz.ravel(), index=index_qsz)
     feedcost_qsz = supcost_qsz_p7.sum(axis=1)
     feedcost = feedcost_qsz.mul(z_prob_qsz, axis=0).sum(axis=0)
-    feedcost_per_wgha = feedcost/total_pas_are
+    feedcost_per_wgha = feedcost / total_pas_are if total_pas_are != 0 else 0
     summary_df.loc[trial, 'Feed cost ($/WgHa)'] = round(feedcost_per_wgha, 0)
 
     return summary_df
