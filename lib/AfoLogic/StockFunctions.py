@@ -2255,7 +2255,7 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, rr_doy
     return conception
 
 
-def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, doj2, lat, nfoet_b1any, nyatf_b1any
+def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, doj2, cs, lat, nfoet_b1any, nyatf_b1any
                       , period_is_mating, rev_trait_value, saa_rr, sam_rr, saa_ls, saa_con, saa_preg_increment):
     ''''
     Calculation of dam conception using a back transformed logistic function. Using coefficients developed in
@@ -2311,9 +2311,11 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
     else:
         b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
         e1_pos = sinp.stock['i_e1_pos']
-        ##Select slice 24 (Ewe Lamb coefficients) or 25 (mature ewe coefficients) of cb1 & cu2 based on age of the dam. Note: age adds a,e,b axes onto the sliced array
-        cb1_sliced = fun.f_update(cb1[25, ...], cb1[24, ...], age < 364)
-        cu2_sliced = fun.f_update(cu2[25, ...], cu2[24, ...], age < 364)
+        ##Select slice 24 (Ewe Lamb coefficients) or 25 (maiden ewe coefficients) or 26 (mature ewe coefficients) of cb1 & cu2 based on age of the dam. Note: age adds a,e,b axes onto the sliced array
+        cb1_sliced = fun.f_update(cb1[26, ...], cb1[24, ...], age < 364)
+        cu2_sliced = fun.f_update(cu2[26, ...], cu2[24, ...], age < 364)
+        cb1_sliced = fun.f_update(cb1_sliced, cb1[25, ...], np.logical_and(364 < age, age < 728))
+        cu2_sliced = fun.f_update(cu2_sliced, cu2[25, ...], np.logical_and(364 < age, age < 728))
         ##Calculate the transformed estimates of proportion empty (slice cu2 allowing for active i axis)
         cutoff0 = cb1_sliced[:,:,1:2,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating
                                                                  + cu2_sliced[1, ...] * maternallw_mating ** 2
@@ -2327,6 +2329,8 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
                                                                  + cu2_sliced[9, ...] * lat
                                                                  + cu2_sliced[10, ...] * doj
                                                                  + cu2_sliced[11, ...] * doj2
+                                                                 + cu2_sliced[12, ...] * cs
+                                                                 + cu2_sliced[13, ...] * cs ** 2
                                                                   )
 
         ##calc conception propn

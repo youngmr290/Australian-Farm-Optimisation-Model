@@ -4456,7 +4456,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ffcfw_mating_dams = fun.f_update(ffcfw_mating_dams, t_w_mating, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
                 maternallw_mating_dams = ffcfw_mating_dams
                 ##LW change during joining is required for the LMAT conception equation. Using LWC in the single generator period
-                lwc_mating_dams = fun.f_update(lwc_mating_dams, ebg_e1b1sliced, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]) * cg_dams[18, ...]
+                lwc_mating_dams = fun.f_update(lwc_mating_dams, ebg_e1b1sliced * cg_dams[18, ...], period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
                 ##Relative condition of the dam at mating - required to determine milk production
                 rc_mating_dams = ffcfw_mating_dams / nw_start_dams_e1b1sliced
                 ##Condition score of the dams at mating
@@ -5193,7 +5193,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0 = sfun.f_conception_mu2(cf_dams, cb1_dams, cu2_dams, srw_female_pa1e1b1nwzida0e0b0xyg1[p_srw], maternallw_mating_dams
                                                    , lwc_mating_dams * 1000, age_pa1e1b1nwzida0e0b0xyg1[p], nlb_yg3 * 100
                                                    , doj_pa1e1b1nwzida0e0b0xyg1[p:p+1], doj2_pa1e1b1nwzida0e0b0xyg1[p:p+1]
-                                                   , lat_deg, nfoet_b1nwzida0e0b0xyg
+                                                   , cs_start_dams, lat_deg, nfoet_b1nwzida0e0b0xyg
                                                    , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                    , rev_trait_values['dams'][p]
                                                    , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p], sam_rr_pa1e1b1nwzida0e0b0xyg1[p]
