@@ -47,8 +47,16 @@ for row in dataset:
     user_sa = rve.f_process_user_sa(exp_data, row)
 
     ##load pkl_fs based in SA values
-    fs_use_pkl = next((item["value"] for item in user_sa if item["key1"] == "fs_use_pkl"), False)
-    fs_use_number = next((item["value"] for item in user_sa if item["key1"] == "fs_use_number"), None)
+    def get_sa_value(user_sa, key, default=False):
+        result = default
+        for item in user_sa:
+            if item["key1"] == key and item["value"] != '-':
+                result = item["value"]
+        return result
+
+    fs_use_pkl = get_sa_value(user_sa, "fs_use_pkl", False)
+    fs_use_number = get_sa_value(user_sa, "fs_use_number", None)
+
     pkl_fs = dxl.f_load_fs(fs_use_pkl, fs_use_number)
 
     ##run AFO
