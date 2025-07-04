@@ -3453,6 +3453,7 @@ def f1_fat_score(cn, rc_tpg, age=0, rev_trait_value=0):
           3. convert to fat score. FS1 = <5mm, FS2 6-10mm, FS3 11-15mm, FS4 16-20mm, FS5 >21mm'''
     condition_score = f1_condition_score(cn, rc_tpg)
     gr_depth = np.maximum(0, (condition_score - 2.5) / 0.06)
+    gr_depth = fun.f_sa(gr_depth, sen.saa['fat_depth'], sa_type=2, value_min=0)
     #todo make the coefficients inputs in Universal (use cn) - See Universal Master 23Nov23
     # gr_depth = np.maximum(0, (condition_score - cn[8, ...]) / cn[9, ...])
     ## REV SA on GR depth if age has been passed to the function

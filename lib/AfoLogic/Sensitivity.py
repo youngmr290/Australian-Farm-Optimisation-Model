@@ -488,6 +488,7 @@ def create_sa():
     saa['mortalityb'] = 0.0      #Adjust the base mortality - this is a high level sa, it impacts within a calculation not on an input
     saa['feedsupply_adj_dams_ro'] = np.zeros((6, len_o), dtype='float64') #user fs adjuster - used in web app (simplified version of feedsupply_adj_r2p)
     saa['feedsupply_adj_offs_p10'] = np.zeros((3), dtype='float64') #user offs fs adjuster - used in web app (simplified version of feedsupply_adj_r2p)
+    saa['fat_depth'] = 0.0         #Change in carcase fat_depth of all sale animals. Note: no energy cost linked to fat depth - relocate body fat to the carcase.
     ##SAT
     ##SAR
     sar['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1j2p'].shape, dtype='float64')  #SA value for feedsupply.
