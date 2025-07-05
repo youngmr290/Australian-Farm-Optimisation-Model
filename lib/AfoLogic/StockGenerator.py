@@ -7468,8 +7468,8 @@ def generator(coefficients_c=[], params={}, r_vals={}, nv={}, pkl_fs_info={}, pk
         return calibration_objective
 
     else:
-        if calibration == {}:
-            ##print the calibration variables when running AFO - used as a record of the calibration so comment out for main runs.
+        if calibration == {}:   #to access this code define calibration = {} in RunAfoRaw.py
+            ##print & save the calibration variables when running AFO - used as a record of the calibration.
             calibration_values_p = np.zeros(n_traits)
             i = 0
             calibration_values_p[i] = o_cfw_tpdams[0,210,0,0,2,0,0,0,0,0,0,0,0,0,0,0]   #ACFW of single ewes at 3.5yo

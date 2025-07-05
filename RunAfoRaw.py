@@ -30,7 +30,7 @@ cat_propn_s1_ks2 = dxl.f_load_stubble()
 ##run AFO #
 ###########
 start_loops_time = time.time()    #This excludes the time for reading the inputs and is used to calculate remaining time
-calibration={}   # or None if not required
+calibration = None    # =None for AFO to run 'normally' ={} to generate the calibration TraitValues.xlsx outputs.
 
 run = 0  # counter to work out average time per loop
 for row in dataset:
@@ -80,7 +80,7 @@ for row in dataset:
     print(
         f'{trial_description}, Expected finish time: \033[1m{time.ctime(finish_time_expected)}\033[0m (at {time.ctime()})')
 
-if calibration != None:
+if calibration != None:    #this is for saving the calibration trait values for each team. Done as a separate experiment
     traits_to_save = pd.DataFrame({row: values["output"] for row, values in calibration.items()}).T
     writer = pd.ExcelWriter("Output/TraitValues.xlsx", engine='xlsxwriter')
     traits_to_save.to_excel(writer, sheet_name='Traits', index=True, header=False)
