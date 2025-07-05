@@ -158,6 +158,9 @@ def create_sa():
     sav['woolp_fdprem'] = '-'                       # sa value for fd premium
     sav['salep_percentile'] = '-'                   #Value for percentile for all sale grids
     sav['salep_max_s7'] = np.full(len_s7, '-', dtype=object)    #max sale price in grid for selected percentile (i.e. overwrites calculated price)
+    sav['salep_month_adjust_s7s9p4'] = np.full(uinp.sheep['i_salep_months_priceadj_s7s9p4'].shape, '-', dtype=object)      #monthly sale price scalar
+    sav['salep_price_type_s7'] = np.full(len_s7, '-', dtype=object)  #price type for each grid (0 - $/kg DW, 1 - $/kg LW & 2- $/hd)
+    sav['salep_score_type_s7'] = np.full(len_s7, '-', dtype=object)  #score type for each grid (0 - Fat score, 1 - CS)
     sav['manager_cost'] = '-' #SA value for manager cost per year
     sav['permanent_cost'] = '-' #SA value for permanent cost per year
     sav['casual_cost'] = '-' #SA value for casual cost per hour
