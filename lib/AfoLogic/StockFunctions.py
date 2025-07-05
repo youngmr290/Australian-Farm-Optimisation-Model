@@ -3463,7 +3463,7 @@ def f1_fat_score(cn, rc_tpg, age=0, rev_trait_value=0):
         # ##Process the carcase fat REV: if cfat is not the target trait overwrite trait value with value from the dictionary or update the REV dictionary
         # #todo this needs work to be able to use because gr_depth has a p axis and f1_rev_update has the p axis as a key in the dictionary...maybe a loop
         # gr_depth = f1_rev_update('cfat', gr_depth, rev_trait_value)
-    fat_score = np.clip((gr_depth + 4)/5, 1, 5) #FS 1 is the lowest possible measurement.
+    fat_score = np.clip((gr_depth + 2.5)/5, 1, 5) #FS 1 is the lowest possible measurement.
     return fat_score
 
 
