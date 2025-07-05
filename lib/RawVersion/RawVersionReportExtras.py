@@ -694,9 +694,9 @@ def f_save_reports(report_run, reports, processor):
         plot = rfun.f_xy_graph(reports["stacked_profitarea"])
         plot.savefig('Output/profitarea_curve.png')
     if report_run.loc['run_feedbudget', 'Run']:
-        df_settings = rfun.f_df2xl(writer, reports["stacked_feed"], 'feed budget', df_settings, option=xl_display_mode)
-        df_settings = rfun.f_df2xl(writer, reports["stacked_feed2"], 'feed budget total', df_settings, option=xl_display_mode)
-        df_settings = rfun.f_df2xl(writer, reports["stacked_grazing"], 'grazing summary', df_settings, option=xl_display_mode)
+        df_settings = rfun.f_df2xl(writer, reports["stacked_feed"], 'feed_budget', df_settings, option=xl_display_mode)
+        df_settings = rfun.f_df2xl(writer, reports["stacked_feed2"], 'feed_budget_total', df_settings, option=xl_display_mode)
+        df_settings = rfun.f_df2xl(writer, reports["stacked_grazing"], 'grazing_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_numbers_summary', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_ewe_numbers_summary"], 'ewe_numbers_summary', df_settings, option=xl_display_mode)
         df_settings = rfun.f_df2xl(writer, reports["stacked_wethers_n_crossys_numbers_summary"], 'wethers_n_xb_numbers_summary', df_settings, option=xl_display_mode)
@@ -840,7 +840,7 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_dse1_dams"], 'dse_mei', df_settings, option=0, colstart=dams_start_col)
         df_settings = rfun.f_df2xl(writer, reports["stacked_dse1_offs"], 'dse_mei', df_settings, option=0, colstart=offs_start_col)
     if report_run.loc['run_pgr', 'Run']:
-        df_settings = rfun.f_df2xl(writer, reports["stacked_pgr"], 'Total pg', df_settings, option=xl_display_mode)
+        df_settings = rfun.f_df2xl(writer, reports["stacked_pgr"], 'Total_pg', df_settings, option=xl_display_mode)
     if report_run.loc['run_grnfoo', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_grnfoo"], 'grnfoo', df_settings, option=xl_display_mode)
     if report_run.loc['run_dryfoo', 'Run']:
