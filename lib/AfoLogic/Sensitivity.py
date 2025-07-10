@@ -123,7 +123,7 @@ def create_sa():
     sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to revert the code)
     ##SAP
     ##SAA
-    saa['random'] = 1.0   # SA addition used to tweak any random variable when debugging or checking something (after being used it is best to revert the code )
+    saa['random'] = 0.0   # SA addition used to tweak any random variable when debugging or checking something (after being used it is best to revert the code )
     ##SAT
     ##SAR
 
