@@ -469,6 +469,7 @@ def f_property_inp_sa(pinp_defaults):
     sheep['i_mask_i'] = fun.f_sa(sheep['i_mask_i'], sen.sav['TOL_inc'], 5)
     sheep['i_g3_inc'] = fun.f_sa(sheep['i_g3_inc'], sen.sav['g3_included'],5)
     sheep['a_c2_c0'] = fun.f_sa(sheep['a_c2_c0'], sen.sav['genotype'],5)
+    sheep['i_dse_type'] = fun.f_sa(sheep['i_dse_type'], sen.sav['dse_type'],5)
     sheep['i_scan_og1'] = fun.f_sa(sheep['i_scan_og1'], sen.sav['scan_og1'],5)
     sheep['i_dry_sales_forced_o'] = fun.f_sa(sheep['i_dry_sales_forced_o'], sen.sav['bnd_drys_sold_o'],5)
     sheep['i_dry_retained_forced_o'] = fun.f_sa(sheep['i_dry_retained_forced_o'], sen.sav['bnd_drys_retained_o'],5)
