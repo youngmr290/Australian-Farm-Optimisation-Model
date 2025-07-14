@@ -1,6 +1,9 @@
 """
 This module contains functions that parametrise the emission components of the model.
 
+The NIR method is based on National Inventory Report 2022 - (Published_April 2023)
+which is compatible with v2.3 of the SB-GAF tool and v10.9 of G-GAF tool from PICCC.
+
 
 author: Young
 
