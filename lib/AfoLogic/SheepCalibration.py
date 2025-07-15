@@ -4,7 +4,12 @@ Created on Thu Feb 13 09:35:26 2020
 
 @author: John
 
-Multiprocess the teams if there are sufficient teams to occupy the computer resource
+SheepCalibration.py is run using python -u SheepCalibration.py {<exp no>} {<number of processes>}
+<exp no> is an optional argument, if it is excluded the default trial is QT
+<number of processes> is an optional argument. The default is 1 (don't multiprocess teams use workers on a single team)
+
+Multiprocessing the teams (with workers =1) will be quicker if the number of cpus is greater than population size.
+Population size is pop_size parameter (5) x if there are sufficient teams to occupy the computer resource
 If not, use multiple workers. The maximum useful number of workers is the size of the selection population
 Multiprocessing teams should be more efficient because it can use 'immediate' updating
 
