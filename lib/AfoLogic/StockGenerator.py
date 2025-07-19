@@ -2094,11 +2094,57 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     af2_wool_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(2 - np.exp(cw_offs[17, ..., na]
                                                 * np.maximum(0,age_p0_pa1e1b1nwzida0e0b0xyg3p0 - cw_offs[18, ..., na])
                                                 **cw_offs[19, ..., na]), weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
-    ##overall age factor - reduction for young animals and older animals
-    af_wool_pa1e1b1nwzida0e0b0xyg0 = af1_wool_pa1e1b1nwzida0e0b0xyg0 * af2_wool_pa1e1b1nwzida0e0b0xyg0
-    af_wool_pa1e1b1nwzida0e0b0xyg1 = af1_wool_pa1e1b1nwzida0e0b0xyg1 * af2_wool_pa1e1b1nwzida0e0b0xyg1
-    af_wool_pa1e1b1nwzida0e0b0xyg2 = af1_wool_pa1e1b1nwzida0e0b0xyg2 * af2_wool_pa1e1b1nwzida0e0b0xyg2
-    af_wool_pa1e1b1nwzida0e0b0xyg3 = af1_wool_pa1e1b1nwzida0e0b0xyg3 * af2_wool_pa1e1b1nwzida0e0b0xyg3
+    ##age factor wool part 3 - reduces fleece growth for animals below a threshold age. Reduces the CFW of hoggets
+    ###calibrated with data from MLP. The functional form is not possible to determine from the data.
+    ###Exponential was penalising PW CFW so have selected a simpler function, a step function with a ramp.
+    ###This variable (coefficient cw[25]) can be used to alter production of YCFW relative to ACFW
+    t_slope = (1 - cw_sire[25, ..., na])/(cw_sire[24, ..., na] - cw_sire[23, ..., na])
+    af3_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.clip(cw_sire[25, ..., na] + t_slope
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg0p0 - cw_sire[23, ..., na]), cw_sire[25, ..., na], 1)
+                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
+    t_slope = (1 - cw_dams[25, ..., na])/(cw_dams[24, ..., na] - cw_dams[23, ..., na])
+    af3_wool_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.clip(cw_dams[25, ..., na] + t_slope
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg1p0 - cw_dams[23, ..., na]), cw_dams[25, ..., na], 1)
+                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
+    t_slope = (1 - cw_yatf[25, ..., na])/(cw_yatf[24, ..., na] - cw_yatf[23, ..., na])
+    af3_wool_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.clip(cw_yatf[25, ..., na] + t_slope
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg2p0 - cw_yatf[23, ..., na]), cw_yatf[25, ..., na], 1)
+                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
+    t_slope = (1 - cw_offs[25, ..., na])/(cw_offs[24, ..., na] - cw_offs[23, ..., na])
+    af3_wool_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.clip(cw_offs[25, ..., na] + t_slope
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg3p0 - cw_offs[23, ..., na]), cw_offs[25, ..., na], 1)
+                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
+    ##age factor wool part 4 - reduces average CFW for animals below a threshold age. Alters the FD of hoggets
+    ###Coefficient cw[26] used to calibrate YFD separate from YCFW.
+    t_slope = (1 - cw_sire[26, ..., na])/(cw_sire[24, ..., na] - cw_sire[23, ..., na])
+    af4_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.clip(cw_sire[26, ..., na] + t_slope
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg0p0 - cw_sire[23, ..., na]), cw_sire[26, ..., na], 1)
+                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg0p0, axis = -1)
+    t_slope = (1 - cw_dams[26, ..., na])/(cw_dams[24, ..., na] - cw_dams[23, ..., na])
+    af4_wool_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.clip(cw_dams[26, ..., na] + t_slope
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg1p0 - cw_dams[23, ..., na]), cw_dams[26, ..., na], 1)
+                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg1p0, axis = -1)
+    t_slope = (1 - cw_yatf[26, ..., na])/(cw_yatf[24, ..., na] - cw_yatf[23, ..., na])
+    af4_wool_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.clip(cw_yatf[26, ..., na] + t_slope
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg2p0 - cw_yatf[23, ..., na]), cw_yatf[26, ..., na], 1)
+                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg2p0, axis = -1)
+    t_slope = (1 - cw_offs[26, ..., na])/(cw_offs[24, ..., na] - cw_offs[23, ..., na])
+    af4_wool_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.clip(cw_offs[26, ..., na] + t_slope
+                                                * (age_p0_pa1e1b1nwzida0e0b0xyg3p0 - cw_offs[23, ..., na]), cw_offs[26, ..., na], 1)
+                                                , weights=age_p0_weights_pa1e1b1nwzida0e0b0xyg3p0, axis = -1)
+    ##overall age factor for CFW - reduction for young animals and older animals
+    ###change in CFW is affected by all the age factors
+    af_cfw_pa1e1b1nwzida0e0b0xyg0 = af1_wool_pa1e1b1nwzida0e0b0xyg0 * af2_wool_pa1e1b1nwzida0e0b0xyg0 * af3_wool_pa1e1b1nwzida0e0b0xyg0
+    af_cfw_pa1e1b1nwzida0e0b0xyg1 = af1_wool_pa1e1b1nwzida0e0b0xyg1 * af2_wool_pa1e1b1nwzida0e0b0xyg1 * af3_wool_pa1e1b1nwzida0e0b0xyg1
+    af_cfw_pa1e1b1nwzida0e0b0xyg2 = af1_wool_pa1e1b1nwzida0e0b0xyg2 * af2_wool_pa1e1b1nwzida0e0b0xyg2 * af3_wool_pa1e1b1nwzida0e0b0xyg2
+    af_cfw_pa1e1b1nwzida0e0b0xyg3 = af1_wool_pa1e1b1nwzida0e0b0xyg3 * af2_wool_pa1e1b1nwzida0e0b0xyg3 * af3_wool_pa1e1b1nwzida0e0b0xyg3
+    ##overall age factor for FD - reduction in follicle density for young animals and older animals
+    ###change in FD is the interaction between the change in CFW and the change in follicle density.
+    ###Including the AF results in FD not changing with the change in CFW. Excluding the AF results in FD varying as CFW changes
+    af_fd_pa1e1b1nwzida0e0b0xyg0 = af1_wool_pa1e1b1nwzida0e0b0xyg0 * af2_wool_pa1e1b1nwzida0e0b0xyg0 * af4_wool_pa1e1b1nwzida0e0b0xyg0
+    af_fd_pa1e1b1nwzida0e0b0xyg1 = af1_wool_pa1e1b1nwzida0e0b0xyg1 * af2_wool_pa1e1b1nwzida0e0b0xyg1 * af4_wool_pa1e1b1nwzida0e0b0xyg1
+    af_fd_pa1e1b1nwzida0e0b0xyg2 = af1_wool_pa1e1b1nwzida0e0b0xyg2 * af2_wool_pa1e1b1nwzida0e0b0xyg2 * af4_wool_pa1e1b1nwzida0e0b0xyg2
+    af_fd_pa1e1b1nwzida0e0b0xyg3 = af1_wool_pa1e1b1nwzida0e0b0xyg3 * af2_wool_pa1e1b1nwzida0e0b0xyg3 * af4_wool_pa1e1b1nwzida0e0b0xyg3
 
     ##Day length factor on efficiency
     dlf_eff_pa1e1b1nwzida0e0b0xyg = np.average(lat_deg / 40 * np.sin(2 * np.pi * doy_pa1e1b1nwzida0e0b0xygp0 / 364), axis = -1)
@@ -2201,11 +2247,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##Conceptus energy pattern (c_start) on day 1
     ce_day1_f_dams = np.exp(cp_dams[16, ...] - cp_dams[17, ...] * np.exp(-cp_dams[18, 0, ...] * 1)) / 4
 
-    ##genotype calc that requires af_wool. ME for minimum wool growth (with no intake, relsize = 1)
-    new_min_pa1e1b1nwzida0e0b0xyg0 =cw_sire[14, ...] * sfw_a0e0b0xyg0[0, ...] / cw_sire[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg0 * dlf_wool_pa1e1b1nwzida0e0b0xyg0 * cw_sire[1, ...]
-    new_min_pa1e1b1nwzida0e0b0xyg1 =cw_dams[14, ...] * sfw_a0e0b0xyg1[0, ...] / cw_dams[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg1 * dlf_wool_pa1e1b1nwzida0e0b0xyg1 * cw_dams[1, ...]
-    new_min_pa1e1b1nwzida0e0b0xyg2 =cw_yatf[14, ...] * sfw_pa1e1b1nwzida0e0b0xyg2[0, ...] / cw_yatf[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg2 * dlf_wool_pa1e1b1nwzida0e0b0xyg2 * cw_yatf[1, ...]
-    new_min_pa1e1b1nwzida0e0b0xyg3 =cw_offs[14, ...] * sfw_da0e0b0xyg3[0, ...] / cw_offs[3,...] / 364 * af_wool_pa1e1b1nwzida0e0b0xyg3 * dlf_wool_pa1e1b1nwzida0e0b0xyg3 * cw_offs[1, ...]
+    ##genotype calc that requires af_cfw. ME for minimum wool growth (with no intake, relsize = 1)
+    new_min_pa1e1b1nwzida0e0b0xyg0 =cw_sire[14, ...] * sfw_a0e0b0xyg0[0, ...] / cw_sire[3,...] / 364 * af_cfw_pa1e1b1nwzida0e0b0xyg0 * dlf_wool_pa1e1b1nwzida0e0b0xyg0 * cw_sire[1, ...]
+    new_min_pa1e1b1nwzida0e0b0xyg1 =cw_dams[14, ...] * sfw_a0e0b0xyg1[0, ...] / cw_dams[3,...] / 364 * af_cfw_pa1e1b1nwzida0e0b0xyg1 * dlf_wool_pa1e1b1nwzida0e0b0xyg1 * cw_dams[1, ...]
+    new_min_pa1e1b1nwzida0e0b0xyg2 =cw_yatf[14, ...] * sfw_pa1e1b1nwzida0e0b0xyg2[0, ...] / cw_yatf[3,...] / 364 * af_cfw_pa1e1b1nwzida0e0b0xyg2 * dlf_wool_pa1e1b1nwzida0e0b0xyg2 * cw_yatf[1, ...]
+    new_min_pa1e1b1nwzida0e0b0xyg3 =cw_offs[14, ...] * sfw_da0e0b0xyg3[0, ...] / cw_offs[3,...] / 364 * af_cfw_pa1e1b1nwzida0e0b0xyg3 * dlf_wool_pa1e1b1nwzida0e0b0xyg3 * cw_offs[1, ...]
 
     ##plot above x-axis is p
     # array = srw_age_pa1e1b1nwzida0e0b0xyg2
@@ -2215,7 +2261,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     # array = mp2_age_y_pa1e1b1nwzida0e0b0xyg1
     # array = mp_age_y_pa1e1b1nwzida0e0b0xyg1
     # array = piyf_pa1e1b1nwzida0e0b0xyg2
-    # array = af_wool_pa1e1b1nwzida0e0b0xyg2
+    # array = af_cfw_pa1e1b1nwzida0e0b0xyg2
     # array = mr_age_pa1e1b1nwzida0e0b0xyg2
     # shape=array.shape
     # for a1 in range(shape[-14]):
@@ -2253,10 +2299,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     lact_nut_effect_pa1e1b1nwzida0e0b0xyg1 = (age_pa1e1b1nwzida0e0b0xyg2  > (cl_dams[16, ...] * cl_dams[2, ...]))
 
     ##Average daily CFW
-    d_cfw_ave_pa1e1b1nwzida0e0b0xyg0 = sfw_a0e0b0xyg0 * af_wool_pa1e1b1nwzida0e0b0xyg0 / 364
-    d_cfw_ave_pa1e1b1nwzida0e0b0xyg1 = sfw_a0e0b0xyg1 * af_wool_pa1e1b1nwzida0e0b0xyg1 / 364
-    d_cfw_ave_pa1e1b1nwzida0e0b0xyg2 = sfw_pa1e1b1nwzida0e0b0xyg2 * af_wool_pa1e1b1nwzida0e0b0xyg2 / 364
-    d_cfw_ave_pa1e1b1nwzida0e0b0xyg3 = sfw_da0e0b0xyg3 * af_wool_pa1e1b1nwzida0e0b0xyg3 / 364
+    d_cfw_ave_a0e0b0xyg0 = sfw_a0e0b0xyg0 / 364
+    d_cfw_ave_a0e0b0xyg1 = sfw_a0e0b0xyg1 / 364
+    d_cfw_ave_pa1e1b1nwzida0e0b0xyg2 = sfw_pa1e1b1nwzida0e0b0xyg2 / 364
+    d_cfw_ave_a0e0b0xyg3 = sfw_da0e0b0xyg3 / 364
 
     ##Expected relative size
     relsize_exp_pa1e1b1nwzida0e0b0xyg0  = 1 - (1 - w_b_std_b0xyg0 / srw_pa1e1b1nwzida0e0b0xyg0) * np.exp(-cn_sire[1, ...]
@@ -3717,8 +3763,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_cs(cw_sire, cc_sire, ffcfw_start_sire
                             , relsize_start_sire, d_cfw_history_start_p2g0, mei_sire, new_min_pa1e1b1nwzida0e0b0xyg0[p]
-                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p],  sfd_a0e0b0xyg0, wge_pa1e1b1nwzida0e0b0xyg0[p_srw]
-                            , af_wool_pa1e1b1nwzida0e0b0xyg0[p], dlf_wool_pa1e1b1nwzida0e0b0xyg0[p]
+                            , d_cfw_ave_a0e0b0xyg0,  sfd_a0e0b0xyg0, wge_pa1e1b1nwzida0e0b0xyg0[p_srw]
+                            , af_cfw_pa1e1b1nwzida0e0b0xyg0[p], af_fd_pa1e1b1nwzida0e0b0xyg0[p], dlf_wool_pa1e1b1nwzida0e0b0xyg0[p]
                             , kw_cs_yg0, days_period_pa1e1b1nwzida0e0b0xyg0[p], age_pa1e1b1nwzida0e0b0xyg0[p]
                             , sfw_ltwadj_g0, sfd_ltwadj_g0 , rev_trait_values['sire'][p])
                         if eqn_used:
@@ -3737,8 +3783,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_cs(cw_dams, cc_dams, ffcfw_start_dams
                             , relsize_start_dams, d_cfw_history_start_p2g1, mei_dams, new_min_pa1e1b1nwzida0e0b0xyg1[p]
-                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg1[p], sfd_a0e0b0xyg1, wge_pa1e1b1nwzida0e0b0xyg1[p_srw]
-                            , af_wool_pa1e1b1nwzida0e0b0xyg1[p], dlf_wool_pa1e1b1nwzida0e0b0xyg1[p]
+                            , d_cfw_ave_a0e0b0xyg1, sfd_a0e0b0xyg1, wge_pa1e1b1nwzida0e0b0xyg1[p_srw]
+                            , af_cfw_pa1e1b1nwzida0e0b0xyg1[p], af_fd_pa1e1b1nwzida0e0b0xyg1[p], dlf_wool_pa1e1b1nwzida0e0b0xyg1[p]
                             , kw_cs_yg1, days_period_pa1e1b1nwzida0e0b0xyg1[p], age_pa1e1b1nwzida0e0b0xyg1[p]
                             , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p], sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p]
                             , rev_trait_values['dams'][p], nec_dams, kc_cs_yg1, nel_dams, kl_cs_dams
@@ -3759,8 +3805,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_cs(cw_offs, cc_offs, ffcfw_start_offs
                             , relsize_start_offs, d_cfw_history_start_p2g3, mei_offs, new_min_pa1e1b1nwzida0e0b0xyg3[p]
-                            , d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p], sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw]
-                            , af_wool_pa1e1b1nwzida0e0b0xyg3[p], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p]
+                            , d_cfw_ave_a0e0b0xyg3, sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw]
+                            , af_cfw_pa1e1b1nwzida0e0b0xyg3[p], af_fd_pa1e1b1nwzida0e0b0xyg3[p], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p]
                             , kw_cs_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p], age_cut_pa1e1b1nwzida0e0b0xyg3[p]
                             , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
                             , rev_trait_values['offs'][p])
@@ -3783,8 +3829,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_mu(cw_sire, cc_sire
                                            , ffcfw_start_sire, relsize_start_sire, d_cfw_history_start_p2g0
                                            , mei_sire, new_min_pa1e1b1nwzida0e0b0xyg0[p]
-                                           , d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...],  sfd_a0e0b0xyg0, wge_pa1e1b1nwzida0e0b0xyg0[p_srw]
-                                           , af_wool_pa1e1b1nwzida0e0b0xyg0[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg0[p, ...]
+                                           , d_cfw_ave_a0e0b0xyg0,  sfd_a0e0b0xyg0, wge_pa1e1b1nwzida0e0b0xyg0[p_srw]
+                                           , af_cfw_pa1e1b1nwzida0e0b0xyg0[p, ...], af_fd_pa1e1b1nwzida0e0b0xyg0[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                            , kw_mu_yg0, days_period_pa1e1b1nwzida0e0b0xyg0[p], age_pa1e1b1nwzida0e0b0xyg0[p]
                                            , sfw_ltwadj_g0, sfd_ltwadj_g0 , rev_trait_values['sire'][p])
                         if eqn_used:
@@ -3804,8 +3850,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_mu(cw_dams, cc_dams
                                            , ffcfw_start_dams, relsize_start_dams, d_cfw_history_start_p2g1
                                            , mei_dams, new_min_pa1e1b1nwzida0e0b0xyg1[p]
-                                           , d_cfw_ave_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_a0e0b0xyg1, wge_pa1e1b1nwzida0e0b0xyg1[p_srw]
-                                           , af_wool_pa1e1b1nwzida0e0b0xyg1[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg1[p, ...]
+                                           , d_cfw_ave_a0e0b0xyg1, sfd_a0e0b0xyg1, wge_pa1e1b1nwzida0e0b0xyg1[p_srw]
+                                           , af_cfw_pa1e1b1nwzida0e0b0xyg1[p, ...], af_fd_pa1e1b1nwzida0e0b0xyg1[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                            , kw_mu_yg1, days_period_pa1e1b1nwzida0e0b0xyg1[p], age_pa1e1b1nwzida0e0b0xyg1[p]
                                            , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                            , rev_trait_values['dams'][p], nec_dams, kc_mu_yg1
@@ -3828,8 +3874,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_mu(cw_offs, cc_offs
                                            , ffcfw_start_offs, relsize_start_offs, d_cfw_history_start_p2g3
                                            , mei_offs, new_min_pa1e1b1nwzida0e0b0xyg3[p]
-                                           , d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...], sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw]
-                                           , af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
+                                           , d_cfw_ave_a0e0b0xyg3, sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw]
+                                           , af_cfw_pa1e1b1nwzida0e0b0xyg3[p, ...], af_fd_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                            , kw_mu_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p], age_cut_pa1e1b1nwzida0e0b0xyg3[p]
                                            , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
                                            , rev_trait_values['offs'][p])
@@ -3851,8 +3897,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_nfs(cw_sire, cc_sire, cg_sire, ck_sire
                                             , ffcfw_start_sire, relsize_start_sire, d_cfw_history_start_p2g0, mei_sire
-                                            , new_min_pa1e1b1nwzida0e0b0xyg0[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...]
-                                            , sfd_a0e0b0xyg0, wge_pa1e1b1nwzida0e0b0xyg0[p_srw], af_wool_pa1e1b1nwzida0e0b0xyg0[p, ...]
+                                            , new_min_pa1e1b1nwzida0e0b0xyg0[p], d_cfw_ave_a0e0b0xyg0
+                                            , sfd_a0e0b0xyg0, wge_pa1e1b1nwzida0e0b0xyg0[p_srw], af_cfw_pa1e1b1nwzida0e0b0xyg0[p, ...], af_fd_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                             , dlf_wool_pa1e1b1nwzida0e0b0xyg0[p, ...], days_period_pa1e1b1nwzida0e0b0xyg0[p]
                                             , age_pa1e1b1nwzida0e0b0xyg0[p], sfw_ltwadj_g0, sfd_ltwadj_g0, rev_trait_values['sire'][p])
                         if eqn_used:
@@ -3871,8 +3917,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_nfs(cw_dams, cc_dams, cg_dams, ck_dams
                                             , ffcfw_start_dams, relsize_start_dams, d_cfw_history_start_p2g1, mei_dams
-                                            , new_min_pa1e1b1nwzida0e0b0xyg1[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg1[p, ...]
-                                            , sfd_a0e0b0xyg1, wge_pa1e1b1nwzida0e0b0xyg1[p_srw], af_wool_pa1e1b1nwzida0e0b0xyg1[p, ...]
+                                            , new_min_pa1e1b1nwzida0e0b0xyg1[p], d_cfw_ave_a0e0b0xyg1
+                                            , sfd_a0e0b0xyg1, wge_pa1e1b1nwzida0e0b0xyg1[p_srw], af_cfw_pa1e1b1nwzida0e0b0xyg1[p, ...], af_fd_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                             , dlf_wool_pa1e1b1nwzida0e0b0xyg1[p, ...], days_period_pa1e1b1nwzida0e0b0xyg1[p]
                                             , age_pa1e1b1nwzida0e0b0xyg1[p], sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                             , sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], rev_trait_values['dams'][p]
@@ -3894,8 +3940,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
                         temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_nfs(cw_offs, cc_offs, cg_offs, ck_offs
                                             , ffcfw_start_offs, relsize_start_offs, d_cfw_history_start_p2g3, mei_offs
-                                            , new_min_pa1e1b1nwzida0e0b0xyg3[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...]
-                                            , sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw], af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
+                                            , new_min_pa1e1b1nwzida0e0b0xyg3[p], d_cfw_ave_a0e0b0xyg3
+                                            , sfd_da0e0b0xyg3, wge_pa1e1b1nwzida0e0b0xyg3[p_srw], af_cfw_pa1e1b1nwzida0e0b0xyg3[p, ...], af_fd_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                             , dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], days_period_pa1e1b1nwzida0e0b0xyg3[p]
                                             , age_cut_pa1e1b1nwzida0e0b0xyg3[p], sfw_ltwadj_pa1e1b1nwzida0e0b0xyg3, sfd_ltwadj_pa1e1b1nwzida0e0b0xyg3
                                             , rev_trait_values['offs'][p])
@@ -4774,7 +4820,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                     temp0, temp1, temp2, temp3, temp4 = sfun.f_fibre_cs(cw_yatf, cc_yatf, ffcfw_start_yatf
                             , relsize_start_yatf, d_cfw_history_start_p2g2, mei_yatf, new_min_pa1e1b1nwzida0e0b0xyg2[p]
                             , d_cfw_ave_pa1e1b1nwzida0e0b0xyg2[p], sfd_pa1e1b1nwzida0e0b0xyg2[p]
-                            , wge_pa1e1b1nwzida0e0b0xyg2[p], af_wool_pa1e1b1nwzida0e0b0xyg2[p]
+                            , wge_pa1e1b1nwzida0e0b0xyg2[p], af_cfw_pa1e1b1nwzida0e0b0xyg2[p], af_fd_pa1e1b1nwzida0e0b0xyg2[p]
                             , dlf_wool_pa1e1b1nwzida0e0b0xyg2[p], kw_cs_yg2, days_period_pa1e1b1nwzida0e0b0xyg2[p]
                             , age_pa1e1b1nwzida0e0b0xyg2[p], sfw_ltwadj_g2, sfd_ltwadj_g2, rev_trait_values['yatf'][p])
 
@@ -4799,7 +4845,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             , ffcfw_start_yatf, relsize_start_yatf, d_cfw_history_start_p2g2
                             , mei_yatf, new_min_pa1e1b1nwzida0e0b0xyg2[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg2[p]
                             , sfd_pa1e1b1nwzida0e0b0xyg2[p], wge_pa1e1b1nwzida0e0b0xyg2[p]
-                            , af_wool_pa1e1b1nwzida0e0b0xyg2[p], dlf_wool_pa1e1b1nwzida0e0b0xyg2[p]
+                            , af_cfw_pa1e1b1nwzida0e0b0xyg2[p], af_fd_pa1e1b1nwzida0e0b0xyg2[p], dlf_wool_pa1e1b1nwzida0e0b0xyg2[p]
                             , kw_mu_yg2, days_period_pa1e1b1nwzida0e0b0xyg2[p], age_pa1e1b1nwzida0e0b0xyg2[p]
                             , sfw_ltwadj_g2, sfd_ltwadj_g2, rev_trait_values['yatf'][p])
 
@@ -4824,7 +4870,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                             ,ffcfw_start_yatf, relsize_start_yatf, d_cfw_history_start_p2g2, mei_yatf
                             , new_min_pa1e1b1nwzida0e0b0xyg2[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg2[p]
                             , sfd_pa1e1b1nwzida0e0b0xyg2[p], wge_pa1e1b1nwzida0e0b0xyg2[p]
-                            , af_wool_pa1e1b1nwzida0e0b0xyg2[p], dlf_wool_pa1e1b1nwzida0e0b0xyg2[p]
+                            , af_cfw_pa1e1b1nwzida0e0b0xyg2[p], af_fd_pa1e1b1nwzida0e0b0xyg2[p], dlf_wool_pa1e1b1nwzida0e0b0xyg2[p]
                             , days_period_pa1e1b1nwzida0e0b0xyg2[p], age_pa1e1b1nwzida0e0b0xyg2[p]
                             , sfw_ltwadj_g2, sfd_ltwadj_g2, rev_trait_values['yatf'][p])
 
