@@ -1,8 +1,8 @@
 """
 This module contains functions that parametrise the emission components of the model.
 
-The NIR method is based on National Inventory Report 2022 - (Published_April 2023)
-which is compatible with v2.3 of the SB-GAF tool and v10.9 of G-GAF tool from PICCC.
+The NIR method is based on National Inventory Report 2022 - (Published_April 2024)
+which is compatible with v2.6 of the SB-GAF tool and v11.1 of G-GAF tool from PICCC.
 
 
 author: Young
@@ -14,6 +14,7 @@ import numpy as np
 
 from . import UniversalInputs as uinp
 from . import PropertyInputs as pinp
+from . import StructuralInputs as sinp
 from . import FeedsupplyFunctions as fsfun
 
 def f_stock_ch4_animal_bc(ch, intake_f, intake_s, md_solid, level):
@@ -501,12 +502,21 @@ def f_fert_emissions():
     '''
     nitrogen_applied_k = pinp.emissions['i_nitrogen_applied_k']
     propn_urea_k = pinp.emissions['i_propn_Urea']
-    ef_fert = uinp.emissions['i_ef_fert']
+    rainfall_zone = int(pinp.emissions['i_leach_factor']) #0 - <600mm, 1 - >600mm
+    ef_fert_crop = uinp.emissions['i_ef_fert_crop_r1'][rainfall_zone]
+    ef_atmospheric_dep_fert_crop = uinp.emissions['i_ef_atmospheric_dep_fert_crop_r1'][rainfall_zone]
+    ef_fert_pas = uinp.emissions['i_ef_fert_pas']
+    ef_atmospheric_dep_fert_pas = uinp.emissions['i_ef_atmospheric_dep_fert_pas']
     n2o_gwp_factor = uinp.emissions['i_n2o_gwp_factor']
+
+    ##populate the k axis on ef_fert - for some reason ef is different based on whether it is a pasture or a crop
+    landuse_is_pas_k = np.isin(sinp.general['i_idx_k'], sinp.general['i_idx_k2'])
+    ef_fert_k = np.where(landuse_is_pas_k, ef_fert_pas, ef_fert_crop)
+    ef_atmospheric_dep_fert_k = np.where(landuse_is_pas_k, ef_atmospheric_dep_fert_pas, ef_atmospheric_dep_fert_crop)
 
     ##nitrification
     Cg = uinp.emissions['i_cf_n2o']  # 44/28 - weight conversion factor of Nitrogen (molecular weight 28) to Nitrous oxide (molecular weight 44)
-    n2o_fert_k = nitrogen_applied_k * ef_fert * Cg
+    n2o_fert_k = nitrogen_applied_k * ef_fert_k * Cg
 
     ##leaching and runoff
     FracWET = uinp.emissions['i_FracWET_fert'] #fraction of N available for leaching and runoff
@@ -515,7 +525,7 @@ def f_fert_emissions():
 
     ##atmospheric
     FracGASM = uinp.emissions['i_FracGASM_fert'] #fraction of animal waste N volatilised
-    n2o_atmospheric_deposition_k = f_n2o_atmospheric_deposition(nitrogen_applied_k, ef_fert, FracGASM)
+    n2o_atmospheric_deposition_k = f_n2o_atmospheric_deposition(nitrogen_applied_k, ef_atmospheric_dep_fert_k, FracGASM)
 
     ##urea hydrolysis
     Cg_co2 = uinp.emissions['i_cf_co2']  # 44/12 - weight conversion factor of carbon (molecular weight 12) to carbon dioxide (molecular weight 44)
