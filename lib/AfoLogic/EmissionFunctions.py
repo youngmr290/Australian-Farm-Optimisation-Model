@@ -482,7 +482,7 @@ def f_fuel_emissions(diesel_used):
     return co2_fuel_co2e, ch4_fuel_co2e, n2o_fuel_co2e
 
 
-def f_fert_emissions():
+def f_fert_emissions(fert_nitrogen_propn_k_n, fert_propn_urea_k_n):
     '''
     Calculates GHG emissions linked to fertiliser applied to rotation activities, using the methods documented
     in the National Greenhouse Gas Inventory Report.
@@ -498,16 +498,17 @@ def f_fert_emissions():
         5. Liming hydrolysis: The lime dissolves to form calcium, bicarbonate, and hydroxide ions.
 
 
-    :return: fert co2e kg/ha
+    :return: emissions (kg co2e) per tonne of fert applied.
     '''
-    nitrogen_applied_k = pinp.emissions['i_nitrogen_applied_k']
-    propn_urea_k = pinp.emissions['i_propn_Urea']
     rainfall_zone = int(pinp.emissions['i_leach_factor']) #0 - <600mm, 1 - >600mm
     ef_fert_crop = uinp.emissions['i_ef_fert_crop_r1'][rainfall_zone]
     ef_atmospheric_dep_fert_crop = uinp.emissions['i_ef_atmospheric_dep_fert_crop_r1'][rainfall_zone]
     ef_fert_pas = uinp.emissions['i_ef_fert_pas']
     ef_atmospheric_dep_fert_pas = uinp.emissions['i_ef_atmospheric_dep_fert_pas']
     n2o_gwp_factor = uinp.emissions['i_n2o_gwp_factor']
+
+    ##nitrogen applied per tonne of each fert
+    nitrogen_applied_kn = 1000 * fert_nitrogen_propn_k_n.values
 
     ##populate the k axis on ef_fert - for some reason ef is different based on whether it is a pasture or a crop
     landuse_is_pas_k = np.isin(sinp.general['i_idx_k'], sinp.general['i_idx_k2'])
@@ -516,22 +517,23 @@ def f_fert_emissions():
 
     ##nitrification
     Cg = uinp.emissions['i_cf_n2o']  # 44/28 - weight conversion factor of Nitrogen (molecular weight 28) to Nitrous oxide (molecular weight 44)
-    n2o_fert_k = nitrogen_applied_k * ef_fert_k * Cg
+    n2o_fert_kn = nitrogen_applied_kn * ef_fert_k[:,None] * Cg
 
     ##leaching and runoff
     FracWET = uinp.emissions['i_FracWET_fert'] #fraction of N available for leaching and runoff
     FracLEACH = uinp.emissions['i_FracLEACH_fert'] #fraction of N lost through leaching and runoff
-    n2o_leach_k = f_n2o_leach_runoff(nitrogen_applied_k, FracWET, FracLEACH)
+    n2o_leach_kn = f_n2o_leach_runoff(nitrogen_applied_kn, FracWET, FracLEACH)
 
     ##atmospheric
     FracGASM = uinp.emissions['i_FracGASM_fert'] #fraction of animal waste N volatilised
-    n2o_atmospheric_deposition_k = f_n2o_atmospheric_deposition(nitrogen_applied_k, ef_atmospheric_dep_fert_k, FracGASM)
+    n2o_atmospheric_deposition_kn = f_n2o_atmospheric_deposition(nitrogen_applied_kn, ef_atmospheric_dep_fert_k[:,None], FracGASM)
 
     ##urea hydrolysis
     Cg_co2 = uinp.emissions['i_cf_co2']  # 44/12 - weight conversion factor of carbon (molecular weight 12) to carbon dioxide (molecular weight 44)
     ef_urea = uinp.emissions['i_ef_urea']
-    urea_applied_k = nitrogen_applied_k * propn_urea_k / 0.46
-    co2_urea_application = urea_applied_k * ef_urea * Cg_co2
+    fert_propn_urea_kn = fert_propn_urea_k_n.values
+    urea_applied_kn = nitrogen_applied_kn * fert_propn_urea_kn / 0.46
+    co2_urea_application_kn = urea_applied_kn * ef_urea * Cg_co2
 
     ##lime hydrolysis
     ef_limestone = uinp.emissions['i_ef_limestone']
@@ -539,12 +541,12 @@ def f_fert_emissions():
     FracLime = uinp.emissions['i_FracLime']
     purity_limestone = uinp.emissions['i_purity_limestone']
     purity_dolomite = uinp.emissions['i_purity_dolomite']
-    lime_applied_k = pinp.emissions['i_lime_applied_k']
-    co2_lime_application = ((lime_applied_k * FracLime * purity_limestone * ef_limestone)
-                            + (lime_applied_k * (1-FracLime) * purity_dolomite * ef_dolomite)) * Cg_co2
+    lime_applied_n = 1000 * (fert_nitrogen_propn_k_n.columns == "lime").astype(int)
+    co2_lime_application_n = ((lime_applied_n * FracLime * purity_limestone * ef_limestone)
+                            + (lime_applied_n * (1-FracLime) * purity_dolomite * ef_dolomite)) * Cg_co2
 
     ##total co2e
-    co2e_fert_k = ((n2o_fert_k + n2o_leach_k + n2o_atmospheric_deposition_k) * n2o_gwp_factor
-                   + co2_urea_application + co2_lime_application)
+    co2e_fert_kn = ((n2o_fert_kn + n2o_leach_kn + n2o_atmospheric_deposition_kn) * n2o_gwp_factor
+                   + co2_urea_application_kn + co2_lime_application_n)
 
-    return co2e_fert_k
+    return co2e_fert_kn

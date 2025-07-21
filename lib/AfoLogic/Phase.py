@@ -555,6 +555,23 @@ def f_fert_passes():
     return total_fert_passes_rz_nl.sort_index()
 
 
+def f1_fert_rate():
+    '''Fert rate per hectare of rotation activity (note this includes un-arable land so the rate may look lower than expected).'''
+    ##fert price
+    fert_price_n1 = uinp.general['i_fert_info_n1']['price ($/t)']
+    a_ferttype_k_n = pinp.crop['i_a_ferttype_k_n']
+    fert_price_k_n = a_ferttype_k_n.replace(fert_price_n1)
+    fert_price_r_n = fert_price_k_n.reindex(pinp.phases_r.iloc[:, -1].values)
+    fert_price_r_n.index = pinp.phases_r.index  # to match original rotation index
+
+    ##fert cost per hectare
+    phase_fert_cost_rzl_n = f_fert_cost(option=2)
+    phase_fert_cost_rn_zl = phase_fert_cost_rzl_n.stack().reorder_levels([0, 3, 1, 2]).unstack([2, 3])
+
+    ##fert rate per hectare
+    phase_fert_rate_rn_zl = phase_fert_cost_rn_zl.div(fert_price_r_n.stack().sort_index(), axis=0)
+    return phase_fert_rate_rn_zl
+
 def f1_fertilising_time():
     '''
     Determines the time (hr/ha) spent fertilising for each rotation.
@@ -568,28 +585,30 @@ def f1_fertilising_time():
     This is used to calculate machinery application cost, labour requirement and
     variable machinery depreciation associated with fertilising.
     '''
-    ##fert passes - arable (arable area accounted for in passes function)
-    total_passes_rzln = f_fert_passes().stack()
 
-    ##time linked to tonnage
-    ###fert used on each rotation phase - calculated based on inputted estimate of kgs of fert applied per pass
-    fert_req_n = pinp.crop['fert_info']['expected_rate']/1000 #convert to tonnes
-    fert_total_rzln = total_passes_rzln.mul(fert_req_n, level=-1)
+    ##time linked to tonnage - irrelevant of number of passes.
+    ###fert used on each rotation phase - calculated based on fert price and the cost per hectare.
+    phase_fert_rate_rn_zl = f1_fert_rate()
     ###time per tonne
-    time_n = mac.time_tonne()
-    ###total time
-    time_t_rzln = fert_total_rzln.mul(time_n, level=-1)
+    time_k_n = mac.time_tonne()
+    time_r_n = time_k_n.reindex(pinp.phases_r.iloc[:, -1].values)
+    time_r_n.index = pinp.phases_r.index  # to match original rotation index
+    ###time total
+    time_t_rn_zl = phase_fert_rate_rn_zl.mul(time_r_n.stack().sort_index(), axis=0)
+    time_t_rzln = time_t_rn_zl.stack([0,1]).reorder_levels([0,2,3,1])
 
-    ##time linked to spreading a hectare in paddock
+    ##time linked to spreading a hectare in paddock - depends on number of passes
+    ###fert passes - arable (arable area accounted for in passes function)
+    total_passes_rzln = f_fert_passes().stack()
     ###time taken to cover 1ha while spreading
     time_ha_n = mac.time_ha()
     ###total time
-    time_ha_rzln = total_passes_rzln.mul(time_ha_n, level=-1)
+    time_ha_rzln = total_passes_rzln.mul(time_ha_n, level=-1).fillna(0)
 
     return time_t_rzln + time_ha_rzln
 
 
-def f_fert_cost(r_vals):
+def f_fert_cost(r_vals={}, option=1):
     '''
     Cost of fertilising. Includes the fertiliser cost and the application cost.
 
@@ -615,6 +634,7 @@ def f_fert_cost(r_vals):
     purchased shortly before application because farmers wait to see how the year unfolds before locking
     in a fertiliser plan.
 
+    :param option: option changes when the function returns. Option 2 is used for calculating fert rate for application cost and emission calculations.
     :return: Dataframe of fertiliser costs. Summed with other cashflow items at the end of the module
 
     '''
@@ -685,6 +705,9 @@ def f_fert_cost(r_vals):
     fert_rz_nl = fert_rz_nl.mul(arable_l, axis=1, level=1) #add arable to df
     nap_fert_rz_nl = nap_fert_rz_nl.mul(1-arable_l, axis=1, level=1) #add arable to df
     phase_fert_cost_rzl_n = fert_rz_nl.fillna(0).stack(1) + nap_fert_rz_nl.fillna(0).stack(1)
+
+    if option==2:
+        return phase_fert_cost_rzl_n
 
     ##adjust for interest and p7 period
     phase_fert_cost_rzl_p7n = phase_fert_cost_rzl_n.reindex(fert_cost_allocation_z_p7n.columns, axis=1, level=1)
@@ -1330,23 +1353,36 @@ def f1_rot_fert_emissions(r_vals):
     :param r_vals:
     :return:
     '''
-    ##call emission function
-    co2e_fert_k = efun.f_fert_emissions()
 
-    ##convert k to r
-    keys_k = sinp.general['i_idx_k']
-    phases_df = pinp.phases_r
-    landuse_r = phases_df.iloc[:, -1].values
-    a_k_rk = landuse_r[:, na] == keys_k
-    co2e_fert_r = np.sum(co2e_fert_k * a_k_rk, axis=1)
+    ##fert nitrogen propn
+    a_ferttype_k_n = pinp.crop['i_a_ferttype_k_n']
+    fert_nitrogen_propn_n1 = uinp.general['i_fert_info_n1']['N proportion']
+    fert_nitrogen_propn_k_n = a_ferttype_k_n.replace(fert_nitrogen_propn_n1)
+    ##fert urea propn
+    fert_propn_urea_n1 = uinp.general['i_fert_info_n1']['propn of N that is urea']
+    fert_propn_urea_k_n = a_ferttype_k_n.replace(fert_propn_urea_n1)
+
+    ##call emission function
+    co2e_fert_kn = efun.f_fert_emissions(fert_nitrogen_propn_k_n, fert_propn_urea_k_n)
+    co2e_fert_k_n = pd.DataFrame(co2e_fert_kn, index=fert_nitrogen_propn_k_n.index, columns=fert_nitrogen_propn_k_n.columns)
+    co2e_fert_r_n = co2e_fert_k_n.reindex(pinp.phases_r.iloc[:, -1].values)
+    co2e_fert_r_n.index = pinp.phases_r.index  # to match original rotation index
+
+    ##total emissions for each rotation phase
+    phase_fert_rate_rn_zl = f1_fert_rate()
+    co2e_fert_rn_zl = phase_fert_rate_rn_zl.mul(co2e_fert_r_n.stack().sort_index(), axis=0)
+    co2e_fert_zrl = co2e_fert_rn_zl.unstack(0).sum().reorder_levels([0,2,1])
 
     ##save r_val
-    fun.f1_make_r_val(r_vals, co2e_fert_r, 'co2e_fert_r')
+    keys_r  = np.array(pinp.phases_r.index).astype('str')
+    keys_l  = pinp.general['i_lmu_idx']
+    keys_z  = zfun.f_keys_z()
+    zrl = pd.MultiIndex.from_product([keys_z, keys_r, keys_l], names=['z', 'r', 'l'])
+    co2e_fert_zrl = co2e_fert_zrl.reindex(zrl) #reindex so that nump array is in the correct order (rotation index was sorted)
+    np_co2e_fert_zrl = co2e_fert_zrl.values.reshape((len(keys_z), len(keys_r), len(keys_l)))
+    fun.f1_make_r_val(r_vals, np_co2e_fert_zrl, 'co2e_fert_zrl')
 
-    ##make df
-    keys_r = np.array(phases_df.index).astype('str')
-    co2e_fert_r = pd.Series(co2e_fert_r, keys_r)
-    return co2e_fert_r
+    return co2e_fert_zrl
 
 #########################
 #total rot cost         #
@@ -1519,7 +1555,7 @@ def f1_crop_params(params,r_vals):
     phasesow_req = f_phase_sow_req()
     sow_prov_p7p5zk, can_sow_p5zk = f_sow_prov()
     total_co2e_phase_fuel_zrl = f1_rot_fuel_emissions(r_vals)
-    co2e_fert_r = f1_rot_fert_emissions(r_vals)
+    co2e_fert_zrl = f1_rot_fert_emissions(r_vals)
 
     ##create params
     params['grain_pool_proportions'] = propn.to_dict()
@@ -1537,7 +1573,7 @@ def f1_crop_params(params,r_vals):
     params['spreader_sprayer_dep_p7zlr'] = spreader_sprayer_dep_p7zlr.to_dict()
     params['increment_spreader_sprayer_dep_p7zlr'] = increment_spreader_sprayer_dep_p7zlr.to_dict()
     params['co2e_phase_fuel_zrl'] = total_co2e_phase_fuel_zrl.to_dict()
-    params['co2e_phase_fert_r'] = co2e_fert_r.to_dict()
+    params['co2e_phase_fert_zrl'] = co2e_fert_zrl.to_dict()
 
 
 

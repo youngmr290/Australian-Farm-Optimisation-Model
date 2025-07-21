@@ -2857,8 +2857,8 @@ def f_emission_summary(lp_vars, r_vals, option=0):
 
     ##Fertiliser
     type = 'crop'
-    prod = 'co2e_fert_r'.format(e)
-    na_prod = [0,1,2,3,5]  # q,s,p7,z,l
+    prod = 'co2e_fert_zrl'.format(e)
+    na_prod = [0,1,2]  # q,s,p7
     weights = 'v_phase_change_increase_qsp7zrl'
     keys = 'keys_qsp7zrl'
     index = [0, 1, 3]  # q,s,z

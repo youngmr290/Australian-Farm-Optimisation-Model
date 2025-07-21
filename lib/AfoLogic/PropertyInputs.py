@@ -740,12 +740,10 @@ def f1_mask_landuse():
     f1_do_mask_landuse(crop, "yield_by_lmu", landuse_axis_type="crop", landuse_axis=0)
     f1_do_mask_landuse(crop, "seeding_rate", landuse_axis_type="all", landuse_axis=0)
     f1_do_mask_landuse(crop, "seed_info", landuse_axis_type="all", landuse_axis=0)
+    f1_do_mask_landuse(crop, "i_a_ferttype_k_n", landuse_axis_type="all", landuse_axis=0)
 
     ##emmisions
     f1_do_mask_landuse(emissions, "i_burn_propn_k", landuse_axis_type="crop", landuse_axis=0)
-    f1_do_mask_landuse(emissions, "i_nitrogen_applied_k", landuse_axis_type="all", landuse_axis=0)
-    f1_do_mask_landuse(emissions, "i_propn_Urea", landuse_axis_type="all", landuse_axis=0)
-    f1_do_mask_landuse(emissions, "i_lime_applied_k", landuse_axis_type="all", landuse_axis=0)
 
     ##cropgrazing
     f1_do_mask_landuse(cropgraze, "i_cropgraze_propn_area_grazed_kl", landuse_axis_type="crop", landuse_axis=0)
