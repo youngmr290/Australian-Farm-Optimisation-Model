@@ -560,6 +560,9 @@ def f1_fert_rate():
     ##fert price
     fert_price_n1 = uinp.general['i_fert_info_n1']['price ($/t)']
     a_ferttype_k_n = pinp.crop['i_a_ferttype_k_n']
+    missing_keys = set(pd.unique(a_ferttype_k_n.values.ravel())) - set(fert_price_n1.keys())
+    if missing_keys:
+        raise KeyError(f"Missing keys in fert_price_n1 mapping: {missing_keys}")
     fert_price_k_n = a_ferttype_k_n.replace(fert_price_n1)
     fert_price_r_n = fert_price_k_n.reindex(pinp.phases_r.iloc[:, -1].values)
     fert_price_r_n.index = pinp.phases_r.index  # to match original rotation index
