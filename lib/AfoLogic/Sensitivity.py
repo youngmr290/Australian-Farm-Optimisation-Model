@@ -123,7 +123,7 @@ def create_sa():
     sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to revert the code)
     ##SAP
     ##SAA
-    saa['random'] = 1.0   # SA addition used to tweak any random variable when debugging or checking something (after being used it is best to revert the code )
+    saa['random'] = 0.0   # SA addition used to tweak any random variable when debugging or checking something (after being used it is best to revert the code )
     ##SAT
     ##SAR
 
@@ -158,6 +158,9 @@ def create_sa():
     sav['woolp_fdprem'] = '-'                       # sa value for fd premium
     sav['salep_percentile'] = '-'                   #Value for percentile for all sale grids
     sav['salep_max_s7'] = np.full(len_s7, '-', dtype=object)    #max sale price in grid for selected percentile (i.e. overwrites calculated price)
+    sav['salep_month_adjust_s7s9p4'] = np.full(uinp.sheep['i_salep_months_priceadj_s7s9p4'].shape, '-', dtype=object)      #monthly sale price scalar
+    sav['salep_price_type_s7'] = np.full(len_s7, '-', dtype=object)  #price type for each grid (0 - $/kg DW, 1 - $/kg LW & 2- $/hd)
+    sav['salep_score_type_s7'] = np.full(len_s7, '-', dtype=object)  #score type for each grid (0 - Fat score, 1 - CS)
     sav['manager_cost'] = '-' #SA value for manager cost per year
     sav['permanent_cost'] = '-' #SA value for permanent cost per year
     sav['casual_cost'] = '-' #SA value for casual cost per hour
@@ -408,6 +411,7 @@ def create_sa():
     sav['date_shear_isxg3'] = np.full((len_i, len_s, len_x, len_g3), '-', dtype=object)      # SA value for the shearing offs
     sav['g3_included']      = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)      # SA value for the inclusion of each offspring genotype
     sav['genotype']         = np.full(pinp.sheep['a_c2_c0'].shape, '-', dtype=object)       # this is the selection of the genotypes of the sires for B, M & T
+    sav['dse_type']         = '-'            # SA value for the dse type (0 is hd, 1 is MJ)
     sav['scan_og1']         = np.full(pinp.sheep['i_scan_og1'].shape, '-', dtype=object)    # SA value for the scanning management option
     sav['nut_mask_dams_oWi'] = np.full((pinp.sheep['i_o_len'], len_max_W1, pinp.sheep['i_i_len']), '-', dtype=object)    #masks the nutrition options available e.g. high low high - the options selected are available for each starting weight (ie len_W = len_w/n_start_weights). This array is cut down in the code to the correct w len.
     sav['nut_mask_offs_sWix'] = np.full((pinp.sheep['i_s_len'], len_max_W3, pinp.sheep['i_i_len'], pinp.sheep['i_x_len']), '-', dtype=object)   #masks the nutrition options available e.g. high low high - the options selected are available for each starting weight (ie len_W = len_w/n_start_weights). This array is cut down in the code to the correct w len.
@@ -505,6 +509,7 @@ def create_sa():
     sav['srw_c2'] = np.full(uinp.parameters['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
     sav['sfw_c2'] = np.full(uinp.parameters['i_sfw_c2'].shape, '-', dtype=object)  #std fleece weight genotype params
     sav['sfd_c2'] = np.full(uinp.parameters['i_sfd_c2'].shape, '-', dtype=object)  #std fibre diameter genotype params
+    sav['cn_c1c2'] = np.full(uinp.parameters['i_cn_c2'].shape, '-', dtype=object)  #normal growth params for genotypes
     sav['ci_c1c2'] = np.full(uinp.parameters['i_ci_c2'].shape, '-', dtype=object)  #intake params for genotypes
     sav['cl_c1c2'] = np.full(uinp.parameters['i_cl_c2'].shape, '-', dtype=object)  #lactation params for genotypes.
     sav['cp_c1c2'] = np.full(uinp.parameters['i_cp_c2'].shape, '-', dtype=object)  #pregnancy params for genotypes.

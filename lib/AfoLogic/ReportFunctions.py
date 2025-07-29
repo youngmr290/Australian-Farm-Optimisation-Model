@@ -401,6 +401,8 @@ def f_var_reshape(lp_vars, r_vals):
     ###saltbush
     d_keys['keys_qszp6fl'] = [keys_q, keys_s, keys_z, keys_p6, keys_f, keys_l]
     d_keys['keys_qsp7zl'] = [keys_q, keys_s, keys_p7, keys_z, keys_l]
+    ###trees
+    d_keys['keys_p7zl'] = [keys_p7, keys_z, keys_l]
     ###periods
     d_keys['keys_p7z'] = [keys_p7, keys_z]
     d_keys['keys_p6z'] = [keys_p6, keys_z]
@@ -1587,35 +1589,35 @@ def f_overhead_summary(r_vals):
 
 def f_tree_summary(r_vals):
     ##costs
-    tree_sequestration_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_sequestration_cost_p7z', na_prod=[0, 1, 4]
-                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
-                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
-    tree_biodiversity_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biodiversity_cost_p7z', na_prod=[0, 1, 4]
-                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
-                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
-    tree_biomass_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biomass_cost_p7zl', na_prod=[0, 1]
-                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
-                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
-    tree_estab_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_estab_cost_p7zl', na_prod=[0, 1]
-                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
-                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
+    tree_sequestration_cost_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_sequestration_cost_p7z', na_prod=[2]
+                                                    , weights='v_tree_area_l', na_weights=[0,1]
+                                                    , keys='keys_p7zl', arith=2, index=[1], cols=[0])
+    tree_biodiversity_cost_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biodiversity_cost_p7z', na_prod=[2]
+                                                    , weights='v_tree_area_l', na_weights=[0,1]
+                                                    , keys='keys_p7zl', arith=2, index=[1], cols=[0])
+    tree_biomass_cost_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biomass_cost_p7zl', na_prod=[]
+                                                    , weights='v_tree_area_l', na_weights=[0,1]
+                                                    , keys='keys_p7zl', arith=2, index=[1], cols=[0])
+    tree_estab_cost_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_estab_cost_p7zl', na_prod=[]
+                                                    , weights='v_tree_area_l', na_weights=[0,1]
+                                                    , keys='keys_p7zl', arith=2, index=[1], cols=[0])
 
-    total_cost_qsz_p7 = tree_sequestration_cost_qsz_p7 + tree_biodiversity_cost_qsz_p7 + tree_biomass_cost_qsz_p7 + tree_estab_cost_qsz_p7
+    total_cost_z_p7 = tree_sequestration_cost_z_p7 + tree_biodiversity_cost_z_p7 + tree_biomass_cost_z_p7 + tree_estab_cost_z_p7
 
     ##income
-    tree_sequestration_income_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_sequestration_income_p7zl', na_prod=[0, 1]
-                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
-                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
-    tree_biodiversity_income_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biodiversity_income_p7z', na_prod=[0, 1, 4]
-                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
-                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
-    tree_biomass_income_qsz_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biomass_income_p7zl', na_prod=[0, 1]
-                                                    , weights='v_tree_area_l', na_weights=[0,1,2,3]
-                                                    , keys='keys_qsp7zl', arith=2, index=[0, 1, 3], cols=[2])
+    tree_sequestration_income_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_sequestration_income_p7zl', na_prod=[]
+                                                    , weights='v_tree_area_l', na_weights=[0,1]
+                                                    , keys='keys_p7zl', arith=2, index=[1], cols=[0])
+    tree_biodiversity_income_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biodiversity_income_p7z', na_prod=[2]
+                                                    , weights='v_tree_area_l', na_weights=[0,1]
+                                                    , keys='keys_p7zl', arith=2, index=[1], cols=[0])
+    tree_biomass_income_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biomass_income_p7zl', na_prod=[]
+                                                    , weights='v_tree_area_l', na_weights=[0,1]
+                                                    , keys='keys_p7zl', arith=2, index=[1], cols=[0])
 
-    total_income_qsz_p7 = tree_sequestration_income_qsz_p7 + tree_biodiversity_income_qsz_p7 + tree_biomass_income_qsz_p7
+    total_income_z_p7 = tree_sequestration_income_z_p7 + tree_biodiversity_income_z_p7 + tree_biomass_income_z_p7
 
-    return total_cost_qsz_p7, total_income_qsz_p7
+    return total_cost_z_p7, total_income_z_p7
 
 def f_dse(lp_vars, r_vals, method, per_ha, summary1=False, summary2=False, summary3=False):
     '''
@@ -1762,7 +1764,7 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     slp_estab_cost_qsz_p7 = f_stock_pasture_summary(r_vals, type='slp', prod='slp_estab_cost_p7z', na_prod=[0,1,4]
                                              , weights='v_slp_ha_qszl', na_weights=[2]
                                              , keys='keys_qsp7zl', arith=2, index=[0,1,3], cols=[2])
-    tree_cost_qsz_p7, tree_income_qsz_p7 = f_tree_summary(r_vals)
+    tree_cost_z_p7, tree_income_z_p7 = f_tree_summary(r_vals)
     labour_p7qsz = f_labour_summary(lp_vars, r_vals, option=0)
     exp_fix_p7_z = f_overhead_summary(r_vals).unstack()
     dep_qsp7z = f_dep_summary(lp_vars, r_vals)
@@ -1830,14 +1832,14 @@ def f_profitloss_table(lp_vars, r_vals, option=1):
     pnl.loc[idx[:, :, :,'Revenue','grain'],:] = rev_grain_p7_qsz.T.reindex(pnl_cols, axis=1).values #reindex because  has been sorted alphabetically
     pnl.loc[idx[:, :, :, 'Revenue', 'sheep sales'], :] = stocksale_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Revenue', 'wool'], :] = wool_qszp7.reshape(-1, len_p7)
-    pnl.loc[idx[:, :, :, 'Revenue', 'trees'], :] = tree_income_qsz_p7.values
+    pnl.loc[idx[:, :, :, 'Revenue', 'trees'], :] = tree_income_z_p7.values
     pnl.loc[idx[:, :, :, 'Revenue', 'Total Revenue (net of selling costs and freight)'], :] = pnl.loc[pnl.index.get_level_values(3) == 'Revenue'].groupby(axis=0,level=(0,1,2)).sum().values
 
     ##expenses - add to p/l table each as a new row
     pnl.loc[idx[:, :, :, 'Expense', 'crop'], :] = crop_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'pasture'], :] = pas_p7_qsz.T.values
     pnl.loc[idx[:, :, :, 'Expense', 'salt land pasture'], :] = slp_estab_cost_qsz_p7.add(slp_p7_qsz.T).values
-    pnl.loc[idx[:, :, :, 'Expense', 'trees'], :] = tree_cost_qsz_p7.values
+    pnl.loc[idx[:, :, :, 'Expense', 'trees'], :] = tree_cost_z_p7.values
     pnl.loc[idx[:, :, :, 'Expense', 'stock husb and infra'], :] = husbcost_qszp7.reshape(-1, len_p7)
     pnl.loc[idx[:, :, :, 'Expense', 'stock sup'], :] = supcost_qsz_p7.values
     pnl.loc[idx[:, :, :, 'Expense', 'stock purchase'], :] = purchasecost_qszp7.reshape(-1, len_p7)
@@ -2857,8 +2859,8 @@ def f_emission_summary(lp_vars, r_vals, option=0):
 
     ##Fertiliser
     type = 'crop'
-    prod = 'co2e_fert_r'.format(e)
-    na_prod = [0,1,2,3,5]  # q,s,p7,z,l
+    prod = 'co2e_fert_zrl'.format(e)
+    na_prod = [0,1,2]  # q,s,p7
     weights = 'v_phase_change_increase_qsp7zrl'
     keys = 'keys_qsp7zrl'
     index = [0, 1, 3]  # q,s,z

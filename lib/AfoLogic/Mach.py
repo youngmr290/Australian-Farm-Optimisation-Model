@@ -890,13 +890,17 @@ def time_tonne():
                   /uinp.mach[pinp.mach['option']]['spreader_cap'])
 
     ##convert from meters cubed to tonne - divide by conversion (density) because lighter ferts require more filling up time per tonne
-    conversion = pd.DataFrame([pinp.crop['fert_info']['fert_density']]).squeeze()
-    time_n = time_cubic / conversion
+    fert_density_n1 = uinp.general['i_fert_info_n1']['fert_density']
+    a_ferttype_k_n = pinp.crop['i_a_ferttype_k_n']
+    fert_density_kn = a_ferttype_k_n.replace(fert_density_n1)
+
+    ##convert from m3 to tonnes
+    time_kn = time_cubic / fert_density_kn
 
     ##mulitiplied by a factor (spreader_proportion) 0 or 1 if the fert is applied at seeding (or a fraction if applied at both seeding and another time)
-    spreader_proportion = pd.DataFrame([pinp.crop['fert_info']['spreader_proportion']]).squeeze()
-    time_n = time_n.mul(spreader_proportion)
-    return time_n
+    spreader_proportion_n = pd.DataFrame([pinp.crop['fert_info']['spreader_proportion']]).squeeze()
+    time_kn = time_kn.mul(spreader_proportion_n, level=1)
+    return time_kn
 
 ###################
 #application cost # *remember that lime application only happens every 4 yrs - accounted for in the passes inputs

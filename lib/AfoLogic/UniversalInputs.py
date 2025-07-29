@@ -226,13 +226,17 @@ def f_universal_inp_sa(uinp_defaults):
     ##sheep
     ###SAV
     sheep['i_eqn_compare'] = fun.f_sa(sheep['i_eqn_compare'], sen.sav['eqn_compare'], 5)  #determines if both equation systems are being run and compared
-    sheep['i_eqn_used_g0_q1p7'] = fun.f_sa(sheep['i_eqn_used_g0_q1p7'], sen.sav['eqn_used_g0_q1p7'], 5)  #determines if both equation systems are being run and compared
-    sheep['i_eqn_used_g1_q1p7'] = fun.f_sa(sheep['i_eqn_used_g1_q1p7'], sen.sav['eqn_used_g1_q1p7'], 5)  #determines if both equation systems are being run and compared
-    sheep['i_eqn_used_g2_q1p7'] = fun.f_sa(sheep['i_eqn_used_g2_q1p7'], sen.sav['eqn_used_g2_q1p7'], 5)  #determines if both equation systems are being run and compared
-    sheep['i_eqn_used_g3_q1p7'] = fun.f_sa(sheep['i_eqn_used_g3_q1p7'], sen.sav['eqn_used_g3_q1p7'], 5)  #determines if both equation systems are being run and compared
+    sheep['i_eqn_used_g0_q1p7'] = fun.f_sa(sheep['i_eqn_used_g0_q1p7'], sen.sav['eqn_used_g0_q1p7'], 5)  #determines which equation systems are being run
+    sheep['i_eqn_used_g1_q1p7'] = fun.f_sa(sheep['i_eqn_used_g1_q1p7'], sen.sav['eqn_used_g1_q1p7'], 5)  #determines which equation systems are being run
+    sheep['i_eqn_used_g2_q1p7'] = fun.f_sa(sheep['i_eqn_used_g2_q1p7'], sen.sav['eqn_used_g2_q1p7'], 5)  #determines which equation systems are being run
+    sheep['i_eqn_used_g3_q1p7'] = fun.f_sa(sheep['i_eqn_used_g3_q1p7'], sen.sav['eqn_used_g3_q1p7'], 5)  #determines which equation systems are being run
     sheep['i_woolp_mpg_percentile'] = fun.f_sa(sheep['i_woolp_mpg_percentile'], sen.sav['woolp_mpg_percentile'], 5) #replaces the std percentile input with the sa value
     sheep['i_woolp_fdprem_percentile'] = fun.f_sa(sheep['i_woolp_fdprem_percentile'], sen.sav['woolp_fdprem_percentile'], 5) #replaces the std percentile input with the sa value
+    sheep['i_salep_price_max_s7'] = fun.f_sa(sheep['i_salep_price_max_s7'], sen.sav['salep_max_s7'], 5)
     sheep['i_salep_percentile'] = fun.f_sa(sheep['i_salep_percentile'], sen.sav['salep_percentile'], 5) #Value for percentile for all sale grids
+    sheep['i_salep_months_priceadj_s7s9p4'] = fun.f_sa(sheep['i_salep_months_priceadj_s7s9p4'], sen.sav['salep_month_adjust_s7s9p4'], 5)  #Value for the premiums and discounts by month
+    sheep['i_salep_price_type_s7'] = fun.f_sa(sheep['i_salep_price_type_s7'], sen.sav['salep_price_type_s7'], 5)
+    sheep['ia_s8_s7'] = fun.f_sa(sheep['ia_s8_s7'], sen.sav['salep_score_type_s7'], 5)
     sheep['i_sale_ffcfw_min'] = fun.f_sa(sheep['i_sale_ffcfw_min'], sen.sav['sale_ffcfw_min'], 5) #Value for min ffcfw for each grid
     sheep['i_sale_ffcfw_max'] = fun.f_sa(sheep['i_sale_ffcfw_max'], sen.sav['sale_ffcfw_max'], 5) #Value for max ffcfw for each grid
     sheep['i_mobsize_scalar_l0'] = fun.f_sa(sheep['i_mobsize_scalar_l0'], sen.sav['mobsize_scalar_l0'], 5) #Relative mobsize at lambing across the b1 axis
@@ -240,6 +244,7 @@ def f_universal_inp_sa(uinp_defaults):
     sheep['i_husb_operations_contract_cost_h2'] = fun.f_sa(sheep['i_husb_operations_contract_cost_h2'],sen.sam['husb_cost_h2'])
     sheep['i_husb_operations_muster_propn_h2'] = fun.f_sa(sheep['i_husb_operations_muster_propn_h2'], sen.sam['husb_mustering_h2'])
     sheep['i_husb_operations_labourreq_l2h2'] = fun.f_sa(sheep['i_husb_operations_labourreq_l2h2'],sen.sam['husb_labour_l2h2'])
+    sheep['i_salep_price_max_s7'] = fun.f_sa(sheep['i_salep_price_max_s7'], sen.sam['salep_max_s7'])
     sheep['i_salep_months_priceadj_s7s9p4'] = fun.f_sa(sheep['i_salep_months_priceadj_s7s9p4'],sen.sam['salep_month_adjust_s7s9p4'])
     ###SAP
     ###SAA
@@ -255,6 +260,7 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_srw_c2'] = fun.f_sa(parameters['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5) #genotype srw
     parameters['i_sfw_c2'] = fun.f_sa(parameters['i_sfw_c2'].astype(float), sen.sav['sfw_c2'], 5) #genotype sfw
     parameters['i_sfd_c2'] = fun.f_sa(parameters['i_sfd_c2'].astype(float), sen.sav['sfd_c2'], 5) #genotype sfd
+    parameters['i_cn_c2'] = fun.f_sa(parameters['i_cn_c2'].astype(float), sen.sav['cn_c1c2'], 5) #normal growth parameters
     parameters['i_ci_c2'] = fun.f_sa(parameters['i_ci_c2'].astype(float), sen.sav['ci_c1c2'], 5) #potential intake parameters
     parameters['i_cl_c2'] = fun.f_sa(parameters['i_cl_c2'].astype(float), sen.sav['cl_c1c2'], 5) #lactation parameters
     parameters['i_cp_c2'] = fun.f_sa(parameters['i_cp_c2'].astype(float), sen.sav['cp_c1c2'], 5) #pregnancy parameters

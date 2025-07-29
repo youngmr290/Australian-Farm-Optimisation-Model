@@ -469,6 +469,7 @@ def f_property_inp_sa(pinp_defaults):
     sheep['i_mask_i'] = fun.f_sa(sheep['i_mask_i'], sen.sav['TOL_inc'], 5)
     sheep['i_g3_inc'] = fun.f_sa(sheep['i_g3_inc'], sen.sav['g3_included'],5)
     sheep['a_c2_c0'] = fun.f_sa(sheep['a_c2_c0'], sen.sav['genotype'],5)
+    sheep['i_dse_type'] = fun.f_sa(sheep['i_dse_type'], sen.sav['dse_type'],5)
     sheep['i_scan_og1'] = fun.f_sa(sheep['i_scan_og1'], sen.sav['scan_og1'],5)
     sheep['i_dry_sales_forced_o'] = fun.f_sa(sheep['i_dry_sales_forced_o'], sen.sav['bnd_drys_sold_o'],5)
     sheep['i_dry_retained_forced_o'] = fun.f_sa(sheep['i_dry_retained_forced_o'], sen.sav['bnd_drys_retained_o'],5)
@@ -739,12 +740,10 @@ def f1_mask_landuse():
     f1_do_mask_landuse(crop, "yield_by_lmu", landuse_axis_type="crop", landuse_axis=0)
     f1_do_mask_landuse(crop, "seeding_rate", landuse_axis_type="all", landuse_axis=0)
     f1_do_mask_landuse(crop, "seed_info", landuse_axis_type="all", landuse_axis=0)
+    f1_do_mask_landuse(crop, "i_a_ferttype_k_n", landuse_axis_type="all", landuse_axis=0)
 
     ##emmisions
     f1_do_mask_landuse(emissions, "i_burn_propn_k", landuse_axis_type="crop", landuse_axis=0)
-    f1_do_mask_landuse(emissions, "i_nitrogen_applied_k", landuse_axis_type="all", landuse_axis=0)
-    f1_do_mask_landuse(emissions, "i_propn_Urea", landuse_axis_type="all", landuse_axis=0)
-    f1_do_mask_landuse(emissions, "i_lime_applied_k", landuse_axis_type="all", landuse_axis=0)
 
     ##cropgrazing
     f1_do_mask_landuse(cropgraze, "i_cropgraze_propn_area_grazed_kl", landuse_axis_type="crop", landuse_axis=0)

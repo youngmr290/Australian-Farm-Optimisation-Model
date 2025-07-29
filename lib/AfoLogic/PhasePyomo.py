@@ -100,8 +100,8 @@ def f1_croppyomo_local(params, model):
                                      initialize=params['co2e_phase_fuel_zrl'], default=0, mutable=False,
                                      doc='kgs of co2e emissions from fuel used to spray, spreading and stubble handling for 1 unit of rotation increment')
 
-    model.p_co2e_phase_fert_r = pe.Param(model.s_phases,
-                                     initialize=params['co2e_phase_fert_r'], default=0, mutable=False,
+    model.p_co2e_phase_fert_zrl = pe.Param(model.s_season_types, model.s_phases, model.s_lmus,
+                                     initialize=params['co2e_phase_fert_zrl'], default=0, mutable=False,
                                      doc='kgs of co2e emissions from fert applied to 1 unit of rotation increment')
 
 
@@ -212,7 +212,7 @@ def f_rot_emissions(model, q, s, p7, z):
 
     Use in con_emissions see BoundsPyomo.py
     '''
-    rot_co2e = sum((model.p_co2e_phase_fuel_zrl[z, l, r] + model.p_co2e_phase_fert_r[r]) * model.v_phase_change_increase[q, s, p7, z, r, l]
+    rot_co2e = sum((model.p_co2e_phase_fuel_zrl[z, l, r] + model.p_co2e_phase_fert_r[z,r,l]) * model.v_phase_change_increase[q, s, p7, z, r, l]
                    for r in model.s_phases for l in model.s_lmus)
 
     return rot_co2e
