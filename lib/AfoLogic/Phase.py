@@ -768,7 +768,7 @@ Limitations with the way stubble is handled in this Table:
     This probability is calculated by dividing the average yield for that LMU by the critical grain yield. This means the likelihood of stubble handling being req’d increases for higher yielding soil types etc, which is logical. However, the probability isn’t accurately linked to the likelihood that stubble will actually require handling. For instance, just because the average steady-state wht yield of a LMU is 1.75t/ha doesn’t necessarily mean that the wheat stubble on that LMU will need handling 1.75/3.5 = 50% of the time.
     So in summary, these probabilities are fairly crude...
     additionally this new structure assumes that even if the preceding landuse is pasture the current phase will still get handling cost (wasn't able to find an alternative way)
-frost is not included because that doesn't reduce biomass
+The impact of sowing time on stubble handling is not reflected.
 '''
 
 def f1_stubble_handling_prob():

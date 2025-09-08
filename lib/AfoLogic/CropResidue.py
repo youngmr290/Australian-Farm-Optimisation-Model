@@ -93,11 +93,10 @@ def f_biomass2residue():
     The total mass of crop residues at first grazing (harvest for stubble and an inputted date for fodder) is
     calculated as a product of the biomass, harvest index and proportion harvested.
 
-    .. note:: Any frost impact on residue production has not been included because frost is captured within the
-              seeding penalty inputs because it changes based on sowing date.
-              Residue production can be positively impacted by frost because frost during the plants flowering stage
+    .. note:: Residue production can be positively impacted by frost because frost during the plants flowering stage
               can damage cell tissue and reduce grain fill :cite:p:`RN144`. This results in less grain and more residue
-              due to not using energy resources to fill grain.
+              due to not using energy resources to fill grain. However, this is not currently captured in the
+              calculation of residue as it is challenging to represent and isn't a significant error.
 
     This is a separate function because it is used in residue simulator.
     '''
