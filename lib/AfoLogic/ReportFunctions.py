@@ -2895,8 +2895,9 @@ def f_emission_summary(lp_vars, r_vals, option=0):
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
     keys_qsz = [keys_q, keys_s, keys_z]
-    annual_sequestration_qsz = pd.Series(annual_sequestration, index=keys_qsz)
-    tree_co2e_sold_qsz = pd.Series(tree_co2e_sold, index=keys_qsz)
+    idx = pd.MultiIndex.from_product(keys_qsz)
+    annual_sequestration_qsz = pd.Series(annual_sequestration, index=idx)
+    tree_co2e_sold_qsz = pd.Series(tree_co2e_sold, index=idx)
 
     ##calc info for intensity calcs
     ###wool production
