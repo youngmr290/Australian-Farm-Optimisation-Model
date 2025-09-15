@@ -496,8 +496,7 @@ def f_sowing_timeliness_penalty(r_vals):
     break_penalty_zk = seeding_penalty_zkp0[np.arange(len_z)[:, None], np.arange(len_k)[None, :], season_break_z[:, None].astype(int)]
 
     ### 2) For each calendar day p0, find which weather-years have NOT yet broken by that day:
-    #    mask M[p0, z] = True if date_break_z[z] >= doy_p0[p0]
-    M_p0z = (season_break_z[None, :] >= doy_p0[:, None])  # shape [P0, Z]
+    M_p0z = (season_break_z[None, :] > doy_p0[:, None])  # shape [P0, Z]
 
     ### 3) Build per-day weights from prob_z over only the not-yet-broken years; normalize each day.
     weights_p0z = M_p0z * prob_z[None, :]  # shape [P0, Z]
