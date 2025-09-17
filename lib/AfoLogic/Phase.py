@@ -1084,8 +1084,6 @@ def f_seedcost(r_vals):
     phases_df3 = pinp.phases_r.copy()
     phases_df3.columns = pd.MultiIndex.from_product([phases_df3.columns,[''],[''],['']])  # make the df multi index so that when it merges with other df below the indexs remaining separate (otherwise it turn into a one leveled tuple)
 
-    ##seasonal inputs
-    seed_period_lengths = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     ##inputs
     seeding_rate = pinp.crop['seeding_rate']
     seeding_cost = pinp.crop['seed_info']['Seed cost']
@@ -1492,10 +1490,8 @@ def f_sow_prov():
     p5z_isnot_during_false_break_p5z = np.logical_not(p5z_is_false_break_p5z)
 
     ##wet sowing periods
-    seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
     wet_seed_start_z = per.f_wet_seeding_start_date()
-    wet_seed_len_z = np.sum(seed_period_lengths_pz, axis=0)
-    wet_seed_end_z = wet_seed_start_z + wet_seed_len_z
+    wet_seed_end_z = per.f_wet_seeding_end_date()
     period_is_wetseeding_p5z = (labour_period_start_p5z < wet_seed_end_z) * (labour_period_end_p5z > wet_seed_start_z) \
                                * p5z_isnot_during_false_break_p5z
     ###add k axis
