@@ -123,17 +123,16 @@ def f_seed_days():
 
 def f_contractseeding_occurs():
     '''
-    #todo i think this can be removed because contract seeding is hooked up to the yield penalty.
     This function just sets the period when contract seeding must occur (period when wet seeding begins).
-    Contract seeding is not hooked up to yield penalty because if you're going to hire someone you will hire
-    them at the optimum time. Contract seeding is hooked up to poc so this param stops the model having late seeding
-    (contract seeding must occur in the first seeding period).
+    Contract seeding is hooked up to yield penalty because contractors can not always be hired at the optimum time.
+    Contract seeding is hooked up to poc so the yield penalty stops the model having late seeding
     '''
-    contract_start_z = per.f_wet_seeding_start_date()
+    contract_start_z = zfun.f_seasonal_inp(pinp.period['start_contract_seeding_gs1_z'], numpy=True, axis=0)
+    contract_end_z = zfun.f_seasonal_inp(pinp.period['end_contract_seeding_gs1_z'], numpy=True, axis=0)
     mach_periods = per.f_p_dates_df()
-    start_pz = mach_periods.values[:-1]
-    end_pz = mach_periods.values[1:]
-    contractseeding_occur_pz = np.logical_and(start_pz <= contract_start_z, contract_start_z < end_pz)
+    labour_period_start_p5z = mach_periods.values[:-1]
+    labour_period_end_p5z = mach_periods.values[1:]
+    contractseeding_occur_pz = (labour_period_start_p5z < contract_end_z) * (labour_period_end_p5z > contract_start_z)
     contractseeding_occur_pz = pd.DataFrame(contractseeding_occur_pz,index=mach_periods.index[:-1],columns=mach_periods.columns)
     return contractseeding_occur_pz * 1
     # params['contractseeding_occur'] = (mach_periods==contract_start).squeeze().to_dict()

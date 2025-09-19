@@ -61,14 +61,12 @@ def f_peak_debt_date():
 #function to determine seeding start - starts a specified number of days after season break
 #also used in mach sheet
 def f_wet_seeding_start_date():
-    seeding_after_season_start_z = zfun.f_seasonal_inp(pinp.period['seeding_after_season_start'], numpy=True, axis=0)
-    seeding_after_season_start_z = seeding_after_season_start_z
-    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
-    # seeding_after_season_start_z = seeding_after_season_start_z.astype(datetime.datetime)
-    # seeding_after_season_start_z = pd.to_timedelta(seeding_after_season_start_z,unit='D')
-    ##wet seeding starts a specified number of days after season break
-    return season_break_z +  seeding_after_season_start_z
-    # return f_feed_periods().iloc[0].squeeze() +  datetime.timedelta(days = pinp.period['seeding_after_season_start'])
+    start_wet_seeding_gs1_z = zfun.f_seasonal_inp(pinp.period['start_wet_seeding_gs1_z'], numpy=True, axis=0)
+    return start_wet_seeding_gs1_z
+
+def f_wet_seeding_end_date():
+    end_wet_seeding_gs1_z = zfun.f_seasonal_inp(pinp.period['end_wet_seeding_gs1_z'], numpy=True, axis=0)
+    return end_wet_seeding_gs1_z
 
 #this function requires start date and length of each period (as a list) and spits out the start dates of each period
 #used to determine harv and seed dates for period func below
@@ -89,7 +87,6 @@ def f_period_dates(start, length):
 def f_period_end_date(start, length):
     #gets the last date from periods function then adds the length of last period
     return f_period_dates(start,length)[-1] + length[-1]
-#print(f_period_end_date(f_wet_seeding_start_date(),ci.crop_input['seed_period_lengths']))
 
 
 def f_p_dates_df():
@@ -103,10 +100,10 @@ def f_p_dates_df():
 
     ##seeding and harv periods
     harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0)
-    seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
     harv_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['harv_period_lengths'],numpy=True,axis=1)
     wet_seeding_start_z = f_wet_seeding_start_date()
-    seeding_periods_pz = np.cumsum(np.concatenate([wet_seeding_start_z[na,:], seed_period_lengths_pz]), axis=0)
+    wet_seeding_end_z = f_wet_seeding_end_date()
+    seeding_periods_pz = np.concatenate([wet_seeding_start_z[na,:], wet_seeding_end_z[na,:]])
     harv_periods_pz = np.cumsum(np.concatenate([harv_start_z[na,:], harv_period_lengths_pz]), axis=0)
     seed_and_harv_periods_pz = np.concatenate([seeding_periods_pz,harv_periods_pz])
 

@@ -1084,8 +1084,6 @@ def f_seedcost(r_vals):
     phases_df3 = pinp.phases_r.copy()
     phases_df3.columns = pd.MultiIndex.from_product([phases_df3.columns,[''],[''],['']])  # make the df multi index so that when it merges with other df below the indexs remaining separate (otherwise it turn into a one leveled tuple)
 
-    ##seasonal inputs
-    seed_period_lengths = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     ##inputs
     seeding_rate = pinp.crop['seeding_rate']
     seeding_cost = pinp.crop['seed_info']['Seed cost']
@@ -1460,12 +1458,6 @@ def f_sow_prov():
 
     This accounts for period and crop e.g. wet seeding activity only provides sowing to crop after the break.
 
-    This also stop seeding (dry and wet) in a false break between the identification and the real break.
-    This is because the soil is a "little bit wet". So in the areas that are wet enough the seed will germinate
-    and in other areas it won't. So this will lead to a patchy crop establishment and make crop management difficult
-    later in the season due to the variation in crop stages.
-    This only effects crop because pasture seeding timing is an input with a z axis so it can be altered there if desired.
-
     '''
     ##machine periods
     labour_period_p5z = per.f_p_dates_df()
@@ -1480,24 +1472,11 @@ def f_sow_prov():
     dry_sown_landuses = sinp.landuse['dry_sown']
     wet_sown_landuses = set(sinp.general['i_idx_k1']) - dry_sown_landuses #can subtract sets to return differences
     dry_sown_landuses = dry_sown_landuses | {"ms"}
-    false_brk_identification_z = zfun.f_seasonal_inp(pinp.general['i_false_brk_identification_z'],numpy=True,axis=0)
-    false_brk_followuprains_z = zfun.f_seasonal_inp(pinp.general['i_false_brk_followuprains_z'],numpy=True,axis=0)
-
-    ##determine which periods crop can't be sown because it is a false break (this doesnt effect seasons with no false brk)
-    ## any p5 period that the false break goes through cant be seeded even if the false brk only partially covers a period.
-    ## to avoid any misrepresentation ensure the false brk timing inputs line up with p5 periods
-    z_is_false_break_z = false_brk_identification_z < false_brk_followuprains_z
-    p5_is_false_break_p5z = np.logical_and(false_brk_identification_z >= labour_period_start_p5z, false_brk_followuprains_z > labour_period_start_p5z)
-    p5z_is_false_break_p5z = np.logical_and(z_is_false_break_z, p5_is_false_break_p5z)
-    p5z_isnot_during_false_break_p5z = np.logical_not(p5z_is_false_break_p5z)
 
     ##wet sowing periods
-    seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
     wet_seed_start_z = per.f_wet_seeding_start_date()
-    wet_seed_len_z = np.sum(seed_period_lengths_pz, axis=0)
-    wet_seed_end_z = wet_seed_start_z + wet_seed_len_z
-    period_is_wetseeding_p5z = (labour_period_start_p5z < wet_seed_end_z) * (labour_period_end_p5z > wet_seed_start_z) \
-                               * p5z_isnot_during_false_break_p5z
+    wet_seed_end_z = per.f_wet_seeding_end_date()
+    period_is_wetseeding_p5z = (labour_period_start_p5z < wet_seed_end_z) * (labour_period_end_p5z > wet_seed_start_z)
     ###add k axis
     period_is_wetseeding_p5zk = period_is_wetseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(wet_sown_landuses), axis=-1)
 
@@ -1505,8 +1484,7 @@ def f_sow_prov():
     ##currently we are saying that dry sowning cant occur between the brk of season and wet seeding start. This may or may not be correct (not if dry seeding occurs after the brk of the season it doesnt need to happen in the children seasons).
     dry_seed_start = pinp.crop['dry_seed_start']
     season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'],numpy=True)
-    period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)\
-                               * p5z_isnot_during_false_break_p5z
+    period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)
     ###add k axis
     if not sinp.structuralsa['i_differentiate_wet_dry_seeding']: #in the web app all land uses can be dry sown (this is a simplification to save seperate representation of dry sown land uses.)
         dry_sown_landuses = sinp.general['i_idx_k1']
