@@ -2536,6 +2536,22 @@ def f_feed_budget(lp_vars, r_vals, option=0, nv_option=0, dams_cols=[], offs_col
     return feed_budget.astype(float).round(2)
 
 
+def f_sup_per_dse(lp_vars, r_vals):
+    '''
+    Total supplement fed per dse per day.
+    '''
+    grain_fed_qszkfp6 = f_grain_sup_summary(lp_vars, r_vals, option=3)
+    grain_fed_qsp6z = grain_fed_qszkfp6.unstack([3,4]).sum(axis=1).reorder_levels([0,1,3,2])
+    dse_sire_qsp6z, dse_dams_qsp6z, dse_offs_qsp6z = f_dse(lp_vars, r_vals, 0, False)
+    total_dse_qsp6z = dse_dams_qsp6z.add(dse_offs_qsp6z, fill_value=0).add(dse_sire_qsp6z, fill_value=0).sum(axis=1)
+    days_p6z = pd.DataFrame(r_vals['pas']['days_p6z'], index=r_vals['pas']['keys_p6'], columns=r_vals['zgen']['keys_z']).stack()
+    sup_per_dse_qsp6z = grain_fed_qsp6z/total_dse_qsp6z
+    sup_per_dse_per_day_qs_p6z = sup_per_dse_qsp6z.unstack([-2,-1]).div(days_p6z, axis=1)
+    sup_per_dse_per_day_qsp6_z = sup_per_dse_per_day_qs_p6z.stack(0)
+
+    return sup_per_dse_per_day_qsp6_z * 1000
+
+
 def f_emission_summary(lp_vars, r_vals, option=0):
     '''
     Summary of whole farm emissions. The report summarises the methane, nitrous oxide, carbon dioxide and

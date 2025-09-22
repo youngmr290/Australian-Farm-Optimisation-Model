@@ -114,6 +114,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_napcon"] = pd.DataFrame()  # non-arable pasture feed consumed
     reports["stacked_poccon"] = pd.DataFrame()  # pasture on crop paddocks feed consumed
     reports["stacked_supcon"] = pd.DataFrame()  # supplement feed consumed
+    reports["stacked_supdsecon"] = pd.DataFrame()  # supplement feed consumed
     reports["stacked_stubcon"] = pd.DataFrame()  # stubble feed consumed
     reports["stacked_cropcon"] = pd.DataFrame()  # crop consumed from early season crop grazing
     reports["stacked_cropcon_available"] = pd.DataFrame()  # crop consumed from early season crop grazing
@@ -564,6 +565,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         supcon = pd.concat([reports["supcon"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_supcon"] = rfun.f_append_dfs(stacked_reports["stacked_supcon"], supcon)
 
+    if report_run.loc['run_supdsecon', 'Run']:
+        supdsecon = pd.concat([reports["supdsecon"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_supdsecon"] = rfun.f_append_dfs(stacked_reports["stacked_supdsecon"], supdsecon)
+
     if report_run.loc['run_stubcon', 'Run']:
         stubcon = pd.concat([reports["stubcon"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_stubcon"] = rfun.f_append_dfs(stacked_reports["stacked_stubcon"], stubcon)
@@ -869,6 +874,8 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_poccon"], 'poccon', df_settings, option=xl_display_mode)
     if report_run.loc['run_supcon', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_supcon"], 'supcon', df_settings, option=xl_display_mode)
+    if report_run.loc['run_supdsecon', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_supdsecon"], 'supdsecon', df_settings, option=xl_display_mode)
     if report_run.loc['run_stubcon', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_stubcon"], 'stubcon', df_settings, option=xl_display_mode)
     if report_run.loc['run_cropcon', 'Run']:
