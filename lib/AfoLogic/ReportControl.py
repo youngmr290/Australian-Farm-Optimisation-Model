@@ -1385,6 +1385,11 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         #returns consumption in each FP
         option = f_update_default_controls(user_controls, 'supcon', 'option', 1)
         reports["supcon"] = rfun.f_grain_sup_summary(lp_vars, r_vals, option=option)
+
+    if report_run.loc['run_supdsecon', 'Run']:
+        #returns sup consumption (kg/DSE/day) in each FP in each z
+        reports["supdsecon"] = rfun.f_sup_per_dse(lp_vars, r_vals)
+
     if report_run.loc['run_stubcon', 'Run']:
         #returns consumption in each FP
         prod = np.array([1])
