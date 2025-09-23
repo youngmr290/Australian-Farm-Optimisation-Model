@@ -387,8 +387,8 @@ def f1_btrt0(dstwtr_propn,pss,pstw,pstr): #^this function is inflexible ie if yo
     progeny_numbers_b0yg[1,...] = 2 * pstw**2 #number of progeny surviving when there are no deaths is 2, therefore 2p^2
     progeny_numbers_b0yg[2,...] = 3 * pstr**3 #number of progeny surviving when there are no deaths is 3, therefore 3p^3
     progeny_numbers_b0yg[3,...] = 2 * pstw * (1 - pstw)  #the 2 is because it could be either progeny 1 that dies or progeny 2 that dies
-    progeny_numbers_b0yg[4,...] = 2 * (3* pstr**2 * (1 - pstr))  #the 2x is because there are 2 progeny surviving in the litter and the 3x because it could be either progeny 1, 2 or 3 that dies
-    progeny_numbers_b0yg[5,...] = 3* pstr * (1 - pstr)**2  #the 3x because it could be either progeny 1, 2 or 3 that survives
+    progeny_numbers_b0yg[4,...] = 2 * (3 * pstr**2 * (1 - pstr))  #the 2x is because there are 2 progeny surviving in the litter and the 3x because it could be either progeny 1, 2 or 3 that dies
+    progeny_numbers_b0yg[5,...] = 3 * pstr * (1 - pstr)**2  #the 3x because it could be either progeny 1, 2 or 3 that survives
     ##mul progeny numbers array with number of dams giving birth to that litter size to get the number of progeny surviving per dam giving birth.
     a_nfoet_b0 = sinp.stock['a_nfoet_b1'][sinp.stock['i_mask_b0_b1']] #create association between l0 and b0
     btrt_b0yg = progeny_numbers_b0yg * dstwtr_propn[a_nfoet_b0]
@@ -2822,7 +2822,8 @@ def f_mortality_dam_mu2(cu2, ce, cb1, cf_csc, csc, cs, cv_cs, period_between_sca
     ### Mortality is calculated each loop and only retained if the period is pre-birth
     cs_p1p2 = fun.f_distribution7(cs, cv=cv_cs)[...,na]
     csc_p1p2 = fun.f_distribution7(cf_csc, cv=cv_cs)[...,na,:]
-    ### If selected, cap the CS for the ewe mortality calculation to remove the upper end of the quadratic effect that was added
+    ### If selected, cap the CS for the ewe mortality calculation to remove the upper end of the quadratic effect.
+    ### The quadratic effect would have increased mortality when CS is above the cap.
     cap = cu2[23, -2, ...,na,na]
     cs_p1p2 = fun.f_update(cs_p1p2, np.minimum(cs_p1p2, cap), cap != 0)
     ###calculate transformed mortality

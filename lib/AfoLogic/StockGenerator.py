@@ -2007,8 +2007,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     numbers_initial_ida0e0b0xyg3 = initial_yg3 * numbers_initial_cluster_ida0e0b0xyg3
 
     ##set default numbers to initial numbers. So that p0 (dvp0) has numbers_start
-    o_numbers_start_tpsire[...] =  numbers_initial_zida0e0b0xyg0
-    o_numbers_start_tpdams[...] =  numbers_initial_a1e1b1nwzida0e0b0xyg1
+    o_numbers_start_tpsire[...] = numbers_initial_zida0e0b0xyg0
+    o_numbers_start_tpdams[...] = numbers_initial_a1e1b1nwzida0e0b0xyg1
     o_numbers_start_tpoffs[...] = numbers_initial_ida0e0b0xyg3
 
     ############################
@@ -10518,7 +10518,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ####calc propn of dams mated in previous opportunity uses the estimated proportion of dams mated
     prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1 = np.roll(est_prop_dams_mated_oa1e1b1nwzida0e0b0xyg1, shift=1, axis=0)
     prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
-    prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1 = ce_pdams[2,...] * np.minimum(1,prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1)
+    prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1 = ce_pdams[0,...] * np.minimum(1,prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1)
     ###convert to v axis
     prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
     ###create param

@@ -625,7 +625,7 @@ def f1_boundarypyomo_local(params, model):
 
             ###constraint
             def f_propn_drys_sold(model, q, s, v, w, z, i, y, g1):
-                '''Force the model so that the only drys that can be retain are not twice dry (essentially forcing the sale of twice drys)'''
+                '''Force the model so that the only drys that can be retained are not twice dry (essentially forcing the sale of twice drys)'''
                 if (pe.value(model.p_wyear_inc_qs[q, s]) and v in scan_v[:-1] and model.p_prop_twice_dry_dams[v,z,i,y,g1]!=0
                         and any(model.p_mask_dams['00-0',t,v,w,z,g1]==1 for t in model.s_sale_dams)): #use 00 numbers at scanning. Don't want to include the last prejoining dvp because there is no sale limit in the last year.
                     idx_scan = scan_v.index(v) #which prejoining is the current v
