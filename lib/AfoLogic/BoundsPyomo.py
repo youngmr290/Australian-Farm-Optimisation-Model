@@ -201,13 +201,11 @@ def f1_boundarypyomo_local(params, model):
             ###param - propn of each fp used in the SR
             ###constraint
             l_p7 = list(model.s_season_periods)
-            def sup_per_dse_bound(model, q, s):
-                if pe.value(model.p_wyear_inc_qs[q, s]):
+            def sup_per_dse_bound(model, q, s, z, p6):
+                if pe.value(model.p_wyear_inc_qs[q, s]) and model.p_mask_season_p6z[p6,z]:
                     total_sup = sum(model.v_sup_con[q,s,z,k3,g,f,p6]
-                                    * model.p_a_p6_p7[p7,p6,z] * model.p_season_seq_prob_qszp7[q,s,z,p7]
-                                    for k3 in model.s_supp_feeds for g in model.s_grain_pools for f in model.s_feed_pools
-                                    for p6 in model.s_feed_periods for p7 in model.s_season_periods for z in model.s_season_types)
-                    wg_dse = sum((sum(model.v_sire[q,s,g0] * model.p_dse_sire[p6,z,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,z,g0])!=0)
+                                    for k3 in model.s_supp_feeds for g in model.s_grain_pools for f in model.s_feed_pools)
+                    dse = (sum(model.v_sire[q,s,g0] * model.p_dse_sire[p6,z,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,z,g0])!=0)
                              + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]
                                        for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                                        for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
@@ -217,12 +215,10 @@ def f1_boundarypyomo_local(params, model):
                                         for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
                                         if pe.value(model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0)
                                  for a in model.s_wean_times for i in model.s_tol))
-                                 * model.p_wg_propn_p6z[p6, z] * model.p_a_p6_p7[p7,p6,z] * model.p_season_seq_prob_qszp7[q,s,z,p7]
-                                 for p6 in model.s_feed_periods for p7 in model.s_season_periods for z in model.s_season_types)
-                    return wg_dse * p_sup_per_dse_bnd == total_sup * 1000
+                    return dse * p_sup_per_dse_bnd * params['pas']['length_p6z'][p6,z] >= total_sup * 1000
                 else:
                     return pe.Constraint.Skip
-            model.con_sup_per_dse_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, rule=sup_per_dse_bound,
+            model.con_sup_per_dse_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, model.s_feed_periods, rule=sup_per_dse_bound,
                                                 doc='total supplement fed per dse for the whole year')
 
         ##bnd on crop grazing intensity (kg/crop ha that can be grazed)
@@ -233,7 +229,7 @@ def f1_boundarypyomo_local(params, model):
             def f_crop_grazing_intensity(model, q, s, p7, z):
                 if p7 == l_p7[-1] and pe.value(model.p_wyear_inc_qs[q, s]):
                     return (sum(sum(model.v_phase_area[q, s, p7, z, r, l] * model.p_landuse_area[r, k1] for r in model.s_phases)
-                            * model.p_cropgrazing_can_occur_kl[k1,l] * tonnes_crop_consume_ha
+                            * model.p_cropgrazing_can_occur_klz[k1,l, z] * tonnes_crop_consume_ha
                             for l in model.s_lmus for k1 in model.s_crops)
                             == sum(model.v_tonnes_crop_consumed[q,s,f,k1,p6,p5,z,l] for f in model.s_feed_pools
                                    for p6 in model.s_feed_periods for p5 in model.s_labperiods
@@ -920,14 +916,14 @@ def f1_boundarypyomo_local(params, model):
             total_pas_area_percent_q = dict(zip(keys_q, total_pas_area_percent_q))
             ###constraint
             l_p7 = list(model.s_season_periods)
-            def total_pas_bound(model, q, s, p7, z):
+            def total_pas_bound(model, q, s, p7):
                 if p7 == l_p7[-1] and total_pas_area_percent_q[q] != 99999 and pe.value(model.p_wyear_inc_qs[q, s]):
-                    return (sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_pasture_area[r,t]
-                                for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
+                    return (sum(model.v_phase_area[q,s,p7,z,r,l] * model.p_pasture_area[r,t] * model.p_season_prob_qsz[q,s,z]
+                                for r in model.s_phases for l in model.s_lmus for t in model.s_pastures for z in model.s_season_types)
                             == sum(model.p_area[l] for l in model.s_lmus) * total_pas_area_percent_q[q])
                 else:
                     return pe.Constraint.Skip
-            model.con_total_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, rule=total_pas_bound,doc='bound on total pasture area')
+            model.con_total_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, rule=total_pas_bound,doc='bound on total pasture area')
 
         ##bnd area of each pasture
         if pasture_bound_inc:

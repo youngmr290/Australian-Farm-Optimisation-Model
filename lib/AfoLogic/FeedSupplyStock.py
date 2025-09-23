@@ -555,6 +555,81 @@ def f1_pkl_feedsupply(lp_vars,r_vals,pkl_fs_info):
     '''
     from . import ReportFunctions as rfun
 
+    ##create greenpas_ha mask used in next run. This is temp for MRY phd set stocking grazing management.
+    ###green pasture hectare variable
+    rfun.f_var_reshape(lp_vars, r_vals)
+    greenpas_ha_qsfgop6lzt = rfun.d_vars['base']['greenpas_ha_qsfgop6lzt']
+    ###average start foo
+    foo_start_grnha_qop6lzt = r_vals['pas']['foo_start_grnha_qop6lzt']
+    foo_start_grnha_qsfgop6lzt = foo_start_grnha_qop6lzt[:,na,na,na,...]
+    wa_start_foo_qsfgop6lzt = fun.f_weighted_average(foo_start_grnha_qsfgop6lzt, greenpas_ha_qsfgop6lzt, axis=(2, 3, 4),
+                                                     keepdims=True)
+    ###average GI
+    foo_gi_gt = r_vals['pas']['i_foo_graze_propn_gt']
+    wa_gi_qsfgop6lzt = fun.f_weighted_average(foo_gi_gt[:, na, na, na, na, :], greenpas_ha_qsfgop6lzt, axis=(2, 3, 4),
+                                              keepdims=True)  # can add axis 6 & 7 for and lmu
+    ###build the greenpas_ha mask
+    ####start foo
+    arr = foo_start_grnha_qsfgop6lzt - wa_start_foo_qsfgop6lzt
+    idx_below_ave = np.where(arr > 0, -np.inf, arr).argmax(axis=4)[:, :, :, :, na, ...]
+    idx_below_ave = np.minimum(idx_below_ave, foo_start_grnha_qsfgop6lzt.shape[4] - 2)
+    idx_above_ave = idx_below_ave + 1
+    value_below_ave = np.take_along_axis(foo_start_grnha_qsfgop6lzt, idx_below_ave, axis=4)
+    value_above_ave = np.take_along_axis(foo_start_grnha_qsfgop6lzt, idx_above_ave, axis=4)
+    start_foo_mask_greenpas_ha_qsfgop6lzt = np.logical_or(foo_start_grnha_qsfgop6lzt == value_below_ave,
+                                                          foo_start_grnha_qsfgop6lzt == value_above_ave)
+    # override extremes so exactly one True in first/last slice
+    all_pos = (arr >= 0).all(axis=4, keepdims=True)
+    all_neg = (arr <= 0).all(axis=4, keepdims=True)
+
+    _first_val = np.take(foo_start_grnha_qsfgop6lzt, [0], axis=4) #[0] to keep singleton
+    _last_val = np.take(foo_start_grnha_qsfgop6lzt, [foo_start_grnha_qsfgop6lzt.shape[4] - 1], axis=4)
+    _mask_first = foo_start_grnha_qsfgop6lzt == _first_val
+    _mask_last = foo_start_grnha_qsfgop6lzt == _last_val
+
+    start_foo_mask_greenpas_ha_qsfgop6lzt = np.where(all_pos, _mask_first, start_foo_mask_greenpas_ha_qsfgop6lzt)
+    start_foo_mask_greenpas_ha_qsfgop6lzt = np.where(all_neg, _mask_last, start_foo_mask_greenpas_ha_qsfgop6lzt)
+
+    ####grazing int
+    arr = foo_gi_gt[:, na, na, na, na, :] - wa_gi_qsfgop6lzt
+    idx_below_ave = np.where(arr > 0, -np.inf, arr).argmax(axis=3)[:, :, :, :, na, ...]
+    idx_below_ave = np.minimum(idx_below_ave, foo_gi_gt.shape[0] - 2)
+    idx_above_ave = idx_below_ave + 1
+    value_below_ave = np.take_along_axis(foo_gi_gt[na, na, na, :, na, na, na, na, :], idx_below_ave, axis=3)
+    value_above_ave = np.take_along_axis(foo_gi_gt[na, na, na, :, na, na, na, na, :], idx_above_ave, axis=3)
+    gi_mask_greenpas_ha_qsfgop6lzt = np.logical_or(foo_gi_gt[:, na, na, na, na, :] == value_below_ave,
+                                                   foo_gi_gt[:, na, na, na, na, :] == value_above_ave)
+
+    # override extremes so exactly one True in first/last slice
+    all_pos = (arr >= 0).all(axis=3, keepdims=True)
+    all_neg = (arr <= 0).all(axis=3, keepdims=True)
+
+    _first_val = np.take(foo_gi_gt[:, na, na, na, na, :], 0, axis=0)
+    _last_val = np.take(foo_gi_gt[:, na, na, na, na, :], foo_gi_gt.shape[0] - 1, axis=0)
+    _mask_first = foo_gi_gt[:, na, na, na, na, :] == _first_val
+    _mask_last = foo_gi_gt[:, na, na, na, na, :] == _last_val
+
+    gi_mask_greenpas_ha_qsfgop6lzt = np.where(all_pos, _mask_first, gi_mask_greenpas_ha_qsfgop6lzt)
+    gi_mask_greenpas_ha_qsfgop6lzt = np.where(all_neg, _mask_last, gi_mask_greenpas_ha_qsfgop6lzt)
+
+
+    ####combine masks
+    mask_greenpas_ha_qsfgop6lzt = np.logical_not(np.logical_and(start_foo_mask_greenpas_ha_qsfgop6lzt,
+                                                                gi_mask_greenpas_ha_qsfgop6lzt))  # not so it is correct for pyomo constraint - True in the arrays above means we want the model to be able to select it therefore false in constraint param.
+    keys_qsfgop6lzt = rfun.d_keys['keys_qsfgop6lzt'].copy()  # f is removed since singleton
+    del keys_qsfgop6lzt[2]  # f is removed since singleton
+    d_mask_greenpas_ha_qsgop6lzt = fun.f1_make_pyomo_dict(mask_greenpas_ha_qsfgop6lzt[:, :, 0, ...] * 1,
+                                                           keys_qsfgop6lzt)  # f is removed since singleton
+
+    number = fun.f_sa(False, sen.sav['go_mask_create_number'], 5)
+    if number:
+        from ..AfoLogic import relativeFile
+        pkl_path = relativeFile.find(__file__, "../../pkl", 'pkl_greenpas_mask{0}.pkl'.format(number))
+        with open(pkl_path, "wb") as f:
+            pkl.dump(d_mask_greenpas_ha_qsgop6lzt,f)
+
+
+
     if sinp.structuralsa['i_fs_create_pkl']:
         ##inputs
         d_pos = sinp.stock['i_d_pos']

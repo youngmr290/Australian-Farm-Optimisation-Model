@@ -69,6 +69,17 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
     ######################
     param_start = time.time()
 
+    ##z mask
+    model.p_non_tactic_prov_k2tvwz8z9 = pe.Param(model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams,
+                                  model.s_lw_dams, model.s_season_types, model.s_season_types,
+                                  initialize=params['non_tactic_prov_k2tvwz8z9'],
+                                  default=0.0, mutable=False, doc='mask z tactics')
+
+    model.p_non_tactic_prov_vwz8z9 = pe.Param(model.s_dvp_offs,
+                                  model.s_lw_offs, model.s_season_types, model.s_season_types,
+                                  initialize=params['non_tactic_prov_vwz8z9'],
+                                  default=0.0, mutable=False, doc='mask z tactics')
+
     ##nsire - mating
     model.p_nsires_req = pe.Param(model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, 
                                   model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, 
@@ -382,6 +393,8 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
     f_con_prog2offsR(model,l_v3)
     f_con_matingR(model)
     f_con_stock_trade_profit(model)
+    f_con_dams_non_tactic_z(model)
+    f_con_offs_non_tactic_z(model)
 
 ########################
 # local constraints    #
@@ -402,6 +415,36 @@ speed info:
 - using if statements to save summing 0 values is faster but it still takes time to evaluate the if therefore it saves time to select the minimum number of if statements
 - constraints can only be skipped on based on the req param. if the provide side is 0 and you skip the constraint then that would mean there would be no restriction for the require variable.
 '''
+def f_con_dams_non_tactic_z(model):
+    '''
+    '''
+
+    def dams_non_tactic_z(model,q,s,k,t1,v1,a,n1,z9,i,y1,g1):
+        if pe.value(model.p_wyear_inc_qs[q,s]) and t1!="t2":
+            return + sum(model.v_dams[q,s,k,t1,v1,a,n1,w,z9,i,y1,g1] \
+                   - sum(model.v_dams[q,s,k,t1,v1,a,n1,w,z8,i,y1,g1]*model.p_non_tactic_prov_k2tvwz8z9[k,t1,v1,w,z8,z9] for z8 in model.s_season_types) for w in model.s_lw_dams ) ==0
+        else:
+            return pe.Constraint.Skip
+    model.con_dams_non_tactic_z = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_sale_dams,
+                                                model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
+                                   model.s_groups_dams, rule=dams_non_tactic_z, doc='damsation phases constraint')
+
+
+def f_con_offs_non_tactic_z(model):
+    '''
+    '''
+
+    def offs_non_tactic_z(model,q,s,k3,k5,t3,v3,a,n3,z9,i,x,y3,g3):
+        if pe.value(model.p_wyear_inc_qs[q,s]) and t3!="t0":
+            return sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w,z9,i,a,x,y3,g3] \
+                   - sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w,z8,i,a,x,y3,g3]*model.p_non_tactic_prov_vwz8z9[v3,w,z8,z9] for z8 in model.s_season_types) for w in model.s_lw_offs )==0
+        else:
+            return pe.Constraint.Skip
+    model.con_offs_non_tactic_z = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs,
+                                                model.s_dvp_offs, model.s_wean_times, model.s_nut_offs, model.s_season_types, model.s_tol, model.s_gender, model.s_gen_merit_offs,
+                                   model.s_groups_offs, rule=offs_non_tactic_z, doc='offsation phases constraint')
+
+
 
 def f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs):
     '''

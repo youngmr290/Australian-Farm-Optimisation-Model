@@ -119,6 +119,15 @@ def create_sa():
     sav['lmu_arable_propn_l']    = np.full(len(pinp.general['i_lmu_area']), '-', dtype=object)  # SA for area of each LMU
     sav['phase_can_increase_kp7'] = np.full((len_k, len_P7), '-', dtype=object)  #SA to control when phases can be increased and reduced (only matters for dual season cropping)
     sav['phase_can_reduce_kp7'] = np.full((len_k, len_P7), '-', dtype=object)  #SA to control when phases can be decreased and reduced (only matters for dual season cropping)
+    sav['go_mask_create_number']      = '-'                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is created for a given trial.
+    sav['go_mask_use_number']      = '-'                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is created for a given trial.
+    sav['go_mask_z_inc_z']      = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)                  #SA to alter fs number - fs number is appended to the fs pkl file and can be used to select which pkl fs is created for a given trial.
+    sav['rot_mask_no_tactics_z'] = np.full(len_z, '-', dtype=object)  #control what z tactics are allowed.
+    sav['tos_mask_no_tactics_z'] = np.full(len_z, '-', dtype=object)  #control what z tactics are allowed.
+    sav['mask_stock_no_tactics_z'] = np.full(len_z, '-', dtype=object)  #control what z tactics are allowed.
+    sav['N_scalar_tactics_z'] = np.full(len_z, '-', dtype=object)  #control what z tactics are allowed.
+    sav['yield_scalar_tactics_z'] = np.full(len_z, '-', dtype=object)  #control what z tactics are allowed.
+
     ##SAM
     sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to revert the code)
     ##SAP
@@ -262,7 +271,7 @@ def create_sa():
     #Cropgrazing #
     ##############
     ##SAV
-    sav['cropgrazing_inc'] = '-'  #control if crop grazing is allowed
+    sav['cropgrazing_inc_z'] = np.full(len_z, '-', dtype=object)  #control if crop grazing is allowed
     sav['bnd_crop_grazing_intensity'] = '-'  #control the amount of crop consumed per hectare of crop that can be grazed (i.e. doesn't include a crop are if the crop can't be grazed).
     sav['cropgraze_propn_area_grazed_kl'] = np.full((len_crop_k, len_l), '-', dtype=object)  #control proportion of crop area that can be grazed.
     sav['cropgraze_yield_penalty_k'] = np.full((len_crop_k), '-', dtype=object)  #Reduction in yield per kg of crop consumed (if grazed early in the growing season after the crop is established).
@@ -349,7 +358,7 @@ def create_sa():
     # Pasture  #
     ############
     ##SAV
-    sav['poc_inc'] = '-'  #control if poc is included
+    sav['poc_inc_z'] = np.full_like(pinp.general['i_mask_z'], '-', dtype=object)  #control if poc is included
     sav['pas_inc_t'] = np.full_like(pinp.general['pas_inc_t'], '-', dtype=object) #SA value for pastures included mask
     sav['bnd_pas_area_percent_t'] = np.full(len_t, '-', dtype=object)  # SA to set the area of each pasture type.
     ##SAM

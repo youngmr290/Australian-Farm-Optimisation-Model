@@ -89,7 +89,7 @@ def f_cropgraze_DM(r_vals=None, total_DM=False):
     :param total_DM: boolean when set to True calculates the total crop DM used to calculate relative availability.
     '''
     ##read inputs
-    cropgrazing_inc = pinp.cropgraze['i_cropgrazing_inc']
+    cropgrazing_inc_z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgrazing_inc_z'],numpy=True,axis=-1)
     growth_p6z = zfun.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zp6'], source=0, destination=-1),numpy=True,axis=-1) #kg/d
     wastage_k = pinp.cropgraze['i_cropgraze_wastage']
     growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl']
@@ -145,7 +145,7 @@ def f_cropgraze_DM(r_vals=None, total_DM=False):
     ###propn of crop grazing possible for each landuse.
     propn_area_grazed_kl = pinp.cropgraze['i_cropgraze_propn_area_grazed_kl']
     ###mask which z crop graing can occur
-    propn_area_grazed_kl = propn_area_grazed_kl * cropgrazing_inc
+    propn_area_grazed_klz = propn_area_grazed_kl[:,:,na] * cropgrazing_inc_z
 
     ##season mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
@@ -182,14 +182,14 @@ def f_cropgraze_DM(r_vals=None, total_DM=False):
         transfer_exists_p6p5z = transfer_exists_p6p5z * mask_fp_z8var_p6z[:,na,:]
         crop_DM_required_kp6p5z = crop_DM_required_kp6p5z * mask_fp_z8var_p6z[:,na,:]
 
-        crop_DM_provided_kp6p5z8lz9 = crop_DM_provided_kp6p5z8lz9 * propn_area_grazed_kl[:,na,na,na,:,na]
+        crop_DM_provided_kp6p5z8lz9 = crop_DM_provided_kp6p5z8lz9 * propn_area_grazed_klz[:,na,na,na,:,:]
 
         ##store report vals
         fun.f1_make_r_val(r_vals, crop_DM_provided_kp6p5z8lz9, 'crop_DM_provided_kp6p5z8lz9') #doesnt need unclustering because of z9 axis
         fun.f1_make_r_val(r_vals, crop_DM_required_kp6p5z, 'crop_DM_required_kp6p5z',mask_fp_z8var_p6z[:,na,:],z_pos=-1)
-        fun.f1_make_r_val(r_vals, propn_area_grazed_kl, 'propn_area_grazable_k1l')
+        fun.f1_make_r_val(r_vals, propn_area_grazed_klz, 'propn_area_grazable_k1lz')
 
-        return crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z, propn_area_grazed_kl
+        return crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z, propn_area_grazed_klz
 
     else:
         total_dm_growth_kp6p5zl = f1_calc_dm_growth(delay=0)  # this is growth since seeding (hence 0 day delay)
@@ -197,7 +197,8 @@ def f_cropgraze_DM(r_vals=None, total_DM=False):
         ##crop foo mid way through feed period after consumption - used to calc vol in the next function.
         crop_foo_kp6p5zl = np.cumsum(total_dm_growth_kp6p5zl - total_dm_growth_consumable_kp6p5zl * consumption_factor_p6z[:,na,:,na]
                                       , axis=1) - (total_dm_growth_kp6p5zl - total_dm_growth_consumable_kp6p5zl * consumption_factor_p6z[:,na,:,na])/2
-        return crop_foo_kp6p5zl * (propn_area_grazed_kl[:,na,na,na,:]>0) #second part to set unused dv to 0 so it is removed from lp.
+        propn_area_grazed_kzl = np.transpose(propn_area_grazed_klz, (0,2,1))
+        return crop_foo_kp6p5zl * (propn_area_grazed_kzl[:,na,na,:,:]>0) #second part to set unused dv to 0 so it is removed from lp.
 
 # def f_DM_reduction_seeding_time():
 #     '''
@@ -412,7 +413,7 @@ def f_cropgraze_biomass_penalty(r_vals):
 
 def f1_cropgraze_params(params, r_vals, nv):
     # grazecrop_area_rkl = f_graze_crop_area()
-    crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z, propn_area_grazed_kl = f_cropgraze_DM(r_vals=r_vals)
+    crop_DM_provided_kp6p5z8lz9, crop_DM_required_kp6p5z, transfer_exists_p6p5z, propn_area_grazed_klz = f_cropgraze_DM(r_vals=r_vals)
     biomass_reduction_propn_kp6z = f_cropgraze_biomass_penalty(r_vals)
     crop_md_fkp6p5zl, crop_vol_fkp6p5zl = crop_md_vol(nv, r_vals)
     co2e_cropgraze_kp6z = f_cropgraze_emissions(r_vals)
@@ -430,7 +431,7 @@ def f1_cropgraze_params(params, r_vals, nv):
     ###DM prov
     arrays_kp6p5z8lz9 = [keys_k, keys_p6, keys_p5, keys_z, keys_l, keys_z]
     ###kl
-    arrays_kl = [keys_k, keys_l]
+    arrays_klz = [keys_k, keys_l, keys_z]
     ###DM req
     arrays_kp6p5z = [keys_k, keys_p6, keys_p5, keys_z]
     ###yield & stub penalty
@@ -444,7 +445,7 @@ def f1_cropgraze_params(params, r_vals, nv):
     params['crop_DM_provided_kp6p5z8lz9'] = fun.f1_make_pyomo_dict(crop_DM_provided_kp6p5z8lz9, arrays_kp6p5z8lz9)
     params['crop_DM_required_kp6p5z'] = fun.f1_make_pyomo_dict(crop_DM_required_kp6p5z, arrays_kp6p5z)
     params['transfer_exists_p6p5z'] = fun.f1_make_pyomo_dict(transfer_exists_p6p5z, arrays_p6p5z)
-    params['propn_area_grazed_kl'] = fun.f1_make_pyomo_dict(propn_area_grazed_kl, arrays_kl)
+    params['propn_area_grazed_klz'] = fun.f1_make_pyomo_dict(propn_area_grazed_klz, arrays_klz)
     params['biomass_reduction_propn_kp6z'] = fun.f1_make_pyomo_dict(biomass_reduction_propn_kp6z, arrays_kp6z)
     # params['stubble_reduction_propn_kp6z'] = fun.f1_make_pyomo_dict(stubble_reduction_propn_kp6z, arrays_kp6z)
     params['crop_md_fkp6p5zl'] = fun.f1_make_pyomo_dict(crop_md_fkp6p5zl, arrays_fkp6p5zl)

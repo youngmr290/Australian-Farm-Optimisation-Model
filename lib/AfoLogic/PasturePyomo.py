@@ -172,6 +172,7 @@ def f1_paspyomo_local(params, model, MP_lp_vars):
     f_con_nappas(model)
     f_con_pasarea(model)
     f_con_erosion(model)
+    f_con_gi(model)
 
 
 ###################
@@ -393,6 +394,45 @@ def f_con_erosion(model):
         else:
             return pe.Constraint.Skip
     model.con_erosion = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = erosion, doc='total pasture available of each type on each soil type in each feed period')
+
+
+def f_con_gi(model):
+    '''
+    Constrains the pasture area (used in con_greenpas) on each LMU based on the rotation selected.
+    This accounts for arable area and destocking for reseeding.
+    '''
+    import pickle as pkl
+    import numpy as np
+
+    from . import Functions as fun
+    from . import Sensitivity as sen
+    from . import SeasonalFunctions as zfun
+
+    number=fun.f_sa(False, sen.sav['go_mask_use_number'],5)
+    if number:
+        with open('pkl/pkl_greenpas_mask{0}.pkl'.format(number), "rb") as f:
+            d_mask_greenpas_ha_qsgop6lzt = pkl.load(f)
+    else:
+        return
+    model.p_mask_greenpas_ha = pe.Param(model.s_sequence_year, model.s_sequence, model.s_grazing_int,
+                                        model.s_foo_levels, model.s_feed_periods,
+                                        model.s_lmus, model.s_season_types, model.s_pastures,
+                                        initialize=d_mask_greenpas_ha_qsgop6lzt, default=0.0,
+                                        doc='mask v_grnpas_has. 1 means the variable must be 0')
+
+    l_z = np.array(list(model.s_season_types))
+    mask_z_inc = fun.f_sa(np.array([False]), sen.sav['go_mask_z_inc_z'], 5)  # controls which z get the mask - default is all z off
+    mask_z_inc = zfun.f_seasonal_inp(mask_z_inc, numpy=True, axis=0).astype(bool)
+    l_z = l_z[mask_z_inc]
+    def gi(model):
+        if len(l_z)!=0:
+            return sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z,t]*model.p_mask_greenpas_ha[q,s,g,o,p6,l,z,t] for q in model.s_sequence_year
+                       for s in model.s_sequence for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels
+                       for p6 in model.s_feed_periods for l in model.s_lmus for z in model.s_season_types for t in model.s_pastures
+                       if z in l_z) ==0
+        else:
+            return pe.Constraint.Skip
+    model.con_gi = pe.Constraint(rule = gi, doc='Pasture area row for growth constraint of each type on each soil for each feed period (ha)')
 
     
 ###################

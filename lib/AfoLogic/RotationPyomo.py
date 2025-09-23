@@ -45,6 +45,11 @@ def f1_rotationpyomo(params, model, MP_lp_vars):
     ####################
     #define parameters #
     ####################
+    model.p_non_tactic_prov_z8z9 = pe.Param(model.s_season_types, model.s_season_types,
+                                                  initialize=params['p_non_tactic_prov_z8z9'], default=0.0,
+                                                  mutable=False, doc='param to constrain activity level in a season based on the activity level in other seasons.')
+    model.s_special_k = pe.Set(initialize=params['s_special_k'], doc='landuse set that doesnt differentiate dry sown and wet sown landuses')
+    model.p_phase_to_special_rK = pe.Param(model.s_phases, model.s_special_k, initialize=params['p_phase_to_special'], default=0, doc='map rotation to special landuse')
     model.p_area = pe.Param(model.s_lmus, initialize=params['lmu_area'], doc='available area on farm for each soil')
     model.p_not_cropable_area_l = pe.Param(model.s_lmus, initialize=params['p_not_cropable_area_l'], doc='area of paddocks that are never cropped on each LMU.')
     model.p_landuse_area = pe.Param(model.s_phases, model.s_landuses, initialize=params['phases_rk'], default=0, doc='landuse in each phase')
@@ -93,6 +98,7 @@ def f1_rotationpyomo(params, model, MP_lp_vars):
     f_con_area(model)
     f_con_max_crop_area(model)
     # f_con_dry_link(model)
+    f_con_rot_non_tactic_z(model)
 
 
 
@@ -106,6 +112,22 @@ def f1_rotationpyomo(params, model, MP_lp_vars):
 ######################
 ##rotation constraints are usually the same each loop. but if the lmu mask changes they need to be built again
 ##thus they are just built each loop. Maybe this could be changed if running lots of rotations.
+
+def f_con_rot_non_tactic_z(model):
+    '''
+    ensures each season has the same landuse area (but it doesnt differentiate between dry or wet sown).
+    '''
+
+    p7_end = list(model.s_season_periods)[-1]
+    def rot_non_tactic_z(model,q,s,p7,l,K,z9):
+        if pe.value(model.p_wyear_inc_qs[q,s]) and pe.value(model.p_mask_season_p7z[p7,z9]) and p7==p7_end:
+            return sum(model.v_phase_area[q,s,p7,z9,r,l] * model.p_phase_to_special_rK[r,K] \
+                   - sum(model.v_phase_area[q,s,p7,z8,r,l] * model.p_phase_to_special_rK[r,K] *model.p_non_tactic_prov_z8z9[z8,z9] for z8 in model.s_season_types)
+                       for r in model.s_phases) <=0
+        else:
+            return pe.Constraint.Skip
+    model.con_rot_non_tactic_z = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_lmus, model.s_special_k, model.s_season_types, rule=rot_non_tactic_z, doc='rotation phases constraint')
+
 
 def f_con_history_between(params, model, MP_lp_vars):
     '''

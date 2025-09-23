@@ -161,11 +161,82 @@ def f_season_params(params):
     # mask_drynext_z8z9 = mask_drynext_z8z9 * phase_is_drysown_r[:,na,na]
     # mask_drystart_z8z9 = mask_drystart_z8z9 * phase_is_drysown_r[:,na,na]
 
+    ##temp mask used to control which z get tactics.
+    ##if a z has no tactics the variable level must equal the weighted average of the other z.
+    ###which z have no tactics
+    from . import Sensitivity as sen
+    mask_no_tactics_z = fun.f_sa(False, sen.sav['rot_mask_no_tactics_z'], 5)
+    mask_no_tactics_z = zfun.f_seasonal_inp(mask_no_tactics_z, numpy=True, axis=0).astype(bool)
+    ###prov for z with tactics
+    base_z8z9 = index_z==index_z[:,na]
+    ###prov for z without tactics
+    i_season_propn_z = zfun.f_z_prob()
+    t_prob_z8z9 = i_season_propn_z[:,na] #* np.logical_not(base_z8z9)
+    non_tactic_prov_z8z9 = fun.f_divide(t_prob_z8z9,np.sum(t_prob_z8z9, axis=0))  #this doesnt really do anything here because all z are active (this constraint only works on p7[-1])
+    non_tactic_prov_z8z9 = fun.f_update(base_z8z9, non_tactic_prov_z8z9, mask_no_tactics_z)
+
+    ###map phase to special_landuse (landuse param that doesnt differentiate between dry or wet sowing)
+    special_landuse={}
+    special_landuse['A']={'a','a2'} #annual
+    special_landuse['B']={'b', 'bd'} #barleys
+    special_landuse['J']={'j'} #tedera
+    special_landuse['K']={'k'} #chic pea
+    special_landuse['M']={'m'} #manipulated pasture
+    special_landuse['MS']={'ms'} #mixed species land use
+    special_landuse['Z']={'z', 'zd'} #canolas
+    special_landuse['R']={'r', 'rd'} #canolas
+    special_landuse['O']={'o', 'od'} #oats
+    special_landuse['H']={'h'} #hay
+    special_landuse['OF']={'of'} #oats fodder
+    special_landuse['F']={'f'} #faba
+    special_landuse['L']={'l'} #lupin #yr1 doesnt include fodder
+    special_landuse['LF']={'lf'} #lupin
+    special_landuse['S']={'s'} #spray topped pasture yr1
+    special_landuse['SP']={'sp'} #salt land pasture (can only be in a cont rotation)
+    special_landuse['T']={ 't'} #tedera - also includes manipulated tedera because it is combined in yrs 3,4,5
+    special_landuse['W']={ 'w', 'wd'} #wheats
+    special_landuse['U']={'u'} #lucerne
+    special_landuse['X']={'x'} #lucerne
+
+    # 1) Reverse mapping: code -> special key
+    code_to_key = {}
+    for key, codes in special_landuse.items():
+        for code in codes:
+            # warn if a code appears under multiple keys
+            if code in code_to_key and code_to_key[code] != key:
+                print(f"Warning: landuse '{code}' in both {code_to_key[code]} and {key}")
+            code_to_key[code] = key
+
+    # 2) Take the last column (current land use) and normalise (lowercase, drop trailing digits)
+    cur = phases_df.iloc[:,-1]
+
+    # 3) Map to special key
+    mapped = cur.map(code_to_key)
+    idx = pd.MultiIndex.from_arrays(
+        [mapped.index, mapped.values],
+        names=["phase", "key"]
+    )
+    phase_key_series = pd.Series(1, index=idx, name="value")
+    # 4) Get dict: {phase_index: special_key}
+    phase_to_special = phase_key_series.to_dict()
+    params['p_phase_to_special'] = phase_to_special
+    params['s_special_k'] = special_landuse.keys()
+
+    # Optional: see which rows didn't map (e.g., unexpected codes)
+    unmapped = mapped[mapped.isna()]
+    if not unmapped.empty:
+        print("Warning: Unmapped landuse codes:", unmapped.index)
+
+
+
     ##build params
     arrays_p7z8z9 = [keys_p7, keys_z, keys_z]
 
     arrays_p7z8 = [keys_p7, keys_z]
+    ###z8z9
+    arrays_z8z9 = [keys_z, keys_z]
 
+    params['p_non_tactic_prov_z8z9'] = fun.f1_make_pyomo_dict(non_tactic_prov_z8z9 * 1, arrays_z8z9)
     params['p_mask_childz_within_phase'] = fun.f1_make_pyomo_dict(mask_reqwithinz8_p7z8*1, arrays_p7z8)
     params['p_mask_childz_between_phase'] = fun.f1_make_pyomo_dict(mask_reqbetweenz8_p7z8*1, arrays_p7z8)
     params['p_parentz_provwithin_phase'] = fun.f1_make_pyomo_dict(mask_provwithinz8z9_p7z8z9*1, arrays_p7z8z9)

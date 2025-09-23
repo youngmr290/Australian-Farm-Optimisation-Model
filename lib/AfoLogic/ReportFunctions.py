@@ -3340,7 +3340,7 @@ def f_cropgrazing_analysis(lp_vars, r_vals, trial):
     ###total crop consumed (kgs)
     crop_consumed_qsz = np.sum(d_vars['base']['crop_consumed_qsfkp6p5zl'], axis=(2,3,4,5,7)) * 1000
     ###kilograms of crop consumed per hectare of crop that could have been grazed.
-    GI_qsz = fun.f_divide(crop_consumed_qsz, np.sum(landuse_area_qszlk1 * r_vals['crpgrz']['propn_area_grazable_k1l'].T, axis=(-1,-2)))
+    GI_qsz = fun.f_divide(crop_consumed_qsz, np.sum(landuse_area_qszlk1 * r_vals['crpgrz']['propn_area_grazable_k1lz'].T, axis=(-1,-2)))
     ###weight z
     GI = np.sum(GI_qsz * r_vals['zgen']['z_prob_qsz'])
     summary_df.loc[trial, 'Crop grazing intensity (kg/ha)'] = round(GI)

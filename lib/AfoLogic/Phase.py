@@ -318,6 +318,8 @@ def f_rot_biomass(for_stub=False, for_insurance=False, r_vals=None):
     base_yields_rk_z.index.rename(['rot','landuse'],inplace=True)
 
     ##Mask z axis
+    z_scalar = fun.f_sa(np.ones(len(sen.sav['yield_scalar_tactics_z'])), sen.sav['yield_scalar_tactics_z'], 5)
+    base_yields_rk_z = pd.DataFrame(base_yields_rk_z.iloc[:,0].values[:,na] * z_scalar, index=base_yields_rk_z.index, columns=base_yields_rk_z.columns) #manually do the z axis so that it can be changed for the N tactic.
     base_yields_rk_z = zfun.f_seasonal_inp(base_yields_rk_z, axis=1)
 
     ##apply sam with k axis
@@ -669,6 +671,10 @@ def f_fert_cost(r_vals={}, option=1):
         nap_fert_scalar_r = nap_fert_scalar_r.loc[mask_r]
 
     ###Mask z axis
+    z_scalar = fun.f_sa(np.ones(len(sen.sav['N_scalar_tactics_z'])), sen.sav['N_scalar_tactics_z'], 5)
+    t_base_fert_rk_nz = pd.DataFrame(base_fert_rk_zn.loc[:, ("typ", "late")].values[:,na] * z_scalar, index=base_fert_rk_zn.index, columns=base_fert_rk_zn.loc[:, (slice(None), "late")].columns) #manually do the z axis so that it can be changed for the N tactic.
+    base_fert_rk_zn.loc[:, (slice(None), "late")] = t_base_fert_rk_nz
+
     base_fert_rk_zn = zfun.f_seasonal_inp(base_fert_rk_zn, axis=1, level=0)
     ###rename index
     base_fert_rk_zn.index.rename(['rot','landuse'],inplace=True)
@@ -1485,6 +1491,12 @@ def f_sow_prov():
     dry_seed_start = pinp.crop['dry_seed_start']
     season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'],numpy=True)
     period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)
+
+    ####mask dry sowing tactic
+    can_dry_sow_z = fun.f_sa(True, sen.sav['tos_mask_no_tactics_z'], 5).astype(float)
+    can_dry_sow_z = zfun.f_seasonal_inp(can_dry_sow_z, numpy=True)
+    period_is_dryseeding_p5z = np.logical_and(period_is_dryseeding_p5z, can_dry_sow_z)
+
     ###add k axis
     if not sinp.structuralsa['i_differentiate_wet_dry_seeding']: #in the web app all land uses can be dry sown (this is a simplification to save seperate representation of dry sown land uses.)
         dry_sown_landuses = sinp.general['i_idx_k1']

@@ -686,6 +686,7 @@ def f_pasture(params, r_vals, nv):
     params['p_mask_childz_between_fp'] = fun.f1_make_pyomo_dict(mask_reqbetweenz8_p6z8 * 1, arrays_p6z8)
     params['p_parentz_provwithin_fp'] = fun.f1_make_pyomo_dict(mask_provwithinz8z9_p6z8z9 * 1, arrays_p6z8z9)
     params['p_parentz_provbetween_fp'] = fun.f1_make_pyomo_dict(mask_provbetweenz8z9_p6z8z9 * 1, arrays_p6z8z9)
+    params['length_p6z'] = fun.f1_make_pyomo_dict(length_p6z, arrays_p6z8)
 
     params['p_erosion_p7p6lrzt'] = fun.f1_make_pyomo_dict(erosion_p7p6lrzt, arrays_p7p6lrzt)
 

@@ -1238,7 +1238,7 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         keys = 'keys_qsdp6zlt'
         arith = f_update_default_controls(user_controls, 'dryfoo', 'arith', 2)
         index = f_update_default_controls(user_controls, 'dryfoo', 'index', [4,3])   #p6 z
-        cols = f_update_default_controls(user_controls, 'dryfoo', 'cols', [2,6])     #dry pools, t
+        cols = f_update_default_controls(user_controls, 'dryfoo', 'cols', [5,6])     #dry pools, t
         axis_slice = f_update_default_controls(user_controls, 'dryfoo', 'axis_slice', {})
         reports["dryfoo"] = rfun.f_stock_pasture_summary(r_vals, prod=prod, type=type, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)

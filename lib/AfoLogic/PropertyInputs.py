@@ -388,7 +388,7 @@ def f_property_inp_sa(pinp_defaults):
 
     ##crop grazing
     ###sav
-    cropgraze['i_cropgrazing_inc'] = fun.f_sa(cropgraze['i_cropgrazing_inc'], sen.sav['cropgrazing_inc'], 5)
+    cropgraze['i_cropgrazing_inc_z'] = fun.f_sa(cropgraze['i_cropgrazing_inc'], sen.sav['cropgrazing_inc_z'], 5).astype(bool)
     cropgraze['i_cropgraze_propn_area_grazed_kl'] = fun.f_sa(cropgraze['i_cropgraze_propn_area_grazed_kl'], sen.sav['cropgraze_propn_area_grazed_kl'], 5)
     cropgraze['i_cropgraze_yield_reduction_k'] = fun.f_sa(cropgraze['i_cropgraze_yield_reduction_k'], sen.sav['cropgraze_yield_penalty_k'], 5)
     ###sam
@@ -425,7 +425,7 @@ def f_property_inp_sa(pinp_defaults):
 
     ##pasture
     ###sav
-    crop['i_poc_inc'] = fun.f_sa(crop['i_poc_inc'], sen.sav['poc_inc'], 5)
+    crop['i_poc_inc_z'] = fun.f_sa(crop['i_poc_inc'], sen.sav['poc_inc_z'], 5).astype(bool)
     general['pas_inc_t'] = fun.f_sa(general['pas_inc_t'], sen.sav['pas_inc_t'], 5)
     for t, pasture in enumerate(sinp.general['pastures']):
         general['pas_inc_t'][t] &= any(x in sinp.landuse['pasture_sets'][pasture] for x in sinp.general['i_idx_k2'][general['i_pas_landuse_inc_k2']]) #exclude pasture type if there is no active landuses.
