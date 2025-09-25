@@ -2880,10 +2880,17 @@ def f_emission_summary(lp_vars, r_vals, option=0):
     weights = 'v_phase_change_increase_qsp7zrl'
     keys = 'keys_qsp7zrl'
     index = [0, 1, 3]  # q,s,z
-    cols = []
-    fert_co2e_qsz = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+    cols = [4]
+    fert_co2e_qsz_r = f_stock_pasture_summary(r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                           keys=keys, arith=arith, index=index, cols=cols)
-    fert_co2e_qsz = fert_co2e_qsz/1000 #convert to tonnes
+    fert_co2e_qsz_r = fert_co2e_qsz_r/1000 #convert to tonnes
+    ###convert r to k
+    phases_df = r_vals['rot']['phases']
+    phases_rk = phases_df.set_index(phases_df.columns[-1], append=True)  # add landuse as index level
+    fert_co2e_qsz_rk = fert_co2e_qsz_r.reindex(phases_rk.index, axis=1, level=0)
+    fert_co2e_qsz_k = fert_co2e_qsz_rk.groupby(axis=1,level=1).sum()
+    fert_co2e_qsz = fert_co2e_qsz_k.sum(axis=1).to_frame()
+    fert_cols_k = [str("Fertiliser CO2e ")+i+str(" (t)") for i in fert_co2e_qsz_k.columns]
 
     ##trees
     type = 'tree'
@@ -3011,7 +3018,7 @@ def f_emission_summary(lp_vars, r_vals, option=0):
                                total_residue_co2e_qsz, ch4_residue_co2e_qsz, n2o_residue_co2e_qsz,
                                n2o_pas_residue_co2e_qsz, n2o_pas_residue_co2e_qsz,
                                total_fuel_co2e_qsz,
-                               fert_co2e_qsz,
+                               fert_co2e_qsz, fert_co2e_qsz_k,
                                annual_sequestration_qsz,
                                tree_co2e_sold_qsz,
                                crop_production_qsz,
@@ -3021,7 +3028,7 @@ def f_emission_summary(lp_vars, r_vals, option=0):
                              'Total Crop Residue CO2e (t)', 'Crop Residue Methane co2e (t)', 'Crop Residue Nitrous Oxide co2e (t)',
                              'Total Pas Residue CO2e (t)', 'Pasture Residue Nitrous Oxide co2e (t)',
                              'Total Fuel CO2e (t)',
-                             'Total Fertiliser CO2e (t)',
+                             'Total Fertiliser CO2e (t)'] + fert_cols_k + [
                              'Total Sequestered CO2e (t)',
                              'Total Sold CO2e (t)',
                              'Crop yield (t)',
