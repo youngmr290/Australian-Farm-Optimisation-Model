@@ -52,6 +52,7 @@ def f_reshape_uinp_defaults(uinp_defaults):
     cl1 = (uinp_defaults["parameters_inp"]['i_cl1_len'], uinp_defaults["parameters_inp"]['i_cl1_len2'],-1)
     cu1 = (uinp_defaults["parameters_inp"]['i_cu1_len'], uinp_defaults["parameters_inp"]['i_cu1_len2'],-1)
     cu2 = (uinp_defaults["parameters_inp"]['i_cu2_len'], uinp_defaults["parameters_inp"]['i_cu2_len2'],-1)
+    cu6 = (uinp_defaults["parameters_inp"]['i_cu6_len'], uinp_defaults["parameters_inp"]['i_cu6_len2'],-1)
     cx = (uinp_defaults["parameters_inp"]['i_cx_len'], uinp_defaults["parameters_inp"]['i_cx_len2'],-1)
 
     ###price
@@ -77,6 +78,8 @@ def f_reshape_uinp_defaults(uinp_defaults):
     uinp_defaults["parameters_inp"]['i_cu1_y'] = np.reshape(uinp_defaults["parameters_inp"]['i_cu1_y'], cu1)
     uinp_defaults["parameters_inp"]['i_cu2_c2'] = np.reshape(uinp_defaults["parameters_inp"]['i_cu2_c2'], cu2)
     uinp_defaults["parameters_inp"]['i_cu2_y'] = np.reshape(uinp_defaults["parameters_inp"]['i_cu2_y'], cu2)
+    uinp_defaults["parameters_inp"]['i_cu6_c2'] = np.reshape(uinp_defaults["parameters_inp"]['i_cu6_c2'], cu6)
+    uinp_defaults["parameters_inp"]['i_cu6_y'] = np.reshape(uinp_defaults["parameters_inp"]['i_cu6_y'], cu6)
     uinp_defaults["parameters_inp"]['i_cx_c2'] = np.reshape(uinp_defaults["parameters_inp"]['i_cx_c2'], cx)
     uinp_defaults["parameters_inp"]['i_cx_y'] = np.reshape(uinp_defaults["parameters_inp"]['i_cx_y'], cx)
 
@@ -273,6 +276,7 @@ def f_universal_inp_sa(uinp_defaults):
     parameters['i_ck_c2'] = fun.f_sa(parameters['i_ck_c2'].astype(float), sen.sav['ck_c1c2'], 5) #energy efficiency parameters
     parameters['i_cl0_c2'] = fun.f_sa(parameters['i_cl0_c2'].astype(float), sen.sav['cl0_c1c2'], 5) #genotype litter size params
     parameters['i_cu2_c2'] = fun.f_sa(parameters['i_cu2_c2'].astype(float), sen.sav['cu2_c1c2'], 5) #Murdoch Uni parameters
+    parameters['i_cu6_c2'] = fun.f_sa(parameters['i_cu6_c2'].astype(float), sen.sav['cu6_c1c2'], 5) #Murdoch Uni parameters
     parameters['i_ce_c2'][0,...] = fun.f_sa(parameters['i_ce_c2'][0,...].astype(float), sen.sav['bnd_twice_dry_propn'], 5) #propn of twice drys
     ###SAM - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_ci_c2'] = fun.f_sa(parameters['i_ci_c2'].astype(float),sen.sam['ci_c1c2'])

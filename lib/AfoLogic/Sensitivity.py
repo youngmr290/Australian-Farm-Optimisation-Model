@@ -523,6 +523,7 @@ def create_sa():
     sav['ck_c1c2'] = np.full(uinp.parameters['i_ck_c2'].shape, '-', dtype=object)  #energy efficiency params.
     sav['cl0_c1c2'] = np.full(uinp.parameters['i_cl0_c2'].shape, '-', dtype=object)  #litter size genotype params for genotypes.
     sav['cu2_c1c2'] = np.full(uinp.parameters['i_cu2_c2'].shape, '-', dtype=object)  #lamb survival params for genotypes.
+    sav['cu6_c1c2'] = np.full(uinp.parameters['i_cu6_c2'].shape, '-', dtype=object)  #ewe lamb params for genotypes.
     ##SAM
     sam['ci_c1c2'] = np.ones(uinp.parameters['i_ci_c2'].shape, dtype='float64')  #intake params for genotypes
     sam['cl_c1c2'] = np.ones(uinp.parameters['i_cl_c2'].shape, dtype='float64')  # lactation params for genotypes
