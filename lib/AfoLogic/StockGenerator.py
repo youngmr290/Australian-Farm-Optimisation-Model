@@ -2859,6 +2859,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
         cf_w_w_dams = np.zeros(tag1, dtype =dtype) #this is required as default when mu wean function is not being called (it is required in the start production function)
         cf_mort_start_damsp1p2 = np.array([0.0])
         cf_mort_damsp1p2 = np.zeros(tag1, dtype =dtype)[...,na,na] #this is required as default when EL peri-natal mortality function is not being called (it is required in the start production function)
+        cf_lact_start_damsp1p2 = np.array([0.0])
+        cf_lact_damsp1p2 = np.zeros(tag1, dtype =dtype)[...,na,na] #this is required as default when EL proportion lactating function is not being called (it is required in the start production function)
         cf_csc_start_dams = np.array([0.0])
         cf_csc_dams = np.zeros(tag1, dtype =dtype) #this is required as default when mu2 peri-natal mortality function is not being called (it is required in the start production function)
         # cf_conception_start_dams = np.array([0.0])
@@ -3072,6 +3074,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 cf_w_w_start_dams = fun.f_update(cf_w_w_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
                 ###Dam mortality carryover (running tally of coeff * dam LW change during pregnancy)
                 cf_mort_start_damsp1p2 = fun.f_update(cf_mort_start_damsp1p2, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p,...,na,na])
+                ###Dam proportion lactating (running tally of coeff * dam LW change during pregnancy)
+                cf_lact_start_damsp1p2 = fun.f_update(cf_lact_start_damsp1p2, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p,...,na,na])
                 ###CS change carryover (running tally of dam CS change in late pregnancy)
                 cf_csc_start_dams = fun.f_update(cf_csc_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
                 # ###Carry forward conception
@@ -5548,6 +5552,25 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                         mortality_birth_yatf = temp0 #mortality
                     if eqn_compare:
                         r_compare1_q0q2tpyatf[eqn_system, 0, :, p, ...] = temp0
+            eqn_system = 2 # EL = 2
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)   # equation used is based on the yatf system
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
+                    ## calculate LW change of EL dams (to reduce the arguments required)  #todo this needs to be different formula depending on eqn_group[7] or it should be based on EBW
+                    lwc_dams = ebg_dams * cg_dams[18, ...] + d_guw_dams
+                    temp0, temp1 = sfun.f_mortality_progeny_EL(cu6_yatf, cb1_yatf, cx_yatf[:,mask_x,...]
+                                    , cf_lact_start_damsp1p2, lw_start_dams, lwc_dams, cv_weight_dams, foo_yatf
+                                    , chill_index_a1e1b1nwzida0e0b0xyg1p0, mobsize_mortality_pa1e1b1nwzida0e0b0xyg1[p]
+                                    , days_period_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
+                                    , sap_mortalityp_pa1e1b1nwzida0e0b0xyg2[p], saa_mortalityx_pa1e1b1nwzida0e0b0xyg1[p]
+                                    , period_is_join_pa1e1b1nwzida0e0b0xyg1[p], period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
+                                    , between_mated90 = period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p]
+                                    , between_d90birth = period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p])
+                    if eqn_used:
+                        mortality_birth_yatf = temp0
+                        cf_lact_damsp1p2 = temp1
+                    if eqn_compare:
+                        r_compare1_q0q2tpyatf[eqn_system, 0, :, p, ...] = temp0
 
 
             ##end numbers - accounts for mortality and other activity during the period - this is the number in the different classes as at the end of the period
@@ -6346,6 +6369,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 ###Dam mortality carryover (running tally of coeff * dam LW change during pregnancy)
                 cf_mort_condensed_damsp1p2 = sfun.f1_condensed(cf_mort_damsp1p2, idx_sorted_w_dams[...,na,na], condense_w_mask_dams[...,na,na]
                                         , n_fs_dams, len_w1, n_pos-2, w_pos-2, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1,...,na,na])
+                ###Dams lactating carryover (running tally of coeff * dam LW change during pregnancy)
+                cf_lact_condensed_damsp1p2 = sfun.f1_condensed(cf_lact_damsp1p2, idx_sorted_w_dams[...,na,na], condense_w_mask_dams[...,na,na]
+                                        , n_fs_dams, len_w1, n_pos-2, w_pos-2, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1,...,na,na])
                 ###Condition score change carryover (running tally of dam CS change in late pregnancy)
                 cf_csc_condensed_dams = sfun.f1_condensed(cf_csc_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_pos, w_pos, n_fvps_percondense_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
@@ -6749,7 +6775,21 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Dam mortality carryover (running tally of coeff * dam LW change during pregnancy)
                 cf_mort_start_damsp1p2 = sfun.f1_period_start_prod(numbers_end_condensed_dams[...,na,na]
-                                        , cf_mort_condensed_damsp1p2, b1_pos-2, p_pos-2, w_pos-2, tuple(x-2 for x in prejoin_tup), z_pos-2  #subtract 2 from each value in the tuples
+                                        , cf_mort_condensed_damsp1p2, b1_pos-2, p_pos-2, w_pos-2
+                                        , tuple(x-2 for x in prejoin_tup), z_pos-2  #subtract 2 from each value in the tuples
+                                        , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1,...,na,na]
+                                        , mask_min_lw_wz_dams[...,na,na], mask_min_wa_lw_w_dams[...,na,na]
+                                        , mask_max_lw_wz_dams[...,na,na], mask_max_wa_lw_w_dams[...,na,na]
+                                        , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1,...,na,na], group=1
+                                        , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p,...,na,na]
+                                        , gbal=gbal_management_pa1e1b1nwzida0e0b0xyg1[p,...,na,na]
+                                        , drysretained_scan=est_drys_retained_scan_pa1e1b1nwzida0e0b0xyg1[p,...,na,na]
+                                        , drysretained_birth=est_drys_retained_birth_pa1e1b1nwzida0e0b0xyg1[p,...,na,na] #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
+                                        , stub_lw_idx=stub_lw_idx_dams[...,na,na], len_gen_t=len_gen_t1, a_t_g=a_t_g1
+                                        , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1,...,na,na])
+                cf_lact_start_damsp1p2 = sfun.f1_period_start_prod(numbers_end_condensed_dams[...,na,na]
+                                        , cf_lact_condensed_damsp1p2, b1_pos-2, p_pos-2, w_pos-2
+                                        , tuple(x-2 for x in prejoin_tup), z_pos-2  #subtract 2 from each value in the tuples
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1,...,na,na]
                                         , mask_min_lw_wz_dams[...,na,na], mask_min_wa_lw_w_dams[...,na,na]
                                         , mask_max_lw_wz_dams[...,na,na], mask_max_wa_lw_w_dams[...,na,na]
