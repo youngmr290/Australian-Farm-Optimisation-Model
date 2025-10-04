@@ -2300,16 +2300,15 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
     Calculation of dam conception using a back transformed logistic function. Using coefficients developed in
     Murdoch University trials that mated for 2 cycles.
 
-    Conception is the change in the numbers of animals in each slice of e & b as a proportion of the numbers
-    in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums()
+    Conception is represented in the code as a change in the numbers of animals in each slice of e & b as a proportion
+    of the numbers in the NM slice (e[0]b[0]). The adjustment of the actual numbers occurs in f1_period_end_nums()
     This function calculates the change in the proportions (the total should add to 0)
 
     The general approach is to calculate the probability of conception less than or equal to 1,2,3 foetuses
     similar to f_conception_cs() except LMAT is "less than" and probability is calculated from a back transformed
     calculation with linear and quadratic terms.
     The calculation includes terms for LW at joining, Age at joining and LW change during joining.
-    The estimation of cumulative probability as fitted in the LMAT trial is scaled by a day of year factor, this
-    is derived from the factor used for the GrazPlan adjustment but requires calculating in this function.
+    The estimation of cumulative probability as fitted in the LMAT trial is scaled by a day of joining factor.
     The probability is an estimate of the number of dams carrying that number of young to birth if mated for the
     number of cycles assessed in the trial. The parameters could be altered to represent a single cycle however
     this correction hasn't been made (as of Apr 2022) and the adjustment is made in this function.
@@ -2358,10 +2357,10 @@ def f_conception_mu2(cf, cb1, cu2, srw, maternallw_mating, lwc, age, nlb, doj, d
         ##Calculate the transformed estimates of proportion empty (slice cu2 allowing for active i axis)
         cutoff0 = cb1_sliced[:,:,1:2,...] + cu2_sliced[-1, ...] + (cu2_sliced[0, ...] * maternallw_mating
                                                                  + cu2_sliced[1, ...] * maternallw_mating ** 2
-                                                                 + cu2_sliced[2, ...] * age
-                                                                 + cu2_sliced[3, ...] * age ** 2
-                                                                 + cu2_sliced[4, ...] * lwc
-                                                                 + cu2_sliced[5, ...] * lwc ** 2
+                                                                 + cu2_sliced[2, ...] * lwc
+                                                                 + cu2_sliced[3, ...] * lwc ** 2
+                                                                 + cu2_sliced[4, ...] * age
+                                                                 + cu2_sliced[5, ...] * age ** 2
                                                                  + cu2_sliced[6, ...] * nlb
                                                                  + cu2_sliced[7, ...] * nlb ** 2
                                                                  + cu2_sliced[8, ...] * srw
