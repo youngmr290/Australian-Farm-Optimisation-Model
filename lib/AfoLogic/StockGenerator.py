@@ -4494,6 +4494,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 ##Dam weight at mating - to estimate the weight at mating we are wanting to use the growth rate of the dams that are not yet pregnant
                 ## because mating doesn't happen at the start of the period.
+                ##Also representing the LW change to the mid-cycle (cf[4]/2 = extra 8.5 or 10.5 days for sheep & cattle)
                 ##relative size and relative condition of the dams at mating are the determinants of conception
                 ## use the condition of dams in the 11 slice because mated animals can have a different feed supply
                 ## use dams in e[-1] because want the condition of the animal before it conceives. Note all e slices will have the same condition until conceived because they have the same feedsupply until scanning.
@@ -4504,8 +4505,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 gest_propn_b1sliced = fun.f_dynamic_slice(gest_propn_pa1e1b1nwzida0e0b0xyg1[p], b1_pos, 2, 3) #slice b1 axis
                 days_period_b1sliced = fun.f_dynamic_slice(days_period_pa1e1b1nwzida0e0b0xyg1[p], b1_pos, 2, 3) #slice b1 axis
 
-                t_w_mating = np.sum((ffcfw_e1b1sliced + ebg_e1b1sliced * cg_dams[18, ...] * days_period_b1sliced
-                                     * (1 - gest_propn_b1sliced)) * period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
+                t_w_mating = np.sum((ffcfw_e1b1sliced + ebg_e1b1sliced * cg_dams[18, ...]
+                                     * (days_period_b1sliced * (1 - gest_propn_b1sliced) + cf_dams[4, ...] / 2))
+                                    * period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                     , axis=e1_pos, keepdims=True) #Temporary variable for mating weight
                 ffcfw_mating_dams = fun.f_update(ffcfw_mating_dams, t_w_mating, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
                 maternallw_mating_dams = ffcfw_mating_dams
