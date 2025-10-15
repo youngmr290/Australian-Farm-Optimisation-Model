@@ -3014,7 +3014,7 @@ def f_mortality_progeny_EL(cu6, cb1, cx, cf_value, lw, lwc, cv_lw, foo, chill_in
     #                 + cx[8, ..., na,na])                                                                          #and gender using the mu2 coefficients
     ##back transform to proportion lactating
     lactating = (np.average(fun.f_back_transform(t_lactating_p1p2),axis = (-1,-2)))  #p1p2 axes averaged
-    ##convert from % lactating to mortality
+    ##convert from % lactating to mortality and include conversion from % lactating to survival for twins.
     mortalityx = (1 - (cb1[39, ...] + lactating * cb1[40, ...])) * is_birth
     ##Apply SA to progeny mortality at birth (LTW)
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
