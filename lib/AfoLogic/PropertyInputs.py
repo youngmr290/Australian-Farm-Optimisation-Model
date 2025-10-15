@@ -643,6 +643,7 @@ def f1_mask_lmu():
     f1_do_mask_lmu(general, "i_lmu_area", lmu_axis=0)
     f1_do_mask_lmu(general, "i_non_cropable_area_l", lmu_axis=0)
     f1_do_mask_lmu(general, "arable", lmu_axis=0)
+    f1_do_mask_lmu(general, "i_recharge_kl", lmu_axis=1)
 
     ##crop
     f1_do_mask_lmu(crop, "yield_by_lmu", lmu_axis=1)
@@ -683,6 +684,7 @@ def f1_mask_lmu():
     f1_do_mask_lmu(tree, "estimated_area_trees_l", lmu_axis=0)
     f1_do_mask_lmu(tree, "lmu_growth_scalar_l", lmu_axis=0)
     f1_do_mask_lmu(tree, "lmu_carbon_scalar_l", lmu_axis=0)
+    f1_do_mask_lmu(tree, "recharge_l", lmu_axis=0)
 
 def f1_do_mask_landuse(dict, key, landuse_axis_type, landuse_axis):
     '''
@@ -732,6 +734,7 @@ def f1_mask_landuse():
     ##general
     f1_do_mask_landuse(general, "i_phase_can_increase_kp7", landuse_axis_type="all", landuse_axis=0)
     f1_do_mask_landuse(general, "i_phase_can_reduce_kp7", landuse_axis_type="all", landuse_axis=0)
+    f1_do_mask_landuse(general, "i_recharge_kl", landuse_axis_type="all", landuse_axis=0)
 
     ##crop
     f1_do_mask_landuse(crop, "seeding_yield_penalty", landuse_axis_type="crop", landuse_axis=0)

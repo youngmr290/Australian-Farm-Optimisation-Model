@@ -196,6 +196,10 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         axis_slice = f_update_default_controls(user_controls, 'offs_dvp_dates', 'axis_slice', {})
         reports["offs_dvp_dates"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod,
                                                    keys=keys, arith=arith, index=index, cols=cols)
+
+    if report_run.loc['run_deepflow', 'Run']:
+        reports["deepflow"] = rfun.f_deepflow_summary(r_vals)
+
     if report_run.loc['run_saleprice', 'Run']:
         option = f_update_default_controls(user_controls, 'saleprice', 'option', 2)
         grid = f_update_default_controls(user_controls, 'saleprice', 'grid', [0,5,6])

@@ -1587,6 +1587,33 @@ def f_overhead_summary(r_vals):
     exp_fix_c = r_vals['fin']['overheads']
     return exp_fix_c
 
+def f_deepflow_summary(r_vals):
+    '''average recharge across the whole farm'''
+    ##deepflow phases
+    v_phase_area_qsp7zrl = d_vars['base']['v_phase_area_qsp7zrl']
+    v_phase_area_qszrl = v_phase_area_qsp7zrl[:,:,-1,...] #slice p7[-1] - will need to be more complex if dual season.
+    recharge_rl = r_vals['crop']['recharge_rl']
+    total_rot_recharge_qsz = np.sum(v_phase_area_qszrl * recharge_rl, axis=(3,4))
+
+    ##deepflow trees
+    v_tree_area_l = d_vars['base']['v_tree_area_l']
+    tree_recharge_l = r_vals['tree']['recharge_l']
+    total_tree_recharge = np.sum(v_tree_area_l * tree_recharge_l)
+
+    ##average deepflow across farm
+    total_area_qsz = np.sum(v_tree_area_l) + np.sum(v_phase_area_qszrl, axis=(3,4))
+    total_recharge_qsz = total_rot_recharge_qsz + total_tree_recharge
+    ave_recharge_qsz = total_recharge_qsz/total_area_qsz
+
+    ##make df
+    keys_q = r_vals['zgen']['keys_q']
+    keys_s = r_vals['zgen']['keys_s']
+    keys_z = r_vals['zgen']['keys_z']
+    keys_qsz = [keys_q, keys_s, keys_z]
+    ave_recharge_qsz = f_numpy2df(ave_recharge_qsz, keys_qsz, [0,1], [2])
+
+    return ave_recharge_qsz
+
 def f_tree_summary(r_vals):
     ##costs
     tree_sequestration_cost_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_sequestration_cost_p7z', na_prod=[2]

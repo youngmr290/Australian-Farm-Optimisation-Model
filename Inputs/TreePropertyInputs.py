@@ -11,6 +11,8 @@ region_tree_inputs = {
         # tree growth scalar for LMU0 to LMU8
         "lmu_growth_scalar_l": np.array([0.40, 0.74, 1, 0.82, 0.86, 0.94, 0.86, 0.88, 0.7]),
         "lmu_carbon_scalar_l": np.array([0.70, 0.87, 1.00, 0.91, 0.93, 0.97, 0.93, 0.94, 0.85]), #this is less because as the trees on the good soils reach mature size the gap will cloase between soil types.
+        #deepflow/recharge
+        "recharge_l": np.array([0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.0]),
     },
     "EWW": {
         "estimated_area_trees_l": np.array([0, 0, 0, 0, 0, 0, 0, 0, 0]),
@@ -21,6 +23,8 @@ region_tree_inputs = {
         # tree growth scalar for LMU0 to LMU8
         "lmu_growth_scalar_l": np.array([0.69, 0.98, 1.02, 1, 0.96, 0.81, 0.81, 0.56, np.nan]),
         "lmu_carbon_scalar_l": np.array([0.845, 0.99, 1.01, 1.0, 0.98, 0.905, 0.905, 0.78, np.nan]), #this is less because as the trees on the good soils reach mature size the gap will cloase between soil types.
+        #deepflow/recharge
+        "recharge_l": np.array([0.1, 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.3, 0.0]),
     },
     "GSW": {
         "estimated_area_trees_l": np.array([0, 0, 0, 0, 0, 0, 0, 0, 0]),
@@ -30,6 +34,8 @@ region_tree_inputs = {
         # tree growth scalar for LMU0 to LMU8
         "lmu_growth_scalar_l": np.array([0.62, 0.62, 0.77, 1, 1, np.nan, np.nan, np.nan, np.nan]),
         "lmu_carbon_scalar_l": np.array([0.81, 0.81, 0.885, 1.0, 1.0, np.nan, np.nan, np.nan, np.nan]), #this is less because as the trees on the good soils reach mature size the gap will cloase between soil types.
+        #deepflow/recharge
+        "recharge_l": np.array([1.1, 0.8, 1.4, 1.1, 1.1, 0.0, 0.0, 0.0, 0.0]),
     },
     "SWV": {
         "estimated_area_trees_l": np.array([0, 0, 0, 0, 0, 0, 0, 0, 0]),
@@ -39,5 +45,7 @@ region_tree_inputs = {
         # tree growth scalar for LMU0 to LMU8
         "lmu_growth_scalar_l": np.array([1, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]),
         "lmu_carbon_scalar_l": np.array([1, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]),
+        #deepflow/recharge
+        "recharge_l": np.array([11.0, 11.0,	8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
     }
 }

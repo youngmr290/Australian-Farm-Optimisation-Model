@@ -379,8 +379,6 @@ def f_sequestration(r_vals, mask_season_p7z):
     '''
 
     
-    #TODO Do i need to add a discount in the ACCU's for 25 year projects?
-    
     project_duration = uinp.tree["controls"]["project_duration"]  # Total number of years
     include_carbon_credit = uinp.tree["controls"]["include_carbon_credit"]
     carbon_price = uinp.tree["carbon_price"]
@@ -498,7 +496,9 @@ def f_biodiversity(r_vals, mask_season_p7z):
 
     return tree_biodiversity_cashflow_p7z, tree_biodiversity_wc_c0p7z
     
-    
+def f_deepflow(r_vals):
+    recharge_l = pinp.tree["recharge_l"]
+    fun.f1_make_r_val(r_vals, recharge_l, 'recharge_l')
     
 def f1_tree_cashflow(r_vals):
     '''
@@ -532,6 +532,7 @@ def f1_tree_cashflow(r_vals):
 def f1_trees(params,r_vals):
     '''collates all the params'''
     tree_cashflow_p7zl, tree_wc_c0p7zl = f1_tree_cashflow(r_vals)
+    f_deepflow(r_vals)
     
     keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']

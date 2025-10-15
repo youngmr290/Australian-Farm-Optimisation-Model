@@ -1521,6 +1521,28 @@ def f_sow_prov():
     can_sow_p5zk = pd.Series(period_is_seeding_p5zk.ravel(), index=index_p5zk)
     return sow_prov_p7p5zk, can_sow_p5zk
 
+def f_deepflow(r_vals):
+    '''
+
+    Tallies the water that is not used by plants and leaks through the soil to the groundwater.
+    This depends on landuse, soil type and rainfall.
+
+    Future improvement would be to adjust the input by weather year.
+
+    '''
+    ##read phases and add two empty col levels
+    phases_df = pinp.phases_r.copy()
+
+    ##inputs
+    recharge_kl = pinp.general['i_recharge_kl']
+    recharge_k_l = pd.DataFrame(recharge_kl, index=sinp.general['i_idx_k'], columns=pinp.general['i_lmu_idx'])
+
+    ##merge to rotation df
+    recharge_r_l = pd.merge(phases_df, recharge_k_l, how='left', left_on=sinp.end_col(), right_index = True)
+    recharge_r_l = recharge_r_l.drop(list(range(sinp.general['phase_len'])), axis=1)
+
+    ##store r_vals
+    fun.f1_make_r_val(r_vals, recharge_r_l.values, 'recharge_rl')
 
 #########
 #params #
@@ -1537,6 +1559,7 @@ def f1_crop_params(params,r_vals):
     sow_prov_p7p5zk, can_sow_p5zk = f_sow_prov()
     total_co2e_phase_fuel_zrl = f1_rot_fuel_emissions(r_vals)
     co2e_fert_zrl = f1_rot_fert_emissions(r_vals)
+    f_deepflow(r_vals)
 
     ##create params
     params['grain_pool_proportions'] = propn.to_dict()

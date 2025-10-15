@@ -36,6 +36,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_dam_dvp_dates"] = pd.DataFrame()  # dam dvp dates
     reports["stacked_repro_dates"] = pd.DataFrame()  # dam repro dates
     reports["stacked_offs_dvp_dates"] = pd.DataFrame()  # offs dvp dates
+    reports["stacked_deepflow"] = pd.DataFrame()  # sale price
     reports["stacked_saleprice"] = pd.DataFrame()  # sale price
     reports["stacked_salegrid_dams"] = pd.DataFrame()  # sale grid
     reports["stacked_salegrid_yatf"] = pd.DataFrame()  # sale grid
@@ -230,6 +231,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
         offs_dvp_dates = pd.concat([reports["offs_dvp_dates"]], keys=[trial_name],
                                    names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_offs_dvp_dates"] = rfun.f_append_dfs(stacked_reports["stacked_offs_dvp_dates"], offs_dvp_dates)
+
+    if report_run.loc['run_deepflow', 'Run']:
+        deepflow = pd.concat([reports["deepflow"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_deepflow"] = rfun.f_append_dfs(stacked_reports["stacked_deepflow"], deepflow)
 
     if report_run.loc['run_saleprice', 'Run']:
         saleprice = pd.concat([reports["saleprice"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -707,6 +712,8 @@ def f_save_reports(report_run, reports, processor):
         df_settings = rfun.f_df2xl(writer, reports["stacked_wethers_n_crossys_numbers_summary"], 'wethers_n_xb_numbers_summary', df_settings, option=xl_display_mode)
     if report_run.loc['run_emissions', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_emissions"], 'emissions', df_settings, option=xl_display_mode)
+    if report_run.loc['run_deepflow', 'Run']:
+        df_settings = rfun.f_df2xl(writer, reports["stacked_deepflow"], 'deepflow', df_settings, option=xl_display_mode)
     if report_run.loc['run_saleprice', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_saleprice"], 'saleprice', df_settings, option=xl_display_mode)
     if report_run.loc['run_salegrid_dams', 'Run']:
