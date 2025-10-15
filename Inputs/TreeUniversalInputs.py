@@ -25,7 +25,7 @@ tree_inputs = {
         "between_row_spacing": 4.3,  # meters
         "within_row_spacing": 4.3,  # meters
         "side_buffer": 5,  # meters
-        "biodiversity_credits": 2,  # credits/ha
+        "biodiversity_credits": 17000,  # $/ha
         "shrub_density": 0,  # stems/ha
 
         # biomass green tonnes per hectare per year
@@ -86,7 +86,7 @@ tree_inputs = {
         "between_row_spacing": 2.0,  # meters
         "within_row_spacing": 2.0,  # meters
         "side_buffer": 4,  # meters
-        "biodiversity_credits": 1,  # credits/ha
+        "biodiversity_credits": 8500,  # $/ha
         "shrub_density": 0,  # stems/ha
 
         # biomass green tonnes per hectare per year
@@ -146,7 +146,7 @@ tree_inputs = {
         "between_row_spacing": 6.0,  # meters
         "within_row_spacing": 6.0,  # meters
         "side_buffer": 5,  # meters
-        "biodiversity_credits": 5,  # credits/ha
+        "biodiversity_credits": 22500,  # $/ha
         "shrub_density": 300,  # stems/ha
 
         # biomass green tonnes per hectare per year
@@ -206,7 +206,7 @@ tree_inputs = {
         "between_row_spacing": 2.0,  # meters
         "within_row_spacing": 2.0,  # meters
         "side_buffer": 4,  # meters
-        "biodiversity_credits": 0,  # credits/ha
+        "biodiversity_credits": 4500,  # $/ha
         "shrub_density": 0,  # stems/ha
 
         # biomass green tonnes per hectare per year
@@ -318,7 +318,6 @@ tree_inputs = {
     # Prices
     ###############
     "carbon_price": 40,  # $/t co2e
-    "biodiversity_credit_price": 2500,  # $/credit
     "biomass_price": 50,  # $/t green
 }
 

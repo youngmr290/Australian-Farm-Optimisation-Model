@@ -458,9 +458,12 @@ def f_sequestration(r_vals, mask_season_p7z):
     
 def f_biodiversity(r_vals, mask_season_p7z):
     '''
-    Calculate the value of biodiversity credits from tree plantation per hectare.
-    
-    Assumption 1 - Biodiversity credits are paid for upfront.
+    Calculate the per-hectare value of biodiversity credits from tree plantations.
+
+    Assumptions:
+    1. Biodiversity credit payments are received upfront at project commencement.
+    2. The project is perpetual in nature (i.e., the biodiversity covenant remains indefinitely),
+       so the annualised value is calculated using the perpetuity formula (A = NPV × r).
     '''
     project_duration = uinp.tree["controls"]["project_duration"]  # Total number of years
     biodiversity_included = uinp.tree["controls"]["include_biodiversity_credit"]
@@ -470,27 +473,28 @@ def f_biodiversity(r_vals, mask_season_p7z):
 
     variable_costs_y = np.zeros(project_duration)
     fixed_costs_y = np.zeros(project_duration)
-    biodiversity_credits_y = np.zeros(project_duration)
+    total_credit_value_y = np.zeros(project_duration)
     
     #credits and costs per ha
     if biodiversity_included and plantation_config["biodiversity_credits"]>0:
-        biodiversity_credits_y[0] = plantation_config["biodiversity_credits"]  #all credits recieved at the start of the project
+        total_credit_value_y[0] = plantation_config["biodiversity_credits"]  #all credits recieved at the start of the project
         variable_costs_y[1:] = biodiversity_costs["annual_monitoring"]
         fixed_costs_y[0] = biodiversity_costs["setup"]
 
-    # Compute the total value (dollars)
-    market_price_per_credit = uinp.tree["biodiversity_credit_price"]
-    total_credit_value_y = biodiversity_credits_y * market_price_per_credit
-    
-    discount_rate  = uinp.finance['i_interest']
+    discount_rate = uinp.finance['i_interest']
     npv_income = npf.npv(discount_rate, total_credit_value_y)
     npv_variable_cost = npf.npv(discount_rate, variable_costs_y)
     npv_fixed_cost = npf.npv(discount_rate, fixed_costs_y)
 
-    # Compute annualized cost as an annuity
-    annual_income = npv_income * (discount_rate / (1 - (1 + discount_rate) ** -project_duration))
-    annual_variable_cost = npv_variable_cost * (discount_rate / (1 - (1 + discount_rate) ** -project_duration))
-    annual_fixed_cost = npv_fixed_cost * (discount_rate / (1 - (1 + discount_rate) ** -project_duration))
+    # ---- Annualisation ----
+    # Income: perpetual (land covenant)
+    annual_income = npv_income * discount_rate
+
+    # Costs: finite (limited to project duration)
+    crf = discount_rate / (1 - (1 + discount_rate) ** -project_duration)
+    annual_variable_cost = npv_variable_cost * crf
+    annual_fixed_cost = npv_fixed_cost * crf
+
     annual_cashflow = annual_income - annual_variable_cost
     
     #allocate to p7
