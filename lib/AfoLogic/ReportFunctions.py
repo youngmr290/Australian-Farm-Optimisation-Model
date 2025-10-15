@@ -1615,11 +1615,18 @@ def f_deepflow_summary(r_vals):
     return ave_recharge_qsz
 
 def f_tree_summary(r_vals):
-    ##costs
-    tree_sequestration_cost_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_sequestration_cost_p7z', na_prod=[2]
+    ##fixed costs
+    keys_p7 = r_vals['zgen']['keys_p7']
+    keys_z = r_vals['zgen']['keys_z']
+    sequestration_fixed_cost_p7z = r_vals['tree']['tree_sequestration_fixed_cost_p7z']
+    biodiversity_fixed_cost_p7z = r_vals['tree']['tree_biodiversity_fixed_cost_p7z']
+    total_fixed_costs_z_p7 = f_numpy2df(sequestration_fixed_cost_p7z + biodiversity_fixed_cost_p7z, [keys_p7, keys_z], [1], [0])
+
+    ##variable costs
+    tree_sequestration_variable_cost_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_sequestration_variable_cost_p7z', na_prod=[2]
                                                     , weights='v_tree_area_l', na_weights=[0,1]
                                                     , keys='keys_p7zl', arith=2, index=[1], cols=[0])
-    tree_biodiversity_cost_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biodiversity_cost_p7z', na_prod=[2]
+    tree_biodiversity_variable_cost_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biodiversity_variable_cost_p7z', na_prod=[2]
                                                     , weights='v_tree_area_l', na_weights=[0,1]
                                                     , keys='keys_p7zl', arith=2, index=[1], cols=[0])
     tree_biomass_cost_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_biomass_cost_p7zl', na_prod=[]
@@ -1629,7 +1636,9 @@ def f_tree_summary(r_vals):
                                                     , weights='v_tree_area_l', na_weights=[0,1]
                                                     , keys='keys_p7zl', arith=2, index=[1], cols=[0])
 
-    total_cost_z_p7 = tree_sequestration_cost_z_p7 + tree_biodiversity_cost_z_p7 + tree_biomass_cost_z_p7 + tree_estab_cost_z_p7
+    ##total costs
+    total_cost_z_p7 = (tree_sequestration_variable_cost_z_p7 + tree_biodiversity_variable_cost_z_p7 +
+                       tree_biomass_cost_z_p7 + tree_estab_cost_z_p7 + total_fixed_costs_z_p7)
 
     ##income
     tree_sequestration_income_z_p7 = f_stock_pasture_summary(r_vals, type='tree', prod='tree_sequestration_income_p7zl', na_prod=[]

@@ -289,14 +289,14 @@ tree_inputs = {
     # Biodiversity
     ###############
     "biodiversity_costs": {
-        "setup": 40, #$/ha
+        "setup": 10000, #$/farm
         "annual_monitoring": 25, #$/ha
     },
     ###############
     # Carbon sequestration
     ###############
     "sequestration_costs": {
-        "setup": 40, #$/ha
+        "setup": 10000, #$/farm
         "annual_monitoring": 25, #$/ha
     },
     "fuel_used": {
