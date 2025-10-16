@@ -25,7 +25,7 @@ tree_inputs = {
         "between_row_spacing": 4.3,  # meters
         "within_row_spacing": 4.3,  # meters
         "side_buffer": 5,  # meters
-        "biodiversity_credits": 17000,  # $/ha
+        "biodiversity_value": 17000,  # $/ha
         "shrub_density": 0,  # stems/ha
 
         # biomass green tonnes per hectare per year
@@ -86,7 +86,7 @@ tree_inputs = {
         "between_row_spacing": 2.0,  # meters
         "within_row_spacing": 2.0,  # meters
         "side_buffer": 4,  # meters
-        "biodiversity_credits": 8500,  # $/ha
+        "biodiversity_value": 8500,  # $/ha
         "shrub_density": 0,  # stems/ha
 
         # biomass green tonnes per hectare per year
@@ -146,7 +146,7 @@ tree_inputs = {
         "between_row_spacing": 6.0,  # meters
         "within_row_spacing": 6.0,  # meters
         "side_buffer": 5,  # meters
-        "biodiversity_credits": 22500,  # $/ha
+        "biodiversity_value": 22500,  # $/ha
         "shrub_density": 300,  # stems/ha
 
         # biomass green tonnes per hectare per year
@@ -206,7 +206,7 @@ tree_inputs = {
         "between_row_spacing": 2.0,  # meters
         "within_row_spacing": 2.0,  # meters
         "side_buffer": 4,  # meters
-        "biodiversity_credits": 4500,  # $/ha
+        "biodiversity_value": 4500,  # $/ha
         "shrub_density": 0,  # stems/ha
 
         # biomass green tonnes per hectare per year

@@ -285,6 +285,9 @@ def create_sa():
     sav['include_biodiversity_credit'] = '-'  #control inclusion of bio credits
     sav['include_harvesting'] = '-'  #control inclusion of harvesting
     ##SAM
+    sam['price_carbon_credit'] = 1.0  #price of a carbon credit
+    sam['price_biodiversity_credit'] = 1.0  #price of a biodiversity credit
+    sam['price_tree_biomass'] = 1.0  #price of harvested tree biomass
     ##SAP
     ##SAA
     ##SAT

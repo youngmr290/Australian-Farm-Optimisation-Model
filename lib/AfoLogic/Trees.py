@@ -476,8 +476,8 @@ def f_biodiversity(r_vals, mask_season_p7z):
     total_credit_value_y = np.zeros(project_duration)
     
     #credits and costs per ha
-    if biodiversity_included and plantation_config["biodiversity_credits"]>0:
-        total_credit_value_y[0] = plantation_config["biodiversity_credits"]  #all credits recieved at the start of the project
+    if biodiversity_included and plantation_config["biodiversity_value"]>0:
+        total_credit_value_y[0] = plantation_config["biodiversity_value"]  #all credits recieved at the start of the project
         variable_costs_y[1:] = biodiversity_costs["annual_monitoring"]
         fixed_costs_y[0] = biodiversity_costs["setup"]
 
