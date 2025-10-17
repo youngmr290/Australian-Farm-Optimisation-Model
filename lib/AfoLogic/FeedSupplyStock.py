@@ -147,6 +147,7 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ##len
     len_a0 = np.count_nonzero(pinp.sheep['i_mask_a'])
     len_a1 = np.count_nonzero(pinp.sheep['i_mask_a'])
+    len_b1 = len(sinp.stock['i_mask_b0_b1'])
 
 
     ##nut
@@ -317,7 +318,9 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
 
     ##2) calculate the feedsupply adjustment OPTION for each sheep class
     ###a)wean
-    a_k0_pa1e1b1nwzida0e0b0xyg1 = period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1 * pinp.sheep['i_dam_wean_diffman'] * fun.f_expand(np.arange(len_a1)+1, a1_pos) #len_a+1 because that is the association between k0 and a1
+    # a_k0_pa1e1b1nwzida0e0b0xyg1 = period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1 * pinp.sheep['i_dam_wean_diffman'] * fun.f_expand(np.arange(len_a1)+1, a1_pos) #len_a+1 because that is the association between k0 and a1
+    #todo after Ewe Lambs uncomment the above line and delete the line of code below (code below makes all periods use the aStd feedsupply adjustment)
+    a_k0_pa1e1b1nwzida0e0b0xyg1 = (period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1>=0) * pinp.sheep['i_dam_wean_diffman'] * fun.f_expand(np.arange(len_a1)+1, a1_pos) #len_a+1 because that is the association between k0 and a1
     a_r2_wean_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(a_r2_k0e1b1nwzida0e0b0xyg1[na,...], a_k0_pa1e1b1nwzida0e0b0xyg1, a1_pos)
 
     ###b)b.	Dams Cluster k1 – oestrus cycle (e1): The association required is
@@ -367,8 +370,10 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     ###d)agedam for offspring
     t_fs_agedam_pa1e1b1nwzik3a0e0b0xyg3 = 0
     ###e)wean age for offspring
-    t_fs_ageweaned_pa1e1b1nwzidk0e0b0xyg3 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg3
-                                                                , a_r2_wean_pa1e1b1nwzida0e0b0xyg3[na,...], axis=0)[0]
+    #todo removed the offs wean adjust for the ewe lamb analysis so that the weaning feed supply adjustment is only affecting the dams
+    t_fs_ageweaned_pa1e1b1nwzidk0e0b0xyg3 = 0
+    # np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg3
+    #                                                            , a_r2_wean_pa1e1b1nwzida0e0b0xyg3[na,...], axis=0)[0]
     ###f) btrt for offspring
     t_fs_btrt_pa1e1b1nwzida0e0k4xyg3 = 0
     ###g) gender for offspring
@@ -422,8 +427,15 @@ def f1_stock_fs(cr_sire,cr_dams,cr_offs,cu0_sire,cu0_dams,cu0_offs,a_p6_pa1e1b1n
     if sinp.structuralsa['i_r2adjust_inc']:
         ##the adjustment is broadcast across j2 (the standard, minimum and maximum)
         ##feedsupply is clipped in step 7 to ensure it is within a feasible range.
-        t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = (t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1nwzida0e0b0xyg1
+        # t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = (t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1nwzida0e0b0xyg1
+        #                                           + t_fs_lsln_pa1e1b1nwzida0e0b0xyg1) #can't use += for some reason
+        #todo after Ewe Lambs uncomment the 2 lines above and delete the 6 lines of temporary code below
+        ## For EL analysis don't adjust the NM slice (b1[0]) with the wean feed supply adjustment
+        index_b1nwzida0e0b0xyg = fun.f_expand(np.arange(len_b1), b1_pos)
+        t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1 = (t_feedsupply_stpa1e1b1j2wzida0e0b0xyg1
+                                                  + t_fs_ageweaned_pa1e1b1nwzida0e0b0xyg1 * (index_b1nwzida0e0b0xyg>0)
                                                   + t_fs_lsln_pa1e1b1nwzida0e0b0xyg1) #can't use += for some reason
+
         t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 = (t_feedsupply_stpa1e1b1j2wzida0e0b0xyg3 + t_fs_agedam_pa1e1b1nwzik3a0e0b0xyg3
                                                   + t_fs_ageweaned_pa1e1b1nwzidk0e0b0xyg3 + t_fs_btrt_pa1e1b1nwzida0e0k4xyg3
                                                   + t_fs_gender_pa1e1b1nwzida0e0b0k5yg3)

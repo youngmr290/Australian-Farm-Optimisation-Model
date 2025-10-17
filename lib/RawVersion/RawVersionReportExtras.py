@@ -48,6 +48,7 @@ def f_create_report_dfs(non_exist_trials):
     reports["stacked_woolvalue_dams"] = pd.DataFrame()  # average wool value dams
     reports["stacked_woolvalue_offs"] = pd.DataFrame()  # average wool value offs
     reports["stacked_saledate_offs"] = pd.DataFrame()  # offs sale date
+    reports["stacked_saledateEL_offs"] = pd.DataFrame()  # offs sale date  #todo remove after ewe lambs analysis
     reports["stacked_cfw_dams"] = pd.DataFrame()  # clean fleece weight dams
     reports["stacked_fd_dams"] = pd.DataFrame()  # fibre diameter dams
     reports["stacked_cfw_offs"] = pd.DataFrame()  # clean fleece weight dams
@@ -284,6 +285,10 @@ def f_concat_reports(stacked_reports, reports, report_run, trial_name):
     if report_run.loc['run_saledate_offs', 'Run']:
         saledate_offs = pd.concat([reports["saledate_offs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
         stacked_reports["stacked_saledate_offs"] = rfun.f_append_dfs(stacked_reports["stacked_saledate_offs"], saledate_offs)
+
+    if report_run.loc['run_saledateEL_offs', 'Run']:  #todo remove after ewe lambs analysis
+        saledateEL_offs = pd.concat([reports["saledateEL_offs"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
+        stacked_reports["stacked_saledateEL_offs"] = rfun.f_append_dfs(stacked_reports["stacked_saledateEL_offs"], saledateEL_offs)
 
     if report_run.loc['run_cfw_dams', 'Run']:
         cfw_dams = pd.concat([reports["cfw_dams"]], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -728,6 +733,10 @@ def f_save_reports(report_run, reports, processor):
         reports["stacked_saledate_offs"] = reports["stacked_saledate_offs"].astype(object)
         reports["stacked_saledate_offs"][reports["stacked_saledate_offs"]==np.datetime64('1970-01-01')] = 0
         df_settings = rfun.f_df2xl(writer, reports["stacked_saledate_offs"], 'saledate_offs', df_settings, option=xl_display_mode)
+    if report_run.loc['run_saledateEL_offs', 'Run']:  #todo remove after ewe lambs analysis
+        reports["stacked_saledateEL_offs"] = reports["stacked_saledateEL_offs"].astype(object)
+        reports["stacked_saledateEL_offs"][reports["stacked_saledateEL_offs"]==np.datetime64('1970-01-01')] = 0
+        df_settings = rfun.f_df2xl(writer, reports["stacked_saledateEL_offs"], 'saledateEL_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_salevalue_offs', 'Run']:
         df_settings = rfun.f_df2xl(writer, reports["stacked_salevalue_offs"], 'salevalue_offs', df_settings, option=xl_display_mode)
     if report_run.loc['run_salevalue_dams', 'Run']:

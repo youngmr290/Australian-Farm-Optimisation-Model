@@ -259,6 +259,18 @@ def f_run_report(lp_vars, r_vals, report_run, trial_name, infeasible = None, use
         axis_slice = f_update_default_controls(user_controls, 'saledate_offs', 'axis_slice', {})
         reports["saledate_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+    if report_run.loc['run_saledateEL_offs', 'Run']:  #todo remove after ewe lambs analysis
+        type = 'stock'
+        prod = 'saledate_k3k5tvnwziaxyg3'
+        na_prod = [0,1]  # q,s
+        weights = 'offs_numbers_qsk3k5tvnwziaxyg3'
+        keys = 'offs_keys_qsk3k5tvnwziaxyg3'
+        arith = f_update_default_controls(user_controls, 'saledateEL_offs', 'arith', 1)
+        index = f_update_default_controls(user_controls, 'saledateEL_offs', 'index', [5, 7])              #DVP, w
+        cols = f_update_default_controls(user_controls, 'saledateEL_offs', 'cols', [13, 2, 3, 4, 11])     #g3, dam age, BTRT, t, gender
+        axis_slice = f_update_default_controls(user_controls, 'saledateEL_offs', 'axis_slice', {})
+        reports["saledateEL_offs"] = rfun.f_stock_pasture_summary(r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     if report_run.loc['run_salevalue_dams', 'Run']:
         type = 'stock'
         prod = 'salevalue_p7qk2tva1nwziyg1'
