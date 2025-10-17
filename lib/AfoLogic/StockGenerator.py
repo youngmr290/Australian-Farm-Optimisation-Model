@@ -6537,6 +6537,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , scan_management=scan_management_pa1e1b1nwzida0e0b0xyg1[p]
                                         , gbal = gbal_management_pa1e1b1nwzida0e0b0xyg1[p], stub_lw_idx=stub_lw_idx_dams #use p because we want to know scan management in the current repro cycle because that impacts if drys are included in the weighted average use to create the new animal at prejoining
                                         , len_gen_t=len_gen_t1, a_t_g=a_t_g1, period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1[p+1])
+                #todo 3 lines of temporary code for the Ewe Lamb project
+                ####Set the EBW in the random REV and reset the weight at birth
+                t_ebw_start_dams = ebw_start_dams.copy()
+                t_ebw_start_dams = sfun.f1_rev_update('random', t_ebw_start_dams, rev_trait_values['dams'][p])
+                ebw_start_dams = fun.f_update(ebw_start_dams, t_ebw_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_dams = sfun.f1_period_start_prod(numbers_end_condensed_dams, nw_start_condensed_dams, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_dams, mask_min_wa_lw_w_dams
@@ -6903,6 +6908,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
                                         , mask_max_lw_wz_offs, mask_max_wa_lw_w_offs, stub_lw_idx=stub_lw_idx_offs, len_gen_t=len_gen_t3, a_t_g=a_t_g3
                                         , period_is_startdvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p+1])
+                #todo 3 lines of temporary code for the Ewe Lamb project
+                ####Set the EBW in the random REV and reset the weight after sale
+                t_ebw_start_offs = ebw_start_offs.copy()
+                t_ebw_start_offs = sfun.f1_rev_update('random', t_ebw_start_offs, rev_trait_values['offs'][p])
+                ebw_start_offs = fun.f_update(ebw_start_offs, t_ebw_start_offs, period_is_startdvp_pa1e1b1nwzida0e0b0xyg3[p])
                 ###normal weight	- yes this is meant to be updated from nw_start
                 nw_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, nw_start_condensed_offs, b1_pos, p_pos, w_pos, prejoin_tup
                                         , z_pos, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_wz_offs, mask_min_wa_lw_w_offs
@@ -10744,6 +10754,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###############
     '''add report values to report dict and do any additional calculations'''
 
+    ##SRW for BBB ewes (for Ewe Lamb DST)
+    fun.f1_make_r_val(r_vals, srw_female_yg1[0, 0], 'srw')
+
     ##create z8 mask to uncluster report vars
     ###dams - cluster e and b (e axis is active from the dvp dates)
     mask_z8var_k2tva1e1b1nwzida0e0b0xyg1 = 1 * (np.sum(mask_z8var_va1e1b1nwzida0e0b0xyg1
@@ -10908,6 +10921,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ####ktvp
     pzg0_shape = len_p, len_z, len_g0
     k2tvpa1nwziyg1_shape = len_k2, len_t1, len_v1, len_p, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    k2TvPa1nwziyg1_shape = len_k2, len_gen_t1, len_v1, np.count_nonzero(period_is_report_p), len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1    #  Without e & b (For Ewe Lambs DST)
     k3k5tvpnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, lenoffs_p, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####p6

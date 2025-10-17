@@ -567,7 +567,7 @@ def f_summary(lp_vars, r_vals, trial):
                                                       'Canola %', 'Canola % max', 'Canola % min', 'Canola % stdev',
                                                       'Pulse %', 'Pulse % max', 'Pulse % min', 'Pulse % stdev',
                                                       'Fodder %', 'Fodder % max', 'Fodder % min', 'Fodder % stdev',
-                                                      'Sup', 'Sup max', 'Sup min', 'Sup stdev'])
+                                                      'Sup', 'Sup max', 'Sup min', 'Sup stdev', 'SRW'])   #added SRW for Ewe Lamb DST
     ##profit - no minroe and asset
     summary_df.loc[trial, 'profit'] = round(f_profit(lp_vars, r_vals, option=0),0)
     profit_max = round(f_profit(lp_vars, r_vals, option=3)[0],0)
@@ -640,6 +640,8 @@ def f_summary(lp_vars, r_vals, trial):
     summary_df.loc[trial, 'Sup max'] = Sup_max * np.logical_not(Sup_min==Sup_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Sup min'] = Sup_min * np.logical_not(Sup_min==Sup_max) #sets min/max to 0 if range is 0 so the cols get hidden
     summary_df.loc[trial, 'Sup stdev'] = f_grain_sup_summary(lp_vars, r_vals, option=4)[3]
+    ##SRW  For Ewe Lamb DST
+    summary_df.loc[trial, 'SRW'] = r_vals['stock']['srw']
     return summary_df
 
 
