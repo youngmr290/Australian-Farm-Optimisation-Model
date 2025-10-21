@@ -80,7 +80,7 @@ tree_inputs = {
     ###############
     "plantation_structure_1": {
         "number_of_belts": 5,  #for block planting this should be 1
-        "distance_between_belts": 150, # meters - for block plantins this should be the width of adjacent paddock.
+        "distance_between_belts": 100, # meters - for block plantins this should be the width of adjacent paddock.
         "propn_paddock_adj": 1,  # proportion of paddock adjacent to the belt. This should be less than 1 if planting next to bush or other non-arable area.
         "number_of_rows": 2,
         "between_row_spacing": 2.0,  # meters
@@ -200,7 +200,7 @@ tree_inputs = {
     ###############
     "plantation_structure_3": {
         "number_of_belts": 5,  #for block planting this should be 1
-        "distance_between_belts": 150, # meters - for block plantins this should be the width of adjacent paddock.
+        "distance_between_belts": 100, # meters - for block plantins this should be the width of adjacent paddock.
         "propn_paddock_adj": 1,  # proportion of paddock adjacent to the belt. This should be less than 1 if planting next to bush or other non-arable area.
         "number_of_rows": 2,
         "between_row_spacing": 2.0,  # meters
