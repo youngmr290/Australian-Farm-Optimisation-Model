@@ -172,11 +172,11 @@ def f_adjacent_land_production_scalar():
     a_fit_protected = protected_side_params["a"]
     mu_fit_protected = protected_side_params["mu"]
     sigma_fit_protected = protected_side_params["sigma"]
+    x_anchor_fit_protected = protected_side_params["x_anchor"]
 
     # Evaluate the indefinite logistic integral at 0 and at the distance between belts
-    x_max = distance_between_belts  # max distance you’re integrating to
-    F0_protected = fun.f_combined_integral(0, offset_fit_protected, k_fit_protected, x0_fit_protected, a_fit_protected, mu_fit_protected, sigma_fit_protected, x_max)
-    Fx_protected = fun.f_combined_integral(distance_between_belts, offset_fit_protected, k_fit_protected, x0_fit_protected, a_fit_protected, mu_fit_protected, sigma_fit_protected, x_max)
+    F0_protected = fun.f_combined_integral(0, offset_fit_protected, k_fit_protected, x0_fit_protected, a_fit_protected, mu_fit_protected, sigma_fit_protected, x_anchor_fit_protected)
+    Fx_protected = fun.f_combined_integral(distance_between_belts, offset_fit_protected, k_fit_protected, x0_fit_protected, a_fit_protected, mu_fit_protected, sigma_fit_protected, x_anchor_fit_protected)
 
     # Compute the relative production adjustment over the belt width
     relative_production_adj_protected = (Fx_protected - F0_protected) / distance_between_belts

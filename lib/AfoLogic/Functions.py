@@ -680,46 +680,66 @@ def f_logistic_integral(x, L, k, x0, offset):
     """
     return offset*x + (L - offset)/k * np.log(1 + np.exp(k*(x - x0)))
 
-def f_combined_integral(x, offset, k, x0, a, mu, sigma, x_max):
+def f_combined_integral(x, offset, k, x0, a, mu, sigma, x_anchor):
     """
-    Compute the indefinite integral of a custom function that combines:
-      - a logistic component (representing gradual increase from offset to 1), and
-      - a Gaussian "bump" (representing a temporary overshoot above 1),
-      adjusted so that the tail returns to 1 at large distances.
+    Indefinite integral (from 0 to x) of the anchored-and-clamped production function.
 
-    The function being integrated is:
-        f(x) = offset + (1 - offset) / (1 + exp(-k * (x - x0))) + a * exp(-((x - mu)/sigma)^2) - a * exp(-((x_max - mu)/sigma)^2)
+    Definition:
+      Let g(x) = offset + (1 - offset)/(1 + exp(-k*(x - x0))) + a*exp(-((x - mu)/sigma)^2)
+      Let h    = g(x_anchor) - 1
+      Define the anchored function       f_anchor(x) = g(x) - h so that f_anchor(x_anchor) = 1
+      Define the clamped production      f(x) = f_anchor(x) for x <= x_anchor, and f(x) = 1 for x > x_anchor
+
+    This function returns:
+        F(x) = ∫_0^x f(t) dt
+
+    Notes
+    -----
+    - For x <= x_anchor:
+        F(x) = [A(x) - A(0)] - h * x
+      where A is the antiderivative of g.
+
+    - For x > x_anchor:
+        F(x) = ([A(x_anchor) - A(0)] - h * x_anchor) + 1 * (x - x_anchor)
+
+    - Uses log1p(exp(.)) for numerical stability in the logistic integral.
 
     Parameters
     ----------
-    x : float or np.ndarray
-        The x-value(s) at which to evaluate the indefinite integral.
-    offset : float
-        The base value of the logistic function at x → -∞.
-    k : float
-        The steepness of the logistic curve.
-    x0 : float
-        The inflection point (center) of the logistic curve.
-    a : float
-        The amplitude of the Gaussian bump.
-    mu : float
-        The center of the Gaussian bump.
-    sigma : float
-        The standard deviation (spread) of the Gaussian bump.
-    x_max : float
-        The x-location used to anchor the tail of the bump to return the function to 1.
+    x : float
+        Upper limit of integration (lower limit fixed at 0).
+    offset, k, x0, a, mu, sigma : floats
+        Parameters of the raw model g(x) from `fit_gauss_tail`.
+    x_anchor : float
+        Distance at which the curve equals 1 and remains exactly 1 thereafter.
 
     Returns
     -------
-    float or np.ndarray
-        The value of the indefinite integral at x.
+    float
+        Value of ∫_0^x f(t) dt.
     """
     from scipy.special import erf
-    logistic_int = offset * x + (1 - offset) / k * np.log(1 + np.exp(k * (x - x0)))
-    bump_int = a * (np.sqrt(np.pi) / 2) * sigma * erf((x - mu) / sigma)
-    bump_tail = a * np.exp(-((x_max - mu) / sigma) ** 2) * x
-    return logistic_int + bump_int - bump_tail
 
+    x = float(x)
+
+    # Antiderivative of g(x) = logistic + Gaussian bump
+    # ∫ logistic dx  +  ∫ Gaussian dx
+    def A(t):
+        logistic_int = offset * t + (1 - offset) / k * np.log1p(np.exp(k * (t - x0)))
+        bump_int = a * (np.sqrt(np.pi) / 2) * sigma * erf((t - mu) / sigma)
+        return logistic_int + bump_int
+
+    # Compute anchor shift h = g(x_anchor) - 1
+    g_anchor = offset + (1 - offset) / (1 + np.exp(-k * (x_anchor - x0))) \
+               + a * np.exp(-((x_anchor - mu) / sigma) ** 2)
+    h = g_anchor - 1.0
+
+    if x <= x_anchor:
+        return (A(x) - A(0.0)) - h * x
+    else:
+        head = (A(x_anchor) - A(0.0)) - h * x_anchor
+        tail = 1.0 * (x - x_anchor)
+        return head + tail
 
 def f_dynamic_slice(arr, axis, start, stop, step=1, axis2=None, start2=None, stop2=None, step2=1):
     ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
