@@ -2550,7 +2550,7 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_rec
 #     return chill_adjust_b1
 
 
-def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_carrying_capacity_c, shelter_rank_c):
+def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_carrying_capacity_c):
     '''Calculate the adjustment of wind speed across the b1 axis based on differential allocation of single-,
     twin- and triplet-bearing dams to sheltered paddocks.
 
@@ -2574,6 +2574,7 @@ def f_ws_adjust(relative_ws_c, numbers_b1, dse_per_hd, nfoet_b1, scan, propn_car
     indx_rank = fun.f_expand(np.arange(np.max(rank_b1) + 1), -len(dse_b1.shape)-1)
     propn_total_dse_ranked_rb1 = propn_total_dse_b1 * (rank_b1 == indx_rank)
 
+    shelter_rank_c = np.argsort(relative_ws_c)  # ranking of the c slices based on the ws
     section_allocation_ctab1g = np.zeros((len(shelter_rank_c),) + propn_total_dse_ranked_rb1.shape[1:])
 
     # Loop over each shelter.

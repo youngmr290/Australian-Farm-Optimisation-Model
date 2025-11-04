@@ -1498,19 +1498,17 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     #TODO could be hooked up for SLP and existing paddocks that are more sheltered due to bush or other reasons
     relative_ws_adj, relative_temp_adj, protected_area = tre.f_microclimate_adj()
     relative_ws_c = np.array([1, relative_ws_adj])
-    propn_section_grazed_cp4 = pinp.sheep['i_propn_section_grazed_p4c'].T
-    propn_pasture = pinp.sheep['i_propn_pas']
-    relative_stocking_rate_c = pinp.sheep['i_relative_stocking_rate_c']
-    
-    total_area_pas = np.sum(pinp.general['i_lmu_area']) * propn_pasture #estimate of total pasutre area in ha
-    
-    area_pas_tree = protected_area * propn_pasture #pasutre area that is protected by trees - assume that trees are evenly distributed over lmu therefore not all the protected area is pasture
-    area_pas_normal = max(0, total_area_pas - area_pas_tree) #pasutre area that is not protected by trees
-    area_c = np.array([area_pas_normal, area_pas_tree])
-    
-    total_relative_carry_capacity_cp4 = area_c[:,na] * relative_stocking_rate_c[:,na] * propn_section_grazed_cp4
-    propn_carry_capacity_cp4 = total_relative_carry_capacity_cp4 / np.sum(total_relative_carry_capacity_cp4, axis = 0, keepdims = True)
-    shelter_rank_c = np.argsort(relative_ws_c) #ranking of the c slices based on the ws
+    ### Relative proportion of pasture that is protected by trees
+    ### under the assumption that tree cover applies equally across land uses
+    tree_bias_factor = 1  # >1 means trees favour pasture more than crop
+    propn_pas_tree = (protected_area / np.sum(pinp.general['i_lmu_area'])) * tree_bias_factor
+    propn_pas_tree = min(propn_pas_tree, 1.0)  # cap at 1
+    propn_pas_normal = 1 - propn_pas_tree
+    propn_area_c = np.array([propn_pas_normal, propn_pas_tree])
+    #### Relative carrying capacity proportion
+    relative_carry_capacity_c = pinp.sheep['i_relative_stocking_rate_c'] * propn_area_c
+    propn_carry_capacity_cp4 = (relative_carry_capacity_c[:,na] * pinp.sheep['i_propn_section_grazed_p4c'].T)
+    propn_carry_capacity_cp4 /= np.sum(propn_carry_capacity_cp4, axis=0, keepdims=True)
 
     #expand p4 axis
     propn_carry_capacity_cp4g = fun.f_expand(propn_carry_capacity_cp4, p_pos)
@@ -3186,8 +3184,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 
                 ###windspeed
                 ws_adj_a1e1b1nwzida0e0b0xyg1 = sfun.f_ws_adjust(relative_ws_c, numbers_start_dams, dse_per_dam, nfoet_b1nwzida0e0b0xyg, 
-                                                                scan_management_pa1e1b1nwzida0e0b0xyg1[p], propn_carry_capacity_cpg[:,p,...],
-                                                                shelter_rank_c)
+                                                                scan_management_pa1e1b1nwzida0e0b0xyg1[p], propn_carry_capacity_cpg[:,p,...])
                 ws_a1e1b1nwzida0e0b0xyg1 = ws_pa1e1b1nwzida0e0b0xyg[p] * ws_adj_a1e1b1nwzida0e0b0xyg1
                 
                 
