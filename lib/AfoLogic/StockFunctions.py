@@ -1593,13 +1593,13 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, hp_total, meme, new
     mec = nec / kc
     mel = nel / kl
     mew = new / kw
-    ##Body area m2
+    ##Body area m2 - Surface area controls the amount of heat loss (when combined with insulation and ambient temp).
     area = f1_surface_area(cc, ffcfw_start)
     ##Calculate insulation
     in_tissue, in_ext_m0p1 = f_insulation(cc, ffcfw_start, rc_start, sl_start, ws, rain_p1, index_m0)
     ##Ambient temp & temperature reduction due to clear skies (2 hourly)
     temperature_m0 = f1_temp_m0(temp_ave, temp_max, temp_min, index_m0)
-    ##Lower critical temperature (period)
+    ##Lower critical temperature (period) - Below which they have to increase heat production to stay warm.
     temp_lc, temp_lc_m0p1 = f_templc(cc, ffcfw_start, rc_start, sl_start, hp_total, temp_ave, temp_max, temp_min, ws
                                      , rain_p1, index_m0)
     ##Extra ME required to keep warm
