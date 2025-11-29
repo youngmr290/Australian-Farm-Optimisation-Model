@@ -483,6 +483,7 @@ def create_sa():
     ##SAA
     saa['husb_cost_h2'] = np.zeros(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype='float64')  #SA value for contract cost of husbandry operations.
     saa['husb_labour_l2h2'] = np.zeros(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype='float64')  #units of the job carried out per husbandry labour hour
+    saa['eqn_date_g1_p7'] = np.zeros(pinp.sheep['i_eqn_date_g1_p7'].shape, dtype=int)   #SA to change the date when the dam eqn systems change
     saa['r1_izg1'] = np.zeros(pinp.sheep['ia_r1_zig1'].shape, dtype=int)   #SA to change the base feed option selected for dams
     saa['r1_izg3'] = np.zeros(pinp.sheep['ia_r1_zig3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
     saa['r2_isk2g1'] = np.zeros(pinp.sheep['ia_r2_isk2g1'].shape, dtype=int)   #SA to change the base feed option selected for dams

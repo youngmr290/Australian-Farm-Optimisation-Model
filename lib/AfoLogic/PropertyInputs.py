@@ -494,6 +494,7 @@ def f_property_inp_sa(pinp_defaults):
     ###sam
     ###sap
     ###saa
+    sheep['i_eqn_date_g1_p7'] = fun.f_sa(sheep['i_eqn_date_g1_p7'], sen.saa['eqn_date_g1_p7'], 2).astype('int')
     sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.saa['r1_izg1'], 2).astype('int')
     sheep['ia_r2_isk2g1'] = fun.f_sa(sheep['ia_r2_isk2g1'], sen.saa['r2_isk2g1'], 2).astype('int')
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.saa['r1_izg3'], 2).astype('int')
