@@ -95,10 +95,10 @@ def f1_stockpyomo_local(params, model, MP_lp_vars):
     model.p_progprov_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog,
                                      model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, 
                                      model.s_gen_merit_offs, model.s_groups_offs, model.s_lw_offs,
-                                     initialize=params['p_progprov_offs'], default=0.0, mutable=False, doc='number of progeny provided to dams')
+                                     initialize=params['p_progprov_offs'], default=0.0, mutable=False, doc='number of progeny provided to offs')
     model.p_progreq_offs = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_lw_offs, model.s_season_types,
                                     model.s_tol, model.s_gender, model.s_groups_offs, model.s_lw_offs,
-                              initialize=params['p_progreq_offs'], default=0.0, doc='number of progeny required by dams')
+                              initialize=params['p_progreq_offs'], default=0.0, doc='number of progeny required by offs')
 
 
     ##stock - dams

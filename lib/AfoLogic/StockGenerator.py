@@ -9687,7 +9687,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     r_ebw_k2tvPdams = (r_ebw_tpdams[:, na, period_is_report_p, ...]
                          * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
-                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :,:, na, ...]))
+                            == index_k2tva1e1b1nwzida0e0b0xyg1[:, :, :, na, ...]))
     r_ebw_k2tvPyatf = (r_ebw_start_tpyatf[:, na, period_is_report_p, ...]
                          * (a_v_pa1e1b1nwzida0e0b0xyg1[period_is_report_p] == index_vpa1e1b1nwzida0e0b0xyg1)
                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:, na, ...]
@@ -10662,10 +10662,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     arrays_k3tvzxg3 = [keys_k3, keys_t3, keys_v3, keys_z, keys_x, keys_g3]
     params['p_offs_upbound'] = fun.f1_make_pyomo_dict(bnd_upper_offs_k3k5tva1e1b1nwzida0e0b0xyg3, arrays_k3tvzxg3)
 
-    ##upper bound prog - default is that all females (except xb) go to dams.
+    ##upper bound prog - default is that all females from 2 tooth & adults (except xb) transfer to dams.
     ##t[prog2offs], all[d], x[female], g[bbb,bbm] = 0
     bnd_upper_prog_tdxg2 = np.full_like(sen.sav['bnd_up_prog_tdxg2'], 999999) #999999 just an arbitrary high value so constraint gets skipped
-    bnd_upper_prog_tdxg2[2,:,1,0:2] = 0 #set the default so that female prog go to dams.
+    bnd_upper_prog_tdxg2[2:3, 1:, 1:2, 0:2] = 0 #set the default so that female prog from 2 tooths and adults of BBB & BBM can't be offs.
+    bnd_upper_prog_tdxg2[1:2, 0:1, 1:2, 0:2] = 0 #set the default so that female prog from EL of BBB & BBM can't be dams.
     bnd_upper_prog_tdxg2 = fun.f_sa(np.array(bnd_upper_prog_tdxg2,dtype=float), sen.sav['bnd_up_prog_tdxg2'], 5)
     # bnd_upper_prog_tdxg2[bnd_upper_prog_tdxg2==999999] = np.inf  # (can't use np.inf because it becomes nan in the following calcs)
     bnd_upper_prog_tva1e1b1nwzida0e0b0xyg2 = fun.f_expand(bnd_upper_prog_tdxg2, left_pos=x_pos, right_pos=-1,
