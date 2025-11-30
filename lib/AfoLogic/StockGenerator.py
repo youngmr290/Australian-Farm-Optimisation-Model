@@ -585,14 +585,19 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##propn of dams mated (bound) - default is inf which gets skipped in the bound constraint hence the model can optimise the propn mated.
     ##used for bound - the bound version is not used in the generator otherwise randomness could be introduced. Because changing est propn mated
-    ## alters the numbers in the generator but doesn't necessarily alter the selected flock structure.
     prop_dams_mated_og1 = fun.f_sa(np.array([999],dtype=float), sen.sav['bnd_propn_dams_mated_og1'], 5) #999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
     prop_dams_mated_og1[prop_dams_mated_og1==999] = np.inf
     prop_dams_mated_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(prop_dams_mated_og1, left_pos=p_pos, right_pos=-1
                                                          , condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
     ##estimated propn of dams mated (generator)
+    ## alters the numbers in the generator but doesn't necessarily alter the selected flock structure.
     est_prop_dams_mated_og1 = fun.f_sa(np.array([1],dtype=float), sen.sav['est_propn_dams_mated_og1'], 5) #if an estimate is not specified then use 100% is mated.
     est_prop_dams_mated_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(est_prop_dams_mated_og1, left_pos=p_pos, right_pos=-1
+                                                         , condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
+    ##propn of dams retained (bound) - default is inf which gets skipped in the bound constraint hence the model can optimise the propn retained.
+    prop_dams_retained_og1 = fun.f_sa(np.array([999],dtype=float), sen.sav['bnd_propn_dams_retained_og1'], 5) #999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
+    prop_dams_retained_og1[prop_dams_retained_og1==999] = np.inf
+    prop_dams_retained_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(prop_dams_retained_og1, left_pos=p_pos, right_pos=-1
                                                          , condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
     ##minimum propn of single dams sold (bound) - default is 0.
     min_prop_singles_sold_og1 = fun.f_sa(np.array([0],dtype=float), sen.sav['min_propn_singles_sold_og1'], 5)
@@ -1524,6 +1529,9 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ##propn of dams mated, actual value for the Bounds and an estimate for the generator (don't use bound to control generator otherwise introduce randomness)
     prop_dams_mated_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
     est_prop_dams_mated_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(est_prop_dams_mated_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
+
+    ##propn of dams retained for the Bounds
+    prop_dams_retained_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_retained_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
 
     ##break of season
     date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg=np.take_along_axis(seasonstart_ya1e1b1nwzida0e0b0xyg,a_seasonstart_pa1e1b1nwzida0e0b0xyg,0)
@@ -7368,8 +7376,6 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###calculate period pointer here because it needed a_v_p association
     dvp_is_mating = sfun.f1_p2v(period_is_mating_pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1).astype(dtypeint)
     dvp_is_mating = fun.f_dynamic_slice(dvp_is_mating, e1_pos, 0, 1) #slice e axis because e axis doesn't alter the mating DVP.
-
-    ###calculate period pointer here because it needed a_v_p association
     dvp_is_wean = sfun.f1_p2v(period_is_wean_pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1).astype(dtypeint)
     dvp_is_wean = fun.f_dynamic_slice(dvp_is_wean, e1_pos, 0, 1) #slice e axis because e axis doesn't alter the wean DVP.
     dvp_is_scan = sfun.f1_p2v(period_is_scan_pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1).astype(dtypeint)
@@ -10576,6 +10582,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     #prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = fun.f_update(prop_dams_mated_va1e1b1nwzida0e0b0xyg1, dvp_is_mating==0, np.inf)
     arrays_vzg1 = [keys_v1, keys_z, keys_g1]
     params['p_prop_dams_mated'] = fun.f1_make_pyomo_dict(prop_dams_mated_va1e1b1nwzida0e0b0xyg1, arrays_vzg1)
+
+    ##proportion of dams retained. inf means the model can optimise the proportion because inf is used to skip the constraint.
+    prop_dams_retained_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_retained_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because proportion retained doesn't vary with e
+    prop_dams_retained_va1e1b1nwzida0e0b0xyg1[np.logical_not(dvp_is_wean)] = np.inf #use wean dvp to represent the closing numbers (Note: ewes can be sold in pre-joining and scanning DVP)
+    #prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = fun.f_update(prop_dams_mated_va1e1b1nwzida0e0b0xyg1, dvp_is_mating==0, np.inf)
+    arrays_vzg1 = [keys_v1, keys_z, keys_g1]
+    params['p_prop_dams_retained'] = fun.f1_make_pyomo_dict(prop_dams_retained_va1e1b1nwzida0e0b0xyg1, arrays_vzg1)
 
     ##proportion of dry dams as a propn of preg dams at shearing sale. This is different to the propn in the dry report because it is the propn at a given time rather than per animal at the beginning of mating.
     ## This is used to force retention of drys at the main (t[0]) sale time. You can only sell drys if you sell non-drys. This param indicates the propn of dry that can be sold per non-dry dam.

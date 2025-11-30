@@ -58,7 +58,7 @@ def f1_boundarypyomo_local(params, model):
     offs_upbound_inc = fun.f_sa(False, sen.sav['bnd_up_off_inc'], 5) #upper bound on offs
     prog_upbound_inc = any(value != 999999 for value in params['stock']['p_prog_upbound'].values()) #upper bound on prog
     total_dams_scanned_bound_inc = np.any(sen.sav['bnd_total_dams_scanned'] != '-') #equal to bound on the total number of mated dams at scanning
-    force_5yo_retention_inc = np.any(sen.sav['bnd_propn_dam5_retained'] != '-') #force a propn of 5yo dams to be retained.
+    bnd_propn_dams_retained_inc = np.any(sen.sav['bnd_propn_dams_retained_og1'] != '-') #force a propn of 5yo dams to be retained.
     propn_mated_inc = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
     w_set_inc = fun.f_sa(False, sen.sav['propn_mated_w_inc'], 5)
     bnd_propn_dams_mated_inc = propn_mated_inc and not(w_set_inc) #include bnd_propn_mated without a w set.
@@ -523,33 +523,48 @@ def f1_boundarypyomo_local(params, model):
                     pe.Constraint.Skip
             model.con_total_dams_scanned = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=f_total_dams_scanned, doc='total dams scanned')
 
-        ##force 5yo dam retention - fix a proportion of dams at 6yo scanning dvp.
+        ##bound to fix the proportion of dams being retained (t2) relative to total dams (optimised across the w axis)
         ###build bound if turned on
-        if force_5yo_retention_inc:
-            ###set the bound
-            propn_dams_retained = fun.f_sa(999, sen.sav['bnd_propn_dam5_retained'], 5) #999 is arbitrary default value which mean skip constraint
-            ###5yr scan dvp
-            scan5_v = list(params['stock']['p_scan_v_dams'])[4]
-            ###6yr scan dvp
-            scan6_v = list(params['stock']['p_scan_v_dams'])[5]
+        if bnd_propn_dams_retained_inc:
+            ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
+            model.p_prop_dams_retained = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_groups_dams
+                                               , default=0, initialize=params['stock']['p_prop_dams_retained'])
+            l_v1 = list(model.s_dvp_dams)
+            scan_v = list(params['stock']['p_scan_v_dams'])
+            prejoin_v = list(params['stock']['p_prejoin_v_dams'])[1:]  #remove the start dvp, it is not true pre-join.
+            next_prejoin_v = prejoin_v[1:]  #dvp before following prejoining
+            final_v = [l_v1[l_v1.index(item) - 1] for item in next_prejoin_v]   #a list of the final dvp of the reproduction cycle
+
             ###constraint - sum all mated dams in scan dvp.
-            def retention_5yo_dams(model,q,s,z):
-                if (pe.value(model.p_wyear_inc_qs[q, s]) and propn_dams_retained != 999
-                        and any(model.p_mask_dams[k2,t,scan5_v,w8,z,g1] != 0 for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams
-                                for t in model.s_sale_dams for g1 in model.s_groups_dams)):
-                    return (propn_dams_retained) * sum(model.v_dams[q,s,k28,t,v,a,n,w8,z,i,y,g1] for k28 in model.s_k2_birth_dams
-                                                       for t in model.s_sale_dams for v in model.s_dvp_dams
-                                                       for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
-                                                       for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                                                       if pe.value(model.p_mask_dams[k28,t,v,w8,z,g1]) == 1 and v in scan5_v) \
-                       == sum(model.v_dams[q,s,k28,t,v,a,n,w8,z,i,y,g1] for k28 in model.s_k2_birth_dams
-                              for t in model.s_sale_dams for v in model.s_dvp_dams for a in model.s_wean_times
-                              for n in model.s_nut_dams for w8 in model.s_lw_dams for i in model.s_tol
-                              for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                              if pe.value(model.p_mask_dams[k28,t,v,w8,z,g1]) == 1 and v in scan6_v)
-                else:
+            def f_propn_dams_retained(model,q,s,v,z,g1):
+                if (pe.value(model.p_prop_dams_retained[v,z,g1])==np.inf or not pe.value(model.p_wyear_inc_qs[q, s]) or
+                        v not in final_v or all(pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 0
+                            for k2 in model.s_k2_birth_dams for t in model.s_sale_dams for w8 in model.s_lw_dams)):
                     return pe.Constraint.Skip
-            model.con_retention_5yo_dams = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_types, rule=retention_5yo_dams, doc='force retention of 5yo dams')
+                else:
+                    idx_final = final_v.index(v)  #which prejoining is the current v
+                    v_prejoin = prejoin_v[idx_final]  #the sales can be during or after prejoining
+                    v_next_prejoin = next_prejoin_v[idx_final]  #the sale must be before the following prejoining
+                    v_sales = l_v1[l_v1.index(v_prejoin) : l_v1.index(v_next_prejoin)]   #the list of periods that will be summed for total sales relevant to the current v
+                    dams_retained = sum(model.v_dams[q, s, k28, 't2', final_v, a, n, w8, z, i, y, g1]   #number of dams retained in the v prior to next-prejoining
+                                for k28 in model.s_k2_birth_dams
+                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                                for i in model.s_tol for y in model.s_gen_merit_dams
+                                if pe.value(model.p_mask_dams[k28,'t2',final_v,w8,z,g1]) == 1)
+                    dams_sold_t0 = sum(model.v_dams[q, s, k28, 't0', v, a, n, w8, z, i, y, g1]   #number of dams sold from the t0 set during the reproduction cycle (beginning of period)
+                                for k28 in model.s_k2_birth_dams for v in v_sales
+                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                                for i in model.s_tol for y in model.s_gen_merit_dams
+                                if pe.value(model.p_mask_dams[k28, 't0', v, w8, z, g1]) == 1)
+                    dams_sold_t1 = sum(model.v_dams[q, s, k28, 't1', v, a, n, w8, z, i, y, g1]      #number of dams sold from the t1 set during the reproduction cycle (empty)
+                                for k28 in model.s_k2_birth_dams for v in v_sales
+                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                                for i in model.s_tol for y in model.s_gen_merit_dams
+                                if pe.value(model.p_mask_dams[k28,'t1',v,w8,z,g1]) == 1)
+                    return dams_retained == model.p_prop_dams_retained[v,s,g1] * (dams_retained + dams_sold_t0 + dams_sold_t1)
+            model.con_propn_dams_retained = pe.Constraint(model.s_sequence_year, model.s_sequence,
+                                                          model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
+                                                          rule=f_propn_dams_retained, doc='proportion of dams retained')
 
         ##bound to fix the proportion of dams being mated - Proportion of mated dams relative to total dams, optimised across the w axis
         ###this bound does not count the number of females that are transferred to offs.
@@ -659,8 +674,7 @@ def f1_boundarypyomo_local(params, model):
              This constraint is representing retaining dams that didn't GBAL, except that difference in post weaning LWC aren't represented in the sale animals.'''
             ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
             model.p_min_prop_single_dams_sold = pe.Param(model.s_dvp_dams, model.s_season_types, model.s_tol,
-                                                   model.s_gen_merit_dams,
-                                                   model.s_groups_dams, default=0,
+                                                   model.s_gen_merit_dams, model.s_groups_dams, default=0,
                                                    initialize=params['stock']['p_min_prop_single_dams_sold'])
 
             l_v1 = list(model.s_dvp_dams)
@@ -674,8 +688,8 @@ def f1_boundarypyomo_local(params, model):
                 if (pe.value(model.p_wyear_inc_qs[q, s]) and v in scan_v[:-1] and pe.value(model.p_min_prop_single_dams_sold[v, z, i, y, g1]) != 0
                         and any(pe.value(model.p_mask_dams['11-0', t, v, w, z, g1]) == 1 for t in model.s_sale_dams)):  #use 11 numbers at scanning. Don't want to include the last prejoining dvp because there is no sale limit in the last year.
                     idx_scan = scan_v.index(v)  #which prejoining is the current v
-                    idx_v_next_prejoin = next_prejoin_v[idx_scan]  #the sale must be before the following prejoining
-                    v_sale = l_v1[l_v1.index(idx_v_next_prejoin) - 1]
+                    v_next_prejoin = next_prejoin_v[idx_scan]  #the sale must be before the following prejoining
+                    v_sale = l_v1[l_v1.index(v_next_prejoin) - 1]
                     return sum(model.v_dams[q, s, '11-0', 't2', v_sale, a, n, w, z, i, y, g1]
                                for a in model.s_wean_times for n in model.s_nut_dams
                                if pe.value(model.p_mask_dams['11-0', 't2', v_sale, w, z, g1]) == 1
@@ -996,8 +1010,7 @@ def f1_boundarypyomo_local(params, model):
 
             def k1_graze_bound(model, q, s, k1, z):
                 if biomass_graze_bound_k1[k1]!=99999 and pe.value(model.p_wyear_inc_qs[q, s]):  #bound will not be built if param == 99999
-                    return (
-                        sum(model.v_use_biomass[q,s,p7,z,k1,l,'Graz'] for l in model.s_lmus for p7 in model.s_season_periods)
+                    return (sum(model.v_use_biomass[q,s,p7,z,k1,l,'Graz'] for l in model.s_lmus for p7 in model.s_season_periods)
                         == biomass_graze_bound_k1[k1] * sum(model.v_use_biomass[q,s,p7,z,k1,l,s2] for s2 in model.s_biomass_uses
                                                             for l in model.s_lmus for p7 in model.s_season_periods))
                 else:
