@@ -3112,14 +3112,14 @@ def f1_season_wa(numbers, var, season, mask_min_lw_wz, mask_min_wa_lw_w, mask_ma
     :return: production variable with a singleton z axis
     '''
 
-    ##broadcast the mask to var.shape to ensure the same shape, necessary for cases where var has p1p2 axes
-    mask_min_lw_wz = np.broadcast_to(mask_min_lw_wz, var.shape)
-    mask_min_wa_lw_w = np.broadcast_to(mask_min_wa_lw_w, var.shape)
-    mask_max_lw_wz = np.broadcast_to(mask_max_lw_wz, var.shape)
-    mask_max_wa_lw_w = np.broadcast_to(mask_max_wa_lw_w, var.shape)
-
     ##weighted average along z axis
     temporary = fun.f_weighted_average(var,numbers,season,keepdims=True, non_zero=True)
+
+    ##broadcast the mask to var.shape to ensure the same shape, necessary for cases where var has p1p2 axes
+    mask_min_lw_wz = np.broadcast_to(mask_min_lw_wz, var.shape) #needs z
+    mask_min_wa_lw_w = np.broadcast_to(mask_min_wa_lw_w, temporary.shape) #no z
+    mask_max_lw_wz = np.broadcast_to(mask_max_lw_wz, var.shape) #needs z
+    mask_max_wa_lw_w = np.broadcast_to(mask_max_wa_lw_w, temporary.shape) #no z
 
     ##adjust production for min lw: the w slices with the minimum lw get assigned the production associated with the animal from the season with the lightest animal (this is so the light animals in the poor seasons are not disregarded when distributing in PP).
     ##use masked array to average the production from the z slices with the lightest animal (this is required in case multiple z slices have the same weight animals)
