@@ -144,10 +144,10 @@ def f_universal_inp_sa(uinp_defaults):
 
     ##general
     ###SAV
-    general['i_inc_risk'] = fun.f_sa(general['i_inc_risk'], sen.sav['inc_risk_aversion'], 5)
     general['i_utility_method'] = fun.f_sa(general['i_utility_method'], sen.sav['utility_method'], 5)
     general['i_cara_risk_coef'] = fun.f_sa(general['i_cara_risk_coef'], sen.sav['cara_risk_coef'], 5)
     general['i_crra_risk_coef'] = fun.f_sa(general['i_crra_risk_coef'], sen.sav['crra_risk_coef'], 5)
+    general['i_a_expo_risk_coef'] = fun.f_sa(general['i_a_expo_risk_coef'], sen.sav['expo_risk_coef'], 5)
 
     ##finance
     ###SAV

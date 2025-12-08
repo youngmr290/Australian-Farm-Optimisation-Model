@@ -10065,7 +10065,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##if risk is not included then tradevalue is not included in objective. For standard dsp the tradevalue is only required in the pnl report.
     ## if risk is included then need to include tradevalue in obj to stop the model selling extra sheep in poor year to increase utility.
-    if not uinp.general['i_inc_risk']:
+    if uinp.general['i_utility_method']==0:
         tradevalue_p7qtva1e1b1nwzida0e0b0xyg0[...] = 0
         tradevalue_p7qk2tva1e1b1nwzida0e0b0xyg1[...] = 0
         tradevalue_p7qk3k5tva1e1b1nwzida0e0b0xyg3[...] = 0
