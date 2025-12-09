@@ -36,7 +36,7 @@ r_vals={}
 ###############
 #User control #
 ###############
-trial = 31   #31 is quick test
+trial = 3   #3 is quick test
 test_pas = False
 test_sup = False
 test_slp = False
@@ -50,12 +50,13 @@ test_trees = False
 ######
 ##load excel data and experiment data
 exp_data, exp_group_bool, trial_pinp = exp.f_read_exp()
-sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp.loc[[trial]])
+exp_data = exp.f_group_exp(exp_data, exp_group_bool)
+sinp_defaults, uinp_defaults, pinp_defaults = dxl.f_load_excel_default_inputs(trial_pinp=trial_pinp.iloc[[trial]])
 d_rot_info = dxl.f_load_phases()
 cat_propn_s1_ks2 = dxl.f_load_stubble()
 
 ##select property for the current trial
-property = trial_pinp.loc[trial]
+property = trial_pinp.iloc[trial]
 
 ##process user SA
 user_sa = rve.f_process_user_sa(exp_data, trial)
