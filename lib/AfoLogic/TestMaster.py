@@ -36,7 +36,7 @@ r_vals={}
 ###############
 #User control #
 ###############
-trial = 3   #3 is quick test
+trial = 1   #this will run the first trial in the exp_group (so you need to set the exp group in the script params)
 test_pas = False
 test_sup = False
 test_slp = False
