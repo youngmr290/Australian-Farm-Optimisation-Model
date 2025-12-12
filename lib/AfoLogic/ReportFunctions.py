@@ -180,30 +180,40 @@ def load_pkl(trial_name):
         r_vals = pkl.load(f)
     return lp_vars, r_vals
 
-def f_vars2np(lp_vars, var_key, shape, maskz8=None, z_pos=-1):
+def f_vars2np(lp_vars, var_key, axis_keys=None, maskz8=None, z_pos=-1):
     '''
     Converts lp_vars to numpy.
 
     :param lp_vars: dict of lp variables
     :param var_key: string - name of variable to convert to numpy
-    :param shape: shape of desired numpy array
+    :param axis_keys: list of lists/arrays, one per axis, giving the labels (e.g. [keys_q, keys_s, keys_f, ...])
     :param maskz8: z8 mask. Must be broadcastable to lp_vars
     :param z_pos: position of z axis
     :return: numpy array with un-clustered season axis.
     '''
 
-    vars = np.array(list(lp_vars[var_key].values())).astype(float)
-    vars = vars.reshape(shape)
-    vars[np.isnan(vars)] = 0  # replace nan with 0
+    var_comp = lp_vars[var_key]
+    shape = tuple(len(k) for k in axis_keys)
+    arr = np.zeros(shape, dtype=float)
+
+    axis_maps = [{label: i for i, label in enumerate(k)} for k in axis_keys]
+
+    for idx, var in var_comp.items():
+        if not isinstance(idx, tuple):
+            idx = (idx,)
+        pos = tuple(axis_maps[a][label] for a, label in enumerate(idx))
+        arr[pos] = var#float(var.value or 0.0)
+
+    arr[np.isnan(arr)] = 0  # replace nan with 0
 
     ##uncluster z so that each season gets complete information
     if maskz8 is not None:
-        index_z = fun.f_expand(np.arange(maskz8.shape[z_pos]),z_pos)
+        index_z = fun.f_expand(np.arange(maskz8.shape[z_pos]), z_pos)
         a_zcluster = np.maximum.accumulate(index_z * maskz8,axis=z_pos)
-        a_zcluster = np.broadcast_to(a_zcluster,vars.shape)
-        vars = np.take_along_axis(vars,a_zcluster,axis=z_pos)
+        a_zcluster = np.broadcast_to(a_zcluster, arr.shape)
+        arr = np.take_along_axis(arr, a_zcluster, axis=z_pos)
 
-    return vars
+    return arr
 
 
 def f_vars2df(lp_vars, var_key, maskz8=None, z_pos=-1):
@@ -325,51 +335,6 @@ def f_var_reshape(lp_vars, r_vals):
     keys_z = r_vals['zgen']['keys_z']
     keys_pastures = r_vals['pas']['keys_pastures']
 
-    ##axis len
-    len_a = len(keys_a)
-    len_d = len(keys_d)
-    len_dry = len(keys_dry_pool)
-    len_g = len(keys_g)
-    len_g0 = len(keys_g0)
-    len_g1 = len(keys_g1)
-    len_g2 = len(keys_g2)
-    len_g3 = len(keys_g3)
-    len_f = len(keys_f)
-    len_h1 = len(keys_h1)
-    len_i = len(keys_i)
-    len_k = len(keys_k)
-    len_k1 = len(keys_k1)
-    len_k2 = len(keys_k2)
-    len_k3 = len(keys_k3)
-    len_k5 = len(keys_k5)
-    len_l = len(keys_l)
-    len_lw1 = len(keys_lw1)
-    len_lw3 = len(keys_lw3)
-    len_lw_prog = len(keys_lw_prog)
-    len_n1 = len(keys_n1)
-    len_n3 = len(keys_n3)
-    len_o = len(keys_o)
-    len_p5 = len(keys_p5)
-    len_p6 = len(keys_p6)
-    len_p7 = len(keys_p7)
-    len_p8 = len(keys_p8)
-    len_q = len(keys_q)
-    len_r = len(keys_r)
-    len_s1 = len(keys_s1)
-    len_s2 = len(keys_s2)
-    len_s = len(keys_s)
-    len_t = len(keys_t)
-    len_t1 = len(keys_t1)
-    len_t2 = len(keys_t2)
-    len_t3 = len(keys_t3)
-    len_v1 = len(keys_v1)
-    len_v3 = len(keys_v3)
-    len_y0 = len(keys_y0)
-    len_y1 = len(keys_y1)
-    len_y3 = len(keys_y3)
-    len_x = len(keys_x)
-    len_z = len(keys_z)
-
     ##create dict for reshaped variables
     global d_keys
     d_keys = {}
@@ -401,6 +366,7 @@ def f_var_reshape(lp_vars, r_vals):
     ###saltbush
     d_keys['keys_qszp6fl'] = [keys_q, keys_s, keys_z, keys_p6, keys_f, keys_l]
     d_keys['keys_qsp7zl'] = [keys_q, keys_s, keys_p7, keys_z, keys_l]
+    d_keys['keys_qszl'] = [keys_q, keys_s, keys_z, keys_l]
     ###trees
     d_keys['keys_p7zl'] = [keys_p7, keys_z, keys_l]
     ###periods
@@ -410,43 +376,12 @@ def f_var_reshape(lp_vars, r_vals):
     d_keys['keys_qszp5kl'] = [keys_q, keys_s, keys_z, keys_p5, keys_k, keys_l]
     d_keys['keys_qszp5k'] = [keys_q, keys_s, keys_z, keys_p5, keys_k1]
     ##biomass
-    d_keys['keys_qsp7zkls2'] = [keys_q, keys_s, keys_p7, keys_z, keys_k, keys_l, keys_s2]
+    d_keys['keys_qsp7zkls2'] = [keys_q, keys_s, keys_p7, keys_z, keys_k1, keys_l, keys_s2]
     ##v_phase residue
     d_keys['keys_qsp7p6zrlt'] = [keys_q, keys_s, keys_p7, keys_p6, keys_z, keys_r, keys_l, keys_t]
     d_keys['keys_qsp7zrl'] = [keys_q, keys_s, keys_p7, keys_z, keys_r, keys_l]
     ##trees
     d_keys['keys_l'] = [keys_l]
-
-
-    #########
-    #shapes #
-    #########
-    ##stock
-    sire_shape = len_q, len_s, 1, len_g0
-    dams_shape = len_q, len_s, len_k2, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1
-    prog_shape = len_q, len_s, len_k3, len_k5, len_t2, len_lw_prog, len_z, len_i, len_a, len_x, len_g2
-    offs_shape = len_q, len_s, len_k3, len_k5, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3
-    ##pasture
-    qsfgop6lzt = len_q, len_s, len_f, len_g, len_o, len_p6, len_l, len_z, len_t
-    qsfdp6zt = len_q, len_s, len_f, len_dry, len_p6, len_z, len_t
-    qsfdp6zlt = len_q, len_s, len_f, len_dry, len_p6, len_z, len_l, len_t
-    qsdp6zt = len_q, len_s, len_dry, len_p6, len_z, len_t
-    qsdp6zlt = len_q, len_s, len_dry, len_p6, len_z, len_l, len_t
-    qsfp6lz = len_q, len_s, len_f, len_p6, len_l, len_z
-    ##residue
-    qszp6fks1s2 = len_q, len_s, len_z, len_p6, len_f, len_k1, len_s1, len_s2
-    ###crop graze
-    qsfkp6p5zl = len_q, len_s, len_f, len_k1, len_p6, len_p5, len_z, len_l
-    ###saltbush
-    qszp6fl = len_q, len_s, len_z, len_p6, len_f, len_l
-    qszl = len_q, len_s, len_z, len_l
-    ###machinery
-    qszp5kl = len_q, len_s, len_z, len_p5, len_k, len_l
-    qszp5k = len_q, len_s, len_z, len_p5, len_k1
-    ###biomass
-    qsp7zkls2 = len_q, len_s, len_p7, len_z, len_k1, len_l, len_s2
-    ###v_phase
-    qsp7zrl = len_q, len_s, len_p7, len_z, len_r, len_l
 
 
     ##############
@@ -455,27 +390,28 @@ def f_var_reshape(lp_vars, r_vals):
     prob_qsz = r_vals['zgen']['z_prob_qsz']
     ##stock
     ###sire
-    sire_numbers_qszg0 = f_vars2np(lp_vars, 'v_sire', sire_shape).astype(float) #z is singleton (same numbers of sires in all z)
+    sire_numbers_qsg0 = f_vars2np(lp_vars, 'v_sire', [keys_q, keys_s, keys_g0]).astype(float)
+    sire_numbers_qszg0 = sire_numbers_qsg0[:,:,na,:] #give sire a singleton z axis (same numbers of sires in all z)
     d_vars['base']['sire_numbers_qszg0'] = sire_numbers_qszg0
     d_vars['qsz_weighted']['sire_numbers_qszg0'] = sire_numbers_qszg0 * prob_qsz[...,na]
     ###dams
     maskz8_k2tvanwziy1g1 = r_vals['stock']['maskz8_k2tvanwziy1g1']
-    dams_numbers_qsk2tvanwziy1g1 = f_vars2np(lp_vars, 'v_dams', dams_shape, maskz8_k2tvanwziy1g1, z_pos=-4).astype(float)
+    dams_numbers_qsk2tvanwziy1g1 = f_vars2np(lp_vars, 'v_dams', r_vals['stock']['dams_keys_qsk2tvanwziy1g1'], maskz8_k2tvanwziy1g1, z_pos=-4).astype(float)
     d_vars['base']['dams_numbers_qsk2tvanwziy1g1'] = dams_numbers_qsk2tvanwziy1g1
     d_vars['qsz_weighted']['dams_numbers_qsk2tvanwziy1g1'] = dams_numbers_qsk2tvanwziy1g1 * prob_qsz[...,na,na,na,na,na,na,:,na,na,na]
     ###prog
-    prog_numbers_qsk3k5twzia0xg2 = f_vars2np(lp_vars, 'v_prog', prog_shape).astype(float)
+    prog_numbers_qsk3k5twzia0xg2 = f_vars2np(lp_vars, 'v_prog', r_vals['stock']['prog_keys_qsk3k5twzia0xg2']).astype(float)
     d_vars['base']['prog_numbers_qsk3k5twzia0xg2'] = prog_numbers_qsk3k5twzia0xg2
     d_vars['qsz_weighted']['prog_numbers_qsk3k5twzia0xg2'] = prog_numbers_qsk3k5twzia0xg2 * prob_qsz[...,na,na,na,na,:,na,na,na,na]
     ###offs
     maskz8_k3k5tvnwziaxyg3 = r_vals['stock']['maskz8_k3k5tvnwziaxyg3']
-    offs_numbers_qsk3k5tvnwziaxyg3 = f_vars2np(lp_vars, 'v_offs', offs_shape, maskz8_k3k5tvnwziaxyg3, z_pos=-6).astype(float)
+    offs_numbers_qsk3k5tvnwziaxyg3 = f_vars2np(lp_vars, 'v_offs', r_vals['stock']['offs_keys_qsk3k5tvnwziaxyg3'], maskz8_k3k5tvnwziaxyg3, z_pos=-6).astype(float)
     d_vars['base']['offs_numbers_qsk3k5tvnwziaxyg3'] = offs_numbers_qsk3k5tvnwziaxyg3
     d_vars['qsz_weighted']['offs_numbers_qsk3k5tvnwziaxyg3'] = offs_numbers_qsk3k5tvnwziaxyg3 * prob_qsz[...,na,na,na,na,na,na,:,na,na,na,na,na]
 
     ##biomass
     mask_season_p7z = r_vals['zgen']['mask_season_p7z']
-    v_use_biomass_qsp7zkls2 = f_vars2np(lp_vars, 'v_use_biomass', qsp7zkls2, mask_season_p7z[:, :, na, na, na], z_pos=-4)
+    v_use_biomass_qsp7zkls2 = f_vars2np(lp_vars, 'v_use_biomass', d_keys['keys_qsp7zkls2'], mask_season_p7z[:, :, na, na, na], z_pos=-4)
     d_vars['base']['v_use_biomass_qsp7zkls2'] = v_use_biomass_qsp7zkls2
     d_vars['qsz_weighted']['v_use_biomass_qsp7zkls2'] = v_use_biomass_qsp7zkls2 * prob_qsz[:,:,na,:,na,na,na]
 
@@ -489,43 +425,43 @@ def f_var_reshape(lp_vars, r_vals):
     maskz8_p6naz = maskz8_p6z[:, na, :]
     maskz8_p6nazna = maskz8_p6z[:, na, :, na]
     ###green pasture hectare variable
-    greenpas_ha_qsfgop6lzt = f_vars2np(lp_vars, 'v_greenpas_ha', qsfgop6lzt, maskz8_p6nazna, z_pos=-2)
+    greenpas_ha_qsfgop6lzt = f_vars2np(lp_vars, 'v_greenpas_ha', d_keys['keys_qsfgop6lzt'], maskz8_p6nazna, z_pos=-2)
     d_vars['base']['greenpas_ha_qsfgop6lzt'] = greenpas_ha_qsfgop6lzt
     d_vars['qsz_weighted']['greenpas_ha_qsfgop6lzt'] = greenpas_ha_qsfgop6lzt * prob_qsz[...,na,na,na,na,na,:,na]
     ###dry end period
-    drypas_transfer_qsdp6zlt = f_vars2np(lp_vars, 'v_drypas_transfer', qsdp6zlt, maskz8_p6znana, z_pos=-3)
+    drypas_transfer_qsdp6zlt = f_vars2np(lp_vars, 'v_drypas_transfer', d_keys['keys_qsdp6zlt'], maskz8_p6znana, z_pos=-3)
     d_vars['base']['drypas_transfer_qsdp6zlt'] = drypas_transfer_qsdp6zlt
     d_vars['qsz_weighted']['drypas_transfer_qsdp6zlt'] = drypas_transfer_qsdp6zlt * prob_qsz[...,na,na,:,na,na]
     ###nap end period
-    nap_transfer_qsdp6zt = f_vars2np(lp_vars, 'v_nap_transfer', qsdp6zt, maskz8_p6zna, z_pos=-2)
+    nap_transfer_qsdp6zt = f_vars2np(lp_vars, 'v_nap_transfer', d_keys['keys_qsdp6zt'], maskz8_p6zna, z_pos=-2)
     d_vars['base']['nap_transfer_qsdp6zt'] = nap_transfer_qsdp6zt
     d_vars['qsz_weighted']['nap_transfer_qsdp6zt'] = nap_transfer_qsdp6zt * prob_qsz[...,na,na,:,na]
     ###dry consumed
-    drypas_consumed_qsfdp6zlt = f_vars2np(lp_vars, 'v_drypas_consumed', qsfdp6zlt, maskz8_p6znana, z_pos=-3)
+    drypas_consumed_qsfdp6zlt = f_vars2np(lp_vars, 'v_drypas_consumed', d_keys['keys_qsfdp6zlt'], maskz8_p6znana, z_pos=-3)
     d_vars['base']['drypas_consumed_qsfdp6zlt'] = drypas_consumed_qsfdp6zlt
     d_vars['qsz_weighted']['drypas_consumed_qsfdp6zlt'] = drypas_consumed_qsfdp6zlt * prob_qsz[...,na,na,na,:,na,na]
     ###nap consumed
-    nap_consumed_qsfdp6zt = f_vars2np(lp_vars, 'v_nap_consumed', qsfdp6zt, maskz8_p6zna, z_pos=-2)
+    nap_consumed_qsfdp6zt = f_vars2np(lp_vars, 'v_nap_consumed', d_keys['keys_qsfdp6zt'], maskz8_p6zna, z_pos=-2)
     d_vars['base']['nap_consumed_qsfdp6zt'] = nap_consumed_qsfdp6zt
     d_vars['qsz_weighted']['nap_consumed_qsfdp6zt'] = nap_consumed_qsfdp6zt * prob_qsz[...,na,na,na,:,na]
     ###poc consumed
-    poc_consumed_qsfp6lz = f_vars2np(lp_vars, 'v_poc', qsfp6lz, maskz8_p6naz, z_pos=-1)
+    poc_consumed_qsfp6lz = f_vars2np(lp_vars, 'v_poc', d_keys['keys_qsfp6lz'], maskz8_p6naz, z_pos=-1)
     d_vars['base']['poc_consumed_qsfp6lz'] = poc_consumed_qsfp6lz
     d_vars['qsz_weighted']['poc_consumed_qsfp6lz'] = poc_consumed_qsfp6lz * prob_qsz[...,na,na,na,:]
     ###stubble consumed
-    stub_qszp6fks1s2 = f_vars2np(lp_vars, 'v_stub_con', qszp6fks1s2, maskz8_zp6[:, :, na, na, na, na], z_pos=-6)
+    stub_qszp6fks1s2 = f_vars2np(lp_vars, 'v_stub_con', d_keys['keys_qszp6fks1s2'], maskz8_zp6[:, :, na, na, na, na], z_pos=-6)
     d_vars['base']['stub_qszp6fks1s2'] = stub_qszp6fks1s2
     d_vars['qsz_weighted']['stub_qszp6fks1s2'] = stub_qszp6fks1s2 * prob_qsz[...,na,na,na,na,na]
     ###crop consumed
-    crop_consumed_qsfkp6p5zl = f_vars2np(lp_vars, 'v_tonnes_crop_consumed', qsfkp6p5zl, maskz8_p6nazna, z_pos=-2)
+    crop_consumed_qsfkp6p5zl = f_vars2np(lp_vars, 'v_tonnes_crop_consumed', d_keys['keys_qsfkp6p5zl'], maskz8_p6nazna, z_pos=-2)
     d_vars['base']['crop_consumed_qsfkp6p5zl'] = crop_consumed_qsfkp6p5zl
     d_vars['qsz_weighted']['crop_consumed_qsfkp6p5zl'] = crop_consumed_qsfkp6p5zl * prob_qsz[...,na,na,na,na,:,na]
     ###saltbush consumed
-    v_tonnes_sb_consumed_qszp6fl = f_vars2np(lp_vars, 'v_tonnes_sb_consumed', qszp6fl, maskz8_zp6[:, :, na, na], z_pos=-4)
+    v_tonnes_sb_consumed_qszp6fl = f_vars2np(lp_vars, 'v_tonnes_sb_consumed', d_keys['keys_qszp6fl'], maskz8_zp6[:, :, na, na], z_pos=-4)
     d_vars['base']['v_tonnes_sb_consumed_qszp6fl'] = v_tonnes_sb_consumed_qszp6fl
     d_vars['qsz_weighted']['v_tonnes_sb_consumed_qszp6fl'] = v_tonnes_sb_consumed_qszp6fl * prob_qsz[...,na,na,na]
     ###area saltbush
-    v_slp_ha_qszl = f_vars2np(lp_vars, 'v_slp_ha', qszl, z_pos=-2)
+    v_slp_ha_qszl = f_vars2np(lp_vars, 'v_slp_ha', d_keys['keys_qszl'], z_pos=-2)
     d_vars['base']['v_slp_ha_qszl'] = v_slp_ha_qszl
     d_vars['qsz_weighted']['v_slp_ha_qszl'] = v_slp_ha_qszl * prob_qsz[...,na]
 
@@ -536,29 +472,29 @@ def f_var_reshape(lp_vars, r_vals):
     maskz8_zp5nana = maskz8_zp5[:, :, na, na]
     maskz8_zp5na = maskz8_zp5[:, :, na]
     ###mach variable
-    v_contractseeding_ha = f_vars2np(lp_vars, 'v_contractseeding_ha', qszp5kl, maskz8_zp5nana, z_pos=-4)
+    v_contractseeding_ha = f_vars2np(lp_vars, 'v_contractseeding_ha', d_keys['keys_qszp5kl'], maskz8_zp5nana, z_pos=-4)
     d_vars['base']['v_contractseeding_ha'] = v_contractseeding_ha
     d_vars['base']['v_contractseeding_ha'] = v_contractseeding_ha * prob_qsz[...,na,na,na]
-    v_seeding_machdays = f_vars2np(lp_vars, 'v_seeding_machdays', qszp5kl, maskz8_zp5nana, z_pos=-4)
+    v_seeding_machdays = f_vars2np(lp_vars, 'v_seeding_machdays', d_keys['keys_qszp5kl'], maskz8_zp5nana, z_pos=-4)
     d_vars['base']['v_seeding_machdays'] = v_seeding_machdays
     d_vars['qsz_weighted']['v_seeding_machdays'] = v_seeding_machdays * prob_qsz[...,na,na,na]
-    v_harv_hours = f_vars2np(lp_vars, 'v_harv_hours', qszp5k, maskz8_zp5na, z_pos=-3)
+    v_harv_hours = f_vars2np(lp_vars, 'v_harv_hours', d_keys['keys_qszp5k'], maskz8_zp5na, z_pos=-3)
     d_vars['base']['v_harv_hours'] = v_harv_hours
     d_vars['qsz_weighted']['v_harv_hours'] = v_harv_hours * prob_qsz[...,na,na]
-    v_contractharv_hours = f_vars2np(lp_vars, 'v_contractharv_hours', qszp5k, maskz8_zp5na, z_pos=-3)
+    v_contractharv_hours = f_vars2np(lp_vars, 'v_contractharv_hours', d_keys['keys_qszp5k'], maskz8_zp5na, z_pos=-3)
     d_vars['base']['v_contractharv_hours'] = v_contractharv_hours
     d_vars['qsz_weighted']['v_contractharv_hours'] = v_contractharv_hours * prob_qsz[...,na,na]
 
     ##v_phase
-    v_phase_area_qsp7zrl = f_vars2np(lp_vars, 'v_phase_area', qsp7zrl, mask_season_p7z[:, :, na, na], z_pos=-3)
+    v_phase_area_qsp7zrl = f_vars2np(lp_vars, 'v_phase_area', d_keys['keys_qsp7zrl'], mask_season_p7z[:, :, na, na], z_pos=-3)
     d_vars['base']['v_phase_area_qsp7zrl'] = v_phase_area_qsp7zrl
     d_vars['qsz_weighted']['v_phase_area_qsp7zrl'] = v_phase_area_qsp7zrl * prob_qsz[:,:,na,:,na,na]
-    v_phase_change_increase_qsp7zrl = f_vars2np(lp_vars, 'v_phase_change_increase', qsp7zrl, mask_season_p7z[:, :, na, na], z_pos=-3)
+    v_phase_change_increase_qsp7zrl = f_vars2np(lp_vars, 'v_phase_change_increase', d_keys['keys_qsp7zrl'], mask_season_p7z[:, :, na, na], z_pos=-3)
     d_vars['base']['v_phase_change_increase_qsp7zrl'] = v_phase_change_increase_qsp7zrl
     d_vars['qsz_weighted']['v_phase_change_increase_qsp7zrl'] = v_phase_change_increase_qsp7zrl * prob_qsz[:,:,na,:,na,na]
 
     ##trees
-    v_tree_area_l = f_vars2np(lp_vars, 'v_tree_area_l', len_l)
+    v_tree_area_l = f_vars2np(lp_vars, 'v_tree_area_l', [keys_l])
     d_vars['base']['v_tree_area_l'] = v_tree_area_l
     d_vars['qsz_weighted']['v_tree_area_l'] = v_tree_area_l #doesnt need to be weight by qsz because doesnt vary
 
@@ -1468,14 +1404,9 @@ def f_labour_summary(lp_vars, r_vals, option=0):
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
-    len_p5 = len(keys_p5)
-    len_q = len(keys_q)
-    len_s = len(keys_s)
-    len_z = len(keys_z)
 
-    qsp5z = len_q, len_s, len_p5, len_z
-    qsz = len_q, len_s, len_z
-    qs = len_q, len_s
+    qsp5z = keys_q, keys_s, keys_p5, keys_z
+    qs = keys_q, keys_s
 
     ##total labour cost
     if option == 0:
@@ -1523,11 +1454,7 @@ def f_dep_summary(lp_vars, r_vals):
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
-    len_p7 = len(keys_p7)
-    len_q = len(keys_q)
-    len_s = len(keys_s)
-    len_z = len(keys_z)
-    qsp7z = len_q, len_s, len_p7, len_z
+    qsp7z = keys_q, keys_s, keys_p7, keys_z
     dep_qsp7z = f_vars2np(lp_vars, 'v_dep', qsp7z, mask_season_p7z, z_pos=-1)
     return dep_qsp7z
 
@@ -1538,11 +1465,7 @@ def f_minroe_summary(lp_vars, r_vals):
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
-    len_p7 = len(keys_p7)
-    len_q = len(keys_q)
-    len_s = len(keys_s)
-    len_z = len(keys_z)
-    qsp7z = len_q, len_s, len_p7, len_z
+    qsp7z = keys_q, keys_s, keys_p7, keys_z
 
     minroe_qsp7z = f_vars2np(lp_vars, 'v_minroe', qsp7z, mask_season_p7z, z_pos=-1)
     return minroe_qsp7z
@@ -1554,11 +1477,7 @@ def f_asset_cost_summary(lp_vars, r_vals):
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
-    len_p7 = len(keys_p7)
-    len_q = len(keys_q)
-    len_s = len(keys_s)
-    len_z = len(keys_z)
-    qsp7z = len_q, len_s, len_p7, len_z
+    qsp7z = keys_q, keys_s, keys_p7, keys_z
     asset_cost_qsp7z = f_vars2np(lp_vars, 'v_asset_cost', qsp7z, mask_season_p7z, z_pos=-1)
     return asset_cost_qsp7z
 
@@ -1570,12 +1489,7 @@ def f_wc_summary(lp_vars, r_vals):
     keys_q = r_vals['zgen']['keys_q']
     keys_s = r_vals['zgen']['keys_s']
     keys_z = r_vals['zgen']['keys_z']
-    len_p7 = len(keys_p7)
-    len_c0 = len(keys_c0)
-    len_q = len(keys_q)
-    len_s = len(keys_s)
-    len_z = len(keys_z)
-    qsc0p7z = len_q, len_s, len_c0, len_p7, len_z
+    qsc0p7z = keys_q, keys_s, keys_c0, keys_p7, keys_z
     capital_qsc0p7z = f_vars2np(lp_vars, 'v_wc_debit', qsc0p7z, mask_season_p7z, z_pos=-1)
     capital_qsz = np.max(capital_qsc0p7z, axis=(2,3)) #max c0 and p7 axis
     keys_qsz = [keys_q, keys_s, keys_z]
@@ -2039,12 +1953,7 @@ def f_profit(lp_vars, r_vals, option=0):
         keys_q = r_vals['zgen']['keys_q']
         keys_s = r_vals['zgen']['keys_s']
         keys_z = r_vals['zgen']['keys_z']
-        len_p7 = len(keys_p7)
-        len_c1 = len(keys_c1)
-        len_q = len(keys_q)
-        len_s = len(keys_s)
-        len_z = len(keys_z)
-        qsc1p7z = len_q, len_s, len_c1, len_p7, len_z
+        qsc1p7z = keys_q, keys_s, keys_c1, keys_p7, keys_z
         ###credit/debit (profit/loss before depreciation and tradevalue)
         credit_qsc1p7z = f_vars2np(lp_vars, 'v_credit', qsc1p7z, mask_season_p7z, z_pos=-1)
         debit_qsc1p7z = f_vars2np(lp_vars, 'v_debit', qsc1p7z, mask_season_p7z, z_pos=-1)
