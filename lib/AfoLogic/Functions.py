@@ -1115,6 +1115,117 @@ def f1_make_pyomo_dict(param, index, loop_axis_pos=None, index_loop_axis_pos=Non
     tup = tuple(map(tuple,index_masked))
     return dict(zip(tup, param_masked))
 
+import numpy as np
+na = np.newaxis
+
+
+def build_active_index(
+    masks,
+    axis_keys,
+    reduce_extra_axes="any",
+    active_condition="!=0",
+):
+    """
+    Build a list of active index tuples from one or more masks.
+
+    Parameters
+    ----------
+    masks : np.ndarray or list of np.ndarray
+        Single mask or list of masks. They will be broadcast to a common
+        shape and combined with logical AND.
+
+        Example shapes:
+            (k,p6,p5,z,l)
+            (p6,z)  -> will be broadcast if needed
+
+    axis_keys : list of 1D arrays
+        Keys for each axis you want in the final index (left-most axes
+        after broadcasting).
+
+        Example:
+            axis_keys = [keys_k, keys_p6, keys_p5, keys_z, keys_l]
+
+    reduce_extra_axes : "any" | "all" | None | list[int]
+        How to collapse extra dimensions beyond len(axis_keys).
+
+        - "any": active if any extra axis is True.
+        - "all": active if all extra axes are True.
+        - list[int]: explicit axes to reduce over.
+        - None: require mask.ndim == len(axis_keys).
+
+    active_condition : str
+        How to treat non-bool masks (if masks are numeric):
+
+        - "!=0": mask != 0
+        - ">0":  mask > 0
+
+    Returns
+    -------
+    list[tuple]
+        A list of tuples (key0, key1, ..., keyN) where the combined mask is active.
+    """
+
+    # --- 1. Normalise to a combined boolean mask ---
+    if isinstance(masks, (list, tuple)):
+        arrs = []
+        for m in masks:
+            m = np.asarray(m)
+            if m.dtype == bool:
+                arrs.append(m)
+            else:
+                if active_condition == "!=0":
+                    arrs.append(m != 0)
+                elif active_condition == ">0":
+                    arrs.append(m > 0)
+                else:
+                    raise ValueError("unsupported active_condition")
+        combined = np.logical_and.reduce(arrs)
+    else:
+        m = np.asarray(masks)
+        if m.dtype == bool:
+            combined = m
+        else:
+            if active_condition == "!=0":
+                combined = (m != 0)
+            elif active_condition == ">0":
+                combined = (m > 0)
+            else:
+                raise ValueError("unsupported active_condition")
+
+    # --- 2. Reduce extra axes if needed ---
+    n_keep = len(axis_keys)
+    if combined.ndim < n_keep:
+        raise ValueError("mask has fewer dims than axis_keys")
+
+    if combined.ndim > n_keep:
+        if reduce_extra_axes is None:
+            raise ValueError("mask has extra dims and reduce_extra_axes is None")
+
+        if isinstance(reduce_extra_axes, str):
+            extra_axes = tuple(range(n_keep, combined.ndim))
+            if reduce_extra_axes == "any":
+                combined = np.any(combined, axis=extra_axes)
+            elif reduce_extra_axes == "all":
+                combined = np.all(combined, axis=extra_axes)
+            else:
+                raise ValueError("unknown reduce_extra_axes string")
+        else:
+            # explicit list of axes
+            combined = np.any(combined, axis=tuple(reduce_extra_axes))
+
+    # Now combined.shape must match the len of each axis_keys[i]
+    # --- 3. Extract active indices and map to keys ---
+    idx = np.nonzero(combined)
+    active = []
+
+    for indices in zip(*idx):
+        # indices is like (ik, ip6, ip5, iz, il)
+        key_tuple = tuple(axis_keys[ax][i] for ax, i in enumerate(indices))
+        active.append(key_tuple)
+
+    return active
+
+
 def write_variablesummary(model, trial_name, obj, option=0, property_id=''):
     '''
 

@@ -33,7 +33,7 @@ from . import SeasonalFunctions as zfun
 pyomo sets
 '''
 ##define sets - sets are redefined for each exp in case they change due to SA
-def sets(model, nv):
+def sets(model, nv, params):
 
     #######################
     #season               #
@@ -64,6 +64,14 @@ def sets(model, nv):
     len_z = len(z_keys)
     len_s = np.power(len_z, len_q - 1)
     model.s_sequence = Set(initialize=np.array(['s%s' % i for i in range(len_s)]), doc='season sequences')
+
+    # ---- Active (q,s) pairs ----
+    active_qs = [(q, s) for (q, s), val in params['zgen']['p_wyear_inc_qs'].items() if val != 0]
+
+    model.s_active_qs = Set(dimen=2, initialize=active_qs, ordered=True,
+        doc="Weather-year × sequence combos actually used in this scenario")
+
+
 
     #######################
     #price                #
