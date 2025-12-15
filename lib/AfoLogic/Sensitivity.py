@@ -580,7 +580,7 @@ def create_sa():
     saa['rev_mortalityb'] = 0.0     #Adjust the base mortality - this is a high level sa, it impacts within a calculation not on an input
     saa['rev_mortalityx_l0'] = np.zeros(len_l0, dtype='float64')  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
     saa['rev_littersize'] = 0.0     # sa to the litter size this changes the propn of singles/twins and trips whilst keeping propn empty the same.
-    saa['rev_conception'] = 0.0     # sa to adjust the proportion of ewes that are empty whilst keeping litter size (number of lambs / pregnant ewes) constant
+    saa['rev_empty'] = 0.0          # sa to adjust the proportion of ewes that are empty whilst keeping litter size (number of lambs / pregnant ewes) constant
     saa['rev_rr'] = 0.0             # sa to adjust the reproductive rate of ewes (number of lambs scanned / ewe mated)
 
     ##SAT

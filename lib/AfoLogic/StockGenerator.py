@@ -1677,13 +1677,13 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ###saa for rev that is applied for a specific age stage (only some p)
     saa_littersize_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_rev_sa(saa_littersize_pa1e1b1nwzida0e0b0xyg1, sen.saa['rev_littersize']
                                                            , age=age_pa1e1b1nwzida0e0b0xyg1, sa_type=2)
-    ##conception
+    ##conception (proportion of empty ewes)
     saa_conception_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(sen.saa['conception_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
                                                     axis=g_pos, condition2=mask_o_dams, axis2=p_pos)
     saa_conception_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(saa_conception_oa1e1b1nwzida0e0b0xyg1,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     ###saa for rev that is applied for a specific age stage (only some p)
-    saa_conception_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_rev_sa(saa_conception_pa1e1b1nwzida0e0b0xyg1, sen.saa['rev_conception']
+    saa_conception_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_rev_sa(saa_conception_pa1e1b1nwzida0e0b0xyg1, sen.saa['rev_empty']
                                                            , age=age_pa1e1b1nwzida0e0b0xyg1, sa_type=2)
     ##preg_increment
     saa_preg_increment_oa1e1b1nwzida0e0b0xyg = fun.f_expand(sen.saa['preg_increment_ol0g1'][:,sinp.stock['a_nfoet_b1'],:]
