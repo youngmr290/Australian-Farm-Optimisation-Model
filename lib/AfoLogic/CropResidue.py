@@ -137,7 +137,12 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     period_is_harvest_p6zk = np.logical_and(fp_end_p6z[...,na] >= harv_date_zk, fp_start_p6z[...,na] <= harv_date_zk)
     idx_fp_start_stub_zk = fun.searchsort_multiple_dim(feed_period_dates_p6z, harv_date_zk, 1, 0, side='right') - 1
 
-    idx_fp_end_stub_z = zfun.f_seasonal_inp(pinp.stubble['i_fp_end_stub_z'], numpy=True, axis=0)
+    ##stubble is destocked X days before early break - you dont know the type of season in advanced therefore must destock all z before the early break just in case
+    season_break_z = zfun.f_seasonal_inp(pinp.general['i_break'], numpy=True)
+    destock_days_prior_brk = pinp.stubble['i_destock_stub']
+    date_destocked = np.min(season_break_z) + 364 - destock_days_prior_brk #incremented to the next yr.
+    in_period_p6z = (fp_start_p6z <= date_destocked) & (date_destocked < fp_end_p6z)
+    idx_fp_end_stub_z = np.argmax(in_period_p6z, axis=0).astype(int)
 
     mask_stubble_exists_p6zk = np.logical_or(np.logical_and(index_p6[:,na,na]>=idx_fp_start_stub_zk, index_p6[:,na,na]<=idx_fp_end_stub_z[:,na]),
                                              np.logical_and(idx_fp_end_stub_z[:,na] < idx_fp_start_stub_zk,
@@ -321,12 +326,30 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     stub_transfer_req_p6zk = 1000 * mask_stubble_exists_p6zk   # No transfer can occur when stubble doesn't exist or at harvest.
 
     ###############
-    #harvest p con# stop sheep consuming more than possible because harvest is not at the start of the period
+    #Proportion of the fp where stubble grazing can't occur - stop sheep consuming more than possible because harvest is not at the start of the period
     ###############
-    #how far through each period does harv start? note: 0 for each period harv doesn't start in. Used to calc stub consumption limit in harv period
     fp_len_p6z = fp_end_p6z - fp_start_p6z
-    cons_propn_p6zk = np.clip(fun.f_divide(fp_len_p6z[...,na] - (fp_end_p6z[...,na] - harv_date_zk), fp_len_p6z[...,na]),0, np.inf)
-    cons_propn_p6zk[cons_propn_p6zk>=1] = 0 #cons_prop can not be 1 else div0 error in pyomo.
+
+    ## --- (1) Pre-harvest block: stubble can't be grazed before harvest happens in that period ---
+    # fraction of period BEFORE harvest (blocked)
+    stub_preharvest_block_frac_p6zk  = np.clip(fun.f_divide(fp_len_p6z[...,na] - (fp_end_p6z[...,na] - harv_date_zk), fp_len_p6z[...,na]),0, 1)
+    ### if harvest is not in this period, set to 0 (no pre-harvest block for stubble availability)
+    stub_preharvest_block_frac_p6zk[stub_preharvest_block_frac_p6zk>=1] = 0
+
+    # --- (2) Post-destock block: once sheep are destocked, remainder of period is not grazeable ---
+    # date_destocked is a scalar (same for all z); numpy broadcasts across (p6,z)
+    stub_postdestock_block_frac_p6z  = np.clip(fun.f_divide(fp_len_p6z - (fp_end_p6z - date_destocked), fp_len_p6z),0, 1)
+    # Convert from "fraction of period before destock" to "fraction of period after destock (not available for grazing)"
+    stub_postdestock_block_frac_p6z = 1 - stub_postdestock_block_frac_p6z
+    # if destock after the period ends -> no block
+    stub_postdestock_block_frac_p6z[date_destocked >= fp_end_p6z] = 0
+    # if destock before the period starts -> no blocked (because stubble doesnt exist.
+    stub_postdestock_block_frac_p6z[date_destocked <= fp_start_p6z] = 0
+
+    ##combine
+    stub_unavailable_frac_p6zk  = stub_postdestock_block_frac_p6z[:,:,na] + stub_preharvest_block_frac_p6zk
+    stub_unavailable_frac_p6zk = np.clip(stub_unavailable_frac_p6zk, 0, 1)
+
 
     ######################
     #apply season mask   #
@@ -336,7 +359,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     mask_fp_z8var_zp6 = mask_fp_z8var_p6z.T
 
     ##apply mask
-    cons_propn_p6zk = cons_propn_p6zk * mask_fp_z8var_p6z[...,na]
+    stub_unavailable_frac_p6zk = stub_unavailable_frac_p6zk * mask_fp_z8var_p6z[...,na]
     stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * mask_fp_z8var_p6z[...,na]
     stub_transfer_req_p6zk = stub_transfer_req_p6zk * mask_fp_z8var_p6z[...,na]
     cat_a_prov_p6zks1s2 = cat_a_prov_p6zks1s2 * mask_fp_z8var_p6z[...,na,na,na]
@@ -389,7 +412,7 @@ def crop_residue_all(params, r_vals, nv, cat_propn_s1_ks2):
     params['transfer_prov'] = fun.f1_make_pyomo_dict(stub_prov_ks1s2, arrays_ks1s2)
 
     ###harv con
-    params['cons_prop'] = fun.f1_make_pyomo_dict(cons_propn_p6zk, arrays_p6zk)
+    params['stub_unavailable_frac_p6zk'] = fun.f1_make_pyomo_dict(stub_unavailable_frac_p6zk, arrays_p6zk)
 
     ###feed period transfer
     params['stub_transfer_prov'] = fun.f1_make_pyomo_dict(stub_transfer_prov_p6zk, arrays_p6zk)

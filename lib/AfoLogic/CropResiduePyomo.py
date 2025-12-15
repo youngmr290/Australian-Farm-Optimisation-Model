@@ -53,8 +53,8 @@ def f1_stubpyomo_local(params, model, MP_lp_vars):
     # model.p_rot_stubble = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_season_periods, model.s_season_types,
     #                                initialize=params['rot_stubble'], default=0.0, doc='stubble produced per ha of each rotation')
 
-    model.p_harv_prop = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['cons_prop'],
-                                 default = 0.0, mutable=False, doc='proportion of the way through each fp harvest occurs (0 if harv does not occur in given period)')
+    model.p_stub_unavailable_frac_p6zk = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['stub_unavailable_frac_p6zk'],
+                                 default = 0.0, mutable=False, doc='proportion of each feed period where grazing cannot occur either because harvest only occurs part way or because stubbles are destocked part way')
     
     model.p_stub_md = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['md'],
                                default = 0.0, mutable=False, doc='md from 1t of each stubble categories for each crop')
