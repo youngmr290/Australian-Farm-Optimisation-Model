@@ -649,7 +649,7 @@ def f1_boundarypyomo_local(params, model):
                     return sum(model.v_dams[q,s,'00-0','t2',v_sale,a,n,w,z,i,y,g1]
                                for a in model.s_wean_times for n in model.s_nut_dams
                                if pe.value(model.p_mask_dams['00-0','t2',v_sale,w,z,g1]) == 1
-                               ) == sum(model.v_dams[q,s,'00-0',t,v,a,n,w,z,i,y,g1] for t in model.s_sale_dams
+                               ) <= sum(model.v_dams[q,s,'00-0',t,v,a,n,w,z,i,y,g1] for t in model.s_sale_dams
                                         for a in model.s_wean_times for n in model.s_nut_dams
                                         if pe.value(model.p_mask_dams['00-0',t,v,w,z,g1]) == 1
                                         ) * (1-model.p_prop_twice_dry_dams[v,z,i,y,g1])
