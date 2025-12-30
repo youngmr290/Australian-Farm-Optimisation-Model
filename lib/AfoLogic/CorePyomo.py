@@ -332,13 +332,16 @@ def f_con_harv_stub_nap_cons(model):
 
     '''
     def harv_stub_nap_cons(model,q,s,p6,z):
-        if any(model.p_nap_prop[p6,z] or model.p_stub_unavailable_frac_p6zk[p6,z,k] for k in model.s_crops) and pe.value(model.p_wyear_inc_qs[q, s]):
-            return sum(-paspy.f_pas_me(model,q,s,p6,f,z)
-                       + sum(model.p_stub_unavailable_frac_p6zk[p6,z,k] / (1 - model.p_stub_unavailable_frac_p6zk[p6,z,k])
-                             * model.v_stub_con[q,s,z,p6,f,k,sc,s2] * model.p_stub_md[f,p6,z,k,sc]
-                             for k in model.s_crops for sc in model.s_stub_cat for s2 in model.s_biomass_uses)
-                       + model.p_nap_prop[p6,z] / (1 - model.p_nap_prop[p6,z]) * paspy.f_nappas_me(model,q,s,p6,f,z)
-                       for f in model.s_feed_pools) <= 0
+
+        nap_exists = (model.p_nap_prop[p6, z] != 0)
+        stub_exists = len(model.s_stub_k_by_p6z[p6, z]) > 0
+        if (nap_exists or stub_exists) and pe.value(model.p_wyear_inc_qs[q, s]):
+            return sum(
+                -paspy.f_pas_me(model,q,s,p6,f,z)
+                + stubpy.f1_stub_consumed_in_harvest_period(model,q,s,p6,f,z)
+                + model.p_nap_prop[p6,z] / (1 - model.p_nap_prop[p6,z]) * paspy.f_nappas_me(model,q,s,p6,f,z)
+                for f in model.s_feed_pools
+            ) <= 0
         else:
             return pe.Constraint.Skip
     model.con_harv_stub_nap_cons = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_feed_periods,model.s_season_types,rule=harv_stub_nap_cons,

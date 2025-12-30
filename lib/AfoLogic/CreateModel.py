@@ -71,7 +71,22 @@ def sets(model, nv, params):
     model.s_active_qs = Set(dimen=2, initialize=active_qs, ordered=True,
         doc="Weather-year × sequence combos actually used in this scenario")
 
+    # ---- Active (q,s) pairs for BETWEEN constraints ----
+    active_qs_between = list(active_qs)
 
+    if sinp.structuralsa['model_is_MP']:
+        keys_q = list(model.s_sequence_year_between_con)
+        q_extra = keys_q[-1]  # the added q
+        q_last_real = list(model.s_sequence_year)[-1]
+
+        # copy the active s from the last real q into the extra q
+        s_active_last = [s for (q, s) in active_qs if q == q_last_real]
+        active_qs_between += [(q_extra, s) for s in s_active_last]
+
+    model.s_active_qs_between_con = Set(
+        dimen=2, initialize=active_qs_between, ordered=True,
+        doc="Active (q,s) for between constraints (MP extra q copies last real q)."
+    )
 
     #######################
     #price                #

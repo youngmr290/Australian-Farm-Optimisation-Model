@@ -64,18 +64,14 @@ def build_active_set(
     else:
         base_list = list(base_index)
 
-    # 1. Drop axes if requested
+    # 1. Drop axes (on base) if requested
     if drop_axes is not None and base_list:
         drop_axes = set(drop_axes)
         kept_positions = [i for i in range(len(base_list[0])) if i not in drop_axes]
         projected = {tuple(t[i] for i in kept_positions) for t in base_list}
         base_list = sorted(projected)
 
-    # 2. Reorder axes if requested
-    if order is not None and base_list:
-        base_list = [tuple(t[i] for i in order) for t in base_list]
-
-    # 3. Prepare prefix and suffix lists (each element is a tuple)
+    # 2. Prepare prefix and suffix lists (each element is a tuple)
     prefix_lists = []
     if prefix_sets is not None:
         for s in prefix_sets:
@@ -86,11 +82,7 @@ def build_active_set(
         for s in suffix_sets:
             suffix_lists.append(_as_tuple_list(s))
 
-    # 4. Build the final index via cartesian product
-    # Cases:
-    #   no prefix/suffix: just base_list
-    #   prefix only: prefix × base
-    #   prefix + suffix: prefix × base × suffix
+    # 3. Build final tuples via cartesian product
     blocks = []
     if prefix_lists:
         blocks.extend(prefix_lists)
@@ -98,18 +90,17 @@ def build_active_set(
     if suffix_lists:
         blocks.extend(suffix_lists)
 
-    if not blocks:
-        final_index = []
-    else:
-        final_index = []
+    final_index = []
+    if blocks:
         for combo in product(*blocks):
-            # combo is tuple of (tuple, tuple, ..., tuple)
             flat = ()
             for part in combo:
                 flat += tuple(part)
             final_index.append(flat)
 
-    dimen = len(final_index[0]) if final_index else 0
+    # 4. Reorder axes (on FINAL tuple) if requested
+    if order is not None and final_index:
+        final_index = [tuple(t[i] for i in order) for t in final_index]
 
-    s = pe.Set(initialize=final_index, dimen=dimen, doc=doc)
-    return s
+    dimen = len(final_index[0]) if final_index else 0
+    return pe.Set(initialize=final_index, dimen=dimen, doc=doc)
