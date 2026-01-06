@@ -4,6 +4,8 @@ import time
 print(f'Experiment commenced at: {time.ctime()}')
 start_time = time.time()
 
+# import numpy as np
+
 from lib.RawVersion import LoadExcelInputs as dxl
 from lib.RawVersion import LoadExp as exp
 from lib.RawVersion import RawVersionExtras as rve
@@ -13,9 +15,10 @@ from lib.RawVersion import SaveOutputs as out
 ############
 ##controls #
 ############
-force_run = True #set to True if you want to force all trials to run even if they are up to date.
-solver_method = 'HiGHS'     #options CPLEX, glpk, cbc, ipopt, HiGHS (default)
+force_run = False #set to True if you want to force all trials to run even if they are up to date.
+solver_method = 'CPLEX'     #options CPLEX, glpk, cbc, ipopt, HiGHS (default)
 print_debug_output = False
+# np.seterr(all='raise')
 
 ########################################
 ##load excel data and experiment data  #
