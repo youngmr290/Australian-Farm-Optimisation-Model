@@ -128,7 +128,7 @@ def f_con_crop_DM_transfer(model):
             - sum(
                 model.v_contractseeding_ha[q,s,z8,p5,k,l] * model.p_can_sow[p5,z9,k] * model.p_crop_DM_provided[k,p6,p5,z8,l,z9]
                  + model.v_seeding_machdays[q,s,z8,p5,k,l] * model.p_seeding_rate[k,l] * model.p_can_sow[p5,z9,k] * model.p_crop_DM_provided[k,p6,p5,z8,l,z9]
-                 for z8 in model.s_season_types if (k, p6, p5, z8, l) in model.s_cropgraze_base_kp6p5zl
+                 for z8 in model.s_season_types if (k, p6, p5, z8, l) in model.s_cropgraze_base_kp6p5zl #todo think this can be improved using same method as in stubble... also maybe should be using pe.quicksum
             )
             # DM consumed by livestock across all feed pools
             + sum(

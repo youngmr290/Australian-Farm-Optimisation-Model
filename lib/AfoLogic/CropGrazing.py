@@ -63,8 +63,6 @@ def f1_cropgraze_common_dates_and_masks():
     ###propn of each crop on each lmu that is grazed
     propn_area_grazed_kl = pinp.cropgraze['i_cropgraze_propn_area_grazed_kl'] * np.any(grazing_exists_p6p5z)
 
-
-
     #todo further optimisation by including: seeding_allowed_p5zk
 
     # combined structural mask (k,p6,p5,z,l) where crop grazing can actually exist
