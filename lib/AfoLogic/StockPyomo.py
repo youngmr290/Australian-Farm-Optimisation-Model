@@ -536,7 +536,8 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
             return pe.Constraint.Skip
 
     start_con_damR=time.time()
-    model.con_dam_withinR = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
+    model.con_dam_withinR = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_dvp_dams,
+                                   model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
                                    model.s_groups_dams, model.s_lw_dams, rule=damwithinR, doc='transfer dam to dam from last dvp to current dvp.')
     end_con_damR=time.time()
     print('con_damwithinR: ',end_con_damR-start_con_damR)
@@ -544,7 +545,7 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
 def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9, MP_lp_vars):
     '''
     Between year numbers/transfers of
-
+    #todo Is this comment correct? It is a copy of "within"
     a) Dams to dams in the current decision variable period (only selected when a dam is changing its sire
        group e.g. BBB to BBT).
     b) Dams to dams in the following decision variable period.

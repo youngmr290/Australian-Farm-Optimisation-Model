@@ -707,6 +707,7 @@ def f1_rev_sa(value, sa, age, sa_type):
     t_value = fun.f_sa(t_value, sa, sa_type)
 
     ###this is done so that the p axis doesnt get activated if the rev_sa is not used.
+    #todo Could add an if so that if all(rev_age_stage == 0) then don't add the p axis simply apply the SA (is that just "return t_value"?)
     if np.all(t_value==value): #if adjusted value is the same as the initial value then no sa was applied.
         return value
     else:
@@ -2745,7 +2746,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     ##Exposure index
     xo_p1p2 = (cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_p1p2 + cd[10, ..., na,na] * chill_index_p1[..., na]
                + cb1[10, ..., na,na])  #Note: in CSIRO equations cb1 is slice [11] but the coefficient has been changed
-    ##Progeny mortality at birth from exposure
+    ##Progeny mortality at birth from exposure (note: saa_mortalityx includes rev_mortalityx)
     mortalityx = np.average(fun.f_back_transform(xo_p1p2), axis=(-1, -2)) * period_is_birth  #axis -1 & -2 are p1 & p2
     ##Apply SA to progeny mortality due to exposure
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)

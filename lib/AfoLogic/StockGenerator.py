@@ -1632,13 +1632,10 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     saa_mortalityx_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(saa_mortalityx_oa1e1b1nwzida0e0b0xyg,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     ###saa for rev that is applied for a specific age stage (only some p)
-    rev_saa_mortalityx_oa1e1b1nwzida0e0b0xyg = fun.f_expand(sen.saa['rev_mortalityx_ol0g1'][:,sinp.stock['a_nfoet_b1'],:]
-                                                        , b1_pos, right_pos=g_pos, left_pos2=p_pos, right_pos2=b1_pos
-                                                        , condition=mask_dams_inc_g1, axis=g_pos)#add axes between g & b1, and b1 & p
-    rev_saa_mortalityx_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(rev_saa_mortalityx_oa1e1b1nwzida0e0b0xyg,
-                                                     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    rev_saa_mortalityx_b1nwzida0e0b0xyg = fun.f_expand(sen.saa['rev_mortalityx_l0'][sinp.stock['a_nfoet_b1']]
+                                                        , b1_pos, right_pos=0)
     ###combine normal saa and rev saa
-    saa_mortalityx_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_rev_sa(saa_mortalityx_pa1e1b1nwzida0e0b0xyg1, rev_saa_mortalityx_pa1e1b1nwzida0e0b0xyg1
+    saa_mortalityx_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_rev_sa(saa_mortalityx_pa1e1b1nwzida0e0b0xyg1, rev_saa_mortalityx_b1nwzida0e0b0xyg
                                                            , age=age_pa1e1b1nwzida0e0b0xyg1, sa_type=2) #use dam age because it needs to be based on the age stage of the dams. Because the yatf will always be birth
     ##mort birth
     saa_mortalitye_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(sen.saa['mortalitye_ol0g1'][:,sinp.stock['a_nfoet_b1'],:]
@@ -1652,7 +1649,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                         , condition=mask_dams_inc_g1, axis=g_pos)#add axes between g & b1, and b1 & p
     sap_mortalityp_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(sap_mortalityp_oa1e1b1nwzida0e0b0xyg2,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
-    ## sum saa[rr] and saa[rr_age] so there is only one saa to handle in f_conception_cs & f_conception_ltw
+    ## saa[rr] and saa[rr_age] are summed after expanding axes because f_conception_ltw() handles saa[rr] differently
     ## Note: the proportions of the BTRT doesn't include rr_age_og1 because the BTRT calculations can't vary by age of the dam
     rr_age_og1 = sen.saa['rr_age_og1']
     saa_rr_age_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(rr_age_og1, p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
@@ -1666,9 +1663,11 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                                                     axis=g_pos, condition2=mask_o_dams, axis2=p_pos)
     sam_rr_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(sam_rr_oa1e1b1nwzida0e0b0xyg1,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
-    ## Alter the standard scanning rate for f_conception_ltw to include saa['rr_age'] (scan_std_yg0 has already been adjusted by saa['rr'] in UniversalInputs.py
+    saa_rr_age_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_rev_sa(saa_rr_age_pa1e1b1nwzida0e0b0xyg1, sen.saa['rev_rr']
+                                                       , age=age_pa1e1b1nwzida0e0b0xyg1, sa_type=2)
+    ## Alter the standard scanning rate for f_conception_ltw to include saa['rr_age'] (scan_std_yg1 has already been adjusted by saa['rr'] in UniversalInputs.py
     scan_std_pa1e1b1nwzida0e0b0xyg1 = scan_std_yg1 + saa_rr_age_pa1e1b1nwzida0e0b0xyg1
-    ## Combine saa['rr'] and saa['rr_age'] for f_conception_cs
+    ## Combine saa['rr'] and saa['rr_age'] for f_conception_cs & f_conception_mu
     saa_rr_age_pa1e1b1nwzida0e0b0xyg1 = saa_rr_age_pa1e1b1nwzida0e0b0xyg1 + sen.saa['rr']
     ##littesize
     saa_littersize_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(sen.saa['littersize_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
@@ -1676,22 +1675,16 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     saa_littersize_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(saa_littersize_oa1e1b1nwzida0e0b0xyg1,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     ###saa for rev that is applied for a specific age stage (only some p)
-    rev_saa_littersize_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(sen.saa['rev_littersize_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
-                                                    axis=g_pos, condition2=mask_o_dams, axis2=p_pos)
-    rev_saa_littersize_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(rev_saa_littersize_oa1e1b1nwzida0e0b0xyg1,
-                                                     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
-    saa_littersize_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_rev_sa(saa_littersize_pa1e1b1nwzida0e0b0xyg1, rev_saa_littersize_pa1e1b1nwzida0e0b0xyg1, age=age_pa1e1b1nwzida0e0b0xyg1, sa_type=2)
-    ##conception
+    saa_littersize_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_rev_sa(saa_littersize_pa1e1b1nwzida0e0b0xyg1, sen.saa['rev_littersize']
+                                                           , age=age_pa1e1b1nwzida0e0b0xyg1, sa_type=2)
+    ##conception (proportion of empty ewes)
     saa_conception_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(sen.saa['conception_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
                                                     axis=g_pos, condition2=mask_o_dams, axis2=p_pos)
     saa_conception_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(saa_conception_oa1e1b1nwzida0e0b0xyg1,
                                                      a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     ###saa for rev that is applied for a specific age stage (only some p)
-    rev_saa_conception_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(sen.saa['rev_conception_og1'], p_pos, right_pos=g_pos, condition=mask_dams_inc_g1,
-                                                    axis=g_pos, condition2=mask_o_dams, axis2=p_pos)
-    rev_saa_conception_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(rev_saa_conception_oa1e1b1nwzida0e0b0xyg1,
-                                                     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
-    saa_conception_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_rev_sa(saa_conception_pa1e1b1nwzida0e0b0xyg1, rev_saa_conception_pa1e1b1nwzida0e0b0xyg1, age=age_pa1e1b1nwzida0e0b0xyg1, sa_type=2)
+    saa_conception_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_rev_sa(saa_conception_pa1e1b1nwzida0e0b0xyg1, sen.saa['rev_empty']
+                                                           , age=age_pa1e1b1nwzida0e0b0xyg1, sa_type=2)
     ##preg_increment
     saa_preg_increment_oa1e1b1nwzida0e0b0xyg = fun.f_expand(sen.saa['preg_increment_ol0g1'][:,sinp.stock['a_nfoet_b1'],:]
                                                         , b1_pos, right_pos=g_pos, left_pos2=p_pos, right_pos2=b1_pos
@@ -3045,7 +3038,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
             #     print("period is fvp0 offs: ", period_is_condense_pa1e1b1nwzida0e0b0xyg1[p])
 
 
-            ##this is a special p slice to handle the fact that srw sometime has active p (when using rev) but mostly is singleton.
+            ##this is a special p slice to handle the fact that srw sometimes has active p (when using rev) but mostly is singleton.
             ##this is used to slice variables that have a p axis due to the srw rev (e.g. srw, wge, w_b)
             if sen.saa['rev_srw']==0 or sen.sav['rev_age_stage']=='-':
                 p_srw = 0
@@ -5758,6 +5751,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 fd_min_sire = np.minimum(fd_min_start_sire, d_fd_sire)
                 ##Staple length if shorn(end)
                 sl_sire = (fl_sire - fl_shear_yg0) * cw_sire[15, ...]
+                sl_sire = sfun.f1_rev_sa(sl_sire, sen.saa['rev_sl'], age_pa1e1b1nwzida0e0b0xyg0[p], sa_type=2)
                 ##Staple strength if shorn(end)
                 ss_sire = fd_min_sire**2 / fd_sire **2 * cw_sire[16, ...] + sen.saa['ss']
                 ss_sire = sfun.f1_rev_sa(ss_sire, sen.saa['rev_ss'], age_pa1e1b1nwzida0e0b0xyg0[p], sa_type=2)
@@ -5804,6 +5798,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 fd_min_dams = np.minimum(fd_min_start_dams, d_fd_dams)
                 ##Staple length if shorn(end)
                 sl_dams = (fl_dams - fl_shear_yg1) * cw_dams[15, ...]
+                sl_dams = sfun.f1_rev_sa(sl_dams, sen.saa['rev_sl'], age_pa1e1b1nwzida0e0b0xyg1[p], sa_type=2)
                 ##Staple strength if shorn(end)
                 ss_dams = fd_min_dams ** 2 / fd_dams ** 2 * cw_dams[16, ...] + sen.saa['ss']
                 ss_dams = sfun.f1_rev_sa(ss_dams, sen.saa['rev_ss'], age_pa1e1b1nwzida0e0b0xyg1[p], sa_type=2)
@@ -5854,6 +5849,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 fd_min_yatf = np.minimum(fd_min_start_yatf, d_fd_yatf) #d_fd is actually the fd of the weeks growth. Not the change in fd.
                 ##Staple length if shorn(end)
                 sl_yatf = (fl_yatf - fl_shear_yg2) * cw_yatf[15, ...]
+                sl_yatf = sfun.f1_rev_sa(sl_yatf, sen.saa['rev_sl'], age_pa1e1b1nwzida0e0b0xyg2[p], sa_type=2)
                 ##Staple strength if shorn(end)
                 ss_yatf = fun.f_divide(fd_min_yatf ** 2 , fd_yatf ** 2 * cw_yatf[16, ...]) + sen.saa['ss']
                 ss_yatf = sfun.f1_rev_sa(ss_yatf, sen.saa['rev_ss'], age_pa1e1b1nwzida0e0b0xyg2[p], sa_type=2)
@@ -5901,6 +5897,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
                 fd_min_offs = np.minimum(fd_min_start_offs, d_fd_offs)
                 ##Staple length if shorn(end)
                 sl_offs = (fl_offs - fl_shear_yg3) * cw_offs[15, ...]
+                sl_offs = sfun.f1_rev_sa(sl_offs, sen.saa['rev_sl'], age_cut_pa1e1b1nwzida0e0b0xyg3[p], sa_type=2)
                 ##Staple strength if shorn(end)
                 ss_offs = fd_min_offs ** 2 / fd_offs ** 2 * cw_offs[16, ...] + sen.saa['ss']
                 ss_offs = sfun.f1_rev_sa(ss_offs, sen.saa['rev_ss'], age_cut_pa1e1b1nwzida0e0b0xyg3[p], sa_type=2)
@@ -9134,24 +9131,22 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ####Only different from the total because it excludes those providing to the same period
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = (numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9
                                                             - numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9)
-    ###at prejoining make all k28 animals provide k29[nm] - except the first prejoining (ewe lamb) if fs is being optimised. This is because we want to make sure the feedsupply for b[2] (b11) in dvp[0] represents an animal that is expected to be mated.
-    trail_is_fs_optimisation = sinp.structuralsa['i_fs_create_pkl']
+    ###at prejoining make all k28 animals provide k29[nm] - except the first prejoining (ewe lamb) when the selection of NM/mating occurs in the prog2dams constraint.
+    ### This is because we want to make sure the feedsupply for b[2] (b11) in dvp[0] represents an animal that is expected to be mated.
     dvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1 == prejoining_oa1e1b1nwzida0e0b0xyg1[0]
     nextdvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1 = np.roll(dvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1, shift=-1, axis=0)
     temporary = np.sum(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary,
-                                                                        np.logical_and(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == prejoin_vtype1,
-                                                                                       np.logical_not(np.logical_and(nextdvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1,
-                                                                                                                     trail_is_fs_optimisation)))[:, :, :, 0:1, ..., na,na])  # take slice 0 of e (for prejoining all e slices are the same)
+                                                                np.logical_and(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == prejoin_vtype1,
+                                                                    np.logical_not(nextdvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1))[:, :, :, 0:1, ..., na,na])  # take slice 0 of e (for prejoining all e slices are the same)
 
 
 
     ###at prejoining make all k28 animals provide k29[nm] - except the first prejoining (ewe lamb) if fs is being optimised. This is because we want to make sure the feedsupply for b[2] (b11) in dvp[0] represents an animal that is expected to be mated.
     temporary = np.sum(numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
     numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary,
-                                                                            np.logical_and(dvp_type_va1e1b1nwzida0e0b0xyg1 == prejoin_vtype1,
-                                                                                           np.logical_not(np.logical_and(dvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1,
-                                                                                                                         trail_is_fs_optimisation)))[:, :, 0:1, ..., na,na])  #take slice 0 of e (for prejoining all e slices are the same)
+                                                                np.logical_and(dvp_type_va1e1b1nwzida0e0b0xyg1 == prejoin_vtype1,
+                                                                    np.logical_not(dvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1))[:, :, 0:1, ..., na,na])  #take slice 0 of e (for prejoining all e slices are the same)
 
     ###combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
     #todo can't just sum across the 'a' slice (decision variable), to allow a0 to provide a1 we will need another 'a' axis (see google doc) - fix this in version 2
@@ -9185,9 +9180,8 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
     ####at prejoining make all k28 animals require from k29[nm] - except the first prejoining (ewe lamb) if fs is being optimised. This is because we want to make sure the feedsupply for b[2] (b11) in dvp[0] represents an animal that is expected to be mated.
     temporary = np.sum(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
     numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary,
-                                                                        np.logical_and(dvp_type_va1e1b1nwzida0e0b0xyg1 == prejoin_vtype1,
-                                                                                       np.logical_not(np.logical_and(dvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1,
-                                                                                                                     trail_is_fs_optimisation)))[:, :, 0:1, ..., na,na])  #take slice 0 of e (for prejoining all e slices are the same)
+                                                                np.logical_and(dvp_type_va1e1b1nwzida0e0b0xyg1 == prejoin_vtype1,
+                                                                    np.logical_not(dvp_is_firstprejoining_va1e1b1nwzida0e0b0xyg1))[:, :, 0:1, ..., na,na])  #take slice 0 of e (for prejoining all e slices are the same)
 
     ####combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
     #todo can't just sum across the 'a' slice (decision variable), to allow a0 to provide a1 we will need another 'a' axis (see google doc)
@@ -10578,7 +10572,7 @@ def generator(params={},r_vals={},nv={},pkl_fs_info={}, pkl_fs={}, stubble=None,
 
     ##proportion of dams mated. inf means the model can optimise the proportion because inf is used to skip the constraint.
     prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesn't impact mating propn
-    prop_dams_mated_va1e1b1nwzida0e0b0xyg1[np.logical_not(dvp_is_scan)] = np.inf #use scan dvp so that ewes sold at prejoin are not counted (there can be ewes sold at the beginning of the dvp)
+    prop_dams_mated_va1e1b1nwzida0e0b0xyg1[np.logical_not(dvp_is_mating)] = np.inf #use scan dvp so that ewes sold at prejoin are not counted (there can be ewes sold at the beginning of the dvp)
     #prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = fun.f_update(prop_dams_mated_va1e1b1nwzida0e0b0xyg1, dvp_is_mating==0, np.inf)
     arrays_vzg1 = [keys_v1, keys_z, keys_g1]
     params['p_prop_dams_mated'] = fun.f1_make_pyomo_dict(prop_dams_mated_va1e1b1nwzida0e0b0xyg1, arrays_vzg1)

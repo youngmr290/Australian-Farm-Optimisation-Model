@@ -538,7 +538,7 @@ def f1_boundarypyomo_local(params, model):
             ###constraint - sum all mated dams in scan dvp.
             def f_propn_dams_retained(model,q,s,v,z,g1):
                 if (pe.value(model.p_prop_dams_retained[v,z,g1])==np.inf or not pe.value(model.p_wyear_inc_qs[q, s]) or
-                        v not in final_v or all(pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 0
+                        v not in final_v or all(pe.value(model.p_mask_dams[k2,t,v,w8,z,g1]) == 0   #only create the constraint for v in v_final
                             for k2 in model.s_k2_birth_dams for t in model.s_sale_dams for w8 in model.s_lw_dams)):
                     return pe.Constraint.Skip
                 else:
@@ -546,11 +546,11 @@ def f1_boundarypyomo_local(params, model):
                     v_prejoin = prejoin_v[idx_final]  #the sales can be during or after prejoining
                     v_next_prejoin = next_prejoin_v[idx_final]  #the sale must be before the following prejoining
                     v_sales = l_v1[l_v1.index(v_prejoin) : l_v1.index(v_next_prejoin)]   #the list of periods that will be summed for total sales relevant to the current v
-                    dams_retained = sum(model.v_dams[q, s, k28, 't2', final_v, a, n, w8, z, i, y, g1]   #number of dams retained in the v prior to next-prejoining
+                    dams_retained = sum(model.v_dams[q, s, k28, 't2', v, a, n, w8, z, i, y, g1]   #number of dams retained in the v prior to next-prejoining (this final_v)
                                 for k28 in model.s_k2_birth_dams
                                 for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                 for i in model.s_tol for y in model.s_gen_merit_dams
-                                if pe.value(model.p_mask_dams[k28,'t2',final_v,w8,z,g1]) == 1)
+                                if pe.value(model.p_mask_dams[k28,'t2',v,w8,z,g1]) == 1)
                     dams_sold_t0 = sum(model.v_dams[q, s, k28, 't0', v, a, n, w8, z, i, y, g1]   #number of dams sold from the t0 set during the reproduction cycle (beginning of period)
                                 for k28 in model.s_k2_birth_dams for v in v_sales
                                 for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
@@ -561,7 +561,7 @@ def f1_boundarypyomo_local(params, model):
                                 for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                 for i in model.s_tol for y in model.s_gen_merit_dams
                                 if pe.value(model.p_mask_dams[k28,'t1',v,w8,z,g1]) == 1)
-                    return dams_retained == model.p_prop_dams_retained[v,s,g1] * (dams_retained + dams_sold_t0 + dams_sold_t1)
+                    return dams_retained == model.p_prop_dams_retained[v,z,g1] * (dams_retained + dams_sold_t0 + dams_sold_t1)
             model.con_propn_dams_retained = pe.Constraint(model.s_sequence_year, model.s_sequence,
                                                           model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
                                                           rule=f_propn_dams_retained, doc='proportion of dams retained')
@@ -649,7 +649,7 @@ def f1_boundarypyomo_local(params, model):
                     return sum(model.v_dams[q,s,'00-0','t2',v_sale,a,n,w,z,i,y,g1]
                                for a in model.s_wean_times for n in model.s_nut_dams
                                if pe.value(model.p_mask_dams['00-0','t2',v_sale,w,z,g1]) == 1
-                               ) == sum(model.v_dams[q,s,'00-0',t,v,a,n,w,z,i,y,g1] for t in model.s_sale_dams
+                               ) <= sum(model.v_dams[q,s,'00-0',t,v,a,n,w,z,i,y,g1] for t in model.s_sale_dams
                                         for a in model.s_wean_times for n in model.s_nut_dams
                                         if pe.value(model.p_mask_dams['00-0',t,v,w,z,g1]) == 1
                                         ) * (1-model.p_prop_twice_dry_dams[v,z,i,y,g1])
