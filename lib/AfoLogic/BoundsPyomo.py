@@ -551,16 +551,16 @@ def f1_boundarypyomo_local(params, model):
                                 for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                 for i in model.s_tol for y in model.s_gen_merit_dams
                                 if pe.value(model.p_mask_dams[k28,'t2',v,w8,z,g1]) == 1)
-                    dams_sold_t0 = sum(model.v_dams[q, s, k28, 't0', v, a, n, w8, z, i, y, g1]   #number of dams sold from the t0 set during the reproduction cycle (beginning of period)
-                                for k28 in model.s_k2_birth_dams for v in v_sales
+                    dams_sold_t0 = sum(model.v_dams[q, s, k28, 't0', vs, a, n, w8, z, i, y, g1]   #number of dams sold from the t0 set during the reproduction cycle (beginning of period)
+                                for k28 in model.s_k2_birth_dams for vs in v_sales
                                 for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                 for i in model.s_tol for y in model.s_gen_merit_dams
-                                if pe.value(model.p_mask_dams[k28, 't0', v, w8, z, g1]) == 1)
-                    dams_sold_t1 = sum(model.v_dams[q, s, k28, 't1', v, a, n, w8, z, i, y, g1]      #number of dams sold from the t1 set during the reproduction cycle (empty)
-                                for k28 in model.s_k2_birth_dams for v in v_sales
+                                if pe.value(model.p_mask_dams[k28, 't0', vs, w8, z, g1]) == 1)
+                    dams_sold_t1 = sum(model.v_dams[q, s, k28, 't1', vs, a, n, w8, z, i, y, g1]      #number of dams sold from the t1 set during the reproduction cycle (empty)
+                                for k28 in model.s_k2_birth_dams for vs in v_sales
                                 for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                 for i in model.s_tol for y in model.s_gen_merit_dams
-                                if pe.value(model.p_mask_dams[k28,'t1',v,w8,z,g1]) == 1)
+                                if pe.value(model.p_mask_dams[k28,'t1',vs,w8,z,g1]) == 1)
                     return dams_retained == model.p_prop_dams_retained[v,z,g1] * (dams_retained + dams_sold_t0 + dams_sold_t1)
             model.con_propn_dams_retained = pe.Constraint(model.s_sequence_year, model.s_sequence,
                                                           model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
